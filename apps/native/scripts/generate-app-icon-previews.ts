@@ -1,7 +1,7 @@
 /**
  * Rasterizes the App Icon picker's thumbnails. Run after changing an SVG in
  * `assets/app-icon-previews/` and commit the PNGs:
- * `pnpm --filter @outlayr/native gen:app-icon-previews`. Needs
+ * `vp run --filter @outlayr/native gen:app-icon-previews`. Needs
  * `brew install librsvg`.
  *
  * A `.icon` bundle is compiled by `actool` at build time and has no runtime

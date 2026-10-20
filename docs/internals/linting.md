@@ -5,11 +5,11 @@ Vite+ runs **oxlint** (lint) and **oxfmt** (format) from one config. The `lint` 
 Ultracite is still the preset source, but no longer the CLI: the entry point is `vp`, which reads those two blocks.
 
 ```bash
-pnpm run fix     # format + autofix — vp check --fix
-pnpm run check   # report only — run it yourself; nothing else runs it repo-wide
+vp check --fix   # format + autofix
+vp check         # report only — run it yourself; nothing else runs it repo-wide
 ```
 
-Pre-commit runs `vp staged`, which applies `vp check --fix` to staged files and re-stages what it rewrites; the Claude Code hook runs `pnpm run fix`. Pre-push (`.vite-hooks/pre-push`) runs `vp run -r --cache check-types` and then `vp run -r --cache test` — it never runs `vp check`, so the repo-wide lint pass is yours to run before pushing. GitHub Actions is disabled repo-wide, so there is no CI gate behind it.
+Pre-commit runs `vp staged`, which applies `vp check --fix` to staged files and re-stages what it rewrites; the Claude Code hook runs `vp check --fix`. Pre-push (`.vite-hooks/pre-push`) runs `vp run -r --cache check-types` and then `vp run -r --cache test` — it never runs `vp check`, so the repo-wide lint pass is yours to run before pushing. Every GitHub workflow is manual (`workflow_dispatch`), so there is no CI gate behind it.
 
 The gate is green: **no errors and 6 warnings**, all extra-dependency findings from React Compiler rules that are `warn` rather than `error` — see "Warnings, not errors" below.
 
@@ -32,7 +32,7 @@ Formatting is **4-space indent, 120 columns**. oxfmt also formats CSS, so `globa
 
 One more is suppressed at its single call site rather than disabled: `jest/prefer-mock-return-shorthand` rewrites `mockImplementation(() => v)` to `mockReturnValue(v)`, which evaluates `v` at setup — and `device-language.test.ts` passes a `fn` that throws, to exercise the failure path.
 
-If you re-enable any of these, run `pnpm exec vp run -r --no-cache test` and `pnpm exec vp run -r --no-cache check-types` before staging the result. `--no-cache` matters: the root `test` and `check-types` scripts pass `--cache`, so a plain `pnpm run test` can replay a cached run instead of executing one.
+If you re-enable any of these, run `vp run -r --no-cache test` and `vp run -r --no-cache check-types` before staging the result. `--no-cache` matters: the root `test` and `check-types` scripts pass `--cache`, so a plain `vp run test` can replay a cached run instead of executing one.
 
 ## Rules we rejected
 

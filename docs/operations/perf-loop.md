@@ -41,9 +41,9 @@ so two builds are compared on the same taps and the same data.
    the bundle reads them:
 
    ```sh
-   pnpm exec intlayer build
-   CI=1 pnpm exec expo start --dev-client --port 8090   # main
-   CI=1 pnpm exec expo start --dev-client --port 8091   # the change
+   vp exec intlayer build
+   CI=1 vp exec expo start --dev-client --port 8090   # main
+   CI=1 vp exec expo start --dev-client --port 8091   # the change
    ```
 
 2. With the perf emulator booted and nothing else on the host, from `apps/native`:
@@ -117,8 +117,8 @@ table, then confirm it here before calling it a win a user feels.
 1. Serve each side with a production bundle, on the same dev build and snapshot:
 
    ```sh
-   CI=1 pnpm exec expo start --dev-client --no-dev --minify --port 8090   # main
-   CI=1 pnpm exec expo start --dev-client --no-dev --minify --port 8091   # the change
+   CI=1 vp exec expo start --dev-client --no-dev --minify --port 8090   # main
+   CI=1 vp exec expo start --dev-client --no-dev --minify --port 8091   # the change
    ```
 
 2. Add `--prod`:
@@ -175,8 +175,8 @@ and a Transport category budget with rollover.
    `android/` is generated, and the native build needs no `.env`. From `apps/native`:
 
    ```sh
-   CI=1 pnpm install --frozen-lockfile
-   pnpm exec expo prebuild -p android --no-install
+   CI=1 vp install --frozen-lockfile
+   vp exec expo prebuild -p android --no-install
    cd android && ./gradlew assembleDebug -PreactNativeArchitectures=<abi>
    ```
 
@@ -211,7 +211,7 @@ and a Transport category budget with rollover.
 ### An emulator on another machine
 
 The emulator can run on a second machine. Run both Metros there too: copy both checkouts over
-(rsync without `node_modules`, then `pnpm install`), start them as above, copy `measure.ts` and
+(rsync without `node_modules`, then `vp install`), start them as above, copy `measure.ts` and
 `flows/`, and run `node measure.ts …` (node 24 strips the types, and the script imports only node
 built-ins). `adb` and `argent` must be on that machine's PATH. Metro tunnelled from the host
 (`ssh -R`) bundles fine, but `react-profiler-stop` can time out over it on a loaded host.

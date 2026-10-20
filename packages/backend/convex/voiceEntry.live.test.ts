@@ -10,7 +10,7 @@
  *   RUN_LIVE_MODEL_TESTS=1 \
  *   ANTHROPIC_API_KEY="$(npx convex env get ANTHROPIC_API_KEY)" \
  *   ELEVENLABS_API_KEY="$(npx convex env get ELEVENLABS_API_KEY)" \
- *   pnpm exec vitest run convex/voiceEntry.live.test.ts
+ *   vp test run convex/voiceEntry.live.test.ts
  *
  * The assertions are the contract, not the answer: a draft comes back with a
  * positive amount and only names the caller offered, and the correction

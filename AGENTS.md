@@ -4,11 +4,11 @@ This project enforces strict code quality standards through automated formatting
 
 ## Quick Reference
 
-- **Format code**: `pnpm exec vp fmt`
-- **Check for issues**: `pnpm exec vp check`
-- **Fix what is fixable**: `pnpm exec vp check --fix`
-- **Show the toolchain**: `pnpm exec vp toolchain`
-- **Run a workspace task**: `pnpm exec vp run -r <task>` (add `--no-cache` to force a real run)
+- **Format code**: `vp fmt`
+- **Check for issues**: `vp check`
+- **Fix what is fixable**: `vp check --fix`
+- **Show the toolchain**: `vp toolchain`
+- **Run a workspace task**: `vp run -r <task>` (add `--no-cache` to force a real run)
 
 Most issues are automatically fixable. See `docs/internals/linting.md` for which rules are off and why.
 
@@ -145,4 +145,4 @@ Oxlint + Oxfmt's linter will catch most issues automatically. Focus your attenti
 
 ---
 
-Most formatting and common issues are automatically fixed by Oxlint + Oxfmt. Run `pnpm run fix` before committing to ensure compliance; the pre-commit hook runs `vp staged` over staged files anyway.
+Most formatting and common issues are automatically fixed by Oxlint + Oxfmt. Run `vp check --fix` before committing to ensure compliance; the pre-commit hook runs `vp staged` over staged files anyway.

@@ -6,7 +6,7 @@ import { CURRENCY_DECIMALS, CURRENCY_META, PICKABLE_CURRENCY_CODES } from "./cat
  * Drift guard: the committed `catalog.generated.ts` MUST equal the deterministic
  * output of `buildCatalog()` over the vendored provider list + pinned CLDR data
  * + overrides overlay. Regenerate with
- * `pnpm --filter @outlayr/money generate:catalog`.
+ * `vp run --filter @outlayr/money generate:catalog`.
  */
 describe("catalog.generated drift", () => {
 	const built = buildCatalog();

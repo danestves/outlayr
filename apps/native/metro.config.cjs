@@ -28,7 +28,7 @@ config.resolver.sourceExts.push("sql");
 // Intlayer goes outermost: it spreads the resolver it is handed and chains its
 // `resolveRequest` to the existing one, so it inherits the `.sql` extension and
 // both wrappers rather than replacing them. The sync variant does not build
-// dictionaries on server start — `pnpm i18n:build` owns that, so a clean clone
+// dictionaries on server start — `vp run i18n:build` owns that, so a clean clone
 // and CI produce them the same way rather than only whoever ran Metro.
 const finalConfig = configMetroIntlayerSync(
     withUniwindConfig(wrapWithReanimatedMetroConfig(config), {

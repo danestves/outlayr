@@ -7,8 +7,8 @@ A pre-built Next.js + ShadCN editor for generating App Store and Google Play scr
 This is a normal pnpm workspace member, so install from the repo root:
 
 ```bash
-vp i                                          # from the repo root
-pnpm --filter app-store-screenshots dev       # http://127.0.0.1:3000
+vp install                                          # from the repo root
+vp run --filter app-store-screenshots dev        # http://127.0.0.1:3000
 ```
 
 It is excluded from the lint gate (`projectIgnores` in the root `vite.config.ts`),

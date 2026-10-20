@@ -12,7 +12,7 @@
       {
         "hooks": [
           {
-            "command": "pnpm run fix",
+            "command": "vp check --fix",
             "type": "command"
           }
         ],

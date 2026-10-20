@@ -1,6 +1,6 @@
 # Driving the simulator from a URL
 
-`pnpm dev` serves the running iOS simulator at **`http://localhost:8081/.sim`** — live video plus
+`vp run dev` serves the running iOS simulator at **`http://localhost:8081/.sim`** — live video plus
 touch, keyboard, and hardware buttons, in a browser tab. Anything that can open a URL can drive the
 app: a second monitor, a phone on the LAN, a tunnel, or an agent's browser tooling.
 
@@ -11,18 +11,18 @@ the home screen, or Settings.
 
 ## Using it
 
-1. Boot a simulator and start the dev server (`pnpm dev`).
+1. Boot a simulator and start the dev server (`vp run dev`).
 2. Open `http://localhost:8081/.sim`.
 3. Pick a device in the grid. It boots if it is not already running.
 
 `--port` moves Metro, and the preview follows it: the path is always `/.sim` on whatever port Metro
 is on.
 
-For camera injection and the shell-backed tools, run the standalone server instead — `pnpm --filter @outlayr/native sim`,
+For camera injection and the shell-backed tools, run the standalone server instead — `vp run --filter @outlayr/native sim`,
 which serves the same UI on `http://localhost:3200` from its own process. See
 [Known limits](#known-limits) for why those two features do not work embedded.
 
-## Do not run `serve-sim --kill` while `pnpm dev` is running
+## Do not run `serve-sim --kill` while `vp run dev` is running
 
 **It kills Metro.** Verified, not theorised.
 
@@ -69,7 +69,7 @@ If touch stops working after an Expo upgrade, check that first.
 its own CLI as `process.argv[1]` so the page can shell out to it. Inside Metro that resolves to the
 Expo CLI, so those commands run against the wrong binary. Everything interactive — touch, swipe,
 pinch, keyboard, hardware buttons, rotation — travels over the HID WebSocket instead and is
-unaffected. Use `pnpm --filter @outlayr/native sim` when you need the camera.
+unaffected. Use `vp run --filter @outlayr/native sim` when you need the camera.
 
 **A malformed `/.sim/exec` request crashes the dev server.** `serve-sim` passes the request's
 `command` field to `child_process.exec` without checking its type; sending a JSON array instead of a

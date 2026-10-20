@@ -4,7 +4,7 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v58.0.0/ before 
 
 # The simulator is a URL
 
-`pnpm dev` serves the running simulator at `http://localhost:8081/.sim` — live
+`vp run dev` serves the running simulator at `http://localhost:8081/.sim` — live
 video plus touch, keyboard, and hardware buttons. Verify a visible change there
 rather than describing what it should look like.
 
@@ -16,12 +16,12 @@ trap and the rest of the limits are in `docs/operations/simulator-preview.md`.
 Run from `apps/native`, in this order. Stop at the first red step.
 
 ```sh
-pnpm exec vp check                     # lint + format, repo-wide
-pnpm check-types                       # intlayer build, then tsc --noEmit
-node_modules/.bin/jest src/<area>      # the suites next to what you touched, ~22s for all of them
-pnpm --filter @outlayr/backend test    # only when packages/backend changed, ~1s
-pnpm bench:bundle                      # only when a dependency or import style changed, ~40s
-node --import tsx scripts/licenses.ts  # only when a dependency changed, ~40s
+vp check                                 # lint + format, repo-wide
+vp run check-types                       # intlayer build, then tsc --noEmit
+node_modules/.bin/jest src/<area>        # the suites next to what you touched, ~22s for all of them
+vp run --filter @outlayr/backend test    # only when packages/backend changed, ~1s
+vp run bench:bundle                      # only when a dependency or import style changed, ~40s
+node --import tsx scripts/licenses.ts    # only when a dependency changed, ~40s
 ```
 
 `scripts/licenses.ts` rewrites `src/screens/settings/licenses.json`, the list

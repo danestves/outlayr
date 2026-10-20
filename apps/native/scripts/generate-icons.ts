@@ -1,9 +1,9 @@
 /**
  * Writes every icon set in `icon-sets.ts`. Run after changing `SETS` and
- * commit the SVGs: `pnpm --filter @outlayr/native gen:icons`.
+ * commit the SVGs: `vp run --filter @outlayr/native gen:icons`.
  *
  * Pass a directory name to redo one set only:
- *   `pnpm --filter @outlayr/native gen:icons toolbar-symbols`
+ *   `vp run --filter @outlayr/native gen:icons toolbar-symbols`
  *
  * Each set empties its own output directory first, so a renamed slug leaves no
  * orphan SVG behind — which is also why a filtered run never touches the sets it

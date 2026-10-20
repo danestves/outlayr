@@ -8,7 +8,7 @@
  *
  *   RUN_LIVE_MODEL_TESTS=1 \
  *   ANTHROPIC_API_KEY="$(npx convex env get ANTHROPIC_API_KEY)" \
- *   pnpm exec vitest run convex/csvImport.live.test.ts
+ *   vp test run convex/csvImport.live.test.ts
  *
  * The assertions are the contract, not the answer: a generative model may
  * reasonably file a bakery under Food or under Groceries, so asserting a

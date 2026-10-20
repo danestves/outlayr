@@ -7,7 +7,7 @@
  * action takes an SF Symbol or a pure-SwiftUI label. Hugeicons is SVG, so any
  * glyph that lands in one of those has to be written out first.
  *
- * Adding a glyph is a line in `SETS` and a re-run of `pnpm gen:icons`.
+ * Adding a glyph is a line in `SETS` and a re-run of `vp run gen:icons`.
  */
 
 import type { IconWeight } from "./hugeicon-raster";

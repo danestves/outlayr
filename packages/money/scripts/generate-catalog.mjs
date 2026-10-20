@@ -5,7 +5,7 @@ import { buildCatalog } from "./lib/build-catalog.mts";
 const OUTPUT = new URL("../src/catalog.generated.ts", import.meta.url);
 
 const HEADER = `// GENERATED FILE — DO NOT EDIT BY HAND.
-// Run \`pnpm --filter @outlayr/money generate:catalog\` to regenerate.
+// Run \`vp run --filter @outlayr/money generate:catalog\` to regenerate.
 // Source: scripts/provider-codes.json (Frankfurter USD-base blend + cotizave
 // VES) overlaid with CLDR (cldr-numbers-modern names/symbols, cldr-core
 // fraction digits) and scripts/overrides.json. A drift test in

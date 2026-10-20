@@ -19,34 +19,38 @@ video/           Remotion marketing clips
 
 ## Getting started
 
-Requires Node 24 and pnpm 11. [Vite+](https://viteplus.dev) (`vp`) is the task runner, linter and formatter.
+Requires Node 24 and [Vite+](https://viteplus.dev) (`vp`), which manages pnpm and runs tasks, lint and format:
+
+```bash
+curl -fsSL https://vite.plus | bash
+```
 
 The app icons come from Hugeicons Pro, a paid private registry. Installing needs a token in your user-level config, never in the repo `.npmrc`:
 
 ```bash
-pnpm config set --global "//npm.hugeicons.com/:_authToken" "<token>"
-pnpm install
+vp pm config set --global "//npm.hugeicons.com/:_authToken" "<token>"
+vp install
 ```
 
 Run the app on the iOS simulator or an Android emulator:
 
 ```bash
-pnpm --filter @outlayr/native ios
-pnpm --filter @outlayr/native android
+vp run --filter @outlayr/native ios
+vp run --filter @outlayr/native android
 ```
 
 The app runs without a backend. To work on sync, sign-in or exchange rates, start a local Convex deployment and copy its URLs into `apps/native/.env` (see `apps/native/.env.example`):
 
 ```bash
-pnpm run dev:setup
-pnpm run dev:server
+vp run dev:setup
+vp run dev:server
 ```
 
 ## Scripts
 
-- `pnpm run check`: lint and format check (`pnpm run fix` applies fixes)
-- `pnpm run check-types`: type-check every package
-- `pnpm run test`: run every package's tests
+- `vp check`: lint and format check (`vp check --fix` applies fixes)
+- `vp run check-types`: type-check every package
+- `vp run test`: run every package's tests
 
 Architecture notes and runbooks are in [docs](./docs/README.md).
 

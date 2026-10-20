@@ -7,7 +7,7 @@
  *   RUN_LIVE_MODEL_TESTS=1 \
  *   ANTHROPIC_API_KEY="$(npx convex env get ANTHROPIC_API_KEY)" \
  *   RECEIPT_PATH=/tmp/receipt-eur.jpg \
- *   pnpm exec vitest run convex/receiptScan.live.test.ts
+ *   vp test run convex/receiptScan.live.test.ts
  *
  * The fixture at `RECEIPT_PATH` is a Spanish supermarket ticket in euros with a
  * printed "TOTAL (EUR) 20,56", seven lines and a Visa payment line. The
