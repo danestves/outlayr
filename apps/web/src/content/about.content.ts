@@ -21,8 +21,8 @@ const about = {
             }),
         },
         entity: t({
-            en: "Outlayr is a mobile expense tracker, budget app, and subscription tracker, made by danestves LLC.",
-            es: "Outlayr es una app móvil para controlar tus gastos, tu presupuesto y tus suscripciones, hecha por danestves LLC.",
+            en: "Outlayr is an open source mobile expense tracker, budget app, and subscription tracker, made by danestves LLC.",
+            es: "Outlayr es una app móvil de código abierto para controlar tus gastos, tu presupuesto y tus suscripciones, hecha por danestves LLC.",
         }),
         facts: [
             {
@@ -92,12 +92,19 @@ const about = {
                     es: "Outlayr no cancela suscripciones ni negocia tus facturas por ti.",
                 }),
             },
+            {
+                label: t({ en: "Source code", es: "Código fuente" }),
+                text: t({
+                    en: "Open source on GitHub at github.com/danestves/outlayr. The app is licensed under GPL-3.0 and the server under AGPL-3.0.",
+                    es: "Código abierto en GitHub, en github.com/danestves/outlayr. La app usa la licencia GPL-3.0 y el servidor, AGPL-3.0.",
+                }),
+            },
         ],
         factsTitle: t({ en: "Outlayr at a glance", es: "Outlayr de un vistazo" }),
         meta: {
             description: t({
-                en: "Outlayr is a mobile expense tracker, budget app, and subscription tracker, made by danestves LLC. Platforms, languages, plans, free limits, and where your data lives.",
-                es: "Outlayr es una app móvil para controlar tus gastos, tu presupuesto y tus suscripciones, hecha por danestves LLC. Plataformas, idiomas, planes, límites y dónde están tus datos.",
+                en: "Outlayr is an open source mobile expense tracker, budget app, and subscription tracker, made by danestves LLC. Platforms, languages, plans, free limits, and where your data lives.",
+                es: "Outlayr es una app móvil de código abierto para controlar tus gastos, tu presupuesto y tus suscripciones, hecha por danestves LLC. Plataformas, idiomas, planes, límites y dónde están tus datos.",
             }),
             title: t({
                 en: "About Outlayr: the expense tracker by danestves LLC",

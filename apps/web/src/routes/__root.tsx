@@ -17,7 +17,7 @@ import { startAnalytics } from "@/lib/analytics";
 import { LANGUAGES, localeFromParam, pageUrl } from "@/lib/i18n";
 import { useMotion } from "@/lib/motion";
 import { ORGANIZATION_ID, WEBSITE_ID, ldJson } from "@/lib/seo";
-import { COMPANY, SITE_URL, SUPPORT_EMAIL } from "@/lib/site";
+import { COMPANY, SITE_URL, SOURCE_URL, SUPPORT_EMAIL } from "@/lib/site";
 import { THEME_SCRIPT } from "@/lib/theme";
 
 import appCss from "../index.css?url";
@@ -51,6 +51,16 @@ const SITE_GRAPH = {
             name: "Outlayr",
             publisher: { "@id": ORGANIZATION_ID },
             url: SITE_URL,
+        },
+        {
+            "@id": `${SITE_URL}/#source`,
+            "@type": "SoftwareSourceCode",
+            codeRepository: SOURCE_URL,
+            license: ["https://www.gnu.org/licenses/gpl-3.0.html", "https://www.gnu.org/licenses/agpl-3.0.html"],
+            name: "Outlayr",
+            programmingLanguage: "TypeScript",
+            publisher: { "@id": ORGANIZATION_ID },
+            targetProduct: { "@id": `${SITE_URL}/#app` },
         },
     ],
 };

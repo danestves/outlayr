@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { CONTAINER } from "@/lib/layout";
-import { COMPANY, SUPPORT_EMAIL } from "@/lib/site";
+import { COMPANY, SOURCE_URL, SUPPORT_EMAIL } from "@/lib/site";
 
 import { ConsentSwitch } from "./consent-switch";
 import { LanguageSwitch } from "./language-switch";
@@ -65,6 +65,11 @@ export function SiteFooter() {
                             <Item to="/guides">{footer.guides}</Item>
                             <Item to="/compare">{footer.compare}</Item>
                             <Item to="/support">{footer.support}</Item>
+                            <li>
+                                <a className={LINK} href={SOURCE_URL}>
+                                    {footer.source}
+                                </a>
+                            </li>
                         </Column>
                         <Column title={footer.company}>
                             <Item to="/about">{footer.about}</Item>

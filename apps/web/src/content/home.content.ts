@@ -81,8 +81,8 @@ const home = {
         faq: [
             {
                 answer: t({
-                    en: "Outlayr is a mobile expense tracker, budget app, and subscription tracker, made by danestves LLC. You log a purchase by typing one sentence, saying it, or scanning the receipt. Budgets, savings goals, subscriptions, and insights update as you log, in any of 165 currencies, in English or Spanish.",
-                    es: "Outlayr es una app móvil para controlar tus gastos, tu presupuesto y tus suscripciones, hecha por danestves LLC. Registras una compra escribiendo una oración, dictándola o escaneando el recibo. Los presupuestos, las metas de ahorro, las suscripciones y las estadísticas se actualizan a medida que registras, en cualquiera de 165 monedas, en inglés o en español.",
+                    en: "Outlayr is an open source mobile expense tracker, budget app, and subscription tracker, made by danestves LLC. You log a purchase by typing one sentence, saying it, or scanning the receipt. Budgets, savings goals, subscriptions, and insights update as you log, in any of 165 currencies, in English or Spanish.",
+                    es: "Outlayr es una app móvil de código abierto para controlar tus gastos, tu presupuesto y tus suscripciones, hecha por danestves LLC. Registras una compra escribiendo una oración, dictándola o escaneando el recibo. Los presupuestos, las metas de ahorro, las suscripciones y las estadísticas se actualizan a medida que registras, en cualquiera de 165 monedas, en inglés o en español.",
                 }),
                 question: t({ en: "What is Outlayr?", es: "¿Qué es Outlayr?" }),
             },
@@ -154,6 +154,13 @@ const home = {
                     es: "Tu registro se guarda en tu celular. Solo llega a nuestros servidores si inicias sesión y activas la sincronización, o si usas una función que los necesite, como el escaneo de recibos. Outlayr no tiene anuncios y tus datos nunca se venden.",
                 }),
                 question: t({ en: "Who can see my financial data?", es: "¿Quién puede ver mis datos financieros?" }),
+            },
+            {
+                answer: t({
+                    en: "Yes. The code for the app and its server is public on GitHub at github.com/danestves/outlayr. The app is licensed under GPL-3.0 and the server under AGPL-3.0.",
+                    es: "Sí. El código de la app y de su servidor es público en GitHub, en github.com/danestves/outlayr. La app usa la licencia GPL-3.0 y el servidor, AGPL-3.0.",
+                }),
+                question: t({ en: "Is Outlayr open source?", es: "¿Outlayr es de código abierto?" }),
             },
         ],
         faqTitle: t({ en: "Questions, answered.", es: "Preguntas y respuestas." }),

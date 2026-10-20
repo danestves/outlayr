@@ -64,6 +64,7 @@ const site = {
             language: t({ en: "Language", es: "Idioma" }),
             nav: t({ en: "Footer", es: "Pie de página" }),
             privacy: t({ en: "Privacy", es: "Privacidad" }),
+            source: t({ en: "Source code", es: "Código fuente" }),
             support: t({ en: "Support", es: "Soporte" }),
             supportDetail: t({ en: "Common questions", es: "Preguntas frecuentes" }),
             terms: t({ en: "Terms", es: "Términos" }),

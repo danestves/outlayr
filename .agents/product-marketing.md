@@ -32,7 +32,7 @@
 **Emotional tension:** Not knowing where the money went.
 
 ## Competitive Landscape
-**Entity sentence (use it everywhere):** "Outlayr is a mobile expense tracker, budget app, and subscription tracker, made by danestves LLC." Spanish: "Outlayr es una app móvil para controlar tus gastos, tu presupuesto y tus suscripciones, hecha por danestves LLC." Search results for "Outlayr" go to outlayr.com, an unrelated payments company, and to apps named "Outlay".
+**Entity sentence (use it everywhere):** "Outlayr is an open source mobile expense tracker, budget app, and subscription tracker, made by danestves LLC." Spanish: "Outlayr es una app móvil de código abierto para controlar tus gastos, tu presupuesto y tus suscripciones, hecha por danestves LLC." Search results for "Outlayr" go to outlayr.com, an unrelated payments company, and to apps named "Outlay".
 **Direct (each has a page under /compare, facts dated and linked to the rival's own site):**
 - Rocket Money: subscription manager, US only, cancellation by its team is Premium. Deepest "alternative" demand.
 - YNAB, Monarch, Copilot: paid, bank-synced, US-centric (Copilot USD only; Monarch US and Canada).

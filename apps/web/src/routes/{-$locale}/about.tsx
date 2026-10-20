@@ -24,6 +24,7 @@ const FACT_SPANS = [
     "lg:col-span-7",
     "lg:col-span-8",
     "lg:col-span-4",
+    "md:col-span-2 lg:col-span-12",
 ] as const;
 const SHOTS = [
     { id: "budgets", path: "/screens/04" },

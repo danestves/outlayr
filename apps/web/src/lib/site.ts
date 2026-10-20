@@ -5,6 +5,7 @@ export const LEDGER_MCP_ORIGIN = "https://edge.tryoutlayr.com";
 export const APP_STORE_URL = "https://apps.apple.com/app/id6801652978";
 export const SUPPORT_EMAIL = "support@tryoutlayr.com";
 export const COMPANY = "danestves LLC";
+export const SOURCE_URL = "https://github.com/danestves/outlayr";
 
 export const RIVALS_CHECKED = new Date(Date.UTC(2026, 9, 7));
 

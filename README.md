@@ -1,6 +1,21 @@
 # Outlayr
 
-A local-first mobile expense and subscription tracker, on iPhone today and coming to Google Play. The ledger lives on the device; sync, sign-in and server features are optional. [tryoutlayr.com](https://tryoutlayr.com) · [App Store](https://apps.apple.com/app/id6801652978)
+Outlayr is an open source mobile expense tracker, budget app, and subscription tracker. Log a purchase by typing one sentence, saying it, or scanning the receipt. The ledger lives on the phone; sign-in, sync and server features are optional. On iPhone today, coming to Google Play.
+
+<a href="https://apps.apple.com/app/id6801652978"><img alt="Download on the App Store" height="40" src="./apps/web/public/badges/app-store.svg"></a>
+
+[tryoutlayr.com](https://tryoutlayr.com)
+
+![Outlayr: track every expense in one sentence](./apps/web/public/og.png)
+
+## Features
+
+- One-sentence entry, voice entry and receipt scanning
+- Category or overall budgets with carry-over and a projection of where the month ends
+- Savings goals, accounts, transfers and 165 currencies, converted at the rate from the day of each purchase
+- Subscriptions and paychecks that log themselves, with a reminder before each charge
+- Insights, Home and Lock Screen widgets, Face ID lock, CSV import and export
+- Works offline, in English and Spanish
 
 ## Layout
 
