@@ -82,7 +82,7 @@ jobs:
                   hugeicons-token: ${{ secrets.HUGEICONS_PRO_TOKEN }}
 
             - name: Build the i18n dictionaries
-              run: pnpm exec intlayer build
+              run: vp exec intlayer build
 
             - name: Publish
               env:
@@ -99,4 +99,4 @@ jobs:
             - name: Upload source maps to PostHog
               run: |
                   APP_VERSION=$(npx expo config --type public --json | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).version")
-                  pnpm exec posthog-cli hermes upload --directory dist --release-name com.tryoutlayr.app --release-version "$APP_VERSION"
+                  vp exec posthog-cli hermes upload --directory dist --release-name com.tryoutlayr.app --release-version "$APP_VERSION"

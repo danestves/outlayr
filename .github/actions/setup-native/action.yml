@@ -15,12 +15,11 @@ inputs:
 runs:
     using: composite
     steps:
-        - uses: pnpm/action-setup@v4
-
-        - uses: actions/setup-node@v4
+        - uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af
           with:
               node-version: 22
-              cache: pnpm
+              cache: true
+              run-install: false
 
         # Same reason as native.yml: pnpm won't expand env vars in a project-level
         # .npmrc auth setting, so the credential goes in the user-level config.
@@ -33,11 +32,11 @@ runs:
                 echo "::error::HUGEICONS_PRO_TOKEN is not set. @hugeicons-pro/* will 401."
                 exit 1
               fi
-              pnpm config set "//npm.hugeicons.com/:_authToken" "$HUGEICONS_PRO_TOKEN" --location user
+              vp pm config set "//npm.hugeicons.com/:_authToken" "$HUGEICONS_PRO_TOKEN" --location user
 
         - name: Install
           shell: bash
-          run: pnpm install --frozen-lockfile
+          run: vp install --frozen-lockfile
 
         # SECRET variables can't be read outside EAS; the workflow passes those
         # from repository secrets.

@@ -17,12 +17,11 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - uses: pnpm/action-setup@v4
-
-            - uses: actions/setup-node@v4
+            - uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af
               with:
                   node-version: 22
-                  cache: pnpm
+                  cache: true
+                  run-install: false
 
             # The @hugeicons-pro packages come from a private registry whose
             # credential cannot live in the committed .npmrc — pnpm refuses to expand
@@ -36,9 +35,9 @@ jobs:
                     echo "::error::HUGEICONS_PRO_TOKEN is not set. @hugeicons-pro/* will 401."
                     exit 1
                   fi
-                  pnpm config set "//npm.hugeicons.com/:_authToken" "$HUGEICONS_PRO_TOKEN" --location user
+                  vp pm config set "//npm.hugeicons.com/:_authToken" "$HUGEICONS_PRO_TOKEN" --location user
 
-            - run: pnpm install --frozen-lockfile
+            - run: vp install --frozen-lockfile
 
             # uniwind derives ThemeName from a declaration it generates off global.css.
             # That file is build output and gitignored, so on a clean clone ThemeName
@@ -52,19 +51,19 @@ jobs:
             # pass over the workspace, so this is not scoped to a filter the way
             # the per-package tasks below are.
             - name: Lint and format
-              run: pnpm exec vp check
+              run: vp check
 
             - name: Typecheck
-              run: pnpm exec vp run --filter @outlayr/native check-types
+              run: vp run --filter @outlayr/native check-types
 
             # `intlayer build` compiles a half-translated key without complaining and
             # the app then falls back to English at runtime. This is the only step
             # that fails on one.
             - name: i18n coverage
-              run: pnpm exec vp run --filter @outlayr/native i18n:test
+              run: vp run --filter @outlayr/native i18n:test
 
             - name: Tests
-              run: pnpm exec vp run --filter @outlayr/native test
+              run: vp run --filter @outlayr/native test
 
     bundle:
         name: expo export (ios)
@@ -72,12 +71,11 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - uses: pnpm/action-setup@v4
-
-            - uses: actions/setup-node@v4
+            - uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af
               with:
                   node-version: 22
-                  cache: pnpm
+                  cache: true
+                  run-install: false
 
             - name: Authenticate the private icon registry
               env:
@@ -87,9 +85,9 @@ jobs:
                     echo "::error::HUGEICONS_PRO_TOKEN is not set. @hugeicons-pro/* will 401."
                     exit 1
                   fi
-                  pnpm config set "//npm.hugeicons.com/:_authToken" "$HUGEICONS_PRO_TOKEN" --location user
+                  vp pm config set "//npm.hugeicons.com/:_authToken" "$HUGEICONS_PRO_TOKEN" --location user
 
-            - run: pnpm install --frozen-lockfile
+            - run: vp install --frozen-lockfile
 
             # `.intlayer/` is generated and gitignored. The `check-types` and `test`
             # scripts each run `intlayer build` themselves, so the other job never
@@ -99,7 +97,7 @@ jobs:
             # the only check that can catch a bundling regression permanently red.
             - name: Build the i18n catalog
               working-directory: apps/native
-              run: pnpm i18n:build
+              run: vp run i18n:build
 
             # A green lint/typecheck still lets a module-resolution or Metro config
             # regression through. Bundling is the cheapest check that the app can

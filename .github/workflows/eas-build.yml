@@ -139,7 +139,7 @@ jobs:
 
             # What `eas-build-post-install` ran on EAS Build.
             - name: Build the i18n dictionaries
-              run: pnpm exec intlayer build
+              run: vp exec intlayer build
 
             # The release skill compares main against this to choose between an OTA
             # and a new build. Generated before prebuild, the way the skill does.
