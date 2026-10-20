@@ -1,7 +1,13 @@
 import { insert, t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
-import { ACCOUNTS_SCREEN_ALT, BUDGETS_SCREEN_ALT, RECEIPT_SCAN_ANSWER } from "./shared";
+import {
+    ACCOUNTS_SCREEN_ALT,
+    BUDGETS_SCREEN_ALT,
+    OPEN_SOURCE_ANSWER,
+    OPEN_SOURCE_QUESTION,
+    RECEIPT_SCAN_ANSWER,
+} from "./shared";
 
 const OUTLAYR_LEAD = {
     en: "Outlayr is a free expense tracker you fill in by sentence, voice, or receipt.",
@@ -76,6 +82,8 @@ const LABELS = {
     currencies: t({ en: "Currencies", es: "Monedas" }),
     entries: t({ en: "Adding entries", es: "Cómo registras" }),
     focus: t({ en: "Tracks", es: "Sigue" }),
+    license: t({ en: "License", es: "Licencia" }),
+    phone: t({ en: "On a phone", es: "En el celular" }),
     platforms: t({ en: "Runs on", es: "Funciona en" }),
     price: t({ en: "Price", es: "Precio" }),
     subscriptions: t({ en: "Subscriptions", es: "Suscripciones" }),
@@ -1323,6 +1331,297 @@ const answers = {
                 title: t({
                     en: "The best expense tracker apps, by what you need.",
                     es: "La mejor app para controlar gastos, según lo que necesitas.",
+                }),
+            },
+            "best-open-source-expense-tracker-apps": {
+                apps: [
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://actualbudget.org/",
+                                text: t({
+                                    en: "Free. Hosting its sync server on PikaPods is paid",
+                                    es: "Gratis. Alojar su servidor de sincronización en PikaPods es de pago",
+                                }),
+                            },
+                            {
+                                label: LABELS.entries,
+                                source: "https://actualbudget.org/",
+                                text: t({
+                                    en: "By hand, QIF, OFX, QFX, CAMT.053, or CSV files, and bank sync through GoCardless in the EU and UK or SimpleFIN in the US and Canada",
+                                    es: "A mano, archivos QIF, OFX, QFX, CAMT.053 o CSV, y sincronización bancaria con GoCardless en la UE y el Reino Unido o con SimpleFIN en EE. UU. y Canadá",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://actualbudget.org/docs/budgeting/multi-currency/",
+                                text: t({
+                                    en: "One per budget. Other currencies through an experimental rule that converts them",
+                                    es: "Una por presupuesto. Otras monedas con una regla experimental que las convierte",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://actualbudget.org/download",
+                                text: t({ en: "Windows, macOS, Linux", es: "Windows, macOS, Linux" }),
+                            },
+                            {
+                                label: LABELS.phone,
+                                source: "https://actualbudget.org/docs/faq",
+                                text: t({
+                                    en: "A web app you add to the home screen. The official phone apps are deprecated",
+                                    es: "Una app web que agregas a la pantalla de inicio. Las apps oficiales para celular quedaron obsoletas",
+                                }),
+                            },
+                            {
+                                label: LABELS.license,
+                                source: "https://github.com/actualbudget/actual",
+                                text: t({ en: "MIT", es: "MIT" }),
+                            },
+                        ],
+                        name: "Actual Budget",
+                        slug: "actual",
+                        summary: t({
+                            en: "Actual Budget is a local-first envelope budgeting app for Windows, macOS, Linux, and the web, free and open source under the MIT license.",
+                            es: "Actual Budget es una app de presupuesto por sobres que guarda tus datos primero en tu equipo, para Windows, macOS, Linux y la web, gratis y de código abierto con licencia MIT.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://apps.apple.com/us/app/cashew-expense-budget-tracker/id6463662930",
+                                text: t({
+                                    en: "Free. Cashew Pro is $1.49 a month, $11.99 a year, or $19.99 once on the US App Store",
+                                    es: "Gratis. Cashew Pro cuesta $1.49 al mes, $11.99 al año o $19.99 en un solo pago en el App Store de EE. UU.",
+                                }),
+                            },
+                            {
+                                label: LABELS.entries,
+                                source: "https://github.com/jameskokoska/Cashew",
+                                text: t({
+                                    en: "By hand, CSV or Google Sheets import, or links that fill in a transaction for you",
+                                    es: "A mano, importando un CSV o una hoja de Google Sheets, o con enlaces que llenan un movimiento por ti",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://github.com/jameskokoska/Cashew",
+                                text: t({
+                                    en: "Several, with up-to-date conversion rates",
+                                    es: "Varias, con tasas de conversión actualizadas",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://github.com/jameskokoska/Cashew",
+                                text: t({ en: "iPhone, Android, web", es: "iPhone, Android, web" }),
+                            },
+                            {
+                                label: LABELS.license,
+                                source: "https://github.com/jameskokoska/Cashew",
+                                text: t({ en: "GPL-3.0", es: "GPL-3.0" }),
+                            },
+                        ],
+                        name: "Cashew",
+                        slug: "cashew",
+                        summary: t({
+                            en: "Cashew is an expense and budget tracker for iPhone, Android, and the web, free with an optional Pro, and open source under GPL-3.0.",
+                            es: "Cashew es una app de gastos y presupuesto para iPhone, Android y la web, gratis con un Pro opcional, y de código abierto con licencia GPL-3.0.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://github.com/firefly-iii/firefly-iii",
+                                text: t({
+                                    en: "Free to host yourself. Paid hosting on services like LumaDock or PikaPods",
+                                    es: "Gratis si lo alojas tú. Alojamiento de pago en servicios como LumaDock o PikaPods",
+                                }),
+                            },
+                            {
+                                label: LABELS.entries,
+                                source: "https://github.com/firefly-iii/data-importer",
+                                text: t({
+                                    en: "By hand, or the Data Importer for CSV and CAMT files and bank data from third-party providers, some of them paid",
+                                    es: "A mano, o con el Data Importer para archivos CSV y CAMT y datos bancarios de proveedores externos, algunos de pago",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://github.com/firefly-iii/firefly-iii",
+                                text: t({ en: "Any currency you want", es: "Cualquier moneda que quieras" }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://github.com/firefly-iii/firefly-iii",
+                                text: t({
+                                    en: "A web app on your own server, with Docker",
+                                    es: "Una app web en tu propio servidor, con Docker",
+                                }),
+                            },
+                            {
+                                label: LABELS.phone,
+                                source: "https://docs.firefly-iii.org/references/firefly-iii/third-parties/apps/",
+                                text: t({
+                                    en: "Through apps made by third parties, like Abacus or Waterfly III",
+                                    es: "Con apps hechas por terceros, como Abacus o Waterfly III",
+                                }),
+                            },
+                            {
+                                label: LABELS.license,
+                                source: "https://github.com/firefly-iii/firefly-iii",
+                                text: t({ en: "AGPL-3.0", es: "AGPL-3.0" }),
+                            },
+                        ],
+                        name: "Firefly III",
+                        slug: "firefly-iii",
+                        summary: t({
+                            en: "Firefly III is a self-hosted personal finance manager with budgets, rules, and recurring transactions, free and open source under AGPL-3.0.",
+                            es: "Firefly III es un gestor de finanzas personales que alojas tú mismo, con presupuestos, reglas y movimientos recurrentes, gratis y de código abierto con licencia AGPL-3.0.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://flow.gege.mn/",
+                                text: t({
+                                    en: "Free, with optional donations",
+                                    es: "Gratis, con donaciones opcionales",
+                                }),
+                            },
+                            {
+                                label: LABELS.entries,
+                                source: "https://flow.gege.mn/",
+                                text: t({
+                                    en: "By hand, iOS Shortcuts, recurring entries, or receipts read by Eny, a separate service",
+                                    es: "A mano, Atajos de iOS, movimientos recurrentes o recibos leídos por Eny, un servicio aparte",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://github.com/flow-mn/flow",
+                                text: t({
+                                    en: "As many as you want, crypto included. Rates need a connection",
+                                    es: "Todas las que quieras, cripto incluidas. Las tasas necesitan conexión",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://github.com/flow-mn/flow",
+                                text: t({ en: "iPhone and Android, in beta", es: "iPhone y Android, en beta" }),
+                            },
+                            {
+                                label: LABELS.license,
+                                source: "https://github.com/flow-mn/flow",
+                                text: t({ en: "GPL-3.0", es: "GPL-3.0" }),
+                            },
+                        ],
+                        name: "Flow",
+                        slug: "flow",
+                        summary: t({
+                            en: "Flow is a free expense tracker for iPhone and Android that works fully offline, with no analytics, open source under GPL-3.0.",
+                            es: "Flow es una app gratis para controlar gastos en iPhone y Android que funciona sin conexión y sin analíticas, de código abierto con licencia GPL-3.0.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            { label: LABELS.price, text: OUTLAYR.price },
+                            { label: LABELS.entries, text: OUTLAYR.entries },
+                            { label: LABELS.currencies, text: OUTLAYR.currencies },
+                            { label: LABELS.platforms, text: OUTLAYR.platforms },
+                            {
+                                label: LABELS.license,
+                                source: "https://github.com/danestves/outlayr",
+                                text: t({ en: "GPL-3.0 app, AGPL-3.0 server", es: "App GPL-3.0, servidor AGPL-3.0" }),
+                            },
+                        ],
+                        name: "Outlayr",
+                        slug: "outlayr",
+                        summary: t(OUTLAYR_LEAD),
+                    },
+                ],
+                facts: [
+                    {
+                        label: "Actual Budget",
+                        text: t({
+                            en: "Best if you want envelope budgeting on a computer, with bank sync in the US, Canada, the UK, or the EU",
+                            es: "Ideal si quieres presupuestar por sobres en la computadora, con sincronización bancaria en EE. UU., Canadá, el Reino Unido o la UE",
+                        }),
+                    },
+                    {
+                        label: "Cashew",
+                        text: t({
+                            en: "Best if you want one app on iPhone, Android, and the web, with CSV and Google Sheets import",
+                            es: "Ideal si quieres una sola app en iPhone, Android y la web, con importación de CSV y Google Sheets",
+                        }),
+                    },
+                    {
+                        label: "Firefly III",
+                        text: t({
+                            en: "Best if you want to run it on your own server, in any currency, with rules and an API",
+                            es: "Ideal si quieres usarla en tu propio servidor, en cualquier moneda, con reglas y una API",
+                        }),
+                    },
+                    {
+                        label: "Flow",
+                        text: t({
+                            en: "Best if you want a free phone app that works fully offline, with no analytics",
+                            es: "Ideal si quieres una app gratis para el celular que funcione sin conexión y sin analíticas",
+                        }),
+                    },
+                    {
+                        label: "Outlayr",
+                        text: t({
+                            en: "Best if you want to log by sentence, voice, or receipt, with each purchase at the rate from its day",
+                            es: "Ideal si quieres registrar con una oración, tu voz o un recibo, con cada compra a la tasa de su día",
+                        }),
+                    },
+                ],
+                faq: [
+                    {
+                        answer: t({
+                            en: "It depends on where you want it to run. Cashew and Flow are phone apps, and Cashew also runs on the web. Actual Budget runs on Windows, macOS, Linux, and the web, with envelope budgeting. Firefly III runs on your own server. Outlayr logs by sentence, voice, or receipt on iPhone, with Android coming. All five are free to start.",
+                            es: "Depende de dónde quieras usarla. Cashew y Flow son apps para el celular, y Cashew también funciona en la web. Actual Budget funciona en Windows, macOS, Linux y la web, con presupuesto por sobres. Firefly III funciona en tu propio servidor. Outlayr registra con una oración, tu voz o un recibo en iPhone, y pronto llegará a Android. Las cinco son gratis para empezar.",
+                        }),
+                        question: t({
+                            en: "What is the best open source expense tracker?",
+                            es: "¿Cuál es la mejor app de gastos de código abierto?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Cashew, Flow, and Outlayr are on the App Store. Actual Budget runs as a web app you add to the home screen, since its official phone apps are deprecated. Firefly III works through apps made by third parties.",
+                            es: "Cashew, Flow y Outlayr están en el App Store. Actual Budget funciona como una app web que agregas a la pantalla de inicio, porque sus apps oficiales para celular quedaron obsoletas. Firefly III funciona con apps hechas por terceros.",
+                        }),
+                        question: t({
+                            en: "Which open source expense tracker works on iPhone?",
+                            es: "¿Qué app de gastos de código abierto funciona en iPhone?",
+                        }),
+                    },
+                    { answer: OPEN_SOURCE_ANSWER, question: OPEN_SOURCE_QUESTION },
+                    COST_FAQ,
+                ],
+                lead: t({
+                    en: "Five open source expense trackers, each best for a different need: Actual Budget, Cashew, Firefly III, Flow, and Outlayr. Anyone can read the code of all five. Outlayr is ours; the other four are not.",
+                    es: "Cinco apps de gastos de código abierto, cada una mejor para algo distinto: Actual Budget, Cashew, Firefly III, Flow y Outlayr. Cualquiera puede leer el código de las cinco. Outlayr es nuestra; las otras cuatro no.",
+                }),
+                meta: {
+                    title: t({
+                        en: "Best Open Source Expense Tracker Apps (2026) · Outlayr",
+                        es: "Mejores apps de gastos de código abierto (2026) · Outlayr",
+                    }),
+                },
+                sources: t({
+                    en: "Each detail about the other apps links to the page it was read on",
+                    es: "Los datos de las otras apps enlazan a la página donde se leyeron",
+                }),
+                title: t({
+                    en: "The best open source expense trackers, by what you need.",
+                    es: "La mejor app de gastos de código abierto, según lo que necesitas.",
                 }),
             },
             "best-subscription-tracker-apps": {

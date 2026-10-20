@@ -20,6 +20,10 @@ const site = {
             guides: {
                 "apple-pay-expense-tracker": t({ en: "Apple Pay", es: "Apple Pay" }),
                 "best-expense-tracker-apps": t({ en: "Best expense trackers", es: "Mejores apps de gastos" }),
+                "best-open-source-expense-tracker-apps": t({
+                    en: "Open source trackers",
+                    es: "Apps de código abierto",
+                }),
                 "best-subscription-tracker-apps": t({
                     en: "Best subscription trackers",
                     es: "Mejores apps de suscripciones",

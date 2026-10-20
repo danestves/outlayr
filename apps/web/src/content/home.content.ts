@@ -1,7 +1,13 @@
 import { t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
-import { ACCOUNTS_SCREEN_ALT, BUDGETS_SCREEN_ALT, RECEIPT_SCAN_ANSWER } from "./shared";
+import {
+    ACCOUNTS_SCREEN_ALT,
+    BUDGETS_SCREEN_ALT,
+    OPEN_SOURCE_ANSWER,
+    OPEN_SOURCE_QUESTION,
+    RECEIPT_SCAN_ANSWER,
+} from "./shared";
 
 const home = {
     content: {
@@ -155,13 +161,7 @@ const home = {
                 }),
                 question: t({ en: "Who can see my financial data?", es: "¿Quién puede ver mis datos financieros?" }),
             },
-            {
-                answer: t({
-                    en: "Yes. The code for the app and its server is public on GitHub at github.com/danestves/outlayr. The app is licensed under GPL-3.0 and the server under AGPL-3.0.",
-                    es: "Sí. El código de la app y de su servidor es público en GitHub, en github.com/danestves/outlayr. La app usa la licencia GPL-3.0 y el servidor, AGPL-3.0.",
-                }),
-                question: t({ en: "Is Outlayr open source?", es: "¿Outlayr es de código abierto?" }),
-            },
+            { answer: OPEN_SOURCE_ANSWER, question: OPEN_SOURCE_QUESTION },
         ],
         faqTitle: t({ en: "Questions, answered.", es: "Preguntas y respuestas." }),
         hero: {

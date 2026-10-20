@@ -17,6 +17,7 @@ type GuideSlug = keyof ReturnType<typeof getIntlayer<"answers">>["guides"];
 const PLATES = {
     "apple-pay-expense-tracker": "/screens/log-an-expense.webp",
     "best-expense-tracker-apps": null,
+    "best-open-source-expense-tracker-apps": null,
     "best-subscription-tracker-apps": null,
     "budget-planner": "/screens/04.webp",
     "expense-tracker-template": null,
@@ -33,6 +34,14 @@ const PANELS = {
 } as const;
 
 const LISTS_CHECKED = new Date(Date.UTC(2026, 9, 9));
+
+const LISTS_RECHECKED = {
+    "best-open-source-expense-tracker-apps": new Date(Date.UTC(2026, 9, 20)),
+};
+
+function listChecked(slug: GuideSlug): Date {
+    return hasKey(LISTS_RECHECKED, slug) ? LISTS_RECHECKED[slug] : LISTS_CHECKED;
+}
 
 const WWW = /^www\./u;
 const WEBP = /\.webp$/u;
@@ -64,7 +73,7 @@ export const Route = createFileRoute("/{-$locale}/guides/$slug")({
                           ldJson(itemList(guide.apps.map((app) => ({ name: app.name, url: `${url}#${app.slug}` })))),
                           ldJson(
                               webPage(locale, `/guides/${loaderData}`, {
-                                  dateModified: LISTS_CHECKED.toISOString().slice(0, 10),
+                                  dateModified: listChecked(loaderData).toISOString().slice(0, 10),
                               })
                           ),
                       ]
@@ -229,7 +238,7 @@ function Guide() {
             aside={
                 plate !== null && "plateAlt" in guide ? <GuidePlate alt={guide.plateAlt.value} plate={plate} /> : null
             }
-            checked={"apps" in guide ? LISTS_CHECKED : undefined}
+            checked={"apps" in guide ? listChecked(slug) : undefined}
             hub="/guides"
             lead={guide.lead}
             related={nextAfter(guides, slug, 3).map((other) => ({
@@ -254,7 +263,7 @@ function Guide() {
             {"apps" in guide ? (
                 <p className="text-muted mt-4 text-sm">
                     {guide.sources}
-                    {labels.checked({ date: longDate(LISTS_CHECKED, LANGUAGES[locale].date) })}
+                    {labels.checked({ date: longDate(listChecked(slug), LANGUAGES[locale].date) })}
                 </p>
             ) : null}
         </Article>
