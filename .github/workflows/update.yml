@@ -33,9 +33,9 @@ concurrency:
 jobs:
     deploy_backend:
         name: Deploy Convex functions
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-26.04
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v7
 
             - uses: ./.github/actions/setup-native
               with:
@@ -61,7 +61,7 @@ jobs:
     publish:
         name: Publish ${{ inputs.platform }} JS to ${{ inputs.channel }}
         needs: [deploy_backend]
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-26.04
         env:
             EAS_BUILD_PROFILE: ${{ inputs.channel }}
             RELEASE_CHANNEL: ${{ inputs.channel }}
@@ -73,7 +73,7 @@ jobs:
                 shell: bash
                 working-directory: apps/native
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v7
 
             - uses: ./.github/actions/setup-native
               with:
