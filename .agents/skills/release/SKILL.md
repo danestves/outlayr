@@ -43,7 +43,7 @@ The script is read-only. It prints:
 | `NOTHING TO SHIP` | Report and stop. If the fingerprint differs, say that the next app change will need a build. |
 | `BACKEND ONLY` | Dispatch `deploy-backend.yml`. The app bundle doesn't import `packages/backend`, so there's nothing to publish. |
 | `OTA` | Write the message (step 3), then dispatch `update.yml`. |
-| `BUILD` | Run the `rnd build` it prints, then ship the binary (step 4). The printed fingerprint diff names the native source that forced it. |
+| `BUILD` | Dispatch `eas-build.yml` with the command it prints, then ship the binary (step 4). The printed fingerprint diff names the native source that forced it. |
 | `FIRST BUILD` | **Stop and ask.** No GitHub store build exists on this channel, so this binary would move testers onto a different backend, and every earlier EAS build stops receiving OTAs from this one on. Run `gh variable get EXPO_PUBLIC_CONVEX_URL --env $channel` and name the backend the binary would call. Check the setup below. |
 
 Before dispatching, read the commit list against the verdict. The file classification is a heuristic, but the fingerprint check is not. On Android it relies on a patched `@expo/fingerprint` that sees the Expo modules; `decide.sh` exits if the fingerprint lists none, and that is a stop to report, never one to work around. If a commit contradicts the verdict, for example a user-visible change that the path rules missed, stop and explain instead of dispatching.
@@ -60,19 +60,18 @@ The in-app What's new sheet shows `message` verbatim, split on `\n`:
 
 ## 4. Dispatch and wait
 
-From `apps/native`, run the command the verdict printed (with the message filled in for an OTA) in a background shell. A backend deploy or an OTA is a GitHub run, which `gh workflow run` prints the URL of; watch it to the end:
+From `apps/native`, run the command the verdict printed (with the message filled in for an OTA) in a background shell. Every verdict dispatches a GitHub run, which `gh workflow run` prints the URL of; watch it to the end:
 
 ```sh
 gh workflow run update.yml -f channel=$channel -f platform=ios -f message=$'First change\nSecond change'
 gh run watch <run id> --exit-status
 ```
 
-A `BUILD` dispatches `.github/workflows/eas-build.yml`, which deploys Convex and then builds. `rnd build` waits for the run and prints the build, whose `id` the next steps take. Then ship it:
+A `BUILD` dispatches `.github/workflows/eas-build.yml` on `main`, which deploys Convex and then builds. The command names the ref because the checkout is detached; `rnd build` would dispatch the local branch name, `HEAD`, and GitHub rejects it. Watch the run like an OTA, then ship it:
 
 ```sh
+gh run download <run id> -n application-archive -D build   # the .ipa or .aab
 rnd() { npx -y -p @react-native-feel/deploy@0.3.0 rnd "$@"; }
-rnd build:download --build-id <id> -p $platform   # into ./build, as a zip
-(cd build && unzip -o '*.zip')
 # iOS only: upload to App Store Connect and add it to TestFlight's Internal group.
 # The submit profile carries only App Store Connect details, so it serves both channels.
 rnd submit -p ios --profile production --path build/<name>.ipa --groups Internal
@@ -80,7 +79,7 @@ rnd submit -p ios --profile production --path build/<name>.ipa --groups Internal
 
 Android stops at the `.aab`: rnd can't submit to Play. Report its path; Daniel uploads it to the internal track in Play Console.
 
-Rough durations: backend about 3 minutes, OTA about 5. GitHub builds have no timing yet. If a run fails, read `gh run view <runId> --log-failed`, and on iOS the `xcode-logs` artifact. Report the failing step and don't retry blindly.
+Rough durations: backend about 3 minutes, OTA about 5, a store build about 35 including the backend. If a run fails, read `gh run view <runId> --log-failed`, and on iOS the `xcode-logs` artifact. Report the failing step and don't retry blindly.
 
 ## 5. Verify and report
 

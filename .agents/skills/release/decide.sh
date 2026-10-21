@@ -24,7 +24,8 @@ cd "$(git rev-parse --show-toplevel)/apps/native"
 export npm_config_loglevel=error
 
 field() { python3 -c "import json,sys; d=json.loads(sys.stdin.read(),strict=False); print($1)"; }
-ship="npx -y -p @react-native-feel/deploy@0.3.0 rnd build -p $platform -e $channel --json"
+ship="gh workflow run eas-build.yml --ref main -f platform=$platform -f profile=$channel -f runner=macos-26 \\
+  -f dispatch_id=$(python3 -c 'import uuid; print(uuid.uuid4())') -f config_json='{\"distribution\":\"store\"}'"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
