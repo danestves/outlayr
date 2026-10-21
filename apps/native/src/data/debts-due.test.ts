@@ -27,6 +27,7 @@ const cuota = (planId: string, sequence: number, dueDate: Date, amount = 30) => 
 function plansOf(rows: ReturnType<typeof cuota>[], paid: Record<string, number>, plans = [plan("shoes")]) {
     return assemblePlans(
         {
+            fees: [],
             installments: rows,
             outside: [],
             payments: Object.entries(paid).map(([planId, amount]) => ({ paid: amount, planId })),

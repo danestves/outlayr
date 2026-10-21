@@ -37,7 +37,7 @@ export function useInstallmentEntry(planId: string) {
     return { entry, leave, nowMs };
 }
 
-export function useOrderActions({ plan }: PlanWithStanding, leave: () => void) {
+export function useOrderActions({ plan, standing }: PlanWithStanding, leave: () => void) {
     const db = useDatabase();
     const router = useRouter();
     const t = useTranslation();
@@ -74,5 +74,7 @@ export function useOrderActions({ plan }: PlanWithStanding, leave: () => void) {
             },
         ]);
 
-    return { cuotaSheetRef, deletePending, editing, pay, setEditing };
+    const live = editing && (standing.rows.find(({ row }) => row.id === editing.id)?.row ?? editing);
+
+    return { cuotaSheetRef, deletePending, editing: live, pay, setEditing };
 }

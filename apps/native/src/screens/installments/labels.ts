@@ -1,6 +1,6 @@
 import type { InstallmentRow } from "@/data/installments-core";
 import { formatSentenceDate } from "@/domain/dates";
-import type { InstallmentStanding } from "@/domain/installments";
+import type { InstallmentStanding, PlanStanding } from "@/domain/installments";
 import { daysBetween, startOfLocalDay } from "@/domain/local-day";
 import type { TranslateFn } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
@@ -34,5 +34,20 @@ export function scheduleRowWording(
     } else if (row.status === "partial") {
         status = { text: t("installments.partly", { amount: money(row.covered) }), tone: "partial" };
     }
-    return { status, when };
+    const breakdown =
+        row.row.fee > 0
+            ? t("installments.fee.breakdown", { amount: money(row.row.amount), fee: money(row.row.fee) })
+            : null;
+    return { breakdown, status, when };
+}
+
+export function lateFeeSuggestion(
+    standing: PlanStanding<InstallmentRow>
+): { row: InstallmentRow; visible: boolean } | null {
+    const open = standing.rows.filter((row) => row.status !== "paid");
+    const last = open.findLast((row) => row.row.sequence > 0);
+    if (!last) {
+        return null;
+    }
+    return { row: last.row, visible: open.some((row) => row.overdue) && !open.some((row) => row.row.fee > 0) };
 }

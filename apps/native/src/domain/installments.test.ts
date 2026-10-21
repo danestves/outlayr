@@ -158,3 +158,52 @@ describe("planStanding", () => {
         ]);
     });
 });
+
+describe("planStanding with late fees", () => {
+    const cashea = [
+        { amount: 40, dueDate: day(2026, 10, 18), sequence: 0 },
+        { amount: 33.8, dueDate: day(2026, 11, 1), sequence: 1 },
+        { amount: 33.8, dueDate: day(2026, 11, 15), sequence: 2 },
+        { amount: 33.8, dueDate: day(2026, 11, 29), fee: 4, sequence: 3 },
+    ];
+
+    it("owes a fee on the last cuota while an earlier one is overdue, and pays it last", () => {
+        const late = planStanding(cashea, 40, day(2026, 11, 20), "USD");
+        expect(late.rows.map(({ overdue, owed, status }) => [owed, status, overdue])).toStrictEqual([
+            [40, "paid", false],
+            [33.8, "unpaid", true],
+            [33.8, "unpaid", true],
+            [37.8, "unpaid", false],
+        ]);
+        expect(late).toMatchObject({ remaining: 105.4, scheduled: 145.4 });
+        expect(late.next?.remaining).toBe(33.8);
+
+        const partly = planStanding(cashea, 40 + 33.8 + 33.8 + 20, day(2026, 11, 20), "USD");
+        expect(partly.next).toMatchObject({ covered: 20, remaining: 17.8, status: "partial" });
+
+        expect(planStanding(cashea, 145.4, day(2026, 12, 1), "USD")).toMatchObject({ finished: true, remaining: 0 });
+    });
+
+    it("reopens a cuota already paid at its base once a fee lands on it", () => {
+        const charged = cashea.map((row) => ({ ...row, fee: row.sequence === 1 ? 4 : 0 }));
+        const standing = planStanding(charged, 40 + 33.8 + 33.8, day(2026, 11, 20), "USD");
+        expect(standing.rows.map(({ remaining, status }) => [status, remaining])).toStrictEqual([
+            ["paid", 0],
+            ["paid", 0],
+            ["partial", 4],
+            ["unpaid", 33.8],
+        ]);
+        expect(standing.next?.row.sequence).toBe(2);
+        expect(standing.installmentsPaid).toBe(1);
+    });
+
+    it("adds a fee to its cuota in whole cents", () => {
+        const rows = [{ amount: 0.1, dueDate: day(2026, 11, 1), fee: 0.2, sequence: 1 }];
+        expect(planStanding(rows, 0.3, day(2026, 11, 2), "USD")).toMatchObject({
+            finished: true,
+            overpaid: 0,
+            remaining: 0,
+            scheduled: 0.3,
+        });
+    });
+});

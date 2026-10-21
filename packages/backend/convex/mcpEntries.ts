@@ -216,6 +216,7 @@ export const logEntry = internalMutation({
             imageColor: null,
             imageKey: null,
             income,
+            installmentId: null,
             localId,
             note: entry.note,
             onceRecurring: false,

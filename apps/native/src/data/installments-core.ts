@@ -1,17 +1,22 @@
 import { toAccountKind } from "@outlayr/money/account-kind";
-import { startOfDay } from "@outlayr/money/calendar";
-import { and, asc, eq, isNotNull, isNull, sql } from "drizzle-orm";
+import { firstOfMonth, startOfDay } from "@outlayr/money/calendar";
+import { canonicalUsd } from "@outlayr/money/canonical-usd";
+import { and, asc, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 
 import type { Database } from "@/db/client";
 import { accounts, installmentPlans, installments, outsidePayments, transactions, transfers } from "@/db/schema";
 import { withTransaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
-import { planStanding } from "@/domain/installments";
+import { orderName, planStanding } from "@/domain/installments";
 import type { InstallmentStanding, PlanStanding, ScheduledInstallment } from "@/domain/installments";
+import { roundToMinorUnits } from "@/domain/money";
+import { translateNow } from "@/i18n/runtime";
 
 import { getAccountById } from "./accounts-core";
+import { feeCategoryFor } from "./card-fees-core";
 import { frozenUsdAmount } from "./frozen-usd";
 import { tombstonePlans } from "./installment-cascade";
+import { localRateLookup } from "./rates";
 import { transactionsRepo } from "./transactions-core";
 import type { TransactionInput } from "./transactions-core";
 import { stageTransfer } from "./transfers-core";
@@ -37,6 +42,12 @@ export interface InstallmentOrderInput {
     schedule: readonly ScheduledInstallment[];
     /** Required with an upfront row (sequence 0): its source account, or null when paid outside Outlayr. */
     upfront?: PaymentSource | null;
+}
+
+export interface InstallmentFeeInput {
+    amount: number;
+    date?: Date;
+    installmentId: string;
 }
 
 export interface InstallmentPaymentInput {
@@ -67,6 +78,40 @@ function livePlan(db: Database, planId: string): InstallmentPlan {
         throw new Error("The installment order no longer exists");
     }
     return plan;
+}
+
+function liveInstallment(db: Database, installmentId: string) {
+    const [found] = db
+        .select({ plan: installmentPlans })
+        .from(installments)
+        .innerJoin(installmentPlans, eq(installmentPlans.id, installments.planId))
+        .where(
+            and(eq(installments.id, installmentId), isNull(installments.deletedAt), isNull(installmentPlans.deletedAt))
+        )
+        .limit(1)
+        .all();
+    if (!found) {
+        throw new Error("The installment no longer exists");
+    }
+    return found.plan;
+}
+
+function liveFees(db: Database, installmentId: string) {
+    return db
+        .select({ date: transactions.date, id: transactions.id })
+        .from(transactions)
+        .where(and(eq(transactions.installmentId, installmentId), isNull(transactions.deletedAt)))
+        .orderBy(desc(transactions.date))
+        .all();
+}
+
+async function tombstoneFees(db: Database, ids: readonly string[], now: Date): Promise<void> {
+    if (ids.length > 0) {
+        await db
+            .update(transactions)
+            .set({ deletedAt: now, updatedAt: now })
+            .where(and(inArray(transactions.id, [...ids]), isNull(transactions.deletedAt)));
+    }
 }
 
 function paymentTransfer(
@@ -115,6 +160,59 @@ function outsideRows(
 }
 
 export const installmentsRepo = {
+    async addFee(db: Database, input: InstallmentFeeInput): Promise<string> {
+        if (!(input.amount > 0)) {
+            throw new Error("A late fee must be positive");
+        }
+        const plan = liveInstallment(db, input.installmentId);
+        const account = liabilityAccount(db, plan.accountId);
+        const [current, ...extra] = liveFees(db, input.installmentId);
+        const date = input.date ?? current?.date ?? new Date();
+        const now = new Date();
+        const values = {
+            ...(await canonicalUsd(localRateLookup(db), {
+                amount: input.amount,
+                currency: account.currency,
+                date,
+                displayCurrency: account.currency,
+            })),
+            accountId: account.id,
+            amount: input.amount,
+            currency: account.currency,
+            date,
+            day: startOfDay(date),
+            installmentId: input.installmentId,
+            month: firstOfMonth(date),
+            updatedAt: now,
+        };
+        const id = current?.id ?? newId();
+        await withTransaction(db, async () => {
+            if (current) {
+                await db.update(transactions).set(values).where(eq(transactions.id, current.id));
+            } else {
+                const [purchase] = db
+                    .select({ categoryId: transactions.categoryId, note: transactions.note })
+                    .from(transactions)
+                    .where(eq(transactions.id, plan.transactionId))
+                    .limit(1)
+                    .all();
+                await db.insert(transactions).values({
+                    ...values,
+                    categoryId: feeCategoryFor(db, purchase?.categoryId ?? null),
+                    id,
+                    income: false,
+                    note: translateNow("installments.fee.note", { order: orderName(translateNow, purchase ?? null) }),
+                });
+            }
+            await tombstoneFees(
+                db,
+                extra.map((fee) => fee.id),
+                now
+            );
+        });
+        return id;
+    },
+
     async createOrder(db: Database, input: InstallmentOrderInput): Promise<{ planId: string; transactionId: string }> {
         const { purchase, schedule } = input;
         const account = liabilityAccount(db, purchase.accountId);
@@ -216,16 +314,35 @@ export const installmentsRepo = {
                 return;
             }
             await Promise.all(
-                entry.standing.rows.map(({ covered, row, status }) => {
+                entry.standing.rows.map(async ({ covered, row, status }) => {
                     if (status === "unpaid") {
-                        return installmentsRepo.deleteInstallment(db, row.id, now);
+                        await installmentsRepo.deleteInstallment(db, row.id, now);
+                        return;
                     }
-                    return status === "partial"
-                        ? installmentsRepo.updateInstallment(db, row.id, { amount: covered }, now)
-                        : null;
+                    if (status !== "partial") {
+                        return;
+                    }
+                    if (covered > row.fee) {
+                        const amount = roundToMinorUnits(covered - row.fee, entry.plan.currency);
+                        await installmentsRepo.updateInstallment(db, row.id, { amount }, now);
+                        return;
+                    }
+                    await db
+                        .update(transactions)
+                        .set({ installmentId: null, updatedAt: now })
+                        .where(and(eq(transactions.installmentId, row.id), isNull(transactions.deletedAt)));
+                    await installmentsRepo.updateInstallment(db, row.id, { amount: covered }, now);
                 })
             );
         });
+    },
+
+    async removeFee(db: Database, installmentId: string, now: Date = new Date()): Promise<void> {
+        await tombstoneFees(
+            db,
+            liveFees(db, installmentId).map((fee) => fee.id),
+            now
+        );
     },
 
     async recordPayment(db: Database, input: InstallmentPaymentInput): Promise<string> {
@@ -320,6 +437,42 @@ export function planPaymentsQuery(db: Database) {
         .groupBy(installmentPlans.id);
 }
 
+export function planFeesQuery(db: Database) {
+    return db
+        .select({ fee: sql<number>`sum(${transactions.amount})`, installmentId: installments.id })
+        .from(transactions)
+        .innerJoin(installments, eq(installments.id, transactions.installmentId))
+        .innerJoin(installmentPlans, eq(installmentPlans.id, installments.planId))
+        .innerJoin(accounts, eq(accounts.id, installmentPlans.accountId))
+        .where(
+            and(
+                isNotNull(transactions.installmentId),
+                isNull(transactions.deletedAt),
+                eq(transactions.income, false),
+                eq(transactions.accountId, installmentPlans.accountId),
+                eq(transactions.currency, accounts.currency)
+            )
+        )
+        .groupBy(installments.id);
+}
+
+export function lastFeeAmount(db: Database, accountId: string): number | null {
+    const [fee] = db
+        .select({ amount: transactions.amount })
+        .from(transactions)
+        .where(
+            and(
+                eq(transactions.accountId, accountId),
+                isNotNull(transactions.installmentId),
+                isNull(transactions.deletedAt)
+            )
+        )
+        .orderBy(desc(transactions.date))
+        .limit(1)
+        .all();
+    return fee?.amount ?? null;
+}
+
 export function liveOutsidePaymentsQuery(db: Database) {
     return db
         .select({
@@ -343,7 +496,9 @@ export function planPurchasesQuery(db: Database) {
 
 type RowOf<Query extends (db: Database) => { all: () => unknown[] }> = ReturnType<ReturnType<Query>["all"]>[number];
 export type PlanRow = RowOf<typeof livePlansQuery>;
-export type InstallmentRow = RowOf<typeof liveInstallmentsQuery>;
+type StoredInstallmentRow = RowOf<typeof liveInstallmentsQuery>;
+export type InstallmentRow = StoredInstallmentRow & { fee: number };
+type FeeRow = RowOf<typeof planFeesQuery>;
 type PaymentRow = RowOf<typeof planPaymentsQuery>;
 export type OutsidePaymentRow = RowOf<typeof liveOutsidePaymentsQuery>;
 export type PurchaseRow = RowOf<typeof planPurchasesQuery>;
@@ -366,7 +521,8 @@ export interface UpcomingInstallment {
 
 export function assemblePlans(
     reads: {
-        installments: readonly InstallmentRow[];
+        fees: readonly FeeRow[];
+        installments: readonly StoredInstallmentRow[];
         outside: readonly OutsidePaymentRow[];
         payments: readonly PaymentRow[];
         plans: readonly PlanRow[];
@@ -374,9 +530,10 @@ export function assemblePlans(
     },
     today: Date
 ): PlanWithStanding[] {
+    const feeByRow = new Map(reads.fees.map((row) => [row.installmentId, row.fee]));
     const rowsByPlan = new Map<string, InstallmentRow[]>();
     for (const row of reads.installments) {
-        rowsByPlan.set(row.planId, [...(rowsByPlan.get(row.planId) ?? []), row]);
+        rowsByPlan.set(row.planId, [...(rowsByPlan.get(row.planId) ?? []), { ...row, fee: feeByRow.get(row.id) ?? 0 }]);
     }
     const outsideByPlan = new Map<string, OutsidePaymentRow[]>();
     for (const row of reads.outside) {
@@ -417,6 +574,7 @@ export function upcomingInstallments(plans: readonly PlanWithStanding[], through
 export function readPlans(db: Database, today: Date, accountId?: string): PlanWithStanding[] {
     return assemblePlans(
         {
+            fees: planFeesQuery(db).all(),
             installments: liveInstallmentsQuery(db).all(),
             outside: liveOutsidePaymentsQuery(db).all(),
             payments: planPaymentsQuery(db).all(),

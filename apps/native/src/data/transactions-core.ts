@@ -7,7 +7,7 @@ import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { and, asc, desc, eq, gt, gte, inArray, isNotNull, isNull, lt, lte, sql } from "drizzle-orm";
 
 import type { Database } from "@/db/client";
-import { accounts, categories, transactions, transfers } from "@/db/schema";
+import { accounts, categories, installments, transactions, transfers } from "@/db/schema";
 import { withTransaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
 import { merchantKey } from "@/domain/merchant-resolver";
@@ -97,7 +97,7 @@ export type DeletedTransaction = {
 
 /**
  * Unbounded: the only way back for a soft-deleted entry. Excludes erased rows, transfer fees (a lone fee would
- * charge a transfer that no longer exists) and entries on deleted accounts.
+ * charge a transfer that no longer exists), late fees deleted with their order and entries on deleted accounts.
  */
 export function deletedTransactionsQuery(db: SpendDb) {
     return db
@@ -109,6 +109,7 @@ export function deletedTransactionsQuery(db: SpendDb) {
                 gt(transactions.date, ERASED_DATE),
                 isNull(transactions.transferId),
                 sql`(${transactions.feeForId} IS NULL OR NOT EXISTS (SELECT 1 FROM ${transactions} AS purchase WHERE purchase.id = ${transactions.feeForId} AND purchase.deletedAt IS NOT NULL))`,
+                sql`(${transactions.installmentId} IS NULL OR NOT EXISTS (SELECT 1 FROM ${installments} WHERE ${installments.id} = ${transactions.installmentId} AND ${installments.deletedAt} = ${transactions.deletedAt}))`,
                 sql`NOT EXISTS (SELECT 1 FROM ${accounts} WHERE ${accounts.id} = ${transactions.accountId} AND ${accounts.deletedAt} IS NOT NULL)`
             )
         )

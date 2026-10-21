@@ -134,6 +134,7 @@ export const transactions = sqliteTable(
         /** This device's photo path. Never replicated: it embeds a container uuid that changes on every app update. */
         imageUri: text("imageUri"),
         income: integer("income", { mode: "boolean" }).notNull(),
+        installmentId: text("installmentId"),
         month: integer("month", { mode: "timestamp_ms" }).notNull(),
         note: text("note").notNull().default(""),
         onceRecurring: integer("onceRecurring", { mode: "boolean" }).notNull().default(false),
@@ -168,6 +169,9 @@ export const transactions = sqliteTable(
         index("transactions_feeForId_idx")
             .on(table.feeForId)
             .where(sql`${table.feeForId} IS NOT NULL`),
+        index("transactions_installmentId_idx")
+            .on(table.installmentId)
+            .where(sql`${table.installmentId} IS NOT NULL`),
         index("transactions_day_idx").on(table.day),
         index("transactions_month_idx").on(table.month),
         index("transactions_categoryId_idx").on(table.categoryId),

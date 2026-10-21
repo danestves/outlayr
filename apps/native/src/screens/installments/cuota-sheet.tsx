@@ -20,8 +20,10 @@ import { EditorRow } from "@/screens/budgets/components/editor-row";
 
 import { installmentTitle } from "./labels";
 import { useCuotaEditor } from "./use-cuota-editor";
+import { useFeeEditor } from "./use-fee-editor";
 
 export interface CuotaSheetProps {
+    accountId: string;
     count: number;
     currency: string;
     /** The purchase's date: a cuota due before it would take the upfront's payment. */
@@ -31,7 +33,7 @@ export interface CuotaSheetProps {
     row: InstallmentRow | null;
 }
 
-export function CuotaSheet({ count, currency, earliest, onDismiss, ref, row }: CuotaSheetProps) {
+export function CuotaSheet({ accountId, count, currency, earliest, onDismiss, ref, row }: CuotaSheetProps) {
     const sheetSurface = useSheetSurface();
     const sheetRef = useRef<BottomSheetModal>(null);
     const setRefs = useMergedRef(sheetRef, ref);
@@ -47,6 +49,7 @@ export function CuotaSheet({ count, currency, earliest, onDismiss, ref, row }: C
                 <BottomSheetView style={{ paddingBottom: 36, paddingHorizontal: 20, paddingTop: 8 }}>
                     {row ? (
                         <CuotaBody
+                            accountId={accountId}
                             count={count}
                             currency={currency}
                             earliest={earliest}
@@ -62,12 +65,14 @@ export function CuotaSheet({ count, currency, earliest, onDismiss, ref, row }: C
 }
 
 function CuotaBody({
+    accountId,
     count,
     currency,
     earliest,
     onClose,
     row,
 }: {
+    accountId: string;
     count: number;
     currency: string;
     earliest?: Date;
@@ -83,6 +88,15 @@ function CuotaBody({
         onClose,
         row,
     });
+    const [hadFee] = useState(row.fee > 0);
+    const {
+        commit: commitFee,
+        open: openFee,
+        padRef: feePadRef,
+        padText: feePadText,
+        remove: removeFee,
+        setPadText: setFeePadText,
+    } = useFeeEditor({ accountId, currency, row });
 
     return (
         <View>
@@ -114,6 +128,30 @@ function CuotaBody({
                     onPress={() => padRef.current?.present()}
                     value={formatAmount(amount, currency, showCents, language)}
                 />
+                {row.fee > 0 ? (
+                    <Animated.View entering={hadFee ? undefined : revealEntering()}>
+                        <EditorRow
+                            label={t("installments.fee.label")}
+                            onPress={openFee}
+                            value={formatAmount(row.fee, currency, showCents, language)}
+                        />
+                        <Pressable
+                            accessibilityRole="button"
+                            className="border-border border-b py-3.5 active:opacity-60"
+                            onPress={removeFee}
+                        >
+                            <Text className="text-over-budget text-body">{t("installments.fee.remove")}</Text>
+                        </Pressable>
+                    </Animated.View>
+                ) : (
+                    <Pressable
+                        accessibilityRole="button"
+                        className="border-border border-b py-3.5 active:opacity-60"
+                        onPress={openFee}
+                    >
+                        <Text className="text-tint text-body">{t("installments.fee.add")}</Text>
+                    </Pressable>
+                )}
                 <Pressable
                     accessibilityRole="button"
                     className="border-border border-b py-3.5 active:opacity-60"
@@ -129,6 +167,14 @@ function CuotaBody({
                 onDone={commitAmount}
                 ref={padRef}
                 value={padText}
+            />
+            <AmountEntrySheet
+                code={currency}
+                minorUnits={minorUnits}
+                onChange={setFeePadText}
+                onDone={commitFee}
+                ref={feePadRef}
+                value={feePadText}
             />
         </View>
     );

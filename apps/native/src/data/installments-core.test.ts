@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import { utcDateString } from "@outlayr/money/dates";
 import { buildRateTable } from "@outlayr/money/valuation";
-import { eq, isNull } from "drizzle-orm";
+import { and, eq, isNotNull, isNull } from "drizzle-orm";
 
 import type { Database } from "@/db/client";
 import { exchangeRates, installmentPlans, installments, outsidePayments, transactions, transfers } from "@/db/schema";
@@ -344,5 +344,108 @@ describe("deleting an order", () => {
 
         await expect(db.select().from(installments)).resolves.toStrictEqual(before);
         await expect(balanceOf(cashea, tonight)).resolves.toBe(0);
+    });
+});
+
+describe("late fees", () => {
+    const tonight = new Date(2026, 9, 18, 23);
+    const cuota = async (planId: string, sequence: number) =>
+        (await db.select().from(installments).where(eq(installments.planId, planId))).find(
+            (row) => row.sequence === sequence
+        )?.id ?? "";
+    const liveFees = () =>
+        db
+            .select()
+            .from(transactions)
+            .where(and(isNotNull(transactions.installmentId), isNull(transactions.deletedAt)));
+
+    it("owes the fee on the order and settles the liability at zero once base and fee are paid", async () => {
+        const planId = await order();
+        await installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId: await cuota(planId, 3) });
+        expect(readPlans(db, PURCHASE)[0]?.standing).toMatchObject({ remaining: 64, scheduled: 104 });
+        await expect(balanceOf(cashea, tonight)).resolves.toBe(-64);
+
+        await installmentsRepo.recordPayment(db, { amount: 64, date: PURCHASE, planId, source: fromBank(64) });
+
+        expect(readPlans(db, PURCHASE)[0]?.standing).toMatchObject({ finished: true, overpaid: 0 });
+        await expect(balanceOf(cashea, tonight)).resolves.toBe(0);
+        await expect(balanceOf(bank, tonight)).resolves.toBe(-104);
+    });
+
+    it("replaces the cuota's fee instead of adding a second one", async () => {
+        const planId = await order();
+        const installmentId = await cuota(planId, 2);
+        const first = await installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId });
+        const second = await installmentsRepo.addFee(db, { amount: 5, installmentId });
+
+        expect(second).toBe(first);
+        await expect(liveFees()).resolves.toMatchObject([{ amount: 5, date: PURCHASE, income: false }]);
+        expect(readPlans(db, PURCHASE)[0]?.standing.remaining).toBe(65);
+    });
+
+    it("leaves the order when the fee is deleted from the ledger or removed from the cuota", async () => {
+        const planId = await order();
+        const installmentId = await cuota(planId, 1);
+        const fee = await installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId });
+
+        await transactionsRepo.remove(db, fee);
+        expect(readPlans(db, PURCHASE)[0]?.standing.remaining).toBe(60);
+        await expect(balanceOf(cashea, tonight)).resolves.toBe(-60);
+
+        await installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId });
+        await installmentsRepo.removeFee(db, installmentId);
+        expect(readPlans(db, PURCHASE)[0]?.standing.remaining).toBe(60);
+        await expect(liveFees()).resolves.toStrictEqual([]);
+    });
+
+    it("goes with the purchase and comes back when it is restored", async () => {
+        const planId = await order();
+        await installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId: await cuota(planId, 3) });
+        const [plan] = await db.select().from(installmentPlans);
+
+        await transactionsRepo.remove(db, plan?.transactionId ?? "");
+        await expect(balanceOf(cashea, tonight)).resolves.toBe(40);
+        await expect(liveFees()).resolves.toStrictEqual([]);
+
+        await transactionsRepo.restore(db, plan?.transactionId ?? "");
+        await expect(balanceOf(cashea, tonight)).resolves.toBe(-64);
+        expect(readPlans(db, PURCHASE)[0]?.standing.remaining).toBe(64);
+    });
+
+    it("keeps charged fees in the ledger when the pending cuotas are deleted", async () => {
+        const planId = await order();
+        await installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId: await cuota(planId, 2) });
+        await installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId: await cuota(planId, 3) });
+        await installmentsRepo.recordPayment(db, { amount: 42.2, date: PURCHASE, planId, source: fromBank(42.2) });
+        await expect(balanceOf(cashea, tonight)).resolves.toBeCloseTo(-25.8, 10);
+
+        await installmentsRepo.deletePlan(db, planId);
+
+        const standing = readPlans(db, PURCHASE)[0]?.standing;
+        expect(standing?.rows.map(({ row }) => [row.sequence, row.amount, row.fee])).toStrictEqual([
+            [0, 40, 0],
+            [1, 20, 0],
+            [2, 18.2, 4],
+        ]);
+        expect(standing).toMatchObject({ finished: true, remaining: 0 });
+        await expect(balanceOf(cashea, tonight)).resolves.toBeCloseTo(-25.8, 10);
+        await expect(liveFees()).resolves.toHaveLength(2);
+    });
+
+    it("detaches the fee from a cuota trimmed below it", async () => {
+        const planId = await order();
+        await installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId: await cuota(planId, 2) });
+        await installmentsRepo.recordPayment(db, { amount: 23, date: PURCHASE, planId, source: fromBank(23) });
+
+        await installmentsRepo.deletePlan(db, planId);
+
+        const standing = readPlans(db, PURCHASE)[0]?.standing;
+        expect(standing?.rows.map(({ row }) => [row.sequence, row.amount, row.fee])).toStrictEqual([
+            [0, 40, 0],
+            [1, 20, 0],
+            [2, 3, 0],
+        ]);
+        expect(standing).toMatchObject({ finished: true, paid: 63 });
+        await expect(balanceOf(cashea, tonight)).resolves.toBe(-41);
     });
 });

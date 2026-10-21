@@ -49,6 +49,7 @@ export const transactionFields = {
     /** A key, not a url: `r2.getUrl` signs for 15 minutes, so every read re-mints from the key. */
     imageKey: v.union(v.string(), v.null()),
     income: v.boolean(),
+    installmentId: v.optional(v.union(v.string(), v.null())),
     month: v.number(),
     note: v.string(),
     onceRecurring: v.boolean(),

@@ -195,6 +195,30 @@ const installments = {
             en: "Couldn't save",
             es: "No se pudo guardar",
         }),
+        "installments.fee.add": t({
+            en: "Add late fee",
+            es: "Agregar recargo",
+        }),
+        "installments.fee.breakdown": t({
+            en: "{amount} + {fee} late fee",
+            es: "{amount} + {fee} recargo",
+        }),
+        "installments.fee.label": t({
+            en: "Late fee",
+            es: "Recargo",
+        }),
+        "installments.fee.note": t({
+            en: "Late fee · {order}",
+            es: "Recargo · {order}",
+        }),
+        "installments.fee.remove": t({
+            en: "Remove late fee",
+            es: "Quitar recargo",
+        }),
+        "installments.fee.suggest": t({
+            en: "Charged a late fee?",
+            es: "¿Te cobraron recargo?",
+        }),
         "installments.finished_one": t({
             en: "{count} paid off",
             es: "{count} pagada",

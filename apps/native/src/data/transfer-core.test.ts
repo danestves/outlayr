@@ -65,6 +65,7 @@ function makeDb(options?: { withRealTransactions?: boolean }): Database {
 			feeForId text,
 			feeRate real,
 			paidVia text,
+			installmentId text,
 			restoredAt integer,
 			updatedAt integer NOT NULL, deletedAt integer
 		);

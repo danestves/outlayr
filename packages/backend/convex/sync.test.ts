@@ -297,6 +297,17 @@ describe("push table coverage", () => {
         expect(row?.fields).toMatchObject({ installmentPlanId: "plan-1", note: "cuota 2" });
     });
 
+    it("keeps a late fee's cuota link when a build that predates it edits the fee", async () => {
+        const t = harness();
+        const owner = await seedProUser(t);
+
+        await pushAs(t, owner, DEVICE_A, [transactionRow("fee-1", 1, { fields: { installmentId: "cuota-3" } })]);
+        await pushAs(t, owner, DEVICE_B, [transactionRow("fee-1", 2, { fields: { note: "Recargo" } })]);
+
+        const [row] = (await pullAs(t, owner, 0)).rows;
+        expect(row?.fields).toMatchObject({ installmentId: "cuota-3", note: "Recargo" });
+    });
+
     it("round-trips an account and a transaction that names it", async () => {
         const t = harness();
         const owner = await seedProUser(t);

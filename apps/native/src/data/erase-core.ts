@@ -42,6 +42,7 @@ export const ERASED_TRANSACTION = {
     imageKey: null,
     imageUri: null,
     income: false,
+    installmentId: null,
     month: ERASED_DATE,
     note: "",
     onceRecurring: false,

@@ -9,6 +9,7 @@ import {
     liveInstallmentsQuery,
     liveOutsidePaymentsQuery,
     livePlansQuery,
+    planFeesQuery,
     planPaymentsQuery,
     planPurchasesQuery,
     upcomingInstallments,
@@ -24,9 +25,10 @@ export function useInstallmentPlans(db: Database, nowMs: number, accountId?: str
     const payments = useLiveQuery(transfers, () => planPaymentsQuery(db));
     const outside = useLiveQuery(outsidePayments, () => liveOutsidePaymentsQuery(db));
     const purchases = useLiveQuery(transactions, () => planPurchasesQuery(db));
+    const fees = useLiveQuery(transactions, () => planFeesQuery(db));
     return useMemo(
-        () => assemblePlans({ installments: rows, outside, payments, plans, purchases }, new Date(nowMs)),
-        [nowMs, outside, payments, plans, purchases, rows]
+        () => assemblePlans({ fees, installments: rows, outside, payments, plans, purchases }, new Date(nowMs)),
+        [fees, nowMs, outside, payments, plans, purchases, rows]
     );
 }
 

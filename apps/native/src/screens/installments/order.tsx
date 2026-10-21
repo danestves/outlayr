@@ -19,7 +19,8 @@ import { formatAmount } from "@/domain/money";
 import { useLanguage, useTranslation } from "@/i18n/context";
 
 import { CuotaSheet } from "./cuota-sheet";
-import { installmentTitle, scheduleRowWording } from "./labels";
+import { FeeSuggestion } from "./fee-suggestion";
+import { installmentTitle, lateFeeSuggestion, scheduleRowWording } from "./labels";
 import { useInstallmentEntry, useOrderActions } from "./use-order";
 
 export function InstallmentOrder({ planId }: { planId: string }) {
@@ -38,6 +39,7 @@ function OrderLoaded({ entry, leave, nowMs }: { entry: PlanWithStanding; leave: 
     const name = orderName(t, purchase);
     const planLine = orderPlanPhrase(t, standing.rows);
     const { cuotaSheetRef, deletePending, editing, pay, setEditing } = useOrderActions(entry, leave);
+    const feeSuggestion = lateFeeSuggestion(standing);
 
     return (
         <>
@@ -87,6 +89,15 @@ function OrderLoaded({ entry, leave, nowMs }: { entry: PlanWithStanding; leave: 
                         </Button>
                     </View>
                 ) : null}
+                {feeSuggestion ? (
+                    <FeeSuggestion
+                        accountId={plan.accountId}
+                        currency={plan.currency}
+                        key={feeSuggestion.row.id}
+                        row={feeSuggestion.row}
+                        visible={feeSuggestion.visible}
+                    />
+                ) : null}
 
                 <MonoLabel accessibilityRole="header" className="pt-7 pb-1.5">
                     {t("installments.schedule")}
@@ -106,6 +117,7 @@ function OrderLoaded({ entry, leave, nowMs }: { entry: PlanWithStanding; leave: 
                 </View>
             </ScrollView>
             <CuotaSheet
+                accountId={plan.accountId}
                 count={standing.installmentsTotal}
                 currency={plan.currency}
                 earliest={purchase?.date}
@@ -131,7 +143,7 @@ interface ScheduleRowProps {
 function ScheduleRow({ count, isNext, money, nowMs, onPress, row }: ScheduleRowProps) {
     const t = useTranslation();
     const { language } = useLanguage();
-    const { status, when } = scheduleRowWording(t, language, row, { isNext, money, nowMs });
+    const { breakdown, status, when } = scheduleRowWording(t, language, row, { isNext, money, nowMs });
     return (
         <Pressable
             accessibilityRole={onPress ? "button" : undefined}
@@ -144,7 +156,8 @@ function ScheduleRow({ count, isNext, money, nowMs, onPress, row }: ScheduleRowP
                 <Text className={row.overdue ? "text-expense text-subtitle" : "text-muted text-subtitle"}>{when}</Text>
             </View>
             <View className="items-end gap-0.5">
-                <Text className="text-body text-foreground tabular-nums">{money(row.row.amount)}</Text>
+                <Text className="text-body text-foreground tabular-nums">{money(row.owed)}</Text>
+                {breakdown ? <Text className="text-muted text-subtitle tabular-nums">{breakdown}</Text> : null}
                 {status ? <Text className={`${STATUS_TONE[status.tone]} text-subtitle`}>{status.text}</Text> : null}
             </View>
         </Pressable>

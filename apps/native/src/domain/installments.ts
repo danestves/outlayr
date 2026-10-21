@@ -149,12 +149,14 @@ export function generateSchedule(template: ScheduleTemplate): ScheduledInstallme
 export interface InstallmentLike {
     amount: number;
     dueDate: Date;
+    fee?: number;
     sequence: number;
 }
 
 export interface InstallmentStanding<Row extends InstallmentLike> {
     covered: number;
     overdue: boolean;
+    owed: number;
     remaining: number;
     row: Row;
     status: "paid" | "partial" | "unpaid";
@@ -186,11 +188,11 @@ export function planStanding<Row extends InstallmentLike>(
     let scheduledMinor = 0;
 
     const standings = ordered.map((row): InstallmentStanding<Row> => {
-        const amountMinor = toMinor(row.amount, currency);
-        scheduledMinor += amountMinor;
-        const coveredMinor = Math.min(Math.max(left, 0), amountMinor);
+        const owedMinor = toMinor(row.amount, currency) + toMinor(row.fee ?? 0, currency);
+        scheduledMinor += owedMinor;
+        const coveredMinor = Math.min(Math.max(left, 0), owedMinor);
         left -= coveredMinor;
-        const remainingMinor = amountMinor - coveredMinor;
+        const remainingMinor = owedMinor - coveredMinor;
         let status: InstallmentStanding<Row>["status"] = "partial";
         if (remainingMinor === 0) {
             status = "paid";
@@ -200,6 +202,7 @@ export function planStanding<Row extends InstallmentLike>(
         return {
             covered: fromMinor(coveredMinor, currency),
             overdue: remainingMinor > 0 && row.dueDate.getTime() < todayMs,
+            owed: fromMinor(owedMinor, currency),
             remaining: fromMinor(remainingMinor, currency),
             row,
             status,

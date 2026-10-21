@@ -2,7 +2,7 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 
 import type { Database } from "@/db/client";
-import { installmentPlans, installments, outsidePayments, transfers } from "@/db/schema";
+import { installmentPlans, installments, outsidePayments, transactions, transfers } from "@/db/schema";
 
 const PLAN_CHILDREN = [installments, outsidePayments] as const;
 
@@ -36,6 +36,25 @@ export async function tombstonePlans(db: Database, where: SQL, now: Date, unlink
 
 // Payments stay linked so a restore can bring the order back.
 export async function tombstonePlansForTransaction(db: Database, transactionId: string, now: Date): Promise<void> {
+    const plans = db
+        .select({ id: installmentPlans.id })
+        .from(installmentPlans)
+        .where(and(eq(installmentPlans.transactionId, transactionId), isNull(installmentPlans.deletedAt)));
+    await db
+        .update(transactions)
+        .set({ deletedAt: now, updatedAt: now })
+        .where(
+            and(
+                isNull(transactions.deletedAt),
+                inArray(
+                    transactions.installmentId,
+                    db
+                        .select({ id: installments.id })
+                        .from(installments)
+                        .where(and(isNull(installments.deletedAt), inArray(installments.planId, plans)))
+                )
+            )
+        );
     await tombstonePlans(db, eq(installmentPlans.transactionId, transactionId), now, false);
 }
 
@@ -48,6 +67,29 @@ export async function restorePlansForTransaction(
     restoredAt: Date
 ): Promise<void> {
     const taken = and(eq(installmentPlans.transactionId, transactionId), eq(installmentPlans.deletedAt, deletedAt));
+    await db
+        .update(transactions)
+        .set({ deletedAt: null, restoredAt, updatedAt: now })
+        .where(
+            and(
+                eq(transactions.deletedAt, deletedAt),
+                inArray(
+                    transactions.installmentId,
+                    db
+                        .select({ id: installments.id })
+                        .from(installments)
+                        .where(
+                            and(
+                                eq(installments.deletedAt, deletedAt),
+                                inArray(
+                                    installments.planId,
+                                    db.select({ id: installmentPlans.id }).from(installmentPlans).where(taken)
+                                )
+                            )
+                        )
+                )
+            )
+        );
     await Promise.all(
         PLAN_CHILDREN.map((child) =>
             db

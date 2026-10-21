@@ -243,6 +243,7 @@ const SPECS = {
             "feeForId",
             "feeRate",
             "paidVia",
+            "installmentId",
         ],
         id: transactions.id,
         table: transactions,
