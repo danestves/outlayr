@@ -13,7 +13,7 @@ import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n";
 import { useMotionScan } from "@/lib/motion";
 import { faqPage, ldJson, pageMeta } from "@/lib/seo";
-import { APP_STORE_URL, COMPANY, SITE_URL } from "@/lib/site";
+import { APP_STORE_URL, COMPANY, PLAY_STORE_URL, SITE_URL } from "@/lib/site";
 
 const AGENT_LINKS = [
     '</.well-known/api-catalog>; rel="api-catalog"',
@@ -30,13 +30,13 @@ function appGraph(locale: Locale) {
         "@type": "MobileApplication",
         applicationCategory: "FinanceApplication",
         description: meta.description,
-        downloadUrl: APP_STORE_URL,
+        downloadUrl: [APP_STORE_URL, PLAY_STORE_URL],
         featureList: extras.map((extra) => `${extra.label}: ${extra.text}`),
         image: `${SITE_URL}${LANGUAGES[locale].image}`,
         inLanguage: Object.values(LANGUAGES).map((language) => language.lang),
         name: "Outlayr",
         offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-        operatingSystem: "iOS 18.0",
+        operatingSystem: "iOS 18.0, Android",
         publisher: { "@id": `${SITE_URL}/#organization`, "@type": "Organization", name: COMPANY },
         url: SITE_URL,
     };

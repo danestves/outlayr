@@ -23,15 +23,15 @@ const support = {
             },
             {
                 answer: t({
-                    en: "Cancel from your app store’s subscriptions page. On iPhone: open the Settings app, tap your name, then Subscriptions, then Outlayr. Pro stays on until the period you paid for ends.",
-                    es: "Cancélalo desde la página de suscripciones de tu tienda de apps. En iPhone: abre la app Configuración, toca tu nombre, luego Suscripciones y luego Outlayr. Pro sigue activo hasta que termine el período que pagaste.",
+                    en: "Cancel from your app store’s subscriptions page. On iPhone: open the Settings app, tap your name, then Subscriptions, then Outlayr. On Android: open the Google Play Store app, tap your profile picture, then Payments & subscriptions, then Subscriptions, then Outlayr. Pro stays on until the period you paid for ends.",
+                    es: "Cancélalo desde la página de suscripciones de tu tienda de apps. En iPhone: abre la app Configuración, toca tu nombre, luego Suscripciones y luego Outlayr. En Android: abre la app Google Play Store, toca tu foto de perfil, luego Pagos y suscripciones, luego Suscripciones y luego Outlayr. Pro sigue activo hasta que termine el período que pagaste.",
                 }),
                 question: t({ en: "How do I cancel Pro?", es: "¿Cómo cancelo Pro?" }),
             },
             {
                 answer: t({
-                    en: "Purchases go through your app store, so refunds do too. On iPhone, request one at reportaproblem.apple.com.",
-                    es: "Las compras pasan por tu tienda de apps, así que los reembolsos también. En iPhone, pide uno en reportaproblem.apple.com.",
+                    en: "Purchases go through your app store, so refunds do too. On iPhone, request one at reportaproblem.apple.com. On Android, follow Google Play’s steps at support.google.com/googleplay/answer/2479637.",
+                    es: "Las compras pasan por tu tienda de apps, así que los reembolsos también. En iPhone, pide uno en reportaproblem.apple.com. En Android, sigue los pasos de Google Play en support.google.com/googleplay/answer/2479637.",
                 }),
                 question: t({ en: "Can I get a refund?", es: "¿Puedo pedir un reembolso?" }),
             },

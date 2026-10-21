@@ -28,8 +28,8 @@ const story = {
                 t({ en: "English and Spanish", es: "Inglés y español" }),
             ],
             status: t({
-                en: "Now on the App Store. Google Play is next.",
-                es: "Ya en el App Store. Google Play viene después.",
+                en: "Now on the App Store and Google Play.",
+                es: "Ya en el App Store y Google Play.",
             }),
         },
         how: {
@@ -83,13 +83,13 @@ const story = {
         pricing: {
             label: t({ en: "Pricing", es: "Precios" }),
             lead: t({
-                en: "The tracker is free and has no ads. Pro lifts the limits and adds sync. Cancel anytime in your App Store settings, or buy it once.",
-                es: "La app es gratis y no tiene anuncios. Pro quita los límites y agrega la sincronización. Cancela cuando quieras desde los ajustes del App Store, o cómpralo una sola vez.",
+                en: "The tracker is free and has no ads. Pro lifts the limits and adds sync. Cancel anytime from your app store, or buy it once.",
+                es: "La app es gratis y no tiene anuncios. Pro quita los límites y agrega la sincronización. Cancela cuando quieras desde tu tienda de apps, o cómpralo una sola vez.",
             }),
             month: t({ en: "a month", es: "al mes" }),
             note: t({
-                en: "US prices. The App Store shows the price for your country.",
-                es: "Precios de Estados Unidos. El App Store muestra el precio de tu país.",
+                en: "US prices. Your app store shows the price for your country.",
+                es: "Precios de Estados Unidos. Tu tienda de apps muestra el precio de tu país.",
             }),
             other: t({ en: "Or $49.99 a year, or $129.99 once.", es: "O US$49.99 al año, o US$129.99 una sola vez." }),
             price: t({ en: "$7.99", es: "US$7.99" }),

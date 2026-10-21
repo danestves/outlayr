@@ -2,7 +2,7 @@ import { useIntlayer, useLocale } from "react-intlayer";
 
 import { capture } from "@/lib/analytics";
 import type { Locale } from "@/lib/i18n";
-import { APP_STORE_URL } from "@/lib/site";
+import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/site";
 
 const APP_STORE_BADGE = {
     en: "/badges/app-store.svg",
@@ -35,16 +35,19 @@ export function StoreBadges({ placement }: { placement: Placement }) {
                     width={120}
                 />
             </a>
-            <span aria-disabled="true" className="flex shrink-0 items-center gap-3">
+            <a
+                className="fluid shrink-0 hover:-translate-y-0.5 active:translate-y-px"
+                href={PLAY_STORE_URL}
+                onClick={() => capture("google_play_badge_clicked", { placement })}
+            >
                 <img
-                    alt={`${badges.googlePlay.value}, ${badges.comingSoon.value}`}
-                    className="h-12 w-auto opacity-40 grayscale"
+                    alt={badges.googlePlay.value}
+                    className="h-12 w-auto"
                     height={googlePlay.height}
                     src={googlePlay.src}
                     width={googlePlay.width}
                 />
-                <span className="text-muted text-sm">{badges.comingSoon}</span>
-            </span>
+            </a>
         </div>
     );
 }

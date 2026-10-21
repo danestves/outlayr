@@ -5,7 +5,7 @@ description: Prepare a CSV of transactions that Outlayr, the mobile expense trac
 
 # Outlayr
 
-Outlayr is a mobile expense tracker, budget app, and subscription tracker, on iPhone today and coming soon to Google Play for Android. Entries live on the phone. There is no bank linking, so the only way to bring history in is a CSV file the user imports in the app.
+Outlayr is a mobile expense tracker, budget app, and subscription tracker, on iPhone and Android. Entries live on the phone. There is no bank linking, so the only way to bring history in is a CSV file the user imports in the app.
 
 ## Facts about Outlayr
 
@@ -39,4 +39,4 @@ Leave out transfers between the user's own accounts and credit card payments. Th
 
 ## Importing
 
-On iPhone, the user opens the Log, taps the add button, and picks **Import a CSV**. Outlayr guesses the columns from the header, shows a preview of every row it will write and every row it cannot read, and asks the user to link categories before anything is saved.
+The user opens the Log, taps the add button, and picks **Import a CSV**. Outlayr guesses the columns from the header, shows a preview of every row it will write and every row it cannot read, and asks the user to link categories before anything is saved.

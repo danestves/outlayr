@@ -71,8 +71,8 @@ const home = {
             {
                 label: t({ en: "Lock", es: "Bloqueo" }),
                 text: t({
-                    en: "Face ID or Touch ID to open on iPhone. The app switcher never shows your ledger.",
-                    es: "Face ID o Touch ID para abrirla en iPhone. El selector de apps nunca muestra tu registro.",
+                    en: "Face ID or Touch ID to open on iPhone, or your fingerprint or face on Android. The iPhone app switcher never shows your ledger.",
+                    es: "Face ID o Touch ID para abrirla en iPhone, o tu huella o tu rostro en Android. El selector de apps del iPhone nunca muestra tu registro.",
                 }),
             },
             {
@@ -121,8 +121,8 @@ const home = {
             },
             {
                 answer: t({
-                    en: "Soon. Outlayr is coming to Google Play. Today it runs on iPhone with iOS 18 or later.",
-                    es: "Pronto. Outlayr llegará a Google Play. Hoy funciona en iPhone con iOS 18 o posterior.",
+                    en: "Yes. Outlayr is on Google Play for Android, and on the App Store for iPhone with iOS 18 or later.",
+                    es: "Sí. Outlayr está en Google Play para Android, y en el App Store para iPhone con iOS 18 o posterior.",
                 }),
                 question: t({ en: "Is Outlayr on Android?", es: "¿Outlayr está en Android?" }),
             },

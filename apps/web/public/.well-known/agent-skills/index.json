@@ -6,7 +6,7 @@
             "type": "skill-md",
             "description": "Prepare a CSV of transactions that Outlayr, the mobile expense tracker, imports cleanly, and look up accurate facts about Outlayr. Use when someone wants to move spending from a bank export, a spreadsheet, or another app into Outlayr, asks what Outlayr does, costs, or supports, or wants an assistant to read their Outlayr spending.",
             "url": "/.well-known/agent-skills/outlayr/SKILL.md",
-            "digest": "sha256:1bd31e4a9a0ecc2367808fda7705f5613cdc2dedc46adbadb5d79194f64e5c85"
+            "digest": "sha256:57e694aee35773bc954394f11f5e04c35c803160e1862e459a495c3aa9d9a5b7"
         }
     ]
 }

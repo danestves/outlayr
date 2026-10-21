@@ -72,7 +72,7 @@ const OUTLAYR = {
         en: "Daily spending, budgets, and savings goals",
         es: "Gastos diarios, presupuestos y metas de ahorro",
     }),
-    platforms: t({ en: "iPhone. Android soon", es: "iPhone. Pronto en Android" }),
+    platforms: t({ en: "iPhone, Android", es: "iPhone, Android" }),
     price: t({ en: "Free. Pro monthly, yearly, or once", es: "Gratis. Pro al mes, al año o en un solo pago" }),
 };
 
@@ -91,8 +91,8 @@ const LABELS = {
 
 const COST_FAQ = {
     answer: t({
-        en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 20 voice or receipt captures every 30 days, 2 accounts, 2 category budgets, and accounts in one currency. Outlayr Pro raises those limits and adds sync. It is billed monthly or yearly, or bought once, at prices set per country in the App Store.",
-        es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 20 capturas de voz o de recibos cada 30 días, 2 cuentas, 2 presupuestos por categoría y cuentas en una moneda. Outlayr Pro sube esos límites y agrega la sincronización. Se paga al mes, al año o en un solo pago, con precios por país en el App Store.",
+        en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 20 voice or receipt captures every 30 days, 2 accounts, 2 category budgets, and accounts in one currency. Outlayr Pro raises those limits and adds sync. It is billed monthly or yearly, or bought once, at prices set per country in your app store.",
+        es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 20 capturas de voz o de recibos cada 30 días, 2 cuentas, 2 presupuestos por categoría y cuentas en una moneda. Outlayr Pro sube esos límites y agrega la sincronización. Se paga al mes, al año o en un solo pago, con precios por país en tu tienda de apps.",
     }),
     question: t({ en: "How much does Outlayr cost?", es: "¿Cuánto cuesta Outlayr?" }),
 };
@@ -114,7 +114,7 @@ const DAY_RATE = t({
     en: "Want each purchase converted at the rate from its day",
     es: "Quieres cada compra convertida con la tasa de su día",
 });
-const NEED_ANDROID_OR_WEB = t({ en: "Need Android or a web app today", es: "Necesitas Android o una app web hoy" });
+const NEED_WEB = t({ en: "Need a web app today", es: "Necesitas una app web hoy" });
 const OUTSIDE_US = t({ en: "Live outside the United States", es: "Vives fuera de Estados Unidos" });
 const SEVERAL_CURRENCIES = t({ en: "Spend in more than one currency", es: "Gastas en más de una moneda" });
 const SYNC_ACCOUNTS = t({
@@ -215,8 +215,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes. Outlayr is offered in all 175 App Store countries and regions, Canada included, with 165 currencies. EveryDollar's mobile app is sold in the United States App Store and Google Play only, and it supports US dollars.",
-                            es: "Sí. Outlayr se ofrece en los 175 países y regiones del App Store, Canadá incluido, con 165 monedas. La app móvil de EveryDollar solo se vende en el App Store y Google Play de Estados Unidos, y admite dólares estadounidenses.",
+                            en: "Yes. Outlayr is offered in 175 countries and regions, Canada included, with 165 currencies. EveryDollar's mobile app is sold in the United States App Store and Google Play only, and it supports US dollars.",
+                            es: "Sí. Outlayr se ofrece en 175 países y regiones, Canadá incluido, con 165 monedas. La app móvil de EveryDollar solo se vende en el App Store y Google Play de Estados Unidos, y admite dólares estadounidenses.",
                         }),
                         question: t({
                             en: "Does Outlayr work in Canada and outside the United States?",
@@ -275,8 +275,8 @@ const answers = {
                     {
                         label: LABELS.availability,
                         outlayr: t({
-                            en: "175 App Store countries and regions",
-                            es: "175 países y regiones del App Store",
+                            en: "175 countries and regions",
+                            es: "175 países y regiones",
                         }),
                         rival: t({
                             en: "Mobile app in the United States only",
@@ -311,8 +311,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes. Outlayr is offered in all 175 App Store countries and regions, Chile and Mexico included, with 165 currencies, in English and Spanish. Fintonic is offered only in Spain and connects Spanish banks.",
-                            es: "Sí. Outlayr se ofrece en los 175 países y regiones del App Store, Chile y México incluidos, con 165 monedas, en inglés y en español. Fintonic solo se ofrece en España y conecta bancos españoles.",
+                            en: "Yes. Outlayr is offered in 175 countries and regions, Chile and Mexico included, with 165 currencies, in English and Spanish. Fintonic is offered only in Spain and connects Spanish banks.",
+                            es: "Sí. Outlayr se ofrece en 175 países y regiones, Chile y México incluidos, con 165 monedas, en inglés y en español. Fintonic solo se ofrece en España y conecta bancos españoles.",
                         }),
                         question: t({
                             en: "Does Outlayr work in Chile and Mexico?",
@@ -388,8 +388,8 @@ const answers = {
                     {
                         label: LABELS.availability,
                         outlayr: t({
-                            en: "175 App Store countries and regions",
-                            es: "175 países y regiones del App Store",
+                            en: "175 countries and regions",
+                            es: "175 países y regiones",
                         }),
                         rival: t({ en: "Spain only, with Spanish banks", es: "Solo España, con bancos españoles" }),
                     },
@@ -418,8 +418,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes. Outlayr is offered in all 175 App Store countries and regions, in English and Spanish. Monarch is available in the United States and Canada.",
-                            es: "Sí. Outlayr se ofrece en los 175 países y regiones del App Store, en inglés y en español. Monarch está disponible en Estados Unidos y Canadá.",
+                            en: "Yes. Outlayr is offered in 175 countries and regions, in English and Spanish. Monarch is available in the United States and Canada.",
+                            es: "Sí. Outlayr se ofrece en 175 países y regiones, en inglés y en español. Monarch está disponible en Estados Unidos y Canadá.",
                         }),
                         question: t({
                             en: "Is Outlayr available outside the United States and Canada?",
@@ -443,7 +443,7 @@ const answers = {
                             en: "Track investments alongside spending",
                             es: "Sigues tus inversiones junto con tus gastos",
                         }),
-                        NEED_ANDROID_OR_WEB,
+                        NEED_WEB,
                     ],
                 },
                 lead: t({
@@ -599,8 +599,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes. Outlayr is offered in all 175 App Store countries and regions, with 165 currencies, in English and Spanish. Rocket Money is available in the United States, with U.S. banks.",
-                            es: "Sí. Outlayr se ofrece en los 175 países y regiones del App Store, con 165 monedas, en inglés y en español. Rocket Money está disponible en Estados Unidos, con bancos de EE. UU.",
+                            en: "Yes. Outlayr is offered in 175 countries and regions, with 165 currencies, in English and Spanish. Rocket Money is available in the United States, with U.S. banks.",
+                            es: "Sí. Outlayr se ofrece en 175 países y regiones, con 165 monedas, en inglés y en español. Rocket Money está disponible en Estados Unidos, con bancos de EE. UU.",
                         }),
                         question: t({
                             en: "Does Outlayr work outside the United States?",
@@ -659,8 +659,8 @@ const answers = {
                     {
                         label: LABELS.availability,
                         outlayr: t({
-                            en: "175 App Store countries and regions, 165 currencies",
-                            es: "175 países y regiones del App Store, 165 monedas",
+                            en: "175 countries and regions, 165 currencies",
+                            es: "175 países y regiones, 165 monedas",
                         }),
                         rival: t({
                             en: "The United States, with U.S. banks",
@@ -688,8 +688,8 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "It is if you would rather say or scan a purchase than type it, want each purchase converted at the rate from its day, or want two budgets on the free plan. Spendee fits better if you want bank sync, or need Android today.",
-                            es: "Sí, si prefieres dictar o escanear una compra en vez de escribirla, quieres cada compra convertida con la tasa de su día o quieres dos presupuestos en el plan gratis. Spendee te conviene más si quieres sincronización bancaria, o necesitas Android hoy.",
+                            en: "It is if you would rather say or scan a purchase than type it, want each purchase converted at the rate from its day, or want two budgets on the free plan. Spendee fits better if you want bank sync.",
+                            es: "Sí, si prefieres dictar o escanear una compra en vez de escribirla, quieres cada compra convertida con la tasa de su día o quieres dos presupuestos en el plan gratis. Spendee te conviene más si quieres sincronización bancaria.",
                         }),
                         question: t({
                             en: "Is Outlayr a good Spendee alternative?",
@@ -708,7 +708,7 @@ const answers = {
                             es: "Quieres dos presupuestos en el plan gratis",
                         }),
                     ],
-                    rival: [SYNC_ACCOUNTS, t({ en: "Need Android today", es: "Necesitas Android hoy" })],
+                    rival: [SYNC_ACCOUNTS],
                 },
                 lead: t({
                     en: `${OUTLAYR_LEAD.en} ${RIVALS.spendee.en}`,
@@ -758,8 +758,8 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "It is if you would rather say or scan a purchase than type it, or want each purchase converted at the rate from its day. Wallet fits better if you want bank sync, or need Android or a web app today.",
-                            es: "Sí, si prefieres dictar o escanear una compra en vez de escribirla, o quieres cada compra convertida con la tasa de su día. Wallet te conviene más si quieres sincronización bancaria, o necesitas Android o una app web hoy.",
+                            en: "It is if you would rather say or scan a purchase than type it, or want each purchase converted at the rate from its day. Wallet fits better if you want bank sync, or need a web app today.",
+                            es: "Sí, si prefieres dictar o escanear una compra en vez de escribirla, o quieres cada compra convertida con la tasa de su día. Wallet te conviene más si quieres sincronización bancaria, o necesitas una app web hoy.",
                         }),
                         question: t({
                             en: "Is Outlayr a good alternative to Wallet by BudgetBakers?",
@@ -771,7 +771,7 @@ const answers = {
                 ],
                 fit: {
                     outlayr: [SAY_OR_SCAN, DAY_RATE],
-                    rival: [SYNC_ACCOUNTS, NEED_ANDROID_OR_WEB],
+                    rival: [SYNC_ACCOUNTS, NEED_WEB],
                 },
                 lead: t({
                     en: `${OUTLAYR_LEAD.en} ${RIVALS.wallet.en}`,
@@ -858,7 +858,7 @@ const answers = {
                             en: "Follow the give every dollar a job method",
                             es: "Sigues el método de darle un trabajo a cada dólar",
                         }),
-                        NEED_ANDROID_OR_WEB,
+                        NEED_WEB,
                     ],
                 },
                 lead: t({
@@ -1913,8 +1913,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Rocket Money is available in the United States only, and Monarch in the United States and Canada. PocketGuard links accounts in the US, Canada, and the UK. Outlayr is offered in all 175 App Store countries and regions, in English and Spanish.",
-                            es: "Rocket Money solo está disponible en Estados Unidos, y Monarch en Estados Unidos y Canadá. PocketGuard vincula cuentas de EE. UU., Canadá y Reino Unido. Outlayr se ofrece en los 175 países y regiones del App Store, en inglés y en español.",
+                            en: "Rocket Money is available in the United States only, and Monarch in the United States and Canada. PocketGuard links accounts in the US, Canada, and the UK. Outlayr is offered in 175 countries and regions, in English and Spanish.",
+                            es: "Rocket Money solo está disponible en Estados Unidos, y Monarch en Estados Unidos y Canadá. PocketGuard vincula cuentas de EE. UU., Canadá y Reino Unido. Outlayr se ofrece en 175 países y regiones, en inglés y en español.",
                         }),
                         question: t({
                             en: "Which subscription trackers work outside the United States?",
