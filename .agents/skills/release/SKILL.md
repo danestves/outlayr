@@ -79,14 +79,14 @@ rnd() { npx -y -p @react-native-feel/deploy@0.3.0 rnd "$@"; }
 rnd submit -p ios --profile production --path build/<name>.ipa --groups Internal
 ```
 
-rnd can't submit to Play, so Android uploads with `play.ts`. Preview lands on the internal track, rolled out to testers. Production goes to Google's review and then to 20% of users:
+rnd can't submit to Play, so Android uploads with `play.ts`. Preview lands on the internal track, rolled out to testers. Production goes to Google's review and then to 50% of users:
 
 ```sh
 node ../.agents/skills/release/play.ts upload build/<name>.aab preview
 node ../.agents/skills/release/play.ts upload build/<name>.aab production $'First change' $'Primer cambio'
 ```
 
-Widening a production rollout is Daniel's call: `play.ts rollout 0.5`, then `play.ts rollout 1` to finish it.
+Widening a production rollout is Daniel's call: `play.ts rollout 1` to finish it.
 
 Rough durations: backend about 3 minutes, OTA about 5, a store build about 35 including the backend. If a run fails, read `gh run view <runId> --log-failed`, and on iOS the `xcode-logs` artifact. Report the failing step and don't retry blindly.
 

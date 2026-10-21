@@ -8,7 +8,7 @@ const KEY_PATH = join(homedir(), ".config/outlayr/play-publisher.json");
 const API = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${PACKAGE}`;
 const UPLOAD_API = `https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/${PACKAGE}`;
 const TRACKS = { preview: "internal", production: "production" } as const;
-const FIRST_ROLLOUT = 0.2;
+const FIRST_ROLLOUT = 0.5;
 const NOTE_LANGUAGES = { en: ["en-US"], es: ["es-419", "es-ES", "es-US"] } as const;
 
 interface Release {
