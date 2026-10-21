@@ -148,7 +148,7 @@ runs against the local SQLite replica.
 | `transactionTags` one live link per `(transactionId, tagId)` (`transactionTags_pair_idx`, partial on `deletedAt IS NULL`) | ⚠️ same | Two devices tagging the same entry offline each mint their own link id. Reconciled client-side at the write — see §4. Before `0029` made the index partial, a tombstoned link still held the slot and the second link wedged every later pull. |
 | `imageUri` (`:57`) | ❌ **never** — device-local | A `file://` path whose container uuid changes on every app update. Replicating it lost photos: the receiver could not resolve the path, its launch reconciliation nulled the column, and the resulting push tie-broke on `deviceId` back onto the *originating* device. Removed from the wire in S11. |
 | `imageKey` | ✅ verbatim | The photo's R2 object key. Not a url — `r2.getUrl` signs one with a 15-minute default lifetime, so a stored url rots; every read re-mints from the key. The bytes travel out of band (`packages/backend/convex/photos.ts`, `apps/native/src/data/photo-sync-core.ts`), never in a `push` batch. |
-| `appMeta` key/value (`:166-169`) | partly | No `updatedAt`/`deletedAt` locally. Only account-scoped keys sync; everything the Settings screen files under "This device" (`src/screens/settings/index.tsx` — haptics, biometric lock, notifications) plus `firstLaunch` stays local **by design**. |
+| `appMeta` key/value (`:166-169`) | partly | No `updatedAt`/`deletedAt` locally. Only `SYNCED_META_KEYS` (`src/data/sync-outbox-core.ts`) sync: the currency and how the ledger reads, which belong to the person. `colorScheme` stays local because an OLED phone at night and a tablet in daylight want different answers; `numberEntryType` because a phone typed one-handed and a tablet typed with both do (syncing it let a second device reverse a choice). `biometricLock` and `notification*` describe a permission this handset holds; `sync*` and `ledgerAdoption` are this device's replication identity; `firstLaunch`, `onboardingComplete` and `recurrenceRepaired` record this install's first run. |
 | `exchangeRates` local replica (`:180-194`) | ❌ never | One-way server→device, wiped and replaced by `src/data/rates.ts`. Not user data. Do not sync it. |
 
 ---
@@ -351,7 +351,10 @@ comes back, because the erase skipped it as already deleted.
 **Neighbours.** The undo window lives before the write, so it never makes a tombstone.
 Recently Deleted has no purge window; tombstones live forever (§8 Q6), so there is no
 purge to race. Erase data tombstones live rows with `deletedAt: now`, which beats any
-earlier restore. An archive carries `restoredAt` like any other column.
+earlier restore. An archive carries `restoredAt` like any other column. A replicated row is
+never hard-deleted: the `AFTER DELETE` triggers drop its outbox entry, so the delete never
+reaches a peer, which keeps the row and pushes it back on its next write to it (a budget's
+period rollover is one). Tombstone instead, as `budgets-core.ts` and `erase-core.ts` do.
 
 ### R2 — Row-level last-writer-wins, not field-level
 

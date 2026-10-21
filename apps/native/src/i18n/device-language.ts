@@ -15,7 +15,7 @@ function deviceLanguageTag(): string | null {
     return firstLocale()?.languageTag ?? null;
 }
 
-/** Re-read on foreground: changing the language in iOS Settings hands the process back with a new locale. */
+/** Re-read on foreground for Android, which keeps the process across a language change; iOS restarts the app. */
 export function useDeviceLanguageTag(): string | null {
     const [tag, setTag] = useState(deviceLanguageTag);
 
