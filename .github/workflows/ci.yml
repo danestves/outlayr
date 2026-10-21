@@ -85,10 +85,6 @@ jobs:
               with:
                   hugeicons-token: ${{ secrets.HUGEICONS_PRO_TOKEN }}
 
-            # uniwind derives ThemeName from a declaration it generates off global.css.
-            # That file is build output and gitignored, so on a clean clone ThemeName
-            # widens to `string` and the theme context stops typechecking. Metro
-            # regenerates it on dev and export; nothing else does.
             - name: Generate uniwind artifacts
               if: needs.changes.outputs.native == 'true'
               working-directory: apps/native
@@ -98,9 +94,6 @@ jobs:
               if: env.TYPECHECK != ''
               run: vp run $TYPECHECK check-types
 
-            # `intlayer build` compiles a half-translated key without complaining and
-            # the app then falls back to English at runtime. This is the only step
-            # that fails on one.
             - name: i18n coverage
               if: needs.changes.outputs.native == 'true'
               run: vp run --filter @outlayr/native i18n:test
@@ -122,20 +115,10 @@ jobs:
               with:
                   hugeicons-token: ${{ secrets.HUGEICONS_PRO_TOKEN }}
 
-            # `.intlayer/` is generated and gitignored. The `check-types` and `test`
-            # scripts each run `intlayer build` themselves, so the other job never
-            # noticed; `expo export` does not, and Metro fails resolving
-            # `.intlayer/config/configuration.mjs` before it reaches a line of app code.
-            # That has been failing this job on every branch, main included, which left
-            # the only check that can catch a bundling regression permanently red.
             - name: Build the i18n catalog
               working-directory: apps/native
               run: vp run i18n:build
 
-            # A green lint/typecheck still lets a module-resolution or Metro config
-            # regression through. Bundling is the cheapest check that the app can
-            # actually be built, and it catches the Skia directory-index resolution
-            # that watchFolders changes can break.
             - name: Bundle
               working-directory: apps/native
               run: npx expo export --platform ios --output-dir /tmp/export-ci
