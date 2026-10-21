@@ -12,7 +12,7 @@ Running `/release preview` or `/release production`, with `android` after it for
 
 If the channel above isn't exactly `preview` or `production`, ask which one and stop. The build profile, update channel, and GitHub environment share that name, so one word selects all three, including the Convex deployment that receives the functions.
 
-The platform is `$platform`. Empty means `ios`. If it's neither `ios` nor `android`, ask which one and stop. The runtime fingerprint is per platform, so each platform gets its own verdict; to ship both, run the skill once per platform.
+The platform is `$platform`. Empty means `ios`. If it's neither `ios` nor `android`, ask which one and stop. The runtime fingerprint is per platform, so each platform gets its own verdict; to ship both, run the skill once per platform. Both stores have production users, so a change both platforms show needs both runs.
 
 ## 1. Check out main
 
@@ -50,13 +50,15 @@ Before dispatching, read the commit list against the verdict. The file classific
 
 Before an `OTA` or `BUILD`, run `node --import tsx scripts/licenses.ts --check` from `apps/native`. If it reports the open source licenses list as stale, **stop and ask**: a dependency change shipped without regenerating it, and the fix is a PR, not an edit on detached main.
 
-## 3. Message (OTA only)
+## 3. Message
 
 The in-app What's new sheet shows `message` verbatim, split on `\n`:
 
 - One line per change a user would notice, written in their words: "Typing in the transaction form no longer stutters".
 - No bullet marks, semicolons, or em dashes. English only.
 - Leave out chores, tests, refactors, backend-only work, and changes only the other platform shows.
+
+A production Android build carries Play's What's new notes under the same rules, once in English and once in Spanish, at most 500 characters each.
 
 ## 4. Dispatch and wait
 
@@ -77,7 +79,14 @@ rnd() { npx -y -p @react-native-feel/deploy@0.3.0 rnd "$@"; }
 rnd submit -p ios --profile production --path build/<name>.ipa --groups Internal
 ```
 
-Android stops at the `.aab`: rnd can't submit to Play. Report its path; Daniel uploads it to the internal track in Play Console.
+rnd can't submit to Play, so Android uploads with `play.ts`. Preview lands on the internal track, rolled out to testers. Production goes to Google's review and then to 20% of users:
+
+```sh
+node ../.agents/skills/release/play.ts upload build/<name>.aab preview
+node ../.agents/skills/release/play.ts upload build/<name>.aab production $'First change' $'Primer cambio'
+```
+
+Widening a production rollout is Daniel's call: `play.ts rollout 0.5`, then `play.ts rollout 1` to finish it.
 
 Rough durations: backend about 3 minutes, OTA about 5, a store build about 35 including the backend. If a run fails, read `gh run view <runId> --log-failed`, and on iOS the `xcode-logs` artifact. Report the failing step and don't retry blindly.
 
@@ -91,7 +100,7 @@ Rough durations: backend about 3 minutes, OTA about 5, a store build about 35 in
   ```
 
   It must print that id. Anything else means the update landed on a runtime no build has and reached nobody.
-- **Build**: the run's `fingerprint` artifact holds the runtime OTAs target from now on; `decide.sh` reads it. On iOS, `rnd submit:status -p ios` lists the new TestFlight build.
+- **Build**: the run's `fingerprint` artifact holds the runtime OTAs target from now on; `decide.sh` reads it. On iOS, `rnd submit:status -p ios` lists the new TestFlight build. On Android, `play.ts status` lists the new versionCode on its track.
 - **Backend**: a `SUCCESS` run is the check.
 
 Report the verdict, the commits it shipped, the run id, the update group or build number, and the runtime.
@@ -103,6 +112,7 @@ Before a `FIRST BUILD`, confirm each of these exists and name any that don't:
 - rnd is logged in on this machine: `EAS_GITHUB_TOKEN=$(gh auth token) rnd login`, then `rnd whoami`.
 - The repository secrets listed at the top of `.github/workflows/eas-build.yml`: `gh secret list`. `rnd credentials` reports which signing ones the repo holds.
 - `asc auth status` shows an App Store Connect key, for iOS submits.
+- `~/.config/outlayr/play-publisher.json` holds the play-publisher service account key, for Android uploads; `play.ts status` proves it works. Play Console grants it production releases.
 - The `production` and `preview` GitHub environments: `gh variable list --env $channel` and `gh secret list --env $channel`. The Convex deploy key is an environment secret; everything the app reads is a variable.
 - `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY` among those variables, for Android. The workflow checks it before it deploys.
 
