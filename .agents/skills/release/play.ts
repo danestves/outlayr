@@ -8,7 +8,6 @@ const KEY_PATH = join(homedir(), ".config/outlayr/play-publisher.json");
 const API = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${PACKAGE}`;
 const UPLOAD_API = `https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/${PACKAGE}`;
 const TRACKS = { preview: "internal", production: "production" } as const;
-const FIRST_ROLLOUT = 0.5;
 const NOTE_LANGUAGES = { en: ["en-US"], es: ["es-419", "es-ES", "es-US"] } as const;
 
 interface Release {
@@ -26,7 +25,6 @@ interface Track {
 function usage(): never {
     console.error(`usage: play.ts upload <aab> preview
        play.ts upload <aab> production "<English notes>" "<Spanish notes>"
-       play.ts rollout <fraction, 1 to finish>
        play.ts status`);
     process.exit(2);
 }
@@ -60,7 +58,7 @@ async function accessToken(): Promise<string> {
 }
 
 const [command, ...args] = process.argv.slice(2);
-if (command !== "upload" && command !== "rollout" && command !== "status") {
+if (command !== "upload" && command !== "status") {
     usage();
 }
 const token = await accessToken();
@@ -109,43 +107,17 @@ if (command === "upload") {
             await readFile(aab),
             "application/octet-stream"
         );
-        const versionCodes = [String(versionCode)];
-        if (channel === "preview") {
-            await putTrack(edit, { releases: [{ status: "completed", versionCodes }], track });
-        } else {
-            const current = await call<Track>("GET", `${API}/edits/${edit}/tracks/${track}`);
-            const live = (current.releases ?? []).filter((release) => release.status === "completed");
-            const releaseNotes = Object.entries(NOTE_LANGUAGES).flatMap(([language, codes]) =>
-                codes.map((code) => ({ language: code, text: language === "en" ? english : spanish }))
-            );
-            await putTrack(edit, {
-                releases: [...live, { releaseNotes, status: "inProgress", userFraction: FIRST_ROLLOUT, versionCodes }],
-                track,
-            });
-        }
+        const releaseNotes =
+            channel === "production"
+                ? Object.entries(NOTE_LANGUAGES).flatMap(([language, codes]) =>
+                      codes.map((code) => ({ language: code, text: language === "en" ? english : spanish }))
+                  )
+                : undefined;
+        await putTrack(edit, {
+            releases: [{ releaseNotes, status: "completed", versionCodes: [String(versionCode)] }],
+            track,
+        });
         console.log(`versionCode ${versionCode} committed to the ${track} track`);
-    });
-}
-
-if (command === "rollout") {
-    const fraction = Number(args[0]);
-    if (!(fraction > 0 && fraction <= 1)) {
-        usage();
-    }
-    await inEdit(async (edit) => {
-        const current = await call<Track>("GET", `${API}/edits/${edit}/tracks/production`);
-        const releases = current.releases ?? [];
-        const rolling = releases.find((release) => release.status === "inProgress" || release.status === "halted");
-        if (!rolling) {
-            throw new Error(`No staged rollout on production: ${releases.map(describe).join("; ")}`);
-        }
-        const next: Release =
-            fraction === 1
-                ? { releaseNotes: rolling.releaseNotes, status: "completed", versionCodes: rolling.versionCodes }
-                : { ...rolling, status: "inProgress", userFraction: fraction };
-        const live = fraction === 1 ? [] : releases.filter((release) => release.status === "completed");
-        await putTrack(edit, { releases: [...live, next], track: "production" });
-        console.log(`production: ${describe(next)}`);
     });
 }
 
