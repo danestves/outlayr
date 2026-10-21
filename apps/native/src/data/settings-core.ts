@@ -82,11 +82,7 @@ export const SETTING_DEFAULTS = {
     use24HourClock: false,
 } as const satisfies Record<BoolSettingKey | NumberSettingKey, boolean | number>;
 
-/**
- * The `appMeta` keys a person chooses, as opposed to the bookkeeping the app
- * keeps beside them (the sync cursor, `syncedAt`, the enrichment outbox, rate
- * stamps). `walletCards` is which account each Apple Pay card files into.
- */
+/** Keys a person chooses, not app bookkeeping. `walletCards` maps each Apple Pay card to an account. */
 export const SETTING_KEYS: ReadonlySet<string> = new Set([
     ...Object.keys(SETTING_DEFAULTS),
     META_KEYS.currency,
@@ -125,9 +121,8 @@ export const NUMBER_ENTRY_OPTIONS: readonly ChoiceOption[] = [
 ];
 
 /**
- * The answer to "Send data to Anthropic and ElevenLabs?". No stored row is a
- * question not yet asked, which a parsed bool cannot tell apart from Not now;
- * the launch sheet asks only the first. Nothing reaches them until it is `allowed`.
+ * No stored row is a question not yet asked, which a parsed bool cannot tell apart from Not now. Nothing reaches
+ * Anthropic or ElevenLabs until it is `allowed`.
  */
 export type AiConsent = "unanswered" | "allowed" | "declined";
 
@@ -138,10 +133,6 @@ export function parseAiConsent(raw: string | null): AiConsent {
     return parseBoolSetting(raw, false) ? "allowed" : "declined";
 }
 
-/**
- * Whether a merchant name may go to Anthropic for a category: the person allowed
- * sending data to AI providers and kept Suggest category and tags on.
- */
 export function remoteEnrichmentOn(bool: (key: BoolSettingKey) => boolean): boolean {
     return bool("aiConsentV2") && bool("aiEnrichment");
 }
@@ -177,7 +168,6 @@ export async function readNumberSetting(db: Database, key: NumberSettingKey): Pr
     return parseIntSetting(await getMeta(db, key), SETTING_DEFAULTS[key]);
 }
 
-/** `remoteEnrichmentOn` for a background pass, read at the moment it would send. */
 export async function readRemoteEnrichment(db: Database): Promise<boolean> {
     const [consent, enrichment] = await Promise.all([
         readBoolSetting(db, "aiConsentV2"),

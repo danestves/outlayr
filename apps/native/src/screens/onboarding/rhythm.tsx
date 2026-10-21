@@ -12,11 +12,7 @@ import { useTranslation } from "@/i18n/context";
 
 const EVENING = reminderTime(REMINDER_EVENING, { hour: 20, minute: 0 });
 
-/**
- * The step shows its own output: the notification the tap would set up, drawn
- * as a card rather than described in prose. Content only — the OS permission
- * prompt still waits for the first saved entry, since iOS never asks twice.
- */
+/** Content only: the OS prompt waits for the first saved entry, since iOS never asks twice. */
 function MockNotification({ body, back }: { body: string; back?: boolean }) {
     return (
         <View
@@ -38,8 +34,7 @@ export function OnboardingRhythm() {
     const db = useDatabase();
     const t = useTranslation();
 
-    // The flow's terminal step either way: `finishOnboarding` settles the root
-    // guard, which swaps this stack for the account offer. Nothing navigates.
+    // `finishOnboarding` settles the root guard, which swaps this stack. Nothing navigates.
     const finish = () => {
         finishOnboarding(db).catch((cause: unknown) => {
             console.error("Finishing onboarding failed", cause);

@@ -36,13 +36,11 @@ describe("runningTotals", () => {
 
 describe("categoryMovers", () => {
     it("says nothing when there is no prior window to compare against", () => {
-        // The first window a new user opens has no history behind it.
         expect(categoryMovers([entry("a", 500)], [], 500)).toStrictEqual([]);
     });
 
     it("ranks on currency, not on percentage", () => {
-        // 10 -> 30 is +200% and trivial; 4000 -> 4800 is +20% and is where the
-        // window actually went.
+        // 10 -> 30 is +200% and trivial; 4000 -> 4800 is +20% and where the window actually went.
         const current = [entry("rent", 4800), entry("gum", 30)];
         const prior = [entry("rent", 4000), entry("gum", 10)];
         const movers = categoryMovers(current, prior, 4830);
@@ -52,7 +50,6 @@ describe("categoryMovers", () => {
     });
 
     it("reports a category that stopped entirely", () => {
-        // It cannot be found by walking the current window, which no longer has it.
         const movers = categoryMovers([entry("a", 1000)], [entry("b", 900)], 1000);
         const stopped = movers.find((mover) => mover.id === "b");
         if (!stopped) {

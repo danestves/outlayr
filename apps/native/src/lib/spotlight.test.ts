@@ -50,7 +50,7 @@ describe("spotlight transaction keywords", () => {
 
     it("indexes the amount the way the Log prints it, padded to the currency's minor units", async () => {
         // `transactions.amount` is major units, so this is stored as 12.4 and
-        // `String(amount)` would index "12.4" — which the figure on the row it
+        // `String(amount)` would index "12.4", which the figure on the row it
         // deep-links to, "€12.40", never matches.
         const db = migratedDatabase({ foreignKeys: false });
         await seed(db, 12.4, "EUR");
@@ -71,7 +71,7 @@ describe("spotlight transaction keywords", () => {
 
     it("carries the active language's kind, not every language's", () => {
         // The index is rebuilt on every launch and every background, and the
-        // language row hands the user to iOS Settings, which terminates the app —
+        // language row hands the user to iOS Settings, which terminates the app,
         // so a second language in here is never the one being typed.
         const db = migratedDatabase({ foreignKeys: false });
 

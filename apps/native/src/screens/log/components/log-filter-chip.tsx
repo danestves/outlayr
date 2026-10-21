@@ -26,7 +26,6 @@ interface LogFilterChipProps {
     categoryId: string | null;
     cursor: Date;
     detail: string | null;
-    /** The currency the whole screen is being read in. */
     displayCurrency: string;
     filter: LogFilter;
     firstWeekday: number;
@@ -38,10 +37,7 @@ interface LogFilterChipProps {
     onCursor: (date: Date) => void;
     onIncome: (income: boolean) => void;
     onMeasure: (measure: LogMeasure) => void;
-    /**
-     * In/out/net over the whole filtered scope. Null for a scope with nothing in
-     * it, which has no figure to state and says so in the list instead.
-     */
+    /** Null when the scope holds nothing. */
     totals: ScopeTotals | null;
 }
 
@@ -66,8 +62,6 @@ export function LogFilterChip({
     const { showCents } = useDisplaySettings().state;
     const t = useTranslation();
     const hasMenu = filterHasMenu(filter);
-    // `detail` may not have resolved yet, and the chip has to say what it is
-    // regardless.
     const title = detail || t(FILTER_LABEL_KEY[filter]);
 
     return (
@@ -117,11 +111,6 @@ export function LogFilterChip({
     );
 }
 
-/**
- * The same trio the unfiltered header shows, over the scope instead of the
- * period: filtering to a category or a week is the user asking a money question,
- * and the chip alone does not answer it.
- */
 function ScopeFigures({
     totals,
     measure,
@@ -173,10 +162,7 @@ function ScopeFigures({
     );
 }
 
-/**
- * One row per currency the scope also used. Never folded into the figure above:
- * without a rate reaching them, one number across two currencies is invented.
- */
+/** Without a rate, one number across two currencies is invented. */
 function OtherCurrencyRow({
     figures,
     measure,

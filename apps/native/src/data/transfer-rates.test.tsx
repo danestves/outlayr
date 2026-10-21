@@ -52,11 +52,8 @@ async function seedRate(db: Database, rate: number): Promise<void> {
 }
 
 describe("useTransferRates", () => {
-    // A refresh opens with an unqualified `DELETE FROM exchangeRates`, which
-    // SQLite's truncate optimization exempts from the update hook `useLiveQuery`
-    // listens on — so the rows can change with no event at all. That is the whole
-    // reason `rates-revision` exists, and this hook was the one that did not read
-    // it: the transfer editor kept quoting the table it opened with.
+    // A refresh's unqualified DELETE skips the update hook `useLiveQuery` listens on (SQLite's truncate
+    // optimization), so only `rates-revision` announces it.
     it("picks up a refresh that announced itself only through the revision counter", async () => {
         const db = migratedDatabase({ foreignKeys: false });
         const { result } = await renderHook(() => useTransferRates(db, ["USD", "VES"], OFFICIAL));

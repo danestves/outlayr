@@ -10,26 +10,17 @@ import { useDecoratedRows } from "./transactions";
 import type { TransactionWithCategory } from "./transactions";
 
 export interface WindowTransactionsQuery {
-    /**
-     * Restricts to a top-level category and its children, mirroring the Swift
-     * `category == %@ OR category.parent == %@` predicate. `null` keeps all.
-     */
+    /** A top-level category and its children; `null` keeps all. */
     categoryId?: string | null;
-    /** Exclusive, and clamped against `nowMs` so the future never shows. */
+    /** Exclusive, and clamped to `nowMs` so the future never shows. */
     end: Date;
-    /** Restricts to one direction; `null` keeps both. */
     income?: boolean | null;
     nowMs: number;
     start: Date;
 }
 
-/**
- * Newest first. The category relationship is resolved through
- * {@link useCategoryMeta} rather than a join, for both the child filter and the
- * display fields: `useLiveQuery` only invalidates on the table it watches, so a
- * joined category would leave a renamed or re-parented category stale until some
- *transaction* was written.
- */
+// Categories resolve through {@link useCategoryMeta}, not a join: `useLiveQuery` only invalidates on the table it
+// watches, so a joined category would stay stale after a rename or re-parent.
 export function useWindowTransactions(db: Database, query: WindowTransactionsQuery | null): TransactionWithCategory[] {
     const categoryMeta = useCategoryMeta(db);
 
@@ -53,8 +44,6 @@ export function useWindowTransactions(db: Database, query: WindowTransactionsQue
         return ids;
     }, [categoryId, categoryMeta]);
 
-    // A primitive so the subscription re-runs when the contributing set changes
-    // without re-subscribing on every render's fresh array identity.
     const contributingKey = contributingIds?.join(",") ?? "";
 
     const data = useLiveQuery(

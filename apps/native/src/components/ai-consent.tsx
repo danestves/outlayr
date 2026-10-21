@@ -21,7 +21,6 @@ import { useAuthSession } from "@/lib/auth-session";
 import { legalUrl } from "@/lib/legal-url";
 import { useColors } from "@/theme/use-colors";
 
-/** Every feature that sends data to the AI providers, with what it sends. */
 const FEATURES = [
     { sends: "aiConsent.voiceSends", title: "aiConsent.voice" },
     { sends: "aiConsent.scanSends", title: "aiConsent.scan" },
@@ -35,7 +34,6 @@ export function recordAiConsent(db: Database, allowed: boolean): void {
     });
 }
 
-/** The features, what each sends to the AI providers, and the privacy policy. Shared by every place that asks. */
 export function AiConsentDetails() {
     const t = useTranslation();
     const { language } = useLanguage();
@@ -83,11 +81,7 @@ function AiConsentPrompt({ onAnswer }: { onAnswer: (allowed: boolean) => void })
     );
 }
 
-/**
- * Stands in for voice entry and receipt scan until the AI providers are allowed. It has to
- * come before either screen mounts: voice starts recording on open, and both
- * send on their own once they have a clip or a photo. Not now leaves.
- */
+// Must come before either screen mounts: voice records on open, and both send once they have a clip or a photo.
 export function AiConsentGate() {
     const db = useDatabase();
     const router = useRouter();
@@ -109,12 +103,7 @@ export function AiConsentGate() {
     );
 }
 
-/**
- * Asks once, on the tabs, anyone signed in who has not answered yet: people
- * past onboarding before the question existed, or who skipped its step. A
- * swipe away is Not now. Waits for no cover for the reason `UpdateSheet` does.
- * Mounts once the question is unanswered this run, and stays so an answer animates out.
- */
+// Waits for no cover, for the reason `UpdateSheet` does, and stays mounted once asked so an answer animates out.
 export function AiConsentSheet() {
     const consent = useAiConsent(useDatabase());
     const [asked, setAsked] = useState(consent === "unanswered");
@@ -141,8 +130,7 @@ function AiConsentSheetBody({ consent }: { consent: AiConsent }) {
             native
             nativeBackground={colors.background}
             onOpenChange={(next) => {
-                // Only a swipe the person made: a close this render asked for
-                // (an answer landed, a lock came up) is not a Not now.
+                // Only a swipe the person made is a Not now, not a close this render asked for (an answer, a lock).
                 if (!next && open) {
                     recordAiConsent(db, false);
                 }

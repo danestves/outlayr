@@ -4,11 +4,7 @@ import type { TranslateFn } from "@/i18n/context";
 
 import type { PayoffPlanControls } from "./use-payoff-plan";
 
-/**
- * The menu's payoff plan actions: change and remove a live plan, or set one when
- * the balance is a debt. Elements rather than a component: the toolbar menu
- * keeps only children that are menu actions themselves.
- */
+/** Elements, not a component: the toolbar menu keeps only children that are menu actions themselves. */
 export function payoffMenuActions(plan: PayoffPlanControls, setLabel: string, t: TranslateFn) {
     if (plan.live) {
         return [

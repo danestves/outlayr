@@ -95,7 +95,6 @@ async function zoneOffset(ctx: QueryCtx, userId: string, now: number): Promise<n
 const bySeq = (a: { seq: number }, b: { seq: number }) => a.seq - b.seq;
 const utcDayStart = (instant: number) => Math.floor(instant / DAY_MS) * DAY_MS;
 
-/** One table carrying every code's official rates. USD needs none. */
 async function ratesIn(ctx: QueryCtx, ...codes: string[]): Promise<RateTable> {
     const quotes = [...new Set(codes)].filter((code) => code !== "USD");
     const rows = await Promise.all(
@@ -134,7 +133,8 @@ export const spendingSummary = internalQuery({
         const now = Date.now();
         const offsetMs = await zoneOffset(ctx, userId, now);
         const window = monthWindow(now, offsetMs, firstDayOfMonth, Math.max(0, Math.trunc(monthsAgo)));
-        // Whole UTC days around the window: a valuation cell is one UTC day, and one cut at the edge values differently.
+        // Whole UTC days around the window: a valuation cell is one UTC day, and a cell cut at the edge values
+        // differently.
         const stored = await ctx.db
             .query("transactions")
             .withIndex("by_user_and_deletedAt_and_date", (q) =>
@@ -238,8 +238,6 @@ export const accountBalances = internalQuery({
             zoneOffset(ctx, userId, now),
         ]);
         const accounts = accountRows.filter((row) => row.deletedAt === null).sort((a, b) => a.sortOrder - b.sortOrder);
-        // Each balance is summed in its account's currency and restated into the
-        // main one, so the table carries both.
         const rates = await ratesIn(ctx, currency, ...accounts.map((row) => row.currency));
         const ledger = new Map<string, LegEntry[]>(accounts.map((account) => [account.localId, []]));
         for (const row of transactionRows.sort(bySeq)) {

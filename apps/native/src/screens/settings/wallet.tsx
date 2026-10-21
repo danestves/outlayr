@@ -47,17 +47,11 @@ import {
 
 interface Step {
     detail?: TranslationKey;
-    /** A frame of the Shortcuts screen this step happens on, for the strip. */
     frame?: ImageRequireSource;
     title: TranslationKey;
 }
 
-/**
- * Built inline on iOS 26: the action goes straight into a blank automation,
- * and the trigger's Wallet transaction is the "Shortcut Input" its three
- * fields are read from. The action only ever surfaces inside the action
- * picker and under Library › Apps.
- */
+/** Built inline on iOS 26: the trigger's Wallet transaction is the "Shortcut Input". */
 const MANUAL_STEPS: readonly Step[] = [
     { title: "settings.wallet.step1" },
     { detail: "settings.wallet.step2Detail", title: "settings.wallet.step2" },
@@ -90,7 +84,6 @@ const BANK_STEPS: readonly Step[] = [
     { frame: bankOnFrame, title: "settings.wallet.bankStep3" },
 ];
 
-/** The shared shortcut carries an iOS 27 trigger, so only iOS 27 gets the one-tap install. */
 const HAS_SHARED_SHORTCUT = WALLET_SHORTCUT_URL != null && TRIGGERS_IN_SHORTCUTS;
 
 export function Wallet() {
@@ -130,16 +123,12 @@ export function Wallet() {
     ) : null;
     const [stepsShown, setStepsShown] = useState(false);
     const working = lastRunAt != null || (lastEntry != null && !lastEntry.push);
-    // What this user's automation actually runs. `added` is only ever set by the
-    // shared link, so a setup built inline before the link shipped stays inline.
+    // `added` is only set by the shared link, so an older inline setup stays inline.
     const linked = HAS_SHARED_SHORTCUT && added;
     const inline = TRIGGERS_IN_SHORTCUTS ? IOS27_MANUAL_STEPS : MANUAL_STEPS;
     const steps = linked ? IOS27_AUTOMATION_STEPS : inline;
 
-    // Records that the link was taken, NOT that the shortcut exists: iOS hands
-    // the URL to Shortcuts and tells us nothing about what the user did there,
-    // so a Cancel looks exactly like an install. That is why the claim below
-    // waits for a run, and why the link stays reachable after this writes.
+    // Records the link was taken, not that the shortcut exists: iOS reports nothing back, so the claim waits for a run.
     const getShortcut = async () => {
         try {
             await openWalletShortcut();
@@ -150,8 +139,7 @@ export function Wallet() {
         }
     };
 
-    // A working inline setup is done, whatever `added` says: the link may ship
-    // in a later build, and it must not bounce those users back to the Get button.
+    // A working inline setup is done whatever `added` says.
     if (HAS_SHARED_SHORTCUT && !added && !working) {
         return (
             <SettingsScreen>
@@ -221,7 +209,6 @@ export function Wallet() {
     );
 }
 
-/** The most recent row the automation produced, as proof it works. */
 function LastEntry({ db, txId }: { db: Database; txId: string }) {
     const t = useTranslation();
     const { language } = useLanguage();
@@ -365,7 +352,6 @@ const CAPTION_HEIGHT = 62;
 const FRAME_GAP = 12;
 const FRAME_RADIUS = 12;
 
-/** The steps that have a frame, in a swipeable row above the list. */
 function FrameStrip({ steps }: { steps: readonly Step[] }) {
     const t = useTranslation();
     const framed = steps.flatMap((step, index) =>

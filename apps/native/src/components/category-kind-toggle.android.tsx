@@ -8,10 +8,6 @@ import type { CategoryKindToggleProps } from "./category-kind-toggle";
 
 const LABEL_FONT = { fontFamily: "GoogleSansFlex_500Medium" } as const;
 
-/**
- * The Expense/Income switch as M3 segmented buttons, stretched across the top
- * of the category list: Android has no bottom toolbar to hold it.
- */
 export function CategoryKindToggle({ income, onChange }: CategoryKindToggleProps) {
     const t = useTranslation();
     return (

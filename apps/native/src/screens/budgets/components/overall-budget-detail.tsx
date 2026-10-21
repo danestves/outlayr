@@ -25,10 +25,7 @@ import { BudgetLimitSheet } from "@/screens/budgets/components/budget-limit-shee
 import { BudgetPeriodStepper } from "@/screens/budgets/components/budget-period-stepper";
 import { useColors } from "@/theme/use-colors";
 
-/**
- * Lives under `/budgets/[id]` with the reserved id `overall` rather than its own
- * route: a static sibling of a dynamic segment never resolved here.
- */
+/** Under `/budgets/[id]` with the reserved id `overall`: a static sibling of a dynamic segment never resolved. */
 export function OverallBudgetDetail({ db, onDone }: { db: Database; onDone: () => void }) {
     const router = useRouter();
     const t = useTranslation();
@@ -61,19 +58,12 @@ export function OverallBudgetDetail({ db, onDone }: { db: Database; onDone: () =
         return <View className="bg-background flex-1" />;
     }
 
-    // No confirmation in front of it: the write is held for the undo window. This
-    // screen leaves rather than waiting on it, because the budget is still
-    // readable and it would otherwise sit on a row already gone from the list
-    // behind it.
     const deleteBudget = () => {
         requestDelete(budget.id);
         onDone();
     };
 
-    // Field-level throughout. Re-pointing this budget through `createMainBudget`
-    // is what used to clear its name and turn carry-over off, because that call
-    // only preserves a column the caller leaves undefined.
-    /** Reports whether the write landed, so only a real one is felt. */
+    // Patched by field: `createMainBudget` overwrites every column it is passed.
     const write = async (edit: BudgetEdit) => {
         try {
             await budgetsRepo.patchMainBudget(db, budget.id, edit);
@@ -87,7 +77,6 @@ export function OverallBudgetDetail({ db, onDone }: { db: Database; onDone: () =
 
     const commitLimit = async ({ limit, limitChanged, type }: LimitCommit) => {
         limitSheetRef.current?.dismiss();
-        // An untouched figure is left out of the patch: see `LimitCommit`.
         if (await write({ ...(limitChanged && { amount: limit }), type })) {
             haptics("success");
         }
@@ -157,8 +146,7 @@ export function OverallBudgetDetail({ db, onDone }: { db: Database; onDone: () =
                 target={{
                     categoryId: null,
                     limit: budget.limit,
-                    // The scope reads mid-sentence, so the standing-in label is a word
-                    // rather than a name. A budget the user named keeps its own casing.
+                    // Mid-sentence, so the fallback label is lowercased.
                     name: budget.customName ?? t("budgets.scope.everything").toLocaleLowerCase(),
                     type: budget.type,
                     window: budget.window,
@@ -170,7 +158,7 @@ export function OverallBudgetDetail({ db, onDone }: { db: Database; onDone: () =
                 <Stack.Toolbar.Button
                     accessibilityLabel={t("budgets.action.delete")}
                     onPress={deleteBudget}
-                    // `Color.ios` answers null off iOS, where the brand danger stands in.
+                    // `Color.ios` answers null off iOS.
                     tintColor={Color.ios.systemRed ?? colors.danger}
                 >
                     <Stack.Toolbar.Icon {...toolbarIcon("delete")} />

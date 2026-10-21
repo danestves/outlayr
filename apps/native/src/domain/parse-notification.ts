@@ -4,7 +4,6 @@ import { detectDecimalSeparator, parseCsvAmount } from "./transaction-csv";
 
 export interface ParsedNotification {
     amount: number;
-    /** The money token as it appeared, e.g. "Bs. 1.250,00", for `detectCurrency`. */
     amountText: string;
     income: boolean;
     merchant: string | null;
@@ -60,11 +59,7 @@ export const NOTIFICATION_PATTERNS = {
     receivedFrom: RECEIVED_FROM,
 };
 
-/**
- * Reads a purchase out of a bank or Wallet notification. Null when no money
- * token is found, which is how "your statement is ready" gets skipped, and
- * when the text says the charge did not go through.
- */
+// Null without a money token (how "your statement is ready" is skipped), or when the charge did not go through.
 export function parseNotification(text: string): ParsedNotification | null {
     const match = MONEY.exec(text);
     if (!match || DECLINED.test(text)) {

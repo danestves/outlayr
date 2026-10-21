@@ -42,7 +42,6 @@ export async function requestReminderPermission(): Promise<ReminderPermission> {
     }
 }
 
-/** Identifiers iOS currently holds, the daily reminder's among them. */
 export async function pendingReminderIds(): Promise<string[]> {
     try {
         const requests = await getAllScheduledNotificationsAsync();
@@ -60,11 +59,7 @@ export interface DatedReminder {
     title: string;
 }
 
-/**
- * A one-shot DATE trigger rather than a repeat: the next charge in a chain lands
- * on a date the schedule has to recompute, so each sweep arms the next one
- * afresh under the same identifier.
- */
+/** One-shot DATE trigger, not a repeat: a chain's next charge is recomputed, so each sweep re-arms it by identifier. */
 export async function scheduleDatedReminder({ id, title, body, data, fireAt }: DatedReminder): Promise<void> {
     await scheduleNotificationAsync({
         content: { body, data, sound: "default", title },
@@ -73,7 +68,6 @@ export async function scheduleDatedReminder({ id, title, body, data, fireAt }: D
     });
 }
 
-/** Sequential: `cancelScheduledNotificationAsync` mutates one shared iOS queue. */
 export async function cancelReminders(ids: readonly string[]): Promise<void> {
     for (const id of ids) {
         // oxlint-disable-next-line no-await-in-loop -- cancelScheduledNotificationAsync mutates one shared iOS notification queue, so overlapping cancels race each other.

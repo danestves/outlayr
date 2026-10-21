@@ -30,7 +30,6 @@ interface LogSparklineProps {
     byMonth: boolean;
     /** The currency the points are already valued in. */
     code: string;
-    /** Decides whether the line has a direction worth speaking. */
     measure: LogMeasure;
     points: SparklinePoint[];
     positive: boolean;
@@ -44,7 +43,6 @@ export function LogSparkline({ points, positive, range, byMonth, code, measure }
     const { language } = useLanguage();
     const hidden = use(AmountsHiddenContext);
     const reduceMotion = useReducedMotion();
-    // Read here, not threaded from the screen: every chart answers to this setting itself.
     const animatedCharts = useSettingBool("animatedCharts") && !reduceMotion;
     const [width, setWidth] = useState(0);
     const [scrubIndex, setScrubIndex] = useState<number | null>(null);
@@ -59,8 +57,6 @@ export function LogSparkline({ points, positive, range, byMonth, code, measure }
         const amounts = points.map((point) => point.amount);
         const max = Math.max(...amounts);
         const min = Math.min(...amounts);
-        // A flat line has no range to normalize against; park it on the baseline
-        // rather than dividing by zero.
         const span = max - min || 1;
         const step = width / (points.length - 1);
         const coords = points.map((point, index) => ({
@@ -92,7 +88,6 @@ export function LogSparkline({ points, positive, range, byMonth, code, measure }
         [measure, points, byMonth]
     );
 
-    // Where the muted part of the line hands over to the trend colour.
     const boundary = useMemo(() => {
         if (points.length < 2) {
             return 1;
@@ -100,9 +95,7 @@ export function LogSparkline({ points, positive, range, byMonth, code, measure }
         return Math.min(1, Math.max(0, 1 - (range - 1) / (points.length - 1)));
     }, [points.length, range]);
 
-    // Only numbers cross into the worklet. Capturing `points` would hand
-    // Reanimated an array of `Date`s, which it cannot serialize — the gesture
-    // throws "Cannot copy value of type `Date`" on the first render.
+    // Only numbers cross into the worklet: Reanimated cannot serialize `Date`s.
     const count = points.length;
     const pan = usePanGesture({
         onFinalize: () => {
@@ -126,15 +119,12 @@ export function LogSparkline({ points, positive, range, byMonth, code, measure }
 
     const scrubbed = scrubIndex == null ? null : points[scrubIndex];
     const scrubCoord = scrubIndex == null ? null : (geometry?.coords[scrubIndex] ?? null);
-    // Before the period starts, the scrubber marks history rather than the figure
-    // the hero is reporting — so it takes the rule's colour, not the trend's.
+    // Before the period starts, the scrubber marks history.
     const scrubColor = scrubIndex != null && points.length - range > scrubIndex ? colors.border : color;
 
     return (
         <View className="pt-4 pb-1" style={{ paddingHorizontal: INSET }}>
-            {/* The scrub is a pointer gesture with nothing to commit, so unlike the
-			    Insights charts there is no per-sample action to expose — one labelled
-			    node naming the line is the whole readout. */}
+            {/* Nothing to commit, so one labelled node is the whole readout. */}
             <GestureDetector gesture={pan}>
                 <View
                     accessibilityLabel={t(labelKey)}
@@ -170,8 +160,7 @@ export function LogSparkline({ points, positive, range, byMonth, code, measure }
                             />
                             {scrubCoord ? (
                                 <>
-                                    {/* Solid, not dashed: a dashed rule here would read as the
-									    projection it means on the burn-down. */}
+                                    {/* Solid: dashed means a projection. */}
                                     <Path
                                         d={`M${scrubCoord.x} 0 L${scrubCoord.x} ${HEIGHT}`}
                                         stroke={scrubColor}
@@ -194,8 +183,7 @@ export function LogSparkline({ points, positive, range, byMonth, code, measure }
             </GestureDetector>
 
             {scrubbed && scrubCoord ? (
-                // Only ever on screen while a finger is down, so a screen reader could
-                // never reach it and would only announce a sample nobody chose.
+                // Only up while a finger is down, so screen readers skip it.
                 <View
                     accessibilityElementsHidden
                     className="bg-surface-secondary absolute items-center rounded-md px-1.75 py-1"

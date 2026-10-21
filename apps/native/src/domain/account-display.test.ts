@@ -39,7 +39,7 @@ describe("formatSignedAmount", () => {
     });
 
     it("drops the minus when the balance rounds to zero", () => {
-        // An emptied EUR account summed to -7.1e-15 and read "-$0.00".
+        // 120.35 - 100.2 - 20.15 is -7.1e-15 in floating point.
         expect(formatSignedAmount(120.35 - 100.2 - 20.15, "USD")).toBe("$0.00");
         expect(formatSignedAmount(-0.4, "USD", false)).toBe("$0");
         expect(formatSignedAmount(-0.6, "USD", false)).toBe("-$1");
@@ -66,7 +66,6 @@ describe("isMultiCurrency", () => {
     });
 });
 
-/** The headline figures alone; the per-account rows have their own cases below. */
 function summary(result: ReturnType<typeof accountsOverview>) {
     if (result === null) {
         return null;
@@ -112,8 +111,6 @@ describe("accountsOverview", () => {
     });
 
     it("counts an entry older than every rate held, at today's rate", () => {
-        // Converted at its own day, a deposit from before the rate window had no
-        // rate and dropped out: a $9,450 savings account read €0.00 in euros.
         const result = accountsOverview(
             [account()],
             [cell({ amount: 1000, amountUsd: 1000, dateKey: "2025-11-20", income: true })],
@@ -172,8 +169,6 @@ describe("accountsOverview", () => {
     });
 
     it("tells a card apart from an overdrawn current account", () => {
-        // The distinction the ledger could not make before `kind`: both are a
-        // negative balance, and only one of them is a debt.
         const result = accountsOverview(
             [
                 account({ id: "a1", initialBalance: -200, kind: "liability" }),

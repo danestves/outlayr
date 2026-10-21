@@ -46,10 +46,7 @@ function flush(): void {
     }
 }
 
-/**
- * The settings among a burst's rows, or `null` when a row is already gone: it
- * was deleted and may have been any setting.
- */
+// `null` when a row is already gone: it was deleted and may have been any setting.
 async function changedSettings(db: Database, rowIds: number[]): Promise<ReadonlySet<string> | null> {
     const rows = await db
         .select({ key: appMeta.key })
@@ -61,10 +58,6 @@ async function changedSettings(db: Database, rowIds: number[]): Promise<Readonly
     return new Set(rows.map((row) => row.key).filter((key) => SETTING_KEYS.has(key)));
 }
 
-/**
- * Whether a burst reaches a listener on `keys`. A `null` burst hid its keys, so
- * it reaches every listener; a listener without `keys` hears every setting.
- */
 export function settingChangeReaches(changed: ReadonlySet<string> | null, keys?: readonly string[]): boolean {
     if (changed === null) {
         return true;
@@ -106,16 +99,8 @@ function retainNativeListener(): () => void {
     };
 }
 
-/**
- * Calls `listener` after writes to `tableName`, once per burst rather than once
- * per row.
- *
- * SQLite's update hook reports every row a write touches as its own native
- * event, so a 1,000-row sync page or CSV import would otherwise re-run every
- * live read on the table a thousand times. Events are collected into one native
- * listener for the app and delivered on the next tick through the channel batch
- * writers already call directly (`invalidate`).
- */
+// SQLite's update hook fires once per row, so a 1,000-row sync page would re-run every live read a thousand times.
+// Events collect into one native listener and deliver next tick, once per burst.
 export function subscribeToTableChanges(tableName: string, listener: () => void): () => void {
     const release = retainNativeListener();
     const unsubscribe = subscribeToTable(tableName, listener);
@@ -125,16 +110,8 @@ export function subscribeToTableChanges(tableName: string, listener: () => void)
     };
 }
 
-/**
- * Calls `listener` after a burst of writes that changed a setting (see
- * `SETTING_KEYS`), or one of `keys` when given, whether from this device or
- * pulled by sync.
- *
- * `appMeta` also holds bookkeeping every sync cycle rewrites, so a listener on
- * the table alone would re-run work that reads only settings. The event names a
- * rowid, not a key, so the burst's keys are looked up once; a row already gone
- * was deleted and may have been a setting, so it counts as one.
- */
+// `appMeta` also holds bookkeeping every sync cycle rewrites; events name a rowid, not a key, so the burst's keys are
+// looked up once to wake only setting listeners.
 export function subscribeToSettingChanges(
     db: Database,
     listener: () => void,

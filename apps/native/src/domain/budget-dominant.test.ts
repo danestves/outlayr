@@ -30,8 +30,6 @@ describe("dominantCategory", () => {
         expect(dominantCategory(rows, WINDOW, END_MS)).toStrictEqual({ categoryId: "groceries", share: 1 });
     });
 
-    // Uncategorised spend still moves the denominator, so a named category cannot
-    // claim a share of the month it did not take.
     it("counts uncategorised spend in the total but never returns it", () => {
         const rows = [spend(50, "2026-08-02T10:00:00Z", null), spend(50, "2026-08-03T10:00:00Z", "groceries")];
         expect(dominantCategory(rows, WINDOW, END_MS)).toStrictEqual({ categoryId: "groceries", share: 0.5 });

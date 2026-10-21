@@ -66,8 +66,6 @@ describe("applyMerchantToSiblings", () => {
         await seedRow(db, "source", { categoryId: "groceries" });
     });
 
-    // Casing and diacritics fold into the key, so "INTERMARCHÉ" is a sibling of
-    // "Intermarché"; a different currency or a different name is not.
     it("paints the logo and fills an empty category on every sibling of the same merchant and currency", async () => {
         await seedRow(db, "bare");
         await seedRow(db, "accented", { note: "INTERMARCHÉ" });
@@ -86,7 +84,6 @@ describe("applyMerchantToSiblings", () => {
         );
 
         expect(touched).toBe(2);
-        // One file per row, never a shared path.
         expect((await row(db, "bare")).imageUri).not.toBe((await row(db, "accented")).imageUri);
         await expect(row(db, "bare")).resolves.toMatchObject({ categoryId: "groceries", imageColor: "#123456" });
         await expect(row(db, "accented")).resolves.toMatchObject({ categoryId: "groceries" });
@@ -135,8 +132,6 @@ describe("applyMerchantToSiblings", () => {
         expect((await tagIdsForQuery(db, "tagged")).map((r) => r.tagId)).toStrictEqual(["tag-own"]);
     });
 
-    // A default-currency row stores null, and a sibling may store the code
-    // written out; both are the same currency.
     it("matches a default-currency row's siblings whether they store null or the code", async () => {
         await seedRow(db, "implicit", { currency: null });
         await seedRow(db, "explicit", { currency: "USD" });
@@ -149,8 +144,6 @@ describe("applyMerchantToSiblings", () => {
         expect((await row(db, "other")).categoryId).toBeNull();
     });
 
-    // The carry runs in the background: a sibling that moved while the logo
-    // was being persisted keeps its newer state, and the file goes.
     it("leaves a sibling that changed under it alone and discards the file", async () => {
         await seedRow(db, "moved");
         const discarded: string[] = [];

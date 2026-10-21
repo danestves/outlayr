@@ -42,9 +42,7 @@ export function AccountDetail({ id }: { id: string }) {
     const db = useDatabase();
     const router = useRouter();
     const accounts = useAccounts(db);
-    // A delete from the edit sheet holds its write for the undo window, so the row
-    // is still readable here. Pending counts as gone, or this screen sits on a
-    // doomed account and then pops on its own ten seconds later.
+    // Pending counts as gone, or this screen sits on a doomed account and pops on its own after the undo window.
     const { pendingId } = useDeferredDelete("account");
     const account = accounts.find((row) => row.id === id && row.id !== pendingId) ?? null;
 
@@ -101,7 +99,6 @@ function AccountDetailLoaded({ account, db }: { account: Account; db: Database }
     );
 }
 
-/** A person's or a liability's detail: the one that can carry a payoff plan. */
 function DebtDetail({ account, db, details, nowMs }: DetailProps) {
     const { balance, cells, rates } = details;
     const payoff = useAccountPayoff(db, account, balance, cells, rates, nowMs);
@@ -170,7 +167,6 @@ function DetailBody({
         [router, transferIds, outsidePlans]
     );
 
-    // A person shares the history, but reads as a debt and keeps out of the account editor.
     const person = isPerson(account);
     const startedAt = t("accounts.detail.startedAt", {
         amount: formatSignedAmount(account.initialBalance, account.currency, showCents, language),

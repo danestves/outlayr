@@ -67,8 +67,6 @@ const goals = {
             en: "No exchange rate for this account yet, so there is nothing to plot against the target.",
             es: "Aún no hay tasa de cambio para esta cuenta, así que no hay nada que trazar frente al objetivo.",
         }),
-        // States the standing in words, because the three figures above it are the
-        // measure and this is the reading of it.
         "goals.detail.verdictAhead": t({
             en: "You're {amount} ahead of where the date needs you.",
             es: "Llevas {amount} de ventaja sobre lo que pide la fecha.",
@@ -81,9 +79,7 @@ const goals = {
             en: "You're on pace for {date}.",
             es: "Vas a buen ritmo para {date}.",
         }),
-        // Deliberately dateless: the goal records a deadline, never the day the
-        // balance actually crossed the target, so naming `targetDate` here would
-        // claim a goal reached early has been held since a date still to come.
+        // Dateless on purpose: the goal records a deadline, never the day the balance crossed the target.
         "goals.detail.verdictReached": t({
             en: "Reached. There's nothing left to put aside.",
             es: "Meta alcanzada. Ya no tienes que apartar nada.",

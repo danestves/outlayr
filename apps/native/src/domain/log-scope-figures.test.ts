@@ -36,7 +36,6 @@ describe("scopeTotals", () => {
         const { shown, others } = scopeTotals(scope, "USD");
 
         expect(others).toHaveLength(1);
-        // Pinned against the summer the rest of the app totals with, per bucket.
         const buckets = new Map(currencyTotals(scope, "USD").map((bucket) => [bucket.currencyCode, bucket.amount]));
         expect(buckets.size).toBe(2);
         for (const figures of [shown, ...others]) {
@@ -53,7 +52,6 @@ describe("scopeTotals", () => {
     });
 
     it("falls back to the dominant bucket when the scope holds no such currency", () => {
-        // A zero USD bucket would claim the scope was empty; it is not, it is EUR.
         const { shown, others } = scopeTotals([entry(10, "EUR")], "USD");
         expect(shown.currencyCode).toBe("EUR");
         expect(netTotal(shown)).toBe(-10);
@@ -97,8 +95,6 @@ describe("a transfer never reaches the scope header", () => {
         expect(totals.shown.count).toBe(1);
     });
 
-    // Which is why the header asks first: +0.00 / -0.00 over a screen full of
-    // rows reads as a broken figure, not as "none of this is spending".
     it("says a scope of nothing but transfers has no figures to print", () => {
         expect(scopeHasFigures([scopeEntry(500, { excludedFromTotals: true })])).toBe(false);
         expect(scopeHasFigures([scopeEntry(40), scopeEntry(500, { excludedFromTotals: true })])).toBe(true);

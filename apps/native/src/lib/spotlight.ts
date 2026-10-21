@@ -16,27 +16,16 @@ import { translateNow } from "@/i18n/runtime";
 
 import { budgetLink, transactionLink } from "./deep-links";
 
-/**
- * Domains let the index be replaced wholesale per kind: a publish clears the
- * domain and re-indexes it, so deletions need no reconciliation.
- */
+/** A publish clears the domain and re-indexes it, so deletions need no reconciliation. */
 const TRANSACTION_DOMAIN = "transactions";
 const BUDGET_DOMAIN = "budgets";
 
-/**
- * How many entries are searchable. Spotlight itself would take far more, but
- * every publish rewrites the whole domain, so the cap bounds that cost rather
- * than Spotlight's.
- */
+/** Bounds the cost of rewriting the whole domain on every publish, not Spotlight's own capacity. */
 const TRANSACTION_LIMIT = 500;
 
 /**
- * Each item's `uniqueIdentifier` IS its `outlayr://` link. `expo-core-spotlight`
- * opens that identifier as a URL when a result is tapped, which routes the tap
- * through `+native-intent` alongside the widgets, Siri and the quick actions.
- *
- * Failures are swallowed: an un-indexed ledger is a search that comes up empty,
- * while a throw here would take down the write that triggered it.
+ * Each `uniqueIdentifier` IS its `outlayr://` link: expo-core-spotlight opens it as a URL on tap. Failures are
+ * swallowed so a failed index never takes down the write that triggered it.
  */
 export async function indexSpotlight(db: SpendDb, now = new Date()) {
     if (Platform.OS !== "ios") {
@@ -49,9 +38,6 @@ export async function indexSpotlight(db: SpendDb, now = new Date()) {
 
         const valuation = await loadValuation(db);
         const showCents = parseBoolSetting(await getMeta(db, "showCents"), true);
-        // The code is per figure, not per index: a stored amount and the display
-        // currency are two different things, and printing one under the other's
-        // symbol misreports money.
         const money = (value: number, code: string) => formatAmount(value, code, showCents);
 
         const categoryRows = await db
@@ -103,42 +89,31 @@ async function indexTransactions(
     }
 
     const untitled = translateNow("spotlight.entry");
-    // The active language alone. The index is rebuilt on every launch and every
-    // background (`use-system-sync`), and the only way to change the language is
-    // the iOS Settings row, which terminates the app — so there is no window in
-    // which a stale language could be left in the index.
+    // Active language only: changing it terminates the app, and the index is rebuilt on every launch.
     const incomeKeyword = translateNow("common.income");
     const expenseKeyword = translateNow("common.expense");
 
     await Spotlight.indexItems(
         rows.map((row) => {
             const category = row.categoryId ? (categoryName.get(row.categoryId) ?? null) : null;
-            // Under its own code, never the ledger's: the Log row this result opens
-            // prints the stored amount unconverted and marks the foreign code beside
-            // it, so converting here would disagree with the screen it deep-links to.
+            // Under its own code: the Log row this opens prints the stored amount unconverted.
             const code = row.currency ?? valuation.displayCurrency;
             const amount = money(row.amount, code);
             return {
-                // What the row says on the Log, in the order the Log says it.
                 contentDescription: [row.income ? `+${amount}` : amount, category, formatDayHeader(row.date, now)]
                     .filter(Boolean)
                     .join(" · "),
                 domainIdentifier: TRANSACTION_DOMAIN,
                 keywords: [
-                    // At the currency's minor units, not `String(row.amount)`: the
-                    // column is major units, so a €12.40 coffee is stored as 12.4 and
-                    // indexed the same way — and "12.40", which is what the Log row
-                    // above prints, then matched nothing. Spotlight matches keywords
-                    // by token prefix, so the padded form still answers to "12".
+                    // At the currency's minor units: the column is major units, so 12.4 would miss the "12.40" the
+                    // Log prints. Spotlight matches keywords by token prefix, so "12" still hits.
                     ...[row.note, category, row.details, row.amount.toFixed(minorUnitsFor(code))].filter(
                         (value): value is string => Boolean(value)
                     ),
                     row.income ? incomeKeyword : expenseKeyword,
                 ],
                 lastUsedDate: row.date.getTime(),
-                // `note` is non-null but can be empty, and a blank Spotlight title
-                // renders as an untappable-looking empty row. The write path already
-                // falls back to the category name; this covers rows that predate it.
+                // `note` can be empty, and a blank Spotlight title renders as an untappable-looking row.
                 title: row.note.trim() || category || untitled,
                 uniqueIdentifier: transactionLink(row.id),
             };
@@ -173,9 +148,6 @@ async function indexBudgets(
         return;
     }
 
-    // Its own label, not the overall budget's: every row here is one category's
-    // cap, and a pull can leave one whose category is tombstoned with nothing to
-    // name it. Composing the title around it would read "Budget budget".
     const unnamed = translateNow("spotlight.budget.fallback");
     const budgetKeyword = translateNow("spotlight.budget.keyword");
 
@@ -185,13 +157,9 @@ async function indexBudgets(
                 (row.name?.trim() ? row.name.trim() : null) ??
                 (row.categoryId ? categoryName.get(row.categoryId) : null) ??
                 null;
-            // The window's own day, exactly as the Budgets screen values it — a
-            // target set in one currency is not the same number under another.
             const window = advanceBudgetWindow(row.startDate ?? now, row.type, now);
             return {
-                // Deliberately the limit, not what is left: Spotlight results are not
-                // re-indexed as you spend, so a "left" figure would go stale between
-                // writes and quietly misreport money.
+                // The limit, not what is left: results are not re-indexed as you spend, so "left" would go stale.
                 contentDescription: translateNow("spotlight.budget.limit", {
                     amount: money(
                         limitIn(row, window.start, valuation.displayCurrency, valuation.rates),
@@ -207,7 +175,6 @@ async function indexBudgets(
     );
 }
 
-/** Clears everything this app put in the index — used by Erase Data. */
 export async function clearSpotlight() {
     if (Platform.OS !== "ios") {
         return;

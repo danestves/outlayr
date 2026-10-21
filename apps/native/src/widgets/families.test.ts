@@ -11,9 +11,7 @@ interface Declaration {
 }
 
 /**
- * `app.config.ts` is the only declaration of what a widget is offered, and it
- * cannot be imported here — it pulls in `expo/config` and `dotenv`. So it is
- * read as source and the `WIDGETS` literal is parsed out of it.
+ * `app.config.ts` cannot be imported here (it pulls in `expo/config` and `dotenv`), so `WIDGETS` is parsed from source.
  */
 function declarations(): Declaration[] {
     const source = readFileSync(join(import.meta.dirname, "..", "..", "app.config.ts"), "utf-8");
@@ -23,9 +21,7 @@ function declarations(): Declaration[] {
         throw new Error("app.config.ts: no `const WIDGETS = [` literal to parse.");
     }
 
-    // One entry per top-level object in the literal. Splitting on the brace keeps
-    // nested `name:` keys — an enum case is one — out of the widget's own. The
-    // indent widths are the formatter's, so they move when oxfmt's config does.
+    // The indent widths are oxfmt's, so they move with its config.
     return source
         .slice(start, end)
         .split("\n    {\n")
@@ -50,12 +46,6 @@ function layout(name: string): string {
 }
 
 describe("widget declarations", () => {
-    /**
-     * A Lock Screen family is a different rendering context, not a smaller tile:
-     * the system flattens it to one tint and gives it a couple of lines. A layout
-     * that declares one without branching on it gets its home screen composition
-     * squeezed into that space, which is how a hero figure ends up unreadable.
-     */
     it("branches on every accessory family it declares", () => {
         for (const widget of declarations()) {
             const source = layout(widget.name);
@@ -74,11 +64,6 @@ describe("widget declarations", () => {
         }
     });
 
-    /**
-     * Declaring a configuration is what puts the "Edit Widget" sheet on the tile.
-     * A layout that then ignores the chosen value leaves the user a control that
-     * silently does nothing.
-     */
     it("reads the configuration it asks the user for", () => {
         const configured = declarations().filter((widget) => widget.configured);
         expect(configured.map((widget) => widget.name).sort((a, b) => a.localeCompare(b))).toStrictEqual([

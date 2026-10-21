@@ -12,29 +12,18 @@ import type { ValuationCoverage } from "@/domain/valuation-coverage";
 import { frozenUsdAmount } from "./frozen-usd";
 import { localRateLookup } from "./rates";
 
-/**
- * Rows per slice, not per foreground: a pass drains the whole backlog, but in
- * slices so a ten-thousand-row ledger does not value itself in one burst. Every
- * row costs a rate lookup and an UPDATE, both synchronous on this driver.
- */
+// Sliced so a large ledger doesn't value itself in one burst: each row's lookup and UPDATE are synchronous here.
 export const CANONICALIZE_BATCH = 250;
 
-/**
- * `await` on this driver only reaches the microtask queue, which runs to
- * exhaustion before the UI gets a frame — a timer is what actually yields.
- */
+// `await` on this driver only reaches the microtask queue, which drains before the UI gets a frame; a timer yields.
 function yieldToUi(): Promise<void> {
     return new Promise((resolve) => {
         setTimeout(resolve, 0);
     });
 }
 
-/**
- * The ledger's currency when the user actually stated it, and null otherwise.
- * `bootstrap` seeds the default unconditionally, so a stored default proves
- * nothing on its own; any other code can only have come from the picker, which
- * answers even for ledgers predating the marker.
- */
+// `bootstrap` seeds the default unconditionally, so a stored default proves nothing without the chosen marker; any
+// other code can only have come from the picker.
 async function statedCurrency(db: SpendDb): Promise<string | null> {
     const stored = await getMeta(db, META_KEYS.currency);
     if (stored === null) {
@@ -47,17 +36,7 @@ async function statedCurrency(db: SpendDb): Promise<string | null> {
     return chosen === "true" ? stored : null;
 }
 
-/**
- * Names the ledger's currency on rows that never stated one, and answers how
- * many it stamped. A null currency means "whatever the setting says", so
- * switching the setting restates every unstamped row's magnitude.
- *
- * Stamps only where the user actually stated a currency: the stamp is
- * irreversible where the ambiguity it replaces is not, and a stamped USD row
- * goes on to freeze at rate 1 without any rate ever being consulted.
- *
- * Idempotent, and a no-op once the backlog is gone.
- */
+// Stamps only a currency the user stated: the stamp is irreversible, and a stamped USD row freezes at rate 1 unchecked.
 export async function stampLedgerCurrency(db: SpendDb): Promise<number> {
     const display = await statedCurrency(db);
     if (display === null) {
@@ -65,8 +44,6 @@ export async function stampLedgerCurrency(db: SpendDb): Promise<number> {
     }
     let stamped = 0;
 
-    // Budgets carry the same contract as entries: a target stored as a bare
-    // number would follow the setting rather than survive it.
     /* oxlint-disable no-await-in-loop -- each table counts the rows it is about to stamp and then stamps them under the same predicate, and `await` on this driver only reaches the microtask queue (see yieldToUi below), so issuing the tables together would overlap no I/O while letting the two halves of that pair interleave */
     for (const table of [transactions, budgets, mainBudget] as const) {
         const pending = await db.select({ id: table.id }).from(table).where(isNull(table.currency));
@@ -81,11 +58,7 @@ export async function stampLedgerCurrency(db: SpendDb): Promise<number> {
     return stamped;
 }
 
-/**
- * The rows a pass can act on. Shared so a coverage readout counts the same set
- * the drain works through: a row naming no currency is not a backlog item, and
- * counting it as one reports a backlog that never drains.
- */
+// Shared with the coverage readout: a row naming no currency isn't backlog, and counting it reports one never draining.
 function uncanonicalized() {
     return and(
         isNull(transactions.amountUsd),
@@ -99,12 +72,10 @@ function uncanonicalized() {
     );
 }
 
-/** Fills resolvable canonical-USD gaps without consuming pending custom rows. */
 export async function backfillCanonicalUsd(db: SpendDb): Promise<number> {
     const lookup = localRateLookup(db);
     let valued = 0;
-    // A row this pass cannot value keeps its place in the predicate, so the cursor
-    // steps over it. Without that, the next slice re-reads the same rows forever.
+    // A row this pass can't value stays in the predicate, so the cursor steps over it or the next slice re-reads it.
     let cursor = 0;
 
     /* oxlint-disable no-await-in-loop -- the next slice's offset is `cursor`, which only the previous slice's landed count can produce, so the slices cannot be issued together */
@@ -130,10 +101,6 @@ export async function backfillCanonicalUsd(db: SpendDb): Promise<number> {
 
         let valuedInBatch = 0;
         let removedFromBacklog = 0;
-        // The rate lookup and the UPDATE are both synchronous on this driver (see
-        // CANONICALIZE_BATCH above), so issuing the slice together overlaps no I/O
-        // — it only moves all 250 rows into one microtask drain, which is exactly
-        // what yieldToUi paces.
         for (const row of pending) {
             const canonical = await canonicalUsd(lookup, {
                 amount: row.amount,
@@ -176,10 +143,6 @@ export async function backfillCanonicalUsd(db: SpendDb): Promise<number> {
     /* oxlint-enable no-await-in-loop */
 }
 
-/**
- * The budget twin of {@link backfillCanonicalUsd}. Values each target at the day
- * it was created, not today, or a target would drift with the market.
- */
 export async function backfillBudgetUsd(db: SpendDb): Promise<number> {
     const lookup = localRateLookup(db);
     let valued = 0;
@@ -200,8 +163,6 @@ export async function backfillBudgetUsd(db: SpendDb): Promise<number> {
         /* oxlint-disable no-await-in-loop -- the rate lookup and the UPDATE are both synchronous on this driver (see CANONICALIZE_BATCH above), so issuing the rows together overlaps no I/O and only lets every target's write pile into one microtask drain */
         for (const row of pending) {
             if (row.currency === null) {
-                // Not stamped yet; `stampLedgerCurrency` runs first and the next pass
-                // will find it.
                 continue;
             }
             const { amountUsd } = await canonicalUsd(lookup, {
@@ -262,16 +223,8 @@ async function canonicalizedCount(db: SpendDb): Promise<number> {
     return rows[0]?.total ?? 0;
 }
 
-/**
- * Splits the backlog into what a later pull can still value and what it never
- * will. `pullRatesIfDue` wipe-replaces the table with a bounded window, so a row
- * dated before the earliest rate its currency holds is not waiting on anything.
- *
- * A currency with no rows at all is left in `pending`: rates for it may still
- * arrive, and "never" is not something to claim without evidence.
- *
- * All zeroes when nothing is outstanding, `converted` included.
- */
+// `pullRatesIfDue` wipe-replaces rates with a bounded window, so a row dated before its currency's earliest rate never
+// values. A currency with no rates at all stays pending: they may still arrive.
 export async function valuationCoverage(db: SpendDb): Promise<ValuationCoverage> {
     if (!(await hasUncanonicalized(db))) {
         return { beyondRateHistory: 0, converted: 0, pending: 0 };

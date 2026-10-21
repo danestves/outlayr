@@ -5,11 +5,7 @@ import { useTranslation } from "@/i18n/context";
 
 import { Text } from "./text";
 
-/**
- * Terminal surface for a database that failed to open, migrate or seed. It
- * replaces the navigator entirely: with no usable file there is no screen that
- * could render meaningfully, and the splash must not hang forever either.
- */
+/** Replaces the navigator: with no usable database no screen can render, and the splash must not hang. */
 export function LocalDataError() {
     const { error, status, retry } = useLocalData();
     const t = useTranslation();

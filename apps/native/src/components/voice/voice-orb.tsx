@@ -9,22 +9,17 @@ import { ORB_SKSL } from "./orb-shader";
 
 export type VoiceOrbState = "idle" | "listening" | "thinking" | "settled" | "failed";
 
-// Compiled once per bundle: `RuntimeEffect.Make` parses and compiles the SkSL,
-// which is far too slow to redo on a render and is also a capitalized call the
-// React Compiler would read as a component inside one.
+// Module scope: compiling SkSL is far too slow for a render, and the React Compiler would read the capitalized
+// `RuntimeEffect.Make` call as a component.
 const ORB_EFFECT = Skia.RuntimeEffect.Make(ORB_SKSL);
 
-/** How fast the orb wakes on a syllable, and how slowly it settles after one. */
 const ATTACK = 14;
 const RELEASE = 3.2;
-/** A word is never a jump to full: the floor while listening keeps it lit. */
 const LISTENING_FLOOR = 0.3;
 const LISTENING_RANGE = 0.7;
-/** Where the orb rests once it has understood: lit, not straining. */
 const SETTLED_ACTIVATION = 0.42;
 /** A frame this long is a hitch; playing it back at full rate is a lurch. */
 const MAX_FRAME_MS = 48;
-/** The frame a still orb shows — far enough in that the bands are apart. */
 const STILL_PHASE = 2.4;
 
 function targetActivation(state: VoiceOrbState, level: number, phase: number): number {
@@ -33,8 +28,7 @@ function targetActivation(state: VoiceOrbState, level: number, phase: number): n
         return LISTENING_FLOOR + LISTENING_RANGE * Math.min(1, Math.max(0, level));
     }
     if (state === "thinking") {
-        // Two tempi, so the pulse never lands on a beat and reads as work
-        // rather than as a progress indicator.
+        // Two tempi, so the pulse never lands on a beat and reads as work rather than progress.
         return 0.62 + 0.22 * Math.sin(phase * 3.1) + 0.12 * Math.sin(phase * 5.3 + 1.1);
     }
     if (state === "settled") {
@@ -44,22 +38,14 @@ function targetActivation(state: VoiceOrbState, level: number, phase: number): n
 }
 
 interface VoiceOrbProps {
-    /** Input level, 0–1, from the recorder's metering. Read on the UI thread only. */
+    /** 0 to 1, from the recorder's metering. Read on the UI thread only. */
     level?: SharedValue<number>;
     size: number;
     state: VoiceOrbState;
 }
 
-/**
- * The orb: an ink sphere with brand-coloured bands sheeting through it under a
- * glass shell. `state` picks how awake it is and `level` moves it word by word
- * while listening, the way a voice assistant's own does.
- *
- * Every uniform is produced on the UI thread from two accumulated values —
- * phase and activation — so a 60Hz meter never re-renders React. The phase is
- * accumulated rather than derived from wall time because the tempo follows the
- * activation: a `time * speed` product would jump on every change of speed.
- */
+// Uniforms come from two UI-thread accumulators, so a 60Hz meter never re-renders React. Phase accumulates rather
+// than deriving from wall time: tempo follows activation, and `time * speed` would jump on every speed change.
 export function VoiceOrb({ level, size, state }: VoiceOrbProps) {
     const reducedMotion = useReducedMotion();
     const phase = useSharedValue(STILL_PHASE);
@@ -87,7 +73,6 @@ export function VoiceOrb({ level, size, state }: VoiceOrbProps) {
         return () => setActive(false);
     }, [reducedMotion, setActive]);
 
-    // Reduced motion still gets the look of its state, on a fixed frame.
     useEffect(() => {
         if (!reducedMotion) {
             return;

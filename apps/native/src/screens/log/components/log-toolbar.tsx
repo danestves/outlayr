@@ -17,10 +17,7 @@ export interface LogToolbarProps {
     period: LogPeriod;
 }
 
-/**
- * Rendered from the screen rather than the layout, because both menus read and
- * write screen state.
- */
+/** Rendered from the screen: both menus read and write screen state. */
 export function LogToolbar({ period, onPeriod, filter, onFilter, onSearch }: LogToolbarProps) {
     const t = useTranslation();
     return (

@@ -24,8 +24,6 @@ describe("buildRateTable", () => {
 
 describe("valueIn", () => {
     it("returns the stored amount untouched when already in display currency", () => {
-        // The common path. A round-trip through USD here would drift a cent on a
-        // ledger kept entirely in one currency.
         const value = valueIn(
             {
                 amount: 12.4,
@@ -40,28 +38,21 @@ describe("valueIn", () => {
     });
 
     it("converts a null-currency row instead of relabelling it", () => {
-        // The row named no currency, so it was written under whatever the ledger's
-        // currency was that day. Handing back 99 here would restate a $110 lunch as
-        // €99 the moment the user switched their display currency.
         const value = valueIn({ amount: 99, amountUsd: 110, currency: null, dateKey: "2026-07-15" }, "EUR", rates);
         expect(value).toBe(104.5);
     });
 
     it("still takes a null-currency row at face value when it has no USD value", () => {
-        // Nothing can place it, so the ledger's currency is the only label left.
         const value = valueIn({ amount: 99, amountUsd: null, currency: null, dateKey: "2026-07-15" }, "EUR", rates);
         expect(value).toBe(99);
     });
 
     it("converts a cross-currency row at the rate of ITS OWN day", () => {
-        // $100 on 5 Jul values at that day's 0.90, not the later 0.95 — otherwise
-        // last month's total would move every time rates do.
         const value = valueIn({ amount: 100, amountUsd: 100, currency: "USD", dateKey: "2026-07-05" }, "EUR", rates);
         expect(value).toBe(90);
     });
 
     it("converts a USD row that was never canonicalized", () => {
-        // $100 is $100: a USD row needs nothing frozen.
         const value = valueIn({ amount: 100, amountUsd: null, currency: "USD", dateKey: "2026-07-05" }, "EUR", rates);
         expect(value).toBe(90);
     });
@@ -72,18 +63,15 @@ describe("valueIn", () => {
     });
 
     it("rounds to the display currency's own exponent", () => {
-        // JPY has no minor units; 0.95-style fractions must not survive into it.
         const jpy = buildRateTable([{ date: "2026-07-01", quote: "JPY", rate: 157.3 }]);
         const value = valueIn({ amount: 1, amountUsd: 1, currency: "USD", dateKey: "2026-07-05" }, "JPY", jpy);
         expect(value).toBe(157);
     });
 
     it("falls back to face value rather than dropping money", () => {
-        // Entered offline, never canonicalized: it still belongs in the total.
         const noUsd = valueIn({ amount: 50, amountUsd: null, currency: "GBP", dateKey: "2026-07-15" }, "EUR", rates);
         expect(noUsd).toBe(50);
 
-        // Canonical, but no rate for the display currency that far back.
         const noRate = valueIn({ amount: 50, amountUsd: 50, currency: "USD", dateKey: "2020-01-01" }, "EUR", rates);
         expect(noRate).toBe(50);
     });
@@ -132,8 +120,6 @@ describe("isExact", () => {
     });
 
     it("is false for a cross-currency row that was never canonicalized", () => {
-        // GBP, not USD: a USD row needs nothing frozen, since its canonical value
-        // is the amount itself.
         expect(isExact({ amount: 1, amountUsd: null, currency: "GBP", dateKey: "2026-07-15" }, "EUR", rates)).toBe(
             false
         );
@@ -146,25 +132,19 @@ describe("isExact", () => {
     });
 
     it("is false when canonical but no rate reaches that far back", () => {
-        // A frozen USD value is not proof the row can be converted: with no rate in
-        // the table `valueIn` falls back to face value.
         expect(isExact({ amount: 1, amountUsd: 1, currency: "USD", dateKey: "2020-01-01" }, "EUR", rates)).toBe(false);
     });
 });
 
 describe("limitIn", () => {
     it("restates a target at the rate of the day its window opened", () => {
-        // Both legs on the window's day, not the amount's USD value frozen on the
-        // day the target was set: 4000 VES / 40 = $100, and $100 * 0.95 = €95. The
-        // stored 200 is a stale freeze and must not reach the screen.
+        // 4000 VES / 40 = $100 at the window's rate, and $100 * 0.95 = €95; the stored 200 is a stale freeze.
         expect(
             limitIn({ amount: 4000, amountUsd: 200, currency: "VES" }, new Date(Date.UTC(2026, 6, 15)), "EUR", rates)
         ).toBe(95);
     });
 
     it("falls back to the frozen value when no rate reaches the window", () => {
-        // VES has no rate on or before 2026-07-01, so the stored USD value is the
-        // only thing left that can place the target.
         expect(
             limitIn({ amount: 4000, amountUsd: 200, currency: "VES" }, new Date(Date.UTC(2026, 6, 1)), "EUR", rates)
         ).toBe(180);
@@ -186,7 +166,6 @@ describe("sumValuedIn", () => {
     const JULY_15 = new Date(Date.UTC(2026, 6, 15, 12));
 
     it("adds a mixed-currency list in the display currency", () => {
-        // 40 EUR is already there; 50 USD is worth 47.50 at that day's rate.
         expect(
             sumValuedIn(
                 [
@@ -224,8 +203,7 @@ describe("valueRowsIn", () => {
     const cents = (value: number) => roundMoney(value);
     const added = (values: readonly number[]) => cents(values.reduce((total, value) => total + value, 0));
 
-    // $2.15 is €1.935 at 0.9 and €2.0425 at 0.95: rounded on its own each row is a
-    // fifth of a cent out, and four of them per day carry that into the open.
+    // $2.15 is €1.935 at 0.9 and €2.0425 at 0.95: rounding each row alone leaves a fifth of a cent per row.
     const entries = [JULY_5, JULY_15].flatMap((date) =>
         Array.from({ length: 4 }, () => ({
             amount: 2.15,
@@ -290,8 +268,7 @@ describe("valueRowsIn", () => {
     });
 
     it("keeps income and expense apart, as the Log's cells do", () => {
-        // Rounding all four as one cell gives €0.19; the Log rounds each direction
-        // separately and prints €0.20.
+        // Rounding all four as one cell gives €0.19; the Log rounds each direction separately and prints €0.20.
         const rows = [true, false].flatMap((income) =>
             Array.from({ length: 2 }, () => ({
                 amount: 0.05,
@@ -318,12 +295,6 @@ describe("valueRowsIn", () => {
     });
 });
 
-/**
- * `convertUsdSum` rounds at the display currency's own exponent, so the running
- * difference `valueRowsIn` hands back out has to use the same one. A flat two
- * decimals here left a 3-decimal currency's rows failing to sum to the header
- * they exist to agree with.
- */
 describe("valueRowsIn in a three-decimal currency", () => {
     const bhdRates = buildRateTable([{ date: "2026-07-10", quote: "BHD", rate: 0.377 }]);
     const row = (amountUsd: number) => ({

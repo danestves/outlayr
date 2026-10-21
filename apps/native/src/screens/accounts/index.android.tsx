@@ -41,11 +41,6 @@ import { DebtSections, LedgerTotals } from "./debt-sections";
 /** Where the row's text starts, which is where its menu drops down from. */
 const TEXT_LEADING = 16 + PARENT_TILE + 16;
 
-/**
- * The accounts list on Android: M3 two-line rows on hairlines, with the same
- * census, rows and transfers entry as the iOS list. A row swipes left to
- * delete and holds for a menu.
- */
 export function Accounts() {
     const db = useDatabase();
     const router = useRouter();
@@ -81,8 +76,6 @@ export function Accounts() {
         [router]
     );
 
-    // As on iOS: the row goes now and the write waits out the undo window, so
-    // the toast carries what deleting does to the account's transactions.
     const deleteAccount = useCallback(
         (account: Account) => {
             requestDelete(account.id, t("accounts.undo.body"));
@@ -225,8 +218,6 @@ const AccountRow = memo(({ account, colors, db, onDelete, onEdit, onOpen }: Acco
                     type="solid"
                 />
                 {stacked ? (
-                    // At accessibility sizes the balance would squeeze the name to an
-                    // ellipsis, so it drops to its own line, as on iOS.
                     <View className="flex-1">
                         <Text className="text-body text-m3-on-surface">
                             {`${account.name} `}

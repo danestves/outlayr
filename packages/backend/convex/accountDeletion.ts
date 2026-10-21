@@ -45,18 +45,7 @@ export interface DeletionJob {
     userId: string | null;
 }
 
-/**
- * The TTL gates the authorisation to START destroying, not the destruction.
- *
- * Only `prepared` still has anything to re-authenticate for. Past it the
- * provider is revoked and the ledger is being hard-deleted a batch at a time,
- * and a large one takes many round trips — so a device that goes offline
- * mid-purge and returns a day later must be allowed to finish. Refusing left the
- * entries gone, the account and its sessions live, and the subscription still
- * billing, with no path forward: `cleanupExpired` sweeps only `prepared` and
- * `complete`, so the job survived forever carrying the `userId` this whole flow
- * exists to destroy.
- */
+/** The TTL gates starting the destruction, not finishing it: a device offline mid-purge must be able to finish. */
 export function requireUnexpiredDeletionJob(job: DeletionJob, at: number = Date.now()): void {
     if (job.phase === "prepared" && job.expiresAt <= at) {
         throw new ConvexError("Deletion job expired; reauthentication is required");
@@ -113,15 +102,7 @@ function requireUnexpiredPreparedJob(job: DeletionJob) {
     }
 }
 
-/**
- * How many open deletion jobs one account may hold.
- *
- * A user can genuinely prepare more than one — a lost resume secret, a second
- * device, a retried flow — but never many. The cap is what makes that true:
- * `sync.refuseWhileDeleting` reads a user's jobs to decide whether a push is
- * landing on an account mid-purge, and an uncapped table would let a client
- * bury the one job that says so under any number of harmless `prepared` ones.
- */
+/** Capped so `sync.refuseWhileDeleting` reads jobs cheaply and no client can bury the job that refuses a push. */
 export const DELETION_JOBS_PER_USER = 20;
 
 export const prepare = mutation({
@@ -240,13 +221,7 @@ async function forgetUsage(ctx: MutationCtx, userId: string, tokenIdentifier: st
     await ctx.runMutation(components.agent.users.deleteAllForUserIdAsync, { userId: tokenIdentifier });
 }
 
-/**
- * Removes every row Better Auth holds for a user in one table. Its own user
- * cascade is off (`auth.ts` disables `deleteUser`), so `session` — and `account`,
- * which carries the provider subject and its OAuth tokens — are this flow's to
- * delete. `deleteMany` deletes a single page per call, so the cursor has to be
- * followed to the end or the rest survive the erasure.
- */
+/** Better Auth's user cascade is off (`auth.ts`), so these are ours; `deleteMany` takes one page per call. */
 async function deleteAuthRows(
     ctx: MutationCtx,
     model: "account" | "oauthAccessToken" | "oauthConsent" | "session",
@@ -307,9 +282,7 @@ export const advance = mutation({
         await deleteAuthRows(ctx, "oauthConsent", job.userId);
         await deleteAuthRows(ctx, "session", job.userId);
         await deleteAuthRows(ctx, "account", job.userId);
-        // SAFETY: the better-auth component types its mutation references
-        // against its own generated api, which this app does not import. The
-        // `input` shape below is the adapter's documented one.
+        // SAFETY: the component types its references against its own generated api, which this app does not import.
         await ctx.runMutation(
             components.betterAuth.adapter.deleteOne as never,
             {
@@ -375,8 +348,7 @@ export const poll = query({
         if (!job) {
             return null;
         }
-        // `at` rather than the wall clock: nothing writes the job when it merely
-        // expires, so a subscribed caller would go on being told the old phase.
+        // Nothing writes the job when it merely expires, so a subscriber would keep the old phase.
         if (job.phase === "prepared" && job.expiresAt <= (args.at ?? Date.now())) {
             return null;
         }

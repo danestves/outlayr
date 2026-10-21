@@ -179,9 +179,7 @@ const budgets = {
             en: "over budget",
             es: "de más",
         }),
-        // Appended to whichever verdict fired, so the sentence names what did it
-        // rather than only when it happened. Percent, not a worded fraction: "four
-        // fifths" does not survive translation.
+        // Percent, not a worded fraction: "four fifths" does not survive translation.
         "budgets.hero.verdictBlame": t({
             en: "{name} took {percent}% of it.",
             es: "{name} se llevó el {percent}%.",
@@ -250,8 +248,7 @@ const budgets = {
             en: "this year",
             es: "este año",
         }),
-        // The chips in the period step. Title case because a chip is a label, not
-        // part of a sentence — `budgets.periodPhrase.*` is the mid-sentence form.
+        // Title case: a chip is a label. `budgets.periodPhrase.*` is the mid-sentence form.
         "budgets.periodName.day": t({
             en: "Day",
             es: "Día",
@@ -356,8 +353,6 @@ const budgets = {
             en: "Not saved",
             es: "No se guardó",
         }),
-        // The overall budget, named for what it covers rather than for its rank.
-        // The same word heads the tab, the sheet and the widget.
         "budgets.scope.everything": t({
             en: "Everything",
             es: "Todo",
@@ -382,8 +377,7 @@ const budgets = {
             en: "One overall budget at a time. This changes the one you have.",
             es: "Solo puedes tener un presupuesto general. Esto cambia el que ya tienes.",
         }),
-        // The sheet's head. Word order is the translator's: `{scope}` is a category
-        // name or "everything", `{period}` is `budgets.periodPhrase.*`.
+        // Word order is the translator's: `{scope}` is a category name or "everything", `{period}` a period phrase.
         "budgets.sheet.stated": t({
             en: "Keep {scope} under {period}",
             es: "Tu límite para {scope} {period}",

@@ -12,7 +12,6 @@ import type { Language } from "@/i18n/languages";
 type DebtListRow = DebtsScreenOverview["youOwe"][number];
 
 interface Wording {
-    /** The display currency the totals are in. */
     currency: string;
     language: Language;
     showCents: boolean;
@@ -24,13 +23,6 @@ export interface DebtSubtitle {
     tone: "due" | "income" | "muted" | "overdue";
 }
 
-/**
- * What a Debts row says under its name, and how it is tinted: a liability with
- * orders says its next cuota, in its own currency, flagged when overdue;
- * otherwise only what the figure does not already say: the account keeps
- * another currency. An overdue cuota reads as an expense; otherwise the account
- * the due strip names is tinted.
- */
 export function debtSubtitle(
     item: DebtListRow,
     debts: DebtsScreenOverview,
@@ -68,10 +60,6 @@ export function debtSubtitle(
     return { text, tone: overdue ? "overdue" : tone };
 }
 
-/**
- * The due strip's "Due in the next 14 days" and its summary: how many cuotas
- * and the soonest, or since when when that one is overdue.
- */
 export function dueStripWording(
     due: NonNullable<DebtsScreenOverview["due"]>,
     debts: DebtsScreenOverview,
@@ -90,23 +78,17 @@ export function dueStripWording(
     };
 }
 
-/** A whole figure for a plan's facts, or the mask while amounts are hidden. */
 function planMoney(amount: number, currency: string, hidden: boolean, language: Language): string {
     return hidden ? maskedAmount(currency) : formatAmount(amount, currency, false, language);
 }
 
 export interface PayoffFacts {
-    /** How far behind the date's line, or null when on pace or ahead. */
+    /** Null when on pace or ahead. */
     behind: string | null;
     /** What a month costs until the date, or under a month what is left by it; null once unvalued. */
     plan: string | null;
 }
 
-/**
- * A live plan's one line of facts, in `currency`: what a month costs until the
- * date, or under a month what is left by the date and the days to it, and how
- * far behind the date's line the balance is. Null parts are not said.
- */
 export function payoffFacts(
     line: PayoffLine,
     currency: string,
@@ -131,11 +113,6 @@ export function payoffFacts(
     };
 }
 
-/**
- * What a Debts row says about its plan: the date at the line's end and the
- * line's label while it is live, or when it was paid off while the balance has
- * stayed at zero since. A plan that ended and moved on says nothing.
- */
 export function payoffRowWording(
     item: DebtListRow,
     line: PayoffLine | undefined,

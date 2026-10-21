@@ -13,8 +13,6 @@ describe("suggesting a curated merchant from a prefix", () => {
     });
 
     it("matches an alias and answers with the entry's own name", () => {
-        // "ubereats" is an alias of the "uber eats" entry, and the name offered
-        // is the entry's label rather than the alias that matched.
         expect(suggestMerchants("ubereat", 4)).toStrictEqual(["Uber Eats"]);
     });
 

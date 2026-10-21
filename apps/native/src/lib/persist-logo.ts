@@ -1,7 +1,5 @@
-/** Writes fetched logo bytes into photo storage and reads the glow hue off the file. */
 export async function persistLogo(bytes: Uint8Array): Promise<{ imageColor: string | null; imageUri: string }> {
-    // Required lazily so neither caller pulls Skia's downscaler into the module
-    // graph at import time, matching `domain/ids.ts`.
+    // Required lazily so neither caller pulls Skia's downscaler into the module graph at import time.
     // SAFETY: untyped `require`, asserted to that module's own type.
     const photoStorage = require("@/lib/photo-storage") as typeof import("@/lib/photo-storage");
     // SAFETY: as on the line above.

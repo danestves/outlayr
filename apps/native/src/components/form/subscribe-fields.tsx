@@ -14,12 +14,8 @@ interface SubscribeFieldsProps<TState, TSelected> {
     store: Subscribable<TState>;
 }
 
-/**
- * `form.Subscribe` compares with `===`, so a selector returning an object or
- * tuple re-renders on every store write — the shape TanStack's own docs show.
- * This is that component with a shallow comparator, for subtrees that need more
- * than one field. Prefer plain `form.Subscribe` when a single primitive will do.
- */
+// `form.Subscribe` compares with `===`, so an object or tuple selector re-renders on every store write.
+// Prefer plain `form.Subscribe` when a single primitive will do.
 export function SubscribeFields<TState, TSelected>({
     store,
     selector,

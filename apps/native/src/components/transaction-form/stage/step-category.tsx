@@ -9,21 +9,15 @@ import { useColors } from "@/theme/use-colors";
 import { StageOptionRow } from "./stage-options";
 import type { StageOptionItem } from "./stage-options";
 
-/**
- * Four rows of pills — 38pt each with 8pt between them. Past that, at standard
- * text sizes, the options scroll inside the step rather than growing the stage,
- * which is docked to the bottom of the form and would otherwise push the
- * sentence off the screen.
- */
+// Four rows of 38pt pills with 8pt gaps. Past that the options scroll inside the step, or the docked stage would
+// push the sentence off the screen.
 const MAX_LIST_HEIGHT = 176;
 
-/** Reads inside a 38pt pill without crowding the label. */
 const TILE = 22;
 
-/** The crumb the picker sheet already draws between a holder and its child. */
 const CRUMB = " › ";
 
-/** No category id can collide: they are uuids. */
+// No category id can collide: they are uuids.
 const CREATE_OPTION = "__create__";
 
 interface FlatCategory {
@@ -31,13 +25,8 @@ interface FlatCategory {
     label: string;
 }
 
-/**
- * Tree order, each holder followed by its own children. Categories nest one
- * level — `useCategoriesByNamespace` returns top-level rows with their children
- * nested, and a child holds none of its own — and a row of pills has nowhere to
- * put the sheet's disclosure, so a child states its holder inline instead. Two
- * leaves both called "Coffee" would otherwise be the same pill twice.
- */
+// A row of pills has no disclosure, so a child states its holder inline: two leaves called "Coffee" would otherwise
+// be the same pill twice.
 function flattenCategories(categories: readonly CategoryWithChildren[]): FlatCategory[] {
     const flat: FlatCategory[] = [];
     for (const parent of categories) {
@@ -50,15 +39,12 @@ function flattenCategories(categories: readonly CategoryWithChildren[]): FlatCat
 }
 
 interface StepCategoryProps {
-    /** Top-level rows with their children nested, as `useCategoriesByNamespace` hands them over. */
     categories: readonly CategoryWithChildren[];
-    /** Omitted by a host that cannot mint a category, which also drops the option. */
     onCreate?: () => void;
     onSelect: (category: Category) => void;
     selectedId: string | null;
 }
 
-/** The stage's category step: every category as an option, holders before their children. */
 export function StepCategory({ categories, onCreate, onSelect, selectedId }: StepCategoryProps) {
     const t = useTranslation();
     const colors = useColors();
@@ -70,8 +56,6 @@ export function StepCategory({ categories, onCreate, onSelect, selectedId }: Ste
         label,
         leading: (
             <CategoryIconTile
-                // An income category takes the income token rather than its stored
-                // colour, exactly as the picker sheet tints it.
                 color={category.income ? colors.income : (category.color ?? colors.muted)}
                 emoji={category.emoji}
                 icon={category.icon}

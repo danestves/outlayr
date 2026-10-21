@@ -25,13 +25,6 @@ import { Text } from "../text";
 import { InstallmentsPad, MAX_COUNT, NONE, useInstallmentsSheetForm } from "./installments-sheet-form";
 import type { InstallmentsSheetProps } from "./installments-sheet-form";
 
-/**
- * How a purchase on a liability account is paid: the part paid now and where it
- * came from, then N installments of an amount, their rhythm and the first due
- * date, and the whole schedule they make. Cuotas already paid before Outlayr are
- * checked off in it, always from the first one. Every field is the draft's; the
- * entry form writes the order on save.
- */
 export function InstallmentsSheet(props: InstallmentsSheetProps) {
     const { accounts, currency, draft, onChange, purchaseDay, ref, schedule } = props;
     const t = useTranslation();
@@ -250,7 +243,6 @@ interface ScheduleRowProps {
     row: ScheduledInstallment;
 }
 
-/** One row of the draft's schedule: its check, its date and amount, and an inline editor while it is open. */
 function ScheduleRow({
     detail,
     editing,

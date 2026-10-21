@@ -45,7 +45,6 @@ interface Figure {
     currency: string;
 }
 
-/** A figure in the list's currency when the list could value it exactly, otherwise as it was kept. */
 function inListCurrency(
     figure: { amount: number; currency: string | null; valued?: number | null },
     currency: string
@@ -57,17 +56,14 @@ function inListCurrency(
 }
 
 interface UnderAmountProps {
-    /** A fee the amount above could not take in, because it is in another currency. */
     fee: Figure | undefined;
     future: boolean;
     moved: TransferMove | undefined;
-    /** The amount as it was kept, when the figure above restates it in the list's currency. */
     original: string | null;
     sentCurrency: string;
     showCents: boolean;
 }
 
-/** The trailing figure's second line, in the type of the time beside it. */
 function UnderAmount({ fee, future, moved, original, sentCurrency, showCents }: UnderAmountProps) {
     const t = useTranslation();
     const { language } = useLanguage();
@@ -125,12 +121,10 @@ function UnderAmount({ fee, future, moved, original, sentCurrency, showCents }: 
 interface RowMetaProps {
     currency: string;
     details: string | null | undefined;
-    /** Marks a row whose figure carries a fee. */
     fee: boolean;
     foreignCode: string | null;
     future: boolean;
     rateNeeded: boolean;
-    /** The trailing figure restates the row in the list's currency, with the original under it. */
     restated: boolean;
     subtitle: string;
     unplaced: boolean;
@@ -197,18 +191,14 @@ function RowMeta({
 }
 
 interface RowFigure extends Figure {
-    /** A fee the figure could not take in, because it is in another currency. */
     apart?: Figure;
     feeIn: boolean;
-    /** `amount` with the fee taken in. */
     total: number;
 }
 
-/** The row's trailing figure, and the fee it carries. */
 function rowFigure(transaction: TransactionRowProps["transaction"], currency: string, isTransfer: boolean): RowFigure {
     const fee = transaction.fee && inListCurrency(transaction.fee, currency);
     if (isTransfer) {
-        // A transfer keeps the currency it left in: what arrived, and in what, is the row's point.
         const sent = transaction.moved?.sent ?? transaction.amount;
         return { amount: sent, apart: fee, currency: transaction.currency ?? currency, feeIn: false, total: sent };
     }
@@ -221,38 +211,17 @@ function rowFigure(transaction: TransactionRowProps["transaction"], currency: st
 }
 
 interface TransactionRowProps {
-    /**
-     * The list's currency: a row kept in another one is restated in it, and a row
-     * that stated none is printed under it.
-     */
     currency: string;
-    /**
-     * Forces the upcoming variant. A scheduled entry whose stored date is already
-     * past is still upcoming — what is upcoming is its next occurrence — so the
-     * Upcoming section states it rather than letting the date decide.
-     */
+    /** A scheduled entry whose stored date is past is still upcoming: its next occurrence is. */
     future?: boolean;
-    /** When the row lands, for the upcoming variant's subtitle. */
     landsOn?: Date;
-    /**
-     * The row's context menu, opened by holding it. Omit on a surface that offers
-     * none.
-     */
     menuItems?: readonly ActionMenuItem[];
-    /**
-     * Same deletion the swipe performs. Pass it on a surface whose rows swipe: a
-     * pan is the one gesture assistive technology cannot make, so the action has to
-     * also exist as an accessibility action.
-     */
+    /** Pass it where rows swipe: assistive technology cannot pan, so delete must also be an accessibility action. */
     onDelete?: (id: string) => void;
     onPress: (id: string) => void;
-    /** Rates for `currency`. Without it no row is marked unplaced. */
+    /** Without it no row is marked unplaced. */
     rates?: RateTable;
-    /**
-     * `details` is optional because most surfaces read a projection that leaves the
-     * free text out (`LOG_COLUMNS`); only the search read carries it, and only a
-     * row that has it prints the excerpt.
-     */
+    /** Optional: most reads use `LOG_COLUMNS`, which leaves the free text out; only search carries it. */
     transaction: TransactionWithCategory & {
         details?: string | null;
         ends?: TransferLogRow["ends"];
@@ -293,9 +262,8 @@ export function TransactionRow({
     const kept = formatAmount(transaction.amount, code, showCents, language);
     const original =
         shown.currency === code || formatAmount(shown.amount, code, showCents, language) === kept ? null : kept;
-    // A row that stated no currency is printed under the global code. That is a
-    // fact only while something can place it; once nothing can, the code is an
-    // assumption and the mark says so.
+    // A row with no currency prints under the global code; once nothing can place it, that code is an assumption and
+    // the mark says so.
     const unplaced =
         transaction.currency === null &&
         rates !== undefined &&
@@ -337,16 +305,12 @@ export function TransactionRow({
 
     const row = (
         <RowPressable
-            // The hold is the only route to the action menu, and nothing on screen says
-            // so; the rotor entry is the only route to Delete, which otherwise lives
-            // behind a swipe no assistive gesture can perform.
             accessibilityActions={
                 onDelete ? [{ label: t("log.row.deleteAccessibility"), name: DELETE_ACTION }] : undefined
             }
             accessibilityHint={menuItems?.length ? t("log.row.actionsHint") : undefined}
             accessibilityRole="button"
-            // The menu lifts this row into its preview, so the row carries the ground
-            // it is snapshotted against rather than borrowing the list's.
+            // The menu snapshots this row into its preview, so the row carries its own ground.
             className={cn("bg-background flex-row gap-3 py-2", stacked ? "items-start" : "items-center")}
             onAccessibilityAction={
                 onDelete

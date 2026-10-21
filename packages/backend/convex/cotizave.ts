@@ -11,13 +11,8 @@ const RATES_TIMEOUT_MS = 20_000;
 
 const VES_QUOTE = "VES";
 
-/**
- * Cotizave market name → unified `exchangeRateType`. `reference` is the BCV
- * official rate.
- */
-// A Map rather than an object: the key is a market name off the remote feed, so
-// the lookup is of an untrusted string and `.get` answers `undefined` for one we
-// do not carry without widening the table's own key type to `string`.
+/** `reference` is the BCV official rate. */
+// A Map: `.get` on an untrusted market name answers undefined without widening the key type.
 const MARKET_RATE_TYPES = new Map<string, MarketRateType>([
     ["binance", "binance"],
     ["eur_reference", "eur_reference"],
@@ -29,14 +24,7 @@ const cotizaveMarket = z.object({
     mid: z.number().finite().positive(),
 });
 
-/**
- * The envelope, pinned to the pair we store.
- *
- * `base`/`currency` are literals rather than free strings: a payload quoting
- * another pair, however well-formed, must never be stored as VES rows. A market
- * entry that does not parse is dropped instead of failing the response, so one
- * bad row does not cost the rest of the feed — hence the per-element catch.
- */
+/** Pinned to the pair we store; an unparseable market entry is dropped, not the whole feed. */
 const cotizaveResponse = z.object({
     base: z.literal("USD"),
     currency: z.literal(VES_QUOTE),

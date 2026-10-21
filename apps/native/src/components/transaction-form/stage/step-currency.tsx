@@ -11,15 +11,8 @@ import { useColors } from "@/theme/use-colors";
 import { CurrencyPickerList } from "../../currency-picker-list";
 
 export interface StepCurrencyProps {
-    /**
-     * Codes clustered above the catalogue, in order. The cluster and the search
-     * both come from `currencyPickerRows` by way of `CurrencyPickerList`.
-     */
     favourites: readonly string[];
-    /**
-     * Sizes the virtualised list. A stage body has no intrinsic height, and
-     * an auto-sized list measures to zero for the frames the stage is swapping.
-     */
+    /** A stage body has no intrinsic height, and an auto-sized list measures zero while the stage swaps. */
     listMinHeight: number;
     onSelect: (code: string) => void;
     /** `null` while no database is open, so favouriting is absent rather than dead. */
@@ -28,12 +21,8 @@ export interface StepCurrencyProps {
     selected: string;
 }
 
-/**
- * The currency picker as a stage body. The list is `CurrencyPickerList`, not a
- * fresh one: the SwiftUI `List` it replaced mounted all 165 rows in a single
- * commit, and the virtualisation, the per-keystroke cost and the favourite-travel
- * animation all live there.
- */
+// `CurrencyPickerList`, not a fresh list: it holds the virtualisation (165 rows), the per-keystroke cost and the
+// favourite-travel animation.
 export function StepCurrency({
     favourites,
     listMinHeight,

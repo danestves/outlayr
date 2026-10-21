@@ -12,7 +12,7 @@ import { VALUATION_RATE_TYPE } from "./valuation-source";
 
 const NO_OTHERS: readonly string[] = [];
 
-/** The reactive twin of `loadValuationIn`. Keep `also` stable across renders. */
+/** Reactive `loadValuationIn`; keep `also` stable across renders. */
 export function useValuationIn(db: Database, code: string, also: readonly string[] = NO_OTHERS): Valuation {
     const rows = useRatesRead(
         () =>
@@ -33,7 +33,6 @@ export function useValuationIn(db: Database, code: string, also: readonly string
     return useMemo(() => ({ displayCurrency: code, rates: buildRateTable(rows) }), [code, rows]);
 }
 
-/** {@link useValuationIn} for the ledger's own display currency. */
 export function useValuation(db: Database): Valuation {
     return useValuationIn(db, useGlobalCurrency(db));
 }

@@ -9,36 +9,19 @@ import { merchantKey } from "@/domain/merchant-resolver";
 import { forgetLogoDismissal, refreshLogoCandidate } from "./logo-backfill-state";
 import { restoreStamp } from "./sync-engine-core";
 
-/**
- * How far back the sibling search reads. The same bound and the same reason
- * as `merchant-history-core.ts`: `merchantKey` folds diacritics, SQLite
- * cannot, so the match is made in JS over a recency window.
- */
+// `merchantKey` folds diacritics and SQLite can't, so the match runs in JS over a recency window.
 const SIBLING_WINDOW = 500;
 
 export interface MerchantSiblingsInput {
-    /** The category the looked-up row was saved with; fills siblings that have none. */
     categoryId: string | null;
-    /**
-     * The looked-up row's own currency column: null when it is in the ledger's
-     * default currency. A sibling in the same currency may store it either way
-     * — null, or the code written out — so both spellings are matched.
-     */
+    /** Null means the ledger default; a same-currency sibling may store null or the code, so both match. */
     currency: string | null;
     defaultCurrency: string;
-    /** Removes a file a sibling did not take after all. */
     discard?: (imageUri: string) => void;
-    /** The row the lookup was made on. It already carries the answer. */
     excludeId: string;
     income: boolean;
     key: string;
-    /**
-     * Produces one stored file per row, as the backfill does: a photo is owned
-     * by the row that names it, so deleting one row never orphans another's
-     * image. Null when the lookup found no logo.
-     */
     persistLogo: (() => Promise<{ imageColor: string | null; imageUri: string }>) | null;
-    /** Attached to siblings that carry no tags of their own. */
     tagIds: readonly string[];
 }
 
@@ -48,26 +31,9 @@ interface SiblingPatch {
     imageUri?: string;
 }
 
-/**
- * Carries a merchant lookup the user asked for on one row over to every other
- * row of the same merchant and currency.
- *
- * The carry runs in the background while the ledger stays live, so a sibling
- * is written only if it is still the row that was selected: the UPDATE
- * carries the stamp and the columns the decision was made on, and a row that
- * moved under it — an edit here, a peer's by sync — keeps its newer state
- * and the file persisted for it is discarded.
- *
- * The logo replaces whatever image a sibling had, but never an emoji, a glyph
- * or a tint: those three can only be a choice, while an image is most often
- * a logo the earlier lookup got wrong. A dismissal recorded for a repainted
- * row is released, because the user just asked for this exact image. The
- * category and tags only fill rows that have none — a sibling filed by hand
- * keeps its filing, which is also what history answers with next time.
- *
- * `imageKey` is left standing on a repainted row, as the form does for a
- * replaced photo: the uploader reads it to release the superseded object.
- */
+// The logo replaces a sibling's image but never an emoji, glyph or tint: those are always a choice, while an image is
+// often a wrong earlier lookup. Category and tags only fill rows that have none. `imageKey` stays on a repainted row
+// so the uploader can release the superseded object.
 export async function applyMerchantToSiblings(db: Database, input: MerchantSiblingsInput): Promise<number> {
     const effective = input.currency ?? input.defaultCurrency;
     const sameCurrency =
@@ -119,8 +85,6 @@ export async function applyMerchantToSiblings(db: Database, input: MerchantSibli
                 await forgetLogoDismissal(db, row.id);
             }
         }
-        // The row is written only if it is still the one selected: the stamp
-        // and the columns the decision was made on are in the predicate.
         const still = [
             eq(transactions.id, row.id),
             eq(transactions.updatedAt, row.updatedAt),
@@ -137,18 +101,15 @@ export async function applyMerchantToSiblings(db: Database, input: MerchantSibli
         let wrote = false;
         if (Object.keys(patch).length > 0) {
             if (patch.imageUri == null) {
-                // A category alone leaves the row bare, and the backfill only
-                // paints a candidate whose stamp still matches the row: the
-                // stamp follows the write, as an edit's does. Before the write,
-                // since the refresh matches against the row as it is now.
+                // A category alone leaves the row bare, so its candidate stamp follows the write. Refreshed before
+                // the write, since the refresh matches against the row as it is now.
                 await refreshLogoCandidate(db, row.id, nextStamp.getTime());
             }
             const written = await db
                 .update(transactions)
                 .set({
                     ...patch,
-                    // Never behind the row's own clock, or the sync's last-writer
-                    // check drops the paint.
+                    // Never behind the row's own clock, or sync's last-writer check drops the paint.
                     updatedAt: nextStamp,
                 })
                 .where(and(...still))

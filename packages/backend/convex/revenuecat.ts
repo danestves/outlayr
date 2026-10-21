@@ -11,7 +11,6 @@ import { optionalUserId } from "./lib/auth";
 
 export const PRO_ENTITLEMENT_ID = "pro";
 
-/** A user waits on both of these: one behind "Delete account", one behind a restore. */
 const REVENUECAT_TIMEOUT_MS = 10_000;
 
 export const revenuecat = new RevenueCat(components.revenuecat, {
@@ -55,13 +54,8 @@ export const mirrorSubscriber = internalMutation({
     args: { appUserId: v.string(), subscriber: v.string() },
     handler: async (ctx, args) => {
         const subscriber: RevenueCatSubscriber = JSON.parse(args.subscriber);
-        // `syncSubscriber` upserts and never removes, so an entitlement the
-        // store has stopped listing would survive as a stale grant. An expired
-        // one still arrives in the payload and ages out on its own date; a
-        // REVOKED one is simply absent, and a lifetime purchase has no date to
-        // age out on. So the mirror is cleared in exactly that case, and only
-        // when it currently disagrees — the same mutation re-syncs immediately,
-        // so the two are one transaction.
+        // `syncSubscriber` never removes, and a revoked entitlement is absent rather than expired, so the mirror is
+        // cleared when it disagrees. The re-sync below runs in the same transaction.
         if (!listsPro.safeParse(subscriber).success && (await isPro(ctx, args.appUserId))) {
             await revenuecat.deleteCustomer(ctx, { appUserId: args.appUserId });
         }
@@ -75,26 +69,14 @@ export const mirroredEntitlement = internalQuery({
     handler: async (ctx, args) => isPro(ctx, args.appUserId),
 });
 
-/**
- * Answers whether the ACCOUNT carries the entitlement, which is what
- * `requirePro` reads — not whether an upstream read succeeded.
- *
- * The store is asked whenever it can be, because it is the only source that
- * can REMOVE an entitlement: a refund or revocation whose webhook was missed
- * would otherwise leave a stale mirror authoritative forever, and a lifetime
- * purchase has no expiry to age out on.
- *
- * The existing mirror is the fallback, not the shortcut — for a deployment with
- * no `REVENUECAT_SECRET_KEY`, where the webhook is the only mirror there is,
- * and for the cases where the store cannot be reached or has been asked too
- * often. Refusing there would strand a customer the webhook already covered.
- */
 export const sessionUserId = internalQuery({
     args: {},
     handler: async (ctx) => await optionalUserId(ctx),
     returns: v.union(v.string(), v.null()),
 });
 
+// The store is asked whenever possible: only it can remove an entitlement whose refund webhook was missed. The
+// mirror is the fallback when it cannot be asked, since refusing would strand a customer the webhook covered.
 export const syncFromStore = action({
     args: {},
     handler: async (ctx): Promise<boolean> => {
@@ -115,10 +97,7 @@ export const syncFromStore = action({
         if (!allowed.ok) {
             return await mirrored();
         }
-        // The throwing failures — DNS, TLS, a dropped connection, a body that is
-        // not JSON — mean the same thing as a non-2xx: the store did not answer,
-        // so the mirror is what there is. Only the fetch and the decode are
-        // inside, so a real mirroring failure still surfaces.
+        // A thrown fetch or decode means the store did not answer, like a non-2xx; only those two are caught here.
         let subscriber: z.infer<typeof subscriberResponse>["subscriber"];
         try {
             const response = await fetch(`https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(userId)}`, {

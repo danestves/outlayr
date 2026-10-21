@@ -1,13 +1,5 @@
-// Seeds the QA simulator's local ledger with a curated, screenshot-ready set of
-// accounts, transactions, budgets and goals, then attaches real merchant logos
-// the way the app itself does (logo.dev bytes persisted per transaction into
-// photo storage, with a glow tint on the row).
-//
-// The simulator is signed OUT before anything is written: `syncEnabled = '0'`
-// alone is one Settings toggle or re-run adoption away from `enqueueAllForSync`
-// pushing every seeded row to the signed-in account.
-//
-// Usage: node apps/screenshots/scripts/seed-sim-ledger.mjs <SIMULATOR_UDID> [--subscriptions]
+// Signs the simulator OUT first: `syncEnabled = '0'` alone is one toggle away from pushing every seeded row. Usage:
+// node apps/screenshots/scripts/seed-sim-ledger.mjs <SIMULATOR_UDID> [--subscriptions]
 
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
@@ -54,22 +46,19 @@ try {
     // Not running.
 }
 execFileSync("xcrun", ["simctl", "keychain", udid, "reset"]);
-// The keys `resetSyncForAccountSwitch` clears, plus the adoption marker. Deleting
-// `syncEnabled` before any insert also keeps the outbox triggers dormant.
+// Deleting `syncEnabled` before any insert keeps the outbox triggers dormant.
 sqlite(
     "BEGIN; DELETE FROM outbox; DELETE FROM appMeta WHERE key IN ('syncEnabled', 'syncAccountSubject', 'syncCursor', 'syncedAt', 'ledgerAdoption'); COMMIT;"
 );
 
-/** Local midnight of a Y/M/D, in ms — the convention `day` and `month` use. */
+/** Local midnight in ms, the convention `day` and `month` use. */
 const dayMs = (y, m, d) => new Date(y, m - 1, d).getTime();
-/** A timestamp inside a day, so rows inside one date sort by clock time. */
 const atMs = (y, m, d, h, min) => new Date(y, m - 1, d, h, min).getTime();
 const monthMs = (y, m) => new Date(y, m - 1, 1).getTime();
 
 const NOW = Date.now();
 
-// `domain` drives the logo; `null` keeps the category glyph tile, which is what
-// the app shows for a merchant it cannot resolve.
+// `null` keeps the category glyph, as for a merchant the app cannot resolve.
 const MERCHANTS = {
     amazon: { domain: "amazon.com", label: "Amazon" },
     apple: { domain: "apple.com", label: "Apple" },
@@ -123,11 +112,6 @@ function logoDevUrl(domain) {
     return `https://img.logo.dev/${encodeURIComponent(domain)}?token=${LOGO_TOKEN}&size=512&format=png&fallback=404`;
 }
 
-/**
- * The tint the app extracts from a logo for the row's glow. Approximated with
- * the most saturated quantised colour, skipping near-white and near-black so a
- * mostly-white mark does not answer `#ffffff`.
- */
 function dominantColor(file) {
     const raw = execFileSync(
         "magick",
@@ -175,13 +159,7 @@ function dominantColor(file) {
 const tmp = join(tmpdir(), `outlayr-logos-${process.pid}`);
 mkdirSync(tmp, { recursive: true });
 
-/**
- * Fetches a domain's logo once and lands it in both places the app reads:
- * the on-device logo cache (what the entry form and voice screen preview) and
- * a per-row JPEG in photo storage (what a saved row renders). Flattened onto
- * white first — photo storage re-encodes to JPEG, which has no alpha, so a
- * transparent mark would otherwise come out on a black tile.
- */
+/** Flattened onto white: JPEG has no alpha, so a transparent mark lands on black. */
 const brandCache = new Map();
 async function brandFor(domain) {
     if (brandCache.has(domain)) {
@@ -231,7 +209,6 @@ async function brandFor(domain) {
     return brand;
 }
 
-/** Copies the brand JPEG into photo storage under its own id, as the app does. */
 function persistBrand(brand) {
     if (!brand) {
         return { imageColor: null, imageUri: null };
@@ -259,11 +236,7 @@ const EXTRA_CATEGORIES = [
 const statements = [];
 const q = (value) => (value === null || value === undefined ? "NULL" : `'${String(value).replaceAll("'", "''")}'`);
 
-// Every category this seed writes transactions against, looked up by its ENGLISH
-// name. Run `localize-sim-data.mjs <udid> en` before re-seeding: with the rows
-// renamed to Spanish these lookups silently return undefined, which wrote 56
-// transactions with a NULL categoryId and re-inserted the four extras as English
-// duplicates. Fail loudly instead.
+// Looked up by English name: run `localize-sim-data.mjs <udid> en` before re-seeding.
 const REQUIRED_CATEGORIES = [
     "Dining Out",
     "Entertainment",
@@ -296,8 +269,6 @@ for (const category of EXTRA_CATEGORIES) {
     );
 }
 
-// Eight, not five. The Accounts screen is a plain list with no empty state to
-// fill it, so five rows left the bottom 40% of the screenshot blank paper.
 const ACCOUNTS = [
     {
         color: "#1567B0",
@@ -357,8 +328,6 @@ const ACCOUNTS = [
     { color: "#C8C2B4", currency: "USD", icon: "Wallet01", id: "acc-cash", kind: "asset", name: "Cash", target: 220 },
 ];
 
-// Hand-written so the rows the Log actually shows read as one person's real
-// month. Everything older is generated below for chart depth.
 const SEPTEMBER = [
     { a: "acc-chase", amt: 5200, cat: "Paycheck", d: 1, det: "August salary", h: 9, inc: true, note: "Paycheck" },
     { a: "acc-chase", amt: 1850, cat: "Rent", d: 1, h: 10, note: "Rent" },
@@ -375,8 +344,7 @@ const SEPTEMBER = [
     { a: "acc-apple", amt: 27.85, cat: "Dining Out", d: 7, h: 20, m: "ubereats", note: "Uber Eats" },
     { a: "acc-apple", amt: 20, cat: "Subscriptions", d: 8, h: 9, m: "chatgpt", note: "ChatGPT" },
     { a: "acc-chase", amt: 112.34, cat: "Utilities", d: 8, h: 16, m: "conedison", note: "Con Edison" },
-    // Dated into the current week on purpose: the Insights week window is the one
-    // the screenshots use, and a week with no income reads as a dead chart.
+    // In the current week: a week with no income is a dead Insights chart.
     { a: "acc-zinli", amt: 1450, cat: "Freelance", d: 9, det: "client retainer", h: 12, inc: true, note: "Freelance" },
     { a: "acc-amex", amt: 54.28, cat: "Shopping", d: 9, h: 12, m: "target", note: "Target" },
     { a: "acc-paypal", amt: 15, cat: "Subscriptions", d: 9, h: 18, m: "figma", note: "Figma" },
@@ -386,7 +354,6 @@ const SEPTEMBER = [
     { a: "acc-apple", amt: 4, cat: "Subscriptions", d: 11, h: 15, m: "github", note: "GitHub" },
 ];
 
-// Older months, so Insights has a real trend rather than a single bar.
 const RECURRING = [
     { a: "acc-chase", amt: 5200, cat: "Paycheck", d: 1, h: 9, inc: true, note: "Paycheck" },
     { a: "acc-chase", amt: 1850, cat: "Rent", d: 1, h: 10, note: "Rent" },
@@ -492,7 +459,6 @@ for (const entry of entries) {
     );
 }
 
-// A cross-currency transfer, so the Log shows the transfer row the feature adds.
 const TRANSFER_USD = 400;
 statements.push(
     `INSERT INTO transfers (id, date, dateCreated, day, month, deletedAt, exchangeRate, exchangeRateType, fromAccountId, fromAmount, fromAmountUsd, fromCurrency, note, toAccountId, toAmount, toAmountUsd, toCurrency, updatedAt)
@@ -501,8 +467,7 @@ statements.push(
 balanceDelta["acc-chase"] -= TRANSFER_USD;
 balanceDelta["acc-banesco"] += TRANSFER_USD * VES_RATE;
 
-// Accounts are written after the rows and the transfer so `initialBalance` can
-// be solved back from the balance each account should end on.
+// After the rows and transfer, so `initialBalance` is solved back from each target.
 for (const account of ACCOUNTS) {
     const domain = ACCOUNT_BRANDS[account.id];
     // oxlint-disable-next-line no-await-in-loop -- one fetch per domain, memoised
@@ -520,8 +485,7 @@ for (const account of ACCOUNTS) {
 // `Budget.type` codes are the Swift ones; 3 is a monthly window.
 const BUDGET_TYPE_MONTH = 3;
 
-// Groceries is deliberately over its limit: the over-budget rail is part of
-// what the Budgets screen has to show.
+// Groceries is over on purpose: the screenshot needs the over-budget rail.
 const BUDGETS = [
     { amount: 350, category: "Groceries" },
     { amount: 250, category: "Dining Out" },
@@ -539,11 +503,7 @@ for (const budget of BUDGETS) {
     );
 }
 
-// Carry-over OFF, and the limit set so the screenshot's own arithmetic closes:
-// 3900 - 2881.41 spent = 1018.59 left, which is what the screen prints. With
-// rollover on, three prior months under budget carried ~954 in silently and a
-// reader who subtracted LIMIT - SPENT got a different number than the one on
-// screen. A marketing frame must not contain a sum the viewer cannot verify.
+// Carry-over off so the frame's arithmetic closes: 3900 - 2881.41 = 1018.59.
 statements.push(
     `INSERT OR REPLACE INTO mainBudget (id, name, amount, type, startDate, dateCreated, green, updatedAt, deletedAt, currency, amountUsd, rollover)
    VALUES (${q(randomUUID())}, 'Monthly spending', 3900, ${BUDGET_TYPE_MONTH}, ${dayMs(2026, 9, 1)}, ${dayMs(2026, 6, 1)}, 0, ${NOW}, NULL, 'USD', 3900, 0);`
@@ -566,8 +526,7 @@ const GOALS = [
         target: 15_000,
         targetDate: dayMs(2027, 12, 31),
     },
-    // On Cash, not Chase: a goal reads the account's balance, and Chase already
-    // holds more than this target, so on Chase it would open at 100% "Reached".
+    // On Cash: Chase already holds more than this target, so the goal would open Reached.
     {
         account: "acc-cash",
         currency: "USD",

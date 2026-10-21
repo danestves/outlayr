@@ -1,10 +1,4 @@
-/**
- * Shape of the bundle drizzle-kit emits at `drizzle/migrations.js` — the journal
- * plus each migration's SQL, inlined by `babel-plugin-inline-import`.
- *
- * Declared so `migrate(db, bundle)` typechecks against a real type: a shape
- * change on a drizzle upgrade should fail the build, not the migration.
- */
+/** Typed so a drizzle upgrade that changes the bundle's shape fails the build, not the migration. */
 declare module "*/drizzle/migrations" {
     const bundle: {
         journal: {

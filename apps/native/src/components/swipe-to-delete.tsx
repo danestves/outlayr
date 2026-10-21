@@ -10,11 +10,7 @@ import { Text } from "@/components/text";
 import { useTranslation } from "@/i18n/context";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
-/**
- * A row that swipes left to reveal Delete, the way the Log's rows do, in the
- * M3 error role. The swipe closes before `onDelete` runs, so a row that comes
- * back from an undo is not left open.
- */
+// The swipe closes before `onDelete` runs, so a row that comes back from an undo is not left open.
 export function SwipeToDelete({ children, onDelete }: { children: ReactNode; onDelete: () => void }) {
     const t = useTranslation();
     const m3 = useMaterialColors();

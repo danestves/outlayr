@@ -5,11 +5,7 @@ import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
 
-/**
- * Reads the cap off the list the write produced, not off the array at press
- * time: toggles are serialised, so a row rendered a tick before another landed
- * would otherwise mis-read it.
- */
+// Reads the cap off the list the write produced: toggles are serialised, so the array at press time can be stale.
 export function useToggleFavouriteCurrency(db: Database | null) {
     const haptics = useHaptics();
     const t = useTranslation();
@@ -22,9 +18,7 @@ export function useToggleFavouriteCurrency(db: Database | null) {
                 // oxlint-disable-next-line promise/no-callback-in-promise -- a press handler is not a promise chain, so the haptic has nowhere else to be sequenced from
                 haptics(favourite || isFavourite(next, code) ? "light" : "warning");
             })
-            // The `catch` inside `toggleFavouriteCurrency` guards its queue, not
-            // this caller — the promise it returns still rejects. Without this the
-            // star simply does not move, and nothing says why.
+            // `toggleFavouriteCurrency`'s own `catch` guards its queue; the promise it returns still rejects.
             .catch((error) => {
                 console.error("Failed to change the favourite currencies", error);
                 notifyFailure({

@@ -73,8 +73,7 @@ describe("currencyTotals with rates", () => {
     });
 
     it("values two days at their own rates rather than one blended rate", () => {
-        // $100 on the 5th is €90, $100 on the 20th is €95. A single conversion of
-        // the $200 would print €180 or €190 — both wrong.
+        // $100 on the 5th is €90 and on the 20th €95; one blended conversion of the $200 would print €180 or €190.
         const buckets = currencyTotals(
             [priced(100, "USD", 100, JULY_5), priced(100, "USD", 100, JULY_20)],
             "EUR",
@@ -101,8 +100,6 @@ describe("currencyTotals with rates", () => {
     });
 
     it("splits a day where only some entries were canonicalized", () => {
-        // The convertible half must not drag the other half in with it, and the
-        // other half must not keep the convertible half out.
         const buckets = currencyTotals(
             [priced(100, "USD", 100, JULY_5), priced(40, "USD", null, JULY_5)],
             "EUR",
@@ -120,15 +117,12 @@ describe("currencyTotals with rates", () => {
     });
 
     it("uses the frozen USD value directly when the ledger reads in USD", () => {
-        // No rate table can cover USD→USD, and none is needed.
         const buckets = currencyTotals([priced(92, "EUR", 100, JULY_5)], "USD", eurRates);
         expect(buckets).toStrictEqual([{ amount: -100, currencyCode: "USD", transactionCount: 1 }]);
     });
 
     it("converts the day's sum once, not each entry", () => {
-        // Three $0.10 charges are $0.30 → €0.27 at 0.90. Rounding each conversion
-        // first gives 0.09 × 3 = €0.27 here, but the header aggregates in SQL where
-        // only the sum survives — both paths must round the same figure.
+        // The header aggregates in SQL, where only the sum survives, so both paths must round the same figure.
         const cells = toCells([
             priced(0.1, "USD", 0.1, JULY_5),
             priced(0.1, "USD", 0.1, JULY_5),
@@ -152,8 +146,6 @@ describe("currencyTotals with rates", () => {
 });
 
 describe("figures over a whole result set", () => {
-    // What the Search header prints: one in/out/net block per currency over every
-    // matched row, whatever day each landed on.
     it("keeps in and out apart across every day in the set", () => {
         const figures = cellFigures(
             toCells([
@@ -167,8 +159,6 @@ describe("figures over a whole result set", () => {
     });
 
     it("splits a mixed-currency result rather than inventing one sum", () => {
-        // No frozen USD value on the euro rows, so no rate reaches them and the
-        // result keeps two blocks. Counts put the dominant currency first.
         const figures = cellFigures(
             toCells([
                 priced(100, "USD", 100, JULY_5),
@@ -186,9 +176,7 @@ describe("figures over a whole result set", () => {
 });
 
 describe("switching display currency", () => {
-    // A ledger written entirely under one setting stores `currency: null` on every
-    // row. Reading null as "already in the display currency" relabels the whole
-    // history instead of converting it — $99.15 of lunches becoming €99.15.
+    // Reading a null currency as the display currency would relabel $99.15 of lunches as €99.15.
     const nullCurrency = [
         {
             amount: 18.5,
@@ -214,7 +202,6 @@ describe("switching display currency", () => {
     ];
 
     it("converts the whole history when the setting changes", () => {
-        // 99.15 USD at the 5 July rate of 0.90, converted once.
         expect(currencyTotals(nullCurrency, "EUR", eurRates)).toStrictEqual([
             { amount: -89.24, currencyCode: "EUR", transactionCount: 3 },
         ]);

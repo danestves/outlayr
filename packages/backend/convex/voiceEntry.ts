@@ -1,4 +1,4 @@
-// oxlint-disable unicorn/filename-case -- the Convex module name is the function path — clients call these as api.voiceEntry.*
+// oxlint-disable unicorn/filename-case -- the Convex module name is the function path: clients call these as api.voiceEntry.*
 
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createElevenLabs } from "@ai-sdk/elevenlabs";
@@ -42,45 +42,22 @@ import { perUserBurst } from "./lib/limits";
 import { AI_CONSENT_VERSION, CLAUDE_MODEL_ID, ELEVENLABS_TRANSCRIPTION_MODEL_ID } from "./lib/models";
 import { isPro } from "./revenuecat";
 
-/**
- * A spoken entry is a sentence, not a dictation: one minute of AAC at the
- * client's 48kbps mono preset is ~360KB, and a Convex value tops out at 1MB.
- */
+// A Convex value tops out at 1MB; a minute of AAC at the client's 48kbps mono preset is ~360KB.
 export const MAX_AUDIO_BYTES = 900_000;
-/**
- * The names are copied into a paid prompt, so their size is bounded as well
- * as their count: a branch holds at most this many children, every name is
- * at most this long, and the whole tree at most this many names.
- */
 const MAX_MERCHANT_LENGTH = 80;
 const MAX_DETAILS_LENGTH = 200;
-/** How far a spoken date may sit from today before it is read as a mishearing. */
 const MAX_PAST_DAYS = 366;
-/** "Every 99 months" is already nonsense; past it the number is a mishearing. */
 const MAX_RECURRENCE_EVERY = 99;
 const MAX_QUOTE_LENGTH = 60;
 const MAX_QUOTES = 8;
-/**
- * The ledger's own ceiling, thirteen integer digits (`apps/native/src/domain/
- * numpad.ts`): what keeps cent arithmetic inside float64's safe range. A
- * spoken amount past it is a mishearing, and the draft is unclear.
- */
+// The ledger's 13-digit ceiling (apps/native/src/domain/numpad.ts) keeps cent arithmetic inside float64's safe range.
 const MAX_AMOUNT = 9_999_999_999_999;
 const MAX_FUTURE_DAYS = 1;
-/**
- * Two model calls in sequence against the client's 25s abort: a short clip
- * transcribes in 1–3s, the parse in 2–5s.
- */
+// Both calls run in sequence inside the client's 25s abort.
 const TRANSCRIBE_TIMEOUT_MS = 10_000;
 const PARSE_TIMEOUT_MS = 10_000;
-/** How many earlier turns the model sees; a correction only ever refers to the last few. */
 const CONTEXT_TURNS = 12;
-/**
- * A thread outlives the screen only when the app died or went offline before
- * `endThread` ran, so the sweep is the privacy boundary's backstop, not its
- * normal path. Measured from the thread's last turn, not its opening: a screen
- * left open and still spoken into keeps the draft its corrections refer to.
- */
+// The privacy backstop for a thread whose `endThread` never ran, measured from its last turn rather than its opening.
 const THREAD_TTL_MS = 60 * 60 * 1000;
 
 export const PROPOSE_DRAFT_TOOL = "proposeDraft";
@@ -88,24 +65,15 @@ export const PROPOSE_DRAFT_TOOL = "proposeDraft";
 /** `ai` still admits older model specs in `LanguageModel`; the agent takes the current one only. */
 type AgentModel = Extract<LanguageModel, { specificationVersion: "v4" }>;
 
-/**
- * The action's only arguments — a privacy boundary. The clip itself has to
- * cross (that is the feature), and with it only what the model needs to write
- * the sentence down in this ledger's terms: category and account NAMES, the
- * ledger currency, and the device's calendar today so "yesterday" resolves on
- * the user's clock rather than the server's. No ids, no balances, no history.
- */
+// A privacy boundary: the clip plus only what the model needs in this ledger's terms. No ids, balances or history.
 export const voiceEntryArgs = {
     accounts: v.array(v.string()),
-    /** The AI consent the person gave — see `enrichment.ts:suggestArgs`. */
     aiConsent: v.optional(v.number()),
     /** AAC in an MP4 container, as the client records it. */
     audio: v.bytes(),
     categoryTree: v.array(v.object({ children: v.array(v.string()), name: v.string() })),
     currency: v.string(),
-    /** BCP-47 tag, used to bias the transcriber and to keep the merchant's own spelling. */
     language: v.optional(v.string()),
-    /** The thread `startThread` opened; every clip on one screen shares it. */
     threadId: v.string(),
     /** `YYYY-MM-DD` in the device's local calendar. */
     today: v.string(),
@@ -120,7 +88,7 @@ const speakStatus = v.union(
     v.literal("quotaExceeded"),
     v.literal("invalid"),
     v.literal("providerError"),
-    /** The provider heard no words at all. Nothing was written to the thread. */
+    /** No words heard; nothing was written to the thread. */
     v.literal("unclear")
 );
 
@@ -150,7 +118,6 @@ interface VoiceDraftBase {
 
 export type RecurrenceUnit = "day" | "week" | "month" | "year";
 
-/** "Every month", "every 2 weeks": the cadence a subscription repeats on. */
 export interface VoiceRecurrence {
     every: number;
     unit: RecurrenceUnit;
@@ -159,12 +126,10 @@ export interface VoiceRecurrence {
 export interface VoiceEntryDraft extends VoiceDraftBase {
     accountName: string | null;
     categoryName: string | null;
-    /** The merchant's web domain when the model knows it; feeds the logo lookup on the client. */
     domain: string | null;
     income: boolean;
     kind: "entry";
     merchant: string;
-    /** Null for a one-off; a transfer never repeats. */
     recurrence: VoiceRecurrence | null;
 }
 
@@ -174,11 +139,6 @@ export interface VoiceTransferDraft extends VoiceDraftBase {
     toAccountName: string | null;
 }
 
-/**
- * A spent or received amount, or money moved between two of the person's own
- * accounts. A transfer has no category and no merchant: the two account names
- * are the whole story, and the client's transfer editor takes it from there.
- */
 export type VoiceDraft = VoiceEntryDraft | VoiceTransferDraft;
 
 const QUOTE_FIELDS = ["amount", "merchant", "category", "account", "date", "schedule"] as const;
@@ -188,7 +148,7 @@ export interface VoiceQuote {
     text: string;
 }
 
-/** What the `proposeDraft` tool hands back; null is "no transaction in those words". */
+/** A null `draft` means the words held no transaction. */
 export interface ProposedDraft {
     draft: VoiceDraft | null;
     quotes?: VoiceQuote[];
@@ -198,7 +158,7 @@ function failure(status: Exclude<SpeakStatus, "ok">, transcript: string | null =
     return { order: null, status, transcript };
 }
 
-/** The model's own output is untrusted input — this is only the JSON shape. */
+/** Only the JSON shape: the model's output stays untrusted until `normalizeDraft`. */
 export const modelOutputSchema = z.object({
     accountName: z.string().nullable(),
     amount: z.number().nullable(),
@@ -206,23 +166,19 @@ export const modelOutputSchema = z.object({
     currency: z.string().nullable(),
     date: z.string().nullable(),
     details: z.string().nullable(),
-    /** The merchant's primary web domain, only when known with confidence. */
     domain: z.string().nullable(),
-    /** False when the words carry no amount or no purchase at all. */
     found: z.boolean(),
     kind: z.enum(["expense", "income", "transfer"]),
     merchant: z.string().nullable(),
     // Optional: a required field the model skips would fail the whole tool call.
     quotes: z.array(z.object({ field: z.enum(QUOTE_FIELDS), text: z.string() })).optional(),
-    /** Set only when the words say the charge repeats. */
     recurrence: z.object({ every: z.number(), unit: z.enum(["day", "week", "month", "year"]) }).nullable(),
-    /** The receiving account of a transfer; null for the other kinds. */
     toAccountName: z.string().nullable(),
 });
 
 export type ModelOutput = z.infer<typeof modelOutputSchema>;
 
-/** `shards: 10` is copied from `enrichment.ts:118` and is load-bearing. */
+// Unsharded, a global counter is one hot document that throws OCC write conflicts under concurrency.
 export const rateLimiter = new RateLimiter(components.rateLimiter, {
     voiceEntryGlobal: {
         kind: "fixed window",
@@ -245,11 +201,6 @@ function weekdayOf(isoDate: string): string {
         : new Intl.DateTimeFormat("en-US", { timeZone: "UTC", weekday: "long" }).format(parsed);
 }
 
-/**
- * The system prompt for one turn. The transcript itself is the user message,
- * and earlier turns (with the drafts they produced) are the thread's history,
- * so "no, that was yesterday" has the draft it corrects in front of it.
- */
 export function buildPrompt(args: LedgerContext): string {
     const weekday = weekdayOf(args.today);
     return [
@@ -282,11 +233,6 @@ function normalizeRecurrence(candidate: ModelOutput["recurrence"]): VoiceRecurre
     return { every: Math.min(MAX_RECURRENCE_EVERY, Math.max(1, Math.round(candidate.every))), unit: candidate.unit };
 }
 
-/**
- * The model's tool call, made safe in this ledger's terms: names it did not
- * offer become null, a date outside the window becomes today, the ledger's own
- * currency becomes null. Pure, so the prompt's contract is tested without a model.
- */
 export function normalizeDraft(output: ModelOutput, args: LedgerContext): VoiceDraft | null {
     const { amount } = output;
     if (!(output.found && amount != null && Number.isFinite(amount) && amount > 0 && amount <= MAX_AMOUNT)) {
@@ -316,9 +262,7 @@ export function normalizeDraft(output: ModelOutput, args: LedgerContext): VoiceD
     }
     return {
         ...base,
-        // A known account comes back in the ledger's spelling; an unknown one
-        // comes back as spoken rather than as nothing, so the client can tell
-        // "no account named" from "an account named that it cannot place".
+        // An unknown account comes back as spoken, so the client can tell "none named" from "named but unplaced".
         accountName: pickKnown(output.accountName, args.accounts) ?? trimTo(output.accountName, MAX_NAME_LENGTH),
         categoryName: pickKnown(output.categoryName, knownCategories),
         domain: normalizeDomain(output.domain),
@@ -342,11 +286,6 @@ export function normalizeQuotes(quotes: ModelOutput["quotes"], sentence: string)
         .slice(0, MAX_QUOTES);
 }
 
-/**
- * The agent for one turn. The ledger context rides in the tool's closure and
- * in the per-call system prompt rather than in a table: it is the caller's to
- * send with each clip, exactly as before the thread existed.
- */
 function voiceAgent(model: AgentModel, context: LedgerContext, sentence: string) {
     const proposeDraft = createTool({
         description: "Propose the transaction the person just described, or the corrected version of the last draft.",
@@ -364,11 +303,6 @@ function voiceAgent(model: AgentModel, context: LedgerContext, sentence: string)
     });
 }
 
-/**
- * Speech to words, nothing more. Returns null for a clip the provider heard
- * nothing in, which the caller reports as `unclear` rather than an error — a
- * tap-and-release with no speech is the common case, not a failure.
- */
 export async function transcribeClip(
     model: TranscriptionModel,
     audio: ArrayBuffer,
@@ -399,11 +333,7 @@ export async function transcribeClip(
     }
 }
 
-/**
- * The thread belongs to the caller. Stamped and compared on `tokenIdentifier`,
- * the issuer-qualified principal, not the bare `subject`: two issuers can hand
- * out the same subject, and that must not make them one owner.
- */
+// Compared on `tokenIdentifier`, not the bare `subject`: two issuers can hand out the same subject.
 async function ownsThread(ctx: QueryCtx | MutationCtx | ActionCtx, threadId: string): Promise<string | null> {
     const identity = await ctx.auth.getUserIdentity();
     if (identity === null) {
@@ -423,7 +353,6 @@ export interface StartThreadResult {
     threadId: string | null;
 }
 
-/** One thread per visit to the voice screen. */
 export const startThread = mutation({
     args: {},
     handler: async (ctx): Promise<StartThreadResult> => {
@@ -452,11 +381,6 @@ export const startThread = mutation({
     returns: startThreadResult,
 });
 
-/**
- * The backstop for a screen that never got to `endThread`; a no-op once it
- * did. A thread spoken into since it was scheduled is not idle: the sweep
- * moves itself out to one TTL past that last turn instead of deleting.
- */
 export const expireThread = internalMutation({
     args: { threadId: v.string() },
     handler: async (ctx, { threadId }) => {
@@ -479,11 +403,7 @@ export const expireThread = internalMutation({
     returns: v.null(),
 });
 
-/**
- * The turns on a thread, the shape `useUIMessages` reads, with live deltas.
- * A thread that is not the caller's reads as empty rather than as an error,
- * so a stale id after sign-out cannot leak another person's sentences.
- */
+// Another person's thread reads as empty, so a stale id after sign-out cannot leak their sentences.
 export const listTurns = query({
     args: {
         paginationOpts: paginationOptsValidator,
@@ -500,7 +420,6 @@ export const listTurns = query({
     },
 });
 
-/** The screen closed; its sentences have no life past it. */
 export const endThread = mutation({
     args: { threadId: v.string() },
     handler: async (ctx, { threadId }) => {
@@ -512,15 +431,6 @@ export const endThread = mutation({
     returns: v.null(),
 });
 
-/**
- * One clip on the thread: transcribe it, save the words as the person's turn,
- * and have the agent answer with a `proposeDraft` call whose output the
- * client reads from `listTurns`. The draft is not returned here on purpose:
- * one path for the first draft and every correction after it.
- *
- * Read live rather than through a frozen snapshot, so that
- * `npx convex env set ANTHROPIC_API_KEY=""` or `ELEVENLABS_API_KEY=""` takes effect on the very next call.
- */
 export const admit = internalMutation({
     args: {},
     handler: async (ctx) => {
@@ -540,6 +450,7 @@ export const speak = action({
             return failure("unauthenticated");
         }
 
+        // Read per call, so clearing a key with `npx convex env set` takes effect on the next clip.
         const apiKey = process.env.ANTHROPIC_API_KEY;
         const transcriptionKey = process.env.ELEVENLABS_API_KEY;
         if (!apiKey || !transcriptionKey || args.aiConsent !== AI_CONSENT_VERSION) {

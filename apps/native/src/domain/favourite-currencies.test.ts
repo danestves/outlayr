@@ -43,8 +43,6 @@ describe("parseFavourites", () => {
     });
 
     it("counts only the codes it kept towards the cap", () => {
-        // Interleaved rubbish: were it counted, the cap would land after four
-        // real codes instead of eight.
         const padded = EIGHT.flatMap((code, index) => [code, `XX${index}`]);
         expect(parseFavourites(padded.join(","))).toStrictEqual(EIGHT);
     });
@@ -124,14 +122,10 @@ describe("the cluster a new ledger starts with", () => {
     });
 
     it("prices a redenominated code under the name the catalogue carries", () => {
-        // iOS reports VED for Venezuela; rates are quoted in VES, so the catalogue
-        // carries VES. Without the alias a device in Caracas seeds nothing.
         expect(seedFavourites("VED")).toStrictEqual(["USD", "EUR", "VES"]);
     });
 
     it("ignores a code the catalogue does not know", () => {
-        // A locale can name a currency this app cannot price, and a stored code the
-        // catalogue has never heard of reaches a row with no name or symbol to draw.
         expect(seedFavourites("XXX")).toStrictEqual(["USD", "EUR"]);
     });
 });

@@ -4,19 +4,10 @@ import type { BudgetWindow } from "@outlayr/money/budget-window";
 
 import { median } from "./stats";
 
-/**
- * How many closed windows a typical figure is drawn from.
- *
- * Six months is far enough back to survive a holiday or a move without being so
- * far that a raise or a new city still counts. The same sample answers "how many
- * of the last six went over", which is why the two are one walk.
- */
 const TYPICAL_LOOKBACK = 6;
 
 export interface TypicalInput {
-    /** The window a limit is being placed on. Everything before it is closed. */
     current: BudgetWindow;
-    /** Where the ledger's own history starts; the walk stops once it passes this. */
     since?: Date | null;
     /** What was spent in `[start, end)` of a closed window. */
     spentIn: (start: Date, end: Date) => number;
@@ -24,49 +15,29 @@ export interface TypicalInput {
 }
 
 export interface TypicalSpend {
-    /**
-     * Spend per closed window sampled, newest first, zeros included. `windowsOver`
-     * counts against this: a window with nothing spent did not go over.
-     */
+    /** Newest first, zeros included: a window with nothing spent did not go over. */
     readonly history: readonly number[];
     /**
-     * The median of the windows that held spending, or null when none did.
-     *
-     * Zero windows are excluded on purpose. A category used in two months of six
-     * has a median of 0 once the empty ones are padded in, and "typically $0"
-     * is worse than saying nothing — the same reason `budget-burndown`'s daily
-     * rate refuses to median over a zero-padded calendar.
+     * Median of the windows that held spending, or null. Zeros are excluded: a category used two months in six
+     * would read "typically $0", which is worse than saying nothing.
      */
     readonly typical: number | null;
 }
 
-/**
- * What one scope usually costs per window, and what each recent window cost.
- *
- * Walks backwards from the current window, which is deliberately excluded: it is
- * still being spent in, and a partial window would drag the median down by
- * however much of it is left.
- *
- * Pure, and cheap by construction — `useExpenseContributions` already holds
- * every non-deleted expense in memory, so `spentIn` is an array pass, not a
- * query.
- */
+/** Excludes the current window: it is still being spent in and would drag the median down. */
 export function typicalSpend({ current, type, spentIn, since }: TypicalInput): TypicalSpend {
     const history = closedWindowsBefore({ current, since, type }).map((window) => spentIn(window.start, window.end));
     return { history, typical: typicalOf(history) };
 }
 
-/** How many of the sampled windows spent more than `limit`. */
 export function windowsOver(history: readonly number[], limit: number): number {
     return history.reduce((count, spent) => (spent > limit ? count + 1 : count), 0);
 }
 
-/** See {@link TypicalSpend.typical}. */
 export function typicalOf(history: readonly number[]): number | null {
     return median(history.filter((spent) => spent > 0));
 }
 
-/** The closed windows behind `current`, newest first. */
 export function closedWindowsBefore({
     current,
     type,
@@ -94,16 +65,10 @@ export function closedWindowsBefore({
     return windows;
 }
 
-/** The key {@link spendPerWindow} files an expense under whatever its category. */
 export const EVERY_SCOPE = "*";
 
 /**
- * Spend per scope per window, newest window first, in one pass over the ledger.
- *
- * The rail asks the same question of every category at once, and asking it one
- * category at a time is `categories x windows` passes over an array that holds
- * the whole ledger. A subcategory's spend lands under its parent as well as
- * itself, matching `contributesTo`, so a parent's figure covers its children.
+ * One pass for every category; a subcategory's spend also lands under its parent, matching `contributesTo`.
  */
 export function spendPerWindow(
     rows: readonly ExpenseContribution[],

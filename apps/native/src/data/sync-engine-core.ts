@@ -43,26 +43,17 @@ export const PUSH_BATCH_LIMIT = 500;
 /** Mirrors `PULL_PAGE_LIMIT` in `packages/backend/convex/sync.ts`. */
 export const PULL_PAGE_LIMIT = 1000;
 
-/** SQLite binds a bounded number of variables per statement. */
 const ID_CHUNK = 300;
 
-/**
- * Everything that survives the JSON hop to Convex.
- *
- * `Date` is deliberately absent: `toWireFields` encodes every column named in a
- * spec's `dates` to epoch milliseconds first, and letting a `Date` through here
- * would put an ISO string on the wire that reads back as text.
- */
+/** No `Date`: `toWireFields` encodes `dates` to epoch ms, and a stray `Date` would come back as text. */
 type WireValue = boolean | number | string | null;
 
-/** A replicated row's payload, keyed by column name. */
 type WireFields = Record<string, WireValue>;
 
 export interface WireRow {
     deletedAt: number | null;
     fields: WireFields;
     localId: string;
-    /** Sent only when set, so a row that was never restored pushes as it always has. */
     restoredAt?: number | null;
     table: SyncedTable;
     updatedAt: number;
@@ -81,27 +72,19 @@ export type PushFn = (args: {
 export type PullFn = (args: {
     cursor: number;
     limit: number;
-    /** Narrows the walk; see `pullSince`. Absent reads every table. */
     tables?: readonly SyncedTable[];
 }) => Promise<{ rows: PulledRow[]; cursor: number; hasMore: boolean }>;
 
 interface TableSpec {
-    /** Stored as `Date` locally and as epoch milliseconds on the wire. */
     dates: readonly string[];
     /**
-     * What a column falls back to when the wire omits it, for columns added after
-     * a table began replicating, and in place of a null a NOT NULL column cannot
-     * hold. Without one `toLocalFields` writes an explicit null, which a NOT NULL
-     * column rejects — taking the whole pull transaction with it, not just the
-     * row. A null the wire carries for a nullable column is a value, and lands as
-     * one.
+     * Fallback when the wire omits a column (added after replication began) or sends null for a NOT NULL one.
+     * Without it `toLocalFields` writes null, and a NOT NULL column then fails the whole pull transaction.
      */
     defaults?: Readonly<Record<string, WireValue>>;
     /**
-     * The replicated payload, which must name exactly the columns the Convex
-     * table declares in `packages/backend/convex/lib/syncTables.ts`. A column
-     * missing here replicates as permanently absent rather than as an error, so
-     * `sync-engine-core.test.ts` checks this list against the local schema.
+     * Must name exactly the columns of the Convex table in `packages/backend/convex/lib/syncTables.ts`. A missing
+     * column replicates as silently absent, so `sync-engine-core.test.ts` checks this list against the schema.
      */
     fields: readonly string[];
     id: SQLiteColumn;
@@ -111,9 +94,7 @@ interface TableSpec {
 const SPECS = {
     accounts: {
         dates: ["initialBalanceDate", "dateCreated"],
-        // `kind` arrived in `0020` and an older build pushes accounts without it; absent reads as `asset`.
         defaults: { kind: "asset" },
-        // `imageUri` is absent for the same reason it is on `transactions`.
         fields: [
             "name",
             "currency",
@@ -187,15 +168,8 @@ const SPECS = {
     },
     savingsGoals: {
         dates: ["targetDate", "dateCreated"],
-        // `startAmount`/`startAmountUsd` arrived in `0024` and an older build sends
-        // neither. Both default to ZERO, never null: null is how an unconvertible
-        // figure is spelled, and a goal carrying one would withhold its progress
-        // and chart for as long as the display currency differed from its own —
-        // for a figure that is exactly zero in every currency. Same pair the
-        // migration writes. A null the wire does carry for `startAmountUsd` stays null.
-        // `targetDate` is defaulted only so a dateless TOMBSTONE can be
-        // written — a live dateless goal never gets this far (`isReplicated`
-        // refuses it), and the epoch it lands on is on a row nothing reads.
+        // Start amounts default to 0, never null: null means unconvertible and would withhold the goal's progress.
+        // `targetDate: 0` only lets a dateless goal be written as a tombstone (see `writeRow`).
         defaults: { startAmount: 0, startAmountUsd: 0, targetDate: 0 },
         fields: [
             "name",
@@ -221,8 +195,6 @@ const SPECS = {
     },
     transactionPhotos: {
         dates: [],
-        // `imageUri` is absent on purpose: it is a path into THIS device's
-        // container, meaningless on another and stale here after an update.
         fields: ["transactionId", "imageKey", "imageColor", "sortOrder"],
         id: transactionPhotos.id,
         table: transactionPhotos,
@@ -254,12 +226,8 @@ const SPECS = {
             "emoji",
             "customColor",
             "imageColor",
-            // `imageUri` is deliberately absent: a device-local container path is
-            // worthless on the receiving handset, and replicating it lost photos.
-            // The receiver could not resolve the path, its launch reconciliation
-            // nulled the column, and the resulting push tie-broke on `deviceId` — so
-            // the ORIGINATING device pulled back a null for a photo it still held.
-            // `imageKey` is the replicated half; the bytes travel via `photos.ts`.
+            // No `imageUri`: a peer cannot resolve the device-local path, nulls it, and pushes that null back over the
+            // original photo. `imageKey` replicates; the bytes travel via `photos.ts`.
             "imageKey",
             "onceRecurring",
             "recurringType",
@@ -308,12 +276,9 @@ export function specFor(table: SyncedTable): TableSpec {
     return SPECS[table];
 }
 
-/** A column as SQLite hands it back: the wire set, plus the `Date` it decodes to. */
 export type LocalValue = Date | WireValue;
 
-// A runtime table name erases the generated row type, and every read below is
-// keyed by a name checked against `SPECS`. The alternative is six copies of each
-// helper.
+// A runtime table name erases drizzle's row type; every read is keyed by a name checked against `SPECS`.
 type Row = Record<string, LocalValue>;
 interface AnyWriter {
     insert: (table: SQLiteTable) => {
@@ -328,18 +293,8 @@ interface AnyWriter {
     };
 }
 
-/**
- * The single place the handle is re-typed, so the reason lives in one spot.
- *
- * `Database` shares no overlap with `AnyWriter` to assert against directly:
- * drizzle's builders are generic over each table's column map, so the value the
- * builder accepts differs per table and cannot be one type. `AnyWriter` is the
- * shape this file actually calls, with the row type erased for the same reason
- * `Row` is.
- */
 function anyWriter(db: Database): AnyWriter {
-    // SAFETY: only the two methods named above are called, and every table
-    // reaching them was looked up in `SPECS` by a checked `SyncedTable` name.
+    // SAFETY: drizzle's per-table generics share no type; only insert/select run, on tables looked up in `SPECS`.
     return db as unknown as AnyWriter;
 }
 
@@ -347,7 +302,6 @@ function toEpoch(value: LocalValue | undefined): number | null {
     return value instanceof Date ? value.getTime() : null;
 }
 
-/** A column the spec does not list as a date still cannot carry one. */
 function toWireValue(value: LocalValue | undefined): WireValue {
     return value instanceof Date ? value.getTime() : (value ?? null);
 }
@@ -361,9 +315,7 @@ function toWireFields(spec: TableSpec, row: Row): WireFields {
     );
 }
 
-/** The one wire spelling of an instant — see {@link WireValue}. */
 const wireEpoch = z.number();
-/** A localId as the server hands it back. */
 const wireId = z.string();
 
 function toLocalDate(value: WireValue): Date | null {
@@ -404,8 +356,7 @@ async function rowsById(db: Database, table: SyncedTable, ids: readonly string[]
 function groupByTable<T extends { tableName: string; localId: string }>(entries: readonly T[]): Map<SyncedTable, T[]> {
     const grouped = new Map<SyncedTable, T[]>();
     for (const entry of entries) {
-        // SAFETY: checked against `SPECS` on the next line, which is the same set
-        // `SyncedTable` enumerates.
+        // SAFETY: checked against `SPECS` on the next line.
         const table = entry.tableName as SyncedTable;
         if (!(table in SPECS)) {
             continue;
@@ -418,16 +369,8 @@ function groupByTable<T extends { tableName: string; localId: string }>(entries:
 }
 
 /**
- * S6 — the durable push. Reads the outbox oldest-first, joins out the current
- * state of each queued row, and clears exactly the queue entries it pushed.
- *
- * Entries are cleared by their autoincrement `seq`, never by `(table, localId)`:
- * an edit that lands while a batch is in flight re-queues the same row under a
- * NEW seq, and deleting by identity would silently drop it.
- *
- * A queue entry whose row no longer exists is dropped rather than pushed. The
- * delete trigger normally removes those, so this only covers a store that was
- * modified outside them.
+ * Clears queue entries by `seq`, never by `(table, localId)`: an edit that lands mid-push re-queues the row
+ * under a new seq, and deleting by identity would drop it.
  */
 export async function drainOutbox(db: Database, push: PushFn): Promise<number> {
     if (!(await isSyncEnabled(db))) {
@@ -462,8 +405,7 @@ export async function drainOutbox(db: Database, push: PushFn): Promise<number> {
 
         const rows: WireRow[] = [];
         for (const entry of queued) {
-            // SAFETY: `queued` came from `groupByTable`, which already dropped every
-            // entry whose table name is not a key of `SPECS`.
+            // SAFETY: an unknown table misses `loaded`, which `groupByTable` keyed by `SPECS` names.
             const table = entry.tableName as SyncedTable;
             const row = loaded.get(table)?.get(entry.localId);
             if (!row) {
@@ -477,8 +419,6 @@ export async function drainOutbox(db: Database, push: PushFn): Promise<number> {
                 localId: entry.localId,
                 ...(restoredAt !== null && { restoredAt }),
                 table,
-                // `appMeta` has no clock of its own, so the enqueue time is the only
-                // honest "when did this device last say so" it can carry.
                 updatedAt: table === "appMeta" ? (toEpoch(entry.enqueuedAt) ?? 0) : (toEpoch(row.updatedAt) ?? 0),
             });
         }
@@ -507,39 +447,24 @@ export async function drainOutbox(db: Database, push: PushFn): Promise<number> {
 interface LocalVersion {
     deletedAt: number | null;
     restoredAt?: number | null;
-    /** Null for a table with no clock of its own — `appMeta` is the only one. */
     updatedAt: number | null;
 }
 
-/**
- * Where a version sits in its row's delete and restore history, the same as
- * `era` beside `incomingWins` in `packages/backend/convex/lib/syncTables.ts`.
- */
+/** Mirrors `era` in `packages/backend/convex/lib/syncTables.ts`. */
 function era(version: { deletedAt: number | null; restoredAt?: number | null }): number {
     const restoredAt = version.restoredAt ?? 0;
     return version.deletedAt === null ? restoredAt : Math.max(version.deletedAt, restoredAt);
 }
 
-/**
- * The `restoredAt` that lifts a tombstone: now, or just past the tombstone's
- * own era when this clock runs behind the one that deleted it, so a restore
- * always beats the delete it undoes.
- */
+/** Just past the tombstone's era when this clock lags the deleter's, so a restore beats the delete it undoes. */
 export function restoreStamp(row: { deletedAt: Date | null; restoredAt: Date | null }, now: Date): Date {
     const lifted = era({ deletedAt: toEpoch(row.deletedAt), restoredAt: toEpoch(row.restoredAt) });
     return new Date(Math.max(now.getTime(), lifted + 1));
 }
 
 /**
- * R1 then R2 from `docs/internals/convex-sync.md` §4, from the device's side.
- * Eras decide first, exactly as on the server.
- *
- * A local row carries no `deviceId`, so an exact `updatedAt` tie cannot break
- * the way the server's does. It breaks on whether this device still owes the
- * row a push: an unsent edit is work the server has never arbitrated, and
- * overwriting it here would push the peer's value back up under the local row's
- * identity. Everything else defers to the incoming row, which the server has
- * already declared the account's winner.
+ * R1 then R2 from `docs/internals/convex-sync.md` §4. An exact `updatedAt` tie breaks on whether this device
+ * still owes the row a push: overwriting an unsent edit would push the peer's value back under the local id.
  */
 export function incomingWinsLocally(
     incoming: { updatedAt: number; deletedAt: number | null; restoredAt?: number | null },
@@ -549,9 +474,7 @@ export function incomingWinsLocally(
     if (local === null) {
         return true;
     }
-    // `appMeta` has no `updatedAt` column, so there is no clock to compare and
-    // every incoming value would otherwise outrank the local one. Whether the key
-    // is still owed a push is the only signal there is.
+    // `appMeta` has no clock, so whether the key is still owed a push is the only signal.
     if (local.updatedAt === null) {
         return !localIsPending;
     }
@@ -569,14 +492,7 @@ export function incomingWinsLocally(
     return !localIsPending;
 }
 
-/**
- * R3's tie-break, and the reason it is not the server's.
- *
- * The design names `(updatedAt, deviceId)`, but the local schema has no
- * `deviceId` column — the id does the same job here and better: both devices
- * hold the same pair of rows and so compute the same survivor, which is the
- * only property the rule needs.
- */
+/** Breaks R3 ties on the id (no local `deviceId`); both devices hold the same pair and pick the same survivor. */
 function keepsTheSlot(
     incoming: { updatedAt: number; localId: string },
     rival: { updatedAt: number; id: string }
@@ -592,28 +508,7 @@ export interface ApplyResult {
     tables: SyncedTable[];
 }
 
-/**
- * S7 — applies one pulled page in a single local transaction and advances the
- * cursor with it, so a crash mid-apply replays the page rather than skipping it.
- *
- * Foreign keys are switched off around the batch by {@link applyPulledRows}:
- * `seq` is last-modified order, so a category edited today sorts AFTER a
- * transaction created against it last year, and no ordering of the page can
- * make the references resolve.
- *
- * The outbox entries the applier's own writes create are deleted inside the
- * same transaction. Atomically, so there is no window in which a pulled row is
- * queued to be pushed straight back — a pull→push echo that would never settle.
- * Only rows actually written are cleared: a local edit that WON its merge is
- * still owed to the server.
- */
-/**
- * `appMeta` replicates key by key, so the allow-list has to govern both
- * directions. A key this build stopped syncing is still on the server and in
- * every peer's history, and applying it back would let another device reverse a
- * choice this one now owns. Every other table replicates whole, so membership in
- * {@link SPECS} is the only question there.
- */
+/** A meta key this build no longer syncs is not applied, or a peer could reverse this device's choice. */
 function isReplicated(row: PulledRow): boolean {
     if (!(row.table in SPECS)) {
         return false;
@@ -687,8 +582,7 @@ async function applyInTransaction(
             if (outcome === "unchanged") {
                 continue;
             }
-            // A row R3 rewrote is NOT what the server holds, so it stays queued and
-            // this device pushes its correction rather than silently diverging.
+            // An R3 rewrite is not what the server holds, so it stays queued and pushes the correction.
             if (outcome === "verbatim") {
                 replicatedVerbatim.push(row);
             }
@@ -696,6 +590,7 @@ async function applyInTransaction(
         }
         /* oxlint-enable no-await-in-loop */
 
+        // Cleared in the same transaction, so a pulled row is never queued to echo back to the server.
         const cleared = groupByTable(
             replicatedVerbatim.map((row) => ({
                 localId: row.localId,
@@ -713,8 +608,7 @@ async function applyInTransaction(
             /* oxlint-enable no-await-in-loop */
         }
 
-        // After the outbox is cleared, so the tombstones this writes stay queued:
-        // converging the other device depends on them being pushed back.
+        // After the outbox clear, so these tombstones stay queued and reach the other device.
         if (await reconcileMainBudget(db, now)) {
             touched.add("mainBudget");
         }
@@ -729,15 +623,8 @@ async function applyInTransaction(
 }
 
 /**
- * `budgets.categoryId` is UNIQUE locally and unconstrained on the server, so
- * two offline devices can each create a budget for the same category and the
- * second row cannot even be inserted here. R3 is therefore resolved at the
- * write, not in a pass afterwards.
- *
- * Both devices see the same pair and pick the same survivor, so device A
- * tombstones its local rival and device B writes the incoming loser already
- * tombstoned. Both push their tombstone, and R1 lets it win, so the
- * account converges on one live budget per category.
+ * `budgets.categoryId` is UNIQUE locally but not on the server, so R3 resolves at the write: both devices
+ * tombstone the same loser, and R1 converges the account on one live budget per category.
  */
 async function resolveBudgetCategory(db: Database, row: PulledRow, now: Date): Promise<boolean> {
     const incoming = wireId.safeParse(row.fields.categoryId);
@@ -805,16 +692,10 @@ async function resolveTagLink(db: Database, row: PulledRow, now: Date): Promise<
     return incomingLoses;
 }
 
-/**
- * Whether the incoming transaction arrives with no live schedule — either
- * tombstoned, or retired to `none` because the peer's sweep moved the chain on to
- * a successor.
- */
 function retiresSchedule(values: Row): boolean {
     return values.deletedAt != null || values.recurringType === 0;
 }
 
-/** Whether upserting `values` over `local` would leave every column it sets as it is. */
 function changesNothing(local: Row | undefined, values: Row): boolean {
     return (
         local !== undefined &&
@@ -822,10 +703,6 @@ function changesNothing(local: Row | undefined, values: Row): boolean {
     );
 }
 
-/**
- * Answers whether the row landed verbatim, was rewritten by R3, or already
- * matched `local` and was left alone.
- */
 async function writeRow(
     db: Database,
     row: PulledRow,
@@ -835,11 +712,8 @@ async function writeRow(
     const spec = SPECS[row.table];
 
     if (row.table === "appMeta") {
-        // Written directly rather than through `setMeta`, which cannot express a
-        // null value — and a key whose value is genuinely null must not arrive here
-        // as an empty string.
-        // SAFETY: `appMeta` declares its single column as a nullable string in
-        // `syncTables.ts`, and the wire union is narrower than the column.
+        // Not `setMeta`: it cannot store null, and a null value must not arrive as an empty string.
+        // SAFETY: `syncTables.ts` declares `appMeta.value` as a nullable string.
         const value = (row.fields.value ?? null) as string | null;
         if (changesNothing(local, { key: row.localId, value })) {
             return "unchanged";
@@ -852,13 +726,7 @@ async function writeRow(
     }
 
     const lostCategory = row.table === "budgets" && (await resolveBudgetCategory(db, row, now));
-    // A peer running an older build can clear a goal's deadline, and a goal with
-    // no date cannot exist here — the column is NOT NULL and there is no pace to
-    // keep. Skipping the row would leave this device showing its dated copy
-    // forever while the server held the dateless one, so the winner is written as
-    // a TOMBSTONE instead and pushed back, converging both sides on deleted. Same
-    // shape as `resolveBudgetCategory` above: a row this device rewrote is not
-    // what the server holds, so it stays queued.
+    // A NOT NULL `targetDate` an older peer cleared is written as a queued tombstone, converging both on deleted.
     const datelessGoal = row.table === "savingsGoals" && row.deletedAt === null && row.fields.targetDate == null;
     const lostTagPair = row.table === "transactionTags" && (await resolveTagLink(db, row, now));
     const rewritten = lostCategory || datelessGoal || lostTagPair;
@@ -875,11 +743,7 @@ async function writeRow(
         values.categoryId = null;
     }
     if (row.table === "transactions" && retiresSchedule(values)) {
-        // `reminderLeadDays` is device-local, so it is absent from the incoming
-        // fields and an `onConflictDoUpdate` would leave this handset's value on a
-        // row a peer has just settled — a live notice on a charge that is already
-        // taken. The preference does not survive a peer-driven hand-off either way;
-        // what matters is that it cannot outlive its schedule.
+        // Device-local and absent from the wire, so the upsert would keep a reminder on a charge a peer settled.
         values.reminderLeadDays = null;
     }
     if (!rewritten && changesNothing(local, values)) {
@@ -890,10 +754,7 @@ async function writeRow(
     return rewritten ? "rewritten" : "verbatim";
 }
 
-/**
- * The overall budget is a singleton by convention rather than by constraint, so
- * unlike `budgets` it can hold two live rows and is reconciled after the write.
- */
+/** A singleton by convention, not constraint, so unlike `budgets` it can hold two live rows. */
 async function reconcileMainBudget(db: Database, now: Date): Promise<boolean> {
     const live = await db
         .select({ id: mainBudget.id, updatedAt: mainBudget.updatedAt })
@@ -924,9 +785,8 @@ async function reconcileMainBudget(db: Database, now: Date): Promise<boolean> {
 }
 
 /**
- * Runs the batch with foreign keys off and restores enforcement only if it was
- * on to begin with — `db/client.ts` deliberately leaves it off for a store that
- * already holds orphans, and turning it on here would break that.
+ * Foreign keys go off for the batch: `seq` is last-modified order, so no page ordering resolves every reference.
+ * Enforcement returns only if it was on, since `db/client.ts` leaves it off for a store holding orphans.
  */
 export async function applyPulledRows(
     db: Database,
@@ -954,13 +814,7 @@ export async function applyPulledRows(
     }
 }
 
-/**
- * Walks the change log from `cursor` to its end. A scoped walk (`tables`) keeps
- * its cursor to itself, since its pages say nothing about the other tables.
- *
- * The `cursor` guard is not paranoia: a page that returns rows but does not
- * advance the watermark would otherwise be replayed forever.
- */
+/** The cursor check stops a page that returns rows without advancing the watermark from replaying forever. */
 async function walkLog(db: Database, pull: PullFn, from: number, now: Date, scope?: RereadScope): Promise<ApplyResult> {
     const tables = scope?.tables;
     let cursor = from;
@@ -996,11 +850,6 @@ async function walkLog(db: Database, pull: PullFn, from: number, now: Date, scop
     return { applied, tables: [...touched] };
 }
 
-/**
- * What a one-time re-read walks. Rows of a `markersOnly` table apply only when
- * they carry `restoredAt`, and `repair` stamps this device's own unsynced
- * restores first; see {@link repairUnsyncedRestores}.
- */
 interface RereadScope {
     markersOnly: ReadonlySet<SyncedTable>;
     repair: boolean;
@@ -1011,13 +860,8 @@ interface RereadScope {
 const LEGACY_RESTORABLE = ["transactions", "transactionTags"] as const satisfies readonly SyncedTable[];
 
 /**
- * Walks the account's change log from this device's cursor to its end, then
- * runs the one-time re-read the migrations asked for, if any, as one walk:
- * `syncReread` names tables to read whole, and `syncRestoresReread` adds the
- * tables where the build before `restoredAt` rejected every restored row it
- * pulled. Those are read for their restored rows only. Neither is a cursor
- * reset: a full re-read would hand back the server's tombstone for every entry
- * this device restored from Recently Deleted before restores synced.
+ * Walks the log from this device's cursor, then any one-time re-read the migrations asked for. Never a cursor
+ * reset: a full re-read would serve the server's tombstone for every row restored here before restores synced.
  */
 export async function pullAndApply(db: Database, pull: PullFn, now: Date = new Date()): Promise<ApplyResult> {
     if (!(await isSyncEnabled(db))) {
@@ -1041,17 +885,11 @@ export async function pullAndApply(db: Database, pull: PullFn, now: Date = new D
     return { applied: main.applied + extra.applied, tables: [...new Set([...main.tables, ...extra.tables])] };
 }
 
-/** The tables a restore can lift a tombstone in, and so the ones the reread repairs. */
 const RESTORABLE = { installmentPlans, installments, outsidePayments, transactionTags, transactions } as const;
 
 /**
- * Restores this device made before restores synced: live here, tombstoned on
- * the server. It runs after the main walk has served every tombstone this
- * device had not read yet, and a tombstone always won locally under the old
- * rule, so a row live here against a tombstone in the log was brought back
- * here. A restore moved `updatedAt` past the delete; a row put back by an
- * archive restore did not, and is left as it is rather than revived on every
- * device. Stamped, the row is queued and the next push carries the restore.
+ * Stamps restores made here before restores synced (live here, tombstoned on the server) so the next push carries
+ * them. A row whose `updatedAt` never passed the delete came back via archive restore and is left alone.
  */
 async function repairUnsyncedRestores(db: Database, read: readonly PulledRow[]): Promise<SyncedTable[]> {
     const repaired: SyncedTable[] = [];
@@ -1093,11 +931,7 @@ async function repairUnsyncedRestores(db: Database, read: readonly PulledRow[]):
     return repaired;
 }
 
-/**
- * One replication cycle. Push first: an edit made here reaches the server
- * before the pull can hand this device a peer's version of the same row, which
- * is what keeps the common case out of conflict resolution entirely.
- */
+/** Push first, so a local edit reaches the server before the pull can hand back a peer's version of the row. */
 export async function runSync(
     db: Database,
     transport: { push: PushFn; pull: PullFn },

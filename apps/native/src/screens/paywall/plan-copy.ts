@@ -1,7 +1,6 @@
 import type { Plan } from "@/domain/pro-plans";
 import type { TranslateFn } from "@/i18n/context";
 
-/** What the price is per: "once", "a month", or the annual plan's monthly equivalent. */
 export function unitOf(plan: Plan, t: TranslateFn): string | null {
     if (plan.kind === "lifetime") {
         return t("pro.plan.once");
@@ -12,7 +11,6 @@ export function unitOf(plan: Plan, t: TranslateFn): string | null {
     return plan.perMonth === null ? null : t("pro.plan.perMonth", { price: plan.perMonth });
 }
 
-/** The trial and the saving, whichever the plan has, on one line. */
 export function noteOf(plan: Plan, t: TranslateFn): string | null {
     const parts = [
         plan.trialDays === null ? null : t("pro.plan.trial", { days: plan.trialDays }),

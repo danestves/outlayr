@@ -1,13 +1,8 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
-/** Families the fake font manager can draw; any other name matches a blank face. */
 let mockDrawable = new Set<string>();
 const mockMatched: string[] = [];
 
-/**
- * Skia as the card meets it: `matchFamilyStyle` never returns null, and a face
- * that matched nothing measures zero wide.
- */
 jest.mock("@shopify/react-native-skia", () => ({
     FontWeight: { Medium: 500, Normal: 400, SemiBold: 600 },
     Skia: {
@@ -25,7 +20,6 @@ jest.mock("@shopify/react-native-skia", () => ({
     },
 }));
 
-/** A fresh module, so the faces one test resolves are not cached for the next. */
 function freshFonts(): typeof import("./day-card-fonts") {
     jest.resetModules();
     return require("./day-card-fonts");

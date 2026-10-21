@@ -6,18 +6,8 @@ import { AppSymbol } from "@/components/app-symbol";
 import { Text } from "@/components/text";
 import { useColors } from "@/theme/use-colors";
 
-/**
- * A save or validation failure raised from a screen that stays up afterwards —
- * a `formSheet` or `modal`.
- *
- * These cannot be toasts: `PanelUIProvider` mounts the toast viewport at the app
- * root and a native presentation covers it, so the notice would be silent — see
- * the note in `@/lib/notify`. It reads where the retry happens instead: against
- * the button that failed, or under the field that is wrong.
- *
- * Nothing moves focus, so VoiceOver would never reach a line that appeared
- * behind the cursor — hence the announcement.
- */
+// For screens that stay up after a failure (`formSheet`, `modal`): a native presentation covers the root toast
+// viewport (see `@/lib/notify`). Nothing moves focus, hence the announcement.
 export function InlineFailure({ message }: { message: string | null }) {
     const colors = useColors();
 

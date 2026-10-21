@@ -21,9 +21,7 @@ describe("favourite currencies storage", () => {
     });
 
     it("keeps both stars when two taps land before the first write", async () => {
-        // Dispatched the way onPress does it — neither awaited — so both would read
-        // the same empty list if the toggles did not serialise, and the second write
-        // would erase the first.
+        // Dispatched like onPress, neither awaited, so without serialising both read the same empty list.
         const [first, second] = await Promise.all([
             toggleFavouriteCurrency(db, "EUR"),
             toggleFavouriteCurrency(db, "JPY"),

@@ -41,7 +41,6 @@ beforeEach(() => {
 });
 
 describe("useHaptics on Android", () => {
-    // expo-haptics rejects a constant newer than the device, which would leave it silent.
     it.each([
         [33, "selection", "clock-tick"],
         [34, "selection", "segment-tick"],

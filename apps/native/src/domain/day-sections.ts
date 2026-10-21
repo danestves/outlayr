@@ -10,51 +10,32 @@ import { DEFAULT_CURRENCY } from "./money";
 
 export interface DayGroupable {
     amount: number;
-    /** Frozen USD value, when the row has one. Absent leaves it unconvertible. */
     amountUsd?: number | null;
-    /**
-     * Null means the entry stated none — it was written under whatever the
-     * ledger's currency was that day, which today's setting cannot be assumed to
-     * match.
-     */
+    /** Null: the entry stated no currency, and today's ledger currency cannot be assumed to match. */
     currency?: string | null;
-    /**
-     * The transaction's own instant, so it converts at that day's rate. `day` is
-     * a local midnight and would land on the wrong side of UTC for half the world.
-     */
+    /** Converts at this instant's rate; `day` is a local midnight, the wrong UTC day for half the world. */
     date?: Date;
     day: Date;
-    /** Set on a transfer in the Log, where money moved between the user's own accounts is neither income nor spending. */
+    /** On a Log transfer: money moved between the user's own accounts is neither income nor spending. */
     excludedFromTotals?: boolean;
     feeForId?: string | null;
     id?: string;
     income: boolean;
     transferId?: string | null;
-    /**
-     * What the row is worth in its list's currency, stamped by {@link valueRows}.
-     * Null when nothing can state it exactly; absent on a list valued without rates.
-     */
     valued?: number | null;
 }
 
 export interface DaySection<T> {
     data: T[];
     day: Date;
-    /** The day's instant, so a list keeps the section's rows when a day above it comes or goes. */
     key: string;
-    /**
-     * Signed net for the day across every currency. Only meaningful when the day
-     * used one — prefer {@link DaySection.totals}, which never adds two currencies
-     * together.
-     */
+    /** Adds currencies together, so only meaningful on a one-currency day; prefer {@link DaySection.totals}. */
     total: number;
-    /** The day's signed total per currency, dominant first. */
     totals: CurrencyBucket[];
 }
 
 export type WithFee<T> = T & { fee?: T };
 
-/** A row as {@link valueRows} hands it back. */
 export type Valued<T> = T & Pick<DayGroupable, "valued">;
 
 const instant = (row: DayGroupable): number => (row.date ?? row.day).getTime();
@@ -85,11 +66,7 @@ export function foldFees<T extends DayGroupable>(rows: readonly T[]): WithFee<T>
     });
 }
 
-/**
- * Stamps `valued` on the rows a list totals, handed out from the same
- * `(currency, UTC day, direction)` cells its header sums, so the rows add up to
- * the header to the cent. Without rates the rows come back as they were.
- */
+/** Values rows from the header's own `(currency, UTC day, direction)` cells, so they add up to it to the cent. */
 export function valueRows<T extends DayGroupable>(
     rows: readonly T[],
     currency: string,
@@ -118,9 +95,8 @@ export function valueRows<T extends DayGroupable>(
 }
 
 /**
- * Newest first, keyed on the local calendar day of the row's instant. The stored
- * `day` is midnight in whatever time zone the row was saved in, so keying on it
- * splits one day in two once the device's zone changes.
+ * Newest first, keyed on the local day of the row's instant: the stored `day` is midnight in the zone it was
+ * saved in, so keying on it splits one day in two after a zone change.
  */
 export function groupByDay<T extends DayGroupable>(
     rows: readonly T[],
@@ -147,8 +123,7 @@ export function groupByDay<T extends DayGroupable>(
             globalCurrency,
             rates
         );
-        // Derived from the buckets rather than summed again over the rows, so the
-        // one-currency case is the same number the section header prints, to the cent.
+        // From the buckets, not re-summed rows, so a one-currency total matches the header to the cent.
         let total = 0;
         for (const bucket of section.totals) {
             total += bucket.amount;
@@ -161,12 +136,7 @@ export function groupByDay<T extends DayGroupable>(
     }));
 }
 
-/**
- * Day sections of newer rows then older ones, each half grouped on its own so a
- * write to one regroups only that half. The halves are split on the stored
- * `day`, which a zone change can leave on the other side of a local day; when
- * the two then meet or cross, `regroup` groups them together instead.
- */
+/** A zone change can push the stored `day` across a local day, so halves that meet or cross regroup whole. */
 export function joinDaySections<T>(
     newer: DaySection<T>[],
     older: DaySection<T>[],
@@ -180,11 +150,7 @@ export function joinDaySections<T>(
     return newestOlder.day.getTime() < oldestNewer.day.getTime() ? [...newer, ...older] : regroup();
 }
 
-/**
- * {@link groupByDay} for rows that grow by older ones, as the Log's window does
- * when it pages: while the rows it grouped last are still the first ones, it
- * groups only the rows after them and joins those days on. One per list.
- */
+/** For rows that grow by older ones (the Log paging): groups only the added rows and joins them on. One per list. */
 export function groupByDayAsItGrows<T extends DayGroupable>(globalCurrency: string, rates?: RateTable) {
     return growing(
         (rows: readonly T[]) => groupByDay(rows, globalCurrency, rates),
@@ -192,11 +158,7 @@ export function groupByDayAsItGrows<T extends DayGroupable>(globalCurrency: stri
     );
 }
 
-/**
- * How many of `rows`, newest first, a capped list shows: the first `cap`, run on
- * to the end of the last one's day, so a day header never totals part of its day.
- * All of them when there are `cap` or fewer.
- */
+/** Runs the first `cap` rows on to the end of the last one's day, so no header totals part of a day. */
 export function capAtDayEnd(rows: readonly DayGroupable[], cap: number): number {
     const last = rows[cap - 1];
     if (rows.length <= cap || !last) {

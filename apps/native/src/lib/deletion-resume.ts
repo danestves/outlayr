@@ -13,7 +13,6 @@ export const deletionResumeSecretKey = "outlayr.account-deletion-resume";
 
 type DeletionPhase = "authDeleting" | "billingErased" | "complete" | "prepared" | "providersRevoked" | "purged";
 
-/** How far `accountDeletion` has got, as its `poll` and `advance` report it. */
 interface DeletionStatus {
     phase: DeletionPhase;
 }
@@ -28,12 +27,8 @@ function recoveryError(): Error {
 }
 
 /**
- * What the keychain has to hold for a half-finished deletion to be resumable.
- *
- * Loose rather than strict: `resumeProviderRevocation` writes the record back
- * with a `googleLocalReceipt` added, so a stored blob legitimately carries more
- * than this, and rejecting it would strand the deletion it was written to
- * survive.
+ * Loose: `resumeProviderRevocation` writes the record back with a `googleLocalReceipt`, and rejecting that extra
+ * field would strand the deletion the record exists to survive.
  */
 const storedPreparation = z.looseObject({
     provider: z.enum(["apple", "google", "password"]),

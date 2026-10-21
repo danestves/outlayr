@@ -23,13 +23,7 @@ import { cloudRuntime } from "@/lib/cloud-runtime";
 import { useLedgerAdoption } from "@/lib/ledger-adoption";
 import { notifyFailure } from "@/lib/notify";
 
-/**
- * Switching back on goes through the adoption path rather than a bespoke push.
- * The switch is only offered to a device that has already reconciled with the
- * account, so what is owed is the backlog the triggers never queued while the
- * gate was shut — and `runAdoption` opens the gate before it queues, which is
- * the ordering `enqueueAllForSync` warns about.
- */
+/** Resumes through adoption: `runAdoption` opens the gate before queueing, the order `enqueueAllForSync` needs. */
 const RESUME: AdoptionActions = {
     pushLocal: true,
     wipeAccount: false,

@@ -20,11 +20,6 @@ const FIT_CONTENT = { alignSelf: "stretch" } as const;
 
 const PRESSED_ALPHA = 0.1;
 
-/**
- * The amount keypad as a Material 3 modal bottom sheet: the currency as its
- * title, a close icon button, the tonal keys and a filled Done. Same contract
- * as `amount-entry-sheet.tsx`.
- */
 export const AmountEntrySheet: typeof AmountEntrySheetBase = ({
     value,
     minorUnits,

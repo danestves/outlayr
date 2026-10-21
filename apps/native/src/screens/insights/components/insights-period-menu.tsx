@@ -7,11 +7,9 @@ import { PERIODS } from "../periods";
 
 export interface InsightsPeriodMenuProps {
     period: InsightsPeriod;
-    /** Takes the stored setting value, as `PERIODS` lists it. */
     onSelect: (value: number) => void;
 }
 
-/** The week / month / year switch, a menu on the right of the bar labelled with the current period. */
 export function InsightsPeriodMenu({ period, onSelect }: InsightsPeriodMenuProps) {
     const t = useTranslation();
     return (

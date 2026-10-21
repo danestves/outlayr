@@ -27,10 +27,8 @@ import { Text } from "./text";
 const TILE = 90;
 export const HERO_RING = TILE + 12;
 const BADGE = 26;
-/** App-icon squircle radius (~22% of the 90pt tile) shared by every state. */
 const RADIUS = 20;
 
-/** The tile edge the picker animates the hero up to. */
 export const FLOAT_TILE = 164;
 const FLOAT_SCALE = FLOAT_TILE / TILE;
 
@@ -38,23 +36,13 @@ const FLOAT_SCALE = FLOAT_TILE / TILE;
 const PRESS_SPRING = { damping: 35, mass: 1, stiffness: 631 } as const;
 
 /**
- * Float progress above which the floating twin owns the tile and the in-scroll
- * hero gives it up. One threshold read by both, so exactly one tile is ever drawn.
- * 0.01 is Reanimated's own `restDisplacementThreshold`: a spring inside that band
- * is considered home and snapped to its target, so swapping there never leaves the
- * twin drawing a frame the spring is about to discontinuously correct.
+ * Read by both heroes so exactly one tile is drawn. 0.01 is Reanimated's `restDisplacementThreshold`,
+ * so the swap never lands on a frame the spring is about to snap.
  */
 const SWAP_EPS = 0.01;
 const POP_SCALE = 1.06;
-/** Short enough to finish well inside the pop's return leg. */
 const POP_FADE_MS = 160;
 
-/**
- * `transaction`: a photo glyph, a radial ghost fill, and a caption in both
- * states. `category`: no photo (a category cannot have one), a flat ghost fill,
- * sparkles set wider, and an invitation that exists only while the tile is
- * empty. Both wear the same ink dash.
- */
 export type HeroVariant = "transaction" | "category";
 
 /** Sparkle offsets from the tile CENTRE, per variant. */
@@ -63,11 +51,7 @@ const SPARKLES = {
     transaction: { large: [-53, -33], small: [51, 8] },
 } as const;
 
-/**
- * Tile-to-caption gap. The category one is a gap only in appearance: that caption
- * is absolutely positioned, so it hangs below the hero without adding to its
- * height, and the form's `captionClearance` is what reserves the room for it.
- */
+/** The category caption is absolute, so the form's `captionClearance` reserves its room, not this gap. */
 const CAPTION_GAP = { category: 8, transaction: 12 } as const;
 
 const A11Y = {
@@ -96,29 +80,17 @@ const EMPTY_CAPTION = {
 } satisfies Record<HeroVariant, TranslationKey>;
 
 interface IdentityHeroProps {
-    /** Custom color override; falls back to income green / foreground. */
     color: string | null;
     emoji: string | null;
     /**
-     * Screen-space Y delta from the resting center to the floated center. A shared
-     * value, not a number: it depends on measurements that land after the flight has
-     * started, and a prop change would rebuild this style mid-flight and jump the tile.
+     * A shared value: it is measured after the flight starts, and a prop change would rebuild the style
+     * mid-flight and jump the tile.
      */
     floatOffsetY?: SharedValue<number>;
-    /**
-     * 0 → resting in the form; 1 → floated + enlarged over the open picker. Drives
-     * the fly-up (scale + translate) and, past {@link SWAP_EPS}, which of the two
-     * heroes is the one being drawn.
-     */
+    /** 0 rests in the form, 1 floats over the open picker; past {@link SWAP_EPS} the twin is drawn instead. */
     floatProgress?: SharedValue<number>;
     icon: string | null;
     income: boolean;
-    /**
-     * When true, this is the floating twin: it renders above everything, applies the
-     * fly-up transform, drops the caption/reset, and ignores touches. It is drawn
-     * only once `floatProgress` clears {@link SWAP_EPS}; the in-scroll hero (false)
-     * is drawn on exactly the frames the twin is not.
-     */
     isFloat?: boolean;
     onPress?: () => void;
     onReset?: () => void;
@@ -126,7 +98,6 @@ interface IdentityHeroProps {
     variant?: HeroVariant;
 }
 
-/** A ~90pt app-icon squircle that opens the identity picker. */
 export function IdentityHero({
     emoji,
     icon,
@@ -154,18 +125,12 @@ export function IdentityHero({
 
     const wasEmpty = useRef(isEmpty);
     const identity = `${emoji}|${icon}|${photoUri}|${color}`;
-    // `pickerOpen` gates the pop rather than a first-render latch: both forms seed the
-    // draft from their stored row in a mount effect, and by content alone that seed is
-    // indistinguishable from a pick. A pick can only land while the picker is up.
-    //
-    // `isEmpty` and `pickerOpen` are deliberately read as the state at the moment the
-    // identity changed; re-running on them would re-fire the pop when the picker
-    // merely opens or closes over an unchanged tile.
+    // `pickerOpen` gates the pop because both forms seed the draft in a mount effect, which looks like a pick.
+    // Reads `isEmpty` and `pickerOpen` at change time; depending on them would re-pop when the picker toggles.
     const onIdentityChange = useEffectEvent((_identity: string) => {
         const becameEmpty = isEmpty && !wasEmpty.current;
         wasEmpty.current = isEmpty;
         if (becameEmpty) {
-            // A reset springs without the overshoot a pick gets.
             contentOpacity.set(0);
             contentOpacity.set(withSpring(1, LAUNCH_SPRING));
             return;
@@ -181,9 +146,6 @@ export function IdentityHero({
         onIdentityChange(identity);
     }, [identity]);
 
-    // A hard swap, not a crossfade: a single threshold read by both heroes means
-    // there is never a frame with two tiles or none, and the twin starts on the
-    // resting hero's own frame, so the seam has nothing to show.
     const rootStyle = useAnimatedStyle(() => {
         const floated = (float?.value ?? 0) > SWAP_EPS;
         return { opacity: (isFloat ? floated : !floated) ? 1 : 0 };
@@ -298,8 +260,7 @@ export function IdentityHero({
                 )}
             </Animated.View>
 
-            {/* A filled category hero has no caption at all; the transaction one
-			    switches copy instead. */}
+            {/* A filled category hero has no caption; the transaction one switches copy. */}
             {isFloat || (variant === "category" && !isEmpty) ? null : (
                 <Text
                     className="font-sans-medium text-footnote text-muted"
@@ -419,11 +380,7 @@ function EmptyTile({ colors, variant }: { colors: ReturnType<typeof useColors>; 
                     x={0}
                     y={0}
                 />
-                {/*
-                 * Ink rather than muted: at 0.32 grey the well read as a disabled box.
-                 * The dash is the only invitation on an otherwise empty form, so it
-                 * carries full foreground weight, and it stays monochrome.
-                 */}
+                {/* Ink rather than muted: at 0.32 grey the well read as a disabled box. */}
                 <Rect
                     fill="none"
                     height={TILE - 1.8}

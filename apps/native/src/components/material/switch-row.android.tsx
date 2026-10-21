@@ -12,11 +12,7 @@ export type { SwitchRowProps } from "./switch-row";
 
 const PRESSED_ALPHA = 0.1;
 
-/**
- * A one-line M3 list item with a trailing Compose `Switch`. The whole row
- * toggles, and TalkBack reads it as one switch: the Compose one is hidden
- * from it so the row is not announced twice.
- */
+// The Compose switch is hidden from TalkBack, so the whole-row switch is not announced twice.
 export function SwitchRow({ label, value, onChange }: SwitchRowProps) {
     const m3 = useMaterialColors();
     return (

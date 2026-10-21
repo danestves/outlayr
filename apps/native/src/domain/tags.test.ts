@@ -8,7 +8,6 @@ describe("normalizing a tag name", () => {
     });
 
     it("collapses inner whitespace so one tag cannot become two", () => {
-        // "work  trip" and "work trip" look identical in a list.
         expect(normalizeTagName("work   trip")).toBe("work trip");
     });
 
@@ -57,9 +56,6 @@ describe("diffing a row's tags", () => {
     });
 
     it("writes nothing when nothing moved", () => {
-        // Every write replicates. Rewriting an unchanged link would push a row to
-        // every other device for no reason, and a tombstone-then-recreate would
-        // briefly show the entry untagged over there.
         expect(tagLinkDiff(["a", "b"], ["b", "a"])).toStrictEqual({
             attach: [],
             detach: [],

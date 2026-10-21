@@ -214,13 +214,7 @@ describe("budgetWindowLabel", () => {
     });
 });
 
-/**
- * The two days a year a clock shifts are 23 and 25 hours long. Both counters
- * used to floor raw milliseconds since the window opened, which reads an hour
- * short for the whole of the first local day after a spring-forward — so the
- * last day of March reported two days left, and `leftPerDay` halved the
- * remaining allowance with it.
- */
+/** In Madrid's zone: DST days run 23 and 25 hours, and flooring raw ms reads an hour short after a spring-forward. */
 function inMadrid(kind: "days" | "hours" | "pace", ...parts: number[]): number {
     const probe = join(import.meta.dirname, "dst-probe.ts");
     return Number(
@@ -253,7 +247,6 @@ describe("time left across a spring-forward", () => {
 });
 
 describe("budgetDetailPace", () => {
-    // Half way through a 30-day month, a third of the limit spent.
     const budget = {
         amount: 300,
         leftover: 200,
@@ -263,8 +256,6 @@ describe("budgetDetailPace", () => {
     };
 
     it("reports a marker and a daily rate for a live window", () => {
-        // Literals, not the same helpers the subject calls: an expectation
-        // derived the way the implementation derives it agrees with any answer.
         // 16 of 31 days gone leaves 15/31 of the window and $200 over 16 days.
         expect(budgetDetailPace(budget, d(2025, 3, 16), 0)).toStrictEqual({
             behind: false,
@@ -275,8 +266,6 @@ describe("budgetDetailPace", () => {
     });
 
     it("withholds both on a closed window, where a rate would say nothing", () => {
-        // A past period is a record. The old screens each decided this for
-        // themselves, which is how a marker could show on one and not the other.
         expect(budgetDetailPace(budget, d(2025, 3, 16), -1)).toStrictEqual({
             behind: false,
             closed: true,

@@ -12,22 +12,15 @@ import type { InstallmentRow, PlanWithStanding, UpcomingInstallment } from "./in
 export const DUE_WINDOW_DAYS = 14;
 
 export interface DueWindow {
-    /** Cuotas not fully covered and due by the window's last day, overdue ones included. */
     count: number;
-    /** False when part of `total` could not be valued. */
     exact: boolean;
-    /** The soonest of them. */
     next: UpcomingInstallment;
-    /** What is left of them, in the display currency. */
+    /** In the display currency. */
     total: number;
 }
 
-/**
- * The cuotas due from today through `DUE_WINDOW_DAYS` ahead plus the overdue
- * ones, each counted for what its order's payments have not covered, valued
- * into `displayCurrency` at today's rate as the Debts totals are. Null when
- * nothing is due. `rates` has to carry each order's currency.
- */
+// Each cuota counts what its payments haven't covered, valued at today's rate like the Debts totals. `rates` has to
+// carry each order's currency.
 export function dueWindow(
     plans: readonly PlanWithStanding[],
     nowMs: number,
@@ -51,13 +44,10 @@ export function dueWindow(
 }
 
 export interface AccountInstallments {
-    /** The soonest cuota not fully covered across the account's open orders. */
     next: InstallmentStanding<InstallmentRow>;
-    /** The orders not yet paid off. */
     open: PlanWithStanding[];
 }
 
-/** Each liability's open orders and its soonest unpaid cuota, by account id. */
 export function installmentsByAccount(plans: readonly PlanWithStanding[]): Map<string, AccountInstallments> {
     const byAccount = new Map<string, AccountInstallments>();
     for (const entry of plans) {

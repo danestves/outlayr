@@ -7,43 +7,25 @@ import { useHaptics } from "@/lib/use-haptics";
 
 /** Launch spring (response 0.4, dampingFraction 0.85) as stiffness/damping. */
 export const LAUNCH_SPRING = { damping: 27, mass: 1, stiffness: 246 } as const;
-/**
- * Not the launch played backwards: the return has to land inside the ~350ms UIKit
- * takes to dismiss the sheet, or the hero is still easing home after the sheet has
- * gone. ω ≈ 17.3 rad/s (response 0.36) with ζ ≈ 0.92 reaches Reanimated's rest
- * band at ~290ms.
- */
+// Not the launch reversed: it must rest (~290ms) inside the ~350ms UIKit takes to dismiss the sheet.
 const RETURN_SPRING = { damping: 32, mass: 1, stiffness: 300 } as const;
 
 interface IdentityDraftValue {
     draft: IdentitySelection;
-    // Accepts an updater as well as a value: an async writer (a fetched logo)
-    // has to re-read the draft at write time, because the seeding effect may
-    // have replaced it while the request was out.
+    // Takes an updater: an async writer (a fetched logo) must re-read the draft the seeding effect may have replaced.
     setDraft: (next: IdentitySelection | ((previous: IdentitySelection) => IdentitySelection)) => void;
 }
 
 interface IdentityFlyUpValue {
-    /**
-     * 0 → resting, 1 → floated.
-     *
-     * The form is not frozen behind the picker: react-native-screens ships
-     * `ENABLE_FREEZE = false`, this app never calls `enableFreeze()`, and no route
-     * sets `freezeOnBlur`.
-     */
+    /** 0 resting, 1 floated. */
     floatProgress: SharedValue<number>;
     pickerOpen: boolean;
     setPickerOpen: (open: boolean) => void;
     setSheetHeight: (height: number) => void;
-    /**
-     * The picker sheet's measured height in points, 0 until it has ever laid out.
-     * The sheet uses FRACTIONAL detents, so its height varies by device and cannot
-     * be replaced with a constant.
-     */
+    /** Points, 0 until first layout. The sheet's detents are fractional, so it varies by device. */
     sheetHeight: SharedValue<number>;
 }
 
-/** An identity with nothing chosen — what an editor opens on and resets to. */
 export const EMPTY_DRAFT: IdentitySelection = {
     color: null,
     emoji: null,
@@ -57,11 +39,7 @@ const OUTSIDE_PROVIDER = "useIdentityDraft and useIdentityFlyUp must be used wit
 const IdentityDraftContext = createContext<IdentityDraftValue | null>(null);
 const IdentityFlyUpContext = createContext<IdentityFlyUpValue | null>(null);
 
-/**
- * Two contexts under one provider: every tap inside the open picker replaces
- * `draft`, so merging them would drag every consumer — the whole transaction
- * form, SwiftUI `Host` tree included — through a re-render per tap.
- */
+// Two contexts: every picker tap replaces `draft`, and merging them would re-render the whole form per tap.
 export function IdentityDraftProvider({ children }: { children: React.ReactNode }) {
     const haptics = useHaptics();
     const [draft, setDraft] = useState<IdentitySelection>(EMPTY_DRAFT);
@@ -69,10 +47,8 @@ export function IdentityDraftProvider({ children }: { children: React.ReactNode 
     const floatProgress = useSharedValue(0);
     const sheetHeight = useSharedValue(0);
 
-    // Idempotent: the opener starts the spring on the tap frame, the picker route
-    // re-asserts it on mount, and on the way out every dismissal signal the route
-    // can subscribe to races to be first. Without this guard a second call would
-    // restart the spring from zero velocity mid-flight and visibly hitch.
+    // Idempotent: the opener, the picker route's mount and every dismissal signal all call this, and a second call
+    // would restart the spring from zero velocity mid-flight.
     const openRef = useRef(false);
     const setPickerOpen = useCallback(
         (open: boolean) => {
@@ -81,9 +57,8 @@ export function IdentityDraftProvider({ children }: { children: React.ReactNode 
             }
             openRef.current = open;
             if (open) {
-                // Nothing on the return: UIKit starts the dismissal transition before it
-                // decides whether to put the sheet back, so an aborted detent drag would
-                // fire a tap for a dismissal that never happened.
+                // No haptic on the return: UIKit starts dismissing before it decides whether to put the sheet
+                // back, so an aborted detent drag would tap for a dismissal that never happened.
                 haptics("light");
             }
             setPickerOpenState(open);
@@ -92,15 +67,11 @@ export function IdentityDraftProvider({ children }: { children: React.ReactNode 
         [floatProgress, haptics]
     );
 
-    // A JS-side latch instead of reading `sheetHeight.get()`: that is a cross-thread
-    // read on every sheet layout, and two layouts landing before the UI thread syncs
-    // would both still see the 0 sentinel and both hard-set.
+    // A JS latch, not `sheetHeight.get()`: two layouts landing before the UI thread syncs would both see the 0.
     const sheetMeasured = useRef(false);
     const setSheetHeight = useCallback(
         (height: number) => {
-            // The first measurement lands hard: springing off the 0 sentinel would drag
-            // the hero's target through every height in between while it is still
-            // flying up.
+            // The first measurement lands hard: springing off 0 would drag the hero's target through every height.
             if (sheetMeasured.current) {
                 sheetHeight.set(withSpring(height, LAUNCH_SPRING));
                 return;

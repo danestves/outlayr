@@ -58,8 +58,7 @@ describe("month names", () => {
 describe("weekdayInitial", () => {
     it("takes the letter the language actually uses", () => {
         expect(weekdayInitial(WEDNESDAY, "en")).toBe("W");
-        // Spanish disambiguates miércoles from martes with X, so it cannot be
-        // derived by slicing the abbreviation.
+        // Spanish writes X for miércoles to tell it from martes.
         expect(weekdayInitial(WEDNESDAY, "es")).toBe("X");
         expect(weekdayInitial(NOW, "en")).toBe("M");
         expect(weekdayInitial(NOW, "es")).toBe("L");
@@ -119,8 +118,6 @@ describe("formatTime", () => {
 });
 
 describe("the language argument", () => {
-    // A hardcoded English fallback is exactly how six duplicate English tables
-    // accumulated: every un-migrated call site must still follow the user.
     it("falls back to the live language, never to English", () => {
         underRuntimeLanguage("es", () => {
             expect(monthAbbrevTitle(WEDNESDAY)).toBe("jul");

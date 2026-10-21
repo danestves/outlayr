@@ -15,8 +15,7 @@ const deleted = (deletedAt: number, restoredAt: number | null = null) => ({
     updatedAt: deletedAt,
 });
 
-// The same cases run against `incomingWinsLocally` in
-// `apps/native/src/data/sync-engine-core.test.ts`; the two must agree.
+// The same cases run against `incomingWinsLocally` in apps/native's sync-engine-core.test.ts; the two must agree.
 describe("incomingWins across a restore", () => {
     it.each([
         ["a restore beats the older tombstone it lifted", live(20, 20), deleted(10), true],

@@ -49,8 +49,8 @@ export const DEVICE_STORES = [
 
 export type DeviceStore = (typeof DEVICE_STORES)[number];
 /**
- * One clear per store, named. `DEVICE_STORES` above is the erase ORDER — this is
- * the contract, and a store added to one without the other stops compiling.
+ * One clear per store, named. `DEVICE_STORES` above is the erase order and this the
+ * contract; a store added to one without the other stops compiling.
  */
 export interface DeviceDataStores {
     alternateIcon: () => Promise<void>;

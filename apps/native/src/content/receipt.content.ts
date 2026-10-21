@@ -39,12 +39,10 @@ const receipt = {
             en: "Close",
             es: "Cerrar",
         }),
-        // The notes line for a receipt longer than the notes keep.
         "receipt.details.more": t({
             en: "and {count} more lines",
             es: "y {count} líneas más",
         }),
-        // Failures name what happened, not what the code did.
         "receipt.failed.denied": t({
             en: "Outlayr needs the camera to scan a receipt.",
             es: "Outlayr necesita la cámara para escanear un recibo.",
@@ -118,7 +116,6 @@ const receipt = {
             en: "from",
             es: "de",
         }),
-        // Under the converted figure, when the symbol rather than a code named the currency.
         "receipt.review.inferredCurrency": t({
             en: "Currency read from the symbol",
             es: "Moneda leída del símbolo",
@@ -147,7 +144,6 @@ const receipt = {
             en: "Paid with {method}",
             es: "Pagado con {method}",
         }),
-        // "848.55 Bs. per $", under the converted figure.
         "receipt.review.rate": t({
             en: "{rate} {quote} per {base}",
             es: "{rate} {quote} por {base}",

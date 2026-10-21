@@ -1,4 +1,4 @@
-// oxlint-disable unicorn/filename-case -- the Convex module name is the function path — this file is addressed as internal.groundedLookup.run by callers and by jobs already queued in _scheduled_functions
+// oxlint-disable unicorn/filename-case -- the Convex module name is the function path: this file is addressed as internal.groundedLookup.run by callers and by jobs already queued in _scheduled_functions
 
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { generateText, isStepCount } from "ai";
@@ -30,12 +30,7 @@ import { budgetConfig, estimateMicros, measureMicros, WORST_CASE_SEARCH_CALLS } 
 
 const CANONICAL_NAMES_LIST = [...CANONICAL_CATEGORY_NAMES].join(", ");
 
-/**
- * The model can hallucinate one of its own denylisted image hosts as a
- * merchant's domain (e.g. `img.logo.dev`) — that domain still reaches the
- * client's favicon tier, so it is nulled out here rather than only guarding a
- * fetch that no longer exists.
- */
+// The model can name a denylisted image host as a merchant's domain, which would still reach the client's favicons.
 const FORBIDDEN_LOGO_ORIGINS = [/(^|\.)logo\.dev$/i, /(^|\.)itunes\.apple\.com$/i, /(^|\.)mzstatic\.com$/i];
 
 const FENCED_JSON = /```(?:json)?\s*([\s\S]*?)```/i;
@@ -108,11 +103,6 @@ function buildGroundedPrompt(args: GroundedRunArgs): string {
         .join(" ");
 }
 
-/**
- * The model may answer with clean JSON, a fenced ```json block, or JSON
- * wrapped in prose — this never throws, matching the measured live call
- * (a single `generateText` with `web_search` returned JSON text directly).
- */
 function extractJsonCandidate(text: string): string | null {
     const fenced = text.match(FENCED_JSON);
     if (fenced?.[1]) {
@@ -126,10 +116,6 @@ function extractJsonCandidate(text: string): string | null {
     return text.slice(start, end + 1);
 }
 
-/**
- * An unparseable answer degrades to all-null fields rather than throwing —
- * exactly like a confident "I don't know" from the model would.
- */
 function parseGroundedOutput(text: string): z.infer<typeof groundedOutputSchema> {
     const jsonText = extractJsonCandidate(text);
     if (jsonText === null) {
@@ -162,17 +148,6 @@ export interface GroundedCallOutcome {
     sources: readonly { url: string }[];
 }
 
-/**
- * Collapsed from the original two-pass design: a live measured call
- * against `grok-4.20-non-reasoning` with `web_search` returned clean JSON
- * text while searching (3 search steps, 3.75s), disproving the "structured
- * output can't compose with a provider tool" assumption that motivated the
- * split — the JSON shape is instructed in the prompt and parsed defensively
- * instead of relying on an `Output.object` response format. No ctx, no rate
- * limiting, no writes — testable by injecting the model and tool set
- * directly. `stopWhen: isStepCount(4)` still allows multiple search rounds;
- * `maxRetries: 0` matches the inline tier.
- */
 export async function runGroundedLookupCall(
     deps: GroundedCallDeps,
     args: GroundedRunArgs
@@ -189,8 +164,6 @@ export async function runGroundedLookupCall(
     const output = parseGroundedOutput(result.text);
 
     const sanitizedDomain = sanitizeDomain(output.domain);
-    // A domain the model claims cannot be one of the image hosts this app
-    // itself denylists — see `isForbiddenLogoOrigin`.
     const domain = sanitizedDomain !== null && isForbiddenLogoOrigin(sanitizedDomain) ? null : sanitizedDomain;
     const categoryName = sanitizeCategoryName(output.categoryName);
     const emoji = sanitizeEmoji(output.emoji ?? null);
@@ -198,8 +171,7 @@ export async function runGroundedLookupCall(
     const tags = sanitizeTags(output.tags);
 
     const candidate = {
-        // No user tree reaches a globally-shared record — only the closed
-        // canonical set does.
+        // No user's own category names reach the globally shared record, only the closed canonical set.
         categoryName: args.categoryTree?.length ? sanitizeCategoryName(output.canonicalCategory ?? null) : categoryName,
         domain,
         emoji,
@@ -216,9 +188,6 @@ export async function runGroundedLookupCall(
         tags,
     };
 
-    // `corroborates` only ever needs a url; document-type sources (no `.url`)
-    // can never corroborate a domain, so they are dropped here rather than
-    // widening `KnowledgeCandidate`'s source shape to accommodate them.
     const urlSources = result.sources
         .filter((source) => source.sourceType === "url")
         .map((source) => ({ url: source.url }));
@@ -228,26 +197,14 @@ export async function runGroundedLookupCall(
         candidate,
         inputTokens: result.usage.inputTokens ?? 0,
         outputTokens: result.usage.outputTokens ?? 0,
-        // `web_search` is the only registered tool, so every recorded call is a
-        // search round. One answer measured at 3 search calls — bills ~3x a
-        // naive per-lookup estimate ($0.022 measured vs $0.005 assumed).
+        // `web_search` is the only registered tool, so every tool call is a billed search round.
         searchCalls: result.toolCalls.length,
         sources: urlSources,
     };
 }
 
-/**
- * The least ctx capability this needs — see `enrichment.ts`'s
- * `GroundedScheduleCtx` for why `Pick` rather than the full `ActionCtx`.
- */
 export type GroundedLookupCtx = Pick<ActionCtx, "runQuery" | "runMutation">;
 
-/**
- * `overrideDeps` is a test-only seam — production never passes it, so the
- * real Anthropic provider is always constructed fresh per call
- * (`CLAUDE_GROUNDED_MODEL_ID`/`ANTHROPIC_API_KEY` read live, matching `enrichment.ts`'s
- * own rollback-lever pattern).
- */
 export async function groundedAnswer(
     ctx: GroundedLookupCtx,
     args: GroundedRunArgs,
@@ -318,8 +275,6 @@ export async function groundedAnswer(
         });
     }
 
-    // Spend is recorded unconditionally, even when the result never cleared
-    // `shouldPublish`.
     await ctx.runMutation(internal.groundedSpend.record, {
         actualMicros: measureMicros(
             { inputTokens: outcome.inputTokens, outputTokens: outcome.outputTokens },
@@ -335,10 +290,6 @@ export async function groundedAnswer(
     return outcome.answer;
 }
 
-/**
- * Continues the same rate-limit ordering: `groundedPerKey` then
- * `groundedBudgetMicros` (both spent here; `suggest` only reads the first).
- */
 export async function runGroundedLookup(
     ctx: GroundedLookupCtx,
     args: GroundedRunArgs,

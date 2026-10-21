@@ -20,7 +20,6 @@ const nativeRoot = join(import.meta.dirname, "../..");
 
 /** WCAG 2.2 AA, normal text. */
 const AA_TEXT_CONTRAST = 4.5;
-/** WCAG 2.2 AA, large text and non-text; `font-sans-semibold` is 600 and does not reach it. */
 const CHANNEL_WEIGHTS = [0.2126, 0.7152, 0.0722] as const;
 const SIX_HEX_DIGITS = /^[0-9a-f]{6}$/i;
 
@@ -49,11 +48,7 @@ const stylesheet = readFileSync(join(nativeRoot, "global.css"), "utf-8");
 type Theme = "light" | "dark";
 const THEMES: readonly Theme[] = ["light", "dark"];
 
-/**
- * Fills, hairlines and chart colours. `--warning` is the one that looks like a
- * miss and is not — 1.51:1 on paper — because no `text-warning` exists; the
- * no-text-utility assertion below is what keeps that true.
- */
+/** `--warning` (1.51:1) has no `text-warning` utility, which the no-text-utility test keeps true. */
 const NON_TEXT_TOKENS = [
     "surface",
     "surface-secondary",
@@ -72,22 +67,12 @@ const NON_TEXT_TOKENS = [
     "m3-scrim",
 ] as const;
 
-/**
- * The first-run flow paints its own ground and writes only its own tokens over
- * it — no app token ever lands on `--fr-ground`, and no `fr-` token ever lands
- * on a page ground. Measuring them against {@link GROUNDS} would measure pairs
- * the app never draws, so the set is closed and measured against itself.
- */
+/** First-run tokens only ever sit on their own ground, so the set is measured against itself. */
 const FIRST_RUN_GROUNDS = ["fr-ground", "fr-card"] as const;
 
 const WHITE = "#ffffff";
 
-/**
- * Every file writing literal `text-white`, relative to `src`. The list is the
- * guard: a new call site fails the assertion below until the fill beneath it
- * joins {@link WHITE_TEXT_FILLS}, because nothing in this file can infer which
- * fill a literal colour was written over.
- */
+/** The list is the guard: a new call site fails until its fill joins {@link WHITE_TEXT_FILLS}. */
 const WHITE_TEXT_SITES = [
     "components/currency-picker-row.tsx",
     "screens/budgets/components/budget-row.tsx",
@@ -98,7 +83,6 @@ function pairKey(theme: Theme, token: string, ground: string): string {
     return `${theme}: --${token} on --${ground}`;
 }
 
-/** The `--token: value;` declarations inside `@variant <theme> { … }`. */
 function themeTokens(theme: Theme): Map<string, string> {
     const open = stylesheet.indexOf(`@variant ${theme} {`);
     if (open === -1) {
@@ -107,7 +91,6 @@ function themeTokens(theme: Theme): Map<string, string> {
     return new Map([...braced(open).matchAll(/--([\w-]+):\s*([^;]+);/g)].map((match) => [match[1], match[2].trim()]));
 }
 
-/** The `@theme inline` bridge, as utility suffix -> the token it reads. */
 function exposedTokens(): Map<string, string> {
     const open = stylesheet.indexOf("@theme inline");
     if (open === -1) {
@@ -142,7 +125,6 @@ function tokenValue(theme: Theme, token: string): string {
     return value;
 }
 
-/** Every `text-…` utility the app writes, whatever it resolves to. */
 function textUtilities(): Set<string> {
     const names = new Set<string>();
     for (const file of sourceFiles(join(nativeRoot, "src"))) {
@@ -161,7 +143,6 @@ function byCodeUnit(a: string, b: string): number {
     return a < b ? -1 : 1;
 }
 
-/** Files writing a literal `text-white`, as paths relative to `src`. */
 function whiteTextSites(): string[] {
     const src = join(nativeRoot, "src");
     return sourceFiles(src)
@@ -343,12 +324,6 @@ describe("tokens classified as fills", () => {
     });
 });
 
-/**
- * `--tint` is the one token a user can change, so the stylesheet's own value is
- * only the default. Every accent has to clear the same floor the declared one
- * does, against every ground its theme paints — otherwise the picker is a list
- * of options, one of which is unreadable.
- */
 describe("every accent a user can pick", () => {
     for (const theme of THEMES) {
         it(`holds ${AA_TEXT_CONTRAST}:1 on every ${theme} ground`, () => {
@@ -365,9 +340,6 @@ describe("every accent a user can pick", () => {
         });
     }
 
-    // The declared `--tint` is what an untouched install paints, so the two must
-    // not drift: a default changed in one place and not the other would ship an
-    // app whose first screen disagrees with its own settings row.
     it("leads with the value the stylesheet declares", () => {
         for (const theme of THEMES) {
             expect(DEFAULT_ACCENT[theme]).toBe(tokenValue(theme, "tint"));

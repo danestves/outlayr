@@ -34,8 +34,6 @@ describe("logCurrencyOptions", () => {
     });
 
     it("collapses codes that differ only in case, keeping the first spelling", () => {
-        // The kept spelling is the data's own: it is what a rate lookup and a
-        // bucket label are matched against, so it must not be rewritten.
         expect(
             logCurrencyOptions({
                 favourites: ["USD", "eur"],
@@ -72,8 +70,6 @@ describe("logCurrencyOptions", () => {
                 codes.includes(code);
 
         it("drops a favourite no rate can express a figure in", () => {
-            // Offering it would put a code on the chip that the numbers beside it can
-            // never be in — the screen would name CHF and print EUR.
             expect(
                 logCurrencyOptions({
                     convertible: reaches("JPY"),
@@ -85,8 +81,6 @@ describe("logCurrencyOptions", () => {
         });
 
         it("keeps the ledger's own currency even when nothing can reach it", () => {
-            // It is the only way out of an override, so dropping it would trap the
-            // screen in whatever it was last switched to.
             expect(
                 logCurrencyOptions({
                     convertible: () => false,

@@ -3,23 +3,7 @@ import { toAccountKind } from "@outlayr/money/account-kind";
 import { merchantKey } from "./merchant-resolver";
 import { buildPatternIndex, containsTokenSequence } from "./pattern-index";
 
-/**
- * Banks, card issuers, brokerages and wallets — the things an ACCOUNT is named
- * after, which is a different question from the one `merchant-map.ts` answers.
- * A merchant is where money went; an institution is where money lives, and the
- * two lists barely overlap: nobody names an account "Netflix", and "Chase" as a
- * transaction payee is ambiguous (a fee? a transfer?) in a way it never is as an
- * account name.
- *
- * Identity only — no category, no tags. A bank has no useful spending category,
- * and inventing one here would leak into whatever consumes this next.
- *
- * Consulted solely by the account editor (`useAccountIdentity`). Keeping it out
- * of `resolveMerchant` is deliberate: adding these patterns there would make the
- * curated tier answer for a transaction named "Chase" and suppress the model
- * call that currently classifies it.
- */
-/** The regions the account picker offers installment apps in. */
+// Account names only: in `resolveMerchant` these would suppress the model call for a payee named "Chase".
 export const INSTALLMENT_REGIONS = [
     "AE",
     "AT",
@@ -44,11 +28,7 @@ export const INSTALLMENT_REGIONS = [
 
 export type InstallmentRegion = (typeof INSTALLMENT_REGIONS)[number];
 
-/**
- * The currency a region's installment apps bill in, and so the currency their
- * accounts are made in: the local one, except Venezuela's apps, which quote in
- * dollars and are paid in bolívares at BCV.
- */
+// Venezuela's apps quote in dollars and are paid in bolívares at BCV.
 const INSTALLMENT_CURRENCIES: Readonly<Record<InstallmentRegion, string>> = {
     AE: "AED",
     AT: "EUR",
@@ -74,20 +54,13 @@ const INSTALLMENT_CURRENCIES: Readonly<Record<InstallmentRegion, string>> = {
 interface InstitutionEntry {
     readonly domain: string;
     readonly id: string;
-    /** Set on installment apps: the regions (ISO 3166 codes) the account picker offers them in. */
     readonly installmentsIn?: readonly InstallmentRegion[];
-    /** The brand's own name, spelled and cased the way the brand spells it. */
     readonly label: string;
-    /**
-     * Already in `merchantKey` form — lowercase, unaccented, single-spaced.
-     * A pattern matches when its token sequence appears anywhere in the name,
-     * so "chase" covers "Chase Sapphire" without an entry for it.
-     */
+    /** Already in `merchantKey` form; a pattern matches its token sequence anywhere in the name. */
     readonly patterns: readonly string[];
 }
 
 const INSTITUTIONS: readonly InstitutionEntry[] = [
-    // United States
     {
         domain: "chase.com",
         id: "chase",
@@ -113,7 +86,6 @@ const INSTITUTIONS: readonly InstitutionEntry[] = [
         label: "Capital One",
         patterns: ["capital one", "capitalone"],
     },
-    // `merchantKey` folds "U.S. Bank" to "u s bank".
     { domain: "usbank.com", id: "us-bank", label: "U.S. Bank", patterns: ["us bank", "u s bank", "usbank"] },
     { domain: "pnc.com", id: "pnc", label: "PNC", patterns: ["pnc", "pnc bank"] },
     { domain: "truist.com", id: "truist", label: "Truist", patterns: ["truist"] },
@@ -153,11 +125,9 @@ const INSTITUTIONS: readonly InstitutionEntry[] = [
     { domain: "sezzle.com", id: "sezzle", installmentsIn: ["US", "CA"], label: "Sezzle", patterns: ["sezzle"] },
     { domain: "splitit.com", id: "splitit", label: "Splitit", patterns: ["splitit", "split it"] },
 
-    // Wallets, transfer and brokerage
     { domain: "paypal.com", id: "paypal", label: "PayPal", patterns: ["paypal"] },
     { domain: "venmo.com", id: "venmo", label: "Venmo", patterns: ["venmo"] },
-    // "cash app", never bare "cash" — plain cash is not a company, and the model
-    // correctly answers null for it.
+    // "cash app", never bare "cash": plain cash is not a company.
     { domain: "cash.app", id: "cash-app", label: "Cash App", patterns: ["cash app", "cashapp"] },
     { domain: "zellepay.com", id: "zelle", label: "Zelle", patterns: ["zelle"] },
     { domain: "wise.com", id: "wise", label: "Wise", patterns: ["wise", "transferwise"] },
@@ -170,7 +140,6 @@ const INSTITUTIONS: readonly InstitutionEntry[] = [
     { domain: "airtm.com", id: "airtm", label: "Airtm", patterns: ["airtm"] },
     { domain: "zinli.com", id: "zinli", label: "Zinli", patterns: ["zinli"] },
 
-    // Europe
     { domain: "n26.com", id: "n26", label: "N26", patterns: ["n26"] },
     { domain: "monzo.com", id: "monzo", label: "Monzo", patterns: ["monzo"] },
     {
@@ -221,7 +190,7 @@ const INSTITUTIONS: readonly InstitutionEntry[] = [
         label: "Scalapay",
         patterns: ["scalapay"],
     },
-    // "alma pay", never bare "alma" — it is a first name and a Spanish word.
+    // "alma pay", never bare "alma": it is a first name and a Spanish word.
     { domain: "almapay.com", id: "alma", installmentsIn: ["FR"], label: "Alma", patterns: ["alma pay", "almapay"] },
     { domain: "oney.com", id: "oney", installmentsIn: ["FR", "ES"], label: "Oney", patterns: ["oney"] },
     { domain: "zilch.com", id: "zilch", installmentsIn: ["GB"], label: "Zilch", patterns: ["zilch"] },
@@ -233,8 +202,7 @@ const INSTITUTIONS: readonly InstitutionEntry[] = [
         patterns: ["riverty"],
     },
 
-    // Asia-Pacific and Middle East
-    // "zip pay" and its old name, never bare "zip" — it is a common word.
+    // "zip pay" and its old name, never bare "zip": it is a common word.
     {
         domain: "zip.co",
         id: "zip",
@@ -248,7 +216,6 @@ const INSTITUTIONS: readonly InstitutionEntry[] = [
     { domain: "tamara.co", id: "tamara", installmentsIn: ["SA", "AE"], label: "Tamara", patterns: ["tamara"] },
     { domain: "paidy.com", id: "paidy", installmentsIn: ["JP"], label: "Paidy", patterns: ["paidy"] },
 
-    // Latin America
     { domain: "nubank.com.br", id: "nubank", label: "Nubank", patterns: ["nubank", "nu bank"] },
     {
         domain: "mercadopago.com",
@@ -310,7 +277,6 @@ const INSTITUTIONS: readonly InstitutionEntry[] = [
         patterns: ["sistecredito", "siste credito"],
     },
 
-    // Venezuela
     { domain: "banesco.com", id: "banesco", label: "Banesco", patterns: ["banesco"] },
     {
         domain: "mercantilbanco.com",
@@ -324,8 +290,6 @@ const INSTITUTIONS: readonly InstitutionEntry[] = [
         label: "BNC",
         patterns: ["bnc", "banco nacional de credito"],
     },
-    // Listed after "bbva" so the two-token pattern outranks it — see the sort in
-    // `buildPatternIndex`, which does not depend on this file's order.
     {
         domain: "provincial.com",
         id: "provincial",
@@ -340,7 +304,6 @@ const INSTITUTIONS: readonly InstitutionEntry[] = [
     },
     { domain: "bancamiga.com", id: "bancamiga", label: "Bancamiga", patterns: ["bancamiga"] },
     { domain: "banplus.com", id: "banplus", label: "Banplus", patterns: ["banplus"] },
-    // `merchantKey` folds "100% Banco" to "100 banco".
     { domain: "100banco.com", id: "100-banco", label: "100% Banco", patterns: ["100 banco"] },
     { domain: "cashea.app", id: "cashea", installmentsIn: ["VE"], label: "Cashea", patterns: ["cashea"] },
     { domain: "krece.app", id: "krece", installmentsIn: ["VE"], label: "Krece", patterns: ["krece"] },
@@ -350,13 +313,11 @@ const INSTITUTIONS: readonly InstitutionEntry[] = [
 
 export type InstallmentApp = Pick<InstitutionEntry, "domain" | "id" | "label"> & { readonly currency: string };
 
-/** The device region as one the account picker offers installment apps in, or null. */
 export function installmentRegion(regionCode: string | null | undefined): InstallmentRegion | null {
     const code = regionCode?.toUpperCase();
     return INSTALLMENT_REGIONS.find((region) => region === code) ?? null;
 }
 
-/** The installment apps offered in a region, in the order this list keeps them, each in the currency it bills in there. */
 export function installmentAppsIn(region: InstallmentRegion | null): InstallmentApp[] {
     return region === null
         ? []
@@ -370,38 +331,24 @@ export function installmentAppsIn(region: InstallmentRegion | null): Installment
 
 const INSTITUTION_INDEX: ReadonlyMap<string, InstitutionEntry> = buildPatternIndex(INSTITUTIONS);
 
-/** Each installment app's label, folded: the name the account picker gives the account it makes. */
 const INSTALLMENT_APP_LABELS: ReadonlyMap<string, string> = new Map(
     INSTITUTIONS.filter((entry) => entry.installmentsIn).map((entry) => [merchantKey(entry.label), entry.domain])
 );
 
 const INSTALLMENT_APP_DOMAINS: ReadonlySet<string> = new Set(INSTALLMENT_APP_LABELS.values());
 
-/**
- * The curated installment app an account name stands for, or null: its label
- * first ("Zip" and "Alma" brand nothing on their own), then any name the
- * institution lookup resolves to one.
- */
+// Label first: "Zip" and "Alma" brand nothing on their own, so the pattern lookup alone misses them.
 export function installmentAppDomain(name: string): string | null {
     const key = merchantKey(name);
     const domain = INSTALLMENT_APP_LABELS.get(key) ?? resolveInstitutionDomain(key);
     return domain !== null && INSTALLMENT_APP_DOMAINS.has(domain) ? domain : null;
 }
 
-/** A liability named after a curated installment app: the free plan caps these on their own. */
 export function isInstallmentAppAccount(account: { readonly kind: string; readonly name: string }): boolean {
     return toAccountKind(account.kind) === "liability" && installmentAppDomain(account.name) !== null;
 }
 
-/**
- * The institution's domain, or null. Takes a key already folded by
- * `merchantKey`.
- *
- * Exact match then token-sequence match, and deliberately no fuzzy tier: the
- * merchant resolver can afford a near-miss because it only borrows the
- * category from one, but a near-miss here would brand an account with another
- * bank's logo, which is worse than showing none.
- */
+// No fuzzy tier: a near-miss would brand an account with another bank's logo, which is worse than none.
 export function resolveInstitutionDomain(key: string): string | null {
     if (key.length === 0) {
         return null;

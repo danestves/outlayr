@@ -21,7 +21,7 @@ interface ConfettiProps {
     height: number;
     /** Changing this re-seeds the burst; the same value never re-fires. */
     seed: number;
-    /** Burst box, in points — pieces launch across it and fall out the bottom. */
+    /** In points; pieces launch across it and fall out the bottom. */
     width: number;
 }
 
@@ -116,8 +116,6 @@ function Piece({
                     height: piece.size * 0.6,
                     left: piece.x * width,
                     position: "absolute",
-                    // Launched from the floor of the box: the burst reads as thrown up
-                    // from the row the user just committed, not rained down on it.
                     top: height,
                     width: piece.size,
                 },

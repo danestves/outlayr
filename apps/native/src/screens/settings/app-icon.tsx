@@ -24,12 +24,7 @@ const PREVIEW = {
     mono: monoPreview,
 } satisfies Record<AppIconSlug, number>;
 
-/**
- * Which bundle this build stamped as its primary, carried from `app.config.ts`
- * through `extra`. A build fact, so it is read once rather than per render.
- */
-// SAFETY: as in `widget-bridge` — `extra` is an open record and absence is
-// folded into null on the same line.
+// SAFETY: `extra` is an open record, and absence folds into null on the same line.
 const PRIMARY_ICON = (Constants.expoConfig?.extra?.primaryAppIcon as string | undefined) ?? null;
 
 /** `default.png` draws the Release primary, which is not every build's. */
@@ -41,8 +36,6 @@ export function AppIcon() {
     const locked = useProLocked();
     const { active, choose } = useAppIcon();
 
-    // No rows at all where iOS refuses the change, rather than five that look
-    // tappable and cannot take.
     if (!alternateIconsSupported) {
         return (
             <SettingsScreen>

@@ -32,8 +32,7 @@ describe("detectCurrency", () => {
     it("survives the spacing and signs a formatter emits", () => {
         expect(detectCurrency("  €  1.234,56  ")).toBe("EUR");
         expect(detectCurrency("-€12,40")).toBe("EUR");
-        // A non-breaking space is what most locales actually put between the
-        // number and its symbol.
+        // A non-breaking space, as most locales put between the number and its symbol.
         expect(detectCurrency("1 234,56 €")).toBe("EUR");
     });
 });

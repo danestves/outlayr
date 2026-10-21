@@ -212,7 +212,6 @@ describe("editing and removing", () => {
     });
 });
 
-/** The settled balance the account screens and net worth read, in the account's currency. */
 async function balanceOf(id: string, now: Date): Promise<number> {
     const account = getAccountById(db, id);
     if (!account) {

@@ -12,7 +12,6 @@ import type { ArmedReminder, ReminderCandidate } from "@/domain/subscription-rem
 import { getMeta, META_KEYS } from "./app-meta-core";
 import { occurrenceId } from "./recurrence-backfill";
 
-/** Carries the copy a notification body needs, which `ArmedReminder` does not. */
 export interface SubscriptionReminderCandidate extends ReminderCandidate {
     account: string | null;
     amount: number;
@@ -43,13 +42,8 @@ const CANDIDATE_COLUMNS = {
 } as const;
 
 /**
- * Every live subscription that asked for a notice, resolved to the charge the
- * notice is about.
- *
- * `recurringType > 0` and a null `deletedAt` are load-bearing rather than
- * belt-and-braces: `reminderLeadDays` rides whichever row currently carries the
- * chain's schedule, so the column alone cannot tell a live carrier apart from a
- * tombstone or a retired occurrence (see its note in `db/schema.ts`).
+ * `recurringType > 0` and a null `deletedAt` are load-bearing: `reminderLeadDays` rides whichever row carries the
+ * chain's schedule, so it cannot tell a live carrier from a tombstone or retired occurrence (see `db/schema.ts`).
  */
 export async function reminderCandidates(
     db: Database,
@@ -72,9 +66,7 @@ export async function reminderCandidates(
         return [];
     }
 
-    // Mirrors the write path in `transactions-core`: a null `currency` means
-    // "whatever the ledger setting says", so a notice has to resolve it the same
-    // way rather than announce a bare number.
+    // Mirrors `transactions-core`: a null `currency` means the ledger's, so a notice resolves it the same way.
     const ledgerCurrency = (await getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
 
     return rows.flatMap((row) => {
@@ -93,7 +85,6 @@ export async function reminderCandidates(
             soonest !== null && lead !== null && reminderFireAt(soonest, lead, time).getTime() > now.getTime()
                 ? soonest
                 : landingAfter(now);
-        // A chain that has run past its end date has no charge left to announce.
         if (charge == null) {
             return [];
         }
@@ -115,7 +106,6 @@ export async function reminderCandidates(
     });
 }
 
-/** An armed request plus everything its notification body has to say. */
 export interface PendingSubscriptionReminder extends ArmedReminder {
     account: string | null;
     amount: number;
@@ -124,15 +114,11 @@ export interface PendingSubscriptionReminder extends ArmedReminder {
     chargeId: string;
     currency: string;
     income: boolean;
-    /** The charge itself, which `fireAt` sits `leadDays` ahead of. */
     landing: Date;
     note: string;
 }
 
-/**
- * What the scheduler *would* arm, read-only: the queue is only ever touched by
- * the caller, which has to compare this against what iOS already holds.
- */
+/** Read-only: only the caller touches the queue, after comparing this against what iOS already holds. */
 export async function pendingReminderPlan(
     db: Database,
     now: Date,
@@ -143,9 +129,6 @@ export async function pendingReminderPlan(
     const byLocalId = new Map(candidates.map((candidate) => [candidate.localId, candidate]));
     return reminderPlan({ candidates, cap, now, time }).arm.flatMap((armed) => {
         const candidate = byLocalId.get(armed.localId);
-        // Unreachable — every armed request comes from a candidate — but modelled
-        // as a drop rather than asserted, so a plan can never carry a body it
-        // cannot fill.
         if (candidate === undefined) {
             return [];
         }

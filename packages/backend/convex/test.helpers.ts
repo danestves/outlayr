@@ -6,21 +6,11 @@ import type { GenericSchema, SchemaDefinition } from "convex/server";
 import { components } from "./_generated/api";
 import { PRO_ENTITLEMENT_ID, revenuecat } from "./revenuecat";
 
-/**
- * `safeGetAuthUser` resolves the caller by looking up a `session` row whose
- * `_id` equals `identity.sessionId` (and is unexpired) and then a `user` row
- * whose `_id` equals `identity.subject`. Both rows must be seeded in the Better
- * Auth component for `withIdentity` to resolve to a user.
- *
- * The `.helpers.ts` basename is load-bearing: the Convex bundler skips files
- * whose basename has more than one dot, keeping `convex-test`/`vitest` imports
- * out of the deployed function bundle.
- */
+// The `.helpers.ts` basename keeps this out of the deployed bundle: Convex skips basenames with more than one dot.
+// `safeGetAuthUser` needs both an unexpired `session` row (`identity.sessionId`) and a `user` row (`identity.subject`).
 
 const SESSION_TTL_MS = 86_400_000;
 
-// The Better Auth register helper is typed against the generic component
-// schema, so tests hand their concrete `t` through this widened alias.
 type AnyTestConvex = TestConvex<SchemaDefinition<GenericSchema, boolean>>;
 
 export interface SeededIdentity {
@@ -38,10 +28,7 @@ interface SeedOptions {
 const registeredInstances = new WeakSet<object>();
 let seedCounter = 0;
 
-/**
- * `registerComponent` replaces the component's in-memory database, so calling
- * it twice would wipe previously seeded users.
- */
+// `registerComponent` replaces the component's in-memory database, so a second call wipes seeded users.
 function ensureAuthComponentRegistered(t: AnyTestConvex): void {
     if (registeredInstances.has(t)) {
         return;

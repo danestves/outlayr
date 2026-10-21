@@ -12,17 +12,13 @@ import { formatAmount } from "@/domain/money";
 import { useLanguage, useTranslation } from "@/i18n/context";
 
 interface BudgetDaySlotsProps {
-    /** Scope to one category and its subcategories; null for the overall budget. */
     categoryId?: string | null;
     className?: string;
-    /** The short band alone, for callers that place the verdict themselves. */
     compact?: boolean;
     contributions: readonly ExpenseContribution[];
     currency: string;
     limit: number;
-    /** What the overflow counts — the category on a row, "purchase" for the overall budget. */
     noun?: string;
-    /** `Date.now()` from the screen, so the day matches the one spend is counted in. */
     nowMs: number;
     tint?: string;
     window: BudgetWindow;
@@ -35,7 +31,6 @@ export function drawsDaySlots(slots: DaySlots): boolean {
 const BLOCK_GAP = 2;
 const RULE_OVERHANG = 3;
 
-/** Renders `buildDaySlots`: see it for why a day counts rather than measures. */
 export function BudgetDaySlots({
     contributions,
     limit,

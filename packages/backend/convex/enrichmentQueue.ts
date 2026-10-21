@@ -41,7 +41,6 @@ type EnrichmentResult = Infer<typeof enrichmentResult>;
 
 export const enqueue = mutation({
     args: {
-        /** The AI consent the person gave — see `enrichment.ts:suggestArgs`. */
         aiConsent: v.optional(v.number()),
         categoryTree: v.array(v.object({ children: v.array(v.string()), name: v.string() })),
         currency: v.optional(v.string()),

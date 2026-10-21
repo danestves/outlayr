@@ -5,19 +5,10 @@ import { isAvailableAsync, shareAsync } from "expo-sharing";
 import type { TranslationKey } from "@/i18n/catalog";
 import { duringHandoff } from "@/lib/app-handoff";
 
-/**
- * `text/plain` is carried alongside the CSV types because plenty of banks hand
- * out `.csv` files typed as plain text, and a picker that hides them looks
- * broken rather than strict.
- */
+/** `text/plain` because plenty of banks hand out `.csv` files typed as plain text. */
 const CSV_TYPES = ["text/csv", "text/comma-separated-values", "text/plain"];
 
-/**
- * Carries a catalog key, not a sentence: every catch site puts this straight
- * into an `Alert` body, so a literal message would reach the user in English
- * whatever their language. `message` keeps the key so a crash log still names
- * the failure.
- */
+/** Carries a catalog key, not a sentence: every catch site puts it straight into an `Alert` body. */
 export class TransferError extends Error {
     readonly key: TranslationKey;
 
@@ -28,11 +19,6 @@ export class TransferError extends Error {
     }
 }
 
-/**
- * Hands a file to the system share sheet. The sheet is used rather than a photo
- * or Files write because it needs no permission and already offers every
- * destination the user has.
- */
 export async function shareFile(
     data: string | Uint8Array,
     fileName: string,
@@ -53,17 +39,11 @@ export interface PickedFile {
     text: string;
 }
 
-/** Null means the user backed out, which is not an error. */
 export async function pickCsvFile(): Promise<PickedFile | null> {
     return await pickTextFile(CSV_TYPES);
 }
 
-/**
- * Deliberately permissive about type: iOS reports a `.json` written by another
- * app under any of several UTIs, and a picker that filters too tightly greys out
- * the very file the user is looking at. The contents decide, not the extension —
- * `parseArchive` refuses anything it cannot vouch for.
- */
+/** Permissive: iOS reports another app's `.json` under several UTIs, and `parseArchive` vets the contents. */
 export async function pickArchiveFile(): Promise<PickedFile | null> {
     return await pickTextFile(["application/json", "public.json", "public.text"]);
 }

@@ -18,12 +18,8 @@ function openAppInfo(): void {
 }
 
 /**
- * Outlayr's own page under App languages. The system only registers that page
- * for an intent whose data names the package, which RN's `Linking.sendIntent`
- * can't set; without it the launch has no target at all. expo-intent-launcher
- * is required here rather than imported at the top: it loads its native module
- * on import, which a build made before it was added doesn't have, and Settings
- * would fail to load.
+ * The page only registers for an intent whose data names the package, which `Linking.sendIntent` can't set.
+ * expo-intent-launcher is required lazily: it loads its native module on import, which older builds lack.
  */
 async function openAppLanguagePage(): Promise<void> {
     if (applicationId === null) {

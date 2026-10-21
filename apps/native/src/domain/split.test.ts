@@ -11,8 +11,6 @@ const entry = (id: string, amount: number, categoryId: string | null) => ({
 
 describe("attributing an entry", () => {
     it("reads an unsplit entry as one allocation of its whole amount", () => {
-        // This is what keeps every existing row, and every reader that never learns
-        // about splitting, correct without being touched.
         expect(allocationsFor(entry("t1", 40, "food"), [])).toStrictEqual([{ amount: 40, categoryId: "food" }]);
     });
 
@@ -47,9 +45,6 @@ describe("whether a split adds up", () => {
     });
 
     it("refuses parts that fall short", () => {
-        // The row shows its own amount and the parts sit underneath it. A split
-        // that does not add up is a visible contradiction, and every category
-        // total downstream inherits it.
         expect(isBalanced(40, [{ amount: 25, categoryId: "a" }], 2)).toBe(false);
     });
 
@@ -66,9 +61,7 @@ describe("editing one part of a split", () => {
     ];
 
     it("balances a three-decimal currency at its own minor units", () => {
-        // BHD has three. At two, the absorber rounded 10.005 - 5 up to 5.01 and
-        // `unallocated` rounded the resulting -0.005 to -0, so the split saved
-        // 10.01 against a 10.005 entry and the guard still called it balanced.
+        // At two decimals, 10.01 would save against a 10.005 entry and still read as balanced.
         const parts = rebalance(
             10.005,
             [
@@ -88,7 +81,6 @@ describe("editing one part of a split", () => {
     });
 
     it("takes the difference out of another part so it stays balanced", () => {
-        // Otherwise every keystroke leaves the entry unsaveable.
         const next = rebalance(40, two, 0, 30, 2);
         expect(next.map((part) => part.amount)).toStrictEqual([30, 10]);
         expect(isBalanced(40, next, 2)).toBe(true);

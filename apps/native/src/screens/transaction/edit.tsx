@@ -21,9 +21,7 @@ import { EditTransfer } from "@/screens/transfers/edit";
 export function EditTransaction({ id }: { id: string }) {
     const router = useRouter();
     const db = useDatabase();
-    // Read once, synchronously, while mounting: the database is already open (the
-    // splash gate guarantees it) and the driver runs on the JS thread, so the row
-    // is in hand for the very first render — the form never mounts empty.
+    // Read synchronously: the database is open and the driver is on the JS thread, so the form never mounts empty.
     const [initial] = useState(() => {
         const row = id ? getTransactionById(db, id) : null;
         const purchase = row?.feeForId ? getTransactionById(db, row.feeForId) : null;
@@ -48,10 +46,7 @@ export function EditTransaction({ id }: { id: string }) {
     return <TransactionSheet initial={initial} />;
 }
 
-/**
- * Edits an "Edits discarded" Undo carries into the entry's reopened sheet, with
- * the version of the entry they were made on.
- */
+/** Edits an "Edits discarded" Undo carries back, with the version they were made on. */
 const entryDrafts = createDraftStash<{ edits: TransactionFormDraft; updatedAt: number }>();
 
 function TransactionSheet({ initial }: { initial: Transaction }) {
@@ -59,8 +54,7 @@ function TransactionSheet({ initial }: { initial: Transaction }) {
     const db = useDatabase();
     const readDraft = useRef<(() => TransactionFormDraft) | null>(null);
     const version = initial.updatedAt.getTime();
-    // Only edits made on this very version come back: anything older would
-    // write over whatever changed it.
+    // Only edits made on this version come back: older ones would overwrite whatever changed it.
     const [restore] = useState(() => {
         const held = entryDrafts.take(initial.id);
         return held?.updatedAt === version ? held.edits : undefined;
@@ -82,10 +76,7 @@ function TransactionSheet({ initial }: { initial: Transaction }) {
     const { requestDelete } = useDeferredDelete("row");
     const { awake, height, rest, sheet } = useRestingSheet(t("transaction.edit.title"));
 
-    // No confirmation in front of it: the write is held for the undo window and
-    // the toast that offers it is mounted at the app root, so it survives this
-    // screen going away — which it does immediately. Only the tap that leaves
-    // deletes: a second one, or one during a save, would flush the first's undo.
+    // Only the tap that leaves deletes: a second one, or one during a save, would flush the first's undo.
     const deleteTransaction = () => {
         if (leave()) {
             requestDelete(initial.id);

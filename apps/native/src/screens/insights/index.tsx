@@ -79,7 +79,7 @@ function bucketAt(buckets: readonly InsightsBucket[], index: number | null): Ins
     return buckets[index] ?? null;
 }
 
-/** A bucket's span as epoch ms, which is what the chart props take. */
+/** Epoch ms. */
 interface BucketBounds {
     end: number;
     start: number;
@@ -130,10 +130,7 @@ function subBreakdownFor(
     return subcategoryBreakdown(rows, categoriesById, filterId, period, measure, new Date(nowMs), offset, calendar);
 }
 
-/**
- * On the net chart the scrubbed figure is the running position, so a bare date
- * would read as that day's own net.
- */
+/** A bare date would read as that day's own net, not the running position. */
 function eyebrowLabel(
     scrubBucket: InsightsBucket | null,
     isNet: boolean,
@@ -159,7 +156,6 @@ function listDirection(measure: InsightsMeasure): boolean | null {
     return null;
 }
 
-/** Null means nothing is selected, and the list below the chart stays closed. */
 function windowQuery(
     lockedBucket: InsightsBucket | null,
     filterId: string | null,
@@ -229,8 +225,6 @@ export function Insights() {
     const storedPeriod = useSettingNumber("insightsTimeFrame");
     const period = PERIODS.find((option) => option.value === storedPeriod)?.period ?? "week";
 
-    // With income tracking off there is only one direction, so the measure is not
-    // a choice.
     const stored = insightsMeasureFromStored(useSettingNumber("insightsMeasure"));
     const measure = incomeTracking ? stored : "spent";
 
@@ -249,10 +243,7 @@ export function Insights() {
     const result = useInsights(db, nowMs, period, measure, offset, calendar);
     const spendingCalendar = useSpendingCalendar(db, nowMs);
 
-    // Both selections name a bucket index and a category that may not survive the
-    // window, period or measure changing. Cleared on the change itself rather
-    // than from an effect, so no frame renders the old selection against the new
-    // window.
+    // Cleared on change, not in an effect, so no frame pairs the old selection with the new window.
     const windowKey = `${offset}|${period}|${measure}`;
     const [selectionWindow, setSelectionWindow] = useState(windowKey);
     if (windowKey !== selectionWindow) {
@@ -301,19 +292,15 @@ export function Insights() {
     const totals = { income: result.income, spent: result.spent };
     const scoped = readBucket != null || filteredEntry != null;
 
-    // Every slot at zero is not an empty ledger — the window may be busy in the
-    // other direction.
+    // All zero is not empty: the window may be busy in the other direction.
     const chartIsEmpty = result.buckets.every((bucket) => bucket.value === 0);
     const quietAlt = chartIsEmpty ? quietAlternative(measure, totals) : null;
 
     const isNet = measure === "net";
     const readIndex = scrubIndex ?? lockedIndex;
-    // Net is charted as a running balance, so a slot's reading is the balance at
-    // that point, not the slot's own flow — see `runningTotals`.
     const running = useMemo(() => (isNet ? runningTotals(result.buckets) : []), [isNet, result.buckets]);
     const readBalance = balanceAt(running, readIndex, isNet);
 
-    // The hero follows the narrowest thing selected.
     const heroMagnitude = heroMagnitudeFor(filteredEntry, readBalance, readBucket, measure, totals);
     const heroPositive = heroPositiveFor(filteredEntry, readBalance, readBucket, isNet, measure, totals);
 
@@ -362,12 +349,8 @@ export function Insights() {
     const listQuery = windowQuery(lockedBucket, filterId, measure, nowMs, result.start, result.end);
 
     const listTransactions = useWindowTransactions(db, listQuery);
-    // Held here, not in the list: clearing the chart selection unmounts the list,
-    // and the hook flushes its pending write on unmount — so a delete owned down
-    // there would commit the instant the row's own list went away, before the undo
-    // window had run and before the toast offering it could be tapped.
+    // Held here: the list unmounts with the selection and the hook flushes its pending write on unmount.
     const { pendingId, requestDelete } = useDeferredDelete("row");
-    // Only a single day reads better ungrouped — every row would share one header.
     const listGrouped = !(lockedBucket && period !== "year");
 
     if (!result.hasHistory) {

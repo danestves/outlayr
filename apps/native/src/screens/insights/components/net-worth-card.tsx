@@ -18,19 +18,13 @@ const Y_TICKS = 2;
 
 interface NetWorthCardProps {
     currency: string;
-    /** Both positive. Null hides the line: no liability and no person on the ledger. */
     debts: { owedToYou: number; youOwe: number } | null;
     onOpenDebts: () => void;
-    /** Empty on a ledger with no accounts, which hides the card entirely. */
     series: readonly NetWorthSeriesPoint[];
     showCents: boolean;
 }
 
-/**
- * Pads a flat line so it does not sit on the floor of its own chart, and keeps
- * zero in view whenever the line crosses it — a net worth that went negative
- * should read as having gone negative, not as a line that happens to be low.
- */
+/** Keeps zero in view when the line crosses it. */
 function worthDomain(values: readonly number[]): [number, number] {
     let minimum = Number.POSITIVE_INFINITY;
     let maximum = Number.NEGATIVE_INFINITY;
@@ -51,12 +45,6 @@ function worthDomain(values: readonly number[]): [number, number] {
     return [low - padding, high + padding];
 }
 
-/**
- * Net worth over the recent window.
- *
- * Lives on Insights rather than the Log: the Log is about this week's money and
- * net worth is a slow number, which belongs with the other slow numbers.
- */
 export function NetWorthCard({ series, currency, debts, onOpenDebts, showCents }: NetWorthCardProps) {
     const t = useTranslation();
     const { language } = useLanguage();

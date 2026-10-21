@@ -8,29 +8,17 @@ import { DEFAULT_CURRENCY } from "@/domain/money";
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
 import { seedCategories } from "./categories-core";
 
-/**
- * One-time first-launch setup, guarded by the `firstLaunch` meta key. Awaited by
- * `LocalDataProvider` before it reports `ready`, so the splash covers seeding and
- * the first screen already sees its categories.
- *
- * The ledger's own currency stays `DEFAULT_CURRENCY`: onboarding asks for it on
- * its own screen, so seeding a locale guess here would only be a default the user
- * is about to overwrite. The locale is used for the favourites cluster instead,
- * where being wrong costs a row nobody taps rather than the currency every future
- * entry is recorded in.
- */
+// Awaited by `LocalDataProvider` before `ready`, so the first screen sees its categories. The locale seeds only the
+// favourites: onboarding asks for the ledger's own currency.
 export async function bootstrapLocalData(db: Database): Promise<void> {
     const done = await getMeta(db, META_KEYS.firstLaunch);
     if (done === "true") {
         return;
     }
-    // Behind the `firstLaunch` guard, so a user who clears the cluster keeps it
-    // cleared rather than having it grow back on the next launch.
+    // Behind the guard, so a user who clears the cluster keeps it cleared.
     const favourites = seedFavourites(getLocales()[0]?.currencyCode ?? null);
 
-    // Atomic on purpose: the `firstLaunch` marker is written last, and first launch
-    // is the most kill-prone moment. `seedCategories` guards itself too, so the
-    // two defences are independent.
+    // Atomic: the `firstLaunch` marker is written last, and first launch is the most kill-prone moment.
     await withTransaction(db, async () => {
         await setMeta(db, META_KEYS.currency, DEFAULT_CURRENCY);
         await setMeta(db, META_KEYS.favouriteCurrencies, serialiseFavourites(favourites));

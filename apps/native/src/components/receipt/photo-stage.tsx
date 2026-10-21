@@ -12,11 +12,9 @@ import Animated, {
 
 import { ScanSweep } from "@/components/receipt/scan-sweep";
 
-/** The same give as the orb: the photo settles into place, it does not bounce. */
 const STAGE_SPRING = { damping: 20, mass: 0.9, stiffness: 180 };
 const STAGE_RADIUS = 20;
 const THUMB_RADIUS = 12;
-/** A failed read keeps the photo but steps it back, so the message is what reads. */
 const DIMMED_OPACITY = 0.55;
 
 export interface StageBox {
@@ -25,24 +23,14 @@ export interface StageBox {
 }
 
 interface PhotoStageProps {
-    /** The frame the photo fills, letterboxed to its own aspect by the caller. */
+    /** Letterboxed to the photo's own aspect by the caller. */
     box: StageBox;
-    /** Steps the photo back behind a failure message. */
     dimmed?: boolean;
-    /** Draws the reading pass over the photo. */
     scanning: boolean;
-    /** The tint the sweep is drawn in. */
     tint: string;
     uri: string;
 }
 
-/**
- * The photo, at whatever size the phase wants it — the subject of the screen
- * while it is read, a thumbnail beside the draft once it has been. The change
- * of size is one spring on width, height and corner radius, so the draft rises
- * into the room the photo gives up rather than snapping under it. Reduced
- * motion crossfades the sizes instead.
- */
 export function PhotoStage({ box, dimmed = false, scanning, tint, uri }: PhotoStageProps) {
     const reducedMotion = useReducedMotion();
     const compact = !scanning && box.height < 160;

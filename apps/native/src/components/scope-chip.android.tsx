@@ -18,16 +18,8 @@ const PRESSED_ALPHA = 0.1;
 const OUTLINED_LAYER = { borderRadius: 7 } as const;
 const SELECTED_LAYER = { borderBottomLeftRadius: 8, borderTopLeftRadius: 8 } as const;
 
-/**
- * A Material 3 chip, Direction B's. A scope the user set (it can be cleared)
- * is a selected chip on secondary-container with a trailing X; the window
- * chip, which always has a value, is an outlined chip. Either opens its menu
- * from the label, as a Material dropdown with the iOS menu's icons.
- *
- * The chip draws at 32dp, but the label and the X each take a 48dp touch
- * area: the label through `MaterialMenu`, the X by a 48dp frame given back as
- * negative margin. Nothing here clips, so those areas can reach past the chip.
- */
+// Draws at 32dp, but the label and the X each take a 48dp touch area (the X by a frame given back as negative
+// margin). Nothing here clips, so those areas can reach past the chip.
 export const ScopeChip: typeof ScopeChipBase = ({
     title,
     actions,
@@ -41,13 +33,11 @@ export const ScopeChip: typeof ScopeChipBase = ({
     const selected = onClear != null;
     const hasMenu = actions != null && actions.length > 0 && onAction != null;
     const ink = selected ? m3.onSecondaryContainer : m3.onSurfaceVariant;
-    // The X brings its own target, so the label stops short of it.
     const menuPadding = hasMenu ? "pr-2" : "pr-4";
 
     const label = (pressed: boolean) => (
         <View className={cn("h-8 flex-row items-center gap-2 pl-4", selected ? "pr-1" : menuPadding)}>
             {pressed ? (
-                // Material's pressed state layer, on the chip's own shape.
                 <View
                     className="absolute inset-0"
                     pointerEvents="none"

@@ -13,11 +13,6 @@ describe("scopeMeasureLabel", () => {
         expect(scopeMeasureLabel(t, "out", "USD", "USD")).toBe(t("log.measure.out"));
     });
 
-    /**
-     * The failure this exists to rule out: a scope whose entries never got a rate
-     * falls back to their own bucket, and COP's symbol is "$" exactly like USD's —
-     * so an unnamed hero reads 4,500,000 pesos as four and a half million dollars.
-     */
     it("names the currency when the figure fell back to another bucket", () => {
         const label = scopeMeasureLabel(t, "out", "COP", "USD");
 

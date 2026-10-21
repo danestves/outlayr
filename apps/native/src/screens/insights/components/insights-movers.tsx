@@ -55,7 +55,6 @@ function MoverRow({
     const { language } = useLanguage();
     const stacked = useAccessibilityTextSize();
     const rose = mover.delta > 0;
-    // Shared with `CategoryBreakdownRow` directly below, so the two cannot disagree.
     const favourable = breakdownRiseIsFavourable(measure) === rose;
     const toneClass = favourable ? "text-income" : "text-danger";
 
@@ -82,10 +81,7 @@ function MoverRow({
     );
 
     return (
-        // `accessible` collapses the four figures into one stop, the way the
-        // `Pressable` around the structurally identical `CategoryBreakdownRow`
-        // does. Without it a mover reads as a name, then a number, then a
-        // percent, with nothing relating them.
+        // One VoiceOver stop for the figures, as `CategoryBreakdownRow`'s Pressable gives.
         <View accessible className="flex-row items-center gap-2.5 py-1.5">
             <CategoryIconTile color={mover.color} emoji={mover.emoji} icon={mover.icon} size={26} />
             {stacked ? (

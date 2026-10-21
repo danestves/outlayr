@@ -30,7 +30,6 @@ function intlDecimal(tag: string): string {
 
 interface FlowFigureProps {
     className?: string;
-    /** Overrides the face `className` names, for a hero set in another family. */
     fontFamily?: string;
     format: Intl.NumberFormatOptions;
     locale: NumberLocale;
@@ -90,7 +89,6 @@ interface FlowAmountProps {
     amount: number;
     className?: string;
     code: string;
-    /** See `FlowFigure`. */
     fontFamily?: string;
     prefix?: string;
     showCents: boolean;
@@ -141,25 +139,19 @@ export function fittedHeroSize(
     return Math.min(size, Math.floor(drawn / fontScale));
 }
 
-/** A hero that keeps the body face its classes name, on every platform. */
 const PLAIN_HERO: typeof HERO_TYPE = { face: {}, scale: 1 };
 
 interface HeroNumberProps {
     /** Signed magnitude; the sign shown is derived unless `sign` is given. */
     amount: number;
-    /**
-     * Sets the figure in the brand's hero type (`HERO_TYPE`): nothing changes on
-     * iOS, Android draws it in Instrument Serif. A screen's headline opts in.
-     */
+    /** Android sets the figure in Instrument Serif (`HERO_TYPE`); iOS is unchanged. */
     brandFace?: boolean;
     code: string;
-    /** Mirrors the "Display Cents" setting; false rounds to whole units. */
     showCents?: boolean;
     sign?: "+" | "-" | "";
     size?: number;
     /** Plain text, for a figure the user is typing or picking. */
     still?: boolean;
-    /** uniwind color class for the digits, e.g. "text-income". */
     toneClass?: string;
 }
 
@@ -173,10 +165,8 @@ export function HeroNumber({
     still = false,
     showCents = true,
 }: HeroNumberProps) {
-    // Read through the context rather than `amountParts`' `runtimeLanguage()`
-    // default: the default is a module global React cannot see, so a component
-    // that reads it without also consuming this context is bailed out of the
-    // re-render when the language changes and keeps printing the old locale.
+    // From context, not `amountParts`' `runtimeLanguage()` default: React cannot see that module global, so a
+    // language change would leave this printing the old locale.
     const { language } = useLanguage();
     const { fontScale, width: windowWidth } = useWindowDimensions();
     const parts = amountParts(amount, code, showCents, language);
@@ -226,10 +216,7 @@ export function HeroNumber({
     );
 }
 
-/**
- * Order matters: `isFuture` is declared after `income`, so a future-dated income
- * row resolves to `text-future` once `tv`'s merge drops the earlier colour.
- */
+// Order matters: `isFuture` comes after `income`, so a future-dated income row resolves to `text-future`.
 const rowAmount = tv({
     base: `${ROW_TYPE.amount} text-foreground`,
     variants: {
@@ -241,7 +228,6 @@ const rowAmount = tv({
 
 interface RowAmountProps extends RowAmountLabelInput {
     isFuture: boolean;
-    /** The import review's excluded state: still legible, visibly not counted. */
     struck?: boolean;
     transfer?: boolean;
 }
@@ -267,8 +253,7 @@ export function RowAmount({
     const sign = transfer ? (transferSign ?? "") : signFor(income);
     return (
         <Text
-            // Spelled out because neither the glyph nor the colour is a cue a screen
-            // reader can read; `rowAmountLabel` owns the wording.
+            // Spelled out: neither the glyph nor the colour is a cue a screen reader can read.
             accessibilityLabel={
                 hidden
                     ? t("log.amounts.hidden")
@@ -286,16 +271,13 @@ export function RowAmount({
 
 interface MeasureCellAmountProps {
     code: string;
-    /** True only for the "In" measure — the one figure that earns the income color. */
     income: boolean;
     /** Unsigned magnitude; the sign comes from `positive`, not from this. */
     magnitude: number;
     positive: boolean;
-    /** Mirrors the "Display Cents" setting; false rounds to whole units. */
     showCents?: boolean;
 }
 
-/** Symbol, sign and digits share one tone, unlike the hero's muted symbol. */
 export function MeasureCellAmount({ magnitude, positive, income, code, showCents = true }: MeasureCellAmountProps) {
     const t = useTranslation();
     const { language } = useLanguage();
@@ -314,9 +296,7 @@ export function MeasureCellAmount({ magnitude, positive, income, code, showCents
 }
 
 interface DayTotalProps {
-    /** Mirrors the "Display Cents" setting; false rounds to whole units. */
     showCents?: boolean;
-    /** The Upcoming header runs a step larger than a day header's. */
     sizeClass?: string;
     /** Signed totals per currency, dominant first. */
     totals: readonly CurrencyBucket[];
@@ -326,10 +306,7 @@ function signedAmount(amount: number, code: string, showCents: boolean, language
     return `${amount < 0 ? "-" : "+"}${hidden ? maskedAmount(code) : formatAmount(amount, code, showCents, language)}`;
 }
 
-/**
- * A day that spent two currencies gets two figures separated by a slash, never
- * added: there is no rate here, so a single number would be an invention.
- */
+// Two currencies get two figures, never one sum: there is no rate here.
 export function DayTotal({ totals, showCents = true, sizeClass = "text-footnote" }: DayTotalProps) {
     const t = useTranslation();
     const { language } = useLanguage();

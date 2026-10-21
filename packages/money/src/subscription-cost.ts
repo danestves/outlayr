@@ -6,22 +6,13 @@ import type { RateTable } from "./valuation";
 
 export interface ScheduleCostEntry extends CurrencyEntry {
     recurringCoefficient: number;
-    /** When the owner gave the schedule an end; null means it runs indefinitely. */
     recurringEndDate?: Date | null;
     recurringType: number;
 }
 
-/**
- * How many times a month a schedule charges — a fraction, since most cadences
- * do not divide the month evenly.
- *
- * The year is taken as 365 days and 52 weeks. Those two disagree by a day,
- * which is the price of a figure that holds still instead of drifting with
- * whichever month the user happens to open the app in.
- */
+// A year of 365 days and 52 weeks disagree by a day, the price of a figure that does not drift with the month.
 export function monthlyChargeCount(recurringType: number, recurringCoefficient: number): number {
-    // Normalized exactly as `nextDate` does, so the count and the dates the
-    // back-fill actually writes always describe the same schedule.
+    // Normalized exactly as `nextDate` does, so the count matches the dates the back-fill writes.
     const every = Math.max(1, Math.round(recurringCoefficient));
     switch (recurringType) {
         case RECURRING_TYPE.daily: {
@@ -42,20 +33,8 @@ export function monthlyChargeCount(recurringType: number, recurringCoefficient: 
     }
 }
 
-/**
- * What a set of schedules costs per month, per currency. Every schedule is
- * normalized to one monthly charge whatever its cadence, so face values are not
- * comparable across entries without it.
- *
- * A retired schedule is dropped rather than added as a zero: counting it would
- * pad the count and, worse, open a bucket for a currency nothing recurs in. One
- * whose end date has passed is dropped for the same reason — it is a commitment
- * the owner has already ended, and leaving it in reports money they will never
- * be charged again.
- *
- * Never one blended number — the buckets come from {@link currencyTotals}, the
- * same contract every other aggregate on this screen honours.
- */
+// Retired and ended schedules are dropped, not added as zero, which would open a bucket for a currency nothing
+// recurs in.
 export function monthlySubscriptionCost(
     schedules: readonly ScheduleCostEntry[],
     globalCurrency: string,
@@ -74,12 +53,10 @@ export function monthlySubscriptionCost(
         }
         perMonth.push({
             amount: schedule.amount * charges,
-            // Scaled alongside the face amount, or a converted bucket would hold a
-            // month of the schedule in one currency and a single charge in another.
+            // Scaled with the face amount, or a converted bucket would mix a month and a single charge.
             amountUsd: schedule.amountUsd == null ? null : schedule.amountUsd * charges,
             currency: schedule.currency,
-            // What a month of it costs now, at today's rate. The schedule's own date
-            // is when it was first saved, which can predate every rate held.
+            // Today's rate: the schedule's own date is its first save, which can predate every rate held.
             date: now,
             income: schedule.income,
         });

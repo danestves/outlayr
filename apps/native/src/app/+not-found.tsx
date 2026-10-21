@@ -4,11 +4,7 @@ import { View } from "react-native";
 import { Text } from "@/components/text";
 import { useTranslation } from "@/i18n/context";
 
-/**
- * Replaces expo-router's built-in `Unmatched` screen, which links to
- * `/_sitemap` — a developer surface a shipped build must never show. Reachable
- * from any malformed `outlayr://` deep link.
- */
+// Replaces expo-router's `Unmatched` screen, which links to the `/_sitemap` developer surface.
 export default function NotFoundScreen() {
     const t = useTranslation();
     return (

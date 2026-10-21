@@ -15,11 +15,7 @@ import { applyMove } from "@/domain/reorder";
 import { useTranslation } from "@/i18n/context";
 import { useColors } from "@/theme/use-colors";
 
-/**
- * `onMove` is scoped to one `List.ForEach`, so a Section boundary is the limit of
- * what can move where — one card for the whole tree would promise cross-group
- * drags the list cannot perform.
- */
+/** `onMove` is scoped to one `List.ForEach`, so each level is its own Section. */
 export function CategoryReorder({ income }: { income: boolean }) {
     const db = useDatabase();
     const t = useTranslation();
@@ -49,8 +45,7 @@ export function CategoryReorder({ income }: { income: boolean }) {
     return (
         <Host style={{ flex: 1 }} useViewportSizeMeasurement>
             <List modifiers={[...groupedList(colors), environment({ key: "editMode", value: "active" })]}>
-                {/* A non-empty `title` short-circuits the `header` slot natively, so every
-				    header here passes the eyebrow instead of a plain string. */}
+                {/* A non-empty `title` short-circuits the `header` slot natively. */}
                 <Section header={<Eyebrow colors={colors}>{t("categories.title")}</Eyebrow>} modifiers={[rowGround]}>
                     <List.ForEach data={parents} keyExtractor={(parent) => parent.id} onMove={reorderParents}>
                         {({ item: parent }) => <ReorderRow category={parent} tint={accent(parent)} />}
@@ -94,8 +89,7 @@ function ReorderRow({ category, tint, indented = false }: { category: Category; 
                     />
                 </View>
             </RNHostView>
-            {/* One line, so every row is the same height and a drop target stays where
-			    the eye last put it. */}
+            {/* One line keeps rows the same height, so drop targets stay put. */}
             <SwiftText modifiers={[indented ? CHILD_NAME : PARENT_NAME, lineLimit(1), foregroundStyle(LABEL)]}>
                 {category.name}
             </SwiftText>

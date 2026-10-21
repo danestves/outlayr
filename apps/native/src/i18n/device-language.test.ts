@@ -15,7 +15,6 @@ import { useDeviceLanguageTag } from "./device-language";
 
 const mockGetLocales = jest.mocked(getLocales);
 
-/** The hook reads only the first locale's `languageTag`. */
 const mockDeviceLanguageTag = {
     mockImplementation: (fn: () => string) =>
         // oxlint-disable-next-line jest/prefer-mock-return-shorthand -- `mockReturnValue` would call `fn` here at setup, and one caller passes a `fn` that throws to exercise the failure path
@@ -26,17 +25,11 @@ const mockDeviceLanguageTag = {
 
 const realAddEventListener = AppState.addEventListener;
 
-/**
- * Captures every listener the hook registers so a test can drive AppState
- * transitions directly.
- */
 function watchAppState() {
     const listeners: ((status: AppStateStatus) => void)[] = [];
     const remove = jest.fn();
 
-    // Assigned rather than spied: `jest.restoreAllMocks` also reverts the
-    // `language-storage` module mock, and restoring spies one at a time still
-    // left a later test running an earlier test's implementation.
+    // Assigned rather than spied: restoring spies one at a time left a later test running an earlier one's mock.
     AppState.addEventListener = ((event: string, listener: unknown) => {
         if (event === "change") {
             listeners.push(listener as (status: AppStateStatus) => void);

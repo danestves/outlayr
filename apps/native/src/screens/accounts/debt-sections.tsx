@@ -183,10 +183,6 @@ interface DueRowProps {
     wording: ReturnType<typeof dueStripWording>;
 }
 
-/**
- * "Due in the next 14 days", how many cuotas and the soonest, and what they come
- * to. When the soonest is overdue it says since when, in the expense colour.
- */
 function DueRow({ colors, currency, due, format, wording: { overdue, summary, title } }: DueRowProps) {
     return (
         <HStack
@@ -219,7 +215,6 @@ interface DebtRowProps {
     currency: string;
     format: (amount: number) => string;
     onOpen: (id: string) => void;
-    /** A live payoff plan: its line, the date at the line's end, and what the line says. */
     plan: { a11y: string; date: string; line: PayoffLine } | null;
     row: DebtListRow;
     subtitle: string | null;

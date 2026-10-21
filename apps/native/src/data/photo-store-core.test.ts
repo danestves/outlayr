@@ -118,7 +118,7 @@ async function storedAccountUri(db: SpendDb, id: string): Promise<string | null>
 class FakeFiles implements PhotoFiles {
     readonly directoryUri = DIRECTORY;
     files: Map<string, number>;
-    /** Outside files that are still readable — a picker cache not yet reclaimed. */
+    /** Outside files that are still readable: a picker cache not yet reclaimed. */
     sources: Set<string>;
     removed: string[] = [];
 

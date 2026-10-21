@@ -28,23 +28,16 @@ import { posthog } from "@/lib/posthog";
 
 type CommitKind = "continue" | "finish";
 
-// Named so the form's submit-meta type is the union rather than whichever
-// literal the default happened to be.
+// Typed so the form's submit-meta type is the union, not the default's literal.
 const CONTINUE: CommitKind = "continue";
 const FINISH: CommitKind = "finish";
 
 const EASE_OUT = Easing.bezier(0.19, 1, 0.22, 1);
 
-/**
- * The stage object: the chosen currency's symbol at display size, flipping on
- * its vertical axis when the pick changes — the glyph turns over like a coin,
- * with the label swapped at the 90° edge where the face is invisible.
- */
 function CurrencyGlyph({ symbol }: { symbol: string }) {
     const reduced = useReducedMotion();
     const [spun, setSpun] = useState(symbol);
-    // Reduced motion has no edge to swap at, so the glyph is just the symbol —
-    // derived rather than written back from the effect below.
+    // Derived, not set from the effect: reduced motion has no edge to swap the glyph at.
     const shown = reduced ? symbol : spun;
     const spin = useSharedValue(0);
 
@@ -83,11 +76,7 @@ function CurrencyGlyph({ symbol }: { symbol: string }) {
     );
 }
 
-/**
- * A submit hold that ends when this screen is focused again. "Continue" pushes
- * smart features over this screen rather than leaving it, so going back lands here
- * still mounted: a hold that never settled left the CTA on "Saving…" for good.
- */
+/** Continue pushes over this screen, so going back finds it mounted with the CTA still on "Saving…". */
 function useHoldUntilRefocused(): () => Promise<void> {
     const release = useRef<(() => void) | null>(null);
     useFocusEffect(
@@ -121,13 +110,10 @@ export function OnboardingCurrency() {
             try {
                 await setCurrency(db, code);
                 if (meta === "continue") {
-                    // The root guard does not swap on this write alone — the AI
-                    // consent question is next, so this screen has to push there itself.
+                    // The root guard does not swap on this write: the AI consent question is next.
                     router.push("/onboarding/smart-features");
                 } else {
-                    // Nothing navigates on success here: `finishOnboarding` settles the
-                    // root guard, which swaps this stack for sign-in. Pushing as well
-                    // would race it.
+                    // `finishOnboarding` settles the root guard, which swaps the stack; pushing too would race it.
                     await finishOnboarding(db);
                 }
                 if (posthog) {
@@ -138,8 +124,6 @@ export function OnboardingCurrency() {
                 }
                 return await holdSubmitting();
             } catch (error) {
-                // A toast, unlike its sheet-bound siblings: onboarding is a plain
-                // pushed route, so nothing covers the viewport at the app root.
                 console.error("Failed to save the onboarding currency", error);
                 notifyFailure({
                     body: t("onboarding.currency.saveFailed.body"),

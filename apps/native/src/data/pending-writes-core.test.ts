@@ -843,24 +843,16 @@ describe("applyPendingWrites", () => {
         await expect(liveRows(db)).resolves.toHaveLength(0);
     });
 
-    // The queue delivers at least once: an interrupted drain leaves the file in
-    // place, so the same enqueue id comes back. Deleting the duplicate it wrote
-    // is the user saying the charge belongs on the ledger once, and re-running
-    // the automation has to be able to put it back — but only once more.
     it("does not re-write a replayed job again after the first replay landed", async () => {
         const job = walletWrite("j1");
         await applyPendingWrites(db, [job], NOW);
         const [first] = await liveRows(db);
 
-        // The user deletes it as a duplicate, so the tombstone must not block a
-        // genuine re-run.
         await transactionsRepo.remove(db, first?.id ?? "", NOW);
         const replay = new Date(NOW.getTime() + WALLET_DEDUPE_WINDOW_MS + 1);
         await applyPendingWrites(db, [job], replay);
         await expect(undeleted(db)).resolves.toHaveLength(1);
 
-        // Every launch after that replays the same file. The ledger entry now
-        // points at the live row, so nothing more is written.
         const later = new Date(replay.getTime() + WALLET_DEDUPE_WINDOW_MS + 1);
         await applyPendingWrites(db, [job], later);
         await applyPendingWrites(db, [job], new Date(later.getTime() + WALLET_DEDUPE_WINDOW_MS + 1));
@@ -880,15 +872,12 @@ describe("drainPendingWrites", () => {
     it("applies a job once when two drains overlap", async () => {
         const job = walletWrite("wallet-1");
         let released = 0;
-        // The real claim: it re-returns an unreleased claim on purpose, so a
-        // crash mid-drain is recovered. That is what makes the overlap dangerous.
         const claim = () => ({ jobs: [job], names: ["claimed-1.jsonl"] });
         const release = () => {
             released += 1;
         };
 
-        // Both catch-up paths firing at once: the effect body at mount, and the
-        // first AppState "active" a few hundred milliseconds later.
+        // Both catch-up paths at once: the effect body at mount, and the first AppState "active" just after.
         const [first, second] = await Promise.all([
             drainPendingWrites(db, claim, release),
             drainPendingWrites(db, claim, release),

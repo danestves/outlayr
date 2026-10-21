@@ -67,12 +67,8 @@ describe("when a reminder fires", () => {
         expect(wallClock(fire)).toStrictEqual([2026, 2, 24, 9, 0, 0]);
     });
 
-    // The zone is forced because the host's own may have no DST at all, in which
-    // case the case under test could not arise. A subprocess is required rather
-    // than mutating `process.env.TZ` in-place: Jest caches the host's own zone
-    // the first time any `Date` is touched (before this file's own code ever
-    // runs), so a later mutation of `process.env.TZ` is silently ignored — only
-    // a fresh process started with `TZ` already set picks up a different zone.
+    // A subprocess with `TZ` set: the host zone may have no DST, and Jest caches the zone on first `Date` use, so
+    // mutating `process.env.TZ` here would be ignored.
     it("keeps the chosen hour across a DST change", () => {
         const probe = join(import.meta.dirname, "dst-probe.ts");
         const out = execFileSync(
@@ -131,8 +127,6 @@ describe("planning what to arm", () => {
             now,
             time: NINE_AM,
         });
-        // -3 counted forward would land on the 15th, three days after the money
-        // left — and it would survive the `now` filter, so nothing else catches it.
         expect(plan.arm).toHaveLength(1);
         expect(plan.arm[0].fireAt).toStrictEqual(new Date(2026, 2, 12, 9, 0));
     });

@@ -18,7 +18,7 @@ function twoDigitYear(date: Date): string {
     return String(date.getFullYear() % 100).padStart(2, "0");
 }
 
-/** Ports the Swift stepper's `dateString`. Ends are exclusive; the label is not. */
+/** Ends are exclusive; the label is not. */
 export function budgetWindowLabel(window: BudgetWindow, type: number, language: Language = runtimeLanguage()): string {
     if (type === BUDGET_TYPE.day) {
         return `${dayMonth(window.start, language)} ${window.start.getFullYear()}`;
@@ -31,9 +31,8 @@ export function budgetWindowLabel(window: BudgetWindow, type: number, language: 
 }
 
 /**
- * The catalog key for the span a budget covers, not the phrase — the widget
- * payload wants it shouted and the app wants it in a sentence, so casing is the
- * caller's to decide.
+ * A catalog key, not the phrase: the widget shouts it and the app puts it
+ * mid-sentence, so casing is the caller's.
  */
 export function budgetPeriodPhrase(type: number): TranslationKey {
     switch (type) {
@@ -56,10 +55,8 @@ export function budgetPeriodPhrase(type: number): TranslationKey {
 }
 
 /**
- * The cadence as a chip's label, title-cased. `budgetPeriodPhrase` is the same
- * span as a phrase inside a sentence; a chip is neither, so the two are separate
- * keys rather than one string cased at the call site — the first locale where
- * case carries meaning would break that.
+ * A chip's title-cased label. A separate key from `budgetPeriodPhrase`, not one string
+ * cased at the call site, which breaks in the first locale where case carries meaning.
  */
 export function budgetPeriodName(type: number): TranslationKey {
     switch (type) {
@@ -109,17 +106,11 @@ function clamp01(value: number): number {
 export interface BudgetPace {
     /** Continuous fraction of the window already elapsed, clamped [0, 1]. */
     elapsed: number;
-    /**
-     * Fraction of the window's time still remaining, on whole-day granularity —
-     * the Swift `targetPercent`.
-     */
+    /** Fraction of the window's time still remaining, in whole days. */
     remaining: number;
 }
 
-/**
- * `remaining` mirrors the Swift `targetPercent = (totalDays - (daysPast + 1)) /
- * totalDays`, counting the current day as consumed so the marker leads spending.
- */
+/** `remaining` counts the current day as consumed, so the marker leads spending. */
 export function budgetPace(window: BudgetWindow, now: Date): BudgetPace {
     const totalMs = window.end.getTime() - window.start.getTime();
     const elapsedMs = now.getTime() - window.start.getTime();
@@ -135,12 +126,8 @@ export function budgetPace(window: BudgetWindow, now: Date): BudgetPace {
 }
 
 /**
- * Whole days remaining in the window, counted from today's own midnight.
- *
- * Counted forward to the end rather than backward from a total: flooring raw
- * milliseconds since the window opened reads an hour short for the whole of the
- * first local day after a clock shift, so on the last day of a month containing
- * one the label said two days left.
+ * Counted forward from today's midnight: flooring milliseconds since the window opened
+ * reads an hour short for the first local day after a clock shift.
  */
 export function daysLeftInWindow(window: BudgetWindow, now: Date): number {
     return Math.max(0, daysBetween(startOfDay(now).getTime(), window.end.getTime()));
@@ -166,25 +153,19 @@ export function isBehindPace(remaining: number, amount: number, leftover: number
     return remaining * amount > leftover;
 }
 
-/**
- * The 0.95 ceiling keeps the marker clear of the arc's ends (Swift's
- * `0 < targetPercent < 0.95`).
- */
+/** The 0.95 ceiling keeps the marker clear of the arc's ends. */
 export function shouldShowPaceMarker(type: number, remaining: number, over: boolean): boolean {
     return type !== BUDGET_TYPE.day && !over && remaining > 0 && remaining < 0.95;
 }
 
 export interface BudgetRail {
-    /** Share of the track the solid fill covers, in [0, 1]. */
     fill: number;
-    /** Spending passed the limit: the rail re-scales. */
     over: boolean;
 }
 
 /**
- * Over budget the track becomes the spending and the fill is the limit's share
- * of it, so a rail that would otherwise sit empty at every overage instead
- * reports how far past the limit the spending went.
+ * Over budget the track becomes the spending and the fill the limit's share of it,
+ * so the rail shows how far past the limit spending went instead of sitting empty.
  */
 export function budgetRail(spent: number, limit: number): BudgetRail {
     const over = spent > limit;
@@ -202,7 +183,6 @@ function clampFill(value: number): number {
     return Math.max(0, Math.min(1, value));
 }
 
-/** What a detail screen shows about pace, for the window it is looking at. */
 export interface BudgetDetailPace {
     behind: boolean;
     closed: boolean;
@@ -213,12 +193,8 @@ export interface BudgetDetailPace {
 }
 
 /**
- * Both budget detail screens — the category one and the overall one — read this.
- *
- * They are separate screens because their data hooks and their toolbars differ,
- * but the pace they report must not: a marker shown on one and withheld on the
- * other is the same budget contradicting itself. Keeping the rule here is what
- * stops the two drifting, the way their editors once did.
+ * The category and overall budget screens both read this, so one can't show a pace
+ * marker the other withholds.
  */
 export function budgetDetailPace(
     budget: { amount: number; leftover: number; overBudget: boolean; type: number; window: BudgetWindow },

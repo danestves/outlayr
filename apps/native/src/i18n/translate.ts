@@ -1,11 +1,7 @@
 export type Catalog = Readonly<Record<string, string>>;
 
 export type TranslationParams = Readonly<Record<string, string | number | null | undefined>> & {
-    /**
-     * The plural selector, declared so `translate` reads a number rather than
-     * sniffing what a caller happened to put under this key. A catalog with no
-     * `_one`/`_other` pair for the key still renders it as a plain placeholder.
-     */
+    /** A catalog with no `_one`/`_other` pair for the key still renders it as a plain placeholder. */
     readonly count?: number;
 };
 
@@ -21,9 +17,7 @@ export function interpolate(template: string, params: TranslationParams | undefi
     if (!params) {
         return template;
     }
-    // `null` renders empty — it is a value the caller does have and knows is
-    // absent. `undefined` means the param was never passed, so the placeholder
-    // stays visible rather than silently swallowing a wiring mistake.
+    // `null` renders empty; `undefined` keeps the placeholder visible so a wiring mistake shows.
     return template.replace(PLACEHOLDER, (match, name: string) => {
         const value = params[name];
         if (value === undefined) {
@@ -33,11 +27,7 @@ export function interpolate(template: string, params: TranslationParams | undefi
     });
 }
 
-/**
- * English and Spanish share a one/other split, so the form is chosen by hand
- * rather than through `Intl.PluralRules` — Hermes ships no ICU plural data, and
- * `CURRENCY_META` already exists for the same reason.
- */
+/** Chosen by hand, not through `Intl.PluralRules`: Hermes ships no ICU plural data. */
 function pluralSuffix(count: number): "_one" | "_other" {
     return count === 1 ? "_one" : "_other";
 }

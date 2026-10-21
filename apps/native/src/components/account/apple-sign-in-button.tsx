@@ -12,11 +12,7 @@ import { useColors } from "@/theme/use-colors";
 
 export const SIGN_IN_BUTTON_HEIGHT = 52;
 
-/**
- * Apple's own button, not a lookalike: App Review requires the system control
- * wherever Sign in with Apple is offered, and it cannot be given a busy state,
- * so the pending frame is drawn in its place.
- */
+// App Review requires the system control, which cannot show a busy state, so the pending frame is drawn in its place.
 export function AppleSignInButton({
     pending,
     disabled,
@@ -45,9 +41,7 @@ export function AppleSignInButton({
     }
 
     return (
-        // `pointerEvents` alone leaves the native button focusable and announced
-        // as enabled, so VoiceOver activates something that does nothing. The
-        // Google button beside it already states `disabled` on its own control.
+        // `pointerEvents` alone leaves the native button focusable and announced as enabled to VoiceOver.
         <View
             accessibilityElementsHidden={disabled}
             importantForAccessibility={disabled ? "no-hide-descendants" : "auto"}

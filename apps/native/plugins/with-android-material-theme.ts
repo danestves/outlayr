@@ -4,22 +4,14 @@ import path from "node:path";
 import { AndroidConfig, withAndroidStyles, withDangerousMod } from "expo/config-plugins";
 import type { ConfigPlugin } from "expo/config-plugins";
 
-/**
- * Material Components' DayNight theme with wallpaper colour on Android 12+.
- * Comes from `com.google.android.material:material`, which `@expo/ui` already
- * puts on the classpath for Compose.
- */
+// From `com.google.android.material`, which `@expo/ui` already puts on the classpath for Compose.
 const MATERIAL_THEME = "Theme.Material3.DynamicColors.DayNight.NoActionBar";
 
 const ALERT_THEME = "Theme.App.AlertDialog";
 const ALERT_BACKGROUND = "m3_alert_dialog_background";
 
-/**
- * The M3 dialog container: 28dp corners on `surfaceContainerHigh`. Material's
- * own builder draws this in code, but React Native's `Alert` goes through
- * AppCompat's, which only reads the window background, and MDC's default for
- * that is the 4dp Material 2 card.
- */
+// RN's `Alert` goes through AppCompat's builder, which only reads the window background, and MDC's default for
+// that is the 4dp Material 2 card.
 const ALERT_BACKGROUND_XML = `<?xml version="1.0" encoding="utf-8"?>
 <inset xmlns:android="http://schemas.android.com/apk/res/android"
     android:insetLeft="24dp"
@@ -33,19 +25,8 @@ const ALERT_BACKGROUND_XML = `<?xml version="1.0" encoding="utf-8"?>
 </inset>
 `;
 
-/**
- * Re-parents the Activity theme on Material 3 with dynamic colour, so the
- * views Android draws itself (`Alert.alert`, system dialogs, the community
- * date and time picker dialogs) come out in the same Material You palette as
- * the app, and follow its light/dark through `AppCompatDelegate`.
- *
- * Expo writes `Theme.AppCompat.DayNight.NoActionBar` plus a static
- * `colorPrimary`, which would pin every dialog button to one colour, so that
- * item goes too. Expo's own style mods run before this one (later plugins'
- * mods run first, and Expo's defaults are registered last).
- *
- * Below Android 12 the theme falls back to the static Material 3 baseline.
- */
+// Expo's static `colorPrimary` goes too: it pins every dialog button to one colour.
+// Expo's own style mods run before this one (later plugins' mods run first).
 const withAndroidMaterialTheme: ConfigPlugin = (config) => {
     const withBackground = withDangerousMod(config, [
         "android",

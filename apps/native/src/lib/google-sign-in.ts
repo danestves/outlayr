@@ -5,10 +5,7 @@ import { duringHandoff } from "@/lib/app-handoff";
 
 const webClientId = env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB;
 
-/**
- * The web client id is what the backend verifies the id token against, so a
- * build without one can obtain a token no server will accept.
- */
+/** The backend verifies the id token against the web client id, so without one no server accepts the token. */
 export const isGoogleSignInAvailable = Boolean(webClientId);
 
 export async function googleIdToken(): Promise<string | null> {

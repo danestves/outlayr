@@ -27,12 +27,7 @@ function declaredInAppConfig(): string[] {
     return [...block[1].matchAll(/"([^"]+)"/g)].map((match) => match[1]);
 }
 
-/**
- * The primaries are a build-conditional pair, not a list, so there is no block
- * to anchor on the way the alternates give one. Matching the quoted path form
- * is what separates them: the alternates reach the plugin as a template
- * literal built from bare names.
- */
+/** The quoted path form matches only the primaries; the alternates reach the plugin as a template literal. */
 function primaryIconsInAppConfig(): string[] {
     const source = readFileSync(join(nativeRoot, "app.config.ts"), "utf-8");
     const names = [...source.matchAll(/"\.\/assets\/(\w+)\.icon"/g)].map((match) => match[1]);
@@ -42,11 +37,6 @@ function primaryIconsInAppConfig(): string[] {
     return names;
 }
 
-/**
- * The two build-conditional declarations of the primary, each as the ordered
- * pair its ternary writes — production branch first: the bundle actool stamps,
- * and the name `extra` carries to the JS runtime for the Default row's copy.
- */
 function primaryIconBranches(): { icon: string[]; extra: string[] } {
     const source = readFileSync(join(nativeRoot, "app.config.ts"), "utf-8");
     const icon = /icon:\s*isProduction\s*\?\s*"\.\/assets\/(\w+)\.icon"\s*:\s*"\.\/assets\/(\w+)\.icon"/.exec(source);
@@ -98,8 +88,7 @@ describe("app icon catalogue", () => {
     });
 
     it("ships a preview for every choice, the primary included", () => {
-        // Metro falls back to the nearest density it can find, so a missing @3x
-        // is a soft failure: an upscaled, blurry tile on every current iPhone.
+        // Metro falls back to the nearest density, so a missing @3x fails softly as a blurry tile.
         for (const icon of APP_ICONS) {
             for (const scale of ["", "@2x", "@3x"]) {
                 expect(
@@ -160,7 +149,6 @@ describe("choosing an icon", () => {
 
     it("drops a tap while a change is in flight", () => {
         const flying = tap(ON_MONO, "OutlayrInk");
-        // Identity, not shape: it is how the caller knows not to call into iOS.
         expect(tap(flying, "OutlayrEmboss")).toBe(flying);
     });
 

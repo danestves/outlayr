@@ -11,15 +11,11 @@ import { useMaterialColors } from "@/theme/use-material-colors";
 
 import type { DisplayCurrencyChip as DisplayCurrencyChipBase } from "./display-currency-chip";
 
-/** See the iOS file: namespaced away from the currency codes. */
+/** Namespaced away from currency codes. */
 const MANAGE_CURRENCIES_ACTION = "log.currency.manage";
 const PRESSED_ALPHA = 0.1;
 
-/**
- * The currency control as a Material 3 outlined chip with a dropdown arrow,
- * Direction B's, opening a Material menu with the current code checked. It
- * draws at 32dp; `MaterialMenu` gives it a 48dp touch area.
- */
+/** 32dp; `MaterialMenu` adds the 48dp touch area. */
 export const DisplayCurrencyChip: typeof DisplayCurrencyChipBase = ({ code, options, onSelect, onManage }) => {
     const t = useTranslation();
     const m3 = useMaterialColors();
@@ -48,7 +44,6 @@ export const DisplayCurrencyChip: typeof DisplayCurrencyChipBase = ({ code, opti
             renderTrigger={({ pressed }) => (
                 <View className="border-m3-outline h-8 flex-row items-center gap-1 rounded-lg border pr-2 pl-3">
                     {pressed ? (
-                        // Material's pressed state layer, inside the 1dp outline.
                         <View
                             className="absolute inset-0 rounded-[7px]"
                             pointerEvents="none"

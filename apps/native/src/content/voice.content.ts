@@ -31,7 +31,6 @@ const voice = {
             en: "Close",
             es: "Cerrar",
         }),
-        // Failures name what happened, not what the code did.
         "voice.failed.denied": t({
             en: "Outlayr needs the microphone to hear you.",
             es: "Outlayr necesita el micrófono para escucharte.",
@@ -125,7 +124,6 @@ const voice = {
             en: "No category yet",
             es: "Aún sin categoría",
         }),
-        // A transfer reads as "Checking to Savings"; either side may be unresolved.
         "voice.review.noMerchant": t({
             en: "No name yet",
             es: "Aún sin nombre",

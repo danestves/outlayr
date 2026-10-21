@@ -6,36 +6,14 @@ import { rememberedCategory } from "@/domain/merchant-history";
 import type { HistoricalEntry } from "@/domain/merchant-history";
 import { merchantKey } from "@/domain/merchant-resolver";
 
-/**
- * How far back a lookup reads before giving up on remembering a merchant.
- *
- * The window is recency, not a text match: `merchantKey` folds diacritics and
- * collapses punctuation, and SQLite has no equivalent, so a `LIKE` narrowed on
- * the normalised key would silently miss every accented spelling it was meant
- * to find — "panaderia" against a stored "Panadería". Reading a bounded window
- * and comparing exactly in JS is slower in theory and correct in practice.
- *
- * A merchant absent from the last 500 filed entries on this side of the ledger
- * is not remembered. That is a deliberate bound, and it sits behind the 600ms
- * enrichment debounce.
- */
+// A recency window, not a `LIKE`: `merchantKey` folds diacritics and punctuation and SQLite can't, so a text match
+// would miss "Panadería" for "panaderia". The match runs in JS.
 export const HISTORY_WINDOW = 500;
 
-/**
- * An income recorded with a person is a sale on credit, titled "Sold on credit",
- * not a merchant. An expense on a person ("Pedro paid my lunch") keeps the shop
- * in its note, so it still counts. Joined on the account so an entry with no
- * account still counts.
- */
+// An income on a person is a sale on credit, not a merchant; an expense on one keeps the shop in its note.
 const notASale = or(eq(transactions.income, false), isNull(accounts.kind), ne(accounts.kind, "person"));
 
-/**
- * The category this user has filed this merchant under before, or null.
- *
- * Scoped to `income` because a category belongs to one side of the ledger: a
- * refund from a shop the user files under an expense category must not answer
- * with it.
- */
+// Scoped to `income`: a refund from a shop filed under an expense category must not answer with it.
 export async function rememberedCategoryFor(db: Database, key: string, income: boolean): Promise<string | null> {
     if (key === "") {
         return null;
@@ -69,24 +47,12 @@ export async function rememberedCategoryFor(db: Database, key: string, income: b
     return rememberedCategory(entries, key);
 }
 
-/**
- * How far back the remembered-merchant list reads. Shorter than
- * {@link HISTORY_WINDOW} because this one is folded down to a handful of names
- * for a pill row rather than tallied: a merchant absent from the last 200 filed
- * entries is not what the user is about to type again.
- */
 export const RECENT_MERCHANT_WINDOW = 200;
 
 export interface MerchantNoteRow {
     note: string;
 }
 
-/**
- * The named entries on one side of the ledger, most recent first.
- *
- * Kept as a builder rather than an awaited read so the same query serves both
- * the live hook and a test that runs it directly.
- */
 export function recentMerchantNotesQuery(db: Database, income: boolean) {
     return db
         .select({ note: transactions.note })
@@ -106,14 +72,7 @@ export function recentMerchantNotesQuery(db: Database, income: boolean) {
         .limit(RECENT_MERCHANT_WINDOW);
 }
 
-/**
- * The distinct merchants those notes name, most recent first.
- *
- * Folded on `merchantKey` for the same reason the category lookup is: "Rio
- * Supermercado", "RIO SUPERMERCADO" and "rio  supermercado" are one merchant,
- * and SQLite cannot say so. The spelling kept is the most recent one, which is
- * the one the user last chose to write.
- */
+// Folded on `merchantKey` for the same reason as the category lookup; the spelling kept is the most recent.
 export function recentMerchants(rows: readonly MerchantNoteRow[], limit: number): string[] {
     const seen = new Set<string>();
     const names: string[] = [];

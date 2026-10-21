@@ -4,35 +4,16 @@ import { and, count, eq, gte, isNotNull, isNull, lte, sql, sum } from "drizzle-o
 import type { SpendDb } from "@/data/budget-spent";
 import { transactions } from "@/db/schema";
 
-/**
- * Deliberately the same key `utcDateString` derives in JS, so a rate looked up
- * here and one looked up for the same row on the Log's day sections resolve to
- * the same day.
- */
+// The same key `utcDateString` derives in JS, so SQL and the Log's day sections look rates up on the same day.
 export const UTC_DAY = sql<string>`strftime('%Y-%m-%d', ${transactions.date} / 1000, 'unixepoch')`;
 
-/**
- * Where a row is PLOTTED, on the reader's calendar. Never where it is VALUED.
- *
- * A goal is measured in local days throughout — `useNow` ticks at local midnight
- * and the picker hands back one — so its history has to be bucketed on them, or
- * a Friday evening entry lands in Saturday's bucket and is drawn before itself.
- *
- * It travels beside `dateKey` rather than replacing it: that key is the date the
- * rate is looked up at, so re-cutting it would value a row on a day whose rate
- * may not exist, or may not be the one it was frozen against.
- *
- * Every read of an account's cells groups by it, plotted or not: each cell is
- * rounded on its own when valued, so two reads that split a UTC day differently
- * value the account a cent apart.
- */
+// Where a row is PLOTTED (local days, like goals and `useNow`), never where it is VALUED: `dateKey` stays the rate
+// lookup day. Every read of an account's cells groups by it, since each cell rounds on its own when valued and two
+// reads splitting a UTC day differently land a cent apart.
 export const LOCAL_DAY = sql<string>`strftime('%Y-%m-%d', ${transactions.date} / 1000, 'unixepoch', 'localtime')`;
 
-/**
- * Any query selecting these must group by `currency`, `income` and
- * {@link UTC_DAY}, or the row it returns is not a cell: conversion needs one
- * currency and one day's rate, and a group spanning either cannot supply them.
- */
+// Any query selecting these must group by `currency`, `income` and {@link UTC_DAY}: conversion needs one currency and
+// one day's rate.
 const CELL_COLUMNS = {
     currency: transactions.currency,
     dateKey: UTC_DAY,
@@ -44,8 +25,7 @@ const CELL_COLUMNS = {
     rows: count(),
     total: sum(transactions.amount),
     totalUsd: sum(transactions.amountUsd),
-    // The part of `total` no rate can be applied to, since a row with no frozen
-    // USD value contributes nothing to `totalUsd`.
+    // The part of `total` no rate applies to: a row with no frozen USD adds nothing to `totalUsd`.
     unconverted: sum(sql<number>`CASE WHEN ${transactions.amountUsd} IS NULL THEN ${transactions.amount} ELSE 0 END`),
     unconvertedRows: sql<number>`SUM(CASE WHEN ${transactions.amountUsd} IS NULL THEN 1 ELSE 0 END)`,
 } as const;
@@ -66,7 +46,6 @@ export interface CellRow {
 }
 
 export function toCurrencyCell(row: CellRow): CurrencyCell {
-    // A sum is null when the group matched no rows.
     return {
         amount: Number(row.total ?? 0),
         amountUsd: Number(row.totalUsd ?? 0),
@@ -85,11 +64,7 @@ export function toCurrencyCells(rows: readonly CellRow[]): CurrencyCell[] {
     return rows.map(toCurrencyCell);
 }
 
-/**
- * Aggregated in SQL, not by pulling the window into JS: the Log's `"all"`
- * period has no lower bound, so a plain `select()` would fetch every column of
- * every transaction ever on each of this subscription's many re-runs.
- */
+// Aggregated in SQL: the Log's `"all"` period has no lower bound, so a plain select would fetch every row each re-run.
 export function logCellQuery(db: SpendDb, start: Date | null, now: Date) {
     return db
         .select(CELL_COLUMNS)
@@ -112,13 +87,8 @@ export function settledAccountCellQuery(db: SpendDb, accountId: string, now: Dat
         .groupBy(transactions.currency, transactions.income, UTC_DAY, LOCAL_DAY);
 }
 
-/**
- * A balance is what has happened SO FAR, so it cannot count money dated
- * later. Filtering the cells afterwards is not equivalent: a cell carries only a
- * `YYYY-MM-DD` key, so an entry scheduled for 23:00 today is indistinguishable
- * from one already made at 09:00. The bound has to be applied to the rows before
- * they are grouped, which is what this does.
- */
+// Bounded before grouping: a cell carries only a day key, so an entry scheduled for 23:00 today is indistinguishable
+// from one made at 09:00.
 export function settledAccountsCellQuery(db: SpendDb, now: Date) {
     return db
         .select({ accountId: transactions.accountId, ...CELL_COLUMNS, plotDay: LOCAL_DAY })
@@ -127,10 +97,7 @@ export function settledAccountsCellQuery(db: SpendDb, now: Date) {
         .groupBy(transactions.accountId, transactions.currency, transactions.income, UTC_DAY, LOCAL_DAY);
 }
 
-/**
- * Split by category and unbounded by date — Swift's
- * `Category.allTransactions` reduction, which counts a future-dated log too.
- */
+// Unbounded by date, like Swift's `Category.allTransactions`, which counts future-dated logs too.
 export function categoryCellQuery(db: SpendDb) {
     return db
         .select({ categoryId: transactions.categoryId, ...CELL_COLUMNS })

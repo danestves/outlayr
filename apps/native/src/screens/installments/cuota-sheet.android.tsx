@@ -23,7 +23,6 @@ import { useCuotaEditor } from "./use-cuota-editor";
 
 const PRESSED_ALPHA = 0.1;
 
-/** What an outlined select field reads. */
 function fieldValue(value: string) {
     return (
         <Text className="text-body text-m3-on-surface tabular-nums" numberOfLines={1}>
@@ -32,11 +31,6 @@ function fieldValue(value: string) {
     );
 }
 
-/**
- * One cuota as a Material 3 modal bottom sheet: Due and Amount as outlined
- * fields, each written as soon as it is picked, and Delete as an error text
- * button. Same contract as `cuota-sheet.tsx`.
- */
 export function CuotaSheet({ count, currency, earliest, onDismiss, ref, row }: CuotaSheetProps) {
     const insets = useSafeAreaInsets();
     const sheetSurface = useSheetSurface();

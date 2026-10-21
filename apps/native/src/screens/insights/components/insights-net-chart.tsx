@@ -36,7 +36,7 @@ interface InsightsNetChartProps {
     onScrub: (index: number | null) => void;
     period: InsightsPeriod;
     selectedIndex: number | null;
-    /** The running balance through the window — see `runningTotals`. */
+    /** Running balance (see `runningTotals`). */
     totals: number[];
 }
 
@@ -82,8 +82,7 @@ export function InsightsNetChart({
         const span = Math.max(1, top - bottom);
         const plotHeight = HEIGHT - PAD.top - PAD.bottom;
         const y = (value: number) => PAD.top + ((top - value) / span) * plotHeight;
-        // Scaled to the *whole* window, not to the live part, so the line lines up
-        // with the x-axis labels beneath it.
+        // Scaled to the whole window so the line meets the x-axis labels.
         const step = buckets.length > 1 ? width / (buckets.length - 1) : 0;
         return { step, x: (index: number) => index * step, y, zeroY: y(0) };
     }, [live, width, buckets.length]);
@@ -163,8 +162,7 @@ export function InsightsNetChart({
         <View>
             <GestureDetector gesture={pan}>
                 <View collapsable={false} onLayout={onLayout} style={{ height: HEIGHT }}>
-                    {/* Skia's canvas is a native view and swallows touches, so the pan
-					    on the wrapper never sees them unless this opts out. */}
+                    {/* Skia's canvas swallows touches the wrapper's pan needs. */}
                     <Canvas pointerEvents="none" style={{ height: HEIGHT, width }}>
                         {geometry?.surplus ? (
                             <SkPath color={withAlpha(ink, 0.07)} opacity={draw} path={surplus} />
@@ -229,9 +227,7 @@ export function InsightsNetChart({
                         ) : null}
                     </Canvas>
 
-                    {/* The line itself is one Skia path, so it cannot carry per-slot
-					    accessibility; these invisible siblings give VoiceOver the same
-					    per-slot readout the bar chart has. */}
+                    {/* Invisible siblings give VoiceOver the per-slot readout the Skia path cannot. */}
                     <View pointerEvents="none" style={{ ...StyleSheetAbsoluteFill, flexDirection: "row" }}>
                         {live.map((value, index) => (
                             <View

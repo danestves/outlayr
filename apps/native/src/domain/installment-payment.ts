@@ -3,12 +3,7 @@ import { decimalsFor } from "@outlayr/money/currency";
 
 import type { PaymentSource } from "@/data/installments-core";
 
-/**
- * What leaves `from` to put `amount` on an order owed in `toCurrency`, the way
- * the transfer editor stores a move between currencies: the source leg rounded
- * to its own minor units, the rate as destination per source, typed `official`.
- * Null when the currencies differ and the day has no rate to convert at.
- */
+// Stored the way the transfer editor stores a cross-currency move: rate as destination per source, typed `official`.
 export function paymentSource(
     amount: number,
     from: { currency: string; id: string },
@@ -37,11 +32,6 @@ export function paymentSource(
     };
 }
 
-/**
- * The accounts a payment toward an order can come from: banks first, then
- * cards and loans, which pay it the way a card pays anything (their debt goes
- * up as the order's goes down). Never the order's own account, never a person.
- */
 export function paymentSources<T extends { readonly id: string; readonly kind: string }>(
     accounts: readonly T[],
     planAccountId: string | undefined

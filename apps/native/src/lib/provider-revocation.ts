@@ -15,7 +15,7 @@ const providerBinding = z.object({
     providerSubject: z.string().min(1),
 });
 
-/** Stores the provider identity only after the corresponding Better Auth session is established. */
+/** Call only once the matching Better Auth session is established. */
 export async function persistProviderBinding(binding: ProviderBinding): Promise<void> {
     if (!providerBinding.safeParse(binding).success) {
         throw new Error("Provider binding is invalid");

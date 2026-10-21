@@ -33,15 +33,12 @@ export function CategoryEditScreen({ id }: { id: string }) {
     const haptics = useHaptics();
     const { requestDelete } = useDeferredDelete("category");
 
-    // Read once on mount, like the editor does — a rename must not retitle the
-    // sheet mid-edit.
+    // Read once on mount, like the editor does: a rename must not retitle the sheet mid-edit.
     const [edited] = useState(() => (id ? getCategoryById(db, id) : null));
     const title = t(categoryKindKey(edited));
 
-    // No confirmation in front of it: the write is held for the undo window, and
-    // the toast carrying it is mounted at the app root, so it outlives this screen
-    // — which goes away at once. The cascade the confirmation used to spell out
-    // rides on the toast instead, which is why the children are counted first.
+    // No confirmation: the write is held for the undo window by a toast mounted at the app root, which outlives this
+    // screen. The toast spells out the cascade, so the children are counted first.
     const deleteCategory = async () => {
         if (!id) {
             return;

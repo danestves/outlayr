@@ -12,12 +12,8 @@ const NOTHING: ValuationCoverage = {
 };
 
 /**
- * Read once per mount rather than live: coverage only moves when a rate pull or
- * a canonicalization pass lands, both of which run on foreground, and the scan
- * behind it is not worth a listener that every transaction write would fire.
- *
- * Starts at zeroes, which reads as "nothing to report" — the honest state before
- * the scan has answered.
+ * Read once per mount, not live: coverage only moves when a foreground rate pull or canonicalization lands, and
+ * the scan is not worth a listener every transaction write would fire.
  */
 export function useValuationCoverage(db: Database): ValuationCoverage {
     const [coverage, setCoverage] = useState<ValuationCoverage>(NOTHING);

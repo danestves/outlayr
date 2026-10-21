@@ -19,7 +19,6 @@ import { useSystemSync } from "@/lib/use-system-sync";
 
 const IDLE_TIMEOUT_MS = 1000;
 
-/** The settings the subscription and cuota notices are written or timed from. */
 const DUE_REMINDER_SETTINGS = [
     "subscriptionReminders",
     "installmentReminders",
@@ -32,13 +31,8 @@ const DUE_REMINDER_SETTINGS = [
 
 let duePass: Promise<void> = Promise.resolve();
 
-/**
- * Cuotas take the headroom the subscription notices leave, so they wait for that
- * pass, failed or not. Each whole pass also waits for the one before: a
- * foreground and a setting change would otherwise run side by side, and one's
- * cuota pass could count the queue while the other's subscriptions are mid
- * re-arm.
- */
+// Cuotas take the headroom the subscription notices leave, so they wait for that pass. Whole passes chain, or one
+// pass's cuotas could count the queue while another's subscriptions are mid re-arm.
 const reconcileDueReminders = (db: Database) => {
     duePass = duePass
         .then(() => syncSubscriptionReminders(db))
@@ -72,13 +66,8 @@ export function BackgroundWork() {
     const ready = started ? db : null;
 
     useDailyReminderSync(ready);
-    // The sweep moves the very landing the notices are dated from, so the
-    // subscription reminders reconcile from its callback: once per launch and
-    // foreground, after the walk when there is one. The cuota notices follow
-    // them in the same callback rather than a listener of their own.
+    // The sweep moves the landing the notices are dated from, so due reminders reconcile from its callback.
     useRecurrenceSweep(ready, reconcileDueReminders);
-    // A setting they read rebuilds them now, the way `useDailyReminderSync`
-    // rebuilds the daily one, rather than on the next foreground.
     useEffect(() => {
         if (ready == null) {
             return;
@@ -92,17 +81,13 @@ export function BackgroundWork() {
             unsubscribe();
         };
     }, [ready]);
-    // Ordered after the sweep so a subscription that advanced on this foreground
-    // is already in the table when the widgets are rebuilt from it.
+    // After the sweep, so a subscription that advanced this foreground is in the table when the widgets rebuild.
     useSystemSync(ready);
     useEnrichmentQueue(ready);
-    // Inert until the sign-in flow opens the device-local sync gate, and held
-    // down entirely without a confirmed entitlement and session — the server
-    // refuses a lapsed customer, one it cannot verify, and a missing token.
+    // Held down without a confirmed entitlement and session: the server refuses a lapsed customer and a missing token.
     useSyncEngine(ready, !proEntitled || !cloudAuthenticated);
     usePhotoReconcile(ready);
-    // After the reconciliation, which owns whether a row's path still resolves —
-    // running first would upload against paths it is about to repair.
+    // After the reconciliation: running first would upload against paths it is about to repair.
     usePhotoSync(ready, !proEntitled || !cloudAuthenticated);
 
     return null;

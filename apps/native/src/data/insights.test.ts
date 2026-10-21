@@ -161,9 +161,9 @@ async function seed(db: TestDb): Promise<void> {
         tx("b1", at(2025, 6, 1), 8, false, "food"),
         tx("i1", at(2025, 7, 3), 500, true, "sal"),
         tx("i2", at(2025, 7, 15, 10, 0), 40, true, "sal"),
-        // Soft-deleted — never counted.
+        // Soft-deleted: never counted.
         tx("d1", at(2025, 7, 8), 999, false, "food", now),
-        // Future relative to NOW (same day, later time) — never counted.
+        // Future relative to NOW (same day, later time): never counted.
         tx("f2", at(2025, 7, 15, 18, 0), 88, false, "food"),
     ]);
 }
@@ -425,7 +425,6 @@ describe("window labels", () => {
         expect(windowLabel("month", -1, NOW)).toBe("Jun 2025");
         expect(windowLabel("year", 0, NOW)).toBe("2025");
         expect(windowLabel("week", 0, NOW)).toBe("13 - 19 Jul");
-        // A week straddling two months names both.
         expect(windowLabel("week", -2, NOW)).toBe("29 Jun - 5 Jul");
     });
 

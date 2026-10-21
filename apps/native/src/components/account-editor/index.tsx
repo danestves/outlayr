@@ -58,9 +58,7 @@ import { useColors } from "@/theme/use-colors";
 
 import { AccountEditorDetailsSection } from "./details-section";
 
-export type AccountEditorProps =
-    /** `liability` opens a new account as money owed. */
-    { mode: "create"; liability?: boolean } | { mode: "edit"; id: string };
+export type AccountEditorProps = { mode: "create"; liability?: boolean } | { mode: "edit"; id: string };
 
 type IdentitySource = "initial" | "suggested" | "user";
 
@@ -69,12 +67,6 @@ export default function AccountEditor(props: AccountEditorProps) {
     return <AccountEditorReady db={db} {...props} />;
 }
 
-/**
- * The add/edit account form: a FIXED hero header over a scrolling `ScrollView`
- * of hairline-ruled rows, the exact shape of the category editor. The hero, the
- * CTA and the mesh curtain are RN views around the `Host`, because the scroller
- * inside it has to be its only child.
- */
 function curtainHuesFor(photoUri: string | null, emoji: string | null, tint: string): string[] {
     if (photoUri) {
         return [tint];
@@ -85,7 +77,6 @@ function curtainHuesFor(photoUri: string | null, emoji: string | null, tint: str
     return [tint];
 }
 
-/** The kind the form saves: a person stays one, the toggle picks the rest. */
 function formKind(person: boolean, liability: boolean): AccountKind {
     if (person) {
         return "person";
@@ -119,21 +110,15 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
     const { draft, setDraft } = useIdentityDraft();
     const { pickerOpen, setPickerOpen, floatProgress } = useIdentityFlyUp();
 
-    // Lazy `useState`, not `useMemo`: stable for the component's life — a
-    // re-read would re-fire the draft effects below and clobber a picked logo.
+    // Lazy `useState`, not `useMemo`: a re-read would re-fire the draft effects below and clobber a picked logo.
     const [loaded] = useState<Account | null>(() =>
         mode === "edit" && editId != null ? getAccountById(db, editId) : null
     );
 
-    /**
-     * This editor is presented as a sheet and stays up when a write fails, so the
-     * notice is inline rather than a toast — see `@/components/form/inline-failure`.
-     */
     const [failure, setFailure] = useState<string | null>(null);
 
-    // `imageKey` counts on its own: a synced photo can be known before the photo
-    // pass has downloaded it into `imageUri`, and a lookup started in that gap
-    // would save a suggestion over the user's own picture.
+    // `imageKey` counts on its own: a synced photo can be known before it downloads into `imageUri`, and a lookup
+    // started in that gap would save a suggestion over the user's own picture.
     const hasStoredIdentity = Boolean(loaded?.emoji || loaded?.icon || loaded?.imageUri || loaded?.imageKey);
     const nameState = useNativeState(loaded?.name ?? "");
     const nameRef = useRef<TextFieldRef>(null);
@@ -167,8 +152,7 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
         defaultValues: initialValues,
         onSubmit: async ({ value }) => {
             setFailure(null);
-            // A currency swapped after typing can leave more precision in the pad
-            // than the new code has minor units — JPY cannot hold "12.34".
+            // A currency swapped after typing can leave more precision than the new code has: JPY cannot hold "12.34".
             const magnitude = roundToMinorUnits(numpadToNumber(value.balanceText), value.currency);
             const balance = value.negative ? -magnitude : magnitude;
             const balanceChanged =
@@ -185,15 +169,12 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
                 kind: formKind(person, value.liability),
                 name: value.name.trim(),
             };
-            // Which cap an account fills is only known once it is named: an
-            // installment app has its own.
             if (mode === "edit" && loaded == null) {
                 return;
             }
             const capped = accountCapped(input, mode === "create" ? null : loaded);
-            // The picker is not the only way a currency gets here: the form opens
-            // on the global currency, which is not capped, so an untouched field
-            // can still be the second currency in the ledger.
+            // The form opens on the global currency, which is not capped, so an untouched field can still be the
+            // second currency in the ledger.
             if (capped || currencyBlocked(input)) {
                 router.push("/paywall");
                 return;
@@ -229,18 +210,13 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
 
     const containerHeight = useSharedValue(0);
     const heroRestTop = useDerivedValue(() => HEADER_HEIGHT + HERO_TOP_PADDING);
-    // A person has no band to measure, so the form starts under the header.
     const [heroBand, setHeroBand] = useState(() =>
         person ? HEADER_HEIGHT : HEADER_HEIGHT + HERO_TOP_PADDING + HERO_RING + HERO_BOTTOM_PADDING
     );
 
     const [identitySource, setIdentitySource] = useState<IdentitySource>("initial");
-    /**
-     * What the well held at the last commit. The logo lookup is debounced and
-     * settles long after the render that started it, so `canAttach`/`onClear`
-     * read from here. Mirrored in an effect, not during render, which is a side
-     * effect the compiler cannot follow.
-     */
+    // The logo lookup settles long after the render that started it, so its callbacks read here. Mirrored in an
+    // effect: a write during render is a side effect the compiler cannot follow.
     const latest = useRef({ hasIdentity: false, identitySource, pickerOpen });
     useEffect(() => {
         latest.current = {
@@ -250,8 +226,7 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
         };
     });
 
-    // The draft is shared context, so this editor may mount onto another
-    // screen's leftovers.
+    // The draft is shared context, so this editor may mount onto another screen's leftovers.
     useEffect(() => {
         if (mode !== "create") {
             return;
@@ -282,8 +257,7 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
         });
     }, [navigation, pickerOpen]);
 
-    // The balance field raises a decimal pad, which has no return key, and the CTA
-    // is pinned to the bottom — without this it is simply unreachable while typing.
+    // The balance field's decimal pad has no return key, and the CTA is pinned to the bottom: unreachable without this.
     const keyboardLift = useSharedValue(0);
     useEffect(() => {
         const show = Keyboard.addListener("keyboardWillShow", (event) => {
@@ -309,12 +283,8 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
         canAttach: () =>
             latest.current.identitySource !== "user" &&
             !latest.current.pickerOpen &&
-            // An identity carried in from the stored row is a choice already made;
-            // only an empty well or an earlier suggestion moves.
             !(latest.current.identitySource === "initial" && latest.current.hasIdentity),
-        // A stored identity is a choice already made, so editing such an account
-        // never looks anything up. An account saved without one is still owed a
-        // logo: its name is looked up on open, and again as it is retyped.
+        // A stored identity is a choice already made. An account saved without one is looked up on open and on retype.
         enabled: !person && (mode === "create" || !hasStoredIdentity),
         groundedLookup,
         initialName: initialValues.name,
@@ -361,8 +331,7 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
 
     const openPicker = () => {
         Keyboard.dismiss();
-        // Opening the picker claims the tile: a suggestion must not overwrite
-        // whatever the user is about to choose.
+        // Opening the picker claims the tile, so a late suggestion cannot overwrite what the user is about to choose.
         setIdentitySource("user");
         setPickerOpen(true);
         router.push("/transactions/identity");
@@ -378,6 +347,7 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
         balanceSheetRef.current?.present();
     };
 
+    // The scroller must be the Host's only child, so the hero, CTA and curtain are RN views around it.
     return (
         <View
             onLayout={(e) => {
@@ -409,9 +379,7 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
                 <Host style={{ flex: 1 }}>
                     <ScrollView
                         modifiers={[
-                            // The decimal pad has no return key and the CTA sits under it,
-                            // so a drag has to be able to put the keyboard away without
-                            // collapsing the sheet out from under the form.
+                            // The decimal pad has no return key: a drag must dismiss it without collapsing the sheet.
                             scrollDismissesKeyboard("immediately"),
                             ...underPicker,
                         ]}
@@ -472,9 +440,7 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
                 />
             )}
 
-            {/* The CTA is an RN view now, so the picker's SwiftUI blur/opacity
-			    modifiers cannot reach it — it hides the way the transfer editor's
-			    does, on the wrapper. */}
+            {/* SwiftUI's blur and opacity cannot reach this RN view, so it hides on the wrapper. */}
             <Animated.View
                 className="bottom-safe-offset-2 absolute right-0 left-0 px-5"
                 pointerEvents={pickerOpen ? "none" : "box-none"}
@@ -529,14 +495,7 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
     );
 }
 
-/**
- * No confirmation in front of it: the write is held for the undo window, and the
- * toast carrying it is mounted at the app root, so it outlives this sheet —
- * which goes away at once. The body says what the row vanishing cannot.
- *
- * Still the editor's button rather than the route's, because this is the tree
- * that has the loaded account.
- */
+// No confirmation: the write is held for the undo window by a toast mounted at the app root, outliving this sheet.
 interface AccountDeleteToolbarProps {
     account: Account;
     onDeleted: () => void;

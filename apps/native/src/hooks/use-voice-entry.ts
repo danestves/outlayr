@@ -27,11 +27,8 @@ import { VOICE_TURNS_QUERY, voiceThreadTransport } from "@/lib/convex";
 import type { SpeakRequest, StartThreadResult, VoiceDraft, VoiceQuote, VoiceThreadTransport } from "@/lib/convex";
 import { withTimeout } from "@/lib/with-timeout";
 
-/**
- * One sentence of speech, mono, at the lowest AAC rate that still transcribes
- * cleanly: ~6KB/s against the server's 900KB cap and the 45s recording cap.
- * `isMeteringEnabled` is what makes `getStatus().metering` exist at all.
- */
+// ~6KB/s against the server's 900KB cap and 45s recording cap.
+// `isMeteringEnabled` is what makes `getStatus().metering` exist at all.
 const RECORDING_OPTIONS: RecordingOptions = {
     android: { audioEncoder: "aac", extension: ".m4a", outputFormat: "mpeg4" },
     bitRate: 48_000,
@@ -49,11 +46,8 @@ const RECORDING_OPTIONS: RecordingOptions = {
     web: { bitsPerSecond: 48_000, mimeType: "audio/webm" },
 };
 
-/** The meter is read this often; the orb smooths it, so faster buys nothing. */
 const METER_INTERVAL_MS = 50;
-/** Transcription plus the agent's turn behind one request; past this the network, not the model, is the problem. */
 const REQUEST_TIMEOUT_MS = 25_000;
-/** A screen holds a handful of turns; corrections only ever look at the last few. */
 const TURNS_PAGE = 40;
 
 export type VoiceFailure =
@@ -69,50 +63,28 @@ export type VoiceFailure =
     | "quotaExceeded"
     | "provider";
 
-/**
- * `Context` is whatever the caller needs to read the draft back in the
- * ledger's terms — the candidates it offered the model, the currency it sent.
- * It rides from the send to the review, because the ledger can change
- * underneath a request in flight.
- */
 export type VoicePhase<Context = unknown> =
     | { kind: "starting" }
     | { kind: "listening" }
     | { after: number; clip: ArrayBuffer; kind: "sending" }
-    /** The words landed at `order`; the agent's answer at the same order is the draft. */
     | { context: Context; kind: "thinking"; order: number }
     | { context: Context; draft: VoiceDraft; kind: "review"; order: number; quotes: readonly VoiceQuote[] }
     | { kind: "failed"; reason: VoiceFailure; transcript: string | null };
 
 interface UseVoiceEntryArgs<Context> {
-    /** Snapshotted with the request; the review phase hands it back. */
     context: Context;
-    /**
-     * Everything but the clip, the thread and the date, built fresh by the
-     * caller each render. `today` is read when the clip is sent, so a screen
-     * that sat across midnight still says which day "today" is.
-     */
     request: Omit<SpeakRequest, "audio" | "threadId" | "today">;
-    /** Defaults to the real transport; a fake is for tests. */
     transport?: VoiceThreadTransport;
 }
 
 export interface UseVoiceEntryResult<Context> {
-    /** Stops listening and discards the clip. Safe in any phase. */
     cancel: () => void;
-    /** Ends the clip now and sends it, instead of waiting for the trailing silence. */
     finish: () => void;
     heard: string | null;
-    /** Input level 0–1, written on the meter interval and read by the orb on the UI thread. */
     level: SharedValue<number>;
-    /**
-     * Listens for another sentence on the same thread: a correction after a
-     * draft, or a second try after a failure. The thread keeps every turn.
-     */
     listenAgain: () => void;
     phase: VoicePhase<Context>;
     spoke: boolean;
-    /** The thread so far: every sentence and every draft it produced. */
     turns: VoiceTurn[];
 }
 
@@ -145,35 +117,16 @@ function failureFor(status: string): VoiceFailure {
 async function readAndDiscard(uri: string): Promise<ArrayBuffer> {
     const file = new File(uri);
     const bytes = await file.arrayBuffer();
-    // A clip is spent the moment it is read; leaving it would collect one
-    // recording per entry in the cache directory.
     try {
         file.delete();
     } catch {
-        // The cache is the OS's to sweep; a leftover clip costs nothing but bytes.
+        // The OS sweeps the cache; a leftover clip costs only bytes.
     }
     return bytes;
 }
 
-/**
- * The listen → send → review loop behind the voice screen, on one agent thread.
- *
- * Listening starts on mount: the screen exists to hear one sentence, so the
- * first thing it does is ask. The thread opens in parallel and the first clip
- * waits for it. Every clip after that is another turn on the same thread, so
- * "no, that was yesterday" reaches the model with the draft it corrects.
- *
- * The meter runs on a timer rather than through `useAudioRecorderState`,
- * which would re-render the screen twenty times a second for a number that
- * only moves the orb; the level goes into a shared value instead.
- *
- * The draft is never returned by the send: it arrives through the turns
- * query, as the `proposeDraft` output on the assistant message at the order
- * the send reported. One path for the first draft and every correction.
- *
- * Must render inside the Convex provider, which the root layout mounts only
- * for a signed-in session; the screen gates on that before rendering this.
- */
+// Must render inside the Convex provider. The meter polls into a shared value because `useAudioRecorderState` would
+// re-render the screen twenty times a second.
 export function useVoiceEntry<Context>({
     context,
     request,
@@ -187,11 +140,9 @@ export function useVoiceEntry<Context>({
     /** Bumped by every cancel/listenAgain so a stop racing a start cannot land on the wrong take. */
     const takeRef = useRef(0);
     const meterRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    /** The take whose stop is already under way, so nothing ends it twice. */
     const endingRef = useRef<number | null>(null);
     const sentRef = useRef<ArrayBuffer | null>(null);
     const threadRef = useRef<string | null>(null);
-    /** The clip already resent once on a fresh thread; a second `invalid` is a real failure. */
     const resentRef = useRef<ArrayBuffer | null>(null);
     const disposedRef = useRef(false);
     const lastOrderRef = useRef(-1);
@@ -216,10 +167,7 @@ export function useVoiceEntry<Context>({
 
     const endTake = useCallback(
         async (take: number, outcome: "send" | "silent" | "discard") => {
-            // Claimed before the first await: a second tap on the orb, or the
-            // silence timer firing under one, would otherwise race this call
-            // for one recorder and one file and could turn a good clip into a
-            // silent failure.
+            // Claimed before the first await: a second tap or the silence timer would race this for one recorder.
             if (endingRef.current === take) {
                 return;
             }
@@ -230,11 +178,8 @@ export function useVoiceEntry<Context>({
                 await recorder.stop();
                 ({ uri } = recorder);
             } catch {
-                // A recorder that never started, or one the screen's unmount
-                // already released, throws here; there is no clip either way.
+                // Never started, or already released by unmount: no clip either way.
             }
-            // A discard, or a take retired while the recorder was stopping (the
-            // screen closed under it): the clip is spent either way.
             if (outcome === "discard" || take !== takeRef.current) {
                 if (uri) {
                     await readAndDiscard(uri).catch(() => null);
@@ -262,23 +207,12 @@ export function useVoiceEntry<Context>({
         [recorder, stopMeter]
     );
 
-    /**
-     * The microphone was already open when the thread failed to: stop it and
-     * retire the take, so the silence timer cannot report on a clip that has
-     * nowhere to go and a retry starts from a released recorder.
-     */
     const abandonTake = useCallback(() => {
         const take = takeRef.current;
         takeRef.current += 1;
         void endTake(take, "discard");
     }, [endTake]);
 
-    /**
-     * Opens the thread the clips will land on. Called on mount, and again by
-     * `listenAgain` when the first attempt failed, so a retry after an outage
-     * is a retry and not a clip with nowhere to go. `disposedRef` is the
-     * unmount, which turns a late-arriving thread into an immediate `end`.
-     */
     const openThread = useCallback(async () => {
         let opened: StartThreadResult;
         try {
@@ -291,7 +225,6 @@ export function useVoiceEntry<Context>({
             return;
         }
         if (disposedRef.current) {
-            // The screen closed before the thread opened; nothing was said on it.
             if (opened.threadId !== null) {
                 await api.end(opened.threadId).catch(() => null);
             }
@@ -309,7 +242,6 @@ export function useVoiceEntry<Context>({
         }
     }, [abandonTake, api]);
 
-    /** Forgets the current thread so the next clip waits for a fresh one. */
     const dropThread = useCallback(() => {
         const id = threadRef.current;
         threadRef.current = null;
@@ -321,8 +253,6 @@ export function useVoiceEntry<Context>({
 
     useEffect(() => {
         disposedRef.current = false;
-        // Deferred a tick, as the microphone start is: the effect body sets no
-        // state itself, and the thread's outcome arrives from the network.
         void Promise.resolve().then(() => (disposedRef.current ? undefined : openThread()));
         return () => {
             disposedRef.current = true;
@@ -336,10 +266,6 @@ export function useVoiceEntry<Context>({
     const startTake = useCallback(async () => {
         takeRef.current += 1;
         const take = takeRef.current;
-        // The phase moves only after the first await, so a mount effect calling
-        // this sets no state synchronously; "starting" is the initial phase.
-        // Only an undecided permission shows a prompt, and only that trip out is
-        // announced to the app lock.
         const current = await getRecordingPermissionsAsync();
         const permission = current.granted ? current : await duringHandoff(requestRecordingPermissionsAsync);
         if (take !== takeRef.current) {
@@ -384,21 +310,14 @@ export function useVoiceEntry<Context>({
     }, [endTake, level, recorder]);
 
     useEffect(() => {
-        // Deferred a tick so the effect body itself sets no state: the microphone
-        // is the external system here, and the phase changes arrive from it.
         let disposed = false;
         void Promise.resolve().then(() => (disposed ? undefined : startTake()));
         return () => {
             disposed = true;
             takeRef.current += 1;
             stopMeter();
-            // Nothing is asked of the recorder here: `useAudioRecorder`'s own
-            // cleanup has already released the native object by the time this
-            // runs, and even reading `isRecording` on a released shared object
-            // throws. Releasing it is what stops the recording.
+            // Never touch the recorder here: `useAudioRecorder` already released it, and reading `isRecording` throws.
         };
-        // Runs once in practice: the recorder is one shared object for the
-        // screen's life and both callbacks close over stable values only.
     }, [startTake, stopMeter]);
 
     useEffect(() => {
@@ -419,9 +338,7 @@ export function useVoiceEntry<Context>({
                     return;
                 }
                 if (settled === "timeout") {
-                    // The request may still land a draft on this thread after
-                    // the screen gave up on it; a retry must not speak into a
-                    // thread with an answer nobody saw. Start the next one clean.
+                    // The request may still land a draft on this thread, so a retry must not speak into it.
                     dropThread();
                     setPhase({ kind: "failed", reason: "timeout", transcript: null });
                     return;
@@ -436,10 +353,7 @@ export function useVoiceEntry<Context>({
                 if (settled.status === "invalid") {
                     const resent = resentRef.current === clip;
                     if (!resent) {
-                        // The thread expired under the screen (the server sweeps one
-                        // idle for an hour). Open another and let this effect send the
-                        // same clip again when its id lands; a correction on it will
-                        // read as a new sentence, which is the honest outcome.
+                        // The server sweeps threads idle for an hour: resend this clip once on a fresh thread.
                         resentRef.current = clip;
                         sentRef.current = null;
                         setPhase({ after: -1, clip, kind: "sending" });
@@ -457,9 +371,6 @@ export function useVoiceEntry<Context>({
         })();
     }, [api, context, dropThread, openThread, phase, request, threadId]);
 
-    // The answer to a sent turn is read off the thread, not set by an effect:
-    // the phase says which order it is waiting on, and the messages say
-    // whether that order has been answered yet.
     const settledPhase = useMemo<VoicePhase<Context>>(() => {
         if (phase.kind !== "thinking") {
             return phase;

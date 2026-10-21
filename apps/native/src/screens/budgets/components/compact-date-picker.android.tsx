@@ -14,13 +14,7 @@ import type { CompactDatePickerProps } from "./compact-date-picker";
 
 export type { CompactDatePickerProps } from "./compact-date-picker";
 
-/**
- * The day as a read-only outlined field that opens the Material date dialog.
- *
- * Every caller mounts this on the tap that asked for a date, so the dialog
- * opens with it; the field stays to reopen it. The dialog closes on a pick or
- * a dismiss. Material editors use `OutlinedDateField` instead.
- */
+/** Mount it on the tap that asked for a date: the dialog opens with it, and the field stays to reopen it. */
 export function CompactDatePicker({ label, onChange, onDismiss, range, value }: CompactDatePickerProps) {
     const m3 = useMaterialColors();
     const { language } = useLanguage();

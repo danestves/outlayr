@@ -1,8 +1,4 @@
-/**
- * Longest pattern first, so "bbva provincial" is reached before "bbva" and
- * "banco santander" before "santander": a more specific name must not be
- * answered by a shorter one it happens to contain.
- */
+// Longest pattern first, so "bbva provincial" is reached before the shorter "bbva" it contains.
 export function buildPatternIndex<T extends { readonly patterns: readonly string[] }>(
     entries: readonly T[]
 ): ReadonlyMap<string, T> {
@@ -16,7 +12,6 @@ export function buildPatternIndex<T extends { readonly patterns: readonly string
     return new Map(ranked.map(({ pattern, entry }) => [pattern, entry]));
 }
 
-/** Whether `needle` appears in `haystack` as a run of whole tokens. */
 export function containsTokenSequence(haystack: readonly string[], needle: readonly string[]): boolean {
     return needle.length > 0 && ` ${haystack.join(" ")} `.includes(` ${needle.join(" ")} `);
 }

@@ -12,14 +12,7 @@ import type { Category, CategoryWithChildren } from "@/data/categories-core";
 import { useTranslation } from "@/i18n/context";
 import { useColors } from "@/theme/use-colors";
 
-/**
- * Drag-to-reorder for one namespace of the category tree on Android, saved
- * through the same `categoriesRepo.reorder` the iOS edit-mode list calls.
- *
- * As on iOS, each list is one level of the tree: the parents, then each
- * parent's subcategories under its own eyebrow. A row moves within its list
- * only, so a drag never promises a re-parenting the write cannot make.
- */
+/** Within its own list only: the write cannot re-parent. */
 export function CategoryReorder({ income }: { income: boolean }) {
     const db = useDatabase();
     const t = useTranslation();

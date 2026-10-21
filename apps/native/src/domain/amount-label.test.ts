@@ -12,10 +12,6 @@ const es: TranslateFn = (key, params) => translate(key, { catalog: CATALOGS.es, 
 
 const USD = { amount: 1240.5, code: "USD" };
 
-/**
- * A row separates money in from money out with a `+`/`-` glyph and a hue, and a
- * screen reader conveys neither. The direction has to be a word in the name.
- */
 describe("rowAmountLabel states the direction in words", () => {
     it("names income", () => {
         expect(rowAmountLabel({ ...USD, income: true }, en)).toMatch(/Income/);
@@ -37,7 +33,6 @@ describe("rowAmountLabel carries the figure it labels", () => {
 
     it("uses the row's own currency, not a fixed one", () => {
         expect(rowAmountLabel({ amount: 12, code: "EUR", income: false }, en)).toMatch(/€12\.00/);
-        // A zero-minor-unit code has no fraction to read out at all.
         expect(rowAmountLabel({ amount: 1240, code: "JPY", income: false }, en)).toBe("Expense ¥1,240");
     });
 
@@ -46,10 +41,6 @@ describe("rowAmountLabel carries the figure it labels", () => {
         expect(rowAmountLabel({ ...USD, income: false, showCents: false }, en)).toBe("Expense $1,240");
     });
 
-    /**
-     * `income` is the direction of record, so a stored magnitude that happens to be
-     * negative must not smuggle a second, contradicting sign into the sentence.
-     */
     it("never doubles the sign for a negative magnitude", () => {
         expect(rowAmountLabel({ amount: -1240.5, code: "USD", income: false }, en)).toBe(
             rowAmountLabel({ amount: 1240.5, code: "USD", income: false }, en)

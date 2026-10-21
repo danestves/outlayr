@@ -18,11 +18,7 @@ const IMPACT = {
     medium: AndroidHaptics.Context_Click,
 } as const;
 
-/**
- * Android names its haptics after the gesture, so a key press and a selection
- * tick part ways here. Constants newer than the device fall back to the
- * closest one every version has.
- */
+/** Constants newer than the device fall back to the closest one every version has. */
 function androidHapticFor(play: HapticPlay, event: HapticEvent, api: number): AndroidHaptics {
     switch (play.kind) {
         case "selection": {
@@ -54,11 +50,7 @@ function useHapticsLevel(): number | null {
     return db === null ? null : level;
 }
 
-/**
- * The same events and setting as iOS, played through the system's haptic
- * constants. `impactAsync` and `notificationAsync` fall back to timed Vibrator
- * patterns on Android, which buzz rather than tap.
- */
+/** `impactAsync` and `notificationAsync` fall back to timed Vibrator patterns on Android, which buzz, not tap. */
 export const useHaptics: typeof iosUseHaptics = () => {
     const level = useHapticsLevel();
 
@@ -71,7 +63,6 @@ export const useHaptics: typeof iosUseHaptics = () => {
             if (play === null) {
                 return;
             }
-            // Fire-and-forget, as on iOS: a haptic the device can't play stays silent.
             performAndroidHapticsAsync(androidHapticFor(play, event, Number(Platform.Version))).catch(() => undefined);
         },
         [level]

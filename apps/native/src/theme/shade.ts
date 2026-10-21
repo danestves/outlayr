@@ -1,7 +1,4 @@
-/**
- * Converts a `#RRGGBB` (or `#RGB`) hex to an `rgba()` string at the given alpha.
- * Falls back to the raw input on a malformed hex.
- */
+/** Falls back to the raw input on a malformed hex. */
 export function withAlpha(hex: string, alpha: number): string {
     const parsed = parseHex(hex);
     if (!parsed) {
@@ -11,10 +8,6 @@ export function withAlpha(hex: string, alpha: number): string {
     return `rgba(${parsed.r}, ${parsed.g}, ${parsed.b}, ${clamped})`;
 }
 
-/**
- * Pastelizes a tint the way the Swift `CategoryTileShading.curtain` does.
- * Returns `#RRGGBB`; falls back to the input on a malformed hex.
- */
 function byteToHex(v: number): string {
     return Math.round(Math.max(0, Math.min(255, v)))
         .toString(16)
@@ -30,40 +23,26 @@ export function curtainShade(hex: string, isDark: boolean): string {
     return `#${byteToHex(mix(parsed.r))}${byteToHex(mix(parsed.g))}${byteToHex(mix(parsed.b))}`;
 }
 
-/** `CategoryTileShading.washOpacity` — the tint's alpha behind a category glyph. */
+/** `CategoryTileShading.washOpacity`: the tint's alpha behind a category glyph. */
 export const TILE_WASH_OPACITY = 0.22;
-/** `CategoryTileShading.targetContrast` — WCAG graphics minimum, with headroom. */
+/** `CategoryTileShading.targetContrast`: WCAG graphics minimum, with headroom. */
 const TARGET_CONTRAST = 3.5;
 
 /** Normalized sRGB triple, each channel 0–1. */
 export type Rgb = readonly [number, number, number];
 
-/**
- * `--background` in each theme, normalized. Restated here rather than read from
- * `useColors` because this runs mid-bisection on a worklet-free hot path and
- * takes no hook; `token-contrast.test.ts` is what keeps the pair honest.
- */
+/** Restated, not from `useColors`: no hook mid-bisection. `token-contrast.test.ts` keeps it honest. */
 const PAPER_GROUND: Rgb = [0.949, 0.941, 0.918];
 const DARK_GROUND: Rgb = [0.09, 0.082, 0.059];
 
-/**
- * Derives a legible glyph shade from any category tint, porting Swift's
- * `CategoryTileShading.glyph`. The tint is composited over the sheet at
- * {@link TILE_WASH_OPACITY} to get the wash the glyph actually sits on, then
- * shaded toward ink (or paper, whichever contrasts more) by the smallest amount
- * that clears {@link TARGET_CONTRAST} — found by bisection, exactly as Swift does.
- *
- * A tint that already clears the target is returned untouched.
- */
+/** Ports Swift's `CategoryTileShading.glyph`, bisecting exactly as Swift does. */
 export function glyphShade(hex: string, isDark: boolean): string {
     const parsed = parseHex(hex);
     if (!parsed) {
         return hex;
     }
     const tint: Rgb = [parsed.r / 255, parsed.g / 255, parsed.b / 255];
-    // The theme's own grounds, not the iOS greys these used to approximate: a
-    // wash composited over the wrong sheet targets a contrast the tile never
-    // actually has.
+    // The theme's own grounds, or the target contrast is one the tile never has.
     const sheet: Rgb = isDark ? DARK_GROUND : PAPER_GROUND;
     const wash = mixRgb(tint, sheet, 1 - TILE_WASH_OPACITY);
 

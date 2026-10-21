@@ -5,12 +5,7 @@ import { unusedDatabase as mockUnusedDatabase } from "@/db/test-database";
 import type { WidgetProps } from "./props";
 import { publishWidgets } from "./publish";
 
-/**
- * Every widget the build declares gets a fresh timeline or snapshot from one
- * publish. Removing a widget's import and its update call from `publish.ts`
- * together would pass lint and tsc and leave an installed tile stale; this is
- * the one place that notices.
- */
+/** Catches a widget whose import and update call were removed together, leaving its tile stale. */
 jest.mock("./budget", () => ({ __esModule: true, default: { updateTimeline: jest.fn() } }));
 jest.mock("./insights", () => ({ __esModule: true, default: { updateSnapshot: jest.fn() } }));
 jest.mock("./ledger", () => ({ __esModule: true, default: { updateSnapshot: jest.fn() } }));
@@ -31,8 +26,7 @@ const updates = {
 };
 
 const mockProps: WidgetProps = {
-    // SAFETY: only the fields publishWidgets reads on its way to the update
-    // calls; the tiles never render here.
+    // SAFETY: only the fields publishWidgets reads on its way to the update calls.
     Budget: { views: { auto: { present: false } } } as unknown as WidgetProps["Budget"],
     categories: [],
     currency: "USD",

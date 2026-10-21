@@ -9,15 +9,8 @@ import { readReminderTime } from "./reminder-sync";
 import { cancelReminders, pendingReminderIds, reminderPermission, scheduleDatedReminder } from "./reminders";
 
 /**
- * Reconciles iOS's pending queue with the subscriptions that asked to be
- * announced. Every arm is recomputed from the ledger rather than trusted: a
- * chain's next landing moves each time a charge is backfilled, and a restore
- * carries the rows across but not the requests.
- *
- * Cancellation runs whatever the switch says, so turning it off — or deleting
- * the subscription behind a pending notice — actually silences iOS. Only
- * identifiers inside the subscription namespace are touched; the daily reminder
- * is a different setting's promise.
+ * Every arm is recomputed from the ledger: a chain's next landing moves on each backfill, and a restore carries
+ * the rows but not the requests. Cancellation runs whatever the switch says, so turning it off silences iOS.
  */
 export function syncSubscriptionReminders(db: Database): Promise<void> {
     const run = queue.then(() => reconcileSubscriptionReminders(db));
@@ -27,16 +20,7 @@ export function syncSubscriptionReminders(db: Database): Promise<void> {
     return run;
 }
 
-/**
- * Reconciles run one at a time. `BackgroundWork` asks on every launch and
- * foreground, once the recurrence sweep has moved the landings, and after a
- * setting changes; the transaction form and the voice entry ask after their
- * own writes. Two overlapping passes interleave their cancels and schedules, so
- * one can cancel a request the other has just armed.
- *
- * `catch` keeps the chain alive: without it a single failed pass would wedge
- * every later one behind a permanently rejected promise.
- */
+/** One pass at a time: overlapping passes interleave cancels and schedules, so one can cancel what the other armed. */
 let queue: Promise<unknown> = Promise.resolve();
 
 async function reconcileSubscriptionReminders(db: Database): Promise<void> {

@@ -7,10 +7,7 @@ import { monthAbbrevTitle } from "./dates";
 
 export type CursorUnit = "day" | "week" | "month";
 
-/**
- * The Log fetches a day on an exact `day` value and a week or month on its first
- * instant, so a cursor that isn't normalized quietly returns nothing at all.
- */
+// The Log matches a day exactly and longer units on their first instant, so an unnormalized cursor finds nothing.
 export function cursorStart(unit: CursorUnit, date: Date, firstWeekday = 1): Date {
     switch (unit) {
         case "day": {
@@ -29,7 +26,6 @@ export function cursorStart(unit: CursorUnit, date: Date, firstWeekday = 1): Dat
     }
 }
 
-/** The first instant *after* the unit the cursor names. */
 export function cursorEnd(unit: CursorUnit, date: Date, firstWeekday = 1): Date {
     const start = cursorStart(unit, date, firstWeekday);
     switch (unit) {
@@ -55,12 +51,10 @@ export function stepCursor(unit: CursorUnit, date: Date, count: number, firstWee
     return cursorStart(unit, moved, firstWeekday);
 }
 
-/** False once the next step would land in the future — nothing is logged there. */
 export function canStepForward(unit: CursorUnit, date: Date, now: Date, firstWeekday = 1): boolean {
     return stepCursor(unit, date, 1, firstWeekday).getTime() <= now.getTime();
 }
 
-/** "25 Jul 2026" / "19 Jul – 25 Jul" / "Jul 2026", per Swift's `Unit.dateFormat`. */
 export function cursorLabel(
     unit: CursorUnit,
     date: Date,

@@ -16,11 +16,7 @@ describe("merchantKnowledge visibility (T5)", () => {
         expect(exported.length).toBeGreaterThan(0);
         for (const [name, fn] of exported) {
             const flags = fn as { isPublic?: boolean; isInternal?: boolean };
-            // `isPublic`/`isInternal` are the real flags Convex's registration
-            // stamps on the returned handler (query/mutation vs internalQuery/
-            // internalMutation) — asserting against `api.merchantKnowledge` at
-            // runtime cannot catch this, because the generated `api` object is
-            // an untyped `anyApi` proxy that resolves any property access.
+            // The generated `api` is an `anyApi` proxy, so only these registration flags can catch a public function.
             expect(flags.isPublic, `${name} must not be public`).not.toBeTruthy();
             expect(flags.isInternal, `${name} must be internal`).toBeTruthy();
         }

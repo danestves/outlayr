@@ -23,7 +23,6 @@ import type { Language } from "@/i18n/languages";
 import { BudgetBurndownChart } from "./budget-burndown-chart";
 import { BudgetDaySlots } from "./budget-day-slots";
 
-/** How far the chart reaches past the screen's text gutter. */
 const BLEED = 8;
 
 interface BudgetBurndownHeroProps {
@@ -31,19 +30,15 @@ interface BudgetBurndownHeroProps {
     burndown: Burndown | null;
     contributions: readonly ExpenseContribution[];
     currency: string;
-    /** Name and share of the category that took most of the window, when there is one. */
     dominant?: { name: string; share: number } | null;
-    /** `Date.now()` from the screen, so the clock tracks the same instant as spend. */
     nowMs: number;
     onPress: () => void;
 }
 
-/** The one face in the app that is neither the rounded sans nor the mono. */
 const SERIF = "InstrumentSerif_400Regular";
 
 const CHART_HEIGHT = 168;
 
-/** "23 Jul". */
 function formatDayMonth(date: Date, language: Language): string {
     return `${date.getDate()} ${monthAbbrev(date, language)}`;
 }
@@ -78,13 +73,9 @@ export function BudgetBurndownHero({
     const over = balance < 0;
     const scrubLabel = scrubbed ? formatDayMonth(dayDate(budget.window.start, scrubbed.day), language) : null;
 
-    // Already crossed zero is not the same question as will it, so both are asked.
     const projected = burndown?.projectedBalance ?? null;
     const endsShort = projected != null && projected < 0;
     const balanceLabel = formatAmount(Math.abs(balance), currency, showCents, language);
-    // A day's allowance while the window still holds one. Over budget the hero is
-    // already stating the overage, and a third cell repeating it is a figure
-    // twice rather than a measure more.
     const perDay = budget.leftover < 0 ? null : leftPerDay(budget.leftover, budget.window, now);
     const measures: MeasureStripCell[] = [
         {
@@ -126,10 +117,8 @@ export function BudgetBurndownHero({
 
     return (
         <View>
-            {/* A tap gesture rather than a Pressable: the chart inside runs its own
-			    pan, and RN's touch responder and RNGH cannot arbitrate between them —
-			    the pan claims every touch and the card stops opening. Two gestures in
-			    one system sort themselves out, pan on movement, tap on stillness. */}
+            {/* A tap gesture, not a Pressable: RN's responder cannot arbitrate with the chart's RNGH pan,
+                which would claim every touch and stop the card opening. */}
             <GestureDetector gesture={openDetail}>
                 <View
                     accessibilityLabel={
@@ -191,10 +180,7 @@ export function BudgetBurndownHero({
                         />
                     ) : null}
 
-                    {/* The head's measures. What the limit is, what the window has taken
-					    and what a day still holds, ruled like the Log's own head. The
-					    runway used to sit here as a second mono label; the verdict below
-					    already says it in a sentence. */}
+                    {/* Ruled like the Log's own head. */}
                     <View className="pt-3.5">
                         <MeasureStrip cells={measures} className="border-b-0" />
                     </View>
@@ -246,8 +232,7 @@ function HeroVerdict({
         return null;
     }
 
-    // The one place the app speaks rather than labels. A share under a fifth is
-    // not a culprit, so the second clause only earns its place above that.
+    // A share under a fifth is not a culprit.
     const blame =
         dominant && dominant.share >= 0.2
             ? t("budgets.hero.verdictBlame", { name: dominant.name, percent: Math.round(dominant.share * 100) })
@@ -256,8 +241,7 @@ function HeroVerdict({
     return (
         <Text
             className="text-foreground text-title px-1 pt-4 leading-snug"
-            // Set directly rather than through a `font-serif` class: uniwind's theme
-            // already ships a `--font-serif`, and the generic stack wins over ours.
+            // Not a `font-serif` class: uniwind's theme already ships a `--font-serif`, and its generic stack wins.
             style={{ fontFamily: SERIF }}
         >
             {sentence}

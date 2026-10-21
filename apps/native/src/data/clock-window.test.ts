@@ -66,7 +66,6 @@ async function save(db: TestDb, id: string, date: Date): Promise<void> {
     });
 }
 
-/** What the Log lists at a given reading of the clock. */
 async function listedAt(db: TestDb, nowMs: number): Promise<string[]> {
     const dayRows = await logWindowDaysQuery(db, nowMs, 30);
     const floorMs = dayRows.at(-1)?.day?.getTime() ?? null;

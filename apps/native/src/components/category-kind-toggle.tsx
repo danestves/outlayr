@@ -9,10 +9,6 @@ export interface CategoryKindToggleProps {
     onChange: (income: boolean) => void;
 }
 
-/**
- * The Expense/Income switch over the category tree: a SwiftUI segmented
- * picker, sized for the bottom toolbar it sits in.
- */
 export function CategoryKindToggle({ income, onChange }: CategoryKindToggleProps) {
     const t = useTranslation();
     return (

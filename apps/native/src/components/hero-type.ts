@@ -7,9 +7,4 @@ interface HeroType {
     scale: number;
 }
 
-/**
- * How a headline amount (the Log's and Insights' hero) is set beyond its
- * classes. Nothing on iOS, which draws it in the body face at the call site's
- * size; `hero-type.android.ts` is Direction B's Instrument Serif.
- */
 export const HERO_TYPE: HeroType = { face: {}, scale: 1 };

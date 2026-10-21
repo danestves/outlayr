@@ -9,28 +9,20 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import { StageOptionRow } from "./stage-options";
 import type { StageOptionItem } from "./stage-options";
 
-/** The schedule line's face. 20/32 has no token pair — `text-title` is 20/26. */
+// 20/32 has no token pair: `text-title` is 20/26.
 const LINE = "font-sans-medium text-[20px] leading-[32px]";
 
-/**
- * This face and the sentence's 26/38 both leave 12pt of leading, so the rule
- * clears the descenders at the offset the sentence measured.
- */
+// This face and the sentence's 26/38 both leave 12pt of leading, so the sentence's measured offset clears descenders.
 const RULE_BOTTOM = 7;
 
-/**
- * The leads the stage offers, as the design names them. `REMINDER_LEAD_OPTIONS`
- * also carries three days, which this row leaves out — a lead outside the list
- * is appended rather than dropped, so a subscription restored from another
- * device never renders a row with nothing selected.
- */
+// Leaves out the three days `REMINDER_LEAD_OPTIONS` carries; a lead outside the list is appended, so a subscription
+// restored from another device never renders with nothing selected.
 const LEAD_OPTIONS: readonly (number | null)[] = [null, 0, 1, 2, 7];
 
 const CUSTOM_OPTION = "custom";
 
 const LEAD_OFF_OPTION = "off";
 
-/** Null is the one lead with no number to name it. */
 const leadOptionId = (lead: number | null): string => (lead === null ? LEAD_OFF_OPTION : String(lead));
 
 interface ScheduleValueProps {
@@ -38,11 +30,7 @@ interface ScheduleValueProps {
     value: string;
 }
 
-/**
- * A settled value on the schedule line, drawn as the sentence draws its own.
- * Not `SentenceValue`: that one reads its face out of `useSentenceStyle` and
- * renders only inside a `<Sentence>`, and this line is neither.
- */
+// Not `SentenceValue`: that reads its face from `useSentenceStyle` and renders only inside a `<Sentence>`.
 function ScheduleValue({ onPress, value }: ScheduleValueProps) {
     return (
         <Pressable accessibilityLabel={value} accessibilityRole="button" onPress={onPress}>
@@ -57,23 +45,14 @@ function ScheduleValue({ onPress, value }: ScheduleValueProps) {
 }
 
 interface StepRepeatProps {
-    /** The stored `recurringType`; `RECURRING_TYPE.none` leaves the row unselected. */
     cadence: number;
-    /** The host's own interval is in force, which is what "custom" states. */
     custom?: boolean;
-    /** Names that interval — an "every 3 weeks" phrase — in place of the plain "Custom…". */
     customLabel?: string;
-    /** Null while the schedule runs forever. */
     endDate: Date | null;
-    /**
-     * The words the line reads around its values. No catalog key states them
-     * yet, so they arrive from the host rather than being minted here.
-     */
     labels: { ending: string; endingOpen: string; openEnd: string; starting: string };
     /** Days ahead of a charge; null is off. */
     leadDays: number | null;
     onCadenceChange: (type: number) => void;
-    /** Opens the host's interval sheet. */
     onCustomPress: () => void;
     onEndDatePress: () => void;
     onLeadChange: (lead: number | null) => void;
@@ -81,11 +60,6 @@ interface StepRepeatProps {
     startDate: Date;
 }
 
-/**
- * The stage's repeat step. States the whole schedule in the sentence's own
- * vocabulary — options and one running line — rather than the grouped rows the
- * sentence replaced.
- */
 export function StepRepeat({
     cadence,
     custom = false,
@@ -104,8 +78,6 @@ export function StepRepeat({
     const { language } = useLanguage();
 
     const cadences: StageOptionItem<string>[] = SELECTABLE_RECURRING_TYPES.map((type) => ({
-        // The id is the stored `recurringType` as a string; `CUSTOM_OPTION` is
-        // the host's own interval, which has no type of its own.
         id: String(type),
         label: cadenceLabel(t, type),
     }));
@@ -137,9 +109,7 @@ export function StepRepeat({
                 selectedId={custom ? CUSTOM_OPTION : String(cadence)}
             />
 
-            {/* The comma and the full stop are punctuation rather than copy: both
-                languages this app ships write the line the same way around the two
-                words the host passes in. */}
+            {/* The comma and full stop are punctuation, not copy: both shipped languages place them the same way. */}
             <View className="flex-row flex-wrap items-baseline" testID="stage-repeat-line">
                 <Text className={`${LINE} text-grammar`}>{`${labels.starting} `}</Text>
                 <ScheduleValue onPress={onStartDatePress} value={formatSentenceDate(startDate, language)} />

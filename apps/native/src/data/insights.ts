@@ -19,10 +19,8 @@ import type { SpendDb } from "./budget-spent";
 import { NO_VALUATION } from "./valuation-source";
 import type { Valuation } from "./valuation-source";
 
-/** Mirrors the Swift `ChartTimeFrame`. */
 export type InsightsPeriod = "week" | "month" | "year";
 
-/** Mirrors the Swift `LogMeasure`. */
 export type InsightsMeasure = "spent" | "income" | "net";
 
 const FALLBACK_CATEGORY_COLOR = "#767676";
@@ -69,10 +67,7 @@ interface BucketRange {
     start: Date;
 }
 
-/**
- * Windows are calendar-anchored, not trailing: a week runs from its
- * `firstWeekday`, a month from its `firstDayOfMonth`, a year from January.
- */
+// Calendar-anchored, not trailing: a week from `firstWeekday`, a month from `firstDayOfMonth`, a year from January.
 export function windowStart(
     period: InsightsPeriod,
     now: Date,
@@ -100,10 +95,7 @@ export function windowEnd(
     return windowStart(period, now, offset + 1, calendar);
 }
 
-/**
- * Oldest first. Every slot is present even when it is still in the future — the
- * chart dims those rather than omitting them.
- */
+// Every slot is present even when still in the future: the chart dims those rather than omitting them.
 export function bucketRanges(
     period: InsightsPeriod,
     now: Date,
@@ -137,7 +129,6 @@ export function bucketRanges(
     return ranges;
 }
 
-/** The divisor behind every "per day" / "per month" figure. */
 export function elapsedSlots(
     period: InsightsPeriod,
     now: Date,
@@ -167,7 +158,6 @@ function measureValue(income: boolean, amount: number, measure: InsightsMeasure)
     }
 }
 
-/** Future rows (`date > now`) are dropped. */
 export function bucketSeries(
     rows: readonly InsightsContribution[],
     period: InsightsPeriod,
@@ -207,7 +197,6 @@ export function bucketSeries(
     return buckets;
 }
 
-/** What `net` is charted as, rather than the per-slot flow. */
 export function runningTotals(buckets: readonly InsightsBucket[]): number[] {
     const totals: number[] = [];
     let carried = 0;
@@ -303,20 +292,13 @@ export function categoryBreakdownWithin(
 }
 
 export interface CategoryBreakdownEntry {
-    /** Positive magnitude summed across the category and its subcategories. */
     amount: number;
     color: string;
-    /**
-     * Change against the same window one period earlier, as a fraction of the
-     * prior amount; null when there is no prior amount to compare against.
-     * Filled by {@link withCategoryDeltas}, not by the breakdown itself.
-     */
+    /** Fraction of the prior window's amount, null with none. Filled by {@link withCategoryDeltas}. */
     delta: number | null;
     emoji: string | null;
-    /** `amount` ÷ breakdown total, in [0, 1]. */
     fraction: number;
     icon: string | null;
-    /** Top-level category id. */
     id: string;
     name: string;
 }
@@ -337,10 +319,9 @@ export function withCategoryDeltas(
 
 export interface CategoryMover {
     color: string;
-    /** Signed change in currency. Positive means more flowed this window. */
+    /** Signed, in currency: positive means more flowed this window. */
     delta: number;
     emoji: string | null;
-    /** `delta` ÷ the prior amount, or null for a category that is simply new. */
     fraction: number | null;
     icon: string | null;
     id: string;
@@ -381,8 +362,6 @@ export function categoryMovers(
         });
     }
 
-    // A category that stopped entirely cannot be found by walking the current
-    // window, which no longer has it.
     const currentIds = new Set(current.map((entry) => entry.id));
     for (const entry of prior) {
         if (currentIds.has(entry.id) || entry.amount < floor) {
@@ -403,7 +382,6 @@ export function categoryMovers(
     return movers.slice(0, MOVER_LIMIT);
 }
 
-/** Both sides of one window, each already a positive magnitude. */
 export interface WindowTotals {
     income: number;
     spent: number;
@@ -437,11 +415,7 @@ export function windowTotals(
     return { income, spent };
 }
 
-/**
- * Includes a "Direct" entry, keyed on `parentId` itself, for transactions filed
- * on the parent rather than a child. Mirrors the Swift
- * `HorizontalPieChartView.childrenBreakdown`.
- */
+// Includes a "Direct" entry keyed on `parentId` for rows filed on the parent itself.
 export function subcategoryBreakdown(
     rows: readonly InsightsContribution[],
     categoriesById: ReadonlyMap<string, CategoryMeta>,
@@ -541,10 +515,6 @@ function dayMonth(date: Date, language: Language): string {
     return `${date.getDate()} ${monthAbbrevTitle(date, language)}`;
 }
 
-/**
- * Matches `SingleGraphView.dateString`: "9 - 15 Jul" (or "29 Jun - 5 Jul"
- * across a month boundary), "Jul 2025", "2025".
- */
 export function windowLabel(
     period: InsightsPeriod,
     offset: number,
@@ -569,7 +539,6 @@ export function windowLabel(
     return String(start.getFullYear());
 }
 
-/** Swift `PagedGraphView` formats: "8 Jul", "Jun 25", "2024". */
 export function windowShortLabel(
     period: InsightsPeriod,
     offset: number,
@@ -587,7 +556,6 @@ export function windowShortLabel(
     return String(start.getFullYear());
 }
 
-/** "12 Jul 2025" for a day, "Jul 2025" for a month. */
 export function bucketDateLabel(period: InsightsPeriod, date: Date, language: Language = runtimeLanguage()): string {
     if (period === "year") {
         return `${monthAbbrevTitle(date, language)} ${date.getFullYear()}`;
@@ -595,11 +563,8 @@ export function bucketDateLabel(period: InsightsPeriod, date: Date, language: La
     return `${dayMonth(date, language)} ${date.getFullYear()}`;
 }
 
-/**
- * The reactive hook builds this same query itself; this async form feeds the
- * tests, so the two have to stay in step. Only this form carries `id`, which the
- * widgets look an entry's valued figure up by.
- */
+// The reactive hook builds this same query itself and this async form feeds the tests, so keep them in step. Only this
+// form carries `id`, which the widgets look an entry's valued figure up by.
 export async function loadContributions(
     db: SpendDb,
     now: Date,

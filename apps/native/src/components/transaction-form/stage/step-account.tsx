@@ -13,33 +13,25 @@ import { useTranslation } from "@/i18n/context";
 import { StageOptionRow } from "./stage-options";
 import type { StageOptionItem } from "./stage-options";
 
-/** Four rows of pills — see `step-category.tsx` for why the step scrolls rather than grows. */
+// See `step-category.tsx` for why the step scrolls rather than grows.
 const MAX_LIST_HEIGHT = 176;
 
 const TILE = 22;
 
-/** No account id can collide: they are uuids. */
+// No account id can collide: they are uuids.
 const NONE_OPTION = "__none__";
 const NO_PEOPLE: readonly Account[] = [];
 
 interface StepAccountProps {
     accounts: readonly Account[];
-    /** More options under the accounts and people. */
     after?: ReactNode;
-    /** Offers "None" first: an entry is allowed to sit outside every account. */
     allowNone?: boolean;
     onSelect: (account: Account | null) => void;
-    /** A section after the banks, for money that moved with a person. */
     people?: readonly Account[];
     selectedId: string | null;
 }
 
-/**
- * The stage's account step: one option per account, then the people, or a
- * sentence when there are neither. Creating one is deliberately not a prop:
- * with no bank to pick, the way out is the stage's own footer button, which the
- * host points at its account editor for as long as `accounts` is empty.
- */
+// No create prop on purpose: with no bank to pick, the host points the stage's footer at its account editor.
 export function StepAccount({
     accounts,
     after,

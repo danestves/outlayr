@@ -22,22 +22,15 @@ import { useTransactionRowActions } from "@/lib/use-transaction-row-actions";
 import { MARK_CEILING } from "@/theme/empty-state-ink";
 import { MARK_MOTION, recedeDelay } from "@/theme/mark-motion";
 
-/** Rows mounted before "Show all". A grouped list runs on to the end of that row's day. */
+/** A grouped list runs on to the end of the last row's day. */
 const LIST_CAP = 50;
 
 interface InsightsTransactionListProps {
     currency: string;
-    /** Break the list into day sections with their signed subtotals. */
     grouped?: boolean;
     onPress: (id: string) => void;
     onRequestDelete: (id: string) => void;
-    /**
-     * Row whose delete is waiting out its undo window, hidden from the list. Both
-     * halves of the delete are the owning screen's: the toast that offers the undo
-     * belongs beside its scroll container, not to content inside it, and this list
-     * unmounts the moment the selection driving it is cleared — which would flush
-     * the pending write before the window elapsed.
-     */
+    /** The screen owns the delete: this list unmounts with its selection, which would flush the write early. */
     pendingDeleteId: string | null;
     transactions: TransactionWithCategory[];
 }

@@ -1,11 +1,8 @@
 import { t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
-/**
- * The one question asked before anything goes to Anthropic or ElevenLabs (App Review 5.1.1(i),
- * 5.1.2(i)). Each row has to stay true to what the matching backend action
- * sends, and to the privacy policy's "Suggestions, voice, and receipts".
- */
+// App Review 5.1.1(i), 5.1.2(i): each row must stay true to what the matching backend action sends and to the
+// privacy policy's "Suggestions, voice, and receipts".
 const aiConsent = {
     content: {
         "aiConsent.allow": t({

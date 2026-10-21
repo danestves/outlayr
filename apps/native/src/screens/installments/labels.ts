@@ -5,12 +5,11 @@ import { daysBetween, startOfLocalDay } from "@/domain/local-day";
 import type { TranslateFn } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
 
-/** "Upfront", or "Installment 2 of 3" / "Cuota 2 de 3". */
 export function installmentTitle(t: TranslateFn, row: InstallmentRow, count: number): string {
     return row.sequence === 0 ? t("installments.upfront") : t("installments.cuota", { count, index: row.sequence });
 }
 
-/** "today", "in 6 days"; null once the day has passed, which the row says as Overdue. */
+/** Null once the day has passed. */
 export function dueIn(t: TranslateFn, dueDate: Date, nowMs: number): string | null {
     const days = daysBetween(startOfLocalDay(nowMs), dueDate.getTime());
     if (days < 0) {
@@ -19,11 +18,6 @@ export function dueIn(t: TranslateFn, dueDate: Date, nowMs: number): string | nu
     return days === 0 ? t("common.today").toLowerCase() : t("installments.inDays", { count: days });
 }
 
-/**
- * A schedule row's date line ("1 Nov · in 14 days" on the next one) and the
- * status beside its amount: paid, overdue or how much is in; null while
- * nothing is paid and it is not due yet.
- */
 export function scheduleRowWording(
     t: TranslateFn,
     language: Language,

@@ -24,20 +24,16 @@ function TagSlot() {
 }
 
 interface TagPickerSheetProps {
-    /** Resolves to the tag's id, existing or newly created. */
     onCreate: (name: string) => Promise<string | null>;
     onToggle: (tagId: string) => void;
-    /** Not yet real tags — offered as one-tap create affordances. */
     pendingTagNames?: readonly string[];
     ref?: Ref<BottomSheetModal>;
     selected: readonly string[];
     tags: readonly TagRow[];
 }
 
-/** Present via the forwarded ref: `ref.current?.present()`. */
 const NO_PENDING_TAG_NAMES: string[] = [];
 
-/** The one row that makes a tag, offered both for what was typed and for a pending name. */
 function CreateTagRow({ name, onPress }: { name: string; onPress: () => void }) {
     const colors = useColors();
     const t = useTranslation();
@@ -75,8 +71,7 @@ export function TagPickerSheet({
         return tags.filter((tag) => tag.name.toLocaleLowerCase().includes(needle));
     }, [tags, trimmed]);
 
-    // Offered only when nothing already answers to the name, so the row cannot
-    // mint a near-duplicate of a tag one line below it.
+    // Only when nothing answers to the name, so the row cannot mint a near-duplicate of a tag one line below.
     const canCreate = isUsableTagName(query) && findTagByName(tags, trimmed) === null;
 
     const pendingToOffer = useMemo(
@@ -88,10 +83,8 @@ export function TagPickerSheet({
         [pendingTagNames, tags, trimmed]
     );
 
-    // `canCreate` derives from the `tags` prop, which only changes once the insert
-    // commits — so without this the row stays pressable for the whole write and a
-    // second tap runs `ensureTag`'s check-then-insert again before the first row
-    // is visible to it.
+    // `canCreate` only changes once the insert commits, so without this a second tap reruns `ensureTag`'s
+    // check-then-insert before the first row is visible to it.
     const creating = useRef(false);
     const createTag = (name: string) => {
         if (creating.current) {

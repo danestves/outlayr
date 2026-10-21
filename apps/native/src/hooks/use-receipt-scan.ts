@@ -16,7 +16,6 @@ import { launchPick, pendingPick } from "@/lib/pending-pick";
 import { prepareReceiptImage } from "@/lib/receipt-image";
 import { withTimeout } from "@/lib/with-timeout";
 
-/** The re-encode plus one vision call; past this the network, not the model, is the problem. */
 const REQUEST_TIMEOUT_MS = 30_000;
 
 export type ScanFailure =
@@ -35,50 +34,30 @@ export type ScanFailure =
 
 type ScanSource = "camera" | "library";
 
-/** The photo on screen: the picker's own file, at the size it reported. */
 export interface ScanPhoto {
     height: number;
     uri: string;
     width: number;
 }
 
-/**
- * `Context` is whatever the caller needs to read the draft back in the
- * ledger's terms — the candidates it offered the model, the currency it sent.
- * The review carries the snapshot from when the photo left, because the
- * ledger can change underneath a request in flight.
- */
 type ScanPhase<Context = unknown> =
-    /** Nothing picked yet; the screen offers the camera and the library. */
     | { kind: "idle" }
-    /** The system camera or library is up; the screen waits behind it. */
     | { kind: "picking"; source: ScanSource }
-    /** The photo is chosen and being re-encoded, then read. */
     | { kind: "scanning"; photo: ScanPhoto }
     | { context: Context; draft: ReceiptDraft; kind: "review"; photo: ScanPhoto }
     | { kind: "failed"; photo: ScanPhoto | null; reason: ScanFailure };
 
 interface UseReceiptScanArgs<Context> {
-    /** Snapshotted with the request; the review phase hands it back. */
     context: Context;
-    /**
-     * Everything but the photo and the date, built fresh by the caller each
-     * render. `today` is read when the photo is sent.
-     */
     request: Omit<ScanRequest, "image" | "today">;
-    /** Defaults to the real transport; a fake is for tests. */
     transport?: ReceiptScanFn;
 }
 
 export interface UseReceiptScanResult<Context> {
-    /** Opens the system library. */
     chooseFromLibrary: () => void;
     phase: ScanPhase<Context>;
-    /** Back to the start: no photo, no draft. */
     reset: () => void;
-    /** Reads the last photo again, after a failure that was not the photo's fault. */
     retry: () => void;
-    /** Opens the system camera; on a device without one, fails as `noCamera`. */
     takePhoto: () => void;
 }
 
@@ -108,18 +87,6 @@ function failureFor(status: string): ScanFailure {
     }
 }
 
-/**
- * The pick → read → review loop behind the scan screen.
- *
- * The camera is the system's: `launchCameraAsync` presents the platform
- * capture UI, which already knows about flash, focus and the simulator's lack
- * of a lens. The photo is then re-encoded to the server's size and sent as
- * bytes with the ledger's names; the draft comes straight back.
- *
- * `takeRef` retires a read the screen has moved past — a reset or another
- * pick while a request is in flight — so a late answer cannot land on a
- * photo that is no longer on screen.
- */
 export function useReceiptScan<Context>({
     context,
     request,
@@ -195,9 +162,7 @@ export function useReceiptScan<Context>({
         [read]
     );
 
-    // A photo the picker finished for this screen after Android tore the app
-    // down under it: the launch that asked for it never resolved, so it is
-    // picked up here, on the next visit. Any pick started meanwhile wins.
+    // Android can tear the app down under the picker: that launch never resolves, so its photo is picked up here.
     useEffect(() => {
         const take = takeRef.current;
         pendingPick("receipt-scan")
@@ -240,8 +205,7 @@ export function useReceiptScan<Context>({
                 );
                 adopt(result, take);
             } catch {
-                // The one way the launch itself rejects on iOS is a device with no
-                // camera to present — the simulator, or a broken lens.
+                // On iOS the launch only rejects on a device with no camera (the simulator, or a broken lens).
                 if (take === takeRef.current) {
                     setPhase({ kind: "failed", photo: null, reason: "noCamera" });
                 }
@@ -287,7 +251,6 @@ export function useReceiptScan<Context>({
 
     useEffect(
         () => () => {
-            // The screen is gone; whatever answers now has nowhere to land.
             takeRef.current += 1;
         },
         []

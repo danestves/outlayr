@@ -10,16 +10,8 @@ import { useDecoratedRows } from "./transactions";
 import type { TransactionWithCategory } from "./transactions";
 import type { Transaction } from "./transactions-core";
 
-/**
- * A Log row plus the note's free text. Search matches on it, so a result row
- * carries it and can say so; every other surface keeps the narrower shape.
- */
 export type SearchedTransaction = TransactionWithCategory & Pick<Transaction, "details">;
 
-/**
- * The matching category ids are resolved from the reactive meta map and handed to
- * the query — see {@link searchedTransactionsQuery} for the predicate itself.
- */
 export function useSearchedTransactions(db: Database, query: string, nowMs: number): SearchedTransaction[] {
     const meta = useCategoryMeta(db);
     const trimmed = query.trim();

@@ -34,7 +34,7 @@ describe("sparklineSeries", () => {
     it("walks net forward as a running balance, including entries before the window", () => {
         const points = sparklineSeries(
             [
-                // Predates the window entirely — it still sets the opening balance.
+                // Predates the window, yet still sets the opening balance.
                 row("2026-01-04T09:00:00", 500, true),
                 row("2026-07-24T09:00:00", 200),
             ],

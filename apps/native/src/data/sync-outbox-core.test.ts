@@ -160,10 +160,7 @@ describe("enqueueAllForSync", () => {
     });
 
     it("queues only account-scoped meta keys", async () => {
-        // Both registries: META_KEYS holds the app's own markers, while the synced
-        // presentation settings are stored under their bare setting names and so
-        // appear in neither. Seeding only one of them would let the allow-list grow
-        // without this ever noticing.
+        // Both registries: the synced presentation settings use bare names that META_KEYS does not hold.
         for (const key of [...Object.values(META_KEYS), ...SYNCED_META_KEYS]) {
             await setMeta(db, key, "x");
         }

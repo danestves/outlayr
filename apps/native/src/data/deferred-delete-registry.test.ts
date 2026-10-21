@@ -30,7 +30,6 @@ function settle(): Promise<void> {
     });
 }
 
-/** A registry already pointed at `db`, which the provider does in an effect. */
 function registryFor(db: Database | null) {
     const registry = createDeferredDeleteRegistry();
     registry.attachDatabase(db);
@@ -85,7 +84,6 @@ describe("createDeferredDeleteRegistry", () => {
         const show = jest.spyOn(toast, "show").mockReturnValue("toast-1");
 
         registry.requestDelete("row", "tx-1");
-        // The undo lives on the toast, so its button is the only way to reach it.
         slipOf(show.mock.calls[0]?.[0])?.onAction?.();
 
         jest.advanceTimersByTime(UNDO_WINDOW_MS * 2);
@@ -196,7 +194,6 @@ describe("createDeferredDeleteRegistry", () => {
 
         expect(hide).toHaveBeenCalledWith("toast-1");
         expect(show).toHaveBeenCalledTimes(2);
-        // The displaced row's window closed early rather than being dropped.
         await settle();
         const [first] = await db.select().from(transactions).where(eq(transactions.id, "tx-1"));
         expect(first.deletedAt).not.toBeNull();

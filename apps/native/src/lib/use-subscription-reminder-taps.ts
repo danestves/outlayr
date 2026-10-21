@@ -33,7 +33,6 @@ function announcedRowId(db: Database, { charge, subscription }: z.infer<typeof s
     return pending ? subscription : null;
 }
 
-/** The pay sheet for an order still owed, the order once it is paid off, nothing once it is deleted. */
 function installmentTarget(db: Database, planId: string): Href | null {
     const entry = readPlans(db, new Date()).find(({ plan }) => plan.id === planId);
     if (entry === undefined) {

@@ -12,10 +12,6 @@ import type { LogFigures } from "@/domain/log-measure";
 import { logCellQuery, toCurrencyCells } from "./cell-query";
 import { useLiveQuery } from "./live-query";
 
-/**
- * Mirrors the Swift `LogPeriod` enum. Kept separate from the Insights period so
- * the two screens can scope independently.
- */
 export type LogPeriod = "day" | "week" | "month" | "year" | "all";
 
 export const LOG_PERIOD_ORDER: readonly LogPeriod[] = ["day", "week", "month", "year", "all"];
@@ -57,15 +53,8 @@ export function logPeriodStart(period: LogPeriod, now: Date, firstWeekday: numbe
     }
 }
 
-/**
- * Net is a running balance from the ledger's first entry, so it needs every row
- * and takes no lower bound. In and Out are per-bucket, so those stop at the
- * window's floor.
- *
- * The valuation arrives as arguments rather than being read here: the screen
- * decides which currency the Log is being read in, and a hook that fetched the
- * global one itself would leave the line in the old currency under an override.
- */
+// Net is a running balance from the first entry, so it takes no lower bound. The valuation is passed in because the
+// screen may read the Log in an override currency.
 export function useSparklineRows(
     db: Database,
     nowMs: number,
@@ -116,25 +105,13 @@ export function useSparklineRows(
     }, [rows, displayCurrency, rates]);
 }
 
-/**
- * With rates on hand a mixed-currency period reads as one bucket; without them,
- * or for entries no rate can reach, each currency keeps its own — a sum across
- * currencies is never invented.
- */
+// Without rates (or for rows no rate reaches) each currency keeps its bucket: a cross-currency sum is never invented.
 export interface LogInsights {
-    /** Never absent: an empty period yields zeroes in the global currency. */
     dominant: LogFigures;
-    /** Every other currency the period used, in dominance order. */
     others: LogFigures[];
-    /** Dominant first, then the rest. */
     perCurrency: LogFigures[];
 }
 
-/**
- * Only the header scopes to the period — the list below stays full. `nowMs` is
- * a dependency so the upper "future rows hidden" boundary only moves when the
- * caller intends.
- */
 export function useLogInsights(
     db: Database,
     nowMs: number,

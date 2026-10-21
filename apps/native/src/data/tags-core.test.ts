@@ -37,8 +37,6 @@ describe("tagsRepo", () => {
     });
 
     it("reuses a tag that already answers to the name", async () => {
-        // Otherwise "Work" and "work" become two tags that look identical in every
-        // list they appear in.
         const first = await tagsRepo.ensureTag(db, "Work");
         const second = await tagsRepo.ensureTag(db, "  work ");
         expect(second).toBe(first);
@@ -85,8 +83,6 @@ describe("tagsRepo", () => {
     });
 
     it("revives a detached link rather than making a second one", async () => {
-        // The pair is unique, so a second row cannot exist — and reviving keeps the
-        // identity the other devices already know.
         const work = await tagsRepo.ensureTag(db, "work");
         if (!work) {
             throw new Error("expected a tag id");
@@ -101,7 +97,6 @@ describe("tagsRepo", () => {
     });
 
     it("retires the links when the tag itself goes", async () => {
-        // A live link to a tombstoned tag reads as tagged and renders nothing.
         const work = await tagsRepo.ensureTag(db, "work");
         if (!work) {
             throw new Error("expected a tag id");

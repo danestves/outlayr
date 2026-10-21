@@ -108,8 +108,6 @@ const NOW = new Date(Date.UTC(2026, 6, 28, 12));
 
 describe("the Ledger widget's entries", () => {
     it("quotes an entry it cannot value in the currency it was kept in", async () => {
-        // Pinning every row to the display currency would turn 12,000 yen into
-        // twelve thousand dollars on the home screen.
         const db = makeDb();
         await db.insert(categories).values({
             color: "#FF0000",
@@ -178,11 +176,6 @@ describe("the Ledger widget's entries", () => {
     });
 });
 
-/**
- * A configured tile picks its own view out of the published props: the widget
- * body cannot query, so every selection has to be derived here whether or not
- * this install ever configures the tile.
- */
 describe("the Budget widget's selections", () => {
     async function withBudgets(overall: boolean): Promise<SpendDb> {
         const db = makeDb();
@@ -250,14 +243,9 @@ describe("the Budget widget's selections", () => {
 
         expect(props.Budget.views.overall.name).toBe("Overall Budget");
         expect(props.Budget.views.worst.name).toBe("Food");
-        // Unconfigured, the tile keeps showing what it always did.
         expect(props.Budget.views.auto).toStrictEqual(props.Budget.views.overall);
     });
 
-    // The tile and the Budgets screen both say "worst" and used to mean different
-    // things: the screen ranks over-budget first and then by how much money is
-    // over, while the tile sorted on the fraction alone. So $10 over on a $100
-    // budget lost the tile to $2 over on a $10 one.
     it("names the same budget the Budgets screen ranks first", async () => {
         const db = await withBudgets(false);
         await db.insert(categories).values({ id: "cat-3", income: false, name: "Tips", updatedAt: NOW });
@@ -269,7 +257,7 @@ describe("the Budget widget's selections", () => {
             type: 3,
             updatedAt: NOW,
         });
-        // Food: 110 of 100 — $10 over, 1.1x. Tips: 12 of 10 — $2 over, 1.2x.
+        // Food: 110 of 100, $10 over (1.1x). Tips: 12 of 10, $2 over (1.2x).
         await db.insert(transactions).values([
             {
                 amount: 20,

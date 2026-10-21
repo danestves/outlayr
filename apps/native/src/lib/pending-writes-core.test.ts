@@ -22,7 +22,6 @@ function write(id: string, overrides: Partial<PendingWrite> = {}): PendingWrite 
     };
 }
 
-/** An in-memory stand-in for the App Group directory. */
 function makeFiles(initial: Record<string, string> = {}) {
     const disk = new Map(Object.entries(initial));
     const files: QueueFiles = {

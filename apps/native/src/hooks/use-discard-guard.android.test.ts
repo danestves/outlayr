@@ -13,9 +13,7 @@ interface DetentEvent {
 
 const mockPreventRemove = jest.fn<(prevent: boolean, callback: Prevented) => void>();
 const mockNotifyEditsDiscarded = jest.fn<(onUndo: () => void) => void>();
-/** The guard each pop saw committed: it must already be down. */
 const mockGuardAtPop: boolean[] = [];
-/** The sheet's detent listener, to drag, settle and hide the sheet from a test. */
 const mockSheetListener: { current: ((event: DetentEvent) => void) | null } = { current: null };
 
 function mockLastGuard(): { callback: Prevented; prevent: boolean } {

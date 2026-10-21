@@ -17,27 +17,19 @@ const SELECT = { duration: 180 } as const;
 
 const SELECTED_ALPHA = 0.13;
 
-/**
- * The pill is 38pt tall against a 44pt minimum. Horizontal slop stays inside the
- * 8pt gap `StageOptionRow` lays between neighbours, so no two targets overlap.
- */
+// 38pt pill against a 44pt minimum; horizontal slop stays inside `StageOptionRow`'s 8pt gap so targets never overlap.
 const HIT_SLOP = { bottom: 3, left: 4, right: 4, top: 3 } as const;
 
 export interface StageOptionProps {
-    /** Defaults to the visible label; give one where the label alone is ambiguous. */
     accessibilityLabel?: string;
     label: string;
-    /** A dot or tile drawn before the label — a category swatch, an account glyph. */
     leading?: ReactNode;
     onPress: () => void;
     selected?: boolean;
     trailing?: ReactNode;
 }
 
-/**
- * One choice on the stage. Only colour animates: these render inside a SwiftUI
- * `RNHostView`, which re-measures the whole tree whenever a child changes size.
- */
+// Only colour animates: inside a SwiftUI `RNHostView`, a size change re-measures the whole tree.
 export function StageOption({
     accessibilityLabel,
     label,
@@ -50,10 +42,8 @@ export function StageOption({
     const reduced = useReducedMotion();
     const on = useSharedValue(selected ? 1 : 0);
 
-    // Mixed out here rather than inside the worklet: `withAlpha` is not a
-    // worklet, and calling it from `useAnimatedStyle` crashes on the UI thread.
-    // The resting fill is the same vermilion at zero alpha so the wash arrives
-    // without travelling through grey.
+    // Mixed outside the worklet: `withAlpha` is not one and crashes on the UI thread. The rest fill is vermilion at
+    // zero alpha, so the wash never travels through grey.
     const restFill = withAlpha(colors.tint, 0);
     const selectedFill = withAlpha(colors.tint, SELECTED_ALPHA);
     const { separator, tint } = colors;

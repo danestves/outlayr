@@ -7,29 +7,11 @@ import type { UnbudgetedScope } from "@/data/budgets";
 import { formatAmount } from "@/domain/money";
 import { useLanguage, useTranslation } from "@/i18n/context";
 
-/**
- * How many unbudgeted scopes the tab offers at once.
- *
- * The rail is a suggestion, not a chore list: every row on it is work the reader
- * did not ask for, and a list of fourteen reads as one. The rest are reachable
- * through the picker in the toolbar.
- */
 const RAIL_LIMIT = 2;
 
 interface UnbudgetedRailProps {
     currency: string;
-    /**
-     * What the whole ledger typically costs, or null when no closed window holds
-     * enough to say. Only the caption: whether the row appears at all is
-     * {@link UnbudgetedRailProps.offerEverything}, because a ledger too young to
-     * have a typical figure is exactly the one that still needs the budget.
-     */
     everythingTypical: number | null;
-    /**
-     * Offer the whole ledger as a scope. True while no overall budget exists —
-     * once one does, the tab's head is that budget and a row offering to set it
-     * again would be a second door to one thing.
-     */
     offerEverything: boolean;
     onPress: (scope: UnbudgetedScope | null) => void;
     /** The cadence the typical figure is stated in, e.g. "a month". */
@@ -37,7 +19,6 @@ interface UnbudgetedRailProps {
     scopes: readonly UnbudgetedScope[];
 }
 
-/** What you spend on and have not budgeted, heaviest first. */
 export function UnbudgetedRail({
     scopes,
     currency,
@@ -70,7 +51,7 @@ export function UnbudgetedRail({
                         className="border-border flex-row items-center gap-3 border-b py-3 active:opacity-60"
                         onPress={() => onPress(null)}
                     >
-                        {/* The one scope with no category to draw: the ledger itself. */}
+                        {/* The ledger itself has no category to draw. */}
                         <CategoryIconTile color="#767676" emoji={null} icon={null} size={30} />
                         <View className="flex-1 gap-0.5">
                             <Text className="text-body text-foreground">{t("budgets.scope.everything")}</Text>

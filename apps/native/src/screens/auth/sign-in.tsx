@@ -29,16 +29,10 @@ export function SignIn() {
     return <SignInContent client={authClient} />;
 }
 
-/**
- * Renders an i18n template around its one value so the value can carry the
- * mono voice: words are said, figures are entered. The template arrives with
- * its placeholder intact — `t` leaves `{braces}` alone when no params are
- * passed — and is split here instead of interpolated.
- */
+/** Splits rather than interpolates: `t` leaves `{braces}` alone when no params are passed. */
 function FlyleafLine({ template, value, quiet }: { template: string; value: string; quiet?: boolean }) {
     const [before, after] = template.split(PLACEHOLDER);
-    // "Bs." + the template's own full stop would print "Bs.." — the value's
-    // trailing period absorbs the sentence's.
+    // "Bs." plus the template's own full stop would print "Bs..", so the value's period absorbs the sentence's.
     const tail = value.endsWith(".") && after?.startsWith(".") ? after.slice(1) : after;
     return (
         <Text className={quiet ? "text-fr-muted text-label" : "font-sans-medium text-callout text-fr-ink leading-8"}>
@@ -57,12 +51,6 @@ function FlyleafLine({ template, value, quiet }: { template: string; value: stri
     );
 }
 
-/**
- * The stage object: the ledger's flyleaf, written during the flow — what an
- * account would actually be keeping a copy of. The reminder line only appears
- * when the rhythm step's offer was taken; a skipped question leaves shorter
- * prose, not a hole.
- */
 function FlyleafCard() {
     const db = useDatabase();
     const t = useTranslation();

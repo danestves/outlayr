@@ -26,7 +26,6 @@ function setDeviceLanguage(tag: string, overrides: Partial<Locale> = {}) {
 
 const realAddEventListener = AppState.addEventListener;
 
-/** Drives the foreground transition the provider re-reads the locale on. */
 function watchAppState() {
     const listeners: ((status: AppStateStatus) => void)[] = [];
     AppState.addEventListener = ((event: string, listener: unknown) => {
@@ -54,14 +53,8 @@ afterEach(() => {
 const TOTALS = [{ amount: -760.24, currencyCode: "USD", transactionCount: 1 }];
 
 /**
- * `DayTotal` formats money but translates nothing. That combination is the
- * regression: language reaches the formatters through `runtimeLanguage()`, a
- * module global React cannot see, so a component that does not consume the
- * language context is bailed out of the re-render — `LanguageProvider` receives
- * `children` as an unchanged element — and keeps printing the previous locale.
- *
- * The trigger is now a device language change, which is what returning from
- * Settings › Outlayr › Language looks like to the app.
+ * `DayTotal` formats money but translates nothing: language reaches formatters through a module global, so a
+ * component outside the language context is bailed out of the re-render and keeps the previous locale.
  */
 describe("changing the device language mid-session", () => {
     it("reformats money in a component that formats but does not translate", async () => {

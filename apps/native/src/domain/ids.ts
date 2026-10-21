@@ -1,13 +1,6 @@
-/**
- * A v4 UUID for a new row id. Prefers the standard global `crypto.randomUUID`
- * when the runtime exposes it (node, and RN runtimes that polyfill WebCrypto);
- * otherwise it lazily falls back to `expo-crypto`. The lazy `require` keeps this
- * module free of a top-level native import so the data layer stays loadable under
- * the node test runner (which can't transform React Native's source).
- */
+// The lazy `require` keeps a top-level native import out, so the data layer still loads under the node test runner.
 export function newId(): string {
-    // SAFETY: Hermes has no `crypto` in its lib types; the shape asserted is
-    // the one the very next line checks for before calling.
+    // SAFETY: Hermes has no `crypto` in its lib types; the next line checks the asserted shape before calling it.
     const webCrypto = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
     if (webCrypto?.randomUUID) {
         return webCrypto.randomUUID();

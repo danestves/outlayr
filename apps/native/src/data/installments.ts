@@ -16,13 +16,8 @@ import {
 import type { PlanWithStanding, UpcomingInstallment } from "./installments-core";
 import { useLiveQuery } from "./live-query";
 
-/**
- * Live orders with their derived standing, every account's or one's.
- *
- * `nowMs` is the screen's `useNow()` reading, as in `useSavingsGoals`: overdue
- * is measured against the day, and a memo keyed only on data would keep
- * yesterday's verdict on a screen left open past midnight.
- */
+// `nowMs` is the screen's `useNow()` reading: overdue is measured against the day, and a data-keyed memo would keep
+// yesterday's verdict past midnight.
 export function useInstallmentPlans(db: Database, nowMs: number, accountId?: string): PlanWithStanding[] {
     const plans = useLiveQuery(installmentPlans, () => livePlansQuery(db, accountId), [accountId]);
     const rows = useLiveQuery(installments, () => liveInstallmentsQuery(db));
@@ -35,11 +30,7 @@ export function useInstallmentPlans(db: Database, nowMs: number, accountId?: str
     );
 }
 
-/**
- * Installments not yet covered and due within `days` of today, soonest first,
- * across every account or one: an account's "Coming up" list passes its
- * `accountId`. Overdue ones are included.
- */
+// Overdue installments are included.
 export function useUpcomingInstallments(
     db: Database,
     nowMs: number,

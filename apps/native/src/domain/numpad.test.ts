@@ -28,8 +28,6 @@ describe("applyNumpadKey digits", () => {
         expect(type("12345678901234")).toBe("1234567890123");
     });
 
-    // The ceiling has to stay inside float64's exact-cent range, or a saved
-    // amount reads back as a different one.
     it("keeps the largest entry exactly representable in cents", () => {
         const largest = numpadToNumber(type("1234567890123"));
         expect(Number.isSafeInteger(Math.round(largest * 100))).toBe(true);

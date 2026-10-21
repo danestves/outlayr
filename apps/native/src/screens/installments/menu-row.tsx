@@ -14,11 +14,7 @@ interface MenuRowProps<Id extends string> {
     value: string;
 }
 
-/**
- * An editor row whose value is picked from a native menu, as a picker's row is.
- * The hosted menu sizes to its content, so the row is handed the width its
- * parent gave it, the way `StretchedMenuView` does on iOS.
- */
+/** The hosted menu sizes to its content, so the row passes the parent's width. */
 export function MenuRow<Id extends string>({ label, onPick, options, selected, value }: MenuRowProps<Id>) {
     const colors = useColors();
     const [width, setWidth] = useState<number | null>(null);

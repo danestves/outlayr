@@ -1,12 +1,5 @@
-/**
- * Lists every function React Compiler gives up on in `src`, so a render fix can
- * check it did not add one and a bailout fix can show it removed one.
- *
- * It runs the babel-plugin-react-compiler that babel-preset-expo resolves, with the
- * options the preset passes, over each source file (tests excluded).
- *
- *   node --import tsx scripts/perf/compiler-bailouts.ts [--only <path suffix>,...]
- */
+// Lists every function React Compiler bails out on in `src`, with the plugin and options babel-preset-expo uses.
+//   node --import tsx scripts/perf/compiler-bailouts.ts [--only <path suffix>,...]
 import { readdirSync, readFileSync, realpathSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join, relative, resolve } from "node:path";
@@ -86,7 +79,6 @@ const describe = (diagnostic: Diagnostic) => {
 const files = walk(join(nativeRoot, "src")).filter(
     (file) => only === undefined || only.some((suffix) => file.endsWith(suffix))
 );
-/** Reasons per bailed-out function, keyed `file:line`; one function can log several events. */
 const bailouts = new Map<string, Set<string>>();
 let compiled = 0;
 

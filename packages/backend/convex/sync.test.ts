@@ -162,16 +162,11 @@ describe("push authorization", () => {
         const owner = await seedProUser(t);
         const { resumeSecret } = await authenticatedAs(t, owner).mutation(api.accountDeletion.prepare, {});
 
-        // Asked but not confirmed: the owner may still cancel, so the ledger is
-        // still theirs to change.
         await pushAs(t, owner, DEVICE_A, [transactionRow("before", 100)]);
 
         await t.mutation(api.accountDeletion.recordAppleRevocation, { resumeSecret });
         await t.mutation(api.accountDeletion.advance, { resumeSecret });
 
-        // The session and the Pro mirror both outlive the purge, so `push`'s own
-        // two guards still pass here. Without this check the row comes back for a
-        // user id that is about to stop existing, and no later pass can find it.
         await expect(pushAs(t, owner, DEVICE_A, [transactionRow("after", 200)])).rejects.toThrow(ConvexError);
         await expect(t.run((ctx) => ctx.db.query("transactions").collect())).resolves.toHaveLength(0);
     });
@@ -959,7 +954,6 @@ describe("the Pro gate", () => {
 });
 
 describe("push during account deletion", () => {
-    /** A deletion job for `userId`, in whatever phase the caller needs. */
     async function seedJob(t: TestClient, userId: string, phase: "prepared" | "providersRevoked", n: number) {
         await t.run(
             async (ctx) =>
@@ -976,9 +970,6 @@ describe("push during account deletion", () => {
         );
     }
 
-    // The guard used to read a page of jobs, so a client could bury the one that
-    // refuses the push under a page of harmless prepared ones and re-create rows
-    // for a user id the purge is about to null.
     it("cannot be walked past by burying the purging job under a page of prepared ones", async () => {
         const t = harness();
         const owner = await seedProUser(t);

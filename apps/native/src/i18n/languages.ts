@@ -4,10 +4,7 @@ export type Language = (typeof SUPPORTED_LANGUAGES)[number];
 
 export const DEFAULT_LANGUAGE: Language = "en";
 
-/**
- * Endonyms: someone who has landed in a language they cannot read still has to
- * recognise which one they are in.
- */
+/** Endonyms: someone stuck in a language they cannot read must still recognise their own. */
 const LANGUAGE_NAMES = {
     en: "English",
     es: "Español",
@@ -18,14 +15,12 @@ export function languageLabel(language: Language): string {
 }
 
 function isLanguage(value: string): value is Language {
-    // SAFETY: widening the tuple so an arbitrary string can be tested against
-    // it — narrowing the argument is the whole point of the predicate.
+    // SAFETY: widening the tuple so an arbitrary string can be tested; narrowing the argument is the point.
     return (SUPPORTED_LANGUAGES as readonly string[]).includes(value);
 }
 
 const TAG_SUBTAG_SEPARATOR = /[-_]/;
 
-/** `es-419`, `es_419` and `es-MX` all resolve to the one Spanish catalog. */
 export function languageFromTag(tag: string | null | undefined): Language | null {
     if (!tag) {
         return null;
@@ -34,11 +29,6 @@ export function languageFromTag(tag: string | null | undefined): Language | null
     return primary && isLanguage(primary) ? primary : null;
 }
 
-/**
- * There is no in-app language preference: iOS owns this choice per app, under
- * Settings › Outlayr › Language, and writing a second one in AsyncStorage only
- * creates a state the system pickers and the App Store listing disagree with.
- */
 export function resolveLanguage(deviceTag: string | null | undefined): Language {
     return languageFromTag(deviceTag) ?? DEFAULT_LANGUAGE;
 }

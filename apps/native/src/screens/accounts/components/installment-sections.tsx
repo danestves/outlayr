@@ -20,12 +20,6 @@ import { dueIn } from "@/screens/installments/labels";
 /** How far ahead "Coming up" looks: a monthly plan's next cuota is always inside it. */
 const COMING_UP_DAYS = 31;
 
-/**
- * A liability account's installment orders: the open ones, the paid-off ones
- * folded under a count, and every order's unpaid cuotas merged by date with the
- * overdue ones first. Each due cuota has a Paid action that opens the pay sheet;
- * nothing is paid without it.
- */
 export function InstallmentSections({ accountId, db, nowMs }: { accountId: string; db: Database; nowMs: number }) {
     const t = useTranslation();
     const plans = useInstallmentPlans(db, nowMs, accountId);

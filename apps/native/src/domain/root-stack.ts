@@ -4,11 +4,7 @@ import type { RootStackGroup } from "@/domain/auth-gate";
 import type { TranslationKey } from "@/i18n/catalog";
 import { ACCOUNT_DETENT, CATEGORY_DETENT, INSTALLMENT_PAY_DETENT, SUBCATEGORY_DETENT } from "@/lib/sheet-detents";
 
-/**
- * Pushed screens that carry a transparent header, a minimal back button and a
- * title. They live outside `(tabs)` so pushing one drops the tab bar, and on
- * the root stack rather than a nested one so they keep a back button.
- */
+// Outside `(tabs)` so pushing one drops the tab bar, and on the root stack so they keep a back button.
 export const TITLED_SCREENS: readonly {
     name: string;
     titleKey: TranslationKey;
@@ -33,7 +29,6 @@ export const TITLED_SCREENS: readonly {
     { name: "settings/wallet", titleKey: "nav.settings.wallet" },
 ];
 
-/** Form sheets that open at their own detent with the same header chrome. */
 export const SHEET_SCREENS: readonly {
     name: string;
     titleKey: TranslationKey;
@@ -76,7 +71,6 @@ export const SHEET_SCREENS: readonly {
     },
 ];
 
-/** Modals that carry the same header chrome as a pushed titled screen. */
 export const MODAL_SCREENS: readonly {
     name: string;
     titleKey: TranslationKey;
@@ -112,7 +106,7 @@ export const ROOT_STACK_SCREEN_NAMES = {
     "sign-in": ["auth/sign-in", "auth/email"],
 } satisfies Readonly<Record<RootStackGroup, readonly string[]>>;
 
-/** Where a guard flip lands. expo-router's own fallback goes by file order, not declaration order. */
+// expo-router's own fallback goes by file order, not declaration order.
 export const GROUP_ENTRY = {
     adopt: "/auth/adopt",
     ledger: "/",

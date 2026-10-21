@@ -7,11 +7,7 @@ import { useLiveQuery } from "./live-query";
 
 export const RECENT_CATEGORY_LIMIT = 5;
 
-/**
- * Ids only. The category's own columns are resolved by the caller against a
- * fresh read of `categories`, because `useLiveQuery` listens to one table: a
- * name or colour joined on here would survive every edit to that category.
- */
+// Ids only: `useLiveQuery` listens to one table, so a joined name or colour would go stale.
 export function recentCategoryIdsQuery(db: Database, income: boolean, limit: number = RECENT_CATEGORY_LIMIT) {
     return db
         .select({ categoryId: transactions.categoryId })

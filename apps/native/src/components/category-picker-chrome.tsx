@@ -18,14 +18,6 @@ import { categoryTint, HighlightedName } from "./category-picker-shared";
 import { Text } from "./text";
 import { cn } from "./tw";
 
-/**
- * The category picker sheet's look: its header, the card its rows sit in, and
- * the row. `category-picker-chrome.android.tsx` draws them as Material 3
- * (a SheetHeader and hairline list items, no card); the sheet's state and
- * search stay in `category-picker-sheet.tsx`, shared.
- */
-
-/** The sheet's own grabber stays: iOS draws it, and nothing here draws another. */
 export const CATEGORY_PICKER_HANDLE = undefined;
 
 export function CategoryPickerHeader({ onClose, title }: { onClose: () => void; title: string }) {
@@ -184,7 +176,6 @@ export const CategoryRow = memo(
 );
 CategoryRow.displayName = "CategoryRow";
 
-/** A recently used category, one tap from picked. */
 export const RecentChip = memo(
     ({ category, onSelect }: { category: Category; onSelect: (category: Category) => void }) => {
         const colors = useColors();

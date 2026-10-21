@@ -5,7 +5,6 @@ export interface RemoteEnrichmentResult {
     /** A grounded lookup was scheduled server-side; do not cache this as final. */
     readonly grounding?: boolean;
     readonly isNewCategory: boolean;
-    /** An existing top-level category this one belongs beneath, if any. */
     readonly parentCategoryName?: string | null;
     readonly tags: readonly string[];
 }
@@ -17,10 +16,8 @@ const CACHE_LIMIT = 50;
 const cache = new Map<string, RemoteEnrichmentResult | null>();
 
 /**
- * Scoped by the currency the lookup was made with, when it had one: the
- * currency is the locator the model is given, so the same name can resolve to
- * a different business in a different currency. A caller with no currency
- * (the import review) reads and fills the bare partition.
+ * Scoped by currency, the model's locator, so one name can resolve to a different business per currency. A
+ * caller with no currency (the import review) uses the bare partition.
  */
 function cacheKey(key: string, currency: string | undefined): string {
     return currency ? `${key}|${currency}` : key;

@@ -31,11 +31,8 @@ interface BudgetRowProps {
     contributions: readonly ExpenseContribution[];
     currency: string;
     heroTimeLeft: string | null;
-    /** The row's context menu, opened by holding it. Omit where there is none. */
     menuItems?: readonly ActionMenuItem[];
-    /** `Date.now()` from the screen, so the clock tracks the same instant as spend. */
     nowMs: number;
-    /** Takes the row off the list and starts its undo window. No confirmation. */
     onDelete: (id: string) => void;
     onPress: (id: string) => void;
 }
@@ -78,7 +75,6 @@ export function BudgetRow({
     const dayVerdict = daySlots ? dayVerdictSentence(daySlots, budget.name, t) : null;
     const difference = Math.abs(budget.leftover);
     const perDay = leftPerDay(budget.leftover, budget.window, now);
-    // Cents off regardless of the setting: the exact figure is already alongside.
     const meta = [
         t("budgets.spentOfLimit", {
             limit: formatAmount(budget.amount, currency, false, language),
@@ -119,8 +115,7 @@ export function BudgetRow({
             <Animated.View className="bg-background">
                 <ActionMenu items={menuItems ?? []}>
                     <Pressable
-                        // Delete otherwise lives only behind the right swipe, which is a pan no
-                        // assistive gesture can perform.
+                        // Delete otherwise lives only behind the swipe, a pan no assistive gesture can perform.
                         accessibilityActions={[
                             {
                                 label: t("budgets.row.deleteA11y", { name: budget.name }),
@@ -129,8 +124,7 @@ export function BudgetRow({
                         ]}
                         accessibilityHint={menuItems?.length ? t("budgets.row.actionsHint") : undefined}
                         accessibilityRole="button"
-                        // The menu lifts this row into its preview, so the row carries the
-                        // ground it is snapshotted against rather than borrowing the list's.
+                        // The menu snapshots this row into its preview, so it carries its own ground.
                         className="bg-background gap-2 py-3.5 active:opacity-70"
                         onAccessibilityAction={(event: AccessibilityActionEvent) => {
                             if (event.nativeEvent.actionName === DELETE_ACTION) {

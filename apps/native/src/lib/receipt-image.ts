@@ -1,15 +1,8 @@
 import { FilterMode, ImageFormat, MipmapMode, Skia } from "@shopify/react-native-skia";
 import type { SkImage } from "@shopify/react-native-skia";
 
-/**
- * The server accepts 900KB (`receiptScan.ts:MAX_IMAGE_BYTES`); this leaves
- * room for the value's own overhead on the wire.
- */
+/** The server accepts 900KB (`receiptScan.ts:MAX_IMAGE_BYTES`); the margin covers the value's wire overhead. */
 const MAX_UPLOAD_BYTES = 850_000;
-/**
- * A receipt's type is legible to the model at this size on the long edge;
- * a 4000px camera frame is ten times the bytes for nothing.
- */
 const FIRST_LONG_EDGE = 1600;
 const MIN_LONG_EDGE = 800;
 const FIRST_QUALITY = 78;
@@ -45,12 +38,6 @@ function encodeAt(image: SkImage, longEdge: number, quality: number): Uint8Array
     return encoded.length > 0 ? encoded : null;
 }
 
-/**
- * Re-encodes a picked photo as a JPEG the server will take: first at a size
- * the model reads comfortably, then smaller and rougher until it fits under
- * the cap. Null when the file cannot be decoded at all — a HEIC the decoder
- * lacks, a corrupt download — which the caller reports as an unreadable photo.
- */
 export async function prepareReceiptImage(sourceUri: string): Promise<PreparedReceipt | null> {
     let image: SkImage | null;
     try {

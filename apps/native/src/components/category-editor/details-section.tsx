@@ -19,10 +19,8 @@ import { BODY, CAPTION, ROW, rowLabel } from "@/components/transaction-form/styl
 interface CategoryEditorDetailsSectionProps {
     caption: string | null;
     dangerColor: string;
-    /** A rejected save, shown in place of the caption. Null while the form is clean. */
     failure: string | null;
     expenseLabel: string;
-    /** `overlay` in the rule colour — supplied by the editor, which owns the theme. */
     hairline: ViewModifier[];
     income: boolean;
     incomeLabel: string;
@@ -39,11 +37,7 @@ interface CategoryEditorDetailsSectionProps {
     typePickerVisible: boolean;
 }
 
-/**
- * Hairline-ruled rows on the page, matching the account editor and settings —
- * not an inset-grouped card. Every `Text` names `BODY` explicitly: outside a
- * `Form` nothing applies the rounded face.
- */
+// Every `Text` names `BODY`: outside a `Form` nothing applies the rounded face.
 export function CategoryEditorDetailsSection({
     caption,
     dangerColor,
@@ -64,8 +58,6 @@ export function CategoryEditorDetailsSection({
     typeLabel,
     typePickerVisible,
 }: CategoryEditorDetailsSectionProps) {
-    // The failure takes the caption's slot rather than stacking under it: this is
-    // the line directly below the name field, and two of them would push the form.
     const footer = failure ?? caption;
     return (
         <VStack spacing={0}>

@@ -54,10 +54,6 @@ afterEach(() => {
 });
 
 describe("auth base url", () => {
-    // `CONVEX_SITE_URL` is a built-in Convex system variable, always present in a
-    // deployed function. `SITE_URL` only exists once there is a web client, so
-    // falling back to it is what keeps a native-only deployment from minting
-    // OAuth redirects against localhost.
     it("falls back to the deployment site url when SITE_URL is unset", async () => {
         const baseURL = await baseUrlWith({
             CONVEX_SITE_URL: "https://example-deployment.convex.site",
@@ -78,12 +74,7 @@ describe("auth base url", () => {
 });
 
 describe("auth", () => {
-    // No Apple or Google credential is set in the test env, which is also the
-    // state of a freshly provisioned deployment. Construction must still succeed
-    // or the whole backend fails to boot over an unconfigured provider.
-    //
-    // The instance cannot cross the `t.run` boundary — it carries a `$ERROR_CODES`
-    // field and Convex reserves the `$` prefix — so assert on a scalar.
+    // The instance cannot cross `t.run`: Convex reserves the `$` prefix of its `$ERROR_CODES` field.
     it("builds without any social provider credentials", async () => {
         const t = convexTest(schema, modules);
 
@@ -92,14 +83,10 @@ describe("auth", () => {
         expect(handlerType).toBe("function");
     });
 
-    // The APPLE_* variables are read at module scope, so the module has to be
-    // re-imported after they are stubbed.
+    // The APPLE_* variables are read at module scope, so the module is re-imported after stubbing.
     it("enables the Apple provider once its credentials are configured", async () => {
         const apple = await resolveApple({});
 
-        // Better Auth drops a provider whole on `enabled: false`, so this being
-        // false is not "configured but off" — it is the Apple button answering
-        // PROVIDER_NOT_FOUND on every tap.
         expect(apple.enabled).toBeTruthy();
         expect(apple.clientId).toBe("com.tryoutlayr.app");
     });

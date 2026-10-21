@@ -26,19 +26,12 @@ const LOG_CONTROLS = { alignItems: "center", flexDirection: "row", gap: 8 } as c
 const LOG_CONTROLS_UNDER_HERO = { ...LOG_CONTROLS, alignSelf: "flex-end" } as const;
 
 interface LogInsightsProps {
-    /** What the chip offers, ledger currency first — see `logCurrencyOptions`. */
     currencyOptions: readonly string[];
-    /** The currency the whole screen is being read in. */
     displayCurrency: string;
     insights: LogInsightsData;
     measure: LogMeasure;
     /** Null puts the screen back in the ledger's own currency. */
     onDisplayCurrency: (code: string | null) => void;
-    /**
-     * Opens the screen that curates favourites. Without a route in from here, a
-     * ledger kept in one currency offers a single option and the chip is a control
-     * that cannot do anything.
-     */
     onManageCurrencies: () => void;
     onMeasure: (measure: LogMeasure) => void;
     period: LogPeriod;
@@ -52,10 +45,7 @@ export interface SparklineData {
     range: number;
 }
 
-/**
- * Nothing here does currency arithmetic — `useLogInsights` buckets, and this
- * picks a bucket and renders it.
- */
+/** No currency arithmetic here: `useLogInsights` does it. */
 export function LogInsights({
     insights,
     measure,
@@ -70,8 +60,7 @@ export function LogInsights({
     const { showCents } = useDisplaySettings().state;
     const t = useTranslation();
     const largeText = useAccessibilityTextSize();
-    // The buckets are already expressed in `displayCurrency`; it only fails to
-    // name one when nothing in the period could be placed there.
+    // Falls back to the dominant bucket only when nothing could be placed in `displayCurrency`.
     const figures = insights.perCurrency.find((f) => f.currencyCode === displayCurrency) ?? insights.dominant;
     const alsoThisPeriod = insights.perCurrency.filter((f) => f.currencyCode !== figures.currencyCode);
 
@@ -91,15 +80,11 @@ export function LogInsights({
                 <GlassContainer style={largeText ? LOG_CONTROLS_UNDER_HERO : LOG_CONTROLS}>
                     <AmountsEyeButton />
                     <DisplayCurrencyChip
-                        // The figures' own currency, not the requested one: when nothing in
-                        // the period could be placed in `displayCurrency` the numbers fall
-                        // back to the dominant bucket, and a chip still naming the request
-                        // would label the screen as something it is not.
+                        // The figures' own currency, which may be a fallback from the request.
                         code={figures.currencyCode}
                         onManage={onManageCurrencies}
                         onSelect={(code) =>
-                            // The list leads with the ledger's own currency, so choosing it is
-                            // the way out of an override rather than an override onto itself.
+                            // The ledger's own currency leads, so choosing it clears the override.
                             onDisplayCurrency(code === currencyOptions[0] ? null : code)
                         }
                         options={currencyOptions}

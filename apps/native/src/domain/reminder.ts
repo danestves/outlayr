@@ -47,14 +47,7 @@ export function reminderTime(option: number, custom: TimeOfDay): TimeOfDay {
     }
 }
 
-/**
- * The reminder's time, written the way every other clock in the app is.
- *
- * `formatTime` takes a `Date` because that is what its callers hold; a reminder
- * is a wall-clock time with no day attached, so one is stood up here. It is
- * still hand-rolled underneath rather than `toLocaleTimeString`, because Hermes
- * ships without ICU and every locale would read back as the en-US default.
- */
+// Hand-rolled, not `toLocaleTimeString`: Hermes ships without ICU and every locale would read back as en-US.
 export function formatTimeOfDay(
     { hour, minute }: TimeOfDay,
     use24Hour = false,
@@ -69,11 +62,6 @@ export type ReminderPermission = "granted" | "denied" | "undetermined" | "unknow
 
 export type EnableReminderStep = "schedule" | "request" | "open-settings";
 
-/**
- * iOS prompts once and never again. Once denied, the switch cannot be honoured
- * from inside the app at all, so the tap has to hand the user to Settings
- * instead of silently doing nothing.
- */
 export function enableReminderStep(permission: ReminderPermission): EnableReminderStep {
     switch (permission) {
         case "granted": {
@@ -91,14 +79,8 @@ export function enableReminderStep(permission: ReminderPermission): EnableRemind
 
 export type ReminderReconcile = "schedule" | "disable" | "none";
 
-/**
- * The setting is a claim about what iOS will do, and iOS can be changed behind
- * the app's back. Anything short of `granted` makes the stored `true` a lie the
- * Settings row would keep repeating, so it is written back off.
- *
- * The granted branch re-arms rather than trusting the queue: a restore onto a
- * new device carries the setting across but not the pending request.
- */
+// iOS permission can change behind the app's back, so anything short of `granted` writes the setting back off.
+// Granted re-arms: a restore carries the setting across but not the pending request.
 export function reminderReconcile(enabled: boolean, permission: ReminderPermission): ReminderReconcile {
     if (!enabled) {
         return "none";

@@ -20,13 +20,9 @@ import { InsightsMovers } from "./insights-movers";
 
 const noop = () => undefined;
 
-/**
- * 31 March 2026. Frozen rather than derived from the clock so the sample is the
- * same picture on every run, and so no bucket ever reads as pending.
- */
+/** Frozen so the sample never changes and no bucket reads as pending. */
 const FIXTURE_NOW = new Date(2026, 2, 31, 12, 0, 0, 0).getTime();
 
-/** Daily spend for March 2026, in declaration order. Sums to 1840.50. */
 const DAILY_SPEND = [
     62.4, 0, 50.9, 121.75, 44.9, 0, 88.3, 27.6, 135.2, 51.4, 0, 73.85, 182.6, 34.1, 96.45, 0, 58.9, 112.35, 41.2, 0,
     67.75, 129.4, 23.85, 0, 84.6, 178.9, 36.25, 0, 92.15, 45.7, 0,
@@ -41,15 +37,9 @@ function marchBuckets(values: number[]): InsightsBucket[] {
     }));
 }
 
-/** Lifted from the presets a fresh install actually seeds. */
 const DINING = { color: "#FF8A00", icon: "Restaurant01" } as const;
 const GROCERIES = { color: "#34C759", icon: "ShoppingCart01" } as const;
 
-/*
- * The fixtures below are typed against the real `@/data/insights` shapes on
- * purpose: a field added to any of them must break compilation here rather than
- * quietly leave the sample showing something the real Insights tab no longer does.
- */
 const SAMPLE_BUCKETS: InsightsBucket[] = marchBuckets(DAILY_SPEND);
 
 const sampleCells = (t: TranslateFn): LedgerCell[] => [
@@ -117,12 +107,7 @@ interface InsightsSampleProps {
     onAddTransaction: () => void;
 }
 
-/**
- * Fabricated figures in a finance app: the preview must keep its `Sample` marker
- * inside the content (so it survives a screenshot), take no touches, and stay
- * hidden from assistive tech — a screen reader must never read out invented money
- * as if it were the user's.
- */
+/** Invented money: keeps its `Sample` marker in content, takes no touches, and is hidden from assistive tech. */
 export function InsightsSample({ onAddTransaction }: InsightsSampleProps) {
     const colors = useColors();
     const t = useTranslation();
@@ -130,11 +115,7 @@ export function InsightsSample({ onAddTransaction }: InsightsSampleProps) {
     const breakdown = sampleBreakdown(t);
 
     return (
-        // A fragment, not a wrapping View: UIKit hooks the large title to the first
-        // descendant scroll view, and an extra container between the screen and the
-        // ScrollView costs it that inset — the sample then renders up underneath the
-        // title. The veil and the CTA ride as absolute siblings instead, which is how
-        // `FloatingAddButton` already sits over the Log.
+        // A fragment: UIKit hooks the large title to the first descendant scroll view.
         <>
             {/* A ScrollView that does not scroll: it exists for the large-title inset. */}
             <ScrollView
@@ -152,8 +133,7 @@ export function InsightsSample({ onAddTransaction }: InsightsSampleProps) {
 
                     <View className="flex-row items-center justify-between pt-3.5">
                         <MonoLabel>{`${t("insights.measure.spent")} · ${t("insights.sample.month")}`}</MonoLabel>
-                        {/* Spending less is the favourable direction, so the fall wears
-					    income green rather than danger red. */}
+                        {/* Spending less is favourable, so income green. */}
                         <View
                             style={{
                                 backgroundColor: withAlpha(colors.income, 0.2),

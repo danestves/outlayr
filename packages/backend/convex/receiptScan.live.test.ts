@@ -1,19 +1,7 @@
 /// <reference types="vite/client" />
 
-/**
- * The receipt reader against the real Anthropic endpoint. Opt-in for the same
- * reasons as `csvImport.live.test.ts`: it spends money and depends on a network.
- *
- *   RUN_LIVE_MODEL_TESTS=1 \
- *   ANTHROPIC_API_KEY="$(npx convex env get ANTHROPIC_API_KEY)" \
- *   RECEIPT_PATH=/tmp/receipt-eur.jpg \
- *   vp test run convex/receiptScan.live.test.ts
- *
- * The fixture at `RECEIPT_PATH` is a Spanish supermarket ticket in euros with a
- * printed "TOTAL (EUR) 20,56", seven lines and a Visa payment line. The
- * assertions are the contract, not the answer: the total, a currency the ledger
- * does not use, a plausible line count, and only names the caller offered.
- */
+// Opt-in: RUN_LIVE_MODEL_TESTS=1 plus ANTHROPIC_API_KEY from `npx convex env get`. RECEIPT_PATH is a Spanish
+// supermarket ticket printing "TOTAL (EUR) 20,56", seven lines and a Visa payment line.
 
 import { readFile } from "node:fs/promises";
 

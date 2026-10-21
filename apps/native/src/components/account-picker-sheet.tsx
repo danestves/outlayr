@@ -17,13 +17,9 @@ import { useColors } from "@/theme/use-colors";
 import { CategoryIconTile } from "./category-icon-tile";
 import { Text } from "./text";
 
-/**
- * Half the screen. Android's Compose sheet has no single resting height: with
- * one snap point it opens fully expanded, up under the status bar, so it gets
- * a second, taller one and rests on the first.
- */
+// One snap point opens Android's Compose sheet fully expanded, so it gets a taller second one to rest below.
 const SNAP_POINTS = Platform.OS === "android" ? ["50%", "92%"] : ["50%"];
-/** Resting at half height, Android shows the top of the full sheet, so a centred empty state would sit below the fold. */
+// Resting at half height, Android shows the sheet's top, so a centred empty state would sit below the fold.
 const EMPTY_ALIGN = Platform.OS === "android" ? "pt-10" : "justify-center";
 
 interface AccountPickerSheetProps {
@@ -37,7 +33,6 @@ interface AccountPickerSheetProps {
     selectedId: string | null;
 }
 
-/** Present via the forwarded ref: `ref.current?.present()`. */
 export function AccountPickerSheet({
     db,
     selectedId,

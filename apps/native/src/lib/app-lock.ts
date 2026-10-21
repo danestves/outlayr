@@ -1,11 +1,7 @@
 import { authenticateAsync, getEnrolledLevelAsync, SecurityLevel } from "expo-local-authentication";
 import type { LocalAuthenticationResult } from "expo-local-authentication";
 
-/**
- * Whether the device holds anything the prompt could check. Nothing enrolled
- * means no credential can ever open the gate, and holding the ledger shut on
- * that device would strand its owner outside their own local data.
- */
+/** Nothing enrolled means no credential can open the gate, so enforcing it would lock the owner out of local data. */
 export async function lockIsEnforceable(): Promise<boolean> {
     try {
         return (await getEnrolledLevelAsync()) !== SecurityLevel.NONE;
@@ -17,8 +13,7 @@ export async function lockIsEnforceable(): Promise<boolean> {
 export async function requestUnlock(promptMessage: string): Promise<LocalAuthenticationResult> {
     try {
         return await authenticateAsync({
-            // Left on so a failed or locked-out sensor still falls through to the
-            // device passcode. Turning it off is how a lock becomes unopenable.
+            // Off, a failed or locked-out sensor has no passcode fallback and the lock becomes unopenable.
             disableDeviceFallback: false,
             promptMessage,
         });

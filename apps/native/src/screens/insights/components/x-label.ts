@@ -1,6 +1,5 @@
 import type { InsightsPeriod } from "@/data/insights";
 
-/** Which buckets get an axis label: every day of a week, four months of a year, five days of a month. */
 export function showXLabel(period: InsightsPeriod, index: number, label: string): boolean {
     if (period === "week") {
         return true;

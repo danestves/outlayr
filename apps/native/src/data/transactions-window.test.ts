@@ -55,11 +55,7 @@ function makeDb() {
     return drizzle(sqlite, { schema });
 }
 
-/**
- * `count` rows all dated on day `d` of July 2025. Spread by the minute, not the
- * hour: past 24 rows an hourly offset rolls into the next day, which leaves
- * `day` on the seeded date while `date` says otherwise.
- */
+/** Spread by the minute: past 24 rows an hourly offset rolls `date` into the next day while `day` stays put. */
 async function seedDay(db: TestDb, d: number, count: number): Promise<void> {
     const day = at(2025, 7, d);
     await db.insert(transactions).values(
@@ -86,8 +82,6 @@ async function windowFor(db: TestDb, days: number) {
 describe("log window", () => {
     it("returns every row of every day it includes, never a partial day", async () => {
         const db = makeDb();
-        // Day 14 holds far more rows than the other two, so a row-based LIMIT
-        // would cut it — and the Log prints a per-day subtotal off these rows.
         await seedDay(db, 15, 2);
         await seedDay(db, 14, 9);
         await seedDay(db, 13, 3);

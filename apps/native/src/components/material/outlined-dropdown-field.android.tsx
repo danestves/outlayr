@@ -13,14 +13,8 @@ import { OutlinedSelectField } from "./outlined-field";
 
 export type { DropdownOption, OutlinedDropdownFieldProps } from "./outlined-dropdown-field";
 
-/**
- * A short list picked from a Material dropdown menu that drops from the
- * field's bottom edge, the Android form of a SwiftUI menu-style `Picker`.
- * The menu's Compose host is a one-point strip along that edge: it anchors
- * the popup without sizing the field to the menu's trigger. Compose keeps a
- * menu 48dp clear of the window's edges, so near the bottom of a sheet it
- * opens upward over the field instead.
- */
+// The menu's Compose host is a one-point strip along the field's bottom edge, so it anchors the popup without
+// sizing the field to the trigger.
 export function OutlinedDropdownField<T extends string>({
     label,
     options,
@@ -30,7 +24,6 @@ export function OutlinedDropdownField<T extends string>({
 }: OutlinedDropdownFieldProps<T>) {
     const m3 = useMaterialColors();
     const [expanded, setExpanded] = useState(false);
-    // The menu is as wide as the field, as an exposed dropdown is.
     const [fieldWidth, setFieldWidth] = useState(0);
     const selected = options.find((option) => option.value === value);
 

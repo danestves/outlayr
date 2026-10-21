@@ -2,16 +2,12 @@ import { background, listRowBackground, listStyle, scrollContentBackground } fro
 
 import type { ThemeColors } from "@/theme/use-colors";
 
-/**
- * Every modifier a SwiftUI `List` needs to stand on the app's ground instead of
- * iOS's. Hiding the scroll background alone leaves whatever is behind the `Host`,
- * so the ground is named here rather than inherited.
- */
+// Hiding the scroll background alone leaves whatever is behind the `Host`, so the ground is named here.
 export const groupedList = (colors: ThemeColors) => [
     listStyle("insetGrouped"),
     scrollContentBackground("hidden"),
     background(colors.groupedBackground),
 ];
 
-/** The cells that float on {@link groupedList}. Goes on a `Section`, not a row. */
+/** Goes on a `Section`, not a row. */
 export const groupedRows = (colors: ThemeColors) => listRowBackground(colors.surface);

@@ -8,7 +8,6 @@ export interface EditorSwitchProps {
     value: boolean;
 }
 
-/** A budget fact that is on or off, on the income track. `editor-switch.android.tsx` is the M3 switch. */
 export function EditorSwitch({ accessibilityLabel, onValueChange, value }: EditorSwitchProps) {
     const colors = useColors();
     return (

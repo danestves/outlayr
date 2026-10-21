@@ -6,13 +6,7 @@ import type { SearchBar as SearchBarBase } from "./search-bar";
 
 export type { SearchBarProps } from "./search-bar";
 
-/**
- * The header field as Material's search view: the input sits flat on the app
- * bar in on-surface, with the hint and the clear X in on-surface-variant. On
- * Android `barTintColor` paints the field's plate, which drops the platform's
- * underline (`tintColor` does nothing there); the hint's own magnifier goes
- * too, since the bar already leads with a back arrow.
- */
+/** On Android `barTintColor` paints the plate and drops the underline; `tintColor` does nothing. */
 export const SearchBar: typeof SearchBarBase = ({ onChangeText, onClose, placeholder }) => {
     const m3 = useMaterialColors();
     return (

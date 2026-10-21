@@ -24,12 +24,11 @@ import type { SentenceVerb } from "./sentence/fact-glyphs";
 
 interface InstallmentOrderArgs {
     account: Account | null;
-    /** The accounts an upfront can come from. */
     banks: readonly Account[];
     currency: string;
     date: Date;
     db: Database;
-    /** The rate the entry books its dollars with, which prices a plan in dollars. */
+    /** Prices a plan in dollars. */
     entryRate: { rate: number | null; type: EntryRateType };
     income: boolean;
     initial: Transaction | undefined;
@@ -37,13 +36,7 @@ interface InstallmentOrderArgs {
     mode: "create" | "edit";
 }
 
-/**
- * The entry form's Installments fact: a chip offered on a new expense on a
- * liability account, the sheet it opens, and the save that writes the purchase
- * together with its order. Editing an entry that already has an order shows a
- * chip that opens the order instead: its rows are edited there, never
- * regenerated from here.
- */
+// Editing an entry that has an order opens the order instead: its rows are edited there, never regenerated here.
 export function useInstallmentOrder({
     account,
     banks,
@@ -134,7 +127,7 @@ export function useInstallmentOrder({
         ];
     };
 
-    /** The upfront's source: null when it was paid outside Outlayr, undefined while it cannot be converted. */
+    /** Null when paid outside Outlayr; undefined while it cannot be converted. */
     const upfrontSource = (plan: number): PaymentSource | null | undefined => {
         if (from === null) {
             return null;
@@ -145,7 +138,7 @@ export function useInstallmentOrder({
         );
     };
 
-    /** Why the order cannot be saved yet, or null. Opens the sheet on the answer. */
+    /** Opens the sheet on the answer. */
     const problem = (price: number): string | null => {
         if (!offered || draft === null) {
             return null;
@@ -165,7 +158,7 @@ export function useInstallmentOrder({
         return reason;
     };
 
-    /** Writes the purchase with its order when installments are on; null when they are off. */
+    /** Null when installments are off. */
     const save = (
         input: TransactionInput,
         price: number,
@@ -193,7 +186,7 @@ export function useInstallmentOrder({
             });
     };
 
-    /** For the form to fire after its `onDone`: an order it just saved may ask about cuota notices. True when it asks. */
+    /** Fire after the form's `onDone`; true when it asks about cuota notices. */
     const afterDone = () => ordered.current && askForInstallmentReminders(db);
 
     const sheet = (price: number) => {

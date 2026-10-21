@@ -15,7 +15,6 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import { CompactDatePicker } from "./compact-date-picker";
 import { EditorRow } from "./editor-row";
 
-/** What the editor writes. Every field is optional: one row commits one fact. */
 export interface GoalEdit {
     name?: string;
     targetAmount?: number;
@@ -25,14 +24,11 @@ export interface GoalEdit {
 interface GoalEditorProps {
     accountName: string;
     currency: string;
-    /** The currency `targetAmount` is actually in — the goal's own when unvalued. */
+    /** The currency `targetAmount` is actually in: the goal's own when unvalued. */
     targetCurrency: string;
-    /** The currency the goal was set in, when it is not the one being read. */
     foreignCurrency?: string | null;
-    /** What the target costs a month at today's standing, or null once reached. */
     perMonth: number | null;
     onChange: (edit: GoalEdit) => void;
-    /** Opens the target sheet: the amount is placed, not typed into a row. */
     onChangeTarget: () => void;
     onDelete: () => void;
     name: string;
@@ -40,14 +36,6 @@ interface GoalEditorProps {
     targetDate: Date;
 }
 
-/**
- * A goal's facts, edited where they are read.
- *
- * There is no save and no form: each row commits on its own and the figures
- * above it move as it does. The account is not a row at all — progress IS that
- * account's balance, so swapping it would silently restate every figure the goal
- * has ever shown; it is stated with the reason instead.
- */
 export function GoalEditor({
     accountName,
     currency,
@@ -69,11 +57,7 @@ export function GoalEditor({
 
     const money = (value: number) => formatAmount(value, currency, showCents, language);
 
-    // Tomorrow at the earliest, for the reason the sheet has the same floor: a
-    // goal due today has no month left to hold a pace over. Keyed on the shared
-    // clock, or a screen left open across midnight would keep yesterday's idea of
-    // tomorrow — which is today, and would let a same-day deadline through the
-    // floor that exists to refuse it.
+    // Keyed on the shared clock: a screen left open across midnight would otherwise let a same-day deadline through.
     const nowMs = useNow();
     const range = useMemo(() => {
         const start = tomorrowLocal(nowMs);
@@ -98,9 +82,7 @@ export function GoalEditor({
                             autoFocus
                             className="text-body text-foreground py-1 font-sans"
                             defaultValue={name}
-                            // `onEndEditing` rather than `onSubmitEditing`: it fires on Done
-                            // and on a blur, and a name typed then abandoned by tapping the
-                            // next row is still a name the user typed.
+                            // Fires on Done and on blur, so a name abandoned by tapping the next row still commits.
                             onEndEditing={(event) => commitName(event.nativeEvent.text)}
                             placeholder={t("goals.form.defaultName")}
                             placeholderTextColorClassName="accent-muted"
@@ -115,10 +97,6 @@ export function GoalEditor({
                     detail={perMonth == null ? null : t("goals.editor.targetNote", { amount: money(perMonth) })}
                     label={t("goals.editor.target")}
                     onPress={onChangeTarget}
-                    // In the goal's OWN currency when the conversion is unavailable:
-                    // the figure handed down is then the stored face amount, and
-                    // labelling it with the display currency would say EUR 1,000 is
-                    // GBP 1,000 on a screen already saying there is no rate.
                     value={formatAmount(targetAmount, targetCurrency, showCents, language)}
                 />
 
@@ -131,10 +109,7 @@ export function GoalEditor({
                     <Animated.View className="border-border border-b py-2" entering={revealEntering()}>
                         <CompactDatePicker
                             label={t("goals.editor.by")}
-                            // Clamped, not merely bounded: an overdue goal lowers the
-                            // range's floor to its own past date so the picker can
-                            // render it, which would otherwise let any day since be
-                            // chosen afresh.
+                            // Clamped, not merely bounded: an overdue goal lowers the range's floor so it can render.
                             onChange={(next) => {
                                 setPickingDate(false);
                                 const floor = tomorrowLocal(nowMs);

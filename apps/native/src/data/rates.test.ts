@@ -30,8 +30,6 @@ describe("isThrottled", () => {
     });
 
     it("treats a backward clock jump as expired rather than locking shut", () => {
-        // A stamp in the future would otherwise hold the throttle closed until
-        // the clock caught up — potentially hours with no rates.
         expect(isThrottled(now + 60_000, now)).toBe(false);
     });
 });
@@ -70,7 +68,6 @@ function wireRow(quote: string, date: string): RateWireRow {
     };
 }
 
-/** Answers one page per call, walking the cursor the caller feeds back. */
 function pagedPuller(pages: RateWireRow[][]): {
     pull: (args?: { cursor?: number }) => Promise<PullRatesPage>;
     calls: (number | undefined)[];
@@ -152,7 +149,6 @@ describe("pullRatesIfDue", () => {
     });
 
     it("replaces the whole cache rather than merging into it", async () => {
-        // A quote the provider dropped must not survive as a rate nothing refreshes.
         const db = makeDb();
         await db.insert(exchangeRates).values(wireRow("VES", "2020-01-01"));
         const { pull } = pagedPuller([[wireRow("EUR", "2026-07-28")]]);
@@ -181,33 +177,23 @@ describe("pullRatesIfDue", () => {
     });
 
     it("rolls the wipe back when the replacement fails part-way", async () => {
-        // The wipe and the refill are separate statements. Without a real boundary
-        // around them a failed refill leaves the ledger with no rates at all, and
-        // every converted total on every screen silently drops to face value until
-        // some later pull happens to succeed.
         const db = makeDb();
         await db.insert(exchangeRates).values(wireRow("VES", "2020-01-01"));
         const duplicate = wireRow("EUR", "2026-07-28");
         const { pull } = pagedPuller([[duplicate, duplicate]]);
         const before = ratesRevision();
 
-        // `toMatchObject` rather than `.rejects.toThrow()`: the rejection is a
-        // native-addon `SqliteError`, and Jest gives each test file its own realm,
-        // so `instanceof Error` on it is not reliable across files — `toThrow()`
-        // silently reports "did not throw" when that happens.
+        // `toMatchObject`, not `.rejects.toThrow()`: the native `SqliteError` comes from another realm, so `toThrow()`
+        // can report "did not throw".
         await expect(pullRatesIfDue(db, pull, { now: NOW })).rejects.toMatchObject({
             message: expect.any(String),
         });
         await expect(storedRates(db)).resolves.toStrictEqual([{ date: "2020-01-01", quote: "VES" }]);
-        // Unstamped, so the next foreground retries rather than waiting out the
-        // throttle on a pull that never landed.
         await expect(lastPullAt(db)).resolves.toBeNull();
         expect(ratesRevision()).toBe(before);
     });
 
     it("bumps only once the replaced cache is readable", async () => {
-        // Bumping mid-write would invalidate every screen's rate table against a
-        // cache that is still half-replaced.
         const db = makeDb();
         await db.insert(exchangeRates).values(wireRow("VES", "2020-01-01"));
         const { pull } = pagedPuller([[wireRow("EUR", "2026-07-28")]]);

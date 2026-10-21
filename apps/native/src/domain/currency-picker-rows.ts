@@ -13,8 +13,8 @@ export type CurrencyPickerRow =
           code: CurrencyCode;
           favourite: boolean;
           /**
-           * Last of its section. The row draws its own separator, so without this
-           * the final one in a section stacks a hairline against the next header.
+           * The row draws its own separator, so the last in a section must skip it or it stacks a hairline against the
+           * next header.
            */
           last: boolean;
       };
@@ -27,7 +27,6 @@ function currencyRow(code: CurrencyCode, favourite: boolean): CurrencyPickerRow 
     return { code, favourite, key: code, kind: "currency", last: false };
 }
 
-/** Marks the last currency row before each header, and the last one overall. */
 function closeSections(rows: CurrencyPickerRow[]): CurrencyPickerRow[] {
     for (let index = 0; index < rows.length; index += 1) {
         const row = rows[index];
@@ -41,18 +40,9 @@ function closeSections(rows: CurrencyPickerRow[]): CurrencyPickerRow[] {
 }
 
 /**
- * The rows the currency sheet draws, in order.
- *
- * A favourite appears in the cluster and NOWHERE else. The catalogue pins its
- * two suggested codes above its own alphabet, so a cluster that repeated its
- * codes drew them immediately above themselves — two identical rows with no
- * separator between the sections.
- *
- * A search returns flat: clustering on top of it would push the match the user
- * typed below the fold.
- *
- * An empty cluster keeps its header and a hint row: favouriting is a long
- * press, which nothing on a row advertises.
+ * A favourite appears only in the cluster: the catalogue pins its suggested codes too, and repeats would stack
+ * identical rows. A search returns flat so the match stays above the fold; an empty cluster keeps a hint row,
+ * since nothing advertises the long press.
  */
 export function currencyPickerRows(favourites: readonly string[], query: string): CurrencyPickerRow[] {
     const needle = query.trim().toLowerCase();

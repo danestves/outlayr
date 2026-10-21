@@ -25,11 +25,8 @@ const NOTIFICATION = {
 } as const;
 
 /**
- * The nullable `db` rather than `useDatabase()`: `IdentityDraftProvider` sits
- * above the root splash gate, where that throws on the first frame of every
- * launch. `null` resolves to silence rather than to the default, so "no setting
- * was read" can never mean "tap anyway" — which is why this cannot be
- * `useSettingNumber`, whose unread value is the default.
+ * Nullable `db`: `IdentityDraftProvider` sits above the splash gate, where `useDatabase()` throws. Null resolves to
+ * silence, never the default, which is why this is not `useSettingNumber`.
  */
 function useHapticsLevel(): number | null {
     const { db } = useLocalData();
@@ -37,11 +34,7 @@ function useHapticsLevel(): number | null {
     return db === null ? null : level;
 }
 
-/**
- * The app's only route to the taptic engine — `expo-haptics` is import-banned
- * everywhere else (oxlint.config.ts). A direct call is unconditional, which is what
- * left the Haptics setting governing nothing.
- */
+/** The only route to the taptic engine: `expo-haptics` is import-banned everywhere else (oxlint.config.ts). */
 export function useHaptics(): (event: HapticEvent) => void {
     const level = useHapticsLevel();
 

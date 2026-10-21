@@ -61,13 +61,10 @@ import type { NewDebtProps } from "./new-debt-form";
 
 const CHEVRON = font({ design: "rounded", textStyle: "footnote", weight: "semibold" });
 const SUGGESTION_TILE = 22;
-/** What a SwiftUI text field paints its placeholder in, for a row that reads like one. */
 const PLACEHOLDER = { style: "tertiary", type: "hierarchical" } as const;
 const SEGMENT_HEIGHT = 32;
-/** The segment past the debt choices: a sale on credit, which is income rather than a transfer. */
 const FIADO = "fiado";
 
-/** The iOS sheet: a segmented picker, the amount, then SwiftUI rows over the shared form. */
 export function NewDebt(props: NewDebtProps) {
     const t = useTranslation();
     const { language } = useLanguage();
@@ -235,10 +232,7 @@ export function NewDebt(props: NewDebtProps) {
     );
 }
 
-/**
- * "Pay back by": empty sets no plan; once picked, a date and a clear button.
- * The picker stays mounted and fades out while empty: one added later reads "19/11/26".
- */
+/** Stays mounted while empty: one added later reads "19/11/26". */
 function PayBackByField({ form }: { form: ReturnType<typeof useNewDebtForm> }) {
     const t = useTranslation();
     const colors = useColors();
@@ -307,7 +301,6 @@ function PayBackByField({ form }: { form: ReturnType<typeof useNewDebtForm> }) {
     );
 }
 
-/** An existing person under the name field, so a debt with them is one tap rather than a retyped name. */
 function PersonSuggestion({ onPick, person }: { onPick: () => void; person: Account }) {
     const colors = useColors();
     return (
@@ -334,14 +327,12 @@ function PersonSuggestion({ onPick, person }: { onPick: () => void; person: Acco
 }
 
 interface PickerFieldProps {
-    /** The up-down chevron of a row that opens a list rather than a keypad. */
     chevron?: boolean;
     label: string;
     onPress: () => void;
     value: string;
 }
 
-/** A row that opens a sheet, read by VoiceOver as one button. */
 function PickerField({ chevron = false, label, onPress, value }: PickerFieldProps) {
     const colors = useColors();
     return (
@@ -366,7 +357,6 @@ function PickerField({ chevron = false, label, onPress, value }: PickerFieldProp
 
 interface PersonFieldProps {
     label: string;
-    /** The person the sheet was opened for, who is not to be retyped. */
     lockedName: string | null;
     nameState: ReturnType<typeof useNativeState<string>>;
     onName: (name: string) => void;

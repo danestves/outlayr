@@ -14,26 +14,17 @@ export interface AccountLogo {
 }
 
 export interface UseAccountIdentityArgs {
-    /** Read at attach time; false leaves the tile alone. */
     canAttach?: () => boolean;
     enabled: boolean;
     fetchImage?: typeof fetchMerchantImage;
-    /** The `groundedLookup` setting. */
     groundedLookup?: boolean;
-    /**
-     * A name the editor opens with. It is looked up once on mount as if it had
-     * just been typed, so a carried-over draft is not left with an empty tile.
-     */
     initialName?: string;
     locale?: string;
-    /** The name resolved to nothing — a previously suggested logo must go. */
     onClear: () => void;
     onLogo: (logo: AccountLogo) => void;
     persistLogo?: (bytes: Uint8Array) => Promise<AccountLogo>;
     regionCode?: string;
-    /** `remoteEnrichmentOn`: AI providers allowed and suggestions on. False keeps every lookup on-device. */
     remoteEnabled?: boolean;
-    /** Injected in tests; production resolves the real Convex call. */
     transport?: EnrichmentFn | null;
 }
 
@@ -42,16 +33,6 @@ export interface UseAccountIdentityResult {
     pending: boolean;
 }
 
-/**
- * The transaction enrichment protocol with everything but the domain ignored:
- * same debounce rhythm, consent gates, caches and grounded follow-up, consumed
- * only for the logo an account's name resolves to. Category and tag
- * suggestions never reach the caller.
- *
- * Its one addition is the institution tier — accounts are named after banks and
- * wallets, which the curated merchant map does not cover and which resolve
- * on-device here rather than costing a model call.
- */
 export function useAccountIdentity(args: UseAccountIdentityArgs): UseAccountIdentityResult {
     const {
         enabled,
@@ -69,12 +50,6 @@ export function useAccountIdentity(args: UseAccountIdentityArgs): UseAccountIden
 
     const nameRef = useRef("");
     const ticketRef = useRef(0);
-    /**
-     * The callers as of the last commit. `attach` is a long-lived async chain
-     * that outlives the render that started it, so it reads them from here.
-     * Mirrored in an effect rather than during render: a ref written while
-     * rendering is a side effect the compiler cannot follow.
-     */
     const latest = useRef({ canAttach, fetchImage, onClear, onLogo, persistLogo });
     useEffect(() => {
         latest.current = { canAttach, fetchImage, onClear, onLogo, persistLogo };
@@ -100,8 +75,6 @@ export function useAccountIdentity(args: UseAccountIdentityArgs): UseAccountIden
             return;
         }
         if (outcome.kind !== "logo") {
-            // The new name resolved to nothing, so the previous name's logo has to
-            // go with it — keeping it would brand this account wrongly.
             latest.current.onClear();
             return;
         }
@@ -135,8 +108,6 @@ export function useAccountIdentity(args: UseAccountIdentityArgs): UseAccountIden
         onSuggest,
         regionCode,
         remoteEnabled,
-        // Banks and wallets are what accounts are named after, and the curated
-        // merchant map has no opinion about any of them.
         resolveDomain: resolveInstitutionDomain,
         resolveLocal,
         transport,
@@ -151,7 +122,6 @@ export function useAccountIdentity(args: UseAccountIdentityArgs): UseAccountIden
     );
 
     const { initialName } = args;
-    // Once, for the name the editor opened with; later names arrive by typing.
     const enrichInitialName = useEffectEvent(() => {
         if (enabled && initialName != null && initialName.trim().length > 0) {
             onNameChange(initialName);
@@ -161,10 +131,8 @@ export function useAccountIdentity(args: UseAccountIdentityArgs): UseAccountIden
         enrichInitialName();
     }, []);
 
-    // The enrichment teardown cancels its own timers and requests, but not an
-    // `attach` already past them: a fetch or persist still pending when the sheet
-    // closes would land its logo in the draft the next editor is reading. Taking
-    // the ticket on the way out makes every step after an await see it as stale.
+    // The enrichment teardown cancels its timers but not an `attach` already past them, whose logo would land in the
+    // next editor's draft; taking the ticket on the way out makes it stale.
     useEffect(
         () => () => {
             ticketRef.current += 1;

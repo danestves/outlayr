@@ -27,9 +27,7 @@ describe("useRegionCode", () => {
     });
 
     it("returns undefined when getLocales reports no entries", async () => {
-        // expo-localization declares a non-empty tuple, so this is the case its
-        // type says cannot happen — `useRegionCode` still reads index 0, and a
-        // native module that returns nothing must not crash the first render.
+        // expo-localization's type says this cannot happen, but a native module returning nothing must not crash.
         mockGetLocales.mockReturnValue([] as unknown as ReturnType<typeof getLocales>);
         const { result } = await renderHook(() => useRegionCode());
         expect(result.current).toBeUndefined();

@@ -1,9 +1,4 @@
-/**
- * Geometry for the shareable day-group card, kept apart from the Skia painter so
- * the layout can be asserted without a GPU surface.
- *
- * Coordinates are in points at 1x; the painter scales the whole canvas.
- */
+/** Day-card geometry, kept apart from the Skia painter so it can be tested without a GPU. Points at 1x. */
 
 export const DAY_CARD_WIDTH = 360;
 
@@ -16,11 +11,7 @@ const SIGNATURE_SIZE = 10;
 const ROW_HEIGHT = 34;
 const RULE_HEIGHT = 1.3;
 
-/**
- * Skia can measure text but the layout runs without a surface, so widths are
- * estimated from the em size. Only truncation depends on it, and erring wide
- * clips a character early rather than overlapping the amount.
- */
+/** Estimated from the em size (no Skia surface here); erring wide clips early rather than overlapping. */
 const AVERAGE_GLYPH = 0.55;
 
 export type CardWeight = "mono" | "regular" | "medium" | "semibold";
@@ -46,7 +37,6 @@ interface CardRule {
 
 interface DayCardRow {
     amount: string;
-    /** Time, or the category name when "Swap Time Label" is on. */
     meta: string;
     note: string;
 }
@@ -107,8 +97,6 @@ export function layoutDayCard(input: DayCardInput): DayCardLayout {
     y += 18;
     rules.push({ height: RULE_HEIGHT, width: contentWidth, x: left, y });
 
-    // The amount takes the trailing third; the note is truncated against what is
-    // left so the two never overlap on a long merchant name.
     const amountWidth = contentWidth * 0.36;
     const noteWidth = contentWidth - amountWidth - 12;
 

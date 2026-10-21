@@ -7,10 +7,6 @@ export interface BudgetDetailToolbarProps {
     onDelete: () => void;
 }
 
-/**
- * A menu on the bar button, not an alert behind it: these are neutral choices,
- * and the delete asks its own question.
- */
 export function BudgetDetailToolbar({ onDelete }: BudgetDetailToolbarProps) {
     const t = useTranslation();
     return (

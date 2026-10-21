@@ -14,14 +14,10 @@ import type { TransferInput } from "./transfers-core";
 export interface PersonInput {
     currency: string;
     name: string;
-    /**
-     * A debt from before Outlayr, signed the way the balance is: negative when
-     * you owe them, positive when they owe you. Defaults to zero.
-     */
+    /** Signed like the balance: negative when you owe them, positive when they owe you. */
     openingBalance?: number;
 }
 
-/** A person is an account of kind `person`, with no logo or institution identity. */
 export async function createPerson(db: Database, input: PersonInput): Promise<string> {
     return await accountsRepo.create(db, {
         currency: input.currency,
@@ -31,7 +27,7 @@ export async function createPerson(db: Database, input: PersonInput): Promise<st
     });
 }
 
-/** One side of a debt movement, in that account's own currency. */
+/** In that account's own currency. */
 export interface DebtLeg {
     accountId: string;
     amount: number;
@@ -39,21 +35,15 @@ export interface DebtLeg {
 }
 
 export interface DebtMovementInput {
-    /** One of your accounts. */
     account: DebtLeg;
     date: Date;
     note?: string;
     person: DebtLeg;
-    /** How a cross-currency amount was valued; ignored when both legs share a currency. */
     rateType: EntryRateType | null;
     verb: DebtVerb;
 }
 
-/**
- * The transfer a debt movement is. Each leg arrives already in its account's
- * currency, as the transfer editor's legs do, and the stored rate is the one
- * those legs imply, so a cross-currency debt reads back exactly as it was typed.
- */
+// Each leg is already in its account's currency and the stored rate is the one they imply, so it reads back as typed.
 export function debtTransferInput(input: DebtMovementInput): TransferInput {
     const { from, to } = debtLegs(input.verb, { account: input.account, person: input.person });
     const crossCurrency = from.currency !== to.currency;
@@ -71,7 +61,6 @@ export function debtTransferInput(input: DebtMovementInput): TransferInput {
     };
 }
 
-/** Borrowing, lending, paying back or being paid back: a transfer with a person. Returns the transfer id. */
 export async function recordDebtMovement(db: Database, input: DebtMovementInput): Promise<string> {
     return await transfersRepo.create(db, debtTransferInput(input));
 }
@@ -81,15 +70,10 @@ export interface SoldOnCreditInput {
     categoryId: string;
     date: Date;
     note?: string;
-    /** The buyer, whose currency the sale is in. */
     person: { currency: string; id: string };
 }
 
-/**
- * A sale on credit: an income entry on the person's account, so it counts as
- * income once and leaves them owing you. Being paid back later is a transfer,
- * not income. Titled with the note, or "Sold on credit" in the app's language.
- */
+// An income entry on the person's account: income once, and they owe you. Being paid back later is a transfer.
 export async function recordSoldOnCredit(db: Database, input: SoldOnCreditInput): Promise<string> {
     return await transactionsRepo.create(
         db,

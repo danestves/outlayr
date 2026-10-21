@@ -163,7 +163,6 @@ function SettledToggle({ count, onToggle, open }: { count: number; onToggle: () 
     );
 }
 
-/** "Due in the next 14 days", how many cuotas and the soonest, and what they come to; overdue in the error colour. */
 function DueStrip({
     amount,
     currency,
@@ -205,7 +204,6 @@ interface DebtRowProps {
     currency: string;
     format: (amount: number) => string;
     onOpen: (id: string) => void;
-    /** A live payoff plan: its line, the date at the line's end, and what the line says. */
     plan: { a11y: string; date: string; line: PayoffLine } | null;
     row: DebtListRow;
     subtitle: string | null;

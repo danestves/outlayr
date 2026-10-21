@@ -14,7 +14,6 @@ import type { TransactionFormCta as TransactionFormCtaBase, TransactionFormCtaPr
 
 const PRESSED_ALPHA = 0.1;
 
-/** M3 disabled content, for a Save the entry is not whole enough for yet. */
 const BLOCKED_ALPHA = 0.38;
 
 /** Stable handlers, so a keystroke in the form does not rebuild the bar. */
@@ -28,10 +27,7 @@ interface CtaHandlers {
 type CtaBarProps = Pick<TransactionFormCtaProps, "deleteLabel" | "lookupBusy" | "lookupLabel"> &
     CtaHandlers & { inSheet: boolean; saveBusy: boolean; saveReady: boolean; sheetTitle?: string };
 
-/**
- * Save as an M3 text button at the end of a full-screen dialog's app bar. A
- * blocked Save stays pressable, as on iOS: the press says what is missing.
- */
+// A blocked Save stays pressable, as on iOS: the press says what is missing.
 function DialogSave({ busy, onPress, ready }: { busy: boolean; onPress: () => void; ready: boolean }) {
     const t = useTranslation();
     const m3 = useMaterialColors();
@@ -106,15 +102,8 @@ function CtaBarBody({
 
 const CtaBar = memo(CtaBarBody);
 
-/**
- * The form's commit actions on Android.
- *
- * A full-screen dialog (new entry, new transfer) puts Save in the app bar as a
- * text button, always: the stage's filled footer is the other way to commit.
- * A sheet (edit) has no app bar, so Lookup, Delete and Save go in the
- * `SheetHeader` it draws first in its content. Same props as `cta.tsx`; render
- * it before the form's scroller so a sheet's header lands on top.
- */
+// A sheet (edit) has no app bar, so its actions go in the `SheetHeader` it draws first: render this before the
+// form's scroller so that header lands on top.
 export const TransactionFormCta: typeof TransactionFormCtaBase = (props) => {
     const handlers = useRef(props);
     useLayoutEffect(() => {

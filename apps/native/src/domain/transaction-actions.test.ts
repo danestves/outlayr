@@ -72,8 +72,6 @@ describe("transactionRowActions", () => {
 });
 
 describe("logAgainDraft", () => {
-    // Shaped like the row `getTransactionById` returns, schedule and photo
-    // included, so the projection is exercised against what it really receives.
     const row = {
         amount: 4.75,
         categoryId: "cat-coffee",

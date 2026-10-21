@@ -9,18 +9,13 @@ import { useLiveQuery } from "./live-query";
 export interface SyncStatus {
     /** The device-local switch, which outlives any entitlement. */
     enabled: boolean;
-    /** Rows this device has queued and not yet handed to the server. */
     pending: number;
-    /** When a cycle last completed here, or null if none ever has. */
     syncedAt: Date | null;
 }
 
 /**
- * What the Settings row reads.
- *
- * Deliberately carries no error state: §8.7 of `docs/internals/convex-sync.md`
- * settles the failure UX as silent-and-retrying. A stalled queue shows as a
- * pending count that stops falling.
+ * No error state by design (`docs/internals/convex-sync.md` §8.7): a stalled queue shows as a pending count that
+ * stops falling.
  */
 export function useSyncStatus(db: Database): SyncStatus {
     const pendingRows = useLiveQuery(outbox, () => db.select({ total: count() }).from(outbox));

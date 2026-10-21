@@ -17,8 +17,7 @@ import { Text } from "./text";
 
 const GLASS = isLiquidGlassAvailable();
 
-/** `GlassContainer` is third-party, so it takes a style rather than a class —
-    the same reason `GlassView` is never wrapped by uniwind (see `styled.ts`). */
+// `GlassContainer` is third-party, so it takes a style rather than a class (see `styled.ts`).
 const GRID_GAP = { gap: 8 } as const;
 
 const CLEAR_ACTION = "clear";
@@ -33,14 +32,9 @@ const ROWS: NumpadTileKey[][] = [
 interface AmountNumpadProps {
     code: string;
     minorUnits: number;
-    /**
-     * Overrides `numberEntryType`. For a field that is not money — an exchange
-     * rate — where "the last two digits are cents" describes nothing the user
-     * is typing, so the money preference must not reach it.
-     */
+    /** Overrides `numberEntryType` for a field that is not money, such as an exchange rate. */
     mode?: NumpadMode;
     onChange: (next: string, key: NumpadKey) => void;
-    /** Off where the caller already shows the figure above the keys. */
     showDisplay?: boolean;
     toneClass?: string;
     value: string;
@@ -65,15 +59,9 @@ export function AmountNumpad({
     const symbol = currencySymbol(code);
     const amountColor = toneClass?.includes("income") ? colors.income : colors.foreground;
 
-    /**
-     * What the last press produced, and the `value` it was built from. `value`
-     * is a render-time prop, so two presses landing inside one commit window
-     * would both read the string from before the first of them and the earlier
-     * keystroke would be lost — a dropped digit is a tenfold error under
-     * `preDotted`. Keyed on the base rather than cleared on a timer so it stops
-     * applying the moment a render catches up. Every caller stores what it is
-     * handed verbatim; one that declined a keystroke would need to say so.
-     */
+    // `value` is a render-time prop, so two presses inside one commit would build on the same string and drop a digit
+    // (a tenfold error under `preDotted`). Keyed on the base, so it stops applying once a render catches up. Callers
+    // store what they are handed verbatim; one that declined a keystroke would need to say so.
     const chained = useRef<{ base: string; next: string } | null>(null);
 
     const latest = useRef({ value, minorUnits, mode, onChange });
@@ -84,8 +72,7 @@ export function AmountNumpad({
     const press = useCallback(
         (key: NumpadKey) => {
             const { value: base, minorUnits: units, mode: entryMode, onChange: emit } = latest.current;
-            // A long press has no tell of its own beyond the amount resetting, and
-            // `keyTap` is silent below the excessive haptics level.
+            // `keyTap` is silent below the excessive haptics level, and a long press has no other tell.
             haptics(key === "clear" ? "medium" : "keyTap");
             const current = chained.current?.base === base ? chained.current.next : base;
             const next = applyNumpadKey(current, key, units, entryMode);
@@ -96,9 +83,7 @@ export function AmountNumpad({
     );
 
     return (
-        // No horizontal inset of its own: the caller owns it, so the keys line up
-        // with whatever sits under them — the sheet's Done button at `px-4`, the
-        // first-run CTA at `px-6`.
+        // No horizontal inset: the caller owns it, so the keys line up with whatever sits under them.
         <View>
             {showDisplay ? (
                 <>
@@ -121,11 +106,8 @@ export function AmountNumpad({
                     </View>
                 </>
             ) : null}
-            {/* Grouped: remounting twelve loose `GlassView`s — which the stage does
-                every time it swaps back to this step — leaves most of them without
-                an effect, and only the first column and "0" draw. Inside a
-                container they attach as one set. `spacing` stays default so they
-                do not merge into each other. */}
+            {/* Grouped: twelve loose `GlassView`s remounted by the stage mostly lose their effect, while a container
+                attaches them as one set. Default `spacing` keeps them from merging. */}
             <GlassContainer style={GRID_GAP}>
                 {ROWS.map((row) => (
                     <View className="flex-row gap-2" key={row.join(",")}>
@@ -156,7 +138,6 @@ function NumpadKeyTile({
     onLongPress,
 }: {
     label: NumpadTileKey;
-    /** The separator key draws the active language's mark, not the canonical ".". */
     glyph: string;
     hidden: boolean;
     fg: string;
@@ -164,8 +145,7 @@ function NumpadKeyTile({
     onLongPress?: () => void;
 }) {
     const t = useTranslation();
-    // Holds the separator's cell open so "0" stays centred under "8" when the
-    // entry model has no use for a separator — see `applyNumpadKey`.
+    // Holds the separator's cell open so "0" stays centred under "8".
     if (hidden) {
         return <View className="min-h-12 flex-1" />;
     }

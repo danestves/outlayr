@@ -281,9 +281,7 @@ export function Paywall() {
     };
 
     const empty = failed || (plans !== null && plans.length === 0);
-    // Most of what Pro sells runs on the account: sync, photo backup, AI import
-    // and the web lookup all need a backend. A build without one cannot deliver
-    // what this screen advertises, so it does not take money for it either.
+    // A build without a backend cannot deliver Pro, so it takes no money for it.
     const noCloud = !proSellable();
     const needsAccount = !noCloud && accountId === null;
     const canBuy = !(isPro || needsAccount || noCloud);

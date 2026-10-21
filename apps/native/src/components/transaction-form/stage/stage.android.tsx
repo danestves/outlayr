@@ -25,21 +25,17 @@ const SWAP_MS = 240;
 
 const LABEL_MS = 160;
 
-/** How far the incoming body travels, in the direction of travel. */
 const SLIDE = 8;
 
-/** The B mock's bottom padding, kept clear of the gesture bar. */
 const BOTTOM_PAD = 24;
 
-/** Lifted over the keyboard there is no gesture bar to clear. */
+// Lifted over the keyboard there is no gesture bar to clear.
 const KEYBOARD_BOTTOM_PAD = 12;
 
 const ICON_SIZE = 24;
 
-/** M3 state layers: 10% of the content colour on a press. */
 const PRESSED_ALPHA = 0.1;
 
-/** M3 disabled container and content, for the footer while the entry is not whole yet. */
 const DISABLED_CONTAINER_ALPHA = 0.12;
 const DISABLED_CONTENT_ALPHA = 0.38;
 
@@ -49,7 +45,7 @@ const LARGE_TEXT_STAGE_FONT_SCALE_CAP = 2;
 
 export const StagePartContext: typeof StagePartContextBase = createContext<"inline" | "pinned" | null>(null);
 
-/** See `stage.tsx`: no `exiting` partner, so the surface never holds two bodies. */
+// See `stage.tsx`: no `exiting` partner, so the surface never holds two bodies.
 function stageBodyEntering(forward: boolean) {
     return new Keyframe({
         0: { opacity: 0, transform: [{ translateX: forward ? SLIDE : -SLIDE }] },
@@ -66,7 +62,6 @@ const FOOTER_LABEL_ENTERING = new Keyframe({
     .duration(LABEL_MS)
     .reduceMotion(ReduceMotion.System);
 
-/** A trailing action is an M3 text button. */
 function StageRightMeta({ action, node }: { action?: StageAction; node?: ReactNode }) {
     const m3 = useMaterialColors();
     if (action) {
@@ -87,11 +82,6 @@ function StageRightMeta({ action, node }: { action?: StageAction; node?: ReactNo
     return <View className="ml-auto">{node}</View>;
 }
 
-/**
- * The surface at the bottom of the transaction form, in Material 3: a
- * `surfaceContainer` panel with 28dp top corners, an icon button back, and the
- * filled primary button. Same contract as `stage.tsx`.
- */
 export const TransactionStage: typeof TransactionStageBase = ({
     backLabel,
     children,
@@ -112,12 +102,10 @@ export const TransactionStage: typeof TransactionStageBase = ({
     const buttonOnly = part === "pinned" && largeText;
     const inline = part === "inline";
     const ready = (footer?.tone ?? "primary") === "primary";
-    // The part that draws the back button owns the press: at large text the
-    // pinned part is only the footer.
+    // The part that draws the back button owns the press: at large text the pinned part is only the footer.
     useStageBack(buttonOnly ? undefined : onBack);
     const bottomPad = { paddingBottom: keyboardShown ? KEYBOARD_BOTTOM_PAD : BOTTOM_PAD + insets.bottom };
 
-    // The keyboard replaces this button, as on iOS: return does the same job.
     const button =
         footer && !keyboardShown ? (
             <Pressable
@@ -159,8 +147,7 @@ export const TransactionStage: typeof TransactionStageBase = ({
                 className={cn("pt-[15px]", inline ? null : "bg-m3-surface-container rounded-t-[28px] px-4")}
                 style={inline ? undefined : bottomPad}
             >
-                {/* Title centred on the panel, not after the back button, so it sits in
-                the same place on every step. */}
+                {/* Centred on the panel, not after the back button, so it sits in the same place on every step. */}
                 <View className={cn(largeText ? "min-h-12" : "h-12", "flex-row items-center")}>
                     {onBack ? (
                         <Pressable

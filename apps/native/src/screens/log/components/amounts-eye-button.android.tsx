@@ -13,18 +13,13 @@ import { useMaterialColors } from "@/theme/use-material-colors";
 
 import type { AmountsEyeButton as AmountsEyeButtonBase } from "./amounts-eye-button";
 
-/** Kept for parity with iOS, whose glass controls share them; Android draws no glass. */
+/** Parity with iOS; Android draws no glass. */
 export const LOG_CONTROL_SIZE = "h-10 rounded-full";
 export const LOG_CONTROL_SHADOW = {} as const;
 
 const PRESSED_ALPHA = 0.1;
 
-/**
- * The amounts toggle as a Material 3 tonal icon button: glass has no Android
- * fallback worth drawing. Hidden amounts swap the glyph and take the primary,
- * as the iOS button takes the tint. It draws at 40dp inside a 48dp touch
- * frame, given back as negative margin so the hero row does not move.
- */
+/** 40dp inside a 48dp touch frame, given back as negative margin. */
 export const AmountsEyeButton: typeof AmountsEyeButtonBase = () => {
     const db = useDatabase();
     const t = useTranslation();

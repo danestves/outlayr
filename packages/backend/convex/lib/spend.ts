@@ -1,16 +1,14 @@
 import type { RateLimitConfig } from "@convex-dev/rate-limiter";
 import { DAY } from "@convex-dev/rate-limiter";
 
-/** $10 per 1,000 Claude web searches — https://platform.claude.com/docs/en/about-claude/pricing. */
+/** $10 per 1,000 Claude web searches: https://platform.claude.com/docs/en/about-claude/pricing. */
 const DEFAULT_SEARCH_PRICE_MICROS = 10_000;
 /** $2 per 1M input tokens on `claude-sonnet-5-5`. */
 const DEFAULT_INPUT_PRICE_MICROS_PER_TOKEN = 2;
 /** $10 per 1M output tokens on `claude-sonnet-5-5`. */
 const DEFAULT_OUTPUT_PRICE_MICROS_PER_TOKEN = 10;
-/** The monthly ceiling, in micro-dollars. */
 export const DEFAULT_BUDGET_CEILING_MICROS = 200_000_000;
 const BUDGET_PERIOD_MS = 30 * DAY;
-/** Cost-model worst case: up to 3 search rounds per lookup. */
 export const WORST_CASE_SEARCH_CALLS = 3;
 /** Backs the pessimistic pre-charge. Search results bill as input: one-search lookups measured 14k to 17.5k tokens. */
 const ESTIMATED_INPUT_TOKENS = 18_000;
@@ -42,11 +40,7 @@ export function budgetCeilingMicros(): number {
     return envNumber("GROUNDED_BUDGET_MICROS", DEFAULT_BUDGET_CEILING_MICROS);
 }
 
-/**
- * Never registered as a named limit on the shared `RateLimiter` instance —
- * passing this inline on every call is what lets the ceiling move via an env
- * var alone (a statically-registered config cannot be overridden per call).
- */
+// Passed inline, never registered: a registered config cannot change per call, so the env var could not move it.
 export function budgetConfig(): RateLimitConfig {
     return {
         kind: "fixed window",
@@ -69,7 +63,6 @@ export interface UsageLike {
     outputTokens?: number | null;
 }
 
-/** The measured actual, recorded unconditionally regardless of outcome. */
 export function measureMicros(usage: UsageLike, searchCalls: number): number {
     return (
         searchCalls * searchPriceMicros() +

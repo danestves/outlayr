@@ -32,10 +32,6 @@ const FUZZY_MIN_KEY_LENGTH = 5;
 const FUZZY_MAX_DISTANCE = 1;
 const FUZZY_EARLY_EXIT_DISTANCE = 2;
 
-/**
- * Bailing out once a row's minimum exceeds `earlyExitAt` avoids computing the
- * full O(n*m) table for candidates that are obviously too far apart.
- */
 function boundedLevenshtein(a: string, b: string, earlyExitAt: number): number {
     if (Math.abs(a.length - b.length) > earlyExitAt) {
         return earlyExitAt + 1;

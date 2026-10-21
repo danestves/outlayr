@@ -8,7 +8,6 @@ import { useRestingSheet } from "./use-resting-sheet.android";
 
 const mockWindow = { fontScale: 1, height: 915, scale: 2.625, width: 412 };
 const mockInsets = { bottom: 24, left: 0, right: 0, top: 32 };
-/** The gap the hook leaves under the resting body. */
 const REST_BOTTOM_ROOM = 8;
 
 jest.mock("react-native/Libraries/Utilities/useWindowDimensions", () => ({
@@ -20,9 +19,6 @@ jest.mock("react-native-safe-area-context", () => ({
 }));
 
 describe("useRestingSheet on Android", () => {
-    // A live Android sheet can't change its detents: swapping them on wake left a
-    // raised sheet holding one detent, and swiping it down crashed with
-    // "Invalid state 4 for detentCount 1". The height moves; the options never do.
     it("declares the same fitToContents options at rest and awake", async () => {
         const { result } = await renderHook(() => useRestingSheet("Edit"));
         const resting = result.current.sheet;

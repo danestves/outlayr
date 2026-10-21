@@ -35,7 +35,6 @@ interface AccountTileProps {
     type?: CategoryIconType;
 }
 
-/** An account's tile: its logo, emoji or icon, or a person's initials, which never take a logo. */
 export function AccountTile({ account, future, radius, size, type = "solid" }: AccountTileProps) {
     const colors = useColors();
     const color = account.imageColor ?? account.customColor ?? colors.foreground;

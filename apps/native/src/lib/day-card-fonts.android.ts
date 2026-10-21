@@ -12,11 +12,6 @@ import type { CardTypefaces, loadCardTypefaces as loadCardTypefacesBase } from "
 
 export type { CardTypefaces } from "./day-card-fonts";
 
-/**
- * Direction B's faces, from the font files the app already bundles: the day
- * total is the card's hero figure, so it takes the serif the Log hero does;
- * the date and signature take the mono labels' face.
- */
 const FILES = {
     medium: GoogleSansFlex_500Medium,
     mono: GeistMono_500Medium,
@@ -51,10 +46,8 @@ async function loadAll(): Promise<CardTypefaces> {
 }
 
 /**
- * Loaded from the bundled files rather than matched by family name: Direction
- * B draws the card in the app's own faces, and Android's system manager hands
- * back blank typefaces for names it cannot match (see `day-card-fonts.ts`).
- * Loaded once; a failure is retried on the next share rather than cached.
+ * Loaded from the bundled files: Android's system manager hands back blank typefaces for family names it cannot
+ * match. A failure is retried on the next share rather than cached.
  */
 export const loadCardTypefaces: typeof loadCardTypefacesBase = () => {
     loading ??= loadAll();

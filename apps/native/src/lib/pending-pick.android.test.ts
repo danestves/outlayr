@@ -10,7 +10,6 @@ jest.mock<Partial<typeof import("@react-native-async-storage/async-storage")>>(
     () => require("@react-native-async-storage/async-storage/jest/async-storage-mock")
 );
 
-// The picker module hands a held result out once.
 const mockPicker: { held: ImagePickerResult | null } = { held: null };
 jest.mock<Partial<typeof import("expo-image-picker")>>("expo-image-picker", () => ({
     getPendingResultAsync: async () => {
@@ -30,7 +29,6 @@ const PHOTO: ImagePickerResult = {
 
 const clock = jest.spyOn(Date, "now");
 
-/** A pick Android tore the app down under: the launch never comes back, and the photo waits in the picker module. */
 async function tornDownPick(owner: PickOwner) {
     let launched: () => void = () => undefined;
     const started = new Promise<void>((resolve) => {
@@ -73,7 +71,6 @@ describe("pendingPick on Android", () => {
 
     it("recovers nothing once the launch came back on its own", async () => {
         await launchPick("receipt-scan", async () => PHOTO);
-        // A result no recorded launch asked for, such as one from an older build.
         mockPicker.held = PHOTO;
 
         await expect(pendingPick("receipt-scan")).resolves.toBeNull();

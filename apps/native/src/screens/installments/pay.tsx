@@ -19,12 +19,7 @@ import { EditorRow } from "@/screens/budgets/components/editor-row";
 import { SourceChoice, SourceTile, usePayEntry, usePayForm } from "./pay-form";
 import type { PayFormProps } from "./pay-form";
 
-/**
- * Paying an order, confirmed by hand: installments never post themselves. The
- * amount is the next cuota's (or everything left, from "Pay all") and can be
- * lowered into a partial payment; a payment from another currency is converted
- * at the day's official rate, as the transfer editor converts one.
- */
+/** Installments never post themselves. */
 export function PayInstallment({ all, planId }: { all: boolean; planId: string }) {
     const props = usePayEntry(planId, all);
     return props === null ? null : <PayForm {...props} />;

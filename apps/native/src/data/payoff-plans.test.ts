@@ -51,7 +51,6 @@ describe("payoffLines", () => {
     });
 
     it("draws no fill before the rates arrive, rather than paid off", () => {
-        // With no rate the balance and the start both read zero.
         const noRates = { displayCurrency: "USD", rates: buildRateTable([]) };
         const line = payoffLines([plan], [row(0, false)], noRates, NOW).get("ana");
         expect(line).toMatchObject({ fraction: null, reached: false, tick: null });
@@ -157,13 +156,11 @@ describe("setting payoff plans", () => {
         await setPayoffPlan(db, person(pedro), at(30));
         await setPayoffPlan(db, person(ana), at(30));
         await expect(livePayoffPlanCount(db, null, at(1))).resolves.toBe(2);
-        // Changing Ana's own plan is not counted against her.
         await expect(livePayoffPlanCount(db, ana, at(1))).resolves.toBe(1);
 
         await move("gotPaidBack", 80, 2);
         await move("lent", 20, 3);
         await expect(livePayoffPlanCount(db, null, at(4))).resolves.toBe(1);
-        // A deleted account's plan no longer counts.
         await accountsRepo.softDelete(db, ana);
         await expect(livePayoffPlanCount(db, null, at(4))).resolves.toBe(0);
 

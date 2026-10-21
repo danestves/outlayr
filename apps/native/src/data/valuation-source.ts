@@ -12,23 +12,17 @@ export interface Valuation {
     rates: RateTable;
 }
 
-/**
- * The market rate a plain entry was frozen at, and so the one its conversion
- * back out must use.
- */
+/** The rate type plain entries are frozen at, so a conversion back out must use it too. */
 const RATE_TYPE = "official";
 
-/** A valuation with no rates — every row falls back to face value. */
 export const NO_VALUATION: Valuation = {
     displayCurrency: DEFAULT_CURRENCY,
     rates: buildRateTable([]),
 };
 
 /**
- * Scoped to the quotes asked for deliberately: converting a canonical USD figure
- * into a currency needs that currency's rates and nothing else, and the whole
- * replica is thousands of rows across every pair the provider carries. `also`
- * adds currencies a figure is restated out of, such as an account's own.
+ * Scoped to the quotes asked for: the replica holds thousands of rows across every pair. `also` adds currencies
+ * a figure is restated out of, such as an account's own.
  */
 export async function loadValuationIn(db: SpendDb, code: string, also: readonly string[] = []): Promise<Valuation> {
     // USD needs no table: a canonical value is already in it.
@@ -47,9 +41,7 @@ export async function loadValuationIn(db: SpendDb, code: string, also: readonly 
         .where(
             and(
                 inArray(exchangeRates.quote, quotes),
-                // Pinned to the type entries are frozen at. VES alone carries
-                // official, eur_reference and binance, and mixing them would convert
-                // a figure out at a rate it was never valued in.
+                // VES alone carries official, eur_reference and binance; mixing them would convert at a foreign rate.
                 eq(exchangeRates.rateType, RATE_TYPE)
             )
         );
@@ -57,7 +49,6 @@ export async function loadValuationIn(db: SpendDb, code: string, also: readonly 
     return { displayCurrency: code, rates: buildRateTable(rows) };
 }
 
-/** {@link loadValuationIn} for the ledger's own display currency. */
 export async function loadValuation(db: SpendDb): Promise<Valuation> {
     return await loadValuationIn(db, (await getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY);
 }

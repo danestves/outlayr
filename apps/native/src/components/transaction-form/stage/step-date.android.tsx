@@ -17,21 +17,15 @@ import type { StepDate as StepDateBase } from "./step-date";
 
 const PRESSED_ALPHA = 0.1;
 
-/** M3's date picker without title or headline: a month row and a weekday row over six weeks, 48dp each. */
+// M3's date picker without title or headline: a month row and a weekday row over six weeks, 48dp each.
 const CALENDAR_HEIGHT = 392;
 
-/**
- * The stage's date step on Android: Material 3's inline calendar, and with
- * `withTime` a time row under it that opens the M3 time picker. No wheel: Compose
- * has none, and the calendar fits the stage at about the keypad's height.
- */
 export const StepDate: typeof StepDateBase = ({ date, onChange, withTime = false }) => {
     const m3 = useMaterialColors();
     const t = useTranslation();
     const { language } = useLanguage();
     const { use24Hour } = useDisplaySettings().state;
-    // Frozen: the calendar owns its selection once mounted, and a new initial
-    // date would rebuild it mid-gesture.
+    // Frozen: the calendar owns its selection once mounted, and a new initial date would rebuild it mid-gesture.
     const [initialDay] = useState(() => utcPickerDay(date));
     const [timeOpen, setTimeOpen] = useState(false);
 

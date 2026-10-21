@@ -1,11 +1,7 @@
 import { CURRENCY_DECIMALS, CURRENCY_META, PICKABLE_CURRENCY_CODES } from "./catalog.generated";
 import type { PickableCode } from "./catalog.generated";
 
-/**
- * Ingestible AND pickable (Decision #707): a labeled SUBSET of the generated
- * catalog, not an exclusion from it — metals canonicalize through USD like any
- * fiat code.
- */
+// A labeled subset of the generated catalog, not an exclusion: metals canonicalize through USD like any fiat code.
 export const METAL_CURRENCY_CODES = ["XAU", "XAG", "XPT", "XPD"] as const;
 
 export const DEFAULT_MONEY_DECIMALS = 2;

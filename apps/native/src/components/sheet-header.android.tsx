@@ -13,20 +13,13 @@ import type { SheetHeaderIconButtonProps, SheetHeaderProps, SheetHeaderTextButto
 
 const ICON_SIZE = 24;
 const ICON_STROKE = 1.8;
-/** M3 icon button state layer: a 40dp circle inside the 48dp target. */
 const STATE_LAYER_RADIUS = 20;
 const PRESSED_ALPHA = 0.1;
 const HANDLE_ALPHA = 0.4;
 const DISABLED_ALPHA = 0.38;
-/** M3 text button: a 40dp container, grown to the 48dp touch target. */
 const TEXT_BUTTON_SLOP = { bottom: 4, top: 4 } as const;
 
-/**
- * Drag handle, then a 56dp row: close at the start, the title in the app bar's
- * `titleLarge` sans, trailing actions at the end, all on the sheet's
- * `surfaceContainerLow`. The geometry is `SHEET_HEADER_HEIGHT` in
- * `navigation/material-chrome.ts`; keep the two in step.
- */
+// The geometry is `SHEET_HEADER_HEIGHT` in `navigation/material-chrome.ts`; keep the two in step.
 export function SheetHeader({ title, onClose, children }: SheetHeaderProps) {
     const router = useRouter();
     const t = useTranslation();

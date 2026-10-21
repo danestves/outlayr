@@ -359,21 +359,15 @@ const transaction = {
             en: "Unlock",
             es: "Desbloquear",
         }),
-        // Spelled out rather than reusing `transaction.field.name`: the sentence's
-        // inline field already carries that label, and while the step is open both
-        // are on screen — one label on two inputs is an ambiguous target.
+        // Not `transaction.field.name`: the sentence's inline field carries that label and both are on screen at once.
         "transaction.merchant.field": t({
             en: "Merchant name",
             es: "Nombre del comercio",
         }),
-        // Not "Recent merchants": the step's own title already names the fact, so
-        // the cluster only has to say which of its two rows this is.
         "transaction.merchant.recent": t({
             en: "Recently",
             es: "Recientes",
         }),
-        // The bar is meant to be quiet: the sentence below already says what the
-        // screen is for, so the title states the mode and nothing more.
         "transaction.new.title": t({
             en: "New",
             es: "Nueva",
@@ -570,8 +564,7 @@ const transaction = {
             en: "Custom Schedule",
             es: "Programación personalizada",
         }),
-        // Lowercase: it reads mid-sentence on the stage's schedule line, between
-        // the cadence options and the end date it introduces.
+        // Lowercase: it reads mid-sentence on the stage's schedule line.
         "transaction.schedule.ending": t({
             en: "ending",
             es: "hasta el",
@@ -604,8 +597,6 @@ const transaction = {
             en: "Next charges",
             es: "Próximos cargos",
         }),
-        // Says what the schedule does now, not what it used to: the charge moves
-        // for that one month and the anchor day comes back after it.
         "transaction.schedule.shortMonthNote": t({
             en: "A month too short for that day charges on its last day instead.",
             es: "Si el mes no tiene ese día, se cobra el último día del mes.",
@@ -618,8 +609,7 @@ const transaction = {
             en: "never",
             es: "fecha de fin",
         }),
-        // Lowercase, and paired with `transaction.schedule.ending`: the two words
-        // the stage's schedule line reads around its dates.
+        // Lowercase, like `transaction.schedule.ending`.
         "transaction.schedule.starting": t({
             en: "starting",
             es: "desde el",
@@ -664,12 +654,8 @@ const transaction = {
             en: "tags",
             es: "etiquetas",
         }),
-        // A chip that holds a fact states the fact. The unset chips are lowercase
-        // nouns; these are values, so a cadence keeps its own capitalisation.
-        // Nouns, not questions. The template supplies the preposition, so "at
-        // {merchant}" has to read as a phrase with the blank in place — "at a
-        // merchant" does, "at where?" does not. The Spanish article carries the
-        // gender its noun needs, which is why these are not one shared word.
+        // Nouns, not questions: the template supplies the preposition, so "at {merchant}" must read with the blank in
+        // place. The Spanish article carries its noun's gender, so these are not one shared word.
         "transaction.sentence.blank.account": t({
             en: "an account",
             es: "una cuenta",
@@ -694,9 +680,6 @@ const transaction = {
             en: "a rate",
             es: "una tasa",
         }),
-        // The form's layout, not just its copy: `parseSentence` reads the slot
-        // order straight out of these, so a language that puts the account
-        // before the category only has to say so here.
         "transaction.sentence.coach": t({
             en: "Every underlined word is yours to change. Tap one, or just keep going below.",
             es: "Puedes cambiar cualquier palabra subrayada. Toca una o sigue abajo.",
@@ -709,6 +692,7 @@ const transaction = {
             en: "Change the amount's currency",
             es: "Cambiar la moneda del monto",
         }),
+        // Layout, not just copy: `parseSentence` reads the slot order straight out of these templates.
         "transaction.sentence.expense": t({
             en: "{kind} {amount} at {merchant} for {category} from {account} {when}.",
             es: "{kind} {amount} en {merchant} para {category} con {account} {when}.",
@@ -733,9 +717,6 @@ const transaction = {
             en: "{kind} {amount} from {merchant} for {category} into {account} {when}.",
             es: "{kind} {amount} de {merchant} para {category} en {account} {when}.",
         }),
-        // The sentence's opening verb, and the control that used to be an
-        // Expense/Income segment above it. First person past: the entry is a thing
-        // the user did, and Spanish has to pick a person to conjugate for anyway.
         "transaction.sentence.kind.expense": t({
             en: "Spent",
             es: "Gasté",
@@ -752,9 +733,6 @@ const transaction = {
             en: "no account",
             es: "ninguna cuenta",
         }),
-        // The chips are lowercase, and `transaction.cadence.*` is title-case because
-        // it heads a row elsewhere. Lowercasing that at the call site would be right
-        // in Spanish and wrong in the first locale where case carries meaning.
         "transaction.sentence.optional": t({
             en: "Optional",
             es: "Opcional",
@@ -927,9 +905,7 @@ const transaction = {
             en: "Subscription added",
             es: "Suscripción agregada",
         }),
-        // Bare nouns, unlike `transaction.interval.*`, which embed the count. The
-        // sentence renders "Every"/count/unit as three pieces so the count can be
-        // styled on its own without either language having to be split on a number.
+        // Bare nouns, unlike `transaction.interval.*`: the sentence styles the count on its own.
         "transaction.unit.day": t({ en: "day", es: "día" }),
         "transaction.unit.days": t({ en: "days", es: "días" }),
         "transaction.unit.month": t({ en: "month", es: "mes" }),

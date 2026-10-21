@@ -22,8 +22,6 @@ export function Currency() {
         setCurrency(db, code).then(() => router.back());
     };
 
-    // Read off the list the write produced, not off `favourites.length` at press
-    // time: toggles are serialised, so a row rendered a tick before another landed
     const onToggleFavourite = useToggleFavouriteCurrency(db);
 
     return (

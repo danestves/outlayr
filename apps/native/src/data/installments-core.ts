@@ -19,42 +19,28 @@ import { stageTransfer } from "./transfers-core";
 export type InstallmentPlan = typeof installmentPlans.$inferSelect;
 export type Installment = typeof installments.$inferSelect;
 
-/**
- * Where a payment comes from. The plan counts what ARRIVES on the liability
- * (`amount`, in its currency); `fromAmount` is what left the source in its own,
- * so a bolivar account paying a USD cuota at the day's rate is one transfer.
- */
+// `amount` is what ARRIVES on the liability, in its currency; `fromAmount` is what left the source, in its own.
 export interface PaymentSource {
     exchangeRate: number | null;
     exchangeRateType: string | null;
     fromAccountId: string;
-    /** Equal to the paid amount when the two currencies match. */
     fromAmount: number;
     fromCurrency: string;
     note?: string;
 }
 
 export interface InstallmentOrderInput {
-    /** More writes for the purchase entry (its tags, its split), inside the order's transaction. */
     inSameTransaction?: (transactionId: string) => Promise<void>;
-    /**
-     * Installments 1..k already paid outside Outlayr, each on its due date (today
-     * at the latest): an order started before it was recorded. Defaults to none.
-     */
+    /** Installments 1..k paid before the order was recorded, each on its due date (today at the latest). */
     installmentsPaidOutside?: number;
-    /** The purchase entry, at full price, on the liability account, at its real date. */
     purchase: TransactionInput & { accountId: string };
-    /** From `generateSchedule`, possibly edited. Must not be empty. */
     schedule: readonly ScheduledInstallment[];
-    /**
-     * Required when the schedule has an upfront row (sequence 0): the account it
-     * was paid from, or `null` when it was paid outside Outlayr.
-     */
+    /** Required with an upfront row (sequence 0): its source account, or null when paid outside Outlayr. */
     upfront?: PaymentSource | null;
 }
 
 export interface InstallmentPaymentInput {
-    /** What reaches the liability, in the plan's currency. */
+    /** In the plan's currency. */
     amount: number;
     date: Date;
     planId: string;
@@ -108,7 +94,7 @@ function paymentTransfer(
     };
 }
 
-/** `outsidePayments` rows, valued before any transaction opens, as `stageTransfer` does. */
+// Valued before any transaction opens, as `stageTransfer` does.
 function outsideRows(
     db: Database,
     planId: string,
@@ -129,12 +115,6 @@ function outsideRows(
 }
 
 export const installmentsRepo = {
-    /**
-     * Writes an order in one transaction: the purchase on the liability account
-     * at full price, the plan, its rows, the upfront as a transfer from
-     * `upfront.fromAccountId` dated the purchase day (or paid outside), and any
-     * installments already paid outside. Answers the plan and purchase ids.
-     */
     async createOrder(db: Database, input: InstallmentOrderInput): Promise<{ planId: string; transactionId: string }> {
         const { purchase, schedule } = input;
         const account = liabilityAccount(db, purchase.accountId);
@@ -209,7 +189,6 @@ export const installmentsRepo = {
         return { planId, transactionId: purchaseId };
     },
 
-    /** Removes one row; the rest of the schedule stays as it is. */
     async deleteInstallment(db: Database, id: string, now: Date = new Date()): Promise<void> {
         await db
             .update(installments)
@@ -217,7 +196,6 @@ export const installmentsRepo = {
             .where(and(eq(installments.id, id), isNull(installments.deletedAt)));
     },
 
-    /** Undoes one payment made outside Outlayr. */
     async deleteOutsidePayment(db: Database, id: string, now: Date = new Date()): Promise<void> {
         await db
             .update(outsidePayments)
@@ -225,12 +203,8 @@ export const installmentsRepo = {
             .where(and(eq(outsidePayments.id, id), isNull(outsidePayments.deletedAt)));
     },
 
-    /**
-     * Drops what is still pending on an order. Rows its payments cover stay, a
-     * partly paid one is trimmed to what was paid, and the order with its
-     * payments stays, finished, so its liability's balance doesn't move. An
-     * order with nothing paid goes entirely, its transfers left as plain ones.
-     */
+    // Rows its payments cover stay and a partly paid one is trimmed, so the liability's balance doesn't move. An order
+    // with nothing paid goes entirely, its transfers left as plain ones.
     async deletePlan(db: Database, planId: string, now: Date = new Date()): Promise<void> {
         await withTransaction(db, async () => {
             const entry = readPlans(db, now).find(({ plan }) => plan.id === planId);
@@ -254,10 +228,6 @@ export const installmentsRepo = {
         });
     },
 
-    /**
-     * Records a payment toward an order: a transfer to its liability account, or
-     * with `source: null` an outside payment. Answers the new row's id.
-     */
     async recordPayment(db: Database, input: InstallmentPaymentInput): Promise<string> {
         const plan = livePlan(db, input.planId);
         const account = liabilityAccount(db, plan.accountId);
@@ -281,7 +251,6 @@ export const installmentsRepo = {
         return id;
     },
 
-    /** Moves one row's due date or changes its amount, as a provider does. */
     async updateInstallment(
         db: Database,
         id: string,
@@ -302,7 +271,6 @@ export const installmentsRepo = {
     },
 };
 
-/** Live orders with their account's currency, which every amount on them is in. */
 export function livePlansQuery(db: Database, accountId?: string) {
     return db
         .select({
@@ -336,11 +304,7 @@ export function liveInstallmentsQuery(db: Database) {
         .where(isNull(installments.deletedAt));
 }
 
-/**
- * What each order has been paid: the `toAmount` of its live transfers, already
- * in the plan's currency. Only transfers that still arrive on the order's
- * account count, so one re-pointed elsewhere in the editor stops paying it.
- */
+// Only transfers still arriving on the order's account count, so one re-pointed in the editor stops paying it.
 export function planPaymentsQuery(db: Database) {
     return db
         .select({ paid: sql<number>`sum(${transfers.toAmount})`, planId: installmentPlans.id })
@@ -356,7 +320,6 @@ export function planPaymentsQuery(db: Database) {
         .groupBy(installmentPlans.id);
 }
 
-/** Live payments made outside Outlayr, which count toward their order like its transfers. */
 export function liveOutsidePaymentsQuery(db: Database) {
     return db
         .select({
@@ -370,7 +333,6 @@ export function liveOutsidePaymentsQuery(db: Database) {
         .orderBy(asc(outsidePayments.date));
 }
 
-/** The purchase entries behind orders, for their name and price. */
 export function planPurchasesQuery(db: Database) {
     return db
         .select({ amount: transactions.amount, date: transactions.date, id: transactions.id, note: transactions.note })
@@ -387,7 +349,6 @@ export type OutsidePaymentRow = RowOf<typeof liveOutsidePaymentsQuery>;
 export type PurchaseRow = RowOf<typeof planPurchasesQuery>;
 
 export interface PlanWithStanding {
-    /** Oldest first, so one can be undone on its own. */
     outsidePayments: OutsidePaymentRow[];
     plan: PlanRow;
     /** Null only while the purchase entry is missing on this device, e.g. mid-sync. */
@@ -403,7 +364,6 @@ export interface UpcomingInstallment {
     standing: InstallmentStanding<InstallmentRow>;
 }
 
-/** Joins the reads into each order's derived standing as of `today`. */
 export function assemblePlans(
     reads: {
         installments: readonly InstallmentRow[];
@@ -436,11 +396,7 @@ export function assemblePlans(
     });
 }
 
-/**
- * Every installment not fully covered and due on or before `through`, soonest
- * first, across the orders given. Overdue rows are included (flagged), since a
- * "due soon" list that hid a missed payment would be the wrong kind of calm.
- */
+// Overdue rows are included: a due-soon list that hid a missed payment would be the wrong kind of calm.
 export function upcomingInstallments(plans: readonly PlanWithStanding[], through: Date): UpcomingInstallment[] {
     const throughMs = startOfDay(through).getTime();
     return plans
@@ -458,7 +414,6 @@ export function upcomingInstallments(plans: readonly PlanWithStanding[], through
         .sort((a, b) => a.standing.row.dueDate.getTime() - b.standing.row.dueDate.getTime());
 }
 
-/** Every live order (or one account's) with its standing, read once. */
 export function readPlans(db: Database, today: Date, accountId?: string): PlanWithStanding[] {
     return assemblePlans(
         {

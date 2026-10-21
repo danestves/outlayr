@@ -60,7 +60,6 @@ interface RowSeed {
     categoryId?: string;
     date: Date;
     deletedAt?: Date;
-    /** The form's longer free-text field. */
     details?: string;
     id: string;
     note?: string;

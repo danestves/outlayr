@@ -18,13 +18,6 @@ const SIZES = [
 
 const TONES = ["text-foreground", "text-muted", "text-danger", "text-income", "text-future", "text-tint"] as const;
 
-/**
- * The reason this file exists. `tailwind-merge` does not know this app's
- * `--text-*` scale, so out of the box it files every size under *colour* and a
- * size cancels against a tone — `cn("text-body", "text-danger")` returns just
- * the colour, and the typography silently disappears. `tw.ts` declares the
- * sizes to fix that, and these tests keep it fixed.
- */
 describe("cn keeps a size and a tone from cancelling", () => {
     it("preserves every size token against every tone", () => {
         for (const size of SIZES) {

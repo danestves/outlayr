@@ -3,13 +3,7 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "@jest/globals";
 
-/**
- * The sweep derives an occurrence id so two devices that both advance the same
- * schedule write one row rather than two. That only holds if the derivation is
- * independent of the sweeping device's zone — it used to key on local midnight,
- * which gave Madrid and New York different ids for the same charge and doubled
- * every subscription across a synced pair.
- */
+// Ids must not depend on the sweeping device's zone, or a synced pair in two zones doubles every subscription.
 function occurrenceIdIn(timeZone: string, parentLocalId: string, isoHolding: string): string {
     const probe = join(import.meta.dirname, "occurrence-id-probe.ts");
     return execFileSync(process.execPath, ["--import", "tsx", probe, parentLocalId, isoHolding], {
@@ -19,8 +13,7 @@ function occurrenceIdIn(timeZone: string, parentLocalId: string, isoHolding: str
 }
 
 describe("occurrence id", () => {
-    // The failing shape: 23:30Z is already tomorrow in Madrid and still today in
-    // New York, so a local-midnight seed disagreed by a whole day here.
+    // 23:30Z is already tomorrow in Madrid and still today in New York.
     it("agrees across a zone split that straddles the local date", () => {
         const madrid = occurrenceIdIn("Europe/Madrid", "sub-1", "2025-08-10T23:30:00.000Z");
         const newYork = occurrenceIdIn("America/New_York", "sub-1", "2025-08-10T23:30:00.000Z");

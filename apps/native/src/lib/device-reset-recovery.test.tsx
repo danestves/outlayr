@@ -88,9 +88,7 @@ describe("deviceResetRecovery", () => {
         let retriesDuringSweep = -1;
         mockRecover.mockImplementation(async () => {
             await mockCompleteCloudDeletion?.();
-            // Where `clearSqlite` calls it: the `deleteDatabaseAsync` that follows
-            // races any reopen started here, and the stores after it are still
-            // unerased.
+            // Where `clearSqlite` calls it: a reopen started here would race `deleteDatabaseAsync`.
             await mockCloseDatabase?.();
             retriesDuringSweep = mockRetry.mock.calls.length;
             return { failures: [] };
@@ -107,10 +105,6 @@ describe("deviceResetRecovery", () => {
     });
 
     it("does not reopen on an ordinary launch, when there was no reset to recover", () => {
-        // `recoverDeviceReset` returns early on a null marker, so nothing closes
-        // the database — and reopening the one just opened publishes
-        // `status: "opening"`, which un-gates this component and remounts it into
-        // the same no-op, forever.
         mockRecover.mockResolvedValue({ failures: [] });
         return render(
             <DeviceResetRecovery>

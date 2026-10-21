@@ -85,10 +85,7 @@ export function NewTransaction({ from, ...params }: EntryParams & { from?: LinkP
     const { leave, setDirty } = useDiscardGuard();
     const db = useDatabase();
     const t = useTranslation();
-    // Read once while mounting, as the edit route does: the driver runs on the JS
-    // thread, so the copy is in hand for the first render. A row that no longer
-    // resolves opens an empty form rather than bouncing — the id came from a menu
-    // over a row that may have been deleted behind it.
+    // A row that no longer resolves opens an empty form: the menu's row may since be deleted.
     const [copyOf] = useState<LogAgainDraft | undefined>(() => {
         const copied = single(from);
         const source = copied ? getTransactionById(db, copied) : null;

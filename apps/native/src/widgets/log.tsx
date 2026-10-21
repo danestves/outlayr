@@ -14,13 +14,7 @@ import { createWidget } from "expo-widgets";
 import { PLACEHOLDERS } from "./placeholders";
 import type { LogWidgetProps } from "./props";
 
-/**
- * Runs in the widget extension's `JSContext`, so only `props`, `environment` and
- * the `@expo/ui` globals are in scope — see the note in `budget.tsx`.
- *
- * A widget gets exactly one `widgetURL`, so the whole tile is a single target:
- * the new-expense form. The figure is not separately tappable.
- */
+/** Runs in the extension's `JSContext` (see `budget.tsx`). One `widgetURL`, so the tile is one target. */
 const LogWidget = (props: LogWidgetProps, environment: WidgetEnvironment) => {
     "widget";
 
@@ -44,9 +38,7 @@ const LogWidget = (props: LogWidgetProps, environment: WidgetEnvironment) => {
         return <Text modifiers={[widgetURL(props.url)]}>{`Log an expense · ${props.todaySpent} today`}</Text>;
     }
 
-    // Accessory families render vibrant — the system flattens everything to one
-    // tint, so the plus carries the meaning on its own rather than relying on the
-    // filled ink disc the home screen version uses.
+    // Accessory families flatten to one tint, so the plus stands alone.
     if (family === "accessoryCircular") {
         return <Image modifiers={[font({ size: 22, weight: "semibold" }), widgetURL(props.url)]} systemName="plus" />;
     }

@@ -41,8 +41,7 @@ function UnavailableAction({
 }) {
     const t = useTranslation();
     const entitled = useProEntitled();
-    // `notEntitled` is in NO_RETRY_REASONS, but it is the one reason a retry can
-    // fix — once the entitlement is confirmed the same import runs.
+    // `notEntitled` is in NO_RETRY_REASONS, but a retry fixes it once the entitlement is confirmed.
     const gated = reason === "notEntitled" && !entitled;
     if (reason !== "notEntitled" && NO_RETRY_REASONS.has(reason)) {
         return null;
@@ -82,10 +81,7 @@ export function matchedStatus(stage: CsvImportStage): TaskStatus {
     return stage === "idle" || stage === "matching" ? "running" : "complete";
 }
 
-/**
- * Stays `pending` after a settled run that sent nothing: the model was never
- * asked, so a tick would claim work that did not happen.
- */
+/** Stays `pending` after a run that sent nothing: the model was never asked. */
 export function askedStatus(stage: CsvImportStage, tier2Sent: number): TaskStatus {
     if (stage === "asking") {
         return "running";

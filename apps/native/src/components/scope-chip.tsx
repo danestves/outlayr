@@ -12,12 +12,10 @@ import { Text } from "./text";
 
 interface ScopeChipProps {
     accessibilityLabel?: string;
-    /** Menu the title opens. Omit for a chip that only reports and dismisses. */
     actions?: MenuAction[];
     clearAccessibilityLabel?: string;
     menuTitle?: string;
     onAction?: (id: string) => void;
-    /** Omit where the scope cannot be cleared, e.g. the window always has a value. */
     onClear?: () => void;
     title: string;
 }

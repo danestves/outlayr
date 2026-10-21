@@ -26,7 +26,6 @@ const REMOTE: RemoteEnrichmentResult = {
 /** A classified name the model could not place: a real miss, unlike the all-null shape. */
 const NOTHING: RemoteEnrichmentResult = { categoryName: "Shopping", domain: null, isNewCategory: false, tags: [] };
 
-/** A row this device saved, as `transactionsRepo.create` would register it. */
 async function seedRow(
     db: Database,
     id: string,
@@ -166,8 +165,7 @@ describe("attachMissingLogos", () => {
 
     it("paints every row of a merchant from one lookup, each with its own file", async () => {
         await seedRow(db, "a", "Intermarche");
-        // An hour older, so the newest-first scan names the group by "a" without
-        // leaning on how SQLite breaks a tie.
+        // An hour older, so the newest-first scan names the group by "a" without relying on SQLite's tie-break.
         await seedRow(db, "b", "INTERMARCHÉ", { date: new Date(NOW.getTime() - 3_600_000) });
         let persisted = 0;
         const deps = makeDeps({

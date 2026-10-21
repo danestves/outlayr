@@ -7,10 +7,7 @@ export type IdentityHeroSymbolProps = Omit<SymbolViewProps, "name" | "tintColor"
     tintColor?: string;
 };
 
-/**
- * The SF Symbols the empty identity tile draws. Android has no SF Symbols, so
- * `identity-hero-symbol.android.tsx` draws the matching Hugeicon instead.
- */
+/** Android has no SF Symbols, so `identity-hero-symbol.android.tsx` draws the matching Hugeicon. */
 export function IdentityHeroSymbol(props: IdentityHeroSymbolProps) {
     return <SymbolView {...props} />;
 }

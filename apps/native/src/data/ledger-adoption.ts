@@ -18,33 +18,16 @@ import {
 
 const SEEDED_CATEGORY_COUNT = SEEDED_CATEGORY_NAMES.expense.length + SEEDED_CATEGORY_NAMES.income.length;
 
-/**
- * What the sync engine has to answer before an adoption can run. #164 and #165
- * own it; a build without one reports `unknown` and every plan defers, which
- * leaves both ledgers untouched.
- */
+// A build without an engine reports `unknown` and every plan defers, leaving both ledgers untouched.
 export interface AdoptionEngine {
-    /** Whether the signed-in account already holds replicated rows. */
     accountLedger: () => Promise<RemoteLedger>;
-    /** Tombstone the account's rows so this device's ledger is the survivor. */
     discardAccountLedger: () => Promise<void>;
-    /** Discard the local replica and refill it from the account's log at seq 0. */
     replaceFromAccount: () => Promise<void>;
 }
 
-/**
- * Tombstones count as content: a row deleted offline is a decision this device
- * made, and losing it hands the row back on the first pull.
- *
- * Categories are read the way §1 states the case — "no category edits beyond the
- * seed set" — because a user who spent the afternoon renaming categories and
- * logged nothing still has something to lose. `seedCategories` stamps every row
- * it writes with one `dateCreated` equal to its `updatedAt`, so an edit, a
- * deletion, or a different row count are all it takes to read as touched.
- *
- * Every uncertainty resolves toward `populated`: being wrong that way asks a
- * question, and being wrong the other way destroys a ledger.
- */
+// Tombstones count as content: a row deleted offline is a decision this device made. `seedCategories` stamps every
+// row with `dateCreated` equal to `updatedAt`, so an edit, deletion or different count reads as touched. Every
+// uncertainty resolves toward `populated`: wrong that way asks a question, wrong the other way destroys a ledger.
 export async function localLedgerState(db: Database): Promise<LocalLedger> {
     const moneyTables = [transactions, budgets, mainBudget, accounts, transfers];
     const moneyCounts = await Promise.all(moneyTables.map((table) => db.select({ total: count() }).from(table)));
@@ -69,7 +52,6 @@ export async function localLedgerState(db: Database): Promise<LocalLedger> {
     return (touched?.total ?? 0) > 0 ? "populated" : "empty";
 }
 
-/** The account this device's ledger has already been reconciled with, if any. */
 export async function adoptedAccount(db: Database): Promise<string | null> {
     return await getMeta(db, META_KEYS.ledgerAdoption);
 }
@@ -93,20 +75,9 @@ export async function prepareAccountAdoption(db: Database, accountId: string): P
     }
 }
 
-/**
- * Executes an adoption. The order is the whole point:
- *
- * 1. The account's rows go first, so a failure anywhere after it still leaves
- *    this device's ledger whole and the adoption retryable.
- * 2. The local wipe-and-refill runs while the sync gate is still shut, so the
- *    outbox triggers do not queue tombstones for rows this device is discarding
- *    on purpose.
- * 3. Only then does the gate open, and only then is the backlog queued —
- *    `enqueueAllForSync` warns about exactly this ordering.
- *
- * Refuses rather than half-applying when a destructive plan arrives with no
- * engine to run it through.
- */
+// Order matters: the account's rows go first so a later failure leaves this ledger whole and retryable; the local wipe
+// runs while the sync gate is shut so triggers don't queue tombstones for discarded rows; only then does the gate open
+// and the backlog queue (`enqueueAllForSync` warns about this ordering).
 export async function runAdoption(
     db: Database,
     engine: AdoptionEngine | null,

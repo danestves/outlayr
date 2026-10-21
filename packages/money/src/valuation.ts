@@ -7,11 +7,7 @@ export interface Valuable {
     amount: number;
     /** Frozen at write; null when no rate was available then. */
     amountUsd: number | null;
-    /**
-     * Null means the entry recorded none — it was written under whatever the
-     * ledger's currency was THAT DAY, which is not necessarily today's. Only
-     * `amountUsd` can say what it was worth; see {@link valueExactIn}.
-     */
+    /** Null: written in the ledger's currency of that day, not necessarily today's, so only `amountUsd` values it. */
     currency: string | null;
     /** UTC `YYYY-MM-DD` of the day the money moved. */
     dateKey: string;
@@ -22,11 +18,8 @@ export interface Valuable {
 /** USD→currency rates; `get` answers with the newest rate on or before `dateKey`. */
 export interface RateTable {
     /**
-     * The oldest day the table holds for `code`, or null when it holds none.
-     *
-     * Every pull wipe-replaces the table with a bounded window, so a day before
-     * this floor is not waiting on anything — it is the line between "not valued
-     * yet" and "never will be". A code with no floor at all is the former.
+     * Every pull wipe-replaces the table with a bounded window, so a day before this floor will never be valued.
+     * A code with no floor at all is merely not valued yet.
      */
     earliest: (code: string) => string | null;
     get: (code: string, dateKey: string) => number | null;
@@ -42,8 +35,6 @@ export function buildRateTable(rows: readonly { quote: string; date: string; rat
             byCode.set(row.quote, [{ date: row.date, rate: row.rate }]);
         }
     }
-    // Descending, so the first entry at or before a date is the answer. Dates are
-    // `YYYY-MM-DD`, which sorts lexically exactly as it sorts chronologically.
     for (const list of byCode.values()) {
         list.sort((a, b) => b.date.localeCompare(a.date));
     }
@@ -68,20 +59,8 @@ export function buildRateTable(rows: readonly { quote: string; date: string; rat
     };
 }
 
-/**
- * What a row is genuinely worth in the display currency, or null when the data
- * cannot say.
- *
- * A row stating the display currency returns its stored amount untouched — it
- * must never round-trip through USD, or a ledger kept entirely in one currency
- * would drift by a cent. Anything else converts from the frozen `amountUsd` at
- * the rate of the day it happened, NOT today's, so a total for last month means
- * the same thing tomorrow as it does now.
- *
- * A null `currency` takes the conversion path, not the untouched one: null means
- * the row named no currency, and the ledger's currency is a setting the user can
- * change.
- */
+// The display currency returns untouched, never through USD, or a one-currency ledger drifts by a cent. Anything
+// else converts the frozen `amountUsd` at its own day's rate. A null currency converts: the ledger's can change.
 export function valueExactIn(row: Valuable, displayCurrency: string, rates: RateTable): number | null {
     if (row.currency === displayCurrency) {
         return row.amount;
@@ -100,7 +79,6 @@ export function valueExactIn(row: Valuable, displayCurrency: string, rates: Rate
     return convertFromUsd(amountUsd, rate, displayCurrency);
 }
 
-/** A row already stated in USD needs nothing frozen: its USD value is the amount. */
 function canonicalOf(row: Valuable): number | null {
     return row.currency === "USD" ? row.amount : row.amountUsd;
 }
@@ -116,30 +94,18 @@ export function valueIn(row: Valuable, displayCurrency: string, rates: RateTable
     return valueExactIn(row, displayCurrency, rates) ?? row.amount;
 }
 
-/** {@link Valuable} with the direction that splits the Log's cells. */
 export interface DirectedValuable extends Valuable {
     income?: boolean;
 }
 
-/**
- * Values a set of rows the way the Log aggregates in SQL: rows sharing a
- * currency, a UTC day and a direction convert as one sum, so any figure built
- * over whole cells is the figure the Log header prints for the same rows.
- *
- * Whoever converts row by row rounds once per row, and the drift against the
- * header is unbounded in the row count. Each row still gets a value of its own —
- * the cell's total, handed out as running differences — so callers that group,
- * bucket or filter afterwards keep working on rows.
- *
- * Values come back positionally.
- */
+// Rows sharing a currency, UTC day and direction convert as one sum, like the Log's SQL cells, so totals match its
+// header; per-row rounding drifts without bound. Each row gets its share as running differences, positionally.
 export function valueRowsIn(rows: readonly DirectedValuable[], displayCurrency: string, rates: RateTable): number[] {
     const values: number[] = Array.from({ length: rows.length });
     const cells = new Map<string, { index: number; row: DirectedValuable }[]>();
 
     for (const [index, row] of rows.entries()) {
-        // USD needs no conversion pass, so its rows never round and per-row is
-        // already per-cell; the other two cannot be converted at all.
+        // USD never rounds, so per row is already per cell; the other two cannot convert at all.
         if (displayCurrency === "USD" || row.currency === displayCurrency || canonicalOf(row) === null) {
             values[index] = valueIn(row, displayCurrency, rates);
             continue;
@@ -153,17 +119,14 @@ export function valueRowsIn(rows: readonly DirectedValuable[], displayCurrency: 
         }
     }
 
-    // `convertUsdSum` already rounds at the display currency's own exponent, so
-    // the running difference has to be handed back out at the same one — a flat
-    // two here left a 3-decimal currency's rows failing to sum to their header.
+    // `convertUsdSum` rounds at the display currency's exponent, so the running difference must use the same one.
     const decimals = decimalsFor(displayCurrency);
 
     for (const members of cells.values()) {
         let runningUsd = 0;
         let assigned = 0;
         for (const { index, row } of members) {
-            // SAFETY: `members` holds only rows `canonicalOf` answered a number for —
-            // the null ones were partitioned out before this loop.
+            // SAFETY: rows `canonicalOf` answered null for were partitioned out before this loop.
             runningUsd += canonicalOf(row) as number;
             const converted = convertUsdSum(runningUsd, row.dateKey, displayCurrency, rates);
             if (converted === null) {
@@ -191,7 +154,6 @@ export interface DatedValuable {
     income?: boolean;
 }
 
-/** {@link valueRowsIn} for rows carrying an instant rather than a UTC day key. */
 export function valueDatedRowsIn(rows: readonly DatedValuable[], displayCurrency: string, rates: RateTable): number[] {
     return valueRowsIn(
         rows.map((row) => ({
@@ -218,17 +180,8 @@ interface BudgetLimit {
     currency: string | null;
 }
 
-/**
- * A budget's target restated in the display currency at the rate of the day its
- * window opened — *both* legs of the conversion, so the figure is one day's
- * cross rate rather than a nominal amount frozen on one date and converted on
- * another.
- *
- * The window's day rather than today keeps the target still while the window is
- * being spent, and rather than the day the target was set because the target is
- * shown beside, and subtracted from, spending valued at its own recent days. A
- * limit in three-year-old money makes that subtraction meaningless.
- */
+// Both legs at the window's opening day: the target holds still while the window is spent, and it is subtracted
+// from spending valued at recent days, which a limit in years-old money would make meaningless.
 export function limitIn(row: BudgetLimit, windowStart: Date, displayCurrency: string, rates: RateTable): number {
     const dateKey = utcDateString(windowStart.getTime());
     return valueIn(
@@ -253,12 +206,7 @@ function limitUsdOn(row: BudgetLimit, dateKey: string, rates: RateTable): number
     return rate === null || rate <= 0 ? row.amountUsd : row.amount / rate;
 }
 
-/**
- * Null when no rate reaches back to `dateKey`.
- *
- * Convert the sum once, never row by row: rounding per row is how a header total
- * and the subtotals under it end up cents apart.
- */
+// Convert the sum once, never row by row: per-row rounding leaves a header and its subtotals cents apart.
 export function convertUsdSum(
     amountUsd: number,
     dateKey: string,

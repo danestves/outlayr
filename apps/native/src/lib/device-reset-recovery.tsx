@@ -16,21 +16,12 @@ async function recoverDevice(db: Database | null, retry: () => void): Promise<Er
             throw new Error("Local database is unavailable for device reset");
         }
         const database = db;
-        // Set only if the sweep actually reached the sqlite store, which it
-        // does only when a reset marker was waiting. Every ordinary launch
-        // recovers nothing, and reopening then would publish
-        // `status: "opening"` on a database that was just opened — which
-        // un-gates this component in `_layout`, remounts it, and recovers
-        // nothing again, forever.
+        // Set only when the sweep reached the sqlite store: reopening after an ordinary launch publishes
+        // `status: "opening"`, which un-gates this in `_layout`, remounts it and loops forever.
         let closed = false;
         const result = await createDeviceResetGate({
-            // Close only. `retry()` belongs after the whole sweep, not inside
-            // it: it publishes `status: "opening"`, which un-gates this
-            // component in `_layout` and starts a reopen that races the
-            // `deleteDatabaseAsync` one line below `closeDatabase` — either
-            // the delete loses to a locked file, or the reopen re-seeds a
-            // ledger while the remaining stores are still being erased. The
-            // sibling path in `settings/account` closes the same way.
+            // Close only: `retry()` here starts a reopen racing `deleteDatabaseAsync`, so the delete loses to a
+            // locked file or a ledger is re-seeded mid-erase. `settings/account` closes the same way.
             closeDatabase: async () => {
                 closed = true;
                 await closeDatabase(database);
@@ -43,8 +34,6 @@ async function recoverDevice(db: Database | null, retry: () => void): Promise<Er
             throw new Error(`Device cleanup incomplete: ${result.failures.join(", ")}`);
         }
         if (closed) {
-            // The database file is gone, so the provider is holding a handle
-            // to nothing until this reopens it.
             retry();
         }
         return null;

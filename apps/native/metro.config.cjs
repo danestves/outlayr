@@ -11,25 +11,17 @@ const { wrapWithReanimatedMetroConfig } = require("react-native-reanimated/metro
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getPostHogExpoConfig(__dirname);
 
-// The hoisted pnpm store must stay watched: `@shopify/react-native-skia` resolves
-// to `src/index.ts`, which re-exports a *directory* (`./views`), and directory-index
-// resolution only searches files Metro has crawled. SDK 57's default already
-// includes it, so this asserts the invariant rather than re-adding it.
+// Skia's `src/index.ts` re-exports a directory, and directory-index resolution only searches crawled files.
 const pnpmStore = path.resolve(__dirname, "../../node_modules");
 if (!config.watchFolders.includes(pnpmStore)) {
     config.watchFolders.push(pnpmStore);
 }
 
-// Let Metro resolve the `.sql` files that drizzle's generated migrations
-// bundle imports. Must run before the reanimated/uniwind wrappers, which
-// extend (never reset) the resolver — re-verify on upgrades.
+// Drizzle's migrations import `.sql`. Must precede the wrappers, which extend (never reset) the resolver.
 config.resolver.sourceExts.push("sql");
 
-// Intlayer goes outermost: it spreads the resolver it is handed and chains its
-// `resolveRequest` to the existing one, so it inherits the `.sql` extension and
-// both wrappers rather than replacing them. The sync variant does not build
-// dictionaries on server start — `vp run i18n:build` owns that, so a clean clone
-// and CI produce them the same way rather than only whoever ran Metro.
+// Outermost, so intlayer chains onto the `.sql` extension and both wrappers. The sync variant leaves the
+// dictionaries to `vp run i18n:build`.
 const finalConfig = configMetroIntlayerSync(
     withUniwindConfig(wrapWithReanimatedMetroConfig(config), {
         cssEntryFile: "./global.css",
@@ -37,13 +29,8 @@ const finalConfig = configMetroIntlayerSync(
     })
 );
 
-// `react-native-purchases` requires RevenueCat's ~1 MB web SDK at the top level,
-// but only its browser mode (Expo Go, Rork, web) ever calls into it. Our native
-// builds always carry `RNPurchases`, so iOS and Android get an empty module.
-// zod ships every module twice, `.js` (ESM) beside `.cjs`, and the AI SDK's
-// `zod/v4` subpaths resolve to the `.cjs` files while the app's `zod` gets the
-// `.js` ones: a second ~500 KB zod. Pointing each zod `.cjs` at its `.js` twin
-// leaves one copy.
+// RevenueCat's ~1 MB web SDK only runs in browser mode; native builds always carry `RNPurchases`.
+// The AI SDK's `zod/v4` resolves to `.cjs` while the app's `zod` gets `.js`: a second ~500 KB zod.
 const BROWSER_ONLY_MODULES = new Set(["@revenuecat/purchases-js-hybrid-mappings"]);
 const upstreamResolveRequest = finalConfig.resolver.resolveRequest;
 finalConfig.resolver = {
@@ -67,15 +54,8 @@ finalConfig.resolver = {
 const SIM_PREVIEW_PATH = "/.sim";
 
 /**
- * Expo's dev server dispatches WebSocket upgrades by exact pathname against its
- * own endpoint map and calls `socket.destroy()` on every miss, which kills the
- * preview's input and DevTools sockets — the stream is HTTP, so video survives
- * and only touch silently stops working. See `@expo/cli`
- * `src/start/server/metro/runServer-fork.ts`. Re-entering the listener list is
- * the only hook: ours claims the `/.sim` prefix and replays every other upgrade
- * through the original listeners untouched, so `/hot` and the CDP inspector are
- * unaffected. If a future SDK registers its handler after the first request,
- * this stops claiming upgrades and input degrades — it never breaks Metro.
+ * Expo's dev server destroys every WebSocket upgrade outside its endpoint map (`@expo/cli` runServer-fork.ts),
+ * which silently kills preview touch input. Claim `/.sim` and replay every other upgrade to the original listeners.
  */
 function claimSimUpgrades(server, sim) {
     const inherited = server.listeners("upgrade");
@@ -96,7 +76,6 @@ function claimSimUpgrades(server, sim) {
     });
 }
 
-// Serve the simulator preview from the Metro server so QA has one URL to target.
 // Assigned after the wrappers because each returns a fresh config object.
 finalConfig.server = {
     ...finalConfig.server,

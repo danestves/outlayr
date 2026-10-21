@@ -27,14 +27,8 @@ const OUTSIDE_PROVIDER = "useDisplaySettings and useAppSettings must be used wit
 const DisplaySettingsContext = createContext<DisplaySettingsValue | null>(null);
 const AppSettingsContext = createContext<AppSettingsValue | null>(null);
 
-/**
- * One `useAllSettings` subscription for the whole tree, split into two
- * contexts: `DisplaySettingsContext`'s memo is keyed on the three primitive
- * booleans, so its published value stays referentially stable across a write
- * to any other setting — `AppSettingsContext`'s is keyed on the whole snapshot
- * and republishes on every setting write. Neither moves for the bookkeeping
- * that shares `appMeta`.
- */
+// Two contexts over one subscription: the display memo is keyed on three booleans, so it stays stable across other
+// setting writes, while `AppSettingsContext` republishes on every write.
 export function AppSettingsProvider({ children }: { children: ReactNode }) {
     const { db } = useLocalData();
     const settings = useAllSettings(db);
@@ -93,13 +87,8 @@ export function useAppSettings(): AppSettingsValue {
     return value;
 }
 
-/**
- * One setting, without the context. `useAppSettings` republishes on every
- * setting write, so reading a single key through it re-renders the caller for
- * every unrelated toggle in the app — which is how a background tab's chart ends
- * up redrawing when the ledger's measure is switched. These subscribe to the key
- * itself and fall back to the default until the database is open.
- */
+// Prefer these to `useAppSettings` for one key: that republishes on every setting write and re-renders the caller
+// for every unrelated toggle.
 export function useSettingBool(key: BoolSettingKey): boolean {
     const { db } = useLocalData();
     return useBoolSetting(db, key);

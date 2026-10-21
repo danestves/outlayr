@@ -15,44 +15,31 @@ export interface OverviewAccount {
     currency: string;
     id: string;
     initialBalance: number;
-    /** Absent on a row written before the column existed; reads as `asset`. */
+    /** Absent on older rows; reads as `asset`. */
     kind?: string | null;
 }
 
-/** One account's standing in the display currency, in the ledger's own order. */
 export interface OverviewRow {
     balance: number;
-    /** False when the opening figure or any cell fell back to face value. */
     exact: boolean;
     id: string;
     kind: AccountKind;
-    /** Holds money in a currency other than its own, so its own code is not the whole story. */
     multiCurrency: boolean;
 }
 
 export interface AccountsOverview {
     count: number;
-    /** False when any part fell back to face value instead of converting. */
     exact: boolean;
-    /** What the liability accounts and the people you owe add up to, stated positive. */
+    /** Stated positive. */
     owe: number;
-    /** What the asset accounts hold, plus what people owe you. */
     own: number;
-    /**
-     * Every account together, which is `own - owe`. Unchanged by the kind split:
-     * this is the same figure the card has always printed.
-     */
     total: number;
     rows: OverviewRow[];
 }
 
 export type AccountCellRow = CurrencyCell & { accountId: string | null };
 
-/**
- * Every account's balance valued into the display currency at `now`'s rate and
- * summed. Null with no accounts, so the card can disappear rather than print a
- * zero. `rates` has to carry each account's currency beside the display one.
- */
+// `rates` must carry each account's currency beside the display one. Null with no accounts, so the card hides.
 export function accountsOverview(
     accounts: readonly OverviewAccount[],
     cells: readonly AccountCellRow[],
@@ -91,11 +78,6 @@ export function accountsOverview(
     );
 }
 
-/**
- * Rows already valued by {@link accountsOverview}, summed again: a screen that
- * values every account once can total a subset (the banks, say) without a
- * second pass over the cells. Null with no rows.
- */
 export function summarizeOverview(rows: OverviewRow[]): AccountsOverview | null {
     if (rows.length === 0) {
         return null;
@@ -111,23 +93,13 @@ export function summarizeOverview(rows: OverviewRow[]): AccountsOverview | null 
     };
 }
 
-/** `exact` is false when part of the figure could not be valued. */
 export interface DisplayedBalance {
     exact: boolean;
     value: number;
 }
 
-/**
- * An account's balance in the display currency on `dateKey`: summed in the
- * account's own currency, then restated once at that day's rate.
- *
- * A balance is what the account holds, so it moves with the rate. Converting the
- * opening and every entry at their own days instead needs a rate for every day
- * since the account opened, and the app keeps about 90: an older opening fell
- * out of the figure entirely.
- *
- * `rates` has to carry the account's currency beside the display one.
- */
+// Summed in the account's currency, then restated once at `dateKey`: per-entry days would need a rate for every
+// day since opening, and the app keeps about 90. `rates` must carry the account's currency too.
 export function balanceIn(
     account: AccountBalanceInput,
     cells: readonly CurrencyCell[],
@@ -140,13 +112,7 @@ export function balanceIn(
     return { composition: own.composition, exact: own.exact && restated.exact, value: restated.value };
 }
 
-/**
- * `amount` of `from` restated in `to` through USD at `dateKey`'s rates.
- *
- * A day older than every rate held reads at the oldest one, flagged approximate:
- * nearer the truth than today's, and a line drawn through it stays continuous.
- * With no rate at all on either side the amount is left out.
- */
+// A day older than every rate reads at the oldest one, flagged inexact, so a line through it stays continuous.
 export function restate(amount: number, from: string, to: string, dateKey: string, rates: RateTable): DisplayedBalance {
     if (from === to) {
         return { exact: true, value: amount };
@@ -171,9 +137,8 @@ export function restate(amount: number, from: string, to: string, dateKey: strin
     return { exact: false, value: convertBetween(amount, from, to, floor, rates) ?? 0 };
 }
 
-/** Null when either side has no rate on or before `dateKey`. */
 function convertBetween(amount: number, from: string, to: string, dateKey: string, rates: RateTable): number | null {
-    // A stored rate is currency-per-USD, so USD is the amount divided by it.
+    // A stored rate is currency per USD.
     const perUsd = from === "USD" ? 1 : rates.get(from, dateKey);
     if (perUsd === null || perUsd <= 0) {
         return null;

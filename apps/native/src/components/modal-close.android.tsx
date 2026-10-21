@@ -11,11 +11,7 @@ import type { ModalClose as ModalCloseBase } from "./modal-close";
 const PRESSED_ALPHA = 0.1;
 const DISABLED_ALPHA = 0.38;
 
-/**
- * The close of a header-less modal on Android: an M3 icon button at the start,
- * where a full-screen dialog keeps its X, below the status bar. The modal runs
- * edge to edge here, so unlike iOS's card it has to clear the top inset itself.
- */
+// The modal runs edge to edge here, so unlike iOS's card it has to clear the top inset itself.
 export const ModalClose: typeof ModalCloseBase = ({ accessibilityLabel, disabled = false, onPress }) => {
     const m3 = useMaterialColors();
     const insets = useSafeAreaInsets();

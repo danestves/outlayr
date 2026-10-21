@@ -6,11 +6,8 @@ import { platformCopy } from "./platform-copy";
 import type { Catalog } from "./translate";
 
 /**
- * Type-only, and deliberately so. Intlayer blocklists `*.content.*` in Metro
- * (`react-native-intlayer/metro`) because its model is to reference a
- * dictionary by key and let `intlayer build` compile the source into
- * `.intlayer/`. A value import of these files resolves under tsx and tsc and
- * then fails to bundle, which is how it reached a device build.
+ * Type-only: Intlayer blocklists `*.content.*` in Metro (`react-native-intlayer/metro`), so a value import resolves
+ * under tsx and tsc and then fails to bundle.
  */
 type Accounts = typeof import("@/content/accounts.content").default;
 type AiConsent = typeof import("@/content/ai-consent.content").default;
@@ -42,11 +39,7 @@ type Update = typeof import("@/content/update.content").default;
 type Voice = typeof import("@/content/voice.content").default;
 type Watch = typeof import("@/content/watch.content").default;
 
-/**
- * Every dictionary Intlayer builds, by key. The flat map below and the parity
- * guard both enumerate this, so adding a `.content.ts` file means adding it
- * here.
- */
+/** The flat map and the parity guard enumerate this, so a new `.content.ts` file must be added here. */
 export const DICTIONARY_KEYS = [
     "accounts",
     "ai-consent",
@@ -110,33 +103,21 @@ type Content =
     | Voice["content"]
     | Watch["content"];
 
-/**
- * Keys stay fully qualified inside their dictionary (`log.empty.title` lives in
- * `log`), so one flat namespace types every call site and `t` needs no
- * dictionary argument.
- */
 export type TranslationKey = keyof UnionToIntersection<Content>;
 
 type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
 
 type PluralStem<K extends string> = K extends `${infer Stem}_other` ? Stem : never;
 
-/**
- * What `t` accepts. A plural is called by its stem — `t("budgets.days",
- * { count })` — so the stem has to be nameable without existing as a key of its
- * own, or every plural would need a third, unrendered entry.
- */
+/** A plural is called by its stem (`t("budgets.days", { count })`), which is not a key of its own. */
 export type TranslatableKey = TranslationKey | PluralStem<TranslationKey & string>;
 
 /**
- * `@intlayer/core` reads `document.cookie` and `localStorage`, which React
- * Native leaves undefined; `react-native-intlayer` stubs them, but only as a
- * side effect of being imported. `@/i18n` re-exports this module before
- * `./context`, so the provider's own import lands too late for the reads below.
+ * `@intlayer/core` reads `document.cookie` and `localStorage`, which React Native lacks. The polyfill only stubs
+ * them when called, and `@/i18n` loads this module before `./context`, so the provider's call is too late.
  */
 intlayerPolyfill();
 
-/** Flattens Intlayer's per-dictionary resolution into one lookup, worded for this platform. */
 function catalogFor(locale: Language): Catalog {
     const flat: Record<string, string> = {};
     for (const key of DICTIONARY_KEYS) {

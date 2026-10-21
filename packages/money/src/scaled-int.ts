@@ -4,17 +4,8 @@ import { MoneyValidationError } from "./errors";
 
 export const DECIMAL_RADIX = 10n;
 
-/**
- * Canonical USD is stored at scale 6 (micro-dollars); six places carry every
- * realistic rate division with sub-cent precision.
- *
- * Exactness ceiling: the micro-dollar integer is returned to JS as a `number`,
- * so it is exact only up to `Number.MAX_SAFE_INTEGER` (2^53 - 1) micro-dollars
- * ≈ $9,007,199,254.74 (~$9.007B). A magnitude above that loses sub-micro
- * precision without ever becoming non-finite, so the overflow guard does not
- * reject it. True overflow (e.g. a sub-normal rate) still produces a non-finite
- * number and is rejected.
- */
+// Micro-dollars, returned to JS as a `number`: exact only up to 2^53 - 1 of them (about $9.007B). Past that,
+// precision is lost without going non-finite, so the overflow guard does not reject it.
 export const USD_SCALE = 6n;
 
 export interface ScaledInt {
@@ -22,10 +13,7 @@ export interface ScaledInt {
     scale: bigint;
 }
 
-/**
- * Reads the number's shortest round-trip decimal string, which is spec-defined
- * and therefore identical on V8 and Hermes.
- */
+// Reads the shortest round-trip decimal string, which is spec-defined and so identical on V8 and Hermes.
 export function toScaledInt(value: number): ScaledInt {
     if (!Number.isFinite(value)) {
         throw new MoneyValidationError(`Cannot represent a non-finite number as a scaled integer: ${value}`);
@@ -46,11 +34,7 @@ export function toScaledInt(value: number): ScaledInt {
     return { amount: negative ? -amount : amount, scale: BigInt(scale) };
 }
 
-/**
- * Dinero multiplies but does not divide by an arbitrary rate, so a conversion
- * is expressed as ONE exact rational and rounded once here instead of inverting
- * the rate first (which `convert()` would require).
- */
+// Dinero cannot divide by an arbitrary rate, so a conversion is one exact rational rounded once here.
 export function divideHalfEven(numerator: bigint, denominator: bigint): bigint {
     return halfEven(numerator, denominator, calculator);
 }

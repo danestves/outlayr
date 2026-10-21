@@ -25,9 +25,8 @@ export interface AccountInput {
     imageKey?: string | null;
     imageUri?: string | null;
     initialBalance?: number;
-    /** Defaults to now — the account starts holding this balance today. */
+    /** Defaults to now: the account starts holding this balance today. */
     initialBalanceDate?: Date;
-    /** `asset`, `liability` or `person`; defaults to asset. See `@outlayr/money/account-kind`. */
     kind?: AccountKind;
     name: string;
 }
@@ -42,12 +41,7 @@ export function getAccountById(db: Database, id: string): Account | null {
     return rows[0] ?? null;
 }
 
-/**
- * A tombstoned account resolves to null here through {@link getAccountById},
- * so the default quietly falls back to none rather than reviving a deleted
- * account on the next entry. A person is never the default either: "Pedro paid"
- * is one entry, not where the next one comes from.
- */
+// A tombstoned account resolves to null, so the default never revives it; a person is never the default either.
 export function getLastUsedAccount(db: Database): Account | null {
     const id = getMetaSync(db, META_KEYS.lastTransactionAccount);
     const account = id == null ? null : getAccountById(db, id);
@@ -98,16 +92,12 @@ export const accountsRepo = {
         return await db.select().from(accounts).where(isNull(accounts.deletedAt)).orderBy(accounts.sortOrder);
     },
 
-    /** {@link listActive} without people, for whatever matches a bank or a card. */
     async listBanks(db: Database): Promise<Account[]> {
         const live = await accountsRepo.listActive(db);
         return live.filter((account) => !isPerson(account));
     },
 
-    /**
-     * The caller supplies every live account it lists, already in the desired
-     * order. Reorder lists banks only; people keep their own relative order.
-     */
+    /** Takes every live account it lists, already ordered; people keep their own relative order. */
     async reorder(db: Database, orderedIds: string[]): Promise<void> {
         const now = new Date();
         await withTransaction(db, async () => {
@@ -122,16 +112,8 @@ export const accountsRepo = {
     },
 
     /**
-     * `transactions.accountId` declares `onDelete: "set null"`, which never fires
-     * for a tombstone — so the detach the delete copy promises has to happen here,
-     * or every entry keeps pointing at a row only the `deletedAt` filters hide.
-     *
-     * A person is the exception: their entries (a sale on credit, a lunch they
-     * paid) are what the debt is made of, so they go with them, and leave no
-     * schedule behind for the orphan repair to revive.
-     *
-     * Its savings goals go too: a goal on a deleted account is already hidden,
-     * and a deleted person's payoff plan must not keep counting.
+     * `onDelete: "set null"` never fires for a tombstone, so entries are detached here. A person's entries are the debt
+     * itself, so they go with them (no schedule left for the orphan repair to revive), and so do the account's goals.
      */
     async softDelete(db: Database, id: string, now: Date = new Date()): Promise<void> {
         // Read past the tombstone: a peer's delete may have landed first.
@@ -148,10 +130,8 @@ export const accountsRepo = {
                 .update(accounts)
                 .set({ deletedAt: now, updatedAt: now })
                 .where(and(eq(accounts.id, id), isNull(accounts.deletedAt)));
-            // Detaching moves `updatedAt` on rows that stay live and bare; a logo
-            // candidate among them has to follow or the backfill reads it as a
-            // peer's edit and never paints it. Before the write, since only a
-            // stamp that matches the row as it is now is moved.
+            // Detaching moves `updatedAt` on live rows, so a logo candidate must follow or the backfill reads it as a
+            // peer's edit. Before the write: only a stamp matching the row as it is now is moved.
             const attached = await db
                 .select({ id: transactions.id })
                 .from(transactions)
@@ -189,9 +169,8 @@ export const accountsRepo = {
             currency !== existing.currency ||
             initialBalanceDate.getTime() !== existing.initialBalanceDate.getTime();
 
-        // The twin of `removesPhoto` in transactions-core.ts: an account whose bytes
-        // this device has not fetched also has a null path, so only a removal read
-        // against the PREVIOUS path may clear the key.
+        // Like `removesPhoto` in transactions-core.ts: an unfetched logo also has a null path, so only a removal read
+        // against the previous path may clear the key.
         const removesLogo = existing.imageUri != null && "imageUri" in patch && patch.imageUri == null;
 
         await db

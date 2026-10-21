@@ -12,14 +12,7 @@ type AuthClient = NonNullable<typeof authClient>;
 
 export type SignInProvider = "apple" | "google";
 
-/**
- * One request per provider, so the credential type travels with the name of the
- * provider that produces it. Apple answers with a credential object and Google
- * with a bare id token; pairing them in one union is what previously left the
- * hook inspecting the value to work out which branch it was in.
- *
- * Null is a dismissed sheet, which is not a failure.
- */
+/** Null is a dismissed sheet, which is not a failure. */
 type SignInRequest =
     | { getCredential: () => Promise<AppleSignInCredential | null>; provider: "apple" }
     | { getCredential: () => Promise<string | null>; provider: "google" };
@@ -50,10 +43,8 @@ function betterAuthUserId(result: SocialSignInResult): string {
     return userId.data;
 }
 
-/** Only the subject is read; an id token carries far more than we need. */
 const identityClaims = z.object({ sub: z.string().min(1) });
 
-/** The `active: true` an /apple/grant success answers with. */
 const appleGrant = z.object({ active: z.literal(true) });
 
 export function googleProviderSubject(identityToken: string): string {
@@ -85,8 +76,7 @@ export async function completeAppleSignIn(
 ): Promise<void> {
     activation.begin();
     try {
-        // SAFETY: better-auth types this per configured provider, and the client
-        // is built without the generic that would resolve it here. Only `data.user.id`
+        // SAFETY: the client is built without the provider generic better-auth needs here; only `data.user.id`
         // and `error.message` are read, and both are checked before use.
         const result = (await client.signIn.social({
             idToken: { nonce: credential.nonce, token: credential.identityToken },
@@ -135,10 +125,6 @@ export async function completeGoogleSignIn(client: AuthClient, identityToken: st
     });
 }
 
-/**
- * Every exit from a provider sheet — token, dismissal, or failure — clears
- * `busy` through one `finally`, so no path can leave the button spinning.
- */
 export function useProviderSignIn(client: AuthClient, options: ProviderSignInOptions = {}): ProviderSignIn {
     const t = useTranslation();
     const activation = useAuthSession();

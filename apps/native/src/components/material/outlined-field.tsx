@@ -9,36 +9,25 @@ import { Text, TextInput } from "@/components/text";
 import { withAlpha } from "@/theme/shade";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
-/**
- * Material 3 outlined text fields, drawn in RN for the Android editors: a
- * Compose `OutlinedTextField` keeps its text in a native state object, and RN's
- * `TextInput` already does focus, the keyboard and TalkBack the way the rest of
- * the form expects.
- *
- * Platform-neutral on purpose (an `.android.tsx` type-checks its imports
- * against the plain sibling), but only Android siblings render these.
- */
+// Drawn in RN, not Compose: an `OutlinedTextField` keeps its text in native state. Platform-neutral because an
+// `.android.tsx` type-checks its imports against the plain sibling, but only Android siblings render these.
 
 const FIELD_HEIGHT = 56;
 const CORNER = 4;
-/** The floated label is `bodySmall` (16dp line) centred on the top edge. */
 const LABEL_LINE = 16;
 const PRESSED_ALPHA = 0.1;
 
 interface FieldFrameProps {
     label: string;
-    /** The label sits on the outline (populated or focused) instead of inside the field. */
     floated: boolean;
     focused?: boolean;
     error?: boolean;
-    /** Under the field: help text, or the error when `error` is set. */
     supportingText?: string | null;
     /** What the label's notch is cut out of: the ground the field sits on. */
     ground?: string;
     children: ReactNode;
 }
 
-/** The outline, the notched label and the supporting line. The box itself is `children`. */
 function FieldFrame({
     label,
     floated,
@@ -50,8 +39,7 @@ function FieldFrame({
 }: FieldFrameProps) {
     const m3 = useMaterialColors();
     const accent = error ? m3.error : m3.primary;
-    // An error appears under a field the cursor may not be on, so TalkBack is
-    // told; the line itself is the input's hint, read when the field is reached.
+    // An error may land under a field the cursor is not on, so TalkBack is told.
     const errorText = error ? supportingText : null;
     useEffect(() => {
         if (errorText) {
@@ -123,11 +111,6 @@ type OutlinedTextFieldProps = Omit<ComponentProps<typeof RNTextInput>, "style" |
     ref?: Ref<TextInputInstance>;
 };
 
-/**
- * An editable outlined field. The label rests inside while the field is empty
- * and unfocused, and floats onto the outline otherwise; the placeholder shows
- * only once it has floated, as in M3.
- */
 export function OutlinedTextField({
     label,
     error = false,
@@ -200,28 +183,17 @@ export function OutlinedTextField({
 
 interface OutlinedSelectFieldProps {
     label: string;
-    /** What the field reads. The whole field is the button. */
     value: ReactNode;
-    /** Spoken after the label. */
     accessibilityValue: string;
-    /** Left out, the field reads but does not press. */
     onPress?: () => void;
-    /** A control at the start of the box, outside the field's own press target. */
     leading?: ReactNode;
-    /** A control at the end of the box, outside the field's own press target. */
     trailing?: ReactNode;
-    /** Draws the dropdown arrow at the end; off for a field that opens a sheet of its own. */
     dropdown?: boolean;
     focused?: boolean;
     ground?: string;
     accessibilityHint?: string;
 }
 
-/**
- * A read-only outlined field that opens a menu or a picker sheet when pressed,
- * M3's exposed-dropdown anatomy: the label always floats, and the value reads
- * where text would be typed.
- */
 export function OutlinedSelectField({
     label,
     value,

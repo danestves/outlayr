@@ -20,20 +20,11 @@ interface LogUpcomingProps {
     currency: string;
     /** Frozen "now", so a row's landing date does not drift mid-session. */
     nowMs: number;
-    /** Builds a row's context menu. Every row here is an upcoming occurrence. */
     menuItems: (transaction: TransactionWithCategory) => readonly ActionMenuItem[];
     onPress: (id: string) => void;
-    /**
-     * Supplied rather than looked up, so the header converts against the same
-     * currency the caller is displaying. A screen with its own currency would
-     * otherwise get totals valued against the ledger-wide one.
-     */
+    /** Supplied so totals convert against the caller's display currency. */
     rates: RateTable;
-    /**
-     * Every schedule, not only the ones `transactions` paints: the Log clips its
-     * rows to the next two weeks, and a monthly cost taken over that clip is a
-     * different number on the day a yearly renewal enters the window.
-     */
+    /** Every schedule: a monthly cost over the two-week clip jumps when a yearly renewal enters it. */
     schedules: TransactionWithCategory[];
     transactions: TransactionWithCategory[];
 }
@@ -44,8 +35,7 @@ export function LogUpcoming({ transactions, schedules, currency, rates, onPress,
     const t = useTranslation();
     const largeText = useAccessibilityTextSize();
     const headerRow = cn("flex-row items-baseline justify-between gap-2", largeText && "flex-wrap");
-    // Valued at the charge still to come, not at the date the schedule was first
-    // saved: a yearly renewal's can predate every rate the app holds.
+    // Valued at the coming charge: a renewal's saved date can predate every held rate.
     const charges = useMemo(
         () => transactions.map((transaction) => ({ ...transaction, date: landingDate(transaction, new Date(nowMs)) })),
         [transactions, nowMs]
@@ -58,10 +48,6 @@ export function LogUpcoming({ transactions, schedules, currency, rates, onPress,
             transactions.map((transaction, index) => ({ ...transaction, valued: valued[index]?.valued ?? null }))
         );
     }, [transactions, charges, currency, rates]);
-    // A second figure rather than a correction of the first: the heading total is
-    // genuinely what leaves the account next, but each schedule contributes one
-    // charge to it whatever its cadence, so alone it reads like a monthly cost
-    // while weighing a daily coffee the same as a yearly renewal.
     const perMonth = useMemo(
         () => monthlySubscriptionCost(schedules, currency, rates, new Date(nowMs)),
         [schedules, currency, rates, nowMs]

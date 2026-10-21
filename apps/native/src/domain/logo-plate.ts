@@ -1,15 +1,7 @@
 import { relativeLuminance, rgbToHex } from "@/theme/shade";
 import type { Rgb } from "@/theme/shade";
 
-/**
- * How a fetched logo sits in its square tile, decided from its own pixels.
- *
- * A stored logo is a JPEG, which has no alpha, so a transparent PNG drawn
- * as-is turns black wherever it was see-through. A transparent mark gets a
- * plate it reads against, faintly tinted with its own hue, and is trimmed and
- * re-centred so every brand gets the same padding. A solid logo crowding its
- * edges gets more of its own background. Anything else is drawn as it came.
- */
+// A stored logo is a JPEG with no alpha, so a transparent PNG drawn as-is turns black where it was see-through.
 
 /** Unpremultiplied RGBA, row-major. */
 export interface LogoPixels {
@@ -26,34 +18,23 @@ export interface LogoRect {
     y: number;
 }
 
-export type LogoPlate =
-    | { kind: "keep" }
-    /** Fill the tile with `color`, then draw `source` of the logo into `target` of the tile. */
-    | { color: string; kind: "plate"; source: LogoRect; target: LogoRect };
+export type LogoPlate = { kind: "keep" } | { color: string; kind: "plate"; source: LogoRect; target: LogoRect };
 
 const KEEP: LogoPlate = { kind: "keep" };
 const FULL: LogoRect = { height: 1, width: 1, x: 0, y: 0 };
 
-/** Under this alpha a pixel is see-through; past {@link TRANSPARENT_SHARE} of them the logo is transparent. */
 const CLEAR_ALPHA = 16;
 const TRANSPARENT_SHARE = 0.01;
-/** Alpha a pixel needs to count as the mark, so a faint halo does not widen its box. */
 const MARK_ALPHA = 24;
-/** RGB distances: the border is one colour within the first, a pixel is the mark past the second. */
 const BORDER_TOLERANCE = 30;
 const BORDER_UNIFORM_SHARE = 0.85;
 const MARK_DISTANCE = 40;
-/** A solid logo nearer an edge than this fraction of the side is re-padded. */
 const TIGHT_MARGIN = 0.1;
-/** A pixel under this contrast with the plate disappears into it. */
 const VISIBLE_CONTRAST = 1.6;
-/** The mark's area as a square's side, in fractions of the tile, and the cap on its longer side. */
 const MARK_SIZE = 0.6;
 const MARK_MAX_SIDE = 0.78;
-/** A transparent mark this wide, tall and solid is an icon with rounded corners, drawn full size. */
 const BLEED_SPAN = 0.95;
 const BLEED_FILL = 0.9;
-/** 30° bins. A mark is one brand hue when most of its coloured pixels sit within a bin of the top one. */
 const HUE_BINS = 12;
 const HUE_BIN_DEGREES = 360 / HUE_BINS;
 const BRANDED_CHROMA = 0.25;
@@ -98,7 +79,6 @@ function distance(data: Uint8Array, index: number, color: readonly [number, numb
     return Math.hypot(data[index] - color[0], data[index + 1] - color[1], data[index + 2] - color[2]);
 }
 
-/** The border's colour in bytes when nearly all of it is one colour, otherwise null. */
 function borderColor({ data, width, height }: LogoPixels): [number, number, number] | null {
     const border: number[] = [];
     for (let x = 0; x < width; x += 1) {
@@ -114,10 +94,6 @@ function borderColor({ data, width, height }: LogoPixels): [number, number, numb
     return matching / border.length > BORDER_UNIFORM_SHARE ? color : null;
 }
 
-/**
- * The plate a transparent mark reads best against: light unless the mark is
- * mostly light itself, and tinted with the mark's hue when it has one.
- */
 function plateFor({ data }: LogoPixels, marks: readonly number[]): Rgb {
     let weight = 0;
     let onWhite = 0;
@@ -159,7 +135,6 @@ function plateFor({ data }: LogoPixels, marks: readonly number[]): Rgb {
     return branded ? fromHsl(hue, 0.45, 0.955) : PAPER;
 }
 
-/** Scales a mark of this size, in fractions of the sample's longer side, to the same optical size in every tile. */
 function fit(width: number, height: number): LogoRect {
     const scale = Math.min(MARK_SIZE / Math.sqrt(width * height), MARK_MAX_SIDE / Math.max(width, height));
     return { height: height * scale, width: width * scale, x: (1 - width * scale) / 2, y: (1 - height * scale) / 2 };

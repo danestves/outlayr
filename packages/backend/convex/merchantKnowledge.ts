@@ -6,14 +6,8 @@ import { internalMutation, internalQuery } from "./_generated/server";
 import type { QueryCtx } from "./_generated/server";
 import { MODEL_TTL_MS, WEB_TTL_MS } from "./lib/merchantTrust";
 
-/**
- * `lookup`/`lookupMany`/`record`/`purge` are all `internal*` and stay that way — a public
- * exact-key oracle over a shared, non-user-scoped table is a
- * dictionary-enumeration surface (threat T5). `lookup` is reachable only from
- * `enrichment.ts:suggest`, `csvImport.ts:csvImport` and the enrichment queue,
- * all rate-limited; no function here collects or paginates a listing
- * over `by_key`, or takes a prefix/range.
- */
+// Everything here stays internal: a public exact-key oracle over this shared table is a dictionary-enumeration
+// surface (threat T5). Never add a listing, prefix or range read over `by_key`.
 
 const MAX_KEYS = 5;
 
@@ -75,7 +69,6 @@ export const lookup = internalQuery({
     returns: v.union(knowledgeRecord, v.null()),
 });
 
-/** `lookup` for many names in one transaction: one answer per key list, in order. */
 export const lookupMany = internalQuery({
     args: { keyLists: v.array(v.array(v.string())), now: v.number() },
     handler: async (ctx, args) => await Promise.all(args.keyLists.map((keys) => findKnowledge(ctx, keys, args.now))),

@@ -25,12 +25,7 @@ import { transactionsRepo } from "./transactions-core";
 
 const makeDb = (): Database => migratedDatabase();
 
-/**
- * A minimal server: one seq counter, one row per `(table, localId)`, and the
- * server's own `incomingWins`. It exists so the device-side tests can exercise
- * a real round trip; the Convex handler is tested against `convex-test` in
- * `packages/backend/convex/sync.test.ts`.
- */
+/** A minimal server using the real `incomingWins`; the Convex handler is tested in `convex/sync.test.ts`. */
 function makeServer() {
     const rows = new Map<string, PulledRow>();
     let nextSeq = 1;
@@ -148,19 +143,10 @@ function metaRow(key: string, seq: number, updatedAt: number, value: string | nu
 }
 
 describe("the replicated column set", () => {
-    // A column added to the local schema and not to the spec replicates as
-    // permanently absent rather than as an error, which no round-trip test would
-    // notice on its own.
     const ENVELOPE = new Set(["id", "key", "updatedAt", "deletedAt", "restoredAt"]);
-    /** Columns whose value is about this handset, not about the ledger. */
     const DEVICE_LOCAL = new Set([
         "transactions.imageUri",
-        // Every handset schedules its own local notification off its own copy of the
-        // schedule, so replicating the preference would only share a choice the
-        // receiving device already gets to make.
         "transactions.reminderLeadDays",
-        // The path embeds a container uuid that changes on every app update, so it
-        // is meaningless on another handset and stale on this one after one.
         "transactionPhotos.imageUri",
         "accounts.imageUri",
     ]);
@@ -219,8 +205,7 @@ describe("incomingWinsLocally", () => {
     });
 });
 
-// The same cases run against the server's `incomingWins` in
-// `packages/backend/convex/lib/syncTables.test.ts`; the two must agree.
+// Mirrors the server's cases in `packages/backend/convex/lib/syncTables.test.ts`; the two must agree.
 describe("incomingWinsLocally across a restore", () => {
     const live = (updatedAt: number, restoredAt: number | null = null) => ({ deletedAt: null, restoredAt, updatedAt });
     const deleted = (deletedAt: number, restoredAt: number | null = null) => ({
@@ -502,9 +487,6 @@ describe("applyPulledRows", () => {
         expect(row.note).not.toBe("back");
     });
 
-    // `reminderLeadDays` is device-local, so it is absent from the wire and the
-    // applier's `onConflictDoUpdate` leaves whatever this handset stored. On a row
-    // a peer has settled that would be a live notice for a charge already taken.
     it("clears the local notice when a peer retires the schedule", async () => {
         await addTransaction(db, "t1", {
             onceRecurring: true,
@@ -633,8 +615,6 @@ describe("applyPulledRows", () => {
         await expect(getSyncCursor(db)).resolves.toBe(0);
     });
 
-    // `appMeta` carries no `updatedAt` column, so without the pending guard every
-    // incoming value would outrank a local one the device has not sent yet.
     it("keeps an unsent local meta value rather than taking the incoming one", async () => {
         await setSyncEnabled(db, true);
         await setMeta(db, META_KEYS.currency, "GBP");
@@ -659,10 +639,6 @@ describe("applyPulledRows", () => {
         await expect(getMeta(db, META_KEYS.currency)).resolves.toBe("JPY");
     });
 
-    // A key dropped from the allow-list is still on the server and in every
-    // peer's history. Without the inbound guard, the first pull after the
-    // handset made its own choice would hand that choice back to whichever
-    // device wrote it last.
     it("ignores an incoming meta key the allow-list no longer names", async () => {
         await setMeta(db, "numberEntryType", "1");
 
@@ -705,7 +681,6 @@ describe("the echo of this device's own push", () => {
         await setSyncEnabled(db, true);
     });
 
-    /** Pushes the outbox and returns the page the same cycle's pull would apply. */
     async function pushAndEcho() {
         await drainOutbox(db, server.push);
         return await server.pull({ cursor: await getSyncCursor(db), limit: 100 });
@@ -874,8 +849,6 @@ describe("r3 — invariants Convex cannot hold", () => {
         expect(live).toHaveLength(1);
         expect(live[0].id).toBe("local");
         expect(rows.find((row) => row.id === "remote")?.categoryId).toBeNull();
-        // The row this device wrote is NOT what the server holds, so it must stay
-        // queued rather than be cleared as an applied row.
         expect((await db.select().from(outbox)).map((row) => row.localId)).toStrictEqual(["remote"]);
     });
 
@@ -1116,8 +1089,7 @@ describe("two devices against one account", () => {
         await runSync(alpha, server.transport);
         await runSync(beta, server.transport);
 
-        // Alpha deletes; beta edits the same row LATER and still loses, because
-        // R1 does not consult the clock.
+        // Beta's later edit still loses: R1 does not consult the clock.
         await tombstone(alpha, "t1", 2000);
         await bumpNote(beta, "t1", "still-here", 9000);
         await runSync(alpha, server.transport);
@@ -1151,7 +1123,6 @@ describe("two devices against one account", () => {
         await runSync(alpha, server.transport);
         await expect(liveOn(alpha)).resolves.toBe(true);
 
-        // A full re-read of the log replays the tombstone, which no longer wins.
         await pullAndApply(alpha, async ({ limit }) => await server.pull({ cursor: 0, limit }));
         await expect(liveOn(alpha)).resolves.toBe(true);
 
@@ -1178,9 +1149,6 @@ describe("two devices against one account", () => {
                 wire("deleted", 2000),
             ],
         });
-        // What the build before this one left behind, written with the gate shut
-        // so nothing is queued: it rejected the peer's restore, its own never
-        // landed, and an archive put back a row deleted after it was taken.
         await addTransaction(db, "restored-here", { updatedAt: AT(3000) });
         await addTransaction(db, "restored-there", { deletedAt: AT(2000), updatedAt: AT(2000) });
         await addTransaction(db, "from-archive", { updatedAt: AT(1500) });
@@ -1213,7 +1181,6 @@ describe("two devices against one account", () => {
         await addTransaction(alpha, "remote-row", { note: "from-alpha" });
         await runSync(alpha, server.transport);
 
-        // Beta has its own unsent row when the page lands.
         await addTransaction(beta, "local-row", { note: "unsent" });
         const applied = await pullAndApply(beta, server.pull);
 
@@ -1263,7 +1230,6 @@ describe("two devices against one account", () => {
         const db = makeDb();
         const server = makeServer();
         await setSyncEnabled(db, true);
-        // The server still holds the entry's tombstone; this device restored it.
         server.rows.set("transactions restored", txRow("restored", 1, 5000, { deletedAt: 5000 }));
         server.rows.set("installmentPlans plan-1", {
             deletedAt: null,
@@ -1302,7 +1268,6 @@ describe("two devices against one account", () => {
 });
 
 describe("a savings goal from a build that predates the start anchor", () => {
-    /** What `0021`-era clients put on the wire: no start columns, nullable date. */
     function legacyGoal(overrides: { deletedAt?: number | null; targetDate?: number | null } = {}): PulledRow {
         return {
             deletedAt: overrides.deletedAt ?? null,
@@ -1337,8 +1302,6 @@ describe("a savings goal from a build that predates the start anchor", () => {
     }
 
     it("lands with the start anchor defaulted rather than nulled", async () => {
-        // `toLocalFields` writes an explicit null for a field the wire omits, and
-        // `startAmount` is NOT NULL — without a default this rejects the whole page.
         const db = makeDb();
         await withAccount(db);
 
@@ -1346,19 +1309,11 @@ describe("a savings goal from a build that predates the start anchor", () => {
 
         const [row] = await db.select().from(savingsGoals);
         expect(row.startAmount).toBe(0);
-        // Zero, not null: null is how an unconvertible figure is spelled, and it
-        // would withhold this goal's progress and chart for as long as the display
-        // currency differed from its own.
         expect(row.startAmountUsd).toBe(0);
         expect(row.targetDate.getTime()).toBe(9000);
     });
 
     it("tombstones a dateless goal rather than keeping a copy the server has lost", async () => {
-        // A peer on an older build can clear a deadline. Skipping the row would
-        // leave this device showing its dated copy for good while the server held
-        // the dateless one, so it is written deleted and pushed back — both sides
-        // converge on gone. The unrelated row in the same page must survive, since
-        // a constraint failure here would take it down too.
         const db = makeDb();
         await withAccount(db);
 
@@ -1375,10 +1330,8 @@ describe("a savings goal from a build that predates the start anchor", () => {
     });
 
     it("survives the migration when it was deleted before upgrading", async () => {
-        // The rebuild drops LIVE dateless goals. A deleted one is kept, because its
-        // row exists only to carry the tombstone: dropping it strands the outbox
-        // entry for an offline delete, `drainOutbox` clears that entry without
-        // pushing it, and every other device keeps a goal the owner deleted.
+        // A deleted dateless goal survives the rebuild: dropping it would strand its offline delete's outbox entry,
+        // which `drainOutbox` clears unpushed, so other devices would keep the goal.
         const db = makeDb();
         await withAccount(db);
         await applyPulledRows(db, { cursor: 1, rows: [legacyGoal({ deletedAt: 6000, targetDate: null })] });
@@ -1402,7 +1355,6 @@ describe("a savings goal from a build that predates the start anchor", () => {
 
 describe("an account from a build that predates account kinds", () => {
     it("lands as an asset rather than failing the page", async () => {
-        // `kind` is NOT NULL locally; without its default, the null would reject the whole pull.
         const db = makeDb();
 
         await applyPulledRows(db, {

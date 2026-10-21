@@ -28,9 +28,7 @@ export function DoneStep({ review, onDone }: DoneStepProps) {
         return null;
     }
     const { count, outAmount, duplicatesSkipped } = review.commit;
-    // The app's language, not the device's: the sentence around this month is
-    // translated, so `toLocaleDateString` put "September" inside a Spanish line
-    // on any phone left in English.
+    // The app's language, not the device's: `toLocaleDateString` put "September" inside Spanish copy.
     const month = review.plan.latest == null ? null : monthLongTitle(review.plan.latest, language);
 
     return (

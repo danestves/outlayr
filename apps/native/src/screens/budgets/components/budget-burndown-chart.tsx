@@ -25,16 +25,11 @@ interface BudgetBurndownChartProps {
     burndown: Burndown;
     height?: number;
     limit: number;
-    /** Called with the scrubbed day (1-indexed) or null when the finger lifts. */
+    /** The scrubbed day, 1-indexed, or null when the finger lifts. */
     onScrub?: (day: number | null) => void;
     /**
-     * The chart as it appears inside a budget row or card rather than on its own.
-     *
-     * It pins the axis to ±the limit, so a column of them shares one unit and a
-     * 200%-over budget does not look identical to a 2%-over one; and it gives up
-     * the pan, which claims the touch the moment it lands and would otherwise
-     * stop the row registering a tap. The two always went together, because they
-     * are the same distinction.
+     * Pins the axis to ±limit so a column of rows shares one unit, and drops the pan, which claims the touch on
+     * landing and would stop the row registering a tap.
      */
     thumbnail?: boolean;
     width: number;
@@ -51,11 +46,6 @@ interface Plot {
     zeroY: number;
 }
 
-/**
- * The money axis always includes both the limit and zero, so the zero rule is on
- * screen whether the budget held or blew, and stretches to cover the projection
- * when it dips below the worst actual balance.
- */
 function makePlot(burndown: Burndown, limit: number, width: number, height: number, domain: "auto" | "limit"): Plot {
     const plotLeft = PAD.left;
     const plotRight = width - PAD.right;
@@ -64,7 +54,6 @@ function makePlot(burndown: Burndown, limit: number, width: number, height: numb
     let rawTop: number;
     let rawBottom: number;
     if (domain === "limit") {
-        // Fixed at ±limit so depth means severity across rows; worse clamps.
         rawTop = Math.max(1, limit);
         rawBottom = -rawTop;
     } else {
@@ -76,7 +65,6 @@ function makePlot(burndown: Burndown, limit: number, width: number, height: numb
         rawTop = Math.max(...candidates);
         rawBottom = Math.min(...candidates);
     }
-    // A flat budget (nothing spent) would collapse the range to a point.
     const range = Math.max(1, rawTop - rawBottom);
 
     const plotTop = PAD.top;
@@ -228,8 +216,7 @@ function useScrubPan({ activeDay, interactive, lastDay, onScrub, plot, scrubX, s
         const ratio = (x - plotLeft) / Math.max(1, plotRight - plotLeft);
         const day = Math.round(ratio * span) + 1;
         const clamped = Math.min(lastDay, Math.max(1, day));
-        // Only cross to JS when the snapped day actually changes, so a full
-        // swipe costs one call per day rather than one per frame.
+        // Cross to JS only when the snapped day changes: one call per day rather than per frame.
         if (clamped !== activeDay.get()) {
             activeDay.set(clamped);
             scheduleOnRN(setScrubDay, clamped);
@@ -303,8 +290,6 @@ export function BudgetBurndownChart({
     const scrubbed = scrubDay == null ? null : burndown.points[scrubDay - 1];
     const marker = scrubbed ?? last;
 
-    // Kept out of the JSX so a scrub re-render reparses this one line rather than
-    // every path, and out of `geometry` so the day it tracks cannot invalidate them.
     const markerRule = useMemo(() => {
         if (!marker) {
             return null;
@@ -324,13 +309,7 @@ export function BudgetBurndownChart({
         setScrubDay,
     });
 
-    /**
-     * A share of the limit rather than an amount: the chart is handed no currency
-     * code, and reading out a bare number would leave it unqualified. The whole
-     * plot is also one Skia path with nothing to commit, so unlike the Insights
-     * charts there is no per-day action to expose — this one sentence is the
-     * readout.
-     */
+    /** A share of the limit: the chart is handed no currency code to qualify an amount. */
     const summary = useMemo(() => {
         const day = last?.day ?? 1;
         const balance = last?.balance ?? limit;
@@ -342,9 +321,6 @@ export function BudgetBurndownChart({
         });
     }, [last, limit, burndown.totalDays, t]);
 
-    // A non-interactive chart is a thumbnail inside a budget row or card whose own
-    // label already reports these figures, so it leaves the tree rather than making
-    // every row read twice.
     const canvas = (
         <View
             accessibilityElementsHidden={!interactive}
@@ -355,8 +331,7 @@ export function BudgetBurndownChart({
             importantForAccessibility={interactive ? undefined : "no-hide-descendants"}
             style={{ height, width }}
         >
-            {/* Skia's canvas is a native view and swallows touches, so the pan
-				    detector on the wrapper never sees them unless this opts out. */}
+            {/* Skia's canvas swallows touches, so the wrapper's pan detector needs it to opt out. */}
             <Canvas pointerEvents="none" style={{ height, width }}>
                 {geometry.surplus ? (
                     <SkPath color={withAlpha(colors.foreground, 0.07)} opacity={draw} path={surplus} />
@@ -446,7 +421,6 @@ export function BudgetBurndownChart({
         </View>
     );
 
-    // A disabled detector still claims the touch, leaving the thumbnail a dead
-    // zone for the row's swipe.
+    // A disabled detector still claims the touch, leaving the thumbnail a dead zone for the row's swipe.
     return interactive ? <GestureDetector gesture={pan}>{canvas}</GestureDetector> : canvas;
 }

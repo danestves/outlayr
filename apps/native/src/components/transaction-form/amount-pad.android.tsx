@@ -14,10 +14,6 @@ import { TransactionStage } from "./stage/stage";
 
 const PRESSED_ALPHA = 0.1;
 
-/**
- * The amount step on Android. Same contract as `amount-pad.tsx`; the currency
- * is an outlined M3 chip with a drop-down arrow rather than a glass pill.
- */
 export const TransactionFormAmountPad: typeof TransactionFormAmountPadBase = ({
     backLabel,
     code,
@@ -61,7 +57,6 @@ export const TransactionFormAmountPad: typeof TransactionFormAmountPadBase = ({
             value={value}
         />
     );
-    // The money pad carries no title: the sentence above already states the amount.
     const shared =
         onCodePress && !largeText
             ? { footer, forward, right: currency, stepKey }

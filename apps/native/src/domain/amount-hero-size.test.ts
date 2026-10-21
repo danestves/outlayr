@@ -25,7 +25,6 @@ describe("amountHeroFontSize", () => {
         expect(amountHeroFontSize(450, 2, IPHONE_CONTENT_WIDTH)).toBe(AMOUNT_HERO_MAX_SIZE);
     });
 
-    // The reported bug: 453,333,333.00 ran off both edges at a fixed 62pt.
     it("shrinks a figure that would overflow", () => {
         const size = amountHeroFontSize(453_333_333, 2, IPHONE_CONTENT_WIDTH);
         expect(size).toBeLessThan(AMOUNT_HERO_MAX_SIZE);
@@ -36,7 +35,6 @@ describe("amountHeroFontSize", () => {
         expect(amountHeroFontSize(Number.MAX_SAFE_INTEGER, 2, IPHONE_CONTENT_WIDTH)).toBe(AMOUNT_HERO_MIN_SIZE);
     });
 
-    // A zero or negative content width means layout has not reported yet.
     it("falls back to the floor before the width is known", () => {
         expect(amountHeroFontSize(4500, 2, 0)).toBe(AMOUNT_HERO_MIN_SIZE);
     });

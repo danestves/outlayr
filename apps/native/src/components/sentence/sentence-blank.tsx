@@ -7,14 +7,12 @@ import { useSentenceStyle } from "./sentence";
 import { SentenceWash } from "./sentence-wash";
 import { useSentenceShake } from "./use-sentence-shake";
 
-/** Matches {@link import("./sentence-value").SentenceValue}'s rule. */
+// Matches `SentenceValue`'s rule.
 const RULE_BOTTOM = 7;
 
 interface SentenceBlankProps {
     accessibilityLabel: string;
-    /** Marks this as the slot the stage below the sentence is editing. */
     active?: boolean;
-    /** Marks the one blank that is holding the save back. */
     flagged?: boolean;
     label: string;
     onPress: () => void;
@@ -24,14 +22,7 @@ interface SentenceBlankProps {
     shake?: boolean;
 }
 
-/**
- * An unfilled slot. It states what belongs there rather than asking for it, so
- * the sentence still reads as a sentence with nothing entered — which is what
- * lets the screen carry no instructional copy at all.
- *
- * Deliberately still until flagged: a blank that pulsed would be the one thing
- * on the screen repainting every frame, and there may be four of them.
- */
+// Still until flagged: a pulsing blank would repaint every frame, and there may be four of them.
 export function SentenceBlank({
     accessibilityLabel,
     active,
@@ -52,8 +43,6 @@ export function SentenceBlank({
         return optional && !active ? "text-grammar" : "text-foreground";
     };
 
-    // Dashed only while the slot is genuinely empty: once it is the one being
-    // filled, or the one refusing the save, a solid rule says so.
     const rule = () => {
         if (flagged) {
             return "bg-danger h-[2px] rounded-full";

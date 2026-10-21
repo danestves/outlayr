@@ -24,19 +24,13 @@ export const AI_TIER_MAX_ROWS = 5000;
 const CLIENT_TIMEOUT_MS = 15_000;
 
 export interface UseCsvImportArgs {
-    /** `remoteEnrichmentOn`: AI providers allowed and suggestions on. False matches on the device only. */
     aiEnrichment: boolean;
     categoryIdByKey: ReadonlyMap<string, string>;
     categoryTree: readonly CategoryBranch[];
     chars: number;
     draft: MappingDraft;
-    /**
-     * Identifies the selected file. Must be a primitive value — `parsed` itself
-     * gets rebuilt into a fresh object on every render in some call sites, so it
-     * cannot be used to detect a genuine file change.
-     */
+    /** A primitive: `parsed` is rebuilt every render in some call sites, so it cannot detect a file change. */
     fileKey: string | null;
-    /** The synced grounded-lookup consent; the server re-checks it too. */
     groundedLookup: boolean;
     labels: readonly string[];
     parsed: ParsedImportFile;
@@ -154,7 +148,6 @@ function reduce(state: CsvImportState, action: CsvImportAction): CsvImportState 
     }
 }
 
-/** Labels the curated map could not finish with: no domain, or no match at all. */
 interface MerchantLinkGaps {
     domainless: string[];
     unresolved: string[];
@@ -167,9 +160,6 @@ function linkKnownMerchants(
 ): MerchantLinkGaps {
     const unresolved: string[] = [];
 
-    // A map match without a domain keeps its tier-1 category link but still
-    // travels to the server, so `merchantKnowledge` can supply — or a grounded
-    // lookup can learn — the domain the curated map does not carry.
     const domainless: string[] = [];
     for (const label of labels) {
         const named = categoryIdByKey.get(categoryKey(label));

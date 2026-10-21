@@ -31,7 +31,6 @@ const SUGGESTION_TILE = 24;
 const PRESSED_ALPHA = 0.1;
 const LABEL_FONT = { fontFamily: "GoogleSansFlex_500Medium" } as const;
 
-/** What an outlined select field reads. */
 function selectValue(value: string) {
     return (
         <Text className="text-body text-m3-on-surface" numberOfLines={1}>
@@ -40,7 +39,7 @@ function selectValue(value: string) {
     );
 }
 
-/** Save as a text button at the end of the full-screen dialog's app bar. Memoized: a keystroke must not rebuild the bar. */
+/** Memoized: a keystroke must not rebuild the bar. */
 const SaveAction = memo(({ disabled, label, onPress }: { disabled: boolean; label: string; onPress: () => void }) => (
     <Stack.Toolbar placement="right">
         <Stack.Toolbar.View>
@@ -50,7 +49,6 @@ const SaveAction = memo(({ disabled, label, onPress }: { disabled: boolean; labe
 ));
 SaveAction.displayName = "SaveAction";
 
-/** The New debt dialog on Android: M3 segmented buttons for the direction and Fiado, the amount, then outlined fields. */
 export function NewDebt(props: NewDebtProps) {
     const t = useTranslation();
     const { language } = useLanguage();
@@ -189,7 +187,6 @@ export function NewDebt(props: NewDebtProps) {
     );
 }
 
-/** "Pay back by": empty sets no plan; once picked, the day and a clear button at the field's end. */
 function PayBackByField({ form }: { form: ReturnType<typeof useNewDebtForm> }) {
     const t = useTranslation();
     const m3 = useMaterialColors();
@@ -233,7 +230,6 @@ function PayBackByField({ form }: { form: ReturnType<typeof useNewDebtForm> }) {
     );
 }
 
-/** An existing person under the name field, so a debt with them is one tap rather than a retyped name. */
 function PersonSuggestion({ onPick, person }: { onPick: () => void; person: Account }) {
     const m3 = useMaterialColors();
     return (

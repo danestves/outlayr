@@ -6,24 +6,18 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withAlpha } from "@/theme/shade";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
-/** M3's FAB, on the Log FAB's numbers: 56dp, 16dp corners, 16dp in from the edge. */
+/** The Log FAB's numbers: 56dp, 16dp corners, 16dp in from the edge. */
 const SIZE = 56;
 const MARGIN = 16;
 
 /**
- * What a list scrolling under the FAB pads its end with, so its last row
- * clears the FAB. The FAB floats above the system bar, so the clearance grows
- * with the bottom inset: about 48dp more with 3-button navigation.
+ * The FAB floats above the system bar, so a list's end padding grows with the bottom inset:
+ * about 48dp more with 3-button navigation.
  */
 export function useFabClearance(): number {
     return SIZE + MARGIN * 2 + useSafeAreaInsets().bottom;
 }
 
-/**
- * The Material 3 floating action button for a screen's one "new" action, in
- * the primary container. Android's answer to the bottom-toolbar add button the
- * iOS screens use.
- */
 export function MaterialFab({ label, onPress }: { label: string; onPress: () => void }) {
     const m3 = useMaterialColors();
     const insets = useSafeAreaInsets();

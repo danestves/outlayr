@@ -28,31 +28,18 @@ import {
 import type { SyncedTable, WireFields, WireValue } from "./lib/syncTables";
 import { requirePro } from "./revenuecat";
 
-/**
- * Rows a single `push` may carry. Chosen against Convex's per-transaction
- * ceiling of 4,096 index ranges read: this mutation does one
- * `by_user_and_localId` lookup per row, so 500 leaves an 8x margin, and the
- * argument payload at ~400 bytes a row is two orders of magnitude under the
- * 16 MiB limit.
- */
+// Convex reads at most 4,096 index ranges per transaction and push does one lookup per row, so 500 is an 8x margin.
 export const PUSH_BATCH_LIMIT = 500;
 
-/** Rows a single `pullSince` page may serve, and the ceiling on `limit`. */
 export const PULL_PAGE_LIMIT = 1000;
 
 const tombstone = {
     deletedAt: v.union(v.number(), v.null()),
-    /** Optional: a build that predates restores never sends it. */
     restoredAt: v.optional(v.union(v.number(), v.null())),
     updatedAt: v.number(),
 };
 
-/**
- * A pushed row names its own table, so one batch can carry edits from every
- * synced table without the client having to shard by table — the outbox is ordered by when
- * the edit happened, not by which table it landed in, and re-ordering it would
- * be re-ordering causality.
- */
+// A row names its own table so a batch keeps the outbox's edit order across tables; sorting by table breaks causality.
 const pushRow = v.union(
     v.object({
         localId: v.string(),
@@ -139,7 +126,6 @@ const pushRow = v.union(
         fields: v.object(outsidePaymentFields),
     }),
     v.object({
-        /** Keys are never deleted, so this side of the union has no tombstone. */
         deletedAt: v.null(),
         fields: v.object(appMetaFields),
         localId: v.string(),
@@ -170,10 +156,6 @@ const pulledRow = v.object({
     updatedAt: v.number(),
 });
 
-/**
- * `appMeta` stores its identity in `key` rather than `localId`, so it is the one
- * table the lookup has to special-case. Everything downstream speaks `localId`.
- */
 async function findExisting(ctx: MutationCtx, userId: string, row: PushRow): Promise<Doc<SyncedTable> | null> {
     if (row.table === "appMeta") {
         return await ctx.db
@@ -187,10 +169,6 @@ async function findExisting(ctx: MutationCtx, userId: string, row: PushRow): Pro
         .unique();
 }
 
-/**
- * `appMeta` is the one table without a tombstone column, so the merge rule reads
- * it as permanently live and decides on `updatedAt` alone.
- */
 function versioned(doc: Doc<SyncedTable>) {
     return {
         deletedAt: "deletedAt" in doc ? doc.deletedAt : null,
@@ -233,8 +211,7 @@ function transactionPolicyTieDecision(row: PushRow, existing: Doc<SyncedTable> |
     ) {
         return null;
     }
-    // SAFETY: the guard above returned unless `row.table` is "transactions", and
-    // `existing` was looked up by that same table name.
+    // SAFETY: the guard above returned unless `row.table` is "transactions", the table `existing` came from.
     const stored = existing as Doc<"transactions">;
     const incoming = fieldsFor<"transactions">(row);
     // SAFETY: `Object.keys` widens to string[]; the keys are this object's own.
@@ -259,15 +236,7 @@ function transactionPolicyTieDecision(row: PushRow, existing: Doc<SyncedTable> |
     return incomingPendingCustom ? "incoming" : "existing";
 }
 
-/**
- * The already-validated payload for one table, recovered as its document type.
- *
- * `push`'s argument validator is the per-table union in `syncTables.ts`, so by
- * the time a row reaches `upsert` its `fields` have been checked against exactly
- * the columns `schema.ts` declares for `row.table`. The assertion only puts back
- * the generated type that a runtime table name erased — see the note on
- * `upsert`, and the switch below that pairs each literal with its own branch.
- */
+// `push`'s validator already checked `fields` against `row.table`'s columns; this restores the erased type.
 function fieldsFor<T extends SyncedTable>(row: PushRow): Doc<T> {
     // SAFETY: the caller passes the table literal matching the case it is in.
     return row.fields as Doc<T>;
@@ -279,17 +248,11 @@ async function writeRow<T extends SyncedTable>(
     existing: Doc<SyncedTable> | null,
     doc: WithoutSystemFields<Doc<T>>
 ): Promise<void> {
-    // SAFETY: `existing` was looked up by `row.table`, which is the same `T`
-    // this call was given, so its id addresses a row of that table.
+    // SAFETY: `existing` was looked up by `row.table`, the same `T` this call was given.
     await (existing ? ctx.db.patch(table, existing._id as Id<T>, doc) : ctx.db.insert(table, doc));
 }
 
-/**
- * A switch rather than one call on `row.table`, because a runtime table name
- * erases the generated per-table document type, and that type is exactly what
- * catches a payload drifting from `schema.ts`. `existing` was looked up through
- * `row.table`, so its id belongs to the branch it lands in.
- */
+// A switch: a runtime table name erases the per-table type that catches a payload drifting from schema.ts.
 async function upsert(
     ctx: MutationCtx,
     row: PushRow,
@@ -366,20 +329,9 @@ async function upsert(
         }
         case "savingsGoals": {
             const fields = fieldsFor<"savingsGoals">(row);
-            // A client that predates `exchangeRate` omits it while sending a target
-            // it valued at the EDIT date. Keeping the stored rate beside that pair
-            // would leave the two describing different days, and every later
-            // restatement would divide by a rate the target was never valued at.
-            // Cleared instead, so readers fall back to the pair the editing client
-            // actually used — which is the only consistent basis left.
-            //
-            // Only when that pair actually MOVED, though. The same client sends the
-            // whole row to rename a goal or shift its deadline, and discarding a
-            // precise rate over an edit that did not touch the target would give
-            // away the precision this column exists to keep.
-            // SAFETY: `existing` is the stored `savingsGoals` doc for this row when
-            // there is one, and this branch is reached only for that table, so both
-            // target fields are declared on it by `savingsGoalFields`.
+            // An older client omits `exchangeRate` but values a moved target at the edit date, so the stale rate is
+            // cleared. A rename leaves the target alone and keeps the precise rate.
+            // SAFETY: this branch is reached only for `savingsGoals`, whose fields declare both targets.
             const priced = existing as { targetAmount?: number; targetAmountUsd?: number | null } | null;
             const targetMoved =
                 priced == null ||
@@ -399,12 +351,10 @@ async function upsert(
                 seq: stamp.seq,
                 updatedAt: row.updatedAt,
                 userId: stamp.userId,
-                // SAFETY: `appMeta` is the one table whose payload is a single
-                // column, declared as exactly this in `syncTables.ts`.
+                // SAFETY: `appMeta`'s payload is this single column, as declared in `syncTables.ts`.
                 value: (row.fields as { value: string | null }).value,
             };
-            // SAFETY: `existing` was looked up by `row.table`, which this case
-            // has already matched against "appMeta".
+            // SAFETY: `existing` was looked up by `row.table`, which this case matched against "appMeta".
             await (existing
                 ? ctx.db.patch("appMeta", existing._id as Id<"appMeta">, doc)
                 : ctx.db.insert("appMeta", doc));
@@ -416,34 +366,10 @@ async function upsert(
     }
 }
 
-/**
- * Replication, both directions. Every function here derives `userId` from the
- * validated session and never from an argument, so one account can neither read
- * nor write another's ledger.
- *
- * Sync is a Pro entitlement, checked immediately after `requireUserId` in
- * `push` and `pullSince` — on the server, where a client cannot route around it.
- */
-/**
- * Refuses a push from a device that has not learned the account is going.
- *
- * `purgeUserBatch` deletes `syncState` last and reports done, but the session is
- * not deleted until the end of `advance` and Pro is not cleared until
- * `recordBillingErased` — so both of this mutation's own guards stay true for a
- * window as long as a retried RevenueCat call. A push landing inside it
- * re-creates `syncState` at `nextSeq: 1` and re-inserts rows for a user id that
- * is about to stop existing, and nothing can ever find them again: every purge
- * path is keyed off the `accountDeletionJobs.userId` that `advance` then nulls.
- *
- * `prepared` is deliberately still allowed — the owner has asked but not
- * confirmed, and may yet cancel.
- */
+// The session and Pro outlive `purgeUserBatch` by up to a retried RevenueCat call, and a push in that window writes
+// rows for a user id no purge path can find again. `prepared` is allowed: the owner may yet cancel.
 export async function refuseWhileDeleting(ctx: QueryCtx, userId: string): Promise<void> {
-    // Every job, not a page of them: this asks whether ANY job has moved past
-    // `prepared`, and a page can only answer that if the newest job is inside
-    // it. `accountDeletion.prepare` caps the set per user, which is what keeps
-    // the full read small — without that cap a client could bury the one job
-    // that refuses the push under a page of harmless prepared ones.
+    // Every job, not a page: a page could bury the refusing job. `accountDeletion.prepare` caps the set per user.
     const jobs = await ctx.db
         .query("accountDeletionJobs")
         .withIndex("by_userId", (q) => q.eq("userId", userId))
@@ -458,8 +384,7 @@ export async function seqCounter(ctx: MutationCtx, userId: string) {
         .query("syncState")
         .withIndex("by_user", (q) => q.eq("userId", userId))
         .unique();
-    // Starts at 1 so that a cursor of 0 means "nothing read yet" rather than
-    // "read everything up to the first row".
+    // Starts at 1 so a cursor of 0 means "nothing read yet".
     const nextSeq = state?.nextSeq ?? 1;
     return {
         advanceTo: async (next: number) => {
@@ -494,9 +419,8 @@ export const push = mutation({
         let skipped = 0;
         const reEmittedPolicyWinners = new Set<string>();
 
-        /* oxlint-disable no-await-in-loop -- rows are applied in order — `seq` is handed out one per accepted row, and two rows for the same localId in one batch require the second lookup to observe the first row's upsert. */
-        // SAFETY: `pushRow` above validates each row into exactly this shape;
-        // `PushRow` is the flattened view of that union the loop reads.
+        /* oxlint-disable no-await-in-loop -- rows are applied in order: `seq` is handed out one per accepted row, and two rows for the same localId in one batch require the second lookup to observe the first row's upsert. */
+        // SAFETY: `pushRow` above validates each row into this shape; `PushRow` is that union flattened.
         for (const row of args.rows as PushRow[]) {
             const existing = await findExisting(ctx, userId, row);
             const candidate = {
@@ -509,9 +433,7 @@ export const push = mutation({
             if (policyTieDecision === "existing") {
                 const key = `${row.table}:${row.localId}`;
                 if (!reEmittedPolicyWinners.has(key)) {
-                    // SAFETY: only a "transactions" row reaches a policy tie —
-                    // `transactionPolicyTieDecision` returns null for every other
-                    // table — and `existing` was looked up by that table name.
+                    // SAFETY: the tie decision is null for every table but "transactions", where `existing` came from.
                     await ctx.db.patch("transactions", (existing as Doc<"transactions">)._id, { seq: nextSeq });
                     nextSeq += 1;
                     reEmittedPolicyWinners.add(key);
@@ -520,10 +442,7 @@ export const push = mutation({
                 continue;
             }
             if (policyTieDecision === null && !incomingWins(candidate, existing ? versioned(existing) : null)) {
-                // The server keeps the winner and the pull hands it back, so a device
-                // whose offline edit lost converges without pushing again. Overwriting
-                // here instead would strand the winner's edit on a device that has
-                // already cleared its outbox.
+                // The pull hands the winner back, so the losing device converges without pushing again.
                 skipped += 1;
                 continue;
             }
@@ -538,7 +457,6 @@ export const push = mutation({
         }
         /* oxlint-enable no-await-in-loop */
 
-        // One counter write per batch rather than per row.
         await counter.advanceTo(nextSeq);
 
         return { accepted, nextSeq, skipped };
@@ -550,17 +468,9 @@ export const push = mutation({
     }),
 });
 
-/**
- * A stored document read as the flat, per-column bag `toWire` walks.
- *
- * Every synced table's columns are declared in `syncTables.ts` as wire-shaped
- * validators, so a stored value is already a `WireValue`; `_id`/`_creationTime`
- * are Convex's own and are the reason the key type stays open.
- */
 type StoredDocument = Record<string, WireValue | undefined> & {
     deletedAt?: number | null;
     restoredAt?: number | null;
-    /** `appMeta` identifies its rows by `key`; every other table by `localId`. */
     key?: string;
     localId?: string;
 };
@@ -577,9 +487,7 @@ function toWire(table: SyncedTable, doc: Doc<SyncedTable>) {
     }
     const localId = source.localId ?? source.key;
     if (localId === undefined) {
-        // Every synced table declares one or the other in `syncTables.ts`, so
-        // reaching here is schema drift, not bad data. Serving the row under a
-        // stand-in id would have the client adopt it afresh on every pull.
+        // Schema drift, not bad data: a stand-in id would have the client adopt the row afresh on every pull.
         throw new Error(`Synced row in ${table} carries neither localId nor key`);
     }
     return {
@@ -594,23 +502,8 @@ function toWire(table: SyncedTable, doc: Doc<SyncedTable>) {
     };
 }
 
-/**
- * One page of the account's change log, strictly after `cursor`.
- *
- * Six index walks merge-sorted into one causally ordered stream. Taking `limit`
- * from each table before the merge is what makes the truncation safe: any row
- * left behind in a table necessarily has a `seq` above the last one served, so
- * the next page picks it up rather than skipping it.
- *
- * The page is NOT ordered so that a category precedes a transaction referencing
- * it — `seq` is last-modified order, and a category edited today sorts after a
- * transaction created against it last year. The applier runs the batch with
- * foreign keys off for exactly this reason.
- *
- * `tables` narrows the walk, for a device re-reading only the tables an older
- * build skipped rows of. Its cursor is that walk's own, never the device's main
- * one: a page that omits tables cannot vouch for their seqs.
- */
+// Taking `limit` per table before the merge keeps truncation safe. Pages are in seq order, not foreign-key order,
+// so the applier runs with foreign keys off. A `tables` walk's cursor cannot vouch for the tables it omits.
 export const pullSince = query({
     args: {
         cursor: v.number(),
@@ -641,9 +534,6 @@ export const pullSince = query({
 
         return {
             cursor: last ? last.seq : args.cursor,
-            // A full page may be exactly the tail, in which case the next call
-            // serves nothing and the walk stops there — one wasted query, never a
-            // missed row.
             hasMore: merged.length >= limit,
             rows,
         };
@@ -655,11 +545,6 @@ export const pullSince = query({
     }),
 });
 
-/**
- * The account's current watermark, subscribed to rather than polled: any
- * device's push moves it, which invalidates this query on every other device
- * and is what makes replication realtime without a poll loop.
- */
 export const currentSeq = query({
     args: {},
     handler: async (ctx) => {

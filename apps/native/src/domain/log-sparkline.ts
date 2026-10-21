@@ -18,11 +18,6 @@ function endOfDay(day: Date): Date {
     return new Date(startOfDay(day).getTime() + 86_399_000);
 }
 
-/**
- * The window mirrors Swift's `getLineGraphData*`: a week back for the day and
- * week periods, a month back for the month, twelve months for the year.
- * All-time has no window, so it has no graph.
- */
 function sampleEdges(
     period: "day" | "week" | "month" | "year" | "all",
     now: Date
@@ -38,7 +33,7 @@ function sampleEdges(
         const edges: Date[] = [];
         let edge = addMonths(next, -12);
         while (edge.getTime() < next.getTime()) {
-            // Swift labels each monthly sample with the day before its boundary, so
+            // Swift labels each monthly sample with the day before its boundary.
             edges.push(endOfDay(addDays(edge, -1)));
             edge = addMonths(edge, 1);
         }
@@ -57,11 +52,6 @@ function sampleEdges(
     return { edges, unit: "day" };
 }
 
-/**
- * Net is a **running** total — the ledger's balance walked forward from the very
- * first entry. In and Out are **per-bucket** sums instead. Mirrors Swift's two
- * `getLineGraphData*` builders.
- */
 export function sparklineSeries(
     rows: readonly SparklineRow[],
     measure: LogMeasure,
@@ -104,7 +94,6 @@ export function sparklineSeries(
     });
 }
 
-/** How many trailing points belong to the period the hero is measuring. */
 export function sparklineRange(period: "day" | "week" | "month" | "year" | "all", now: Date, firstWeekday = 1): number {
     const today = startOfDay(now);
     const day = 86_400_000;
@@ -117,7 +106,6 @@ export function sparklineRange(period: "day" | "week" | "month" | "year" | "all"
     return Math.round((today.getTime() - startOfWeek(now, firstWeekday).getTime()) / day) + 1;
 }
 
-/** The direction the line should read as good. */
 export function sparklineIsPositive(measure: LogMeasure, points: readonly SparklinePoint[]): boolean {
     switch (measure) {
         case "net": {

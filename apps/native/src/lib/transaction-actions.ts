@@ -11,13 +11,7 @@ interface TransactionActionsOptions {
     t: TranslateFn;
 }
 
-/**
- * Mirrors `SingleTransactionView`'s `contextMenu` in Swift.
- *
- * Neither Delete nor Stop Recurring carries a confirmation of its own: both
- * route through the undo window the swipe action already uses, and a dialog in
- * front of an undoable action is a second ask for the same permission.
- */
+/** Delete and Stop Recurring take no confirmation: both route through the swipe action's undo window. */
 export function transactionMenuItems({
     actions,
     onStopRecurring,

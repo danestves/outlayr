@@ -21,7 +21,6 @@ jest.unmock("@/i18n/context");
 
 const mockGetLocales = jest.mocked(getLocales);
 
-/** The provider reads only the first locale's `languageTag`. */
 const mockDeviceLanguageTag = {
     mockReset: () => mockGetLocales.mockReset(),
     mockReturnValue: (tag: string) => mockGetLocales.mockReturnValue([mockTestLocale({ languageTag: tag })]),

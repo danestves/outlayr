@@ -22,9 +22,6 @@ const BASE = {
 
 describe("the pace chart's head", () => {
     it("holds still through the day, like the standing it is read beside", () => {
-        // Both are measured in whole days: the required line advances at midnight
-        // and so does the head, so the drawn gap and the printed verdict stay in
-        // step without an intraday timer neither of them has.
         const noon = makeGeometry({ ...BASE, actual: [{ time: NOW, value: 600 }], nowMs: NOW + DAY / 2 });
         const midnight = makeGeometry({ ...BASE, actual: [{ time: NOW, value: 600 }] });
 
@@ -32,9 +29,6 @@ describe("the pace chart's head", () => {
     });
 
     it("marks where the account stands today, not a future-dated row", () => {
-        // The account's cells are unbounded by date, so a scheduled transaction
-        // pushes the series past today. Anchoring the head there would mark a
-        // balance the account does not hold yet.
         const geometry = makeGeometry({
             ...BASE,
             actual: [
@@ -90,16 +84,11 @@ describe("the pace chart's head", () => {
                 { time: NOW, value: 600 },
             ],
         });
-        // Identical paths: the scheduled point neither joins the line nor stretches
-        // the axis under it.
         expect(geometry.actual).toBe(banked.actual);
         expect(geometry.required).toBe(banked.required);
     });
 
     it("projects nothing once the deadline is behind, so no path is drawn at the edge", () => {
-        // Both ends clamp to the axis's right edge past the deadline, collapsing the
-        // dash into a vertical stroke beside a pace saying the whole remainder is
-        // due now.
         const overdue = makeGeometry({
             ...BASE,
             actual: [{ time: TARGET_TIME + DAY, value: 800 }],
@@ -109,8 +98,6 @@ describe("the pace chart's head", () => {
     });
 
     it("projects nothing once the target is met, so nothing reads as a plan to withdraw", () => {
-        // The dashed run would otherwise descend from a surplus back down to the
-        // target, beside a verdict saying the goal is done.
         const reached = makeGeometry({ ...BASE, actual: [{ time: NOW, value: 1200 }], target: 1000 });
         expect(reached.projection).toBeNull();
 

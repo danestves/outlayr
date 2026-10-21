@@ -11,7 +11,6 @@ import { useTranslation } from "@/i18n/context";
 import { useColors } from "@/theme/use-colors";
 
 interface BudgetPeriodStepperProps {
-    /** How many closed windows the ledger reaches back through. */
     maxBack: number;
     /** 0 is the running window; negative counts closed windows behind it. */
     offset: number;
@@ -20,7 +19,6 @@ interface BudgetPeriodStepperProps {
     window: BudgetWindow;
 }
 
-/** Ports Swift's `BudgetStepperView`: browse the windows behind the running one. */
 export function BudgetPeriodStepper({ window, type, offset, maxBack, onStep }: BudgetPeriodStepperProps) {
     const t = useTranslation();
     return (

@@ -3,7 +3,6 @@ import type { PurchasesPackage } from "react-native-purchases";
 
 import { readPlans } from "./pro-plans";
 
-/** A Play product whose `defaultOption`, the offer Play made this user, opens with a free week. */
 const ANNUAL_WITH_FREE_WEEK = {
     identifier: "ANNUAL",
     packageType: "ANNUAL",

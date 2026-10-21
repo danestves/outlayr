@@ -38,7 +38,6 @@ async function fireChange(tableName: string, rows = 1) {
                 listener({ tableName });
             }
         }
-        // Change events reach live reads on the next tick, coalesced.
         await new Promise((resolve) => {
             setTimeout(resolve, 0);
         });

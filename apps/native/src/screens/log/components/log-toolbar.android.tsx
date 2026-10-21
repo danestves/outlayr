@@ -9,13 +9,7 @@ import { useTranslation } from "@/i18n/context";
 import { FILTER_ICON, FILTER_LABEL_KEY, PERIOD_PHRASE_KEY } from "../labels";
 import type { LogToolbarProps } from "./log-toolbar";
 
-/**
- * The same three actions, all trailing: an M3 app bar's leading slot is the
- * navigation icon, so search sits with period and filter instead of pushing
- * the title along. No `tintColor` or `backgroundColor` on the toolbar: on
- * device the tint hides the menu items' icons and checkmarks, and the
- * background hides the checkmark on items without an icon (the periods).
- */
+/** No `tintColor` or `backgroundColor`: on device they hide the menu icons and checkmarks. */
 export function LogToolbar({ period, onPeriod, filter, onFilter, onSearch }: LogToolbarProps) {
     const t = useTranslation();
     return (

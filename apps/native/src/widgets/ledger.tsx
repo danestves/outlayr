@@ -15,34 +15,23 @@ import { createWidget } from "expo-widgets";
 import { PLACEHOLDERS } from "./placeholders";
 import type { LedgerConfiguration, LedgerEntryProps, LedgerWidgetProps } from "./props";
 
-/**
- * Runs in the widget extension's `JSContext`, so only `props`, `environment` and
- * the `@expo/ui` globals are in scope — see the note in `budget.tsx`.
- */
+/** Runs in the extension's `JSContext`: see `budget.tsx`. */
 const LedgerWidget = (props: LedgerWidgetProps, environment: WidgetEnvironment<LedgerConfiguration>) => {
     "widget";
 
     const scheme = environment.colorScheme === "dark" ? "dark" : "light";
     const palette = props.chrome[scheme];
-    // A configuration stored by an older build can name a period or measure this
-    // one no longer offers, so both fall back rather than indexing to undefined.
-    // The defaults are what the tile has always shown, so an installed widget
-    // does not silently start reporting something else.
+    // An older build's configuration can name an option this one no longer offers.
     const header =
         props.headers[environment.configuration?.period ?? "today"]?.[environment.configuration?.measure ?? "spent"] ??
         props.headers.today.spent;
     const family = environment.widgetFamily;
     const limit = family === "systemMedium" ? 3 : 8;
 
-    // Declared inside the body, not at module scope: babel stringifies this
-    // function and the extension evaluates it in a bare `JSContext`, where a
-    // module-level helper resolves to nothing. It fails as a render-time
-    // `ReferenceError` on the tile, never at build time.
+    // Inside the body: in the bare `JSContext` a module-level helper is a render-time `ReferenceError`.
     const signed = (entry: LedgerEntryProps) => (entry.income ? `+${entry.amount}` : entry.amount);
 
-    // Lock Screen families render vibrant: one tint, no background, a couple of
-    // lines. The colour dot and the ledger head carry nothing there, so both
-    // branches drop to note-and-figure rows and let the copy do the work.
+    // Lock Screen families flatten to one tint, so both drop to note-and-figure rows.
     if (family === "accessoryInline") {
         const [latest] = props.entries;
         return (
@@ -120,8 +109,7 @@ const LedgerWidget = (props: LedgerWidgetProps, environment: WidgetEnvironment<L
                 </Text>
             </VStack>
             <Spacer />
-            {/* `layoutPriority` so a long merchant name truncates before the
-			    figure does. */}
+            {/* `layoutPriority` so a long merchant name truncates before the figure does. */}
             <Text
                 modifiers={[
                     font({ design: "rounded", size: 14, weight: "semibold" }),

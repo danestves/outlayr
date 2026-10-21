@@ -1,9 +1,4 @@
-/**
- * The orb's two looks and the blend between them. Numeric keys and colours
- * mirror the Liquid Orb editor's `siri` preset with the app's palette swapped
- * in; the editor's own idle profile scales the active one by the same ratios
- * used here, so its idle/active pair is what `idle`/`active` below are.
- */
+// Mirrors the Liquid Orb editor's `siri` preset with the app's palette swapped in; idle scales active by its ratios.
 
 export interface OrbProfile {
     colorA: readonly [number, number, number];
@@ -22,18 +17,11 @@ export interface OrbProfile {
 
 export type Rgb = readonly [number, number, number];
 
-/** `#rrggbb` → linear-ish 0–1 triple, the form the shader's `float3` wants. */
 function rgb(hex: string): Rgb {
     const channel = (at: number) => Number.parseInt(hex.slice(at, at + 2), 16) / 255;
     return [channel(1), channel(3), channel(5)];
 }
 
-/**
- * Brand vermilion carries the hot band, gold the one beside it, the transfer
- * blue is the single cool counterpoint that keeps the sphere from reading as
- * fire, and the deep ember closes the set. Every one is a token the ledger
- * already paints with (`--tint`, `--warning`, `--transfer`, light `--tint`).
- */
 const ACTIVE_PROFILE: OrbProfile = {
     colorA: rgb("#EC603B"),
     colorB: rgb("#65B3EE"),
@@ -49,7 +37,6 @@ const ACTIVE_PROFILE: OrbProfile = {
     zoom: 0.36,
 };
 
-/** The same bands with the saturation and the light turned down: awake, not talking. */
 const IDLE_PROFILE: OrbProfile = {
     colorA: rgb("#B07660"),
     colorB: rgb("#6C8CA0"),
@@ -65,7 +52,6 @@ const IDLE_PROFILE: OrbProfile = {
     zoom: 0.3384,
 };
 
-/** What never changes between the two looks: the glass, the limb, the fill. */
 export const SHARED_UNIFORMS = {
     canvasColor: rgb("#17150F"),
     edgeGlow: 0,
@@ -89,7 +75,6 @@ function mixRgb(from: Rgb, to: Rgb, k: number): [number, number, number] {
     return [from[0] + (to[0] - from[0]) * k, from[1] + (to[1] - from[1]) * k, from[2] + (to[2] - from[2]) * k];
 }
 
-/** `activation` 0 is idle, 1 is the full active look; anything between is both. */
 export function blendProfile(activation: number): OrbProfile {
     "worklet";
     const k = Math.min(1, Math.max(0, activation));

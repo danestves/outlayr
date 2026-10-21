@@ -14,27 +14,15 @@ import type { ClaimedWrites, QueueFiles } from "./pending-writes-core";
 import { sharedStore } from "./shared-store";
 
 /**
- * The App Group the app and the App Intents target meet in, declared once in
- * `app.config.ts` and carried here through `extra`. Reading it back rather than
- * repeating the literal is what stops the two from drifting onto different
- * containers — a mismatch neither build complains about, and which surfaces only
- * as an intent whose work silently never arrives.
- *
- * The widgets do NOT come through here: `expo-widgets` owns its own transport
- * (`Widget.updateTimeline`). This group exists solely for the intent queue below.
+ * Read from `extra` rather than repeated, so the app and the intents cannot drift onto different containers.
+ * Widgets do not use this group: `expo-widgets` owns its own transport.
  */
-// SAFETY: as in `device-data-stores` — `extra` is an open record.
+// SAFETY: as in `device-data-stores`: `extra` is an open record.
 const APP_GROUP = Constants.expoConfig?.extra?.appGroup as string | undefined;
 
-/**
- * Where the intents used to append. Read once and retired: the key held
- * the whole queue as one JSON string, so appending meant read-modify-write and
- * two intents running while the app was closed could overwrite each other. The
- * queue is a file now — see {@link claimPendingWrites}.
- */
+/** Retired: one JSON string let two intents overwrite each other. `adoptLegacyQueue` migrates what remains. */
 export const PENDING_WRITES_KEY = "pendingWrites";
 
-/** The key the read-only intents decode; see {@link publishIntentSnapshot}. */
 export const INTENT_SNAPSHOT_KEY = "intentSnapshot";
 
 export const PUSHED_PURCHASES_KEY = "pushedPurchases";
@@ -44,14 +32,7 @@ export const WALLET_PUSH_KEY = "walletPush";
 /** Epoch ms string `SignalWalletRunIntent` writes on every Wallet automation run. */
 const WALLET_LAST_RUN_KEY = "walletLastRunAt";
 
-/**
- * What `BudgetLeftoverIntent` and `SpendingSummaryIntent` report. Mirrors
- * `IntentSnapshot` in `app-intents/SharedStore.swift`; the field names are
- * the wire format and cannot be renamed on one side alone.
- *
- * A narrow projection of the widget props on purpose: widening it copies more of
- * the ledger into a second store the intents never read.
- */
+/** Mirrors `IntentSnapshot` in `app-intents/SharedStore.swift`: the field names are the wire format. */
 export interface IntentSnapshot {
     budget: {
         present: boolean;
@@ -63,10 +44,7 @@ export interface IntentSnapshot {
         limit: string;
         percent: string;
     };
-    /**
-     * Every budget, so `BudgetQuery` can resolve a spoken name. Ordered overall
-     * first, which is what the intent falls back to when no budget is named.
-     */
+    /** Overall first: the intent falls back to the first entry when no budget is named. */
     budgets: {
         id: string;
         name: string;
@@ -121,12 +99,6 @@ export function publishIntentSnapshot(snapshot: IntentSnapshot): void {
     }
 }
 
-/**
- * The queue directory inside the App Group container, which both this app and
- * the intents can reach. `Paths.appleSharedContainers` is keyed by the group id,
- * so a build whose entitlement does not carry the group resolves to nothing
- * rather than silently writing somewhere the intents cannot see.
- */
 function queueDirectory(): Directory | null {
     if (Platform.OS !== "ios" || !APP_GROUP) {
         return null;
@@ -195,7 +167,6 @@ const queueFiles: QueueFiles = {
     },
 };
 
-/** Moves anything still under the retired key into the file queue, once. */
 function adoptLegacyQueue(): void {
     if (!sharedStore) {
         return;
@@ -209,14 +180,8 @@ function adoptLegacyQueue(): void {
 }
 
 /**
- * Takes the intent queue, oldest first, so a burst of Siri entries lands in the
- * order it was spoken.
- *
- * Nothing is deleted here. The caller commits what it gets and only then calls
- * {@link releasePendingWrites}, so a force-quit mid-drain replays rather than
- * dropping a *money* write. Replaying is safe because `applyPendingWrites`
- * records the enqueue id of every job it commits alongside the row, in the same
- * SQLite transaction — the idempotency key this queue used to lack.
+ * Nothing is deleted here: the caller commits, then calls {@link releasePendingWrites}, so a force-quit mid-drain
+ * replays. That is safe because `applyPendingWrites` records each enqueue id in the same SQLite transaction.
  */
 export function claimPendingWrites(): ClaimedWrites {
     try {

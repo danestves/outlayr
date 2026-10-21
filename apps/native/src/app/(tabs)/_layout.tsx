@@ -6,8 +6,6 @@ import { useNow } from "@/data/use-now";
 import { useTranslation } from "@/i18n/context";
 import { useColors } from "@/theme/use-colors";
 
-// The weight still carries part of the selection: the tint reads clearly on the
-// icon but the label is small enough that colour alone is a weak signal.
 const LABEL_STYLE = {
     default: { fontWeight: "400" },
     selected: { fontWeight: "600" },

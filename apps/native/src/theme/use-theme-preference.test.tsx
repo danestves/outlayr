@@ -32,14 +32,11 @@ describe("the stored colour scheme", () => {
         }
     });
 
-    // The value comes off disk, so a number nobody wrote must not strand the app
-    // on a theme that does not exist.
     it("falls back to following the device for a value it does not know", () => {
         expect(themePreferenceForValue(99)).toBe("system");
         expect(themePreferenceForValue(-1)).toBe("system");
     });
 
-    // Renumbering would silently repaint every device that already stored one.
     it("keeps system at zero, so an unwritten setting means follow the device", () => {
         expect(valueForThemePreference("system")).toBe(0);
     });

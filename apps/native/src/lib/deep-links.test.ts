@@ -24,8 +24,6 @@ describe("resolveDeepLink", () => {
     });
 
     it("degrades a host with no id to its section rather than to not-found", () => {
-        // The transactions list is the Log tab at `/`; `/transactions` is only a
-        // parent for `[id]` and would land on `+not-found`.
         expect(resolveDeepLink("outlayr://transaction")).toBe("/");
     });
 

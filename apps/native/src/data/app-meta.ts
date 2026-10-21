@@ -7,11 +7,7 @@ import { DEFAULT_CURRENCY } from "@/domain/money";
 import { META_KEYS } from "./app-meta-core";
 import { useLiveValue } from "./live-query";
 
-/**
- * Bootstrap writes the resolved value before the splash lifts, so the USD
- * fallback is a type-level guard, not a startup state. Transactions with a null
- * currency render against this.
- */
+// Bootstrap writes the value before the splash lifts, so the USD fallback is a type-level guard, not a startup state.
 export function useGlobalCurrency(db: Database): string {
     return useLiveValue(
         appMeta,

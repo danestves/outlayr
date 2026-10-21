@@ -5,11 +5,7 @@ import { join, resolve } from "node:path";
 
 export const nativeRoot = resolve(import.meta.dirname, "..");
 
-/**
- * Exports the iOS JS bundle with its source map and hands both to `read`.
- * Builds the intlayer dictionaries first: Metro resolves `.intlayer/`, which is
- * gitignored, so a fresh checkout has none and the export fails without it.
- */
+// Builds the intlayer dictionaries first: `.intlayer/` is gitignored, so a fresh checkout's export fails without it.
 export function readIosBundle<T>(read: (bundle: string, map: string) => T): T {
     const outDir = mkdtempSync(join(tmpdir(), "outlayr-bundle-"));
     try {

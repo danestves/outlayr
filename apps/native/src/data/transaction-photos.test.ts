@@ -5,11 +5,7 @@ import { applyMigration, applyMigrations } from "@/db/test-database";
 
 const PHOTOS_MIGRATION = "0011_transaction_photos.sql";
 
-/**
- * Driven through raw SQL rather than drizzle, because the point is what the
- * migration does to a database written by the PREVIOUS build — a schema drizzle
- * no longer describes.
- */
+/** Raw SQL: the migration runs on the previous build's schema, which drizzle no longer describes. */
 function ledgerBeforeThePhotosTable(): BetterSqlite3.Database {
     const sqlite = new BetterSqlite3(":memory:");
     applyMigrations(sqlite, (file) => file < PHOTOS_MIGRATION);
@@ -36,9 +32,6 @@ function insertTransaction(
 
 describe("moving existing photos into their own table", () => {
     it("carries a stored photo across rather than orphaning it", () => {
-        // Without the backfill the new table starts empty and every photo already
-        // on a device is unreachable: the old column still holds the key, and
-        // nothing reads that column any more.
         const sqlite = ledgerBeforeThePhotosTable();
         insertTransaction(sqlite, "t1", {
             imageKey: "transaction-photos/u1/a.jpg",
@@ -57,7 +50,6 @@ describe("moving existing photos into their own table", () => {
     });
 
     it("carries a row that has a key but no local file", () => {
-        // A photo the account holds that this device has not fetched yet.
         const sqlite = ledgerBeforeThePhotosTable();
         insertTransaction(sqlite, "t1", {
             imageKey: "transaction-photos/u1/a.jpg",

@@ -1,7 +1,7 @@
 import type { InsightsPeriod } from "@/data/insights";
 import type { TranslationKey } from "@/i18n/catalog";
 
-/** `value` is the stored `insightsTimeFrame` setting, which is a plain number. */
+/** `value` is the stored `insightsTimeFrame` setting. */
 export const PERIODS = [
     { labelKey: "insights.period.week", period: "week", value: 1 },
     { labelKey: "insights.period.month", period: "month", value: 2 },

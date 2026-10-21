@@ -1,12 +1,7 @@
 import { useEffect, useState } from "react";
 import { Keyboard } from "react-native";
 
-/**
- * The on-screen keyboard's height, 0 while it is down. Built on the `Did`
- * events because Android never sends `keyboardWillShow`/`keyboardWillHide`;
- * the Android editors pad their scrollers with it so the last field can
- * scroll clear of the keyboard.
- */
+// `Did` events because Android never sends `keyboardWillShow`/`keyboardWillHide`.
 export function useKeyboardHeight(): number {
     const [height, setHeight] = useState(0);
     useEffect(() => {

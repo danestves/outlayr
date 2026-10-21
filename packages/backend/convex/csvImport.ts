@@ -1,4 +1,4 @@
-// oxlint-disable unicorn/filename-case -- the Convex module name is the function path — clients call this action as api.csvImport.csvImport
+// oxlint-disable unicorn/filename-case -- the Convex module name is the function path: clients call this action as api.csvImport.csvImport
 
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
@@ -23,17 +23,11 @@ const MAX_LABELS = 200;
 /** The action's own budget under the client's 15s hard `Promise.race` abort. */
 const REQUEST_TIMEOUT_MS = 12_000;
 
-/**
- * The action's only arguments — a privacy boundary asserted by test, not just
- * a shape. `import-ai-payload.ts`'s `ClassificationPayload` plus the grounded
- * consent flag and device region: no raw file, no full row set, no amount or
- * date value, and no per-row data of any kind may reach here.
- */
+/** A privacy boundary asserted by test: no raw file, row set, amount, date or per-row data. */
 export const csvImportArgs = {
-    /** The AI consent the person gave — see `enrichment.ts:suggestArgs`. */
     aiConsent: v.optional(v.number()),
     categoryTree: v.array(v.object({ children: v.array(v.string()), name: v.string() })),
-    /** One side of the dual-authority consent gate — see `enrichment.ts:suggestArgs`. */
+    /** Dual-authority consent gate: see `enrichment.ts:suggestArgs`. */
     groundedLookup: v.optional(v.boolean()),
     labels: v.array(v.string()),
     regionCode: v.optional(v.string()),
@@ -80,7 +74,7 @@ function failure(status: Exclude<CsvImportStatus, "ok">): CsvImportResult {
     return { status, suggestions: null };
 }
 
-/** The model's own output is untrusted input — this is only the JSON shape. */
+/** Untrusted model output; this is only the JSON shape. */
 const modelOutputSchema = z.object({
     mapping: z.array(
         z.object({
@@ -104,11 +98,7 @@ function buildPrompt(args: RunClassifyArgs): string {
     ].join(" ");
 }
 
-/**
- * `shards: 10` is copied from `enrichment.ts:118` and is load-bearing — an
- * unsharded global counter is one hot document and throws OCC write conflicts
- * under concurrency.
- */
+/** `shards: 10` is load-bearing: one unsharded counter throws OCC conflicts. */
 export const rateLimiter = new RateLimiter(components.rateLimiter, {
     csvImportGlobal: {
         kind: "fixed window",
@@ -118,18 +108,12 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
     },
 });
 
-/**
- * Model call, sanitisation, and failure classification only — no auth, no env
- * check, no rate limit. Exported so tests can inject a fake `LanguageModel`
- * directly, since the real Anthropic provider cannot be substituted through the
- * wrapped `csvImport` action.
- */
+/** Exported so tests can inject a fake `LanguageModel`. */
 export async function classify(model: LanguageModel, args: RunClassifyArgs): Promise<CsvImportResult> {
     try {
         const { output } = await generateText({
             abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-            // The SDK default is 2 retries, which alone would blow past the
-            // client's own 15s `Promise.race` abort.
+            // The SDK's 2 default retries alone would outlast the client's 15s abort.
             maxRetries: 0,
             model,
             output: Output.object({ schema: modelOutputSchema }),
@@ -142,9 +126,7 @@ export async function classify(model: LanguageModel, args: RunClassifyArgs): Pro
         const suggestions: LabelSuggestion[] = [];
         for (const item of output.mapping) {
             const categoryName = item.categoryName?.trim();
-            // The model cannot know this ledger's shape: a name it invents is
-            // dropped rather than trusted, and dropping it is not a schema
-            // failure — the rest of a well-formed response still applies.
+            // An invented category is dropped, not trusted, without failing the rest.
             if (!(categoryName && known.has(categoryName))) {
                 continue;
             }
@@ -154,22 +136,14 @@ export async function classify(model: LanguageModel, args: RunClassifyArgs): Pro
         return { status: "ok", suggestions };
     } catch (error) {
         if (NoObjectGeneratedError.isInstance(error) || TypeValidationError.isInstance(error)) {
-            // The model's JSON failed schema validation: the whole response is
-            // untrustworthy, so zero suggestions are applied rather than
-            // sanitising per field.
+            // Schema failure: the whole response is untrustworthy.
             return failure("invalidResponse");
         }
         return failure("providerError");
     }
 }
 
-/**
- * One import may burn at most this many grounded-lookup attempts. The
- * `groundedPerUser` bucket bursts at 20, so a single big import of unknowns
- * spends at most half of it; the remainder of the batch degrades to
- * classify-with-null-domain and is picked up by a later import once the
- * scheduled lookups have filled `merchantKnowledge`.
- */
+/** Half the `groundedPerUser` burst of 20; the rest degrade to a null domain. */
 export const GROUNDED_IMPORT_MAX = 10;
 
 export interface ImportGroundedArgs {
@@ -178,15 +152,7 @@ export interface ImportGroundedArgs {
     regionCode?: string;
 }
 
-/**
- * Fire-and-forget learning: each scheduled `groundedLookup.run` fills
- * `merchantKnowledge` for the NEXT import of that merchant, never this one —
- * the same contract as `enrichment.ts:suggest`. Consent is pre-checked once
- * here so a declined user costs one query, not one per label;
- * `maybeScheduleGrounded` re-checks it per label, which is just an indexed
- * read. `income: false` because the batch payload deliberately carries no
- * per-row data to derive it from.
- */
+/** Fire-and-forget: fills `merchantKnowledge` for the NEXT import. `income: false`: the payload has no per-row data. */
 export async function scheduleImportGrounded(
     ctx: GroundedScheduleCtx,
     tokenIdentifier: string,
@@ -226,10 +192,7 @@ export async function scheduleImportGrounded(
     return scheduled;
 }
 
-/**
- * Read live rather than through a frozen snapshot, so that
- * `npx convex env set ANTHROPIC_API_KEY=""` takes effect on the very next call.
- */
+/** Read live so `npx convex env set ANTHROPIC_API_KEY=""` takes effect on the next call. */
 export const csvImport = action({
     args: csvImportArgs,
     handler: async (ctx, args): Promise<CsvImportResult> => {
@@ -264,10 +227,7 @@ export const csvImport = action({
             return failure("rateLimited");
         }
 
-        // Tier 1.5, after the rate limits so the shared table cannot be probed
-        // faster than the model could be. A knowledge row answers with the same
-        // category and domain `enrichment.ts:suggest` would return, so its label
-        // never reaches the model.
+        // After the rate limits, so the shared table cannot be probed faster than the model.
         const known: LabelSuggestion[] = [];
         const remaining: string[] = [];
         const looked = await ctx.runQuery(internal.merchantKnowledge.lookupMany, {
@@ -286,8 +246,7 @@ export const csvImport = action({
                 });
             }
         }
-        // Scheduled before the model call so a provider failure still learns the
-        // batch's unknown merchants for next time.
+        // Before the model call, so a provider failure still learns the unknown merchants.
         await scheduleImportGrounded(ctx, identity.tokenIdentifier, {
             groundedLookup: args.groundedLookup === true,
             labels: remaining,

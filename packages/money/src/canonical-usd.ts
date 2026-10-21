@@ -15,41 +15,23 @@ export interface CanonicalUsdInput {
     currency: string | null;
     date: Date;
     displayCurrency: string;
-    /** An actual already-chosen rate, used verbatim after positive-finite validation. */
     exchangeRate?: number | null;
     /** Absent means official for a non-USD entry. */
     exchangeRateType?: EntryRateType | null;
 }
 
-/** No honest USD value could be frozen; downstream policy decides presentation. */
 const UNRESOLVED: CanonicalUsd = {
     amountUsd: null,
     exchangeRate: null,
     exchangeRateType: null,
 };
 
-/**
- * The market rate a plain entry uses. `custom` is a rate the user personally
- * transacted at (a P2P operation) and `eur_reference` is VES-only; both need
- * the form to offer them before this can be anything else.
- */
 const DEFAULT_RATE_TYPE: EntryRateType = "official";
 
-/**
- * Freezes an amount's USD value at the rate of the day it happened.
- *
- * Note the direction: a stored rate is currency-PER-USD, so USD is the amount
- * DIVIDED by it. `computeAmountUSD` does that division in scaled integers with
- * a single half-even rounding, which is why the arithmetic is not done here.
- *
- * Returns nulls rather than throwing when no rate is available. Ordinary
- * unresolved rows retain their native-currency value; a custom row awaiting
- * its user-supplied rate is excluded from foreign scalar valuations.
- */
+// A stored rate is currency PER USD, so USD is the amount divided by it, in scaled integers inside `computeAmountUSD`.
 export async function canonicalUsd(lookup: RateLookup, input: CanonicalUsdInput): Promise<CanonicalUsd> {
     const currency = input.currency ?? input.displayCurrency;
 
-    // A USD entry is already canonical, and its rate is 1 by definition.
     if (currency === "USD") {
         return {
             amountUsd: input.amount,
@@ -88,8 +70,7 @@ export async function canonicalUsd(lookup: RateLookup, input: CanonicalUsdInput)
         });
         return { amountUsd, exchangeRate, exchangeRateType };
     } catch (error) {
-        // A validation failure cannot produce an honest figure — the same outcome as
-        // having no rate at all, and never a reason to refuse the write.
+        // A validation failure is the same as having no rate, never a reason to refuse the write.
         if (error instanceof MoneyValidationError) {
             return { ...UNRESOLVED, exchangeRateType };
         }

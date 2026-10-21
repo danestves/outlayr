@@ -18,22 +18,12 @@ import type { HeroVariant } from "./identity-hero";
 
 export { HERO_RING } from "./identity-hero";
 
-/** Half the floated tile — what the clamp keeps below the top of the screen. */
 const HERO_HALF = FLOAT_TILE / 2;
-/**
- * Sheet height assumed on the very first open, before the sheet has ever laid out
- * and reported one. Mirrors `sheetAllowedDetents: [0.5, 1]` in `app/_layout.tsx`.
- */
+// Before the sheet first reports a height. Mirrors `sheetAllowedDetents: [0.5, 1]` in `app/_layout.tsx`.
 const FIRST_OPEN_DETENT_FRACTION = 0.5;
 
-/**
- * The screen-space Y delta from the hero's resting centre to its floated centre.
- *
- * Derived rather than computed in render because both inputs land late and out of
- * order — the container measures on layout, the sheet only once it exists — and a
- * plain number would rebuild the fly-up's animated style mid-flight, jumping the
- * tile.
- */
+// Derived, not computed in render: both inputs land late and out of order, and a plain number would rebuild the
+// animated style mid-flight and jump the tile.
 function useFloatOffset({
     containerHeight,
     restCenterY,
@@ -42,15 +32,11 @@ function useFloatOffset({
     restCenterY: SharedValue<number>;
 }): SharedValue<number> {
     const { sheetHeight } = useIdentityFlyUp();
-    // The screen is the floor under the form's own measurement: `containerHeight`
-    // comes from a single `onLayout`, so anything that resets the shared value
-    // without changing the layout leaves it at 0, and a 0 zeroes the travel and
-    // kills the whole animation.
+    // The window is the floor: `containerHeight` comes from one `onLayout`, so a reset without a relayout leaves 0,
+    // which zeroes the travel and kills the animation.
     const { height: windowHeight } = useWindowDimensions();
     return useDerivedValue(() => {
-        // NaN, never <= 0, is the "not measured yet" sentinel: a scrolled hero has a
-        // legitimately NEGATIVE form-local centre — it sits above the scroll view's
-        // top edge, under the nav bar.
+        // NaN, never <= 0, means unmeasured: a scrolled hero's form-local centre is legitimately negative.
         if (Number.isNaN(restCenterY.get())) {
             return 0;
         }
@@ -67,9 +53,7 @@ function useFloatOffset({
 }
 
 interface IdentityFlyUpLayerProps {
-    /** Custom color override; falls back to income green / foreground. */
     color: string | null;
-    /** Height of the screen the sheet is centred against. */
     containerHeight: SharedValue<number>;
     emoji: string | null;
     icon: string | null;
@@ -78,20 +62,13 @@ interface IdentityFlyUpLayerProps {
     onDismiss: () => void;
     photoUri: string | null;
     /**
-     * Where the hero's ring rests right now, in form-local points, so the twin starts
-     * exactly on the real hero instead of jumping. A shared value because it is live:
-     * both screens re-publish it as the form scrolls, and it is read on the UI thread
-     * so tracking it costs no renders. The layer latches it for the flight.
+     * Where the hero's ring rests now, in form-local points. Live as the form scrolls and read on the UI thread;
+     * the layer latches it for the flight.
      */
     restTop: SharedValue<number>;
     variant?: HeroVariant;
 }
 
-/**
- * The two overlays a screen hosting the identity hero stacks over itself while the
- * picker is open: the tap-to-dismiss scrim, and the floating twin that flies up
- * and grows over the sheet.
- */
 export function IdentityFlyUpLayer({
     restTop,
     containerHeight,
@@ -105,12 +82,8 @@ export function IdentityFlyUpLayer({
 }: IdentityFlyUpLayerProps) {
     const { pickerOpen, setPickerOpen, floatProgress } = useIdentityFlyUp();
 
-    // The launch point, held still for the duration of the flight: both screens
-    // publish `restTop` live, so a reading landing mid-flight would move the launch
-    // point out from under an animation that has already started and jerk the tile.
-    // Reading `floatProgress` rather than `pickerOpen` keeps the latch on the UI
-    // thread and ties it to the flight, which outlives the React state flip in both
-    // directions.
+    // Latched for the flight: `restTop` is live, and a mid-flight reading would move the launch point and jerk the
+    // tile. Keyed on `floatProgress`, not `pickerOpen`, so it stays on the UI thread and outlives the state flip.
     const restLaunchTop = useSharedValue(Number.NaN);
     useAnimatedReaction(
         () => (floatProgress.value === 0 ? restTop.get() : null),
@@ -120,9 +93,7 @@ export function IdentityFlyUpLayer({
             }
         }
     );
-    // The reaction only fires once the prepared value CHANGES, so the very first
-    // reading has to be taken here or the latch would sit at its sentinel until the
-    // user happened to scroll.
+    // The reaction only fires once the prepared value changes, so the first reading is taken here.
     useEffect(() => {
         if (Number.isNaN(restLaunchTop.get())) {
             restLaunchTop.set(restTop.get());
@@ -132,35 +103,25 @@ export function IdentityFlyUpLayer({
     const restCenterY = useDerivedValue(() => restLaunchTop.get() + HERO_RING / 2);
     const floatOffsetY = useFloatOffset({ containerHeight, restCenterY });
 
-    // A screen showing its own hero is, by definition, not showing a picker.
-    // Asserted on mount because `pickerOpen` lives in the app-level provider and
-    // outlives every screen: any path that leaves it true without the picker route
-    // unmounting strands the scrim below on the next screen, where it is invisible
-    // but still `pointerEvents: "auto"` and silently swallows every tap.
+    // `pickerOpen` lives in the app-level provider and outlives every screen: left true, it strands an invisible
+    // scrim on the next screen that swallows every tap.
     useEffect(() => {
         setPickerOpen(false);
     }, [setPickerOpen]);
 
-    // `translateY`, not `top`: this tracks the hero every scroll frame, and animating
-    // a layout property runs a layout pass for the overlay each time. The hero's own
-    // fly-up transform lives on a descendant view inside `IdentityHero`, so the two
-    // stack instead of colliding.
+    // `translateY`, not `top`: this tracks the hero every scroll frame. The hero's fly-up transform lives on a
+    // descendant inside `IdentityHero`, so the two stack instead of colliding.
     const twinStyle = useAnimatedStyle(() => ({
         transform: [{ translateY: restLaunchTop.get() }],
     }));
 
     return (
         <>
-            {/* Transparent: the blur is SwiftUI's own `.blur(radius:)` inside each
-			    screen's `Host`, so what is left here is tap-outside-to-dismiss and
-			    keeping the form beneath from being hit. */}
+            {/* Transparent: the blur is SwiftUI's own inside each `Host`, so this only dismisses and shields. */}
             {pickerOpen ? (
                 <Pressable
-                    // `Pressable` defaults `accessible` to true, and a childless one
-                    // spanning the screen becomes a full-screen element with nothing to
-                    // announce, parked over the form. There is nothing here to reach by
-                    // touch exploration anyway: the sheet's own close affordance is how a
-                    // screen reader dismisses the picker.
+                    // A childless full-screen `Pressable` would be an empty element parked over the form; screen
+                    // readers dismiss through the sheet's own close.
                     accessible={false}
                     className="absolute inset-0"
                     onPress={() => {
@@ -218,29 +179,9 @@ function listen(navigation: DismissalNavigation, type: string, listener: (event:
     }
 }
 
-/**
- * The sheet's height is republished on every layout: react-native-screens pushes
- * the sheet view's fresh bounds into the shadow tree from `viewDidLayoutSubviews`,
- * which fires during a detent drag too.
- *
- * Two preconditions, because breaking either makes the height silently stop
- * arriving and the fly-up mis-centre rather than fail:
- *   - the route's `sheetAllowedDetents` is fractional, not `fitToContents`;
- *   - react-native-screens' `synchronousScreenUpdatesEnabled` is on (its default
- *     at 4.26.2).
- * The measured view must also stay a plain `View` — `RNSScreenContentWrapper.mm`
- * resizes a descendant ScrollView natively, bypassing the shadow tree, so hanging
- * this off the picker's own ScrollView or `Host` would report nothing.
- *
- * The unmount cleanup alone runs after the dismissal animation finishes, leaving
- * the enlarged hero frozen mid-screen. `transitionStart` fires at the front of it
- * instead, but expo-router runs a forked native-stack and the name is not
- * contractual, so an unsupported one must neither throw nor strand the screen;
- * `setPickerOpen` is idempotent and the unmount cleanup is the backstop.
- * `transitionStart` is read in BOTH directions: a drag the user cancels starts the
- * transition and puts the sheet back, which would otherwise park the tile on the
- * form under a sheet that never left.
- */
+// Needs fractional `sheetAllowedDetents`, screens' `synchronousScreenUpdatesEnabled` and a plain `View`, or the height
+// silently stops arriving. `transitionStart` (not contractual in expo-router's fork) closes the picker at a dismissal's
+// start, both ways since a cancelled drag puts the sheet back; the unmount cleanup is the backstop.
 export function IdentityFlyUpSheetHost({ children }: { children: ReactNode }) {
     const navigation = useNavigation<DismissalNavigation>();
     const { setPickerOpen, setSheetHeight } = useIdentityFlyUp();

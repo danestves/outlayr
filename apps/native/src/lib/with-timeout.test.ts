@@ -14,8 +14,6 @@ describe("withTimeout", () => {
     it("answers the work when it wins, and leaves no timer behind", async () => {
         await expect(withTimeout(Promise.resolve("done"), 5000, "timeout")).resolves.toBe("done");
 
-        // The whole point: a bare `Promise.race` against a `setTimeout` keeps its
-        // handle live for the full window after the call has already answered.
         expect(jest.getTimerCount()).toBe(0);
     });
 

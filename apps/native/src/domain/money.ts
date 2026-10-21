@@ -12,11 +12,7 @@ export const DEFAULT_CURRENCY = "USD";
 export interface NumberLocale {
     decimal: string;
     group: string;
-    /**
-     * BCP-47 tag for the few APIs that insist on `Intl` — `NumberFlow` builds its
-     * digit slots from `formatToParts`. The separators below must mirror what this
-     * tag produces, or an animated figure disagrees with a static one beside it.
-     */
+    /** For `NumberFlow`'s `formatToParts`; the separators below must mirror what this tag produces. */
     tag: string;
 }
 
@@ -67,7 +63,6 @@ export function currencySymbol(code: string): string {
 /** CLDR's currency spacing, which Hermes' `Intl` cannot apply. */
 const SPACED_SYMBOL = /[^\p{S}]$/u;
 
-/** The symbol as it leads digits: "$" stays tight, while "Bs." and "CHF" keep a no-break space. */
 export function symbolPrefix(symbol: string): string {
     return SPACED_SYMBOL.test(symbol) ? `${symbol}\u00A0` : symbol;
 }
@@ -82,32 +77,19 @@ export function symbolIsShared(code: string): boolean {
     return SHARED_SYMBOLS.has(currencySymbol(code));
 }
 
-/** Exact half-even rounding to whatever precision the code actually stores. */
 export function roundToMinorUnits(amount: number, code: string): number {
     return roundMoney(amount, decimalsFor(code));
 }
 
 export interface AmountParts {
-    /** Zero-padded fraction of `minorUnits` length, or "" when the code has none. */
     fraction: string;
-    /** Integer portion grouped with `locale.group`, e.g. "1,240" or "1.240". */
     integer: string;
     locale: NumberLocale;
     minorUnits: number;
     symbol: string;
 }
 
-/**
- * Splits a positive magnitude into display parts for a currency code. Grouping
- * and the decimal mark come from the language (and for Spanish, the region),
- * not from `Intl` — Hermes lacks full ICU, so `Intl.NumberFormat` is avoided
- * here the same way `translate.ts` avoids `Intl.PluralRules`. The magnitude is
- * rounded to the code's minor units via `@outlayr/money`'s exact half-even
- * `roundMoney`.
- *
- * `showCents` mirrors the Swift "Display Cents" setting: when false the value is
- * rounded to whole units and no fraction is emitted.
- */
+// Separators come from the language (and, for Spanish, the region), not `Intl`: Hermes lacks full ICU.
 export function amountParts(
     amount: number,
     code: string,
@@ -127,7 +109,6 @@ export function amountParts(
     };
 }
 
-/** The figure alone: grouped integer joined to its fraction by the decimal mark. */
 export function amountDigits(parts: AmountParts): string {
     return parts.fraction ? `${parts.integer}${parts.locale.decimal}${parts.fraction}` : parts.integer;
 }
@@ -138,15 +119,10 @@ export function maskedAmount(code: string): string {
     return `${symbolPrefix(currencySymbol(code))}${AMOUNT_MASK}`;
 }
 
-/** Wraps already-built digits in the symbol. */
 export function withCurrencySymbol(parts: AmountParts, digits: string): string {
     return `${symbolPrefix(parts.symbol)}${digits}`;
 }
 
-/**
- * Unsigned display string for a magnitude, e.g. "$1,240.00" in English and
- * "$1.240,00" in Spanish on an Argentine device (or "¥1,240" with no minor units).
- */
 export function formatAmount(
     amount: number,
     code: string,

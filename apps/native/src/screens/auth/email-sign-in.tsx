@@ -35,10 +35,6 @@ interface Flow {
     route: EmailSignInRoute;
 }
 
-/**
- * The email flow, one push per step so the OS back button walks back through
- * it. The step and the address travel as route params.
- */
 export function EmailSignIn({ route }: { route: EmailSignInRoute }) {
     const params = useLocalSearchParams<{ email?: string; step?: string }>();
     if (authClient === null) {
@@ -63,13 +59,11 @@ function goTo(route: EmailSignInRoute, step: Step, email: string) {
     router.push({ params: { email: email.trim(), step }, pathname: route });
 }
 
-/** The app's own language, which the code emails are written in. */
 function useFetchOptions() {
     const { language } = useLanguage();
     return { headers: { "accept-language": language } };
 }
 
-/** One request at a time, with its failure in the shell's reserved error slot. */
 function useRequest() {
     const t = useTranslation();
     const [busy, setBusy] = useState(false);
@@ -87,7 +81,6 @@ function useRequest() {
     return { busy, error, run };
 }
 
-/** Better Auth answers a failure with `{ error }`; this throws it, code and status attached. */
 function unwrap<T>({ data, error }: { data: T | null; error: { message?: string } | null }): T {
     if (error !== null || data === null) {
         throw Object.assign(new Error(error?.message ?? "Email sign-in failed"), error);
@@ -369,11 +362,7 @@ function NewPasswordField(props: Omit<FieldProps, "label"> & { label?: string })
     );
 }
 
-/**
- * Six drawn cells over one input with transparent text, which keeps paste,
- * one-time-code autofill and VoiceOver working. Zero opacity would hide it
- * from VoiceOver.
- */
+/** Transparent text, not zero opacity: keeps paste, one-time-code autofill and VoiceOver working. */
 function CodeField({ onChange, value }: { onChange: (code: string) => void; value: string }) {
     const t = useTranslation();
     return (

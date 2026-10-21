@@ -36,8 +36,6 @@ const notFound = {
 
 describe("url builders", () => {
     it("asks logo.dev for a 404 rather than its monogram fallback", () => {
-        // The default is a generic letter tile returned with a 200 — the exact
-        // avatar this feature promises never to show.
         expect(logoDevUrl("netflix.com", "pk_test")).toContain("fallback=404");
         expect(logoDevUrl("netflix.com", "pk_test")).toContain("size=512");
     });
@@ -96,10 +94,6 @@ describe("fetchMerchantImage", () => {
         jest.dontMock("@outlayr/env/native");
     });
 
-    // Regression: enrichment calls this for partial spellings, which carry no
-    // domain, and the cache key is folded from whatever is in the field when the
-    // call resolves. Filing that as a miss left the finished name unable to take
-    // a logo — a `netflix.miss` sitting beside a perfectly good Netflix logo.
     it("does not remember a miss for a request that queried nothing", async () => {
         mockWriteCachedLogo.mockClear();
         const fetchImpl = jest.fn();
@@ -174,7 +168,6 @@ describe("timeouts", () => {
         jest.useRealTimers();
     });
 
-    /** A request that only settles when its signal aborts, like a stalled socket. */
     function stalled(signal: AbortSignal): Promise<Response> {
         return new Promise((_resolve, reject) => {
             signal.addEventListener("abort", () => reject(new Error("aborted")));

@@ -1,78 +1,31 @@
-/**
- * A goal is a target on an account, not a second ledger.
- *
- * The alternative — recording contributions against a goal — would put a
- * parallel record of the same money beside the account that already holds it,
- * and the two would disagree the first time someone moved money without saying
- * it was a contribution. Progress is the account's balance, so it cannot drift
- * from what the account says.
- *
- * Every goal carries a date. A target with no deadline has no pace, and the pace
- * is the only forward-looking number the app can give — see {@link goalProgress}.
- *
- * A payoff plan is the same goal on a liability or a person with zero as its
- * target. Its line runs from the start balance to zero from either side: a debt
- * you owe climbs to it, money a person owes you comes down to it.
- */
-
 import { roundMoney } from "@outlayr/money/round";
 
 import { addLocalDays, daysBetween, startOfLocalDay } from "./local-day";
 
 interface GoalPace {
-    /** Whole months left, floored at zero on or after the target date. */
     monthsLeft: number;
-    /** What to set aside each month to land on the target date. */
     perMonth: number;
 }
 
-/**
- * How far off the line still counts as on pace: one day of what the goal
- * demands, floored at one unit of its currency.
- *
- * A fixed unit is too tight to be useful. The line the date demands climbs every
- * hour, so a $6,000 goal set this morning and not yet contributed to is already
- * "$1.14 short" by lunchtime and stays visibly behind for good — a true figure
- * that reads as a verdict it has not earned. Anything inside a single day's
- * drift is not yet a verdict; the floor keeps a very short or very small goal
- * from getting a sub-cent band.
- */
+// One day of drift is tolerated: the line moves daily, so a fixed unit calls a fresh goal behind for good.
 function onPaceBand(target: number, startAmount: number, totalDays: number, decimals: number): number {
     return round(Math.max(1, Math.abs(target - startAmount) / totalDays), decimals);
 }
 
 interface GoalStanding {
-    /**
-     * Signed distance from the line the date demands: positive is ahead.
-     *
-     * This is the measure a bank app cannot give, because it needs both anchors —
-     * where the account stood when the goal was set, and where the date wants it
-     * today.
-     */
+    /** Positive is ahead of the line the date demands. */
     against: number;
-    /** 0 to 1 of the goal's own span that has elapsed, clamped. */
     elapsed: number;
-    /** What the straight line from the starting balance to the target wants today. */
     expected: number;
-    /** True while `against` is inside {@link ON_PACE_BAND} either way. */
     onPace: boolean;
 }
 
 export interface GoalProgress {
-    /**
-     * 0 to 1, clamped. An overdrawn account reads as no progress, not negative.
-     * On a payoff plan it is the share of the start balance paid off.
-     */
+    /** 0 to 1. On a payoff plan, the share of the start balance paid off. */
     fraction: number;
-    /** Null once the goal is reached: nothing is still being asked for. */
     pace: GoalPace | null;
     reached: boolean;
-    /** Never negative: past the target the goal is done, not over-saved. */
     remaining: number;
-    /**
-     * Null once reached, and null when the goal's own span is degenerate — a goal
-     * created on its target date has no line to be ahead or behind of.
-     */
     standing: GoalStanding | null;
 }
 
@@ -91,22 +44,11 @@ const DAYS_PER_MONTH = 30.44;
 
 const NO_PROGRESS: GoalProgress = { fraction: 0, pace: null, reached: false, remaining: 0, standing: null };
 
-/** A goal whose target is zero: it pays a balance off rather than saving one up. */
 export function isPayoffPlan(goal: { targetAmount: number }): boolean {
     return goal.targetAmount === 0;
 }
 
-/**
- * Where an account stands against its target, the pace that would land it on the
- * date, and whether it is ahead of or behind that pace.
- *
- * The pace is the point of the feature. A target with no sense of what it
- * demands per month is a wish; "$340 a month" is a decision the owner can act
- * on. The standing is what makes the goal worth opening a second time: it is the
- * difference between "you have $2,140" and "you are $212 ahead of the date".
- */
 export function goalProgress(saved: number, target: number, span?: GoalSpan, decimals = 2): GoalProgress {
-    // A payoff plan's line starts at the frozen balance, so without a span it has none.
     if (target === 0 && span !== undefined) {
         return payoffProgress(saved, span, decimals);
     }
@@ -123,12 +65,7 @@ export function goalProgress(saved: number, target: number, span?: GoalSpan, dec
     );
 }
 
-/**
- * Mirrored so the line always climbs to zero: a balance a person owes you is
- * negated, and money still owed reads the same from either side. Not clamped like
- * a savings balance: a debt that grew is owed in full, and paying past zero (so
- * the person now owes you) is reached, not broken.
- */
+// Not clamped like savings: a debt that grew is owed in full, and paying past zero counts as reached.
 function payoffProgress(balance: number, span: GoalSpan, decimals: number): GoalProgress {
     const start = Number.isFinite(span.startAmount) ? span.startAmount : 0;
     const signed = Number.isFinite(balance) ? balance : start;
@@ -136,17 +73,11 @@ function payoffProgress(balance: number, span: GoalSpan, decimals: number): Goal
     const from = direction * start;
     const progress = progressAlong(direction * signed, from, 0, { ...span, startAmount: from }, decimals);
     const { standing } = progress;
-    // Back on the balance's own side, so `expected` is what the balance should read today.
     return standing
         ? { ...progress, standing: { ...standing, expected: direction * standing.expected || 0 } }
         : progress;
 }
 
-/**
- * Progress up a line from `span.startAmount` to `target`, with `fraction` counted
- * from `origin`: zero for a savings goal, which reads as the share of the target
- * held, and the start for a payoff plan, which reads as the share paid.
- */
 function progressAlong(
     held: number,
     origin: number,
@@ -156,8 +87,7 @@ function progressAlong(
 ): GoalProgress {
     const remaining = Math.max(0, round(target - held, decimals));
     const reached = remaining === 0;
-    // A plan set on a settled balance has no distance: still owing, it divides to
-    // -Infinity and clamps to no progress.
+    // A plan set on a settled balance divides to -Infinity while still owing and clamps to no progress.
     const fraction = reached ? 1 : Math.min(1, Math.max(0, (held - origin) / (target - origin)));
 
     if (span === undefined) {
@@ -177,19 +107,10 @@ function paceFor(remaining: number, { now, targetDate }: GoalSpan, decimals: num
     const from = now ?? new Date();
     const days = (targetDate.getTime() - from.getTime()) / MS_PER_DAY;
     const monthsLeft = Math.max(0, Math.floor(days / DAYS_PER_MONTH));
-    // On or past the date with money still to find, the whole remainder is due
-    // now — dividing by a zero or negative horizon would report Infinity, and
-    // "everything, now" is both true and the more useful thing to read.
     return { monthsLeft, perMonth: monthsLeft === 0 ? remaining : round(remaining / monthsLeft, decimals) };
 }
 
-/**
- * Never negative, matching `held`. A savings goal opened on an overdrawn or
- * liability account would otherwise start its line a thousand below zero while
- * the balance above it was clamped to zero — reporting the debt's own magnitude
- * as an immediate lead. An account in the red has put nothing aside, at either
- * end. A payoff plan keeps its start: there the debt is the line.
- */
+// A savings goal on an account in the red starts at zero, or the debt would read as an immediate lead.
 function normalisedStart(startAmount: number): number {
     return Number.isFinite(startAmount) ? Math.max(0, startAmount) : 0;
 }
@@ -200,76 +121,39 @@ function standingFor(
     { now, startAmount, startDate, targetDate }: GoalSpan,
     decimals: number
 ): GoalStanding | null {
-    // Whole LOCAL days, not instants. The line is modelled as advancing continuously,
-    // but nothing tells the app the hour has changed: `useNow` publishes at local
-    // midnight, on a ledger write and on resume, and has no intraday timer. A
-    // standing read at instant granularity is therefore only correct at the moment
-    // it is computed and drifts for as long as the screen stays open.
-    //
-    // Measuring in days makes the figure honest AND makes it move exactly when the
-    // app already knows to look again. It is also the granularity everything else
-    // about a goal uses: a per-day balance series, whole months left, a per-month
-    // pace. `goal-pace-geometry` places the chart head on the same footing.
+    // Whole local days: `useNow` only ticks at midnight, on writes and on resume, so an instant-level
+    // standing would drift while the screen stays open.
     const from = startOfLocalDay((now ?? new Date()).getTime());
     const opened = startOfLocalDay(startDate.getTime());
-    // Counted in calendar days rather than measured in milliseconds: a span
-    // crossing a clock shift is an hour longer or shorter than a whole number of
-    // days, and dividing the raw difference reports 24/47 of a two-day goal.
     const totalDays = daysBetween(opened, startOfLocalDay(targetDate.getTime()));
     if (totalDays <= 0) {
         return null;
     }
     const elapsed = Math.min(1, Math.max(0, daysBetween(opened, from) / totalDays));
-    // Clamped to the target: past the date the line has arrived, and "behind" then
-    // means the whole remainder, which is exactly what the pace already says.
     const expected = round(startAmount + (target - startAmount) * elapsed, decimals);
     const against = round(held - expected, decimals);
     return {
         against,
         elapsed,
         expected,
-        // The start the caller normalised, not the raw one: the band has to describe
-        // the line that is actually drawn. A -1,000 → 4,000 goal climbs 40 a day once
-        // the anchor is clamped, and measuring its tolerance against the unclamped
-        // 5,000 span would call a balance a full day behind "on pace".
-        // `<=`, so a FULL day of drift is tolerated rather than merely less than
-        // one. Now that the line advances in whole days, a goal set yesterday and
-        // not yet contributed to sits exactly one day behind — the commonest state
-        // a new goal is in, and not a verdict it has earned.
+        // Against the normalised start, and `<=` so a goal set yesterday and not yet funded is still on pace.
         onPace: Math.abs(against) <= onPaceBand(target, startAmount, totalDays, decimals),
     };
 }
 
-/**
- * The line the target date demands, sampled evenly. Used as the reference the
- * account's own balance is drawn against.
- *
- * Sampled rather than drawn as two points because the chart clips it against the
- * plot's own domain, and a two-point path would cut the corner on any axis that
- * does not contain both ends.
- */
+// Sampled, not two points: the chart clips it to the plot domain and a two-point path would cut the corner.
 export function goalRequiredLine(
     { startAmount, startDate, targetDate }: Pick<GoalSpan, "startAmount" | "startDate" | "targetDate">,
     target: number
 ): { time: number; value: number }[] {
-    // Day-normalised at both ends, like the standing. Interpolating over the raw
-    // instants instead put the drawn line half a day out of step with the figure
-    // beside it whenever a goal was made at a different time of day from its
-    // deadline — the chart's own head sits on a day boundary, so its reference
-    // has to as well.
     const opened = startOfLocalDay(startDate.getTime());
     const due = startOfLocalDay(targetDate.getTime());
     const totalDays = daysBetween(opened, due);
     if (totalDays <= 0) {
         return [{ time: due, value: target }];
     }
-    // The same normalisation the standing uses, so the drawn line and the figure
-    // beside it start from one anchor.
     const start = normalisedStart(startAmount);
     const points: { time: number; value: number }[] = [];
-    // Sampled on calendar-day ordinals, positions AND values alike. Deriving them
-    // from the raw span put the line at 24/47 of the target on the middle day of a
-    // spring-forward span while the figure beside it said one half.
     const steps = Math.min(REQUIRED_LINE_SAMPLES, totalDays);
     for (let step = 0; step <= steps; step += 1) {
         const ordinal = Math.round((step * totalDays) / steps);

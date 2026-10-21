@@ -8,13 +8,8 @@ export interface DominantCategory {
 }
 
 /**
- * The category that took the largest share of a budget window, for the sentence
- * under the burndown.
- *
- * Rolls a subcategory up to its parent: "Groceries took most of it" is the
- * sentence someone wants, not "Groceries › Produce". Uncategorised spend is
- * counted in the total but can never be the answer, because it has no name to
- * put in the sentence.
+ * Rolls a subcategory up to its parent. Uncategorised spend counts in the total but is never the answer: it has
+ * no name to put in the sentence.
  */
 export function dominantCategory(
     contributions: readonly ExpenseContribution[],

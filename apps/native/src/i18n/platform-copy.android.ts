@@ -3,9 +3,8 @@ import type { platformCopy as iosPlatformCopy } from "./platform-copy";
 const TWIN = ".android";
 
 /**
- * A string that names iOS (its Settings app, the App Store, the OS asking for
- * permission) has a `<key>.android` twin in the same dictionary. Android reads
- * the twin under the base key, so no call site has to ask which platform it is.
+ * A string that names iOS has a `<key>.android` twin in the same dictionary. Android reads the twin under the base
+ * key, so no call site has to ask which platform it is.
  */
 export const platformCopy: typeof iosPlatformCopy = (catalog) => ({
     ...catalog,

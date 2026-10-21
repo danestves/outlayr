@@ -4,13 +4,10 @@ import { MoneyValidationError } from "./errors";
 import { DECIMAL_RADIX, divideHalfEven, toScaledInt, USD_SCALE } from "./scaled-int";
 import type { ScaledInt } from "./scaled-int";
 
-/** `binance` is VES-per-USDT market data only — never an entry type. */
+/** `binance` is VES-per-USDT market data only, never an entry type. */
 export const MARKET_RATE_TYPES = ["official", "eur_reference", "binance"] as const;
 
-/**
- * Deliberately diverges from `MARKET_RATE_TYPES`: `binance` is excluded
- * (USDT != USD), `custom` is added for user-supplied operation rates.
- */
+// Not `MARKET_RATE_TYPES`: `binance` is USDT, not USD, and `custom` is a user-supplied operation rate.
 export const ENTRY_RATE_TYPES = ["official", "eur_reference", "custom"] as const;
 
 export type MarketRateType = (typeof MARKET_RATE_TYPES)[number];
@@ -24,10 +21,6 @@ export interface RateRow {
 /** Must return the newest row on or before `date`, else `null`. */
 export type RateLookup = (quote: string, rateType: MarketRateType, date: string) => Promise<RateRow | null>;
 
-/**
- * - A resolved rate must be positive; a non-positive one would later divide the
- *   base amount into a garbage or non-finite USD value.
- */
 export async function resolveEntryRate(
     lookup: RateLookup,
     currency: string,
@@ -84,12 +77,7 @@ function divideToUsd(numerator: ScaledInt, denominator: ScaledInt): number {
     return Number(toDecimal(money));
 }
 
-/**
- * Freezes an UNROUNDED (micro-dollar precision) USD amount.
- *
- * A finite `(baseAmount, exchangeRate)` pair can still overflow the division to
- * a non-representable amount, which is rejected here rather than stored.
- */
+// Unrounded, at micro-dollar precision. A finite pair can still overflow the division, which is rejected, not stored.
 export function computeAmountUSD(input: ComputeAmountUSDInput): number {
     const amountUSD = divideToUsd(
         toScaledInt(input.baseAmount),

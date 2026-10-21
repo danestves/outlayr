@@ -4,7 +4,7 @@ import { convertUsdSum } from "./valuation";
 import type { RateTable } from "./valuation";
 
 export interface CurrencyBucket {
-    /** Already signed — income adds, expense subtracts. */
+    /** Signed: income adds, expense subtracts. */
     amount: number;
     currencyCode: string;
     transactionCount: number;
@@ -26,49 +26,31 @@ function dominanceOrder(counts: Map<string, number>, globalCurrency: string): st
 
 export interface CurrencyEntry {
     amount: number;
-    /** Frozen USD value, when the entry has one. Absent leaves it unconvertible. */
     amountUsd?: number | null;
-    /**
-     * Null means the entry stated none — it was written under whatever the
-     * ledger's currency was that day, which today's setting cannot be assumed to
-     * match. Only its frozen USD value can place it.
-     */
+    /** Null: written in the ledger's currency of that day, not necessarily today's, so only `amountUsd` places it. */
     currency?: string | null;
-    /**
-     * When the money moved; absent leaves the entry unconvertible. The
-     * transaction's own instant, not its local midnight — the same instant the
-     * USD value was frozen against.
-     */
+    /** The transaction's own instant, not its local midnight: the instant the USD value was frozen against. */
     date?: Date;
     exchangeRate?: number | null;
     exchangeRateType?: string | null;
     income: boolean;
 }
 
-/**
- * One `(currency, UTC day, direction)` cell of a set of entries.
- *
- * Conversion happens per cell, never per row: the Log's header aggregates in
- * SQL and the day sections aggregate in JS, and only a shape both can produce
- * makes a period total and the day subtotals under it round to the same cents.
- */
+// Converted per (currency, UTC day, direction) cell, never per row: the Log header aggregates in SQL and the day
+// sections in JS, and only a shape both produce rounds them to the same cents.
 export interface CurrencyCell {
-    /** Total in `currencyCode`, unsigned, over every row in the cell. */
+    /** Unsigned. */
     amount: number;
-    /** Total of the frozen USD values, unsigned. Zero if none were canonical. */
+    /** Unsigned; zero if none were canonical. */
     amountUsd: number;
     count: number;
-    /**
-     * The currency the rows stated, or null when they stated none. Null is NOT
-     * the global currency: only their frozen USD value can place those rows.
-     */
+    /** Null is NOT the global currency: only the frozen USD value can place those rows. */
     currencyCode: string | null;
     /** UTC `YYYY-MM-DD`; the empty string when the rows carried no date. */
     dateKey: string;
     income: boolean;
     rateNeededAmount?: number;
     rateNeededCount?: number;
-    /** Unsigned total of just the rows with no frozen USD value. */
     unconvertedAmount: number;
     unconvertedCount: number;
 }
@@ -132,14 +114,8 @@ export interface CurrencyFigures {
     income: number;
 }
 
-/**
- * Buckets cells by the currency they end up expressed in, dominant first.
- *
- * Without `rates` nothing is converted and each currency keeps its own bucket.
- * A cell the data cannot convert always keeps its own too. An empty set yields
- * one zero bucket in the global currency, so callers always have something to
- * render.
- */
+// Dominant first. A cell that cannot convert keeps its own currency's bucket, and an empty set yields one zero
+// bucket in the global currency.
 export function cellFigures(
     cells: readonly CurrencyCell[],
     globalCurrency: string,
@@ -156,8 +132,7 @@ export function cellFigures(
     };
 
     for (const cell of cells) {
-        // Only a cell that NAMES the global currency is already in it; one that
-        // named none goes through its frozen USD value like any other.
+        // Only a cell that NAMES the global currency is already in it; a null one converts like any other.
         if (cell.currencyCode === globalCurrency) {
             add(globalCurrency, cell.amount, cell.income, cell.count);
             continue;
@@ -167,14 +142,11 @@ export function cellFigures(
                 ? convertUsdSum(cell.amountUsd, cell.dateKey, globalCurrency, rates)
                 : null;
         if (converted === null) {
-            // Nothing can place it; the global currency is the only label left.
             add(cell.currencyCode ?? globalCurrency, cell.amount, cell.income, cell.count);
             continue;
         }
         add(globalCurrency, converted, cell.income, cell.count - cell.unconvertedCount);
         if (cell.unconvertedCount > 0) {
-            // Rows with no frozen USD value stay in their own currency: the rate
-            // exists, but there is nothing to apply it to.
             add(cell.currencyCode ?? globalCurrency, cell.unconvertedAmount, cell.income, cell.unconvertedCount);
         }
     }
@@ -191,7 +163,6 @@ export function cellFigures(
     }));
 }
 
-/** {@link cellFigures} collapsed to one signed net per currency. */
 export function cellTotals(
     cells: readonly CurrencyCell[],
     globalCurrency: string,

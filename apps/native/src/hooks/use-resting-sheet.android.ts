@@ -12,30 +12,12 @@ export type { SheetRest } from "./use-resting-sheet";
 const REST_BODY_ESTIMATE = 170;
 const REST_BOTTOM_ROOM = 8;
 
-/**
- * Declared by the root stack too (`stackChrome().entrySheet`), so the sheet is
- * created with it. One object for the sheet's whole life: see below.
- */
+// Also declared by the root stack (`stackChrome().entrySheet`), and one object for the sheet's whole life.
 const SHEET = { sheetAllowedDetents: "fitToContents", sheetResizeAnimationEnabled: false } as const;
 
-/**
- * The entry sheet's resting state on Android, same contract as iOS, but the
- * sheet is sized by its content instead of by detents.
- *
- * react-native-screens on Android reads `sheetAllowedDetents` when it creates
- * the sheet and again only on a keyboard or inset change, so the iOS way of
- * waking (re-declaring the detents as `LARGE_ONLY`) never moves the sheet. It
- * also leaves a two-detent sheet holding one detent, and a swipe down from full
- * height then crashes ("Invalid state 4 for detentCount 1"). The one mode it
- * resizes at runtime is `fitToContents`: the sheet follows its content's
- * height. So the declared detents never change, and `height` (applied by
- * `RestingSheetFrame`) does the moving: the header and the measured body at
- * rest, the tallest sheet once awake.
- *
- * A fit-to-contents sheet has one height, so dragging a resting sheet up does
- * not wake it. A tap on the body or the keyboard does (`rest.onWake`), as the
- * rest is meant to be woken on iOS too; a swipe down closes it.
- */
+// react-native-screens on Android reads `sheetAllowedDetents` only at creation and on keyboard or inset changes, and
+// a two-detent sheet left holding one crashes on swipe ("Invalid state 4 for detentCount 1"). So the detents stay
+// `fitToContents` and `height` does the moving.
 export function useRestingSheet(wakeAnnouncement: string) {
     const { height: windowHeight } = useWindowDimensions();
     const insets = useSafeAreaInsets();

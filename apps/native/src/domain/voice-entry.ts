@@ -14,12 +14,6 @@ import { PROPOSE_DRAFT_TOOL } from "@/lib/convex";
 
 import { minorUnitsFor } from "./money";
 
-/**
- * A spoken draft with the ledger's own ids on it: what the review step shows
- * and what the repos are handed. Names the model returned that this ledger
- * cannot resolve become nulls here, never guesses.
- */
-/** A spoken cadence in the ledger's own terms: the stored `recurringType` and its multiplier. */
 export interface ResolvedRecurrence {
     coefficient: number;
     type: RecurringType;
@@ -27,9 +21,7 @@ export interface ResolvedRecurrence {
 
 export interface ResolvedVoiceEntry {
     accountId: string | null;
-    /** An account was named but did not resolve to exactly one; the form must ask which. */
     accountUnresolved: boolean;
-    /** The category was picked from an incomplete set; the form must confirm it. */
     categoryUnresolved: boolean;
     amount: number;
     categoryId: string | null;
@@ -43,22 +35,16 @@ export interface ResolvedVoiceEntry {
     recurrence: ResolvedRecurrence | null;
 }
 
-/**
- * Both legs in one currency. A cross-currency move needs a rate, which nobody
- * speaks, so it is never saved from the review step: `currency` mismatching an
- * account's own is what sends it to the transfer editor instead.
- */
+// A cross-currency move needs a rate nobody speaks, so a `currency` unlike an account's goes to the transfer editor.
 export interface ResolvedVoiceTransfer {
     amount: number;
     currency: string;
     date: Date;
     details: string | null;
     fromAccount: AccountCandidate | null;
-    /** A source was named but did not resolve to exactly one account; the editor must ask. */
     fromUnresolved: boolean;
     kind: "transfer";
     toAccount: AccountCandidate | null;
-    /** Likewise for the destination. */
     toUnresolved: boolean;
 }
 
@@ -80,13 +66,10 @@ interface ResolveArgs {
     accounts: readonly AccountCandidate[];
     /** The prompt did not carry every account, so a draft naming none may name one the model never saw. */
     accountsOmitted?: boolean;
-    /** The prompt did not carry every category, so the model's pick came from an incomplete set. */
     categoriesOmitted?: boolean;
     categories: readonly CategoryCandidate[];
-    /** The ledger's currency, for a draft that names none. */
     currency: string;
     draft: VoiceDraft;
-    /** The instant the clip was sent — a draft dated today keeps its time of day. */
     now: Date;
 }
 
@@ -95,11 +78,7 @@ const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 /** The same fold `transfer-core.ts:categoryKey` links CSV values under. */
 const foldName = (value: string) => value.trim().toLowerCase();
 
-/**
- * `YYYY-MM-DD` to a local instant. Today keeps the clock so the entry sorts
- * where the user expects among the day's other rows; any other day lands at
- * noon, clear of both DST edges.
- */
+// Today keeps the clock so the entry sorts among today's rows; other days land at noon, clear of DST edges.
 export function spokenDateToLocal(date: string, now: Date): Date {
     const match = ISO_DATE.exec(date);
     if (match === null) {
@@ -127,11 +106,7 @@ export function resolveRecurrence(recurrence: VoiceRecurrence | null): ResolvedR
     return recurrence === null ? null : { coefficient: recurrence.every, type: RECURRING_TYPE_OF[recurrence.unit] };
 }
 
-/**
- * The one candidate whose folded name is the spoken one. Two candidates with
- * that name are no match at all: the ledger allows duplicate account names,
- * and a draft that could land on either balance is not one to save unasked.
- */
+// Duplicate names are no match: the ledger allows them, and a draft that could land on either is not saved unasked.
 export function uniqueMatch<T>(
     candidates: readonly T[],
     name: string | null,
@@ -148,11 +123,6 @@ export function uniqueMatch<T>(
     return matches.length === 1 ? (matches[0] ?? null) : null;
 }
 
-/**
- * The category is matched by folded name AND by direction: a model that files a
- * refund under "Groceries" has named a real category on the wrong side of the
- * ledger, and that is a miss, not a match.
- */
 export function resolveVoiceDraft({
     accounts,
     accountsOmitted = false,
@@ -167,9 +137,7 @@ export function resolveVoiceDraft({
     if (draft.kind === "transfer") {
         const fromAccount = findAccount(draft.fromAccountName);
         const matchedTo = findAccount(draft.toAccountName);
-        // The same account twice is a mishearing, not a move.
         const toAccount = matchedTo !== null && matchedTo.id === fromAccount?.id ? null : matchedTo;
-        // Unspoken, the money is in whatever the leaving account holds.
         const moved = draft.currency ?? fromAccount?.currency ?? currency;
         return {
             amount: roundMoney(draft.amount, minorUnitsFor(moved)),
@@ -190,8 +158,6 @@ export function resolveVoiceDraft({
         (candidate) => candidate.name
     );
 
-    // The model answers as many decimals as it heard; the row holds the
-    // currency's minor units, and so must the review, or they would disagree.
     const spent = draft.currency ?? currency;
     const account = findAccount(draft.accountName);
     return {
@@ -211,12 +177,7 @@ export function resolveVoiceDraft({
     };
 }
 
-/**
- * Whether the ids a draft resolved to are still in the ledger's live lists.
- * The draft resolves against the snapshot the model saw; sync can tombstone
- * a category or account before Save is tapped, and the row would then land
- * on a hidden one.
- */
+// Sync can tombstone a category or account before Save is tapped, and the row would land on a hidden one.
 export function stillCurrent(
     draft: { accountId: string | null; categoryId: string | null },
     live: { accountIds: ReadonlySet<string>; categoryIds: ReadonlySet<string> }
@@ -226,7 +187,6 @@ export function stillCurrent(
     return categoryCurrent && accountCurrent;
 }
 
-/** `stillCurrent` for a transfer: both legs, no category. */
 export function transferStillCurrent(
     transfer: { fromAccount: { id: string } | null; toAccount: { id: string } | null },
     live: { accountIds: ReadonlySet<string> }
@@ -235,13 +195,6 @@ export function transferStillCurrent(
     return legs.every((leg) => leg === null || live.accountIds.has(leg.id));
 }
 
-/**
- * An entry the review step may write as-is: a category this ledger has, an
- * amount that survived rounding, a merchant, and no account named that the
- * ledger could not place. "JPY 0.4" rounds to nothing, a blank name would be
- * replaced by the category's on save, and an unplaced account would leave the
- * row off the balance the person named — none is what the review showed.
- */
 export function savableEntry(draft: ResolvedVoiceEntry): { categoryId: string } | null {
     const named = draft.merchant.trim().length > 0;
     const placed = !(draft.accountUnresolved || draft.categoryUnresolved);
@@ -249,10 +202,6 @@ export function savableEntry(draft: ResolvedVoiceEntry): { categoryId: string } 
     return ready && draft.categoryId !== null ? { categoryId: draft.categoryId } : null;
 }
 
-/**
- * A transfer the review step may write as-is: two distinct accounts, both in
- * the currency the amount is in, so the legs are equal and the rate is 1.
- */
 export function savableTransfer(draft: ResolvedVoiceTransfer): { from: AccountCandidate; to: AccountCandidate } | null {
     const { fromAccount, toAccount, currency } = draft;
     if (fromAccount === null || toAccount === null || !(draft.amount > 0)) {
@@ -263,11 +212,7 @@ export function savableTransfer(draft: ResolvedVoiceTransfer): { from: AccountCa
         : null;
 }
 
-/**
- * The recorder meters in dBFS, roughly -160 for silence up to 0 at clipping.
- * Speech in a quiet room sits between -40 and -10, so that is the band mapped
- * onto 0–1; anything under the floor is the room.
- */
+// The recorder meters in dBFS (-160 silence to 0 clipping); speech in a quiet room sits between -40 and -10.
 const METER_FLOOR_DB = -45;
 const METER_CEILING_DB = -8;
 
@@ -285,13 +230,10 @@ const SOUND_OVER_ROOM = 0.07;
 const SOUND_MS = 300;
 const ROOM_WINDOW_MS = 3000;
 export const TRAILING_SILENCE_MS = 2000;
-/** A listener with nothing said into it stops asking after this. */
 export const NO_SPEECH_TIMEOUT_MS = 9000;
-/** One entry is a sentence; the server caps the bytes, this caps the wait. */
 export const MAX_RECORDING_MS = 45_000;
 
 export interface SilenceWatch {
-    /** When speech was last heard; null until the first word. */
     lastSpeechAt: number | null;
     recent: readonly { at: number; level: number }[];
     sampledAt: number;
@@ -310,10 +252,6 @@ export interface SilenceJudgement {
     watch: SilenceWatch;
 }
 
-/**
- * Decides, from one meter sample, whether the recorder should keep going.
- * Pure so the thresholds above can be proven rather than tuned by ear.
- */
 export function judgeSilence(watch: SilenceWatch, level: number, at: number): SilenceJudgement {
     const elapsed = Math.max(0, at - watch.sampledAt);
     const recent = [...watch.recent.filter((sample) => at - sample.at < ROOM_WINDOW_MS), { at, level }];
@@ -347,7 +285,6 @@ export function localIsoDate(now: Date): string {
     return `${now.getFullYear()}-${month}-${day}`;
 }
 
-/** The slice of a thread message this screen reads; the agent's `UIMessage` is a superset. */
 export interface VoiceTurnMessage {
     order: number;
     parts: readonly { output?: unknown; state?: string; type: string }[];
@@ -356,18 +293,12 @@ export interface VoiceTurnMessage {
     text: string;
 }
 
-/** One turn of the thread: what was said, or what an answer proposed. */
 export type VoiceTurn =
     | { kind: "said"; order: number; text: string }
     | { draft: VoiceDraft | null; kind: "proposed"; order: number };
 
 const DRAFT_PART = `tool-${PROPOSE_DRAFT_TOOL}`;
 
-/**
- * The draft an assistant message carries, once its tool has run. Until then
- * (or for a message that failed before calling the tool) there is none, and the
- * caller keeps waiting or gives up on the message's own status.
- */
 export function proposedDraftOf(message: VoiceTurnMessage): ProposedDraft | null {
     if (message.role !== "assistant") {
         return null;
@@ -378,12 +309,10 @@ export function proposedDraftOf(message: VoiceTurnMessage): ProposedDraft | null
     if (part === undefined) {
         return null;
     }
-    // SAFETY: the server's `proposeDraft` tool returns a `ProposedDraft`; the
-    // part is that return value, as the agent stored it.
+    // SAFETY: the part is the `ProposedDraft` the server's `proposeDraft` tool returned.
     return part.output as ProposedDraft;
 }
 
-/** The thread in turns: every sentence, and every answer that reached a draft. */
 export function voiceTurnsOf(messages: readonly VoiceTurnMessage[]): VoiceTurn[] {
     const turns: VoiceTurn[] = [];
     for (const message of messages) {
@@ -401,11 +330,6 @@ export function voiceTurnsOf(messages: readonly VoiceTurnMessage[]): VoiceTurn[]
 
 export type VoiceDraftField = "amount" | "merchant" | "category" | "account" | "date" | "kind" | "schedule" | "details";
 
-/**
- * What a correction changed, for the "Updated · date" line. Compared on the
- * names the model answered, not on resolved ids: the line narrates the
- * conversation, and the conversation is in names.
- */
 export function draftDelta(previous: VoiceDraft, next: VoiceDraft): VoiceDraftField[] {
     const changed: VoiceDraftField[] = [];
     if (previous.kind !== next.kind) {

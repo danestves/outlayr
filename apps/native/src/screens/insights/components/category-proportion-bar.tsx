@@ -10,10 +10,8 @@ import { CHART_BAR } from "@/theme/chart";
 import { useColors } from "@/theme/use-colors";
 
 const GAP = 3;
-/** Track inset, so the rail stays visible behind a bar that is always full. */
 const TRACK_PAD = 2;
 const HEIGHT = 16;
-/** Segments thinner than this share are dropped. */
 const MIN_SHARE = 0.005;
 
 interface CategoryProportionBarProps {
@@ -26,8 +24,6 @@ export function CategoryProportionBar({ entries, selectedId, onSelect }: Categor
     const colors = useColors();
     const t = useTranslation();
     const reduceMotion = useReducedMotion();
-    // Read here, not threaded from the screen: every chart answers to this setting
-    // itself.
     const animated = useSettingBool("animatedCharts") && !reduceMotion;
     const [width, setWidth] = useState(0);
     const progress = useSharedValue(animated ? 0 : 1);
@@ -54,10 +50,6 @@ export function CategoryProportionBar({ entries, selectedId, onSelect }: Categor
     const usable = Math.max(0, width - GAP * (shown.length - 1));
 
     return (
-        // Seated in a track rather than floating on the background. The segments
-        // always sum to the full width, so a single category is a solid band with
-        // no edge to read it against and looks like a status colour; the track
-        // inset by `TRACK_PAD` is that edge, and it survives every category count.
         <View
             style={{
                 backgroundColor: colors.railTrack,

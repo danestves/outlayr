@@ -1,9 +1,5 @@
-// Category, account, goal and budget names are USER DATA, not translated
-// strings, so an es capture shows "Groceries" unless the rows themselves are
-// renamed first. This flips them to Spanish before the es screenshot pass and
-// back after.
-//
-// Usage: node apps/screenshots/scripts/localize-sim-data.mjs <UDID> es|en
+// Names are user data, so the es capture renames the rows first and back after. Usage: node
+// apps/screenshots/scripts/localize-sim-data.mjs <UDID> es|en
 
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
@@ -31,8 +27,6 @@ if (identity !== "0") {
     );
 }
 
-// en -> es. The 18 categories, the two non-brand accounts, the three goals,
-// the overall budget's own name, and the rent entries.
 const CATEGORIES = {
     Business: "Negocio",
     Coffee: "Café",
@@ -70,7 +64,6 @@ const NOTES = { Rent: "Renta" };
 
 const q = (value) => `'${String(value).replaceAll("'", "''")}'`;
 
-/** Returns [from, to] for the requested direction. */
 function pair(map) {
     return Object.entries(map).map(([en, es]) => (direction === "es" ? [en, es] : [es, en]));
 }

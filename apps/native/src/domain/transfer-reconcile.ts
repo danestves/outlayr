@@ -16,10 +16,7 @@ export interface TransferLegs {
     toAmount: number;
 }
 
-/**
- * Enough decimals that no real currency-per-USD rate is truncated, few enough
- * that `97.3 + 2.7` stops being `100.00000000000001`.
- */
+// Enough for any real per-USD rate, few enough that `97.3 + 2.7` stops being `100.00000000000001`.
 const NOISE_DECIMALS = 10;
 
 function finitePositive(value: number): boolean {

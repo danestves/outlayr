@@ -17,12 +17,6 @@ import { CompactDatePicker } from "./compact-date-picker";
 import { EditorRow } from "./editor-row";
 import { EditorSwitch } from "./editor-switch";
 
-/**
- * What the editor writes. Every field is optional: one row commits one fact.
- *
- * `amount` is not one of the editor's own rows — the limit is set on the sheet —
- * but it travels the same write, so the screen has one place to handle a failure.
- */
 export interface BudgetEdit {
     amount?: number;
     name?: string | null;
@@ -33,18 +27,15 @@ export interface BudgetEdit {
 
 interface BudgetEditorProps {
     calendar: { firstDayOfMonth: number; firstWeekday: number };
-    /** Signed, and already in the display currency. Zero when nothing carried in. */
+    /** Signed, and already in the display currency. */
     carry: number;
     currency: string;
-    /** The currency the limit was stored in, when it is not today's. */
     foreignCurrency?: string | null;
-    /** The target this window runs on: the limit plus whatever carried in. */
+    /** The limit plus whatever carried in. */
     amount: number;
-    /** The limit as set, before anything carried into it. */
     limit: number;
     nowMs: number;
     name: string | null;
-    /** Shown greyed in the name field: the category's own name, or Everything. */
     namePlaceholder: string;
     onChange: (edit: BudgetEdit) => void;
     onChangeLimit: () => void;
@@ -55,13 +46,6 @@ interface BudgetEditorProps {
 
 const PERIODS = [BUDGET_TYPE.day, BUDGET_TYPE.week, BUDGET_TYPE.month, BUDGET_TYPE.year] as const;
 
-/**
- * A budget's facts, edited where they are read.
- *
- * There is no save: each row commits on its own, and the figures above it move
- * as it does. That is the point of editing here rather than in a modal — you
- * change the limit standing in front of the number it governs.
- */
 export function BudgetEditor({
     amount,
     limit,
@@ -87,15 +71,9 @@ export function BudgetEditor({
     const [naming, setNaming] = useState(false);
 
     const money = (value: number) => formatAmount(value, currency, showCents, language);
-    // Stated only where it changes what the window runs on. Carry is signed, so
-    // "with -40 carried in" is an overspend still being paid off.
     const carryNote =
         carry === 0 ? null : t("budgets.editor.limitCarry", { amount: money(amount), carry: money(carry) });
 
-    // Deliberately leaves the chips open: the note under them states the window
-    // the change just produced, and closing over it would hide the consequence at
-    // the moment it lands.
-    /** Blank restores the category's own name, which is what `customName` stores. */
     const commitName = (next: string) => {
         setNaming(false);
         if (next.trim() !== (name ?? "").trim()) {
@@ -110,14 +88,8 @@ export function BudgetEditor({
         }
     };
 
-    // The window the chosen cadence produces, which is the current one for that
-    // cadence — see `budgetPatch`, which re-anchors rather than keeping a date
-    // that describes a different rhythm.
-    // The window rolls forward from the anchor, so a future date leaves the budget
-    // reporting a window it is not in yet and ignoring everything spent until then.
-    // The deleted form capped the picker at today; this keeps that, and keeps an
-    // anchor already older than the current period selectable so an edit elsewhere
-    // does not silently move it.
+    // Capped at today: the window rolls forward from the anchor, so a future date would ignore spend until then.
+    // An older anchor stays selectable so an edit elsewhere does not silently move it.
     const anchorRange = useMemo(() => {
         const now = new Date(nowMs);
         const periodStart = startOfPeriod(now, type, calendar);
@@ -179,8 +151,6 @@ export function BudgetEditor({
                 <EditorRow
                     label={t("budgets.editor.from")}
                     onPress={() => setPickingDate((open) => !open)}
-                    // Day-shaped on purpose: this row is the anchor, one date, not the
-                    // span the anchor produces.
                     value={budgetWindowLabel({ end: startDate, start: startDate }, BUDGET_TYPE.day, language)}
                 />
                 {pickingDate ? (
@@ -221,10 +191,7 @@ export function BudgetEditor({
                             autoFocus
                             className="text-body text-foreground py-1 font-sans"
                             defaultValue={name ?? ""}
-                            // `onEndEditing` rather than `onSubmitEditing`: it fires on Done
-                            // AND on a blur, and a name typed then abandoned by tapping the
-                            // next row is still a name the user typed. Blurring without it
-                            // dropped the text silently, which no other row here does.
+                            // Fires on Done and on blur, so a name abandoned by tapping the next row still commits.
                             onEndEditing={(event) => commitName(event.nativeEvent.text)}
                             placeholder={namePlaceholder}
                             placeholderTextColorClassName="accent-muted"

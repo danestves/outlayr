@@ -84,7 +84,6 @@ export async function grantAppleCredential(
     }
 }
 
-/** Sign-in and account deletion both block on Apple answering. */
 const APPLE_TIMEOUT_MS = 10_000;
 const APPLE_ISSUER = "https://appleid.apple.com";
 const APPLE_JWKS = createRemoteJWKSet(new URL("https://appleid.apple.com/auth/keys"));
@@ -94,8 +93,7 @@ const appleIdentityClaims = z.object({ sub: z.string() });
 export function appleTokenVerifier(clientId: string): AppleGrantDependencies["verify"] {
     return async (idToken, rawNonce) => {
         const { payload } = await jwtVerify(idToken, APPLE_JWKS, { audience: clientId, issuer: APPLE_ISSUER });
-        // `jose` declares `sub` as an optional string but the payload is JSON, so
-        // the claim still has to be checked rather than trusted.
+        // `jose` types `sub` but the payload is JSON, so the claim is checked rather than trusted.
         const claims = appleIdentityClaims.safeParse(payload);
         if (!claims.success) {
             throw new TypeError("Apple identity token does not contain a subject");
@@ -116,28 +114,14 @@ interface AppleResumeValidator {
     resumeUserId: (resumeSecret: string) => Promise<string>;
 }
 
-/**
- * The only columns this plugin ever writes back onto a linked Apple account.
- *
- * `setTokenUtil` answers null when better-auth has no encryption configured, and
- * a refresh grant returns no new refresh token, so both token columns carry the
- * absence rather than dropping the write.
- */
+// `setTokenUtil` answers null without encryption configured and a refresh grant returns no refresh token, so both
+// token columns carry the absence rather than dropping the write.
 interface AppleAccountUpdate {
     accessToken: string | null | undefined;
     accessTokenExpiresAt: Date | undefined;
     refreshToken: string | null | undefined;
 }
 
-/**
- * The slice of better-auth's endpoint context this plugin calls, narrowed from
- * `ctx.context` by assertion at each endpoint.
- *
- * `updateAccount` keeps better-auth's `unknown` result: the assertion needs the
- * two types to overlap, and tightening it to the `void` the callers actually use
- * makes `ctx.context as AppleLifecycleContext` stop compiling. The argument side
- * narrows safely because a parameter type only has to be accepted, not produced.
- */
 interface AppleLifecycleContext {
     internalAdapter: {
         findAccounts: (userId: string) => Promise<(AppleAccount & { providerId: string })[]>;
@@ -145,12 +129,7 @@ interface AppleLifecycleContext {
     };
 }
 
-/**
- * Apple's token endpoint, snake_case as it sends it.
- *
- * `refresh_token` is absent on a refresh-grant response and present on an
- * authorization-code one, which is why only the caller that needs it insists.
- */
+// `refresh_token` comes only on an authorization-code response, never on a refresh grant.
 const appleTokenResponse = z.object({
     access_token: z.string(),
     expires_in: z.number(),
@@ -201,10 +180,7 @@ function appleCredentialLifecycleDependencies(config: AppleServerConfig, context
             return accounts.find((a: AppleAccount & { providerId: string }) => a.providerId === "apple") ?? null;
         },
         persist: async (accountId, tokens, retainedRefreshToken) => {
-            // SAFETY: better-auth's token helpers take its full `AuthContext`,
-            // which it does not export, so there is no name to assert to. They
-            // read only the encryption options off it, and the value passed is
-            // the real context — `never` is the widest thing both accept.
+            // SAFETY: better-auth does not export the `AuthContext` its token helpers take; this is the real one.
             await context.internalAdapter.updateAccount(accountId, {
                 accessToken: await setTokenUtil(tokens.accessToken, context as never),
                 accessTokenExpiresAt: tokens.accessTokenExpiresAt,
@@ -255,9 +231,7 @@ export function appleCredentialLifecycle(config: AppleServerConfig | null, resum
                     const result = await grantAppleCredential(
                         ctx.context.session.user.id,
                         ctx.body,
-                        // SAFETY: better-auth builds one context per request and always
-                        // installs `internalAdapter`; this narrows it to the two adapter
-                        // calls `appleCredentialLifecycleDependencies` makes, nothing more.
+                        // SAFETY: better-auth always installs `internalAdapter`; this narrows it to the two calls made.
                         appleCredentialLifecycleDependencies(config, ctx.context as AppleLifecycleContext)
                     );
                     return ctx.json(result);

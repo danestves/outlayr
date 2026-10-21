@@ -3,10 +3,7 @@ import { describe, expect, it } from "@jest/globals";
 import type { Database } from "./client";
 import { withTransaction } from "./transaction";
 
-/**
- * A client shaped like expo-sqlite's: `BEGIN` while a transaction is already
- * open fails, exactly as SQLite does on one connection.
- */
+/** Like expo-sqlite: `BEGIN` inside an open transaction fails, as SQLite does on one connection. */
 function fakeClient(log: string[]) {
     let open = false;
     return {

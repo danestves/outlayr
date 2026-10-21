@@ -56,20 +56,16 @@ import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
 import { useColors } from "@/theme/use-colors";
 
-/** The subject's frame while it is being read: the screen's width less the gutters, capped in height. */
 const STAGE_GUTTER = 24;
 const STAGE_MAX_HEIGHT_RATIO = 0.5;
 const STAGE_MAX_HEIGHT = 480;
-/** Once read, the photo is a thumbnail beside the merchant, not the subject. */
 const THUMB_HEIGHT = 96;
 const THUMB_MIN_WIDTH = 56;
 const THUMB_MAX_WIDTH = 120;
-/** The resting subject: a receipt inside viewfinder brackets. */
 const FRAME_WIDTH = 220;
 const FRAME_HEIGHT = 268;
 const MARK_SIZE = 24;
 const MARK_RADIUS = 7;
-/** Each printed line arrives a beat after the one above; the whole ticket is on screen within a second. */
 const LINE_STAGGER_MS = 34;
 const LINE_STAGGER_MAX_MS = 560;
 const STATUS_SWEEP_MS = 1800;
@@ -92,7 +88,6 @@ const FAILURE_KEY = {
 /** A failure the same photo may survive: nothing was wrong with the picture. */
 const RETRYABLE: ReadonlySet<ScanFailure> = new Set(["offline", "provider", "rateLimited", "timeout"]);
 
-/** "Today", "Yesterday", else the printed date. */
 function dayLabel(date: Date, now: Date, t: TranslateFn, language: Language): string {
     const target = startOfDay(date).getTime();
     const today = startOfDay(now);
@@ -105,24 +100,18 @@ function dayLabel(date: Date, now: Date, t: TranslateFn, language: Language): st
     return formatChargeDate(date, now, language);
 }
 
-/** The photo letterboxed into a frame: its own aspect, no larger than the frame. */
 function fitPhoto(photo: ScanPhoto, maxWidth: number, maxHeight: number): StageBox {
     const aspect = photo.width > 0 && photo.height > 0 ? photo.width / photo.height : 0.7;
     const scale = Math.min(maxWidth / aspect, maxHeight);
     return { height: Math.round(scale), width: Math.round(scale * aspect) };
 }
 
-/** The thumbnail: a fixed height, its width from the aspect within sensible bounds. */
 function thumbBox(photo: ScanPhoto): StageBox {
     const aspect = photo.width > 0 && photo.height > 0 ? photo.width / photo.height : 0.7;
     const width = Math.min(THUMB_MAX_WIDTH, Math.max(THUMB_MIN_WIDTH, Math.round(THUMB_HEIGHT * aspect)));
     return { height: THUMB_HEIGHT, width };
 }
 
-/**
- * The screen's frame: a close in the top-right where a sheet keeps it, the
- * subject in the middle, and whatever the phase puts on the bottom axis.
- */
 function ScanShell({
     bottom,
     children,
@@ -136,7 +125,6 @@ function ScanShell({
     closeDisabled?: boolean;
     onClose: () => void;
     overlay?: React.ReactNode;
-    /** The review is taller than the screen on a long receipt; everything else is centred. */
     scroll?: boolean;
 }) {
     const t = useTranslation();
@@ -207,7 +195,6 @@ interface BarAction {
     onPress: () => void;
 }
 
-/** Two actions side by side at equal width — the weight, not the width, says which leads — plus an optional quiet third. */
 function BottomBar({
     disabled = false,
     primary,
@@ -287,7 +274,6 @@ function BottomBar({
     );
 }
 
-/** A printed line: a quantity when it is not one, the name, the price at the right in figures. */
 function LineRow({
     currency,
     index,
@@ -320,7 +306,6 @@ function LineRow({
     );
 }
 
-/** Subtotal, tax, tip in the muted tone; the total in the ledger's own weight. */
 function SummaryRow({
     delay,
     emphasis = false,
@@ -351,12 +336,6 @@ function SummaryRow({
     );
 }
 
-/**
- * What the total comes to in the ledger's own currency, under the figure in
- * the receipt's: the restated amount, the rate it was restated at, and a note
- * when the currency itself was read off a symbol rather than a code. Nothing
- * at all for a receipt in the ledger's currency.
- */
 function ConversionLine({
     conversion,
     language,
@@ -401,13 +380,6 @@ function ConversionLine({
     );
 }
 
-/**
- * The read receipt, laid out the way the ticket itself is: who and when at
- * the top beside the photo, the total in its own currency as the figure that
- * matters (and what it comes to in the ledger's), then every line, then the
- * printed summary. The lines arrive top to bottom, a beat apart, the way a
- * printer would have put them there.
- */
 function ReviewSheet({
     categoryName,
     ledgerCurrency,
@@ -528,11 +500,6 @@ function ReviewSheet({
     );
 }
 
-/**
- * The screen before a session exists: the cloud tier is missing, the session
- * is still being read, or nobody is signed in. Nothing to read yet, so none of
- * the hooks that need the Convex provider.
- */
 function ScanGateScreen({ gate }: { gate: Exclude<AuthGate, "signed-in"> }) {
     const router = useRouter();
     const t = useTranslation();
@@ -557,7 +524,6 @@ function ScanGateScreen({ gate }: { gate: Exclude<AuthGate, "signed-in"> }) {
     );
 }
 
-/** A combined table: the receipt's currency from one live query, the ledger's from another. */
 function pairRates(paid: RateTable, ledger: RateTable, paidCode: string): RateTable {
     return {
         earliest: (code) => (code === paidCode ? paid.earliest(code) : ledger.earliest(code)),
@@ -567,7 +533,6 @@ function pairRates(paid: RateTable, ledger: RateTable, paidCode: string): RateTa
 
 type CreateArgs = Parameters<typeof transactionsRepo.create>;
 
-/** The transaction a resolved receipt saves as. */
 function receiptEntry(
     db: CreateArgs[0],
     draft: ResolvedReceipt,
@@ -647,8 +612,7 @@ function ScanFlowScreen() {
         [bounded, currency, localeTag, regionCode]
     );
 
-    // What the draft is read against travels with the request: the ledger the
-    // model saw, not the ledger as sync may have left it by the time it answers.
+    // The ledger the model saw, not the one sync may have left by the time it answers.
     const context = useMemo(
         () => ({
             accounts: accounts.map((account) => ({
@@ -710,8 +674,7 @@ function ScanFlowScreen() {
 
     const openForm = useCallback(
         (draft: ResolvedReceipt) => {
-            // An account sync removed since the draft resolved is a question for
-            // the form, not a seed the form would quietly swap for the last used.
+            // An account sync removed is a question for the form, not a seed to swap for the last used.
             const accountLive = draft.accountId === null || live.accountIds.has(draft.accountId);
             const params = {
                 accountId: accountLive ? (draft.accountId ?? undefined) : undefined,
@@ -755,8 +718,7 @@ function ScanFlowScreen() {
                     transaction_type: draft.income ? "income" : "expense",
                 });
                 haptics("success");
-                // A modal gesture can dismiss this screen mid-write; popping again
-                // would take the screen underneath with it.
+                // A modal gesture can dismiss this mid-write; popping again would take the screen beneath.
                 if (isMounted()) {
                     router.back();
                 }
@@ -907,13 +869,7 @@ function ScanFlowScreen() {
     );
 }
 
-/**
- * The scan screen. The picker, the request and the review only exist for a
- * signed-in session, because the action they call authenticates on the Convex
- * client the root layout mounts only then; every other gate gets the same
- * frame with the reason. Signed in, the AI providers have to be allowed before
- * the camera is: the photo is sent the moment it is taken.
- */
+/** Signed-in only: the action authenticates on the Convex client mounted then. Consent precedes the camera. */
 export function ReceiptScanScreen() {
     const { gate } = useAuthSession();
     const consent = useAiConsent(useDatabase());

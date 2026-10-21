@@ -240,8 +240,6 @@ describe("a fee that outruns what arrives", () => {
         expect(result.current.block).not.toBeNull();
     });
 
-    /** The rate is quoted, so the refusal has to be about the fee — an earlier
-     * version derived a rate from the fee instead and saved. */
     it("refuses rather than deriving a rate that makes the fee fit", async () => {
         const result = await feeOverArrivalDraft();
 

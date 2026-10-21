@@ -6,7 +6,6 @@ import { useTranslation } from "@/i18n/context";
 import { payoffMenuActions } from "@/screens/debts/payoff-menu-actions";
 import type { PayoffPlanControls } from "@/screens/debts/use-payoff-plan";
 
-/** An account's ⋯: Edit, and on a card or a loan its payoff plan. */
 export function LiabilityToolbar({ account, plan }: { account: Account; plan: PayoffPlanControls }) {
     const router = useRouter();
     const t = useTranslation();

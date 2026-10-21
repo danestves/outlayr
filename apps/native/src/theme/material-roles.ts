@@ -1,14 +1,6 @@
 import type { MaterialColors } from "@expo/ui/jetpack-compose";
 
-/**
- * The Material 3 colour roles Outlayr exposes, keyed the way Compose and
- * `@expo/ui`'s `MaterialColors` key them, each mapped to the CSS variable
- * `global.css` declares for it. The utility is the variable without its dashes:
- * `--m3-on-primary` is `text-m3-on-primary`, `bg-m3-on-primary`, and so on.
- *
- * A subset on purpose: the roles a screen paints with. The fixed roles,
- * `surfaceTint`, `surfaceBright`/`Dim` and `inversePrimary` stay inside Compose.
- */
+/** A subset on purpose: the roles a screen paints with. */
 export const MATERIAL_ROLE_VARIABLES = {
     error: "--m3-error",
     errorContainer: "--m3-error-container",

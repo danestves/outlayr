@@ -10,13 +10,9 @@ import { useColors } from "@/theme/use-colors";
 
 import { LOG_CONTROL_SHADOW, LOG_CONTROL_SIZE } from "./amounts-eye-button";
 
-/**
- * Namespaced so it cannot collide with a currency code, which is what every
- * other action in this menu is identified by.
- */
+/** Namespaced away from the currency codes that identify every other action. */
 const MANAGE_CURRENCIES_ACTION = "log.currency.manage";
 
-/** The Log hero's currency control: the codes on offer, then a way to curate them. */
 export function DisplayCurrencyChip({
     code,
     options,
@@ -35,8 +31,7 @@ export function DisplayCurrencyChip({
             actions={[
                 ...options.map((option) => ({
                     id: option,
-                    // SAFETY: the ternary produces one of the two literals; the assertion is
-                    // what keeps the menu item's state field a union rather than one of them.
+                    // SAFETY: keeps the menu item's `state` the union rather than one literal.
                     state: (option === code ? "on" : "off") as "on" | "off",
                     title: option,
                 })),

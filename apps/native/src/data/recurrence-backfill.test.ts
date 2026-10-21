@@ -221,7 +221,6 @@ describe("backfillRecurring", () => {
 
         await backfillRecurring(db, id, NOW);
 
-        // Neither an occurrence nor the carrier itself: a retired stamp stays retired.
         await expect(candidateLogoIds(db)).resolves.toStrictEqual(new Map([[id, 1]]));
     });
 
@@ -260,9 +259,7 @@ describe("backfillRecurring", () => {
     it("registers the bare occurrences it writes as logo candidates, and not one a peer already holds", async () => {
         const id = await seedSource(db, { currency: "VES", date: at(2025, 3, 15), exchangeRateType: "official" });
         await rememberLogoCandidates(db, [id], NOW.getTime(), Number.POSITIVE_INFINITY);
-        // Occurrence ids derive from the source id and the day, so a second ledger
-        // walking the same source produces the same ids: the first one is planted
-        // here as if it had arrived by sync before this device walked the schedule.
+        // Occurrence ids derive from the source id and the day, so this plants the first as if synced in earlier.
         const probe = makeDb();
         await seedSource(probe, { currency: "VES", date: at(2025, 3, 15), exchangeRateType: "official", id });
         await rememberLogoCandidates(probe, [id], NOW.getTime(), Number.POSITIVE_INFINITY);
@@ -530,8 +527,7 @@ describe("backfillAllRecurring", () => {
         await expect(allRows(db)).resolves.toHaveLength(first);
     });
 
-    // The carrier is a different row after every sweep, so a notice that survives
-    // two of them is the only proof the hand-off is not a one-time copy.
+    // The carrier is a different row after every sweep, so surviving two proves the hand-off isn't a one-time copy.
     it("keeps the notice on whichever row carries the schedule", async () => {
         await seedSource(db, { date: at(2025, 3, 15), reminderLeadDays: 2 });
 
@@ -730,8 +726,6 @@ describe("transactionsRepo.stopRecurring", () => {
         await expect(liveCarrier(db)).resolves.toBeNull();
     });
 
-    // The distinction the delete path cannot draw: removing the pending charge
-    // stops the chain by losing the charge, and this stops it while keeping it.
     it("leaves the pending charge on the books", async () => {
         const id = await seedSource(db, { date: at(2025, 7, 15) });
 
@@ -874,11 +868,7 @@ describe("repairOrphanedRecurrence", () => {
     });
 });
 
-/**
- * The duplicate-charge case from §8.1 of `docs/internals/convex-sync.md`: two synced
- * devices both sweep the same subscription, and with a freshly minted id each
- * would insert its own copy of every charge.
- */
+// The duplicate-charge case from §8.1 of `docs/internals/convex-sync.md`.
 describe("occurrence identity across devices", () => {
     it("derives the same ids on two devices sweeping the same schedule", async () => {
         const first = makeDb();

@@ -36,18 +36,12 @@ const GROUPS: readonly RootStackGroup[] = ["onboarding", "sign-in", "adopt", "le
 const APP_DIR = join(import.meta.dirname, "..", "app");
 const LAYOUT_PATH = join(APP_DIR, "_layout.tsx");
 
-// expo-router's route context (`expo-router/_ctx.ios.js`) registers *every*
-// `.[tj]sx?` file under `app/`, excluding only `+api`, `+html`, `+middleware`
-// and `+native-intent`. Nothing filters test files: a `*.test.tsx` left here
-// becomes a real, undeclared route — admitted into every guard group, outside
-// the partition below — and ships in the production bundle. Tests for a route
-// belong beside their screen under `src/screens/`.
+// expo-router registers every `.[tj]sx?` under `app/` except `+api`, `+html`, `+middleware` and `+native-intent`, so a
+// test file there becomes a real route and ships. Route tests belong beside their screen under `src/screens/`.
 const ROUTE_EXTENSIONS = [".tsx", ".ts", ".jsx", ".js"];
 const LAYOUT_BASENAME = "_layout";
 const IGNORED_ROUTE_BASENAMES = new Set(["+api", "+html", "+middleware", "+native-intent"]);
-// expo-router folds `index.android.tsx` into the route of its plain sibling,
-// which it requires to exist (`getRoutesCore`), so a platform file adds no
-// route of its own.
+// expo-router folds `index.android.tsx` into its plain sibling's route (`getRoutesCore`), so it adds none of its own.
 const PLATFORM_SUFFIX = /\.(android|ios|native|web)$/;
 
 const UNGUARDED_CATCH_ALL = "+not-found";

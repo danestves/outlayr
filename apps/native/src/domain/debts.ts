@@ -2,7 +2,6 @@ import type { AccountKind } from "@outlayr/money/account-kind";
 
 import { roundToMinorUnits } from "./money";
 
-/** One account's standing in the display currency, as `accountsOverview` reports it. */
 export interface DebtsInputRow {
     balance: number;
     exact: boolean;
@@ -10,44 +9,26 @@ export interface DebtsInputRow {
     kind: AccountKind;
 }
 
-/** An input row, with what it owes stated as a figure. */
 export type DebtRow<Row extends DebtsInputRow = DebtsInputRow> = Row & {
-    /**
-     * What is owed, stated positive. An overpaid card is the one row where it is
-     * negative, which is what `netWorth` says about it too.
-     */
+    /** Positive; an overpaid card is the one negative, matching `netWorth`. */
     amount: number;
     kind: Exclude<AccountKind, "asset">;
 };
 
 export interface DebtsOverview<Row extends DebtsInputRow = DebtsInputRow> {
     assetsExact: boolean;
-    /** False when any row fell back to face value instead of converting. */
     exact: boolean;
     haveTotal: number;
-    /** People with a positive balance, largest first. */
     owedToYou: DebtRow<Row>[];
-    /** Sum of `owedToYou`, positive. */
     owedToYouTotal: number;
-    /** People whose balance is back at zero, in ledger order, so they stay reachable. */
     settled: DebtRow<Row>[];
-    /** Every liability account and every person you owe, largest first. */
     youOwe: DebtRow<Row>[];
-    /** Sum of `youOwe`, positive. */
     youOweTotal: number;
 }
 
 const largestFirst = (a: { amount: number }, b: { amount: number }) => b.amount - a.amount;
 
-/**
- * Splits the debts on the ledger into the two directions.
- *
- * Each balance is rounded to the display currency first: a person lent 0.10
- * and 0.20 and paid back 0.30 holds a float residue, and it must read as
- * settled rather than as owing you $0.00. Ties keep ledger order, the sort
- * being stable. Whatever else a row carries (the account itself, say) rides
- * along.
- */
+/** Rounds each balance first, so a float residue (0.10 + 0.20 - 0.30) reads as settled, not as owing $0.00. */
 export function debtsOverview<Row extends DebtsInputRow>(
     rows: readonly Row[],
     displayCurrency: string
@@ -99,15 +80,9 @@ export function debtsOverview<Row extends DebtsInputRow>(
     };
 }
 
-/** The four ways money moves with a person, as the new-debt sheet names them. */
 export type DebtVerb = "borrowed" | "gotPaidBack" | "lent" | "paidBack";
 
-/**
- * Orients a debt movement as a transfer. Borrowing and being paid back bring
- * money from the person into your account; lending and paying back send it from
- * your account to the person. The person's balance goes down when money leaves
- * them, so borrowing makes it negative (you owe them) and lending positive.
- */
+/** The person's balance drops when money leaves them, so borrowing makes it negative (you owe them). */
 export function debtLegs<Leg>(verb: DebtVerb, legs: { account: Leg; person: Leg }): { from: Leg; to: Leg } {
     const fromPerson = verb === "borrowed" || verb === "gotPaidBack";
     return fromPerson ? { from: legs.person, to: legs.account } : { from: legs.account, to: legs.person };

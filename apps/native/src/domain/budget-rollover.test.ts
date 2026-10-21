@@ -7,15 +7,11 @@ import { addDays } from "@outlayr/money/calendar";
 
 const MONTH = BUDGET_TYPE.month;
 
-/**
- * Local time throughout, matching the calendar arithmetic the budget math does.
- * Building these in UTC silently shifts every boundary by the host's offset.
- */
+/** Local time, matching the budget math; UTC would shift every boundary by the host's offset. */
 function localKey(date: Date): string {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-/** Spend keyed by the window's start, so a test states one figure per window. */
 function spendBy(byStart: Record<string, number>) {
     return (start: Date) => byStart[localKey(start)] ?? 0;
 }
@@ -57,8 +53,6 @@ describe("carrying a budget forward", () => {
     });
 
     it("never counts the current window against itself", () => {
-        // The current window is still being spent in; crediting it would hand the
-        // same allowance out twice.
         const carry = rolloverCarry({
             anchor: new Date(2026, 5, 1),
             current: monthWindow(2026, 6),
@@ -107,11 +101,9 @@ describe("carrying a budget forward", () => {
 
 describe("carrying a budget forward from ledger rows", () => {
     const NOW = new Date(2026, 6, 20, 15, 30);
-    // Mid-window, with the ledger starting months before it.
     const ANCHOR = new Date(2025, 2, 15, 13);
     const FIRST_START = new Date(2025, 0, 1);
 
-    /** Seeded, so a mismatch reproduces. */
     function ledger(): ExpenseContribution[] {
         let seed = 42;
         const random = () => {
@@ -131,7 +123,6 @@ describe("carrying a budget forward from ledger rows", () => {
             rows.push({ amount: (Math.round(random() * 20_000) / 100) * 1.0837, date, ...scope });
         };
         const from = new Date(2024, 11, 1);
-        // Every window of every type starts and ends on a local midnight.
         for (let day = from; day <= NOW; day = addDays(day, 1)) {
             add(day);
             add(new Date(day.getTime() - 1));
@@ -172,9 +163,6 @@ describe("the limit a window actually runs on", () => {
     });
 
     it("floors at zero rather than handing a negative target downstream", () => {
-        // Every rail, percentage and "left this period" figure reads a negative
-        // limit as nonsense. The debt is not lost — it is still in the carry, which
-        // is what the screen reports.
         expect(effectiveLimit(500, -900)).toBe(0);
     });
 });

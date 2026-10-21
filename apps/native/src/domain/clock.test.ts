@@ -7,7 +7,6 @@ import { clockAdvances, nextClockTick } from "./clock";
 
 const HOUR_MS = 3_600_000;
 
-/** Local wall clock at `ms`, as [hours, minutes, seconds, milliseconds]. */
 function wallTime(ms: number): [number, number, number, number] {
     const d = new Date(ms);
     return [d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds()];
@@ -20,17 +19,9 @@ interface DstProbeResult {
 }
 
 /**
- * Runs `nextClockTick` in a subprocess forced to America/New_York. The zone is
- * forced because the host's own may have no DST at all, in which case the case
- * under test could not arise. A subprocess is required rather than mutating
- * `process.env.TZ` in-place: Jest caches the host's own zone the first time any
- * `Date` is touched (before this file's own code ever runs), so a later
- * mutation of `process.env.TZ` is silently ignored — only a fresh process
- * started with `TZ` already set picks up a different zone. `[year, month, day,
- * hour]` tuples travel to the subprocess rather than epoch milliseconds
- * because the calling process's own zone would otherwise resolve "local
- * midnight" to the wrong instant. They go over stdin, not argv: a year of
- * hours is past Linux's 128 KiB limit on a single argument.
+ * A subprocess forced to America/New_York: Jest caches the host zone on first `Date` use, so mutating `TZ` here is
+ * ignored. Wall-clock tuples, not epoch ms, so this process's zone cannot shift "local midnight"; stdin, not argv,
+ * because a year of hours passes Linux's 128 KiB argument limit.
  */
 function ticksInNewYork(dateArgs: [number, number, number, number][]): DstProbeResult[] {
     const probe = join(import.meta.dirname, "dst-probe.ts");
@@ -111,9 +102,6 @@ describe("clock advance rule", () => {
     });
 
     it("takes a correction past the tolerance rather than staying in the future", () => {
-        // A clock that jumped forward and was then fixed: refusing this leaves the
-        // bound stranded ahead of real time for the life of the process, and every
-        // scheduled charge under it reads as money already spent.
         const now = 10 * HOUR_MS;
         expect(clockAdvances(now, now - 60_001)).toBe(true);
         expect(clockAdvances(now, now - 5 * HOUR_MS)).toBe(true);

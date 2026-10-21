@@ -13,13 +13,10 @@ import { withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";
 
 interface GoalPaceChartProps {
-    /** The account's balance over the goal's span, oldest first. */
     actual: readonly GoalLinePoint[];
-    /** Accessible summary; the caller states the figures, so it is passed in. */
     label?: string;
     height?: number;
     nowMs: number;
-    /** The straight line from the starting balance to the target. */
     required: readonly GoalLinePoint[];
     startTime: number;
     target: number;
@@ -27,15 +24,6 @@ interface GoalPaceChartProps {
     width: number;
 }
 
-/**
- * Where the account has actually gone against where the date needs it to go.
- *
- * The dashed reference is the same `CHART_DASH.reference` a budget's ideal
- * burndown uses, pointed the other way: a budget's line falls to zero, a goal's
- * climbs to the target. The gap between the two lines at today IS the standing —
- * so the chart and the "ahead by $212" beside it are one measure drawn twice
- * rather than two figures that can disagree.
- */
 export function GoalPaceChart({
     actual,
     height = 150,

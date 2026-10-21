@@ -10,11 +10,7 @@ import { useIsDark } from "@/theme/use-is-dark";
 export type { PickerRowProps, PickerValue } from "@/components/list/picker-row";
 
 /**
- * A two-line Material 3 list item whose supporting text is the current
- * choice. The whole row opens a dropdown menu anchored under its text, the
- * standard Android picker (Direction B). The iOS SwiftUI `Picker` has no
- * Android view, and mounting it is a fatal Fabric crash.
- *
+ * The SwiftUI `Picker` has no Android view, and mounting it is a fatal Fabric crash.
  * Swatches are dropped: a dropdown item only takes an image source for its icon.
  */
 export function PickerRow<T extends PickerValue>({
@@ -43,10 +39,8 @@ export function PickerRow<T extends PickerValue>({
         }
     };
 
-    // The menu wraps the text, not the row: its Compose host sizes to its
-    // content, so wrapping the row would shrink it to the text anyway, and the
-    // text is where M3 anchors a list item's menu. The row already announces the
-    // value, so the anchor's copy stays out of TalkBack.
+    // The menu wraps the text: its Compose host sizes to content anyway, and M3 anchors a list item's menu there.
+    // The row already announces the value, so the anchor stays out of TalkBack.
     return (
         <ListItemFrame
             accessibilityLabel={selected ? `${title}, ${selected.label}` : title}

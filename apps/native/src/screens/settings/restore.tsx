@@ -23,9 +23,7 @@ export function RestoreData() {
     const t = useTranslation();
     const [restoring, setRestoring] = useState<number | null>(null);
 
-    // The logo pass is stopped first: still awaiting the model or an image, it
-    // could otherwise paint a row the archive just replaced. It is re-armed once
-    // the archive is in, since the same database carries on.
+    // Stop the logo pass first: it could paint a row the archive replaced.
     const applyArchive = (document: ArchiveDocument) => {
         setRestoring(archiveRowCount(document));
         cancelLogoBackfill()
@@ -42,9 +40,7 @@ export function RestoreData() {
             .finally(() => setRestoring(null));
     };
 
-    // A restore replaces the ledger rather than adding to it, so it is confirmed
-    // against a count the user can recognise — a file that turns out to hold two
-    // rows is the one you want to catch before it lands, not after.
+    // A restore replaces the ledger, so it is confirmed against a recognisable row count.
     const restore = () => {
         pickArchiveFile()
             .then((picked) => {

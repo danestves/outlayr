@@ -1,12 +1,8 @@
 import { formatCsvRow } from "./csv";
 import { minorUnitsFor } from "./money";
 
-/**
- * The wire format. `Date` is an ISO 8601 instant rather than the Swift export's
- * `Date` description (`CSVExport.swift:31`) so the moment survives the round
- * trip in any zone, and `Currency` exists at all because a row now carries one —
- * dropping it would restate a €12.50 lunch as $12.50 on the way back in.
- */
+// `Date` is an ISO 8601 instant, not the Swift export's description (`CSVExport.swift:31`), so the moment survives
+// any zone. `Currency` keeps a €12.50 lunch from coming back as $12.50.
 export const CSV_HEADER = [
     "Date",
     "Note",
@@ -24,7 +20,6 @@ const CSV_TYPE_EXPENSE = "Expense";
 export interface ExportableTransaction {
     amount: number;
     categoryName: string | null;
-    /** Null means the row stated none and takes the ledger's code. */
     currency: string | null;
     date: Date;
     exchangeRate: number | null;
@@ -35,7 +30,6 @@ export interface ExportableTransaction {
 
 export type DecimalSeparator = "." | ",";
 
-/** Enough decimals for any money figure without reaching exponential notation. */
 const MAX_DECIMALS = 10;
 
 const TRAILING_ZEROS = /0+$/;
@@ -48,12 +42,6 @@ function exactDecimal(value: number): string {
     return Number.parseFloat(plain) === value ? plain : String(value);
 }
 
-/**
- * Unsigned, ungrouped, `.`-separated — the figure a machine reads back to the
- * same number. `amount` is a float in major units, so a value carrying more
- * precision than the currency's minor units keeps it rather than being rounded
- * on the way out.
- */
 export function serializeCsvAmount(amount: number, currency: string): string {
     const magnitude = Math.abs(amount);
     const fixed = magnitude.toFixed(minorUnitsFor(currency));
@@ -108,10 +96,6 @@ export function detectDecimalSeparator(values: readonly string[]): DecimalSepara
     return comma > dot ? "," : ".";
 }
 
-/**
- * Answers null rather than a guess, so the import preview can show the row as
- * unreadable instead of writing a number nobody typed.
- */
 export function parseCsvAmount(text: string, separator: DecimalSeparator = "."): number | null {
     const trimmed = text.trim();
     if (trimmed === "") {
@@ -124,7 +108,6 @@ export function parseCsvAmount(text: string, separator: DecimalSeparator = "."):
     if (separator === ",") {
         cleaned = cleaned.replaceAll(",", ".");
     }
-    // Currency symbols, spaces and non-breaking spaces are noise; the sign is not.
     cleaned = cleaned.replaceAll(/[^\d.\-+]/g, "");
 
     if (!PLAIN_DECIMAL.test(cleaned)) {
@@ -141,7 +124,6 @@ export function formatCsvDate(date: Date): string {
     return date.toISOString();
 }
 
-/** `ISO` means "parse as an ISO 8601 instant", which keeps the exact moment. */
 const DATE_FORMATS = [
     "ISO",
     "yyyy-MM-dd HH:mm:ss",
@@ -190,8 +172,7 @@ function compile(format: string): FormatPattern | null {
             source += "(\\d{4})";
             continue;
         }
-        // A two-digit field with no separator after it cannot be variable-width, or
-        // `yyyyMMdd` would read "0729" as month 7 and day 29 only by luck.
+        // A two-digit field with no separator after it is fixed-width, or `yyyyMMdd` reads "0729" right only by luck.
         const afterToken = i;
         const adjacent = TOKENS.some((candidate) => format.startsWith(candidate, afterToken));
         source += adjacent ? "(\\d{2})" : "(\\d{1,2})";
@@ -210,11 +191,7 @@ function patternFor(format: string): FormatPattern | null {
     return PATTERN_CACHE.get(format) ?? null;
 }
 
-/**
- * Date-only values land on local midnight, matching how `startOfDay` buckets a
- * row into its day. A parse whose components do not survive the calendar (31
- * February) answers null rather than rolling into the next month.
- */
+// Date-only values land on local midnight, matching `startOfDay`; 31 February answers null rather than rolling over.
 export function parseCsvDate(value: string, format: string): Date | null {
     const trimmed = value.trim();
     if (trimmed === "") {
@@ -257,20 +234,13 @@ export function parseCsvDate(value: string, format: string): Date | null {
     return date;
 }
 
-/**
- * The format the whole column agrees on. Ambiguity between `dd/MM` and `MM/dd`
- * is settled by looking for a component above twelve somewhere in the column —
- * taking the first pattern that happens to match one value is how a US export
- * silently becomes a day-first ledger.
- */
+// `dd/MM` versus `MM/dd` is settled by a component above twelve anywhere in the column.
 export function deduceDateFormat(values: readonly string[]): string | null {
     const sample = values.map((value) => value.trim()).filter((v) => v !== "");
     if (sample.length === 0) {
         return null;
     }
 
-    // A format is judged by how many values it parses, not by parsing them
-    // all: one stray malformed row must not turn every other date unreadable.
     const parseCount = new Map(
         DATE_FORMATS.map((format) => [format, sample.filter((value) => parseCsvDate(value, format) != null).length])
     );
@@ -297,7 +267,6 @@ export function deduceDateFormat(values: readonly string[]): string | null {
 const INCOME_WORDS = new Set(["income", "credit", "cr", "in", "deposit"]);
 const EXPENSE_WORDS = new Set(["expense", "debit", "dr", "out", "withdrawal"]);
 
-/** Null means the field says nothing about direction. */
 export function parseCsvType(value: string): boolean | null {
     const word = value.trim().toLowerCase();
     if (INCOME_WORDS.has(word)) {

@@ -1,8 +1,4 @@
-/**
- * Forged by `react-native-nano-icons` from the `toolbar-symbols` set in
- * `scripts/icon-sets.ts`. Its own module so `toolbar-icons.ts` and its Android
- * sibling share one map.
- */
+// Forged by `react-native-nano-icons` from the `toolbar-symbols` set in `scripts/icon-sets.ts`.
 export const TOOLBAR_SYMBOLS = {
     add: "add",
     close: "close",

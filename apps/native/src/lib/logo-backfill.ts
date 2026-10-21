@@ -11,16 +11,8 @@ import { enrichmentTransport } from "./convex";
 import { fetchMerchantImage } from "./logo-fetch";
 
 /**
- * The production wiring for `attachMissingLogos`: the same consent gates the
- * form honours (`readRemoteEnrichment` keeps every lookup on-device until the AI
- * providers are allowed and suggestions are on, `groundedLookup` is passed through for the
- * server to re-check), the device locale, and the real image and photo pipelines.
- */
-/**
- * Names the database the passes of this session will run against, before
- * the first one is queued, and lifts any halt: a cancel issued while the
- * launch drain is still pending then knows which handle to refuse, and a
- * restore that cancelled and kept the same handle runs again after arming.
+ * Names the database before the first pass queues, so a cancel during the launch drain knows which handle to
+ * refuse, and lifts any halt so a restore that kept the same handle runs again.
  */
 export function armLogoBackfill(db: Database): void {
     lastDb = db;
@@ -41,31 +33,17 @@ export function backfillLogos(db: Database): Promise<number> {
     return inFlight;
 }
 
-/**
- * Stops the running pass at its next step, refuses any later pass for this
- * database, and resolves once the running one has stopped. Called before the
- * device data is erased: a pass still awaiting the model or an image would
- * otherwise write a logo into a photo directory the erase had already emptied.
- */
+/** Called before a device erase: a pass awaiting the model or an image would write into an emptied directory. */
 export async function cancelLogoBackfill(): Promise<void> {
     cancelGeneration += 1;
     halted = lastDb;
     await inFlight?.catch(() => 0);
 }
 
-/**
- * One pass at a time. A foreground event during the launch pass would
- * otherwise start a second one over the same rows, with its own model budget
- * and its own copy of every logo.
- */
+/** One pass at a time: a foreground event during the launch pass would otherwise duplicate model calls and logos. */
 let inFlight: Promise<number> | null = null;
 let cancelGeneration = 0;
-/**
- * The database the last pass ran against, and the one a cancel was issued
- * for. A pass queued behind the Wallet drain can arrive after the cancel
- * returned; it must not start against a database being erased. The next
- * database the app opens is a new handle, which runs again.
- */
+/** A pass queued behind the Wallet drain can arrive after a cancel and must not start on a database being erased. */
 let lastDb: Database | null = null;
 let halted: Database | null = null;
 
@@ -90,16 +68,11 @@ async function runBackfill(db: Database, cancelled: () => boolean): Promise<numb
             transport === null
                 ? null
                 : async (args) => {
-                      // Both consents are read here, at the moment of sending: the
-                      // pass outlives the screen the settings are on, a name must not
-                      // leave the device after consent went, nor reach the web after
-                      // that consent went.
+                      // Read at send time: the pass outlives the settings screen and must not send after consent went.
                       const [remoteEnrichment, groundedLookup] = await Promise.all([
                           readRemoteEnrichment(db),
                           readBoolSetting(db, "groundedLookup"),
                       ]);
-                      // The reads awaited; a cancel that landed during them (the
-                      // device erase) sends nothing and is not made to wait.
                       if (!remoteEnrichment || cancelled()) {
                           return null;
                       }

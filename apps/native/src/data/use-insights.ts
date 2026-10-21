@@ -35,34 +35,23 @@ import { useLiveQuery } from "./live-query";
 import { useValuation } from "./use-valuation";
 
 export interface UseInsightsResult {
-    /** True at offset 0, where the pager cannot step newer. */
     atCurrent: boolean;
-    /** True once the window reaches the earliest transaction's period. */
     atEarliest: boolean;
-    /** Each entry carries its vs-prior delta. */
     breakdown: CategoryBreakdownEntry[];
     buckets: InsightsBucket[];
     categoriesById: Map<string, CategoryMeta>;
     end: Date;
-    /**
-     * Whether the ledger holds anything at all. The empty state turns on this and
-     * not on the window being empty.
-     */
+    /** The empty state turns on this, not on the window being empty. */
     hasHistory: boolean;
     income: number;
     label: string;
-    /** Mean over the window's *elapsed* slots. Signed. */
     measureAverage: number;
-    /** Empty when there is no prior window to compare against. */
     movers: CategoryMover[];
-    /** Signed: `income − spent`. */
     net: number;
-    /** `|net|` over the elapsed slots. */
     netAverage: number;
     nextLabel: string;
     prevLabel: string;
     priorLabel: string;
-    /** Magnitude for the *selected* measure. */
     priorMeasure: number;
     priorNet: number;
     rows: InsightsContribution[];
@@ -80,14 +69,9 @@ export function useInsights(
     calendar: InsightsCalendar = DEFAULT_INSIGHTS_CALENDAR
 ): UseInsightsResult {
     const { firstWeekday, firstDayOfMonth } = calendar;
-    // Threaded through every label below rather than left to the `runtimeLanguage()`
-    // default: the labels are built inside a memo, so a default read makes them
-    // look reactive while they hold last language's month names until an unrelated
-    // dependency happens to move.
+    // Passed explicitly: the memo would freeze a `runtimeLanguage()` default on the previous language.
     const { language } = useLanguage();
 
-    // The analysed window plus the one before it, which `windowTotals` needs for
-    // the vs-prior badge. Bounding here keeps this off a full-history scan.
     const queryStart = useMemo(
         () =>
             windowStart(period, new Date(nowMs), offset - 1, {
@@ -123,9 +107,7 @@ export function useInsights(
         nowMs
     );
 
-    // How far back the pager may step. Derived from its own aggregate row because
-    // the loaded set is only two windows wide and does not know where the user's
-    // history begins.
+    // Its own aggregate: the loaded set is two windows wide and cannot know where history begins.
     const earliestData = useLiveQuery(transactions, () =>
         db
             .select({ earliest: min(transactions.date) })
@@ -151,10 +133,8 @@ export function useInsights(
                 parentId: category.parentId,
             });
         }
-        // parentId is read from this map rather than joined onto the transaction
-        // query: `useLiveQuery` only invalidates on the table it watches, so a joined
-        // parentId survives a re-parent and silently buckets the spend under the old
-        // parent. The category subscription above does invalidate.
+        // parentId comes from this map, not a join: `useLiveQuery` only invalidates on its watched table, so a joined
+        // parentId would survive a re-parent and bucket spend under the old parent.
         const valued = valueDatedRowsIn(txData, displayCurrency, rates);
         const rows: InsightsContribution[] = txData.map((row, index) => ({
             // `amount` is the valued amount from here down, not the row's stored one.
@@ -172,16 +152,13 @@ export function useInsights(
         const net = income - spent;
         const divisor = elapsedSlots(period, now, offset, cal);
 
-        // SQLite hands `min()` back as the stored integer (timestamp_ms) or null on
-        // an empty table.
+        // SQLite returns `min()` as the stored integer (timestamp_ms), or null on an empty table.
         const earliestRaw = earliestData[0]?.earliest ?? null;
         const earliest = earliestRaw == null ? null : new Date(Number(earliestRaw));
         const minOffset = earliest ? Math.min(0, offsetForDate(period, earliest, now, cal)) : 0;
 
         const composition = categoryBreakdown(rows, categoriesById, period, measure, now, offset, cal);
         const priorComposition = categoryBreakdown(rows, categoriesById, period, measure, now, offset - 1, cal);
-        // The breakdown's own total, so the movers' floor and the rows' shares
-        // share a denominator.
         let compositionTotal = 0;
         for (const item of composition) {
             compositionTotal += item.amount;

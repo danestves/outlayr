@@ -9,17 +9,11 @@ import { useChartDraw } from "@/hooks/use-chart-draw";
 interface BudgetProgressBarProps {
     height?: number;
     limit: number;
-    /** True when spending has outrun the clock. */
     paceBehind?: boolean;
-    /** Fraction of period time remaining, or null to hide the pace marker. */
+    /** Fraction of the period remaining; null hides the pace marker. */
     paceRemaining?: number | null;
     spent: number;
-    /**
-     * The budget's category colour, drawn as the fill. Omitted by the overall
-     * budget, which spans every category and so answers in ink. Ignored once the
-     * budget is over: past the limit the rail is stating a verdict, not naming a
-     * category, and that verdict is the only thing it is allowed to say.
-     */
+    /** Ignored once over: past the limit the rail states the verdict, not the category. */
     tint?: string | null;
 }
 
@@ -37,7 +31,6 @@ const railFill = tv({
     },
 });
 
-/** The arithmetic lives in `budgetRail`. */
 export function BudgetProgressBar({
     spent,
     limit,
@@ -51,8 +44,7 @@ export function BudgetProgressBar({
     const animated = useSettingBool("animatedCharts") && !reduceMotion;
     const fill = useChartDraw(animated, pct);
     const fillStyle = useAnimatedStyle(() => ({ width: `${fill.get() * 100}%` }));
-    // The pace triangle reads against the limit; over budget the rail is no
-    // longer drawn to that scale, so it has nothing to point at.
+    // Over budget the rail is no longer drawn to the limit's scale, so the pace marker has nothing to point at.
     const showMarker = !over && paceRemaining != null && paceRemaining > 0 && paceRemaining < 1;
 
     return (

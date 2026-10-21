@@ -38,7 +38,7 @@ const SKIP_REASON_KEY = {
 const TILE_SIZE = 36;
 const TILE_RADIUS = 9;
 const ESTIMATED_ROW_HEIGHT = 56;
-/** Chrome the step stacks around the list (sheet padding, header, measure strip, gaps, CTA), erring high so the capped step never outgrows a fitted sheet. */
+/** Chrome around the list, erring high so the capped step never outgrows a fitted sheet. */
 const LIST_CHROME_HEIGHT = 224;
 const COMMIT_FAILED_NOTICE_HEIGHT = 96;
 
@@ -212,12 +212,8 @@ export function ReviewStep({ review }: ReviewStepProps) {
         return [...byDay.values()];
     }, [entryRows]);
 
-    // Bucketed per currency, never added across them. A CSV may carry a currency
-    // column — the app's own export writes one per row — and each row already
-    // renders in its own. Summing a 120 USD row and a 300 MXN row into "MX$420"
-    // contradicts the two lines directly above it, which is exactly what
-    // `amount-text` forbids: "A day that spent two currencies gets two figures
-    // separated by a slash, never added."
+    // Bucketed per currency, never summed across them: a CSV row may carry its own currency, and
+    // `amount-text` forbids adding two currencies into one figure.
     const { outTotals, dayTotals } = useMemo(() => {
         const perDay = new Map<string, CurrencyEntry[]>();
         const out: CurrencyEntry[] = [];
@@ -246,8 +242,7 @@ export function ReviewStep({ review }: ReviewStepProps) {
             dayTotals: new Map(
                 [...perDay].map(([key, cells]) => [key, currencyTotals(cells, review.currency)] as const)
             ),
-            // Nothing selected still shows a figure rather than an empty cell —
-            // zero is zero in any currency, so the ledger's is not a claim.
+            // Zero is zero in any currency, so an empty selection still shows the ledger's figure.
             outTotals:
                 out.length === 0
                     ? [{ amount: 0, currencyCode: review.currency, transactionCount: 0 }]
@@ -326,9 +321,7 @@ export function ReviewStep({ review }: ReviewStepProps) {
     const writing = review.commit.phase === "writing";
     const failed = review.commit.phase === "failed";
 
-    // The sheet sizes to content (`enableDynamicSizing`), so flex heights are
-    // inert here: an unbounded list grows past the sheet's cap and the tail
-    // clips. Cap the list to what fits so it scrolls internally instead.
+    // The sheet sizes to content, so flex heights are inert; cap the list so it scrolls instead of clipping.
     const listMaxHeight =
         windowHeight -
         LARGE_SHEET_TOP_INSET -
@@ -363,10 +356,7 @@ export function ReviewStep({ review }: ReviewStepProps) {
                     {
                         key: "out",
                         label: t("log.measure.out"),
-                        // One currency keeps the single bold figure it always had.
-                        // Several get `DayTotal`, for the same reason the day
-                        // headers use it: the strip must not add a USD row to an
-                        // MXN one and then label the result in either.
+                        // Several currencies get `DayTotal` so the strip never adds a USD row to an MXN one.
                         value:
                             outTotals.length > 1 ? (
                                 <DayTotal showCents={showCents} sizeClass="text-body" totals={outTotals} />
@@ -391,8 +381,7 @@ export function ReviewStep({ review }: ReviewStepProps) {
                     extraData={{ enrichment, excluded: review.excluded, showSkipped }}
                     keyExtractor={keyOf}
                     ListFooterComponent={skippedFooter}
-                    // Rows hold a toggle state; a recycled container would flash the
-                    // previous row's checked look before the fresh props land.
+                    // Rows hold toggle state; a recycled container would flash the previous row's checked look.
                     recycleItems={false}
                     renderItem={renderItem}
                     renderSectionHeader={renderSectionHeader}

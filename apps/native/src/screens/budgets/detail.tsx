@@ -47,15 +47,11 @@ export function BudgetDetail({ db, id, onDone }: { db: Database; id: string; onD
         return <View className="bg-background flex-1" />;
     }
 
-    // Left rather than waited on: the write is held for the undo window, so the
-    // budget is still readable and this screen would otherwise sit on a row it has
-    // already taken off the list behind it.
     const deleteBudget = () => {
         requestDelete(budget.id);
         onDone();
     };
 
-    /** Reports whether the write landed, so only a real one is felt. */
     const write = async (edit: BudgetEdit) => {
         try {
             await budgetsRepo.patchBudget(db, budget.id, edit);
@@ -69,7 +65,6 @@ export function BudgetDetail({ db, id, onDone }: { db: Database; id: string; onD
 
     const commitLimit = async ({ limit, limitChanged, type }: LimitCommit) => {
         limitSheetRef.current?.dismiss();
-        // An untouched figure is left out of the patch: see `LimitCommit`.
         if (await write({ ...(limitChanged && { amount: limit }), type })) {
             haptics("success");
         }
@@ -84,8 +79,6 @@ export function BudgetDetail({ db, id, onDone }: { db: Database; id: string; onD
                 closed={closed}
                 currency={currency}
                 editor={
-                    // Only ever the live window: a closed one is a record, and the
-                    // budget being edited is not the budget on screen.
                     closed ? (
                         <Text className="text-muted text-subtitle pt-6 leading-snug">
                             {t("budgets.editor.closedWindow")}

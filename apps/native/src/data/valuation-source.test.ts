@@ -76,9 +76,6 @@ async function seed(db: SpendDb): Promise<void> {
             rateType: "official",
             source: "bcv",
         },
-        // Straddling the official day on both sides, so a table that mixed the
-        // types would answer differently at every day asked about rather than
-        // depending on which row the scan happened to hand back first.
         {
             date: LATER_DAY,
             fetchedAt: NOW,
@@ -119,8 +116,6 @@ describe("loadValuationIn", () => {
     });
 
     it("takes only the official rate where a quote carries several types", async () => {
-        // VES publishes official, eur_reference and binance. A figure frozen at the
-        // official rate converted back out at binance is a number that was never true.
         const db = makeDb();
         await seed(db);
 

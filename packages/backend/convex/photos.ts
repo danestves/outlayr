@@ -9,34 +9,11 @@ import { requireUserId } from "./lib/auth";
 import { isPhotoName, ownsPhotoKey, photoKeyFor, photoOwnerFromKey } from "./lib/photoKeys";
 import { requirePro } from "./revenuecat";
 
-/**
- * Transaction photo bytes, which travel outside `sync.ts` entirely.
- *
- * The replication stream is small records merge-sorted by `seq`; a JPEG in that
- * stream would blow the mutation size limit and stall every other table behind
- * it. What replicates is the object key (`transactions.imageKey`); the bytes go
- * straight from the device to R2 over a signed url and come back the same way.
- *
- * Two backends, chosen per deployment. R2 when all four of `R2_BUCKET`,
- * `R2_ENDPOINT`, `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` are set;
- * Convex file storage otherwise, so a deployment with no R2 account still
- * syncs photos rather than failing every upload.
- *
- * The *key* is identical either way — derived from the device file name and
- * carrying the owner — so the wire format, `transactions.imageKey` and the
- * ownership check do not know which backend stored the bytes. Convex file
- * storage allocates its own id, so that id is mapped back to the key in
- * `photoObjects`; R2 needs no mapping because its key is the address.
- *
- * A row is therefore readable by whichever backend stored it, which is what
- * makes turning R2 on later safe: existing photos keep resolving.
- */
+// Photo bytes travel outside sync.ts, to R2 when all four R2_* vars are set and Convex storage otherwise. The key
+// is the same either way, so a row resolves through whichever backend stored it and turning R2 on later is safe.
 const r2 = new R2(components.r2);
 
-/**
- * Read at call time rather than at module scope: a deployment that gains its R2
- * variables should start using them on the next call, not the next cold start.
- */
+// Read per call, so a deployment that gains its R2 variables uses them on the next call, not the next cold start.
 export function usingR2(): boolean {
     return (
         !!process.env.R2_BUCKET &&
@@ -54,7 +31,6 @@ async function photoUrl(ctx: QueryCtx, key: string): Promise<string | null> {
     return usingR2() ? await r2.getUrl(key, { expiresIn: PHOTO_URL_TTL_SECONDS }) : null;
 }
 
-/** The Convex-storage id for `key`, or null when R2 holds the bytes. */
 async function storageIdFor(ctx: QueryCtx, key: string): Promise<Id<"_storage"> | null> {
     const row = await ctx.db
         .query("photoObjects")
@@ -63,43 +39,16 @@ async function storageIdFor(ctx: QueryCtx, key: string): Promise<Id<"_storage"> 
     return row ? row.storageId : null;
 }
 
-/**
- * How long a minted read url stays valid. Longer than the component's 900s
- * default because a device downloads a backlog of photos in one pass and the
- * slowest of them must not outlive its own url; far short of the seven-day
- * ceiling because the url is the only thing standing between a leaked link and
- * the object.
- */
+// Above the 900s default so a backlog download outlives no url; far below 7 days, as the url guards a leaked link.
 export const PHOTO_URL_TTL_SECONDS = 3600;
 
-/** A device asks for at most this many read urls per call. */
 export const PHOTO_URL_BATCH_LIMIT = 100;
 
-/**
- * What one account may keep in photos.
- *
- * Generous on purpose: a ledger's photos are receipts, and the number exists to
- * bound a storage bill nobody is watching rather than to ration anything a real
- * user does. Raising it is a one-line change that frees every account at once;
- * lowering it strands accounts already above the line, so it should only ever
- * move up.
- */
+// Only ever raise this: lowering it strands accounts already above the line.
 export const PHOTO_QUOTA_BYTES = 2 * 1024 * 1024 * 1024;
 
-/**
- * Refused before a url is minted, which is the only refusal a client cannot
- * route around: once it holds a signed PUT the bytes are already R2's problem.
- *
- * The total is summed from `photoSizes` rather than from the bucket:
- * `r2.listMetadata` takes only a limit and a cursor, so there is no prefix to
- * scope it by and it would page through every object of every account to answer
- * one upload.
- *
- * The check is `>=`, so an account exactly at the ceiling cannot start another
- * upload. It bounds what is *already stored*, not what this upload will add:
- * the size is not known until the bytes exist, and asking the device is asking
- * the one party with a reason to understate it.
- */
+// Refused before a url is minted: once a client holds a signed PUT the bytes are R2's problem. It bounds what is
+// already stored, because this upload's size is unknown until the bytes exist.
 async function checkPhotoQuota(ctx: QueryCtx, userId: string): Promise<void> {
     const stored = await ctx.db
         .query("photoSizes")
@@ -115,29 +64,11 @@ async function checkPhotoQuota(ctx: QueryCtx, userId: string): Promise<void> {
     }
 }
 
-/**
- * How many minted-but-unconfirmed keys one account may hold at once.
- *
- * Generous: a key is derived from the file name and reused on retry, so a device
- * crashing repeatedly on the same photo occupies one slot, not many.
- */
+// A retry reuses its key, so a device crashing repeatedly on one photo occupies one slot.
 const UNCONFIRMED_UPLOAD_LIMIT = 50;
 
-/**
- * Answers the signed PUT a device uploads through, and the key to record.
- *
- * The key is derived from the file name rather than allocated, so an upload
- * that dies mid-PUT is retried onto the same key. That is what keeps a retry
- * from leaving bytes nothing will ever reference — R2 has no transaction to
- * roll back, so the only safe retry is an idempotent one.
- *
- * The key is recorded at nought bytes before the url is handed out. Sizing still
- * waits for `confirmUpload`, which weighs the object in R2 rather than trusting
- * the device — but a key that was never confirmed is now a row somebody can
- * find. Before this it was invisible: on the Convex-storage path nothing mapped
- * it in `photoObjects`, so not even `purgeUserBatch` could reach the bytes, and
- * a client that simply never called `confirmUpload` moved the quota not at all.
- */
+// The key derives from the file name, so a retried PUT lands on the same key: R2 has nothing to roll back. It is
+// recorded at 0 bytes before the url goes out, so a never-confirmed upload stays findable for purge and quota.
 export const requestUpload = mutation({
     args: { name: v.string() },
     handler: async (ctx, args) => {
@@ -157,13 +88,7 @@ export const requestUpload = mutation({
     returns: v.object({ key: v.string(), url: v.string() }),
 });
 
-/**
- * Claims `key` at nought bytes, and refuses once too many claims are unweighed.
- *
- * The cap is what the quota cannot do on its own: an unconfirmed object has no
- * size to count, so without a ceiling on how many may be outstanding an account
- * can mint urls forever and store bytes the ledger never sees.
- */
+// An unconfirmed object has no size for the quota to count, so without this cap an account could mint urls forever.
 async function reserveUploadKey(ctx: MutationCtx, userId: string, key: string): Promise<void> {
     const existing = await ctx.db
         .query("photoSizes")
@@ -185,25 +110,14 @@ async function reserveUploadKey(ctx: MutationCtx, userId: string, key: string): 
     await ctx.db.insert("photoSizes", { bytes: 0, key, userId });
 }
 
-/**
- * The ownership seam reached from an action, which has no `db` of its own and
- * so cannot validate a session row directly.
- */
 export const callerId = internalQuery({
     args: {},
     handler: async (ctx) => await requireUserId(ctx),
     returns: v.string(),
 });
 
-/**
- * Records size and content type for an object the device has finished PUTting.
- *
- * An action rather than a mutation because that is what `syncMetadata` requires
- * — it reads the object back out of R2. Skipping the call costs only the
- * metadata row, so a device that crashes between the PUT and this call has a
- * durable photo with no accounting, which the next upload of the same key
- * repairs.
- */
+// An action because `syncMetadata` reads the object back out of R2. A crash before this call leaves a durable photo
+// with no accounting, which the next upload of the same key repairs.
 export const confirmUpload = action({
     args: { key: v.string(), storageId: v.optional(v.id("_storage")) },
     handler: async (ctx, args) => {
@@ -212,9 +126,6 @@ export const confirmUpload = action({
             throw new ConvexError("That photo does not belong to this account");
         }
         if (args.storageId) {
-            // Convex storage allocated the address, so the key only resolves through
-            // the mapping this records. It reads the size back from the system table
-            // in the same mutation, which is the only place it is known.
             await ctx.runMutation(internal.photos.mapStorageId, {
                 key: args.key,
                 storageId: args.storageId,
@@ -222,10 +133,7 @@ export const confirmUpload = action({
             return null;
         }
         await r2.syncMetadata(ctx, args.key);
-        // Read after the sync, or the component has no metadata row to answer from.
-        // A missing size records zero rather than refusing: an object that cannot be
-        // weighed must still be readable, and undercounting a quota is recoverable
-        // where losing a photo is not.
+        // Read after the sync, or there is no metadata row. A missing size records zero: losing a photo is worse.
         const metadata = await r2.getMetadata(ctx, args.key);
         await ctx.runMutation(internal.photos.recordPhotoSize, {
             bytes: metadata?.size ?? 0,
@@ -236,12 +144,6 @@ export const confirmUpload = action({
     returns: v.null(),
 });
 
-/**
- * Records what an object weighs, so `checkPhotoQuota` never has to ask R2.
- *
- * Upserted by key: re-uploading a name replaces the object, and the row has to
- * be replaced with it rather than added to.
- */
 export const recordPhotoSize = internalMutation({
     args: { bytes: v.number(), key: v.string() },
     handler: async (ctx, args) => {
@@ -251,12 +153,7 @@ export const recordPhotoSize = internalMutation({
     returns: v.null(),
 });
 
-/**
- * A malformed key records nothing rather than throwing: it can only arrive from
- * a caller that already passed the ownership check, so there is nothing for the
- * user to act on, and failing here would fail an upload whose bytes are safely
- * stored.
- */
+// A malformed key records nothing rather than throwing, which would fail an upload whose bytes are safely stored.
 async function writePhotoSize(ctx: MutationCtx, key: string, bytes: number): Promise<void> {
     const userId = photoOwnerFromKey(key);
     if (userId === null) {
@@ -273,7 +170,6 @@ async function writePhotoSize(ctx: MutationCtx, key: string, bytes: number): Pro
     await ctx.db.insert("photoSizes", { bytes, key, userId });
 }
 
-/** Drops the accounting for an object whose bytes are gone. */
 async function forgetPhotoSize(ctx: MutationCtx, key: string): Promise<void> {
     const row = await ctx.db
         .query("photoSizes")
@@ -284,12 +180,6 @@ async function forgetPhotoSize(ctx: MutationCtx, key: string): Promise<void> {
     }
 }
 
-/**
- * Binds a Convex-storage id to its key. Re-uploading the same name replaces the
- * mapping and frees the object it displaced, which is what keeps a retry from
- * leaving bytes nothing will ever name — R2 gets that for free from an
- * idempotent key, and this is the Convex-storage equivalent.
- */
 export const mapStorageId = internalMutation({
     args: { key: v.string(), storageId: v.id("_storage") },
     handler: async (ctx, args) => {
@@ -304,9 +194,6 @@ export const mapStorageId = internalMutation({
             .query("photoObjects")
             .withIndex("by_key", (q) => q.eq("key", args.key))
             .unique();
-        // The system table is the only place a Convex-stored object's size is
-        // recorded, and it is readable here, so the accounting is written in the
-        // same mutation as the mapping rather than in a second round trip.
         const stored = await ctx.db.system.get(args.storageId);
         await writePhotoSize(ctx, args.key, stored?.size ?? 0);
         if (existing) {
@@ -325,21 +212,8 @@ export const mapStorageId = internalMutation({
     returns: v.null(),
 });
 
-/**
- * Short-lived read urls for keys this account owns.
- *
- * Minted per read and never stored: `getUrl` signs a url that expires, so a
- * url written to a row would be a reference that rots. A key the caller does
- * not own is dropped rather than refused, so one stale key in a batch does not
- * cost a device the whole page of photos.
- *
- * A mutation rather than a query precisely BECAUSE of that expiry, even though
- * it writes nothing. Convex caches a query's result until something in its read
- * set changes, and nothing here is in the read set of a photo download — so a
- * device that retried a url after the signature aged out was served the same
- * expired url from cache, forever. The client treats a 403 as "try again next
- * pass" (`lib/convex.ts`), which is a livelock against a cached answer.
- */
+// A mutation though it writes nothing: Convex caches a query until its read set changes, so an expired url would
+// be served forever. An unowned key is dropped, not refused, so one stale key does not cost the whole batch.
 export const readUrls = mutation({
     args: { keys: v.array(v.string()) },
     handler: async (ctx, args) => {
@@ -351,8 +225,6 @@ export const readUrls = mutation({
         const owned = args.keys.filter((key) => ownsPhotoKey(userId, key));
         const minted = await Promise.all(
             owned.map(async (key) => {
-                // Routed per key, not per deployment: a photo stored before R2 was
-                // switched on still resolves through the backend that holds it.
                 const url = await photoUrl(ctx, key);
                 return url === null ? null : { key, url };
             })
@@ -362,27 +234,11 @@ export const readUrls = mutation({
     returns: v.array(v.object({ key: v.string(), url: v.string() })),
 });
 
-/**
- * Every table carrying an `imageKey`. The device mints one key shape for all of
- * them — `apps/native/src/data/photo-store-core.ts` lists them — so a table left
- * out reads as unreferenced and its bytes are freed while a row still points at
- * them.
- */
+// Must match apps/native/src/data/photo-store-core.ts: a table left out reads as unreferenced and its bytes are
+// freed while a row still points at them.
 const IMAGE_KEY_TABLES = ["transactions", "accounts", "transactionPhotos"] as const;
 
-/**
- * Whether any row in the account still names `key`.
- *
- * Asked per table against `by_user_and_imageKey`, which is why that index
- * exists: scanning the account's transactions and accounts instead would read
- * the whole ledger per released photo, and past the mutation's document ceiling
- * it would stop answering at all — leaving the bytes unreclaimable for exactly
- * the accounts big enough to need reclaiming.
- *
- * Tombstoned rows count. A tombstone is what the undo window restores from and
- * what a device that has not pulled yet is still rendering, so treating one as
- * unreferenced would delete bytes two live readers can name.
- */
+// Tombstoned rows count: undo restores from them and a device that has not pulled yet still renders them.
 async function isReferenced(ctx: MutationCtx, userId: string, key: string): Promise<boolean> {
     /* oxlint-disable no-await-in-loop -- the first table that names the key answers the question; running all three would read rows nobody needs */
     for (const table of IMAGE_KEY_TABLES) {
@@ -398,24 +254,8 @@ async function isReferenced(ctx: MutationCtx, userId: string, key: string): Prom
     return false;
 }
 
-/**
- * Frees an object no row names any more.
- *
- * The delete is deliberately NOT transactional with the tombstone that made the
- * photo unreferenced, and cannot be: R2 is a separate system, and
- * `r2.deleteObject` removes the metadata row synchronously but hands the object
- * removal to a retrier. So the ordering is chosen for which failure is
- * survivable — the reference is dropped first, the bytes after. A crash in
- * between leaks an object, which costs storage and is reclaimable by calling
- * this again. The reverse order would leave a row naming bytes that no longer
- * exist, which is a photo the user watches disappear.
- *
- * A device that is mid-download when this lands gets a 404 on a url it already
- * holds. That is the race, it is not closable, and the device treats it exactly
- * as it treats a photo it has not fetched yet: the row keeps its key, no local
- * file appears, and the identity tile falls back. Nothing errors and the next
- * pass retries.
- */
+// R2 cannot share a transaction with the tombstone, so the reference goes before the bytes: a crash leaks a
+// reclaimable object instead of leaving a row naming missing bytes. A device mid-download gets a 404 and retries.
 export const releaseUnreferenced = mutation({
     args: { key: v.string() },
     handler: async (ctx, args) => {
@@ -431,9 +271,6 @@ export const releaseUnreferenced = mutation({
             .withIndex("by_key", (q) => q.eq("key", args.key))
             .unique();
         if (mapping) {
-            // Same ordering as the R2 branch: the reference goes before the bytes,
-            // so a crash between them leaks an object rather than leaving a row
-            // naming bytes that no longer exist.
             await ctx.db.delete(mapping._id);
             await ctx.storage.delete(mapping.storageId);
             await forgetPhotoSize(ctx, args.key);

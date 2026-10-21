@@ -7,10 +7,7 @@ import { BusyText } from "@/components/busy-text";
 import { Text } from "@/components/text";
 import { useTranslation } from "@/i18n/context";
 
-/**
- * Fixed by Google's identity guidelines, which is why they are literals rather
- * than theme tokens: the button has to look the same in every app that shows it.
- */
+// Fixed by Google's identity guidelines, so literals rather than theme tokens.
 export const BRAND = {
     dark: { background: "#131314", border: "#8E918F", label: "#E3E3E3" },
     light: { background: "#FFFFFF", border: "#747775", label: "#1F1F1F" },

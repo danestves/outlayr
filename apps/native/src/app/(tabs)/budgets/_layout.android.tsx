@@ -4,10 +4,6 @@ import { useTranslation } from "@/i18n/context";
 import { useAppBarOptions } from "@/navigation/material-chrome";
 import { TabPauseProvider } from "@/navigation/tab-pause-provider";
 
-/**
- * Budgets under an opaque M3 small app bar, the pushed detail screens too:
- * they take the back arrow and title themselves from the screen.
- */
 export default function BudgetsLayout() {
     const t = useTranslation();
     const appBar = useAppBarOptions();

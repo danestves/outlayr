@@ -32,7 +32,6 @@ describe("filterDetail", () => {
     });
 
     it("falls back to the filter's own name before a category resolves", () => {
-        // The chip loads categories asynchronously and must not render blank.
         expect(filterDetail("category", SCOPE)).toBe("by category");
         expect(filterDetail("category", { ...SCOPE, categoryName: "" })).toBe("by category");
     });

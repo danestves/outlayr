@@ -1,8 +1,6 @@
 /**
- * `build` for a list that grows at its end. A call whose items start with the
- * previous call's items, the same objects in the same order, builds only the
- * items after them and `join`s that onto the previous result; any other call
- * builds them all. It holds the previous call, so make one per list.
+ * `build` for a list that grows at its end: when the items start with the previous call's (same objects, same
+ * order), only the new tail is built and `join`ed on. It holds the previous call, so make one per list.
  */
 export function growing<Item, Built>(
     build: (items: readonly Item[]) => Built,

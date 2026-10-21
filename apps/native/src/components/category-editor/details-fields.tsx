@@ -9,7 +9,6 @@ type CategoryType = "expense" | "income";
 
 interface CategoryDetailsFieldsProps {
     caption: string | null;
-    /** A rejected save, shown in place of the caption. Null while the form is clean. */
     failure: string | null;
     expenseLabel: string;
     income: boolean;
@@ -25,14 +24,6 @@ interface CategoryDetailsFieldsProps {
     typePickerVisible: boolean;
 }
 
-/**
- * The category form as Material 3 outlined fields, for the Android editor
- * (`index.android.tsx`); the iOS one is the SwiftUI `details-section.tsx`.
- * The type dropdown draws through Compose, so only Android renders this.
- *
- * The name, with the caption or a rejected save as its supporting text, and
- * the expense/income type as a dropdown on a top-level create.
- */
 export function CategoryDetailsFields({
     caption,
     failure,
@@ -51,8 +42,7 @@ export function CategoryDetailsFields({
 }: CategoryDetailsFieldsProps) {
     return (
         <View className="gap-4">
-            {/* The failure takes the caption's slot: this is the line directly
-			    below the name field, and it names what to change. */}
+            {/* The failure takes the caption's slot, directly below the name field. */}
             <OutlinedTextField
                 autoCapitalize="words"
                 error={failure != null}

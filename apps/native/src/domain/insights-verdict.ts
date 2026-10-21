@@ -4,21 +4,15 @@ import type { TranslateFn } from "@/i18n/context";
 import { measureRiseIsFavourable } from "./insights-measure";
 import { formatAmount } from "./money";
 
-/** Below this, a window is the same as the one before it and says so. */
 const FLAT_BAND = 0.02;
 
 const BADGE_PERCENT_CAP = 1000;
 
 export interface VerdictInput {
     code: string;
-    /**
-     * This window's figure and the previous one's, already signed the way the
-     * measure reads: magnitudes for spent and income, the signed net for net.
-     */
     current: number;
     measure: InsightsMeasure;
     prior: number;
-    /** What to call the window being compared against, e.g. "2025". */
     priorLabel: string;
     showCents: boolean;
     t: TranslateFn;
@@ -26,19 +20,11 @@ export interface VerdictInput {
 }
 
 export interface Verdict {
-    /** The washed pill's text, e.g. "+18%", or null with nothing to compare or a change of 1000% and up. */
     badge: string | null;
-    /** Whether the change is the good kind. */
     favourable: boolean;
-    /** Null when there is nothing to say. */
     sentence: string | null;
 }
 
-/**
- * Badge and sentence both go quiet rather than inventing a comparison: a first
- * window has no prior to measure against, and "+100% versus nothing" is not a
- * fact about spending.
- */
 export function insightsVerdict(input: VerdictInput): Verdict {
     const { measure, current, prior, priorLabel, topMover, code, showCents, t } = input;
 

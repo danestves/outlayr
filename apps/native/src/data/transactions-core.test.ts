@@ -24,15 +24,8 @@ import { transfersRepo } from "./transfers-core";
 
 const makeDb = () => migratedDatabase({ foreignKeys: false });
 
-/**
- * The hand-rolled schema above carries no outbox and no triggers, so anything
- * that has to prove a write reaches the account is run against the shipped
- * migrations instead.
- */
 function syncedDb(): Database {
     const sqlite = migratedSqlite();
-    // The shipped schema enforces the category foreign key the inline one above
-    // leaves off, so the category every draft here names has to exist.
     sqlite
         .prepare(
             "INSERT INTO categories (id, name, income, sortOrder, updatedAt) VALUES ('cat-1', 'Groceries', 0, 0, 1)"
@@ -83,8 +76,7 @@ describe("transactionsRepo.update over a row the rates no longer reach", () => {
             source: "frankfurter",
         });
         id = await transactionsRepo.create(db, DRAFT);
-        // `pullRatesIfDue` replaces the replica wholesale and the feed only serves
-        // the last 90 days, so a row this old becomes unvaluable again.
+        // The feed serves only the last 90 days, so once the replica is replaced this row is unvaluable again.
         await db.delete(exchangeRates);
     });
 
@@ -265,7 +257,6 @@ describe("transactionsRepo.update and the replicated photo key", () => {
         const chosen = await transactionsRepo.create(db, { ...DRAFT, emoji: "☕" });
         const photo = await transactionsRepo.create(db, { ...DRAFT, imageUri: PHOTO });
         const imported = await transactionsRepo.create(db, DRAFT, { logoCandidate: false });
-        // A blank merchant is saved under the category's name, which is no brand.
         const unnamed = await transactionsRepo.create(db, { ...DRAFT, note: "  " });
 
         const candidates = await candidateLogoIds(db);
@@ -326,13 +317,9 @@ describe("transactionsRepo.update and the replicated photo key", () => {
     it("keeps a logo that landed while the edit was being built", async () => {
         const db = makeDb();
         const id = await transactionsRepo.create(db, DRAFT);
-        // A null currency resolves to the ledger's, which is what makes the
-        // edit await between its read and its write; the ledger is EUR here so
-        // the merchant details stay the same.
+        // A null currency makes the edit await between its read and write; EUR keeps the merchant details unchanged.
         await setMeta(db, META_KEYS.currency, "EUR");
 
-        // The edit reads the row, then awaits while it is built; the backfill
-        // paints in that gap. The edit, built from a row without a logo, carries none.
         const editing = transactionsRepo.update(db, id, { ...DRAFT, amount: 5, currency: null });
         await Promise.resolve();
         const painted = new Date(Date.now() + 60_000);
@@ -343,7 +330,6 @@ describe("transactionsRepo.update and the replicated photo key", () => {
         await editing;
 
         await expect(photoColumns(db, id)).resolves.toMatchObject({ imageUri: PHOTO });
-        // And the row's clock did not run backwards past the paint.
         const [row] = await db.select({ updatedAt: transactions.updatedAt }).from(transactions);
         expect(row.updatedAt.getTime()).toBeGreaterThan(painted.getTime());
     });
@@ -374,8 +360,7 @@ describe("transactionsRepo.update and the replicated photo key", () => {
 
     it("leaves the candidate where it was when the edit itself fails", async () => {
         const db = makeDb();
-        // withTransaction runs its task bare when the client has no async
-        // transaction API, which would make this rollback assertion vacuous.
+        // Without an async transaction API `withTransaction` runs bare, making this rollback assertion vacuous.
         const sqlite = db.$client as unknown as BetterSqlite3.Database;
         Object.assign(db.$client as object, {
             withTransactionAsync: async (task: () => Promise<void>) => {
@@ -392,8 +377,6 @@ describe("transactionsRepo.update and the replicated photo key", () => {
         const id = await transactionsRepo.create(db, DRAFT);
         const before = (await candidateLogoIds(db)).get(id);
 
-        // A category the schema will not accept: the UPDATE rejects after the
-        // bookkeeping would have moved the stamp.
         await expect(transactionsRepo.update(db, id, { ...DRAFT, amount: Number.NaN })).rejects.toThrow();
 
         expect((await candidateLogoIds(db)).get(id)).toBe(before);
@@ -441,8 +424,6 @@ describe("transactionsRepo.update and the replicated photo key", () => {
         const id = await transactionsRepo.create(db, DRAFT);
         await db.update(transactions).set({ imageKey: KEY }).where(eq(transactions.id, id));
 
-        // Saving an unrelated edit on a row whose photo is still downloading must
-        // not read as "the user removed the photo" — that would delete it account-wide.
         await transactionsRepo.update(db, id, { ...DRAFT, note: "Renamed" });
 
         expect((await photoColumns(db, id)).imageKey).toBe(KEY);
@@ -551,8 +532,6 @@ describe("the reminder notice on a subscription", () => {
         expect(rows.find((row) => row.id === off)?.reminderLeadDays).toBeNull();
     });
 
-    // The form builds its input from the fields it paints, so an edit made on a
-    // screen without a lead picker leaves the key out entirely.
     it("keeps the notice through an edit that never mentions it", async () => {
         const db = makeDb();
         const id = await transactionsRepo.create(db, SUBSCRIPTION);
@@ -673,7 +652,6 @@ describe("a restore the account has to hear about", () => {
         const db = syncedDb();
         const id = await transactionsRepo.create(db, DRAFT);
         await transactionsRepo.remove(db, id, DELETED_AT);
-        // Only after the tombstone, so the queue holds the restore and nothing else.
         await setSyncEnabled(db, true);
 
         await transactionsRepo.restore(db, id, RESTORED_AT);
@@ -691,7 +669,6 @@ describe("a restore the account has to hear about", () => {
 
         await transactionsRepo.restore(db, id, LATER_STILL);
 
-        // A fresh seq would mean a second write went out saying nothing at all.
         expect((await queued(db))[0]?.seq).toBe(first);
     });
 });
@@ -816,9 +793,6 @@ describe("the account an entry is attached to", () => {
         await expect(attachedTo(db, id)).resolves.toBeNull();
     });
 
-    // The CSV import and the App Intent queue build their inputs without the
-    // field, and neither of those saves is the user taking an entry off an
-    // account.
     it("keeps the attachment through an edit that never mentions it", async () => {
         const db = makeDb();
         const id = await transactionsRepo.create(db, {
@@ -866,15 +840,12 @@ describe("accountTransactionsQuery", () => {
 });
 
 describe("transactionsRepo.update over a row a peer has deleted", () => {
-    // `restore` and `stopRecurring` both refuse a tombstone; `update` did not,
-    // and `toRow` builds a fresh row whose `deletedAt` is always null.
     it("keeps the tombstone rather than putting the row back", async () => {
         const db = makeDb();
         const id = await transactionsRepo.create(db, DRAFT);
         await transactionsRepo.remove(db, id);
         const tombstoned = getTransactionById(db, id);
 
-        // What the edit sheet does when it was open as the peer's delete arrived.
         await transactionsRepo.update(db, id, { ...DRAFT, amount: 200 });
 
         const row = getTransactionById(db, id);

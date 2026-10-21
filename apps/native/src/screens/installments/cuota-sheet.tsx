@@ -28,11 +28,9 @@ export interface CuotaSheetProps {
     earliest?: Date;
     onDismiss: () => void;
     ref?: Ref<BottomSheetModal>;
-    /** Null while no row is being edited. */
     row: InstallmentRow | null;
 }
 
-/** One cuota's date and amount, each committed from its own row the way the goal editor commits, and its delete. */
 export function CuotaSheet({ count, currency, earliest, onDismiss, ref, row }: CuotaSheetProps) {
     const sheetSurface = useSheetSurface();
     const sheetRef = useRef<BottomSheetModal>(null);

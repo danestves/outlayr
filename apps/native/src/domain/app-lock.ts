@@ -14,14 +14,8 @@ export function relocksOnPhase(phase: AppStateStatus): boolean {
 }
 
 /**
- * `enforceable` is `null` until the enrolment probe answers, and the gate is
- * shut for that frame — a first paint that shows the ledger and covers it a
- * moment later has already leaked it.
- *
- * A device with nothing enrolled resolves to `false` and the gate opens.
- * Swift instead bounced to Settings and left `isAppUnLocked` false
- * (`AppLockViewModel.swift:97-102`), which strands the owner outside their own
- * local ledger with no way back in.
+ * `enforceable` is `null` until the enrolment probe answers, and the gate stays shut for that frame so the ledger
+ * never flashes. With nothing enrolled the gate opens, rather than stranding the owner outside their own ledger.
  */
 export function lockGate(enabled: boolean, unlocked: boolean, enforceable: boolean | null): LockGate {
     if (!enabled || enforceable === false) {
@@ -30,16 +24,11 @@ export function lockGate(enabled: boolean, unlocked: boolean, enforceable: boole
     return unlocked ? "open" : "shut";
 }
 
-/**
- * Whether this failure means the device can never satisfy the prompt. A
- * `lockout` is not one of them: the passcode fallback still answers, so a
- * retry can still get in.
- */
+/** A `lockout` is not unenforceable: the passcode fallback can still get in. */
 export function lockIsUnenforceable(error: LocalAuthenticationError): boolean {
     return error === "not_enrolled" || error === "not_available" || error === "passcode_not_set";
 }
 
-/** `null` where the user dismissed the prompt themselves — nothing went wrong. */
 export function lockFailureMessage(error: LocalAuthenticationError): TranslationKey | null {
     switch (error) {
         case "user_cancel":

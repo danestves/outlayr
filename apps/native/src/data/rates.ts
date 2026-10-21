@@ -9,14 +9,9 @@ import { appMeta, exchangeRates } from "@/db/schema";
 import { withTransaction } from "@/db/transaction";
 import { chunkRows } from "@/lib/chunk";
 
-/** 12 hours. */
 export const RATES_THROTTLE_MS = 43_200_000;
 
-/**
- * Rows per chunked INSERT. `exchangeRates` binds 6 params per row, so SQLite's
- * 32,766 bound-parameter cap admits at most 5,461 rows per statement — 2,000
- * leaves margin for driver variance.
- */
+// SQLite caps a statement at 32,766 bound params and a rate row binds 6, so at most 5,461 rows; 2,000 leaves margin.
 export const RATE_ROWS_PER_CHUNK = 2000;
 
 const LAST_PULL_KEY = "lastRatesPullAt";
@@ -31,20 +26,14 @@ export interface RateWireRow {
 }
 
 export interface PullRatesPage {
-    /** Absent or null ends the walk. */
     nextCursor?: number | null;
     rows: RateWireRow[];
     windowStart: string;
 }
 
-/** Injected so the pull logic never imports the Convex client. */
 export type PullRatesFn = (args?: { cursor?: number }) => Promise<PullRatesPage>;
 
-/**
- * A backward clock jump puts the recorded pull in the future, which would hold
- * the throttle shut until the clock caught up. That counts as expired instead,
- * and the pull re-anchors the stamp.
- */
+// A backward clock jump puts the last pull in the future; that counts as expired, and the pull re-anchors the stamp.
 export function isThrottled(last: number | null, now: number): boolean {
     if (last === null) {
         return false;
@@ -84,15 +73,7 @@ async function fetchAllRates(pull: PullRatesFn): Promise<RateWireRow[]> {
     }
 }
 
-/**
- * Wipe-and-replaces the local cache in a SINGLE transaction, so no read ever
- * observes a half-cleared table.
- *
- * An EMPTY snapshot is a no-op: a stale cache beats an emptied one, so neither
- * the wipe nor the stamp happens and the next run retries.
- *
- * Answers whether a pull actually landed (false when throttled or empty).
- */
+// One transaction, so no read sees a half-cleared table. An EMPTY snapshot is a no-op: a stale cache beats an empty.
 export async function pullRatesIfDue(
     db: Database,
     pull: PullRatesFn,
@@ -125,8 +106,7 @@ export async function pullRatesIfDue(
             });
     });
 
-    // After the commit, never inside it: a screen invalidated against a
-    // half-replaced cache would re-read rows that a rollback is about to remove.
+    // After the commit: a screen invalidated mid-transaction would re-read rows a rollback is about to remove.
     bumpRatesRevision();
 
     return true;
@@ -136,12 +116,7 @@ function rateKey({ date, quote, rateType }: Pick<RateWireRow, "date" | "quote" |
     return `${quote}:${rateType}:${date}`;
 }
 
-/**
- * Upserts the delivered rows the cache does not already hold verbatim. Answers
- * whether a `rate` moved or arrived, and bumps only then. A re-stamped
- * `fetchedAt` alone is written without a bump, so an open entry form keeps its
- * earlier "as of" until it remounts.
- */
+// Bumps only when a `rate` moved or arrived: a re-stamped `fetchedAt` alone keeps an open form's "as of" until remount.
 export async function applyRecentRates(db: Database, rows: RateWireRow[]): Promise<boolean> {
     if (rows.length === 0) {
         return false;
@@ -184,10 +159,7 @@ export async function applyRecentRates(db: Database, rows: RateWireRow[]): Promi
     return true;
 }
 
-/**
- * The `@outlayr/money` rate port, backed by the local replica. "Newest row on or
- * before this date" is what covers the weekend and holiday gaps in the ECB feed.
- */
+// "Newest row on or before this date" covers the weekend and holiday gaps in the ECB feed.
 export function localRateLookup(db: SpendDb): RateLookup {
     return async (quote, rateType, date) => {
         const rows = await db

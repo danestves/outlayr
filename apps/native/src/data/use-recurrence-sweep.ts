@@ -8,27 +8,13 @@ import { backfillAllRecurring, repairOrphanedRecurrence } from "./recurrence-bac
 const SWEEP_COOLDOWN_MS = 60_000;
 
 /**
- * Advances every live subscription when the app opens and each time it returns
- * to the foreground. Runs at the root rather than on the Log because the
- * generated rows feed Budgets and Insights too.
- *
- * The cooldown keeps a rapid app-switch from re-walking the whole table; a
- * failure clears it so the next foreground retries instead of waiting out a
- * window it never used.
- *
- * `onSwept` runs once per launch and foreground, after the walk commits.
- * Anything derived from a chain's next landing has to wait for that: the sweep
- * retires the carrier and creates the next occurrence, so a reader that fires on
- * the same foreground event races it and sees a landing the sweep is about to
- * invalidate. A foreground inside the cooldown skips the walk but still calls it,
- * as does a failed walk, against the landings as they stand, so every launch and
- * foreground reconciles.
+ * At the root because the generated rows feed Budgets and Insights too. `onSwept` runs after the walk commits,
+ * even inside the cooldown or after a failure: a reader firing on the same foreground event would race the sweep
+ * and see a landing it is about to invalidate.
  */
 export function useRecurrenceSweep(db: Database | null, onSwept?: (db: Database) => void): void {
     const lastSweepAt = useRef(0);
-    // Read through a ref so a caller passing an inline closure does not re-arm the
-    // AppState listener on every render. Mirrored in an effect rather than during
-    // render, which is a side effect the compiler cannot follow.
+    // A ref, so an inline closure does not re-arm the listener; mirrored in an effect, not during render.
     const swept = useRef(onSwept);
     useEffect(() => {
         swept.current = onSwept;

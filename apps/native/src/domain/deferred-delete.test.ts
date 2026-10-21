@@ -5,7 +5,6 @@ import type { DeferredDeleteSnapshot } from "./deferred-delete";
 
 const WINDOW_MS = 4000;
 
-/** Hand-cranked: nothing scheduled runs until `elapse` is called. */
 function fakeClock() {
     let nextHandle = 1;
     let nowMs = 0;
@@ -106,11 +105,6 @@ describe("createDeferredDelete", () => {
         expect(controller.snapshot.pendingId).toBe("b");
     });
 
-    /**
-     * The whole point. Nothing was written, and the caller hides the row purely by
-     * filtering on `pendingId` — so letting the window close in silence puts the
-     * row back with no explanation, which reads as a lost gesture.
-     */
     it("leaves the row visible AND reports when the write is rejected", async () => {
         const { clock, controller } = harness(rejecting);
 
@@ -179,7 +173,6 @@ describe("createDeferredDelete", () => {
         expect(settled).toBeTruthy();
     });
 
-    /** Same hole, other path: the screen going away must not swallow the failure. */
     it("still reports a rejected write that was flushed", async () => {
         const { controller, seen } = harness(rejecting);
 

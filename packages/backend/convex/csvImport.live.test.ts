@@ -1,21 +1,6 @@
 /// <reference types="vite/client" />
 
-/**
- * The model tier against the real Anthropic endpoint.
- *
- * Opt-in: these spend tokens and depend on a third party being up, so a bad day
- * at Anthropic must never turn the ordinary suite red. Run them deliberately:
- *
- *   RUN_LIVE_MODEL_TESTS=1 \
- *   ANTHROPIC_API_KEY="$(npx convex env get ANTHROPIC_API_KEY)" \
- *   vp test run convex/csvImport.live.test.ts
- *
- * The assertions are the contract, not the answer: a generative model may
- * reasonably file a bakery under Food or under Groceries, so asserting a
- * specific mapping would encode one sampling of a non-deterministic system.
- * What must hold every time is that the response parses, that every suggestion
- * names a category the caller actually offered, and that no label is invented.
- */
+/** Opt-in (RUN_LIVE_MODEL_TESTS=1, ANTHROPIC_API_KEY): spends tokens. Asserts the contract, not a specific mapping. */
 
 import { createAnthropic } from "@ai-sdk/anthropic";
 import rateLimiterTest from "@convex-dev/rate-limiter/test";

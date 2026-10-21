@@ -5,7 +5,7 @@ import { runtimeLanguage } from "@/i18n/runtime";
 
 import { amountDigits, amountParts, withCurrencySymbol } from "./money";
 
-/** A balance's display string: "-" only when the figure shown is below zero, never a "+". */
+/** "-" only when the figure shown is below zero; never a "+". */
 export function formatSignedAmount(
     amount: number,
     code: string,

@@ -7,7 +7,6 @@ import { hasSystemLanguageSettings, openLanguageSettings } from "./language-sett
 
 const mockStartActivity = jest.fn<typeof startActivityAsync>(async () => ({ resultCode: 0 }));
 const mockOpenSettings = jest.fn<() => Promise<void>>(async () => undefined);
-// Whether the installed build has the module's native side; without it, importing the module throws.
 const mockBuild = { hasIntentLauncher: true };
 jest.mock("expo-intent-launcher", () => {
     if (!mockBuild.hasIntentLauncher) {

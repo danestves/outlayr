@@ -103,9 +103,6 @@ describe("eraseLedger", () => {
         expect(replicable[0].deletedAt).not.toBeNull();
     });
 
-    // Recently Deleted is the one screen built to read tombstones, so an erase
-    // writes straight into it: without the exclusion the user is handed the ledger
-    // they just erased back, row by row, each with a Restore button.
     it("keeps the rows it erased out of Recently Deleted", async () => {
         const removed = new Date("2026-02-01T00:00:00.000Z");
         await db.insert(transactions).values({
@@ -125,8 +122,6 @@ describe("eraseLedger", () => {
         expect((await deletedTransactionsQuery(db)).map((row) => row.id)).toStrictEqual(["tx-2"]);
     });
 
-    // A column added to `transactions` and not to the constant would survive the
-    // erase on the tombstone, and no round-trip assertion above would notice.
     it("names every column of a transaction that is not the envelope", () => {
         const ENVELOPE = new Set(["id", "updatedAt", "deletedAt", "restoredAt"]);
         const declared = Object.keys(getTableColumns(transactions)).filter((name) => !ENVELOPE.has(name));

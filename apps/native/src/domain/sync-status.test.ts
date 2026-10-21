@@ -51,8 +51,6 @@ describe("syncStatusLabel", () => {
     });
 
     it("says so when the switch is off, however recent the last cycle was", () => {
-        // Turning sync off deletes the outbox, so the queue is empty and the
-        // timestamp is fresh — every other input agrees on "Up to date".
         expect(syncStatusLabel({ enabled: false, paused: false, pending: 0, syncedAt: AT })).toStrictEqual({
             key: "settings.sync.off",
         });

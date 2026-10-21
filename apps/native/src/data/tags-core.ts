@@ -15,10 +15,7 @@ export interface TagRow {
     sortOrder: number;
 }
 
-/**
- * Blanked the way every other tombstone here is, so a deleted tag carries no
- * name a stale device could still render.
- */
+/** Blanked like every other tombstone, so a stale device has no name left to render. */
 const TOMBSTONED_TAG = {
     color: null,
     name: "",
@@ -37,7 +34,6 @@ export function liveTagsQuery(db: Database) {
         .where(isNull(tags.deletedAt));
 }
 
-/** The tag ids a transaction currently carries. */
 export function tagIdsForQuery(db: Database, transactionId: string) {
     return db
         .select({ tagId: transactionTags.tagId })
@@ -47,11 +43,8 @@ export function tagIdsForQuery(db: Database, transactionId: string) {
 
 export const tagsRepo = {
     /**
-     * Retires the tag and every link to it, in one transaction.
-     *
-     * The links go too because a live link to a tombstoned tag is a row that
-     * reads as tagged and renders nothing — and on another device it would
-     * resurrect the moment that device had not yet pulled the tag's tombstone.
+     * Links go too: a live link to a tombstoned tag reads as tagged and renders nothing, and resurrects on a device
+     * that has not pulled the tag's tombstone yet.
      */
     async deleteTag(db: Database, id: string): Promise<void> {
         const now = new Date();
@@ -66,13 +59,7 @@ export const tagsRepo = {
                 .where(and(eq(tags.id, id), isNull(tags.deletedAt)));
         });
     },
-    /**
-     * The tag answering to `name`, creating it only if none does.
-     *
-     * Matching happens before inserting because the picker lets someone type a
-     * name they already have: without this, "Work" and "work" become two tags
-     * that look the same in every list they appear in.
-     */
+    /** Matches first, so "Work" and "work" never become two tags that look the same. */
     async ensureTag(db: Database, name: string): Promise<string | null> {
         const clean = normalizeTagName(name);
         if (clean === "") {
@@ -102,13 +89,7 @@ export const tagsRepo = {
         await db.update(tags).set({ name: clean, updatedAt: new Date() }).where(eq(tags.id, id));
     },
 
-    /**
-     * Makes a transaction carry exactly `tagIds`.
-     *
-     * A previously detached link is revived rather than re-inserted: the pair is
-     * unique, so a second row for it cannot exist, and reviving keeps the same
-     * identity the other devices already know.
-     */
+    /** A detached link is revived, not re-inserted: the pair is unique, and peers already know its identity. */
     async setTagsFor(db: Database, transactionId: string, tagIds: readonly string[]): Promise<void> {
         await withTransaction(db, () => tagsRepo.writeTagsFor(db, transactionId, tagIds));
     },

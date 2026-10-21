@@ -159,7 +159,8 @@ export const logEntry = internalMutation({
             .withIndex("by_user_and_seq", (q) => q.eq("userId", userId))
             .order("desc")
             .first();
-        // ponytail: one offset from the newest row; an entry across a DST change lands an hour off its midnight. Sync the IANA zone in appMeta to fix.
+        // ponytail: one offset from the newest row; an entry across a DST change lands an hour
+        // off its midnight. Sync the IANA zone in appMeta to fix.
         const offsetMs = latest ? utcOffsetOf(latest.day) : 0;
         const now = Date.now();
         const date = entryInstant(args.date, now, offsetMs);

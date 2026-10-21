@@ -34,18 +34,10 @@ const OTHER = "__other__";
 const TILE = 22;
 
 interface StepAccountInstallmentsProps {
-    /** The ledger's accounts: an app that already has one is not offered again. */
     accounts: readonly Account[];
     onPick: (account: Account) => void;
 }
 
-/**
- * The account step's "Installments in <country>": the installment apps of the
- * device's region that have no account yet. Tapping one makes it a liability
- * account with its logo, in the currency the app bills in, and picks it. Other opens the
- * account editor, where any name, from any country, finds its logo the way an
- * account's name always does, and the account it makes is picked on the way back.
- */
 export function StepAccountInstallments({ accounts, onPick }: StepAccountInstallmentsProps) {
     const db = useDatabase();
     const router = useRouter();
@@ -84,8 +76,8 @@ export function StepAccountInstallments({ accounts, onPick }: StepAccountInstall
         }
         setAdding(app.id);
         try {
-            // Fetched before the account exists: the entry holds the account as it was picked.
-            // Named by its domain, as the mark is, so the logo comes from the same cache entry.
+            // Fetched before the account exists, since the entry holds the account as picked. Named by its domain, as
+            // the mark is, so both read the same cache entry.
             const outcome = await fetchMerchantImage({ domain: app.domain, name: app.domain });
             const logo = outcome.kind === "logo" ? await persistLogo(outcome.bytes) : null;
             const id = await accountsRepo.create(db, {
@@ -149,7 +141,6 @@ export function StepAccountInstallments({ accounts, onPick }: StepAccountInstall
     );
 }
 
-/** The app's logo from its website, or nothing until it arrives. */
 function InstallmentAppMark({ domain }: { domain: string }) {
     const colors = useColors();
     const uri = useMerchantMark(null, domain);

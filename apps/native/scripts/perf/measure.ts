@@ -1,27 +1,6 @@
-/**
- * Measures a perf change against main on the perf emulator. Each run restores the
- * perf-seeded snapshot, cold-starts the app on one side's Metro, and replays one
- * Argent flow under the React profiler. Runs alternate base and PR so drift on
- * the host hits both sides, and the table reports each side's median.
- *
- *   node --import tsx scripts/perf/measure.ts --flow perf-add-entry \
- *     --base 8090 --pr 8091 [--runs 3] [--device emulator-5580] [--out result.json] \
- *     [--components "Forget(RootStack),Forget(Log(./(tabs)/(transactions)/index.tsx))"]
- *
- * `--components` adds a row per component with the times it rendered in slow commits, a
- * count that whole-tree noise cannot hide. Argent keeps only commits over 16 ms and their
- * neighbours, so a component that renders only in fast commits reads 0. Names are the
- * profiler's, verbatim.
- *
- * `--prod` measures production JS instead: start each Metro with `--no-dev --minify`. React's
- * profiler needs a dev bundle, so the table drops to flow time, the CPU time of the app's JS and
- * UI threads, and Android's frame stats, which both modes report.
- *
- * Each port is a Metro serving that side's checkout to the perf build. Flows are
- * the Argent flows in `./flows`. A `<flow>-setup.yaml` next to a flow runs before the
- * profiler starts, for setup too long to profile (scrolling far down the Log). Run it on
- * a quiet host: the numbers are only comparable within one invocation.
- */
+// Measures a perf change against main on the perf emulator: alternating base and PR cold starts from the snapshot,
+// each replaying an Argent flow. Argent keeps only commits over 16 ms, so a `--components` entry that renders only in
+// fast commits reads 0. `--prod` needs each Metro on `--no-dev --minify` and drops the React rows.
 import { execFileSync } from "node:child_process";
 import { existsSync, writeFileSync } from "node:fs";
 import { availableParallelism, loadavg } from "node:os";
@@ -33,10 +12,9 @@ const APP = "com.tryoutlayr.app";
 const SNAPSHOT = "perf-seeded";
 const READY_TEXT = "Hide amounts";
 const MAX_ATTEMPTS = 5;
-/** Four launches of 45 s each: the three minutes a single launch used to get. */
 const LAUNCHES = 4;
 const LAUNCH_POLLS = 22;
-/** Metro drops a dead app within about 65 s (a ping every 5 s, 60 s without a pong). */
+// Metro drops a dead app within about 65 s (a ping every 5 s, 60 s without a pong).
 const DRAIN_POLLS = 40;
 const STARTUP_SETTLE_MS = 10_000;
 
@@ -71,7 +49,7 @@ if (prod && components.length > 0) {
 const sides = { base: Number(args.base), pr: Number(args.pr) } as const;
 type Side = keyof typeof sides;
 
-/** `dumpsys gfxinfo` lines, read for the flow alone. Percentiles come from its histogram, so they snap to its buckets. */
+// Percentiles come from the gfxinfo histogram, so they snap to its buckets.
 const FRAME_STATS = {
     frames: { label: "Frames", pattern: /Total frames rendered: (\d+)/ },
     jankyFrames: { label: "Janky frames", pattern: /Janky frames: (\d+)/ },
@@ -86,27 +64,21 @@ interface ThreadCpu {
     ui: number;
 }
 
-/** The React fields come from the profiler, so a `--prod` run has none of them. */
 interface Run {
-    /** argent's per-commit render causes for each `--components` entry, for the JSON only. */
     causes?: Record<string, string>;
     commits?: number;
-    /** Times each `--components` entry rendered in the slow commits argent keeps. */
     components?: Record<string, number>;
     fiberRenders?: number;
-    /** CPU time the app's threads used during the flow. */
     cpuMs: ThreadCpu;
-    /** Keyed like `FRAME_STATS`. */
     frames: Record<string, number>;
     hotCommits?: number;
-    /** The profiled span; with `--prod`, the flow's own wall-clock time. */
     profiledMs: number;
     side: Side;
 }
 
 const adb = (...rest: string[]) => execFileSync("adb", ["-s", device, ...rest], { encoding: "utf-8" });
 
-/** Runs one argent tool and returns its JSON result; argent reports tool failures as text. */
+// argent reports tool failures as plain text, not JSON.
 function argent(tool: string, flags: string[]): Record<string, unknown> {
     const output = execFileSync("argent", ["run", tool, ...flags], { encoding: "utf-8" }).trim();
     if (!output.startsWith("{")) {
@@ -117,7 +89,6 @@ function argent(tool: string, flags: string[]): Record<string, unknown> {
 
 const OCCURRENCES = /\*\*Total occurrences:\*\* (\d+)/;
 
-/** Times the component rendered in the stopped session's slow commits (0 when it never did), and why. */
 function rendersOf(component: string, target: string[]): { causes: string; renders: number } {
     const output = execFileSync(
         "argent",
@@ -157,7 +128,7 @@ function readFrameStats(): Record<string, number> {
     );
 }
 
-/** CPU time the app's JS and UI threads have used since it started, from `/proc`, which counts in 10 ms ticks. */
+// /proc counts in 10 ms ticks.
 function threadCpu(): ThreadCpu & { pid: string } {
     const pid = adb("shell", "pidof", APP).trim();
     // A thread can exit between the glob and the read.
@@ -174,7 +145,7 @@ function threadCpu(): ThreadCpu & { pid: string } {
     return { js: msOf(js), pid, ui: msOf(stats.find((stat) => stat.startsWith(`${pid} `))) };
 }
 
-/** Throws unless the side's Metro serves what the mode measures: a production bundle with `--prod`, a dev one without. */
+/** Throws when the side's Metro serves the wrong bundle for the mode. */
 async function checkMetroMode(port: number) {
     const manifest = (await fetch(`http://localhost:${port}/`, {
         headers: { accept: "application/expo+json", "expo-platform": "android" },
@@ -205,11 +176,7 @@ async function debugTargetAttached(port: number, polls: number): Promise<boolean
     return false;
 }
 
-/**
- * Waits for Metro to list no app, so the next entry is the launch's own. An app that died without
- * closing its socket stays listed until Metro's heartbeat gives up, about a minute, under the same
- * id a relaunch registers.
- */
+// A dead app stays listed until Metro's heartbeat gives up (about a minute), under the id a relaunch registers.
 async function waitForNoDebugTarget(port: number) {
     for (let poll = 0; poll < DRAIN_POLLS; poll += 1) {
         if ((await debugTargetCount(port)) === 0) {
@@ -220,14 +187,9 @@ async function waitForNoDebugTarget(port: number) {
     throw new Error(`Metro on ${port} still lists an app ${DRAIN_POLLS * 2} s after it was stopped.`);
 }
 
-/**
- * A cold start, so the app opens fresh debugger and packager sockets to the side's Metro. It
- * reaches Metro through the emulator's host address rather than `adb reverse`: the emulator's
- * adb connection can drop mid-flow, and a reverse tunnel takes the profiler's debugger with it.
- *
- * Right after a snapshot load the guest network can still time out connecting to the host, and
- * the dev client then sits on its error screen, so an app that has not attached is relaunched.
- */
+// Through the host address, not `adb reverse`: the emulator's adb connection can drop mid-flow and a reverse tunnel
+// takes the profiler's debugger with it. Right after a snapshot load the guest network can time out connecting, leaving
+// the dev client on its error screen, so an app that has not attached is relaunched.
 async function startOn(port: number) {
     // Stopped before the load, so its socket closes now rather than at Metro's heartbeat timeout.
     adb("shell", "am", "force-stop", APP);
@@ -273,7 +235,6 @@ async function startOn(port: number) {
     }
 }
 
-/** Waits up to five minutes for the host's one-minute load to drop below 1.5x its core count. */
 async function waitForQuietHost() {
     for (let check = 0; check < 30 && (loadavg()[0] ?? 0) > availableParallelism() * 1.5; check += 1) {
         // oxlint-disable-next-line no-await-in-loop -- polling
@@ -284,7 +245,6 @@ async function waitForQuietHost() {
     }
 }
 
-/** Replays the flow and returns the app's thread CPU and frame stats, both counted from its first step. */
 function runFlow(): Pick<Run, "cpuMs" | "frames"> {
     adb("shell", "dumpsys", "gfxinfo", APP, "reset");
     const before = threadCpu();
@@ -348,10 +308,6 @@ async function measure(side: Side): Promise<Run> {
     };
 }
 
-/**
- * Gives a failed run up to four more tries: host load can leave the UI tree unreadable, and the
- * debugger can fail to connect or drop the profile after the app cold-starts.
- */
 async function measureWithRetries(side: Side): Promise<Run> {
     for (let attempt = 1; ; attempt += 1) {
         try {
@@ -384,7 +340,6 @@ async function main() {
     await Promise.all(Object.values(sides).map(checkMetroMode));
     const runs: Run[] = [];
     for (let round = 0; round < runCount; round += 1) {
-        // Alternate which side goes first, so a slow host phase does not always land on one side.
         const order: Side[] = round % 2 === 0 ? ["base", "pr"] : ["pr", "base"];
         for (const side of order) {
             // oxlint-disable-next-line no-await-in-loop -- runs share one emulator, so they must not overlap

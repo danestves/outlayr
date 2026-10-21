@@ -182,11 +182,7 @@ interface FakeBucket {
     released: string[];
 }
 
-/**
- * Stands in for R2 plus `packages/backend/convex/photos.ts`. Mints the same
- * account-namespaced key shape and, like the real signed url, hands back a
- * string that is only meaningful to this bucket.
- */
+// Stands in for R2 plus `packages/backend/convex/photos.ts`, minting the same account-namespaced key shape.
 function fakeTransport(
     bucket: FakeBucket = { confirmed: [], objects: new Map(), released: [] },
     overrides: Partial<PhotoTransport> = {}
@@ -200,7 +196,6 @@ function fakeTransport(
         },
         async put(url, bytes) {
             bucket.objects.set(url.replace("https://r2.test/put/", ""), bytes);
-            // R2 addresses by key, so its PUT allocates nothing to report back.
             return null;
         },
         async readUrls(keys) {
@@ -282,12 +277,10 @@ describe("uploadPhotos", () => {
         await insert(db, "t1", { imageUri: `${DIRECTORY}/a.jpg` });
 
         await expect(uploadPhotos(db, files, failing.transport, NOW)).rejects.toThrow();
-        // Nothing recorded, so the row is still owed an upload.
         expect((await readRow(db, "t1")).imageKey).toBeNull();
 
         const retry = fakeTransport(bucket);
         expect((await uploadPhotos(db, files, retry.transport, NOW)).uploaded).toBe(1);
-        // One key, one object: the retry overwrote rather than orphaning.
         expect([...bucket.objects.keys()]).toStrictEqual([`transaction-photos/${USER}/a.jpg`]);
         expect((await readRow(db, "t1")).imageKey).toBe(`transaction-photos/${USER}/a.jpg`);
     });
@@ -374,7 +367,6 @@ describe("uploadPhotos", () => {
         await insertAccount(db, "a1", { imageUri: `${DIRECTORY}/logo.jpg` });
 
         expect((await uploadPhotos(db, files, transport, NOW)).uploaded).toBe(PHOTO_SYNC_BATCH);
-        // Left for the next pass, not silently skipped.
         expect((await readAccount(db, "a1")).imageKey).toBeNull();
     });
 });
@@ -398,11 +390,9 @@ describe("downloadPhotos", () => {
         const { transport } = fakeTransport();
         await insert(db, "t1", { imageKey: `transaction-photos/${USER}/a.jpg` });
 
-        // The object is not in the bucket yet — the row got here first.
         await expect(downloadPhotos(db, peer, transport)).resolves.toBe(0);
         const row = await readRow(db, "t1");
         expect(row.imageUri).toBeNull();
-        // The key survives, so the next pass retries rather than giving up.
         expect(row.imageKey).toBe(`transaction-photos/${USER}/a.jpg`);
     });
 
@@ -429,7 +419,6 @@ describe("downloadPhotos", () => {
         const peer = new FakeFiles(PEER_DIRECTORY);
         const { bucket, transport } = fakeTransport();
         bucket.objects.set(`transaction-photos/${USER}/a.jpg`, new TextEncoder().encode("PHOTO"));
-        // Removing a photo clears both halves, so there is nothing to resurrect.
         await insert(db, "t1", { imageKey: null, imageUri: null });
 
         await expect(downloadPhotos(db, peer, transport)).resolves.toBe(0);
@@ -463,8 +452,6 @@ describe("downloadPhotos", () => {
         expect(peer.read("logo.jpg")).toStrictEqual(new TextEncoder().encode("LOGO"));
         const row = await readAccount(db, "a1");
         expect(row.imageUri).toBe(`${PEER_DIRECTORY}/logo.jpg`);
-        // The path is this handset's business; presenting it as an edit would burn
-        // a sequence number on every other device.
         expect(row.updatedAt.getTime()).toBe(EARLIER.getTime());
     });
 });
@@ -503,8 +490,6 @@ describe("runPhotoSync", () => {
         const key = (await readRow(deviceA, "t1")).imageKey;
         expect(key).toBe(`transaction-photos/${USER}/a.jpg`);
 
-        // The replicated row reaches B carrying the key and nothing else about the
-        // photo — the path is A's and would not resolve here.
         const deviceB = makeDb();
         const filesB = new FakeFiles(PEER_DIRECTORY);
         await insert(deviceB, "t1", { imageKey: key });

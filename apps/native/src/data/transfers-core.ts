@@ -28,10 +28,7 @@ export interface TransferInput {
     fromAccountId: string;
     fromAmount: number;
     fromCurrency: string;
-    /**
-     * The installment order this transfer pays. Absent leaves an edited
-     * transfer's link alone, so an editor that never shows it cannot unlink it.
-     */
+    /** Absent leaves an edited transfer's link alone, so an editor that never shows it cannot unlink it. */
     installmentPlanId?: string | null;
     note?: string;
     toAccountId: string;
@@ -195,7 +192,6 @@ export function savedTransfer(db: Database, id: string): SavedTransfer | null {
     };
 }
 
-/** Whether two reads of a transfer agree on everything its editor shows and saves. */
 export function sameSavedTransfer(a: SavedTransfer, b: SavedTransfer): boolean {
     return (
         a.id === b.id &&
@@ -229,11 +225,7 @@ function touchesAccount(accountId: string) {
     return or(eq(transfers.fromAccountId, accountId), eq(transfers.toAccountId, accountId));
 }
 
-/**
- * Statements only, no transaction of its own: `withTransactionAsync` does not
- * nest (`db/transaction.ts`), so the account delete this belongs to has to
- * supply the transaction — one opened here splits the cascade into a commit each.
- */
+/** Statements only: `withTransactionAsync` does not nest, so the account delete supplies the transaction. */
 export async function tombstoneTransfersTouchingAccount(db: Database, accountId: string, now: Date): Promise<void> {
     const doomed = db
         .select({ id: transfers.id })
@@ -249,12 +241,7 @@ export async function tombstoneTransfersTouchingAccount(db: Database, accountId:
         .where(and(isNull(transfers.deletedAt), touchesAccount(accountId)));
 }
 
-/**
- * A new transfer's id and the statements that write it, with the frozen USD
- * figures already looked up. Statements only, like
- * {@link tombstoneTransfersTouchingAccount}: a write that has to land in the
- * same transaction as other rows runs `write` inside its own.
- */
+/** Statements only, like {@link tombstoneTransfersTouchingAccount}; run `write` inside the caller's transaction. */
 export async function stageTransfer(
     db: Database,
     input: TransferInput
@@ -290,10 +277,8 @@ export const transfersRepo = {
         return row?.total ?? 0;
     },
     /**
-     * Each leg freezes at its own market rate, so a transfer struck away from the
-     * market moves net worth by the spread — which is what happened. Receiving
-     * 6000 Bs for $100 when the market pays 5550 is $8.11 earned, and pinning both
-     * legs to the source would deny it.
+     * Each leg freezes at its own market rate, so an off-market transfer moves net worth by the spread: receiving
+     * 6000 Bs for $100 when the market pays 5550 is $8.11 earned.
      */
     async create(db: Database, input: TransferInput): Promise<string> {
         const { id, write } = await stageTransfer(db, input);

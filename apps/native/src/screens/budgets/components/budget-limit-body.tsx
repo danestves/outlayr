@@ -28,29 +28,24 @@ import { useHaptics } from "@/lib/use-haptics";
 import { BudgetLimitPicker } from "./budget-limit-picker";
 import { SheetCommitButton } from "./sheet-commit-button";
 
-/** The scope a limit is being placed on. A null `categoryId` is the whole ledger. */
+/** A null `categoryId` is the whole ledger. */
 export interface LimitTarget {
     categoryId: string | null;
     color?: string | null;
     emoji?: string | null;
     icon?: string | null;
-    /** The limit as it stands, or null when there is none yet. */
     limit: number | null;
     name: string;
-    /** True when committing re-points the one overall budget rather than adding one. */
     replacesExisting?: boolean;
     type: number;
-    /** The window the budget runs on. Recomputed from today when the period changes. */
     window?: BudgetWindow | null;
 }
 
 export interface LimitCommit {
-    /** The figure on the sheet. Always the one a budget being created takes. */
     limit: number;
     /**
-     * False when the figure was never touched. An existing limit must then stand
-     * as stored: what is on screen is that limit *converted* into the ledger's
-     * currency, and writing it back would restate a EUR 100 budget as USD 111.
+     * False when untouched: an existing limit must stand as stored, because the screen shows it converted into
+     * the ledger's currency and writing that back would restate a EUR 100 budget as USD 111.
      */
     limitChanged: boolean;
     type: number;
@@ -61,27 +56,15 @@ interface BudgetLimitBodyProps {
     contributions: readonly ExpenseContribution[];
     currency: string;
     nowMs: number;
-    /** Awaited, so the button can hold while the write it starts is in flight. */
     onCommit: (commit: LimitCommit) => Promise<void> | void;
-    /** Off on the first-run takeover, which has one scope and one cadence. */
     periodChoice?: boolean;
     target: LimitTarget;
 }
 
 const PERIODS = [BUDGET_TYPE.day, BUDGET_TYPE.week, BUDGET_TYPE.month, BUDGET_TYPE.year] as const;
 
-/** Smaller than a transaction's sentence: this one states two facts, not seven. */
 const STATED = "font-sans-medium text-[19px] leading-[28px] tracking-tight text-grammar";
 
-/**
- * Setting one limit, stated and then placed.
- *
- * The head says what the budget will be, the figure is the limit, and the plot
- * under it is what the scope actually costs — the answer to whether the figure
- * is a sane one, which is the question a bare number field cannot ask. Shared by
- * the sheet and by the first-run takeover, which is the same decision with the
- * scope already known.
- */
 export function BudgetLimitBody({
     target,
     contributions,
@@ -100,9 +83,6 @@ export function BudgetLimitBody({
     const [typing, setTyping] = useState(false);
     const minorUnits = minorUnitsFor(currency);
 
-    // The stored window while the period is untouched, so an edit opens on the
-    // window the budget is actually running; a fresh one once it changes, because
-    // the old anchor no longer describes the cadence being chosen.
     const window = useMemo(() => {
         if (type === target.type && target.window) {
             return target.window;
@@ -118,10 +98,6 @@ export function BudgetLimitBody({
             : (start: Date, end: Date) => spentForMain(contributions, start, lastMsBefore(end));
     }, [contributions, target]);
 
-    // `since` bounds the walk at the ledger's own first expense. Without it a
-    // two-month-old ledger still reports on "the last 6", four of which never
-    // existed — the zeros do not move the median, but they do dress a thin sample
-    // as a verdict.
     const since = useMemo(() => earliestDate(contributions), [contributions]);
     const evidence = useMemo(
         () => typicalSpend({ current: window, since, spentIn, type }),
@@ -152,10 +128,6 @@ export function BudgetLimitBody({
         [contributions, window, nowMs, target.categoryId]
     );
 
-    // Opens on the stored limit, else on what the scope usually costs, else on
-    // four fifths of this window — a figure the curve already crosses, so the
-    // first thing the plot says is something rather than nothing. A scope with a
-    // history is the common case; a first-run ledger has only the window.
     const [opening] = useState(
         () => target.limit ?? evidence.typical ?? suggestedLimit(burndown.points.at(-1)?.spent ?? 0)
     );
@@ -163,15 +135,8 @@ export function BudgetLimitBody({
     const [entry, setEntry] = useState(() => numberToNumpad(opening, minorUnits));
 
     /**
-     * A write in flight, not a write already made. `createMainBudget` reads before
-     * it inserts and `mainBudget` has no singleton constraint, so two presses
-     * landing before the first returns would each see no overall budget and insert
-     * one — and the sheet stays on screen for the length of its dismissal, which
-     * is long enough to tap twice.
-     *
-     * Released when the call settles rather than latched: the first-run takeover
-     * renders this body inline and stays mounted through a failed write, and a
-     * latch there would swallow every retry.
+     * Guards a write in flight: `mainBudget` has no singleton constraint, so a double tap would insert two.
+     * Released on settle rather than latched, so the inline first-run takeover can retry after a failed write.
      */
     const inFlight = useRef(false);
 
@@ -201,8 +166,7 @@ export function BudgetLimitBody({
     };
 
     const periodPhrase = t(budgetPeriodCadence(type));
-    // The month's own name only when the window IS that month: an anchor on the
-    // 15th makes "August" a lie about a window that ends in September.
+    // An anchor on the 15th makes "August" a lie about a window that ends in September.
     const windowLabel =
         type === BUDGET_TYPE.month && window.start.getDate() === 1
             ? monthLongTitle(window.start, language)
@@ -295,9 +259,7 @@ export function BudgetLimitBody({
             </View>
 
             {typing ? (
-                // Keyed per body: both branches are an `Animated.View` in the same
-                // position, so without one React updates the instance in place and
-                // the entrance never runs — it reconciles rather than mounts.
+                // Keyed per branch: both are an `Animated.View` in one slot, so without a key the entrance never runs.
                 <Animated.View className="px-5 pt-4" entering={revealEntering()} key="pad">
                     <AmountNumpad
                         code={currency}
@@ -309,9 +271,7 @@ export function BudgetLimitBody({
                 </Animated.View>
             ) : (
                 <Animated.View className="pt-4" entering={revealEntering()} key="plot">
-                    {/* Remounted per cadence: the plot freezes its axis at mount, and a
-					    week's curve under a month's axis is a different measure drawn to
-					    the wrong scale. */}
+                    {/* Remounted per cadence: the plot freezes its axis at mount. */}
                     <BudgetLimitPicker
                         burndown={burndown}
                         currency={currency}
@@ -332,8 +292,7 @@ export function BudgetLimitBody({
                 {target.replacesExisting ? (
                     <Text className="text-footnote text-muted pb-3">{t("budgets.sheet.singleton")}</Text>
                 ) : null}
-                {/* Never inert: a limit of nothing is a limit not typed yet, and the
-				    button that would say so is the one being pressed. */}
+                {/* Never inert: a zero limit opens the numpad instead. */}
                 <SheetCommitButton label={t("budgets.picker.commit", { amount: money(limit) })} onPress={commit} />
             </View>
         </View>

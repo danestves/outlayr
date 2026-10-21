@@ -13,17 +13,11 @@ import type { TransactionInput } from "./transactions-core";
 
 const NOW = new Date(2025, 5, 15, 10, 30);
 
-/**
- * The two writes the transaction form runs for a subscription, in order:
- * `create` COMMITS, and only then does the back-fill walk the schedule forward.
- * Everything here is about what the ledger holds when the second one fails.
- */
+/** `create` commits before the back-fill walks the schedule; these tests cover the back-fill failing. */
 const SUBSCRIPTION: TransactionInput = {
     amount: 9.99,
     categoryId: "bills",
-    // Foreign on purpose: a USD amount is canonical by definition and never
-    // consults the rate replica, so nothing would read the table these tests pull
-    // out from under the back-fill.
+    // Foreign on purpose: a USD amount never consults the rate replica these tests break.
     currency: "EUR",
     date: new Date(2025, 2, 15),
     details: null,
@@ -37,11 +31,7 @@ const SUBSCRIPTION: TransactionInput = {
 };
 
 interface Harness {
-    /**
-     * Drops the rate replica, so the back-fill's per-occurrence rate lookups fail
-     * — the real failure site, reached after the source row is already committed
-     * and before the write transaction that would retire it.
-     */
+    /** Drops the rate replica, failing the back-fill after the source row commits and before it is retired. */
     breakRateReplica: () => void;
     db: Database;
 }
@@ -128,10 +118,6 @@ describe("a subscription whose back-fill fails after the row is committed", () =
         expect(rows[0]?.id).toBe(id);
     });
 
-    // What makes the "Outlayr will try again the next time you open it" wording
-    // honest: the schedule is still on the row, so the foreground sweep picks the
-    // chain up. A back-fill that had retired the source on its way out would leave
-    // the subscription silently settled after one charge.
     it("leaves the schedule live for the next sweep to walk", async () => {
         const { db, breakRateReplica } = harness;
         const id = await transactionsRepo.create(db, SUBSCRIPTION);

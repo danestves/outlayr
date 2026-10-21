@@ -7,11 +7,7 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { setBoolSetting } from "@/data/settings-core";
 import { useTranslation } from "@/i18n/context";
 
-/**
- * Asks before anything goes to the AI providers, on the first launch and before an account
- * exists, so the answer is in place by the time a feature could send. Either
- * answer moves on; Not now is asked again when Speak or Scan is opened.
- */
+/** Asked before an account exists, so the answer is in place before any feature could send. */
 export function OnboardingSmartFeatures() {
     const db = useDatabase();
     const router = useRouter();

@@ -34,7 +34,6 @@ export function isSignInCancellation(cause: unknown): boolean {
     return code !== null && CANCELLATION_CODES.has(code);
 }
 
-/** Better Auth's codes for the email flow that the owner can do something about. */
 const EMAIL_FAILURES = new Map<string, TranslationKey>([
     ["INVALID_EMAIL", "auth.email.error.email"],
     ["INVALID_EMAIL_OR_PASSWORD", "auth.email.error.credentials"],

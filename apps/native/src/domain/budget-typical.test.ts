@@ -12,12 +12,10 @@ import {
 
 const MONTH = BUDGET_TYPE.month;
 
-/** Local time throughout, matching the calendar arithmetic the budget math does. */
 function localKey(date: Date): string {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-/** Spend keyed by the window's start, so a test states one figure per window. */
 function spendBy(byStart: Record<string, number>) {
     return (start: Date) => byStart[localKey(start)] ?? 0;
 }

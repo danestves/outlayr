@@ -43,19 +43,11 @@ import type { MaterialTheme } from "./material-scheme";
 
 const THEMES: readonly MaterialTheme[] = ["light", "dark"];
 
-/**
- * Sixteen hues around the wheel at a wallpaper-like chroma, plus a near-grey,
- * the case that hands Material You almost no hue to work with.
- */
 const SEEDS = [
     ...Array.from({ length: 16 }, (_, index) => hexFromArgb(Hct.from(index * 22.5, 48, 50).toInt())),
     "#8a8c8e",
 ];
 
-/**
- * Every scheme style Android's wallpaper picker can hand the app, not only
- * the TonalSpot default: the pipeline gets whatever the device chose.
- */
 const VARIANTS = {
     content: SchemeContent,
     expressive: SchemeExpressive,
@@ -83,7 +75,6 @@ const cases = SEEDS.flatMap((seed) =>
     )
 );
 
-/** Every pair `contrast-pairs.ts` names, measured on one pipeline output. */
 function failures(label: string, variables: Record<string, string>): string[] {
     const value = (token: string) => variables[`--${token}`];
     const found: string[] = [];
@@ -118,7 +109,6 @@ function failures(label: string, variables: Record<string, string>): string[] {
 
 const stylesheet = readFileSync(join(import.meta.dirname, "../../global.css"), "utf-8");
 
-/** The `--token: value;` declarations inside `@variant <theme> { … }`. */
 function themeTokens(theme: MaterialTheme): Map<string, string> {
     const open = stylesheet.indexOf("{", stylesheet.indexOf(`@variant ${theme} {`));
     let depth = 0;

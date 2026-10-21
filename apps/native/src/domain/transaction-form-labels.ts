@@ -10,8 +10,7 @@ import type { TranslationKey } from "@/i18n/catalog";
 import type { TranslateFn } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
 
-// Keyed by a stored `recurringType`, which is a plain column value rather than
-// a checked union, so an unknown one falls through to the caller's default.
+// `recurringType` is a plain column, not a checked union, so an unknown one falls through to the caller's default.
 const CADENCE_LABEL_KEY = new Map<number, TranslationKey>([
     [RECURRING_TYPE.daily, "transaction.cadence.daily"],
     [RECURRING_TYPE.weekly, "transaction.cadence.weekly"],
@@ -43,7 +42,6 @@ const RATE_SOURCE_WORD_KEYS = {
     official: "transaction.sentence.rateSource.official",
 } as const satisfies Record<TransferRateChoice, TranslationKey>;
 
-/** Names the policy a stated conversion was produced by. */
 export function rateNameKey(type: TransferRateChoice, bcv: boolean): TranslationKey {
     return bcv && type === "official" ? "transaction.rate.officialBcv" : RATE_NAME_KEYS[type];
 }
@@ -96,13 +94,6 @@ export function ctaKey(mode: "create" | "edit", isSubscription: boolean): Transl
     return isSubscription ? "transaction.cta.addSubscription" : "transaction.cta.add";
 }
 
-/**
- * Only names what this screen calls each phrasing. Which phrasing a lead reads
- * as stays with {@link leadLabelKey}, including the counted fallback a lead the
- * picker never offered needs — one restored from another device. Several domain
- * keys therefore share a string: "2 days before" and "5 days before" are the
- * same counted form.
- */
 const LEAD_LABEL_KEY = {
     "settings.notifications.leadDaysBefore": "transaction.remind.daysBefore",
     "settings.notifications.leadOff": "transaction.remind.off",
@@ -120,21 +111,11 @@ export function leadLabel(t: TranslateFn, lead: number | null): string {
 
 interface WhenOptions {
     date: Date;
-    /**
-     * The cadence phrase for a subscription, already built by
-     * {@link import("@/components/custom-schedule-sheet").intervalPhrase}, or
-     * null for a one-off.
-     */
     interval: string | null;
     language?: Language;
     now: Date;
 }
 
-/**
- * The sentence's closing phrase. A one-off says when it happened and a
- * subscription says how often it repeats, because those are the same fact about
- * the entry's timing and the sentence has one place to put it.
- */
 export function transactionWhenLabel(t: TranslateFn, { date, interval, language, now }: WhenOptions): string {
     if (interval !== null) {
         return t("transaction.sentence.when.repeating", { date: formatSentenceDate(date, language), interval });

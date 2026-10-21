@@ -21,11 +21,6 @@ function statedKey(account: Account, balance: number) {
     return balance > 0 ? "debts.plan.stated.owesYou" : "debts.plan.stated.youOwe";
 }
 
-/**
- * Setting, changing and removing `account`'s payoff plan from its detail: what
- * the menu offers, `open` for the menu and the line, and the props of the goal
- * sheet that does it. Setting a new plan goes through the free cap first.
- */
 export function usePayoffPlan(db: Database, account: Account, balance: AccountBalance, line: PayoffLine | null) {
     const t = useTranslation();
     const haptics = useHaptics();
@@ -34,8 +29,7 @@ export function usePayoffPlan(db: Database, account: Account, balance: AccountBa
     const [target, setTarget] = useState<GoalTarget | null>(null);
     const live = line !== null && line.endedOn === null ? line : null;
 
-    // Presented from an effect, as the goal screens do: a handler reaching for the
-    // ref would read it in render as far as the compiler can tell.
+    // Presented from an effect: a handler reading the ref counts as a render read to the compiler.
     useEffect(() => {
         if (target) {
             ref.current?.present();
@@ -74,7 +68,6 @@ export function usePayoffPlan(db: Database, account: Account, balance: AccountBa
     };
 
     return {
-        /** No live plan, and a balance in the debt direction. */
         canSet: live === null && takesPayoffPlan(account, balance.total),
         live: live !== null,
         open: () => (live ? present() : gate(account.id, present)),

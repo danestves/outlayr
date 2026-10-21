@@ -1,8 +1,3 @@
-/**
- * Swift's `SupportEmail` prefilled the same five fields (`SupportEmail.swift`).
- * It percent-encoded with `.urlPathAllowed`, which leaves `&` intact and lets a
- * body containing one silently truncate the link — `encodeURIComponent` here.
- */
 export interface SupportDiagnostics {
     appBuild: string;
     appName: string;

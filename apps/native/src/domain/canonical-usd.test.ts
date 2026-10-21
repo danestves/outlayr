@@ -2,7 +2,6 @@ import { describe, expect, it } from "@jest/globals";
 import { canonicalUsd } from "@outlayr/money/canonical-usd";
 import type { RateLookup } from "@outlayr/money/rates";
 
-/** A lookup over a fixed table, mirroring what the local replica serves. */
 function lookupOf(rows: Record<string, number>, seen?: { calls: number }): RateLookup {
     return async (quote, _rateType, date) => {
         if (seen) {
@@ -17,7 +16,7 @@ const DATE = new Date("2026-07-15T12:00:00Z");
 
 describe("canonicalUsd", () => {
     it("divides by the rate, because a rate is currency-per-USD", async () => {
-        // 0.92 EUR per USD, so €92 is $100 — not $84.64.
+        // 0.92 EUR per USD, so €92 is $100, not $84.64.
         const result = await canonicalUsd(lookupOf({ EUR: 0.92 }), {
             amount: 92,
             currency: "EUR",
@@ -56,7 +55,6 @@ describe("canonicalUsd", () => {
     });
 
     it("accepts the write with nulls when no rate is cached", async () => {
-        // An entry made offline before any rate landed must still be recorded.
         const result = await canonicalUsd(lookupOf({ EUR: 0.8 }), {
             amount: 50,
             currency: "GBP",
@@ -71,8 +69,6 @@ describe("canonicalUsd", () => {
     });
 
     it("accepts the write when the stored rate is unusable", async () => {
-        // A non-positive rate would divide the amount into garbage; the money
-        // engine rejects it, and that is a null here rather than a lost entry.
         const result = await canonicalUsd(lookupOf({ EUR: 0 }), {
             amount: 10,
             currency: "EUR",

@@ -8,16 +8,10 @@ import { amountDigits, amountParts, withCurrencySymbol } from "@/domain/money";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useLanguage, useTranslation } from "@/i18n/context";
 
-/**
- * Scaled by hand rather than by a text style: the figure has to stay
- * proportionate to the body-sized ledger underneath it.
- */
 const FONT_SIZE = 40 * HERO_TYPE.scale;
 
 interface LogHeroNumberProps {
-    /** The currency the figure is denominated in — not always the global one. */
     code: string;
-    /** Unsigned magnitude; the sign is passed separately. */
     magnitude: number;
     positive: boolean;
     showCents: boolean;
@@ -34,14 +28,12 @@ export function LogHeroNumber({ magnitude, code, positive, showCents }: LogHeroN
     const digits = amountDigits(parts);
     const sign = positive ? "+" : "-";
     const figureSize = hidden ? FONT_SIZE : fittedHeroSize(FONT_SIZE, magnitude, parts.minorUnits, width, fontScale);
-    // Sized down as the symbol lengthens: a one-character "$" can sit close to the
-    // figure, but a four-character "Bs.D" at the same weight reads as part of it.
+    // Multi-character symbols like "Bs.D" read as part of the figure at full size.
     const symbolSize = (largeText ? figureSize : FONT_SIZE) * (parts.symbol.length > 1 ? 0.44 : 0.6);
 
     return (
         <View
             accessibilityLabel={hidden ? t("log.amounts.hidden") : `${sign}${withCurrencySymbol(parts, digits)}`}
-            // Symbol and digits are one figure, not two things to swipe between.
             accessible
             className="flex-row items-baseline gap-1"
             onLayout={(event) => setWidth(event.nativeEvent.layout.width)}

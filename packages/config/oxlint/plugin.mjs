@@ -1,22 +1,12 @@
-// Design rules that used to live in jest suites reading source files as text
-// (`grounds.test.ts`, `transaction-guard.test.ts`, `widget-scope.test.ts`,
-// `no-background.test.ts`, the EditorCta call-site scan). As lint rules they
-// run on the AST instead of a regex over comments, report at the offending
-// line, and fire in the editor and on `vp check` rather than after a full
-// jest run. Registered from the root `vite.config.ts` as `outlayr/*`.
+// Registered from the root vite.config.ts as `outlayr/*`. See docs/internals/linting.md, "outlayr".
 
 import noLowValueComments from "./t3code/no-low-value-comments.mjs";
 
 const isIdentifier = (node, name) => node?.type === "Identifier" && node.name === name;
 const isJsxName = (node, names) => node?.type === "JSXIdentifier" && names.includes(node.name);
 
-/**
- * `drizzle-orm/expo-sqlite` builds `db.transaction()` in sync mode and never
- * awaits the callback, so an async body commits an empty `begin; commit;` and
- * every statement inside runs unprotected. `tsc` cannot see it: the signature
- * is honest, only the runtime is not. `withTransaction` in `src/db/transaction.ts`
- * is the one place allowed to call it, by override.
- */
+// drizzle-orm/expo-sqlite never awaits the transaction callback, so an async body commits an empty
+// `begin; commit;` and every statement runs unprotected. tsc cannot see it.
 const noDrizzleTransaction = {
     create(context) {
         return {
@@ -43,13 +33,8 @@ const noDrizzleTransaction = {
     },
 };
 
-/**
- * A SwiftUI `List` (and `Form`, which is a `List` underneath) fills itself with
- * `systemGroupedBackground` below the level any token reaches, and the rows
- * float on a second system fill. Neither shows in a rendered tree, so a screen
- * that forgets them ships on iOS's grey. Every file rendering one names both
- * grounds through `groupedList(...)` and `groupedRows(...)`.
- */
+// A SwiftUI List or Form paints systemGroupedBackground below any token, with rows on a second system
+// fill. Neither shows in a rendered tree, so a screen that forgets them ships on iOS's grey.
 const swiftuiListGrounds = {
     create(context) {
         let list = null;
@@ -91,11 +76,7 @@ const swiftuiListGrounds = {
 
 const BOTTOM_SHEET_MODULE = "@expo/ui/community/bottom-sheet";
 
-/**
- * A `BottomSheetModal` is painted by the system material unless the sheet
- * hands it a `backgroundStyle`. Only value imports count: a file that holds a
- * `useRef<BottomSheetModal>` never presents one.
- */
+// Only value imports count: a file that holds a `useRef<BottomSheetModal>` never presents one.
 const bottomSheetBackground = {
     create(context) {
         let importNode = null;
@@ -139,12 +120,6 @@ const bottomSheetBackground = {
 
 const SHEET_REPAINT = /\bbg-(?:background|surface|card|foreground\/\d+)\b/;
 
-/**
- * Scoped by override to `components/import-sheet/**`: the sheet root paints
- * its ground once through `backgroundStyle`, and step content rules ink onto
- * that paper. A solid `bg-background` re-paints it; a wash or card class
- * draws chrome the Grid grammar does not have.
- */
 const noSheetRepaint = {
     create(context) {
         const check = (node, text) => {
@@ -190,18 +165,9 @@ const contains = (outer, inner) => {
     return outerStart <= innerStart && innerEnd <= outerEnd;
 };
 
-/**
- * A `"widget"` body is stringified by babel and evaluated in the widget
- * extension's bare `JSContext`, where nothing from this module's scope exists.
- * A module-level constant the body references becomes a `ReferenceError`
- * painted on the tile, which neither `tsc`, the linter nor the iOS build sees.
- * So a file declaring a widget declares nothing else at module scope: constants
- * live inside the body, shared values arrive as props.
- *
- * The directive is found wherever the function sits, a standalone declaration
- * or a callback inline in `createWidget(...)`; the top-level statement holding
- * the first one is the single exempt statement.
- */
+// A "widget" body is evaluated in the extension's bare JSContext, so a module-scope reference paints a
+// ReferenceError on the tile that tsc, lint and the iOS build all miss. The top-level statement holding
+// the first directive, standalone or inline in `createWidget(...)`, is the only exempt one.
 const widgetModuleScope = {
     create(context) {
         const widgets = [];
@@ -241,11 +207,7 @@ const widgetModuleScope = {
     },
 };
 
-/**
- * `canSave` already folds in `!isSubmitting`, so a call site that forgets
- * `busy` dims its save but never spins, and the omission is invisible until
- * you watch a real save. The category editor shipped that way once.
- */
+// `canSave` already folds in `!isSubmitting`, so a call site that forgets `busy` dims its save but never spins.
 const editorCtaBusy = {
     create(context) {
         return {

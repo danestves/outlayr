@@ -31,17 +31,11 @@ afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
-    // Without this, `rateLimiter.limit`'s `mockImplementation` from the
-    // "global window exhausted" test below stayed wrapped onto the shared
-    // module-level `rateLimiter` singleton for every later test in this file.
+    // Undoes a test's `mockImplementation` on the shared `rateLimiter` singleton.
     vi.restoreAllMocks();
 });
 
-/**
- * `Output.object` sends `{type: "json", schema}` and parses the model's text
- * response as JSON — there is no tool-call path to fake, so a mock model only
- * needs to return the JSON payload as a single text content part.
- */
+/** `Output.object` parses text as JSON, so a mock returns the payload as one text part. */
 function mockModel(payload: unknown) {
     return new MockLanguageModelV4({
         doGenerate: async () => ({
@@ -78,9 +72,7 @@ const BASE_ARGS = {
 
 describe("suggest args validation", () => {
     it("carries exactly the privacy-boundary fields", () => {
-        // Amounts, dates, accounts, balances, and identity must never leave the
-        // device — this is a threat-matrix assertion, not a shape convenience.
-        // `currency` is a code, never a figure.
+        // A threat-matrix assertion: amounts, dates, accounts, balances and identity never leave the device.
         expect(Object.keys(suggestArgs).sort()).toStrictEqual(
             [
                 "aiConsent",
@@ -182,12 +174,7 @@ describe("suggest guard ladder", () => {
         const t = convexTest(schema, modules);
         const identity = await seedAuthUser(t);
 
-        // The global limit is sharded 10 ways and sampled at random per call, so
-        // exhausting it deterministically through real component writes would
-        // mean draining all 10 shards. Asserting the guard reads a failed check
-        // correctly does not require re-proving the component's own sharding
-        // math (that is the library's concern) — only that a not-ok result short
-        // circuits before any model call.
+        // The global limit is sharded and sampled, so this only asserts a not-ok result short-circuits.
         const limitSpy = vi
             .spyOn(rateLimiter, "limit")
             .mockImplementation(async (_ctx, name) =>
@@ -397,14 +384,7 @@ describe(maybeScheduleGrounded, () => {
         return rows.filter((row) => row.name.includes("groundedLookup"));
     }
 
-    /**
-     * `authenticatedAs` returns `AnyTestConvex` (widened for Better Auth's
-     * generic component schema — see `test.helpers.ts`), which loses this
-     * file's concrete `DataModel` and makes an inline `t.action` callback fail
-     * to typecheck against `ActionCtx`. Calling `t.withIdentity` directly on
-     * the concretely-typed `t` keeps the same runtime identity without that
-     * widening.
-     */
+    /** `authenticatedAs` widens to `AnyTestConvex`; `t.withIdentity` keeps this file's `DataModel`. */
     function asIdentity(t: ReturnType<typeof convexTest>, identity: Awaited<ReturnType<typeof seedAuthUser>>) {
         return t.withIdentity({
             sessionId: identity.sessionId,
@@ -705,8 +685,7 @@ describe("runSuggest sanitisation", () => {
             children: [],
             name: `Cat${i}`,
         }));
-        // The 61st branch is pushed out of the server-side cap, so it must read as
-        // "new" even though the caller technically listed it as known.
+        // The 61st branch is past the server-side cap, so it reads as new.
         const model = mockModel({
             categoryName: "Cat60",
             domain: null,
@@ -741,8 +720,6 @@ describe("runSuggest sanitisation", () => {
     });
 
     it("drops a parent the user does not have", async () => {
-        // The model cannot know this ledger's shape, so an invented parent is not
-        // taken on trust.
         const model = mockModel({
             categoryName: "Streaming",
             domain: null,

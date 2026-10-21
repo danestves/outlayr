@@ -11,11 +11,7 @@ export interface OutlinedDropdownFieldProps<T extends string> {
     ground?: string;
 }
 
-/**
- * An outlined field that opens a Compose dropdown menu, drawn by
- * `outlined-dropdown-field.android.tsx`. iOS has no Compose (`MaterialHost`
- * throws there), so this renders nothing; iOS forms use a SwiftUI menu `Picker`.
- */
+// iOS has no Compose (`MaterialHost` throws there), so this renders nothing; iOS forms use a SwiftUI menu `Picker`.
 export function OutlinedDropdownField<T extends string>(_props: OutlinedDropdownFieldProps<T>) {
     return null;
 }

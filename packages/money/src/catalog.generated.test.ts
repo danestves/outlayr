@@ -2,12 +2,7 @@ import { describe, expect, it } from "vite-plus/test";
 import { buildCatalog } from "../scripts/lib/build-catalog.mts";
 import { CURRENCY_DECIMALS, CURRENCY_META, PICKABLE_CURRENCY_CODES } from "./catalog.generated";
 
-/**
- * Drift guard: the committed `catalog.generated.ts` MUST equal the deterministic
- * output of `buildCatalog()` over the vendored provider list + pinned CLDR data
- * + overrides overlay. Regenerate with
- * `vp run --filter @outlayr/money generate:catalog`.
- */
+// Regenerate with `vp run --filter @outlayr/money generate:catalog`.
 describe("catalog.generated drift", () => {
 	const built = buildCatalog();
 

@@ -4,26 +4,14 @@ import { valueCell } from "@outlayr/money/currency-totals";
 import type { CurrencyCell } from "@outlayr/money/currency-totals";
 import type { RateTable } from "@outlayr/money/valuation";
 
-/** A cell that knows where it is drawn as well as where it was valued. */
 export type PlottedCell = CurrencyCell & { plotDay: string };
 
 export interface GoalBalancePoint {
-    /** Local midnight of the day, matching everything else a goal is measured on. */
     time: number;
     value: number;
 }
 
-/**
- * The account's balance across a goal's own span, one point per LOCAL day.
- *
- * Not `accountBalanceSeries`, which walks only the last 182 days; a goal's span
- * can start earlier. Both cut on local days: a goal is read on them throughout.
- *
- * This is a running presentation of `balanceIn`, not a second definition of a
- * balance: each cell is valued into the account's currency by the same
- * `valueCell`, and each day's total is restated at that day's rate the way
- * `balanceIn` restates today's.
- */
+// Not `accountBalanceSeries`, which walks only the last 182 days; a goal's span can start earlier.
 export function goalBalanceSeries(
     cells: readonly PlottedCell[],
     account: AccountBalanceInput,
@@ -39,12 +27,9 @@ export function goalBalanceSeries(
 
     const points: GoalBalancePoint[] = [];
     let running = account.initialBalance;
-    // `YYYY-MM-DD` keys sort lexically exactly as they sort chronologically.
     for (const day of [...byDay.keys()].sort()) {
         running += byDay.get(day) ?? 0;
         const time = localMidnightOf(day);
-        // Days before the goal existed still move the running total — they are what
-        // the account held when it started — but they are not part of its line.
         if (time >= sinceMs) {
             points.push({ time, value: restate(running, account.currency, displayCurrency, day, rates).value });
         }
@@ -52,7 +37,6 @@ export function goalBalanceSeries(
     return points;
 }
 
-/** A `YYYY-MM-DD` key, read as the local day it names. */
 function localMidnightOf(dateKey: string): number {
     const [year, month, day] = dateKey.split("-").map(Number);
     return new Date(year, month - 1, day).getTime();

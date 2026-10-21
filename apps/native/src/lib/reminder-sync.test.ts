@@ -53,7 +53,6 @@ describe("useDailyReminderSync", () => {
         const db = migratedDatabase();
         await renderHook(() => useDailyReminderSync(db));
 
-        // A sync pull, sign-in adoption or logo update writes the table too.
         await act(async () => {
             for (const listener of mockChangeListeners) {
                 listener({ rowId: 1, tableName: "transactions" });

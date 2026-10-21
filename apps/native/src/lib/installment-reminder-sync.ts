@@ -17,13 +17,6 @@ import { readReminderTime } from "./reminder-sync";
 import { cancelReminders, pendingReminderIds, reminderPermission, scheduleDatedReminder } from "./reminders";
 import type { DatedReminder } from "./reminders";
 
-/**
- * Reconciles iOS's pending queue with the day-before notice of every unpaid
- * cuota. Recomputed from the ledger on each pass, so a cuota paid, edited or
- * deleted with its order loses its notice on the next one: `BackgroundWork`
- * asks once per launch and foreground and after a setting changes, and the
- * installment screens ask after their own writes.
- */
 export function syncInstallmentReminders(db: Database): Promise<void> {
     const run = queue.then(() => reconcileInstallmentReminders(db));
     queue = run.catch(() => {
@@ -32,12 +25,7 @@ export function syncInstallmentReminders(db: Database): Promise<void> {
     return run;
 }
 
-/**
- * After a write that moves what a cuota owes (a payment, an edit, a deleted
- * order), so its notice changes now rather than on the next foreground, which
- * may come after it has fired. The write already landed, so a failure here
- * only logs.
- */
+/** Re-arms now rather than on the next foreground, which may come after the notice fired. The write already landed. */
 export function rearmInstallmentReminders(db: Database): void {
     syncInstallmentReminders(db).catch((error) => {
         console.error("Installment reminder sync failed", error);
@@ -79,7 +67,6 @@ async function reconcileInstallmentReminders(db: Database): Promise<void> {
     }
 }
 
-/** The day-before notice of each cuota still owed, soonest first. */
 function cuotaNotices(db: Database, now: Date, time: TimeOfDay, cap: number, hideAmounts: boolean): DatedReminder[] {
     const names = new Map(
         db

@@ -14,13 +14,6 @@ import type { ChoiceRow as IosChoiceRow, LinkRow as IosLinkRow, ToggleRow as Ios
 
 export { PickerRow } from "@/components/list/picker-row";
 
-/**
- * The settings rows as Material 3 list items (Direction B): the value moves
- * under the headline as supporting text, switches and radios are Compose's,
- * and every row ripples. The mono section labels stay, without the hairline
- * above the first row.
- */
-
 export function SettingsSection({ title, footer, children }: { title: string; footer?: string; children?: ReactNode }) {
     return (
         <View className="pt-5">
@@ -53,11 +46,8 @@ export function LinkRow({ icon, title, value, detail, destructive, onPress }: Co
 }
 
 /**
- * The whole row toggles, as an M3 list item with a switch does. The Compose
- * switch is only the row's picture of the state, with no handler of its own: a
- * tap on it reaches the row's Pressable as well, and two handlers would run the
- * change twice (the app lock would ask for a fingerprint twice). It stays out
- * of TalkBack too, and the row announces itself as the switch.
+ * The switch has no handler: a tap on it also reaches the row's Pressable, and two handlers would run the
+ * change twice (the app lock would ask for a fingerprint twice).
  */
 export function ToggleRow({ icon, title, value, onValueChange, testID }: ComponentProps<typeof IosToggleRow>) {
     return (
@@ -80,10 +70,7 @@ export function ToggleRow({ icon, title, value, onValueChange, testID }: Compone
     );
 }
 
-/**
- * Android's single choice is a leading radio button, where iOS draws a trailing
- * checkmark. Like the switch above, the radio has no handler: the row takes the tap.
- */
+/** Like the switch, the radio has no handler: the row takes the tap. */
 export function ChoiceRow({ label, detail, leading, selected, value, onPress }: ComponentProps<typeof IosChoiceRow>) {
     return (
         <MaterialListItem

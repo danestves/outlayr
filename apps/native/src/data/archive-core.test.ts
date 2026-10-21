@@ -172,9 +172,6 @@ describe("archiving a ledger", () => {
     });
 
     it("restores an instant as the same moment, not as text", async () => {
-        // The defect this guards: JSON turns a Date into an ISO string, and a
-        // column read back as a string sorts and compares differently from every
-        // other date in the ledger.
         const when = new Date(1_700_000_123_456);
         await db.insert(categories).values(CATEGORY);
         await db.insert(transactions).values(transactionRow("t1", { date: when }));
@@ -192,8 +189,6 @@ describe("archiving a ledger", () => {
     });
 
     it("carries a tombstone rather than dropping it", async () => {
-        // A deletion the archive dropped comes back as a live row the moment a peer
-        // that never saw it pushes again.
         await db.insert(categories).values(CATEGORY);
         await db.insert(transactions).values(transactionRow("t1", { deletedAt: new Date(1_700_000_000_000) }));
 
@@ -244,11 +239,6 @@ describe("archiving a ledger", () => {
 });
 
 describe("archive and the device's own state", () => {
-    // `appMeta` holds this phone's identity next to the account's settings, and
-    // `replaceLocalFromAccount` refuses to wipe the table for exactly this
-    // reason: "Wiping the table would take `syncDeviceId`, `syncCursor` and
-    // `onboardingComplete` with it — device state that no pull will ever hand
-    // back."
     it("leaves this device's sync identity alone through a restore", async () => {
         const source = migratedDatabase();
         await setMeta(source, META_KEYS.currency, "EUR");
@@ -263,11 +253,8 @@ describe("archive and the device's own state", () => {
 
         await restoreArchive(target, document);
 
-        // The account's settings travel.
         await expect(getMeta(target, META_KEYS.currency)).resolves.toBe("EUR");
-        // The device's do not — a stolen device id breaks the same-millisecond
-        // tie-break between the two handsets, and a cursor that jumped forward
-        // skips every sequence in between, permanently.
+        // A copied device id breaks the same-millisecond tie-break; a jumped cursor skips sequences for good.
         await expect(getMeta(target, META_KEYS.syncDeviceId)).resolves.toBe("device-on-the-ipad");
         await expect(getMeta(target, META_KEYS.syncCursor)).resolves.toBe("200");
     });

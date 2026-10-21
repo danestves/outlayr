@@ -21,8 +21,7 @@ export default function CategoriesScreen() {
     return (
         <>
             <Stack.Toolbar placement="bottom">
-                {/* The segmented picker draws its own capsule, so `hidesSharedBackground`
-				    stops the toolbar wrapping it in a second glass one. */}
+                {/* The segmented picker draws its own capsule; this stops a second glass one around it. */}
                 <Stack.Toolbar.View hidesSharedBackground>
                     <CategoryKindToggle income={income} onChange={setIncome} />
                 </Stack.Toolbar.View>

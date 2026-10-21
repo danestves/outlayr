@@ -17,20 +17,11 @@ interface GoalCardProps {
     currency: string;
     entry: SavingsGoalWithProgress;
     onPress: (id: string) => void;
-    /** Measured by the grid; null on the first frame, before any layout. */
     width: number | null;
 }
 
 const ARC = { radius: 19, size: 46, stroke: 4 } as const;
 
-/**
- * One goal in the grid under the budgets.
- *
- * An arc rather than a bar, and open at the bottom rather than a closed ring: a
- * budget's ring is a container being filled up to a ceiling, a goal's arc is a
- * climb toward a mark. They must not read as the same instrument, because a full
- * budget ring is bad news and a full goal arc is the point.
- */
 export function GoalCard({ currency, entry, onPress, width }: GoalCardProps) {
     const t = useTranslation();
     const { language } = useLanguage();
@@ -38,16 +29,13 @@ export function GoalCard({ currency, entry, onPress, width }: GoalCardProps) {
     const colors = useColors();
 
     const { exact, goal, progress, saved, target } = entry;
-    // Reached is a comparison like any other here, so it only counts when the two
-    // figures could be compared: an unconverted EUR 1,000 target is "met" by a GBP
-    // 1,000 balance, and the card would dim as done beside its own "No rate yet".
+    // Reached only counts when comparable: an unconverted EUR 1,000 target is "met" by a GBP 1,000 balance.
     const reached = exact && progress.reached;
     const money = (value: number) => formatAmount(value, currency, showCents, language);
     const percent = Math.round(progress.fraction * 100);
     const { standing } = progress;
     const onPace = standing?.onPace ?? false;
-    // Null when the goal has no line to be measured against, which is not the same
-    // as being in front of one — `?? 0 >= 0` would have called that ahead.
+    // A null standing is not ahead: `?? 0 >= 0` would have called it ahead.
     const ahead = onPace || (standing != null && standing.against >= 0);
     const tone = arcTone(reached, ahead, colors);
     const word = standingWord(reached, standing != null, onPace, ahead, t);
@@ -55,10 +43,6 @@ export function GoalCard({ currency, entry, onPress, width }: GoalCardProps) {
     return (
         <Pressable
             accessibilityHint={t("goals.a11y.openHint")}
-            // The same branch the visible card takes. Reading out a percentage, a
-            // balance and a target drawn from two currencies — or announcing a goal
-            // as reached — is the failure this withholds, not a smaller one for
-            // being spoken rather than drawn.
             accessibilityLabel={
                 exact
                     ? t("goals.a11y.card", {
@@ -108,10 +92,7 @@ export function GoalCard({ currency, entry, onPress, width }: GoalCardProps) {
             </Text>
 
             {exact ? null : (
-                // Every figure below measures the balance against the target, and one
-                // of the two is not in the currency the other is stated in. A
-                // percentage or a remainder read off that pair would be a precise
-                // answer to a comparison nobody made.
+                // A percentage or remainder read off two currencies would answer a comparison nobody made.
                 <MonoLabel numberOfLines={2}>{t("goals.card.unvalued")}</MonoLabel>
             )}
 
@@ -147,7 +128,6 @@ export function GoalCard({ currency, entry, onPress, width }: GoalCardProps) {
     );
 }
 
-/** The one word under the pace: reached, on pace, ahead, or behind. */
 function standingWord(
     reached: boolean,
     measured: boolean,
@@ -158,7 +138,6 @@ function standingWord(
     if (reached) {
         return t("goals.reached");
     }
-    // Nothing to say rather than something wrong: the card states the pace alone.
     if (!measured) {
         return null;
     }
@@ -168,7 +147,6 @@ function standingWord(
     return ahead ? t("goals.ahead") : t("goals.behind");
 }
 
-/** On pace is stated, not praised: only a real lead or a real shortfall takes colour. */
 function paceTone(onPace: boolean, ahead: boolean): string {
     if (onPace) {
         return "text-muted";
@@ -176,7 +154,6 @@ function paceTone(onPace: boolean, ahead: boolean): string {
     return ahead ? "text-income" : "text-over-budget";
 }
 
-/** Reached closes on the inverted card, behind reads as a warning, ahead as the ordinary ink. */
 function arcTone(reached: boolean, ahead: boolean, colors: ReturnType<typeof useColors>): string {
     if (reached) {
         return colors.background;
@@ -184,10 +161,6 @@ function arcTone(reached: boolean, ahead: boolean, colors: ReturnType<typeof use
     return ahead ? colors.foreground : colors.overBudget;
 }
 
-/**
- * A 270° arc opening at the bottom left, filled clockwise. Skia rather than a
- * view: an arc is a stroked path, and the alternative is two clipped circles.
- */
 function GoalArc({ fraction, tone }: { fraction: number; tone: string }) {
     const colors = useColors();
     const reduceMotion = useReducedMotion();

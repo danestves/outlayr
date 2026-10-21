@@ -10,11 +10,7 @@ import { AFTER_FIRST_UNLOCK, getItem, setItem } from "expo-secure-store";
 
 const keychain = { keychainAccessible: AFTER_FIRST_UNLOCK };
 
-/**
- * better-auth's `emailOTPClient`, rebuilt: the package only exports it from a
- * barrel of every client plugin, which Metro would ship whole. The listener is
- * what makes a verified code refresh the session like a sign-in does.
- */
+/** Rebuilt because better-auth only exports `emailOTPClient` from a barrel Metro would ship whole. */
 const emailCodes = {
     // SAFETY: a type carrier, as in better-auth's own client plugins.
     $InferServerPlugin: {} as ReturnType<typeof emailOTP>,
@@ -50,9 +46,7 @@ function createCloudRuntime() {
     return {
         authClient: createAuthClient({
             baseURL: siteUrl,
-            // Every app switch would otherwise ask the backend for the session,
-            // signed out or not. Launch still restores it and the Convex token
-            // refresh still catches a revoked one.
+            // Every app switch would otherwise fetch the session; launch restores it, token refresh catches a revoke.
             sessionOptions: { refetchOnWindowFocus: false },
             plugins: [
                 convexClient(),

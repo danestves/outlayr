@@ -10,11 +10,7 @@ const BINANCE_PAIR: ReadonlySet<string> = new Set(["USD", "VES"]);
 
 export type TransferRateChoice = EntryRateType | "binance";
 
-/**
- * Entry rate sources for a currency, `official` first. `binance` is never an
- * entry type, since USDT is not USD; `transferRateOptions` offers it to the
- * transfer editor as a reference that saves as `custom`.
- */
+// `binance` is never an entry type (USDT is not USD); the transfer editor offers it as a reference saved as `custom`.
 export function rateTypeOptions(currency: string): EntryRateType[] {
     return ENTRY_RATE_TYPES.filter((type) => type !== "eur_reference" || currency === EUR_REFERENCE_CURRENCY);
 }

@@ -15,39 +15,25 @@ import { savingsGoalsRepo } from "./savings-goals-core";
 import { transactionsRepo } from "./transactions-core";
 import { transfersRepo } from "./transfers-core";
 
-/**
- * The undo has to be noticed and reached for before the write lands, so the
- * window is sized to the toast that offers it rather than the other way round.
- */
 export const UNDO_WINDOW_MS = 10_000;
 
-/**
- * What a held write acts on. `recurring` is not a delete — it ends a schedule —
- * but it is destructive, irreversible once written, and wants the same window,
- * so it rides the same machinery.
- */
+// `recurring` ends a schedule rather than deleting, but it is irreversible once written and wants the same window.
 export type DeferredDeleteKind = "account" | "budget" | "category" | "goal" | "recurring" | "row";
 
 interface KindSpec {
     commit: (db: Database, id: string) => Promise<void>;
     failedBody: TranslatableKey;
     failedTitle: TranslatableKey;
-    /** Titles the toast that carries the undo. */
     undoTitle: TranslatableKey;
 }
 
-/**
- * Which table a row id belongs to is read at commit time rather than passed in:
- * a caller deriving it from its own list gets it wrong the moment that list is
- * filtered inside the undo window, and removing a transfer as a transaction
- * updates zero rows and rejects nothing.
- */
+// The table is read at commit time, not passed in: a caller's list filtered inside the window gets it wrong, and
+// removing a transfer as a transaction updates zero rows and rejects nothing.
 async function commitRow(db: Database, id: string): Promise<void> {
     const transfer = await transfersRepo.getById(db, id);
     await (transfer ? transfersRepo.softDelete(db, id) : transactionsRepo.remove(db, id));
 }
 
-/** The overall budget lives in its own table, and only its id can say so. */
 async function commitBudget(db: Database, id: string): Promise<void> {
     const [overall] = await db.select({ id: mainBudget.id }).from(mainBudget).where(eq(mainBudget.id, id));
     await (overall ? budgetsRepo.deleteMainBudget(db, id) : budgetsRepo.deleteBudget(db, id));
@@ -93,13 +79,9 @@ const SPECS = {
 } satisfies Record<DeferredDeleteKind, KindSpec>;
 
 export interface DeferredDeleteRegistry {
-    /** Points every held write at the open database; re-set when the file is reopened. */
     attachDatabase: (db: Database | null) => void;
-    /** Commits every open window now, e.g. because the app is leaving the foreground. */
     flushAll: () => Promise<void>;
-    /** Id currently held for `kind`, which its list hides, or null. */
     pendingId: (kind: DeferredDeleteKind) => string | null;
-    /** `body` is an already-translated supporting line for the undo toast. */
     requestDelete: (kind: DeferredDeleteKind, id: string, body?: string) => void;
     subscribe: (kind: DeferredDeleteKind, listener: () => void) => () => void;
 }
@@ -110,25 +92,11 @@ interface Slot {
     setBody: (next: string | undefined) => void;
 }
 
-/**
- * One held-write controller per entity kind, with the undo offer and the failure
- * report attached to each.
- *
- * Both toasts are raised from here rather than handed back for the screen to
- * report. Every screen that deletes this way pairs them identically, and a
- * failure means nothing was recorded and the row is on the list again —
- * indistinguishable from a lost gesture unless it is said.
- *
- * Nothing here is React, and deliberately so: the window routinely outlives the
- * screen that opened it. A delete from a detail screen navigates straight back,
- * and a controller owned by that screen would flush on the way out, leaving no
- * window at all.
- */
+// Not React on purpose: the window outlives the screen that opened it (a detail screen navigates straight back), and
+// a screen-owned controller would flush on the way out.
 export function createDeferredDeleteRegistry(): DeferredDeleteRegistry {
     const slots = new Map<DeferredDeleteKind, Slot>();
-    // Held rather than captured per request: a delete must land in the database
-    // the app is on when its window closes, not the one it was on when the swipe
-    // happened.
+    // Held, not captured per request: a delete lands in the database the app is on when its window closes.
     let database: Database | null = null;
 
     function build(kind: DeferredDeleteKind): Slot {
@@ -147,9 +115,8 @@ export function createDeferredDeleteRegistry(): DeferredDeleteRegistry {
                 await spec.commit(db, id);
             },
             onChange: (next) => {
-                // Keyed on the id rather than on null-ness: a second delete inside an
-                // open window replaces the first, and reusing that toast would leave
-                // the new row's undo expiring on the old row's clock.
+                // Keyed on the id, not null-ness: a second delete replaces the first, and reusing its toast would
+                // expire the new row's undo on the old row's clock.
                 if (next.pendingId !== toastFor) {
                     if (toastId !== null) {
                         dismissNotice(toastId);
@@ -171,9 +138,7 @@ export function createDeferredDeleteRegistry(): DeferredDeleteRegistry {
                         body: translateNow(spec.failedBody),
                         title: translateNow(spec.failedTitle),
                     });
-                    // Dropped as it is shown: the controller holds a failure until it is
-                    // acknowledged, so leaving it set raises the same toast again on the
-                    // next publish.
+                    // The controller holds a failure until acknowledged, so leaving it set re-raises it next publish.
                     controller.acknowledgeFailure();
                 }
                 for (const listener of listeners) {

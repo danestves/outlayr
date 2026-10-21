@@ -75,8 +75,6 @@ describe("the next landing after today", () => {
         expect(ymd(nextLanding(at(2026, 1, 31), RECURRING_TYPE.monthly, 1, null, now))).toStrictEqual([2026, 3, 31]);
     });
 
-    // The carrier's own day is already the clamped one, so only the stored anchor
-    // can say the schedule was ever the 31st.
     it("takes an explicit anchor when the carrier's own day already clamped", () => {
         expect(ymd(nextLanding(at(2026, 2, 28), RECURRING_TYPE.monthly, 1, null, now, 31))).toStrictEqual([
             2026, 3, 31,

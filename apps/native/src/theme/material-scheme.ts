@@ -14,12 +14,7 @@ import { MATERIAL_ROLE_VARIABLES, MATERIAL_ROLES } from "./material-roles";
 import type { MaterialRoleColors } from "./material-roles";
 import { withAlpha } from "./shade";
 
-/*
- * Android's colour pipeline, minus the platform: a Material 3 scheme in, every
- * colour variable `global.css` declares out, for one theme. Pure so jest can
- * sweep it across wallpapers; `use-accent.android.ts` feeds it the scheme
- * Compose itself uses and writes the result through uniwind.
- */
+/* Pure so jest can sweep it across wallpapers. */
 
 export type MaterialTheme = "light" | "dark";
 
@@ -30,11 +25,7 @@ const RGBA_HEX = /^#([0-9a-f]{6})([0-9a-f]{2})?$/i;
 const CHANNEL_WEIGHTS = [0.2126, 0.7152, 0.0722] as const;
 const WHITE = "#ffffff";
 
-/**
- * `#RRGGBBAA`, the form `@expo/ui`'s `getMaterialColors` returns, as the
- * lowercase `#rrggbb` the stylesheet and `withAlpha` speak. Every role it
- * returns is opaque, so the alpha byte carries nothing.
- */
+/** `getMaterialColors` returns opaque `#RRGGBBAA`, so the alpha byte carries nothing. */
 export function hexFromRgba(value: string): string {
     const match = RGBA_HEX.exec(value);
     if (!match) {
@@ -62,7 +53,6 @@ export function contrastRatio(a: string, b: string): number {
     return (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
 }
 
-/** `top` at `alpha` laid over the opaque `ground`, as an opaque hex. */
 export function mixOver(top: string, ground: string, alpha: number): string {
     const [over, under] = [channels(top), channels(ground)];
     return `#${over
@@ -74,12 +64,7 @@ export function mixOver(top: string, ground: string, alpha: number): string {
         .join("")}`;
 }
 
-/**
- * `color` with its HCT tone pushed, hue and chroma kept, until it clears
- * `floor` against every one of `grounds`. A colour that already clears comes
- * back untouched. It moves away from the grounds: darker when it is darker
- * than they are on average, lighter otherwise.
- */
+/** Moves the tone away from the grounds, keeping hue and chroma. */
 export function ensureContrast(color: string, grounds: readonly string[], floor = AA_TEXT_CONTRAST): string {
     const clears = (candidate: string) => grounds.every((ground) => contrastRatio(candidate, ground) >= floor);
     if (clears(color)) {
@@ -97,12 +82,10 @@ export function ensureContrast(color: string, grounds: readonly string[], floor 
     return step > 0 ? WHITE : "#000000";
 }
 
-/** `brand`'s hue nudged toward `source`'s (at most 15°), so it sits in the palette. */
 function harmonize(brand: string, source: string): string {
     return hexFromArgb(Blend.harmonize(argbFromHex(brand), argbFromHex(source)));
 }
 
-/** The alpha out of an `rgba(r, g, b, a)` declaration. */
 function alphaOf(rgba: string): number {
     const alpha = Number(rgba.slice(rgba.lastIndexOf(",") + 1, rgba.lastIndexOf(")")));
     if (Number.isNaN(alpha)) {
@@ -112,11 +95,7 @@ function alphaOf(rgba: string): number {
 }
 
 /**
- * The brand values the pipeline still starts from: the semantic hues, which
- * are harmonized toward the scheme rather than replaced by it, and the washes,
- * whose alpha is kept and whose colour is not. Transcribed from `global.css`;
- * `material-scheme.test.ts` fails the moment the two disagree. Category colours
- * are not here and never move: they are a user's own identity for a category.
+ * Transcribed from `global.css` (the test fails on drift). Category colours never move: they are the user's identity.
  */
 export const BRAND_TOKENS = {
     dark: {
@@ -173,16 +152,9 @@ export const BRAND_TOKENS = {
     },
 } as const satisfies Record<MaterialTheme, Record<string, string>>;
 
-/** Token name (no leading `--`) to value; what {@link materialVariables} builds up. */
 type Tokens = Record<string, string>;
 
-/**
- * Clamps each text token in `pairs` against its fills, in place. Tokens that
- * are themselves a fill of another pair go first, so the text written over
- * them is measured against their final value. A token that is a ground is
- * never moved: it is measured, not adjusted, because moving it would move
- * every pair it holds up.
- */
+/** Fills go first so text over them meets their final value; grounds never move, or every pair they hold would. */
 function enforce(tokens: Tokens, pairs: Record<string, readonly string[]>, fixed: ReadonlySet<string>): void {
     const fills = new Set(Object.values(pairs).flat());
     // Not `toSorted`: nothing else in the app relies on Hermes having it.
@@ -197,23 +169,13 @@ function enforce(tokens: Tokens, pairs: Record<string, readonly string[]>, fixed
     }
 }
 
-/** Clamps each verdict badge's text against its own wash, laid over the page ground. */
 function enforceWashes(tokens: Tokens): void {
     for (const [text, tone] of Object.entries(ON_WASH)) {
         tokens[text] = ensureContrast(tokens[text], [mixOver(tokens[tone], tokens.background, WASH_ALPHA)]);
     }
 }
 
-/**
- * The shared pairs in {@link enforce}'s shape. Text tokens are held against
- * the whole M3 surface ladder as well as the four grounds, because on Android
- * popovers and dialogs paint the higher containers and the same text lands
- * on them.
- *
- * Plus the text PanelUI writes from its own tokens, which the iOS stylesheet
- * was never measured on: held to the same floor here, so a harmonized hue
- * cannot slip under it.
- */
+/** Also held against the M3 surface ladder: Android popovers and dialogs paint the higher containers. */
 const OUTLAYR_PAIRS = {
     ...Object.fromEntries(
         [...TEXT_TOKENS, "color-info", "color-warning-foreground"].map((token) => [token, [...GROUNDS, ...M3_SURFACES]])
@@ -222,33 +184,17 @@ const OUTLAYR_PAIRS = {
     ...FIRST_RUN_TEXT,
 } satisfies Record<string, readonly string[]>;
 
-/** The roles keyed by their CSS names without the leading `--`: `onError` becomes `m3-on-error`. */
 function m3Tokens(roles: MaterialRoleColors): Tokens {
     return Object.fromEntries(MATERIAL_ROLES.map((role) => [MATERIAL_ROLE_VARIABLES[role].slice(2), roles[role]]));
 }
 
-/** The M3 roles back out of their CSS names, after {@link enforce} moved some. */
 function m3Roles(tokens: Tokens): MaterialRoleColors {
-    // SAFETY: `fromEntries` loses the key union; one entry per role, read from
-    // the names `m3Tokens` wrote.
+    // SAFETY: `fromEntries` loses the key union; one entry per role, from the names `m3Tokens` wrote.
     return Object.fromEntries(
         MATERIAL_ROLES.map((role) => [role, tokens[MATERIAL_ROLE_VARIABLES[role].slice(2)]])
     ) as MaterialRoleColors;
 }
 
-/**
- * Every colour variable `global.css` declares, rebuilt from a Material 3 scheme
- * for one theme. Keys carry the leading `--`, ready for
- * `Uniwind.updateCSSVariables`.
- *
- * - The `--m3-*` roles are the scheme's own, with text roles clamped to 4.5:1
- *   on what M3 pairs them with.
- * - Outlayr's tokens are mapped onto roles: paper becomes `surface`, ink
- *   `onSurface`, raised planes the surface containers, the accent `primary`.
- * - Semantic hues (income, danger, transfer...) are harmonized toward
- *   `primary` and clamped on every ground; fills under literal white text are
- *   clamped against white; washes keep their alpha.
- */
 export function materialVariables(scheme: MaterialRoleColors, theme: MaterialTheme): Record<`--${string}`, string> {
     const brand = BRAND_TOKENS[theme];
     const m3Clamped = m3Tokens(scheme);
@@ -288,8 +234,7 @@ export function materialVariables(scheme: MaterialRoleColors, theme: MaterialThe
         "fr-vermilion": m3.primary,
         future: m3.onSurfaceVariant,
         "gold-fill": ensureContrast(toward("gold-fill"), [WHITE]),
-        // The connector words: the dimmest the floor allows, which is where
-        // M3's outline sits once it is lifted to text contrast.
+        // The dimmest the floor allows, where M3's outline sits once lifted to text contrast.
         grammar: m3.outline,
         "grouped-background": m3.surface,
         income: toward("income"),
@@ -337,8 +282,7 @@ export function materialVariables(scheme: MaterialRoleColors, theme: MaterialThe
         "rail-track": withAlpha(tokens.foreground, alphaOf(brand["rail-track"])),
     } satisfies Tokens;
 
-    // SAFETY: `fromEntries` widens its keys to string; every key is built as
-    // `--${name}` on the line above.
+    // SAFETY: `fromEntries` widens its keys to string; every key is built as `--${name}` just above.
     return Object.fromEntries(
         Object.entries({ ...tokens, ...derived }).map(([name, value]) => [`--${name}`, value])
     ) as Record<`--${string}`, string>;

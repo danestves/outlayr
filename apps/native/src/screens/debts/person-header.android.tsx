@@ -38,7 +38,6 @@ const STANDING_LABEL = {
     youOwe: "debts.person.youOwe",
 } as const satisfies Record<DebtStanding, TranslationKey>;
 
-/** The filled button's ripple strength, so the pair presses alike. */
 const PRESSED_ALPHA = 0.12;
 const TEXT_FONT = { fontFamily: "GoogleSansFlex_400Regular" } as const;
 const TITLE_FONT = { ...TEXT_FONT, typography: "headlineSmall" } as const;
@@ -46,17 +45,12 @@ const LABEL_FONT = { fontFamily: "GoogleSansFlex_500Medium" } as const;
 
 interface PersonHeroProps {
     account: Account;
-    /** The person's balance in their own currency: negative when you owe them. */
+    /** Negative when you owe them. */
     balance: number;
-    /** The payoff plan's line and facts, between the amount and the movements. */
     plan: ReactNode;
     showCents: boolean;
 }
 
-/**
- * "You owe" / "Owes you" / "Settled" over the amount, and the two movements
- * that standing offers: the first as the M3 filled button, the second tonal.
- */
 export function PersonHero({ account, balance, plan, showCents }: PersonHeroProps) {
     const router = useRouter();
     const t = useTranslation();
@@ -93,11 +87,7 @@ export function PersonHero({ account, balance, plan, showCents }: PersonHeroProp
     );
 }
 
-/**
- * Rename, the payoff plan and delete for a person, in the app bar's overflow
- * menu. Rename writes the name alone, so the person stays a person, and asks
- * for it in an M3 dialog: Android has no `Alert.prompt`.
- */
+/** Android has no `Alert.prompt`, hence the dialog; rename writes the name alone. */
 export function PersonToolbar({ account, db, plan }: { account: Account; db: Database; plan: PayoffPlanControls }) {
     const t = useTranslation();
     const { requestDelete } = useDeferredDelete("account");
@@ -135,7 +125,6 @@ export function PersonToolbar({ account, db, plan }: { account: Account; db: Dat
     );
 }
 
-/** Up while mounted: the caller mounts it to ask and unmounts it on either answer. */
 function RenameDialog({
     name,
     onCancel,

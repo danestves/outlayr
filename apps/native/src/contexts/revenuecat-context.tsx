@@ -26,11 +26,7 @@ export interface RevenueCatValue {
     getPackages: () => Promise<PurchasesPackage[]>;
     eligibleForTrial: (productIds: readonly string[]) => Promise<ReadonlySet<string>>;
     isConfigured: boolean;
-    /**
-     * Whether an entitlement question is in the air. Bounded by the requests
-     * themselves: a gate that must not act on a guess can hold on this without
-     * risking a hold that never ends.
-     */
+    /** Bounded by the requests themselves, so a gate can hold on it without risking a hold that never ends. */
     isPending: boolean;
     /** False until the first identity sync answers, so no gate reads a guess. */
     isResolved: boolean;
@@ -82,14 +78,11 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
     const [isPro, setIsPro] = useState(false);
     const [isResolved, setIsResolved] = useState(false);
     const [isMirrored, setIsMirrored] = useState(false);
-    // Starts closed on a configured build: the identity sync below is requested
-    // on mount, so anything waiting on an answer must not see a gap first.
+    // Starts closed: the identity sync is requested on mount, so a waiter must not see a gap first.
     const [identityPending, setIdentityPending] = useState(() => isConfigured);
     const [mirrorPending, setMirrorPending] = useState(false);
-    // Whether the mirror has answered for this entitlement AT ALL, success or
-    // refusal. Separate from `isMirrored` so the gap between a positive store
-    // answer and the request it triggers still counts as pending, without a
-    // refusal leaving anything waiting forever.
+    // Answered at all, success or refusal. Apart from `isMirrored` so the gap between the store's yes and the mirror
+    // request still counts as pending, while a refusal leaves nothing waiting forever.
     const [mirrorAnswered, setMirrorAnswered] = useState(false);
     const identityQueue = useRef(Promise.resolve());
     const identityTicket = useRef(0);
@@ -100,12 +93,8 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
     const mirrorTicket = useRef(0);
     const mirrorInFlight = useRef<{ account: string | null; promise: Promise<boolean> } | null>(null);
 
-    /**
-     * Every write of the entitlement goes through here, because losing it also
-     * invalidates the server mirror: a customer who lapses and re-subscribes
-     * must be mirrored again before anything gated is allowed to run, and a
-     * mirror still in flight must not land its answer afterwards.
-     */
+    // Every entitlement write goes through here: losing Pro invalidates the server mirror, and a mirror still in
+    // flight must not land its answer afterwards.
     const applyPro = useCallback((pro: boolean) => {
         setIsPro(pro);
         if (!pro) {
@@ -113,9 +102,8 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
             mirrorInFlight.current = null;
             mirrorTicket.current += 1;
             setIsMirrored(false);
-            // Dropping the in-flight entry orphans that request's own cleanup,
-            // so the flags it owns have to be released here or nothing ever
-            // will — and anything holding on `isPending` would wait forever.
+            // Dropping the in-flight entry orphans its cleanup, so its flags are released here or `isPending`
+            // never clears.
             setMirrorPending(false);
             setMirrorAnswered(false);
         }
@@ -161,8 +149,6 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
                 .finally(() => {
                     if (pendingRequest.current?.ticket === ticket) {
                         pendingRequest.current = null;
-                        // Cleared whether the sync answered or threw, so a gate
-                        // waiting on it is never held by a request that is over.
                         setIdentityPending(false);
                     }
                 });
@@ -223,31 +209,22 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
         [applyPro, runForSession]
     );
 
-    // The server reads its own mirror, not the store, so an entitlement the SDK
-    // reports has to be copied across before anything gated on it will answer.
-    // Checkout awaits this for its own message; the effect below covers the
-    // customer who already owned Pro when the mirror shipped, and any purchase
-    // whose webhook was missed.
+    // The server reads its own mirror, not the store. The effect below covers a customer who owned Pro before the
+    // mirror shipped, and any purchase whose webhook was missed.
     const mirror = useCallback(async (): Promise<boolean> => {
-        // Checkout and the effect below both ask, and they overlap: the purchase
-        // sets `isPro` before it resolves. One request answers both, or a
-        // transient failure on the second would overwrite the first's success.
-        // Keyed by account: a request for the previous customer answers nothing
-        // for this one, and returning it would leave the new account unmirrored
-        // with nothing left to re-trigger the attempt.
+        // Checkout and the effect overlap, so one request answers both, or a transient failure on the second would
+        // overwrite the first's success. Keyed by account: a previous customer's request answers nothing for this one.
         const inFlight = mirrorInFlight.current;
         if (inFlight !== null && inFlight.account === accountId) {
             return await inFlight.promise;
         }
         const ticket = mirrorTicket.current;
         const run = mirrorEntitlement().then((mirrored) => {
-            // The entitlement was lost while this was in the air, so its answer
-            // describes a customer who is no longer the one being gated.
+            // The entitlement was lost meanwhile, so this answer describes a customer no longer being gated.
             if (ticket !== mirrorTicket.current) {
                 return false;
             }
-            // Recorded only on success, so a refusal is retried rather than
-            // remembered — `mirrorEntitlement` reports one as `false`.
+            // Recorded only on success, so a refusal (`false`) is retried rather than remembered.
             mirroredFor.current = mirrored ? accountId : null;
             setIsMirrored(mirrored);
             return mirrored;
@@ -282,9 +259,7 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
         const subscription = AppState.addEventListener("change", (state) => {
             if (state === "active") {
                 refreshEntitlement()
-                    // A mirror that was refused earlier gets its next attempt here:
-                    // the entitlement state does not change, so nothing else in the
-                    // session would ask again.
+                    // A refused mirror retries here: the entitlement does not change, so nothing else asks again.
                     .then(mirrorOnce)
                     .catch((error) => {
                         console.warn("[revenuecat] foreground entitlement read failed", error);
@@ -324,9 +299,8 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
             getPackages,
             isConfigured,
             isMirrored,
-            // `isPro && !mirrorAnswered` covers the render between the store
-            // saying yes and the mirror request starting: without it a gate
-            // reads a gap as "not entitled" and acts on it.
+            // `isPro && !mirrorAnswered` covers the render before the mirror request starts, or a gate reads the gap as
+            // "not entitled".
             isPending: identityPending || mirrorPending || (isPro && !mirrorAnswered),
             isPro,
             isResolved,

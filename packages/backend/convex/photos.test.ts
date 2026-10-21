@@ -109,7 +109,6 @@ function push(t: TestClient, who: SeededIdentity, rows: PushRows) {
     });
 }
 
-/** Records what an object weighs, the way a confirmed upload does. */
 async function storeSize(t: TestClient, key: string, bytes: number) {
     await t.mutation(internal.photos.recordPhotoSize, { bytes, key });
 }
@@ -163,8 +162,6 @@ describe("requestUpload", () => {
     });
 
     it("weighs only the caller's own photos", async () => {
-        // The sum is indexed by user, so a stranger at the ceiling must not spend
-        // this account's allowance.
         const t = harness();
         const owner = await seedProUser(t);
         const stranger = await seedProUser(t);
@@ -177,8 +174,6 @@ describe("requestUpload", () => {
 
 describe("accounting for what an account stores", () => {
     it("replaces a re-uploaded name's size instead of adding to it", async () => {
-        // A counter per account would read 300 here, and the account would be
-        // charged for bytes R2 overwrote.
         const t = harness();
         const owner = await seedProUser(t);
         const key = photoKeyFor(owner.userId, PHOTO);
@@ -279,8 +274,6 @@ describe("minted uploads", () => {
 
         const { key } = await authenticatedAs(t, owner).mutation(api.photos.requestUpload, { name: PHOTO });
 
-        // Nought bytes: the object is not weighed until `confirmUpload` reads it
-        // back out of R2. The row exists so the key is not invisible until then.
         await expect(t.run((ctx) => ctx.db.query("photoSizes").collect())).resolves.toMatchObject([
             { bytes: 0, key, userId: owner.userId },
         ]);
@@ -291,7 +284,6 @@ describe("minted uploads", () => {
         const owner = await seedProUser(t);
         const caller = authenticatedAs(t, owner);
         for (let index = 0; index < 50; index += 1) {
-            // Distinct names: a retry reuses its key and takes no new slot.
             await caller.mutation(api.photos.requestUpload, { name: `photo-${index}.jpg` });
         }
 
@@ -332,8 +324,6 @@ describe("releaseUnreferenced", () => {
         const key = photoKeyFor(owner.userId, PHOTO);
         await push(t, owner, [transactionRow("t1", { deletedAt: 200, imageKey: key })]);
 
-        // The undo window restores from a tombstone, and a device that has not
-        // pulled the delete is still rendering the photo.
         await expect(
             authenticatedAs(t, owner).mutation(api.photos.releaseUnreferenced, {
                 key,
@@ -394,12 +384,7 @@ describe("releaseUnreferenced", () => {
     });
 });
 
-/**
- * The R2 variables are absent under test, so every case above already exercises
- * the Convex-storage fallback. These pin the parts of it that differ from R2:
- * the key resolves only through the mapping, and re-uploading the same name
- * frees the object it displaced rather than leaking it.
- */
+// The R2 variables are absent under test, so every case above already exercises the Convex-storage fallback.
 describe("the convex storage fallback", () => {
     it("mints a read url for a key confirmed with a storage id", async () => {
         const t = harness();

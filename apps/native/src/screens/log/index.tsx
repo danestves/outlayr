@@ -57,10 +57,6 @@ import { SwipeableTransactionRow } from "./components/swipeable-transaction-row"
 import { logEntriesEqual } from "./entries-equal";
 import { filterScopeLabel } from "./labels";
 
-/**
- * Kept out of `LogInsights` so that component stays presentational and the
- * (possibly whole-table) read happens in one place.
- */
 function useSparkline(
     db: Database,
     nowMs: number,
@@ -78,8 +74,7 @@ function useSparkline(
         nowMs,
         enabled && period !== "all",
         measure === "net",
-        // A year is sampled monthly over twelve months, which the daily floor
-        // would cut short.
+        // A year samples twelve months, which the daily floor would cut short.
         period === "year" ? null : floor,
         displayCurrency,
         rates
@@ -105,16 +100,13 @@ export function Log() {
     const router = useRouter();
     const t = useTranslation();
     const { language } = useLanguage();
-    // Screen state, never a setting: writing the choice to `appMeta` would also
-    // restate what the ledger is kept in, which is what the next transaction gets
-    // recorded in. Null means the screen follows the ledger's currency.
+    // Screen state: an `appMeta` setting would change the currency new transactions record in.
     const [displayOverride, setDisplayOverride] = useState<string | null>(null);
     const globalCurrency = useGlobalCurrency(db);
     const favouriteCurrencies = useFavouriteCurrencies(db);
     const valuation = useValuationIn(db, displayOverride ?? globalCurrency);
     const { displayCurrency: currency, rates } = valuation;
-    // An account inside its undo window is already gone from the accounts screen;
-    // it must not linger here as a row that can still be opened.
+    // An account in its undo window must not linger here.
     const { pendingId: pendingAccountId } = useDeferredDelete("account");
     const nowMs = useNow();
     const { banks: accountsOverview, debts: debtsOverview } = useLogOverviewIn(db, valuation, nowMs, pendingAccountId);
@@ -141,9 +133,7 @@ export function Log() {
     const [filter, setFilter] = useState<LogFilter>("all");
     const [categoryId, setCategoryId] = useState<string | null>(null);
     const [income, setIncome] = useState(false);
-    // One cursor per period unit, so switching between them leaves each where it
-    // was. Seeded once: re-seeding as the clock ticks would step the calendar
-    // filters out from under the user.
+    // Seeded once: re-seeding as the clock ticks would step the calendar filters out from under the user.
     const [cursors, setCursors] = useState<Record<CursorUnit, Date>>(() => ({
         day: new Date(nowMs),
         month: new Date(nowMs),
@@ -160,8 +150,6 @@ export function Log() {
     const activeCategoryId = categoryId ?? filterableCategories[0]?.id ?? null;
 
     const cursorUnit: CursorUnit = filter === "week" || filter === "month" ? filter : "day";
-    // Every unit is seeded above, so this is a stable reference out of state
-    // rather than a fresh Date each render.
     const cursor = cursors[cursorUnit];
 
     const { head, reachedEnd, splitMs, tail } = useLoggedTransactions(db, nowMs, days);
@@ -188,13 +176,7 @@ export function Log() {
     const currencyOptions = useMemo(
         () =>
             logCurrencyOptions({
-                // Asked of `valued`, not of `rates`: `rates` holds one currency — the
-                // one on screen — so it answers no for every other code, and the chip
-                // offered no favourite at all (#237).
-                //
-                // USD is admitted unconditionally, including on a ledger that has never
-                // pulled a rate: `valueExactIn` returns the row's frozen `amountUsd` for
-                // a USD display and never reaches the rate table.
+                // `rates` holds only the on-screen currency (#237); USD passes via the frozen `amountUsd`.
                 convertible: (code) => code === "USD" || valued.has(code),
                 favourites: favouriteCurrencies,
                 global: globalCurrency,
@@ -222,8 +204,6 @@ export function Log() {
         }
         return mergeByRecency(filteredRows, transferRows);
     }, [filter, head, splitMs, filteredRows, transferRows]);
-    // The window's older days, grouped apart so a write to a recent entry leaves
-    // them be; empty under every other filter.
     const tailRows = useMemo(
         () => (filter === "all" ? mergeByRecency(tail, tailTransfers) : []),
         [filter, tail, tailTransfers]
@@ -249,10 +229,7 @@ export function Log() {
             ),
         [headSections, tailSections, visibleRows, visibleTail, currency, rates]
     );
-    // Totalled over the filtered read, which `useFilteredTransactions` leaves
-    // unwindowed: `head` and `tail` are a page, so `all` gets the period header instead.
-    // The same rows the sections are built from, so the figure and the day
-    // subtotals under it agree to the cent.
+    // Over the unwindowed filtered read and the sections' own rows, so the day subtotals agree to the cent.
     const scopeFigures = useMemo(
         () => (filter === "all" || !scopeHasFigures(visibleRows) ? null : scopeTotals(visibleRows, currency, rates)),
         [filter, visibleRows, currency, rates]
@@ -261,12 +238,9 @@ export function Log() {
     const openRowActions = useTransactionRowActions(nowMs, requestDelete);
     const openAccount = (accountId: string) =>
         router.push({ params: { accountId }, pathname: "/accounts/[accountId]" });
-    // A transfer id is not a transaction id: routing it to `transactions/[id]`
-    // opens a screen with nothing behind it.
+    // Transfer ids route to their own screen; `transactions/[id]` would open empty.
     const openRow = (rowId: string) =>
         router.push(transferIds.has(rowId) ? `/transactions/transfers/${rowId}` : `/transactions/${rowId}`);
-    // A transfer has no row menu: its actions live on its own screen, and the
-    // hold falls through to opening it.
     const rowMenu = (transaction: TransactionWithCategory, scheduled: boolean) =>
         transferIds.has(transaction.id) ? [] : openRowActions(transaction, scheduled);
     const cardOptions = useMemo(
@@ -275,16 +249,12 @@ export function Log() {
     );
     const shareDay = useDayCardShare(cardOptions);
 
-    // Only the period filters name a stretch of time, which the calendar
-    // composes; every other scope is a word, and words come from the catalog.
     const detail = filterPeriodUnit(filter)
         ? filterDetail(filter, { cursor, firstWeekday, income })
         : filterScopeLabel(t, filter, activeCategoryId ? categoryMeta.get(activeCategoryId)?.name : null, income);
 
     const showUpcomingSection = filter === "upcoming" || (filter === "all" && showUpcoming);
-    // Filtered on `pendingId` like the day sections are: a future-dated row is
-    // drawn here rather than below, so without this a delete of one leaves it on
-    // screen for the whole undo window, under a toast saying it is gone.
+    // Filtered like the day sections, or a deleted future row lingers under the undo toast.
     const upcomingRows = useMemo(
         () => (showUpcomingSection ? upcoming.rows.filter((row) => !goesWithPendingDelete(row, pendingId)) : []),
         [showUpcomingSection, upcoming.rows, pendingId]
@@ -294,9 +264,7 @@ export function Log() {
         [upcoming.schedules, pendingId]
     );
     const emptyResult = sections.length === 0 && (filter !== "upcoming" || upcomingRows.length === 0);
-    // LegendList's SectionList keeps `extraData` to itself, so what headers and
-    // rows read besides their rows, the day included, rides on each section for
-    // `logEntriesEqual`.
+    // LegendList's SectionList keeps `extraData` to itself, so what rows read rides on each section.
     const today = startOfDay(new Date(nowMs)).getTime();
     const listSections = useMemo(() => {
         const view = { ...cardOptions, language };
@@ -308,8 +276,7 @@ export function Log() {
         }));
     }, [sections, upcomingRows.length, cardOptions, language, today]);
 
-    // One setting behind both headers: the promoted figure must not depend on
-    // whether a filter happens to be on.
+    // One setting behind both headers, so a filter never changes the promoted figure.
     const onMeasure = (next: LogMeasure) => {
         setNumberSetting(db, "logInsightsType", storedLogMeasure(next));
     };
@@ -341,10 +308,7 @@ export function Log() {
         return (
             <AmountsHiddenContext value={amountsHidden}>
                 {accountsOverview || debts ? (
-                    // The block rides a scroll view for its automatic inset: the header
-                    // is transparent, so anything laid out flat here starts under the
-                    // large title. It scrolls, because four account rows plus the empty
-                    // state outgrow a landscape or large-type viewport.
+                    // A scroll view for the automatic inset: flat content starts under the transparent large title.
                     <ScrollView
                         className="bg-background"
                         contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20 }}
@@ -380,8 +344,7 @@ export function Log() {
                 }}
                 contentContainerStyle={{
                     flexGrow: 1,
-                    // `NativeTabs` supplies the bar + safe-area inset; this only clears
-                    // the floating add button.
+                    // Clears the floating add button.
                     paddingBottom: 100,
                     paddingHorizontal: 20,
                 }}
@@ -410,10 +373,7 @@ export function Log() {
                                 onCursor={(next) =>
                                     setCursors((current) => ({
                                         ...current,
-                                        // Normalized here rather than trusted: the period filters
-                                        // fetch on an exact day, or on a week's or month's first
-                                        // instant, so an un-normalized cursor returns an empty
-                                        // screen.
+                                        // Period filters fetch on a unit's first instant; a raw cursor finds nothing.
                                         [cursorUnit]: cursorStart(cursorUnit, next, firstWeekday),
                                     }))
                                 }

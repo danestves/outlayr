@@ -16,7 +16,6 @@ export interface SpendingCalendarRow {
     exchangeRate?: number | null;
     exchangeRateType?: string | null;
     income: boolean;
-    /** The local calendar day this row is drawn on, `YYYY-MM-DD`. */
     plotKey: string;
     valuationDate: Date;
 }

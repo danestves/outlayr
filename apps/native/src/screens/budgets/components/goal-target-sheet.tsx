@@ -27,30 +27,14 @@ import { useHaptics } from "@/lib/use-haptics";
 import { CompactDatePicker } from "./compact-date-picker";
 import { SheetCommitButton } from "./sheet-commit-button";
 
-/** The account a goal is being set on. Its balance is the goal's starting line. */
 export interface GoalTarget {
     accountId: string;
-    /**
-     * The account's balance today, in `currency`. Frozen as the goal's start.
-     *
-     * Null when it cannot be stated in that currency — retargeting a goal held in
-     * a currency the ledger is no longer displayed in. The sheet then drops the
-     * figures that depend on it rather than converting a balance it was not given.
-     */
+    /** Null when it cannot be stated in `currency`; the sheet then drops the figures that depend on it. */
     balance: number | null;
     currency: string;
-    /**
-     * The goal's figures as they stand, when one is being re-set rather than
-     * created. Opening a blank sheet over an existing goal would read as
-     * discarding it — the same contract the budget limit sheet keeps.
-     */
     existing?: { targetAmount: number; targetDate: Date } | null;
     name: string;
-    /**
-     * Set for a payoff plan, as the sentence stating it with `{account}` and
-     * `{date}` slots. The amount is fixed at zero and the date is the only slot;
-     * what the date costs is stated under it.
-     */
+    /** A sentence with `{account}` and `{date}` slots; the amount is fixed at zero. */
     payoff?: string;
 }
 
@@ -58,55 +42,29 @@ export interface GoalCommit {
     startAmount: number;
     targetAmount: number;
     /**
-     * True only when the keypad was actually used. An existing target must
-     * otherwise stand as stored: what is on screen is that target *converted*
-     * into the ledger's currency, and writing it back would restate a EUR 1,000
-     * goal as EUR 1,100.
-     *
-     * Tracked as an interaction rather than inferred by comparing the figure with
-     * the stored one — the sheet seeds its keypad through `numberToNumpad`, which
-     * rounds to the currency's minor units, so a converted target carrying finer
-     * precision than that would never compare equal and every commit would read
-     * as an edit. Mirrors `LimitCommit.limitChanged`.
+     * True only when the keypad was used: the screen shows a converted target, and `numberToNumpad` rounds,
+     * so comparing figures would read every commit as an edit and restate the stored target.
      */
     targetChanged: boolean;
-    /**
-     * True only when the date was picked. An untouched deadline must not travel
-     * into the patch at all: the sheet holds the one it opened on, and a peer can
-     * move it while the sheet is up — writing the snapshot back would revert them
-     * over an edit that never touched it.
-     */
+    /** False keeps the deadline out of the patch: a peer can move it while the sheet is up. */
     dateChanged: boolean;
     targetDate: Date;
 }
 
 interface GoalTargetSheetProps {
     onCommit: (commit: GoalCommit) => Promise<void> | void;
-    /** Offered under the commit, for a payoff plan being changed. */
     onRemove?: () => void;
     ref?: Ref<BottomSheetModal>;
-    /** Null while nothing is being set; the sheet then has nothing to state. */
     target: GoalTarget | null;
 }
 
-/** Six months out: far enough that the monthly figure is a decision, not a shock. */
 const DEFAULT_HORIZON_MONTHS = 6;
-/** A debt is paid back sooner than a goal is saved for. */
 const PAYOFF_HORIZON_MONTHS = 3;
 
 const STATED = "font-sans-medium text-[19px] leading-[28px] tracking-tight text-grammar";
 
-/**
- * Setting a goal, stated and then placed.
- *
- * Presented over the tab rather than pushed, for the reason the budget sheet is:
- * the figures it changes are the ones behind it. There is no goal form — every
- * fact after this one commit is edited on the goal's own screen, where it is read.
- */
 export function GoalTargetSheet({ target, onCommit, onRemove, ref }: GoalTargetSheetProps) {
     const sheetSurface = useSheetSurface();
-    // Bumped as the sheet closes, so a dismissed draft is never what the next
-    // presentation opens on — same contract as the budget limit sheet.
     const [presentation, setPresentation] = useState(0);
 
     return (
@@ -122,9 +80,7 @@ export function GoalTargetSheet({ target, onCommit, onRemove, ref }: GoalTargetS
                 <BottomSheetView style={{ paddingBottom: 28, paddingTop: 14 }}>
                     {target ? (
                         <GoalTargetBody
-                            // A fresh body per account, per stored figure and per
-                            // presentation: a dismissed draft must not be what the next
-                            // one opens on.
+                            // A dismissed draft must not be what the next presentation opens on.
                             key={`${target.accountId}:${target.existing?.targetAmount ?? "new"}:${presentation}`}
                             onCommit={onCommit}
                             onRemove={onRemove}
@@ -137,7 +93,6 @@ export function GoalTargetSheet({ target, onCommit, onRemove, ref }: GoalTargetS
     );
 }
 
-/** The later of the two, so a floor lowered for rendering cannot be selected into. */
 function notBefore(picked: Date, floor: Date): Date {
     return picked < floor ? floor : picked;
 }
@@ -159,9 +114,7 @@ function GoalTargetBody({
 
     const [mode, setMode] = useState<"amount" | "date">(payoff ? "date" : "amount");
     const [entry, setEntry] = useState(() => numberToNumpad(target.existing?.targetAmount ?? 0, minorUnits));
-    /** Whether the keypad was used at all. A goal being created is always an edit. */
     const [edited, setEdited] = useState(target.existing == null);
-    /** Whether the DATE was picked. An untouched one is committed as it stands. */
     const [dateEdited, setDateEdited] = useState(target.existing == null);
     const [date, setDate] = useState(() => {
         if (target.existing) {
@@ -171,28 +124,17 @@ function GoalTargetBody({
     });
 
     const amount = numpadToNumber(entry);
-    // Shown only when there are any, so a round target stays clean and a typed one
-    // is never rounded away. The keypad's own display is off — this figure IS the
-    // display — and in pre-dotted entry the trailing digits are minor units, so
-    // hiding them let `123` read as "$1" and commit 1.23.
-    //
-    // Scaled by the currency's OWN exponent, not by a hard-coded 100: a
-    // three-decimal currency like KWD would otherwise show "KWD 1" for 1.001.
+    // Minor units show whenever present: in pre-dotted entry `123` would otherwise read as "$1" and commit 1.23.
     const scale = 10 ** minorUnits;
     const hasMinorUnits = minorUnits > 0 && Math.round(amount * scale) % scale !== 0;
-    /** The figure as typed. `money` is for the derived lines, which stay whole. */
     const typed = (value: number) => formatAmount(value, target.currency, hasMinorUnits, language);
 
-    // Tomorrow at the earliest: a goal due today has no month to hold a pace over,
-    // which is the one thing the goal is for.
     const range = useMemo(() => {
         const start = tomorrowLocal(nowMs);
-        // An existing date already in the past stays selectable, so re-setting the
-        // amount does not silently move a deadline the owner did not touch.
+        // A past existing date stays selectable, so re-setting the amount does not move an untouched deadline.
         return { start: target.existing && target.existing.targetDate < start ? target.existing.targetDate : start };
     }, [target.existing, nowMs]);
 
-    /** A write in flight, not one already made — the sheet outlives its dismissal. */
     const inFlight = useRef(false);
 
     const commit = async () => {
@@ -205,14 +147,8 @@ function GoalTargetBody({
         }
         inFlight.current = true;
         const write = async () => {
-            // Re-clamped here, not only where it is picked: the sheet can sit open
-            // across midnight, at which point yesterday's "tomorrow" is today and
-            // the change handler that would have caught it never runs again.
-            //
-            // Only a date the reader actually chose, though. An overdue goal opened
-            // to change its amount still holds its old deadline, and clamping that
-            // would move it to tomorrow — rewriting the one fact this visit never
-            // touched, and recomputing the whole pace from it.
+            // Re-clamped because the sheet can sit open across midnight. Only a chosen date, though: an overdue
+            // goal opened to change its amount must keep its old deadline.
             await onCommit({
                 dateChanged: dateEdited,
                 startAmount: target.balance ?? 0,
@@ -226,8 +162,6 @@ function GoalTargetBody({
         });
     };
 
-    // The same measure the goal will report once it exists, asked here of the
-    // figure being typed — so the cost is on screen before it is committed to.
     const { pace } = goalProgress(
         target.balance ?? 0,
         amount,
@@ -239,14 +173,10 @@ function GoalTargetBody({
         minorUnits
     );
 
-    // What the figure being typed costs, stated before it is committed to. Until
-    // there is one, the line explains what a goal is instead.
     const demand = (() => {
         if (payoff) {
             return payoffDemand(pace, date, nowMs, money, t);
         }
-        // Without a balance in this currency there is no gap to pace out, so the
-        // sheet states what a goal is instead of a figure it cannot stand behind.
         if (target.balance === null || pace == null || amount <= 0) {
             return t("goals.empty.body");
         }
@@ -328,9 +258,7 @@ function GoalTargetBody({
             </View>
 
             {mode === "amount" ? (
-                // Keyed, because both branches are an `Animated.View` in the same
-                // position: without one React reconciles in place and the entrance
-                // never runs.
+                // Keyed per branch: both are an `Animated.View` in one slot, so without a key the entrance never runs.
                 <Animated.View className="px-5 pt-4" entering={revealEntering()} key="pad">
                     <AmountNumpad
                         code={target.currency}
@@ -348,10 +276,7 @@ function GoalTargetBody({
                     <CompactDatePicker
                         height={44}
                         label={t("goals.editor.by")}
-                        // Clamped, not merely bounded: an existing deadline already in
-                        // the past lowers the range's floor so it can render at all,
-                        // which would otherwise let any day between then and now be
-                        // chosen afresh.
+                        // Clamped, not merely bounded: a past deadline lowers the range's floor so it can render.
                         onChange={(next) => {
                             setDateEdited(true);
                             setDate(notBefore(next, tomorrowLocal(nowMs)));
@@ -364,8 +289,7 @@ function GoalTargetBody({
 
             <View className="px-5 pt-5">
                 <Text className="text-footnote text-muted border-border border-t pt-2.5 leading-snug">{demand}</Text>
-                {/* Never inert: a target of nothing is one not typed yet, and the
-				    button that says so is the one being pressed. */}
+                {/* Never inert: a zero target opens the numpad instead. */}
                 <View className="mt-3">
                     <SheetCommitButton label={commitLabel(payoff, target.existing != null, t)} onPress={commit} />
                 </View>
@@ -390,7 +314,6 @@ function commitLabel(payoff: boolean, existing: boolean, t: TranslateFn): string
     return t(existing ? "goals.sheet.save" : "goals.sheet.commit");
 }
 
-/** What paying off by `date` costs: a month's share, or under a month the whole balance and the days to it. */
 function payoffDemand(
     pace: GoalProgress["pace"],
     date: Date,

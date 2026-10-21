@@ -20,11 +20,8 @@ import { useColors } from "@/theme/use-colors";
 
 const CHECKS_UPDATES = isEnabled && !__DEV__;
 
-/**
- * Offers a JS update once per update, when it arrives and again on each return
- * from the background. Waits for the tabs with no cover up: UIKit drops a sheet
- * asked for over a modal route, and one over the lock screen blocks Unlock.
- */
+// Waits for the tabs with no cover up: UIKit drops a sheet asked for over a modal route, and one over the lock screen
+// blocks Unlock.
 export function UpdateSheet() {
     const t = useTranslation();
     const { language } = useLanguage();

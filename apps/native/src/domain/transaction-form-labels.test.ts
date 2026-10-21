@@ -117,8 +117,6 @@ describe("transactionWhenLabel", () => {
         );
     });
 
-    // A subscription's timing is its cadence, so the phrase replaces the day
-    // rather than sitting beside it.
     it("states the cadence instead of the day for a subscription", () => {
         expect(transactionWhenLabel(en, { date: new Date(2026, 7, 18), interval: "month", language: "en", now })).toBe(
             "every month from 18 Aug"

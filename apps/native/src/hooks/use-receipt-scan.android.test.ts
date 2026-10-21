@@ -16,7 +16,6 @@ jest.mock<Partial<typeof import("expo-image-picker")>>("expo-image-picker", () =
         canceled: false,
     }),
 }));
-// Holds the read at "scanning", where the photo it adopted is on screen.
 jest.mock<Partial<typeof import("@/lib/receipt-image")>>("@/lib/receipt-image", () => ({
     prepareReceiptImage: () =>
         new Promise(() => {
@@ -29,7 +28,6 @@ jest.mock<Partial<typeof import("@/lib/convex")>>("@/lib/convex", () => ({
 
 describe("useReceiptScan on Android", () => {
     it("reads the photo the camera finished for scan after Android tore the app down", async () => {
-        // The camera launch Android tore the app down under never comes back.
         let launched: () => void = () => undefined;
         const started = new Promise<void>((resolve) => {
             launched = resolve;

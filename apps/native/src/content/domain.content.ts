@@ -60,8 +60,6 @@ const domain = {
             en: "Starts on whatever your device uses; changing it here takes over.",
             es: "Usa la configuración de tu dispositivo hasta que la cambies aquí.",
         }),
-        // A full date is the one form where the order itself is localized, so the
-        // template carries it rather than the formatter branching per language.
         "clock.section": t({
             en: "Clock",
             es: "Reloj",
@@ -88,11 +86,8 @@ const domain = {
         }),
         "dates.meridiem.am": t({ en: "AM", es: "a. m." }),
         "dates.meridiem.pm": t({ en: "PM", es: "p. m." }),
-        // Indexed by `Date.getMonth()` / `Date.getDay()`, so the order is the
-        // platform's and not a reading order. Spanish keeps months and weekdays
-        // lowercase, which is its own convention rather than an untranslated string;
-        // the shouted forms the Log and Insights use are upper-cased at the call
-        // site so only one set of names has to stay in step per form.
+        // Indexed by `Date.getMonth()` / `Date.getDay()`. Spanish names are lowercase by convention; shouted forms are
+        // upper-cased at the call site.
         "dates.month.0": t({ en: "Jan", es: "ene" }),
         "dates.month.1": t({ en: "Feb", es: "feb" }),
         "dates.month.2": t({ en: "Mar", es: "mar" }),
@@ -124,8 +119,7 @@ const domain = {
         "dates.weekday.4": t({ en: "Thu", es: "jue" }),
         "dates.weekday.5": t({ en: "Fri", es: "vie" }),
         "dates.weekday.6": t({ en: "Sat", es: "sáb" }),
-        // Spanish uses X for miércoles so it does not collide with martes, which is
-        // why these are their own set rather than the first letter of the abbrev.
+        // Spanish uses X for miércoles so it does not collide with martes.
         "dates.weekdayInitial.0": t({ en: "S", es: "D" }),
         "dates.weekdayInitial.1": t({ en: "M", es: "L" }),
         "dates.weekdayInitial.2": t({ en: "T", es: "M" }),

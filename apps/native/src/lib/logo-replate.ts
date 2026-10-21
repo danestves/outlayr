@@ -22,7 +22,6 @@ async function readOriginal(file: File): Promise<CachedOriginal | null> {
     }
 }
 
-/** The production wiring for `replateStoredLogos`: the logo cache's files and Skia's pixels. */
 export function replateLogos(db: Database): Promise<number> {
     const files = listCachedLogos();
     const originals = new Map<string, Promise<CachedOriginal | null>>();
@@ -33,8 +32,7 @@ export function replateLogos(db: Database): Promise<number> {
     };
 
     return replateStoredLogos(db, {
-        // A cache key is the folded name followed by the folded domain, so the
-        // shortest key under a name is the one fetched for exactly that name.
+        // A key is the folded name then the folded domain, so the shortest key under a name was fetched for that name.
         originalsFor: async (name) => {
             const prefix = logoCacheKey(name.trim(), null);
             if (prefix.length === 0) {

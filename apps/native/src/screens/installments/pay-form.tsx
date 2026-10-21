@@ -34,12 +34,10 @@ export interface PayFormProps {
     account: Account | null;
     amount: number;
     entry: PlanWithStanding;
-    /** Names the cuota being paid; "Pay all" names only the order. */
     forNext: boolean;
     sources: readonly Account[];
 }
 
-/** What the pay sheet pays: the next cuota or, from "Pay all", everything left. Null once the order is gone or paid. */
 export function usePayEntry(planId: string, all: boolean): PayFormProps | null {
     const db = useDatabase();
     const { entry } = useInstallmentEntry(planId);
@@ -59,12 +57,6 @@ export function usePayEntry(planId: string, all: boolean): PayFormProps | null {
     };
 }
 
-/**
- * The pay sheet's state on either platform: the amount, lowered into a partial
- * payment from its pad; where it comes from, None being paid outside Outlayr;
- * the day; and the confirm that records it. A payment from another currency is
- * converted at the day's official rate, as the transfer editor converts one.
- */
 export function usePayForm({ account, amount: owed, entry, forNext, sources }: PayFormProps) {
     const db = useDatabase();
     const router = useRouter();
@@ -203,7 +195,6 @@ interface SourceChoiceProps {
     toCurrency: string;
 }
 
-/** One account the payment can come from: its balance, and what the payment costs it in its own currency. */
 export function SourceChoice({ account, amount, date, onPress, selected, toCurrency }: SourceChoiceProps) {
     const db = useDatabase();
     const t = useTranslation();

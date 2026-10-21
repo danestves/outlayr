@@ -1,6 +1,5 @@
 import type { FlatSectionListItem } from "@legendapp/list/section-list";
 
-/** Equal by value over plain data: dates by instant, records and arrays field by field. */
 function sameData<T>(a: T, b: T): boolean {
     if (Object.is(a, b)) {
         return true;
@@ -18,11 +17,7 @@ function sameData<T>(a: T, b: T): boolean {
     );
 }
 
-/**
- * `itemsAreEqual` for the Log's day sections, which every write rebuilds from
- * fresh rows. A header is equal when its whole section is, since its share
- * action carries the day's rows; a row when it is and its section's `view` is.
- */
+/** A header compares its whole section (its share action carries the rows); a row also compares `view`. */
 export function logEntriesEqual<Item, Section extends { view: unknown }>(
     previous: FlatSectionListItem<Item, Section>,
     next: FlatSectionListItem<Item, Section>

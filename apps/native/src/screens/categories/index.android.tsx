@@ -32,25 +32,16 @@ import { useMaterialColors } from "@/theme/use-material-colors";
 
 import { CategoryGridOpen } from "./category-grid-open";
 
-/**
- * The tree's geometry, as on iOS: the stem runs down from the parent tile's
- * centre and each child hangs off it on an elbow.
- */
 const ROW_LEADING = 16;
 const STEM_X = ROW_LEADING + PARENT_TILE / 2;
 const ELBOW = 15;
 const CHILD_LEADING = STEM_X + ELBOW;
 const PARENT_TEXT_LEADING = ROW_LEADING + PARENT_TILE + 16;
 const CHILD_TEXT_LEADING = CHILD_LEADING + CHILD_TILE + 12;
-/** Stronger than the hairlines, so a branch never reads as a row rule. */
 const CONNECTOR_ALPHA = 0.6;
 const NO_EXTRAS: readonly ActionMenuItem[] = [];
 
-/**
- * Takes the row inside its undo window out of the tree, laid out the way the
- * write will leave it: deleting a parent re-parents its subcategories to the
- * top level, so they are promoted here rather than vanishing with it.
- */
+/** A deleted parent's children are re-parented to the top level, so promote them here. */
 function usePendingRemoved(parents: CategoryWithChildren[], pendingId: string | null): CategoryWithChildren[] {
     return useMemo(() => {
         if (pendingId === null) {
@@ -68,13 +59,6 @@ function usePendingRemoved(parents: CategoryWithChildren[], pendingId: string | 
     }, [parents, pendingId]);
 }
 
-/**
- * The category tree on Android: parents and their subcategories on one
- * hairline-ruled list, with the census, rolled-up totals, the "Add
- * subcategory" row and the suggestions the iOS tree shows. Rows swipe left to
- * delete and hold for a menu. The Expense/Income switch and the FAB live in
- * the route, around this.
- */
 export function Categories({ income }: { income: boolean }) {
     const db = useDatabase();
     const router = useRouter();
@@ -125,8 +109,6 @@ export function Categories({ income }: { income: boolean }) {
         });
     };
 
-    // As on iOS: the row goes now and the write waits out the undo window, so the
-    // toast states the cascade.
     const deleteCategory = (category: Category, hasChildren: boolean) => {
         requestDelete(category.id, t(hasChildren ? "categories.undo.bodyWithChildren" : "categories.undo.body"));
     };
@@ -229,11 +211,6 @@ function CategoriesEmpty({ income, colors }: { income: boolean; colors: ThemeCol
     );
 }
 
-/**
- * One parent's stretch of the tree: the parent, its subcategories and the
- * row that adds another. The hairline under that last row closes the group,
- * except under the last group, where the list itself ends.
- */
 function ParentGroup({
     parent,
     income,
@@ -293,10 +270,6 @@ function ParentGroup({
     );
 }
 
-/**
- * The stem and elbow joining a subcategory to its parent. A closing row stops
- * the stem at the elbow, so the branch ends on the last child.
- */
 function TreeConnector({ last = false }: { last?: boolean }) {
     const m3 = useMaterialColors();
     const ink = withAlpha(m3.outline, CONNECTOR_ALPHA);
@@ -329,7 +302,6 @@ function CategoryRow({
     currency: string;
     amount: number;
     indented?: boolean;
-    /** Menu items between Edit and Delete. */
     menuExtras?: readonly ActionMenuItem[];
     onEdit: (category: Category) => void;
     onDelete: () => void;

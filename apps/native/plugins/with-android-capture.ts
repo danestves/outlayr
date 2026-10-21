@@ -5,28 +5,16 @@ type Manifest = AndroidConfig.Manifest.AndroidManifest["manifest"];
 
 const WRITE_EXTERNAL_STORAGE = "android.permission.WRITE_EXTERNAL_STORAGE";
 
-/** Android 9. From Android 10 the picker's camera check asks for CAMERA alone. */
+// expo-image-picker's camera needs WRITE_EXTERNAL_STORAGE through Android 9; the template declares it up to API 32.
 const LAST_SDK_NEEDING_WRITE = "28";
 
-/** What Play infers from CAMERA and RECORD_AUDIO unless told otherwise. */
+// Play infers these as required from CAMERA and RECORD_AUDIO, which hides the app from Chromebooks.
 const OPTIONAL_FEATURES = [
     "android.hardware.camera",
     "android.hardware.camera.autofocus",
     "android.hardware.microphone",
 ];
 
-/**
- * Manifest entries for the two capture features, receipt scanning (camera) and
- * voice entry (microphone). The app works without either.
- *
- * - expo-image-picker's `launchCameraAsync` requires WRITE_EXTERNAL_STORAGE
- *   below Android 10, even though the photo lands in app storage, so it can't
- *   be blocked outright. The template declares it up to API 32; this caps it
- *   at the last level that asks.
- * - CAMERA and RECORD_AUDIO make Play infer required camera, autofocus and
- *   microphone hardware, which hides the app from Chromebooks and
- *   front-camera-only tablets. Declaring them optional keeps it listed there.
- */
 const withAndroidCapture: ConfigPlugin = (config) =>
     withAndroidManifest(config, (manifestConfig) => {
         const { manifest } = AndroidConfig.Manifest.ensureToolsAvailable(manifestConfig.modResults);

@@ -35,17 +35,14 @@ import { useMaterialColors } from "@/theme/use-material-colors";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-/** M3 FAB: 56dp, 16dp corners, 16dp in from the edge and above the navigation bar. */
 const FAB_SIZE = 56;
 const FAB_CORNER = 16;
 const EDGE = 16;
-/** M3 Expressive FAB menu: 56dp pill items 4dp apart, 8dp above the FAB. */
 const ITEM_HEIGHT = 56;
 const ITEM_GAP = 4;
 const MENU_GAP = 8;
 const ICON_SIZE = 24;
 const ICON_STROKE = 1.8;
-/** A `body` label is 24 tall at scale 1, padded 16 above and below. */
 const LABEL_LINE = 24;
 const ITEM_PADDING_Y = 32;
 const SCRIM_ALPHA = 0.32;
@@ -62,11 +59,7 @@ interface AddAction {
     label: string;
 }
 
-/**
- * How many menu items fit between the FAB and the top of the screen's content.
- * Items grow with the text size, and the least-reached-for go first; the
- * transaction always stays.
- */
+// The least-reached-for items drop first as the text grows; the transaction always stays.
 function fabMenuFit(actionCount: number, room: number, fontScale: number): number {
     const itemHeight = Math.max(ITEM_HEIGHT, LABEL_LINE * fontScale + ITEM_PADDING_Y);
     const space = room - EDGE - FAB_SIZE - MENU_GAP - EDGE;
@@ -74,12 +67,7 @@ function fabMenuFit(actionCount: number, room: number, fontScale: number): numbe
     return Math.min(actionCount, Math.max(1, fitting));
 }
 
-/**
- * The Log's add button on Android: an M3 FAB on `primaryContainer` that opens
- * an M3 Expressive FAB menu over a scrim. The FAB morphs into the menu's close
- * button (a `primary` circle, + turning into X) and system back closes the
- * menu first. Same actions, order and routes as the iOS dial.
- */
+// Same actions, order and routes as the iOS dial.
 export function FloatingAddButton() {
     const m3 = useMaterialColors();
     const t = useTranslation();
@@ -138,8 +126,7 @@ export function FloatingAddButton() {
         router.push(href);
     }, []);
 
-    // Bottom-up by how often each is reached for: the transaction always, then
-    // moving money, speaking, scanning, and a CSV import last.
+    // Ranked by how often each is reached for, since the fit drops from the end.
     const ranked: AddAction[] = [
         { href: "/transactions/create", icon: ReceiptDollarIcon, key: "transaction", label: t("log.add.transaction") },
         ...(canTransfer
@@ -156,9 +143,7 @@ export function FloatingAddButton() {
         { href: "/transactions/scan", icon: ScanIcon, key: "scan", label: t("log.add.scan") },
         { href: null, icon: FileImportIcon, key: "import", label: t("log.add.import") },
     ];
-    // Until the first layout there is no room to measure, so nothing is dropped.
     const kept = room === 0 ? ranked.length : fabMenuFit(ranked.length, room, fontScale);
-    // The menu reads top to bottom, so the least-reached-for item sits furthest from the thumb.
     const actions = ranked.slice(0, kept).reverse();
 
     const fabStyle = useAnimatedStyle(() => ({
@@ -203,7 +188,6 @@ export function FloatingAddButton() {
                         {actions.map((action, index) => (
                             <MenuItem
                                 action={action}
-                                // Nearest the FAB arrives first.
                                 delay={(actions.length - 1 - index) * STAGGER_MS}
                                 key={action.key}
                                 onSelect={select}

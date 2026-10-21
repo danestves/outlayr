@@ -1,4 +1,4 @@
-// oxlint-disable unicorn/filename-case -- the Convex module name is the function path — clients call this action as api.receiptScan.scan
+// oxlint-disable unicorn/filename-case -- the Convex module name is the function path: clients call this action as api.receiptScan.scan
 
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { HOUR, isRateLimitError, RateLimiter } from "@convex-dev/rate-limiter";
@@ -28,47 +28,28 @@ import { perUserBurst } from "./lib/limits";
 import { AI_CONSENT_VERSION, CLAUDE_MODEL_ID } from "./lib/models";
 import { isPro } from "./revenuecat";
 
-/**
- * A Convex value tops out at 1MB, and the photo travels as one. The client
- * re-encodes to fit under this; a receipt is legible at 1280px on its long
- * edge at ~200–400KB.
- */
+// A Convex value tops out at 1MB and the photo travels as one; the client re-encodes to fit.
 export const MAX_IMAGE_BYTES = 900_000;
-/** The first bytes of every JPEG; anything else is not the photo the client says it is. */
 const JPEG_MAGIC = [0xff, 0xd8, 0xff] as const;
 const MAX_MERCHANT_LENGTH = 80;
 const MAX_ITEM_NAME_LENGTH = 80;
 const MAX_PAYMENT_LENGTH = 40;
-/** A long supermarket receipt; past this the lines are the model repeating itself. */
 export const MAX_ITEMS = 60;
-/** How far back a printed date may sit before it is read as a misread; a receipt is never from the future. */
 const MAX_PAST_DAYS = 366 * 3;
-/**
- * The ledger's own ceiling, thirteen integer digits (`apps/native/src/domain/
- * numpad.ts`): what keeps cent arithmetic inside float64's safe range.
- */
+// The ledger's 13-digit ceiling (apps/native/src/domain/numpad.ts) keeps cent arithmetic inside float64's safe range.
 const MAX_AMOUNT = 9_999_999_999_999;
-/** One vision call, under the client's 30s abort. */
+// Under the client's 30s abort.
 const REQUEST_TIMEOUT_MS = 22_000;
 
-/**
- * The action's only arguments — a privacy boundary. The photo has to cross
- * (that is the feature), and with it only what the model needs to file the
- * receipt in this ledger's terms: category and account NAMES, the ledger
- * currency, the device's region (a "$" in Mexico City is pesos) and calendar
- * today. No ids, no balances, no history.
- */
+// A privacy boundary: the photo plus only what the model needs in this ledger's terms. No ids, balances or history.
 export const receiptScanArgs = {
     accounts: v.array(v.string()),
-    /** The AI consent the person gave — see `enrichment.ts:suggestArgs`. */
     aiConsent: v.optional(v.number()),
     categoryTree: v.array(v.object({ children: v.array(v.string()), name: v.string() })),
     currency: v.string(),
-    /** JPEG, as the client re-encodes it. */
     image: v.bytes(),
-    /** BCP-47 tag, so item names keep the receipt's own language rather than being translated. */
     language: v.optional(v.string()),
-    /** ISO 3166-1 alpha-2, to break a currency symbol's tie. */
+    /** ISO 3166-1 alpha-2, to break a currency symbol's tie ("$" in Mexico is pesos). */
     regionCode: v.optional(v.string()),
     /** `YYYY-MM-DD` in the device's local calendar. */
     today: v.string(),
@@ -84,13 +65,12 @@ const scanStatus = v.union(
     v.literal("invalid"),
     v.literal("providerError"),
     v.literal("invalidResponse"),
-    /** The model saw no receipt in the photo. */
     v.literal("unclear")
 );
 
 const receiptItem = v.object({
     name: v.string(),
-    /** The line's price, quantity included, in the receipt's currency. */
+    /** The line total, quantity included. */
     price: v.number(),
     quantity: v.number(),
 });
@@ -98,11 +78,8 @@ const receiptItem = v.object({
 const receiptDraft = v.object({
     accountName: v.union(v.string(), v.null()),
     categoryName: v.union(v.string(), v.null()),
-    /** ISO 4217, upper case. Null means the ledger's own currency. */
     currency: v.union(v.string(), v.null()),
-    /** Whether the code was printed on the receipt or inferred from a symbol and the region. */
     currencySource: v.union(v.literal("printed"), v.literal("inferred")),
-    /** The receipt named a code the ledger cannot price; `currency` is null as a stand-in, never a guess. */
     currencyUnresolved: v.boolean(),
     date: v.string(),
     domain: v.union(v.string(), v.null()),
@@ -130,22 +107,19 @@ export interface ReceiptItem {
 }
 
 export interface ReceiptDraft {
-    /** A ledger account the receipt's payment line names, in the ledger's spelling; else null. */
     accountName: string | null;
     categoryName: string | null;
     /** ISO 4217, upper case. Null means the ledger's own currency. */
     currency: string | null;
     currencySource: "printed" | "inferred";
-    /** The receipt named a code the ledger cannot price; `currency` is null as a stand-in, never a guess. */
+    /** A code the ledger cannot price; `currency` is then null as a stand-in, never a guess. */
     currencyUnresolved: boolean;
     /** `YYYY-MM-DD` in the device's local calendar. */
     date: string;
     domain: string | null;
-    /** A refund or return slip: money came back. */
     income: boolean;
     items: ReceiptItem[];
     merchant: string;
-    /** "Visa •••• 4242", "Cash", as printed. */
     paymentMethod: string | null;
     subtotal: number | null;
     tax: number | null;
@@ -162,7 +136,7 @@ function failure(status: Exclude<ScanStatus, "ok">): ScanResult {
     return { receipt: null, status };
 }
 
-/** The model's own output is untrusted input — this is only the JSON shape. */
+/** Only the JSON shape: the model's output stays untrusted until `normalizeDraft`. */
 export const modelOutputSchema = z.object({
     accountName: z.string().nullable(),
     categoryName: z.string().nullable(),
@@ -170,7 +144,6 @@ export const modelOutputSchema = z.object({
     currencyPrinted: z.boolean(),
     date: z.string().nullable(),
     domain: z.string().nullable(),
-    /** False when the photo holds no receipt, invoice or bill at all. */
     found: z.boolean(),
     items: z.array(
         z.object({
@@ -191,10 +164,9 @@ export const modelOutputSchema = z.object({
 export type ModelOutput = z.infer<typeof modelOutputSchema>;
 
 const REGION_PATTERN = /^[A-Z]{2}$/;
-/** The currencies exchange rates are fetched for — the only ones a receipt may be filed in. */
 const KNOWN_CURRENCIES: ReadonlySet<string> = new Set(PICKABLE_CURRENCY_CODES);
 
-/** `shards: 10` is copied from `enrichment.ts:118` and is load-bearing. */
+// Unsharded, a global counter is one hot document that throws OCC write conflicts under concurrency.
 export const rateLimiter = new RateLimiter(components.rateLimiter, {
     receiptScanGlobal: {
         kind: "fixed window",
@@ -204,7 +176,6 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
     },
 });
 
-/** True for bytes that start the way every JPEG does. */
 export function looksLikeJpeg(image: ArrayBuffer): boolean {
     const head = new Uint8Array(image, 0, Math.min(JPEG_MAGIC.length, image.byteLength));
     return head.length === JPEG_MAGIC.length && JPEG_MAGIC.every((byte, index) => head[index] === byte);
@@ -234,22 +205,14 @@ export function buildPrompt(args: LedgerContext): string {
         .join(" ");
 }
 
-/** A printed money line: finite, not negative, within the ledger's ceiling; else null. */
 function moneyLine(value: number | null): number | null {
     return value !== null && Number.isFinite(value) && value >= 0 && value <= MAX_AMOUNT ? value : null;
 }
 
-/**
- * A printed line often opens with its quantity ("2 LECHE ENTERA", "3x Yogur");
- * the model copies it into the name. The number needs a delimiter after it —
- * a space or an x — so "2% Milk" keeps its 2.
- */
+// The number needs a space or an x after it, so "2% Milk" keeps its 2.
 const LEADING_QUANTITY = /^(\d+(?:[.,]\d+)?)(?:\s*[x×]\s*|\s+)(?=\S)/u;
 
-/**
- * Strips a leading quantity from a line's name when it is the quantity the
- * model also reported, so the review does not read "2× 2 Leche".
- */
+// Only when it matches the reported quantity, so the review does not read "2× 2 Leche".
 function nameWithoutQuantity(name: string, quantity: number): string {
     const match = LEADING_QUANTITY.exec(name);
     if (!match?.[1]) {
@@ -260,11 +223,6 @@ function nameWithoutQuantity(name: string, quantity: number): string {
     return printed === quantity && rest.length > 0 ? rest : name;
 }
 
-/**
- * The lines the model read, kept only where they are lines: a name and a
- * price. A quantity that is missing or nonsense is one — the price is the
- * line's total either way, so the quantity is display only.
- */
 export function normalizeItems(items: ModelOutput["items"]): ReceiptItem[] {
     const kept: ReceiptItem[] = [];
     for (const item of items) {
@@ -286,12 +244,6 @@ export function normalizeItems(items: ModelOutput["items"]): ReceiptItem[] {
     return kept;
 }
 
-/**
- * The model's answer, made safe in this ledger's terms: names it did not
- * offer become null, a date outside the window becomes today, the ledger's
- * own currency becomes null. Pure, so the prompt's contract is tested without
- * a model.
- */
 export function normalizeDraft(output: ModelOutput, args: LedgerContext): ReceiptDraft | null {
     const { total } = output;
     if (!(output.found && total != null && Number.isFinite(total) && total > 0 && total <= MAX_AMOUNT)) {
@@ -299,9 +251,8 @@ export function normalizeDraft(output: ModelOutput, args: LedgerContext): Receip
     }
     const knownCategories = args.categoryTree.flatMap((branch) => [branch.name, ...branch.children]);
     const printedCurrency = output.currency?.trim().toUpperCase() ?? null;
-    // Only a currency the ledger can price: an unknown code ("RMB") would save a
-    // row no rate row ever matches, valued at face amount. It is flagged rather
-    // than folded into the ledger's currency, which would be the wrong denomination.
+    // An unknown code ("RMB") would match no rate row, and folding it into the ledger's currency would be the
+    // wrong denomination, so it is flagged instead.
     const foreign = printedCurrency != null && printedCurrency !== args.currency;
     const currencyUnresolved = foreign && !KNOWN_CURRENCIES.has(printedCurrency);
     const currency = foreign && !currencyUnresolved ? printedCurrency : null;
@@ -324,11 +275,6 @@ export function normalizeDraft(output: ModelOutput, args: LedgerContext): Receip
     };
 }
 
-/**
- * One vision call: the photo and the ledger's terms in, one JSON object out.
- * A response that fails the schema is untrustworthy as a whole and reported
- * as such rather than sanitised per field.
- */
 export async function readReceipt(
     model: LanguageModel,
     image: ArrayBuffer,
@@ -362,10 +308,6 @@ export async function readReceipt(
     }
 }
 
-/**
- * Read live rather than through a frozen snapshot, so that
- * `npx convex env set ANTHROPIC_API_KEY=""` takes effect on the very next call.
- */
 export const admit = internalMutation({
     args: {},
     handler: async (ctx) => {
@@ -385,6 +327,7 @@ export const scan = action({
             return failure("unauthenticated");
         }
 
+        // Read per call, so clearing the key with `npx convex env set` takes effect on the next scan.
         const apiKey = process.env.ANTHROPIC_API_KEY;
         if (!apiKey || args.aiConsent !== AI_CONSENT_VERSION) {
             return failure("notConfigured");

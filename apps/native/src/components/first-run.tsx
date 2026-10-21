@@ -16,17 +16,10 @@ import { Text } from "./text";
 const EASE = Easing.bezier(0.19, 1, 0.22, 1);
 const FADE_MS = 200;
 
-/** Ring diameters bleed past the screen on purpose — layers, not a target. */
 const RING_SIZES = [220, 340, 480, 640] as const;
 const RING_OPACITY = [1, 0.72, 0.48, 0.28] as const;
 const RING_STAGGER_MS = 70;
 
-/**
- * The cover gets the long arrival (mark settles, rings ripple, text rises);
- * every later screen replays a shorter cut of the same choreography, which is
- * what makes a route push read as the stage swapping objects rather than a new
- * page.
- */
 const ENTRANCE = {
     cover: { dock: 400, object: 0, rings: 100, text: 220 },
     step: { dock: 160, object: 0, rings: 0, text: 60 },
@@ -74,7 +67,6 @@ function Ring({ size, targetOpacity, delayMs }: { size: number; targetOpacity: n
     );
 }
 
-/** Concentric layers radiating from the stage object — the mark's own geometry. */
 function Rings({ delayMs }: { delayMs: number }) {
     return (
         <View className="absolute inset-0 items-center justify-center" pointerEvents="none">
@@ -108,8 +100,6 @@ function StageObject({ children, cover }: { children: ReactNode; cover: boolean 
         if (reduced) {
             return { opacity: progress.get() };
         }
-        // The cover's mark settles into place; a step's object arrives from a
-        // touch above scale, so a push reads as the stage swapping objects.
         const scale = cover ? 0.92 + progress.get() * 0.08 : 1.05 - progress.get() * 0.05;
         return {
             opacity: progress.get(),
@@ -134,32 +124,18 @@ interface FirstRunSkip {
 interface FirstRunProps {
     action?: FirstRunAction;
     body?: string;
-    /** Controls docked above the action — a picker row, the provider buttons. */
     children?: ReactNode;
-    /** The cover's longer arrival choreography. Only the first screen sets it. */
     cover?: boolean;
-    /**
-     * Rendered in permanently reserved space: an error that pushed into flow
-     * would shift the buttons under the user's thumb at the moment it appeared.
-     */
+    /** Rendered in reserved space, so an appearing error never shifts the buttons under the thumb. */
     error?: string | null;
     eyebrow?: string;
     footnote?: ReactNode;
-    /**
-     * The one thing the stage holds, centered over the layer-rings. Screens
-     * without one (the adoption and unconfigured states) fall back to a head-
-     * at-top layout with `children` filling the space instead.
-     */
+    /** Without one, the head sits at the top and `children` fill the space. */
     object?: ReactNode;
     skip?: FirstRunSkip;
     title: string;
 }
 
-/**
- * The first-run shell: one object center-stage, one text block, one button.
- * Draws on the icon's own palette (`--fr-*`), themed per face rather than
- * inverted, so the flow commits to the paper-and-ink look on both schemes.
- */
 export function FirstRun({
     object,
     cover = false,
@@ -177,10 +153,8 @@ export function FirstRun({
     const dockStyle = useRise(object !== undefined, timing.dock, 0);
 
     return (
-        // One top offset for every screen in the flow: the steps carry a
-        // transparent OS header, so content starts 12 below a 44pt bar (64dp on
-        // Android), and matching the cover and the gate to it keeps the stage
-        // from jumping between them.
+        // One top offset for every screen: the steps carry a transparent OS header (44pt, 64dp on Android), and the
+        // cover and the gate match it so the stage does not jump between them.
         <View className="bg-fr-ground pt-safe-offset-14 android:pt-safe-offset-19 pb-safe-offset-5 flex-1 px-6">
             {object === undefined ? (
                 <>

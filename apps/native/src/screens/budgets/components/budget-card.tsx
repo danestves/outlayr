@@ -27,29 +27,16 @@ interface BudgetCardProps {
     contributions: readonly ExpenseContribution[];
     currency: string;
     heroTimeLeft: string | null;
-    /** `Date.now()` from the screen, so the clock tracks the same instant as spend. */
     nowMs: number;
-    /** The card's context menu, opened by holding it. */
     menuItems: readonly ActionMenuItem[];
     onPress: (id: string) => void;
-    /**
-     * Measured column width. Null on the first frame, before the grid has laid
-     * out — the card flexes and offers no menu until it has a width of its own,
-     * because the menu hosts it in a SwiftUI view that has no flex to inherit.
-     */
+    /** Null on the first frame: the card offers no menu until then, since the menu's SwiftUI host has no flex. */
     width: number | null;
 }
 
 const THUMB_HEIGHT = 40;
 
-/**
- * The grid presentation of a budget, behind the Budget Rows setting. Half the
- * screen wide, so it carries the same figures as `BudgetRow` minus the per-day
- * pace — the line that reads as noise once it has to wrap.
- *
- * No swipe-to-delete: the gesture reads as a scroll fight when the cell is only
- * half a screen wide. Long press opens the same actions the row's swipe does.
- */
+/** No swipe-to-delete: at half a screen wide the gesture fights the scroll. Long press opens the same actions. */
 export function BudgetCard({
     budget,
     currency,

@@ -24,7 +24,6 @@ import { newId } from "@/domain/ids";
 
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
 
-/** The tables the outbox triggers cover, in the order a full enqueue walks them. */
 export const SYNCED_TABLES = [
     "categories",
     "transactions",
@@ -44,18 +43,12 @@ export const SYNCED_TABLES = [
 ] as const;
 
 /**
- * The `appMeta` keys that belong to the account rather than the handset. An
- * allow-list, not a deny-list: a key added later stays device-local until
- * someone decides otherwise, which is the safe way to be wrong. It is mirrored
- * in the `appMeta` triggers' `WHEN` clause, and `outbox-triggers.test.ts` fails
- * if the two disagree.
+ * Allow-list of account-level `appMeta` keys, so a new key stays device-local by default. Mirrored in the
+ * `appMeta` triggers' `WHEN` clause; `outbox-triggers.test.ts` fails if the two disagree.
  */
 export const SYNCED_META_KEYS = [
     META_KEYS.currency,
     META_KEYS.currencyChosen,
-    // How the ledger is presented. These describe the person, not the phone, so a
-    // second device should open reading the way the first one does rather than at
-    // stock defaults.
     "showCents",
     "incomeTracking",
     "showUpcoming",
@@ -77,21 +70,8 @@ export const SYNCED_META_KEYS = [
     "insightsTimeFrame",
     "insightsMeasure",
     "accentColor",
-    // Deliberately NOT here, and each for its own reason rather than by oversight:
-    // `colorScheme` is what this screen should look like in this room — an OLED
-    // phone at night and a tablet in daylight want different answers, and the
-    // default already follows each device on its own. `accentColor` above it is
-    // the opposite: which colour the app *is* belongs to the person, like their
-    // currency. `numberEntryType` describes a thumb on a keypad, and it sits
-    // beside `haptics` in the settings screen for that reason — a phone typed
-    // one-handed and a tablet typed with both want different answers, and
-    // replicating it let a second device silently reverse a choice made here.
-    // `biometricLock` and the `notification*` keys describe a
-    // permission this handset holds and another may have been refused; the `sync*` keys and
-    // `ledgerAdoption` describe this device's own replication identity, so
-    // replicating them would hand every device the same one; `firstLaunch`,
-    // `onboardingComplete` and `recurrenceRepaired` record what has happened on
-    // this install, and a new phone still has its own first run to do.
+    // Not synced: `colorScheme` and `numberEntryType` suit each device; `biometricLock`, `notification*`, `sync*`,
+    // `ledgerAdoption`, `firstLaunch`, `onboardingComplete` and `recurrenceRepaired` describe this install.
 ] as const;
 
 /** 999 bound variables per statement, three columns per queue entry. */
@@ -101,11 +81,7 @@ export async function isSyncEnabled(db: Database): Promise<boolean> {
     return (await getMeta(db, META_KEYS.syncEnabled)) === "1";
 }
 
-/**
- * Turning the gate off drops what is queued: those entries name rows this
- * device is no longer replicating, and keeping them would push edits made while
- * signed out the next time somebody signs in.
- */
+/** Turning sync off drops the queue, or edits made while signed out would push at the next sign-in. */
 export async function setSyncEnabled(db: Database, enabled: boolean): Promise<void> {
     await withTransaction(db, async () => {
         await setMeta(db, META_KEYS.syncEnabled, enabled ? "1" : "0");
@@ -146,11 +122,7 @@ export async function getOrCreateDeviceId(db: Database): Promise<string> {
     return minted;
 }
 
-/**
- * Zero for anything unreadable, which re-reads the log from the start rather
- * than skipping whatever the corrupt value pointed past. Applying a change twice
- * is a no-op; missing one is silent data loss.
- */
+/** Zero for anything unreadable: re-applying a change is a no-op, skipping one is silent data loss. */
 export async function getSyncCursor(db: Database): Promise<number> {
     const raw = await getMeta(db, META_KEYS.syncCursor);
     if (raw === null) {
@@ -170,16 +142,8 @@ export async function outboxPendingCount(db: Database): Promise<number> {
 }
 
 /**
- * Queues every replicated row this device holds. The triggers only fire from the
- * moment the gate opens, so without this a ledger built up before sign-in would
- * never reach the account.
- *
- * It queues tombstones too: a deletion made offline has to travel, or the first
- * pull hands the row back.
- *
- * Order matters at the call site, not here — running it before a "replace"
- * adoption pushes the local seed categories the replace exists to discard (see
- * §5 of `docs/internals/convex-sync.md`).
+ * Triggers only fire once the gate opens, so this queues the ledger built before sign-in, tombstones included.
+ * Run it after a "replace" adoption, or it pushes the seed categories the replace discards (convex-sync.md §5).
  */
 export async function enqueueAllForSync(db: Database): Promise<void> {
     const enqueuedAt = new Date();
@@ -239,11 +203,6 @@ export async function setSyncedAt(db: Database, at: Date): Promise<void> {
     await setMeta(db, META_KEYS.syncedAt, String(at.getTime()));
 }
 
-/**
- * Drops device-local replication state before a different account can adopt this
- * ledger. The next account starts at sequence zero and never receives queued
- * writes that were prepared for the prior subject.
- */
 export async function resetSyncForAccountSwitch(db: Database): Promise<void> {
     await withTransaction(db, async () => {
         await db.update(transactions).set({ imageKey: null }).where(isNotNull(transactions.imageUri));

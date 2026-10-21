@@ -2,19 +2,7 @@ import type { TranslationKey } from "@/i18n/catalog";
 
 export type ThemePreference = "light" | "dark" | "system";
 
-/**
- * The three choices, in the order the picker offers them.
- *
- * Labelled "Color Scheme" in Settings, not "Theme": the Theme row next to it
- * picks the accent. The type keeps uniwind's word because uniwind's `theme` is
- * exactly this — light, dark, or adaptive.
- *
- * `value` is what the `colorScheme` setting stores. Numeric because
- * `SETTING_DEFAULTS` admits booleans and numbers and nothing else, so a
- * string-valued preference has no mechanism to persist through. Append only;
- * never renumber, or every device that already stored one reads back a
- * different answer.
- */
+/** `value` is what the `colorScheme` setting stores. Append only: renumbering changes every stored answer. */
 export const THEME_OPTIONS: readonly {
     label: TranslationKey;
     detail: TranslationKey;

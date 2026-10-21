@@ -16,10 +16,7 @@ import { useRestingSheet } from "@/hooks/use-resting-sheet";
 import { useTranslation } from "@/i18n/context";
 import { createDraftStash } from "@/lib/draft-stash";
 
-/**
- * Edits an "Edits discarded" Undo carries into the transfer's reopened sheet,
- * with the transfer as it was when they were made.
- */
+/** Edits an "Edits discarded" Undo carries back, with the transfer as it was then. */
 const transferDrafts = createDraftStash<{ edits: TransferEditorDraft; saved: SavedTransfer }>();
 
 export function EditTransfer({ id }: { id: string }) {
@@ -30,8 +27,7 @@ export function EditTransfer({ id }: { id: string }) {
     const { awake, height, rest, sheet } = useRestingSheet(t("transfers.title"));
     const [saved] = useState(() => savedTransfer(db, id));
     const readDraft = useRef<(() => TransferEditorDraft) | null>(null);
-    // Only edits made on this very transfer come back: made on an older one,
-    // they would write over whatever changed it.
+    // Only edits made on this transfer come back: older ones would overwrite whatever changed it.
     const [restore] = useState(() => {
         const held = transferDrafts.take(id);
         return held !== undefined && saved !== null && sameSavedTransfer(held.saved, saved) ? held.edits : undefined;

@@ -18,7 +18,6 @@ import { Text } from "./text";
 
 const CLEAR_ACTION = "clear";
 
-/** M3 state layer on a press: 10% of the key's content colour. */
 const PRESSED_ALPHA = 0.1;
 
 const BACKSPACE_GLYPH = 24;
@@ -30,11 +29,6 @@ const ROWS: NumpadTileKey[][] = [
     [".", "0", "back"],
 ];
 
-/**
- * The keypad in Material 3: 56dp tonal keys in `secondaryContainer`, the
- * backspace in `primaryContainer` so it reads as the one key that is not a
- * digit, ripples, and a key-tap haptic. Same contract as `amount-numpad.tsx`.
- */
 export const AmountNumpad: typeof AmountNumpadBase = ({
     value,
     minorUnits,
@@ -120,7 +114,6 @@ function NumpadKeyTile({
     onLongPress,
 }: {
     label: NumpadTileKey;
-    /** The separator key draws the active language's mark, not the canonical ".". */
     glyph: string;
     hidden: boolean;
     onPress: () => void;

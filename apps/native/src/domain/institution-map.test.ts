@@ -34,22 +34,18 @@ describe("resolveInstitutionDomain", () => {
         expect(resolveInstitutionDomain(merchantKey("Cash App"))).toBe("cash.app");
     });
 
-    // Common words that name a company only with a second token.
     it("does not brand a bare zip or alma", () => {
         expect(resolveInstitutionDomain(merchantKey("Zip"))).toBeNull();
         expect(resolveInstitutionDomain(merchantKey("Alma"))).toBeNull();
         expect(resolveInstitutionDomain(merchantKey("Zip Pay"))).toBe("zip.co");
     });
 
-    // Plain cash is not a company. The model answers null for it, and so must this.
     it("answers nothing for a name no institution covers", () => {
         expect(resolveInstitutionDomain(merchantKey("Cash"))).toBeNull();
         expect(resolveInstitutionDomain(merchantKey("Vacation fund"))).toBeNull();
         expect(resolveInstitutionDomain("")).toBeNull();
     });
 
-    // No fuzzy tier: branding an account with the wrong bank's logo is worse
-    // than showing none.
     it("does not answer for a near-miss spelling", () => {
         expect(resolveInstitutionDomain(merchantKey("Chace"))).toBeNull();
     });

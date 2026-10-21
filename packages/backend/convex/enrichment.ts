@@ -29,44 +29,21 @@ export const BACKGROUND_REQUEST_TIMEOUT_MS = 60_000;
 
 export const GROUNDED_REQUEST_TIMEOUT_MS = 120_000;
 
-/**
- * The action's only arguments — a privacy boundary, not just a shape.
- * Amounts, dates, accounts, balances, and identity must never appear here;
- * only the merchant name and the user's own category names may leave the
- * device. Exported so `enrichment.test.ts` can assert the field count
- * directly rather than re-deriving it from the wrapped action.
- */
+/** A privacy boundary: only the merchant name and the user's category names leave the device. */
 export const suggestArgs = {
-    /**
-     * The AI consent the person gave (`AI_CONSENT_VERSION`). Anything else
-     * still reads the shared merchant list but never reaches a provider.
-     */
+    /** `AI_CONSENT_VERSION`; anything else reads the shared merchant list but never reaches a provider. */
     aiConsent: v.optional(v.number()),
     background: v.optional(v.boolean()),
     categoryTree: v.array(v.object({ children: v.array(v.string()), name: v.string() })),
-    /**
-     * The ISO 4217 code the purchase was charged in — a code, never an amount.
-     * It is the one signal that survives travel: a device set to VE buying in
-     * EUR is in Europe, and `regionCode` alone would point the model the wrong
-     * way. Sanitized before use (`sanitizeCurrencyCode`).
-     */
+    /** A code, never an amount: it survives travel where `regionCode` would mislead. */
     currency: v.optional(v.string()),
-    /**
-     * One side of the dual-authority consent gate. A forged `true` alone
-     * cannot enable a grounded lookup — the synced `appMeta` row must also
-     * agree — but a `false` always blocks, from either side.
-     */
+    /** Dual-authority: a forged `true` needs the synced `appMeta` row to agree; `false` always blocks. */
     groundedLookup: v.boolean(),
     income: v.boolean(),
     knowledgeOnly: v.optional(v.boolean()),
     locale: v.optional(v.string()),
     name: v.string(),
-    /**
-     * The device's own region — a signal `locale` cannot substitute for, since a
-     * user may run an English UI on a device set to a different region.
-     * Sanitized before use (`sanitizeRegionCode`); it never carries anything but
-     * a bare ISO 3166-1 alpha-2 code.
-     */
+    /** The device region, which `locale` cannot stand in for. */
     regionCode: v.optional(v.string()),
 };
 
@@ -74,7 +51,7 @@ const suggestion = v.object({
     categoryName: v.union(v.string(), v.null()),
     domain: v.union(v.string(), v.null()),
     emoji: v.union(v.string(), v.null()),
-    /** A grounded lookup was scheduled — the client must not cache this as a final null result. */
+    /** The client must not cache this as a final null result. */
     grounding: v.boolean(),
     isNewCategory: v.boolean(),
     merchantName: v.union(v.string(), v.null()),
@@ -111,47 +88,25 @@ function domainAccepted(confidence: (typeof DOMAIN_CONFIDENCE)[number] | null | 
     return confidence === "high";
 }
 
-/** The model's own output is untrusted input — this is only the JSON shape. */
+/** Untrusted model output; this is only the JSON shape. */
 const modelOutputSchema = z.object({
-    /**
-     * Asking the model to write the brand's own name before its
-     * domain is what measurably fixes the domain's spelling: on 13 hyphenated
-     * or regional merchants x 10 runs, correct domains rose from 88 to 106 of
-     * 130 (with the spelling sentence in `DOMAIN_LINE`), against 96 for that
-     * sentence alone.
-     */
+    /** Brand before domain measurably fixes the domain's spelling. */
     brand: z.string().nullish(),
     categoryName: z.string().nullable(),
     domain: z.string().nullable(),
-    /**
-     * Asked for alongside the domain so the prompt can demand a best guess
-     * without the guess reaching the logo fetcher: only `high` keeps the
-     * domain in `runSuggest`. Nullish so a model that omits it still
-     * answers the category — the domain alone is what it forfeits.
-     */
+    /** Only `high` keeps the domain, so the prompt can demand a best guess. */
     domainConfidence: z.enum(DOMAIN_CONFIDENCE).nullish(),
     emoji: z.string().nullish(),
     isNewCategory: z.boolean(),
-    // Nullish rather than nullable: a model that simply omits one of these has
-    // still answered the question that matters, and failing the whole call over
-    // a missing optional field would cost the category and tags too.
+    // Nullish: a missing optional field must not cost the category and tags.
     parentCategoryName: z.string().nullish(),
     tags: z.array(z.string()),
 });
 
-/**
- * Keyed by `identity.tokenIdentifier`, per the repo's Convex guidelines
- * (preferred over `subject`), never a client argument. Checked before the
- * global limit — it is the common rejection, so checking it first keeps
- * abusive traffic off the sharded global counter.
- *
- * Exported so `enrichment.test.ts` can pre-consume a bucket directly rather
- * than racing the component's random shard sampling through the action.
- */
+/** Keyed by `identity.tokenIdentifier`, never a client argument; checked before the sharded global limit. */
 export const rateLimiter = new RateLimiter(components.rateLimiter, {
     enrichmentBackground: perUserBurst("enrichmentBackground", false),
-    // An unsharded global counter is one hot document and throws OCC write
-    // conflicts under concurrency — `shards: 10` is load-bearing, not tuning.
+    // `shards: 10` is load-bearing: one unsharded counter throws OCC conflicts.
     enrichmentGlobal: {
         kind: "fixed window",
         period: HOUR,
@@ -160,22 +115,14 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
     },
     enrichmentPerUser: perUserBurst("enrichment", false),
     enrichmentQueue: perUserBurst("enrichmentQueue", false),
-    // Kills both a user retyping the same unknown name and a
-    // thundering herd across many users hitting one new merchant at once.
-    // Consumed inside `groundedLookup.run` and `enrichmentQueue.resolveJob`; `maybeScheduleGrounded` only reads it.
+    // Consumed in `groundedLookup.run` and `enrichmentQueue.resolveJob`; `maybeScheduleGrounded` only reads it.
     groundedPerKey: {
         capacity: 1,
         kind: "token bucket",
         period: DAY,
         rate: 1,
     },
-    // Checked in `suggest` itself, before the internal action is ever
-    // scheduled. This gate is anti-abuse, NOT cost control — `groundedBudgetMicros`
-    // is the real backstop, and `groundedPerKey` already stops the same merchant
-    // being looked up twice in a day. At 5/day it fired during ordinary use: a
-    // user in an uncovered country hits five unknown merchants in one sitting and
-    // is then locked out for hours, which is exactly the person this feature is
-    // for.
+    // Anti-abuse, not cost control: `groundedBudgetMicros` is the backstop.
     groundedPerUser: {
         capacity: 20,
         kind: "token bucket",
@@ -192,12 +139,7 @@ export function sanitizeTags(tags: readonly string[]): string[] {
         .map((tag) => tag.slice(0, MAX_TAG_LENGTH));
 }
 
-/**
- * Rejects anything that is not a bare `host.tld`-shaped string — this is what
- * stops a hallucinated `https://…` url or a bare `netflix` from ever reaching
- * the logo fetcher. Case-folded before the match so `NETFLIX.COM`
- * survives; the pattern itself only accepts lowercase.
- */
+/** Only a bare `host.tld` reaches the logo fetcher. */
 export function sanitizeDomain(domain: string | null): string | null {
     if (domain === null) {
         return null;
@@ -206,8 +148,7 @@ export function sanitizeDomain(domain: string | null): string | null {
     if (trimmed.length === 0 || trimmed.length > MAX_DOMAIN_LENGTH) {
         return null;
     }
-    // Measured: the grounded lookup returns `www.`-prefixed domains, which
-    // logo.dev's apex-only lookup would otherwise miss.
+    // Grounded lookups return `www.` domains; logo.dev is apex-only.
     const apex = trimmed.startsWith("www.") ? trimmed.slice(4) : trimmed;
     return DOMAIN_PATTERN.test(apex) ? apex : null;
 }
@@ -230,11 +171,7 @@ export function sanitizeCategoryName(name: string | null): string | null {
 
 const REGION_CODE_PATTERN = /^[A-Z]{2}$/;
 
-/**
- * ISO 3166-1 alpha-2 only. This is client-submitted input, not model output —
- * a modified client could send anything here, so it is validated the same way
- * `trimmedName`'s length bounds are, before it ever reaches a prompt.
- */
+/** Client-submitted: validated before it reaches a prompt. */
 export function sanitizeRegionCode(region: string | undefined): string | undefined {
     if (region === undefined) {
         return;
@@ -245,12 +182,7 @@ export function sanitizeRegionCode(region: string | undefined): string | undefin
 
 const KNOWN_CURRENCIES: ReadonlySet<string> = new Set(PICKABLE_CURRENCY_CODES);
 
-/**
- * A currency the app can actually pick, not merely three letters. Client-
- * submitted, and it partitions the shared knowledge cache and the per-key
- * grounded gate, so an arbitrary string here would be a fresh partition and
- * a fresh search allowance each time.
- */
+/** Client-submitted and it partitions the knowledge cache and per-key gate, so only pickable codes pass. */
 export function sanitizeCurrencyCode(currency: string | undefined): string | undefined {
     if (currency === undefined) {
         return;
@@ -259,29 +191,14 @@ export function sanitizeCurrencyCode(currency: string | undefined): string | und
     return KNOWN_CURRENCIES.has(trimmed) ? trimmed : undefined;
 }
 
-/**
- * What a merchant name actually looks like when it arrives. A Wallet
- * automation and a bank statement both hand over the card-terminal descriptor,
- * and "Sushi Way Les Ha" is a truncated "Sushi Way Les Halles", not a business
- * the model has never heard of.
- */
 export const DESCRIPTOR_LINE =
     'The name is usually a card-terminal or bank-statement descriptor rather than a clean brand name, so decode it first: a word before "*" is often a payment processor or terminal provider (SQ, TST, SP, PAYPAL, NYX, SUMUP, IZ, ZTL, PP, GOOGLE, APPLE.COM) rather than the merchant, unless that company is itself the seller; letters and digits after "*" are often a booking or reference code; a trailing legal-entity suffix (AE, ABEE, ABEET, EPE, IKE, SA, SAS, SL, SRL, SPA, GMBH, AG, LTD, LLC, INC, BV) is not part of the name; and the name may be truncated, abbreviated, run together without spaces, uppercase, or carry a city, airport, store number or country.';
 
-/**
- * Measured against the live model: "only if you are confident" answered null
- * for Intermarché, Stradivarius and Île-de-France Mobilités, whose logos the
- * image tiers had all along. Asking for the best guess plus a confidence and
- * keeping only `high` on grok-4.20-non-reasoning resolved every one of those, while a person's name or a
- * private note still comes back null.
- */
+/** Measured: a best guess kept only at `high` confidence beats "only if confident". */
 export const DOMAIN_LINE =
     "Set brand to the clean display name of the business or place, written the way it writes its own name (for example Airbnb, Blue Bottle Coffee, Fontana di Trevi), or null. Set domain to the primary web domain of what you recognise — a chain, retailer, restaurant group, transit operator, utility, service or app, and equally a museum, landmark, attraction, venue, park or public body: the apex domain of its main site, never a subdomain. Write the domain exactly as that site's address is spelled, keeping hyphens, digits, dots and country suffixes; it is often not the name with spaces, accents and punctuation removed (for example coca-cola.com, hm.com, bahn.de). A landmark or public venue with no site of its own is reached through the official page its operator, city or tourism authority runs for it — name that site rather than null. Set domainConfidence to high when you recognise it, medium when it is a plausible match, low when you are guessing. Set domain to null only when the name identifies no specific business or place you know of (a person, a private note, an unknown local shop).";
 
-/**
- * Where the purchase happened outranks where the device is registered. The
- * device region only breaks ties between same-named businesses.
- */
+/** Where the purchase happened outranks where the device is registered; the region only breaks ties. */
 export function placeLines(regionCode: string | undefined, currency: string | undefined): string[] {
     return [
         currency ? `The purchase was charged in ${currency}, which indicates where the merchant operates.` : "",
@@ -326,11 +243,7 @@ export interface RunSuggestArgs {
     timeoutMs?: number;
 }
 
-/**
- * At most a couple of glyphs. A model asked for "a single emoji" will now and
- * then answer with a sentence, and that would end up rendered as a category's
- * symbol.
- */
+/** A model asked for one emoji sometimes answers a sentence. */
 export function sanitizeEmoji(emoji: string | null): string | null {
     if (emoji === null) {
         return null;
@@ -351,23 +264,14 @@ export interface TreeCandidate {
     tags: readonly string[];
 }
 
-/**
- * Resolves a candidate's `isNewCategory`/`parentCategoryName` against one
- * user's own category tree. Shared by `runSuggest` (Tier 2, tree-relative
- * from the start) and `suggest`'s Tier 1.5 cache hit (a globally-shared
- * candidate applied to whichever user is asking this time) — the same
- * merchant can be "new" for one user and already-known for another.
- */
+/** The same merchant can be new for one user and known for another. */
 export function applyToTree(tree: readonly CategoryBranch[], candidate: TreeCandidate): Omit<Suggestion, "grounding"> {
     const cappedTree = tree.slice(0, MAX_KNOWN_CATEGORY_NAMES);
     const everyName = cappedTree.flatMap((branch) => [branch.name, ...branch.children]);
 
     const { categoryName } = candidate;
     const isNewCategory = categoryName !== null && !everyName.includes(categoryName);
-    // A parent is only ever one of the top-level names actually sent, and only
-    // for a category being created. Anything else is dropped rather than
-    // trusted — neither the model nor a globally-shared cache row can know
-    // this particular user's ledger shape.
+    // A parent must be a top-level name actually sent: nothing upstream knows this ledger.
     const parentCategoryName =
         isNewCategory &&
         candidate.parentCategoryName !== null &&
@@ -387,18 +291,13 @@ export function applyToTree(tree: readonly CategoryBranch[], candidate: TreeCand
     };
 }
 
-/**
- * Model call + sanitisation only — no auth, no env check, no rate limit.
- * Exported so tests can inject a fake model directly; the guard ladder above
- * it is exercised through the `suggest` action instead.
- */
+/** Exported so tests can inject a fake model. */
 export async function runSuggest(model: LanguageModel, args: RunSuggestArgs): Promise<Suggestion> {
     const tree = args.categoryTree.slice(0, MAX_KNOWN_CATEGORY_NAMES);
 
     const { output } = await generateText({
         abortSignal: AbortSignal.timeout(args.timeoutMs ?? REQUEST_TIMEOUT_MS),
-        // The SDK default is 2 retries, which alone would triple worst-case
-        // latency past the client's own 9s `Promise.race` abort.
+        // The SDK's 2 default retries alone would outlast the client's 9s abort.
         maxRetries: 0,
         model,
         output: Output.object({ schema: modelOutputSchema }),
@@ -407,12 +306,9 @@ export async function runSuggest(model: LanguageModel, args: RunSuggestArgs): Pr
     });
 
     return {
-        // The model's own `isNewCategory` claim is discarded by `applyToTree` —
-        // it has no reason to be authoritative about the user's own local data.
         ...applyToTree(args.categoryTree, {
             categoryName: sanitizeCategoryName(output.categoryName),
-            // A guess is a wrong brand's logo on the row, and an unrated domain
-            // is a guess too; only a null here lets the grounded tier take over.
+            // A guessed domain is a wrong logo; only null lets the grounded tier take over.
             domain: domainAccepted(output.domainConfidence) ? sanitizeDomain(output.domain) : null,
             emoji: sanitizeEmoji(output.emoji ?? null),
             merchantName: sanitizeMerchantName(output.brand ?? null),
@@ -426,16 +322,8 @@ export async function runSuggest(model: LanguageModel, args: RunSuggestArgs): Pr
 const GROUNDED_LOOKUP_META_KEY = "groundedLookup";
 
 /**
- * The server-side half of the dual-authority gate: the synced `appMeta`
- * row, keyed the same way `sync.ts` writes it (the Better Auth user id, NOT
- * `identity.tokenIdentifier` — those are different id spaces in this app).
- * An absent row defaults to consented, matching `SETTING_DEFAULTS.groundedLookup`
- * on the client — a device that has never synced this key has never
- * turned it off.
- *
- * A caller whose session no longer resolves answers false rather than throwing:
- * `csvImport.ts` schedules grounded lookups mid-action, and `use-csv-import.tsx`
- * reports any rejection from that action as "You're offline".
+ * Keyed by the Better Auth user id, as `sync.ts` writes it. An absent row means consented; a lost session answers
+ * false.
  */
 export const groundedConsent = internalQuery({
     args: {},
@@ -462,30 +350,16 @@ export interface GroundedScheduleArgs {
     regionCode?: string;
 }
 
-/**
- * The least ctx capability this needs — `Pick` rather than the full
- * `ActionCtx` so a `convex-test` `t.run` mutation-shaped ctx (which carries
- * the same `runQuery`/`runMutation`/`scheduler` signatures) can exercise this
- * function directly in tests, concretely typed, with no widening cast.
- */
+/** `Pick` so a `convex-test` ctx fits without a widening cast. */
 export type GroundedScheduleCtx = Pick<ActionCtx, "runQuery" | "runMutation" | "scheduler">;
 
-/**
- * A missing domain is as much a miss as a missing category. The model can
- * infer "Supermercados X" is groceries from the name alone, but it cannot
- * invent a regional chain's domain — so the answer that most needs a grounded
- * search is the one that already has a category and no url.
- */
 export function needsGroundedLookup(result: Pick<Suggestion, "categoryName" | "domain">): boolean {
     return result.categoryName === null || result.domain === null;
 }
 
 /**
- * Rate limiting order: `groundedPerKey` read and `groundedPerUser` spent here,
- * `groundedPerKey` and `groundedBudgetMicros` spent inside `groundedLookup.run`. Returns whether a
- * lookup was scheduled or may still be running, so `suggest` knows whether to report
- * `grounding: true`. `categoryTree` is deliberately not a parameter —
- * the scheduled args below can never carry it.
+ * `groundedPerKey` read and `groundedPerUser` spent here; `categoryTree` is not a parameter, so scheduled args cannot
+ * carry it.
  */
 export async function maybeScheduleGrounded(
     ctx: GroundedScheduleCtx,
@@ -522,11 +396,7 @@ export async function maybeScheduleGrounded(
     return true;
 }
 
-/**
- * Read live rather than through `@outlayr/env/backend`'s frozen snapshot, so
- * that `npx convex env set ANTHROPIC_API_KEY=""` (design rollback lever 2) takes
- * effect on the very next call — matching `auth.ts`'s `resolveSiteUrl`.
- */
+/** Read live so `npx convex env set ANTHROPIC_API_KEY=""` takes effect on the next call. */
 export const suggest = action({
     args: suggestArgs,
     handler: async (ctx, args): Promise<Suggestion> => {
@@ -543,9 +413,7 @@ export const suggest = action({
         const regionCode = sanitizeRegionCode(args.regionCode);
         const currency = sanitizeCurrencyCode(args.currency);
 
-        // Tier 1.5: an indexed read that costs nothing and consumes neither rate
-        // limit bucket below — checked before `ANTHROPIC_API_KEY` so a hit still works
-        // even when that key is unset (design's degradation matrix).
+        // Tier 1.5 spends no rate limit and runs before the API key check, so a hit works without the key.
         const cached = await ctx.runQuery(internal.merchantKnowledge.lookup, {
             keys: knowledgeKeys(trimmedName, currency),
             now: Date.now(),
@@ -589,8 +457,7 @@ export const suggest = action({
                 regionCode,
             });
 
-            // Scheduling is never awaited: it fills Tier 1.5 for the NEXT lookup
-            // of this merchant, never this transaction.
+            // Never awaited: it fills Tier 1.5 for the NEXT lookup.
             if (needsGroundedLookup(result)) {
                 const scheduled =
                     args.groundedLookup &&
@@ -603,9 +470,7 @@ export const suggest = action({
                         name: trimmedName,
                         regionCode,
                     }));
-                // Whatever the model did answer is kept — blanking it would throw
-                // away a good category to report a missing logo. `grounding: true`
-                // is what stops the client caching this as final.
+                // `grounding: true` stops the client caching this as final.
                 if (scheduled) {
                     return { ...result, grounding: true };
                 }
@@ -627,9 +492,7 @@ export const suggest = action({
                     name: trimmedName,
                     regionCode,
                 }));
-            // A rejected model call surfaces here as a normal degradation, not a
-            // thrown ConvexError — throwing would fill function logs with stack
-            // traces for an entirely ordinary timeout or provider outage.
+            // Not a thrown ConvexError: an ordinary timeout should not fill the logs with stack traces.
             return { ...EMPTY, grounding: scheduled };
         }
     },

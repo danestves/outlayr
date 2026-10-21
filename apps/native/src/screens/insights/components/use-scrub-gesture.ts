@@ -2,11 +2,6 @@ import { usePanGesture } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 
-/**
- * The scrub both insights charts use: report a bucket while the finger moves,
- * clear on lift, and commit whatever it landed on. `report` is the worklet that
- * turns an x into a bucket index, which is all the two charts differ by.
- */
 export function useScrubGesture({
     commit,
     onScrub,

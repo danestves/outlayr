@@ -20,10 +20,6 @@ export function useTransactionCount(db: Database): number {
     return useLiveQuery(transactions, () => ledgerSizeQuery(db)).length;
 }
 
-/**
- * Derived from the projection, so widening the column map widens the type and
- * the two cannot drift apart.
- */
 export interface CategoryDisplay {
     categoryName: string | null;
     categoryColor: string | null;
@@ -64,44 +60,23 @@ export function useDecoratedRows<Row extends { categoryId: string | null }>(
 }
 
 export interface LoggedTransactions {
-    /** The window's days from `splitMs` on, newest first. */
     head: TransactionWithCategory[];
-    /** False while older days remain to be fetched. */
     reachedEnd: boolean;
-    /** Midnight dividing `head` from `tail`; see {@link logSplitMs}. */
     splitMs: number;
-    /**
-     * The window's days before `splitMs`, newest first. The same array, row
-     * objects included, through any write that leaves these rows alone.
-     */
+    /** Keeps the same array, row objects included, through any write that leaves these rows alone. */
     tail: TransactionWithCategory[];
 }
 
 interface LogTail {
-    /** The midnight `rows` start from; `splitMs` when the window ends above it. */
     floorMs: number;
     rows: LogRow[];
     splitMs: number;
 }
 
 /**
- * Newest first. `nowMs` is a dependency so the "future rows hidden" boundary
- * only moves when the caller intends.
- *
- * The category fields come from {@link useCategoryMeta}, not a join: a join
- * would leave every row showing a renamed category's old name and colour until
- * some *transaction* was written.
- *
- * The window is measured in **days, not rows**, so a day is never cut in half
- * under its own signed subtotal, and it grows rather than paging: `useLiveQuery`
- * re-runs on every write to the table, and under that a cursor is unsound —
- * inserting a transaction above it shifts every later page, duplicating or
- * skipping rows.
- *
- * It comes in two reads so a grown window does not rebuild every row it holds
- * when one recent entry changes: only `head` follows the clock. Paging only
- * moves the floor older, so `tail` then reads just the new days and appends
- * them to the rows it holds, which keep their objects.
+ * Category fields come from {@link useCategoryMeta}, not a join, so a rename repaints without a transaction write.
+ * The window grows by days rather than paging: `useLiveQuery` re-runs on every write, and a cursor would shift.
+ * Only `head` follows the clock; `tail` appends the new days on paging and keeps its row objects.
  */
 export function useLoggedTransactions(db: Database, nowMs: number, days: number): LoggedTransactions {
     const dayRows = useLiveQuery(transactions, () => logWindowDaysQuery(db, nowMs, days), [nowMs, days], nowMs);

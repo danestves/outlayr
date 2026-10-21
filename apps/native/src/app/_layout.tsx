@@ -62,10 +62,7 @@ export const unstable_settings = {
     anchor: "(tabs)",
 };
 
-/**
- * Renders in place of the provider tree it is guarding, so it reads the language
- * off the runtime rather than through `useTranslation`.
- */
+// Renders in place of the provider tree, so it reads the language off the runtime rather than `useTranslation`.
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
     return (
         <View className="bg-background flex-1 items-center justify-center px-8">
@@ -132,15 +129,13 @@ function CloudAuthMirror() {
 
 function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
     const { status } = useLocalData();
-    // Above the splash gate on purpose: the accent has to be written into both
-    // themes before the first screen paints, not after it.
+    // Above the splash gate: the accent must be written into both themes before the first screen paints.
     useAccent();
     useApplyThemePreference();
     const { theme } = useTheme();
     const isDark = theme === "dark";
     const [splashHidden, setSplashHidden] = useState(false);
-    // SAFETY: uniwind types the batched read as (string | undefined)[]; every name
-    // below is declared in global.css, so each slot resolves.
+    // SAFETY: every name below is declared in global.css, so each slot resolves.
     const [background, card, text, border, primary] = useCSSVariable([
         "--background",
         "--color-card",
@@ -154,8 +149,7 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
         setSplashHidden(true);
     }, []);
 
-    // An error surface beats an indefinite splash, but it is written in the
-    // owner's language, so it still waits on the catalog.
+    // An error surface beats an indefinite splash, but it is in the owner's language, so it waits on the catalog.
     const failed = fontsLoaded && status === "error";
     if (failed && !splashHidden) {
         setSplashHidden(true);
@@ -180,8 +174,7 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
                         <ThemeProvider
                             value={{
                                 ...base,
-                                // `primary` too, or React Navigation keeps its own iOS blue on every
-                                // native toolbar button — the CSS token never reaches native chrome.
+                                // `primary` too, or React Navigation keeps its own iOS blue on native toolbar buttons.
                                 colors: { ...base.colors, background, border, card, primary, text },
                                 dark: isDark,
                             }}
@@ -202,10 +195,8 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
         );
     }
 
-    // Latched on the splash, because `retry()` walks the status back to
-    // `opening`: blanking on it once the splash is gone would empty the screen
-    // for the length of the attempt, and permanently if the migration never
-    // answers on a locked or corrupt file.
+    // Latched on the splash because `retry()` walks the status back to `opening`: blanking then would empty the
+    // screen for the attempt, and permanently if the migration never answers on a locked or corrupt file.
     if (!splashHidden) {
         return null;
     }
@@ -213,15 +204,8 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
     return <LocalDataError />;
 }
 
-/**
- * Holds the splash until `rootStackGroup` can name a destination, so the first
- * frame is the screen the owner is going to rather than a cover on the way to
- * it. Both waits are bounded — `AUTH_RESTORE_BUDGET_MS` and an adoption run
- * that settles even when it throws.
- *
- * Latched like the gate above, and `AuthCover` stays: a sign-in re-enters
- * `resolving` long after launch, where a splash is not the right cover.
- */
+// Holds the splash until `rootStackGroup` can name a destination. `AuthCover` stays: a sign-in re-enters
+// `resolving` long after launch, where a splash is not the right cover.
 function RouteGate({
     children,
     hideSplash,
@@ -248,10 +232,7 @@ function RouteGate({
     return children;
 }
 
-/**
- * Split from `RootNavigator` so `useDatabase` is only ever called below the
- * splash gate, where the database is guaranteed open.
- */
+// Split out so `useDatabase` is only called below the splash gate, where the database is guaranteed open.
 function RootStack() {
     const db = useDatabase();
     const t = useTranslation();
@@ -277,20 +258,14 @@ function RootStack() {
         <Stack>
             <Stack.Protected guard={group === "onboarding"} redirectTo={GROUP_ENTRY[group]}>
                 <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
-                {/* The steps carry the OS back button rather than a drawn one, which
-				    brings the matching hit target with it. Transparent, because the
-				    stock theme card differs from the flow's `--fr-ground` — an opaque
-				    bar would band the top. */}
+                {/* Transparent: the stock theme card differs from `--fr-ground`, so an opaque bar bands the top. */}
                 <Stack.Screen name="onboarding/currency" options={chrome.firstRunStep} />
                 <Stack.Screen name="onboarding/smart-features" options={chrome.firstRunStep} />
                 <Stack.Screen name="onboarding/rhythm" options={chrome.firstRunStep} />
             </Stack.Protected>
 
-            {/* Behind onboarding, not in front of it: the currency step is the only
-			    thing that writes `currencyChosen`, and canonicalization declines
-			    every row on a ledger that lacks it (`docs/internals/convex-sync.md`
-			    §1.7). A device has to state its currency before it holds a ledger,
-			    not after an account has handed it one. */}
+            {/* Behind onboarding: only the currency step writes `currencyChosen`, and canonicalization declines every
+                row on a ledger that lacks it (`docs/internals/convex-sync.md` §1.7). */}
             <Stack.Protected guard={group === "sign-in"} redirectTo={GROUP_ENTRY[group]}>
                 <Stack.Screen name="auth/sign-in" options={{ headerShown: false }} />
                 <Stack.Screen name="auth/email" options={chrome.firstRunStep} />
@@ -300,16 +275,12 @@ function RootStack() {
                 <Stack.Screen name="auth/adopt" options={{ gestureEnabled: false, headerShown: false }} />
             </Stack.Protected>
 
-            {/* A guard flip swaps every route whose guard now fails for a redirect
-			    to the first accessible screen. Every root screen has to sit in
-			    exactly one of these four groups — an aux screen declared outside all
-			    of them would survive a guard flip and strand the stack on it, with no
-			    tab bar and no way back. */}
+            {/* Every root screen must sit in exactly one of these four groups: one outside them all survives a guard
+                flip and strands the stack on it, with no tab bar and no way back. */}
             <Stack.Protected guard={group === "ledger"} redirectTo={GROUP_ENTRY[group]}>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 
-                {/* Header chrome per group comes from `useStackChrome`, which has an
-				    Android sibling: Material 3 bars, dialogs and sheets there. */}
+                {/* Header chrome comes from `useStackChrome`, which has an Android sibling. */}
                 <Stack.Screen name="search" options={chrome.search(t("nav.search"))} />
                 <Stack.Screen name="paywall" options={chrome.paywall} />
 

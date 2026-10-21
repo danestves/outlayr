@@ -4,11 +4,8 @@ import type { Database } from "@/db/client";
 
 import { localRateLookup } from "./rates";
 
-/**
- * A stored amount's USD value, frozen at the rate of its own day — the
- * contract `transactions.amountUsd` keeps. Signed, unlike an entry: an account
- * can open overdrawn, so the magnitude is canonicalized and the sign restored.
- */
+// Frozen at the rate of its own day, the contract `transactions.amountUsd` keeps. Signed: an account can open
+// overdrawn, so the magnitude is canonicalized and the sign restored.
 export async function frozenUsd(
     db: Database,
     amount: number,

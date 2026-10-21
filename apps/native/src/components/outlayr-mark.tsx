@@ -1,11 +1,7 @@
 import Svg, { Path } from "react-native-svg";
 import { useCSSVariable } from "uniwind";
 
-/**
- * The layered-O mark. Path data verbatim from `assets/logo.svg` — the
- * vectorized brand mark the app icon ships — with the hardcoded #17150F fill
- * lifted to the first-run ink token so it renders on both faces.
- */
+// Path data verbatim from `assets/logo.svg`, with its #17150F fill lifted to the first-run ink token.
 export function OutlayrMark({ size = 92 }: { size?: number }) {
     // SAFETY: declared in global.css for both schemes, so it always resolves.
     const ink = useCSSVariable("--color-fr-ink") as string;

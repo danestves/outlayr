@@ -32,7 +32,6 @@ export async function readReminderTime(db: Database): Promise<TimeOfDay> {
 
 let queue: Promise<unknown> = Promise.resolve();
 
-/** The settings the daily notices are written or timed from. */
 const DAILY_REMINDER_SETTINGS = [
     "showNotifications",
     "hideAmounts",
@@ -95,11 +94,8 @@ export function useDailyReminderSync(db: Database | null): void {
                 console.error("Daily reminder sync failed", error);
             });
         });
-        // The rhythm step's reminder asks after the user's first saved entry; see
-        // `armChosenReminder`. Only an in-app create marks `freshEntries` (the
-        // form, voice, receipt scan, transfers), never a sync pull, sign-in
-        // adoption or backfill, so the prompt cannot land mid-sign-in. Arming
-        // writes the setting, which resyncs from the listener below.
+        // Only an in-app create marks `freshEntries` (never a sync pull, adoption or backfill), so the reminder
+        // prompt cannot land mid-sign-in.
         const arm = debounce(PUBLISH_DEBOUNCE_MS, () => {
             armChosenReminder(db).catch((error) => {
                 console.error("Arming the chosen reminder failed", error);

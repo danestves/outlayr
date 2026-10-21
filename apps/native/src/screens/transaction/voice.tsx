@@ -79,12 +79,9 @@ import { useColors } from "@/theme/use-colors";
 
 const ORB_SIZE = 180;
 const ORB_SIZE_HEARD = 120;
-/** Once a draft is on screen the orb is a badge above it, not the subject. */
 const ORB_SIZE_SETTLED = 80;
-/** The orb's own press: a small give, never a bounce, so the tap reads as a touch on glass. */
 const ORB_PRESS_SCALE = 0.96;
 const ORB_SPRING = { damping: 18, mass: 0.9, stiffness: 170 };
-/** The merchant's mark sits in the sentence at the title's cap height, a small squircle. */
 const MARK_SIZE = 28;
 const MARK_RADIUS = 8;
 const HINT_MERCHANT_MAX = 24;
@@ -148,7 +145,6 @@ function orbStateOf(phase: VoicePhase): VoiceOrbState {
 
 const ONE_DAY_MS = 86_400_000;
 
-/** "Today", "Yesterday", else the charge date — in the case a sentence reads in. */
 function spokenDayLabel(date: Date, now: Date, t: TranslateFn, language: Language): string {
     const target = startOfDay(date).getTime();
     const today = startOfDay(now).getTime();
@@ -161,13 +157,6 @@ function spokenDayLabel(date: Date, now: Date, t: TranslateFn, language: Languag
     return formatChargeDate(date, now, language);
 }
 
-/**
- * The screen's frame: a close in the top-right where a sheet keeps it, the
- * subject in the middle, and whatever the phase puts on the bottom axis.
- * panelui's `VoiceMode` was tried and set aside: its ambient wash and level
- * pills say "listening" a second and third time when the orb already does,
- * and it pins its own mic and close to the bottom row.
- */
 function VoiceShell({
     bottom,
     children,
@@ -177,7 +166,7 @@ function VoiceShell({
 }: {
     bottom: React.ReactNode;
     children: React.ReactNode;
-    /** A save in flight owns the screen; leaving under it would let its callbacks land on the wrong route. */
+    /** Leaving under a save would land its callbacks on the wrong route. */
     closeDisabled?: boolean;
     onClose: () => void;
     overlay?: React.ReactNode;
@@ -196,13 +185,6 @@ function VoiceShell({
     );
 }
 
-/**
- * The orb is the screen's one control. Tapping it while it listens ends the
- * clip; tapping it after a draft or a failure listens again. It grows and
- * shrinks between the subject of the screen and a badge above the draft with a
- * spring on width, height and scale, so the review line rises into place
- * rather than snapping under it. Reduced motion crossfades the sizes instead.
- */
 function OrbControl({
     label,
     level,
@@ -245,11 +227,6 @@ function OrbControl({
     );
 }
 
-/**
- * One line, the way the entry will read on the ledger: the amount, then where
- * it went, then the category and the day. A draft with no category says so in
- * the category's place rather than hiding the gap.
- */
 function ReviewLine({
     accountName,
     categoryName,
@@ -316,7 +293,6 @@ function ReviewLine({
     );
 }
 
-/** The same shape for a move: amount, "Checking to Savings", then the kind and the day. */
 function TransferReviewLine({ draft }: { draft: ResolvedVoiceTransfer }) {
     const t = useTranslation();
     const { language } = useLanguage();
@@ -345,7 +321,6 @@ function TransferReviewLine({ draft }: { draft: ResolvedVoiceTransfer }) {
     );
 }
 
-/** A sweep across the words while the screen is waiting on something; still once it has an answer. */
 const STATUS_SWEEP_MS = 1800;
 
 function StatusLine({ children, waiting = false }: { children: string; waiting?: boolean }) {
@@ -518,11 +493,6 @@ function useVoiceHint(): string | null {
     return t("voice.hint", { example });
 }
 
-/**
- * The screen before a session exists: the cloud tier is missing, the session
- * is still being read, or nobody is signed in. Nothing to hear yet, so no
- * recorder, no thread, and none of the hooks that need the Convex provider.
- */
 function VoiceGateScreen({ gate }: { gate: Exclude<AuthGate, "signed-in"> }) {
     const router = useRouter();
     const t = useTranslation();
@@ -545,12 +515,7 @@ interface BarAction {
     onPress: () => void;
 }
 
-/**
- * What a tap on the orb means now: end the clip, or listen again. Nothing
- * while a clip is on its way (the answer is coming) and nothing while a save
- * is in flight (a new clip or the form must not open under a row that is
- * about to commit and leave).
- */
+/** Nothing while a clip is on its way or a save is in flight. */
 function orbActionOf(
     phase: VoicePhase,
     saving: boolean,
@@ -599,7 +564,6 @@ function failedActions(
 
 type CreateArgs = Parameters<typeof transactionsRepo.create>;
 
-/** The transaction a resolved voice entry saves as. */
 function voiceEntry(db: CreateArgs[0], draft: ResolvedVoiceEntry, categoryId: string): CreateArgs[1] {
     return {
         accountId: draft.accountId,
@@ -670,8 +634,7 @@ function VoiceThreadScreen() {
         [bounded, currency, language]
     );
 
-    // What the draft is read against travels with the request: the ledger the
-    // model saw, not the ledger as sync may have left it by the time it answers.
+    // The ledger the model saw, not the one sync may have left by the time it answers.
     const context = useMemo(
         () => ({
             accounts: accounts.map((account) => ({
@@ -724,8 +687,7 @@ function VoiceThreadScreen() {
 
     const openForm = useCallback(
         (draft: ResolvedVoiceEntry) => {
-            // An account sync removed since the draft resolved is a question for
-            // the form, not a seed the form would quietly swap for the last used.
+            // An account sync removed is a question for the form, not a seed to swap for the last used.
             const accountLive = draft.accountId === null || live.accountIds.has(draft.accountId);
             const params = {
                 accountId: accountLive ? (draft.accountId ?? undefined) : undefined,
@@ -747,8 +709,7 @@ function VoiceThreadScreen() {
 
     const openTransferForm = useCallback(
         (draft: ResolvedVoiceTransfer) => {
-            // A leg sync removed since the draft resolved is a question for the
-            // editor, not a seed it would quietly swap for another account.
+            // A leg sync removed is a question for the editor, not a seed to swap for another account.
             const leg = (account: { id: string } | null, unresolved: boolean) => {
                 const current = account !== null && live.accountIds.has(account.id);
                 return {
@@ -796,18 +757,15 @@ function VoiceThreadScreen() {
                     source: "voice",
                     transaction_type: draft.income ? "income" : "expense",
                 });
-                // Past this line the row is committed, so nothing below may send
-                // the person back to a form that would write it a second time.
+                // The row is committed: nothing below may reopen a form that would write it twice.
                 if (draft.recurrence) {
                     try {
-                        // What the form does after its own save: the schedule's past
-                        // charges land now, and the chain's next date moves forward.
+                        // As the form does after its own save: past charges land now.
                         await backfillRecurring(db, id);
                     } catch (error) {
                         console.error("Failed to back-fill the spoken subscription", error);
                     }
-                    // And its due-date reminder is scheduled now, not on the next
-                    // app resume, which may come after the date it was for.
+                    // Scheduled now: the next resume may come after the due date.
                     syncSubscriptionReminders(db).catch((error) => {
                         console.error("Failed to sync subscription reminders", error);
                     });
@@ -816,8 +774,7 @@ function VoiceThreadScreen() {
                     await rememberLastUsedAccount(db, draft.accountId).catch(() => null);
                 }
                 haptics("success");
-                // A modal gesture can dismiss this screen mid-write; popping again
-                // would take the screen underneath with it.
+                // A modal gesture can dismiss this mid-write; popping again would take the screen beneath.
                 if (isMounted()) {
                     router.back();
                 }
@@ -827,7 +784,7 @@ function VoiceThreadScreen() {
         [db, haptics, isMounted, openForm, router]
     );
 
-    /** Same-currency legs only, by `savableTransfer`; the rate is 1 and no fee is spoken. */
+    /** Same-currency legs only (`savableTransfer`): rate 1, no fee. */
     const saveTransfer = useCallback(
         (draft: ResolvedVoiceTransfer, from: { id: string }, to: { id: string }) => {
             setSaving(true);
@@ -861,8 +818,7 @@ function VoiceThreadScreen() {
                     source: "voice",
                 });
                 haptics("success");
-                // A modal gesture can dismiss this screen mid-write; popping again
-                // would take the screen underneath with it.
+                // A modal gesture can dismiss this mid-write; popping again would take the screen beneath.
                 if (isMounted()) {
                     router.back();
                 }
@@ -908,10 +864,6 @@ function VoiceThreadScreen() {
 
     const moved = phase.kind === "review" ? correctionOf(turns, phase.order) : null;
 
-    // The bottom axis: Edit and Save at equal width (the weight, not the width,
-    // says which is primary), or "Finish in the form" when the draft cannot be
-    // saved yet; after a failure, another try, with Settings beside it when the
-    // microphone was refused.
     let primary: BarAction | null = null;
     let secondary: BarAction | null = null;
     if (entry) {
@@ -1011,12 +963,7 @@ function VoiceThreadScreen() {
     );
 }
 
-/**
- * The voice screen. The thread, the recorder and the turns subscription only
- * exist for a signed-in session, because the Convex provider they need is
- * mounted only then; every other gate gets the same frame with the reason.
- * Signed in, the AI providers have to be allowed first: the recorder starts as it mounts.
- */
+/** The recorder and thread need the Convex provider, mounted only when signed in; consent comes first. */
 export function VoiceEntryScreen() {
     const { gate } = useAuthSession();
     const consent = useAiConsent(useDatabase());

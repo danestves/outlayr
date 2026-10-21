@@ -82,12 +82,7 @@ export function transactionRateOptions(currency: string): EntryRateType[] {
     return ENTRY_RATE_TYPES.filter((rateType) => rateType !== "eur_reference" || currency === "VES");
 }
 
-/**
- * The rate the entry will actually be recorded at. An explicit `exchangeRate` always
- * wins; otherwise a provider-backed type falls back to its suggestion, because selecting
- * "official" without applying the suggestion still records the official rate. Custom has
- * no fallback: with no rate entered there is nothing to convert at.
- */
+// A provider type falls back to its suggestion: selecting "official" without applying it still records official.
 export function effectiveEntryRate(
     selection: TransactionEntryRate,
     suggestions: { eurReference: number | null; official: number | null }
@@ -108,11 +103,7 @@ export function rateEntryText(rate: number): string {
     return rounded > 0 ? String(rounded) : "";
 }
 
-/**
- * Display form of a rate. Providers quote at wildly different precisions (VES official
- * arrives at 4 decimals, the EUR reference leg at 8), and an 11-digit figure is unreadable
- * at heading size. Callers must still apply the UNROUNDED rate: this is display only.
- */
+// Display only: callers must still apply the UNROUNDED rate.
 export function formatQuotedRate(currency: string, rate: number): string {
     return rateEntryText(flipRateForQuote(currency, rate));
 }

@@ -25,9 +25,7 @@ export function TimeFrames() {
     const { state: settings } = useAppSettings();
     const firstWeekday = settings.number("firstWeekday");
     const firstDayOfMonth = settings.number("firstDayOfMonth");
-    // Displayed and overridden here only. The device's convention is seeded at the
-    // root (`useSeededClockPreference`), so a user who never opens this screen
-    // still reads the clock their handset uses.
+    // Displayed and overridden here; the device's convention is seeded at the root.
     const { use24Hour: use24HourClock } = useDisplaySettings().state;
 
     return (

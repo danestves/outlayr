@@ -14,31 +14,18 @@ export interface SavingsGoalInput {
     accountId: string;
     currency: string;
     name: string;
-    /**
-     * The account's balance at the moment the goal is set, in `currency`.
-     *
-     * The caller supplies it because only the screen setting the goal holds a
-     * valued balance; the repo would have to re-derive one and could disagree
-     * with the figure the reader just saw.
-     */
+    /** In `currency`, from the caller: only the screen holds the valued balance the reader just saw. */
     startAmount: number;
     targetAmount: number;
     targetDate: Date;
 }
 
-/** Live goals in display order, newest sort first. */
 export function savingsGoalsQuery(db: Database) {
     return db.select().from(savingsGoals).where(isNull(savingsGoals.deletedAt)).orderBy(asc(savingsGoals.sortOrder));
 }
 
-/**
- * A goal whose figures cannot be canonicalised to USD, and so must not be saved.
- *
- * `frozenInDisplay` reads a null `*Usd` back as the FACE value, so a goal frozen
- * without one is correct only for as long as the ledger stays in the currency it
- * was set in — and silently wrong, permanently, the day that changes. Refusing
- * is the only outcome that cannot become a lie later.
- */
+// `frozenInDisplay` reads a null `*Usd` as the FACE value, so a goal saved without one turns permanently wrong the day
+// the ledger's currency changes. Refusing is the only safe outcome.
 export class GoalValuationError extends Error {
     constructor() {
         super("A goal's amounts could not be valued in USD.");
@@ -46,23 +33,9 @@ export class GoalValuationError extends Error {
     }
 }
 
-/**
- * A re-typed target in USD, at the rate this goal was frozen against.
- *
- * Read from the goal's own `exchangeRate` rather than looked up again, because
- * the history it came from does not survive: it is pruned to the newest row per
- * pair per calendar MONTH outside the 90-day window (`pruneStaleBatch`), and the
- * surviving row for the creation month can be dated after the goal — so a lookup
- * for `dateCreated` on an old goal falls back to the PREVIOUS month's row and
- * freezes the new target at a rate that never valued this one.
- *
- * The stored rate rather than the stored amount pair: dividing the pair recovers
- * only as much precision as those already-rounded figures kept, and scaling a
- * small target up to a large one multiplies that error with it.
- *
- * A rate stored as currency-per-USD, so USD is the amount divided by it — the
- * direction `canonicalUsd` documents.
- */
+// Uses the goal's stored rate, not a fresh lookup: rate history is pruned to one row per month outside 90 days
+// (`pruneStaleBatch`), so a lookup for an old `dateCreated` can land on another month. Not the rounded amount pair
+// either: scaling a small target up multiplies its rounding. The rate is currency-per-USD.
 async function refrozen(db: Database, existing: SavingsGoal, amount: number): Promise<number> {
     const { currency, dateCreated, exchangeRate } = existing;
     if (currency === "USD") {
@@ -71,9 +44,7 @@ async function refrozen(db: Database, existing: SavingsGoal, amount: number): Pr
     if (exchangeRate !== null && exchangeRate !== 0) {
         return amount / exchangeRate;
     }
-    // A goal written before the rate was stored. Its own amount pair is a rounded
-    // record of that rate, which is a worse basis than the rate itself but a far
-    // better one than a lookup that can now resolve to a different day entirely.
+    // Written before the rate was stored: the rounded pair beats a lookup that may now resolve to another day.
     const { targetAmount, targetAmountUsd } = existing;
     if (targetAmountUsd !== null && targetAmount !== 0 && targetAmountUsd !== 0) {
         return (amount * targetAmountUsd) / targetAmount;
@@ -94,10 +65,7 @@ export const savingsGoalsRepo = {
     async create(db: Database, input: SavingsGoalInput): Promise<string> {
         const now = new Date();
         const id = newId();
-        // Both figures, before anything is written: a balance the screen could
-        // state in today's display currency is not the same thing as one that can
-        // be canonicalised, and the ledger's own currency having no rate is
-        // exactly the case that slips past a display-side check.
+        // Both checked before writing: a balance the screen can display isn't always one that can be canonicalised.
         const start = await frozenUsd(db, input.startAmount, input.currency, now);
         const target = await frozenUsd(db, input.targetAmount, input.currency, now);
         if (start.amountUsd === null || target.amountUsd === null) {
@@ -117,8 +85,6 @@ export const savingsGoalsRepo = {
             startAmount: input.startAmount,
             startAmountUsd: start.amountUsd,
             targetAmount: input.targetAmount,
-            // Frozen at write, like every other cross-currency figure: a target set
-            // in bolivares must not silently restate itself when the rate moves.
             targetAmountUsd: target.amountUsd,
             targetDate: input.targetDate,
             updatedAt: now,
@@ -139,21 +105,14 @@ export const savingsGoalsRepo = {
         const targetAmount = patch.targetAmount ?? existing.targetAmount;
         const { currency } = existing;
         const restated = targetAmount !== existing.targetAmount;
-        // Neither the currency nor the start anchor is patchable. A goal is set in
-        // one currency and read back through one date; letting either move meant
-        // the anchor, the frozen USD figures and the valuation date could each end
-        // up describing a different moment. The sheet is opened in the goal's own
-        // currency instead, so a re-typed target needs no restating.
+        // Currency and start anchor aren't patchable: anchor, frozen USD and valuation date must describe one moment.
         await db
             .update(savingsGoals)
             .set({
                 ...patch,
                 currency,
                 targetAmount,
-                // Frozen against the goal's OWN date, not today's. Every figure a goal
-                // holds is read back through `dateCreated` — that is the one frame it
-                // has — so freezing a re-typed target at the edit's rate would file it
-                // under a day whose rate was never used to convert it.
+                // Frozen against the goal's OWN date: every figure it holds is read back through `dateCreated`.
                 targetAmountUsd: restated ? await refrozen(db, existing, targetAmount) : existing.targetAmountUsd,
                 updatedAt: now,
             })

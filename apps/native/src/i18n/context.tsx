@@ -19,20 +19,12 @@ interface LanguageContextValue {
 
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
 
-/**
- * The language is the device's, always: iOS owns it per app under
- * Settings › Outlayr › Language, so there is nothing here to store or restore.
- */
+/** The language is the device's: iOS owns it per app (Settings › Outlayr › Language), so nothing is stored here. */
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-    // Read synchronously, so the first frame is already in the right language —
-    // there is no stored preference left to await.
     const language = resolveLanguage(useDeviceLanguageTag());
-    // Deliberately during render, not in an effect: `runtimeLanguage()` is the
-    // default argument of the date, budget and insights formatters, so children
-    // read it while rendering and an effect would hand them the previous
-    // language for a frame. Removing the global is the real fix — see
-    // `use-insights.ts`, which already threads the language explicitly instead.
+    // During render, not in an effect: `runtimeLanguage()` defaults the date, budget and insights formatters,
+    // so an effect would hand children the previous language for a frame.
     setRuntimeLanguage(language);
 
     const t = useCallback<TranslateFn>(

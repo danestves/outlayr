@@ -1,11 +1,7 @@
 import { Locales } from "intlayer";
 import type { IntlayerConfig } from "intlayer";
 
-/**
- * Plain `es`, not `es-419`: the Swift catalogue this content is ported from is
- * keyed `es-419`, but a device reports `es-MX`/`es-AR`/`es-419` interchangeably
- * and every one of them should land on the same strings.
- */
+// Plain `es`, not `es-419`: devices report es-MX, es-AR and es-419 interchangeably and all must land on one catalogue.
 const config: IntlayerConfig = {
     content: {
         contentDir: ["src/content"],
@@ -14,9 +10,7 @@ const config: IntlayerConfig = {
         defaultLocale: Locales.ENGLISH,
         locales: [Locales.ENGLISH, Locales.SPANISH],
         requiredLocales: [Locales.ENGLISH, Locales.SPANISH],
-        // `t` must carry every locale rather than warning and falling back, so a
-        // half-translated key fails the build instead of reaching a device in
-        // English.
+        // A half-translated key fails the build instead of falling back to English on a device.
         strictMode: "strict",
     },
 };

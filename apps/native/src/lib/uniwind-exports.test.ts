@@ -3,9 +3,8 @@ import { dirname, join } from "node:path";
 
 import { expect, test } from "@jest/globals";
 
-// Metro serves uniwind's component index in place of `react-native`, so any
-// export it does not forward is undefined in the app. Reads both sources as
-// text because invoking the getters would load native modules.
+// Metro serves uniwind's component index in place of `react-native`, so an export it does not forward is undefined
+// in the app. Read as text because invoking the getters would load native modules.
 const getterNames = (file: string) =>
     new Set(Array.from(readFileSync(file, "utf-8").matchAll(/^\s*get (\w+)\(\)/gm), ([, name]) => name));
 

@@ -11,11 +11,8 @@ import { useTranslation } from "@/i18n/context";
 export default function TransferCreateScreen() {
     const { leave, setDirty } = useDiscardGuard();
     const t = useTranslation();
-    // Set only by the voice screen, for a spoken transfer it could not write
-    // itself (a cross-currency move, or an account it did not resolve).
     const params = useLocalSearchParams<{
         amount?: string;
-        /** The currency `amount` was spoken in; see `TransferSeed`. */
         currency?: string;
         /** Epoch milliseconds. */
         date?: string;
@@ -24,7 +21,6 @@ export default function TransferCreateScreen() {
         fromUnresolved?: string;
         note?: string;
         toAccountId?: string;
-        /** Likewise for the destination. */
         toUnresolved?: string;
     }>();
     const amount = Number(params.amount);

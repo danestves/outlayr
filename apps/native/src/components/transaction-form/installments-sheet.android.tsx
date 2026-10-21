@@ -33,13 +33,11 @@ import { InstallmentsPad, MAX_COUNT, NONE, useInstallmentsSheetForm } from "./in
 import type { InstallmentsSheetProps } from "./installments-sheet-form";
 
 const PRESSED_ALPHA = 0.1;
-/** M3 icon button state layer: a 40dp circle inside the 48dp target. */
 const STATE_LAYER_RADIUS = 20;
 const LABEL_FONT = { fontFamily: "GoogleSansFlex_500Medium" } as const;
-/** Taller than most screens, so it opens expanded and scrolls: a fitted sheet here cannot. */
+// Taller than most screens, so it opens expanded and scrolls: a fitted sheet here cannot.
 const SNAP_POINTS = ["100%"];
 
-/** What an outlined select field reads. */
 function fieldValue(value: string) {
     return (
         <Text className="text-body text-m3-on-surface tabular-nums" numberOfLines={1}>
@@ -48,13 +46,6 @@ function fieldValue(value: string) {
     );
 }
 
-/**
- * The installments sheet as a Material 3 modal bottom sheet: outlined fields
- * for what is paid now, where from, the count and amount, the rhythm and the
- * first due date, segmented buttons for the upfront's share, then the schedule
- * with a checkbox per cuota already paid. Same contract and state as
- * `installments-sheet.tsx`.
- */
 export function InstallmentsSheet(props: InstallmentsSheetProps) {
     const { accounts, currency, draft, onChange, purchaseDay, ref, schedule } = props;
     const t = useTranslation();
@@ -278,7 +269,6 @@ interface ScheduleRowProps {
     editing: boolean;
     money: (value: number) => string;
     onAmount: () => void;
-    /** The date dialog closed without a pick: the row folds, as a pick folds it. */
     onClose: () => void;
     onDate: (next: Date) => void;
     onPress: () => void;
@@ -288,12 +278,7 @@ interface ScheduleRowProps {
     row: ScheduledInstallment;
 }
 
-/**
- * One row of the draft's schedule: a checkbox for a cuota paid before
- * Outlayr, its date and amount, and while it is open its due date and amount
- * as fields. The checkbox is drawn by Compose but pressed through RN, so a tap
- * on it never reaches the row.
- */
+// The checkbox is drawn by Compose but pressed through RN, so a tap on it never reaches the row.
 function ScheduleRow({
     detail,
     editing,

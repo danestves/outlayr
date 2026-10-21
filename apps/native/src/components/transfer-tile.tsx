@@ -4,7 +4,6 @@ import type { TransferLogRow } from "@/domain/transfer-log-rows";
 
 import { AccountTile } from "./account-tile";
 
-/** A 20pt glyph in 8pt of padding. */
 export const TILE_SIZE = 36;
 export const TILE_RADIUS = 9;
 

@@ -3,9 +3,6 @@ import type { Dictionary } from "intlayer";
 
 const log = {
     content: {
-        // Verb-led and parallel across the dial, so the column reads as a descent
-        // from the thing you do daily to the thing you do once. The importer is
-        // CSV-only (`csv-import-context`, `pickCsvFile`), so it says so.
         "log.add.import": t({
             en: "Import a CSV",
             es: "Importar un CSV",
@@ -22,8 +19,6 @@ const log = {
             en: "Add a transaction",
             es: "Agregar una transacción",
         }),
-        // Not "Transfer": beside "Add a transaction" the noun reads as another
-        // kind of record rather than as moving what is already there.
         "log.add.transfer": t({
             en: "Move money",
             es: "Mover dinero",

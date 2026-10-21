@@ -7,7 +7,6 @@ import type { IdentityHeroSymbol as IdentityHeroSymbolBase } from "./identity-he
 
 const GLYPHS = { photo: Image01Icon, sparkle: SparkleIcon } as const;
 
-/** The Hugeicon standing in for each SF Symbol the empty identity tile draws. */
 export const IdentityHeroSymbol: typeof IdentityHeroSymbolBase = ({ name, size = 24, tintColor, style }) => (
     <View style={style}>
         <HugeiconsIcon color={tintColor} icon={GLYPHS[name]} size={size} />

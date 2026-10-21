@@ -46,12 +46,6 @@ describe("useSparklineRows pending custom valuation", () => {
     });
 });
 
-/**
- * The header's week has to start where the rest of the Log's week does. It used
- * to call `startOfWeek(now)` with the default first weekday, so a ledger set to
- * "week starts on Monday" reported only Sunday's figures on a Sunday while the
- * sparkline beside it still showed Mon–Sun.
- */
 describe("the week the header totals", () => {
     const SUNDAY = new Date(2025, 8, 14, 12, 0, 0);
 

@@ -1,10 +1,4 @@
-/**
- * RFC 4180 with the relaxations every spreadsheet actually emits: bare `LF` as
- * well as `CRLF`, a trailing newline, and a leading byte order mark.
- *
- * Quoting rather than the Swift export's `string.removeAll(where: { $0 == "," })`
- * (`CSVExport.swift:26`), which silently deleted commas out of every note.
- */
+/** RFC 4180 plus what spreadsheets actually emit: bare `LF`, a trailing newline, and a leading byte order mark. */
 
 const NEEDS_QUOTING = /[",\r\n]/;
 
@@ -19,7 +13,7 @@ export function formatCsvRow(fields: readonly string[]): string {
     return fields.map(escapeField).join(",");
 }
 
-/** Rows of raw cell strings. Blank and all-empty rows are dropped. */
+/** Blank and all-empty rows are dropped. */
 export function parseCsv(text: string): string[][] {
     const source = text.codePointAt(0) === 0xfe_ff ? text.slice(1) : text;
     const rows: string[][] = [];

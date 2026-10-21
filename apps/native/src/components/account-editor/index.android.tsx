@@ -41,7 +41,6 @@ import type { AccountEditorProps } from "./index";
 
 type IdentitySource = "initial" | "suggested" | "user";
 
-/** Space between the sheet header and the identity tile's ring. */
 const HERO_TOP = 8;
 
 export default function AccountEditor(props: AccountEditorProps) {
@@ -49,17 +48,8 @@ export default function AccountEditor(props: AccountEditorProps) {
     return <AccountEditorReady db={db} {...props} />;
 }
 
-/**
- * The add/edit account sheet on Android (Direction B, mock row 4): the sheet
- * header carries close, the title, Delete and Save; under it the identity tile
- * and the outlined fields scroll together.
- *
- * The form logic is `index.tsx`'s, line for line, minus the SwiftUI pieces
- * and the fly-up: keep the two in step. The fly-up needs the sheet to grow
- * under the picker, and an Android sheet ignores re-declared detents once it
- * is up; the picker shows the pick itself, and the tile pops as each lands.
- */
-/** The kind the form saves: a person stays one, the toggle picks the rest. */
+// Mirrors `index.tsx`'s form logic line for line, minus the SwiftUI pieces and the fly-up: keep the two in step.
+// The fly-up needs the sheet to grow under the picker, and an Android sheet ignores re-declared detents once up.
 function formKind(person: boolean, liability: boolean): AccountKind {
     if (person) {
         return "person";
@@ -96,18 +86,15 @@ function AccountEditorReady(props: AccountEditorProps & { db: Database }) {
     const { draft, setDraft } = useIdentityDraft();
     const { pickerOpen, setPickerOpen } = useIdentityFlyUp();
 
-    // Lazy `useState`, not `useMemo`: stable for the component's life — a
-    // re-read would re-fire the draft effects below and clobber a picked logo.
+    // Lazy `useState`, not `useMemo`: a re-read would re-fire the draft effects below and clobber a picked logo.
     const [loaded] = useState<Account | null>(() =>
         mode === "edit" && editId != null ? getAccountById(db, editId) : null
     );
 
-    /** Inline rather than a toast: this sheet stays up when a write fails. */
     const [failure, setFailure] = useState<string | null>(null);
 
-    // `imageKey` counts on its own: a synced photo can be known before the photo
-    // pass has downloaded it into `imageUri`, and a lookup started in that gap
-    // would save a suggestion over the user's own picture.
+    // `imageKey` counts on its own: a synced photo can be known before it downloads into `imageUri`, and a lookup
+    // started in that gap would save a suggestion over the user's own picture.
     const hasStoredIdentity = Boolean(loaded?.emoji || loaded?.icon || loaded?.imageUri || loaded?.imageKey);
     const nameRef = useRef<TextInputInstance>(null);
     const currencySheetRef = useRef<BottomSheetModal>(null);
@@ -140,8 +127,7 @@ function AccountEditorReady(props: AccountEditorProps & { db: Database }) {
         defaultValues: initialValues,
         onSubmit: async ({ value }) => {
             setFailure(null);
-            // A currency swapped after typing can leave more precision in the pad
-            // than the new code has minor units — JPY cannot hold "12.34".
+            // A currency swapped after typing can leave more precision than the new code has: JPY cannot hold "12.34".
             const magnitude = roundToMinorUnits(numpadToNumber(value.balanceText), value.currency);
             const balance = value.negative ? -magnitude : magnitude;
             const balanceChanged =
@@ -158,8 +144,6 @@ function AccountEditorReady(props: AccountEditorProps & { db: Database }) {
                 kind: formKind(person, value.liability),
                 name: value.name.trim(),
             };
-            // Which cap an account fills is only known once it is named: an
-            // installment app has its own.
             if (mode === "edit" && loaded == null) {
                 return;
             }
@@ -200,11 +184,7 @@ function AccountEditorReady(props: AccountEditorProps & { db: Database }) {
     const isSubmitting = useSelector(form.store, (s) => s.isSubmitting);
 
     const [identitySource, setIdentitySource] = useState<IdentitySource>("initial");
-    /**
-     * What the well held at the last commit. The logo lookup is debounced and
-     * settles long after the render that started it, so `canAttach`/`onClear`
-     * read from here.
-     */
+    // The logo lookup is debounced and settles long after the render that started it, so its callbacks read here.
     const latest = useRef({ hasIdentity: false, identitySource, pickerOpen });
     useEffect(() => {
         latest.current = {
@@ -214,15 +194,12 @@ function AccountEditorReady(props: AccountEditorProps & { db: Database }) {
         };
     });
 
-    // A sheet showing its own tile is not showing a picker. `pickerOpen` lives
-    // in the app-level provider, so a path that left it set would leave this
-    // sheet's actions disabled; iOS asserts the same in `IdentityFlyUpLayer`.
+    // `pickerOpen` lives in the app-level provider, so a path that left it set would disable this sheet's actions.
     useEffect(() => {
         setPickerOpen(false);
     }, [setPickerOpen]);
 
-    // The draft is shared context, so this editor may mount onto another
-    // screen's leftovers.
+    // The draft is shared context, so this editor may mount onto another screen's leftovers.
     useEffect(() => {
         if (mode !== "create") {
             return;
@@ -251,12 +228,8 @@ function AccountEditorReady(props: AccountEditorProps & { db: Database }) {
         canAttach: () =>
             latest.current.identitySource !== "user" &&
             !latest.current.pickerOpen &&
-            // An identity carried in from the stored row is a choice already made;
-            // only an empty well or an earlier suggestion moves.
             !(latest.current.identitySource === "initial" && latest.current.hasIdentity),
-        // A stored identity is a choice already made, so editing such an account
-        // never looks anything up. An account saved without one is still owed a
-        // logo: its name is looked up on open, and again as it is retyped.
+        // A stored identity is a choice already made. An account saved without one is looked up on open and on retype.
         enabled: !person && (mode === "create" || !hasStoredIdentity),
         groundedLookup,
         initialName: initialValues.name,
@@ -292,16 +265,13 @@ function AccountEditorReady(props: AccountEditorProps & { db: Database }) {
     const canSave = name.trim() !== "" && !isSubmitting;
     const tint = draft.photoColor ?? draft.color ?? colors.foreground;
 
-    // While the picker is up the header and the tile stand down, as the iOS
-    // CTA does: a tap that reaches this sheet past the picker must not save,
-    // delete, or open a second picker.
+    // While the picker is up, a tap that reaches this sheet past it must not save, delete, or open a second picker.
     const openPicker = () => {
         if (pickerOpen) {
             return;
         }
         Keyboard.dismiss();
-        // Opening the picker claims the tile: a suggestion must not overwrite
-        // whatever the user is about to choose.
+        // Opening the picker claims the tile, so a late suggestion cannot overwrite what the user is about to choose.
         setIdentitySource("user");
         setPickerOpen(true);
         router.push("/transactions/identity");
@@ -317,9 +287,7 @@ function AccountEditorReady(props: AccountEditorProps & { db: Database }) {
         balanceSheetRef.current?.present();
     };
 
-    // No confirmation in front of it: the write is held for the undo window,
-    // and the toast carrying it is mounted at the app root, so it outlives
-    // this sheet — which goes away at once.
+    // No confirmation: the write is held for the undo window by a toast mounted at the app root, outliving this sheet.
     const deleteAccount = (account: Account) => {
         requestDelete(account.id, t("accounts.undo.body"));
         haptics("warning");

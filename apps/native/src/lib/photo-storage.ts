@@ -6,11 +6,7 @@ import type { PhotoFiles } from "@/data/photo-store-core";
 import { newId } from "@/domain/ids";
 import { decodeImage, drawOnPlate } from "@/lib/logo-plating";
 
-/**
- * Matches the Swift ingestion (`TransactionImageIngestion.maxDimension`): the
- * largest a transaction photo is ever drawn is the 132pt identity well, so a
- * full-resolution camera frame is two orders of magnitude of wasted disk.
- */
+/** Matches Swift `TransactionImageIngestion.maxDimension`: a photo is never drawn past the 132pt identity well. */
 const MAX_DIMENSION = 512;
 const JPEG_QUALITY = 80;
 
@@ -59,11 +55,7 @@ export const photoFiles: PhotoFiles = {
     },
 };
 
-/**
- * Re-encodes the source at no more than {@link MAX_DIMENSION} on its long edge.
- * Answers null rather than throwing on any Skia failure, so a photo the decoder
- * cannot handle still gets stored at full size instead of being lost.
- */
+/** Null on any Skia failure, so a photo the decoder cannot handle is stored at full size instead of lost. */
 async function downscaleToJpeg(sourceUri: string): Promise<Uint8Array | null> {
     try {
         const data = await Skia.Data.fromURI(sourceUri);
@@ -99,12 +91,7 @@ async function downscaleToJpeg(sourceUri: string): Promise<Uint8Array | null> {
     }
 }
 
-/**
- * Copies a freshly picked asset into the app's own storage and answers the uri to
- * persist. The picker hands back a path inside a cache directory the system may
- * reclaim whenever it likes, so the returned uri — not the argument — is the only
- * one safe to write to a row.
- */
+/** The picker's path is in a cache the system may reclaim, so only the returned uri is safe to write to a row. */
 export async function persistPickedPhoto(sourceUri: string): Promise<string> {
     const directory = photoDirectory();
     const encoded = await downscaleToJpeg(sourceUri);
@@ -121,7 +108,6 @@ export async function persistPickedPhoto(sourceUri: string): Promise<string> {
     return target.uri;
 }
 
-/** The logo on its plate as a JPEG, or null when it is stored as it came or Skia cannot draw it. */
 function platedLogoJpeg(bytes: Uint8Array): Uint8Array | null {
     try {
         const image = decodeImage(bytes);
@@ -134,12 +120,8 @@ function platedLogoJpeg(bytes: Uint8Array): Uint8Array | null {
 }
 
 /**
- * A transparent or edge-tight logo is drawn onto its plate first, since the
- * JPEG it is stored as would turn its see-through pixels black. Any other
- * logo arrives as bytes while the persist path takes a uri, so the bytes sit
- * in the cache directory just long enough to go through the same downscale
- * every picked photo does. Either re-encode is also what neutralises anything
- * hiding behind a valid image header.
+ * A transparent or edge-tight logo is plated first, since JPEG would turn its see-through pixels black. Either
+ * re-encode also neutralises anything hiding behind a valid image header.
  */
 export async function persistLogoBytes(bytes: Uint8Array): Promise<string> {
     const plated = platedLogoJpeg(bytes);
@@ -178,7 +160,6 @@ export function writePhotosBase64(photos: Record<string, string>): void {
     }
 }
 
-/** Drops every stored photo. Paired with erasing the ledger that references them. */
 export function clearStoredPhotos(): void {
     const directory = new Directory(Paths.document, PHOTO_DIRECTORY);
     if (directory.exists) {

@@ -45,7 +45,6 @@ describe("stepCursor", () => {
 
 describe("canStepForward", () => {
     it("refuses a step that would land in the future", () => {
-        // The week containing "now" — stepping forward leaves the present behind.
         expect(canStepForward("week", NOW, NOW, 1)).toBe(false);
         expect(canStepForward("week", MID_WEEK, NOW, 1)).toBe(true);
     });

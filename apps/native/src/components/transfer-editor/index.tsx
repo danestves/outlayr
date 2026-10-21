@@ -58,19 +58,16 @@ import type { TransferDraftSnapshot, TransferSeed } from "./use-transfer-draft";
 
 type Step = Exclude<TransferSentenceSlot, "feeSide" | "outside"> | "date";
 
-/** A transfer's unsaved edits, taken off one editor to open another with. */
 export interface TransferEditorDraft {
     draft: TransferDraftSnapshot;
     note: string;
 }
 
 type TransferEditorProps = {
-    /** Filled with a function that reads the unsaved edits, for as long as the editor is mounted. */
     draftRef?: RefObject<(() => TransferEditorDraft) | null>;
     onDelete?: () => void;
     onDirtyChange?: (dirty: boolean) => void;
     onDone: () => void;
-    /** Edits a discarded editor held, to open with. The editor opens dirty. */
     restore?: TransferEditorDraft;
 } & (
     | { rest?: SheetRest; saved: SavedTransfer; seed?: never }
@@ -146,12 +143,10 @@ function TransferGap({ blocked, crossCurrency, gap, onResolve, resting }: Transf
     );
 }
 
-/** An edit paints the sheet's surface; a new transfer keeps the screen's background. */
 function editSurface(editing: boolean, color: string) {
     return editing ? { backgroundColor: color } : undefined;
 }
 
-/** An edit is a sheet, and its header names it once the sheet is awake. */
 function editSheet(editing: boolean, resting: boolean, title: string) {
     if (!editing) {
         return undefined;
@@ -159,15 +154,10 @@ function editSheet(editing: boolean, resting: boolean, title: string) {
     return { title: resting ? undefined : title };
 }
 
-/** The note an editor opens with: a restored draft's, else the saved transfer's, else the seed's. */
 function openingNote(restore?: TransferEditorDraft, saved?: SavedTransfer, seed?: { note?: string }) {
     return restore?.note ?? saved?.note ?? seed?.note ?? "";
 }
 
-/**
- * Publishes the editor's unsaved edits through `draftRef` while it is mounted,
- * and reports a restored draft as unsaved from the start.
- */
 function useDraftHandoff(
     draftRef: TransferEditorProps["draftRef"],
     read: () => TransferEditorDraft,
@@ -745,12 +735,10 @@ export default function TransferEditor({
         <View
             className="bg-background flex-1"
             collapsable={false}
-            // An edit is a sheet: on Android that is the M3 sheet surface, and
-            // the screen background would show as a second colour under it.
+            // On Android an edit sheet is the M3 sheet surface; the screen background would show as a second colour.
             style={editSurface(saved !== undefined, sheetSurface)}
         >
-            {/* First, so that on Android an edit sheet's own header (`cta.android.tsx`)
-                lands above the scroller. On iOS it draws only toolbar items. */}
+            {/* First, so an Android edit sheet's own header (`cta.android.tsx`) lands above the scroller. */}
             <TransactionFormCta
                 deleteLabel={t("transfers.delete.row")}
                 deleteTint={colors.danger}

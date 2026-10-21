@@ -40,8 +40,6 @@ function emptyDocument(): ArchiveDocument {
 
 describe("encoding a row", () => {
     it("leaves a column that merely looks like a date alone", () => {
-        // `note` is free text. Encoding by name rather than by value is what keeps
-        // a note reading "2026-01-01" from being rewritten as a number.
         const encoded = encodeArchiveRow({ note: "2026-01-01" });
         expect(encoded.note).toBe("2026-01-01");
     });
@@ -59,8 +57,6 @@ describe("encoding a row", () => {
     });
 
     it("decodes an unusable instant to null rather than an invalid date", () => {
-        // Restoring `new Date(NaN)` gives a row that throws the moment anything
-        // formats it, which is worse than a row with no date.
         for (const bad of ["yesterday", Number.NaN, Number.POSITIVE_INFINITY]) {
             const decoded = decodeArchiveRow("transactions", { date: bad });
             expect(decoded.date).toBeNull();
@@ -86,8 +82,6 @@ describe("reading a file back", () => {
     });
 
     it("refuses a version this build cannot restore", () => {
-        // The columns a later version adds are exactly the ones this build would
-        // drop, and a restore replaces the whole ledger.
         const future = { ...emptyDocument(), version: ARCHIVE_VERSION + 1 };
         expect(parseArchive(JSON.stringify(future))).toBeNull();
     });
@@ -122,7 +116,6 @@ describe("reading a file back", () => {
     });
 
     it("reads a table the file omits as empty rather than refusing it", () => {
-        // An archive written before a table existed still holds intact data.
         const partial = emptyDocument() as unknown as Record<string, unknown>;
         (partial.tables as Record<string, unknown>).transfers = undefined;
         const parsed = parseArchive(JSON.stringify(partial));
@@ -130,9 +123,6 @@ describe("reading a file back", () => {
     });
 
     it("reads a file carrying a table this build has dropped", () => {
-        // `templateTransactions` was archived until it was removed as dead. An
-        // archive written before that still restores; the extra table is ignored
-        // rather than read as a malformed file.
         const legacy = emptyDocument() as unknown as Record<string, unknown>;
         (legacy.tables as Record<string, unknown>).templateTransactions = [{ amount: 1, id: "p1" }];
         const parsed = parseArchive(JSON.stringify(legacy));

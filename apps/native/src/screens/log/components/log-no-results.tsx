@@ -6,10 +6,7 @@ import { Text } from "@/components/text";
 import { useTranslation } from "@/i18n/context";
 import { useColors } from "@/theme/use-colors";
 
-/**
- * Sized off the window height rather than a percentage: inside a list header a
- * percentage has no definite parent to resolve against.
- */
+/** Window height, not a percentage: a list header has no definite parent. */
 export function LogNoResults() {
     const colors = useColors();
     const t = useTranslation();

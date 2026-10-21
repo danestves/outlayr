@@ -20,23 +20,14 @@ import { cn } from "./tw";
 
 export type { CategoryRowProps } from "./category-picker-chrome";
 
-/**
- * The category picker as Direction B draws it: the in-sheet `SheetHeader`
- * (close at the start, start-aligned title), and the categories as hairline
- * list items on the sheet itself, with no card behind them.
- */
-
-/**
- * `SheetHeader` draws the drag handle, so the Compose sheet's own is turned
- * off; otherwise the sheet would show two.
- */
+// `SheetHeader` draws the drag handle, so the Compose sheet's own is off.
 export const CATEGORY_PICKER_HANDLE = null;
 
 export function CategoryPickerHeader({ onClose, title }: { onClose: () => void; title: string }) {
     return <SheetHeader onClose={onClose} title={title} />;
 }
 
-/** No card: the rows bleed over the list's 20dp gutter, so their ripples reach the edges. */
+// No card: the rows bleed over the list's 20dp gutter so their ripples reach the edges.
 export function CategoryPickerGroup({ children }: { children: ReactNode }) {
     return <View className="-mx-5">{children}</View>;
 }
@@ -140,11 +131,7 @@ export const CategoryRow = memo(
 );
 CategoryRow.displayName = "CategoryRow";
 
-/**
- * A recently used category as an M3 assist chip: outlined, 32dp, 8dp corners,
- * the category's tile as its avatar. The iOS pill's fill would vanish here,
- * where the sheet and `surface` are the same tone.
- */
+// Outlined: the iOS pill's fill would vanish here, where the sheet and `surface` share a tone.
 export const RecentChip = memo(
     ({ category, onSelect }: { category: Category; onSelect: (category: Category) => void }) => {
         const colors = useColors();

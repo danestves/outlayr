@@ -5,10 +5,8 @@ import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from "
 import { curtainShade, withAlpha } from "@/theme/shade";
 import { useIsDark } from "@/theme/use-is-dark";
 
-/** Mesh wash height; exported so the form can bleed it up under the nav bar. */
 const CURTAIN_HEIGHT = 260;
 
-/** A uniform 3×3 grid, the centre vertex pulled up to 0.42 for an upward bow. */
 const POINTS: number[][] = [
     [0, 0],
     [0.5, 0],
@@ -21,7 +19,6 @@ const POINTS: number[][] = [
     [1, 1],
 ];
 
-/** Row-2 (middle) alpha per column, and row-3 (bottom) is fully transparent. */
 const MID_ALPHA = [0.55, 0.5, 0.55];
 
 function meshHues(shades: string[]): [string, string, string] {
@@ -41,12 +38,7 @@ function meshHues(shades: string[]): [string, string, string] {
     }
 }
 
-/**
- * Background-size for each `curtainGradient` layer: full width, and only the
- * top `CURTAIN_HEIGHT`. Paired with `backgroundRepeat: "no-repeat"` this is the
- * knob for "mesh down to here, plain grouped grey below" — raise or lower
- * `CURTAIN_HEIGHT` to move the band.
- */
+// With `backgroundRepeat: "no-repeat"`, `CURTAIN_HEIGHT` is where the mesh stops and the plain grouped grey begins.
 export const CURTAIN_LAYER_SIZE = [
     { x: "100%", y: CURTAIN_HEIGHT },
     { x: "100%", y: CURTAIN_HEIGHT },
@@ -76,14 +68,9 @@ export function curtainGradient(hues: string[] | null, isDark: boolean) {
 }
 
 interface IdentityCurtainProps {
-    /** The pastelizable identity hues (hex), or null/empty when there's no identity yet. */
     hues: string[] | null;
 }
 
-/**
- * An ambient mesh-gradient wash bleeding down from the top of the form, tinted by
- * the chosen identity's hues.
- */
 export function IdentityCurtain({ hues }: IdentityCurtainProps) {
     const isDark = useIsDark();
     const revealed = hues != null && hues.length > 0 ? 1 : 0;

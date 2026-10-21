@@ -21,12 +21,6 @@ import { CuotaSheet } from "./cuota-sheet";
 import { installmentTitle, scheduleRowWording } from "./labels";
 import { useInstallmentEntry, useOrderActions } from "./use-order";
 
-/**
- * One order: what is left, what it was bought for, and every row of its
- * schedule, the upfront first. Paying opens the pay sheet; nothing posts here
- * on its own. A cuota is edited from its row, the way providers move one date
- * or round one amount.
- */
 export function InstallmentOrder({ planId }: { planId: string }) {
     const { entry, leave, nowMs } = useInstallmentEntry(planId);
     return entry == null ? null : <OrderLoaded entry={entry} leave={leave} nowMs={nowMs} />;

@@ -32,8 +32,6 @@ describe("the 12/24-hour clock", () => {
         await expect(readBoolSetting(db, "use24HourClock")).resolves.toBe(true);
     });
 
-    // The whole reason the seed reads the raw row: a stored `false` is a choice,
-    // and is indistinguishable from the default through `readBoolSetting`.
     it("never overrules a stored choice, not even a stored false", async () => {
         await setBoolSetting(db, "use24HourClock", false);
         await seedClockPreference(db, true);
@@ -60,8 +58,6 @@ describe("settings read/write round-trip", () => {
         await expect(readNumberSetting(db, "firstWeekday")).resolves.toBe(1);
     });
 
-    // The permission-revoke reconcile writes `showNotifications` back off, so a
-    // shared key would silently disarm every subscription notice with it.
     it("holds the subscription notices on a key of their own", async () => {
         await setBoolSetting(db, "subscriptionReminders", true);
         await setBoolSetting(db, "showNotifications", false);
@@ -115,7 +111,6 @@ describe("showCents effect on formatting", () => {
         expect(parts.integer).toBe("12");
         expect(parts.fraction).toBe("34");
         expect(formatAmount(12.34, "USD", true)).toBe("$12.34");
-        // Omitting the flag defaults to showing cents.
         expect(formatAmount(12.34, "USD")).toBe("$12.34");
     });
 });

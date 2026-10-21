@@ -12,10 +12,7 @@ import type { CardTypefaces } from "./day-card-fonts";
 /** Retina-density raster of a layout measured in points. */
 const SCALE = 3;
 
-/**
- * Fixed light ink on paper rather than the active theme: the card is looked at
- * in Photos and Messages, where a dark-mode export reads as a rendering fault.
- */
+/** Fixed light ink on paper: the card is viewed in Photos and Messages, where a dark export reads as a fault. */
 const PAPER = "#FFFFFF";
 const INK = "#17150F";
 const MUTED = "#767676";
@@ -65,12 +62,6 @@ function renderDayCard(input: DayCardInput, typefaces: CardTypefaces): Uint8Arra
     return encoded.length > 0 ? encoded : null;
 }
 
-/**
- * Routed through the share sheet rather than written straight to the album,
- * which would need `expo-media-library` and a photo-write permission prompt for
- * a feature the user may only want once. "Save Image" is one tap inside the
- * sheet, and the same sheet also covers Messages, Mail and Files.
- */
 export async function shareDayCard(input: DayCardInput, fileName: string): Promise<void> {
     const bytes = renderDayCard(input, await loadCardTypefaces());
     if (bytes == null) {

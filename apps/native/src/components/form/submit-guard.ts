@@ -3,11 +3,8 @@ interface SubmittableForm {
     readonly state: { readonly isSubmitting: boolean };
 }
 
-/**
- * `handleSubmit` re-throws after a failed `onSubmit` (form-core's
- * `_handleSubmit`), so the `.catch` below is a bug net, not the normal error
- * path — every consumer's `onSubmit` already handles its own errors.
- */
+// `handleSubmit` re-throws after a failed `onSubmit`, so this `.catch` is a bug net: every consumer's `onSubmit`
+// handles its own errors.
 export function pressSubmit(form: SubmittableForm): void {
     if (form.state.isSubmitting) {
         return;

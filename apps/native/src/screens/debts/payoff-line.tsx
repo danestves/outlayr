@@ -13,7 +13,7 @@ import { payoffFacts } from "./debts-wording";
 
 const TICK_OVERHANG = 4;
 
-/** A plan's line: the fill is what is paid, the tick is where the date wants the fill today. */
+/** The tick is where the date wants the fill today. */
 export function PayoffBar({ height = 3, line }: { height?: number; line: Pick<PayoffLine, "fraction" | "tick"> }) {
     const colors = useColors();
     return (
@@ -42,10 +42,6 @@ export function PayoffBar({ height = 3, line }: { height?: number; line: Pick<Pa
     );
 }
 
-/**
- * A live plan on its account's detail, under the hero: the line full width and
- * one line of facts, behind in the over-budget colour. Tapping it opens the plan.
- */
 export function PayoffSummary({
     currency,
     line,

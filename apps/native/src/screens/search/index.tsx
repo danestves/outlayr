@@ -35,10 +35,7 @@ function emptyState(query: string, rowCount: number) {
     return null;
 }
 
-/**
- * A modal rather than a field on the Log: pinning the field open there forces the
- * title inline and costs the large title.
- */
+/** A modal: pinning a field open on the Log forces its title inline. */
 export function Search() {
     const db = useDatabase();
     const router = useRouter();
@@ -67,9 +64,7 @@ export function Search() {
         <>
             <SearchBar onChangeText={setQuery} onClose={() => router.back()} placeholder={t("search.placeholder")} />
             {empty ? (
-                // A scroller rather than a plain box: the field arrives focused, so
-                // without something to drag there is nothing on this screen that
-                // puts the keyboard away except Cancel, which closes the search.
+                // A scroller, so a drag can put away the keyboard the focused field arrives with.
                 <ScrollView
                     className="bg-background flex-1"
                     contentContainerStyle={{ flexGrow: 1 }}
@@ -115,19 +110,12 @@ export function Search() {
 }
 
 interface SearchResultsTotalProps {
-    /** Rows matched, across every currency. */
     count: number;
-    /** One block per currency the results ended up expressed in, dominant first. */
     figures: readonly CurrencyFigures[];
     showCents: boolean;
 }
 
-/**
- * "How much have I spent on this" is the question the day groups cannot answer,
- * so the header totals the whole result set rather than any window of it. A
- * mixed-currency result gets a block each: nothing here holds a rate across them,
- * and one combined figure would be an invention.
- */
+/** A block per currency: one figure across them would be invented. */
 function SearchResultsTotal({ figures, count, showCents }: SearchResultsTotalProps) {
     const t = useTranslation();
     const named = figures.length > 1;
@@ -139,8 +127,7 @@ function SearchResultsTotal({ figures, count, showCents }: SearchResultsTotalPro
                 const net = entry.income - entry.expense;
                 const cells = [
                     {
-                        // Only money actually coming in earns the income colour; a positive
-                        // net is still just a net.
+                        // Only money coming in earns the income colour.
                         income: true,
                         key: "in",
                         label: t("search.results.in"),

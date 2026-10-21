@@ -3,13 +3,8 @@ import { useLocalSearchParams } from "expo-router";
 import { NewTransaction } from "@/screens/transaction/new";
 
 export default function NewTransactionScreen() {
-    // `income`/`amount`/`note` are set by the surfaces that open this screen
-    // from outside the bundle — the "Log Income" quick action, or a Siri intent
-    // handing off a draft. `categoryId`/`accountId`/`currency`/`date` come only
-    // from the voice screen, whose draft this ledger already resolved by name.
-    // `from` is the opposite direction: a row already on the ledger asking to be
-    // logged again, which is why it may fill in the fields a suggestion from
-    // outside may not.
+    // Only `income`/`amount`/`note` may arrive from outside the bundle (quick action, Siri). The rest come from the
+    // voice screen, which resolved them on this ledger, or `from`, a ledger row being logged again.
     const {
         income,
         amount,
@@ -36,7 +31,6 @@ export default function NewTransactionScreen() {
         from?: string;
         income?: string;
         note?: string;
-        /** A spoken subscription: the stored `recurringType` and its multiplier. */
         recurringCoefficient?: string;
         recurringType?: string;
     }>();

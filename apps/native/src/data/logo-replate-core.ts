@@ -5,7 +5,6 @@ import { accounts, transactions } from "@/db/schema";
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
 import type { SpendDb } from "./budget-spent";
 
-/** A logo the fetch cache still holds that a plate would now change. */
 export interface CachedOriginal {
     bytes: Uint8Array;
     /** What a copy stored before plates looks like, from `blackBakedSignature`. */
@@ -13,11 +12,8 @@ export interface CachedOriginal {
 }
 
 export interface LogoReplateDeps {
-    /** The cached logos filed under this merchant name, closest match first. */
     originalsFor: (name: string) => Promise<readonly CachedOriginal[]>;
-    /** Stores the original again, now on its plate, and answers the new uri. */
     persist: (bytes: Uint8Array) => Promise<string>;
-    /** A stored photo's signature, null when it cannot be read. */
     signature: (uri: string) => Promise<Uint8Array | null>;
 }
 
@@ -40,20 +36,9 @@ const TABLES = [
     { imageUri: accounts.imageUri, name: accounts.name, table: accounts },
 ] as const;
 
-/**
- * Re-stores, once per device, the logos saved before logos had a plate. Their
- * see-through pixels were baked black into the JPEG and cannot be recovered
- * from the file, but the original bytes are usually still in the logo cache.
- *
- * A stored photo is only replaced when both hold: its row's name files a
- * cached logo, and the photo looks exactly like that logo drawn over black.
- * Neither is enough alone: a receipt on a Netflix row passes the first, and
- * a dark photo passes the second against any black mark like Apple's.
- *
- * shortcut: a row whose name differs from the one the logo was fetched under,
- * or whose cache entry iOS has reclaimed, keeps its black tile; re-resolve the
- * merchant's domain if that turns out common.
- */
+// Replaced only when the row's name files a cached logo AND the photo matches it drawn over black: a receipt on a
+// Netflix row passes the first, a dark photo the second. shortcut: a renamed row or a reclaimed cache entry keeps its
+// black tile; re-resolve the merchant's domain if that turns out common.
 export async function replateStoredLogos(db: SpendDb, deps: LogoReplateDeps): Promise<number> {
     if ((await getMeta(db, META_KEYS.logoPlates)) != null) {
         return 0;

@@ -32,7 +32,6 @@ async function relockSpy() {
     return relock;
 }
 
-/** A picker or sheet the test closes by hand, as the user would. */
 function openSheet() {
     let close: () => void = () => undefined;
     const sheet = duringHandoff(

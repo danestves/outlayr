@@ -12,10 +12,7 @@ function placeholders(template: string): Set<string> {
 }
 
 describe("catalog parity", () => {
-    // Every other test here compares the two catalogs against each other, so an
-    // empty pair agrees with itself and all of them pass while the app renders
-    // raw keys. A dictionary that fails to resolve contributes nothing rather
-    // than throwing, which is exactly the shape a stale `.intlayer/` takes.
+    // The other tests compare the catalogs to each other, so an empty pair (a stale `.intlayer/`) passes them all.
     it("ships a populated catalog for every supported language, from every dictionary", () => {
         for (const language of SUPPORTED_LANGUAGES) {
             const catalog = CATALOGS[language];
@@ -52,9 +49,6 @@ describe("catalog parity", () => {
         }
     });
 
-    // Android reads a `.android` twin in place of its base key, so a twin whose
-    // base was renamed away would never show, and one with other placeholders
-    // would render them raw.
     it("gives every Android twin a base key with the same placeholders", () => {
         for (const [key, twin] of Object.entries(EN)) {
             if (!key.endsWith(".android")) {
@@ -81,8 +75,6 @@ describe("catalog parity", () => {
         }
     });
 
-    // Only the `_other` form: a singular may legitimately spell the number out
-    // ("One purchase too many"), but a plural that never shows its count is a bug.
     it("interpolates a count into every plural form", () => {
         for (const catalogName of SUPPORTED_LANGUAGES) {
             const catalog = CATALOGS[catalogName];

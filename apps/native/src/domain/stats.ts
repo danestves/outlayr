@@ -1,8 +1,4 @@
-/**
- * Middle value of a series, averaging the middle pair on an even count. Null on
- * an empty series, so callers decide what "no evidence" means rather than
- * inheriting a zero that reads like a real measurement.
- */
+// Null on an empty series, so callers decide what "no evidence" means instead of inheriting a zero.
 export function median(values: readonly number[]): number | null {
     if (values.length === 0) {
         return null;

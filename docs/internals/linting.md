@@ -9,7 +9,7 @@ vp check --fix   # format + autofix
 vp check         # report only
 ```
 
-Pre-commit runs `vp staged`, which applies `vp check --fix` to staged files and re-stages what it rewrites; the Claude Code hook runs `vp check --fix`. Pre-push (`.vite-hooks/pre-push`) runs `vp run -r --cache check-types` and then only the tests related to files changed since `origin/main`. It never runs `vp check`. The CI workflow (`.github/workflows/ci.yml`) runs `vp check` on every pull request, plus `check-types` and the tests of each package the diff touches and of the packages that depend on it. Changes outside `apps/` and `packages/` other than docs run every package, and so do pushes to `main`. Its `Check` job fails when any other job fails.
+Pre-commit runs `vp staged`, which applies `vp check --fix` to staged files and re-stages what it rewrites, so a lint error blocks the commit rather than half-applying it; the Claude Code hook runs `vp check --fix`. Pre-push (`.vite-hooks/pre-push`) runs `vp run -r --cache check-types` and then only the tests related to files changed since `origin/main`. It never runs `vp check`. The CI workflow (`.github/workflows/ci.yml`) runs `vp check` on every pull request, plus `check-types` and the tests of each package the diff touches and of the packages that depend on it. Changes outside `apps/` and `packages/` other than docs run every package, and so do pushes to `main`. Its `Check` job fails when any other job fails.
 
 The gate is green: **no errors and 6 warnings**, all extra-dependency findings from React Compiler rules that are `warn` rather than `error` — see "Warnings, not errors" below.
 
@@ -46,7 +46,7 @@ If you re-enable any of these, run `vp run -r --no-cache test` and `vp run -r --
 
 **`require-unicode-regexp`, `prefer-named-capture-group`.** Adding the `u` flag switches escape handling and `\w` semantics for every regex in the CSV, currency and i18n parsers at once.
 
-**`unicorn/no-array-sort`, `unicorn/no-array-reverse`.** `.toSorted()` / `.toReversed()` are a different allocation and a different Hermes baseline than the tests — which run on node — would catch.
+**`unicorn/no-array-sort`, `unicorn/no-array-reverse`.** In-place `.sort()` / `.reverse()` is deliberate on arrays the code just built, and call sites spread first where the input is shared. `.toSorted()` / `.toReversed()` are a different allocation and a different Hermes baseline than the tests, which run on node, would catch.
 
 **`require-await`.** Every site is a callback satisfying a Promise-returning contract (`photos: async () => clearStoredPhotos()`, a Convex `handler`). Dropping `async` turns a synchronous throw into a thrown error where the caller handles a rejection.
 
@@ -73,9 +73,11 @@ If you re-enable any of these, run `vp run -r --no-cache test` and `vp run -r --
 | `components/import-sheet/**` | `no-restricted-imports` (`expo-router`), `outlayr/no-sheet-repaint` | The import flow is one `BottomSheetModal`, never a route: steps navigate through the draft store and only `import-sheet.tsx` may import the router. Step content sits on the root's `backgroundStyle` paper, so no `bg-background`, wash or card class under the directory. |
 | `db/transaction.ts` | `outlayr/no-drizzle-transaction` | Where `withTransaction` is implemented, so it necessarily calls the API the rule bans. |
 | `lib/convex.ts`, `data/sync-engine-core.ts` | `anti-slop/no-chained-type-assertions` | Two assertion chains against a type we do not own: React Native's `BodyInit` omits the typed array its `fetch` actually sends, and drizzle's builders are generic per table so `Database` shares no members with the single-code-path writer the sync engine calls. |
-| `convex/providerLifecycle.ts` | `anti-slop/no-unknown-returns` | `AppleLifecycleContext` is a structural view of better-auth's endpoint context. Its members are better-auth's to declare. |
+| `convex/providerLifecycle.ts` | `anti-slop/no-unknown-returns` | `AppleLifecycleContext` is a structural view of better-auth's endpoint context. Its members are better-auth's to declare: tightening `updateAccount` to the `void` the callers use removes the overlap the assertion needs. |
 
 `complexity` is set to **35**. oxlint counts *cyclomatic* complexity where Biome counted *cognitive*, so the old threshold of 25 does not carry across. On the new metric the barely-over cluster sits at 26–33; only `TransactionForm` is genuinely out of hand; its three suppressions are the only ones in the tree and each names that as known debt.
+
+`typescript/consistent-type-imports` sets `disallowTypeAnnotations: false`: `import()` type annotations are the idiom for `jest.mock<typeof import("…")>` factories and ambient asset declarations, and the `import type` preference itself stays on.
 
 `globals` declares `__DEV__` at the top level and `jest` in the `apps/native/jest/**` override, for the setup stubs that cannot import it. Neither runner preset ships globals, and that alone was 275 findings.
 
@@ -120,8 +122,8 @@ through before any rule went back off. What the exercise produced:
   copy of itself. `sync.test.tsx` wrapped 17 mocks around two pure decisions,
   which moved to `domain/sync-status.ts` and gained five branches on the way.
 
-The rules that went back off fall into three groups, all in the one block in
-`vite.config.ts` with their counts:
+The rules that went back off fall into three groups, all in the one node-side
+block in `vite.config.ts`:
 
 1. **Evidence rules (248).** A test declares its own doubles, so the cast and the
    widened literal *are* the fixture. `no-module-mocking` is here because
@@ -133,7 +135,17 @@ The rules that went back off fall into three groups, all in the one block in
 3. **`no-untyped-mock-factory` (152 type errors).** It reads `typeof import("m")`
    as the whole module, so a factory standing in for two exports out of nine
    cannot satisfy it. `Partial<>` reaches the top level and no further: below
-   that a `useRouter` stub owes a whole `Router`.
+   that a `useRouter` stub owes a whole `Router`. Vitest spells the same rule
+   `require-mock-type-parameters`.
+
+The rest of that block is style in code read top to bottom: stub classes with
+no `this` (`class-methods-use-this`, `max-classes-per-file`), fixture rows
+applied in order (`no-await-in-loop`), and RFC 4122 and confetti suites checking
+bits (`no-bitwise`). `import/first` is off because the hoisting below puts spies
+above the imports on purpose (22 reports). `react/globals` and
+`react/immutability` reported 9 render probes whose body is the assertion
+(counting renders, capturing a hook's return); the compiler never bundles a
+suite, and both stay on in `src/`.
 
 Two traps worth knowing before editing a mock factory, both from
 `babel-plugin-jest-hoist` lifting `jest.mock` above the imports:
@@ -178,7 +190,7 @@ The reason for each lives in the plugin, as a comment above the rule or in its m
 
 ## Tailwind
 
-`oxlint-tailwindcss` reads `apps/native/global.css` and lints class strings against the real Uniwind theme. Only its correctness rules are on. `enforce-sort-order` and the rest of its style set are off: oxfmt already owns class order inside `cn`/`tv`/`clsx`, and the plugin's sorter would additionally reorder 302 raw `className` strings.
+`oxlint-tailwindcss` reads `apps/native/global.css` and lints class strings against the real Uniwind theme. `apps/screenshots` is ignored by both lint and format: it is scaffolded rather than authored here, and it is Tailwind v3 against that v4 entry point, so every class would report unknown. Its hand-written `scripts/` stay checked. Only its correctness rules are on. `enforce-sort-order` and the rest of its style set are off: oxfmt already owns class order inside `cn`/`tv`/`clsx`, and the plugin's sorter would additionally reorder 302 raw `className` strings.
 
 It earned its place on the first run by finding six classes that are not in the theme and so rendered as nothing: `text-tv`, `tracking-micro` (×2) and `text-subheadline` (×3). They now use the nearest token the theme actually defines — `text-hero`, `tracking-eyebrow` and `text-subtitle`.
 

@@ -44,9 +44,6 @@ export function CategoryBreakdownRow({
     const income = measure === "income";
     const toneClass = income ? "text-income" : "text-foreground";
     const sign = income ? "+" : "-";
-    // The bar is the same measurement the tile above it names, so it is drawn in
-    // the same colour. Income keeps its own green: there the bar is reporting a
-    // direction, and the category is the secondary fact.
     const fill = income ? colors.income : entry.color;
     const pct = Math.round(entry.fraction * 100);
 
@@ -146,16 +143,11 @@ export function CategoryBreakdownRow({
     );
 }
 
-/**
- * Holds its width even when there is nothing to report, so a column of rows keeps
- * its right edge whether or not every category has history behind it.
- */
 function DeltaCell({ delta, measure }: { delta: number | null; measure: InsightsMeasure }) {
     if (delta == null) {
         return <View className="min-w-[46px]" />;
     }
     const rose = delta > 0;
-    // Shared with `InsightsMovers` so the two cannot disagree.
     const favourable = breakdownRiseIsFavourable(measure) === rose;
     return (
         <Text

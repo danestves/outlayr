@@ -4,7 +4,6 @@ import type { SkImage } from "@shopify/react-native-skia";
 import { logoPlate } from "@/domain/logo-plate";
 import type { LogoPixels, LogoPlate } from "@/domain/logo-plate";
 
-/** The plate is chosen from the mark's shape and colours, which survive this size; its detail does not matter. */
 const LOGO_SAMPLE = 128;
 /** Small enough to blur away JPEG noise, large enough that two different logos never agree. */
 const SIGNATURE_SIDE = 16;
@@ -13,7 +12,7 @@ export function decodeImage(bytes: Uint8Array): SkImage | null {
     return Skia.Image.MakeImageFromEncoded(Skia.Data.fromBytes(bytes));
 }
 
-/** The image at `side` on its longer edge, over `ground` when given, read back as unpremultiplied RGBA. */
+/** Read back as unpremultiplied RGBA. */
 function samplePixels(image: SkImage, side: number, ground?: string): LogoPixels | null {
     const scale = side / Math.max(image.width(), image.height());
     const width = Math.max(1, Math.round(image.width() * scale));
@@ -43,10 +42,6 @@ export function platePlan(image: SkImage): LogoPlate {
     return pixels == null ? { kind: "keep" } : logoPlate(pixels);
 }
 
-/**
- * The logo drawn on its plate as a square tile no larger than `maxSide`, or
- * null when it is better stored as it came.
- */
 export function drawOnPlate(image: SkImage, maxSide: number): SkImage | null {
     const plan = platePlan(image);
     if (plan.kind === "keep") {
@@ -73,11 +68,7 @@ export function drawOnPlate(image: SkImage, maxSide: number): SkImage | null {
     return surface.makeImageSnapshot();
 }
 
-/**
- * How a logo stored before plates looks: the JPEG it went into dropped the
- * alpha, which is the same as drawing it over black. Comparable between a
- * cached original and a stored photo.
- */
+/** A logo stored before plates went into a JPEG, which dropped alpha: the same as drawing it over black. */
 export function blackBakedSignature(image: SkImage): Uint8Array | null {
     return samplePixels(image, SIGNATURE_SIDE, "black")?.data ?? null;
 }

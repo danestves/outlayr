@@ -37,10 +37,8 @@ import { CategoryDetailsFields } from "./details-fields";
 import type { CategoryEditorProps } from "./index";
 
 const MAX_EXPENSE_CATEGORIES = 24;
-/** Space between the sheet header and the identity tile's ring. */
 const HERO_TOP = 8;
 const HERO_BOTTOM = 24;
-/** Room for the empty hero's caption, which hangs below the tile until a symbol is picked. */
 const CAPTION_CLEARANCE = 24;
 const TOAST_MS = 2000;
 
@@ -62,7 +60,6 @@ function categoryEditorCopy(t: TranslateFn, { create, income, isSubcategory, par
     };
 }
 
-/** The sheet's title: what is being made, or what kind of thing is being edited. */
 function categoryTitleKey(mode: CategoryEditorProps["mode"], isSubcategory: boolean, stored: Category | null) {
     if (mode === "create") {
         return isSubcategory ? "nav.newSubcategory" : "nav.newCategory";
@@ -102,19 +99,10 @@ export default function CategoryEditor(props: CategoryEditorProps) {
     return <CategoryEditorReady db={db} {...props} />;
 }
 
-/**
- * The add/edit category sheet on Android: the sheet header carries close, the
- * title, Delete (when editing) and Save; under it the identity tile and the
- * outlined fields scroll together.
- *
- * The form logic is `index.tsx`'s minus the SwiftUI pieces and the fly-up
- * (see the account editor's sibling for why), and Delete is
- * `category-edit-screen.tsx`'s, which on iOS sits in the native toolbar: keep
- * them in step.
- */
+// Form logic mirrors `index.tsx` minus the SwiftUI pieces and the fly-up, and Delete mirrors
+// `category-edit-screen.tsx`: keep them in step.
 function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
-    // Stable per-instance primitives: the parent spreads a fresh `props` object
-    // every render, so effects must key off these, never off `props` itself.
+    // The parent spreads a fresh `props` every render, so effects key off these primitives, never `props`.
     const { db, mode } = props;
     const parentId = props.mode === "create" ? (props.parentId ?? null) : null;
     const editId = props.mode === "edit" ? props.id : null;
@@ -131,9 +119,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
     const { draft, setDraft } = useIdentityDraft();
     const { pickerOpen, setPickerOpen } = useIdentityFlyUp();
 
-    // Lazy `useState`, not `useMemo`: these must be stable for the component's
-    // life — a re-read would re-fire the draft effects below and clobber whatever
-    // the user has since picked.
+    // Lazy `useState`, not `useMemo`: a re-read would re-fire the draft effects below and clobber the user's picks.
     const [loaded] = useState<Category | null>(() =>
         mode === "edit" && editId != null ? getCategoryById(db, editId) : null
     );
@@ -142,10 +128,6 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
     );
 
     const nameRef = useRef<TextInputInstance>(null);
-    /**
-     * A rejected save reads under the name field rather than in an `Alert`: this
-     * editor is a sheet and stays up, and every rule it can break is a field rule.
-     */
     const [failure, setFailure] = useState<string | null>(null);
 
     const [initialValues] = useState(() => ({
@@ -205,15 +187,12 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
         return set;
     }, [allExpense, editId]);
 
-    // A sheet showing its own tile is not showing a picker. `pickerOpen` lives
-    // in the app-level provider, so a path that left it set would leave this
-    // sheet's actions disabled; iOS asserts the same in `IdentityFlyUpLayer`.
+    // `pickerOpen` lives in the app-level provider, so a path that left it set would disable this sheet's actions.
     useEffect(() => {
         setPickerOpen(false);
     }, [setPickerOpen]);
 
-    // The draft is shared context, so a create editor may mount onto another
-    // screen's leftovers.
+    // The draft is shared context, so a create editor may mount onto another screen's leftovers.
     useEffect(() => {
         if (mode !== "create") {
             return;
@@ -221,8 +200,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
         setDraft(EMPTY_DRAFT);
     }, [mode, setDraft]);
 
-    // Seeded with the raw icon/emoji, not the resolved fallback, so an unknown
-    // glyph is not silently rewritten on save.
+    // Seeded with the raw icon/emoji, not the resolved fallback, so an unknown glyph is not rewritten on save.
     useEffect(() => {
         if (mode !== "edit") {
             return;
@@ -292,9 +270,8 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
         }
     }, [mode, parentId, atExpenseLimit, form]);
 
-    // An add that fills the expense namespace closes the sheet. Keyed on the count
-    // CHANGING, not on its value — firing on mount would race the force-income
-    // effect above and close a sheet that was about to become an income one.
+    // Keyed on the count changing, not its value: firing on mount would race the force-income effect above and close
+    // a sheet that was about to become an income one.
     const seenExpenseCount = useRef(expenseCount);
     useEffect(() => {
         const changed = expenseCount !== seenExpenseCount.current;
@@ -317,18 +294,14 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
         parent,
     });
 
-    // While the picker is up the header and the tile stand down, as the iOS
-    // CTA does: a tap that reaches this sheet past the picker must not save,
-    // delete, or open a second picker.
+    // While the picker is up, a tap that reaches this sheet past it must not save, delete, or open a second picker.
     const openPicker = () => {
         if (pickerOpen) {
             return;
         }
-        // Or the keyboard is left standing over the picker about to be presented.
         Keyboard.dismiss();
         // Freezes the auto-color so a color picked in the picker survives.
         setColorTouched(true);
-        // On the tap frame, rather than waiting for the picker route to mount.
         setPickerOpen(true);
         router.push({
             params: {
@@ -357,16 +330,13 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
             mode: "create",
         });
         haptics("success");
-        // A top-level add stays put for a run of them; a subcategory returns
-        // to the row it was added from.
         if (isSubcategory) {
             router.back();
             return await holdSubmitting();
         }
         form.setFieldValue("name", "");
-        // Cleared rather than advanced here: with `colorTouched` released, the
-        // auto-color effect assigns the first free slot AFTER this insert has
-        // landed, where a value chosen now comes from the pre-insert set.
+        // Cleared, not advanced: with `colorTouched` released, the auto-color effect picks the first free slot after
+        // this insert lands, where a value chosen now would come from the pre-insert set.
         setColorTouched(false);
         setDraft(EMPTY_DRAFT);
         flashAdded();
@@ -376,8 +346,6 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
         haptics("error");
         const code = cause instanceof Error ? categoryErrorCode(cause.message) : null;
         setFailure(code ? t(CATEGORY_ERROR_KEYS[code]) : t("categories.error.generic"));
-        // The name is what the reader has to change, so the cursor goes back to it
-        // — the line under the field says why on its own.
         if (code === "missingName" || code === "duplicateName") {
             nameRef.current?.focus();
         }
@@ -392,9 +360,8 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
         toastTimer.current = setTimeout(() => setShowToast(false), TOAST_MS);
     };
 
-    // No confirmation in front of it: the write is held for the undo window, and
-    // the toast carrying it is mounted at the app root, so it outlives this sheet.
-    // The cascade rides on the toast, which is why the children are counted first.
+    // No confirmation: the write is held for the undo window by a toast mounted at the app root, which outlives this
+    // sheet. The toast spells out the cascade, so the children are counted first.
     const deleteCategory = async (category: Category) => {
         const children = await db
             .select({ id: categories.id })

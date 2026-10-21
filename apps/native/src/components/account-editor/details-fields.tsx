@@ -20,7 +20,6 @@ interface AccountDetailsFieldsProps {
     currencyCode: string;
     currencyLabel: string;
     kindLabel: string;
-    /** True when this account is money owed rather than money held. */
     liability: boolean;
     name: string;
     nameFieldRef?: Ref<TextInputInstance>;
@@ -31,21 +30,11 @@ interface AccountDetailsFieldsProps {
     onCurrencyPress: () => void;
     onNameChange: (name: string) => void;
     onSubmitName: () => void;
-    /** Omitted for a person, whose kind is not an asset or a liability, which hides the row. */
+    /** Omitted for a person, which hides the row. */
     onToggleLiability?: (next: boolean) => void;
     onToggleSign: () => void;
 }
 
-/**
- * The account form as Material 3 outlined fields (Direction B, mock row 4),
- * for the Android editor (`index.android.tsx`); the iOS one is the SwiftUI
- * `details-section.tsx`. The switch draws through Compose, so only Android
- * renders this.
- *
- * Name, a Currency field that opens the currency sheet, the "Money I owe"
- * switch, and a Balance field whose sign toggles in place and whose amount
- * opens the keypad sheet.
- */
 export function AccountDetailsFields({
     balanceEditA11y,
     balanceLabel,
@@ -92,8 +81,7 @@ export function AccountDetailsFields({
                 }
             />
 
-            {/* A card and an overdrawn current account both read as a negative
-			    balance; this is the only thing that tells them apart. */}
+            {/* The only thing that tells a card from an overdrawn current account. */}
             {onToggleLiability ? <SwitchRow label={kindLabel} onChange={onToggleLiability} value={liability} /> : null}
 
             <OutlinedSelectField

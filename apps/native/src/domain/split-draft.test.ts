@@ -31,13 +31,10 @@ describe("adding a category", () => {
 
 describe("typing an amount", () => {
     it("never shows a negative part when there is nothing left to take from", () => {
-        // Both categories added before anything was typed, so the draft is 84/0/0
-        // and filling the middle one has no slack to absorb it.
         let draft = addPart(addPart(openDraft(TOTAL, "groceries", 2), "home"), "pets");
         draft = setPartAmount(TOTAL, draft, 1, 24, 2);
 
         expect(draft.every((one) => one.amount >= 0)).toBe(true);
-        // Honest about the consequence rather than hiding it in a negative.
         expect(isBalanced(TOTAL, draft, 2)).toBe(false);
         expect(unallocated(TOTAL, draft, 2)).toBe(-24);
     });

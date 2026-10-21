@@ -10,7 +10,6 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import { pairs } from "../pairs";
 import { GoalCard } from "./goal-card";
 
-/** `gap-3` between the two columns, matching the budget card grid above it. */
 const CARD_GUTTER = 12;
 
 interface SavingsGoalsSectionProps {
@@ -20,27 +19,12 @@ interface SavingsGoalsSectionProps {
     onPress: (id: string) => void;
 }
 
-/**
- * Goals on the Budgets tab, under the budgets themselves.
- *
- * A budget is a ceiling for this month and a goal is a floor for some later
- * month; they are the two things on the tab that state a number the ledger is
- * measured against, so they belong together rather than on a screen of their own
- * that would hold one list.
- *
- * No horizontal padding of its own: the tab's scroll view owns the 20pt inset
- * every other section on it sits at.
- */
 export function SavingsGoalsSection({ goals, currency, onPress, onAdd }: SavingsGoalsSectionProps) {
     const t = useTranslation();
     const { language } = useLanguage();
     const [gridWidth, setGridWidth] = useState<number | null>(null);
 
-    // Reached goals fall to the end: they are a record, not a commitment, and a
-    // finished goal holding the top of the grid is the tab's least useful tile.
-    // `exact &&`, because a goal whose figures cannot be compared has not been
-    // shown to have reached anything — sinking it to the end would file it under a
-    // verdict the card itself declines to give.
+    // Only `exact` goals sink: an incomparable goal has no verdict to file under.
     const ordered = [...goals].sort(
         (left, right) => Number(left.exact && left.progress.reached) - Number(right.exact && right.progress.reached)
     );
@@ -65,8 +49,6 @@ export function SavingsGoalsSection({ goals, currency, onPress, onAdd }: Savings
                         {right ? (
                             <Tile currency={currency} onAdd={onAdd} onPress={onPress} tile={right} width={cardWidth} />
                         ) : (
-                            // Holds the odd tile to one column rather than letting it
-                            // stretch across the grid.
                             <View className="flex-1" />
                         )}
                     </View>
@@ -80,21 +62,11 @@ export function SavingsGoalsSection({ goals, currency, onPress, onAdd }: Savings
     );
 }
 
-/**
- * What the whole grid still needs, counting each account once and each comparable.
- *
- * Two goals can track the same account, and their `remaining` figures are both
- * measured from that one balance — so summing them counts the money already
- * saved once per goal. A $1,000 account carrying a $2,000 and a $3,000 goal
- * needs $2,000 more, not $3,000: filling the larger fills the smaller on the way
- * past, which is what taking the account's largest shortfall says.
- */
+/** Goals on one account share its balance, so take the largest shortfall instead of summing. */
 function stillToFind(goals: readonly SavingsGoalWithProgress[]): number {
     const byAccount = new Map<string, number>();
     for (const entry of goals) {
-        // A goal whose figures cannot be compared has no shortfall to state: its
-        // `remaining` was read off a balance and a target in different currencies.
-        // The cards withhold it, and this total must not publish it back.
+        // Incomparable currencies: the cards withhold this shortfall, so the total must too.
         if (!entry.exact) {
             continue;
         }
@@ -108,7 +80,6 @@ function stillToFind(goals: readonly SavingsGoalWithProgress[]): number {
     return total;
 }
 
-/** A goal, or the add tile that closes the grid. */
 function Tile({
     currency,
     onAdd,
@@ -129,7 +100,6 @@ function Tile({
     );
 }
 
-/** The dashed tile that opens the target sheet. Always last in the grid. */
 function AddGoalCard({ onPress, width }: { onPress: () => void; width: number | null }) {
     const t = useTranslation();
     return (
@@ -150,7 +120,6 @@ interface GridTile {
     key: string;
 }
 
-/** The goals plus the add tile. */
 function tiles(goals: readonly SavingsGoalWithProgress[]): GridTile[] {
     return [...goals.map((entry) => ({ entry, key: entry.goal.id })), { entry: null, key: "add" }];
 }

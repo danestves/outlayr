@@ -6,12 +6,7 @@ import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 
-/**
- * A cell states which of the two it is rather than leaving the strip to infer it
- * from what was passed: `figure` is rendered as the bold tabular number, `value`
- * is rendered as given — which is how amounts arrive, already coloured and
- * signed by `MeasureCellAmount`.
- */
+/** `figure` renders as the bold tabular number; `value` renders as given, already coloured and signed. */
 export type MeasureStripCell = {
     key: string;
     label: string;

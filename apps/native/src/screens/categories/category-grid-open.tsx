@@ -12,7 +12,6 @@ export const EMPTY_MARK_TILE = 34;
 const EMPTY_MARK_GAP = 11;
 export const EMPTY_MARK_WIDTH = EMPTY_MARK_TILE * 4 + EMPTY_MARK_GAP * 3;
 
-/** The empty category tree's mark: a row of tiles with an open slot to fill. */
 export function CategoryGridOpen({ colors }: { colors: ThemeColors }) {
     return (
         <MarkInk tier="inFlow">

@@ -8,11 +8,8 @@ import type { EditorSwitchProps } from "./editor-switch";
 export type { EditorSwitchProps } from "./editor-switch";
 
 /**
- * The Compose switch in the app's scheme, as on every Android settings row,
- * and handled the same way as `ToggleRow`: the wrapper is the one switch
- * TalkBack reads and the one handler. The Compose switch only pictures the
- * state; a tap on it reaches the wrapper, and a handler of its own would run
- * the change twice.
+ * The wrapper is the one switch TalkBack reads and the one handler: a tap on the Compose switch reaches it, so a
+ * handler on the switch itself would run the change twice.
  */
 export function EditorSwitch({ accessibilityLabel, onValueChange, value }: EditorSwitchProps) {
     return (

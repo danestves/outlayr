@@ -41,8 +41,6 @@ export function InsightsQuiet({ measure, alternative, period }: InsightsQuietPro
         <View>
             <View className="bg-border h-px w-full" />
             <View
-                // The visible copy never names the measure that went quiet, so on its
-                // own a screen reader hears "Nothing to chart" with no subject.
                 accessibilityLabel={t("insights.quiet.accessibility", {
                     measure: t(MEASURE_KEY[measure]),
                     period: phrase,

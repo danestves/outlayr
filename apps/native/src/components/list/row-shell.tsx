@@ -22,7 +22,6 @@ export interface RowShellProps {
     title: string;
 }
 
-/** The ruled settings row every list row builds on: glyph, title, a trailing slot, and an optional line below. */
 export function RowShell({ icon, title, destructive, detail, children, below }: RowShellProps) {
     const colors = useColors();
     const largeText = useAccessibilityTextSize();

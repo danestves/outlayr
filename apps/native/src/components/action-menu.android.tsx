@@ -17,28 +17,23 @@ import type {
     StretchedMenuView as StretchedMenuViewBase,
 } from "./action-menu";
 
-/** Where the finger came down, inside the row: the menu opens from there. */
 interface MenuAnchor {
     x: number;
     y: number;
 }
 
-/** A menu row's identifier, as `@expo/ui`'s own Android menu derives it. */
+// Matches how `@expo/ui`'s own Android menu derives a row's identifier.
 function actionId(action: MenuAction): string {
     return action.id ?? action.title;
 }
 
-/** Sub-menus flattened: the only nesting these menus use is an inline group. */
 function flatActions(actions: readonly MenuAction[]): MenuAction[] {
     return actions.flatMap((action) =>
         action.subactions && action.subactions.length > 0 ? flatActions(action.subactions) : [action]
     );
 }
 
-/**
- * The Material 3 menu itself, mounted only while open: an idle row carries no
- * Compose host, which a long list would otherwise pay for on every row.
- */
+// Mounted only while open, so an idle row in a long list carries no Compose host.
 function MenuPopup({
     actions,
     anchor,
@@ -88,13 +83,8 @@ function MenuPopup({
     );
 }
 
-/**
- * A row that opens a menu on a long press. The press is a gesture-handler long
- * press around the row rather than a `Pressable` around it: the row's own
- * `Pressable` takes every touch first, so `@expo/ui`'s menu, which wraps the
- * row in one, never saw a long press and opened the row instead. Activating
- * cancels the row's press, and a swipe still fails it after a few points.
- */
+// A gesture-handler long press, not a `Pressable`: the row's own `Pressable` takes every touch first, so a wrapping
+// one never sees the long press. Activating cancels the row's press.
 function LongPressMenu({
     actions,
     children,
@@ -140,11 +130,7 @@ function LongPressMenu({
     );
 }
 
-/**
- * `StretchedMenuView` on Android. A long-press menu opens from the press, as
- * `ActionMenu` does; a tap menu keeps `@expo/ui`'s own, whose trigger is the
- * whole row and so does get the tap.
- */
+// A tap menu keeps `@expo/ui`'s own, whose trigger is the whole row and so does get the tap.
 export const StretchedMenuView: typeof StretchedMenuViewBase = ({
     actions,
     children,
@@ -167,7 +153,6 @@ export const StretchedMenuView: typeof StretchedMenuViewBase = ({
     );
 };
 
-/** A long-press Material 3 menu around a row. Same contract as `action-menu.tsx`. */
 export const ActionMenu: typeof ActionMenuBase = ({ items, owner, children, style }) => {
     // An empty menu would still swallow the long press.
     if (items.length === 0) {

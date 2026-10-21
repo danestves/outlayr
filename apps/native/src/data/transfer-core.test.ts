@@ -21,14 +21,7 @@ import {
     uniqueCategoryValues,
 } from "./transfer-core";
 
-/**
- * The better-sqlite3 client this suite injects has no `withTransactionAsync`,
- * so `withTransaction` (src/db/transaction.ts) falls back to running its task
- * bare — real by design for every other test here, which asserts statement
- * order and resulting rows, not atomicity. The rollback test below needs the
- * real boundary, so it opts in with manual BEGIN/COMMIT/ROLLBACK over the same
- * connection, mirroring what expo-sqlite's `withTransactionAsync` gives production.
- */
+/** `withRealTransactions` adds a BEGIN/COMMIT/ROLLBACK `withTransactionAsync`; without it tasks run bare. */
 function makeDb(options?: { withRealTransactions?: boolean }): Database {
     const sqlite = new BetterSqlite3(":memory:");
     if (options?.withRealTransactions) {

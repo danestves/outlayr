@@ -4,13 +4,9 @@ import { debtLegs } from "./debts";
 import type { DebtVerb } from "./debts";
 import { roundToMinorUnits } from "./money";
 
-/** Where a person stands with you: the hero's label and which actions they get. */
 export type DebtStanding = "owesYou" | "settled" | "youOwe";
 
-/**
- * Reads a person's balance, in their own currency. Rounded first, so a float
- * residue from 0.10 + 0.20 - 0.30 reads as settled.
- */
+/** Rounded first, so a float residue (0.10 + 0.20 - 0.30) reads as settled. */
 export function debtStanding(balance: number, currency: string): DebtStanding {
     const rounded = roundToMinorUnits(balance, currency);
     if (rounded < 0) {
@@ -24,11 +20,7 @@ export interface DebtChoice {
     verb: DebtVerb;
 }
 
-/**
- * The two movements offered for a person, as the detail's buttons and the
- * sheet's segments: the one that settles what is owed first. Null is a person
- * not on the ledger yet, who can only be borrowed from or lent to.
- */
+/** The movement that settles what is owed comes first. Null is a person not on the ledger yet. */
 export function debtChoices(standing: DebtStanding | null): readonly [DebtChoice, DebtChoice] {
     switch (standing) {
         case "youOwe": {
@@ -58,7 +50,6 @@ export function debtChoices(standing: DebtStanding | null): readonly [DebtChoice
     }
 }
 
-/** True when the money moves from the person into your account. */
 export function comesFromPerson(verb: DebtVerb): boolean {
     return debtLegs(verb, { account: false, person: true }).from;
 }

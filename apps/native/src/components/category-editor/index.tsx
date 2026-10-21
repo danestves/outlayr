@@ -103,16 +103,8 @@ export default function CategoryEditor(props: CategoryEditorProps) {
     return <CategoryEditorReady db={db} {...props} />;
 }
 
-/**
- * The add/edit category form: a FIXED hero header over a scrolling `ScrollView`
- * of hairline-ruled rows.
- *
- * The hero, the CTA and the mesh curtain are RN views around the `Host`, because
- * the scroller inside it has to be its only child.
- */
 function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/client").Database }) {
-    // Stable per-instance primitives: the parent spreads a fresh `props` object
-    // every render, so effects must key off these, never off `props` itself.
+    // The parent spreads a fresh `props` every render, so effects key off these primitives, never `props`.
     const { db, mode } = props;
     const parentId = props.mode === "create" ? (props.parentId ?? null) : null;
     const editId = props.mode === "edit" ? props.id : null;
@@ -128,9 +120,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
     const { draft, setDraft } = useIdentityDraft();
     const { pickerOpen, setPickerOpen, floatProgress } = useIdentityFlyUp();
 
-    // Lazy `useState`, not `useMemo`: these must be stable for the component's
-    // life — a re-read would re-fire the draft effects below and clobber whatever
-    // the user has since picked.
+    // Lazy `useState`, not `useMemo`: a re-read would re-fire the draft effects below and clobber the user's picks.
     const [loaded] = useState<Category | null>(() =>
         mode === "edit" && editId != null ? getCategoryById(db, editId) : null
     );
@@ -140,10 +130,6 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
 
     const nameState = useNativeState(loaded?.name ?? "");
     const nameRef = useRef<TextFieldRef>(null);
-    /**
-     * A rejected save reads under the name field rather than in an `Alert`: this
-     * editor is a sheet and stays up, and every rule it can break is a field rule.
-     */
     const [failure, setFailure] = useState<string | null>(null);
 
     const [initialValues] = useState(() => ({
@@ -185,16 +171,10 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
     const [colorTouched, setColorTouched] = useState(false);
     const [showToast, setShowToast] = useState(false);
     const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-    // A shared value, not state: only the fly-up reads it and it does so from the
-    // UI thread, so measuring must not cost the form a render.
+    // A shared value: only the fly-up reads it, from the UI thread, so measuring costs the form no render.
     const containerHeight = useSharedValue(0);
-    // Nothing to measure: this hero is FIXED, so where its ring rests is the
-    // padding above it and nothing else.
     const heroRestTop = useDerivedValue(() => HEADER_HEIGHT + HERO_TOP_PADDING);
-    /**
-     * The hero band's real height, measured rather than derived: it turns on the
-     * caption's rendered line height, and the caption itself comes and goes.
-     */
+    // Measured, not derived: it turns on the caption's rendered line height, and the caption comes and goes.
     const [heroBand, setHeroBand] = useState(HEADER_HEIGHT + HERO_TOP_PADDING + HERO_RING + HERO_BOTTOM_PADDING);
 
     const expenseTree = useCategoriesByNamespace(db, false);
@@ -214,8 +194,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
         return set;
     }, [allExpense, editId]);
 
-    // The draft is shared context, so a create editor may mount onto another
-    // screen's leftovers.
+    // The draft is shared context, so a create editor may mount onto another screen's leftovers.
     useEffect(() => {
         if (mode !== "create") {
             return;
@@ -223,8 +202,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
         setDraft(EMPTY_DRAFT);
     }, [mode, setDraft]);
 
-    // Seeded with the raw icon/emoji, not the resolved fallback, so an unknown
-    // glyph is not silently rewritten on save.
+    // Seeded with the raw icon/emoji, not the resolved fallback, so an unknown glyph is not rewritten on save.
     useEffect(() => {
         if (mode !== "edit") {
             return;
@@ -268,12 +246,8 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
     const income = mode === "create" ? formIncome : (loaded?.income ?? false);
     const atExpenseLimit = expenseCount >= MAX_EXPENSE_CATEGORIES;
 
-    // The sheet grows to `.large` before the picker is presented: a 430pt picker
-    // over the medium detent would cover the whole parent, hero included, leaving
-    // nothing for the fly-up to land on.
-    //
-    // This is also where the sheet learns it is a SUBCATEGORY and opens shorter:
-    // the route options are static, and only the editor resolves the parent.
+    // Grows to `.large` before the picker: over the medium detent it would cover the hero the fly-up lands on.
+    // Also where a subcategory opens shorter, since only the editor resolves the parent.
     useEffect(() => {
         navigation.setOptions({
             sheetAllowedDetents: pickerOpen ? LARGE_ONLY : [isSubcategory ? SUBCATEGORY_DETENT : CATEGORY_DETENT, 1],
@@ -306,9 +280,8 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
         }
     }, [mode, parentId, atExpenseLimit, form]);
 
-    // An add that fills the expense namespace closes the sheet. Keyed on the count
-    // CHANGING, not on its value — firing on mount would race the force-income
-    // effect above and close a sheet that was about to become an income one.
+    // Keyed on the count changing, not its value: firing on mount would race the force-income effect above and close
+    // a sheet that was about to become an income one.
     const seenExpenseCount = useRef(expenseCount);
     useEffect(() => {
         const changed = expenseCount !== seenExpenseCount.current;
@@ -334,9 +307,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
         parent,
     });
 
-    // The form and the CTA carry these themselves instead of sharing a wrapper
-    // stack: a `Form` one level deeper is proposed no height and collapses to
-    // nothing, taking every row with it.
+    // Not a shared wrapper stack: a `Form` one level deeper is proposed no height and collapses with every row.
     const underPicker = [
         opacity(pickerOpen ? 0 : 1),
         blur(pickerOpen ? FORM_BLUR_RADIUS : 0),
@@ -344,11 +315,9 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
     ];
 
     const openPicker = () => {
-        // Or the keyboard is left standing over the picker about to be presented.
         Keyboard.dismiss();
         // Freezes the auto-color so a color picked in the picker survives.
         setColorTouched(true);
-        // On the tap frame, rather than waiting for the picker route to mount.
         setPickerOpen(true);
         router.push({
             params: {
@@ -377,17 +346,14 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
             mode: "create",
         });
         haptics("success");
-        // A top-level add stays put for a run of them; a subcategory returns
-        // to the row it was added from.
         if (isSubcategory) {
             router.back();
             return await holdSubmitting();
         }
         nameState.set("");
         form.setFieldValue("name", "");
-        // Cleared rather than advanced here: with `colorTouched` released, the
-        // auto-color effect assigns the first free slot AFTER this insert has
-        // landed, where a value chosen now comes from the pre-insert set.
+        // Cleared, not advanced: with `colorTouched` released, the auto-color effect picks the first free slot after
+        // this insert lands, where a value chosen now would come from the pre-insert set.
         setColorTouched(false);
         setDraft(EMPTY_DRAFT);
         flashAdded();
@@ -397,8 +363,6 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
         haptics("error");
         const code = cause instanceof Error ? categoryErrorCode(cause.message) : null;
         setFailure(code ? t(CATEGORY_ERROR_KEYS[code]) : t("categories.error.generic"));
-        // The name is what the reader has to change, so the cursor goes back to it
-        // — the line under the field says why on its own.
         if (code === "missingName" || code === "duplicateName") {
             nameRef.current?.focus();
         }
@@ -423,17 +387,11 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
                 flex: 1,
             }}
         >
-            {/* FIRST in the tree so it paints under the form: the `Form`'s own
-			    background is hidden, so the wash reads through the gaps while the
-			    opaque cells cover it. */}
+            {/* First, so it paints under the form, whose own background is hidden. */}
             <IdentityCurtain hues={curtainHues} />
 
-            {/* The `Form` has to be its host's ONLY child — nested any deeper it is
-			    proposed no height and collapses, rows and all — so the hero and CTA
-			    are RN views laid over the space this padding reserves. The padding is
-			    on the wrapper, not the `Host`: under `useViewportSizeMeasurement` the
-			    host lays its SwiftUI content out against the viewport and its own
-			    padding is ignored. */}
+            {/* The `Form` must be its host's only child or it collapses, so the hero and CTA are RN views over this
+                padding, set here because under `useViewportSizeMeasurement` the host ignores its own. */}
             <View
                 style={{
                     flex: 1,
@@ -444,8 +402,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
                 <Host style={{ flex: 1 }}>
                     <ScrollView
                         modifiers={[
-                            // The CTA sits under the keyboard, so a drag has to be able to
-                            // put it away — the same way the account editor's form does.
+                            // The CTA sits under the keyboard, so a drag has to be able to put it away.
                             scrollDismissesKeyboard("immediately"),
                             ...underPicker,
                         ]}
@@ -479,8 +436,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
                 </Host>
             </View>
 
-            {/* Follows the `Host` in the tree so the header's scroll-edge lookup still
-			    finds the form first. */}
+            {/* After the `Host`, so the header's scroll-edge lookup finds the form first. */}
             <EditorHeroBand
                 captionClearance={captionClearance}
                 color={tint}
@@ -495,8 +451,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
                 variant="category"
             />
 
-            {/* The CTA is an RN view now, so the picker's SwiftUI blur/opacity
-			    modifiers cannot reach it — it hides on the wrapper instead. */}
+            {/* SwiftUI's blur and opacity cannot reach this RN view, so it hides on the wrapper. */}
             <View
                 className="bottom-safe-offset-2 absolute right-0 left-0 px-5"
                 pointerEvents={pickerOpen ? "none" : "box-none"}

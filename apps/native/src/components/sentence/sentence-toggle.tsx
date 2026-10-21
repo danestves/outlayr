@@ -8,7 +8,7 @@ import { Text } from "../text";
 import { cn } from "../tw";
 import { useSentenceStyle } from "./sentence";
 
-/** Matches {@link import("./sentence-value").SentenceValue}'s rule. */
+// Matches `SentenceValue`'s rule.
 const RULE_BOTTOM = 7;
 
 const SWAP_GLYPH = 13;
@@ -19,15 +19,7 @@ interface SentenceToggleProps {
     value: string;
 }
 
-/**
- * A word in the sentence that flips between a fixed set rather than opening a
- * picker.
- *
- * Its rule is solid, like a value's: a toggle always has a value, and the dashed
- * rule it used to carry is the sentence's mark for a slot with nothing in it —
- * so it was claiming the verb was empty. The trailing glyph carries the "tap to
- * change this" the dash was there for, without saying "tap to choose one".
- */
+// A solid rule, like a value's: the dashed rule marks an empty slot, and a toggle always has a value.
 export function SentenceToggle({ accessibilityLabel, onPress, value }: SentenceToggleProps) {
     const { textClassName } = useSentenceStyle();
     const colors = useColors();

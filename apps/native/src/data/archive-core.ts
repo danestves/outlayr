@@ -45,27 +45,18 @@ const TABLES = {
     transfers,
 } satisfies Record<ArchiveTable, SQLiteTable>;
 
-/**
- * Every row of every replicated table, tombstones included.
- *
- * Tombstones travel because they are data: a deletion the archive dropped would
- * come back as a live row the moment a peer that never saw it pushed again, and
- * the undo window restores from them too.
- */
+// Tombstones travel: a deletion the archive dropped would come back live the moment a peer pushed again, and the
+// undo window restores from them too.
 export async function buildArchive(
     db: Database,
     now: Date,
     photos: Record<string, string> = {}
 ): Promise<ArchiveDocument> {
-    // SAFETY: filled for every `ARCHIVE_TABLES` member by the loop below, which
-    // is the same union the type is keyed on.
+    // SAFETY: the loop below fills every `ARCHIVE_TABLES` member, the same union the type is keyed on.
     const tables = {} as Record<ArchiveTable, ArchiveRow[]>;
     await Promise.all(
         ARCHIVE_TABLES.map(async (table) => {
-            // `appMeta` holds this phone's own state next to the account's, and
-            // only the account's belongs in a file another phone will read.
-            // `SYNCED_META_KEYS` is the same line `replaceLocalFromAccount` draws,
-            // for the same reason it draws it.
+            // Only `SYNCED_META_KEYS`: the rest of `appMeta` is this phone's own, as in `replaceLocalFromAccount`.
             const rows: TableRow[] =
                 table === "appMeta"
                     ? await db
@@ -85,18 +76,9 @@ export async function buildArchive(
     };
 }
 
-/**
- * Replaces the ledger with the archive's, in one transaction.
- *
- * A replace rather than a merge, and the whole thing in one transaction, because
- * the half-states are the danger: a restore that emptied the tables and then
- * failed would leave nothing at all, and one that merged would silently keep
- * rows the archive says were deleted.
- *
- * Deletion runs in reverse table order and insertion in forward order, so a row
- * never points at a parent that has not been written yet — the same reason
- * `ARCHIVE_TABLES` is ordered rather than alphabetical.
- */
+// A replace in one transaction: a restore that emptied the tables and failed would leave nothing, and a merge would
+// keep rows the archive deleted. Deletes run in reverse table order and inserts forward, so no row points at an
+// unwritten parent.
 export async function restoreArchive(db: Database, document: ArchiveDocument): Promise<number> {
     let written = 0;
     const carried = (row: TableRow) => {
@@ -117,8 +99,7 @@ export async function restoreArchive(db: Database, document: ArchiveDocument): P
             if (rows.length === 0) {
                 continue;
             }
-            // Chunked against SQLite's 999 bound variables. A ledger is unbounded and
-            // a single insert of one is not.
+            // Chunked against SQLite's 999 bound variables: a ledger is unbounded.
             for (let from = 0; from < rows.length; from += ARCHIVE_INSERT_CHUNK) {
                 const slice = rows.slice(from, from + ARCHIVE_INSERT_CHUNK);
                 // oxlint-disable-next-line no-await-in-loop -- every statement here shares the one open withTransaction connection, and forward table order writes parents before the rows referencing them
@@ -130,9 +111,6 @@ export async function restoreArchive(db: Database, document: ArchiveDocument): P
     return written;
 }
 
-/**
- * 999 bound variables per statement divided by the widest table's column count,
- * with room to spare rather than tuned to it — a column added later must not
- * quietly push a restore over the limit.
- */
+// 999 bound variables over the widest table's column count, with room to spare so a later column cannot push a
+// restore over the limit.
 const ARCHIVE_INSERT_CHUNK = 20;

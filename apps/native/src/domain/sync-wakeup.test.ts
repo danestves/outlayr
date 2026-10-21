@@ -4,8 +4,6 @@ import { isBehindWatermark } from "./sync-wakeup";
 
 describe("isBehindWatermark", () => {
     it("does not wake a device that has applied the whole log", () => {
-        // `nextSeq` is one past the highest seq the server has handed out, so a
-        // cursor of 7 against a watermark of 8 is fully caught up.
         expect(isBehindWatermark(8, 7)).toBe(false);
     });
 

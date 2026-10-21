@@ -62,10 +62,8 @@ function PlanRow({ onSelect, plan, selected }: { onSelect: () => void; plan: Pla
 }
 
 /**
- * The plans as an M3 single-choice list: a radio per plan, and the selected one
- * on a tonal `secondaryContainer` fill rather than iOS's ink card. Best value is
- * a tonal chip beside the plan's name. The radios have no handler of their own:
- * a tap on one reaches its row too, and the row is what selects.
+ * An M3 single-choice list. The radios have no handler of their own: a tap on one reaches
+ * its row too, and the row is what selects.
  */
 export function PlanList({ onSelect, plans, selected }: PlanListProps) {
     return (

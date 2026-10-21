@@ -6,11 +6,7 @@ import { newId } from "@/domain/ids";
 import { isBalanced } from "@/domain/split";
 import type { Allocation } from "@/domain/split";
 
-/**
- * Raised rather than silently written, because an unbalanced split is a
- * contradiction the user can see: the row states one amount and the parts
- * underneath it state another, and every category total downstream inherits it.
- */
+/** Thrown, never written: the row and its parts would state different amounts to every category total. */
 export class UnbalancedSplitError extends Error {
     constructor(total: number, allocated: number) {
         super(`Split allocates ${allocated} of ${total}`);
@@ -31,13 +27,7 @@ export function splitsForQuery(db: Database, transactionId: string) {
 }
 
 export const splitsRepo = {
-    /**
-     * Retires the splits of entries that are going.
-     *
-     * A live split pointing at a tombstoned entry would keep contributing to its
-     * categories forever — the entry is gone from every list, and its parts are
-     * not.
-     */
+    /** A live split under a tombstoned entry would keep feeding its categories forever. */
     async clearForTransactions(db: Database, transactionIds: readonly string[]): Promise<void> {
         if (transactionIds.length === 0) {
             return;
@@ -51,15 +41,8 @@ export const splitsRepo = {
             );
     },
     /**
-     * Replaces an entry's split with `allocations`, or clears it when given none.
-     *
-     * Rows are rewritten wholesale rather than diffed, unlike tags. A split's
-     * parts have no identity worth preserving — they are positions in a list, and
-     * an allocation that changed both its category and its amount is not the same
-     * allocation. Tombstoning and re-inserting says exactly that.
-     *
-     * Clearing is how an entry goes back to being attributed by its own
-     * `categoryId`: no rows is the implicit whole, not "attributed to nothing".
+     * Rewritten wholesale, not diffed like tags: a split's parts have no identity worth keeping. No rows means the
+     * entry is attributed wholly to its own `categoryId`.
      */
     async writeSplit(
         db: Database,

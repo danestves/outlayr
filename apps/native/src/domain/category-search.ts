@@ -3,9 +3,7 @@ import type { Category, CategoryWithChildren } from "@/data/categories-core";
 export interface CategoryMatch {
     category: Category;
     matchLength: number;
-    /** Offset of the match inside the untouched `category.name`. */
     matchStart: number;
-    /** Null for a top-level match; the owning parent for a child, so the row can show a breadcrumb. */
     parent: Category | null;
 }
 
@@ -14,14 +12,11 @@ export function categorySearchKey(value: string): string {
 }
 
 /**
- * Folded per code point rather than over the whole string, so `origIndex` can map
- * an offset in the folded text back to the original: `"Café"` stored decomposed
- * loses its combining mark to the fold, and every offset after it would otherwise
- * point one character early and cut the highlight short.
+ * Folded per code point so `origIndex` maps folded offsets back: a decomposed "Café" loses its mark to the fold,
+ * and every later offset would cut the highlight short.
  */
 interface FoldedText {
     folded: string;
-    /** `origIndex[i]` is the offset in the original that folded position `i` came from. */
     origIndex: number[];
 }
 
@@ -55,11 +50,7 @@ function match(category: Category, query: string, parent: Category | null): Cate
     return { category, matchLength: end - start, matchStart: start, parent };
 }
 
-/**
- * Flattened to one list: a child is reachable in a single tap during search
- * rather than behind its parent's disclosure. Tree order is kept so results do
- * not reshuffle between keystrokes.
- */
+/** Flat, so a child is one tap away; tree order is kept so results do not reshuffle between keystrokes. */
 export function searchCategoryTree(tree: CategoryWithChildren[], query: string): CategoryMatch[] {
     const needle = categorySearchKey(query);
     if (needle.length === 0) {
@@ -81,10 +72,7 @@ export function searchCategoryTree(tree: CategoryWithChildren[], query: string):
     return matches;
 }
 
-/**
- * Without this the sheet presents every parent collapsed, so a transaction whose
- * category is a subcategory shows no checkmark on any row and reads as unset.
- */
+/** Otherwise every parent starts collapsed and a selected subcategory reads as unset. */
 export function expandedForSelectedCategory(tree: CategoryWithChildren[], selectedId: string | null): Set<string> {
     if (selectedId == null) {
         return new Set();

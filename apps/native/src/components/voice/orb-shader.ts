@@ -1,19 +1,6 @@
-/**
- * The voice orb's fragment shader: the `siri` flow program of the Liquid Orb
- * editor (lersent001/orb, MIT) with its glass shell, ported from WGSL to SkSL
- * for Skia's `RuntimeEffect`.
- *
- * Only the branches this app renders survived the port: glass is always on,
- * the style is always `siri` (index 9 upstream), the palette ramp bank and the
- * other eleven fluids are gone. Everything that IS here matches upstream
- * expression for expression, so the editor's URL params translate 1:1 into
- * `orb-profile.ts` — retune there, not here.
- *
- * Output is premultiplied: the sphere's colour is already scaled by its own
- * coverage and the alpha is the greater of coverage and emission, so every
- * channel sits at or below alpha. Nothing outside the limb paints, which is
- * what lets the orb sit on whichever ground the screen has.
- */
+// The Liquid Orb editor's `siri` program with its glass shell (lersent001/orb, MIT), ported from WGSL to SkSL
+// expression for expression, so the editor's URL params map 1:1 into `orb-profile.ts`: retune there, not here.
+// Output is premultiplied, and nothing outside the limb paints, so the orb sits on any ground.
 export const ORB_SKSL = `
 uniform float2 iResolution;
 uniform float time;

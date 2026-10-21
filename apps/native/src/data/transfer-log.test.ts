@@ -47,8 +47,6 @@ describe("logTransferBounds", () => {
         expect(monday?.until).toStrictEqual(new Date(2026, 2, 23));
     });
 
-    // The screen seeds each cursor with the raw clock and only normalizes on a
-    // step, so the first render of a period filter hands this an afternoon.
     it("normalizes a cursor that still carries a time of day", () => {
         const bounds = logTransferBounds(scope("month", { cursor: new Date(2026, 2, 31, 23, 59, 59) }));
 
@@ -63,9 +61,6 @@ describe("logTransferBounds", () => {
         }
     );
 
-    /** A transfer synced from another timezone carries a `day` that is not the local
-     * midnight of its `date`. Bounding a period on `day` would then put it in a
-     * different month from a transaction recorded at the same instant. */
     it("measures a period against the same column the transactions beside it use", () => {
         for (const filter of ["week", "month"] as LogFilter[]) {
             expect(logTransferBounds(scope(filter))?.floorOn).toBe("date");

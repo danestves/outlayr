@@ -49,14 +49,11 @@ interface AccountEditorDetailsSectionProps {
     balanceEditA11y: string;
     balanceLabel: string;
     balanceSignA11y: string;
-    /** Already formatted for the active language and currency. */
     balanceValue: string;
     currencyCode: string;
     currencyLabel: string;
-    /** `overlay` in the rule colour — supplied by the editor, which owns the theme. */
     hairline: ViewModifier[];
     kindLabel: string;
-    /** True when this account is money owed rather than money held. */
     liability: boolean;
     mutedColor: string;
     nameFieldRef: RefObject<TextFieldRef | null>;
@@ -68,18 +65,13 @@ interface AccountEditorDetailsSectionProps {
     onCurrencyPress: () => void;
     onNameChange: (name: string) => void;
     onSubmitName: () => void;
-    /** Omitted for a person, whose kind is not an asset or a liability, which hides the row. */
+    /** Omitted for a person, which hides the row. */
     onToggleLiability?: (next: boolean) => void;
     onToggleSign: () => void;
     tintColor: string;
 }
 
-/**
- * Hairline-ruled rows on the page, the anatomy settings and the transfer editor
- * already use — not an inset-grouped card. Every `Text` names `BODY`
- * explicitly: outside a `Form` nothing applies the rounded face, so an
- * unmodified label falls back to the system font.
- */
+// Every `Text` names `BODY`: outside a `Form` nothing applies the rounded face, so a bare label gets the system font.
 export function AccountEditorDetailsSection({
     currencyCode,
     currencyLabel,
@@ -112,7 +104,6 @@ export function AccountEditorDetailsSection({
                     modifiers={[
                         SIGN_FONT,
                         foregroundStyle(negative ? tintColor : mutedColor),
-                        // A bare glyph measures ~10pt; 44 is the HIG minimum target.
                         frame({ height: SIGN_HIT, width: SIGN_HIT }),
                         hitArea(outline.rectangle()),
                     ]}
@@ -183,8 +174,7 @@ export function AccountEditorDetailsSection({
 
             <Divider modifiers={hairline} />
 
-            {/* A card and an overdrawn current account both read as a negative
-			    balance; this is the only thing that tells them apart. */}
+            {/* The only thing that tells a card from an overdrawn current account. */}
             {onToggleLiability ? (
                 <>
                     <HStack modifiers={ROW}>

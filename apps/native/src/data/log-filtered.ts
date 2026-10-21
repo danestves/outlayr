@@ -15,14 +15,11 @@ import type { TransactionWithCategory } from "./transactions";
 import { LOG_COLUMNS } from "./transactions-core";
 
 export interface LogFilterScope {
-    /** Null until a `category` filter resolves one. */
     categoryId: string | null;
-    /** Where a day/week/month filter is pointed. Normalized by the caller. */
     cursor: Date;
     filter: LogFilter;
     /** 1 = Sunday, 2 = Monday. */
     firstWeekday: number;
-    /** Which side a `type` filter shows. */
     income: boolean;
 }
 
@@ -30,10 +27,6 @@ function visibleAt(now: Date) {
     return and(isNull(transactions.deletedAt), lte(transactions.date, now));
 }
 
-/**
- * The category itself plus its children. Mirrors Swift's
- * `category == %@ OR category.parent == %@`.
- */
 function categoryScope(categoryId: string, meta: Map<string, { parentId: string | null }>): string[] {
     const ids = [categoryId];
     for (const [id, row] of meta) {
@@ -44,13 +37,7 @@ function categoryScope(categoryId: string, meta: Map<string, { parentId: string 
     return ids;
 }
 
-/**
- * Unwindowed on purpose: every one of these scopes is bounded by the filter
- * itself, and a subtotal that only counted the loaded page would be wrong.
- *
- * Returns null for `all` and `upcoming`, which the screen serves from
- * `useLoggedTransactions` and {@link useUpcomingTransactions} instead.
- */
+// Unwindowed on purpose: each scope is bounded by the filter, and a subtotal over the loaded page would be wrong.
 function filterPredicate(scope: LogFilterScope, now: Date, categoryIds: string[] | null) {
     switch (scope.filter) {
         case "category": {
@@ -64,8 +51,7 @@ function filterPredicate(scope: LogFilterScope, now: Date, categoryIds: string[]
             const unit = scope.filter;
             const start = cursorStart(unit, scope.cursor, scope.firstWeekday);
             const end = cursorEnd(unit, scope.cursor, scope.firstWeekday);
-            // The current window ends at "now", not at its own boundary: a future-
-            // dated row inside this week belongs to Upcoming, not to the list.
+            // The current window ends at now: a future-dated row inside it belongs to Upcoming.
             const upper = end.getTime() > now.getTime() ? now : end;
             return and(isNull(transactions.deletedAt), gte(transactions.date, start), lt(transactions.date, upper));
         }
@@ -81,18 +67,11 @@ function filterPredicate(scope: LogFilterScope, now: Date, categoryIds: string[]
     }
 }
 
-/**
- * `all` and `upcoming` return empty — the screen serves those from the paged
- * window and from {@link useUpcomingTransactions}.
- */
 export function useFilteredTransactions(db: Database, nowMs: number, scope: LogFilterScope): TransactionWithCategory[] {
     const meta = useCategoryMeta(db);
     const categoryIds = scope.filter === "category" && scope.categoryId ? categoryScope(scope.categoryId, meta) : null;
     const now = new Date(nowMs);
     const where = filterPredicate(scope, now, categoryIds);
-    // The cursor is part of the key, not just the closure: `useLiveQuery` only
-    // re-runs when the table changes or a dependency does, and stepping the cursor
-    // changes neither on its own.
     const rows = useLiveQuery(
         transactions,
         () =>
@@ -119,20 +98,12 @@ export function useFilteredTransactions(db: Database, nowMs: number, scope: LogF
 }
 
 export interface UpcomingTransactions {
-    /** What the list paints — clipped to the next two weeks when `limited`. */
     rows: TransactionWithCategory[];
-    /**
-     * Every upcoming entry, whatever the horizon. An aggregate taken over `rows`
-     * would restate "what this costs" as "what happens to charge soon", and would
-     * move on a day nothing was logged, as a schedule crossed into the window.
-     */
+    /** Every upcoming entry, whatever the horizon: an aggregate over `rows` would move on days nothing was logged. */
     schedules: TransactionWithCategory[];
 }
 
-/**
- * Sorted by when each entry will next land, furthest out first, matching Swift's
- * `FutureListView`. `limited` clips the list to the next two weeks.
- */
+// Furthest next landing first, matching Swift's `FutureListView`.
 export function useUpcomingTransactions(db: Database, nowMs: number, limited: boolean): UpcomingTransactions {
     const now = new Date(nowMs);
     const rows = useLiveQuery(
@@ -146,8 +117,7 @@ export function useUpcomingTransactions(db: Database, nowMs: number, limited: bo
                     // recurring and date indexes as a MULTI-INDEX OR when every branch
                     // carries it, and scans the table otherwise.
                     or(
-                        // A scheduled entry is upcoming even when its stored date is
-                        // past: what is upcoming is its next occurrence.
+                        // Upcoming even when its stored date is past: its next occurrence is.
                         and(isNull(transactions.deletedAt), gt(transactions.recurringType, 0)),
                         and(isNull(transactions.deletedAt), gt(transactions.date, now))
                     )
@@ -158,8 +128,6 @@ export function useUpcomingTransactions(db: Database, nowMs: number, limited: bo
 
     const decorated = useDecoratedRows(db, rows);
 
-    // `nowMs` rather than `now`: a fresh Date is a fresh identity every render, so
-    // depending on it would recompute the sort on each one.
     return useMemo(() => {
         const at = new Date(nowMs);
         const schedules = [...decorated].sort((a, b) => landingDate(b, at).getTime() - landingDate(a, at).getTime());

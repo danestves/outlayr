@@ -19,18 +19,8 @@ import { PLACEHOLDERS } from "./placeholders";
 import type { BudgetConfiguration, BudgetWidgetProps } from "./props";
 
 /**
- * Everything inside the function body runs in the widget extension's own
- * `JSContext` — babel stringifies it and `expo-widgets` evaluates it there — so
- * only `props`, `environment`, the `@expo/ui` globals and locals declared inside
- * are in scope. Nothing from this repo's module scope reaches it, which is why
- * every figure arrives preformatted and every colour arrives as hex (see
- * `props.ts` and `palette.ts`).
- *
- * No widget here sets its own outer padding. WidgetKit already insets the
- * content by the system's default margins (~16pt, tuned per device and family),
- * so anything added on top is *additive* — a 14pt pad spent roughly 38% of a
- * small tile's width on whitespace. `environment.widgetContentMargins` reports
- * the system inset if a layout ever needs the number.
+ * Runs in the extension's own `JSContext`: only `props`, `environment`, `@expo/ui` globals and locals exist. No outer
+ * padding: WidgetKit already insets by the system margins.
  */
 const BudgetWidget = (props: BudgetWidgetProps, environment: WidgetEnvironment<BudgetConfiguration>) => {
     "widget";
@@ -38,13 +28,11 @@ const BudgetWidget = (props: BudgetWidgetProps, environment: WidgetEnvironment<B
     const scheme = environment.colorScheme === "dark" ? "dark" : "light";
     const palette = props.chrome[scheme];
     const family = environment.widgetFamily;
-    // A configuration stored by an older build can name a view this one no longer
-    // publishes, and an undefined view renders as a blank tile with no error.
+    // An older build's configuration can name a view this one no longer publishes.
     const view = props.views[environment.configuration?.budget ?? "auto"] ?? props.views.auto;
     const accent = view.over ? palette.over : palette.ink;
 
-    // Lock Screen families render vibrant — the system flattens everything to a
-    // single tint, so colour carries no meaning there and the copy has to.
+    // Lock Screen families flatten to one tint, so the copy carries the meaning.
     const isAccessory =
         family === "accessoryCircular" || family === "accessoryRectangular" || family === "accessoryInline";
 
@@ -99,8 +87,7 @@ const BudgetWidget = (props: BudgetWidgetProps, environment: WidgetEnvironment<B
         );
     }
 
-    // `minimumScaleFactor` rather than a smaller type size: the hero has to hold
-    // both "$9.20" and "$12,480" in the same box.
+    // `minimumScaleFactor`: the hero must hold "$9.20" and "$12,480" alike.
     const hero = (size: number) => (
         <HStack alignment="firstTextBaseline" spacing={5}>
             <Text
@@ -141,7 +128,6 @@ const BudgetWidget = (props: BudgetWidgetProps, environment: WidgetEnvironment<B
         );
     }
 
-    /** The app's `LedgerHead` shape: cells under a hairline, split by rules. */
     const cell = (label: string, value: string, leading: boolean) => (
         <HStack spacing={0}>
             {leading ? null : <Rectangle modifiers={[frame({ width: 1 }), foregroundStyle(palette.border)]} />}
@@ -169,8 +155,6 @@ const BudgetWidget = (props: BudgetWidgetProps, environment: WidgetEnvironment<B
     );
 
     const overallHeading = family === "systemSmall" ? view.periodLabel : `${view.periodLabel} · ${view.rangeLabel}`;
-    // A per-category budget leads with its own name, or the tile is
-    // indistinguishable from the overall one.
     const heading = view.isOverall ? overallHeading : `${view.name.toUpperCase()} · ${view.periodLabel}`;
 
     return (

@@ -376,8 +376,7 @@ interface IconPair {
     stroke: IconSvgElement;
 }
 
-// Keyed by an icon name stored on a category row, so the key is whatever the
-// database holds — a name this build no longer ships answers undefined.
+// Keyed by the stored icon name, so a name this build no longer ships answers undefined.
 const REGISTRY = new Map<string, IconPair>([
     ["Agreement01", { solid: Agreement01Solid, stroke: Agreement01Icon }],
     ["Airplane01", { solid: Airplane01Solid, stroke: Airplane01Icon }],
@@ -578,10 +577,7 @@ interface CategoryIconProps {
     color: string;
     name: string | null | undefined;
     size?: number;
-    /**
-     * Ignored when `type` is `solid`: a solid glyph is a filled path with no
-     * outline to widen, so a stroke width only thickens its edges into mush.
-     */
+    /** Ignored for `solid`: a filled path has no outline to widen, so a stroke only thickens its edges into mush. */
     strokeWidth?: number;
     type?: CategoryIconType;
 }

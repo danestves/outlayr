@@ -42,9 +42,8 @@ export function exportFileName(now: Date): string {
 }
 
 /**
- * A mapping still being guessed: every field is present but any of them may be
- * unresolved, where `ColumnMapping` requires the three the importer cannot run
- * without.
+ * Any field may be unresolved, where `ColumnMapping` requires the three the importer
+ * cannot run without.
  */
 export interface ColumnMappingGuess {
     amount: number | null;
@@ -95,9 +94,8 @@ const HEADER_MATCH_ORDER: readonly (keyof ColumnMapping)[] = [
 ];
 
 /**
- * Best guess from a header row, so a file this app exported maps itself. Fields
- * it cannot place are left `null` for the user to assign, which is why `date`
- * and `amount` widen here but not in {@link ColumnMapping}.
+ * A file this app exported maps itself. Fields it cannot place stay `null` for the user
+ * to assign, which is why `date` and `amount` widen here but not in {@link ColumnMapping}.
  */
 export function guessMapping(header: readonly string[]): ColumnMappingGuess {
     const normalized = header.map((cell) => cell.trim().toLowerCase());
@@ -155,11 +153,7 @@ export interface ImportPlan {
     skipped: SkippedRow[];
 }
 
-/**
- * The key a CSV category value is linked under. Folded, unlike Swift's exact
- * `unique()` (`Sequence+Unique.swift`), which asked the user to link `"Food"`
- * and `"food "` separately and then failed the import when they missed one.
- */
+/** Folded, so `"Food"` and `"food "` are linked once rather than separately. */
 export function categoryKey(value: string): string {
     return value.trim().toLowerCase();
 }
@@ -178,9 +172,8 @@ const MINIMUM_COLUMNS = 3;
 const ANY_DIGIT = /\d/;
 
 /**
- * The header test is Swift's (`ImportDataView+Logic.swift:126`): a first line
- * with no digit in it is a header, because a data row always carries at least a
- * date or an amount.
+ * A first line with no digit in it is a header, because a data row always carries at
+ * least a date or an amount.
  */
 export interface HeaderAndRows {
     /** Null when the first line was data, not a header. */
@@ -269,11 +262,6 @@ function readRateMetadata(
     return { exchangeRate, exchangeRateType };
 }
 
-/**
- * Read or skipped, told apart by a field rather than by the runtime type of the
- * return value — `ImportEntry` and `SkipReason` are both things a row can
- * legitimately produce, so the caller branches on which one happened.
- */
 type ReadRow = { entry: ImportEntry; skipped: null } | { entry: null; skipped: SkipReason };
 
 function skip(reason: SkipReason): ReadRow {
@@ -332,10 +320,8 @@ function readImportRow(
 }
 
 /**
- * Parses the whole file up front so the user can see what will land — and what
- * will not — before anything is written. A row that cannot be read is dropped
- * with its reason rather than defaulted, because a guessed date or a guessed
- * category is indistinguishable from a real one once it is in the ledger.
+ * A row that cannot be read is dropped with its reason rather than defaulted: a guessed
+ * date or category is indistinguishable from a real one once it is in the ledger.
  */
 export function buildImportPlan(
     rows: readonly (readonly string[])[],
@@ -372,9 +358,8 @@ export function buildImportPlan(
 }
 
 /**
- * All or nothing. A half-applied import is the worst outcome the feature has:
- * the user cannot tell which rows landed, and re-running it duplicates whatever
- * did.
+ * All or nothing: after a half-applied import the user cannot tell which rows landed,
+ * and re-running it duplicates whatever did.
  */
 export async function applyImport(db: Database, plan: ImportPlan): Promise<number> {
     if (plan.entries.length === 0) {
@@ -383,7 +368,7 @@ export async function applyImport(db: Database, plan: ImportPlan): Promise<numbe
 
     await withTransaction(db, async () => {
         for (const entry of plan.entries) {
-            // oxlint-disable-next-line no-await-in-loop -- each create reads before it inserts, and every statement shares the one connection withTransaction holds open — issuing them together interleaves those reads and writes across the transaction that makes this import all-or-nothing
+            // oxlint-disable-next-line no-await-in-loop -- each create reads before it inserts on the one connection withTransaction holds, so running them together interleaves those reads and writes
             await transactionsRepo.create(
                 db,
                 {

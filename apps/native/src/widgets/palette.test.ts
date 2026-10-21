@@ -6,7 +6,6 @@ import { describe, expect, it } from "@jest/globals";
 import { WIDGET_PALETTE } from "./palette";
 import type { WidgetPalette } from "./palette";
 
-/** Maps each palette entry to the `global.css` custom property it mirrors. */
 const PALETTE_VARIABLES = {
     background: "--background",
     border: "--border",
@@ -19,7 +18,6 @@ const PALETTE_VARIABLES = {
 
 const CSS = readFileSync(join(import.meta.dirname, "../../global.css"), "utf-8");
 
-/** Pulls one `@variant light|dark { … }` block out of the `@layer theme` rules. */
 function variantBlock(variant: "light" | "dark"): string {
     const marker = `@variant ${variant} {`;
     const open = CSS.indexOf(marker);

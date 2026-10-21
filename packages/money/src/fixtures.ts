@@ -1,14 +1,8 @@
 import type { EntryRateType, MarketRateType, RateLookup } from "./rates";
 
-/**
- * Golden vectors for the `@outlayr/money` vitest suite. Dates derive from a
- * fixed reference instant, never `Date.now()`.
- */
-
 const DATE_STRING_LENGTH = 10;
 const DAY_MS = 86_400_000;
 
-/** Fixed reference instant: 2026-06-30, UTC. */
 export const REFERENCE_DATE_MS = Date.UTC(2026, 5, 30);
 
 export function dateWithinWindow(daysBeforeReference: number): string {
@@ -22,16 +16,9 @@ export interface RateTableRow {
     rateType: MarketRateType;
 }
 
-/**
- * Mirrors the backend `resolveRateOnDate` contract: the newest row whose `date`
- * is on or before the requested date wins (covers weekend/holiday gaps), else
- * `null`.
- */
+// Mirrors the backend `resolveRateOnDate`: the newest row on or before the date wins, else null.
 export function makeRateLookup(rows: readonly RateTableRow[]): RateLookup {
     return (quote, rateType, date) => {
-        // `localeCompare` is a TOTAL order over the `YYYY-MM-DD` strings (returns 0
-        // on equal dates), so the sort stays deterministic even if a table ever
-        // carries duplicate (quote, rateType, date) rows.
         const [match] = rows
             .filter((r) => r.quote === quote && r.rateType === rateType && r.date <= date)
             .sort((a, b) => b.date.localeCompare(a.date));
@@ -52,7 +39,6 @@ export interface ComputeUsdVector {
 
 const ENTRY_DATE = dateWithinWindow(0);
 
-/** Vectors whose result is a finite canonical USD amount at micro-dollar scale. */
 export const COMPUTE_USD_VECTORS: ComputeUsdVector[] = [
     {
         expectedUSD: 80,
@@ -113,7 +99,6 @@ export const COMPUTE_USD_VECTORS: ComputeUsdVector[] = [
             exchangeRateType: "official",
         },
         name: "large amount stays exact just under the 2^53 micro-dollar ceiling",
-        // 9e9 USD = 9e15 micro-dollars < Number.MAX_SAFE_INTEGER (~9.007e15).
     },
 ];
 
@@ -128,7 +113,6 @@ export interface ComputeUsdThrowVector {
     name: string;
 }
 
-/** Vectors that MUST reject with a `MoneyValidationError`. */
 export const COMPUTE_USD_THROW_VECTORS: ComputeUsdThrowVector[] = [
     {
         input: {
@@ -149,7 +133,6 @@ export interface RoundMoneyVector {
     value: number;
 }
 
-/** Banker's-rounding (half-to-even) edges plus scale-up/no-op cases. */
 export const ROUND_MONEY_VECTORS: RoundMoneyVector[] = [
     { expected: 0.12, name: "0.125 -> 0.12 (round down to even)", value: 0.125 },
     { expected: 0.38, name: "0.375 -> 0.38 (round up to even)", value: 0.375 },
@@ -184,16 +167,10 @@ export const ROUND_MONEY_VECTORS: RoundMoneyVector[] = [
         value: 2.5,
     },
     { expected: 100, name: "100 -> 100 identity", value: 100 },
-
-    // Binary-representation traps: a naive `Math.round(value * 100)` regresses
-    // these (2.675 -> 2.67).
     { expected: 2.68, name: "2.675 -> 2.68 (binary trap)", value: 2.675 },
     { expected: 1, name: "1.005 -> 1.00 (binary trap, even)", value: 1.005 },
     { expected: 1.02, name: "1.015 -> 1.02 (binary trap, odd)", value: 1.015 },
     { expected: 0.62, name: "0.615 -> 0.62 (binary trap, odd)", value: 0.615 },
-
-    // Clean near-half literals: the third decimal is an exact 5, so half-even
-    // resolves on the even/odd neighbour of the shortest decimal.
     {
         expected: 1.14,
         name: "1.135 -> 1.14 (half-even up, odd neighbour)",
@@ -209,9 +186,6 @@ export const ROUND_MONEY_VECTORS: RoundMoneyVector[] = [
         name: "0.105 -> 0.10 (half-even down, even neighbour)",
         value: 0.105,
     },
-
-    // Dirty near-half doubles: not ties. Locking the exact-decimal result makes a
-    // naive `value * 10 ** n` toScaledInt fail.
     {
         expected: 1.13,
         name: "1.1349999999999998 -> 1.13 (below half; old epsilon gave 1.14)",

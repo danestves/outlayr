@@ -19,20 +19,13 @@ const SWAP_MS = 240;
 
 const LABEL_MS = 160;
 
-/** How far the incoming body travels, in the direction of travel. */
 const SLIDE = 8;
 
-/** The design's own bottom padding, before any home-indicator inset. */
 const BOTTOM_PAD = 30;
 
-/**
- * While the keyboard is up it covers the home indicator, so reserving the inset
- * for it only pushes the footer under the keyboard instead. Measured on the
- * merchant step: the button was clipped by about that inset and nothing else.
- */
+// The keyboard covers the home indicator, so reserving its inset would only push the footer under the keyboard.
 const KEYBOARD_BOTTOM_PAD = 12;
 
-/** Matches the header's own ✕, a 38pt circle. */
 const BACK_GLYPH = 19;
 
 const STAGE_FONT_SCALE_CAP = 1.35;
@@ -41,12 +34,8 @@ const LARGE_TEXT_STAGE_FONT_SCALE_CAP = 2;
 
 export const StagePartContext = createContext<"inline" | "pinned" | null>(null);
 
-/**
- * A body arriving where another already was. No `exiting` partner on purpose:
- * Reanimated keeps an exiting view mounted, and two bodies inside a
- * bottom-pinned container would hold the stage at both heights for the length of
- * the fade — the taller one wins and the surface jumps when it finally leaves.
- */
+// No `exiting` on purpose: Reanimated keeps an exiting view mounted, so a bottom-pinned stage would hold both
+// bodies' heights for the fade and jump when the old one leaves.
 function stageBodyEntering(forward: boolean) {
     return new Keyframe({
         0: { opacity: 0, transform: [{ translateX: forward ? SLIDE : -SLIDE }] },
@@ -56,7 +45,6 @@ function stageBodyEntering(forward: boolean) {
         .reduceMotion(ReduceMotion.System);
 }
 
-/** The label alone cross-fades; the button around it keeps its box either way. */
 const FOOTER_LABEL_ENTERING = new Keyframe({
     0: { opacity: 0 },
     100: { easing: EASE, opacity: 1 },
@@ -64,11 +52,7 @@ const FOOTER_LABEL_ENTERING = new Keyframe({
     .duration(LABEL_MS)
     .reduceMotion(ReduceMotion.System);
 
-/**
- * `primary` is the committing button. `muted` is the same button while the entry
- * is not whole yet — it is never `disabled`, because a press that cannot save
- * still has to be able to say what is missing.
- */
+// `muted` is never `disabled`: a press that cannot save still has to say what is missing.
 type StageTone = "muted" | "primary";
 
 const FOOTER_FILL = {
@@ -76,12 +60,7 @@ const FOOTER_FILL = {
     primary: "bg-tint",
 } as const satisfies Record<StageTone, string>;
 
-/**
- * `text-accent-foreground` stands in for the design's literal white: it is
- * paper in light and ink in dark, which is the readable side of both `--tint`
- * and `--surface-secondary`. A literal white is enumerated per file by
- * `src/theme/token-contrast.test.ts`, which this must not have to edit.
- */
+// Not a literal white: `src/theme/token-contrast.test.ts` enumerates those per file.
 const FOOTER_INK = {
     muted: "text-muted",
     primary: "text-accent-foreground",
@@ -97,37 +76,17 @@ export type StageFooter = StageAction & { tone?: StageTone };
 interface StageContentProps {
     children: ReactNode;
     footer?: StageFooter;
-    /** Direction of travel. The body slides in from the side it came from. */
     forward?: boolean;
-    /**
-     * Trailing meta the stage only draws. Split from {@link StageContentProps.rightAction}
-     * rather than accepting either shape under one name: a `ReactNode` and a
-     * `{ label, onPress }` are not distinguishable at runtime without inspecting
-     * the value, and a plain string would land on the wrong branch.
-     */
     right?: ReactNode;
-    /** Trailing meta the stage draws as its own tap target. Wins over `right`. */
     rightAction?: StageAction;
-    /** Identity of the body. A change swaps it, animating the arrival. */
     stepKey: string;
-    /**
-     * Absent on the amount step: the sentence above already states the amount, so
-     * naming the field again is the one redundant word on the surface.
-     */
     title?: string;
 }
 
-/** The chevron's accessibility label is only meaningful when there is a chevron. */
 type StageBackProps = { backLabel: string; onBack: () => void } | { backLabel?: never; onBack?: never };
 
 export type TransactionStageProps = StageBackProps & StageContentProps;
 
-/**
- * A trailing action is a glass pill at the back chevron's height, not a bare
- * label. The header above this surface carries 38pt circles and the footer below
- * it a 52pt bar; a tint word between them read as the smallest thing on screen
- * and was easy to miss.
- */
 function StageRightMeta({ action, node }: { action?: StageAction; node?: ReactNode }) {
     if (action) {
         return (
@@ -148,14 +107,8 @@ function StageRightMeta({ action, node }: { action?: StageAction; node?: ReactNo
     return <View className="ml-auto">{node}</View>;
 }
 
-/**
- * The one surface at the bottom of the transaction form. Nothing is presented
- * over the form any more: `transactions/create` is itself a modal, and a native
- * sheet over it insets the parent and drops it from the accessibility tree.
- *
- * Pure: every string arrives as a prop and every action is a callback, so the
- * same container serves whichever step the form is on.
- */
+// Nothing is presented over the form: a native sheet over the `transactions/create` modal insets it and drops it
+// from the accessibility tree.
 export function TransactionStage({
     backLabel,
     children,
@@ -176,12 +129,8 @@ export function TransactionStage({
     const buttonOnly = part === "pinned" && largeText;
     const inline = part === "inline";
     const tone = footer?.tone ?? "primary";
-    // Nothing presents this surface, so it clears the home indicator on
-    // its own rather than inheriting a parent's inset.
     const bottomPad = { paddingBottom: keyboardShown ? KEYBOARD_BOTTOM_PAD : Math.max(BOTTOM_PAD, insets.bottom) };
 
-    // The keyboard replaces this button: a step with a text field cannot fit
-    // both above the keyboard, and return already does the same job.
     const button =
         footer && !keyboardShown ? (
             <Pressable
@@ -219,12 +168,7 @@ export function TransactionStage({
                 className={cn("border-separator border-t pt-[15px]", inline ? null : "bg-background px-5")}
                 style={inline ? undefined : bottomPad}
             >
-                {/* Centred the way the sheet's own header above it is, rather than
-                trailing the back chevron: laid out in the flow the title would sit
-                in a different place on every step, depending on whether that step
-                has a chevron and what its trailing control is. Absolute keeps it on
-                the screen's centre line; `pointerEvents` keeps it from covering the
-                two controls it sits between. */}
+                {/* Absolute, so the title holds the centre line whatever controls the step has on either side. */}
                 <View className={cn(largeText ? "min-h-[38px]" : "h-[38px]", "flex-row items-center")}>
                     {onBack ? (
                         <GlassButton
@@ -243,8 +187,7 @@ export function TransactionStage({
                     <StageRightMeta action={rightAction} node={right} />
                 </View>
 
-                {/* The header used to sit directly on the body, so a keypad read as one
-                block with the control above it. */}
+                {/* pt-3 keeps a keypad from reading as one block with the header above it. */}
                 <Animated.View className="pt-3" entering={stageBodyEntering(forward)} key={stepKey} testID="stage-body">
                     {children}
                 </Animated.View>

@@ -2,20 +2,9 @@ type LogoRejection = "status" | "content-type" | "too-small" | "too-large" | "no
 
 export type LogoVerdict = { ok: true } | { ok: false; reason: LogoRejection };
 
-/**
- * The smallest real logo measured against the live endpoint was amazon.com at
- * 658 bytes, and youtube.com at 794. A 1x1 tracker pixel or a 16px grey globe
- * sits well under 512, so the floor separates them without clipping a real
- * brand mark. Do not raise it.
- */
+// The smallest real logo measured is amazon.com's at 658 bytes; tracker pixels sit well under. Do not raise it.
 const MIN_BYTES = 512;
-/**
- * Raised from 256KB after farmatodo.com's favicon measured 262,206 bytes — a
- * real merchant icon missing the old cap by 62. Multi-resolution `.ico` files
- * bundle every size in one payload and legitimately reach a few hundred KB.
- * The bound exists to stop a hostile host streaming megabytes, which this
- * still does; it is not a bandwidth budget.
- */
+// Multi-resolution `.ico` files reach a few hundred KB; this bound only stops a hostile host streaming megabytes.
 const MAX_BYTES = 524_288;
 
 const PNG = [0x89, 0x50, 0x4e, 0x47];
@@ -39,12 +28,7 @@ function matchesAt(bytes: Uint8Array, offset: number, signature: readonly number
     return signature.every((byte, index) => bytes[offset + index] === byte);
 }
 
-/**
- * A `content-type` header is whatever the server chose to claim. Checking the
- * leading bytes is what actually rejects an HTML error page served as
- * `image/png`, and any polyglot that survives is destroyed by the re-encode in
- * `persistPickedPhoto`.
- */
+// `content-type` is whatever the server claims; the leading bytes reject an HTML error page served as `image/png`.
 function isRasterImage(bytes: Uint8Array): boolean {
     return (
         startsWith(bytes, PNG) ||
@@ -67,16 +51,7 @@ function fnv1a32(bytes: Uint8Array): number {
     return hash >>> 0;
 }
 
-/**
- * A generic placeholder is byte-identical for every miss, so one fingerprint
- * per known blob identifies it exactly. `length:hash` rather than a
- * cryptographic digest because this matches one known artefact — there is no
- * adversary crafting a preimage, and `expo-crypto`'s digest is async while
- * `node:crypto` cannot be bundled (see `domain/uuid5.ts`).
- *
- * The pinned entry is what `s2/favicons` returns for a domain with no icon. It
- * arrives with a 404 today, so this is the second line rather than the first.
- */
+// `length:hash`, not a digest: `expo-crypto` is async and `node:crypto` cannot be bundled.
 const PLACEHOLDER_FINGERPRINTS: ReadonlySet<string> = new Set(["726:1468888882"]);
 
 export function fingerprint(bytes: Uint8Array): string {

@@ -6,15 +6,9 @@ import { useColors } from "@/theme/use-colors";
 
 import { SENTENCE_WASH } from "./sentence-motion";
 
-/** How far past the word the wash reaches, matching the design's padding. */
 const BLEED = 5;
 
-/**
- * Trimmed off the 38pt line box so the wash hugs the glyphs instead of the
- * leading. Measured against SF Pro Rounded at 26pt, like {@link
- * import("./sentence-value").SentenceValue}'s rule: full-height it reads as a
- * slab behind the word rather than a highlight on it.
- */
+// Measured against SF Pro Rounded at 26pt: trims the 38pt line box so the wash hugs the glyphs.
 const LEAD_TOP = 5;
 const LEAD_BOTTOM = 2;
 
@@ -26,18 +20,8 @@ interface SentenceWashProps {
     active?: boolean;
 }
 
-/**
- * The vermilion behind whichever slot the stage below the sentence is editing.
- *
- * Bled outwards from an absolute box rather than padded onto the word: padding
- * is a width, and the sentence lives inside `RNHostView`, which re-measures the
- * whole SwiftUI form every time one of its words changes size. Only `opacity`
- * animates, for the same reason.
- *
- * The alpha is mixed here rather than written as `bg-tint/13` — uniwind compiles
- * that modifier to `color-mix(in srgb, unset 13%, transparent)` and rejects it at
- * runtime, which is the same reason `--rail-over` is a declared literal.
- */
+// An absolute bleed, not padding, and only `opacity` animates: a width change makes `RNHostView` re-measure the
+// whole SwiftUI form. Not `bg-tint/13`: uniwind compiles that to an invalid `color-mix` rejected at runtime.
 export function SentenceWash({ active }: SentenceWashProps) {
     const colors = useColors();
     const reduced = useReducedMotion();

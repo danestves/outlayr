@@ -37,13 +37,9 @@ import { restoreStamp } from "./sync-engine-core";
 
 export const LOG_PAGE_DAYS = 30;
 
-/**
- * A narrow column set on purpose: `details` is unbounded free text and nothing
- * in the list paints it.
- */
+/** Narrow on purpose: `details` is unbounded free text and the list never paints it. */
 export const LOG_COLUMNS = {
     amount: transactions.amount,
-    // Carried so a mixed-currency day can total as one figure.
     amountUsd: transactions.amountUsd,
     categoryId: transactions.categoryId,
     currency: transactions.currency,
@@ -60,13 +56,8 @@ export const LOG_COLUMNS = {
     imageUri: transactions.imageUri,
     income: transactions.income,
     note: transactions.note,
-    // Upcoming projects each scheduled entry forward, which needs the interval as
-    // well as the cadence, and the day the chain was written for — a carrier
-    // clamped into February still lands on the 31st in March.
     recurringAnchorDay: transactions.recurringAnchorDay,
     recurringCoefficient: transactions.recurringCoefficient,
-    // And the end, or a schedule the owner has already stopped keeps counting
-    // toward what their subscriptions cost a month.
     recurringEndDate: transactions.recurringEndDate,
     recurringType: transactions.recurringType,
     transferId: transactions.transferId,
@@ -76,14 +67,7 @@ function visibleAt(nowMs: number) {
     return and(isNull(transactions.deletedAt), lte(transactions.date, new Date(nowMs)));
 }
 
-/**
- * The window is measured in **days, not rows**, because the Log prints a signed
- * subtotal per day: a plain row LIMIT would cut some day in half and print a
- * total for it that is simply wrong.
- *
- * Returned as a query builder rather than run here so the hook can run it in
- * render while the tests await it directly.
- */
+/** Measured in days, not rows: the Log prints a subtotal per day, and a row LIMIT would cut a day in half. */
 export function logWindowDaysQuery(db: SpendDb, nowMs: number, days: number) {
     return db
         .selectDistinct({ day: transactions.day })
@@ -93,19 +77,10 @@ export function logWindowDaysQuery(db: SpendDb, nowMs: number, days: number) {
         .limit(days);
 }
 
-/**
- * Every row the user still has, tombstones excluded — the figure the erase
- * screen prints, which has to fall to zero the moment an erase lands.
- */
 export function ledgerSizeQuery(db: SpendDb) {
     return db.select({ id: transactions.id }).from(transactions).where(isNull(transactions.deletedAt));
 }
 
-/**
- * What Recently Deleted paints. Narrower than {@link LOG_COLUMNS} because the
- * list answers "what was this and when did it go", not "what did it look like":
- * nothing here draws the identity artwork.
- */
 const DELETED_COLUMNS = {
     amount: transactions.amount,
     currency: transactions.currency,
@@ -121,25 +96,8 @@ export type DeletedTransaction = {
 };
 
 /**
- * The tombstones, most recently deleted first. Unbounded on purpose: a delete
- * is never a hard delete, so this is the only surface that can hand an entry
- * back, and cutting it at a window would put rows permanently out of reach
- * while they sit in SQLite forever.
- *
- * Erased rows are the one exception. An erase tombstones the whole ledger, and
- * offering it all back — as blank rows, since the content is already scrubbed —
- * would answer "erase my data" with a list of it and a Restore button. They are
- * excluded by their {@link ERASED_DATE} stamp, which nothing the user can author
- * carries.
- *
- * A transfer's fee is excluded for the opposite reason: it is only ever tombstoned
- * alongside its transfer — `transfersRepo.softDelete` from one side, `remove` from
- * the other — and handing it back alone would put a live charge on a transfer that
- * no longer exists, which no surface can then take off again.
- *
- * An entry on a deleted account is excluded too: deleting a person takes their
- * entries with them, and handing one back would leave it with no account while
- * the person stays deleted.
+ * Unbounded: the only way back for a soft-deleted entry. Excludes erased rows, transfer fees (a lone fee would
+ * charge a transfer that no longer exists) and entries on deleted accounts.
  */
 export function deletedTransactionsQuery(db: SpendDb) {
     return db
@@ -157,10 +115,6 @@ export function deletedTransactionsQuery(db: SpendDb) {
         .orderBy(desc(transactions.deletedAt), desc(transactions.date));
 }
 
-/**
- * A null floor means no day matched at all, so the bound is left off rather
- * than faked.
- */
 export function logWindowRowsQuery(db: SpendDb, nowMs: number, floorMs: number | null) {
     return db
         .select(LOG_COLUMNS)
@@ -169,19 +123,9 @@ export function logWindowRowsQuery(db: SpendDb, nowMs: number, floorMs: number |
         .orderBy(desc(transactions.day), desc(transactions.date), asc(transactions.feeForId));
 }
 
-/**
- * The midnight dividing the Log's window into a head, re-read with the clock on
- * every write, and an older tail read by {@link logTailRowsQuery}. A calendar
- * line rather than a count of days, so a write never moves it.
- */
+/** A calendar line rather than a count of days, so a write never moves the head/tail split. */
 export const logSplitMs = (nowMs: number): number => addDays(startOfDay(new Date(nowMs)), -LOG_PAGE_DAYS).getTime();
 
-/**
- * The window's rows on days before `splitMs`, in {@link logWindowRowsQuery}'s
- * order. Bounded by days alone: every one of them is already in the past, so the
- * read does not follow the clock, and a write that leaves these rows alone hands
- * back the same array. A null floor is an empty window.
- */
 export function logTailRowsQuery(db: SpendDb, floorMs: number | null, splitMs: number) {
     return db
         .select(LOG_COLUMNS)
@@ -199,33 +143,26 @@ export function logTailRowsQuery(db: SpendDb, floorMs: number | null, splitMs: n
 export type Transaction = typeof transactions.$inferSelect;
 
 export interface TransactionInput {
-    /** The account this entry moves money in or out of; null is unattached. */
     accountId?: string | null;
     amount: number;
     categoryId: string | null;
     /** null = adopt the ledger's currency, which the write stamps in. */
     currency: string | null;
-    /** Identity color override (hex). */
     customColor?: string | null;
     date: Date;
     details: string | null;
-    /** Chosen logo emoji — mutually exclusive with `icon`. */
     emoji?: string | null;
     exchangeRate?: number | null;
     exchangeRateType?: EntryRateType | null;
     fee?: CardFeeInput | null;
-    /** Chosen logo icon (registry key) — mutually exclusive with `emoji`. */
     icon?: string | null;
-    /** Color derived for (or chosen for) a photo identity (hex). */
     imageColor?: string | null;
-    /** Chosen logo photo URI — mutually exclusive with `icon`/`emoji`. */
+    /** Logo photo URI; `icon`, `emoji` and this exclude each other. */
     imageUri?: string | null;
     income: boolean;
     note: string;
-    /** Marks the transaction as recurring. */
     onceRecurring?: boolean;
     paidVia?: PaidVia | null;
-    /** Interval multiplier for the cadence (e.g. "every 2 weeks"). */
     recurringCoefficient?: number;
     recurringEndDate?: Date | null;
     /** Cadence: none=0, daily=1, weekly=2, monthly=3, yearly=4. */
@@ -271,10 +208,6 @@ async function writeFee(
         .where(eq(transactions.id, existing.id));
 }
 
-/**
- * Materializing a subscription's past charges is not done here: the form calls
- * `backfillRecurring` (`data/recurrence-backfill.ts`) after the save.
- */
 async function toRow(db: Database, id: string, input: TransactionInput): Promise<typeof transactions.$inferInsert> {
     const trimmedNote = input.note.trim();
     let note = trimmedNote;
@@ -285,9 +218,7 @@ async function toRow(db: Database, id: string, input: TransactionInput): Promise
     const details = input.details?.trim() ? input.details.trim() : null;
     const recurring = input.onceRecurring ?? false;
     const now = new Date();
-    // Stamped even when the user picked nothing: a null currency means "whatever
-    // the ledger setting says", so changing that setting would silently restate a
-    // $18.50 lunch as €18.50.
+    // Stamped even when unpicked: a null currency would follow the setting and restate a $18.50 lunch as €18.50.
     const currency = input.currency ?? (await displayCurrency(db));
     return {
         accountId: input.accountId ?? null,
@@ -308,16 +239,13 @@ async function toRow(db: Database, id: string, input: TransactionInput): Promise
         note,
         onceRecurring: recurring,
         paidVia: input.paidVia,
-        // Derived, never chosen: the schedule is anchored to the day the first
-        // payment falls on, and re-deriving it on every write is what keeps an
-        // edited first payment from leaving the chain anchored to the old day.
+        // Re-derived on every write, so an edited first payment re-anchors the chain.
         recurringAnchorDay: recurring ? input.date.getDate() : null,
         recurringCoefficient: recurring ? Math.max(1, input.recurringCoefficient ?? 1) : 1,
         recurringEndDate: recurring ? (input.recurringEndDate ?? null) : null,
         recurringType: recurring ? (input.recurringType ?? 0) : 0,
         reminderLeadDays: recurring ? normalizeLead(input.reminderLeadDays ?? null) : null,
-        // Frozen at write with the rate of the day the money moved; converting at
-        // read time would make last month's spending change every morning.
+        // Frozen at write; converting at read time would change last month's spending every morning.
         ...(await canonicalUsd(localRateLookup(db), {
             amount: Math.abs(input.amount),
             currency,
@@ -336,11 +264,8 @@ async function displayCurrency(db: Database): Promise<string> {
 }
 
 /**
- * The value already frozen on the row, kept when an edit leaves amount, currency
- * and date alone. Re-freezing is unsafe: the local replica is replaced wholesale
- * on every pull and the feed serves 90 days, so an older entry comes back
- * unresolvable and renaming its note would erase a value that was correct. Any
- * of the three moving returns null instead, which the next backfill pass retries.
+ * Keeps the frozen value unless amount, currency or date moved: re-freezing is unsafe, since the rate feed serves
+ * 90 days and an older entry would come back unresolvable. A moved field returns null for the backfill to retry.
  */
 function keptCanonical(
     next: typeof transactions.$inferInsert,
@@ -380,29 +305,14 @@ function keptCanonical(
 }
 
 /**
- * Whether this edit is the user taking the photo off the transaction, as
- * opposed to saving a row whose photo this device simply has not fetched yet.
- *
- * Only the first clears `imageKey`, which is what stops the photo downloader
- * from putting the picture back. The distinction matters because a synced row
- * whose bytes have not arrived also has a null path: treating a save on THAT
- * as a removal would delete a photo the user never touched, off every device.
- *
- * `imageKey` is otherwise left alone here — a photo *replaced* keeps the old
- * key until the uploader records the new one, which is how the uploader knows
- * there is a superseded object to release.
+ * The user taking the photo off, not a synced row still downloading (also a null path); only this clears
+ * `imageKey`. A replaced photo keeps its old key until the uploader records the new one.
  */
 function removesPhoto(previous: Transaction | null, next: typeof transactions.$inferInsert): boolean {
     return previous?.imageUri != null && next.imageUri == null;
 }
 
-/**
- * Whether this edit takes every identity off a row that had one — a glyph,
- * an emoji, a tint or a photo. The logo backfill has to hear about it, or a
- * row saved bare and later given an emoji, then cleared, would be painted
- * over the user's decision on the next launch. `removesPhoto` is narrower on
- * purpose: only a photo has a replicated key to release.
- */
+/** Tells the logo backfill the user cleared the identity, or it would paint over that choice on the next launch. */
 function clearsIdentity(previous: Transaction | null, next: typeof transactions.$inferInsert): boolean {
     const had =
         previous != null &&
@@ -412,14 +322,8 @@ function clearsIdentity(previous: Transaction | null, next: typeof transactions.
 }
 
 /**
- * The notice an edit that never mentioned it must keep. A form builds its input
- * from the fields it paints, so a screen with no lead picker sends the key absent
- * — and writing `toRow`'s null there would turn a 3-day notice off the next time
- * the user corrected an amount, silently and for the rest of the chain's life.
- *
- * An explicit `null` still means off; only the absent key is read as "leave it".
- * Ending the schedule clears it regardless, since the preference has nothing left
- * to hang on.
+ * An absent key keeps the notice: a form with no lead picker omits it, and `toRow`'s null would silently turn
+ * it off. An explicit `null` means off; ending the schedule clears it regardless.
  */
 function keptLead(
     next: typeof transactions.$inferInsert,
@@ -434,11 +338,7 @@ function keptLead(
         : (next.reminderLeadDays ?? null);
 }
 
-/**
- * Same contract as {@link keptLead}: the CSV import and the App Intent queue
- * build inputs without the field, and neither save is a detach. Only an
- * explicit `null` takes the entry off its account.
- */
+/** Same contract as {@link keptLead}: CSV import and App Intents omit the field; only explicit `null` detaches. */
 function keptAccount(previous: Transaction | null, input: TransactionInput): string | null {
     return input.accountId === undefined ? (previous?.accountId ?? null) : input.accountId;
 }
@@ -453,11 +353,8 @@ export function accountTransactionsQuery(db: SpendDb, accountId: string) {
 
 export interface CreateOptions {
     /**
-     * Whether a named entry saved with its category tile becomes the logo
-     * backfill's to finish — see `logo-backfill-core.ts`. On by default. The
-     * CSV import passes false: its rows are history the user was told stayed
-     * on the device, its review already attached every logo the cache held,
-     * and one candidate write per row would make a large import quadratic.
+     * Whether a named entry saved with its category tile becomes the logo backfill's to finish. The CSV import
+     * passes false: its rows stay on the device, and one candidate write per row would make a big import quadratic.
      */
     logoCandidate?: boolean;
     inSameTransaction?: (id: string) => Promise<void>;
@@ -476,10 +373,8 @@ export const transactionsRepo = {
             await inSameTransaction?.(id);
         };
         await (inSameTransaction ? withTransaction(db, write) : write());
-        // Bookkeeping, so it cannot fail the save: the row is already in, and a
-        // caller told otherwise would retry and write it twice. Judged on the
-        // merchant the caller gave, not on `row.note`: a blank merchant is filled
-        // with the category's name above, and "Rent" is not a brand to look up.
+        // Bookkeeping, so it cannot fail the save: a caller told otherwise would retry and write the row twice.
+        // Judged on the caller's merchant, not `row.note`, which falls back to the category name.
         if (options.logoCandidate !== false && isLogoCandidate({ ...row, note: input.note })) {
             try {
                 await rememberLogoCandidate(db, id, row.updatedAt.getTime(), LOGO_CANDIDATE_KEEP_MS);
@@ -491,13 +386,8 @@ export const transactionsRepo = {
     },
 
     /**
-     * Soft-deletes (tombstone). The UI defers this call behind the undo window.
-     *
-     * The newest occurrence of a subscription is both a settled charge and the
-     * chain's only live schedule, so the schedule is re-anchored on a successor
-     * before the row goes — otherwise removing one charge ends the subscription
-     * with no warning. The tombstone is retired to `none` either way, which is
-     * what makes deleting the *pending* charge the way to stop one.
+     * Re-anchors the schedule on a successor first, since the newest occurrence holds it. The tombstone retires to
+     * `none`, which is how deleting the pending charge stops a subscription.
      */
     async remove(db: Database, id: string, now: Date = new Date()): Promise<void> {
         const row = getTransactionById(db, id);
@@ -505,12 +395,9 @@ export const transactionsRepo = {
 
         await withTransaction(db, async () => {
             if (successor != null) {
-                // The successor's id is derived from its schedule, so a peer that
-                // already anchored the same one holds the row this would duplicate.
+                // The successor's id derives from its schedule, so a peer that anchored it already holds this row.
                 await insertOccurrences(db, id, [successor], now);
             }
-            // The tombstone moves `updatedAt`; the candidate follows so that a
-            // restore can move it again.
             await refreshLogoCandidate(db, id, now.getTime());
             await db
                 .update(transactions)
@@ -521,9 +408,7 @@ export const transactionsRepo = {
                     updatedAt: now,
                 })
                 .where(eq(transactions.id, id));
-            // A fee outliving its transfer would keep charging for a movement the
-            // ledger no longer holds, and nothing downstream reads `transferId` to
-            // notice. The log routes a fee's id here like any other transaction.
+            // A fee outliving its transfer would keep charging for a movement the ledger no longer holds.
             if (row?.transferId != null) {
                 await db
                     .update(transfers)
@@ -539,24 +424,8 @@ export const transactionsRepo = {
     },
 
     /**
-     * Lifts a tombstone, putting the entry back on every read that filters on
-     * `deletedAt`. `restoredAt` is what lets the restore beat the tombstone on
-     * the server and on every other device; without it R1 hands the entry back
-     * deleted, on this device and on every other one.
-     *
-     * `recurringType` is left where {@link remove} retired it. Deleting the
-     * pending charge is how a user ends a subscription, so resurrecting the
-     * cadence here would restart a chain they stopped on purpose — and a chain
-     * that was meant to survive already has, on the successor `remove` anchored
-     * before it wrote the tombstone.
-     *
-     * Scoped to rows that are actually tombstoned, which makes a repeat restore a
-     * no-op rather than a write that queues a replication carrying no change.
-     *
-     * A transfer's fee is out of scope for the same reason
-     * {@link deletedTransactionsQuery} hides it, and nothing restores a transfer
-     * today, so lifting one alone would strand a charge with no owner. An entry
-     * on a deleted account is out of scope for the same reason.
+     * `restoredAt` lets the restore beat the tombstone everywhere (R1). `recurringType` stays retired, since deleting
+     * the pending charge ends a subscription. Fees and entries on deleted accounts stay out, as in the deleted list.
      */
     async restore(db: Database, id: string, now: Date = new Date()): Promise<void> {
         await withTransaction(db, async () => {
@@ -592,14 +461,8 @@ export const transactionsRepo = {
     },
 
     /**
-     * Ends the schedule and keeps the charge. The counterpart to {@link remove}:
-     * no successor is anchored, so nothing is generated after this row, but the
-     * row itself — including a pending charge that has yet to land — stays on the
-     * ledger. `onceRecurring` is left set, so the entry still reads as a member
-     * of its chain under the Recurring filter.
-     *
-     * Tombstones are excluded because their schedule is the only record
-     * `repairOrphanedRecurrence` has left to read a broken chain back from.
+     * Ends the schedule and keeps the charge: no successor is anchored, and `onceRecurring` stays set for the
+     * Recurring filter. Tombstones are skipped: their schedule is all `repairOrphanedRecurrence` can rebuild from.
      */
     async stopRecurring(db: Database, id: string, now: Date = new Date()): Promise<void> {
         await withTransaction(db, async () => {
@@ -673,38 +536,24 @@ export const transactionsRepo = {
         const kept = keptCanonical(row, previous, input);
         const accountId = keptAccount(previous, input);
         const fee = input.fee == null ? null : await cardFeeValues(db, id, { ...row, ...kept, accountId }, input.fee);
-        // One transaction for the bookkeeping and the row: a stamp moved for
-        // an UPDATE that then failed would never match the row again.
+        // One transaction: a stamp moved for an UPDATE that then failed would never match the row again.
         await withTransaction(db, async () => {
-            // A removal is the user's call on this row, and the logo backfill has
-            // to be told or it puts an image back on the next launch. Recorded
-            // BEFORE the row goes bare: the painter reads the dismissal list in its
-            // own UPDATE, so once this is in there is no moment it could slip
-            // through.
+            // Before the row goes bare: the painter reads the dismissal list in its own UPDATE.
             if (clearsIdentity(previous, row)) {
                 await rememberLogoDismissal(db, id);
             }
-            // An edit made here that leaves the row bare keeps it the backfill's:
-            // an existing candidate follows the new `updatedAt`, which a peer's edit
-            // arriving by sync would not. A row that was never a candidate becomes
-            // one only when this edit gives it a merchant name it did not have — a
-            // name the user typed here is exactly what the setting discloses — so
-            // an imported row edited for its amount stays out, and a cleared
-            // identity is a dismissal above, never a candidate. Before the write,
-            // since the refresh matches the stamp against the row as it is now.
+            // An edit here keeps a bare row the backfill's (a peer's synced edit would not). A row becomes a candidate
+            // only when this edit names a new merchant. Before the write: the refresh matches the current stamp.
             if (previous != null && isLogoCandidate({ ...row, note: input.note }) && !clearsIdentity(previous, row)) {
                 if (merchantKey(previous.note) === merchantKey(row.note ?? "")) {
                     await refreshLogoCandidate(db, id, row.updatedAt.getTime());
                 } else {
-                    // A refusal recorded for the old merchant does not cover the new one.
                     await forgetLogoDismissal(db, id);
                     await rememberLogoCandidate(db, id, row.updatedAt.getTime(), LOGO_CANDIDATE_KEEP_MS);
                 }
             }
-            // The logo backfill may have painted the row while `toRow` was awaiting.
-            // An edit that neither had nor chose an identity carries the form's
-            // stale nulls; writing them would orphan a file that landed in between.
-            // Read synchronously, right before the write, so nothing fits between.
+            // The backfill may have painted the row while `toRow` awaited. Read synchronously right before the write,
+            // so the form's stale nulls cannot orphan a file that landed in between.
             const landed = landedLogo(previous, getTransactionById(db, id), row);
             await db
                 .update(transactions)
@@ -713,12 +562,8 @@ export const transactionsRepo = {
                     ...kept,
                     ...landed,
                     accountId,
-                    // Deletion is `remove` and `restore`'s call, never an edit's.
-                    // `toRow` builds a fresh row and every fresh row is live, so
-                    // spreading it cleared the tombstone: a peer's delete arriving
-                    // while this sheet was open lost to the save, and the row came
-                    // back on both devices with a newer `updatedAt` than the
-                    // deletion that was meant to win.
+                    // Deletion is `remove`/`restore`'s call: `toRow` builds a live row, and spreading it would revive a
+                    // peer's delete that arrived while the sheet was open.
                     deletedAt: previous?.deletedAt ?? null,
                     imageKey: removesPhoto(previous, row) ? null : rest.imageKey,
                     reminderLeadDays: keptLead(row, previous, input),
@@ -732,10 +577,7 @@ export const transactionsRepo = {
     },
 };
 
-/**
- * The identity a backfill gave the row between the edit's read and its write,
- * when the edit itself carries none — see the call site. Empty otherwise.
- */
+/** The identity a backfill painted between the edit's read and its write, when the edit carries none. */
 function landedLogo(
     previous: Transaction | null,
     live: Transaction | null,
@@ -745,26 +587,18 @@ function landedLogo(
     if (!editHasNone || previous == null || previous.imageUri != null || live?.imageUri == null) {
         return {};
     }
-    // The logo was resolved for the merchant and currency as they were; an
-    // edit that changed either is saving a different merchant, and the
-    // backfill will look that one up rather than keep the wrong brand.
+    // A changed merchant or currency is a different merchant; the backfill looks that one up instead.
     const sameMerchant =
         merchantKey(previous.note) === merchantKey(next.note ?? "") && previous.currency === next.currency;
     if (!sameMerchant) {
         return {};
     }
-    // The edit's own clock was taken before the paint landed; the row's clock
-    // must not run backwards or the sync's last-writer check would drop the
-    // edit as older than the logo it keeps.
+    // Never run the clock backwards, or sync's last-writer check would drop the edit as older than the logo.
     const updatedAt = new Date(Math.max(next.updatedAt.getTime(), live.updatedAt.getTime() + 1));
     return { imageColor: live.imageColor, imageUri: live.imageUri, updatedAt };
 }
 
-/**
- * Synchronous on purpose: the expo-sqlite driver executes on the JS thread
- * (`getFirstSync`), so a caller can have the row in hand during its first render
- * instead of flashing a placeholder for one frame.
- */
+/** Synchronous on purpose (`getFirstSync` runs on the JS thread), so a caller has the row on its first render. */
 export function getTransactionById(db: Database, id: string): Transaction | null {
     const rows = db.select().from(transactions).where(eq(transactions.id, id)).limit(1).all();
     return rows[0] ?? null;

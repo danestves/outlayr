@@ -7,13 +7,7 @@ interface Brand {
     color: string | null;
 }
 
-/**
- * The same identity a manually-entered merchant gets: logo bytes persisted
- * into photo storage per transaction (so deleting one row can never orphan
- * another's image) and the glow tint the picker would have extracted. Cache
- * bytes and tint are resolved once per domain; a merchant the logo cache
- * cannot answer for keeps its category tile.
- */
+/** Persisted per transaction, so deleting one row can never orphan another's image. */
 export async function attachImportLogos(entries: readonly ImportEntry[]): Promise<ImportEntry[]> {
     // SAFETY: untyped `require`, asserted to that module's own type.
     const photoStorage = require("@/lib/photo-storage") as typeof import("@/lib/photo-storage");

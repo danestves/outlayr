@@ -36,17 +36,10 @@ interface SplitSheetProps {
     minorUnits: number;
     onChange: (next: Allocation[]) => void;
     ref?: Ref<BottomSheetModal>;
-    /** The entry's own amount. Every part is measured against this. */
     total: number;
 }
 
-/**
- * Editing which categories an entry's amount is attributed to.
- *
- * Presented from the Category row. The remainder is permanent furniture rather
- * than an error that appears once you get it wrong, because `unallocated` is
- * signed and the user needs to be told which way they are out.
- */
+// The remainder is always shown, not an error: `unallocated` is signed, and the user needs to know which way.
 export function SplitSheet({ db, income, total, code, minorUnits, allocations, onChange, ref }: SplitSheetProps) {
     const t = useTranslation();
     const { language } = useLanguage();
@@ -55,7 +48,6 @@ export function SplitSheet({ db, income, total, code, minorUnits, allocations, o
     const sheetRef = useRef<BottomSheetModal>(null);
     const categoryRef = useRef<CategoryPickerSheetRef>(null);
     const categories = useCategoriesByNamespace(db, income);
-    /** Which part the category picker and the numpad are currently editing. */
     const [editing, setEditing] = useState<number | null>(null);
     const [amountText, setAmountText] = useState("");
 

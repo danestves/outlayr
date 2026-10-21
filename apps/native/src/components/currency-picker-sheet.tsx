@@ -30,16 +30,12 @@ export const SHEET_CARD_GAP = 10;
 const TITLE_HEIGHT = 48;
 const SEARCH_HEIGHT = 52;
 
-/** Present via the forwarded ref: `ref.current?.present()`. */
 export function CurrencyPickerSheet({ selected, onSelect, ref }: CurrencyPickerSheetProps) {
     const colors = useColors();
     const { height } = useWindowDimensions();
     const insets = useSafeAreaInsets();
-    // The shorter detent, less the chrome above the list. A fraction detent is a
-    // fraction of the sheet's own height rather than the window's — 768 of 874pt
-    // on an iPhone 17 Pro, and less again where this sheet opens over another one
-    // — so the subtraction has to err under: too tall hangs the list past the
-    // short detent, too short only shows the sheet's own background for a frame.
+    // A fraction detent is a fraction of the sheet's own height, not the window's, so this errs under: too tall hangs
+    // the list past the short detent, too short only shows the sheet's background for a frame.
     const listFloor =
         (height - insets.top - insets.bottom - SHEET_CARD_GAP) * SHORT_DETENT -
         SHEET_TOP_PADDING -
@@ -47,9 +43,7 @@ export function CurrencyPickerSheet({ selected, onSelect, ref }: CurrencyPickerS
         SEARCH_HEIGHT;
     const [query, setQuery] = useState("");
     const t = useTranslation();
-    // The nullable `db` from the context, not `useDatabase()`: the sheet is mounted
-    // by forms whose own callers can sit above the root splash gate, where
-    // `useDatabase()` throws.
+    // Nullable `db`, not `useDatabase()`: some hosts' callers sit above the splash gate, where that throws.
     const { db } = useLocalData();
     const favourites = useFavouriteCurrencies(db);
 
@@ -57,8 +51,7 @@ export function CurrencyPickerSheet({ selected, onSelect, ref }: CurrencyPickerS
 
     return (
         <BottomSheetModal
-            // Solid, not the default translucent material: the rows are opaque (see
-            // `currency-picker-list`) and no solid colour can match a blur.
+            // Solid, not the default translucent material: the rows are opaque and no solid colour can match a blur.
             backgroundStyle={{ backgroundColor: colors.background }}
             enableDynamicSizing={false}
             enablePanDownToClose
@@ -67,9 +60,7 @@ export function CurrencyPickerSheet({ selected, onSelect, ref }: CurrencyPickerS
         >
             <SheetGestureRoot fill>
                 <View className="bg-background flex-1">
-                    {/* Explicit heights, so what the floor above subtracts is what the chrome
-    				    is — and so both survive the frames where their own contents measure
-    				    to zero. */}
+                    {/* Explicit heights, so the floor above subtracts exactly the chrome even at zero. */}
                     <View className="items-center justify-center px-5" style={{ height: TITLE_HEIGHT }}>
                         <Text className="font-sans-semibold text-foreground text-headline">
                             {t("onboarding.currency.picker.title")}
@@ -104,10 +95,8 @@ export function CurrencyPickerSheet({ selected, onSelect, ref }: CurrencyPickerS
                         onToggleFavourite={db === null ? null : onToggleFavourite}
                         query={query}
                         selected={selected}
-                        // The sheet lays its content into a `{flexGrow:1, height:0}` box, so
-                        // while it animates in every auto-sized child measures to zero and it
-                        // presents blank. A floor gives the list a size from the first frame;
-                        // flex still takes over at the taller detent.
+                        // The sheet lays content into a `{flexGrow:1, height:0}` box, so auto-sized children measure
+                        // zero while it animates in and it presents blank. Flex still takes over at the taller detent.
                         style={{ minHeight: listFloor }}
                     />
                 </View>

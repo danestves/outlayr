@@ -1,6 +1,5 @@
 import { CURRENCY_META, PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
 
-/** Symbol → the currencies that use it. */
 const BY_SYMBOL = new Map<string, string[]>();
 for (const code of PICKABLE_CURRENCY_CODES) {
     const { symbol } = CURRENCY_META[code];
@@ -15,27 +14,21 @@ for (const code of PICKABLE_CURRENCY_CODES) {
 const CODES = new Set<string>(PICKABLE_CURRENCY_CODES);
 
 /**
- * Reads the currency out of a formatted amount, e.g. "€12,40" → "EUR".
- *
- * Returns null when the text does not identify exactly ONE currency — a bare
- * "$12.40" is shared by USD, CAD, AUD, MXN and more. Callers read null as "fall
- * back to the global currency", which is what `transactionsRepo.create` does.
+ * e.g. "€12,40" → "EUR". Null unless the text identifies exactly one currency: a bare "$12.40" is shared by USD,
+ * CAD, AUD, MXN and more.
  */
 export function detectCurrency(text: string | null | undefined): string | null {
     if (!text) {
         return null;
     }
 
-    // An explicit ISO code wins outright — it is the one form that cannot be
-    // ambiguous, and it must be checked before symbols because a few currencies
-    // use their code as their symbol (AED, and others).
+    // An ISO code wins and is checked before symbols, since some currencies (AED) use their code as their symbol.
     for (const token of text.toUpperCase().match(/[A-Z]{3}/g) ?? []) {
         if (CODES.has(token)) {
             return token;
         }
     }
 
-    // Whatever is left once the number is removed is the symbol.
     const symbol = text
         .replaceAll(/[\d.,\s  ]/g, "")
         .replaceAll(/^[-+]|[-+]$/g, "")

@@ -1,35 +1,19 @@
 import { v } from "convex/values";
 
-/**
- * Everything a replicated column can hold once it is on the wire.
- *
- * Mirrors `WireValue` in `apps/native/src/data/sync-engine-core.ts`: the client
- * encodes every instant to epoch milliseconds before pushing, so no `Date` — and
- * nothing structured — ever reaches this side.
- */
+// Mirrors `WireValue` in apps/native/src/data/sync-engine-core.ts: instants arrive as epoch ms, never a `Date`.
 export type WireValue = boolean | number | string | null;
 
-/** A replicated row's payload, keyed by column name. */
 export type WireFields = Record<string, WireValue>;
 
-/**
- * The replication envelope and the per-table payloads, declared once so
- * `schema.ts` (what is stored) and `sync.ts` (what is accepted and served)
- * cannot drift. A column added to one and not the other would replicate as
- * silently missing data, which no test on either side alone would catch.
- */
+// Shared by schema.ts and sync.ts so they cannot drift: a column in only one would replicate as silently missing data.
 export const replicated = {
-    /** Soft-delete tombstone; rows are never removed from this table. */
+    /** Soft-delete tombstone; rows are never removed. */
     deletedAt: v.union(v.number(), v.null()),
     deviceId: v.string(),
     localId: v.string(),
-    /**
-     * When the row was last brought back from a tombstone, or null. Optional
-     * because every document written before restores synced lacks it.
-     */
     restoredAt: v.optional(v.union(v.number(), v.null())),
     seq: v.number(),
-    /** Client wall clock at the edit, mirroring the SQLite `updatedAt`. */
+    /** Client wall clock at the edit. */
     updatedAt: v.number(),
     userId: v.string(),
 };
@@ -62,30 +46,18 @@ export const transactionFields = {
     feeRate: v.optional(v.union(v.number(), v.null())),
     icon: v.union(v.string(), v.null()),
     imageColor: v.union(v.string(), v.null()),
-    /**
-     * The photo's R2 object key, or null. Not a url: `r2.getUrl` mints a signed
-     * one with a 15-minute default lifetime, so a stored url is stale before the
-     * next launch. The key is the stable half and every read re-mints from it.
-     */
+    /** A key, not a url: `r2.getUrl` signs for 15 minutes, so every read re-mints from the key. */
     imageKey: v.union(v.string(), v.null()),
     income: v.boolean(),
     month: v.number(),
     note: v.string(),
     onceRecurring: v.boolean(),
     paidVia: v.optional(v.union(v.string(), v.null())),
-    /**
-     * Optional, not just nullable: a handset still on the previous build pushes
-     * rows without the key at all, and a required field would reject the whole
-     * batch rather than the one column it cannot fill.
-     */
+    /** Optional, not just nullable: an older build omits the key, and a required field rejects the whole batch. */
     recurringAnchorDay: v.optional(v.union(v.number(), v.null())),
     recurringCoefficient: v.number(),
     recurringEndDate: v.union(v.number(), v.null()),
     recurringType: v.number(),
-    /**
-     * Optional for the same reason as `recurringAnchorDay`: a handset on the
-     * previous build pushes rows without the key at all.
-     */
     transferId: v.optional(v.union(v.string(), v.null())),
 };
 
@@ -99,12 +71,7 @@ export const transferFields = {
     fromAmount: v.number(),
     fromAmountUsd: v.union(v.number(), v.null()),
     fromCurrency: v.string(),
-    /**
-     * The installment order this transfer pays, or null. Optional, not just
-     * nullable: a handset on a build that predates installments pushes transfers
-     * without the key at all. `push` patches, so an absent key leaves the stored
-     * link alone rather than clearing it.
-     */
+    /** Optional for older builds; `push` patches, so an absent key leaves the stored link alone. */
     installmentPlanId: v.optional(v.union(v.string(), v.null())),
     month: v.number(),
     note: v.string(),
@@ -114,7 +81,6 @@ export const transferFields = {
     toCurrency: v.string(),
 };
 
-/** `imageUri` is absent: it is a path into one device's container. */
 export const accountFields = {
     currency: v.string(),
     customColor: v.union(v.string(), v.null()),
@@ -126,35 +92,16 @@ export const accountFields = {
     initialBalance: v.number(),
     initialBalanceDate: v.number(),
     initialBalanceUsd: v.union(v.number(), v.null()),
-    /**
-     * Optional, not just nullable: a handset still on the previous build pushes
-     * accounts without the key at all, and a required field would reject the
-     * whole batch rather than the one column it cannot fill. Absent reads as
-     * `asset` — see `@outlayr/money/account-kind`.
-     */
+    /** Optional for older builds; absent reads as `asset` (`@outlayr/money/account-kind`). */
     kind: v.optional(v.union(v.string(), v.null())),
     name: v.string(),
     sortOrder: v.number(),
 };
 
-/**
- * What the `transactions` table stores, which is the wire contract plus one
- * column no longer on it.
- *
- * `imageUri` is a device-local `file://` path whose container uuid changes on
- * every app update. Replicating it did active harm: the receiving device could
- * not resolve the path, its launch reconciliation cleared the column, and the
- * resulting push tie-broke on `deviceId` — so half the time the *originating*
- * device pulled back a null and lost the reference to a photo it still held.
- * It is kept here, optional, only so documents written before the fix validate;
- * nothing reads or serves it.
- */
+// `imageUri` is a device-local path that must never replicate; it stays here only so older documents validate.
 export const transactionColumns = {
     ...transactionFields,
-    // Optional in storage only: documents written before accounts existed have no
-    // such field, and a required column would fail the schema push over them. The
-    // wire keeps it required; `toWire` leaves the absent field off, which the
-    // client reads as null.
+    // Optional in storage only, for documents older than accounts; the wire keeps it required.
     accountId: v.optional(v.union(v.string(), v.null())),
     imageUri: v.optional(v.union(v.string(), v.null())),
 };
@@ -180,27 +127,15 @@ export const savingsGoalFields = {
     accountId: v.string(),
     currency: v.string(),
     dateCreated: v.number(),
-    /** The rate both frozen figures were valued at — see the local schema. */
     exchangeRate: v.optional(v.union(v.number(), v.null())),
     name: v.string(),
     sortOrder: v.number(),
-    /**
-     * The account's balance when the goal was set — see the local schema.
-     *
-     * Optional on the wire although the local column is NOT NULL: `pushRow` is
-     * this mutation's ARGUMENT validator, so one row from a build that predates
-     * these columns would reject the whole 500-row batch, unrelated tables and
-     * all. The client always sends them; the server tolerates their absence.
-     */
+    /** Optional though NOT NULL locally: `pushRow` validates arguments, so an older build's row rejects the batch. */
     startAmount: v.optional(v.number()),
     startAmountUsd: v.optional(v.union(v.number(), v.null())),
     targetAmount: v.number(),
     targetAmountUsd: v.union(v.number(), v.null()),
-    /**
-     * Still nullable on the wire for the same reason, even though a goal now
-     * carries a date by definition. A dateless row that arrives is refused by
-     * `isReplicated` on the way in rather than rejected on arrival.
-     */
+    /** Nullable for the same reason; `isReplicated` refuses a dateless row instead. */
     targetDate: v.union(v.number(), v.null()),
 };
 
@@ -214,16 +149,11 @@ export const tagFields = {
     sortOrder: v.number(),
 };
 
-/**
- * The join carries its own id: the replication envelope addresses rows by
- * `localId`, and a composite key has nothing for a tombstone to name.
- */
 export const transactionTagFields = {
     tagId: v.string(),
     transactionId: v.string(),
 };
 
-/** `imageUri` is absent: it is a path into one device's container. */
 export const transactionPhotoFields = {
     imageColor: v.union(v.string(), v.null()),
     imageKey: v.union(v.string(), v.null()),
@@ -238,14 +168,13 @@ export const transactionSplitFields = {
     transactionId: v.string(),
 };
 
-/** One purchase on a liability account, paid over time. */
 export const installmentPlanFields = {
     accountId: v.string(),
     dateCreated: v.number(),
     transactionId: v.string(),
 };
 
-/** One stored due date of an order; `sequence` 0 is the upfront payment. */
+/** `sequence` 0 is the upfront payment. */
 export const installmentFields = {
     amount: v.number(),
     dueDate: v.number(),
@@ -253,7 +182,7 @@ export const installmentFields = {
     sequence: v.number(),
 };
 
-/** A payment toward an order made outside Outlayr; `amount` is in the order's account currency. */
+/** `amount` is in the order's account currency. */
 export const outsidePaymentFields = {
     amount: v.number(),
     amountUsd: v.union(v.number(), v.null()),
@@ -279,10 +208,7 @@ const TOMBSTONED_TABLES = [
     "outsidePayments",
 ] as const;
 
-/**
- * Pull order only. `appMeta` is last because it is the one table whose identity
- * is a key rather than a `localId`, so nothing else keys off its position.
- */
+// Pull order. `appMeta` goes last: its identity is a key, so nothing keys off its position.
 export const SYNCED_TABLES = [...TOMBSTONED_TABLES, "appMeta"] as const;
 
 export type SyncedTable = (typeof SYNCED_TABLES)[number];
@@ -312,32 +238,15 @@ interface Versioned {
     updatedAt: number;
 }
 
-/**
- * Where a version sits in its row's delete and restore history. A delete or a
- * restore opens a new era, and a later era wins outright. A tombstone carrying
- * a `restoredAt` was deleted after that restore, whatever its own clock says,
- * so its era is never earlier than the restore it ended.
- */
+// A delete or restore opens a new era, and a later era wins outright. A tombstone carrying `restoredAt` was
+// deleted after that restore whatever its own clock says, so its era is never earlier.
 function era(version: Versioned): number {
     const restoredAt = version.restoredAt ?? 0;
     return version.deletedAt === null ? restoredAt : Math.max(version.deletedAt, restoredAt);
 }
 
-/**
- * R1 then R2 from `docs/internals/convex-sync.md` §4, applied to a whole row.
- *
- * R1 — a tombstone wins unless the live side was restored after it. Eras are
- * compared first; at the same era a tombstone beats a live row, so an offline
- * edit that raced a delete (era 0 against the delete's) never resurrects a
- * charge, while a deliberate restore (era after the delete) does.
- *
- * R2 — otherwise the greater `updatedAt` takes the whole row, and an exact tie
- * goes to the greater `deviceId`. Ties must break the same way here and on the
- * device (`apps/native/src/data/sync-engine-core.ts`) or the two never converge.
- *
- * A row identical on both sides does NOT win, which is what makes a re-push of
- * an unchanged row a no-op and the whole drain safe to retry.
- */
+// R1 then R2 from docs/internals/convex-sync.md §4. Ties must break exactly as in apps/native's sync-engine-core
+// or the two never converge, and an identical row does not win, so a re-push is a no-op.
 export function incomingWins(incoming: Versioned, existing: Versioned | null): boolean {
     if (existing === null) {
         return true;

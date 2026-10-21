@@ -11,8 +11,6 @@ jest.mock<Partial<typeof import("expo-secure-store")>>("expo-secure-store", () =
     setItemAsync: jest.fn<typeof import("expo-secure-store").setItemAsync>(),
 }));
 jest.mock<Partial<typeof import("@/lib/auth-client")>>("@/lib/auth-client", () => ({ authClient: null }));
-// `convex` only has to be non-null — the module's own guard reads it — while the
-// calls themselves go through the wrappers `convex.ts` exports.
 jest.mock("@/lib/convex", () => ({
     cloudAction: jest.fn<typeof import("@/lib/convex").cloudAction>(),
     cloudMutation: jest.fn<typeof import("@/lib/convex").cloudMutation>(),

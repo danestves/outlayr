@@ -18,12 +18,6 @@ import type { GoalEdit } from "@/screens/budgets/components/goal-editor";
 import { GoalTargetSheet } from "@/screens/budgets/components/goal-target-sheet";
 import type { GoalCommit, GoalTarget } from "@/screens/budgets/components/goal-target-sheet";
 
-/**
- * A goal, read and edited in the same place.
- *
- * There is no goal form: the target is placed on the same sheet that created it,
- * and every other fact commits from its own row — see `goal-editor.tsx`.
- */
 export default function GoalScreen() {
     const router = useRouter();
     const t = useTranslation();
@@ -38,10 +32,8 @@ export default function GoalScreen() {
     const targetSheetRef = useRef<BottomSheetModal>(null);
     const [retarget, setRetarget] = useState<GoalTarget | null>(null);
 
-    // Presented from an effect keyed on the target rather than from the row's own
-    // handler: this screen builds its editor during render, and a closure reaching
-    // for `targetSheetRef.current` reads a ref in render as far as the compiler
-    // can tell. Setting state is not.
+    // Presented from an effect, not the row's handler: the editor is built during render, so the compiler reads
+    // `targetSheetRef.current` in that closure as a ref read in render. Setting state is not.
     useEffect(() => {
         if (retarget) {
             targetSheetRef.current?.present();
@@ -60,9 +52,8 @@ export default function GoalScreen() {
             haptics("success");
         } catch (error) {
             console.error("Failed to save the goal", error);
-            // A target that cannot be canonicalised is refused rather than stored
-            // against a null, which would read back as the face value in whatever
-            // currency the ledger is shown in next.
+            // An uncanonicalisable target is refused: stored against a null it would read back as the face value in
+            // whatever currency the ledger is shown in next.
             notifyFailure(
                 error instanceof GoalValuationError
                     ? {
@@ -74,20 +65,8 @@ export default function GoalScreen() {
         }
     };
 
-    /**
-     * Each fact commits only when it was actually touched.
-     *
-     * The sheet holds the deadline it opened on, and a peer can move it while the
-     * sheet is up — so writing that snapshot back on an amount-only edit would
-     * revert them silently.
-     *
-     * A goal's currency never changes. The sheet is opened in the goal's own
-     * currency and seeded with its stored target, so a figure typed here is
-     * already in the right denomination and nothing needs restating — which is
-     * what keeps the start anchor, the frozen USD figures and the valuation date
-     * all describing one moment. Restating them instead was three separate ways
-     * to write a number that means something other than what it says.
-     */
+    // Only touched facts commit: a peer can move the deadline while the sheet is up, and writing the snapshot back
+    // would revert it. The sheet opens in the goal's own currency, so a typed target is stored as-is.
     const commitTarget = async ({ dateChanged, targetAmount, targetChanged, targetDate }: GoalCommit) => {
         targetSheetRef.current?.dismiss();
         await write({ ...(dateChanged && { targetDate }), ...(targetChanged && { targetAmount }) });
@@ -101,17 +80,13 @@ export default function GoalScreen() {
                     <GoalEditor
                         accountName={entry.accountName}
                         currency={currency}
-                        // Only where it differs: a goal set and read in the same currency
-                        // has nothing to explain.
                         foreignCurrency={goal.currency === currency ? null : goal.currency}
                         name={goal.name}
                         onChange={(edit: GoalEdit) => write(edit)}
                         onChangeTarget={() =>
                             setRetarget({
                                 accountId: goal.accountId,
-                                // Both in the goal's own currency: `saved` is valued
-                                // into the display one, so it is only the same figure
-                                // while the two agree.
+                                // `saved` is valued into the display currency: the goal's figure only while they agree.
                                 balance: goal.currency === currency ? entry.saved : null,
                                 currency: goal.currency,
                                 existing: { targetAmount: goal.targetAmount, targetDate: goal.targetDate },
@@ -124,10 +99,8 @@ export default function GoalScreen() {
                         }}
                         perMonth={entry.progress.pace?.perMonth ?? null}
                         targetAmount={entry.target}
-                        // The TARGET's own exactness, not the entry's: that broader
-                        // flag also fails when the balance cannot be valued, and a
-                        // target that converted perfectly would then be stamped with
-                        // the goal's currency while holding a display-currency figure.
+                        // The target's own exactness, not the entry's: that also fails on an unvalued balance, which
+                        // would stamp a display-currency figure with the goal's currency.
                         targetCurrency={entry.targetExact ? currency : goal.currency}
                         targetDate={goal.targetDate}
                     />

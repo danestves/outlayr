@@ -30,7 +30,6 @@ afterEach(() => {
     vi.restoreAllMocks();
 });
 
-/** A JPEG header and nothing else: enough to pass the magic check, never enough to decode. */
 const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46]).buffer;
 
 const BASE_ARGS = {

@@ -90,13 +90,8 @@ interface DialFit {
     kept: number;
 }
 
-/**
- * Every action at its natural label height when the screen has the room; else
- * the other labels clamp to two lines, then one, and only then do actions drop
- * off the top of the dial. At an accessibility text size one line cuts a label
- * to a word, so actions drop before that clamp. "Add a transaction" is never
- * clamped and is always the last one standing.
- */
+// Labels clamp to two lines, then one, before actions drop off the top; at an accessibility text size actions drop
+// before the one-line clamp. "Add a transaction" is never clamped and always stays.
 function fitDial(actionCount: number, room: number, fontScale: number, width: LabelWidth): DialFit {
     const fits = (count: number, lines: LabelLines) => dialHeight(count, fontScale, lines, width) <= room;
     const tightest = fontScale > LARGEST_STANDARD_FONT_SCALE ? 2 : 1;
@@ -178,8 +173,7 @@ export function FloatingAddButton() {
     const canTransfer = useBankAccounts(useDatabase()).length >= 2;
 
     const room = windowHeight - insets.top - NAV_BAR_HEIGHT - insets.bottom - DIAL_BOTTOM_INSET;
-    // Bottom-up by how often each is reached for: the transaction always, then
-    // moving money, speaking, scanning, and a CSV import last.
+    // Ranked by how often each is reached for, since the fit drops from the end.
     const ranked: AddAction[] = [
         {
             href: "/transactions/create",
@@ -203,7 +197,6 @@ export function FloatingAddButton() {
     ];
     const width = labelWidth(fontScale, windowWidth);
     const { kept, lines } = fitDial(ranked.length, room, fontScale, width);
-    // The dial reads top to bottom, so the least-reached-for action sits furthest from the thumb.
     const actions = ranked.slice(0, kept).reverse();
 
     const toggleDial = useCallback(
@@ -223,9 +216,8 @@ export function FloatingAddButton() {
                     glass
                     onOpenChange={toggleDial}
                     open={open}
-                    // The only way to grow the actions: `Fab.Action` has no size of its own
-                    // and steps down from the group, so `lg` takes them from 44pt to 56pt.
-                    // `ACTION_HEIGHT` and `TRIGGER_HEIGHT` above budget for exactly that.
+                    // The only way to grow the actions: `Fab.Action` steps down from the group's size, so `lg` takes
+                    // them from 44pt to 56pt, which `ACTION_HEIGHT` and `TRIGGER_HEIGHT` budget for.
                     size="lg"
                     icon={
                         <HugeiconsIcon

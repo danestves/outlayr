@@ -40,34 +40,15 @@ async function loadSource(db: Database, id: string): Promise<TransactionRow | nu
     return rows[0] ?? null;
 }
 
-/**
- * Minted once for this derivation and never changed: a different namespace
- * would make every device that upgraded compute different ids for occurrences
- * the others already hold.
- */
+// Never change: a different namespace gives upgraded devices different ids for occurrences the others already hold.
 const OCCURRENCE_NAMESPACE = "0f2b9f1e-6d3a-4c58-9a71-2c8f5d6e4b31";
 
-/**
- * The id of the charge `source` makes on `holding`, derived rather than minted.
- *
- * Two synced devices both sweep the same schedule, and with `newId()` each
- * would insert its own copy of the same charge — the ledger would double every
- * subscription. Derived from the pair that actually identifies the occurrence,
- * both devices compute the same id and the second one upserts.
- *
- * The UTC day, not the local one: `startOfDay` here made the seed depend on the
- * sweeping device's zone, so a phone in Madrid and an iPad in New York derived
- * two ids for one charge and both rows replicated.
- */
+// Derived, not minted, so two synced devices sweeping one schedule compute one id and the second upserts. The UTC
+// day, not the local one, or devices in different zones derive two ids for one charge.
 export function occurrenceId(parentLocalId: string, holding: Date): string {
     return uuidV5(`${parentLocalId}:${utcDateString(holding.getTime())}`, OCCURRENCE_NAMESPACE);
 }
 
-/**
- * The day the chain is anchored to. Falling back to the row's own day is what
- * keeps a chain written before the column existed walking exactly as it did.
- */
-/** The carrier's painted logo as it is now, or null when it has none. */
 async function liveLogo(db: Database, carrierId: string) {
     const [row] = await db
         .select({ imageColor: transactions.imageColor, imageUri: transactions.imageUri })
@@ -76,24 +57,9 @@ async function liveLogo(db: Database, carrierId: string) {
     return row?.imageUri == null ? null : { imageColor: row.imageColor, imageUri: row.imageUri };
 }
 
-/**
- * Inserts occurrences of `carrierId` and tells the logo backfill about the
- * ones this statement actually created, when the carrier is its to finish.
- * Occurrences bypass `transactionsRepo.create`, and a subscription saved
- * before its logo landed would otherwise have its source painted and every
- * charge left with the tile.
- *
- * Candidacy is inherited, never recomputed from the copied row: a carrier the
- * user cleared by hand (dismissed), one whose merchant was blank and filled
- * from the category, one that arrived by sync or that a peer has edited since
- * is not a candidate, and its occurrences must not become ones by looking
- * bare. The carrier is read live, inside the caller's transaction.
- *
- * Ignored rather than overwritten: an occurrence already under this id is the
- * same charge replicated from another device, and it may carry an edit — or a
- * deletion, or a logo its owner removed — this device has no business undoing.
- * Only the ids the insert returns are registered, for that last reason.
- */
+// Occurrences bypass `transactionsRepo.create`, so this registers logo candidates itself, inherited from the live
+// carrier and never recomputed from a bare-looking copy. Conflicts are ignored: an existing id is the same charge from
+// another device and may carry an edit or deletion, so only the ids the insert returns register.
 export async function insertOccurrences(
     db: Database,
     carrierId: string,
@@ -103,10 +69,7 @@ export async function insertOccurrences(
     if (rows.length === 0) {
         return;
     }
-    // Read live, before anything here moves the carrier: a peer's edit that
-    // reached it by sync retired it, and must retire its charges too. A logo
-    // the backfill painted on the carrier while these rows were being built
-    // is the one change that is this device's own, and the rows take it.
+    // Read before anything moves the carrier; a logo the backfill painted on it meanwhile is ours, and rows take it.
     const inherit = await isLiveLogoCandidate(db, carrierId);
     const live = await liveLogo(db, carrierId);
     const written = rows.map((row) =>
@@ -133,8 +96,7 @@ export async function insertOccurrences(
     }
     const ids = rows.filter((row) => created.has(row.id) && isLogoCandidate(row)).map((row) => row.id);
     if (ids.length > 0) {
-        // Every occurrence is written with `updatedAt: now`, which is the stamp
-        // the backfill matches the row against.
+        // Occurrences are written with `updatedAt: now`, the stamp the backfill matches against.
         await rememberLogoCandidates(db, ids, now.getTime(), LOGO_CANDIDATE_KEEP_MS);
     }
 }
@@ -170,19 +132,8 @@ function occurrenceRow(source: TransactionRow, holding: Date, carriesSchedule: b
     };
 }
 
-/**
- * A subscription is persisted as a single recurring row. This walks its schedule
- * forward to today, writing one plain (non-recurring) row per occurrence, then
- * retires the source to `recurringType = none`. Mirrors the Swift
- * `TransactionRepository.updateRecurringTransaction` back-fill.
- *
- * Exactly one row in the chain carries `recurringType > 0` at a time: the
- * schedule migrates onto the newest generated row, which is the one
- * {@link backfillAllRecurring} picks up on the next sweep.
- *
- * The `advanced <= holding` break is a defensive stop against a malformed
- * coefficient that fails to advance the schedule.
- */
+// Walks the schedule to today, one plain row per occurrence, and retires the source. Exactly one row in a chain
+// carries `recurringType > 0`: the schedule migrates onto the newest generated row.
 export async function backfillRecurring(db: Database, id: string, now: Date = new Date()): Promise<void> {
     const source = await loadSource(db, id);
     if (source == null || !source.onceRecurring || source.recurringType === RECURRING_TYPE.none) {
@@ -202,9 +153,8 @@ export async function backfillRecurring(db: Database, id: string, now: Date = ne
     const next = nextDate(source.date, type, coefficient, anchorDay) ?? source.date;
     const pending: TransactionInsert[] = [];
 
-    // A row may only inherit the schedule when its own next charge is strictly
-    // ahead of both today and itself: an occurrence that would land today again
-    // hands the same charge to the next sweep, forever.
+    // Inherits the schedule only when its next charge is strictly ahead of today and itself, or the next sweep gets
+    // the same charge forever.
     const carriesFrom = (holding: Date, advanced: Date | null): boolean =>
         advanced != null &&
         startOfDay(advanced).getTime() > today.getTime() &&
@@ -233,10 +183,8 @@ export async function backfillRecurring(db: Database, id: string, now: Date = ne
         return;
     }
 
-    // Each occurrence is canonicalized at ITS OWN date, not the source's: copying
-    // the source's frozen USD value onto every charge would price January's
-    // payment at December's rate. Built outside the write transaction because the
-    // rate lookup reads.
+    // Each occurrence is canonicalized at ITS OWN date, or January's payment is priced at December's rate. Built
+    // outside the write transaction because the rate lookup reads.
     const lookup = localRateLookup(db);
     const display = (await getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
     const canonicalized = await Promise.all(
@@ -253,9 +201,7 @@ export async function backfillRecurring(db: Database, id: string, now: Date = ne
         }))
     );
 
-    // Atomic on purpose: dying between the insert and the retire leaves the source
-    // still flagged recurring, so the next launch walks the same schedule again
-    // and writes every occurrence a second time.
+    // Atomic: dying between insert and retire leaves the source recurring, so the next launch rewrites every charge.
     await withTransaction(db, async () => {
         await insertOccurrences(db, source.id, canonicalized, now);
         await refreshLogoCandidate(db, source.id, now.getTime());
@@ -270,18 +216,7 @@ export async function backfillRecurring(db: Database, id: string, now: Date = ne
     });
 }
 
-/**
- * The app-open / foreground sweep. Without it a subscription only ever advances
- * on the save that created it, since the form is the back-fill's sole other
- * caller.
- *
- * The id list is resolved up front on purpose: each back-fill hands the schedule
- * to a freshly inserted row whose next charge is, by construction, in the
- * future, so re-reading the table mid-sweep would pick those rows up for no work.
- *
- * Sequential rather than concurrent: each iteration writes, and the rows share
- * one SQLite connection.
- */
+// Ids are resolved up front: each backfill hands the schedule to a new future-dated row a re-read would pick up.
 export async function backfillAllRecurring(db: Database, now: Date = new Date()): Promise<void> {
     const live = await db
         .select({ id: transactions.id })
@@ -310,21 +245,8 @@ async function withCanonicalUsd(db: Database, row: TransactionInsert): Promise<T
     };
 }
 
-/**
- * The row that keeps a chain alive once `carrier` stops anchoring it, or null
- * when there is nothing left to keep alive.
- *
- * Anchored at the next occurrence *after today* rather than at the carrier's own
- * next charge: a carrier that sat stale resumes going forward instead of
- * back-charging the gap it slept through.
- *
- * A carrier dated in the future is the pending charge itself rather than a
- * settled one, so removing it is the only way the schema can say "stop" — that
- * one gets no successor.
- *
- * Built outside the caller's write transaction because canonicalizing it reads
- * the rate replica.
- */
+// Anchored at the next occurrence after today, so a stale carrier resumes forward instead of back-charging. A
+// future-dated carrier is the pending charge itself, so removing it means stop: no successor.
 export async function scheduleSuccessor(
     db: Database,
     carrier: TransactionRow,
@@ -350,18 +272,8 @@ export async function scheduleSuccessor(
     return await withCanonicalUsd(db, occurrenceRow(carrier, landing, true, now));
 }
 
-/**
- * One-shot repair for chains whose carrier was soft-deleted before the delete
- * handover existed. The tombstone still holds the whole schedule, so each chain
- * is reinstated from its own row — nothing here is inferred.
- *
- * Chains orphaned any other way are unrecoverable: retiring a row overwrites its
- * cadence and no column links a chain's rows together, so neither the schedule
- * nor its membership survives anywhere to be read back.
- *
- * Guarded twice over — the marker skips the pass, and clearing every tombstone it
- * examines empties the predicate that selected them.
- */
+// One-shot repair for carriers soft-deleted before the delete handover existed; the tombstone still holds the
+// schedule. Other orphaned chains are unrecoverable: no column links a chain's rows.
 export async function repairOrphanedRecurrence(db: Database, now: Date = new Date()): Promise<number> {
     if ((await getMeta(db, META_KEYS.recurrenceRepaired)) === "true") {
         return 0;

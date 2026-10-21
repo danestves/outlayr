@@ -7,61 +7,40 @@ import { median } from "./stats";
 
 const DAY_MS = 86_400_000;
 
-/**
- * Fraction of the window that must have elapsed before a projection is offered.
- * A linear extrapolation from two or three days is dominated by whichever
- * transaction happened to land there, so early in a period it lies confidently.
- */
+/** Before a fifth of the window, a linear extrapolation is dominated by whichever charge landed first. */
 const PROJECTION_FLOOR = 0.2;
 
 export interface BurndownPoint {
-    /** `limit - spent`; goes negative once the budget is blown. */
     balance: number;
-    /** 1-indexed day within the window. */
     day: number;
-    /** Cumulative spend from the window start through the end of this day. */
     spent: number;
 }
 
 export interface Burndown {
-    /** One point per elapsed day, from the window start through today. */
     points: BurndownPoint[];
-    /**
-     * Balance at the window end if the days still to come spend at the median
-     * elapsed daily rate, or null when too little has elapsed to forecast honestly.
-     */
+    /** At the median elapsed daily rate; null when too little has elapsed to forecast honestly. */
     projectedBalance: number | null;
     runwayDate: Date | null;
-    /** 1-indexed day the balance first went negative, or null while it holds. */
+    /** 1-indexed day the balance first went negative. */
     runwayDay: number | null;
-    /** Total days the window spans, elapsed or not. */
     totalDays: number;
 }
 
 export interface BurndownOptions {
-    /** Scope to one category and its subcategories; omit for the overall budget. */
     categoryId?: string | null;
     limit: number;
     now: Date;
     window: BudgetWindow;
 }
 
-/**
- * Whole calendar days from `start` to `date`. Rounding absorbs the ±1h a DST
- * boundary introduces, which a raw `floor(ms / DAY_MS)` would smear into the
- * neighbouring day.
- */
+/** Rounding absorbs the ±1h of a DST boundary, which `floor(ms / DAY_MS)` would push into the next day. */
 function dayOffset(date: Date, start: Date): number {
     return Math.round((startOfDay(date).getTime() - startOfDay(start).getTime()) / DAY_MS);
 }
 
 /**
- * Expected spend for one day still to come: a typical purchase, times how often
- * purchases happen.
- *
- * A median over the zero-padded calendar instead collapses to 0 for anyone who
- * shops on fewer than half the days — most people, and every per-category
- * budget — and the forecast then claims they will spend nothing ever again.
+ * A typical purchase times how often purchases happen: a median over the zero-padded calendar is 0 for anyone
+ * who shops on fewer than half the days, and the forecast would claim they never spend again.
  */
 function dailyRate(perDay: readonly number[]): number {
     const spendDays = perDay.filter((amount) => amount > 0);
@@ -71,10 +50,6 @@ function dailyRate(perDay: readonly number[]): number {
     return (median(spendDays) ?? 0) * (spendDays.length / perDay.length);
 }
 
-/**
- * Days are bucketed by local calendar date, and the series stops at today:
- * everything past `now` is the projection's job, not the actual line's.
- */
 export function buildBurndown(rows: readonly ExpenseContribution[], options: BurndownOptions): Burndown {
     const { limit, window, now, categoryId = null } = options;
 
@@ -109,7 +84,6 @@ export function buildBurndown(rows: readonly ExpenseContribution[], options: Bur
     }
 
     const elapsedFraction = elapsedDays / totalDays;
-    // Spend so far is fact, so only the days still to come are forecast.
     const projectedBalance =
         elapsedFraction >= PROJECTION_FLOOR ? limit - spent - dailyRate(perDay) * (totalDays - elapsedDays) : null;
 

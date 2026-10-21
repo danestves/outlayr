@@ -74,8 +74,7 @@ function DeletedRow({
     const { showCents } = useDisplaySettings().state;
     const t = useTranslation();
     const { language } = useLanguage();
-    // The query selects tombstones only, so the fallback satisfies the column's
-    // nullability rather than describing a row this list can hold.
+    // Tombstones only: the fallback just satisfies nullability.
     const when = row.deletedAt ?? row.date;
 
     return (
@@ -96,9 +95,7 @@ function DeletedRow({
                 showCents={showCents}
             />
             <Pressable
-                // Every row's button says "Restore", so the entry it belongs to has to
-                // be spelled into the label or a screen reader hears the same control
-                // repeated down the whole list.
+                // Every button says "Restore", so the entry is named for screen readers.
                 accessibilityLabel={t("settings.deleted.restoreEntry", {
                     note: row.note,
                 })}

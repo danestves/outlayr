@@ -5,7 +5,6 @@ import { accounts, transactions } from "@/db/schema";
 
 import type { SpendDb } from "./budget-spent";
 
-/** Subfolder of the app's document directory that owns transaction photos. */
 export const PHOTO_DIRECTORY = "transaction-photos";
 
 export interface PhotoTable {
@@ -15,14 +14,7 @@ export interface PhotoTable {
     readonly table: SQLiteTable;
 }
 
-/**
- * Every table that names a photo.
- *
- * One directory holds all of them — an account logo is persisted by the same
- * `persistPickedPhoto` a receipt is — so a walk that misses a table reads its
- * files as orphans and purges them. `transactionPhotos` joins the list when
- * something starts writing it.
- */
+// One directory holds every table's photos, so a walk that misses a table reads its files as orphans and purges them.
 export const PHOTO_TABLES: readonly PhotoTable[] = [
     {
         id: transactions.id,
@@ -38,34 +30,20 @@ export const PHOTO_TABLES: readonly PhotoTable[] = [
     },
 ];
 
-/**
- * How long a file is spared from the orphan purge. A photo is written the moment
- * it is picked but only referenced when the form is saved, so a purge with no
- * grace would delete the picture out from under an open editor.
- */
+// A photo is written when picked but referenced only on save, so a purge with no grace deletes it under an open editor.
 export const PHOTO_PURGE_GRACE_MS = 24 * 60 * 60 * 1000;
 
 interface StoredPhoto {
-    /** Milliseconds since the epoch. */
     modifiedAt: number;
     name: string;
 }
 
-/**
- * The filesystem seam. Injected so the reconciliation below stays free of
- * `expo-file-system`, which cannot load under the node test runner.
- */
+// Injected so reconciliation stays free of `expo-file-system`, which can't load under the node test runner.
 export interface PhotoFiles {
-    /**
-     * Copies an outside file in under `name`, answering whether it could. False
-     * means the source is already gone — the picker's cache is reclaimable at any
-     * time, which is the whole reason photos are copied out of it.
-     */
+    /** False when the source is gone: the picker's cache is reclaimable at any time, hence the copy. */
     adopt: (sourceUri: string, name: string) => boolean;
-    /** Absolute uri of the photo directory, which the implementation creates. */
     readonly directoryUri: string;
     list: () => StoredPhoto[];
-    /** Null when the file is gone, which is not an error — see {@link adopt}. */
     read: (name: string) => Uint8Array | null;
     remove: (name: string) => void;
     write: (name: string, bytes: Uint8Array) => void;
@@ -84,7 +62,6 @@ export function photoUriFor(directoryUri: string, name: string): string {
 }
 
 const DEFAULT_EXTENSION = ".jpg";
-/** Longer than this is not an extension, it is the rest of a filename. */
 const MAX_EXTENSION_LENGTH = 6;
 
 export function photoExtension(name: string): string {
@@ -97,30 +74,14 @@ export function photoExtension(name: string): string {
 }
 
 export interface PhotoReconciliation {
-    /** Rows whose photo could not be found anywhere. */
     cleared: number;
-    /** Files no row references any more. */
     purged: number;
-    /** Rows whose photo was found under a stale absolute path. */
     repointed: number;
-    /** Rows whose photo was still readable outside the store and was copied in. */
     rescued: number;
 }
 
-/**
- * Reconciles the photo directory against the ledger, and answers what it moved.
- *
- * Two defects make this necessary rather than merely tidy. Rows written before
- * photos were copied out of the picker point into a cache iOS may reclaim at any
- * moment; and the document directory's absolute path contains a container UUID
- * that changes when the app is updated, so every stored uri goes stale at once.
- * Both are repaired by matching on the file name rather than trusting the path.
- *
- * Tombstoned rows are deliberately not excluded: the undo window can restore one,
- * and a purge that ignored them would take its photo first.
- *
- * Idempotent.
- */
+// Matches on file name, not path: old rows point into a picker cache iOS may reclaim, and the container UUID in the
+// absolute path changes on app update. Tombstones count as references: the undo window can restore one.
 export async function reconcilePhotos(db: SpendDb, files: PhotoFiles, nowMs: number): Promise<PhotoReconciliation> {
     const { directoryUri } = files;
     const stored = new Map(files.list().map((photo) => [photo.name, photo.modifiedAt]));
@@ -135,8 +96,7 @@ export async function reconcilePhotos(db: SpendDb, files: PhotoFiles, nowMs: num
 
     /* oxlint-disable no-await-in-loop -- every table reconciles against the `stored` and `referenced` maps the previous table already mutated, so a table's rows cannot be read before the one before it has finished adopting files */
     for (const photoTable of PHOTO_TABLES) {
-        // SAFETY: `photoTable` is chosen from `PHOTO_TABLES` at runtime, which
-        // erases the column map; the two columns selected exist on all of them.
+        // SAFETY: a runtime table choice erases the column map; the two columns selected exist on every table.
         const rows = (await db
             .select({ id: photoTable.id, imageUri: photoTable.imageUri })
             .from(photoTable.table)

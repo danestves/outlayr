@@ -29,17 +29,11 @@ import { useDeferredDelete } from "./use-deferred-delete";
 import type { Valuation } from "./valuation-source";
 
 export type DebtsScreenOverview = DebtsOverview<OverviewRow & { account: Account }> & {
-    /** The cuotas due in the next 14 days and the overdue ones; null when there are none. */
     due: DueWindow | null;
-    /** Each liability's open orders and soonest unpaid cuota, by account id. */
     installments: ReadonlyMap<string, AccountInstallments>;
 };
 
-/**
- * `overview`'s liabilities and people, each with its account, with the cuotas
- * of the orders on those accounts.
- * `valuation.rates` has to carry every account's currency beside the display one.
- */
+// `valuation.rates` has to carry every account's currency beside the display one.
 function debtsIn(
     accounts: readonly Account[],
     overview: AccountsOverview | null,
@@ -60,12 +54,7 @@ function debtsIn(
     };
 }
 
-/**
- * Each row carries its account, so the screen needs no second lookup for a
- * name or a logo, and `payoff` holds each row's plan by account id. An account
- * or a plan whose deletion is pending its undo window is left out, so the
- * totals move as the row leaves.
- */
+// An account or plan pending its undo window is left out, so totals move as the row leaves.
 export function useDebtsOverview(
     db: Database,
     nowMs: number
@@ -94,7 +83,6 @@ export function useDebtsOverview(
     }, [accounts, overview, plans, goals, pendingGoalId, displayCurrency, rates, cells, nowMs]);
 }
 
-/** The day each ended plan in `goals` ended on, by goal id, from its account's cells among `cells`. */
 function payoffEndings(
     goals: readonly SavingsGoal[],
     accounts: readonly Account[],
@@ -119,11 +107,7 @@ function payoffEndings(
     return endings;
 }
 
-/**
- * `account`'s payoff plan stated in its own currency, for its detail: the first
- * live plan on it, else the first ended one, as on the Debts row. `balance`,
- * `cells` and `rates` are the detail's own reads of the account.
- */
+// Stated in the account's own currency, for its detail: the first live plan, else the first ended one, as on Debts.
 export function useAccountPayoff(
     db: Database,
     account: Account,
@@ -160,18 +144,11 @@ export function useAccountPayoff(
 }
 
 export interface LogOverview {
-    /** The bank accounts the Log's block draws; people are left to Debts. */
     banks: AccountsOverview | null;
     debts: DebtsScreenOverview;
 }
 
-/**
- * Every account valued once into `valuation`'s currency, split into the Log's
- * bank block and its Debts row, so both follow the Log's currency and a write
- * re-values the ledger once. `excludeId` drops an account whose deletion is
- * pending its undo window: its cells are ignored with it, so the total moves as
- * the row leaves rather than after the write lands.
- */
+// Valued once into `valuation`'s currency for both the bank block and the Debts row, so a write re-values once.
 export function useLogOverviewIn(
     db: Database,
     valuation: Valuation,

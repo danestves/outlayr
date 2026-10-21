@@ -14,7 +14,7 @@ export type LocalDataStatus = "opening" | "ready" | "error";
 export interface LocalDataContextValue {
     db: Database | null;
     error: Error | null;
-    /** Re-runs the whole open → migrate → seed sequence, not just the failed step. */
+    /** Re-runs the whole open, migrate, seed sequence, not just the failed step. */
     retry: () => void;
     status: LocalDataStatus;
 }
@@ -37,11 +37,7 @@ export function useLocalData(): LocalDataContextValue {
     return value;
 }
 
-/**
- * The root layout holds the splash until `status === "ready"`, so anything
- * mounted below it reads an open, migrated and seeded file. A throw here means
- * the splash gate was bypassed, not that the data is merely late.
- */
+// The root layout holds the splash until `ready`, so a throw here means that gate was bypassed.
 export function useDatabase(): Database {
     const { db } = useLocalData();
     if (db == null) {
@@ -50,10 +46,6 @@ export function useDatabase(): Database {
     return db;
 }
 
-/**
- * `ready` means open AND migrated AND seeded — the root layout holds the splash
- * on it, so no screen ever observes a half-built database.
- */
 async function openLocalData(cancelled: () => boolean): Promise<LocalDataState | null> {
     try {
         const database = openDatabase();
@@ -68,8 +60,7 @@ async function openLocalData(cancelled: () => boolean): Promise<LocalDataState |
         if (cancelled()) {
             return null;
         }
-        // Ahead of `ready`, so the onboarding guard's first evaluation already
-        // reads post-backfill appMeta — no third "unknown" gate state.
+        // Ahead of `ready`, so the onboarding guard's first read already sees post-backfill appMeta.
         await settleLegacyOnboarding(database);
         return { db: database, error: null, status: "ready" };
     } catch (caught) {

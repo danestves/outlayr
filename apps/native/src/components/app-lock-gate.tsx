@@ -19,11 +19,7 @@ export function useAppLockOpen(): boolean {
     return use(LockOpenContext);
 }
 
-/**
- * Holds the shield over `children` rather than swapping them out: unmounting the
- * navigator on every lock would discard the whole navigation stack, so returning
- * from a background would drop the user back on the Log.
- */
+// Holds the shield over `children` rather than unmounting them, which would discard the navigation stack.
 export function AppLockGate({ children }: { children: ReactNode }) {
     const t = useTranslation();
     const enabled = useSettingBool("biometricLock");
@@ -32,13 +28,11 @@ export function AppLockGate({ children }: { children: ReactNode }) {
     const [failure, setFailure] = useState<TranslationKey | null>(null);
     const [checking, setChecking] = useState(false);
 
-    // Seeded from the mount-time setting, so a launch with the lock already on is
-    // never mistaken for the user having just turned it on.
+    // Seeded from the mount-time setting, so a launch with the lock on is not mistaken for turning it on.
     const [armed, setArmed] = useState(enabled);
     if (enabled !== armed) {
         setArmed(enabled);
-        // The Settings toggle only flips on behind a passed check; prompting again
-        // here would be two prompts for one action.
+        // The Settings toggle only flips on behind a passed check, so prompting here would be a second prompt.
         setUnlocked(enabled);
         if (!enabled) {
             setEnforceable(null);
@@ -82,8 +76,7 @@ export function AppLockGate({ children }: { children: ReactNode }) {
 
     const gate = lockGate(enabled, unlocked, enforceable);
 
-    // One automatic prompt per shut gate. Re-prompting on every render would
-    // reopen a sheet the user just dismissed, which is unescapable.
+    // One automatic prompt per shut gate: re-prompting would reopen a sheet the user just dismissed.
     const prompted = useRef(false);
     useEffect(() => {
         if (gate === "open") {

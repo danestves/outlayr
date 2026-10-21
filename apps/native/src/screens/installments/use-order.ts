@@ -13,10 +13,7 @@ import { rearmInstallmentReminders } from "@/lib/installment-reminder-sync";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
 
-/**
- * The order behind `planId`, null once it is gone, which also leaves the
- * screen. `leave` goes back once, however many times it is asked.
- */
+/** `leave` goes back once, however often it is asked. */
 export function useInstallmentEntry(planId: string) {
     const db = useDatabase();
     const router = useRouter();
@@ -40,10 +37,6 @@ export function useInstallmentEntry(planId: string) {
     return { entry, leave, nowMs };
 }
 
-/**
- * What the order screen does on either platform: pay, delete what is pending
- * (then `leave`), and the cuota being edited in its sheet.
- */
 export function useOrderActions({ plan }: PlanWithStanding, leave: () => void) {
     const db = useDatabase();
     const router = useRouter();

@@ -14,48 +14,29 @@ import { useTranslation } from "@/i18n/context";
 import { useHaptics } from "@/lib/use-haptics";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
-/** M3's one-line list item with a leading avatar; rows only ever grow past it. */
 const ROW_MIN_HEIGHT = 56;
 const SETTLE_MS = 180;
 
 interface ReorderListProps<T> {
     items: readonly T[];
     keyOf: (item: T) => string;
-    /** The row's name, which TalkBack reads before the move actions. */
     labelOf: (item: T) => string;
-    /**
-     * Saves every key in its new order, once per drop or move action. If the
-     * returned promise rejects, the rows go back to the saved order.
-     */
+    /** Once per drop or move action; a rejection puts the rows back in the saved order. */
     onReorder: (keys: string[]) => Promise<void>;
-    /** The row's content. Keep it to one line so every row is the same height. */
+    /** Keep it to one line: every row takes the first row's height. */
     renderItem: (item: T) => ReactNode;
 }
 
-/** What every row of one list shares while a drag is in flight. */
 interface DragState {
-    /** The key of the row being dragged, or `null` between drags. */
     active: SharedValue<string | null>;
-    /** Where the dragged row's top edge sat when it was picked up. */
     origin: SharedValue<number>;
-    /** Every key in the order the rows are drawn, reshuffled live during a drag. */
     order: SharedValue<string[]>;
-    /** The order when the drag began, to tell a drop from a put-back. */
     picked: SharedValue<string[]>;
-    /** The finger's travel since pick-up. */
     travel: SharedValue<number>;
 }
 
-/**
- * A drag-to-reorder list for screens without a native one: Android, where
- * `@expo/ui` has no Compose equivalent of SwiftUI's edit-mode `onMove`.
- *
- * Rows are placed by the shared `order` rather than by React's, so a drop
- * reshuffles them on the UI thread and the write that follows re-renders them
- * into the slots they already hold. Each row grabs from its trailing handle
- * only, which leaves the rest of the row to the screen's scroll. TalkBack moves
- * a row with the "Move up" and "Move down" actions instead.
- */
+// For Android, where `@expo/ui` has no Compose `onMove`. Rows are placed by the shared `order`, not React's, so a
+// drop reshuffles them on the UI thread and the write that follows re-renders them in the slots they hold.
 export function ReorderList<T>({ items, keyOf, labelOf, onReorder, renderItem }: ReorderListProps<T>) {
     const keys = items.map(keyOf);
     const [rowHeight, setRowHeight] = useState(ROW_MIN_HEIGHT);
@@ -69,16 +50,13 @@ export function ReorderList<T>({ items, keyOf, labelOf, onReorder, renderItem }:
     const { order } = drag;
     const signature = keys.join("\n");
 
-    // Adopts the saved order once the write lands, and any row added or removed
-    // elsewhere. A drop has already put the rows there, so nothing moves.
     useEffect(() => {
         order.set(signature.length === 0 ? [] : signature.split("\n"));
     }, [order, signature]);
 
     const commit = (next: string[]) => {
         order.set(next);
-        // The saved order never changed, so the effect above won't put the rows
-        // back on its own.
+        // The saved order never changed, so the effect above won't put the rows back on its own.
         onReorder(next).catch((error) => {
             order.set(keys);
             console.error("Failed to save the new order", error);
@@ -120,7 +98,6 @@ interface ReorderRowProps {
     count: number;
     drag: DragState;
     id: string;
-    /** The row's place in the saved order, used until `order` has caught up. */
     index: number;
     keys: readonly string[];
     label: string;
@@ -136,8 +113,6 @@ function ReorderRow({ children, commit, count, drag, id, index, keys, label, onL
     const { active, origin, order, picked, travel } = drag;
     const top = useSharedValue(index * rowHeight);
 
-    // Slides the row to its slot whenever the order or the row height changes,
-    // unless it is the one under the finger.
     useAnimatedReaction(
         () => {
             const slot = order.get().indexOf(id);
@@ -220,7 +195,6 @@ function ReorderRow({ children, commit, count, drag, id, index, keys, label, onL
             onLayout={onLayout}
             style={[
                 { left: 0, minHeight: ROW_MIN_HEIGHT, position: "absolute", right: 0, top: 0 },
-                // The one shadow M3 allows a list: the row lifted off it.
                 lifted ? { elevation: 3 } : null,
                 placed,
             ]}

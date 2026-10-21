@@ -10,7 +10,6 @@ import { cn } from "../tw";
 import { clusterEntering } from "./sentence-motion";
 
 interface SentenceStyle {
-    /** Carried to every part so a slot's text matches the words around it. */
     textClassName: string;
 }
 
@@ -26,29 +25,15 @@ export function useSentenceStyle(): SentenceStyle {
 
 interface SentenceProps<TSlot extends string> {
     gapClassName?: string;
-    /**
-     * A fill per slot the caller's templates use. Declaring the union rather
-     * than collecting named children makes a slot the caller forgot a type
-     * error instead of a fact missing off the screen.
-     */
+    /** A record over the union, not named children, so a forgotten slot is a type error rather than a missing fact. */
     slots: Readonly<Record<TSlot, ReactNode>>;
     template: string;
     textClassName?: string;
 }
 
-/**
- * `text-grammar` reaches only the template's own connector words: every part
- * that fills a slot names its own colour over this one.
- */
+// `text-grammar` reaches only the template's connector words: every slot fill names its own colour.
 const DEFAULT_TEXT = "font-sans-medium text-[26px] leading-[38px] tracking-tight text-grammar";
 
-/**
- * Renders a translated template as running text with its slots filled in.
- *
- * The template owns word order, so this never names a position — a language
- * that puts the account before the category only has to say so in its own
- * string.
- */
 export function Sentence<TSlot extends string>({
     gapClassName = "gap-x-2",
     slots,
@@ -57,8 +42,6 @@ export function Sentence<TSlot extends string>({
 }: SentenceProps<TSlot>) {
     const style = useMemo(() => ({ textClassName }), [textClassName]);
     const clusters = useMemo(() => parseSentence(template), [template]);
-    // `Object.entries` rather than an indexed read: the record's keys are a
-    // union, and a template carries plain strings.
     const fills = useMemo(() => new Map<string, ReactNode>(Object.entries(slots)), [slots]);
 
     return (
@@ -68,8 +51,6 @@ export function Sentence<TSlot extends string>({
                     <Animated.View
                         className="flex-row items-baseline"
                         entering={clusterEntering(index)}
-                        // The template is fixed for a given language, so a cluster's
-                        // words and position identify it for as long as it exists.
                         key={`${index}:${cluster.atoms.map((atom) => atom.value).join(",")}`}
                     >
                         {cluster.atoms.map((atom, atomIndex) =>

@@ -35,7 +35,6 @@ export interface TransactionRateClause {
     template: string;
 }
 
-/** How a bolívar expense was paid, stated after the sentence. */
 export interface TransactionPaidViaClause {
     blank: string;
     field: string;
@@ -47,29 +46,19 @@ export interface TransactionPaidViaClause {
 interface TransactionSentenceProps {
     account: string | null;
     accountTile?: ReactNode;
-    /**
-     * The slot the stage below is editing. The primitives draw the wash; this
-     * only says which one of them is being edited.
-     */
     activeSlot: TransactionSentenceMark | null;
     amount: string | null;
-    /**
-     * The amount can hold the save back as readily as the category, and a
-     * filled one can be the fault: zero is a value, not a blank.
-     */
+    /** Zero is a value, not a blank, so a filled amount can still be what holds the save back. */
     amountFigure?: SentenceFigure;
     amountFlagged?: boolean;
     amountShake?: boolean;
     category: string | null;
-    /** The category is the one blank that can hold the save back. */
     categoryFlagged: boolean;
     categoryPending: boolean;
-    /** Answers a save rejected for want of a category. */
     categoryShake: boolean;
     categoryTile?: ReactNode;
     fee: string | null;
     labels: TransactionSentenceLabels;
-    /** The name as entered, or null while the slot is still empty. */
     merchant: string | null;
     merchantTile?: ReactNode;
     onAccountPress: () => void;
@@ -85,11 +74,7 @@ interface TransactionSentenceProps {
     when: string;
 }
 
-/**
- * The entry, stated as one sentence. Every fact is a tap target and the
- * template decides where each one sits, so this component names the slots but
- * never their order.
- */
+// The template decides where each slot sits, so this names the slots but never their order.
 export function TransactionSentence({
     account,
     accountTile,
@@ -252,11 +237,6 @@ export function TransactionSentence({
                         value={labels.kind.verb}
                     />
                 ),
-                // A tap target like every other slot rather than an inline field.
-                // It used to be a `TextInput` with a `Text` laid over it to fix its
-                // baseline, and the stage's merchant step now owns typing — so the
-                // sentence states the name and the stage takes it, which is what
-                // every other fact here already does.
                 merchant:
                     merchant === null ? (
                         <SentenceBlank

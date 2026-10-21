@@ -28,11 +28,6 @@ import { indexSpotlight } from "./spotlight";
 import { affectsSpotlight, affectsWidgets, debounce, PUBLISH_DEBOUNCE_MS, SPOTLIGHT_DEBOUNCE_MS } from "./sync-cadence";
 import { claimPendingWrites, readWalletLastRun, releasePendingWrites } from "./widget-bridge";
 
-/**
- * Keeps the widget tiles, the watch and the Spotlight index current, each on
- * its own cadence — see `sync-cadence.ts` for which tables reach which surface
- * and why the index trails the tiles so far.
- */
 export function useSystemSync(db: Database | null): void {
     useEffect(() => {
         if (db == null) {
@@ -47,10 +42,8 @@ export function useSystemSync(db: Database | null): void {
             indexSpotlight(db);
         });
 
-        // Applying the queue writes rows, which trips the change listener below and
-        // publishes on its own — so this deliberately does not publish itself.
-        // The logo pass runs after the drain so a Wallet purchase that just landed
-        // is in the set it reads.
+        // The drain's writes trip the change listener, so it publishes itself only when nothing applied. Logos run
+        // after the drain so a Wallet purchase that just landed is in the set they read.
         const catchUp = () => {
             mirrorWalletRun(db).catch((error) => {
                 console.warn("[outlayr] wallet run stamp failed", error);
@@ -84,12 +77,8 @@ export function useSystemSync(db: Database | null): void {
 
         catchUp();
         indexSpotlight(db);
-        // Republished explicitly, because the listener below does not cover it: a
-        // refresh opens with an unqualified `DELETE FROM exchangeRates`, and SQLite's
-        // truncate optimization exempts that statement from the update hook the
-        // listener is built on (expo-sqlite's vendored `sqlite3.h:7090-7095`). Adding
-        // exchangeRates to the watched set was tried and does not fix it; this call
-        // is what keeps the tiles honest after a refresh.
+        // Republished explicitly: a refresh's unqualified `DELETE FROM exchangeRates` hits SQLite's truncate
+        // optimization, which skips the update hook the listener relies on (expo-sqlite `sqlite3.h:7090-7095`).
         let unwatchRates: (() => void) | null = null;
         let disposed = false;
         const applyLive = (rows: RateWireRow[]) => {
@@ -131,8 +120,6 @@ export function useSystemSync(db: Database | null): void {
         const unwatchWrites = onWatchPendingWrite(catchUp);
 
         const subscription = AppState.addEventListener("change", (state) => {
-            // Background is the last moment the app can guarantee the tile behind it
-            // is current.
             if (state === "active") {
                 catchUp();
                 syncRates();
@@ -157,16 +144,6 @@ export function useSystemSync(db: Database | null): void {
     }, [db]);
 }
 
-/**
- * Commits what the intents queued and answers how many landed.
- *
- * The claim is released only once the whole batch is through, so a throw leaves
- * the queue file in place for the next launch instead of dropping money writes.
- * A job that can never apply is retried on every launch rather than dropped,
- * which is the trade this takes: the ledger cannot invent a row it already has
- * (`applyPendingWrites` remembers what it committed) but it can lose one nobody
- * ever writes again.
- */
 async function mirrorWalletRun(db: Database): Promise<void> {
     const at = readWalletLastRun();
     if (at == null) {
@@ -179,11 +156,6 @@ async function mirrorWalletRun(db: Database): Promise<void> {
     await setMeta(db, META_KEYS.walletLastRunAt, stamp);
 }
 
-/**
- * Refreshes the local exchange-rate replica. `pullRatesIfDue` owns the 12-hour
- * throttle, and a build with no `EXPO_PUBLIC_CONVEX_URL` has no puller at all —
- * a failed or absent backend must cost nothing here.
- */
 async function refreshRates(db: Database): Promise<boolean> {
     let changed = false;
     try {
@@ -206,16 +178,13 @@ async function applyLiveRates(db: Database, rows: RateWireRow[]): Promise<boolea
 
 async function revalueLedger(db: Database): Promise<boolean> {
     let changed = false;
-    // Before canonicalizing, so a row about to be valued already names what it
-    // was kept in — canonicalization skips the ones that still do not.
+    // Stamp first: canonicalization skips rows that do not yet name the currency they were kept in.
     try {
         changed = (await stampLedgerCurrency(db)) > 0;
     } catch (error) {
         console.warn("[outlayr] currency stamp failed", error);
     }
-    // Always, not only after a successful pull: rows can be left unvalued by an
-    // entry made offline even when the cache was already fresh, and the pass is
-    // a no-op when there is nothing to do.
+    // Always: an offline entry can leave rows unvalued even when the rate cache was already fresh.
     try {
         changed = (await backfillCanonicalUsd(db)) > 0 || changed;
         changed = (await backfillBudgetUsd(db)) > 0 || changed;

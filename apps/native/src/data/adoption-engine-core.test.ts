@@ -160,7 +160,6 @@ describe("replaceLocalFromAccount", () => {
 
         await expect(getMeta(db, META_KEYS.syncDeviceId)).resolves.toBe("this-device");
         await expect(getMeta(db, META_KEYS.onboardingComplete)).resolves.toBe("1");
-        // Account-scoped, so the account's absence of it is authoritative.
         await expect(getMeta(db, META_KEYS.currency)).resolves.toBeNull();
     });
 });
@@ -171,12 +170,6 @@ describe("discardAccountLedger", () => {
         db = makeDb();
     });
 
-    /**
-     * The whole reason this is not "tombstone everything, then push". A delete
-     * beats a live row regardless of `updatedAt`, so a shared row tombstoned here
-     * would be skipped on push and then deleted locally by the next pull — the
-     * ledger the user chose to keep, destroyed by the act of keeping it.
-     */
     it("leaves a row both sides hold alive, and lets the local one win", async () => {
         const server = makeServer();
         await server.push({ deviceId: "peer", rows: [serverRow("shared", 900)] });
@@ -271,9 +264,6 @@ describe("a tombstoned account row does not come back to bite", () => {
             .map((row) => row.id)
             .sort();
         expect(live).toStrictEqual(["mine", "shared"]);
-        // The account's row arrives as a tombstone rather than not at all: readers
-        // filter `deletedAt`, and keeping the row is what stops a later pull from
-        // resurrecting it.
         const theirs = await db.select().from(transactions).where(eq(transactions.id, "theirs"));
         expect(theirs).toHaveLength(1);
         expect(theirs[0]?.deletedAt).not.toBeNull();

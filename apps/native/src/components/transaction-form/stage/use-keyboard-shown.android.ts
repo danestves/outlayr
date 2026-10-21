@@ -3,10 +3,7 @@ import { Keyboard } from "react-native";
 
 import type { useKeyboardShown as useKeyboardShownBase } from "./use-keyboard-shown";
 
-/**
- * Whether the software keyboard is up. Android sends only the `Did` events, so
- * the stage and CTA follow the keyboard once it has settled.
- */
+// Android sends only the `Did` events, so the stage and CTA follow the keyboard once it has settled.
 export const useKeyboardShown: typeof useKeyboardShownBase = () => {
     const [shown, setShown] = useState(() => Keyboard.isVisible());
     useEffect(() => {

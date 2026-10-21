@@ -53,8 +53,7 @@ export function Upcoming() {
     const showUpcoming = settings.bool("showUpcoming");
     const showSoon = settings.bool("showUpcomingSoon");
     const nowMs = useNow();
-    // Unlimited whatever the 14-day toggle says, matching Swift's
-    // `limitedMode: false` and the promise the footer above makes.
+    // Unlimited whatever the 14-day toggle says, the promise the footer above makes.
     const scheduled = useUpcomingTransactions(db, nowMs, false);
     const { pendingId, requestDelete } = useDeferredDelete("row");
     const openRowActions = useTransactionRowActions(nowMs, requestDelete);

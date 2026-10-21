@@ -6,11 +6,7 @@ import { useTranslation } from "@/i18n/context";
 import { PERIODS } from "../periods";
 import type { InsightsPeriodMenuProps } from "./insights-period-menu";
 
-/**
- * Android drops a label-only root menu, so this one opens from the period
- * icon. The current period reads from the checkmark inside the menu instead
- * of the bar. No toolbar colours, as in the Log's toolbar: they hide the check.
- */
+/** Android drops a label-only root menu; toolbar colours would hide the check. */
 export function InsightsPeriodMenu({ period, onSelect }: InsightsPeriodMenuProps) {
     const t = useTranslation();
     return (

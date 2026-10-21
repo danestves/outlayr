@@ -2,10 +2,7 @@ import { CATEGORY_ERROR_MESSAGES } from "@/data/categories-core";
 import type { CategoryError } from "@/data/categories-core";
 import type { TranslationKey } from "@/i18n/catalog";
 
-/**
- * The repo signals a rejected save by throwing one of `CATEGORY_ERROR_MESSAGES`,
- * so the only handle the UI has on which rule fired is the English text itself.
- */
+/** The repo throws `CATEGORY_ERROR_MESSAGES` text, so the English string is the UI's only handle on the rule. */
 export const CATEGORY_ERROR_KEYS = {
     duplicate: "categories.error.duplicate",
     duplicateEmoji: "categories.error.duplicateEmoji",
@@ -18,7 +15,6 @@ export const CATEGORY_ERROR_KEYS = {
 
 export function categoryErrorCode(message: string): CategoryError | null {
     const match = Object.entries(CATEGORY_ERROR_MESSAGES).find(([, text]) => text === message);
-    // SAFETY: `match` is an entry of CATEGORY_ERROR_MESSAGES, whose keys are
-    // exactly the `CategoryError` union — `Object.entries` widens them to string.
+    // SAFETY: the keys of CATEGORY_ERROR_MESSAGES are the `CategoryError` union; `Object.entries` widens them.
     return match ? (match[0] as CategoryError) : null;
 }

@@ -4,7 +4,6 @@ import type { RateTable } from "@outlayr/money/valuation";
 import { goalBalanceSeries } from "./goal-balance-series";
 import type { PlottedCell } from "./goal-balance-series";
 
-/** Every cell here is already in the reading currency, so nothing consults it. */
 const NO_RATES: RateTable = { earliest: () => null, get: () => null };
 
 function cell(plotDay: string, amount: number, income = true): PlottedCell {
@@ -12,8 +11,6 @@ function cell(plotDay: string, amount: number, income = true): PlottedCell {
         amount,
         amountUsd: amount,
         currencyCode: "USD",
-        // Same date here: these cells need no conversion, so the day they are
-        // valued at and the day they are drawn on coincide.
         dateKey: plotDay,
         income,
         plotDay,
@@ -42,8 +39,6 @@ describe("a goal's balance history", () => {
     });
 
     it("counts what came before the goal without drawing it", () => {
-        // The account held it when the goal started, so it belongs in the running
-        // total and not on the line.
         const since = localDay(2026, 8, 15);
         const series = goalBalanceSeries(
             [cell("2026-08-14", 100), cell("2026-08-16", 50)],

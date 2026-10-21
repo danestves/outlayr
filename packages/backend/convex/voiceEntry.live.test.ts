@@ -1,21 +1,8 @@
 /// <reference types="vite/client" />
 
-/**
- * The voice thread against the real ElevenLabs and Anthropic endpoints, end to end through the
- * deployed functions: a clip becomes a draft, and a second sentence corrects
- * it on the same thread. Opt-in for the same reasons as `csvImport.live.test.ts`:
- *
- *   say -o /tmp/voice-clip.m4a --data-format=aac "Twelve fifty at Starbucks yesterday on the Amex"
- *   say -o /tmp/voice-fix.m4a --data-format=aac "No, that was today, and put it under groceries"
- *   RUN_LIVE_MODEL_TESTS=1 \
- *   ANTHROPIC_API_KEY="$(npx convex env get ANTHROPIC_API_KEY)" \
- *   ELEVENLABS_API_KEY="$(npx convex env get ELEVENLABS_API_KEY)" \
- *   vp test run convex/voiceEntry.live.test.ts
- *
- * The assertions are the contract, not the answer: a draft comes back with a
- * positive amount and only names the caller offered, and the correction
- * changes what it names and nothing else.
- */
+// Opt-in: RUN_LIVE_MODEL_TESTS=1 plus ANTHROPIC_API_KEY and ELEVENLABS_API_KEY from `npx convex env get`. Record
+// /tmp/voice-clip.m4a with `say --data-format=aac "Twelve fifty at Starbucks yesterday on the Amex"` and
+// /tmp/voice-fix.m4a with "No, that was today, and put it under groceries".
 
 import { readFile } from "node:fs/promises";
 
@@ -52,7 +39,6 @@ interface Turn {
     role: string;
 }
 
-/** The draft the agent answered at a turn: the `proposeDraft` output on the assistant message of that order. */
 function draftAt(turns: Turn[], order: number): ProposedDraft | null {
     const answer = turns.find((turn) => turn.role === "assistant" && turn.order === order);
     const part = answer?.parts.find((p) => p.type === `tool-${PROPOSE_DRAFT_TOOL}` && p.state === "output-available");

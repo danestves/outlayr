@@ -48,19 +48,13 @@ function shownStatus(holding: boolean, skipping: boolean, reconciled: AdoptionSt
 }
 
 /**
- * Reconciles what this device holds with what the account holds, once per
- * account. Must sit below the splash gate — it reads the database.
- *
- * A plan that cannot be decided settles without writing the marker, so the app
- * opens on the ledger it already has and the reconciliation stays due for the
- * first build that can actually run it. A failure does the same: nothing marked
- * means nothing skipped.
+ * Must sit below the splash gate. An undecidable plan or a failure settles without writing the marker, so the
+ * reconciliation stays due for the next launch or a build that can run it.
  */
 export function LedgerAdoptionProvider({ children }: { children: ReactNode }) {
     const db = useDatabase();
     const { accountId } = useAuthSession();
-    // Read during render rather than awaited, so a device that has already
-    // reconciled never shows a frame of the cover on its way to the ledger.
+    // Read during render rather than awaited, so a reconciled device never shows a frame of the cover.
     const adoptedAccount = useLiveValue(
         appMeta,
         () => db.select().from(appMeta).where(eq(appMeta.key, META_KEYS.ledgerAdoption)),
@@ -72,18 +66,11 @@ export function LedgerAdoptionProvider({ children }: { children: ReactNode }) {
     const [failed, setFailed] = useState(false);
     const confirmedFree = useProLocked();
     const entitlementPending = useProPending();
-    // Held rather than settled while the entitlement is still being
-    // established: settling hands the local ledger to `RootStack`, and a
-    // Pro customer on a new device could edit it before the account's
-    // ledger has been reconciled, turning an automatic adoption into a
-    // merge. The hold is bounded by the requests themselves.
+    // Held while the entitlement resolves: settling hands the local ledger to `RootStack`, and a Pro customer
+    // editing it before reconciliation would turn an automatic adoption into a merge.
     const holding = accountId != null && !settled && entitlementPending;
-    // Skipped only for a CONFIRMED Free customer, who has no account ledger
-    // to reconcile against. Every other answer — Pro, unmirrored Pro, or a
-    // store lookup that failed — reconciles, because settling would claim a
-    // check that never ran. When the account cannot be read, that reaches
-    // the existing `defer` path: refused pull, one retry scheduled, no
-    // marker written, so the work stays due for the next launch.
+    // Skipped only for a CONFIRMED Free customer: any other answer (including a failed store lookup) reconciles,
+    // because settling would claim a check that never ran.
     const skipping = !holding && (accountId == null || settled || confirmedFree);
     const reconcilingFor = holding || skipping ? null : accountId;
     const status = shownStatus(holding, skipping, reconciled);

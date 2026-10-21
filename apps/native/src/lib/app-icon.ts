@@ -9,10 +9,7 @@ import { notifyFailure } from "@/lib/notify";
 
 export const alternateIconsSupported: boolean = supportsAlternateIcons;
 
-/**
- * iOS is the only record of which icon is on — nothing is persisted app-side,
- * so a setting can never disagree with the home screen.
- */
+/** iOS is the only record of which icon is on, so a setting can never disagree with the home screen. */
 function readAppIconName(): string | null {
     try {
         return getAppIconName();
@@ -32,10 +29,7 @@ export function useAppIcon(): AppIconControl {
         active: readAppIconName(),
         pending: null,
     }));
-    /**
-     * `choose` has to read the in-flight request synchronously to decide whether
-     * to call into iOS at all, which a queued state updater cannot report back.
-     */
+    /** A ref because `choose` must read the in-flight request synchronously, which a queued updater cannot report. */
     const latest = useRef(state);
 
     const commit = useCallback((next: AppIconState) => {

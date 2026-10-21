@@ -11,7 +11,6 @@ export interface ReminderTimeRowProps {
     value: TimeOfDay;
 }
 
-/** The custom reminder time, edited in place with the compact time picker. */
 export function ReminderTimeRow({ onChange, value }: ReminderTimeRowProps) {
     const colors = useColors();
     const t = useTranslation();

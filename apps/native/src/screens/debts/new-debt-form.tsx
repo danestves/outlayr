@@ -32,11 +32,6 @@ const MAX_SUGGESTIONS = 4;
 
 const sameName = (a: string, b: string) => a.trim().toLocaleLowerCase() === b.trim().toLocaleLowerCase();
 
-/**
- * The person a debt is with: the one the sheet was opened for, else whoever the
- * typed name matches. Until one is settled, the people whose names hold the
- * typed text are offered under the field.
- */
 function resolvePerson(people: readonly Account[], personId: string | undefined, name: string) {
     const lockedPerson = personId === undefined ? null : (people.find((row) => row.id === personId) ?? null);
     const person = lockedPerson ?? people.find((row) => sameName(row.name, name)) ?? null;
@@ -54,7 +49,6 @@ interface DebtDraft {
     amount: number;
     /** Set for a sale on credit, which records income instead of a movement. */
     category: Category | null;
-    /** The amount's currency, which a new person takes. */
     currency: string;
     date: Date;
     newName: string;
@@ -65,12 +59,7 @@ interface DebtDraft {
     verb: DebtVerb;
 }
 
-/**
- * Creates the person when the name is new, then records the sale on credit or
- * the movement. With no account the debt is from before Outlayr: no money
- * moved, so it becomes the new person's opening balance, negative when you borrowed.
- * Returns the person's id.
- */
+/** No account: the debt predates Outlayr and becomes the opening balance, negative when you borrowed. */
 async function writeDebt(db: Database, draft: DebtDraft): Promise<string> {
     const { account, amount, category, currency, person } = draft;
     const note = draft.note === "" ? undefined : draft.note;
@@ -99,7 +88,6 @@ async function writeDebt(db: Database, draft: DebtDraft): Promise<string> {
     return target.id;
 }
 
-/** Sets the person's plan once the debt is written; a balance that is not a debt sets none. */
 async function writePayoffPlan(db: Database, personId: string, targetDate: Date): Promise<void> {
     const people = await accountsRepo.listActive(db);
     const person = people.find((row) => row.id === personId);
@@ -119,10 +107,8 @@ interface DraftInput {
     theirText: string;
 }
 
-/** What the sheet's fields add up to, and whether that is enough to save. */
 function readDraft(input: DraftInput) {
     const { account, category, person, soldOnCredit } = input;
-    // Before Outlayr: no account moved, so the amount becomes a new person's opening balance.
     const before = !soldOnCredit && account === null && person === null;
     const currency = (soldOnCredit ? null : account?.currency) ?? person?.currency ?? input.newCurrency;
     const amount = roundToMinorUnits(numpadToNumber(input.amountText), currency);
@@ -134,9 +120,7 @@ function readDraft(input: DraftInput) {
         (person !== null || newName !== "") &&
         (soldOnCredit ? category !== null : account !== null || before) &&
         (!crossCurrency || theirAmount > 0);
-    /** The person's currency when their side is typed separately, else null. */
     const theirCurrency = crossCurrency ? person.currency : null;
-    /** A new person with no account to take a currency from picks one, which they keep. */
     const pickCurrency = person === null && (soldOnCredit || account === null);
     return { amount, before, complete, currency, newName, pickCurrency, theirAmount, theirCurrency };
 }
@@ -149,18 +133,10 @@ export function present(sheet: RefObject<BottomSheetModal | null>) {
 export interface NewDebtProps {
     onDirtyChange: (dirty: boolean) => void;
     onDone: () => void;
-    /** Fills in the person, from their detail screen. */
     personId?: string;
     verb?: DebtVerb;
 }
 
-/**
- * The New debt form behind both platforms' screens: borrowing from, lending
- * to, paying back or being paid back by a person, plus Fiado, a sale on credit
- * that asks for an income category instead of an account. A typed name that
- * matches nobody creates the person on save, and for a new person "Into" may be
- * None, which makes the amount their opening balance instead of a transfer.
- */
 export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialVerb }: NewDebtProps) {
     const db = useDatabase();
     const router = useRouter();
@@ -186,7 +162,6 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
     const [theirText, setTheirText] = useState("");
     const [date, setDate] = useState(() => new Date());
     const [note, setNote] = useState("");
-    /** "Pay back by": null sets no plan. */
     const [payBackBy, setPayBackBy] = useState<Date | null>(null);
     const [busy, setBusy] = useState(false);
     const [failure, setFailure] = useState<string | null>(null);
@@ -240,7 +215,7 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
             setBusy(false);
             return;
         }
-        // The debt stands on its own: a plan that fails is said, and the sheet still closes.
+        // A failed plan is reported, but the debt stands.
         if (payBackBy !== null) {
             try {
                 await writePayoffPlan(db, debtorId, payBackBy);
@@ -256,7 +231,7 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
     useLayoutEffect(() => {
         handlers.current = { save };
     });
-    // Reads only the ref, so the compiler keeps it stable and the Save button does not re-register per keystroke.
+    // Reads only the ref, so Save does not re-register per keystroke.
     const onSave = () => {
         void handlers.current.save();
     };
@@ -283,7 +258,6 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
         note,
         nowMs,
         onSave,
-        /** Turns "Pay back by" on a month out, unless the free plan's payoff plans are all taken. */
         openPayBackBy: () => payoffGate(person?.id ?? null, () => setPayBackBy(addLocalMonths(nowMs, 1))),
         payBackBy,
         person,
@@ -306,7 +280,6 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
     };
 }
 
-/** The sheets the form's fields open, the same on both platforms. */
 export function NewDebtSheets({ form }: { form: ReturnType<typeof useNewDebtForm> }) {
     const db = useDatabase();
     const router = useRouter();

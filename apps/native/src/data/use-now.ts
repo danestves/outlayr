@@ -21,8 +21,6 @@ function publish(candidateMs: number): void {
         return;
     }
     readingMs = candidateMs;
-    // Iterated over a copy: a screen that unmounts on this notification would
-    // otherwise skip the subscriber after it.
     // oxlint-disable-next-line unicorn/no-useless-spread -- a notified screen can unmount and unsubscribe, which would skip the subscriber after it
     for (const notify of [...subscribers]) {
         notify();
@@ -46,8 +44,7 @@ function start(): void {
     const phase = AppState.addEventListener("change", (state) => {
         if (state === "active") {
             publish(Date.now());
-            // JS timers do not run while the app is backgrounded, so the pending one
-            // is armed for a midnight that may already have gone by.
+            // JS timers stall in the background, so the pending one may target a midnight that already went by.
             armMidnight();
         }
     });
@@ -72,9 +69,8 @@ function stop(): void {
 }
 
 function subscribe(notify: () => void): () => void {
-    // A screen mounting is itself a reason to restate the reading: it is about to
-    // read the ledger, and the standing one can be an hour old. Not a fresher one
-    // than that, though: each restatement re-renders every screen bounded by it.
+    // A mounting screen restates a stale reading, but not a fresher one: each restatement re-renders every
+    // screen bounded by it.
     const nowMs = Date.now();
     if (nowMs - readingMs > MOUNT_RESTATE_AFTER_MS) {
         publish(nowMs);
@@ -92,23 +88,13 @@ function subscribe(notify: () => void): () => void {
     };
 }
 
-/** What `useNow()` returns, for a caller outside render. */
 export function readNow(): number {
     return readingMs;
 }
 
 /**
- * The one reading of "now" every date-bounded read in the app shares. A screen
- * that freezes its own `Date.now()` at mount puts a row saved after that mount
- * past the ledger's `lte(date, now)` bound and under `useUpcomingTransactions`,
- * since a transaction's date is `new Date()` at *form* mount.
- *
- * It moves on a write to `transactions`, `transfers` or `outsidePayments` —
- * all date-bounded ledger reads — on returning to the foreground, and at local
- * midnight. A transfer with no fee touches only `transfers`, and an installment
- * paid outside Outlayr only `outsidePayments`, so leaving either out hid the row
- * until the next tick. Store state rather than per-hook state so the
- * listeners are installed once for the app, not once per screen reading it.
+ * The one "now" every date-bounded read shares: a screen freezing its own `Date.now()` at mount hides rows saved
+ * after it. Moves on a write to any `BOUNDED_TABLES` table, on returning to the foreground, and at local midnight.
  */
 export function useNow(): number {
     return useSyncExternalStore(useTabPaused(subscribe), readNow);

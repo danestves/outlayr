@@ -14,10 +14,7 @@ import { SENTENCE_DRAW, valueEntering } from "./sentence-motion";
 import { SentenceWash } from "./sentence-wash";
 import { useSentenceShake } from "./use-sentence-shake";
 
-/**
- * Clears the 26pt face's descenders without leaving the rule adrift in the
- * 38pt line box. Measured against SF Pro Rounded, not derived.
- */
+// Measured against SF Pro Rounded, not derived: clears the 26pt face's descenders inside the 38pt line box.
 const RULE_BOTTOM = 7;
 
 export interface SentenceFigure {
@@ -27,38 +24,21 @@ export interface SentenceFigure {
 
 interface SentenceValueProps {
     accessibilityLabel: string;
-    /** Marks this as the slot the stage below the sentence is editing. */
     active?: boolean;
-    /** An inline tile drawn before the text, such as a merchant's logo. */
     children?: ReactNode;
     figure?: SentenceFigure;
-    /**
-     * Marks this fact as the one holding the save back. A value can be at fault
-     * as readily as a blank: a category enrichment suggested is on screen and
-     * still fails the save if it cannot be created.
-     */
     flagged?: boolean;
     onPress: () => void;
-    /** Dimmed while a suggestion for this slot is still resolving. */
     pending?: boolean;
     ruleBottom?: number;
     shake?: boolean;
-    /**
-     * Identity of the fact rather than of its text. The amount changes on every
-     * keypad press and is still the same fact, so it passes a constant here and
-     * updates in place instead of rewriting itself per digit.
-     */
+    /** The fact's identity, not its text: the amount passes a constant so it updates in place instead of per digit. */
     swapKey?: string;
     value: string;
 }
 
-/**
- * A settled fact in the sentence: the word, and a rule that draws itself under
- * it. The rule is `scaleX` from a left origin rather than an animated width —
- * a width would relayout every word after it on each frame, and the sentence
- * lives inside `RNHostView`, which re-measures the whole SwiftUI form when it
- * does.
- */
+// The rule animates `scaleX`, not width: a width relayouts every later word per frame, and inside `RNHostView`
+// that re-measures the whole SwiftUI form.
 export function SentenceValue({
     accessibilityLabel,
     active,

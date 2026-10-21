@@ -72,7 +72,6 @@ export async function resetAllDeviceData(
     const failures: DeviceStore[] = [];
     for (const store of only) {
         try {
-            // Cleanup is intentionally ordered to avoid reopening a dependent store after it is erased.
             // oxlint-disable-next-line no-await-in-loop -- reset order is part of the crash-recovery contract.
             await stores[store]();
         } catch {

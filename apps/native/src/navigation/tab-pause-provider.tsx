@@ -6,20 +6,15 @@ import { useLayoutEffect, useState } from "react";
 import { createTabPause, TabPauseContext } from "@/data/tab-pause";
 
 /**
- * Wraps one tab's stack. Every tab stays mounted, and nothing in NativeTabs
- * freezes the ones in the background, so without this each live read in a tab
- * nobody is looking at re-renders on every write.
- *
- * Selection is read from the tab navigator rather than `useIsFocused`, which
- * also turns false under a modal: the Log behind the entry form keeps updating.
+ * Every tab stays mounted and NativeTabs freezes none, so background live reads would re-render on every write.
+ * Selection comes from the tab navigator, not `useIsFocused`, which also turns false under a modal.
  */
 export function TabPauseProvider({ children }: { children: ReactNode }) {
     const routeKey = useRoute().key;
     const selected = useNavigationState((state) => state.routes[state.index]?.key === routeKey);
     const [pause] = useState(createTabPause);
 
-    // Layout rather than passive: the replay then renders in the same task as the
-    // commit that selected the tab, not a frame after it.
+    // Layout rather than passive, so the replay renders in the same task as the commit that selected the tab.
     useLayoutEffect(() => {
         pause.setSelected(selected);
     }, [pause, selected]);

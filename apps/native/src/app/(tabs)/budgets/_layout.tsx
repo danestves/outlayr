@@ -23,8 +23,7 @@ export default function BudgetsLayout() {
                     <Stack.Header transparent />
                     <Stack.Screen.BackButton displayMode="minimal" />
                 </Stack.Screen>
-                {/* Pushed, not presented: a goal is read here, and the facts under the
-			    chart are edited in place rather than in a modal over it. */}
+                {/* Pushed, not presented: a goal's facts are edited in place, not in a modal over it. */}
                 <Stack.Screen name="goals/[id]">
                     <Stack.Header transparent />
                     <Stack.Screen.BackButton displayMode="minimal" />

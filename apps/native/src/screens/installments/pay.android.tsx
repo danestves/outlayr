@@ -16,7 +16,6 @@ import { useMaterialColors } from "@/theme/use-material-colors";
 import { SourceChoice, SourceTile, usePayEntry, usePayForm } from "./pay-form";
 import type { PayFormProps } from "./pay-form";
 
-/** What an outlined select field reads. */
 function fieldValue(value: string) {
     return (
         <Text className="text-body text-m3-on-surface" numberOfLines={1}>
@@ -25,14 +24,7 @@ function fieldValue(value: string) {
     );
 }
 
-/**
- * Paying an order on Android: the amount over the cuota it pays, From and Date
- * as outlined fields, and the filled Pay button under them: a sheet's content
- * is as tall as its largest detent, so a button pinned to its foot would rest
- * off screen. From opens its choices in the
- * sheet's place, radio rows with each account's balance, as iOS swaps them in.
- * Same state as `pay.tsx`, from `usePayForm`.
- */
+/** Not pinned to the foot: a sheet is as tall as its largest detent, so it would rest off screen. */
 export function PayInstallment({ all, planId }: { all: boolean; planId: string }) {
     const props = usePayEntry(planId, all);
     return props === null ? null : <PayForm {...props} />;

@@ -45,11 +45,7 @@ export async function refreshProEntitlement(): Promise<boolean> {
     return hasProEntitlement(await Purchases.getCustomerInfo());
 }
 
-/**
- * Where the customer manages their subscription: the store that owns it (the
- * App Store for one bought on an iPhone, Play for one bought here). Null with
- * no active subscription, which includes the one-time lifetime purchase.
- */
+/** Null with no active subscription, which includes the one-time lifetime purchase. */
 export async function managementUrl(): Promise<string | null> {
     const customerInfo = await Purchases.getCustomerInfo();
     return customerInfo.managementURL;

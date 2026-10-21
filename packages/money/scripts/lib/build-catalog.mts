@@ -21,10 +21,9 @@ export interface BuiltCatalog {
 }
 
 /**
- * The only fraction-digit counts the money engine, display formatter, and the
- * `CURRENCY_DECIMALS` literal type support. A provider currency outside this set
- * (e.g. a 4-digit accounting unit like CLF) must fail the build loudly rather
- * than ship an exponent the rounding path cannot express.
+ * The only fraction-digit counts the money engine and `CURRENCY_DECIMALS` support. A
+ * provider currency outside them (CLF's 4) must fail the build, not ship an exponent the
+ * rounding path cannot express.
  */
 const ALLOWED_DECIMALS = new Set<number>([0, 2, 3, 6]);
 
@@ -33,15 +32,8 @@ function readJson(relativePath: string) {
 }
 
 /**
- * Deterministically builds the currency catalog from three committed inputs:
- * the vendored provider code list (Frankfurter USD-base blend + cotizave VES),
- * the pinned CLDR datasets (`cldr-numbers-modern` English names/symbols,
- * `cldr-core` fraction digits), and the manual `overrides.json` overlay. Given
- * the committed inputs it always returns the same `{ codes, decimals, meta }`,
- * so the drift test and the generator agree byte-for-byte on values.
- *
- * Resolution order per field: override wins, then CLDR, then the bare code as a
- * last-resort fallback (matches the runtime bare-code display fallback).
+ * Pure over the committed inputs (provider codes, pinned CLDR, `overrides.json`), so the drift
+ * test and the generator agree byte-for-byte. Per field: override, then CLDR, then the bare code.
  */
 export function buildCatalog(): BuiltCatalog {
     const codes: string[] = readJson("../provider-codes.json");

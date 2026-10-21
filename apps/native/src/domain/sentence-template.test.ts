@@ -36,8 +36,6 @@ describe("parseSentence", () => {
         expect(words("Spent {amount")).toStrictEqual([["Spent"], ["{amount"]]);
     });
 
-    // The whole point of driving layout from the template: a translator moves a
-    // slot and the renderer follows, with no code change.
     it("preserves the template's own slot order", () => {
         expect(sentenceSlotNames("{a} then {b}")).toStrictEqual(["a", "b"]);
         expect(sentenceSlotNames("{b} then {a}")).toStrictEqual(["b", "a"]);

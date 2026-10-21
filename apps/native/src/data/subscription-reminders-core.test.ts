@@ -21,7 +21,7 @@ interface CarrierOverrides {
     accountId?: string | null;
     amount?: number;
     currency?: string | null;
-    /** Its LAST charge, clock time included — the landing must not be read off it. */
+    /** Its last charge, clock time included; the landing must not be read off it. */
     date: Date;
     day?: Date;
     deletedAt?: Date | null;
@@ -71,8 +71,6 @@ describe("reminderCandidates", () => {
         db = makeDb();
     });
 
-    // Reading the landing off `date` would carry the last charge's clock time onto
-    // every future one, so the announced day would drift by hours per hop.
     it("dates the landing from the ledger day, not the last charge's clock time", async () => {
         await seedCarrier(db, {
             date: at(2025, 3, 15, 23, 45),
@@ -99,8 +97,7 @@ describe("reminderCandidates", () => {
     });
 
     it("advances from the day the chain was written for, not the short month it was clamped into", async () => {
-        // 31 Jan monthly, clamped to 28 Feb by the backfill, which recorded the
-        // anchor it was clamped from. March has a 31st, so the charge goes back.
+        // 31 Jan monthly, clamped to 28 Feb with its anchor recorded; March has a 31st.
         await seedCarrier(db, { date: at(2025, 2, 28), recurringAnchorDay: 31, reminderLeadDays: 0 });
 
         const [candidate] = await reminderCandidates(db, at(2025, 3, 5), NINE_AM);
@@ -197,8 +194,6 @@ describe("reminderCandidates", () => {
         await expect(reminderCandidates(db, NOW, NINE_AM)).resolves.toStrictEqual([]);
     });
 
-    // Every retire path clears the column, but a peer's hand-off replicates in
-    // whatever it wrote — so the notice alone can never be the predicate.
     it("yields nothing for a retired row still holding a notice", async () => {
         await seedCarrier(db, {
             date: at(2025, 3, 15),
@@ -250,8 +245,6 @@ describe("pendingReminderPlan", () => {
         await expect(everyRow(db)).resolves.toStrictEqual(before);
     });
 
-    // The plan is what the scheduler hands to iOS, so a request that reached it
-    // without its copy would announce a bare identifier.
     it("carries the copy and the landing each notice has to print", async () => {
         await seedCarrier(db, {
             amount: 11.99,
@@ -310,8 +303,6 @@ describe("pendingReminderPlan", () => {
         expect(after?.chargeId).toBe(occurrenceId(after?.localId ?? "", at(2025, 7, 15, 21, 30)));
     });
 
-    // Two carriers, one truncated away: the surviving request has to keep ITS own
-    // copy, not the row the plan dropped.
     it("keeps each notice's copy with its own request under the cap", async () => {
         await seedCarrier(db, {
             amount: 9.99,

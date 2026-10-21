@@ -13,13 +13,7 @@ import type { StoreTermsProps } from "./store-terms";
 
 export type { StoreTermsProps } from "./store-terms";
 
-/**
- * Where this customer manages their subscription, from RevenueCat: the store
- * that owns it, which is the App Store for one bought on an iPhone. Kept current
- * through RevenueCat's customer updates, so a purchase or a restore made here
- * brings the link with it. Null with nothing to manage: no subscription, or the
- * one-time lifetime purchase.
- */
+/** Null with nothing to manage: no subscription, or the lifetime purchase. */
 function useManagementUrl(): string | null {
     const { isConfigured } = useRevenueCat();
     const [url, setUrl] = useState<string | null>(null);
@@ -46,13 +40,6 @@ function useManagementUrl(): string | null {
     return url;
 }
 
-/**
- * Google Play's terms under the plans, while the selected plan is a
- * subscription (the lifetime plan is a single purchase): a trial turns into a
- * paid subscription unless it's cancelled first, and a subscription renews
- * until it's cancelled. Below them, the way to manage the subscription this
- * customer already has, wherever they bought it.
- */
 export function StoreTerms({ plan }: StoreTermsProps) {
     const t = useTranslation();
     const m3 = useMaterialColors();

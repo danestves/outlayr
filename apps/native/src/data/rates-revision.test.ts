@@ -14,8 +14,6 @@ describe("rates revision", () => {
     });
 
     it("reads back the same value until something bumps it", () => {
-        // `useSyncExternalStore` calls the getter on every render and loops forever
-        // if it answers differently without a store notification.
         expect(ratesRevision()).toBe(ratesRevision());
     });
 });

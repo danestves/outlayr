@@ -23,7 +23,6 @@ describe("stored round-trip", () => {
     });
 
     it("falls back to spent on a value it does not recognise", () => {
-        // A spending app's honest default, and what an unseeded install reads.
         expect(insightsMeasureFromStored(0)).toBe("spent");
     });
 });
@@ -60,7 +59,6 @@ describe("insightsMeasureIsIncome", () => {
     it("gives the income colour only to money actually coming in", () => {
         expect(insightsMeasureIsIncome("income")).toBe(true);
         expect(insightsMeasureIsIncome("spent")).toBe(false);
-        // A positive net is still just a net.
         expect(insightsMeasureIsIncome("net")).toBe(false);
     });
 });

@@ -10,19 +10,8 @@ import { useTranslation } from "@/i18n/context";
 import { transactionMenuItems } from "./transaction-actions";
 
 /**
- * Builds a row's context-menu entries. `future` says the row is being painted as
- * an upcoming occurrence, which the Delete guard needs and the row's own date
- * cannot tell it: a carrier's stored date is its last charge, not its next.
- *
- * The whole row is taken rather than an id, because a context menu is composed
- * before the press rather than assembled after one — which is also what retires
- * the read-back the imperative version needed.
- *
- * Stopping a schedule is held for an undo window like the delete beside it. It
- * has to be: the write is the only record that the schedule ended, and a silent
- * failure looks exactly like a stop that worked while the schedule is still live
- * — the next foreground sweep then writes the very charge the user asked to end.
- * The window's toast says so either way.
+ * `future` marks a row painted as an upcoming occurrence: a carrier's stored date is its last charge, not its next.
+ * Stopping a schedule waits out an undo window too, so a silent failure is seen before the next sweep charges again.
  */
 export function useTransactionRowActions(
     nowMs: number,

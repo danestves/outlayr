@@ -8,13 +8,12 @@ import type { CellRow } from "./cell-query";
 
 const TRANSFER_UTC_DAY = sql<string>`strftime('%Y-%m-%d', ${transfers.date} / 1000, 'unixepoch')`;
 
-/** Where a transfer leg is PLOTTED, never where it is valued — see `LOCAL_DAY`. */
+/** Where a transfer leg is PLOTTED, never where it is valued (see `LOCAL_DAY`). */
 const TRANSFER_LOCAL_DAY = sql<string>`strftime('%Y-%m-%d', ${transfers.date} / 1000, 'unixepoch', 'localtime')`;
 
 /**
- * `income` is absent from both column sets on purpose: a transfer row has no
- * direction of its own. Direction is which side of the row you are reading it
- * from, so it is stamped on in {@link toTransferCell} rather than selected.
+ * No `income` column: a transfer row has no direction of its own, so {@link toTransferCell}
+ * stamps it from the side the row is read from.
  */
 const OUTBOUND_COLUMNS = {
     currency: transfers.fromCurrency,

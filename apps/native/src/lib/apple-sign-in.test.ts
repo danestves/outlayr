@@ -23,7 +23,7 @@ describe("apple-nonce-binds-once", () => {
         crypto.getRandomBytesAsync.mockResolvedValue(Uint8Array.from([0, 1, 2]));
         crypto.digestStringAsync.mockResolvedValue("hashed-nonce");
         apple.signInAsync.mockResolvedValue(
-            // SAFETY: appleCredential reads these three fields and nothing else off the credential; email, fullName, realUserStatus and state never reach it.
+            // SAFETY: appleCredential reads these three fields and nothing else off the credential.
             {
                 authorizationCode: "authorization-code",
                 identityToken: "identity-token",

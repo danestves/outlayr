@@ -25,16 +25,12 @@ import { Text } from "./text";
 
 const PREVIEW_COUNT = 3;
 
-/** One row's half of the swap: out, then the new date, then back in. */
 const SWAP = {
     duration: 80,
     easing: Easing.bezier(0.2, 0.9, 0.25, 1),
 } as const;
-/**
- * Exactly one row's full out-and-back, so the next row does not start until the
- * last has landed. Anything shorter overlaps their dim windows: measured on
- * device, 55ms emptied all three rows at once and 90ms still emptied two.
- */
+// One row's full out-and-back, so rows never overlap their dim windows: on device 55ms emptied all three rows at
+// once and 90ms still emptied two.
 const RIPPLE_STAGGER_MS = SWAP.duration * 2;
 
 const SENTENCE = "font-sans-medium text-[30px] text-foreground leading-9";
@@ -54,10 +50,8 @@ interface PluralKeys {
     readonly one: TranslationKey;
 }
 
-/** Named so the fallback below is a value, not another lookup that can miss. */
 const MONTHLY_UNIT: PluralKeys = { many: "transaction.unit.months", one: "transaction.unit.month" };
 
-// Keyed by a stored `recurringType`, as above.
 const UNIT_NOUN_KEY = new Map<number, PluralKeys>([
     [RECURRING_TYPE.daily, { many: "transaction.unit.days", one: "transaction.unit.day" }],
     [RECURRING_TYPE.weekly, { many: "transaction.unit.weeks", one: "transaction.unit.week" }],
@@ -67,7 +61,6 @@ const UNIT_NOUN_KEY = new Map<number, PluralKeys>([
 
 const MONTHLY_INTERVAL: PluralKeys = { many: "transaction.interval.months", one: "transaction.interval.month" };
 
-// Keyed by a stored `recurringType`, as above.
 const INTERVAL_KEY = new Map<number, PluralKeys>([
     [RECURRING_TYPE.daily, { many: "transaction.interval.days", one: "transaction.interval.day" }],
     [RECURRING_TYPE.weekly, { many: "transaction.interval.weeks", one: "transaction.interval.week" }],
@@ -75,12 +68,7 @@ const INTERVAL_KEY = new Map<number, PluralKeys>([
     [RECURRING_TYPE.yearly, { many: "transaction.interval.years", one: "transaction.interval.year" }],
 ]);
 
-/**
- * The "day" / "3 months" fragment both `Every {interval}` and
- * `Repeats every {interval}` embed. Composed rather than written out per cadence
- * because English and Spanish take the same shape here, and the count is a plain
- * integer the caller already clamped — no locale number formatting is involved.
- */
+// Composed, not written per cadence: English and Spanish take the same shape, and the count needs no locale format.
 export function intervalPhrase(t: TranslateFn, type: number, coefficient: number): string {
     const n = Math.max(1, Math.round(coefficient));
     const keys = INTERVAL_KEY.get(type) ?? MONTHLY_INTERVAL;
@@ -103,23 +91,12 @@ function chargeKey(charges: readonly ScheduledCharge[]): string {
     return charges.map((c) => `${c.date.getTime()}:${c.clamped}`).join("|");
 }
 
-/**
- * Holds the charges on screen while they hand over one row at a time.
- *
- * The rows are staggered rather than swapped together so the eye reads the
- * schedule re-walking forward from the first payment, and each row's new date
- * lands at the midpoint of its own fade — no frame ever shows a date the sheet
- * is not about to keep.
- */
+// Each row's new date lands at the midpoint of its own fade, so no frame shows a date the sheet will not keep.
 function useRippledCharges(charges: readonly ScheduledCharge[], ready: boolean) {
     const [shown, setShown] = useState<readonly ScheduledCharge[]>(charges);
     const [swapping, setSwapping] = useState<readonly boolean[]>([]);
-    /*
-     * Committed only once every row has landed. Deriving it from `shown` mid-swap
-     * reads a half-updated schedule, and an intermediate set with no clamped row
-     * hides the note, shrinks the sheet, then grows it again a beat later — the
-     * one height change here, played twice, in the middle of the motion.
-     */
+    // Committed once every row has landed: a half-updated set with no clamped row would hide the note, shrink the
+    // sheet, then grow it again a beat later.
     const [noteVisible, setNoteVisible] = useState(() => charges.some((charge) => charge.clamped));
     const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
     const next = chargeKey(charges);
@@ -196,9 +173,7 @@ interface CustomScheduleSheetProps {
     recurringType: number;
 }
 
-/**
- * Edits are LOCAL until Done, so Cancel leaves the form's schedule untouched.
- */
+// Edits stay local until Done, so Cancel leaves the form's schedule untouched.
 export function CustomScheduleSheet({
     open,
     recurringType,
@@ -213,11 +188,7 @@ export function CustomScheduleSheet({
     const [type, setType] = useState(seeded.type);
     const [coefficient, setCoefficient] = useState(seeded.coefficient);
     const [wasOpen, setWasOpen] = useState(open);
-    /*
-     * The dates re-seed on the open edge, and rippling them there would play our
-     * motion underneath the platform's own presentation. Armed a tick after the
-     * sheet is up, so the first ripple the user sees is one they asked for.
-     */
+    // Armed a tick after the sheet is up: rippling the open-edge re-seed would play under the platform presentation.
     const [rippleReady, setRippleReady] = useState(false);
 
     useEffect(() => {
@@ -230,13 +201,9 @@ export function CustomScheduleSheet({
         return () => clearTimeout(armed);
     }, [open]);
 
-    /*
-     * Re-seeded during render on the closed→open edge, not in an effect: the sheet
-     * stays mounted across opens, so a form edit made while it was closed has to
-     * land — and landing it a frame later would draw the previous schedule first.
-     * Re-seeding on every prop change instead would fight the user mid-edit, since
-     * Done is what pushes these values back up to the form.
-     */
+    // Re-seeded during render on the closed-to-open edge: the sheet stays mounted, so a form edit made while closed
+    // must land, and an effect would draw the previous schedule for a frame. Re-seeding on every prop change would
+    // fight the user mid-edit.
     if (open !== wasOpen) {
         setWasOpen(open);
         setRippleReady(false);
@@ -289,10 +256,8 @@ export function CustomScheduleSheet({
                     </Button>
                 </View>
 
-                {/*
-                 * A row rather than one Text with nested spans: the step buttons are views,
-                 * and the unit needs its own node to cross-fade.
-                 */}
+                {/* A row, not nested Text spans: the step buttons are views, and the unit needs its own node to
+                    cross-fade. */}
                 <View
                     className="h-9 flex-row items-center gap-2"
                     style={{ marginBottom: 16, marginTop: 12 }}
@@ -321,12 +286,8 @@ export function CustomScheduleSheet({
                         icon={PlusSignIcon}
                         onStep={stepUp}
                     />
-                    {/*
-                     * Pinned to the line's height with the words stacked absolutely inside
-                     * it. Reanimated keeps an exiting view mounted, and two words in normal
-                     * flow would double this box for the length of the cross-fade — which
-                     * re-measures RNHostView and makes the whole platform sheet re-settle.
-                     */}
+                    {/* Pinned height with the words stacked absolutely: Reanimated keeps the exiting word mounted, so
+                        two words in flow would double this box, re-measure RNHostView and re-settle the sheet. */}
                     <View className="h-9 flex-1">
                         <Animated.View
                             className="absolute top-0 left-0"
@@ -339,11 +300,8 @@ export function CustomScheduleSheet({
                     </View>
                 </View>
 
-                {/*
-                 * `pill`, never `segmented`: PanelUI's segmented track paints its list
-                 * `bg-muted`, which is a surface wash in their theme and the secondary
-                 * TEXT colour in ours — it comes out a dark slab.
-                 */}
+                {/* `pill`, never `segmented`: PanelUI's segmented track paints `bg-muted`, which is a text colour in
+                    our theme, so it comes out a dark slab. */}
                 <Tabs
                     defaultValue={String(RECURRING_TYPE.monthly)}
                     onValueChange={pickType}
@@ -385,9 +343,7 @@ export function CustomScheduleSheet({
 
 const STEP_ICON_SIZE = 18;
 
-/** Held down, a step waits this long before it starts repeating. */
 const HOLD_DELAY_MS = 350;
-/** And then repeats this often — 1 to 30 in about two seconds. */
 const HOLD_REPEAT_MS = 70;
 
 interface StepButtonProps {
@@ -397,13 +353,6 @@ interface StepButtonProps {
     onStep: () => void;
 }
 
-/**
- * Nudges the count inside the sentence.
- *
- * It repeats while held, which is what lets one pair of buttons cover the whole
- * range: without it, reaching 30 is 29 taps, and that is the gap the row of
- * preset chips used to fill.
- */
 function StepButton({ icon, onStep, disabled, accessibilityLabel }: StepButtonProps) {
     const colors = useColors();
     const held = useRef<{
@@ -428,9 +377,6 @@ function StepButton({ icon, onStep, disabled, accessibilityLabel }: StepButtonPr
             accessibilityLabel={accessibilityLabel}
             accessibilityRole="button"
             accessibilityState={{ disabled }}
-            // `bg-background`, not `bg-surface-secondary`: the sheet's own surface is
-            // within a couple of values of it, so a secondary fill left these as bare
-            // glyphs floating in the sentence with nothing to aim at.
             className={
                 disabled
                     ? "bg-background h-9 w-9 items-center justify-center rounded-full opacity-40"
@@ -438,8 +384,7 @@ function StepButton({ icon, onStep, disabled, accessibilityLabel }: StepButtonPr
             }
             disabled={disabled}
             hitSlop={6}
-            // On press-in, not on press: a stepper that waits for the finger to lift
-            // feels a beat behind, and the hold has to start from the same moment.
+            // On press-in: a stepper that waits for the lift feels a beat behind, and the hold starts from that moment.
             onPressIn={() => {
                 onStep();
                 held.current.delay = setTimeout(() => {
@@ -457,7 +402,6 @@ interface ChargeRowProps {
     date: Date;
     first?: boolean;
     last?: boolean;
-    /** This row's date is mid-handover and is not currently true. */
     swapping?: boolean;
     tag?: string;
     tinted?: boolean;
@@ -465,8 +409,7 @@ interface ChargeRowProps {
 
 function ChargeRow({ date, tag, first = false, last = false, tinted = false, swapping = false }: ChargeRowProps) {
     const { language } = useLanguage();
-    // Transform and opacity only: neither reaches layout, so the row never
-    // re-measures and the platform sheet never re-settles under the motion.
+    // Transform and opacity only, so the row never re-measures and the platform sheet never re-settles.
     const dateStyle = useAnimatedStyle(() => ({
         opacity: withTiming(swapping ? 0 : 1, SWAP),
         transform: [{ translateY: withTiming(swapping ? 5 : 0, SWAP) }],
@@ -477,8 +420,7 @@ function ChargeRow({ date, tag, first = false, last = false, tinted = false, swa
 
     return (
         <View className="min-h-9.5 flex-row items-center gap-3">
-            {/* The rule is drawn before the dot so the dot covers it; an unfilled
-			    dot is a ring, and a line crossing its middle reads as a strikethrough. */}
+            {/* The rule comes before the dot, so the dot's ring covers it instead of reading as a strikethrough. */}
             <View className="w-5.5 items-center justify-center self-stretch">
                 {last ? null : <View className="bg-separator absolute top-1/2 bottom-0 w-[1.5px]" />}
                 {first ? null : <View className="bg-separator absolute top-0 bottom-1/2 w-[1.5px]" />}

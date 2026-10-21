@@ -1,9 +1,6 @@
 import { addDays, startOfDay } from "./calendar";
 
-/**
- * Mirrors the Swift `RecurringCadence` raw values so a transaction's persisted
- * `recurringType` reads identically across the two apps.
- */
+// Mirrors the Swift `RecurringCadence` raw values, so a persisted `recurringType` reads the same in both apps.
 export const RECURRING_TYPE = {
     daily: 1,
     monthly: 3,
@@ -22,16 +19,11 @@ export const SELECTABLE_RECURRING_TYPES: readonly RecurringType[] = [
     RECURRING_TYPE.yearly,
 ];
 
-/**
- * A subscription needs a cadence to walk forward. Only fires when the type is
- * still `none` — re-entering subscription mode after toggling it off must not
- * clobber a cadence the user already chose.
- */
+// Only fills `none`, so re-entering subscription mode keeps a cadence the user already chose.
 export function ensureRecurringType(type: number): number {
     return type === RECURRING_TYPE.none ? RECURRING_TYPE.monthly : type;
 }
 
-/** Adds `n` whole months, landing on `anchorDay` where the target month allows. */
 export function addMonths(date: Date, n: number, anchorDay: number): Date {
     const d = new Date(date);
     d.setDate(1);
@@ -41,13 +33,8 @@ export function addMonths(date: Date, n: number, anchorDay: number): Date {
     return d;
 }
 
-/**
- * The day of the month a schedule was written for.
- *
- * A carrier clamped into a short month — 31 Jan advancing to 28 Feb — has to
- * keep advancing from 31, so every projection of the same chain has to ask for
- * this rather than read the day off the row it happens to be standing on.
- */
+// A carrier clamped from 31 Jan to 28 Feb keeps advancing from 31, so every projection of a chain asks this
+// rather than reading the day off the row it is standing on.
 export function anchorDayOf(source: { date: Date; recurringAnchorDay: number | null }): number {
     return source.recurringAnchorDay ?? source.date.getDate();
 }
@@ -59,16 +46,7 @@ function normalizeAnchor(anchorDay: number | null | undefined, from: Date) {
     return Math.min(31, Math.max(1, Math.round(anchorDay)));
 }
 
-/**
- * The next occurrence after `from`, or `null` when the type is non-recurring.
- * Day/week advance by exact days; month/year advance by calendar units clamped
- * to a valid day-of-month.
- *
- * `anchorDay` is the day the schedule was written for, which a short month can
- * pull a given occurrence off. Passing it is what lets the 31st come back in
- * March after February clamped it to the 28th; omitting it anchors to `from`'s
- * own day, which is the same thing for any schedule that has never clamped.
- */
+// `anchorDay` lets the 31st come back in March after February clamped it; omitted, it anchors to `from`'s own day.
 export function nextDate(from: Date, type: number, coefficient: number, anchorDay?: number | null): Date | null {
     const n = Math.max(1, Math.round(coefficient));
     const anchor = normalizeAnchor(anchorDay, from);
@@ -92,15 +70,11 @@ export function nextDate(from: Date, type: number, coefficient: number, anchorDa
 }
 
 export interface ScheduledCharge {
-    /** The target month was too short to hold the anchor day, so this one moved. */
     clamped: boolean;
     date: Date;
 }
 
-/**
- * The next `count` charges after `firstPayment`, walked exactly as the back-fill
- * walks them so what the form promises is what the ledger later writes.
- */
+// Walked exactly as the back-fill walks, so what the form promises is what the ledger later writes.
 export function schedulePreview(
     firstPayment: Date,
     type: number,
@@ -127,19 +101,10 @@ export function schedulePreview(
     return charges;
 }
 
-/** The largest interval the schedule will accept. */
 export const MAX_INTERVAL = 30;
 
-/**
- * The first occurrence of `from`'s schedule strictly after today, or null when
- * the schedule cannot advance or has run past its end date. `from` counts as a
- * member of its own schedule, so a charge still ahead of today is the landing
- * rather than something to step past — anything else would name the charge one
- * whole cadence beyond the one the ledger is about to take.
- *
- * Walked rather than projected so month-length clamping matches every occurrence
- * the back-fill writes.
- */
+// `from` is a member of its own schedule, so a charge still ahead of today is the landing. Walked, not projected,
+// so month clamping matches every occurrence the back-fill writes.
 export function nextLanding(
     from: Date,
     type: number,
@@ -154,16 +119,13 @@ export function nextLanding(
     const advance = (at: Date): Date | null => nextDate(at, type, coefficient, anchor);
     const pastEndLimit = (at: Date): boolean => endLimit != null && startOfDay(at).getTime() > endLimit.getTime();
 
-    // A row with no cadence has no schedule to land on, checked before `from`
-    // itself is considered so a future-dated one-off can never be mistaken for a
-    // pending subscription charge.
+    // Checked first, so a future-dated one-off is never mistaken for a pending subscription charge.
     if (advance(from) == null) {
         return null;
     }
 
-    // Strictly after, never on: `scheduleSuccessor` hands this a carrier dated
-    // today-or-earlier, and returning a same-day `from` would make it the
-    // successor of itself and stall the chain on one charge forever.
+    // Strictly after: `scheduleSuccessor` passes a carrier dated today or earlier, and a same-day `from` would
+    // succeed itself and stall the chain forever.
     if (startOfDay(from).getTime() > today.getTime()) {
         return pastEndLimit(from) ? null : from;
     }
@@ -183,7 +145,6 @@ export function nextLanding(
     return null;
 }
 
-/** Swift's `nextTransactionDate`. */
 export function landingDate(
     row: { date: Date; recurringAnchorDay: number | null; recurringCoefficient: number | null; recurringType: number },
     now: Date
@@ -191,8 +152,7 @@ export function landingDate(
     if (row.date.getTime() > now.getTime()) {
         return row.date;
     }
-    // From the instant's own day, not the stored `day`: that is midnight in the
-    // writing device's zone and can read as the day before on this one.
+    // Not the stored `day`: that is midnight in the writing device's zone and can read as the day before here.
     return (
         nextDate(startOfDay(row.date), row.recurringType, row.recurringCoefficient ?? 1, anchorDayOf(row)) ?? row.date
     );

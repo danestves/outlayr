@@ -27,8 +27,7 @@ const EMPTY_DRAFT: MappingDraft = {
 
 function buildCategoryTree(meta: ReadonlyMap<string, CategoryMetaRow>) {
     const named = [...meta.entries()].filter(([, row]) => row.name != null);
-    // SAFETY: `named` is filtered to rows with a non-null name just above; the
-    // column itself is nullable.
+    // SAFETY: `named` is filtered to non-null names above; the column is nullable.
     return named
         .filter(([, row]) => row.parentId == null)
         .map(([id, row]) => ({

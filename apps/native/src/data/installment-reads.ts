@@ -15,13 +15,12 @@ import { useTransferRates } from "./transfer-rates";
 
 const OFFICIAL: readonly MarketRateType[] = ["official"];
 
-/** The day's official rate from one currency into another, read as the transfer editor reads it. */
 export function usePaymentRate(db: Database, from: string, to: string, date: Date): number | null {
     const table = useTransferRates(db, [from, to], OFFICIAL).official;
     return table === undefined ? null : marketRateFor(from, to, date, table);
 }
 
-/** The same rate read once, for a save: the entry form never subscribes to rates it may not need. */
+// Read once for a save: the entry form never subscribes to rates it may not need.
 export function paymentRate(db: Database, from: string, to: string, date: Date): number | null {
     if (from === to) {
         return 1;
@@ -42,7 +41,6 @@ export function paymentRate(db: Database, from: string, to: string, date: Date):
     return marketRateFor(from, to, date, buildRateTable(rows));
 }
 
-/** The live order a purchase entry belongs to, if it has one. */
 export function planIdForPurchase(db: Database, transactionId: string): string | null {
     const [plan] = db
         .select({ id: installmentPlans.id })
@@ -74,12 +72,7 @@ function accountOutsidePaymentsQuery(db: Database, accountId: string) {
         .orderBy(desc(outsidePayments.date));
 }
 
-/**
- * The payments a liability's orders took outside Outlayr, newest first, as the
- * arriving transfer rows of its activity with `sender` in place of the account
- * they came from. Each row carries its order's id, which is where a tap goes.
- * A null account (anything but a liability) reads nothing.
- */
+// Shaped as arriving transfer rows of the account's activity, with `sender` standing in for the source account.
 export function useOutsidePaymentRows(
     db: Database,
     account: Pick<Account, "currency" | "id" | "name"> | null,

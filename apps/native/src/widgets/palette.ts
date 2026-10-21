@@ -1,20 +1,4 @@
-/**
- * The Grid palette, flattened for the widget runtime.
- *
- * A widget body is stringified by babel and evaluated inside the widget
- * extension's own `JSContext` (see `expo-widgets`' `WidgetsJSRuntime`), so it
- * cannot import `useColors` or read `global.css` — nothing from this bundle's
- * module scope is in scope there. Colours have to arrive as plain hex in props,
- * which means they have to be written down statically somewhere.
- *
- * Both schemes ship, not just the app's current one: a widget renders in
- * whatever appearance the home screen is in, independent of the app, and picks
- * its side from `environment.colorScheme`.
- *
- * `palette.test.ts` parses `global.css` and fails if any value here has drifted,
- * so this stays a projection of the stylesheet rather than a second source of
- * truth.
- */
+/** Static hex for both schemes: the widget's `JSContext` cannot read `global.css`. `palette.test.ts` catches drift. */
 export interface WidgetPalette {
     background: string;
     border: string;

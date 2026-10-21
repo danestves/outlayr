@@ -16,31 +16,13 @@ import type { MaterialTheme } from "./material-scheme";
 
 const THEMES: readonly MaterialTheme[] = ["light", "dark"];
 
-/** The scheme Compose paints with, for one theme, as `#rrggbb` per role. */
 function composeScheme(theme: MaterialTheme, seedColor: string | undefined): MaterialRoleColors {
     const palette = getMaterialColors({ scheme: theme, seedColor });
     // SAFETY: `fromEntries` loses the key union; one entry per role.
     return Object.fromEntries(MATERIAL_ROLES.map((role) => [role, hexFromRgba(palette[role])])) as MaterialRoleColors;
 }
 
-/**
- * Android's Material You pipeline, in the slot the iOS accent hook fills.
- *
- * Reads the scheme Compose itself uses (`@expo/ui`'s `getMaterialColors`: the
- * wallpaper's on Android 12+ with "Wallpaper" chosen, otherwise TonalSpot
- * seeded from the brand accent), rebuilds every colour variable from it
- * through `materialVariables`, and writes both themes through uniwind. RN
- * surfaces and Compose controls in a `MaterialHost` start from the same scheme;
- * they differ only where the contrast clamp had to move a role for RN text.
- *
- * Re-reads when the app comes back to the foreground, which is where a
- * wallpaper change lands. `applyMaterialScheme` skips the write when the scheme
- * is the one already applied, so an ordinary resume restyles nothing, and
- * bumps the revision `MaterialHost` keys on when it does write. Light/dark
- * needs no listener: both themes are always written. A layout effect for the
- * reason the iOS hook gives: the first frame must already be in the scheme,
- * not in paper and ink.
- */
+/** Reads Compose's own scheme and writes both themes; re-reads on foreground, where a wallpaper change lands. */
 export function useAccent(): Accent {
     const value = useSettingNumber("accentColor");
     const seedColor = materialSeed(value, isDynamicColorAvailable);

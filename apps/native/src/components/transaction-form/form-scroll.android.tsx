@@ -13,22 +13,16 @@ import type {
     FormScrollStageTarget as FormScrollStageTargetBase,
 } from "./form-scroll";
 
-/** What a focused field keeps between itself and the keyboard's top edge. */
 const KEYBOARD_GAP = 16;
 
 interface FormScrollControl {
-    /** Brings an item fully into view. */
     reveal: (y: number, height: number) => void;
     stageTo: (y: number) => void;
 }
 
 const FormScrollContext = createContext<FormScrollControl | null>(null);
 
-/**
- * How much of the scroller the keyboard covers, and a nudge that brings the
- * focused field above it. Edge-to-edge means the window never resizes for the
- * keyboard, so nothing else moves the note out from under it.
- */
+// Edge-to-edge means the window never resizes for the keyboard, so nothing else moves the note out from under it.
 function useKeyboardOverlap(
     frame: RefObject<ViewInstance | null>,
     scroll: RefObject<ScrollViewInstance | null>,
@@ -65,16 +59,10 @@ function useKeyboardOverlap(
     return overlap;
 }
 
-/**
- * The transaction form's scroller on Android: an RN `ScrollView` on the
- * screen's own flat surface, as Direction B draws it. No identity curtain: on
- * iOS it runs up under a transparent bar, and below Android's opaque app bar it
- * is a band with a hard top edge. No blur behind the identity picker either: a
- * Material sheet brings its own scrim.
- */
+// No identity curtain: below Android's opaque app bar it is a band with a hard top edge. No blur behind the picker
+// either: a Material sheet brings its own scrim.
 export const FormScroll: typeof FormScrollBase = ({ bottomInset, children, failure, sheet }) => {
     const m3 = useMaterialColors();
-    // The failure strip is opaque, over the form: it takes the ground it sits on.
     const sheetSurface = useSheetSurface();
     const stripFill = sheet ? sheetSurface : m3.surface;
     const frame = useRef<ViewInstance>(null);
@@ -107,8 +95,7 @@ export const FormScroll: typeof FormScrollBase = ({ bottomInset, children, failu
                         paddingHorizontal: 20,
                         paddingTop: failure === null ? 0 : failureHeight,
                     }}
-                    // The note is multiline, so its return key writes a newline and
-                    // cannot also put the keyboard away. A drag is the way out.
+                    // The note's return key writes a newline, so a drag is the only way to put the keyboard away.
                     keyboardDismissMode="on-drag"
                     keyboardShouldPersistTaps="handled"
                     onLayout={(event) => {
@@ -141,11 +128,7 @@ export const FormScroll: typeof FormScrollBase = ({ bottomInset, children, failu
     );
 };
 
-/**
- * One item in the form. Plain RN needs no host on Android. With `reveal` it
- * scrolls itself into view as it mounts, because the pinned stage can leave it
- * below the fold.
- */
+// `reveal` scrolls the item into view as it mounts: the pinned stage can leave it below the fold.
 export const FormScrollItem: typeof FormScrollItemBase = ({ children, reveal = false }) => {
     const control = use(FormScrollContext);
     const pending = useRef(reveal);
@@ -163,7 +146,6 @@ export const FormScrollItem: typeof FormScrollItemBase = ({ children, reveal = f
     );
 };
 
-/** Scrolls the form to the inline stage the first time it lays out, as iOS's `onAppear` does. */
 export const FormScrollStageTarget: typeof FormScrollStageTargetBase = () => {
     const control = use(FormScrollContext);
     const arrived = useRef(false);

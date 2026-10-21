@@ -11,18 +11,8 @@ import { withAlpha } from "@/theme/shade";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
 /**
- * The Material 3 list item the Android settings rows are built from: a 24dp
- * leading icon, a headline, supporting lines under it, and a trailing control,
- * on a hairline. Direction B, as drawn: no cards, no chevron-and-value pairs
- * on the right; a row's value is its supporting text.
- *
- * Android only, but a plain filename on purpose: a `.android.tsx` file
- * type-checks its imports against the plain sibling, so the pieces several
- * Android siblings share have to live in a module with no platform twin.
- * Nothing on iOS imports it.
- *
- * The frame bleeds over the screen's 16dp gutter (`SettingsScreen`), so the
- * ripple runs edge to edge while the content and hairline stay on the gutter.
+ * Android only, but a plain filename: a `.android.tsx` file type-checks its imports against the plain sibling,
+ * so pieces several Android siblings share need a module with no platform twin.
  */
 
 const ICON_SIZE = 24;
@@ -35,11 +25,10 @@ interface ListItemFrameProps {
     children: ReactNode;
     onPress?: () => void;
     testID?: string;
-    /** 72dp instead of 56dp: the row carries a supporting line. */
     twoLine?: boolean;
 }
 
-/** The pressable, ripple and hairline around a row's content. Without `onPress` it is inert. */
+/** Bleeds over `SettingsScreen`'s 16dp gutter so the ripple runs edge to edge; inert without `onPress`. */
 export function ListItemFrame({
     accessibilityLabel,
     accessibilityRole,
@@ -97,15 +86,13 @@ export function ListItemIcon({ icon, destructive = false }: { destructive?: bool
 }
 
 interface ListItemTextProps {
-    /** Supporting text in `error`: a value that needs the user's attention. */
     attention?: boolean;
     destructive?: boolean;
-    /** Lines under the headline. Empty entries are dropped. */
+    /** Empty entries are dropped. */
     supporting?: readonly (string | null | undefined)[];
     title: string;
 }
 
-/** Headline in `onSurface` (bodyLarge 16/24), supporting lines in `onSurfaceVariant` (bodyMedium 14/20). */
 export function ListItemText({
     attention = false,
     destructive = false,
@@ -124,7 +111,7 @@ export function ListItemText({
                         "text-caption leading-5",
                         attention && index === 0 ? "text-m3-error" : "text-m3-on-surface-variant"
                     )}
-                    // oxlint-disable-next-line react/no-array-index-key -- the lines are positional: a value, then a note
+                    // oxlint-disable-next-line react/no-array-index-key -- the lines are positional
                     key={index}
                 >
                     {line}
@@ -137,14 +124,12 @@ export function ListItemText({
 interface MaterialListItemProps extends Omit<ListItemFrameProps, "children" | "twoLine"> {
     destructive?: boolean;
     icon?: SettingsIconName;
-    /** Drawn before the icon: a radio button, a swatch. */
     leading?: ReactNode;
     supporting?: readonly (string | null | undefined)[];
     title: string;
     trailing?: ReactNode;
 }
 
-/** A whole row: frame, icon, text and trailing control. */
 export function MaterialListItem({
     destructive,
     icon,

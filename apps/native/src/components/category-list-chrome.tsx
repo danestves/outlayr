@@ -3,37 +3,21 @@ import { font, foregroundStyle, kerning, textCase } from "@expo/ui/swift-ui/modi
 
 import type { ThemeColors } from "@/theme/use-colors";
 
-/**
- * The treatment the category tree and its reorder list have in common: the same
- * category has to read as the same row on both. The SwiftUI row-name type lives
- * in `category-list-swift.ts`, so this module exports the same names as its
- * Android sibling.
- */
+// Exports the same names as the Android sibling; the SwiftUI row-name type lives in `category-list-swift.ts`.
 
 export const PARENT_TILE = 34;
 export const CHILD_TILE = 28;
 
-/**
- * Grid's mono eyebrow. `family` is the font's PostScript name, which is what
- * `Font.custom` resolves through CoreText — the `GeistMono_400Regular` expo-font
- * alias only works on React Native's own lookup path. `textStyle` opts the custom
- * font into Dynamic Type so the eyebrow scales with the rows beneath it.
- */
+// `family` is the PostScript name `Font.custom` resolves through CoreText: the expo-font alias only works on RN's own
+// lookup path. `textStyle` opts the custom font into Dynamic Type.
 const EYEBROW_FONT = font({
     family: "GeistMono-Regular",
     size: 11,
     textStyle: "caption2",
 });
 
-/**
- * `textCase` belongs here and not on the call sites: one of these headers is a
- * user-entered category name, which has to obey the eyebrow's grammar without the
- * call site remembering to uppercase it.
- *
- * This is the SwiftUI twin of `MonoLabel`, on the same 11pt / 1.2-tracking / muted
- * spec — a `Section` header slot renders a SwiftUI view, so the uniwind `Text` one
- * cannot be reused here. Restyle both or neither.
- */
+// `textCase` lives here because one header is a user-entered category name. This is the SwiftUI twin of `MonoLabel`
+// (11pt, 1.2 tracking, muted): restyle both or neither.
 export function Eyebrow({ colors, children }: { colors: ThemeColors; children: string }) {
     return (
         <SwiftText modifiers={[EYEBROW_FONT, kerning(1.2), textCase("uppercase"), foregroundStyle(colors.muted)]}>

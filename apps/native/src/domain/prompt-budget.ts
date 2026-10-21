@@ -1,11 +1,7 @@
 import type { CategoryBranch } from "@/lib/convex";
 
-/**
- * The prompt budget the voice and receipt actions enforce (`namesWithinBudget`
- * in `packages/backend/convex/voiceEntry.ts` and `receiptScan.ts`). Mirrored
- * here so a ledger past it still gets a request the backend accepts: an
- * oversized ledger would otherwise fail every attempt as `invalid`.
- */
+// Mirrors `namesWithinBudget` in `packages/backend/convex/voiceEntry.ts` and `receiptScan.ts`, or an oversized
+// ledger would fail every attempt as `invalid`.
 const MAX_CATEGORY_NAMES = 200;
 const MAX_ACCOUNT_NAMES = 50;
 const MAX_CHILDREN_PER_BRANCH = 50;
@@ -18,20 +14,13 @@ export interface PromptNames {
 }
 
 export interface BoundedPromptNames extends PromptNames {
-    /** An account was left out, so the model's "no account" may be one it never saw. */
     accountsOmitted: boolean;
-    /** A category was left out, so the model's pick was made from an incomplete set. */
     categoriesOmitted: boolean;
 }
 
 const fits = (name: string) => name.length <= MAX_NAME_LENGTH;
 
-/**
- * The names that fit the actions' prompt budget, in the ledger's order:
- * overlong names are dropped rather than cut (a cut name would resolve to
- * nothing locally anyway), and the lists stop at the backend's caps. What
- * is left out simply cannot be matched, which the review already handles.
- */
+// Overlong names are dropped, not cut: a cut name would resolve to nothing locally anyway.
 export function boundedPromptNames({ accounts, categoryTree }: PromptNames): BoundedPromptNames {
     const keptAccounts = accounts.filter(fits).slice(0, MAX_ACCOUNT_NAMES);
     let total = keptAccounts.length;

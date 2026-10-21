@@ -123,9 +123,7 @@ export function ImportSheet({ ref }: ImportSheetProps) {
         }
     }, [presented]);
 
-    // Which way the step transition animates. Held in state and adjusted on the
-    // change, rather than compared against a ref written during render, which is
-    // a side effect the compiler cannot follow.
+    // Held in state rather than a ref written during render, a side effect the compiler cannot follow.
     const [previousStep, setPreviousStep] = useState(step);
     const [forward, setForward] = useState(true);
     if (step !== previousStep) {

@@ -23,12 +23,7 @@ import { notifyFailure } from "@/lib/notify";
 import { photoFiles, storedPhotosBase64 } from "@/lib/photo-storage";
 import { useColors } from "@/theme/use-colors";
 
-/**
- * What a transaction row holds that the eight columns cannot carry (`details`,
- * `imageUri`, `emoji`/`icon`/`customColor`, the `recurring*` schedule). Named on
- * the screen because a CSV exported "to be safe" is otherwise taken for a
- * backup, and a restore from it silently comes back thinner.
- */
+/** Named so a CSV is not taken for a backup: a restore from it comes back thinner. */
 const OMITTED = [
     "settings.export.omittedDetails",
     "settings.export.omittedPhotos",
@@ -43,11 +38,6 @@ export function ExportData() {
     const count = useTransactionCount(db);
     const [busy, setBusy] = useState<"archive" | "csv" | null>(null);
 
-    // The archive is the one that can be restored from; the CSV is for
-    // spreadsheets. Kept as separate actions rather than a format toggle so the
-    // difference is legible before the file is written, not after — but the two
-    // differ only in what they build and what they call it, so the busy flag and
-    // the failure report are written once.
     const runExport = (
         kind: "archive" | "csv",
         build: () => Promise<string>,
@@ -79,7 +69,7 @@ export function ExportData() {
                         console.warn("[outlayr] fetching missing photos before export failed", cause);
                     });
                 }
-                // ponytail: the whole archive is one in-memory string with photos as base64; stream it to a zip if ledgers outgrow 512px JPEGs
+                // ponytail: one in-memory string with base64 photos; stream it to a zip if ledgers outgrow 512px JPEGs
                 return serializeArchive(await buildArchive(db, new Date(), storedPhotosBase64()));
             },
             archiveFileName(new Date()),

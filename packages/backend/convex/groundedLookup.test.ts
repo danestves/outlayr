@@ -352,7 +352,6 @@ describe("runGroundedLookup guards (ADR-11 order)", () => {
         const t = convexTest(schema, modules);
         rateLimiterTest.register(t);
         revenuecatTest.register(t);
-        // A confident domain with NO source part at all — nothing corroborates it.
         const grounding = mockTextModel(JSON.stringify(CONFIDENT_PAYLOAD));
 
         await t.action(async (ctx) =>

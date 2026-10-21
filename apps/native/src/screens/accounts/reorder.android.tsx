@@ -12,10 +12,6 @@ import type { Account } from "@/data/accounts-core";
 import { useTranslation } from "@/i18n/context";
 import { useColors } from "@/theme/use-colors";
 
-/**
- * Drag-to-reorder for the accounts on Android, saved through the same
- * `accountsRepo.reorder` the iOS edit-mode list calls.
- */
 export function AccountReorder() {
     const db = useDatabase();
     const t = useTranslation();

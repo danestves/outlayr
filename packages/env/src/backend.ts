@@ -1,18 +1,10 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
-/**
- * Every variable is optional because the deployment must boot without them: the
- * exchange-rate functions and the sync tables are useful signed out, and a
- * required var here would fail the whole deployment shut over a provider that
- * has not been provisioned yet. `auth.ts` degrades each provider individually
- * instead — see the `appleConfig`/`googleConfig` guards there.
- */
+// All optional: a required var would fail the whole deployment over one provider; `auth.ts` degrades each on its own.
 export const env = createEnv({
     emptyStringAsUndefined: true,
-    // env-core's `typeof window` heuristic misclassifies runtimes that expose a
-    // `window` (vitest's edge-runtime, which is what convex-test runs in) as a
-    // client and blocks every server-var read at import time.
+    // env-core's `typeof window` check treats convex-test's edge-runtime as a client and blocks server-var reads.
     isServer: true,
     runtimeEnv: process.env,
     server: {

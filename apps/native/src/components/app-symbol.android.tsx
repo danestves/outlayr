@@ -18,7 +18,6 @@ const GLYPHS = {
     xmark: Cancel01Icon,
 } as const satisfies Record<AppSymbolName, IconSvgElement>;
 
-/** The Hugeicon standing in for each SF Symbol `AppSymbol` is given. */
 export const AppSymbol: typeof AppSymbolBase = ({ name, size = 24, tintColor }) => (
     <HugeiconsIcon color={tintColor} icon={GLYPHS[name]} size={size} />
 );

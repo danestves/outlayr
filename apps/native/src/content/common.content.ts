@@ -251,15 +251,12 @@ const common = {
             en: "Nothing Here",
             es: "Aquí no hay nada",
         }),
-        // A per-category budget whose category is gone has nothing left to name it.
-        // Deliberately not the overall budget's label: this row deep-links to one
-        // category's cap, and calling it "Overall Budget" would claim otherwise.
+        // Not the overall budget's label: this row deep-links to one category's cap.
         "spotlight.budget.fallback": t({
             en: "Budget",
             es: "Presupuesto",
         }),
-        // Lowercase on purpose: a Spotlight keyword is a term someone types, not a
-        // label the app renders.
+        // Lowercase: a Spotlight keyword is a term someone types, not a label the app renders.
         "spotlight.budget.keyword": t({
             en: "budget",
             es: "presupuesto",

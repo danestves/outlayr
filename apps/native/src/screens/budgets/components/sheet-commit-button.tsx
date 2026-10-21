@@ -7,11 +7,6 @@ export interface SheetCommitButtonProps {
     onPress: () => void;
 }
 
-/**
- * The button a budget sheet commits with: the limit sheet's "Keep it under…",
- * the goal sheet's "Set goal". Never inert, so a blank figure is answered by
- * the press itself. `sheet-commit-button.android.tsx` is the M3 filled button.
- */
 export function SheetCommitButton({ label, onPress }: SheetCommitButtonProps) {
     return (
         <Pressable

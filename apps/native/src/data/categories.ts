@@ -18,14 +18,8 @@ export interface CategoryMetaRow {
     parentId: string | null;
 }
 
-/**
- * These fields must NOT be joined onto a transaction or budget query:
- * `useLiveQuery` registers its change listener against one table only, so a
- * joined category column survives every edit to that category. A stale name or
- * colour is cosmetic; a stale `parentId` is not — `contributesTo` then credits
- * the spend to the category's old parent budget, so a screen's legend updates
- * while its numbers silently do not.
- */
+// Never join these onto a transaction or budget query: `useLiveQuery` listens to one table, so a joined `parentId`
+// goes stale and `contributesTo` credits spend to the old parent's budget while the legend updates.
 export function useCategoryMeta(db: Database): Map<string, CategoryMetaRow> {
     const rows = useLiveQuery(categories, () =>
         db
@@ -55,20 +49,11 @@ export function useCategoryMeta(db: Database): Map<string, CategoryMetaRow> {
     }, [rows]);
 }
 
-/**
- * Ports Swift's `Category.allTransactions` reduction: all-time and unfiltered by
- * date, so a scheduled future log counts exactly as it does there. Soft-deleted
- * rows are excluded because Core Data's relationship never holds deleted objects.
- *
- * Each entry counts only the category's own transactions — a parent's rolled-up
- * figure is composed by the caller, mirroring
- * `allTransactionsIncludingChildren`.
- */
+// All-time and unfiltered by date, like Swift's `Category.allTransactions`. Each entry is the category's own spend;
+// the caller composes a parent's rolled-up figure.
 export function useCategoryTotals(db: Database): Map<string, number> {
-    // Grouped in SQL, since this is unbounded by date and reducing in JS would
-    // pull every transaction ever on each re-run; `transactions_categoryId_idx`
-    // serves it. Currency and day fall out of the grouping because a figure
-    // spanning currencies converts each part at the rate of its own day.
+    // Grouped in SQL, since reducing every transaction in JS each re-run is too slow. Currency and day stay in the
+    // grouping because each part converts at its own day's rate.
     const rows = useLiveQuery(transactions, () => categoryCellQuery(db));
     const { displayCurrency, rates } = useValuation(db);
     return useMemo(() => {
@@ -85,9 +70,8 @@ export function useCategoryTotals(db: Database): Map<string, number> {
     }, [rows, displayCurrency, rates]);
 }
 
-/** Top-level categories only, each with its ordered children nested. */
 export function useCategoriesByNamespace(db: Database, income: boolean): CategoryWithChildren[] {
-    // SAFETY: as in `data/accounts.ts` — the table argument pins the row type.
+    // SAFETY: the table argument pins the row type.
     const rows = useLiveQuery(
         categories,
         () =>
@@ -98,9 +82,7 @@ export function useCategoriesByNamespace(db: Database, income: boolean): Categor
                 .orderBy(asc(categories.sortOrder)),
         [income]
     ) as Category[];
-    // Memoized so the nested objects keep their identity between renders: the
-    // picker's rows are `memo`'d, and a freshly spread parent on every render
-    // would re-render the whole list on each keystroke.
+    // Memoized for stable identities: the picker's rows are `memo`'d, so fresh parents re-render every keystroke.
     return useMemo(() => {
         const parents = rows.filter((row) => row.parentId == null);
         const childrenByParent = new Map<string, Category[]>();

@@ -2,14 +2,9 @@ import { addDays } from "@outlayr/money/calendar";
 
 import type { TimeOfDay } from "./reminder";
 
-/**
- * Namespaced so reconciliation can tell the charges it owns apart from
- * `outlayr.daily-reminder`, which a different setting schedules and which has to
- * survive every subscription sweep.
- */
+// Namespaced so reconciliation never cancels `outlayr.daily-reminder`, which another setting owns.
 export const SUBSCRIPTION_REMINDER_PREFIX = "outlayr.sub-due.";
 
-/** Derived from the local id so a re-arm replaces its request instead of stacking. */
 export function subscriptionReminderId(localId: string): string {
     return `${SUBSCRIPTION_REMINDER_PREFIX}${localId}`;
 }
@@ -18,15 +13,11 @@ export function isSubscriptionReminderId(id: string): boolean {
     return id.startsWith(SUBSCRIPTION_REMINDER_PREFIX);
 }
 
-/** In the order the picker renders them. */
 export const REMINDER_LEAD_OPTIONS: readonly number[] = [0, 1, 2, 3, 7];
 
 const MAX_LEAD_DAYS = 30;
 
-/**
- * `null` is the off state and has to stay distinguishable from `0`, which means
- * "on the due day itself" — a lead the picker actually offers.
- */
+// `null` is off and must stay distinct from `0`, which means "on the due day itself".
 export function normalizeLead(raw: number | null): number | null {
     if (raw == null || !Number.isFinite(raw)) {
         return null;
@@ -34,27 +25,18 @@ export function normalizeLead(raw: number | null): number | null {
     return Math.min(MAX_LEAD_DAYS, Math.max(0, Math.floor(raw)));
 }
 
-/**
- * Whole days back, then the wall-clock hour set outright: a DST change between
- * the fire date and the due date would otherwise shift the reminder an hour off
- * the time the owner picked.
- */
+// Whole days back, then the wall-clock hour set outright, so a DST change in between does not shift it an hour.
 export function reminderFireAt(landing: Date, leadDays: number, time: TimeOfDay): Date {
     const fire = addDays(landing, -leadDays);
     fire.setHours(time.hour, time.minute, 0, 0);
     return fire;
 }
 
-/**
- * iOS keeps at most 64 pending requests per app and silently discards every
- * later one, so subscriptions stop short of the ceiling: the headroom belongs to
- * the daily reminder and to anything else the app comes to schedule.
- */
+// iOS keeps at most 64 pending requests per app and silently drops the rest; the headroom is the daily reminder's.
 export const MAX_PENDING_SUBSCRIPTION_REMINDERS = 55;
 
 export interface ReminderCandidate {
     landing: Date;
-    /** Off, so a candidate carrying `null` arms nothing rather than firing on the day. */
     leadDays: number | null;
     localId: string;
 }
@@ -76,20 +58,8 @@ export interface ReminderPlan {
     arm: ArmedReminder[];
 }
 
-/**
- * A fire time that has already passed is dropped, not nudged forward: iOS never
- * delivers a DATE trigger dated in the past, and moving it would announce a
- * charge the ledger has already taken.
- *
- * Sorted ascending before the cap so the requests that survive it are the
- * soonest ones — a truncation that kept an arbitrary slice would silently lose
- * this week's charge to one a year out.
- *
- * Each lead goes through {@link normalizeLead} first. A negative one would
- * otherwise count *forward* from the due day, and a reminder dated after the
- * charge still passes the `now` filter — the one outcome the paragraph above
- * exists to prevent.
- */
+// A past fire time is dropped, not nudged: iOS never delivers a past DATE trigger, and moving it would announce a
+// charge already taken. Leads go through `normalizeLead` because a negative one would count forward past the charge.
 export function reminderPlan({
     candidates,
     now,
@@ -115,22 +85,11 @@ export function reminderPlan({
     return { arm: arm.slice(0, Math.max(0, cap)) };
 }
 
-/**
- * Pending requests inside the subscription namespace that the plan no longer
- * covers. Everything outside it is left standing — cancelling
- * `outlayr.daily-reminder` here would turn the setting that owns it into a lie.
- */
 export function orphanedReminderIds(armed: readonly string[], pendingIds: readonly string[]): string[] {
     const keep = new Set(armed);
     return pendingIds.filter((id) => isSubscriptionReminderId(id) && !keep.has(id));
 }
 
-/**
- * Its own union rather than `TranslationKey`: the strings arrive with the
- * notification settings screen, and naming a key the catalogue does not hold yet
- * fails the typecheck here. The screen's `t()` call re-checks it against the
- * catalogue, so the guarantee is not lost, only deferred to the call site.
- */
 export type LeadLabelKey =
     | "settings.notifications.leadOff"
     | "settings.notifications.leadSameDay"
@@ -140,10 +99,6 @@ export type LeadLabelKey =
     | "settings.notifications.leadOneWeek"
     | "settings.notifications.leadDaysBefore";
 
-/**
- * Anything off the offered set reads through the counted form: a lead restored
- * from a synced device the picker never offered still has to name itself.
- */
 export function leadLabelKey(lead: number | null): LeadLabelKey {
     switch (normalizeLead(lead)) {
         case null: {

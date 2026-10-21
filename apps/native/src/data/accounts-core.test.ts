@@ -254,7 +254,6 @@ describe("accountsRepo lifecycle", () => {
         const byId = new Map(rows.map((row) => [row.id, row]));
         expect(byId.get(detached)?.accountId).toBeNull();
         expect(byId.get(untouched)?.accountId).toBe(kept);
-        // The detached row's logo candidate follows the stamp the detach gave it.
         expect((await candidateLogoIds(db)).get(detached)).toBe(byId.get(detached)?.updatedAt.getTime());
     });
 

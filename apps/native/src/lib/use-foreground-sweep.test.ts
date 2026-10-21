@@ -32,7 +32,6 @@ async function renderSweep() {
         { initialProps: { ready: null } }
     );
     expect(sweep).not.toHaveBeenCalled();
-    // The idle gate opening.
     await rerender({ ready: db });
 }
 

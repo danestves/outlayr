@@ -23,22 +23,9 @@ import { backfillRecurring, occurrenceId } from "./recurrence-backfill";
 import { readRemoteEnrichment } from "./settings-core";
 import { transactionsRepo } from "./transactions-core";
 
-/**
- * How far apart two Wallet runs may be and still be read as one purchase.
- *
- * A Transaction automation fires when the card authorizes and can fire again
- * when the charge settles; the two runs describe one purchase but arrive as two
- * intents. Ten minutes covers the pair when settlement is immediate and a
- * Shortcuts retry. `PushLedger` in
- * `app-intents/SharedStore.swift` copies it to push once per purchase.
- *
- * It deliberately does not stretch to a next-day settlement. Widening it to
- * cover that would also collapse a second, real purchase at the same merchant
- * for the same amount, and a row the user never made is unrecoverable in a way
- * that a duplicate they can delete is not. An automation that can pass a Wallet
- * transaction identifier gets exact matching instead, with no window at all —
- * see `LogWalletTransactionIntent`.
- */
+// One purchase can fire twice (authorize, then settle) as two intents; ten minutes covers that and a retry, and
+// `PushLedger` in `app-intents/SharedStore.swift` copies it. Not widened to next-day settlement: that would collapse
+// a real second purchase, and a missing row is unrecoverable where a duplicate isn't.
 export const WALLET_DEDUPE_WINDOW_MS = 10 * 60 * 1000;
 
 export const SETTLE_REPEAT_WINDOW_MS = 4 * 24 * 60 * 60 * 1000;
@@ -80,7 +67,6 @@ export async function takeRepriced(db: Database): Promise<RepricedSubscription[]
     return entries;
 }
 
-/** What `META_KEYS.lastWalletEntry` holds. */
 export interface LastWalletEntry {
     /** Epoch ms of the commit, not of the purchase. */
     at: number;
@@ -90,7 +76,6 @@ export interface LastWalletEntry {
 
 const lastWalletEntrySchema = z.object({ at: z.number().finite(), push: z.literal(true).optional(), txId: z.string() });
 
-/** Null when nothing has come through Wallet yet, or the value is unreadable. */
 export function parseLastWalletEntry(raw: string | null | undefined): LastWalletEntry | null {
     if (!raw) {
         return null;
@@ -245,11 +230,7 @@ async function rememberCard(db: Database, text: string, at: number, unattached: 
     });
 }
 
-/**
- * A job an automation produced, as opposed to a spoken one. The card is the
- * sure sign; the key prefixes cover an automation built before the card
- * parameter existed.
- */
+// The card is the sure sign; the key prefixes cover automations built before the card parameter existed.
 function fromAutomation(job: PendingWrite): boolean {
     return Boolean(job.card?.trim()) || /^(?:wallet|notification):/.test(job.dedupeKey ?? "");
 }
@@ -259,7 +240,6 @@ function sourceOf(job: PendingWrite): string | null {
     return kind ? `${kind}:${job.card?.trim().toLowerCase() ?? ""}` : null;
 }
 
-/** A notification job with its amount and merchant filled in, or null when it names no purchase. */
 function readNotification(job: PendingWrite): PendingWrite | null {
     if (!job.text) {
         return job;
@@ -283,9 +263,7 @@ const LEDGER_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 interface LedgerEntry {
     at: number;
     date?: number;
-    /** The enqueue this row came from. */
     id: string;
-    /** The purchase it came from, when the intent could name one. */
     key: string | null;
     source?: string;
     txId: string;
@@ -301,8 +279,7 @@ const ledgerSchema = z.array(
             source: z.string().optional(),
             txId: z.string(),
         })
-        // Per entry, so one bad row does not discard a ledger that is otherwise
-        // the only record of which purchases have already been committed.
+        // Per entry: one bad row must not discard the only record of which purchases were committed.
         .nullable()
         .catch(null)
 );
@@ -330,28 +307,16 @@ async function readLedger(db: SpendDb): Promise<LedgerEntry[]> {
     }
 }
 
-/**
- * Records the row this job produced, replacing anything it recorded before.
- *
- * Appending would leave two entries under one enqueue id, and `alreadyApplied`
- * answers with the FIRST — so after a deleted duplicate sent a job round again,
- * every later replay would keep re-checking the transaction the user deleted,
- * find it gone, and write another one.
- */
+// Replaces, not appends: `alreadyApplied` answers with the FIRST entry, so a stale one would keep re-checking a
+// deleted transaction and re-writing it on every replay.
 function remember(ledger: LedgerEntry[], entry: LedgerEntry, at: number): LedgerEntry[] {
     return [...ledger.filter((kept) => kept.id !== entry.id), entry]
         .filter((kept) => at - kept.at <= LEDGER_RETENTION_MS)
         .slice(-LEDGER_LIMIT);
 }
 
-/**
- * The row this job already produced, if any.
- *
- * The enqueue id matches with no window because the same id can only ever be the
- * same enqueue arriving twice — a queue file replayed after an interrupted
- * drain. The purchase key is windowed because two runs naming one purchase are
- * two separate intents, and far enough apart they stop being one.
- */
+// The enqueue id matches with no window (the same id means a replayed queue file); the purchase key is windowed
+// because two runs naming one purchase are separate intents.
 function alreadyApplied(ledger: LedgerEntry[], job: PendingWrite): LedgerEntry | null {
     const replayed = ledger.find((entry) => entry.id === job.id);
     if (replayed) {
@@ -389,11 +354,7 @@ function settleRepeatOf(ledger: LedgerEntry[], job: PendingWrite): LedgerEntry |
     );
 }
 
-/**
- * A tombstone must not block. The user deleting a duplicate is them saying the
- * charge belongs on the ledger once; re-running the automation after that has to
- * be able to put it back.
- */
+// A tombstone must not block: re-running the automation after deleting a duplicate has to put the charge back.
 async function stillOnLedger(db: Database, txId: string): Promise<boolean> {
     const rows = await db
         .select({ id: transactions.id })
@@ -409,15 +370,8 @@ export async function pendingWriteTxId(db: Database, id: string): Promise<string
     return entry && (await stillOnLedger(db, entry.txId)) ? entry.txId : null;
 }
 
-/**
- * Commits every transaction an App Intent accepted while the app was not
- * running, and answers how many landed. Goes through the same
- * `transactionsRepo.create` the form uses.
- *
- * Each committed job is recorded against the row it produced, in the same
- * SQLite transaction as the insert, which is what makes a replayed queue file
- * safe: the queue delivers at least once and this collapses it to exactly once.
- */
+// Each job is recorded against its row in the same SQLite transaction as the insert, which collapses the queue's
+// at-least-once delivery to exactly once.
 export async function applyPendingWrites(db: Database, jobs: PendingWrite[], now: Date = new Date()): Promise<number> {
     if (jobs.length === 0) {
         return 0;
@@ -491,8 +445,6 @@ export async function applyPendingWrites(db: Database, jobs: PendingWrite[], now
                     accountId: account?.id ?? null,
                     amount: job.amount,
                     categoryId,
-                    // Null means "the ledger's own currency", which is what
-                    // `transactionsRepo.create` already resolves it to.
                     currency,
                     date: new Date(job.date),
                     details: null,
@@ -699,10 +651,6 @@ async function settledOccurrence(
     return written ? { ...written, currency: code, id } : null;
 }
 
-/**
- * The account a Wallet card maps to (its pick, else a confident name match, else
- * null — see `cardAccountId`) and whether the card asks for one — see `cardStatus`.
- */
 async function resolveAccount(
     db: Database,
     job: PendingWrite
@@ -723,14 +671,7 @@ async function resolveAccount(
     };
 }
 
-/**
- * The currency a queued entry was actually in, or null to use the ledger's.
- *
- * An explicit code from the automation wins; otherwise the formatted amount is
- * read for one. When the symbol cannot pin a single currency ("$" is on 22 of
- * them) the card's account answers, since a card charges in its account's
- * currency. Only with neither does it stay null — see `detectCurrency`.
- */
+// "$" is on 22 currencies, so an ambiguous symbol defers to the card's account currency before staying null.
 function resolveWriteCurrency(job: PendingWrite, account: MatchedAccount | null): string | null {
     const pinned = job.currency?.trim().toUpperCase();
     if (pinned) {
@@ -739,14 +680,7 @@ function resolveWriteCurrency(job: PendingWrite, account: MatchedAccount | null)
     return detectCurrency(job.amountText) ?? account?.currency ?? null;
 }
 
-/**
- * Works out where a queued entry belongs, best evidence first.
- *
- * 1. The category the intent named. A spoken name arrives with whatever casing
- *    Siri chose, so the match is case-insensitive.
- * 2. Failing that, wherever this same merchant was filed last time — a Wallet
- *    automation only ever knows a merchant string, never a category.
- */
+// The intent's category (case-insensitive: Siri picks the casing), else where this merchant was filed last time.
 async function knownCategory(db: Database, job: PendingWrite): Promise<string | null> {
     if (job.categoryId) {
         const byId = await db
@@ -810,22 +744,8 @@ async function firstCategory(db: Database, income: boolean): Promise<string | nu
 
 let draining: Promise<number> | null = null;
 
-/**
- * Claims the queue, applies it, and releases it — one drain at a time.
- *
- * The guard is the point. `claimPendingWrites` deliberately re-returns a claim
- * an earlier pass has not released yet, because that is how a crash mid-drain is
- * recovered — so a second drain starting while the first is still awaiting its
- * per-job SQLite transactions receives the very same jobs. Both read the
- * idempotency ledger before either has written to it, so both pass
- * `alreadyApplied` and both insert: one Wallet tap or Siri entry lands in the
- * ledger twice.
- *
- * That overlap is ordinary, not exotic. The catch-up runs from the effect body
- * at mount and again on the first `AppState` "active", which on a cold launch
- * arrives a few hundred milliseconds later. `logo-backfill` holds its own pass
- * the same way.
- */
+// One drain at a time: `claimPendingWrites` re-returns an unreleased claim (crash recovery), so overlapping drains
+// get the same jobs, both pass `alreadyApplied`, and insert twice. Mount and a cold launch's first "active" overlap.
 export function drainPendingWrites(
     db: Database,
     claim: () => ClaimedWrites,

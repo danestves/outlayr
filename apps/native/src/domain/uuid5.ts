@@ -1,13 +1,5 @@
 import { sha1 } from "@noble/hashes/legacy.js";
 
-/**
- * RFC 4122 name-based (version 5) UUIDs. The digest comes from `@noble/hashes`
- * because it is synchronous and pure JS: `expo-crypto`'s digest is async and
- * native, and `node:crypto` cannot be imported from a module the app bundles.
- * The algorithm is fixed by the RFC, so `uuid5.test.ts` pins it against the
- * published vectors.
- */
-
 function uuidToBytes(uuid: string): Uint8Array {
     const hex = uuid.replaceAll("-", "");
     if (hex.length !== 32) {
@@ -25,11 +17,7 @@ function format(bytes: Uint8Array): string {
     return [hex.slice(0, 8), hex.slice(8, 12), hex.slice(12, 16), hex.slice(16, 20), hex.slice(20, 32)].join("-");
 }
 
-/**
- * The v5 UUID for `name` within `namespace`. Same inputs, same id, on every
- * device and every run — which is the whole point of using it for a row two
- * devices may both decide to create.
- */
+// The same id on every device, for a row two devices may both decide to create.
 export function uuidV5(name: string, namespace: string): string {
     const nameBytes = new TextEncoder().encode(name);
     const namespaceBytes = uuidToBytes(namespace);

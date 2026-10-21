@@ -2,7 +2,6 @@ import { cardFeeAmount } from "./card-fee";
 import type { CardFee } from "./card-fee";
 import { merchantKey } from "./merchant-resolver";
 
-/** How a bolívar expense left its bank account. */
 export const PAID_VIA = ["pagoMovil", "transfer", "sameBankTransfer", "card", "cash"] as const;
 
 export type PaidVia = (typeof PAID_VIA)[number];
@@ -18,7 +17,6 @@ export function paidViaFee(via: PaidVia | null): CardFee | null {
     return via === "pagoMovil" || via === "transfer" ? BOLIVAR_TRANSFER_FEE : null;
 }
 
-/** The bolívares the bank takes on top of `amount`, or null when this way of paying is free. */
 export function paidViaCharge(via: PaidVia | null, amount: number): number | null {
     const fee = paidViaFee(via);
     return fee === null || amount <= 0 ? null : cardFeeAmount(fee, amount, "VES");

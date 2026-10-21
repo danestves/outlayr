@@ -152,8 +152,6 @@ describe("budgetsRepo.createMainBudget", () => {
     });
 
     it("keeps an existing name when the caller supplies none", async () => {
-        // The form opens on Overall with the name field blank, so a re-save must
-        // not silently erase what the budget was already called.
         await budgetsRepo.createMainBudget(db, {
             amount: 1000,
             name: "Household",
@@ -185,8 +183,6 @@ describe("budgetsRepo.createMainBudget", () => {
 
 describe("budgetsRepo.patchBudget", () => {
     it("changes the limit and leaves the anchor where it was", async () => {
-        // The whole point of editing rather than delete-and-recreate: a mistyped
-        // target must not cost the user the window the budget has been running in.
         const db = makeDb();
         const id = await budgetsRepo.createBudget(db, {
             amount: 250,
@@ -203,8 +199,6 @@ describe("budgetsRepo.patchBudget", () => {
     });
 
     it("leaves every fact the caller did not name", async () => {
-        // The defect this replaced: the old form passed a whole record on every
-        // save, so changing the limit cleared the name and turned carry-over off.
         const db = makeDb();
         const id = await budgetsRepo.createBudget(db, {
             amount: 250,
@@ -242,15 +236,11 @@ describe("budgetsRepo.patchBudget", () => {
 
         const row = getBudgetById(db, id);
         expect(row?.startDate?.getTime()).toBe(BACKDATE.getTime());
-        // Unchanged in the ledger's own currency, and re-stamped in USD against
-        // the day the moved window opens.
         expect(row?.amount).toBe(450);
         expect(row?.amountUsd).toBe(500);
     });
 
     it("re-anchors a cadence change to the current window of the new cadence", async () => {
-        // Keeping the old anchor is what leaves a monthly budget running the 15th
-        // to the 14th after a detour through Week.
         const db = makeDb();
         const id = await budgetsRepo.createBudget(db, {
             amount: 250,
@@ -267,9 +257,6 @@ describe("budgetsRepo.patchBudget", () => {
     });
 
     it("keeps a hand-set anchor when the cadence is restated rather than changed", async () => {
-        // The limit sheet sends the cadence it opened on whether or not it was
-        // touched, so treating its presence as a change threw away a start date
-        // the user had set by hand every time they adjusted the amount.
         const db = makeDb();
         const id = await budgetsRepo.createBudget(db, {
             amount: 250,
@@ -296,9 +283,6 @@ describe("budgetsRepo.patchBudget", () => {
     });
 
     it("keeps the currency the limit was set in when only the window moves", async () => {
-        // A EUR 100 budget shown as roughly USD 110 must not become a USD 100 one
-        // because the cadence changed: the number is the row's own, and reading it
-        // as today's ledger currency silently restates the target.
         const db = makeDb();
         await db.insert(appMeta).values({ key: "currency", value: "EUR" });
         await db.insert(exchangeRates).values({
@@ -314,7 +298,6 @@ describe("budgetsRepo.patchBudget", () => {
             categoryId: "cat-1",
             type: BUDGET_TYPE.month,
         });
-        // The ledger moves to USD after the budget was set.
         await db.update(appMeta).set({ value: "USD" }).where(eq(appMeta.key, "currency"));
 
         await budgetsRepo.patchBudget(db, id, { type: BUDGET_TYPE.week });
@@ -333,8 +316,6 @@ describe("budgetsRepo.patchBudget", () => {
 
 describe("budgetsRepo.patchMainBudget", () => {
     it("changes the limit without clearing the name or carry-over", async () => {
-        // The overall budget had no field-level write at all: the only way in was
-        // `createMainBudget`, and going through it from the form wiped both.
         const db = makeDb();
         const id = await budgetsRepo.createMainBudget(db, {
             amount: 2000,
@@ -416,8 +397,6 @@ describe("an edited budget stays coherent", () => {
 
 describe("budgetsRepo stamps the currency it was set in", () => {
     it("freezes the USD value on the day the anchored window opens", async () => {
-        // `limitIn` restates the target at the window's day, so a value frozen at
-        // the write instant would be converted from a rate it was never set at.
         const db = makeDb();
         await db.insert(appMeta).values({ key: "currency", value: "EUR" });
         await db.insert(exchangeRates).values([
@@ -447,7 +426,7 @@ describe("budgetsRepo stamps the currency it was set in", () => {
         });
 
         const [row] = await db.select({ amountUsd: budgets.amountUsd }).from(budgets).where(eq(budgets.id, id));
-        // 400 EUR / 0.9, February's rate — not 0.5, the rate on the day of the write.
+        // 400 EUR / 0.9, February's rate, not 0.5, the rate on the day of the write.
         expect(Math.round((row.amountUsd ?? 0) * 100) / 100).toBe(444.44);
     });
 
@@ -496,9 +475,6 @@ describe("budgetsRepo.deleteBudget", () => {
 
         await budgetsRepo.deleteBudget(db, id);
 
-        // A hard delete fires the AFTER DELETE trigger, which removes the entry: the
-        // peer never hears of the delete, keeps the budget, and pushes it back at a
-        // fresh seq the moment its own period rolls over.
         await expect(queued(db)).resolves.toStrictEqual([["budgets", id]]);
     });
 
@@ -610,10 +586,7 @@ describe("budgetsRepo.deleteMainBudget", () => {
     });
 });
 
-// A column added to either table and not to its tombstone constant would keep
-// the user's value on a deleted row, and no round-trip assertion above would
-// notice. `erase-core.ts` writes these same two shapes in bulk, so this holds
-// both call sites at once.
+// `erase-core.ts` writes these same shapes in bulk, so this guards both call sites.
 describe("the budget tombstone shapes", () => {
     const ENVELOPE = new Set(["id", "updatedAt", "deletedAt"]);
 

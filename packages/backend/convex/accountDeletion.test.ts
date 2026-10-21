@@ -21,12 +21,7 @@ import { authenticatedAs, grantPro, seedAuthUser } from "./test.helpers";
 
 const modules = import.meta.glob("./**/*.ts");
 
-/**
- * Relative to the run, not an absolute instant. This fixture is the *unexpired*
- * job — the two tests that exercise expiry opt in with `expiresAt: 0` — so a
- * hardcoded date does not stay a fixture, it becomes the expired case on the day
- * it passes and takes every test sharing it down with it.
- */
+/** Relative to the run, or the fixture expires on a calendar date. */
 const UNEXPIRED = Date.now() + 60 * 60 * 1000;
 
 const job: DeletionJob = {
@@ -99,8 +94,6 @@ async function purgedJob() {
 }
 
 describe("preparing a deletion", () => {
-    // The cap is what makes `sync.refuseWhileDeleting`'s full read of a user's
-    // jobs cheap, and what stops a client burying the job that refuses a push.
     it("refuses a new request once the account is holding the cap", async () => {
         const t = convexTest(schema, modules);
         revenuecatTest.register(t);
@@ -204,7 +197,6 @@ describe("billing erasure", () => {
     });
 });
 
-/** Backdates a job's TTL, the way an abandoned deletion ages out. */
 async function expire(t: TestConvex<typeof schema>, resumeSecret: string) {
     const secretHash = await sha256Hex(resumeSecret);
     await t.run(async (ctx) => {
@@ -226,9 +218,6 @@ describe("an abandoned deletion past its TTL", () => {
     it("still finishes, because the ledger is already gone", async () => {
         stubUpstream(200);
         const { owner, resumeSecret, t } = await purgedJob();
-        // A big ledger takes 200 rows per `advance`, so the user can lose
-        // connectivity mid-purge and come back a day later. By then the entries
-        // are hard-deleted and nothing can put them back.
         await expire(t, resumeSecret);
 
         await expect(t.query(api.accountDeletion.poll, { resumeSecret })).resolves.toMatchObject({

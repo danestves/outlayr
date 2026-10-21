@@ -21,31 +21,21 @@ import { CurrencyHint, CurrencyRow, CurrencyRowCopy, CurrencySectionHeader } fro
 
 const EASE = Easing.bezier(0.645, 0.045, 0.355, 1);
 
-/**
- * One fade over the whole list, keyed on the query — not an entering animation
- * per row. A per-row fade would also fire on every row scrolling into the
- * virtualised window, and this screen just had a per-keystroke stall removed.
- */
+// One fade keyed on the query, not one per row: a per-row fade also fires on every row scrolling into view.
 const RESULTS_SETTLE = FadeIn.duration(180).easing(EASE.factory()).reduceMotion(ReduceMotion.System);
 
-/** Ease-in-out, because the row is on screen at both ends of the journey. */
 const TRAVEL = {
     duration: 260,
     easing: EASE,
     reduceMotion: ReduceMotion.System,
 } as const;
 
-/**
- * A toggle the cap refuses never changes `favourites`, so the landing that ends
- * a travel would never arrive. Releases the copy rather than stranding it over
- * a row it is holding back.
- */
+// A toggle the cap refuses never changes `favourites`, so the landing that ends a travel would never arrive.
 const TRAVEL_ABANDON_MS = 700;
 
-/** Where a row was standing when it was favourited, in the wrapper's space. */
 interface Travel {
     code: CurrencyCode;
-    /** The rows it left. The landing is measured when these are replaced. */
+    /** The landing is measured once these rows are replaced. */
     departed: readonly CurrencyPickerRow[];
     height: number;
     left: number;
@@ -56,7 +46,6 @@ interface Travel {
 }
 
 interface CurrencyPickerListProps {
-    /** The sheet needs its own padding; the settings screen takes the default. */
     contentContainerStyle?: StyleProp<ViewStyle>;
     favourites: readonly string[];
     onSelect: (code: string) => void;
@@ -67,23 +56,9 @@ interface CurrencyPickerListProps {
     style?: StyleProp<ViewStyle>;
 }
 
-/**
- * A virtualised list, not `@expo/ui`'s SwiftUI `List`.
- *
- * The SwiftUI one is not virtualised at all — it mounts every child it is given,
- * which for 165 currencies was one ~550ms commit that nothing could paint around.
- * That showed up as 1.75s of dead screen after tapping Settings › Currency, a
- * stall on every keystroke, and a second stall on clearing the search, when the
- * list grows back from a few matches to the whole catalogue.
- *
- * Favouriting moves a row between the two sections. Legend List positions its
- * recycled containers absolutely and offers no item layout animation, so a
- * `layout` prop on the row has nothing to animate — the container moves and the
- * row inside it does not. The journey is drawn instead by measuring where the
- * row stood, measuring where it landed, and flying one copy above the list
- * between the two. When the landing is outside the visible range there is
- * nothing to fly to, and the row moves at once as it always did.
- */
+// Virtualised, not `@expo/ui`'s SwiftUI `List`, which mounts every child: one ~550ms commit for 165 currencies.
+// Legend List has no item layout animation, so a favourited row's move is drawn by flying a copy from where it
+// stood to where it landed. A landing outside the visible range just moves at once.
 export function CurrencyPickerList({
     favourites,
     query,
@@ -109,9 +84,7 @@ export function CurrencyPickerList({
         transform: [{ translateY: travelled.value }],
     }));
 
-    // Legend List keeps a ref to the container holding each rendered row, so the
-    // row itself needs no ref of its own — nothing here costs anything per row.
-    // It types those refs as `any`, and returns nothing for an unrendered index.
+    // Legend List types its container refs as `any` and returns nothing for an unrendered index.
     const containerAt = (index: number): HostInstance | undefined => listRef.current?.getState().elementAtIndex(index);
 
     const lift = (code: CurrencyCode) => {
@@ -178,8 +151,7 @@ export function CurrencyPickerList({
         onToggleFavourite === null
             ? null
             : (code: CurrencyCode, favourite: boolean) => {
-                  // A search returns one flat list, so the row keeps its place and has
-                  // no journey to draw.
+                  // A search is one flat list, so the row keeps its place.
                   if (query.trim() === "") {
                       lift(code);
                   }
@@ -192,15 +164,12 @@ export function CurrencyPickerList({
                 <LegendList
                     contentContainerStyle={contentContainerStyle}
                     contentInsetAdjustmentBehavior="automatic"
-                    // SAFETY: `rows` is this component's own prop, already narrowed by the
-                    // caller; Legend List widens its `data` generic on the way in.
+                    // SAFETY: Legend List widens its `data` generic on the way in; `rows` is already narrowed.
                     data={rows as CurrencyPickerRow[]}
-                    // A container re-renders on its own item or on `extraData`, never
-                    // because the list around it did. Without this the row that took off
-                    // is never told the copy has landed, and stays held back for good.
+                    // A container re-renders only on its own item or `extraData`, so without this the departed row is
+                    // never told the copy has landed and stays held back.
                     extraData={travel?.code}
-                    // Three pools. A header, the one-off hint and a currency row share no
-                    // layout, and recycling across them is what makes a mixed list stutter.
+                    // Separate pools: recycling across header, hint and row layouts is what makes a mixed list stutter.
                     getItemType={(row: CurrencyPickerRow) => row.kind}
                     keyboardDismissMode="on-drag"
                     keyboardShouldPersistTaps="handled"

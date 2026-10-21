@@ -13,21 +13,15 @@ import type { FactChips as FactChipsBase } from "./fact-chips";
 import { FACT_GLYPHS } from "./fact-glyphs";
 import type { SentenceVerb } from "./fact-glyphs";
 
-/** M3 chip icons are 18dp. */
 const CHIP_ICON = 18;
 
 const PRESSED_ALPHA = 0.1;
 
-/**
- * Takes a 32dp chip's touch target to M3's 48dp without changing how it looks.
- * Rows sit 8dp apart, so the targets of stacked chips overlap there; the later
- * chip takes the press, which is the one under the finger's lower half.
- */
+// Takes a 32dp chip's touch target to M3's 48dp. Stacked rows' targets overlap in the 8dp gap; the later chip wins.
 const CHIP_SLOP = { bottom: 8, top: 8 };
-/** The ✕ also reaches into the gap after the chip, never into its own label. */
+// The ✕ reaches into the gap after the chip, never into its own label.
 const REMOVE_SLOP = { bottom: 8, left: 4, right: 8, top: 8 };
 
-/** M3 disabled chip: 38% of the content, 12% of the outline. */
 const DISABLED_ALPHA = 0.38;
 const DISABLED_OUTLINE_ALPHA = 0.12;
 
@@ -40,8 +34,7 @@ function FactChip({ verb }: { verb: SentenceVerb }) {
     const disabled = verb.disabled === true;
 
     return (
-        // Not clipped: a clipping chip would cut its buttons' touch targets back
-        // to its own 32dp. Each button clips its own ripple instead.
+        // Not clipped: clipping would cut the buttons' touch targets back to 32dp. Each button clips its own ripple.
         <View
             className="h-8 flex-row items-center rounded-lg"
             style={
@@ -95,11 +88,6 @@ function FactChip({ verb }: { verb: SentenceVerb }) {
     );
 }
 
-/**
- * The optional facts as Material 3 chips: an unset fact is an outlined assist
- * chip, a set one a selected filter chip in `secondaryContainer` with its own
- * ✕. Same contract as `fact-chips.tsx`.
- */
 export const FactChips: typeof FactChipsBase = ({ chips }) => (
     <Animated.View className="mt-7 flex-row flex-wrap gap-2" layout={LinearTransition.duration(240)}>
         {chips.map((verb) => (

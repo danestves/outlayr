@@ -6,24 +6,16 @@ import { useRegionCode } from "@/hooks/use-region-code";
 import { useLanguage } from "@/i18n/context";
 
 export interface CompactDatePickerProps {
-    /** iOS: the host's height. */
     height?: number;
-    /** What the date is, for TalkBack. iOS's compact field reads its own value. */
+    /** For TalkBack; iOS's compact field reads its own value. */
     label: string;
-    /** A day was picked. */
     onChange: (next: Date) => void;
-    /** Android: the dialog closed without a pick. */
     onDismiss?: () => void;
-    /** The days on offer, inclusive. Either end may be open. */
+    /** Inclusive; either end may be open. */
     range: { end?: Date; start?: Date };
     value: Date;
 }
 
-/**
- * One day, picked in place: SwiftUI's compact date field, which opens its own
- * calendar popover. `compact-date-picker.android.tsx` is a field that opens the
- * Material date dialog instead, since this view does not exist on Android.
- */
 export function CompactDatePicker({ height = 40, onChange, range, value }: CompactDatePickerProps) {
     const locale = useDatePickerLocale();
     return (
@@ -42,11 +34,7 @@ export function CompactDatePicker({ height = 40, onChange, range, value }: Compa
     );
 }
 
-/**
- * The locale a SwiftUI date field writes its date in: the app's language in the
- * device's region. The field reads the system's otherwise, which stays Spanish
- * in an app set to English on a Spanish device.
- */
+/** The app's language in the device's region: the field otherwise follows the system language. */
 export function useDatePickerLocale() {
     const { language } = useLanguage();
     const region = useRegionCode();

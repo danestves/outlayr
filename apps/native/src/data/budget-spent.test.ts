@@ -97,7 +97,6 @@ async function seed(db: TestDb): Promise<void> {
         updatedAt: now,
     };
     await db.insert(transactions).values([
-        // In-window expenses that count.
         {
             ...base,
             amount: 10,
@@ -122,7 +121,6 @@ async function seed(db: TestDb): Promise<void> {
             id: "t-rent",
             income: false,
         },
-        // Income is never spending.
         {
             ...base,
             amount: 500,
@@ -131,7 +129,6 @@ async function seed(db: TestDb): Promise<void> {
             id: "t-inc",
             income: true,
         },
-        // Before the window.
         {
             ...base,
             amount: 5,
@@ -140,7 +137,6 @@ async function seed(db: TestDb): Promise<void> {
             id: "t-before",
             income: false,
         },
-        // After `now`.
         {
             ...base,
             amount: 7,
@@ -149,7 +145,6 @@ async function seed(db: TestDb): Promise<void> {
             id: "t-after",
             income: false,
         },
-        // Soft-deleted.
         {
             ...base,
             amount: 999,
@@ -162,8 +157,7 @@ async function seed(db: TestDb): Promise<void> {
     ]);
 }
 
-// The reactive hooks load one expense set (non-deleted, income=false, date<=now)
-// and bucket in JS; this mirrors that query result.
+// Mirrors the hooks' one expense query (live, income=false, date<=now), bucketed in JS.
 const CONTRIBUTIONS: ExpenseContribution[] = [
     { amount: 10, categoryId: "food", date: at(2025, 1, 10), parentId: null },
     { amount: 20, categoryId: "groc", date: at(2025, 1, 15), parentId: "food" },
@@ -179,8 +173,6 @@ describe("expenseContributionQuery", () => {
     });
 
     it("admits only expenses, dated no later than now, never soft-deleted", async () => {
-        // Every budget figure is a JS reduction over this one result, so a row that
-        // slips through here is spend nothing downstream removes.
         const rows = await expenseContributionQuery(db, NOW);
         expect(rows.map((row) => row.amount).sort((a, b) => a - b)).toStrictEqual([5, 10, 20, 100]);
     });
@@ -219,9 +211,6 @@ describe("spentForMain", () => {
 });
 
 describe("a budget's spend does not depend on which list it is summed from", () => {
-    // The detail screen queries its own contributing rows instead of sharing the
-    // list every other budget surface reads, so the conversion has to be applied
-    // twice or the hero contradicts the rows printed under it.
     const RATES = buildRateTable([{ date: "2026-07-01", quote: "EUR", rate: 0.8 }]);
     const JULY_15 = new Date(Date.UTC(2026, 6, 15, 12));
     const ROWS = [
@@ -271,12 +260,8 @@ describe("a budget's spend does not depend on which list it is summed from", () 
     });
 });
 
-/**
- * `rolloverCarry` hands `spentIn` a half-open `[start, end)`, but both spend
- * functions count a row dated exactly on their upper bound. A CSV import dates
- * every row at local midnight, so a row landing on a window boundary used to be
- * charged to the closed window (shrinking the carry) AND to the new one.
- */
+// `rolloverCarry` passes a half-open `[start, end)` while both spend functions count a row on their upper bound, and
+// a CSV import dates every row at local midnight.
 describe("a transaction dated exactly on a window boundary", () => {
     const FEB = at(2025, 2, 1);
     const MAR = at(2025, 3, 1);

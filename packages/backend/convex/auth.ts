@@ -25,16 +25,7 @@ import {
 import { sha256Hex } from "./lib/sha256Hex";
 import { appleCredentialLifecycle } from "./providerLifecycle";
 
-/**
- * `CONVEX_SITE_URL` is a built-in Convex system variable — always populated in a
- * deployed function, with no configuration. It is the correct auth origin for a
- * native-only app, which is what this repo is: `SITE_URL` only becomes
- * meaningful once a web client exists, so it takes precedence when set but
- * cannot be required.
- *
- * Resolved per call rather than at module scope so a deployment that sets these
- * after first load still picks them up.
- */
+/** `CONVEX_SITE_URL` is always set when deployed; `SITE_URL` only exists with a web client. Read per call. */
 function resolveSiteUrl() {
     return process.env.SITE_URL || process.env.CONVEX_SITE_URL || "http://localhost:3000";
 }
@@ -45,11 +36,7 @@ function resolveNativeAppUrl() {
 
 const LONGEST_COOKIE_MAX_AGE_SECONDS = 400 * 24 * 60 * 60;
 
-/**
- * Better Auth's own limiter is per IP. These are the endpoints that try a
- * password or send mail, limited per address, so one inbox can neither be
- * guessed at nor flooded from many IPs.
- */
+/** Better Auth limits per IP; these are per address, so one inbox cannot be guessed or flooded from many IPs. */
 const EMAIL_LIMITED_PATHS = new Set([
     "/email-otp/request-password-reset",
     "/email-otp/send-verification-otp",
@@ -90,11 +77,7 @@ const googleConfig = (() => {
     return null;
 })();
 
-/**
- * Apple has no static client secret: it is an ES256 JWT signed with the team's
- * private key, valid for at most six months, so it must be minted per request
- * rather than stored as an env var.
- */
+/** Apple's client secret is an ES256 JWT valid six months at most, so it is minted per request. */
 async function generateAppleClientSecret(clientId: string, teamId: string, keyId: string, privateKey: string) {
     const key = await importPKCS8(privateKey, "ES256");
     const now = Math.floor(Date.now() / 1000);
@@ -197,11 +180,7 @@ function createAuth(ctx: GenericCtx<DataModel>) {
             expiresIn: LONGEST_COOKIE_MAX_AGE_SECONDS,
         },
         socialProviders: {
-            // Better Auth awaits this factory and then drops the provider whole
-            // on `enabled: false` — `createAuthContext` returns null for it, so
-            // `signIn.social({ provider: "apple" })` answers PROVIDER_NOT_FOUND.
-            // The unconfigured branch below wants exactly that; the configured
-            // one must not, or the four `APPLE_*` variables buy nothing.
+            // Better Auth drops a provider whole on `enabled: false`, so the configured branch must never return it.
             apple: async () => {
                 if (!appleConfig) {
                     return {

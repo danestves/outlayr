@@ -1,9 +1,3 @@
-/**
- * Turns Hugeicons data into SVG, and SVG into PNGs.
- *
- * `rasterize` needs `brew install librsvg`.
- */
-
 import { execFileSync } from "node:child_process";
 import { mkdirSync, rmSync } from "node:fs";
 
@@ -11,18 +5,12 @@ export type SvgElement = [string, Record<string, string>];
 
 export type IconWeight = "stroke" | "solid";
 
-/** Hugeicons draws every glyph on this grid, whatever size it is rendered at. */
 const VIEWBOX = 24;
 
 const SCALES = [1, 2, 3];
 
-/**
- * `renderingMode="template"` keeps only the alpha, so for a consumer that
- * templates the bitmap the RGB never ships and black is as good as any value.
- *
- * A consumer that does NOT template it draws the pixels as they are — SwiftUI's
- * `Image.uiImage` is one — so those sets have to bake the colour they need.
- */
+// A templated bitmap ships only its alpha. A consumer that draws the pixels as they are (SwiftUI's
+// `Image.uiImage`) needs the colour baked in through `ink`.
 const INK = "#000000";
 
 function attributeName(key: string): string {
@@ -33,15 +21,7 @@ function escapeAttribute(value: string): string {
     return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
 }
 
-/**
- * Serializes one weight's element list into an SVG document.
- *
- * `strokeWidth` overrides the 1.5 the package bakes into every stroke glyph,
- * for the surfaces that need a heavier line to sit next to SF Symbols. It is
- * meaningless for the solid weight, which is filled rather than stroked.
- *
- * `ink` replaces the default black for a consumer that draws the pixels as they are.
- */
+// `strokeWidth` overrides the 1.5 the package bakes into every stroke glyph; the solid weight is filled instead.
 export function toSvg(elements: SvgElement[], strokeWidth?: number, ink: string = INK): string {
     const markup = elements
         .map(([tag, attributes]) => {
@@ -63,11 +43,6 @@ export function toSvg(elements: SvgElement[], strokeWidth?: number, ink: string 
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEWBOX} ${VIEWBOX}" fill="none">${markup}</svg>`;
 }
 
-/**
- * Writes `basePath.png`, `basePath@2x.png` and `basePath@3x.png`. `points` is
- * the size the glyph should occupy on screen — a bitmap has no intrinsic scale,
- * so this is what decides how large the icon draws.
- */
 export function rasterize(svg: string, basePath: string, points: number) {
     for (const scale of SCALES) {
         const pixels = String(points * scale);
@@ -93,7 +68,6 @@ export function requireRsvgConvert() {
     }
 }
 
-/** Empties the output directory so a renamed icon leaves no orphan PNG behind. */
 export function resetDirectory(directory: string) {
     rmSync(directory, { force: true, recursive: true });
     mkdirSync(directory, { recursive: true });

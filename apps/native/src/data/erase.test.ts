@@ -215,10 +215,8 @@ describe("eraseData", () => {
         await seed(unwritable);
         const { calls, residue } = spyResidue();
 
-        // `toMatchObject` rather than `.rejects.toThrow()`: the rejection is a
-        // native-addon `SqliteError`, and Jest gives each test file its own realm,
-        // so `instanceof Error` on it is not reliable across files — `toThrow()`
-        // silently reports "did not throw" when that happens.
+        // `toMatchObject`, not `.rejects.toThrow()`: the rejection is a native-addon `SqliteError` from
+        // another Jest realm, so `instanceof Error` fails and `toThrow()` reports "did not throw".
         await expect(eraseData(unwritable, "transactions", residue)).rejects.toMatchObject({
             message: expect.any(String),
         });

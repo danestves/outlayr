@@ -101,9 +101,6 @@ export function Accounts() {
         [router]
     );
 
-    // The row goes now and the write is held for the undo window, so the toast is
-    // the only thing standing between the swipe and the delete — the body says
-    // what the row taking itself off the list does not.
     const deleteAccount = useCallback(
         (account: Account) => {
             requestDelete(account.id, t("accounts.undo.body"));
@@ -232,8 +229,7 @@ const AccountRow = memo(({ account, colors, db, onDelete, onOpen }: AccountRowPr
                 modifiers={[
                     hitArea(outline.rectangle()),
                     onTapGesture(() => onOpen(account.id)),
-                    // An `onTapGesture` is invisible to VoiceOver: without these the row
-                    // is four loose strings and no way to open it.
+                    // An `onTapGesture` is invisible to VoiceOver: without these the row cannot be opened.
                     accessibilityElement("combine"),
                     accessibilityAddTraits(["isButton"]),
                     accessibilityLabel(account.name),
@@ -279,9 +275,8 @@ const AccountRow = memo(({ account, colors, db, onDelete, onOpen }: AccountRowPr
                 <Image color={colors.muted} modifiers={[CHEVRON]} systemName="chevron.right" />
             </HStack>
             <SwipeActions.Actions edge="trailing">
-                {/* A `destructive` role makes SwiftUI animate the row out of the List on
-				    press, before the confirmation is answered — and cancelling never
-				    puts it back. The tint buys the same red without that. */}
+                {/* A `destructive` role animates the row out before the confirmation is answered, and
+                    cancelling never puts it back. The tint buys the same red without that. */}
                 <Button
                     label={t("common.delete")}
                     modifiers={[tint(colors.danger)]}

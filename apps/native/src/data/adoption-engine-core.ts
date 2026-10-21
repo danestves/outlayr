@@ -12,24 +12,14 @@ import { applyPulledRows, PULL_PAGE_LIMIT, PUSH_BATCH_LIMIT, specFor } from "./s
 import type { LocalValue, PulledRow, PullFn, PushFn, SyncedTable, WireRow } from "./sync-engine-core";
 import { getOrCreateDeviceId, SYNCED_META_KEYS, SYNCED_TABLES, setSyncCursor } from "./sync-outbox-core";
 
-/** As in `sync-engine-core`: a runtime table name erases the generated row type. */
 type Row = Record<string, LocalValue>;
 
-/** The id column recovered from a row the table name has already untyped. */
 const rowId = z.string();
 
-/** Keyed `table\0localId`, because a localId is only unique within its table. */
 function rowKey(table: SyncedTable, localId: string): string {
     return `${table}\0${localId}`;
 }
 
-/**
- * The account's whole change log, collapsed to the latest state per row.
- *
- * Read in full rather than page-by-page because every caller needs a decision
- * over the complete set: whether the account holds anything at all, and which
- * of its rows this device does not already have.
- */
 async function readAccountLog(pull: PullFn): Promise<Map<string, PulledRow>> {
     const latest = new Map<string, PulledRow>();
     let cursor = 0;
@@ -50,13 +40,8 @@ async function readAccountLog(pull: PullFn): Promise<Map<string, PulledRow>> {
     /* oxlint-enable no-await-in-loop */
 }
 
-/**
- * Whether the account holds any row that is not a tombstone.
- *
- * A tombstone is not content: an account whose every row has been deleted has
- * nothing to preserve, and reading it as `populated` would ask the user to
- * choose between their ledger and an empty one.
- */
+// A tombstone is not content: an account whose every row was deleted has nothing to preserve, and calling it
+// `populated` would ask the user to choose between their ledger and an empty one.
 export async function accountLedgerState(pull: PullFn): Promise<RemoteLedger> {
     const log = await readAccountLog(pull);
     for (const row of log.values()) {
@@ -69,8 +54,7 @@ export async function accountLedgerState(pull: PullFn): Promise<RemoteLedger> {
 
 async function localRows(db: Database, table: SyncedTable): Promise<Map<string, Row>> {
     const spec = specFor(table);
-    // SAFETY: same erasure — the row type is recovered as the untyped `Row`
-    // this file reads by column name.
+    // SAFETY: the runtime table name erases the row type; this file reads rows by column name as `Row`.
     const rows = (await db.select().from(spec.table)) as Row[];
     const idName = spec.id.name;
     const byId = new Map<string, Row>();
@@ -83,18 +67,9 @@ async function localRows(db: Database, table: SyncedTable): Promise<Map<string, 
     return byId;
 }
 
-/**
- * Replaces this device's replica with the account's, then reads the log from
- * the beginning.
- *
- * Only the account-scoped `appMeta` keys are cleared. Wiping the table would
- * take `syncDeviceId`, `syncCursor` and `onboardingComplete` with it — device
- * state that no pull will ever hand back.
- *
- * The cursor is reset inside the same transaction as the wipe, so a crash
- * between them cannot leave an empty replica pointed at the end of the log,
- * which would read as a fully-synced empty ledger and stay that way.
- */
+// Only account-scoped `appMeta` keys are cleared: `syncDeviceId`, `syncCursor` and `onboardingComplete` never come
+// back from a pull. The cursor resets in the wipe's transaction, so a crash cannot leave an empty replica pointed at
+// the end of the log.
 export async function replaceLocalFromAccount(db: Database, pull: PullFn, now: Date = new Date()): Promise<void> {
     await withTransaction(db, async () => {
         /* oxlint-disable no-await-in-loop -- `withTransaction` holds one SQLite connection, so the wipe's statements have to be issued on it one at a time */
@@ -131,25 +106,9 @@ export async function replaceLocalFromAccount(db: Database, pull: PullFn, now: D
     /* oxlint-enable no-await-in-loop */
 }
 
-/**
- * Makes this device's ledger the survivor.
- *
- * The obvious implementation — tombstone every account row, then push the local
- * ones — destroys the ledger it is meant to keep. `incomingWins`
- * (`packages/backend/convex/lib/syncTables.ts`) resolves a delete against a live
- * row in the delete's favour **regardless of `updatedAt`**, so every local row
- * sharing a `localId` with a tombstoned one is skipped on push, and the next
- * pull hands those tombstones back and deletes them locally too.
- *
- * So a row the account and this device both hold is left alive on the server and
- * beaten on its own terms: its local `updatedAt` is lifted above the account's,
- * and it takes the account's `restoredAt` when that is later than its own, so
- * the ordinary drain wins the last-writer comparison rather than losing on the
- * restore. Only rows this device has never seen are tombstoned.
- *
- * `appMeta` needs no lift — it has no local clock, so `drainOutbox` stamps it
- * with the enqueue time, which is necessarily later than anything already there.
- */
+// Not tombstone-all-then-push: `incomingWins` (packages/backend/convex/lib/syncTables.ts) lets a delete beat a live
+// row regardless of `updatedAt`. Shared rows stay alive with `updatedAt` (and `restoredAt`) lifted past the account's;
+// only rows this device never saw are tombstoned.
 export async function discardAccountLedger(
     db: Database,
     transport: { push: PushFn; pull: PullFn },
@@ -183,6 +142,7 @@ export async function discardAccountLedger(
                 });
                 continue;
             }
+            // No lift: `drainOutbox` stamps `appMeta` with the enqueue time, later than anything already there.
             if (table === "appMeta") {
                 continue;
             }
@@ -208,15 +168,12 @@ export async function discardAccountLedger(
                 const spec = specFor(table);
                 /* oxlint-disable no-await-in-loop -- `withTransaction` holds one SQLite connection, so the lifts have to be issued on it one at a time */
                 for (const row of rows) {
-                    // A lifted transaction keeps its logo candidate: the stamp
-                    // follows the new clock, before the write, as every local
-                    // write that moves `updatedAt` on a bare row must arrange.
+                    // A lifted transaction's logo candidate stamp follows the new clock, before the write.
                     if (table === "transactions") {
                         await refreshLogoCandidate(db, row.id, row.updatedAt.getTime());
                     }
-                    // SAFETY: `spec.table` is a runtime table name, which erases the per-table
-                    // update type; `updatedAt` is a column every synced table declares, and
-                    // `restoredAt` is set only from a row that carried one, so its table has it.
+                    // SAFETY: the runtime table name erases the update type; every synced table has `updatedAt`, and
+                    // `restoredAt` is set only from a row that carried one.
                     await db
                         .update(spec.table)
                         .set({

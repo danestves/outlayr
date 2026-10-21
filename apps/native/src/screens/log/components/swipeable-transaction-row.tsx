@@ -15,7 +15,6 @@ import { freshEntries } from "@/lib/fresh-entries";
 
 interface SwipeableTransactionRowProps {
     currency: string;
-    /** The row's context menu, opened by holding it. */
     menuItems: readonly ActionMenuItem[];
     onDelete: (id: string) => void;
     onPress: (id: string) => void;

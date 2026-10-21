@@ -4,11 +4,7 @@ import { SUGGESTED_CATEGORY_PRESETS } from "@/data/categories-core";
 
 import { curtainShade, glyphShade, TILE_WASH_OPACITY, withAlpha } from "./shade";
 
-/**
- * Independent reimplementation of the WCAG contrast maths, deliberately not
- * imported from `color.ts` — the point is to check its output against the spec
- * rather than against itself. Same oracle idea as `budget-spent.test.ts`.
- */
+/** Deliberately not imported from `color.ts`: an independent oracle checks it against the spec. */
 function contrast(aHex: string, bHex: string): number {
     const toRgb = (hex: string): [number, number, number] => {
         const v = hex.replace("#", "");
@@ -24,13 +20,11 @@ function contrast(aHex: string, bHex: string): number {
     return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
 }
 
-/** The wash a glyph actually sits on: the tint composited over the sheet. */
 function washOver(hex: string, isDark: boolean): string {
     const v = hex.replace("#", "");
     const int = Number.parseInt(v, 16);
     const tint = [(int >> 16) & 255, (int >> 8) & 255, int & 255];
-    // The themes' grounds in 0–255, kept as literals so this stays an independent
-    // statement of what the tile sits on rather than a read of `shade.ts`.
+    // Literals, so this stays independent of `shade.ts`.
     const sheet = isDark ? [23, 21, 15] : [242, 240, 234];
     const t = 1 - TILE_WASH_OPACITY;
     return `#${tint
@@ -88,17 +82,13 @@ describe("glyphShade", () => {
             for (const hex of PALETTE) {
                 const shade = glyphShade(hex, isDark);
                 const ratio = contrast(shade, washOver(hex, isDark));
-                // The target is 3.5. This oracle recomputes the wash in 0–255 space
-                // while color.ts works normalized, so the two round the sheet
-                // differently (0.96 * 255 = 244.8) — the 0.1 of slack absorbs that,
-                // not any shortfall in the implementation.
+                // The oracle rounds in 0-255 space (0.96 * 255 = 244.8); 0.1 absorbs the difference.
                 expect(ratio >= 3.4).toBeTruthy();
             }
         }
     });
 
     it("leaves a tint that already contrasts untouched", () => {
-        // Near-black on a light wash is already far past the target.
         expect(glyphShade("#101010", false)).toBe("#101010");
     });
 

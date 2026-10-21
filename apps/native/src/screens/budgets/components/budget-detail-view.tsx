@@ -30,32 +30,25 @@ import { InlineEditorKeyboard } from "./inline-editor-keyboard";
 
 interface BudgetDetailViewProps {
     amount: number;
-    /** The window has ended: nothing about it is still in play. */
     closed?: boolean;
     currency: string;
-    /** The budget's own facts, editable in place. Absent on a closed window. */
     editor?: ReactNode;
     leftover: number;
     leftPerDayAmount?: number | null;
     onPressTransaction: (id: string) => void;
     overBudget: boolean;
-    /** True when spending has outrun the clock. */
     paceBehind?: boolean;
-    /** Fraction of period time remaining, or null to hide the pace marker. */
+    /** Fraction of the period remaining; null hides the pace marker. */
     paceRemaining?: number | null;
-    /** Lowercase period phrase, e.g. "this month", or a closed window's dates. */
     period: string;
     spent: number;
     stepper?: ReactNode;
-    /** The budget's category colour for the rail; omitted by the overall budget. */
     tint?: string | null;
     transactions: TransactionWithCategory[];
 }
 
-/** Matches the list hero's bleed, so both rails read as the same instrument. */
 const RAIL_BLEED = 8;
 
-/** Shared budget detail body for both the per-category and overall budgets. */
 export function BudgetDetailView({
     period,
     spent,
@@ -79,17 +72,11 @@ export function BudgetDetailView({
     const nowMs = useNow();
     const { pendingId, requestDelete } = useDeferredDelete("row");
     const openRowActions = useTransactionRowActions(nowMs, requestDelete);
-    // Only the list drops the row being deleted. The summary above it is computed
-    // by the caller from the same window and catches up when the write lands, the
-    // same way the Log's header trails its own list.
     const rows = useMemo(
         () => transactions.filter((row) => !goesWithPendingDelete(row, pendingId)),
         [transactions, pendingId]
     );
     const sections = useMemo(() => groupByDay(rows, currency, rates), [rows, currency, rates]);
-    // Scoped to the window on screen, not the ledger: a closed period is exactly
-    // where rows the rate history can no longer reach turn up, and a total that
-    // silently mixes them with converted ones reads as more solid than it is.
     const note = useMemo(
         () => coverageNote(coverageOf(transactions, displayCurrency, rates), t),
         [transactions, displayCurrency, rates, t]
@@ -98,15 +85,11 @@ export function BudgetDetailView({
     return (
         <InlineEditorKeyboard>
             <SectionList
-                // The editor's name field lives in the list header, and without this the
-                // keyboard covers the field it just opened.
+                // The editor's name field lives in the list header; without this the keyboard covers it.
                 automaticallyAdjustKeyboardInsets
                 className="bg-background flex-1"
                 contentInsetAdjustmentBehavior="automatic"
-                // The name field is in that same header, and a drag over the rows below
-                // has to be able to put its keyboard away. `keyboardShouldPersistTaps` is
-                // left at its default so a tap outside the field does too — the editor's
-                // rows read that tap as the blur that commits the name.
+                // `keyboardShouldPersistTaps` stays default so a tap outside blurs the field, which commits the name.
                 keyboardDismissMode="on-drag"
                 sections={sections}
                 keyExtractor={(item) => item.id}

@@ -13,9 +13,6 @@ const hints = (rows: ReturnType<typeof currencyPickerRows>) => rows.filter((row)
 
 describe("the currency picker's rows", () => {
     it("teaches the gesture under an empty cluster, above the whole catalogue", () => {
-        // Favouriting is a long-press with nothing drawn on the row to advertise it.
-        // This line is the entire discoverability budget: it holds the cluster's
-        // place until the first favourite earns it, then never appears again.
         const rows = currencyPickerRows([], "");
         expect(sections(rows)).toStrictEqual(["favourites", "all"]);
         expect(hints(rows)).toHaveLength(1);
@@ -27,9 +24,6 @@ describe("the currency picker's rows", () => {
     });
 
     it("never repeats a favourite in the list below the cluster", () => {
-        // The catalogue pins USD and VES above its own alphabet, so a cluster that
-        // repeated its codes put them back-to-back with themselves — two identical
-        // pairs, no separator, reading as a plain duplication bug.
         const rows = currencyPickerRows(["USD", "VES"], "");
         const listed = codes(rows);
         expect(listed.filter((code) => code === "USD")).toHaveLength(1);
@@ -55,8 +49,6 @@ describe("the currency picker's rows", () => {
     });
 
     it("leaves a search flat, because the search is already the shortcut", () => {
-        // Clustering on top of a search pushes the match the user typed below the
-        // fold.
         const rows = currencyPickerRows(["USD", "VES"], "eur");
         expect(sections(rows)).toStrictEqual([]);
         expect(codes(rows).includes("EUR")).toBeTruthy();
@@ -73,8 +65,6 @@ describe("where a section closes", () => {
         rows.flatMap((row) => (row.kind === "currency" && row.last ? [row.code] : []));
 
     it("closes on the row before a header, and on the very last row", () => {
-        // The row draws its own separator, so the one closing a section has to leave
-        // it off or it stacks a hairline against the next header.
         const rows = currencyPickerRows(["USD", "VES"], "");
         const closingCodes = lastCodes(rows);
         expect(closingCodes[0]).toBe("VES");

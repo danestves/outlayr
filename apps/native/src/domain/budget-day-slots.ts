@@ -8,27 +8,20 @@ import { median } from "./stats";
 
 interface DayBlock {
     amount: number;
-    /** True once this purchase is the one that carries the day past the limit. */
     over: boolean;
-    /** Spend accumulated before this purchase — the block's left edge, in currency. */
+    /** Spend before this purchase: the block's left edge, in currency. */
     start: number;
 }
 
 type DayVerdict = "room" | "tight" | "over" | null;
 
 export interface DaySlots {
-    /** Today's purchases in order, left to right. */
     blocks: DayBlock[];
-    /** The dashed slot's amount, or null when one more wouldn't fit. */
     ghost: number | null;
     limit: number;
-    /** Median purchase in this category across all history, or null with none. */
     median: number | null;
-    /** Purchases that landed past the limit. */
     overflow: number;
-    /** `limit - spent`; negative once blown. */
     remaining: number;
-    /** How many median-sized purchases still fit under the limit. */
     roomFor: number;
     /** Currency the bar spans end to end, so the rule and any overflow both fit. */
     scale: number;
@@ -37,17 +30,13 @@ export interface DaySlots {
 }
 
 export interface DaySlotsOptions {
-    /** Scope to one category and its subcategories; omit for the overall budget. */
     categoryId?: string | null;
     limit: number;
     now: Date;
     window: BudgetWindow;
 }
 
-/**
- * Taken over everything the expense list holds, not just the window. Null means
- * no history, and the caller must not guess a slot.
- */
+/** Over all history, not just the window. Null means no history, and the caller must not guess a slot. */
 export function categoryMedian(rows: readonly ExpenseContribution[], categoryId: string | null = null): number | null {
     const amounts: number[] = [];
     for (const row of rows) {
@@ -58,11 +47,6 @@ export function categoryMedian(rows: readonly ExpenseContribution[], categoryId:
     return median(amounts);
 }
 
-/**
- * A daily budget as discrete purchases rather than a curve: one block per
- * transaction sized by its amount, a dashed slot for the next typical one if it
- * fits, and the limit as a rule the blocks can run past.
- */
 export function buildDaySlots(rows: readonly ExpenseContribution[], options: DaySlotsOptions): DaySlots {
     const { limit, window, now, categoryId = null } = options;
     const startMs = window.start.getTime();
@@ -121,10 +105,7 @@ export function buildDaySlots(rows: readonly ExpenseContribution[], options: Day
     };
 }
 
-/**
- * `noun` is what the overflow counts — the category on a per-category budget,
- * "purchase" for the overall one.
- */
+/** `noun` is what the overflow counts: the category, or "purchase" on the overall budget. */
 export function dayVerdictSentence(slots: DaySlots, noun: string, t: TranslateFn): string | null {
     switch (slots.verdict) {
         case "room": {

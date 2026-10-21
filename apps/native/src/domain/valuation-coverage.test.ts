@@ -84,8 +84,6 @@ describe("coverageOf", () => {
     });
 
     it("calls a row permanent when the display leg is the one that cannot reach", () => {
-        // USD in, EUR out: the amount needs no canonicalization, but March has no
-        // EUR rate to convert into and no later pull will supply one.
         const stepped = row({
             amountUsd: 10,
             currency: "USD",
@@ -99,8 +97,6 @@ describe("coverageOf", () => {
     });
 
     it("leaves a currency the table has never held in pending", () => {
-        // No rows for JPY at all: rates may still arrive, so "never" is not a
-        // claim the data supports.
         const unknown = row({
             amountUsd: null,
             currency: "JPY",

@@ -122,7 +122,6 @@ export function ChoiceRow({
     detail?: string;
     leading?: ReactNode;
     selected: boolean;
-    /** Shown at the end, before the check. */
     value?: string;
     onPress: () => void;
 }) {

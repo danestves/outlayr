@@ -37,29 +37,20 @@ interface BudgetLimitPickerProps {
     /** Window-to-date burn-down built with `limit: 0`, so `points[].spent` is the curve. */
     burndown: Burndown;
     currency: string;
-    /** Spend per closed window behind this one, newest first. See `budget-typical`. */
     history?: readonly number[];
-    /** The limit on the line, in the ledger's currency. Owned by the caller. */
     limit: number;
     nowMs: number;
-    /** Fires as the drag crosses each step, not per frame. */
     onLimit: (next: number) => void;
-    /** Mid-sentence period, e.g. "a month". Spoken, not drawn. */
     periodPhrase: string;
-    /** How many expenses are behind the curve. */
     sampleSize: number;
     window: BudgetWindow;
-    /** The window named, e.g. "August" or "15 Aug - 22 Aug". */
     windowLabel: string;
 }
 
 /** Below this many expenses the crossing lands wherever the largest charge happened to. */
 const SPARSE_HISTORY = 10;
 
-/**
- * How much of the month must have passed before a whole-month verdict is honest —
- * the curve stops at today. Mirrors `PROJECTION_FLOOR`.
- */
+/** The curve stops at today, so a whole-window verdict needs this much elapsed. Mirrors `PROJECTION_FLOOR`. */
 const ELAPSED_FLOOR = 0.2;
 
 const CHART_HEIGHT = 200;
@@ -86,16 +77,10 @@ function curvePathD(
     return parts.join(" ");
 }
 
-/** "23 Jul". */
 function formatDayMonth(date: Date, language: Language): string {
     return `${date.getDate()} ${monthAbbrevTitle(date, language)}`;
 }
 
-/**
- * The instrument: a window's spending, and the limit as a line you drag across
- * it. Controlled, because the figure above it is the same number and a second
- * copy of it here is how the two drift apart.
- */
 export function BudgetLimitPicker({
     burndown,
     sampleSize,
@@ -120,9 +105,7 @@ export function BudgetLimitPicker({
 
     const cumulative = useMemo(() => burndown.points.map((point) => point.spent), [burndown]);
     const total = cumulative.at(-1) ?? 0;
-    // Frozen at mount, so the plot does not rescale under a finger that is
-    // dragging it. The caller remounts this when the period changes, which is the
-    // only time the curve underneath it becomes a different curve.
+    // Frozen at mount so the plot does not rescale under a dragging finger; the caller remounts it per period.
     const [axisTop] = useState(() => Math.max(LIMIT_STEP * 4, total * 1.35, limit * 1.2));
     const maxLimit = Math.floor(axisTop / LIMIT_STEP) * LIMIT_STEP;
     const elapsedFraction = burndown.points.length / burndown.totalDays;
@@ -131,20 +114,15 @@ export function BudgetLimitPicker({
     const limitY = useSharedValue(yForLimit(limit, axisTop));
     const snapped = useSharedValue(limit);
     const dragging = useSharedValue(false);
-    // Shared rather than a ref because the drag mutates it: a ref written from
-    // the gesture closure is state the compiler cannot follow, and it bailed out
-    // of optimizing the whole component over it.
+    // Shared, not a ref: a ref written from the gesture closure made the compiler bail on the whole component.
     const lastCrossing = useSharedValue<number | null>(null);
 
     useEffect(() => {
         lastCrossing.set(crossingDay(cumulative, limit));
-        // Mid-drag the finger owns the line. This render may be trailing a value the
-        // gesture has already left behind, and writing it back would jolt the line.
+        // Mid-drag the finger owns the line; writing back a trailing render would jolt it.
         if (dragging.get()) {
             return;
         }
-        // Clamped: a figure typed above the axis pins the line to the ceiling
-        // rather than drawing it off the canvas.
         limitY.set(yForLimit(Math.min(limit, maxLimit), axisTop));
         snapped.set(limit);
     }, [limit, axisTop, maxLimit, cumulative, limitY, snapped, dragging, lastCrossing]);
@@ -173,8 +151,7 @@ export function BudgetLimitPicker({
         const stepped = Math.round(raw / LIMIT_STEP) * LIMIT_STEP;
         const next = Math.min(maxLimit, Math.max(LIMIT_STEP, stepped));
         limitY.set(PLOT_TOP + (1 - next / axisTop) * PLOT_HEIGHT);
-        // Only cross to JS when the snapped amount changes, so a full drag costs
-        // one call per $25 rather than one per frame.
+        // Cross to JS only when the snapped amount changes: one call per step rather than per frame.
         if (next !== snapped.get()) {
             snapped.set(next);
             scheduleOnRN(applyLimit, next);
@@ -233,25 +210,18 @@ export function BudgetLimitPicker({
             ? null
             : new Date(windowStart.getFullYear(), windowStart.getMonth(), windowStart.getDate() + crossing - 1);
     const limitLabel = formatAmount(limit, currency, false, language);
-    // Only over a whole sample, and only where the sample holds something: "1 of
-    // the last 1" is a sample size wearing a verdict, and "0 of the last 6 went
-    // over" says nothing about a scope that has never been spent on.
+    // Only over a sample of three or more that holds some spend; otherwise it is a sample size wearing a verdict.
     const sampled = history ?? [];
     const overCount = sampled.length >= 3 && sampled.some((spent) => spent > 0) ? windowsOver(sampled, limit) : null;
     const now = new Date(nowMs);
     const perDay = leftPerDay(limit - total, budgetWindow, now);
-    // A limit of nothing is a limit not typed yet, and neither an allowance nor an
-    // overage describes it.
     const perDayLine = () => {
-        // A limit of nothing is a limit not typed yet, and neither an allowance nor
-        // an overage describes it.
         if (limit <= 0) {
             return null;
         }
         if (limit > total) {
             return t("budgets.sheet.perDay", {
-                // Cents below ten, or a day's allowance of $0.42 reads as "$0" —
-                // which is the one figure this line must never state wrongly.
+                // Cents below ten, or a day's allowance of $0.42 reads as "$0".
                 amount: formatAmount(perDay, currency, perDay < 10, language),
                 days: t("budgets.days", { count: daysLeftInWindow(budgetWindow, now) }),
             });
@@ -264,8 +234,6 @@ export function BudgetLimitPicker({
 
     let readout: string;
     if (sampleSize === 0) {
-        // "Only 0 expenses so far" is a sentence about nothing, written as though
-        // it were about something.
         readout = t("budgets.picker.nothingYet", { window: windowLabel });
     } else if (sparse) {
         readout =
@@ -300,8 +268,7 @@ export function BudgetLimitPicker({
         setMeasured(event.nativeEvent.layout.width - GUTTER * 2);
     };
 
-    // The clips are plain props, so they read the committed React value while the
-    // line reads the shared one. They agree except for a frame mid-drag.
+    // Clips read the committed value and the line the shared one; they differ only for a frame mid-drag.
     const limitYCommitted = yForLimit(Math.min(limit, maxLimit), axisTop);
 
     return (
@@ -317,8 +284,7 @@ export function BudgetLimitPicker({
                             collapsable={false}
                             style={{ height: CHART_HEIGHT, width }}
                         >
-                            {/* Skia's canvas is a native view and swallows touches, so the pan
-						    detector on the wrapper never sees them unless this opts out. */}
+                            {/* Skia's canvas swallows touches, so the wrapper's pan detector needs it to opt out. */}
                             <Canvas pointerEvents="none" style={{ height: CHART_HEIGHT, width }}>
                                 {geometry.area ? (
                                     <SkPath color={withAlpha(colors.foreground, 0.06)} path={geometry.area} />

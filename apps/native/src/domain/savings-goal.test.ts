@@ -17,10 +17,7 @@ const inNewYork = (...args: (number | string)[]): string =>
 
 const NOW = new Date("2026-08-13T12:00:00Z");
 
-/**
- * A 100-day goal, 60 days elapsed at NOW, opened on an account holding nothing —
- * so the line the date demands sits at exactly three fifths of the way up.
- */
+// 100 days, 60 elapsed at NOW, opened at zero: the line the date demands sits at three fifths.
 const SPAN = {
     now: NOW,
     startAmount: 0,
@@ -89,31 +86,24 @@ describe("the pace a target demands", () => {
 
 describe("standing against the line the date demands", () => {
     it("is ahead when the balance beats the elapsed share of the target", () => {
-        // Three fifths elapsed on a 0 → 4000 line wants 2400 held.
         const progress = goalProgress(3000, 4000, SPAN);
         expect(progress.standing?.expected).toBe(2400);
         expect(progress.standing?.against).toBe(600);
     });
 
     it("measures from the balance the account already held, not from zero", () => {
-        // Opening at 1000 on a 1000 → 4000 line wants 2800 held at three fifths.
         const progress = goalProgress(2800, 4000, { ...SPAN, startAmount: 1000 });
         expect(progress.standing?.expected).toBe(2800);
         expect(progress.standing?.against).toBe(0);
     });
 
     it("still calls a goal set yesterday on pace, having had no day to save in", () => {
-        // The line advances in whole days, so a fresh goal is exactly one day off
-        // it the first time midnight passes. That is the commonest state a new goal
-        // is in, and the band tolerates a full day rather than less than one.
         const oneDayOff = goalProgress(2360, 4000, SPAN);
         expect(oneDayOff.standing?.against).toBe(-40);
         expect(oneDayOff.standing?.onPace).toBe(true);
     });
 
     it("holds the band at a day of what the goal demands, not a fixed unit", () => {
-        // SPAN climbs 4000 over 100 days, so a day of the line is 40. The clock
-        // moves this gap on its own; only a real shortfall should read as one.
         const withinADay = goalProgress(2361, 4000, SPAN);
         expect(withinADay.standing?.against).toBe(-39);
         expect(withinADay.standing?.onPace).toBe(true);
@@ -124,8 +114,6 @@ describe("standing against the line the date demands", () => {
     });
 
     it("floors the band at one unit, so a tiny goal is not given a sub-cent one", () => {
-        // A 100-day span climbing 10 asks 0.1 a day, and wants 6 held at three
-        // fifths. Being 0.5 off is ten days of that line and still inside the floor.
         const progress = goalProgress(6.5, 10, { ...SPAN, startAmount: 0 });
         expect(progress.standing?.against).toBe(0.5);
         expect(progress.standing?.onPace).toBe(true);
@@ -148,9 +136,6 @@ describe("standing against the line the date demands", () => {
 
 describe("the clock the standing is read on", () => {
     it("does not drift through the day, since nothing tells the app the hour changed", () => {
-        // `useNow` publishes at midnight, on a ledger write and on resume. A
-        // standing measured at instant granularity would be right only at the
-        // moment it was computed and stale for as long as the screen stayed open.
         const morning = goalProgress(2000, 4000, { ...SPAN, now: new Date("2026-08-13T06:00:00Z") });
         const evening = goalProgress(2000, 4000, { ...SPAN, now: new Date("2026-08-13T22:00:00Z") });
 
@@ -167,18 +152,12 @@ describe("the clock the standing is read on", () => {
 
 describe("a goal opened on an account in the red", () => {
     it("does not read the debt's own size as a lead", () => {
-        // `held` is clamped to zero, so the anchor has to be too. Left at -1000 the
-        // line would start a thousand below the balance above it and report the
-        // overdraft as an immediate $1,000 head start.
         const progress = goalProgress(-1000, 4000, { ...SPAN, startAmount: -1000 });
         expect(progress.standing?.expected).toBe(2400);
         expect(progress.standing?.against).toBe(-2400);
     });
 
     it("sizes its on-pace band from the line it actually draws", () => {
-        // 0 → 4000 over 100 days climbs 40 a day. Measured against the raw -1000
-        // span the band would be 50, and a balance a day and a bit behind would
-        // still read as on pace.
         const progress = goalProgress(2355, 4000, { ...SPAN, startAmount: -1000 });
         expect(progress.standing?.against).toBe(-45);
         expect(progress.standing?.onPace).toBe(false);
@@ -228,15 +207,11 @@ describe("the required line", () => {
             { startAmount: 1000, startDate: SPAN.startDate, targetDate: SPAN.targetDate },
             4000
         );
-        // Values at the ends; the times sit on day boundaries — see below.
         expect(line.at(0)?.value).toBe(1000);
         expect(line.at(-1)?.value).toBe(4000);
     });
 
     it("runs between day boundaries, so it agrees with the standing it is drawn against", () => {
-        // Noon-to-noon anchors: interpolating over the raw instants would put the
-        // line half a day out of step with `expected`, and the chart's head sits on
-        // a day boundary.
         const opened = new Date(2026, 7, 13, 12, 0, 0);
         const due = new Date(2026, 7, 23, 12, 0, 0);
         const line = goalRequiredLine({ startAmount: 0, startDate: opened, targetDate: due }, 100);
@@ -279,7 +254,6 @@ describe("a goal held in a 3-decimal currency", () => {
 
 describe("a payoff plan", () => {
     it("climbs a debt you owe to zero, measuring what is paid", () => {
-        // Three fifths of the way along -1000 → 0, the date wants -400.
         const progress = goalProgress(-500, 0, { ...SPAN, startAmount: -1000 });
         expect(progress).toMatchObject({ fraction: 0.5, reached: false, remaining: 500 });
         expect(progress.standing).toMatchObject({ against: -100, expected: -400, onPace: false });
@@ -287,7 +261,6 @@ describe("a payoff plan", () => {
     });
 
     it("brings what a person owes you down to zero", () => {
-        // Three fifths of the way along 800 → 0, the date wants 320 still owed.
         const progress = goalProgress(200, 0, { ...SPAN, startAmount: 800 });
         expect(progress).toMatchObject({ fraction: 0.75, reached: false, remaining: 200 });
         expect(progress.standing).toMatchObject({ against: 120, expected: 320 });

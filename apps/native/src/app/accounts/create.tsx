@@ -11,9 +11,8 @@ export default function AccountCreateScreen() {
     const [caps] = useState(useAccountCaps());
     const { kind } = useLocalSearchParams<{ kind?: string }>();
 
-    // The route is externally addressable through the app's URL scheme, so the
-    // cap cannot live only in the callers that push it. A liability may still be
-    // an installment app, which the editor caps on its own once it is named.
+    // The URL scheme can open this route, so the cap cannot live only in its callers. A liability that turns out
+    // to be an installment app is capped by the editor once it is named.
     if (caps.accounts && (kind !== "liability" || caps.installmentApps)) {
         return <Redirect href="/paywall" />;
     }

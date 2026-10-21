@@ -15,7 +15,6 @@ export interface BudgetWindow {
     start: Date;
 }
 
-/** End of the single period beginning at `start`. Ports `Budget.endDate`. */
 export function periodEnd(start: Date, type: number): Date {
     switch (type) {
         case BUDGET_TYPE.day: {
@@ -36,7 +35,6 @@ export function periodEnd(start: Date, type: number): Date {
     }
 }
 
-/** The aligned start of the period — the anchor a budget is created with. */
 export function startOfPeriod(now: Date, type: number, calendar: CalendarSettings = DEFAULT_CALENDAR): Date {
     switch (type) {
         case BUDGET_TYPE.day: {
@@ -57,11 +55,7 @@ export function startOfPeriod(now: Date, type: number, calendar: CalendarSetting
     }
 }
 
-/**
- * Rolls `startDate` forward whole periods until the window is the current one.
- * Ports `BudgetRepository.updateBudgetDates()`. The `end > start` guard stops an
- * unknown/zero-length type from looping forever.
- */
+// The `end > start` guard stops an unknown or zero-length type from looping forever.
 export function advanceBudgetWindow(startDate: Date, type: number, now: Date): BudgetWindow {
     let start = new Date(startDate);
     let end = periodEnd(start, type);
@@ -72,7 +66,6 @@ export function advanceBudgetWindow(startDate: Date, type: number, now: Date): B
     return { end, start };
 }
 
-/** The start of the period immediately before the one beginning at `start`. */
 export function previousPeriodStart(start: Date, type: number): Date {
     switch (type) {
         case BUDGET_TYPE.day: {
@@ -93,7 +86,6 @@ export function previousPeriodStart(start: Date, type: number): Date {
     }
 }
 
-/** The window `offset` whole periods from the one at `start`; negative steps back. */
 export function shiftWindow(start: Date, type: number, offset: number): BudgetWindow {
     let cursor = new Date(start);
     for (let step = 0; step < Math.abs(offset); step += 1) {
@@ -106,15 +98,10 @@ export function shiftWindow(start: Date, type: number, offset: number): BudgetWi
     return { end: periodEnd(cursor, type), start: cursor };
 }
 
-/** 100 years of months, or three of days — far past any window worth browsing. */
+/** 100 years of months, or three of days. */
 const MAX_PERIODS_BACK = 1200;
 
-/**
- * How many whole periods back from `currentStart` still reach `earliest` — the
- * bound on stepping back through closed windows. Ports the Swift stepper's
- * `firstDate` guard: before the oldest entry that could count there is nothing
- * to show, and a budget's own anchor rolls forward, so it cannot be the floor.
- */
+// The oldest entry is the floor, not the budget's anchor: the anchor rolls forward.
 export function periodsBackTo(currentStart: Date, type: number, earliest: Date | null): number {
     if (!earliest) {
         return 0;
@@ -132,7 +119,6 @@ export function periodsBackTo(currentStart: Date, type: number, earliest: Date |
     return steps;
 }
 
-/** The upper bound on a window's rows: its own end, or now if it has not closed. */
 export function windowEndMs(window: BudgetWindow, nowMs: number): number {
     return Math.min(window.end.getTime() - 1, nowMs);
 }

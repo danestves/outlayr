@@ -2,23 +2,19 @@ import type { ImagePickerResult } from "expo-image-picker";
 
 import { duringHandoff } from "@/lib/app-handoff";
 
-/** The screen a system camera or library pick belongs to. A recovered photo goes back to that screen only. */
 export type PickOwner = "identity-picker" | "receipt-scan";
 
 /**
- * Every system camera and library launch goes through here, on behalf of the
- * screen that wants the photo. The trip out is announced to the app lock, and
- * on Android the owner is recorded first, so a photo recovered after Android
- * tore the app down goes back to the right screen (`pendingPick`).
+ * Every system camera and library launch goes through here: the app lock hears about the trip out, and on Android
+ * the owner is recorded first so a photo recovered after a teardown goes back to its screen (`pendingPick`).
  */
 export function launchPick(_owner: PickOwner, launch: () => Promise<ImagePickerResult>): Promise<ImagePickerResult> {
     return duringHandoff(launch);
 }
 
 /**
- * A photo the system camera or library finished picking for `owner` after the
- * app had been torn down under it. Call it when the owner's screen mounts. iOS
- * keeps the app alive behind its pickers, so there is never one to pick up.
+ * A photo picked for `owner` after the app was torn down under it. Call it when the owner's screen mounts.
+ * iOS keeps the app alive behind its pickers, so there is never one to pick up.
  */
 export async function pendingPick(_owner: PickOwner): Promise<ImagePickerResult | null> {
     return null;

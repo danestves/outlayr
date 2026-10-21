@@ -32,7 +32,6 @@ import { MonoLabel } from "./mono-label";
 import { Text } from "./text";
 import { cn } from "./tw";
 
-/** The app's motion curve, shared so nothing here invents a second one. */
 const EASE = Easing.bezier(0.645, 0.045, 0.355, 1);
 
 export function CurrencySectionHeader({ section }: { section: "favourites" | "all" }) {
@@ -49,26 +48,13 @@ export function CurrencyHint() {
     return <Text className="text-footnote text-muted pb-3">{t("settings.currency.favouritesHint")}</Text>;
 }
 
-/**
- * Only the tick animates on entry, and only because exactly one row carries it.
- * An entering animation on the rows themselves would fire on every row that
- * scrolls into the virtualised window.
- */
+// Only the tick animates on entry: an entering animation on the rows would fire on every row scrolling into view.
 const TICK_ARRIVES = ZoomIn.duration(240).easing(EASE.factory()).reduceMotion(ReduceMotion.System);
 
-/**
- * `bg-background` is required: UIKit snapshots the context-menu trigger for its
- * platter, and a transparent trigger composites the preview over the row
- * beneath. The travelling copy shares the class so it matches the row it stands
- * in for.
- */
+// `bg-background` is required: UIKit snapshots the context-menu trigger for its platter, and a transparent one
+// composites the preview over the row beneath.
 const ROW_SURFACE = "flex-row items-center gap-3 bg-background py-3";
 
-/**
- * The separator belongs to the row rather than the list, so the row that closes
- * a section has to leave it off — otherwise it stacks a hairline directly
- * against the next section's header.
- */
 const ROW_RULE = "border-border border-b";
 
 const HELD_BACK = { opacity: 0 } as const;
@@ -121,8 +107,7 @@ function SwipeAction({
         width: Math.max(LANE_WIDTH, -translation.get() - 12),
     }));
 
-    // The lane already follows the finger; what it could not say is when the
-    // threshold has been passed. You used to find that out by letting go.
+    // The lane follows the finger, but only this says when the threshold has been passed.
     const glyph = useAnimatedStyle(() => ({
         transform: [
             {
@@ -186,11 +171,6 @@ function CurrencyRowFace({
     );
 }
 
-/**
- * The row stripped of its gestures, for the copy the list flies between
- * sections. Its tick never re-enters: the copy is lifted off a row that is
- * already on screen.
- */
 export function CurrencyRowCopy({ code, selected }: { code: CurrencyCode; selected: boolean }) {
     return (
         <View className={ROW_SURFACE}>
@@ -311,7 +291,7 @@ export function CurrencyRow({
         <ReanimatedSwipeable
             containerStyle={travelling ? HELD_BACK : undefined}
             friction={1}
-            // On release rather than mid-drag — see `SwipeAction`.
+            // On release rather than mid-drag: see `SwipeAction`.
             onSwipeableWillOpen={() => {
                 if (!armedFullSwipe.current) {
                     return;
@@ -326,9 +306,8 @@ export function CurrencyRow({
             renderRightActions={onToggleFavourite === null ? undefined : renderRightActions}
             rightThreshold={40}
         >
-            {/* Not `@expo/ui/swift-ui`'s ContextMenu: that needs a SwiftUI `Host` per
-			    row, which cannot be told to fill its parent's width, so every row
-			    sat as its own inset card. */}
+            {/* Not swift-ui's ContextMenu: its per-row `Host` cannot fill the parent's width, so each row sat as its
+                own inset card. */}
             <StretchedMenuView
                 actions={actions}
                 onPressAction={onPressAction}

@@ -36,11 +36,7 @@ const CHILD_OUT = FadeOut.duration(300).easing(EASE);
 
 interface CategoryPickerSheetProps {
     db: Database;
-    /**
-     * Categories the caller cannot accept. A budgeted category is one:
-     * `budgets.categoryId` is unique, so picking it would fail on the constraint
-     * at save time with nothing on screen to explain why.
-     */
+    /** E.g. budgeted ones: `budgets.categoryId` is unique, so picking one would fail at save, unexplained. */
     excludeIds?: readonly string[];
     income: boolean;
     /** Omitted by hosts that cannot mint a category, which also hides the create action. */
@@ -54,7 +50,6 @@ interface CategoryPickerSheetProps {
 
 export type CategoryPickerSheetRef = BottomSheetModal;
 
-/** Present via the forwarded ref: `ref.current?.present()`. */
 export function CategoryPickerSheet({
     onDismiss,
     db,
@@ -70,12 +65,7 @@ export function CategoryPickerSheet({
     const sheetSurface = useSheetSurface();
     const offered = useCategoriesByNamespace(db, income);
     const blocked = useMemo(() => new Set(excludeIds), [excludeIds]);
-    /**
-     * A blocked category is not a choice, but it may still hold children that are:
-     * a budget on a parent does not stop one on a subcategory, since the schema is
-     * unique per exact id. So a blocked parent stays as a container its children
-     * hang off, and only a blocked category with nothing left under it goes.
-     */
+    // A blocked parent stays as a container while it holds pickable children: budgets are unique per exact id.
     const categories = useMemo(() => {
         if (blocked.size === 0) {
             return offered;
@@ -143,10 +133,8 @@ export function CategoryPickerSheet({
 
     const create = useCallback(() => onCreate?.(trimmed), [onCreate, trimmed]);
     const clearQuery = useCallback(() => setQuery(""), []);
-    // The sheet outlives a dismiss, so a parent the user collapsed by hand would
-    // stay collapsed on every later present — hiding the selected child's
-    // checkmark again. Resetting the set here rather than re-arming the effect
-    // above: presenting changes neither of its deps, so it would never re-run.
+    // The sheet outlives a dismiss, so a hand-collapsed parent would hide the selected child's checkmark on later
+    // presents. Reset here, since presenting changes neither of the effect's deps.
     const handleDismiss = useCallback(() => {
         clearQuery();
         setExpanded(expandedForSelectedCategory(categories, selectedId));

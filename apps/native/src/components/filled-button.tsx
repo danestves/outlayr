@@ -6,23 +6,16 @@ import { withAlpha } from "@/theme/shade";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
 export interface FilledButtonProps {
-    /** This button's own work is running: its label gives way to `busyLabel`. */
     busy?: boolean;
     busyLabel?: string;
-    /** Inert. Dimmed too, unless it is inert because it is the one busy. */
+    /** Dimmed too, unless it is inert because it is the one busy. */
     disabled?: boolean;
     label: string;
     onPress: () => void;
     testID?: string;
 }
 
-/**
- * The M3 filled button: `primary`, full width, 56dp, a medium-weight label.
- * The primary action of an Android screen (Direction B's filled CTA).
- *
- * Android only, but a plain filename so several `.android.tsx` siblings can
- * share it; see `list/material-list-item.tsx`. Nothing on iOS imports it.
- */
+// Android only, but a plain filename so several `.android.tsx` siblings can share it.
 export function FilledButton({ busy = false, busyLabel, disabled = false, label, onPress, testID }: FilledButtonProps) {
     const m3 = useMaterialColors();
     return (

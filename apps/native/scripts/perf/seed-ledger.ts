@@ -1,20 +1,6 @@
-/**
- * Builds the perf emulator's ledger: a restore archive holding a fixed, realistic
- * history, so every render measurement runs against the same few thousand rows.
- *
- * It grows an archive exported from a freshly onboarded app rather than inventing
- * rows from the schema. The template must hold at least one expense; every
- * generated entry clones a template entry and varies only what a person would, so
- * any column this script does not know about keeps the value the app wrote.
- * Entries in another currency clone a template entry in that currency and keep
- * its rate. Entries spread over the template's accounts, when it has any.
- *
- *   TZ=<device zone> node --import tsx scripts/perf/seed-ledger.ts \
- *     --from outlayr-archive.json --out perf-ledger.json [--entries 3000] [--days 540]
- *
- * Same template and flags, same output, except that dates end at the moment it
- * runs, in the run's local zone.
- */
+// Grows an exported archive into the perf ledger. Each entry clones a template row, so columns this script does not
+// know keep what the app wrote. Dates end now in the run's zone, so pass the device's:
+//   TZ=<device zone> node --import tsx scripts/perf/seed-ledger.ts --from <archive> --out <file>
 import { readFileSync, writeFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 
@@ -64,7 +50,7 @@ if (template === null) {
     throw new Error(`${args.from} is not an archive this build can restore.`);
 }
 
-/** mulberry32: small, seedable, and the same sequence on every machine. */
+// mulberry32: seedable, and the same sequence on every machine.
 function random(seed: number): () => number {
     let state = seed;
     return () => {

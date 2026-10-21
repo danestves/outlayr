@@ -39,19 +39,8 @@ function withoutNetwork(key: string): string {
 }
 
 /**
- * Which account a Wallet card belongs to, from the card's name in Wallet
- * ("Chase Sapphire", "Apple Card", "Banco Mercantil Visa ···· 1234") and the
- * accounts the user has made.
- *
- * Best evidence first, and every tier has to be unambiguous: a purchase filed
- * under the wrong account is worse than one left unattached, which the user
- * sees and can fix.
- *
- * 1. The names fold to the same key.
- * 2. One name appears whole inside the other — "Chase" against "Chase Sapphire"
- *    either way round.
- * 3. Both names resolve to the same institution in `institution-map`, so
- *    "Chase Freedom" still lands in an account named "JPMorgan Chase".
+ * Every tier must be unambiguous: a purchase filed under the wrong account is worse
+ * than one left unattached, which the user sees and can fix.
  */
 export function matchCardAccount(card: string, accounts: readonly CardAccountCandidate[]): string | null {
     const cardKey = merchantKey(card);
@@ -69,13 +58,9 @@ export function matchCardAccount(card: string, accounts: readonly CardAccountCan
         return exact;
     }
 
-    // Then the issuer, with the network words out of the way; the full name
-    // only when nothing is left of it or nothing claims it, so a card named
-    // just "Visa" still finds a "Visa" account.
-    //
-    // An ambiguous issuer is final, not a reason to try the full name: with
-    // "Chase One", "Chase Two" and "Visa" on the ledger, "Chase Visa" must stay
-    // unattached rather than fall through to the network word.
+    // Then the issuer without network words, the full name only when nothing is left of it or
+    // nothing claims it. An ambiguous issuer is final: with "Chase One", "Chase Two" and "Visa"
+    // on the ledger, "Chase Visa" stays unattached rather than falling through to "Visa".
     const issuerKey = withoutNetwork(cardKey);
     if (issuerKey.length > 0 && issuerKey !== cardKey) {
         const byIssuer = matchKey(issuerKey, keyed);
@@ -96,8 +81,7 @@ function uniqueExact(key: string, keyed: readonly { id: string; key: string }[])
 }
 
 /**
- * The account `cardKey` names: its id, null when more than one account could
- * claim it, undefined when none does. The distinction is what lets a caller
+ * Null when several accounts could claim it, undefined when none does, so a caller can
  * stop on ambiguity instead of trying a looser key.
  */
 function matchKey(cardKey: string, keyed: readonly { id: string; key: string }[]): string | null | undefined {

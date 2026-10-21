@@ -12,18 +12,13 @@ const expoModulesCore = path.dirname(
 const ANDROID_TESTS = "**/*.android.test.ts?(x)";
 
 /**
- * Everything but the platform. The transform comes from the platform's own
- * preset because its babel caller is what inlines `Platform.OS`, so spreading
- * the iOS one into the Android project would test the iOS branch twice.
- *
+ * The transform comes from the platform's own preset: its babel caller is what inlines `Platform.OS`.
  * @param {typeof iosPreset} preset The platform's jest-expo preset.
  * @returns {import("jest").Config} One project, before its name and test match.
  */
 const projectFor = (preset) => ({
     moduleNameMapper: {
-        // tsconfig maps `@/assets/*` outside `src/`, but jest-expo only picks up
-        // the general `@/*` -> `src/*` rule, so every asset import resolves under
-        // `src/assets` and 404s. Must precede that rule to win.
+        // jest-expo only maps `@/*` to `src/*`, so assets need their own rule ahead of that one.
         "^@/assets/(.*)$": "<rootDir>/assets/$1",
         "^react-native-worklets$": "react-native-worklets/src/mock",
         "^expo-modules-core$": expoModulesCore,
@@ -37,9 +32,7 @@ const projectFor = (preset) => ({
         "<rootDir>/jest/sqlite-change-listener-stub.js",
         "<rootDir>/jest/i18n-key-stub.js",
     ],
-    // panelui-native's kpi pulls in lucide-react-native, which ships ESM under
-    // .mjs — an extension jest-expo's `\.[jt]sx?$` transform never matches, so
-    // without this it reaches the runtime untranspiled.
+    // lucide-react-native ships ESM as .mjs, which jest-expo's `\.[jt]sx?$` transform never matches.
     transform: {
         ...preset.transform,
         "\\.mjs$": preset.transform["\\.[jt]sx?$"],
@@ -50,11 +43,7 @@ const projectFor = (preset) => ({
 });
 
 /**
- * Two projects over one tree. A plain `*.test.ts(x)` runs as iOS, the app's
- * default platform. A `*.android.test.ts(x)` runs as Android, where every
- * import resolves its `.android` sibling first; it is kept out of the iOS run,
- * which would otherwise pick it up and resolve the iOS files under it.
- *
+ * A `*.android.test.ts(x)` runs as Android, resolving `.android` siblings first, and stays out of the iOS run.
  * @type {import("jest").Config}
  */
 module.exports = {

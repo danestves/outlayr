@@ -1,11 +1,6 @@
 /**
- * `work`, or `sentinel` once `ms` has passed — with the timer cleared either way.
- *
- * Racing a bare `setTimeout` leaves its handle live for the whole window after
- * the call has already won, so every lookup keeps a pending task around for as
- * long as its timeout allows. The sentinel is returned rather than thrown
- * because every caller here branches on the timeout as an outcome rather than
- * as an error.
+ * `work`, or `sentinel` once `ms` has passed, clearing the timer either way so a won race leaves no pending task.
+ * The sentinel is returned rather than thrown because callers branch on a timeout as an outcome.
  */
 export async function withTimeout<Result, Sentinel>(
     work: Promise<Result>,

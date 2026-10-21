@@ -10,15 +10,8 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 
 export type { ReminderTimeRowProps } from "@/components/settings/reminder-time-row";
 
-/**
- * The custom reminder time as a two-line list item, the time under its
- * label, that opens the Material time dialog.
- *
- * Android's picker is a dialog that stays up for as long as it is mounted, so
- * it mounts only while open and unmounts on a pick or a dismiss. Mounted with
- * the row, it would trap the screen behind a dialog that never closes. It sits
- * in `MaterialHost` so it wears the app's scheme, not the handset's.
- */
+// Android's picker is a dialog that stays up while mounted, so it mounts only while open: mounted with the row it
+// would trap the screen. `MaterialHost` gives it the app's scheme, not the handset's.
 export function ReminderTimeRow({ onChange, value }: ReminderTimeRowProps) {
     const t = useTranslation();
     const { language } = useLanguage();

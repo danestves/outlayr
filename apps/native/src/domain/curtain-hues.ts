@@ -8,12 +8,7 @@ export interface CurtainHuesInput {
     incomeColor: string;
 }
 
-/**
- * `glowHues` has no default (unlike a typical DI seam) so this module never
- * imports `@/theme/glow`, which pulls in `expo`'s native module resolver and
- * cannot load under plain `node --test` (no `__DEV__`/RN environment). Callers
- * pass `glowFromEmoji` directly.
- */
+/** `glowHues` has no default, so this module never imports `@/theme/glow`, which cannot load under node. */
 export function computeCurtainHues(
     { identity, income, categoryColor, incomeColor, foregroundColor }: CurtainHuesInput,
     glowHues: (emoji: string) => string[]

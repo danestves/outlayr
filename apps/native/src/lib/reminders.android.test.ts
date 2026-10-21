@@ -9,8 +9,6 @@ const mockChannel = jest.fn<(id: string, channel: { name: string | null }) => Pr
     mockCalls.push("channel");
     return null;
 });
-// Its real module needs Android native modules jest-expo doesn't stub, so only
-// what the sibling touches is here.
 jest.mock("expo-notifications", () => ({
     AndroidImportance: { DEFAULT: 4 },
     requestPermissionsAsync: async () => {

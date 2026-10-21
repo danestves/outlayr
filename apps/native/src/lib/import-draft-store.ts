@@ -25,10 +25,8 @@ export interface ImportDraftSnapshot {
 
 export interface ImportDraftStore {
     clear: () => void;
-    /** Called from the sheet modal's onDismiss. */
     commitDismissal: () => void;
     dispatch: (event: ImportFlowEvent) => void;
-    /** Committed only by `commitDismissal`/`clear`, so this rarely changes. */
     getResumeStep: () => ImportStep;
     getSnapshot: () => ImportDraftSnapshot;
     setFileError: (error: FileStepError | null) => void;

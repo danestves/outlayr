@@ -1,13 +1,8 @@
 import { cloudAction, convex } from "@/lib/convex";
 
 /**
- * Copies the store's view of the entitlement onto the account, which is what
- * `requirePro` reads. The store and the server can disagree — a webhook can be
- * missed, and a customer who bought before the mirror existed has nothing on
- * the server at all — so this runs whenever a positive entitlement is observed,
- * not only at checkout.
- *
- * True on a build with no backend: there is no mirror to be behind.
+ * Copies the store's entitlement onto the account, which `requirePro` reads. Run it on every positive entitlement,
+ * not only at checkout: a missed webhook or a pre-mirror purchase leaves the server behind. True with no backend.
  */
 export async function mirrorEntitlement(): Promise<boolean> {
     if (convex === null) {

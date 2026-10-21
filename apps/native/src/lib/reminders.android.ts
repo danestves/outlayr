@@ -25,14 +25,11 @@ import type {
 
 export type { DatedReminder } from "@/lib/reminders";
 
-/** The daily nudge and the subscription warnings share one channel. */
 const REMINDER_CHANNEL = "reminders";
 
 /**
- * Android files every notification under a channel the user can silence on
- * its own, and from Android 13 the permission prompt only appears once one
- * exists. Set again on every use so its name follows the app's language;
- * Android keeps whatever the user changed on an existing channel.
+ * From Android 13 the permission prompt only appears once a channel exists. Set on every use so its name follows
+ * the app's language; Android keeps whatever the user changed on an existing channel.
  */
 async function ensureReminderChannel(): Promise<void> {
     await setNotificationChannelAsync(REMINDER_CHANNEL, {
@@ -41,10 +38,7 @@ async function ensureReminderChannel(): Promise<void> {
     });
 }
 
-/**
- * On Android `canAskAgain` survives the first refusal: the system shows its
- * prompt twice before it stops asking.
- */
+/** On Android `canAskAgain` survives the first refusal: the system prompt shows twice. */
 function toPermission(result: NotificationPermissionsStatus): ReminderPermission {
     if (result.granted) {
         return "granted";
@@ -81,7 +75,6 @@ export const pendingReminderIds: typeof iosPendingReminderIds = async () => {
     }
 };
 
-/** See `reminders.ts`: a one-shot DATE trigger, re-armed by each sweep. */
 export const scheduleDatedReminder: typeof iosScheduleDatedReminder = async ({ id, title, body, data, fireAt }) => {
     await ensureReminderChannel();
     await scheduleNotificationAsync({

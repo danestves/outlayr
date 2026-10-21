@@ -11,12 +11,6 @@ import { useMaterialColors } from "@/theme/use-material-colors";
 
 const PRESSED_ALPHA = 0.1;
 
-/**
- * The M3 navigation bar: `surfaceContainer` behind, the selected tab in a
- * `secondaryContainer` pill, every colour set from the app's own scheme so
- * none falls back to the raw wallpaper palette. Labels always show, and back
- * from any other tab returns to the Log before it leaves the app.
- */
 export default function TabLayout() {
     const m3 = useMaterialColors();
     const t = useTranslation();

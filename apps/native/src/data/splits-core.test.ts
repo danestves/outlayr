@@ -60,7 +60,6 @@ describe("splitsRepo", () => {
     });
 
     it("refuses a split that does not add up", async () => {
-        // The only guard there is: SQLite cannot express the constraint.
         await expect(splitsRepo.writeSplit(db, "t1", 40, [{ amount: 25, categoryId: "food" }], 2)).rejects.toThrow(
             UnbalancedSplitError
         );
@@ -95,8 +94,6 @@ describe("splitsRepo", () => {
     });
 
     it("retires the parts of an entry that is going", async () => {
-        // A live split under a tombstoned entry keeps feeding its categories: the
-        // entry is gone from every list and its parts are not.
         await splitsRepo.writeSplit(
             db,
             "t1",
@@ -120,9 +117,6 @@ describe("splitsRepo", () => {
     });
 
     it("is not consulted for an entry that is gone", async () => {
-        // A tombstoned entry is read by no aggregate, so its parts cannot feed a
-        // category even though the rows are still live. That is why delete does
-        // not touch them — and why undo cannot lose them.
         await splitsRepo.writeSplit(
             db,
             "t1",
@@ -135,8 +129,6 @@ describe("splitsRepo", () => {
         );
         await transactionsRepo.remove(db, "t1");
 
-        // The rows survive, so an undo needs no repair and replication still
-        // carries whatever the entry is restored to.
         await expect(splitsForQuery(db, "t1")).resolves.toHaveLength(2);
     });
 });

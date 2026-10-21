@@ -27,14 +27,12 @@ const STANDING_LABEL = {
 
 interface PersonHeroProps {
     account: Account;
-    /** The person's balance in their own currency: negative when you owe them. */
+    /** Negative when you owe them. */
     balance: number;
-    /** The payoff plan's line and facts, between the amount and the movements. */
     plan: ReactNode;
     showCents: boolean;
 }
 
-/** "You owe" / "Owes you" / "Settled" over the amount, and the two movements that standing offers. */
 export function PersonHero({ account, balance, plan, showCents }: PersonHeroProps) {
     const router = useRouter();
     const t = useTranslation();
@@ -69,11 +67,7 @@ export function PersonHero({ account, balance, plan, showCents }: PersonHeroProp
     );
 }
 
-/**
- * Rename, the payoff plan and delete for a person. Rename writes the name
- * alone, so the person stays a person: the account editor only knows assets
- * and liabilities.
- */
+/** Writes the name alone: the account editor only knows assets and liabilities. */
 export function PersonToolbar({ account, db, plan }: { account: Account; db: Database; plan: PayoffPlanControls }) {
     const t = useTranslation();
     const { requestDelete } = useDeferredDelete("account");

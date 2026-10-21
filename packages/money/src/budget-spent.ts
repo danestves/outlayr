@@ -1,7 +1,4 @@
-/**
- * A subcategory counts toward its parent's budget. A null `categoryId` is the
- * overall budget, which every expense feeds.
- */
+// A subcategory counts toward its parent's budget; a null `categoryId` is the overall budget.
 export function contributesTo(row: ExpenseContribution, categoryId: string | null | undefined): boolean {
     if (categoryId == null) {
         return true;
@@ -9,20 +6,12 @@ export function contributesTo(row: ExpenseContribution, categoryId: string | nul
     return row.categoryId === categoryId || row.parentId === categoryId;
 }
 
-/**
- * The inclusive upper bound `spentForMain` and `spentForCategory` take, from
- * the exclusive end of a window. Both functions count a row dated exactly on
- * their upper bound, so handing one a window's own end counts a boundary-dated
- * transaction in that window AND in the next one.
- */
+// The spent functions' bound is inclusive, so passing a window's own end counts a boundary-dated row in two windows.
 export function lastMsBefore(end: Date): Date {
     return new Date(end.getTime() - 1);
 }
 
-/**
- * Already filtered to non-deleted expenses dated on or before now, and carrying
- * its category's `parentId`.
- */
+/** Already filtered to non-deleted expenses dated on or before now. */
 export interface ExpenseContribution {
     amount: number;
     categoryId: string | null;
@@ -30,10 +19,7 @@ export interface ExpenseContribution {
     parentId: string | null;
 }
 
-/**
- * Spend over `[start, now]`. Ports
- * `BudgetRepository.fetchRequestForBudgetTransactions`.
- */
+/** Inclusive: `[start, now]`. */
 export function spentForCategory(
     rows: readonly ExpenseContribution[],
     categoryId: string,
@@ -55,10 +41,6 @@ export function spentForCategory(
     return total;
 }
 
-/**
- * Every expense over `[start, now]`, whatever its category. Ports
- * `BudgetRepository.fetchRequestForMainBudgetTransactions`.
- */
 export function spentForMain(rows: readonly ExpenseContribution[], start: Date, now: Date): number {
     const startMs = start.getTime();
     const nowMs = now.getTime();

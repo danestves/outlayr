@@ -1,9 +1,5 @@
-/**
- * Cents stay exact while `amount * 100` is inside float64's safe integer range
- * (2^53 ≈ 9.0e15), and `amount` is a SQLite `real`. Thirteen digits keeps the
- * largest entry two orders of magnitude clear of that boundary, and is also
- * about where the hero's own type stops shrinking — see `amount-hero-size.ts`.
- */
+// Cents stay exact while `amount * 100` is under 2^53 and `amount` is a SQLite `real`: thirteen digits stays two
+// orders of magnitude clear, about where the hero's type stops shrinking (`amount-hero-size.ts`).
 const MAX_INTEGER_DIGITS = 13;
 
 export const AMOUNT_CEILING = 10 ** MAX_INTEGER_DIGITS;
@@ -13,13 +9,9 @@ const ZERO_FRACTION = /\.0+$/;
 
 export type NumpadKey = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "." | "back" | "clear";
 
-/** The keys a keypad draws. `clear` arrives from a long press, not from a tile. */
 export type NumpadTileKey = Exclude<NumpadKey, "clear">;
 
-/**
- * `preDotted` shifts every digit through the minor units — 1234 reads as 12.34 —
- * and has no use for a separator key. `explicitSeparator` takes the "." itself.
- */
+// `preDotted` shifts every digit through the minor units (1234 reads as 12.34); `explicitSeparator` takes the "." key.
 export type NumpadMode = "preDotted" | "explicitSeparator";
 
 /** Reads Swift's `numberEntryType`: 1 is the pre-dotted keypad, 2 the separator one. */
@@ -27,25 +19,16 @@ export function numpadMode(numberEntryType: number): NumpadMode {
     return numberEntryType === 1 ? "preDotted" : "explicitSeparator";
 }
 
-/**
- * The entry as a bare minor-unit digit string: at two minor units "12.3" is 1230,
- * so a pre-dotted keystroke is one append and a backspace one slice. An entry
- * seeded from an existing amount therefore shifts from its cents, not from the
- * digits it happens to display.
- */
 function toMinorDigits(current: string, minorUnits: number): string {
     const [integer = "", fraction = ""] = current.split(".");
     return `${integer}${fraction.slice(0, minorUnits).padEnd(minorUnits, "0")}`;
 }
 
-/** Inverse of `toMinorDigits`. The empty string for digits that read as zero. */
 function fromMinorDigits(digits: string, minorUnits: number): string {
     const trimmed = digits.replace(LEADING_ZEROS, "");
     if (trimmed === "") {
         return "";
     }
-    // A zero-minor-unit currency has no cents to shift into, so the ladder
-    // collapses to plain integer entry rather than inventing a fraction.
     if (minorUnits === 0) {
         return trimmed;
     }
@@ -62,7 +45,6 @@ function applyPreDottedKey(current: string, key: Exclude<NumpadTileKey, ".">, mi
     return integer.length > MAX_INTEGER_DIGITS ? current : entry;
 }
 
-/** The empty string represents an unset amount. */
 export function applyNumpadKey(current: string, key: NumpadKey, minorUnits: number, mode: NumpadMode): string {
     if (key === "clear") {
         return "";
@@ -87,7 +69,6 @@ export function applyNumpadKey(current: string, key: NumpadKey, minorUnits: numb
         }
         return `${current}${key}`;
     }
-    // Leading-zero guard: a lone "0" is replaced, not prefixed.
     const nextInteger = integer === "0" ? key : `${integer}${key}`;
     if (nextInteger.length > MAX_INTEGER_DIGITS) {
         return current;
@@ -108,6 +89,5 @@ export function numberToNumpad(amount: number, minorUnits: number): string {
         return "";
     }
     const fixed = amount.toFixed(minorUnits);
-    // Drop a pure ".00" tail so the entry reads like a fresh integer.
     return fixed.replace(ZERO_FRACTION, "");
 }

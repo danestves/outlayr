@@ -27,7 +27,6 @@ import { CuotaSheet } from "./cuota-sheet";
 import { installmentTitle, scheduleRowWording } from "./labels";
 import { useInstallmentEntry, useOrderActions } from "./use-order";
 
-/** The filled button's ripple strength, so the pair presses alike. */
 const PRESSED_ALPHA = 0.12;
 const STATUS_TONE = {
     overdue: "text-m3-error",
@@ -35,12 +34,6 @@ const STATUS_TONE = {
     partial: "text-m3-on-surface-variant",
 } as const;
 
-/**
- * One order on Android: what is left over Pay (filled) and Pay all (tonal), as
- * the person detail pairs its two movements, then the schedule as M3 list
- * items. Deleting what is pending sits in the app bar's overflow menu,
- * until the order is paid off.
- */
 export function InstallmentOrder({ planId }: { planId: string }) {
     const { entry, leave, nowMs } = useInstallmentEntry(planId);
     return entry == null ? null : <OrderLoaded entry={entry} leave={leave} nowMs={nowMs} />;

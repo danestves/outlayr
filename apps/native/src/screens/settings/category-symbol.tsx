@@ -9,10 +9,6 @@ import { useCategoriesByNamespace } from "@/data/categories";
 import { CATEGORY_PALETTE } from "@/data/categories-core";
 import { useColors } from "@/theme/use-colors";
 
-/**
- * The sheet host drives the identity hero's flight and publishes this sheet's
- * measured height.
- */
 export function CategorySymbol({
     editId,
     income,
@@ -50,8 +46,7 @@ export function CategorySymbol({
             <IdentityPickerHost
                 onChange={setDraft}
                 onDone={() => router.back()}
-                // An income category takes the income green and a subcategory inherits
-                // its parent's, so neither offers the rail.
+                // Income categories take green and subcategories their parent's colour, so neither offers the rail.
                 showsColorRail={!(income || isSubcategory)}
                 tabs={CATEGORY_TABS}
                 tint={tint}

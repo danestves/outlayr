@@ -24,7 +24,6 @@ import type { FeeSide, TransferLegs, TransferValues } from "@/domain/transfer-re
 /** `shortfall` is signed, in the fee's own currency: how far the fee overruns its side. */
 type TransferBlock = { kind: "fee"; shortfall: number } | { kind: "rate" };
 
-/** Everything the user has entered — the arrival is solved from it, never typed. */
 type EnteredTransfer = Omit<TransferValues, "arrived">;
 
 interface Units {
@@ -107,9 +106,8 @@ function transferBlock(
         : { kind: "fee", shortfall: roundMoney(affordable - entered.fee, feeDecimals) };
 }
 
-/** An arrival of null or zero is `transfer-reconcile`'s verdict that the fee takes
- * everything reaching its side. Both refuse: a transfer that delivers nothing is a
- * fee wearing a transfer's clothes, and the legs would credit it as money moved. */
+// A null or zero arrival means the fee takes everything reaching its side. Both refuse, or the legs would credit a
+// fee as money moved.
 function settle(
     typed: EnteredTransfer | null,
     pinned: number | null,
@@ -181,7 +179,6 @@ function reconcile(
 }
 
 export interface TransferDraft {
-    /** What the leg pickers offer: people are left out. */
     accounts: Account[];
     arrivalSeen: boolean;
     arrived: number | null;
@@ -212,7 +209,6 @@ export interface TransferDraft {
     outside: number;
     paid: number;
     prefillArrival: () => void;
-    /** The draft as it stands, for `useTransferDraft`'s `restored`. */
     snapshot: () => TransferDraftSnapshot;
     priorCustomRate: { date: Date; rate: number } | null;
     quotedRate: number | null;
@@ -240,29 +236,15 @@ export interface TransferDraft {
     toggleFeeSide: () => void;
 }
 
-/**
- * What the voice screen hands the editor when a spoken transfer needs the
- * pieces nobody speaks (a rate, a fee) or an account it could not resolve.
- * Every field is optional; a missing one falls back to the editor's own default.
- */
 export interface TransferSeed {
     amount?: number;
-    /**
-     * The currency `amount` was spoken in. It lands on whichever leg holds that
-     * currency: the sent side when it is the source account's, the pinned
-     * arrival when it is the destination's, and nowhere when it is neither —
-     * a number in the wrong currency is worse than an empty field.
-     */
+    /** Lands on the leg holding that currency, else nowhere: a wrong-currency number is worse than an empty field. */
     currency?: string;
     date?: Date;
     fromAccountId?: string;
-    /**
-     * The source was named but the ledger could not place it, so that leg opens
-     * empty for the person to choose rather than falling back to any account.
-     */
+    /** Named but not placed: the leg opens empty rather than falling back to any account. */
     fromUnresolved?: boolean;
     toAccountId?: string;
-    /** Likewise for the destination. */
     toUnresolved?: boolean;
 }
 
@@ -281,22 +263,13 @@ interface Opening {
     toId: string | null;
 }
 
-/**
- * The draft's own state, enough to rebuild it: what it opened with, as since
- * edited, plus the choices that only exist once someone made them. The swipe
- * that discards an Android edit sheet hands this back to a new draft.
- */
 export interface TransferDraftSnapshot extends Opening {
     feeMode: FeeMode;
     marketType: MarketRateType | null;
     shownPair: string | null;
 }
 
-/**
- * The editor's opening state: the seed where it speaks, else the last transfer's
- * route, else the first two accounts. Only a seed may name a person; a default
- * leg never lands on one, so a debt paid back last is not the next route.
- */
+// Only a seed may name a person, so a debt paid back last is never the next default route.
 function openingState(
     accounts: readonly Account[],
     seed: TransferSeed | undefined,
@@ -315,10 +288,7 @@ function openingState(
         last !== null && holds(last.fromAccountId, last.fromCurrency) && holds(last.toAccountId, last.toCurrency)
             ? last
             : null;
-    // A leg the seed left unnamed takes the last transfer's leg, else the first
-    // account, whichever is not the other leg, so a half-resolved move never
-    // opens as an account paying itself. A leg that was named and missed stays
-    // empty: guessing a balance the person never named is worse than asking.
+    // Never opens as an account paying itself. A leg named and missed stays empty: guessing is worse than asking.
     const leg = (routed: string | undefined, other: string | null | undefined) =>
         [routed, ...banks.map((account) => account.id)].find((id) => id !== undefined && id !== other);
     const fallbackFrom = seed?.fromUnresolved ? null : leg(route?.fromAccountId, to?.id);
@@ -443,10 +413,6 @@ function restoredBy(saved: SavedTransfer | undefined, account: Account | null, n
     return sent - arrived;
 }
 
-/**
- * Where a draft starts: a restored one where it left off, else the saved
- * transfer or the seed, with the choices nobody has made yet at their defaults.
- */
 function startingDraft(
     db: Database,
     accounts: readonly Account[],
@@ -470,11 +436,9 @@ export function useTransferDraft(
     db: Database,
     seed?: TransferSeed,
     saved?: SavedTransfer,
-    /** A discarded draft to open as, in place of `saved` or `seed`. */
     restored?: TransferDraftSnapshot
 ): TransferDraft {
-    // Every account resolves a leg, so a saved transfer with a person still opens;
-    // `accounts` offers the banks, and the editor lists people in their own section.
+    // Every account, not just banks: a saved transfer with a person still has to resolve its leg.
     const accounts = useAccounts(db);
     const banks = useBankAccounts(db);
     const [opening] = useState(() => startingDraft(db, accounts, seed, saved, restored));
@@ -544,8 +508,7 @@ export function useTransferDraft(
     const customRate = customRates[pair];
     const rateInverse = customRate?.inverse ?? pairQuotedInverse(fromCurrency, toCurrency, marketRate);
     const quote = (value: number) => quotePairRate(rateInverse, value);
-    /** Keyed by pair, so a rate typed for another one does not answer here — and
-     * without this the rate list would label the market rate user-authored. */
+    // Custom rates are keyed by pair; without this the rate list would label the market rate user-authored.
     const shownRateType = rateType === "custom" && customRate === undefined ? quoteType : rateType;
     const rate = selectedRate(crossCurrency, rateType, pairRate(customRate, marketRate, quote), marketRate);
 
@@ -561,9 +524,8 @@ export function useTransferDraft(
     const feeDecimals = feeSide === "destination" ? toDecimals : fromDecimals;
     const feeCurrency = feeSide === "destination" ? toCurrency : fromCurrency;
 
-    // At the currency's own units, and re-derived per render — so moving the fee
-    // to the other side, which changes `feeDecimals`, re-quantizes it rather than
-    // solving the reconciliation against a figure the slip no longer shows.
+    // Re-derived per render at the fee side's units, so moving the fee re-quantizes it instead of solving against a
+    // figure the slip no longer shows.
     const fee = roundMoney(numpadToNumber(feeText), feeDecimals);
     const sent = roundMoney(numpadToNumber(sentText), fromDecimals);
     const math = reconcile(
@@ -579,12 +541,8 @@ export function useTransferDraft(
         outside
     );
 
-    /**
-     * Picks one leg. Choosing the account the other leg holds swaps them. A
-     * pinned arrival is in the destination's currency, so it survives a new
-     * source and is dropped only when the destination actually changes — which
-     * includes a swap, since the old source becomes the destination.
-     */
+    // A pinned arrival is in the destination's currency, so it survives a new source and drops only when the
+    // destination changes (a swap included).
     function pick(
         nextId: string,
         otherId: string | null,
@@ -598,7 +556,6 @@ export function useTransferDraft(
             setOther(selfId);
         }
         setSelf(nextId);
-        // Re-tapping the selected destination changes nothing, and keeps the pin.
         if ((leg === "to" && nextId !== selfId) || swapped) {
             setArrivalPinned(false);
         }
@@ -615,9 +572,7 @@ export function useTransferDraft(
             if (account) {
                 setOutside(false);
                 pick(account.id, toId, setFromId, setToId, fromId, "from");
-                // A pinned arrival with nothing sent yet, and a source in the
-                // destination's currency: the legs are equal, so the sent side
-                // is the arrival, not a number to type again.
+                // Same currency on both legs: the sent side is the pinned arrival.
                 if (arrivalPinned && sent === 0 && account.id !== toId && account.currency === toCurrency) {
                     setSentText(arrivedText);
                 }

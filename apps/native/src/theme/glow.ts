@@ -1,10 +1,4 @@
-/**
- * Dominant hues for the `IdentityCurtain` mesh, extracted natively at runtime
- * (the Swift `EmojiGlow` histogram). One algorithm, two sources: `glowFromEmoji`
- * rasterizes a glyph (sync), `glowFromImage` decodes a photo (async). Both
- * return up-to-two `#RRGGBB` hues, or `[]` when the native module is
- * unavailable — the form then washes the mesh in the tint alone.
- */
+/** `[]` without the native module: the form then washes the mesh in the tint alone. */
 
 import { requireNativeModule } from "expo";
 
@@ -22,12 +16,7 @@ try {
 
 const emojiCache = new Map<string, string[]>();
 
-/**
- * Up-to-two dominant hues (`#RRGGBB`) of an emoji glyph, extracted natively by
- * rendering the glyph and histogramming its colors — the Swift `EmojiGlow`
- * algorithm. Synchronous (a glyph render is cheap) and memoized per glyph.
- * Returns `[]` if the native module is unavailable.
- */
+/** Synchronous and memoized per glyph. */
 export function glowFromEmoji(emoji: string): string[] {
     const hit = emojiCache.get(emoji);
     if (hit) {
@@ -45,13 +34,7 @@ export function glowFromEmoji(emoji: string): string[] {
     return result;
 }
 
-/**
- * Up-to-two dominant hues (`#RRGGBB`) of an image, extracted natively by
- * decoding it into the same buffer the glyph path uses and running the same
- * histogram. Async because decoding a file off disk shouldn't block JS —
- * call it once when a photo is picked and store the result. Resolves to `[]`
- * if the native module is unavailable or the image can't be read.
- */
+/** Async: call it once when a photo is picked and store the result. */
 export async function glowFromImage(uri: string): Promise<string[]> {
     if (!native) {
         return [];

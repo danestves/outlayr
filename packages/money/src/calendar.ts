@@ -10,14 +10,12 @@ export const DEFAULT_CALENDAR: CalendarSettings = {
     firstWeekday: 1,
 };
 
-/** Local-calendar midnight of the given instant. */
 export function startOfDay(date: Date): Date {
     const d = new Date(date);
     d.setHours(0, 0, 0, 0);
     return d;
 }
 
-/** First local instant of the given instant's month. */
 export function firstOfMonth(date: Date): Date {
     const d = new Date(date);
     d.setDate(1);
@@ -25,11 +23,6 @@ export function firstOfMonth(date: Date): Date {
     return d;
 }
 
-/**
- * Midnight on the most recent `firstWeekday` (1 = Sunday, 2 = Monday — the
- * `firstWeekday` setting's own encoding). Defaults to Sunday, which is what the
- * setting defaults to.
- */
 export function startOfWeek(date: Date, firstWeekday = 1): Date {
     const d = startOfDay(date);
     const offset = (d.getDay() - (firstWeekday - 1) + 7) % 7;
@@ -37,7 +30,6 @@ export function startOfWeek(date: Date, firstWeekday = 1): Date {
     return d;
 }
 
-/** Mirrors Swift's `getStartOfMonth`. */
 export function monthPeriodStart(date: Date, firstDayOfMonth = 1): Date {
     const anchor = Math.min(Math.max(1, firstDayOfMonth), 28);
     const start = startOfDay(date);
@@ -62,10 +54,7 @@ export function addDays(date: Date, n: number): Date {
     return d;
 }
 
-/**
- * Adds `n` calendar months. Insights bucketing only ever calls this on a
- * first-of-month anchor, so no month-length clamping is needed — the day stays 1.
- */
+// No month-length clamping: insights only call this on a first-of-month anchor.
 export function addMonths(date: Date, n: number): Date {
     const d = new Date(date);
     d.setMonth(d.getMonth() + n);

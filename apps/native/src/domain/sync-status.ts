@@ -17,7 +17,6 @@ export interface SyncLabel {
 }
 
 export interface SyncLabelProbe {
-    /** The stored switch. Off is a state of its own, not an idle queue. */
     enabled: boolean;
     paused: boolean;
     pending: number;
@@ -56,28 +55,12 @@ export function effectiveCapabilityStatus(probe: CapabilityStatusProbe): Effecti
     return { kind: "active", pending: probe.pending, syncedAt: probe.syncedAt };
 }
 
-/**
- * What the Settings sync row says.
- *
- * An empty queue reads "Up to date" rather than "0 waiting": both are true, and
- * only one of them answers what the user opened the row to ask. A device that
- * has never completed a cycle says so instead, because "up to date" on a ledger
- * the server has never seen is a lie the user cannot check.
- *
- * The pending count is the only failure signal, deliberately. §8.7 of
- * `docs/internals/convex-sync.md` settles the UX as silent-and-retrying — a count
- * that stops falling is honest about what is true without guessing at why.
- */
+// The pending count is the only failure signal, by design: see §8.7 of `docs/internals/convex-sync.md`.
 export function syncStatusLabel({ enabled, paused, pending, syncedAt }: SyncLabelProbe): SyncLabel {
-    // Ahead of everything else, and for the same reason `paused` is: the queue
-    // and the timestamp both describe a cycle that is no longer running.
-    // Turning sync off DELETES the outbox, so `pending` is 0 the moment the
-    // switch moves — the wipe is what made the wrong label confident.
+    // Turning sync off DELETES the outbox, so `pending` reads 0 the moment the switch moves.
     if (!enabled) {
         return { key: "settings.sync.off" };
     }
-    // "Up to date" off a stale timestamp is the one thing a paused row must not
-    // say.
     if (paused) {
         return { key: "settings.sync.paused" };
     }
@@ -90,39 +73,17 @@ export function syncStatusLabel({ enabled, paused, pending, syncedAt }: SyncLabe
     return syncedAt === null ? { key: "settings.sync.never" } : { key: "settings.sync.upToDate" };
 }
 
-/**
- * Whether replication may run. The stored switch is the user's intent and
- * outlives an entitlement, so a lapsed Pro pauses the engines here rather than
- * by rewriting the flag — resubscribing restores sync without the user having
- * to find the switch again.
- *
- * Keyed on a CONFIRMED entitlement rather than on the absence of a lock: the
- * server refuses an unproven customer, so a build that cannot reach RevenueCat
- * must pause too instead of retrying into rejections.
- */
+// A lapsed Pro pauses here instead of rewriting the stored switch. Keyed on a CONFIRMED entitlement: the server
+// refuses an unproven customer, so a build that cannot reach RevenueCat pauses too.
 export function syncRunnable(syncEnabled: boolean, proEntitled: boolean): boolean {
     return syncEnabled && proEntitled;
 }
 
-/**
- * Replication the user asked for and the entitlement is withholding. NOT the
- * inverse of `syncRunnable`, which is also false for a switch that is simply
- * off — telling a Free user who never enabled sync that it is "paused" reports
- * a loss they never had.
- */
+// Not the inverse of `syncRunnable`: a switch the user never turned on is off, not paused.
 export function syncPaused(syncEnabled: boolean, proEntitled: boolean): boolean {
     return syncEnabled && !proEntitled;
 }
 
-/**
- * The heading the sync screen leads with, for a capability kind and the current
- * switch position. Only the two settled kinds distinguish on/off — an
- * unconfigured build or a signed-out device has no switch to describe.
- *
- * A switch left on without a confirmed entitlement reads as paused, not off:
- * the device is not syncing, and "off" would blame a choice the user did not
- * make.
- */
 export function syncPresentation(
     kind: EffectiveCapabilityStatus["kind"],
     syncEnabled: boolean,
@@ -142,11 +103,6 @@ export function syncPresentation(
         : { detail: "settings.sync.offDetail", title: "settings.sync.off" };
 }
 
-/**
- * Whether this device owns the sync switch at all. Adoption has to have settled
- * — mid-reconcile the switch would offer a choice the engine is still making —
- * and the capability has to be one of the two the account actually reached.
- */
 export function ownsSyncSwitch(kind: EffectiveCapabilityStatus["kind"], adoptionStatus: string): boolean {
     return adoptionStatus === "settled" && (kind === "active" || kind === "syncOff");
 }

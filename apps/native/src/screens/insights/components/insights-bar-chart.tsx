@@ -29,15 +29,10 @@ interface InsightsBarChartProps {
     average: number;
     buckets: InsightsBucket[];
     code: string;
-    /** Flows only — `net` is drawn by `InsightsNetChart` as a running balance. */
     measure: Exclude<InsightsMeasure, "net">;
     nowMs: number;
-    /**
-     * Fires once when the finger lifts, with the bucket to lock — or null to
-     * clear, which is what releasing on the already-locked bucket means.
-     */
+    /** Fires on lift; null clears (a release on the locked bucket). */
     onCommit: (index: number | null) => void;
-    /** Fires continuously while a finger is down, with the bucket under it. */
     onScrub: (index: number | null) => void;
     period: InsightsPeriod;
     selectedIndex: number | null;
@@ -49,7 +44,6 @@ interface Plot {
     top: number;
 }
 
-/** Both measures here are magnitudes, so the bars sit on a floor of zero. */
 function makePlot(values: number[]): Plot {
     const rawTop = Math.max(0, ...values);
     const top = rawTop > 0 ? rawTop * (1 + HEADROOM) : 0;
@@ -73,10 +67,7 @@ function barOpacity(future: boolean, dimmed: boolean): number {
     return dimmed ? 0.4 : 1;
 }
 
-/**
- * A tap is a zero-length drag: `minDistance(0)` claims the touch on the way in,
- * so a competing tap gesture would be unresolvable and must not be added.
- */
+/** `minDistance(0)` claims the touch on the way in: a competing tap gesture would be unresolvable. */
 export function InsightsBarChart({
     buckets,
     period,
@@ -112,9 +103,7 @@ export function InsightsBarChart({
     }, [buckets, nowMs]);
 
     const count = buckets.length;
-    // The columns are `flex: 1` inside a gapped row, so the pitch is the bar plus
-    // one gap — not `width / count`, which drifts by a whole bar by the right edge
-    // of a 31-day month.
+    // Columns are `flex: 1` in a gapped row: `width / count` drifts a whole bar by day 31.
     const barWidth = count > 0 ? Math.max(0, (width - gap * (count - 1)) / count) : 0;
     const pitch = barWidth + gap;
 
@@ -139,8 +128,7 @@ export function InsightsBarChart({
     const pan = useScrubGesture({ commit, onScrub, report, reported, setScrubIndex });
 
     const active = scrubIndex ?? selectedIndex;
-    // Built through `withCurrencySymbol` rather than concatenated: a Spanish
-    // device may write 1,2k not 1.2k.
+    // Not concatenated: a Spanish device may write 1,2k.
     const averageParts = amountParts(Math.abs(average), code, false, language);
     const averageLabel = withCurrencySymbol(averageParts, compactMagnitude(average, averageParts.locale.decimal));
 
@@ -166,8 +154,7 @@ export function InsightsBarChart({
                                 dimmed={active != null && active !== index}
                                 future={bucket.start.getTime() > nowMs}
                                 key={index}
-                                // The pan is a pointer gesture and reaches no one driving
-                                // VoiceOver, so each bar carries its own label and activation.
+                                // The pan is invisible to VoiceOver, so each bar carries its own label and activation.
                                 label={`${bucketDateLabel(period, bucket.start)}, ${formatAmount(Math.abs(bucket.value), code, false, language)}`}
                                 onActivate={() => onCommit(selectedIndex === index ? null : index)}
                                 plot={plot}
@@ -226,8 +213,7 @@ export function InsightsBarChart({
             <View style={{ flexDirection: "row", gap, height: LABEL_H, marginTop: 4 }}>
                 {buckets.map((bucket, index) => (
                     <View key={bucket.start.getTime()} style={{ flex: 1 }}>
-                        {/* A month column is a couple of points wide, so the label has to
-						    overflow it rather than truncate. */}
+                        {/* Overflows the narrow month column rather than truncating. */}
                         {showXLabel(period, index, bucket.label) ? (
                             <View
                                 style={{

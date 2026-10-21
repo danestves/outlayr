@@ -1,14 +1,5 @@
-/**
- * Writes every icon set in `icon-sets.ts`. Run after changing `SETS` and
- * commit the SVGs: `vp run --filter @outlayr/native gen:icons`.
- *
- * Pass a directory name to redo one set only:
- *   `vp run --filter @outlayr/native gen:icons toolbar-symbols`
- *
- * Each set empties its own output directory first, so a renamed slug leaves no
- * orphan SVG behind — which is also why a filtered run never touches the sets it
- * was not asked for.
- */
+// Each set empties its output directory first, so a renamed slug leaves no orphan SVG.
+// `gen:icons <dir>` redoes one set and leaves the rest alone.
 
 import { writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -27,8 +18,6 @@ async function writeSet(set: IconSet): Promise<number> {
     for (const entry of set.entries) {
         const weight = entry.weight ?? "stroke";
 
-        // A solid glyph is filled rather than stroked, so a width is meaningless on
-        // it.
         const strokeWidth = weight === "solid" ? undefined : (entry.stroke ?? set.stroke);
 
         const base = join(outDir, entry.slug);

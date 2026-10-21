@@ -154,9 +154,7 @@ function AccountContent({ client, db }: { client: AuthClient; db: Database }) {
             quiesce: () => setSyncEnabled(db, false),
             resetDevice: action === "deleteAll" && resetGate ? async () => await resetGate.recover() : undefined,
             revokeProvider: async (preparation) => {
-                // SAFETY: `prepareDeletion` above is the only producer of this value
-                // and adds the provider pair that `StoredDeletionPreparation` needs
-                // on top of what `DeletionPreparation` declares.
+                // SAFETY: `prepareDeletion` is the only producer and adds the pair `StoredDeletionPreparation` needs.
                 await resumeProviderRevocation(preparation as StoredDeletionPreparation);
             },
         })

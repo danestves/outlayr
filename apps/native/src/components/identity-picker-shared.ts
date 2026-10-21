@@ -5,17 +5,10 @@ import type { TranslationKey } from "@/i18n/catalog";
 import { persistPickedPhoto } from "@/lib/photo-storage";
 import { glowFromImage } from "@/theme/glow";
 
-/**
- * What both identity pickers share: the selection they edit, their tabs, and
- * what each pick does to the selection. `identity-picker-content.tsx` draws it
- * in SwiftUI and `identity-picker-content.android.tsx` in RN and Compose.
- */
-
 export interface IdentitySelection {
     color: string | null;
     emoji: string | null;
     icon: string | null;
-    /** Photo glow color — auto-detected from the image, overridable via the swatch. */
     photoColor: string | null;
     photoUri: string | null;
 }
@@ -23,7 +16,6 @@ export interface IdentitySelection {
 export type IdentityTab = "photo" | "emoji" | "icons";
 
 export const TRANSACTION_TABS: readonly IdentityTab[] = ["photo", "emoji", "icons"];
-/** A category is a glyph, never a photo. */
 export const CATEGORY_TABS: readonly IdentityTab[] = ["icons", "emoji"];
 
 export const IDENTITY_TAB_LABEL = {
@@ -37,16 +29,13 @@ export interface IdentityPickerContentProps {
     onDone: () => void;
     /** Off for income and for subcategories. */
     showsColorRail?: boolean;
-    /** Which tabs the sheet offers, in display order. */
     tabs?: readonly IdentityTab[];
-    /** Glyph wash / highlight color: the chosen category color, or income green. */
     tint?: string;
     /** Colors sibling expense categories already own; dimmed and unpickable. */
     usedColors?: readonly string[];
     value: IdentitySelection;
 }
 
-/** The tab the picker opens on: the one holding the current pick, else the first. */
 export function initialIdentityTab(value: IdentitySelection, tabs: readonly IdentityTab[]): IdentityTab {
     if (value.icon && tabs.includes("icons")) {
         return "icons";
@@ -60,7 +49,6 @@ export function initialIdentityTab(value: IdentitySelection, tabs: readonly Iden
     return tabs[0];
 }
 
-/** An emoji replaces whatever glyph or photo was there; the colour stays. */
 export function withEmoji(value: IdentitySelection, emoji: string): IdentitySelection {
     return {
         color: value.color,
@@ -82,7 +70,6 @@ export function withIcon(value: IdentitySelection, icon: string): IdentitySelect
     };
 }
 
-/** A photo replaces any glyph, and its glow colour is the first extracted hue. */
 export function withPhoto(value: IdentitySelection, photoUri: string, hues: readonly string[]): IdentitySelection {
     return {
         color: value.color,
@@ -93,10 +80,7 @@ export function withPhoto(value: IdentitySelection, photoUri: string, hues: read
     };
 }
 
-/**
- * The photo a system picker result carries, if any: null for a cancel, an
- * error, or no result at all (`getPendingResultAsync` with nothing pending).
- */
+/** Null for a cancel, an error, or nothing pending from `getPendingResultAsync`. */
 export function pickedPhotoUri(result: ImagePickerResult | ImagePickerErrorResult | null): string | null {
     if (result == null || !("canceled" in result) || result.canceled) {
         return null;
@@ -105,11 +89,8 @@ export function pickedPhotoUri(result: ImagePickerResult | ImagePickerErrorResul
 }
 
 /**
- * Copies a photo the system picker returned into app storage and reads its
- * glow. A failed copy still leaves a usable picture for this session, and the
- * launch reconcile adopts it while the cache entry survives. An unreadable
- * image costs the extracted tint alone: `glowFromImage` resolves to `[]`
- * rather than rejecting, so the photo is still adopted.
+ * A failed copy still shows the picture this session, and the launch reconcile adopts it while the cache
+ * entry survives. `glowFromImage` resolves to `[]` rather than rejecting, so an unreadable image keeps the photo.
  */
 export async function adoptPickedPhoto(value: IdentitySelection, pickedUri: string): Promise<IdentitySelection> {
     const uri = await persistPickedPhoto(pickedUri).catch((cause: unknown) => {

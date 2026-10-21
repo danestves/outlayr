@@ -112,8 +112,7 @@ describe("spendingCalendarQuery", () => {
 
     it("plots a row on the local day of its instant, not the day the writing device stored", async () => {
         const db = makeDb();
-        // What a row saved in a zone ahead of this one looks like: `day` is that
-        // device's midnight and lands on the calendar square before the instant's.
+        // A row saved in a zone ahead: `day` is that device's midnight, a square before the instant's.
         await insert(db, "travelled", at(2026, 8, 9, 12), {
             amount: 5,
             amountUsd: 5,
@@ -122,8 +121,6 @@ describe("spendingCalendarQuery", () => {
 
         const rows = await spendingCalendarQuery(db, NOW);
 
-        // `groupByDay` keys the Log on the instant; the calendar has to agree, or
-        // one expense sits on two different days on two screens.
         expect(rows.map((candidate) => candidate.plotKey)).toStrictEqual(["2026-08-09"]);
     });
 

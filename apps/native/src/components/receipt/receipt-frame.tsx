@@ -12,36 +12,28 @@ import Animated, {
 
 import { withAlpha } from "@/theme/shade";
 
-/** One breath in, one out; slow enough to read as a resting pulse, not a loader. */
+/** Slow enough to read as a resting pulse, not a loader. */
 const BREATH_MS = 2200;
 const BREATH_SCALE = 1.035;
-/** The paper sits inside the brackets with this much air on every side. */
 const PAPER_INSET = 22;
 const PAPER_RADIUS = 6;
-/** The torn edge: teeth this wide and this tall along the bottom. */
 const TOOTH_WIDTH = 10;
 const TOOTH_HEIGHT = 6;
-/** The viewfinder marks: an L this long on each corner, this thick. */
 const BRACKET_ARM = 26;
 const BRACKET_STROKE = 2.5;
 const BRACKET_RADIUS = 14;
-/** The lines of "type" on the paper: rows of this height, this far apart. */
 const LINE_HEIGHT = 5;
 const LINE_GAP = 13;
 const LINE_INSET = 16;
 
 interface ReceiptFrameProps {
-    /** The paper's fill, the tone under the type. */
     paper: string;
-    /** The type and the torn edge: the ink, drawn faint. */
     ink: string;
-    /** The brackets: the tint, at full strength. */
     tint: string;
     height: number;
     width: number;
 }
 
-/** The paper as a path: a rounded top, straight sides, a zigzag torn bottom. */
 function paperPath(width: number, height: number) {
     const left = PAPER_INSET;
     const right = width - PAPER_INSET;
@@ -53,7 +45,7 @@ function paperPath(width: number, height: number) {
     path.lineTo(right - PAPER_RADIUS, top);
     path.quadTo(right, top, right, top + PAPER_RADIUS);
     path.lineTo(right, bottom - TOOTH_HEIGHT);
-    // Teeth from the right edge back to the left, so the path closes upward.
+    // Right to left, so the path closes upward.
     const teeth = Math.max(1, Math.floor((right - left) / TOOTH_WIDTH));
     const toothWidth = (right - left) / teeth;
     for (let index = 0; index < teeth; index += 1) {
@@ -65,7 +57,6 @@ function paperPath(width: number, height: number) {
     return path.detach();
 }
 
-/** The four corner marks of a viewfinder, each an L with a rounded elbow. */
 function bracketsPath(width: number, height: number) {
     const path = Skia.PathBuilder.Make();
     const inset = BRACKET_STROKE / 2;
@@ -85,11 +76,6 @@ function bracketsPath(width: number, height: number) {
     return path.detach();
 }
 
-/**
- * The screen's subject before there is a photo: a receipt's silhouette inside
- * viewfinder brackets. The brackets breathe on the UI thread; the paper holds
- * still, because the paper is what the person is about to supply.
- */
 export function ReceiptFrame({ height, ink, paper, tint, width }: ReceiptFrameProps) {
     const reducedMotion = useReducedMotion();
     const breath = useSharedValue(0);

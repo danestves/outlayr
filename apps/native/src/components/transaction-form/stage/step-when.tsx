@@ -12,10 +12,7 @@ const DAYS_OFFERED = 7;
 
 const NAMED_DAYS = ["transaction.sentence.when.today", "transaction.sentence.when.yesterday"] as const;
 
-/**
- * The named day at the clock time the entry already carries. Naming a day is not
- * a reason to reset the time, which is stored with the row.
- */
+/** Naming a day keeps the clock time the entry already carries. */
 function atSameTime(day: Date, source: Date): Date {
     const next = startOfDay(day);
     next.setHours(source.getHours(), source.getMinutes(), source.getSeconds(), source.getMilliseconds());
@@ -26,13 +23,12 @@ interface StepWhenProps {
     date: Date;
     /** Names today; the host already holds a clock, and a test pins it. */
     now: Date;
-    /** Opens the host's date picker — the stage has no calendar of its own. */
+    /** Opens the host's date picker; the stage has no calendar of its own. */
     onPick: () => void;
     onSelect: (date: Date) => void;
     /**
-     * Labels the option that opens the picker. Defaults to the form's own "Date"
-     * field label, the nearest string that exists; a host with a better key
-     * passes it here rather than this file minting copy.
+     * Defaults to the form's "Date" field label; a host with a better key passes it here
+     * rather than this file minting copy.
      */
     pickLabel?: string;
 }

@@ -5,52 +5,26 @@ import type { MaterialRoleColors } from "@/theme/material-roles";
 type Options = NativeStackNavigationOptions;
 
 /**
- * The chrome each group of root-stack screens wears, as `options` objects.
- *
- * `options` rather than `<Stack.Header>` / `<Stack.Screen.Title>` children,
- * because a layout matches `Stack.Screen` children by element type and so can't
- * pick them per platform. This file is iOS's answer and must stay exactly what
- * those children produced (`stack-chrome.test.tsx` holds it to that);
- * `stack-chrome.android.ts` is the Material 3 one.
+ * `options` rather than `<Stack.Header>` children: a layout matches those by element type, so they can't vary per
+ * platform. `stack-chrome.test.tsx` holds this iOS file to exactly what those children produced.
  */
 export interface StackChrome {
-    /** Pushed screens with a title: `TITLED_SCREENS`. */
     titled: (title: string) => Options;
-    /** Pushed screens that title themselves: reorder, account detail, a license. */
     pushed: Options;
-    /** Form sheets at their own resting detent: `SHEET_SCREENS`. */
     sheet: (sheet: { title: string; detent: number }) => Options;
-    /**
-     * The entry edit sheets. iOS lets `useRestingSheet` set the detents from
-     * inside the sheet; Android declares the same constant detents here, since
-     * it reads them only when it creates the sheet.
-     */
+    /** iOS sets the detents from inside the sheet (`useRestingSheet`); Android reads them only at creation. */
     entrySheet: Options;
-    /** A picker sized to its content that draws its own header: the category symbol picker. */
     pickerSheet: (detent: number) => Options;
-    /**
-     * `transactions/identity`, the picker sheet over the account editor or entry
-     * form that opened it. iOS rests it undimmed so the editor's identity can fly
-     * up into it. Android has no fly-up and dims it, so the editor underneath
-     * can't take taps.
-     */
+    /** iOS rests it undimmed so the editor's identity can fly up into it; Android dims it instead. */
     identityPicker: (detent: number) => Options;
-    /** Modals with a title: `MODAL_SCREENS`. */
     modal: (title: string) => Options;
-    /** Modals that draw everything themselves: voice and scan. */
     bareModal: Options;
     search: (title: string) => Options;
     paywall: Options;
-    /**
-     * A bare chevron over the step's own background: `minimal` drops the back
-     * title, which would otherwise read the cover's title from behind it. `fade`
-     * swaps the default horizontal push for a crossfade, so advancing reads as
-     * the stage trading objects rather than a new page sliding in.
-     */
+    /** `minimal` drops the back title, which would otherwise read the cover's title from behind it. */
     firstRunStep: Options;
 }
 
-/** Content scrolls under the bar, inset by each scroller's `contentInsetAdjustmentBehavior`. */
 const TRANSPARENT_HEADER = { headerTransparent: true } as const;
 const MINIMAL_BACK = { headerBackButtonDisplayMode: "minimal" } as const;
 
@@ -89,12 +63,10 @@ const CHROME: StackChrome = {
     titled: (title) => ({ ...TRANSPARENT_HEADER, ...MINIMAL_BACK, title }),
 };
 
-/** The root stack's chrome. iOS draws it from the system, so the colours go unread. */
 export function stackChrome(_m3: MaterialRoleColors): StackChrome {
     return CHROME;
 }
 
-/** The root stack's chrome for the current scheme. On iOS it never changes, so nothing is subscribed. */
 export function useStackChrome(): StackChrome {
     return CHROME;
 }

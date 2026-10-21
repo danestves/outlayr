@@ -10,37 +10,29 @@ import { useLanguage } from "@/i18n/context";
 
 import { OutlinedSelectField } from "./outlined-field";
 
-/**
- * Material 3's date dialog and the outlined field that opens it, for the
- * Android editors. It draws Compose, so import it only from `.android.tsx` files.
- */
+// Draws Compose, so import it only from `.android.tsx` files.
 
 interface DateDialogProps {
-    /** A day was picked, at `value`'s time of day. */
+    /** At `value`'s time of day. */
     onChange: (next: Date) => void;
     onDismiss: () => void;
-    /** The days on offer, inclusive. Either end may be open. */
+    /** Inclusive; either end may be open. */
     range: { end?: Date; start?: Date };
     value: Date;
 }
 
-/** UTC midnight of `date`'s local day: Material 3's picker counts in UTC days. */
+// Material 3's picker counts in UTC days.
 function utcDay(date: Date): string {
     return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())).toISOString();
 }
 
-/** The UTC day the picker reports, as that same local day at `date`'s time of day. */
 function localDay(picked: Date, date: Date): Date {
     const next = new Date(date);
     next.setFullYear(picked.getUTCFullYear(), picked.getUTCMonth(), picked.getUTCDate());
     return next;
 }
 
-/**
- * The Material date dialog, up for as long as it is mounted: mount it only
- * while open. It sits in `MaterialHost` so it wears the app's scheme, not the
- * handset's.
- */
+// Up for as long as it is mounted, so mount it only while open. `MaterialHost` gives it the app's scheme.
 export function DateDialog({ onChange, onDismiss, range, value }: DateDialogProps) {
     return (
         <MaterialHost>
@@ -56,18 +48,11 @@ export function DateDialog({ onChange, onDismiss, range, value }: DateDialogProp
 
 interface OutlinedDateFieldProps extends Omit<DateDialogProps, "onDismiss"> {
     label: string;
-    /** The dialog closed without a pick. */
     onDismiss?: () => void;
     ground?: string;
-    /** A control at the end of the field, such as clearing an optional day. */
     trailing?: ReactNode;
 }
 
-/**
- * One day as a read-only outlined field that opens the date dialog. The field
- * stays as it is while the dialog is up, and the dialog closes on a pick or a
- * dismiss.
- */
 export function OutlinedDateField({
     label,
     onChange,

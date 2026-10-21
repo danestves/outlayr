@@ -38,15 +38,6 @@ const NOTHING: EnrichmentSuggestion = {
     tagIds: [],
 };
 
-/**
- * The user's own ledger outranks the curated map and the model, including when
- * they disagree: a merchant this user has filed before is answered by their own
- * filing. Someone who consistently books Starbucks under Work means it, and
- * being corrected by a list every time is the annoyance this removes.
- *
- * Only the category is taken. The domain and tags still come from whichever
- * source found them, because history has no opinion about either.
- */
 function withRemembered(suggestion: EnrichmentSuggestion, categoryId: string | null): EnrichmentSuggestion {
     if (categoryId == null) {
         return suggestion;
@@ -56,71 +47,31 @@ function withRemembered(suggestion: EnrichmentSuggestion, categoryId: string | n
 
 export interface UseTransactionEnrichmentArgs {
     categoryTree: readonly CategoryBranch[];
-    /** The entry's currency, sent as a locator for the merchant. */
     currency?: string;
     enabled: boolean;
     /** The server re-checks the `groundedLookup` setting independently. */
     groundedLookup?: boolean;
     income: boolean;
-    /**
-     * The merchant the form opened with. Seeds the name the tiers read without
-     * asking anything, so an edit whose currency changes, or whose owner asks
-     * for a lookup, resolves the name on screen rather than an empty one.
-     */
     initialName?: string;
     locale?: string;
     onSuggest: (suggestion: EnrichmentSuggestion) => void;
-    /**
-     * The device's own region — a signal `locale` cannot substitute for, since a
-     * user may run an English UI on a device set to a different region.
-     */
     regionCode?: string;
-    /** `remoteEnrichmentOn`: AI providers allowed and suggestions on. False keeps every lookup on-device. */
     remoteEnabled?: boolean;
-    /**
-     * What the ledger already knows about this merchant. Omitted in tests that
-     * are not about history, and absent for an entry being edited rather than
-     * created.
-     */
     resolveHistory?: (key: string, income: boolean) => Promise<string | null>;
     resolveLocal: (suggestion: EnrichmentSuggestion) => EnrichmentSuggestion;
     recallMerchant?: (name: string, currency: string | undefined) => Promise<RemoteEnrichmentResult | null>;
-    /**
-     * An on-device tier consulted between the curated map and the model, for a
-     * domain the curated map has no opinion about. Answering here skips the
-     * remote call entirely.
-     *
-     * The account editor passes the institution map; the transaction form
-     * passes nothing, so its tiers are unchanged.
-     */
     resolveDomain?: (key: string) => string | null;
-    /** Injected in tests; production resolves the real Convex call. */
     transport?: EnrichmentFn | null;
 }
 
 export interface UseTransactionEnrichmentResult {
-    /**
-     * Asks the curated map and the model for the name on screen right now,
-     * past the debounce, the session cache and the ledger: what this device
-     * already answered is exactly what the caller is dissatisfied with. The
-     * grounded follow-up runs as soon as the fast pass settles without a domain.
-     */
     lookupNow: () => Promise<void>;
     onNameChange: (next: string) => void;
-    /**
-     * A remote lookup is outstanding. The form decides which rows may show it —
-     * a field the user has already edited is theirs, so it never dims.
-     */
     pending: boolean;
 }
 
 const DEBOUNCE_MS = 600;
-/**
- * A grounded search costs ~3x more than assumed (measured: one answer bills 3
- * search calls). Waiting this much longer than `DEBOUNCE_MS` before allowing
- * it means a mid-name pause (e.g. "Rio" before "rio supermercado" finishes)
- * never spends a grounded lookup on a fragment.
- */
+// A grounded answer bills ~3 search calls, so it waits out mid-name pauses ("Rio" before "rio supermercado").
 const GROUNDED_IDLE_MS = 1800;
 const GROUNDED_RECHECK_MS = 8000;
 const GROUNDED_RECHECK_RETRY_MS = 12_000;
@@ -138,7 +89,6 @@ function toCuratedSuggestion(match: MerchantMatch): EnrichmentSuggestion {
                   emoji: null,
                   icon: preset.icon,
                   name: match.categoryName,
-                  // The curated map only ever names top-level categories.
                   parentName: null,
               }
             : null,
@@ -189,17 +139,10 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
     } = args;
 
     const [pending, setPending] = useState(false);
-    /**
-     * A `lookupNow` in progress, fast pass and grounded follow-up included.
-     * `pending` alone drops between the two, which would offer the button
-     * again while the follow-up is still out.
-     */
     const [forcing, setForcing] = useState(false);
 
     const nameRef = useRef(initialName ?? "");
-    /** Set by `lookupNow` for the one `run` it starts; read and cleared there. */
     const forceRef = useRef(false);
-    /** Mirrors `forcing` for the tap that lands before the state commits. */
     const forcingRef = useRef(false);
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const groundedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -214,43 +157,21 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         }
     }, []);
     const requestIdRef = useRef(0);
-    /**
-     * Key -> the request ticket that owns it. Ticketed rather than a bare set
-     * because a superseded request still settles: it must not delete an entry a
-     * LATER request for the same key now owns, or a third lookup starts and the
-     * dedupe stops meaning anything.
-     */
+    // Ticketed, not a bare set: a superseded request still settles and must not delete an entry a LATER request owns.
     const inFlightRef = useRef<Map<string, number>>(new Map());
     const lastRemoteOutcomeRef = useRef<{
         key: string;
         hasDomain: boolean;
     } | null>(null);
-    /**
-     * A domain-less curated hit keeps its category and tags authoritative while
-     * the remote tier is only ever consulted for the domain — the model must
-     * never overwrite the map's judgement.
-     */
     const curatedFallbackRef = useRef<{
         key: string;
         suggestion: EnrichmentSuggestion;
     } | null>(null);
 
-    /**
-     * Keyed, because a remote answer can land after the field has moved on to a
-     * different merchant — the same reason `emitDomainResult` re-checks the key.
-     */
     const rememberedRef = useRef<{ categoryId: string | null; key: string } | null>(null);
-    /** What the tiers last said, so a late ledger answer can be merged onto it. */
     const lastEmittedRef = useRef<{ key: string; suggestion: EnrichmentSuggestion } | null>(null);
 
-    /**
-     * The arguments as of the last commit. The lookup pipeline is a chain of
-     * timers and awaits that outlives the render that started it, so every tier
-     * reads the current arguments from here rather than closing over a render's
-     * copy. Mirrored in an effect, not during render: a ref written while
-     * rendering is a side effect the compiler cannot follow, and every read
-     * happens after commit anyway.
-     */
+    // Tiers read the latest arguments here: the timer and await chain outlives the render that started it.
     const resolved = {
         categoryTree,
         currency,
@@ -272,7 +193,6 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         latest.current = resolved;
     });
 
-    /** Only while the field still holds the merchant the lookup was made for. */
     const rememberedNow = useCallback((): string | null => {
         const held = rememberedRef.current;
         if (held == null || held.key !== merchantKey(nameRef.current)) {
@@ -289,23 +209,10 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         [rememberedNow]
     );
 
-    /**
-     * A name nobody can answer for still has to be reported. Staying silent
-     * leaves the previous merchant's category, tags and logo sitting on an entry
-     * they have nothing to do with.
-     */
     const emitNothing = useCallback(() => {
         emit(NOTHING);
     }, [emit]);
 
-    /**
-     * Runs alongside the tiers rather than ahead of them, and re-emits over
-     * whatever they last said.
-     *
-     * Awaiting it first would be simpler, but the curated tier is synchronous on
-     * purpose — it is the instant on-device answer — and a local read is not a
-     * good enough reason for that to stop being true.
-     */
     const recallFromLedger = useCallback(async (key: string) => {
         const resolve = latest.current.resolveHistory;
         if (resolve == null) {
@@ -346,12 +253,8 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         []
     );
 
-    /**
-     * `askedIn` is the currency the request was made with, not the one on
-     * screen: a response is filed under the locator that produced it, or a
-     * currency change mid-flight would cache the old country's answer in the
-     * new partition and the re-ask would then hit it.
-     */
+    // `askedIn` is the request's currency, not the one on screen: filing under the screen's would cache the old
+    // country's answer in the new partition.
     const emitDomainResult = useCallback(
         (key: string, result: RemoteEnrichmentResult | null, askedIn: string | undefined): boolean => {
             if (result?.domain == null || merchantKey(nameRef.current) !== key) {
@@ -399,8 +302,6 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
             const id = requestIdRef.current;
             inFlightRef.current.set(key, id);
             setPending(true);
-            // The fast tier never requests grounding — see `runGroundedFollowUp`
-            // for the idle-gated retry.
             const request = buildRequest(false);
             let result: RemoteEnrichmentResult | null = null;
             try {
@@ -408,7 +309,6 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
             } catch {
                 result = null;
             }
-            // Only if this request still owns the entry — see `inFlightRef`.
             if (inFlightRef.current.get(key) === id) {
                 inFlightRef.current.delete(key);
             }
@@ -418,19 +318,12 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
             if (result?.grounding !== true) {
                 setCachedEnrichment(key, result, request.currency);
             }
-            // The field moved on while this was out and the replacement has not
-            // started yet (its debounce is still running): the answer is kept
-            // for the cache above and must not be painted onto the new name.
             if (merchantKey(nameRef.current) !== key) {
                 setPending(false);
                 return;
             }
-            // Below the ticket check: `runGroundedFollowUp` reads this to decide
-            // whether the fast pass for the name ON SCREEN already found a
-            // domain. A superseded request recording its outcome here would
-            // answer for a name the user has left, and either suppress the
-            // grounded follow-up the current result deserves or spend one it
-            // does not.
+            // Below the ticket check: a superseded request recording here would answer for a name the user has left,
+            // wrongly suppressing or spending the grounded follow-up.
             lastRemoteOutcomeRef.current = { hasDomain: result?.domain != null, key };
             setPending(false);
             emitRemoteResult(key, result);
@@ -438,10 +331,8 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         [emitRemoteResult, resolveTransport, buildRequest]
     );
 
-    /** A fast result that already carried a domain suppresses this follow-up entirely. */
     const runGroundedFollowUp = useCallback(async () => {
-        // `remoteEnabled` too: a merchant the ledger already knew records an
-        // outcome without asking anyone, and must not send its name from here.
+        // `remoteEnabled` too: a merchant the ledger already knew records an outcome, and its name must not leave here.
         if (!latest.current.groundedLookup || !latest.current.remoteEnabled) {
             return;
         }
@@ -501,36 +392,18 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         scheduleRecheck(GROUNDED_RECHECK_MS, 1);
     }, [resolveTransport, buildRequest, emitDomainResult]);
 
-    /**
-     * An answer `run` reaches without asking the model is final, so anything
-     * still outstanding has to stop counting as current.
-     *
-     * `runRemote` bumps this ticket itself, which is what used to invalidate an
-     * earlier request — every lookup ended there. Now that several tiers answer
-     * and return first, a settling older request would otherwise pass
-     * `runRemote`'s own `id !== requestIdRef.current` check and emit the
-     * PREVIOUS name's suggestion over the one on screen: in the account editor
-     * that is the last merchant's logo landing on this account.
-     *
-     * The in-flight-dedupe return is deliberately not a caller — a request for
-     * THIS key is the answer being waited on, not a stale one.
-     */
+    // Every final answer `run` reaches without the model must supersede older requests, or one settling late emits
+    // the PREVIOUS name's suggestion (in the account editor, the last merchant's logo).
     const supersedeInFlight = useCallback(() => {
         requestIdRef.current += 1;
-        // The dedupe set goes with the ticket. A superseded request's result is
-        // discarded when it settles, so leaving its key here would make `run`
-        // refuse to start the replacement the user actually needs — return to
-        // that name before the abandoned call finishes and nothing would answer
-        // it, stranding the previous tier's logo on screen. At most one
-        // un-superseded request exists at a time, because `runRemote` bumps the
-        // ticket as it starts, so clearing cannot drop a live one.
+        // Cleared with the ticket, or `run` refuses to restart a name whose abandoned call is still out. `runRemote`
+        // bumps the ticket as it starts, so this never drops a live request.
         inFlightRef.current.clear();
         setPending(false);
     }, []);
 
     const run = useCallback(async () => {
-        // Read first: every early return below is a final answer, and a force
-        // left standing would bypass the cache for the next keystroke's lookup.
+        // Read first: every early return below is final, and a force left standing would skip the next lookup's cache.
         const force = forceRef.current;
         forceRef.current = false;
         const key = merchantKey(nameRef.current);
@@ -541,13 +414,9 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
             return;
         }
         if (force) {
-            // The ledger is what the user filed before, and a lookup they asked
-            // for is a request to hear the other tiers over it.
             rememberedRef.current = { categoryId: null, key };
         } else {
-            // Deliberately not awaited: the curated tier below is synchronous, and a
-            // local read must not be what makes it stop being.
-            // oxlint-disable-next-line no-void -- marks the floating promise as intentional rather than a forgotten await.
+            // oxlint-disable-next-line no-void -- not awaited: the curated tier below must stay synchronous.
             void recallFromLedger(key);
         }
         const match = resolveMerchant(key);
@@ -562,8 +431,6 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
             curatedFallback = true;
             curatedFallbackRef.current = { key, suggestion: curatedSuggestion };
         }
-        // On-device and exact, so it answers before the model is asked at all —
-        // an account named after a bank costs no round trip and works offline.
         const localDomain = latest.current.resolveDomain?.(key) ?? null;
         if (localDomain != null) {
             const base = curatedFallback ? curatedFallbackRef.current?.suggestion : undefined;
@@ -592,9 +459,6 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         }
         const cached = force ? { hit: false as const } : getCachedEnrichment(key, latest.current.currency);
         if (cached.hit) {
-            // Recorded as the fast outcome it once was, so a cached answer with
-            // no domain still earns the grounded follow-up — the search it
-            // scheduled back then may have published one since.
             lastRemoteOutcomeRef.current = { hasDomain: cached.value?.domain != null, key };
             emitRemoteResult(key, cached.value);
             supersedeInFlight();
@@ -604,8 +468,6 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
             if (!force) {
                 return;
             }
-            // The outstanding request may be the debounced one for this same
-            // name; the forced ask replaces it rather than waiting on it.
             supersedeInFlight();
         }
         await runRemote(key);
@@ -636,8 +498,6 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         setForcing(true);
         clearTimers();
         forceRef.current = true;
-        // `run` awaits the fast pass, so by then its outcome is recorded and the
-        // follow-up can judge it without the idle timer's guesswork.
         await run()
             .then(() => runGroundedFollowUp())
             .finally(() => {
@@ -664,13 +524,8 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
 
     useEffect(() => () => cancel(), [cancel]);
 
-    /**
-     * The currency is a locator the lookup was made with, so changing it after
-     * the merchant resolved has to ask again: the same name in another
-     * currency can be another business, and a logo the form already attached
-     * would otherwise be saved with the row, where the backfill treats it as
-     * final.
-     */
+    // The same name in another currency can be another business, and the backfill treats a saved logo as final,
+    // so a currency change asks again.
     const seenCurrencyRef = useRef(currency);
     useEffect(() => {
         if (seenCurrencyRef.current === currency) {
@@ -680,19 +535,12 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         if (!latest.current.enabled) {
             return;
         }
-        // Whatever is still out was asked with the old locator and must not
-        // answer for the new one, cache included; nor may the last fast answer
-        // stand in for the new currency's when the grounded timer fires.
         supersedeInFlight();
         lastRemoteOutcomeRef.current = null;
         const key = merchantKey(nameRef.current);
         if (key.length < MIN_KEY_LENGTH) {
             return;
         }
-        // The logo on screen was found for the old currency. Only the domain is
-        // withdrawn — the category and tags do not depend on where the purchase
-        // was — so a save before the re-ask lands stores no wrong country's
-        // brand, and the backfill can still reach the row.
         const last = lastEmittedRef.current;
         if (last != null && last.key === key && last.suggestion.domain != null) {
             emit({ ...last.suggestion, domain: null });
@@ -700,12 +548,6 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         onNameChange(nameRef.current);
     }, [currency, emit, onNameChange, supersedeInFlight]);
 
-    /**
-     * The side of the ledger picks the category namespace the request was
-     * built with, so a request still out for the other side must not answer:
-     * its category would be filed on the wrong side. Asked again for the new
-     * side, as a currency change is.
-     */
     const seenIncomeRef = useRef(income);
     useEffect(() => {
         if (seenIncomeRef.current === income) {

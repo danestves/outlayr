@@ -9,21 +9,12 @@ import { translateNow } from "@/i18n/runtime";
 import { openNotificationSettings, reminderPermission, requestReminderPermission } from "./reminders";
 
 /**
- * About an iOS sheet's dismissal, counted from the form's `onDone`: the order
- * is saved from the entry sheet, and the question belongs on the screen behind
- * it, not over a sheet on its way out.
- * shortcut: no event reaches JS when a native sheet finishes dismissing, so this
- * is timed; listen for one if react-native-screens ever reports it.
+ * Counted from the form's `onDone`, so the question lands on the screen behind the sheet, not over it. shortcut: no
+ * event reaches JS when a native sheet finishes dismissing, so this is timed; listen for one if that changes.
  */
 const AFTER_SHEET_MS = 600;
 
-/**
- * The notification settings' permission ladder, with its own key per kind of
- * due-date notice: the daily reminder and each kind are separate promises, and
- * the revoke reconcile writes each back off on its own. The write re-arms both kinds through `BackgroundWork`'s
- * settings listener, so turning one on arms it within a beat. Resolves false
- * when turning on ended without a grant, so nothing was written.
- */
+/** Resolves false when turning on ended without a grant, so nothing was written. */
 export async function setDueReminders(
     db: Database,
     key: "installmentReminders" | "subscriptionReminders",
@@ -58,12 +49,8 @@ export async function setDueReminders(
 }
 
 /**
- * Asked by every order saved while cuota notices were never set either way,
- * until one answer is given: "Not now" writes them off, and "Turn on" runs the
- * toggle's ladder, which writes them on once iOS grants it and off when it
- * doesn't. An ask that is never answered (the app killed under it) leaves
- * nothing, so the next order asks again. Settings is the way back from either
- * answer. Returns whether it asks, so other prompts can stand aside.
+ * Asks only while cuota notices were never set either way; an unanswered ask writes nothing, so the next order asks
+ * again. Returns whether it asks, so other prompts can stand aside.
  */
 export function askForInstallmentReminders(db: Database): boolean {
     if (getMetaSync(db, "installmentReminders") !== null) {

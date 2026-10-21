@@ -30,21 +30,14 @@ import { DEEP_LINKS } from "@/lib/deep-links";
 import { WIDGET_PALETTE } from "./palette";
 import { NO_BUDGET } from "./placeholders";
 
-/**
- * A widget renders in whatever appearance the home screen is in, which is not
- * necessarily the app's, and `environment.colorScheme` is only known inside the
- * layout — so the layout is handed both sides and picks. See `palette.ts` for
- * why the colours travel as data at all.
- */
+/** The home screen's appearance is only known inside the layout, so it gets both sides. */
 type WidgetChrome = typeof WIDGET_PALETTE;
 
 /** What a large widget holds at the Log's row rhythm; medium takes the first 3. */
 const LEDGER_LIMIT = 8;
-/** Past five, the slices are thinner than the hairline between them. */
 const SLICE_LIMIT = 4;
 const WEEK_DAYS = 7;
 
-/** Which budget a configured tile is pinned to. */
 type BudgetSelection = "auto" | "overall" | "worst";
 
 export interface BudgetConfiguration {
@@ -52,53 +45,29 @@ export interface BudgetConfiguration {
 }
 
 export interface BudgetViewProps {
-    /** How far through the period we are, in [0, 1] — the pace marker. */
+    /** In [0, 1]: the pace marker. */
     elapsedFraction: number;
-    /**
-     * Window end in epoch ms — the one instant at which every figure above
-     * becomes wrong. The publisher schedules the next timeline entry here instead
-     * of polling, and the watch hides the budget past it and extrapolates the
-     * pace marker from it.
-     */
+    /** Epoch ms when every figure goes stale: the next timeline entry is scheduled here. */
     endsAt: number;
-    /**
-     * Whether `name` is the overall budget or the per-category one this fell back
-     * to. The layout must say which: "$189 LEFT · THIS MONTH" without the name
-     * reads as the whole month when it is only Groceries.
-     */
+    /** Without the name, "$189 LEFT" reads as the whole month when it is only Groceries. */
     isOverall: boolean;
     limit: string;
     name: string;
     over: boolean;
     percent: string;
-    /** Eyebrow copy, e.g. "THIS MONTH". */
     periodLabel: string;
-    /** False when no budget of any kind exists — the layout pitches one instead. */
     present: boolean;
-    /** Compact window, e.g. "1 – 31 JUL". */
     rangeLabel: string;
-    /** The hero figure, already in the user's currency and cents preference. */
     remaining: string;
-    /** The localized "LEFT"/"OVER" — the sign is in the word, never in a minus. */
+    /** The sign is in the word, never a minus. */
     remainingCaption: string;
-    /**
-     * Cents off regardless of the "Display Cents" setting, matching `BudgetRow`'s
-     * meta line — on a small widget "$1,873.59" is four glyphs past what the
-     * column can hold.
-     */
+    /** Cents always off: "$1,873.59" overflows a small widget's column. */
     spent: string;
-    /** Spend as a fraction of the limit, clamped to [0, 1] for the gauge. */
     spentFraction: number;
     url: string;
 }
 
-/**
- * Every budget the tile can be pinned to, derived on every publish. A widget
- * body cannot query, so a configuration can only ever choose between views that
- * are already in the payload — which is also why `auto` is materialised rather
- * than resolved in the layout: it is the one the tile shows unconfigured, and it
- * has to stay byte-identical to what shipped before configuration existed.
- */
+/** The body cannot query, so every selectable view ships; `auto` must match the unconfigured tile. */
 export interface BudgetWidgetProps {
     chrome: WidgetChrome;
     views: Record<BudgetSelection, BudgetViewProps>;
@@ -109,7 +78,7 @@ export interface LedgerEntryProps {
     amount: string;
     color: string;
     day: string;
-    /** Empty string rather than null — the layout branches on truthiness. */
+    /** Empty, not null: the layout branches on truthiness. */
     emoji: string;
     id: string;
     income: boolean;
@@ -124,14 +93,12 @@ export interface WatchEntryProps extends LedgerEntryProps {
     writeId: string | null;
 }
 
-/** What the Ledger's header figure can be pinned to. `"today"` is its default. */
 type LedgerHeaderPeriod = "today" | InsightsPeriod;
 type LedgerHeaderMeasure = "spent" | "income" | "net";
 
 interface LedgerHeaderProps {
     amount: string;
     label: string;
-    /** Net can be either way round; the sign is the figure's, not a glyph's. */
     positive: boolean;
 }
 
@@ -143,13 +110,7 @@ export interface LedgerConfiguration {
 export interface LedgerWidgetProps {
     chrome: WidgetChrome;
     entries: LedgerEntryProps[];
-    /**
-     * Every combination the configuration can name, precomputed.
-     *
-     * The widget runs in a separate process with no database, so it cannot answer
-     * a choice it was not handed — the same reason `Insights` ships every window
-     * rather than the one currently selected.
-     */
+    /** Precomputed: the widget has no database to answer a choice with. */
     headers: Record<LedgerHeaderPeriod, Record<LedgerHeaderMeasure, LedgerHeaderProps>>;
     url: string;
 }
@@ -162,10 +123,9 @@ export interface InsightsConfiguration {
 }
 
 export interface InsightsViewProps {
-    /** `ChartDataPoint` shape, oldest first — spend per bucket. */
+    /** Oldest first: spend per bucket. */
     bars: { x: string; y: number }[];
     income: string;
-    /** Net for the window, signed by `netPositive` rather than by a glyph. */
     net: string;
     netPositive: boolean;
     periodLabel: string;
@@ -177,7 +137,7 @@ export interface InsightsViewProps {
 
 export interface InsightsWidgetProps {
     chrome: WidgetChrome;
-    /** The app's own `insightsTimeFrame` — what an unconfigured tile shows. */
+    /** What an unconfigured tile shows. */
     defaultPeriod: InsightsPeriod;
     windows: Record<InsightsPeriod, InsightsViewProps>;
 }
@@ -186,15 +146,10 @@ export interface LogWidgetProps {
     chrome: WidgetChrome;
     todayLabel: string;
     todaySpent: string;
-    /** Always the new-expense form — the tile is one target, see `log.tsx`. */
     url: string;
 }
 
-/**
- * One budget as Siri can name it. Not a widget's props — `CheckBudgetIntent` has
- * to resolve a spoken name against every budget, so the list is derived in the
- * same pass and published to the App Group.
- */
+/** For `CheckBudgetIntent`, which resolves a spoken name against every budget. */
 interface IntentBudgetProps {
     id: string;
     limit: string;
@@ -224,7 +179,6 @@ export interface WidgetProps {
     categories: CategoryProps[];
     currency: string;
     Insights: InsightsWidgetProps;
-    /** Every budget, overall first — see {@link IntentBudgetProps}. */
     intentBudgets: IntentBudgetProps[];
     Ledger: LedgerWidgetProps;
     Log: LogWidgetProps;
@@ -234,7 +188,6 @@ export interface WidgetProps {
     zeroSpent: string;
 }
 
-/** The Insights period codes as stored (`insightsTimeFrame`). */
 // Keyed by the stored insights period setting, which is a plain number.
 const PERIODS = new Map<number, InsightsPeriod>([
     [1, "week"],
@@ -248,11 +201,7 @@ const PERIOD_EYEBROW = {
     year: "insights.quiet.thisYear",
 } satisfies Readonly<Record<InsightsPeriod, TranslationKey>>;
 
-/**
- * "1 – 31 JUL", collapsing the month when both ends share one. `end` is the
- * window's exclusive end, so this steps back a millisecond to name the last day
- * actually inside the period rather than the first day of the next.
- */
+/** `end` is exclusive, so step back a millisecond. */
 function rangeLabel(start: Date, end: Date): string {
     const last = new Date(end.getTime() - 1);
     if (start.getMonth() === last.getMonth()) {
@@ -280,17 +229,7 @@ interface CategoryRow {
     sortOrder: number;
 }
 
-/**
- * Everything the three widgets render, read out of SQLite in one pass and
- * already formatted.
- *
- * Formatting has to happen here: a widget body runs in the extension's own
- * `JSContext` with none of this bundle in scope, so it could not call
- * `formatAmount` even if asked.
- *
- * Runs outside React (on background, after a queued write lands), so it is a
- * plain async function over `SpendDb` and testable against `better-sqlite3`.
- */
+/** Formatted here: the widget's `JSContext` cannot call `formatAmount`. */
 export async function buildWidgetProps(db: SpendDb, now: Date = new Date()): Promise<WidgetProps> {
     const [currencyRaw, showCentsRaw, weekdayRaw, monthDayRaw, periodRaw] = await Promise.all([
         getMeta(db, META_KEYS.currency),
@@ -308,7 +247,6 @@ export async function buildWidgetProps(db: SpendDb, now: Date = new Date()): Pro
     };
     const period = PERIODS.get(parseIntSetting(periodRaw, 1)) ?? "week";
     const money = (value: number) => formatAmount(value, currency, showCents);
-    /** Supporting figures, cents always off — see `BudgetWidgetProps.spent`. */
     const whole = (value: number) => formatAmount(value, currency, false);
     const entryMoney = (value: number, code: string | null) => formatAmount(value, code ?? currency, showCents);
 
@@ -385,15 +323,7 @@ type Money = (value: number) => string;
 
 type EntryMoney = (value: number, code: string | null) => string;
 
-/**
- * The overall budget and the worst-off per-category one, plus the automatic
- * pick between them — the overall budget when there is one.
- */
-/**
- * Every budget with the figures both builders need, read once. `buildBudget` and
- * `buildIntentBudgets` are assembled in the same pass, so without this they each
- * ran the same two selects and re-derived the same window, limit and spend.
- */
+/** Read once for both budget builders. */
 async function budgetFigures(db: SpendDb, now: Date, contributions: readonly Contribution[], valuation: Valuation) {
     const measure = (
         row: {
@@ -454,11 +384,7 @@ function buildBudget(
     }
 
     let worst = empty;
-    // The same order the Budgets screen ranks by. Its own comparator puts an
-    // over-budget one first and guards the zero limit — `spent / 0` is `Infinity`
-    // for anything spent and `NaN` for nothing, and a comparator returning either
-    // hands "worst" to a budget with no limit at all while the one genuinely over
-    // is not shown.
+    // The Budgets screen's own comparator: over-budget first, and the zero limit guarded (`spent / 0` is `Infinity`).
     const [ranked] = [...figures.categories].sort((a, b) =>
         compareBudgetSeverity(
             { amount: a.limit, overBudget: a.spent > a.limit, spent: a.spent },
@@ -518,7 +444,6 @@ function buildBudget(
     }
 }
 
-/** Every budget the user has, overall first, each with its current figures. */
 function buildIntentBudgets(
     figures: Awaited<ReturnType<typeof budgetFigures>>,
     categoriesById: ReadonlyMap<string, CategoryRow>,
@@ -567,7 +492,6 @@ function buildIntentBudgets(
     return out;
 }
 
-/** The income counterpart of {@link sumExpenses}, unscoped by category. */
 function sumIncome(rows: readonly Contribution[], start: Date, now: Date): number {
     const startMs = start.getTime();
     const nowMs = now.getTime();
@@ -655,8 +579,7 @@ async function buildWatchEntries(
 
     return rows.map((row) => {
         const category = row.categoryId ? categoriesById.get(row.categoryId) : undefined;
-        // The figure the headers summed, so a day's entries add up to them. An entry
-        // nothing can value exactly keeps its own currency rather than a guessed one.
+        // The figure the headers summed; an inexact entry keeps its own currency.
         const valued =
             row.currency !== null &&
             isExact({ ...row, dateKey: utcDateString(row.date.getTime()) }, displayCurrency, rates)
@@ -670,9 +593,7 @@ async function buildWatchEntries(
             color: row.customColor ?? row.imageColor ?? category?.color ?? "#767676",
             date: formatDateHeader(row.date, now),
             day: formatDayHeader(row.date, now),
-            // Hugeicons glyphs are a React Native font the widget runtime does not
-            // link, so an icon identity degrades to its colour dot. An emoji is
-            // just text and crosses the process boundary intact.
+            // The widget runtime does not link Hugeicons, so an icon identity degrades to its colour dot.
             emoji: row.emoji ?? category?.emoji ?? "",
             id: row.id,
             income: row.income,
@@ -683,14 +604,7 @@ async function buildWatchEntries(
     });
 }
 
-/**
- * Every period/measure pairing the Ledger's header can be set to.
- *
- * `today` is computed from the raw contributions rather than through
- * `windowTotals`, which has no day window — the tile has always led with today
- * and that stays its default, so an installed widget does not silently change
- * what it reports.
- */
+/** `today` from raw contributions: `windowTotals` has no day window. */
 function buildLedgerHeaders(
     contributions: readonly Contribution[],
     now: Date,

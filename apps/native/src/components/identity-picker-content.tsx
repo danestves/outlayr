@@ -101,12 +101,7 @@ function chunk<T>(items: readonly T[], size: number): T[][] {
     return rows;
 }
 
-/**
- * The identity picker's content, shared by the transaction sheet
- * (`transaction/identity`) and the category one (`settings/category-symbol`).
- *
- * The enclosing `<Host>` and the sheet chrome belong to the route.
- */
+/** The enclosing `<Host>` and the sheet chrome belong to the route. */
 const NO_USED_COLORS: string[] = [];
 
 function IdentityPickerContent({
@@ -122,8 +117,7 @@ function IdentityPickerContent({
     const t = useTranslation();
     const cell = symbolCellSize(width);
     const [tab, setTab] = useState<IdentityTab>(() => initialIdentityTab(value, tabs));
-    // Both halves of the same field: the native state so the clear button can empty
-    // it, the React one so the results recompute.
+    // Native state lets the clear button empty the field; React state recomputes the results.
     const queryState = useNativeState("");
     const [query, setQuery] = useState("");
     const [photoFailed, setPhotoFailed] = useState(false);
@@ -161,12 +155,8 @@ function IdentityPickerContent({
         onChange(await adoptPickedPhoto(value, result.assets[0].uri));
     };
 
-    // The library launch itself can reject — a revoked permission, a host torn
-    // down mid-pick. Said out loud rather than logged: the well looks exactly the
-    // same afterwards, so a silent rejection is indistinguishable from the tap
-    // never having registered. It replaces the prompt under the well rather than
-    // raising an alert: this picker is pushed inside a sheet, which covers the
-    // toast viewport and would make an alert the second modal on the stack.
+    // A rejected launch (revoked permission, host torn down) looks like a missed tap, so it is said out loud,
+    // inline under the well: the sheet covers the toast viewport, and an alert would be a second modal.
     const picking = useRef(false);
     const pickPhoto = () => {
         if (picking.current) {
@@ -303,14 +293,12 @@ function IdentityPickerContent({
                 </HStack>
             ) : null}
 
-            {/* The photo tab carries its own colour control, so the rail belongs to
-			    the glyph tabs alone. */}
+            {/* The photo tab has its own colour control. */}
             {showsColorRail && tab !== "photo" ? (
                 <ColorRail onSelect={pickColor} selected={value.color} usedColors={usedColors} />
             ) : null}
 
-            {/* The icon search sits above this panel with nothing else to tap, so a
-			    drag over the glyphs is the way to put its keyboard away. */}
+            {/* Dragging the glyphs is the only way to put the search keyboard away. */}
             <ScrollView modifiers={[scrollDismissesKeyboard("immediately")]} showsIndicators={false}>
                 {panel}
             </ScrollView>
@@ -318,10 +306,7 @@ function IdentityPickerContent({
     );
 }
 
-/**
- * Not pinned: @expo/ui's ScrollView has no `pinnedViews` equivalent, so the
- * grouped background is only doing the header's own inset.
- */
+/** Not pinned: @expo/ui's ScrollView has no `pinnedViews` equivalent. */
 function GroupHeader({ title }: { title: string }) {
     return (
         <SwiftText modifiers={[GROUP_TITLE, foregroundStyle(SECONDARY_LABEL), padding({ vertical: 8 })]}>
@@ -425,8 +410,7 @@ function ColorRail({
                         />
                     </RNHostView>
                 ))}
-                {/* Bare on purpose while the swatches above tick: the wheel streams a
-				    colour for every finger move and would buzz for the whole drag. */}
+                {/* Bare on purpose: the wheel streams a colour per finger move and would buzz the whole drag. */}
                 <ColorPicker
                     label={t("transaction.identity.color")}
                     modifiers={[labelsHidden(), fixedSize()]}
@@ -438,7 +422,6 @@ function ColorRail({
     );
 }
 
-/** Cropping is left to the system image picker's own square editor. */
 function PhotoPanel({
     uri,
     photoColor,
@@ -446,7 +429,6 @@ function PhotoPanel({
     onPick,
     onColorChange,
 }: {
-    /** The last pick was refused, so the prompt says so instead of inviting one. */
     failed: boolean;
     uri: string | null;
     photoColor: string | null;
@@ -465,7 +447,6 @@ function PhotoPanel({
                 modifiers={[
                     SUBHEADLINE,
                     foregroundStyle(failed ? colors.danger : SECONDARY_LABEL),
-                    // The prompt is one centred line; the failure wraps to two.
                     multilineTextAlignment("center"),
                     padding({ bottom: 24, top: 10 }),
                 ]}

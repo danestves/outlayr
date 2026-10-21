@@ -30,11 +30,7 @@ function expense(
     return { amount, categoryId, date: at(2026, 7, day), parentId };
 }
 
-/**
- * The exact expense set the simulator's Log tab shows for July 2026. It sums to
- * $2,881.50 against a $2,000 limit, so it pins the whole burn-down to a state we
- * have a screenshot of.
- */
+/** The simulator's July 2026 Log: $2,881.50 against a $2,000 limit, matching a known screenshot. */
 const REAL_JULY: ExpenseContribution[] = [
     expense(1, 15),
     expense(9, 90),
@@ -136,16 +132,12 @@ describe("buildBurndown", () => {
             window: JULY,
         });
 
-        // A mean rate spreads the single $2,500 charge across all 31 days and
-        // forecasts -$1,573. Taking a typical purchase instead lands near the
-        // -$881.50 already spent, plus a realistic six days more of small ones.
+        // A mean rate would spread the one $2,500 charge over 31 days and forecast -$1,573.
         expect(result.projectedBalance != null && result.projectedBalance > -1100).toBeTruthy();
         expect(result.projectedBalance).toBe(-970.54);
     });
 
     it("keeps forecasting for someone who only shops some days", () => {
-        // 3 spend days of 10 elapsed: a median over the zero-padded calendar is 0,
-        // which would forecast no future spending at all.
         const rows = [expense(1, 300), expense(2, 300), expense(3, 300)];
 
         const result = buildBurndown(rows, {

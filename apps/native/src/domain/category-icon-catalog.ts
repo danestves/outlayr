@@ -216,12 +216,7 @@ const RAW_ICON_GROUPS: readonly RawCategoryIconGroup[] = [
     },
 ];
 
-/**
- * Search synonyms per icon, keyed by the icon's kebab name. The icon's own name
- * tokens are always matched implicitly, so entries hold only terms the name
- * itself does not contain.
- */
-// Keyed by an icon name, as `REGISTRY` is.
+/** Synonyms only: an icon's own name tokens always match implicitly. */
 const KEYWORDS_BY_NAME = new Map<string, readonly string[]>([
     ["agreement-01", ["contract", "document", "deal", "signature"]],
     ["airplane-01", ["flight", "plane", "travel", "trip"]],
@@ -393,7 +388,6 @@ export interface CategoryIconGroup {
     titleKey: TranslationKey;
 }
 
-/** Icon picker groups in Swift order; `keys` index the category icon registry. */
 export const CATEGORY_ICON_GROUPS: readonly CategoryIconGroup[] = RAW_ICON_GROUPS.map((group) => ({
     keys: group.icons.map((icon) => icon.key),
     titleKey: group.titleKey,
@@ -404,10 +398,7 @@ export interface CategoryEmojiGroup {
     titleKey: TranslationKey;
 }
 
-/**
- * Grouped to mirror `CATEGORY_ICON_GROUPS`. Variation selectors are preserved
- * verbatim.
- */
+/** Variation selectors are preserved verbatim. */
 export const CATEGORY_EMOJI_GROUPS: readonly CategoryEmojiGroup[] = [
     {
         emoji: ["🍎", "🍞", "🥐", "🍔", "🍕", "🌮", "🍣", "🥗", "🍜", "🍦", "🍰", "☕️", "🍺", "🍷", "🥤", "🛒"],
@@ -466,12 +457,7 @@ const ICON_MATCH_ENTRIES: readonly IconMatchEntry[] = RAW_ICON_GROUPS.flatMap((g
     })
 );
 
-/**
- * Replicates Swift `CategoryIconCatalog.icons(matching:)`: an empty (trimmed)
- * query returns every key in group order; otherwise a key matches when the
- * query is a substring of any of its name tokens or keyword synonyms. Matching
- * is case- and diacritic-insensitive; results are deduped by first occurrence.
- */
+/** Mirrors Swift `CategoryIconCatalog.icons(matching:)`, case- and diacritic-insensitive. */
 export function iconKeysMatching(query: string): string[] {
     const needle = query.trim() === "" ? "" : normalizeToken(query.trim());
     const seen = new Set<string>();

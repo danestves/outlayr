@@ -16,29 +16,12 @@ import { withTransaction } from "@/db/transaction";
 
 export type EraseScope = "transactions" | "everything";
 
-/**
- * The date every erased row is stamped with, and the one thing on a scrubbed
- * tombstone that still identifies it as one: `deletedTransactionsQuery` reads
- * tombstones on purpose, so it needs a way to tell a single deleted entry the
- * user may want back from the wreckage of an erase they asked for.
- */
+// The one mark left on a scrubbed tombstone: `deletedTransactionsQuery` reads tombstones, and this tells an erase's
+// wreckage from a single deleted entry the user may want back.
 export const ERASED_DATE = new Date(0);
 
-/**
- * A tombstone exists to be replicated, so it keeps exactly what replication
- * needs — the row's id, `deletedAt`, and the `updatedAt` that orders it against
- * a peer's edit — and nothing that made the row the user's. Not-null columns
- * take a neutral value because the column cannot hold one; the only read that
- * sees them is Recently Deleted, which excludes them by {@link ERASED_DATE}.
- *
- * The schedule is retired to `none` so `repairOrphanedRecurrence` cannot mistake
- * an erased row for a subscription whose carrier was deleted and mint a
- * successor out of it.
- *
- * Exported for the test that holds it against the table's columns: a column added
- * to `transactions` and not to this constant would keep its value on a tombstone,
- * which is exactly the failure this constant exists to prevent.
- */
+// Keeps only what replication needs (id, `deletedAt`, `updatedAt`); not-null columns take a neutral value. The schedule
+// is retired to `none` so `repairOrphanedRecurrence` can't mint a successor from an erased row.
 export const ERASED_TRANSACTION = {
     accountId: null,
     amount: 0,
@@ -89,15 +72,8 @@ const ERASED_TRANSFER = {
     toCurrency: "",
 } as const;
 
-/**
- * Categories survive both scopes — erasing those lives on the Categories screen.
- *
- * Rows are tombstoned, not dropped: a hard delete leaves nothing to replicate,
- * so the first pull after an erase would hand the whole ledger back.
- * Already-tombstoned rows are skipped so a second erase neither re-stamps a
- * `deletedAt` the user never asked for again nor pushes a row that has not
- * changed.
- */
+// Tombstoned, not dropped: a hard delete leaves nothing to replicate, so the first pull would hand the ledger back.
+// Already-tombstoned rows are skipped so a second erase doesn't re-stamp and push unchanged rows.
 export async function eraseLedger(db: Database, scope: EraseScope): Promise<void> {
     const now = new Date();
 
@@ -110,7 +86,6 @@ export async function eraseLedger(db: Database, scope: EraseScope): Promise<void
             .update(transfers)
             .set({ ...ERASED_TRANSFER, deletedAt: now, updatedAt: now })
             .where(isNull(transfers.deletedAt));
-        // An order is its purchase entry's schedule, so it goes with the entries.
         await db
             .update(installments)
             .set({ amount: 0, deletedAt: now, dueDate: ERASED_DATE, updatedAt: now })

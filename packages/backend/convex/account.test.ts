@@ -117,8 +117,6 @@ describe("purging an account", () => {
     });
 
     it("drops the seq counter only once the rows are gone", async () => {
-        // Removing it while rows remain would restart numbering under records that
-        // already carry higher seqs, and a peer would then never see them again.
         const t = harness();
         const owner = await seedProUser(t);
         await authenticatedAs(t, owner).mutation(api.sync.push, {
@@ -147,10 +145,7 @@ describe("purging an account", () => {
     });
 
     it("frees the account's photos and forgets what they weighed", async () => {
-        // Driven through a real confirmed upload rather than a hand-written row, so
-        // the mapping, the accounting and the stored bytes all exist the way they
-        // would in production. The Convex-storage path is the testable one: the R2
-        // branch needs a component convex-test cannot register.
+        // The Convex-storage path: the R2 branch needs a component convex-test cannot register.
         const t = harness();
         const owner = await seedProUser(t);
         const key = photoKeyFor(owner.userId, "a.jpg");
@@ -171,8 +166,6 @@ describe("purging an account", () => {
     });
 
     it("is safe to run again on an account already purged", async () => {
-        // A pass that dies halfway is retried rather than resumed, so a second run
-        // over nothing has to be a no-op instead of an error.
         const t = harness();
         const owner = await seedProUser(t);
 

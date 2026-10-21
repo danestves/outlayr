@@ -5,11 +5,7 @@ import { applyMigration, applyMigrations } from "@/db/test-database";
 
 const REBUILD = "0024_goal_start_and_required_date";
 
-/**
- * A ledger as it stood BEFORE the rebuild, so the rebuild's own behaviour can be
- * observed rather than assumed. The suites elsewhere replay every migration at
- * once, which leaves nothing for `0024` to find.
- */
+// A ledger as it stood BEFORE `0024`: other suites replay every migration at once, leaving nothing for it to find.
 function beforeRebuild(): BetterSqlite3.Database {
     const sqlite = new BetterSqlite3(":memory:");
     applyMigrations(sqlite, (file) => file < REBUILD);
@@ -42,8 +38,6 @@ describe("the rebuild that made a goal's date required", () => {
     });
 
     it("tombstones a dateless goal rather than dropping it", () => {
-        // Dropping the row would leave nothing to carry the removal: a device that
-        // had already synced would consider the goal gone while the server kept it.
         const sqlite = beforeRebuild();
         seedGoal(sqlite, "dateless", null);
         applyMigration(sqlite, `${REBUILD}.sql`);
@@ -53,7 +47,6 @@ describe("the rebuild that made a goal's date required", () => {
             targetDate: number;
         };
         expect(row.deletedAt).not.toBeNull();
-        // Dated from its own creation, since the column can no longer hold null.
         expect(row.targetDate).toBe(5000);
     });
 

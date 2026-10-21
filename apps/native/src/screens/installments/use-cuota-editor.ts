@@ -11,12 +11,7 @@ import { rearmInstallmentReminders } from "@/lib/installment-reminder-sync";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
 
-/**
- * One cuota's date and amount, each written as soon as it is picked, and its
- * delete, for the cuota sheet on either platform. Moving or deleting a row
- * touches only that row; the payments already made are re-allocated by date on
- * the next read.
- */
+/** Edits touch one row; payments are re-allocated by date on the next read. */
 export function useCuotaEditor({
     currency,
     onClose,

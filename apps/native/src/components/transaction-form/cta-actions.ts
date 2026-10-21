@@ -15,11 +15,7 @@ export interface TransactionFormCtaAction {
     variant?: ComponentProps<typeof Stack.Toolbar.Button>["variant"];
 }
 
-/**
- * The iOS bar's buttons for a form's commit actions, in order: lookup, delete,
- * save. Its own module so that `cta.tsx` and `cta.android.tsx` export the same
- * names; only the iOS bar draws from it.
- */
+// Its own module so `cta.tsx` and `cta.android.tsx` export the same names; only the iOS bar draws from it.
 export function transactionFormCtaActions({
     deleteLabel,
     deleteTint,

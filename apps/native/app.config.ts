@@ -137,15 +137,10 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
         adaptiveIcon: {
             backgroundColor: "#f2f0ea",
             foregroundImage: "./assets/images/adaptive-icon.png",
-            // Android 13+ themed icons tint this layer; same geometry as the foreground.
             monochromeImage: "./assets/images/adaptive-icon-monochrome.png",
         },
-        // Nothing here uses these. The template and libraries merge in the
-        // overlay, read-storage and FCM ones; the media pair is blocked before a
-        // library can add it. The photo picker reads without a permission, and
-        // reminders are local, so there is no push. WRITE_EXTERNAL_STORAGE is not
-        // here: the camera still needs it below Android 10, so
-        // `with-android-capture` caps it instead.
+        // WRITE_EXTERNAL_STORAGE is not blocked: the camera needs it below Android 10,
+        // so `with-android-capture` caps it instead.
         blockedPermissions: [
             "android.permission.SYSTEM_ALERT_WINDOW",
             "android.permission.READ_EXTERNAL_STORAGE",
@@ -193,8 +188,6 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
     platforms: ["ios", "android"],
     plugins: [
         "expo-router",
-        // iOS: CFBundleLocalizations. Android: a localeConfig, which is what gives
-        // the app its own Language entry in system Settings.
         ["expo-localization", { supportedLocales: ["en", "es"] }],
         "expo-image",
         "expo-sqlite",
@@ -248,9 +241,7 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
         [
             "expo-splash-screen",
             {
-                // `--background` in each theme. The splash hands off to the first
-                // screen without a crossfade, so a value that is merely close shows up
-                // as a flash at the handoff rather than as a slightly wrong grey.
+                // Must equal `--background`: the splash hands off without a crossfade, so a near miss flashes.
                 backgroundColor: "#f2f0ea",
                 dark: {
                     backgroundColor: "#17150f",
@@ -287,9 +278,7 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
         [
             "expo-audio",
             {
-                // Defaults to true, which adds `audio` to UIBackgroundModes and the
-                // Android media playback service. Voice entry only records in the
-                // foreground, and App Review rejects the unused mode (2.5.4).
+                // The default adds the `audio` background mode, which App Review rejects as unused (2.5.4).
                 enableBackgroundPlayback: false,
                 microphonePermission:
                     "Outlayr listens while you speak an entry. The recording goes to ElevenLabs to write it down for you.",
@@ -299,8 +288,7 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
         [
             "expo-notifications",
             {
-                // Android's status bar draws only the alpha, so this is the mark in
-                // white; `color` tints it in the shade. The brand vermilion, `--tint`.
+                // Android's status bar draws only the alpha, so the asset is the mark in white.
                 color: "#c2371b",
                 icon: "./assets/images/notification-icon.png",
             },
@@ -323,9 +311,8 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
             },
         ],
     ],
-    // Fingerprint, not appVersion: the custom config plugins and Apple targets
-    // change native code without a version bump, and an update served to a
-    // binary whose native side differs is a crash at launch.
+    // Fingerprint, not appVersion: config plugins change native code without a version bump,
+    // and an update served to a binary with a different native side crashes at launch.
     runtimeVersion: { policy: "fingerprint" },
     scheme: "outlayr",
     slug: "outlayr",
@@ -338,8 +325,6 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
           }
         : { url: UPDATES_URL },
     userInterfaceStyle: "automatic",
-    // The marketing version users see. The build number beside it is
-    // `buildNumber` above.
     version: "1.0.0",
 });
 

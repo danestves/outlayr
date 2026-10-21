@@ -184,7 +184,7 @@ describe("a row kept under a currency nobody stated", () => {
     it("is never frozen at rate 1", async () => {
         // Stamping the bootstrap default takes canonicalization's USD identity
         // branch, which turns "follow the setting" into a stored fact the user
-        // never gave — and no later pass looks at the row again.
+        // never gave, and no later pass looks at the row again.
         const db = makeDb();
         await db.insert(appMeta).values({ key: "currency", value: "USD" });
         const id = await add(db, { amount: 18.5, currency: null });
@@ -323,7 +323,7 @@ describe("backfillCanonicalUsd", () => {
                 exchangeRateType: transactions.exchangeRateType,
             })
             .from(transactions);
-        // 100 EUR / 0.87775 — the divisor is currency-per-USD.
+        // 100 EUR / 0.87775: the divisor is currency-per-USD.
         expect(Math.round((row.amountUsd ?? 0) * 100) / 100).toBe(113.93);
         expect(row.exchangeRate).toBe(0.87775);
         expect(row.exchangeRateType).toBe("official");
@@ -516,7 +516,7 @@ describe("backfillBudgetUsd", () => {
         });
 
         await expect(backfillBudgetUsd(db)).resolves.toBe(1);
-        // 400 / 0.8, not 400 / 0.87775 — the divisor is currency-per-USD.
+        // 400 / 0.8, not 400 / 0.87775: the divisor is currency-per-USD.
         await expect(budgetUsd(db, "b1")).resolves.toBe(500);
     });
 

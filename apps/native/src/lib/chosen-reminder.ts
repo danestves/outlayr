@@ -15,8 +15,7 @@ async function arm(db: Database): Promise<void> {
         return;
     }
     if (stored !== null) {
-        // The switch has been set, on or off, since the offer: that is the
-        // user's own answer, and it outranks one they gave during onboarding.
+        // A switch set since the offer is the user's own answer and outranks the onboarding one.
         await setMeta(db, META_KEYS.reminderAsked, "true");
         return;
     }
@@ -29,8 +28,6 @@ async function arm(db: Database): Promise<void> {
     if (existing === "denied") {
         return;
     }
-    // Already granted (by a subscription reminder, or Android before 13) turns
-    // it on without a prompt.
     const granted = existing === "granted" ? existing : await requestReminderPermission();
     if (granted === "granted") {
         await setBoolSetting(db, "showNotifications", true);
@@ -40,14 +37,8 @@ async function arm(db: Database): Promise<void> {
 let queue: Promise<unknown> = Promise.resolve();
 
 /**
- * Keeps the rhythm step's promise. Taking its reminder offer only records the
- * choice and the evening option: the OS prompt waits for the user's first saved
- * entry, since iOS asks only once. Call it after the user saves a new entry; it
- * asks once and turns the reminder on when it is allowed.
- *
- * Asked once, refused or not, and never over a switch the user has already set
- * in Settings. Serial, so a save landing while the prompt is up waits for its
- * answer instead of asking a second time.
+ * The OS prompt waits for the first saved entry, since iOS asks only once. Serial, so a save landing while the
+ * prompt is up waits for its answer instead of asking twice.
  */
 export function armChosenReminder(db: Database): Promise<void> {
     const run = queue.then(() => arm(db));

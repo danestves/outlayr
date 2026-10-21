@@ -75,7 +75,7 @@ describe("netWorthSeries", () => {
             "USD"
         );
         // a1 opens first at 100, a2 joins at 140. The regression this guards is a
-        // day where one account's series has no point and it silently drops out —
+        // day where one account's series has no point and it silently drops out,
         // which would show up as a partial sum neither of those.
         expect(valueAt(series, "2026-08-10")).toBe(140);
         expect(series.every((point) => point.value === 100 || point.value === 140)).toBe(true);

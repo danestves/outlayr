@@ -12,21 +12,8 @@ export type Category = typeof categories.$inferSelect;
 
 const WHITESPACE_RUN = /\s+/;
 
-/**
- * The colours offered when a category is created, identical in light and dark —
- * `glyphShade` derives the readable glyph per theme, so one stored value serves
- * both.
- *
- * Twenty-four hues 15 degrees apart, all at OKLCH lightness 0.600 and chroma
- * 0.102, anchored on the brand vermilion's hue. Uniform lightness and chroma is
- * the whole point: this replaced `Color.colorArray` ported from the Swift app,
- * whose 24 hues spanned 0.414–0.882 in lightness and 1.25:1–7.67:1 in contrast
- * on paper, which is why some category tiles shouted and others vanished.
- *
- * Fifteen degrees is comfortably above the ~9 degree floor where two hues at
- * this lightness stop being tellable apart, which is the same floor that spaces
- * {@link SUGGESTED_CATEGORY_PRESETS}.
- */
+// Uniform OKLCH lightness 0.600 and chroma 0.102, 15 degrees apart (above the ~9 degree floor where hues blur), so no
+// tile shouts or vanishes. Identical in light and dark: `glyphShade` derives the readable glyph per theme.
 export const CATEGORY_PALETTE = [
     "#B56858",
     "#B16C48",
@@ -54,11 +41,7 @@ export const CATEGORY_PALETTE = [
     "#B56669",
 ] as const;
 
-/**
- * Names only: the icon and color are resolved from
- * {@link SUGGESTED_CATEGORY_PRESETS}. A seed carrying its own icon would shadow
- * the matching preset, since `suggestedCategoriesNotAdded` filters by name.
- */
+// Names only: a seed with its own icon would shadow the preset, since `suggestedCategoriesNotAdded` filters by name.
 export const SEEDED_CATEGORY_NAMES = {
     expense: [
         "Groceries",
@@ -75,32 +58,16 @@ export const SEEDED_CATEGORY_NAMES = {
     income: ["Paycheck", "Freelance", "Business", "Gifts"],
 } as const satisfies Record<"expense" | "income", readonly string[]>;
 
-/**
- * Minted once for this derivation and never changed: a different namespace
- * would make every device that upgraded compute different ids for the same
- * seeded categories, which is the duplication this exists to prevent.
- */
+// Never change: a different namespace gives upgraded devices different ids for the same seeded categories.
 const SEEDED_CATEGORY_NAMESPACE = "04ed4302-1c98-46af-999e-930ae1b19e0e";
 
-/**
- * The id of a seeded category, derived rather than minted.
- *
- * With `newId()` every install stamps its own set, so signing a freshly seeded
- * device into an account that already holds one leaves the pull applier — which
- * resolves per `localId` — with two unrelated "Groceries" rows and no way to
- * tell they are the same category (#326). Derived from the pair that identifies
- * it, both installs compute one id and the second upserts.
- */
+// Derived, not minted, so two installs signing into one account compute one id per seeded category and upsert (#326).
 export function seededCategoryId(name: string, income: boolean): string {
     return uuidV5(`${income ? "income" : "expense"}:${name}`, SEEDED_CATEGORY_NAMESPACE);
 }
 
-/**
- * Idempotent by inspecting the table rather than trusting the caller's
- * `firstLaunch` marker: `bootstrap.ts` writes that marker *after* this returns,
- * so a crash in between would otherwise seed a second full set on the next
- * launch.
- */
+// Inspects the table, not the `firstLaunch` marker: `bootstrap.ts` writes that after this returns, so a crash between
+// them would seed a second full set.
 export async function seedCategories(db: Database): Promise<void> {
     const seeded = await db.select({ id: categories.id }).from(categories).limit(1);
     if (seeded.length > 0) {
@@ -139,11 +106,7 @@ export interface CategoryWithChildren extends Category {
     children: Category[];
 }
 
-/**
- * Synchronous on purpose: the expo-sqlite driver executes on the JS thread
- * (`getFirstSync`), so a caller can seed state with the row during its first
- * render instead of popping it in a frame later.
- */
+// Synchronous so a caller can seed state with the row during its first render.
 export function getCategoryById(db: Database, id: string): Category | null {
     const rows = db
         .select()
@@ -161,7 +124,6 @@ export interface CategoryInput {
     icon?: string;
     income: boolean;
     name: string;
-    /** Present only for a subcategory. */
     parentId?: string | null;
 }
 
@@ -179,10 +141,7 @@ async function nextSortOrder(db: Database, income: boolean, parentId: string | n
     return (row?.highest ?? -1) + 1;
 }
 
-/**
- * In the precedence order the checks apply. Ports the Swift `CategoryError`
- * cases one-to-one.
- */
+// In the precedence order the checks apply.
 export type CategoryError =
     | "incomplete"
     | "missingIcon"
@@ -205,14 +164,10 @@ export const CATEGORY_ERROR_MESSAGES = {
 
 export interface CategoryValidationResult {
     error: CategoryError | null;
-    /** Append position: one past the last sibling's order. */
     order: number;
 }
 
-/**
- * Mirrors Swift's `.capitalized` closely enough to keep name-collision checks
- * stable across the two apps.
- */
+// Close enough to Swift's `.capitalized` to keep name-collision checks stable across the two apps.
 export function capitalizeCategoryName(raw: string): string {
     return raw
         .trim()
@@ -222,18 +177,12 @@ export function capitalizeCategoryName(raw: string): string {
         .join(" ");
 }
 
-/**
- * U+FE0F variation selectors are stripped so the text and emoji presentations
- * of the same glyph collide.
- */
+// U+FE0F is stripped so the text and emoji presentations of one glyph collide.
 function emojiComparisonKey(emoji: string): string {
     return emoji.trim().split(String.fromCodePoint(0xfe_0f)).join("");
 }
 
-/**
- * Icons and emoji collide namespace-wide, not per-parent, matching the Swift
- * collision scope.
- */
+// Icons and emoji collide namespace-wide, not per-parent, matching Swift.
 async function namespaceSiblings(db: Database, income: boolean, excludeId?: string): Promise<Category[]> {
     const rows = await db
         .select()
@@ -242,10 +191,7 @@ async function namespaceSiblings(db: Database, income: boolean, excludeId?: stri
     return excludeId == null ? rows : rows.filter((row) => row.id !== excludeId);
 }
 
-/**
- * `name` is expected to be title-cased already; icon/emoji are the raw candidate
- * symbols ("" when absent).
- */
+/** `name` must be title-cased already; icon and emoji are the raw candidates ("" when absent). */
 function detectCollision(
     candidate: { name: string; icon: string; emoji: string },
     siblings: Category[]
@@ -285,7 +231,6 @@ function detectCollision(
     return null;
 }
 
-/** The first entry in `siblings` not already claiming `preferred`, otherwise `preferred` itself. */
 export function pickFreeCategoryIcon(siblings: readonly Category[], preferred: string): string {
     const used = new Set(siblings.map((row) => row.icon).filter((icon): icon is string => icon != null && icon !== ""));
     if (!used.has(preferred)) {
@@ -297,7 +242,6 @@ export function pickFreeCategoryIcon(siblings: readonly Category[], preferred: s
     return fallback?.icon ?? preferred;
 }
 
-/** Ports Swift `categoryCheck`. */
 export async function validateCategoryCreate(
     db: Database,
     input: {
@@ -328,10 +272,7 @@ export async function validateCategoryCreate(
     return { error: detectCollision({ emoji, icon, name }, siblings), order };
 }
 
-/**
- * Ports Swift `categoryCheckEdit`: the missing-symbol checks fire only when the
- * row already had a symbol, so a symbol-less legacy category stays renamable.
- */
+// Missing-symbol checks fire only when the row already had one, so a symbol-less legacy category stays renamable.
 export async function validateCategoryEdit(
     db: Database,
     id: string,
@@ -371,17 +312,12 @@ export interface SuggestedCategoryPreset {
     name: string;
 }
 
-/**
- * The two lists first-run offers, split by direction. Named rather than written
- * inline on the constant so the contract is the type, not the literal: `name`
- * stays `string`, which is what `merchant-map` matches against.
- */
+// Named so `name` stays `string`, which is what `merchant-map` matches against.
 export interface SuggestedCategoryPresets {
     readonly expense: readonly SuggestedCategoryPreset[];
     readonly income: readonly SuggestedCategoryPreset[];
 }
 
-/** Ported from Swift `SuggestedCategory`. */
 export const SUGGESTED_CATEGORY_PRESETS: SuggestedCategoryPresets = {
     expense: [
         { color: "#53915A", icon: "ShoppingCart01", name: "Groceries" },
@@ -422,7 +358,6 @@ export const SUGGESTED_CATEGORY_PRESETS: SuggestedCategoryPresets = {
     ],
 } as const;
 
-/** Ports the `SuggestedCategoriesView` filter. */
 export function presetsNotAdded(
     income: boolean,
     existing: readonly Pick<Category, "icon" | "name">[]
@@ -506,29 +441,9 @@ export const categoriesRepo = {
         return id;
     },
 
-    /**
-     * The cascade is written out by hand because `foreign_keys` enforcement is not
-     * enabled on the connection, so the schema's declared `ON DELETE` would not
-     * fire — and a partial run would orphan transactions with no safety net.
-     *
-     * Every row is tombstoned rather than dropped, because a hard delete leaves
-     * nothing to replicate and the first pull after one would hand the category
-     * and its ledger back. Rows already tombstoned are skipped so a repeated
-     * remove is inert.
-     *
-     * The budget takes the whole `TOMBSTONED_BUDGET` shape rather than a bare
-     * `deletedAt`, because `budgets.categoryId` is UNIQUE whether or not the row
-     * is deleted: a retained one squats the index, and the pull applier — which
-     * looks for live rivals only — would then hit the constraint inserting a
-     * peer's budget for the same category and wedge replication on that page.
-     *
-     * Two things go with the transaction beyond its `deletedAt`. The schedule is
-     * retired so `repairOrphanedRecurrence` cannot read the tombstone as a
-     * subscription whose carrier was deleted and mint a successor pointing at a
-     * category that no longer exists. And the photo reference is dropped so
-     * `reconcilePhotos`, which deliberately counts tombstones as referencing
-     * their file, still collects it — there is no undo here to keep it for.
-     */
+    // Cascaded by hand: `foreign_keys` isn't enabled on the connection, so the schema's `ON DELETE` never fires. The
+    // budget takes the full tombstone since `budgets.categoryId` is UNIQUE even when deleted. Schedules retire so
+    // `repairOrphanedRecurrence` mints no successor, and photos drop so `reconcilePhotos` collects them.
     async remove(db: Database, id: string): Promise<void> {
         const now = new Date();
         await withTransaction(db, async () => {
@@ -557,10 +472,7 @@ export const categoriesRepo = {
         });
     },
 
-    /**
-     * The caller supplies a single namespace/parent scope already in the desired
-     * order; each id takes its array index as `sortOrder`.
-     */
+    /** One namespace/parent scope, already ordered: each id takes its index as `sortOrder`. */
     async reorder(db: Database, orderedIds: string[]): Promise<void> {
         const now = new Date();
         await withTransaction(db, async () => {
@@ -658,11 +570,7 @@ export function findCategoryPreset(categoryName: string): SuggestedCategoryPrese
     return ALL_CATEGORY_PRESETS.find((preset) => preset.name === categoryName) ?? null;
 }
 
-/**
- * A model may name a category no preset covers. Hashing the name rather than
- * picking at random keeps the same suggestion looking the same on every device
- * and across re-renders, so the chip does not change colour under the user.
- */
+// Hashed, not random, so a suggestion no preset covers keeps its colour across devices and re-renders.
 export function presetForName(categoryName: string): SuggestedCategoryPreset {
     const exact = findCategoryPreset(categoryName);
     if (exact != null) {
@@ -676,13 +584,7 @@ export function presetForName(categoryName: string): SuggestedCategoryPreset {
     return ALL_CATEGORY_PRESETS[hash % ALL_CATEGORY_PRESETS.length];
 }
 
-/**
- * The category answering to `name` in the given namespace, creating it only if
- * none does — mirrors `tagsRepo.ensureTag`'s match-before-insert shape.
- *
- * The icon is picked free BEFORE `create` (not caught and retried after),
- * because `create` rejects an icon collision namespace-wide.
- */
+// The icon is picked free BEFORE `create`, which rejects an icon collision namespace-wide.
 export async function ensureCategoryByName(
     db: Database,
     name: string,

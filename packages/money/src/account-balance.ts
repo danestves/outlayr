@@ -9,16 +9,15 @@ export interface AccountBalanceInput {
 }
 
 export interface AccountCompositionEntry {
-    /** Signed net at face value — income adds, expense subtracts. */
+    /** Signed net at face value. */
     amount: number;
     currencyCode: string | null;
 }
 
 export interface AccountBalance {
     composition: AccountCompositionEntry[];
-    /** False when any cell could not contribute to the scalar total. */
     exact: boolean;
-    /** `initialBalance` plus every resolvable cell, valued in the account's currency. */
+    /** In the account's currency. */
     total: number;
 }
 

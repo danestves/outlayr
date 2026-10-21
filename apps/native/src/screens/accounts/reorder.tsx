@@ -35,8 +35,7 @@ export function AccountReorder() {
     return (
         <Host style={{ flex: 1 }} useViewportSizeMeasurement>
             <List modifiers={[...groupedList(colors), environment({ key: "editMode", value: "active" })]}>
-                {/* A non-empty `title` short-circuits the `header` slot natively, so the
-				    header passes the eyebrow instead of a plain string. */}
+                {/* A non-empty `title` short-circuits the `header` slot natively, hence the eyebrow here. */}
                 <Section
                     header={<Eyebrow colors={colors}>{t("accounts.title")}</Eyebrow>}
                     modifiers={[groupedRows(colors)]}
@@ -57,8 +56,7 @@ export function AccountReorder() {
 
 function ReorderRow({ account, tint }: { account: Account; tint: string }) {
     return (
-        // Edit mode offers a delete badge as well as the drag handle, and this
-        // screen has no `onDelete`: the row would animate away and come back.
+        // Edit mode offers a delete badge, and with no `onDelete` the row would animate away and come back.
         <HStack modifiers={[deleteDisabled(true)]} spacing={12}>
             <RNHostView matchContents>
                 <View style={{ height: PARENT_TILE, width: PARENT_TILE }}>

@@ -47,10 +47,6 @@ export function pairRateSource(
     return oldest;
 }
 
-/**
- * The rate tables the transfer editor quotes from, one per requested rate type,
- * for the pair it is on.
- */
 export function useTransferRates(
     db: Database,
     codes: readonly string[],

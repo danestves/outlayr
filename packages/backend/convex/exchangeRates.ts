@@ -1,4 +1,4 @@
-// oxlint-disable unicorn/filename-case -- a Convex module's path is its public API — this file is addressed as internal.exchangeRates.* from the crons and from apps/native
+// oxlint-disable unicorn/filename-case -- a Convex module's path is its public API: this file is addressed as internal.exchangeRates.* from the crons and from apps/native
 import { v } from "convex/values";
 
 import { internal } from "./_generated/api";
@@ -9,49 +9,26 @@ import type { MarketRateType } from "./lib/currencies";
 
 const PRUNE_BATCH_SIZE = 200;
 
-/**
- * Gap between prune batches. The chain used to reschedule at `runAfter(0)`,
- * which dispatched a whole backlog back to back — a 13k-row one is ~65 batches,
- * and each deleted row also rewrites its two index entries, so the sustained
- * rate crossed the deployment's per-second write budget. One batch per second
- * holds a full drain far under that ceiling and still clears that backlog in
- * about a minute; steady state is a single batch and never waits at all.
- */
+// Back-to-back batches cross the deployment's per-second write budget, since each delete also rewrites two indexes.
 const PRUNE_BATCH_INTERVAL_MS = 1000;
 
-/**
- * Retries of one failed batch before the pass gives up and leaves the rest to
- * the next daily cron. The delay doubles each time, so the budget spans roughly
- * 5s to 40s — long enough to outlast a transient write-rate spike, short enough
- * that a genuinely broken batch surfaces as a failed run the same day.
- */
 const PRUNE_MAX_RETRIES = 4;
 const PRUNE_RETRY_BASE_MS = 5000;
 
-/** What one `pruneStaleBatch` invocation did: drained through `cursor`, or threw. */
 type PruneBatchOutcome = { cursor: string; failed: false; isDone: boolean } | { failed: true };
 
-/** The arguments the pass resumes with, and how long it waits first. */
 interface PruneStep {
     cursor: string | null;
     delayMs: number;
     retries: number;
 }
 
-/**
- * Where a pass goes after a batch, or `null` when it stops — the backlog is
- * drained, or a batch has failed past its retry budget.
- *
- * Pure and exported so the chain's survival is testable: a rate-limit failure
- * is not reproducible under `convex-test`, but the decision it feeds into is.
- */
 export function nextPruneStep(
     outcome: PruneBatchOutcome,
     current: { cursor: string | null; retries: number }
 ): PruneStep | null {
     if (outcome.failed) {
-        // A failed batch rolled its own deletes back, so the retry resumes at the
-        // SAME cursor rather than skipping the page.
+        // A failed batch rolled its deletes back, so the retry resumes at the SAME cursor.
         if (current.retries >= PRUNE_MAX_RETRIES) {
             return null;
         }
@@ -64,37 +41,19 @@ export function nextPruneStep(
     if (outcome.isDone) {
         return null;
     }
-    // Retries reset on success: the budget is per stuck batch, not per pass.
     return { cursor: outcome.cursor, delayMs: PRUNE_BATCH_INTERVAL_MS, retries: 0 };
 }
 
-/**
- * Historical depth of the `pullRates` snapshot. An entry backdated past it falls
- * back to that pair's anchor row, or to the same "no rate" failure the server
- * would raise.
- */
 export const RATES_WINDOW_DAYS = 90;
 const MS_PER_DAY = 86_400_000;
 const OLDEST_CALLER_INSTANT_MS = 2 * RATES_WINDOW_DAYS * MS_PER_DAY;
 
-/**
- * Single source of the rates-window boundary. `pullRates` serves exactly the
- * rows on or after this date plus each pair's newest row strictly before it
- * (the anchor), and `pruneStale` keeps exactly that same set — an invariant
- * that only holds while both derive the boundary HERE. Never inline it.
- */
+// `pullRates` serves and `pruneStale` keeps the same set only while both derive the boundary here. Never inline it.
 export function ratesWindowStart(at: number = Date.now()): string {
     return utcDateString(at - RATES_WINDOW_DAYS * MS_PER_DAY);
 }
 
-/**
- * The last date string that still sorts inside `date`'s calendar month.
- *
- * `31` rather than the month's real length: dates are `YYYY-MM-DD`, which sorts
- * lexically exactly as it sorts chronologically, so `2026-02-31` is a valid
- * bound for February even though it is not a date. Deriving the real length
- * would be more code for the same set.
- */
+// `31` for every month: dates sort lexically, so `2026-02-31` bounds February though it is not a date.
 function monthEndBound(date: string): string {
     return `${date.slice(0, 8)}31`;
 }
@@ -104,11 +63,6 @@ interface RatePair {
     rateType: MarketRateType;
 }
 
-/**
- * The EXACT set `pullRates` reads (window rows and anchors alike). A catalog
- * pair is guaranteed an anchor lookup even with ZERO in-window rows, so its
- * newest pre-window row still serves.
- */
 const ANCHOR_PAIR_CATALOG: readonly RatePair[] = [
     ...PICKABLE_CURRENCY_CODES.filter((code) => code !== "USD").map((code) => ({
         quote: code,
@@ -118,26 +72,9 @@ const ANCHOR_PAIR_CATALOG: readonly RatePair[] = [
     { quote: "VES", rateType: "binance" },
 ];
 
-/**
- * How many monthly anchors a pair serves — twenty years, which is past any
- * ledger this app will hold and still a bounded read.
- *
- * A cap rather than an unbounded `collect()` because the page's document budget
- * has to be provable: without one, a deployment that has been ingesting for
- * years would silently grow its page until a pull started failing.
- */
 export const MONTHLY_ANCHOR_LIMIT = 240;
 
-/**
- * Pairs served per `pullRates` page. 12 x (90 window days + same-day row + 240
- * monthly anchors) = 3,972 docs/page — comfortably under Convex's 16,384-doc
- * read ceiling, and the bound is per PAGE, so it holds however large the
- * provider catalog grows.
- *
- * Lower than it was: each pair now carries its monthly history rather than a
- * single anchor row, so the same budget buys fewer pairs per page and more
- * pages. Pages are cheap; a pull that exceeds the read ceiling is not.
- */
+// 12 x (90 window days + same-day row + 240 monthly anchors) = 3,972 docs per page, under Convex's 16,384 ceiling.
 export const PAIRS_PER_PAGE = 12;
 
 function toRateWire(doc: Doc<"exchangeRates">) {
@@ -165,7 +102,7 @@ export const upsertRates = internalMutation({
         source: rateSource,
     },
     handler: async (ctx, args) => {
-        /* oxlint-disable no-await-in-loop -- rates arrive from an upstream HTTP payload, so a repeated (quote, rateType) must read back the row the previous iteration wrote — running the array in parallel would insert the pair twice */
+        /* oxlint-disable no-await-in-loop -- rates arrive from an upstream HTTP payload, so a repeated (quote, rateType) must read back the row the previous iteration wrote; running the array in parallel would insert the pair twice */
         for (const entry of args.rates) {
             if (!Number.isFinite(entry.rate) || entry.rate <= 0) {
                 continue;
@@ -210,18 +147,7 @@ interface PruneBatchResult {
     isDone: boolean;
 }
 
-/**
- * One page of the prune. Deletes every row older than the `pullRates` window
- * EXCEPT each `(quote, rateType)` pair's newest pre-window row — the anchor
- * `pullRates` depends on, kept for non-catalog pairs too. A row is deleted iff a
- * NEWER pre-window row exists for its pair, which is order-independent within a
- * pass. `windowStart` is threaded in rather than recomputed so one pass prunes
- * against a single consistent boundary.
- *
- * Schedules NOTHING: the chain lives in `pruneStale` because a mutation that
- * throws rolls its own `scheduler.runAfter` back with it, which is exactly how
- * the pass used to die on a backlog.
- */
+// Schedules nothing: a mutation that throws rolls back its own `runAfter`, so the chain lives in `pruneStale`.
 export const pruneStaleBatch = internalMutation({
     args: {
         cursor: v.union(v.string(), v.null()),
@@ -238,14 +164,7 @@ export const pruneStaleBatch = internalMutation({
         let deleted = 0;
         /* oxlint-disable no-await-in-loop -- each lookup must observe the deletes this pass already made, so parallelising the page would make the mutation's read set depend on promise scheduling */
         for (const row of page.page) {
-            // Scoped to the row's own calendar month, so what survives is the newest
-            // row per pair per month rather than one row per pair overall. A single
-            // anchor ages forward with the window and is therefore only ever a
-            // boundary guard: an entry older than it resolves to no rate at all and
-            // falls back to face value for good.
-            // One upper bound, not two: an index range takes a single one per field.
-            // The month's end and the window's start are both exclusive-or-inclusive
-            // in different ways, so the tighter of the pair is resolved first.
+            // An index range takes one upper bound per field, so the tighter of month end and window start is chosen.
             const monthEnd = monthEndBound(row.date);
             const newer = await ctx.db
                 .query("exchangeRates")
@@ -266,18 +185,7 @@ export const pruneStaleBatch = internalMutation({
     returns: v.object({ cursor: v.string(), deleted: v.number(), isDone: v.boolean() }),
 });
 
-/**
- * Drives the prune one batch at a time: the cron's entry point, and every link
- * of the chain that follows it.
- *
- * An ACTION rather than a mutation because it is the only place a continuation
- * survives a failed batch. `scheduler.runAfter` inside a mutation is part of
- * that mutation's transaction, so a batch that hits the deployment's write-rate
- * limit takes its own reschedule down with it and the pass stops for the day —
- * against a backlog that means it never drains at all. Here the batch is a
- * nested mutation whose failure rolls back only itself, leaving this handler
- * free to reschedule the same cursor with backoff.
- */
+// An action: a mutation's `runAfter` dies with a batch that hits the write-rate limit, and the pass never drains.
 export const pruneStale = internalAction({
     args: {
         cursor: v.optional(v.union(v.string(), v.null())),
@@ -295,9 +203,6 @@ export const pruneStale = internalAction({
         } catch (error) {
             const retry = nextPruneStep({ failed: true }, { cursor, retries });
             if (!retry) {
-                // Out of budget. Throwing marks the run failed so the batch that is
-                // stuck is visible; the next daily cron restarts the pass from the
-                // top, and everything earlier batches deleted has already committed.
                 throw error;
             }
             console.error(
@@ -325,27 +230,15 @@ export const pruneStale = internalAction({
     returns: v.object({ deleted: v.number(), isDone: v.boolean() }),
 });
 
-/**
- * PUBLIC — deliberately unauthenticated: exchange rates are market data that
- * belong to no user and reveal nothing about one.
- *
- * PAGINATED by pair index: `cursor` is an offset into `ANCHOR_PAIR_CATALOG`
- * (absent = page 0), not a Convex pagination cursor.
- */
+// Deliberately unauthenticated: rates are market data that reveal nothing about a user.
 export const pullRates = query({
     args: { at: v.optional(v.number()), cursor: v.optional(v.number()) },
     handler: async (ctx, args) => {
-        // Taken as an argument, never read off the wall clock: a query is not
-        // rerun because time passed, and `exchangeRates` is written only by
-        // crons, so a subscriber crossing UTC midnight would keep serving
-        // yesterday's window for hours. Same reason `groundedSpend.monthlyTotal`
-        // takes `at`.
+        // An argument, not the wall clock: a query is not rerun as time passes, so it would serve yesterday's window.
         const windowStart = ratesWindowStart(Math.max(args.at ?? Date.now(), Date.now() - OLDEST_CALLER_INSTANT_MS));
         const start = args.cursor ?? 0;
         const pagePairs = ANCHOR_PAIR_CATALOG.slice(start, start + PAIRS_PER_PAGE);
 
-        // Per pair: anchors sit strictly before `windowStart` while window rows sit
-        // on or after it, so the two reads never overlap and need no dedupe.
         const pairPages = await Promise.all(
             pagePairs.flatMap(({ quote, rateType }) => [
                 ctx.db
@@ -354,10 +247,7 @@ export const pullRates = query({
                         q.eq("quote", quote).eq("rateType", rateType).gte("date", windowStart)
                     )
                     .collect(),
-                // Every surviving pre-window row, not just the newest. Pruning leaves
-                // one per calendar month, so this is the pair's monthly history and
-                // what lets an entry older than the window value at a rate from its
-                // own time instead of falling back to face value.
+                // Pruning leaves one row per month, so an entry older than the window values at a rate from its time.
                 ctx.db
                     .query("exchangeRates")
                     .withIndex("by_quote_and_rateType_and_date", (q) =>

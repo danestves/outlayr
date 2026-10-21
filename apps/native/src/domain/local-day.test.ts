@@ -31,8 +31,6 @@ describe("the reader's calendar", () => {
     });
 
     it("clamps a month offset to the destination month's last day", () => {
-        // 31 August plus six months is not 3 March, which is a month further on
-        // than the offer said.
         const endOfAugust = new Date(2026, 7, 31).getTime();
         expect(addLocalMonths(endOfAugust, 6)).toStrictEqual(new Date(2027, 1, 28));
     });

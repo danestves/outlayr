@@ -27,12 +27,7 @@ export interface TransactionSaveDraft {
     recurringType: number;
 }
 
-/**
- * A one-off carries no schedule regardless of what the (hidden) cadence
- * fields still hold — `isSubscription` is the single gate, not each field
- * independently, so a row switched back to "once" can never resurrect a
- * lead or end date left over from before the toggle.
- */
+// `isSubscription` is the single gate, so a row switched back to "once" never resurrects a stale lead or end date.
 export function buildTransactionInput(draft: TransactionSaveDraft): TransactionInput {
     const input: TransactionInput = {
         accountId: draft.accountId,
@@ -54,9 +49,7 @@ export function buildTransactionInput(draft: TransactionSaveDraft): TransactionI
         recurringType: draft.isSubscription ? draft.recurringType : RECURRING_TYPE.none,
         reminderLeadDays: draft.isSubscription ? draft.leadDays : null,
     };
-    // Absent, not undefined: an edit that never touched the rate leaves both keys
-    // off so the write keeps whatever was already stored. `transaction-form-save`
-    // has a test pinning that, and `keptCanonical` reads the pair as a unit.
+    // Absent, not undefined: an untouched rate keeps what is stored, and `keptCanonical` reads the pair as a unit.
     if (draft.exchangeRate !== undefined) {
         input.exchangeRate = draft.exchangeRate;
     }

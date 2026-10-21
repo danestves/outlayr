@@ -175,9 +175,6 @@ test("falls back to the mirrored entitlement when the store cannot be reached", 
     rateLimiterTest.register(t);
     revenuecatTest.register(t);
     const identity = await seedAuthUser(t);
-    // What the webhook leaves behind. It is also the only mirror a deployment
-    // without REVENUECAT_SECRET_KEY has, so refusing on a failed read would
-    // strand that customer.
     await grantPro(t, identity);
     vi.stubGlobal(
         "fetch",
@@ -195,8 +192,6 @@ test("falls back to the mirror when the store request throws", async () => {
     revenuecatTest.register(t);
     const identity = await seedAuthUser(t);
     await grantPro(t, identity);
-    // A rejection rather than a non-2xx: DNS, TLS, a dropped connection. It
-    // means the same thing — the store did not answer.
     vi.stubGlobal(
         "fetch",
         vi.fn(() => Promise.reject(new Error("getaddrinfo ENOTFOUND")))
@@ -212,8 +207,6 @@ test("lets the store remove an entitlement the mirror still holds", async () => 
     rateLimiterTest.register(t);
     revenuecatTest.register(t);
     const identity = await seedAuthUser(t);
-    // A refund whose webhook was missed. The mirror says Pro; the store is the
-    // only thing that can say otherwise, so it has to be asked and believed.
     await grantPro(t, identity);
     vi.stubGlobal(
         "fetch",
@@ -231,8 +224,6 @@ test("expires an entitlement the store now reports as lapsed", async () => {
     revenuecatTest.register(t);
     const identity = await seedAuthUser(t);
     await grantPro(t, identity);
-    // Still listed, with a date in the past: the ordinary end of a
-    // subscription, which needs no clearing because it ages out on its date.
     vi.stubGlobal(
         "fetch",
         vi.fn(async () =>
@@ -260,10 +251,7 @@ test("stops asking the store when one account hammers the sync", async () => {
     rateLimiterTest.register(t);
     revenuecatTest.register(t);
     const identity = await seedAuthUser(t);
-    // No entitlement in the payload, so nothing is ever mirrored and every
-    // attempt has to reach for the store — which is what the cap governs.
-    // Counting the upstream calls rather than the answers keeps this from
-    // passing for the wrong reason: without the limiter it would be 14.
+    // Counts upstream calls, not answers: nothing is ever mirrored here, so without the limiter it would be 14.
     const fetchMock = vi.fn(async () => Response.json({ subscriber: { entitlements: {} } }));
     vi.stubGlobal("fetch", fetchMock);
     const caller = authenticatedAs(t, identity);

@@ -107,8 +107,6 @@ describe("account routing", () => {
     });
 
     it("opens the ledger of a device that declined the account offer", () => {
-        // The whole point of the offer being declinable: the ledger is already on
-        // the device, so there is nothing left to gate on.
         expect(at("signed-out", false, true)).toBe("ledger");
         expect(at("restoring", false, true)).toBe("ledger");
     });

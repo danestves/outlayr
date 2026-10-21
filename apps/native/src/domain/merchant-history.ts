@@ -2,22 +2,11 @@ import { merchantKey } from "./merchant-resolver";
 
 export interface HistoricalEntry {
     categoryId: string;
-    /** Epoch milliseconds, used only to break a tie between equal counts. */
     date: number;
     note: string;
 }
 
-/**
- * How the user has filed this merchant before, or null if they never have.
- *
- * The count decides rather than the most recent row: a single miscategorised
- * entry is exactly the case where the latest answer is the wrong one, and it is
- * also the case a user is most likely to correct next. Recency only breaks a
- * tie, where the newer of two equally-held opinions is the better guess.
- *
- * Candidates are matched on `merchantKey`, not on the raw note, so "Rio
- * Supermercado", "RIO SUPERMERCADO " and "rio  supermercado" are one merchant.
- */
+// The count decides, not the latest row: a single miscategorised entry is exactly when the latest answer is wrong.
 export function rememberedCategory(entries: readonly HistoricalEntry[], key: string): string | null {
     if (key === "") {
         return null;

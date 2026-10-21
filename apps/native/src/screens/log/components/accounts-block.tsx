@@ -20,38 +20,23 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
 import { useColors } from "@/theme/use-colors";
 
-/** The Log row's tile, so an account reads at the same weight as an entry. */
 const TILE_SIZE = 36;
 const TILE_RADIUS = 9;
-/**
- * How many rows the block spends before it points at the accounts screen. A
- * ledger one over the cap gives up a row to the pointer rather than growing.
- */
 const MAX_ROWS = 4;
 
 interface AccountsBlockProps {
-    /** The live account rows, in ledger order. Names and marks come from here. */
     accounts: readonly Account[];
     /** The display currency every figure is valued in. */
     currency: string;
-    /** Null hides the Debts row: no liability and no person on the ledger. */
     debts?: DebtsSummary | null;
     onOpen: (accountId: string) => void;
     onOpenAll: () => void;
     onOpenDebts?: () => void;
-    /** Null hides the bank rows and their heading. */
     overview: AccountsOverview | null;
     showCents: boolean;
     trailing?: ReactNode;
 }
 
-/**
- * The accounts as they stand, under the week's net and above the day groups.
- *
- * One hairline row per account with its balance in the display currency. A
- * liability says "Owed" under its name, and its figure is muted and stated
- * positive, so it cannot be read as an expense line among the entries below.
- */
 export function AccountsBlock({
     accounts,
     overview,
@@ -140,7 +125,6 @@ export function AccountsBlock({
     );
 }
 
-/** Only what the display-currency chip does not already say: a debt, a mix, or another currency. */
 function rowSubtitle(
     row: OverviewRow,
     accountCurrency: string,
@@ -170,8 +154,7 @@ function AccountRow({ account, row, currency, showCents, language, onPress }: Ac
     const colors = useColors();
     const owed = row.kind === "liability";
     const subtitle = rowSubtitle(row, account.currency, currency, t);
-    // A debt is stated as what is owed, not as a negative holding: the entries
-    // right below are negative expenses in the same column.
+    // Stated as owed, not a negative holding: the entries below are negative expenses.
     const hidden = use(AmountsHiddenContext);
     const figure = hidden
         ? maskedAmount(currency)
@@ -225,20 +208,15 @@ function AccountRow({ account, row, currency, showCents, language, onPress }: Ac
 }
 
 export interface DebtsSummary {
-    /** The ledger's own currency, which may not be the one the block is shown in. */
+    /** The ledger's own currency, not necessarily the one shown. */
     currency: string;
-    /** What the cuotas due in the next 14 days and the overdue ones come to, in `currency`; null with none. */
+    /** Due in the next 14 days plus overdue, in `currency`; null with none. */
     due: Pick<DueWindow, "exact" | "total"> | null;
     /** Both positive, in `currency`. */
     owedToYou: number;
     youOwe: number;
 }
 
-/**
- * One row for everything owed both ways. Its figure is
- * what you owe, muted like a liability's; under it, what is due in the next 14
- * days, else what you are owed.
- */
 function DebtsRow({ debts, onPress, showCents }: { debts: DebtsSummary; onPress: () => void; showCents: boolean }) {
     const t = useTranslation();
     const { language } = useLanguage();

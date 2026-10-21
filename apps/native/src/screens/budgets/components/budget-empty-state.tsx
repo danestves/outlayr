@@ -25,14 +25,6 @@ interface BudgetEmptyStateProps {
     onCommit: (commit: LimitCommit) => void;
 }
 
-/**
- * The first budget.
- *
- * It is the same surface every later one is set on, with the scope already
- * known: everything. Only the cadence choice is withheld — a first budget is a
- * monthly one, and offering four cadences before there is anything to compare
- * them against is a decision made too early.
- */
 export function BudgetEmptyState({
     contributions,
     currency,
@@ -69,13 +61,6 @@ export function BudgetEmptyState({
     );
 }
 
-/**
- * The one door to goals while this takeover is up.
- *
- * It renders INSTEAD of the section goals normally live in, so without this a
- * reader holding a savings account and no budget could not set their first goal
- * without first setting a budget they did not want.
- */
 function GoalWayOut({ onPress }: { onPress: () => void }) {
     const t = useTranslation();
     return (

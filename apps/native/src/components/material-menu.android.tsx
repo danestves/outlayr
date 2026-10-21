@@ -19,23 +19,18 @@ import type { MaterialMenuProps } from "./material-menu";
 
 export type { MaterialMenuProps } from "./material-menu";
 
-/**
- * The SF Symbols the app's chip menus name, as the drawables an Android menu row
- * can draw. A row naming anything else, or passing an image source, which no
- * chip menu does, draws no icon.
- */
+// Only the SF Symbols the chip menus name; anything else, or an image source, draws no icon.
 const SYMBOL_ICONS = new Map<MenuAction["image"], ImageSourcePropType>([
     ["arrow.uturn.backward", { uri: "nano_now" }],
     ["chevron.left", { uri: "nano_earlier" }],
     ["chevron.right", { uri: "nano_later" }],
 ]);
 
-/** Material 3's menu item label: labelLarge, 14 on 20 in the medium weight. */
 const LABEL_STYLE = { fontFamily: "GoogleSansFlex_500Medium", fontSize: 14, lineHeight: 20 } as const;
 
 const ICON_SIZE = 24;
 const PRESSED_ALPHA = 0.1;
-/** Material's minimum touch target, in dp. */
+/** dp. */
 const MIN_TOUCH = 48;
 
 function actionId(action: MenuAction): string {
@@ -73,17 +68,8 @@ function MenuRow({ action, onChoose }: { action: MenuAction; onChoose: (id: stri
     );
 }
 
-/**
- * `@expo/ui`'s community `MenuView` for Android, re-hosted in `MaterialHost`.
- * That one renders a bare `Host`, so it took the wallpaper's palette rather
- * than the in-app accent, drew in the system face, and dropped every SF Symbol
- * icon. The only nesting the app's menus use is an inline section, drawn here
- * as a divider and its rows; a section's title has no Material equivalent.
- *
- * A trigger shorter than 48dp gets a 48dp touch area: the host grows by the
- * difference and gives it back as negative margin, so nothing around it moves.
- * The menu anchors to that grown box, as Compose's own chips do.
- */
+// Re-hosted in `MaterialHost`: the community `MenuView` renders a bare `Host`, taking the wallpaper's palette and
+// the system face. A trigger under 48dp grows its host by the difference and gives it back as negative margin.
 export function MaterialMenu({
     accessibilityLabel,
     accessibilityValue,
@@ -95,7 +81,6 @@ export function MaterialMenu({
     const m3 = useMaterialColors();
     const [expanded, setExpanded] = useState(false);
     const [height, setHeight] = useState<number | null>(null);
-    // Half the shortfall goes above the trigger and half below.
     const slop = height === null ? 0 : Math.max(0, (MIN_TOUCH - height) / 2);
     const choose = (id: string) => {
         setExpanded(false);

@@ -7,10 +7,6 @@ import { MaterialFab } from "@/components/material-fab";
 import { useTranslation } from "@/i18n/context";
 import { Categories } from "@/screens/categories";
 
-/**
- * Android's categories route: the Expense/Income switch sits above the tree
- * and "New category" is the FAB, where iOS puts both in a bottom toolbar.
- */
 export default function CategoriesScreen() {
     const router = useRouter();
     const t = useTranslation();

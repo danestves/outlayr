@@ -14,7 +14,6 @@ export function GlassButton({
     className,
     children,
 }: {
-    /** What the button currently reads — a label alone cannot carry a value. */
     accessibilityValue?: AccessibilityValue;
     onPress: () => void;
     accessibilityLabel: string;

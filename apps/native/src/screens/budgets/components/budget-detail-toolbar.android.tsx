@@ -9,9 +9,8 @@ import type { BudgetDetailToolbarProps } from "./budget-detail-toolbar";
 export type { BudgetDetailToolbarProps } from "./budget-detail-toolbar";
 
 /**
- * The same menu, with the delete glyph as an image: Android drops SF Symbol
- * names. No `tintColor` or `backgroundColor` on the toolbar: on Android they
- * stop the menu items' icons and checkmarks from drawing (chrome contract).
+ * Android drops SF Symbol names, so the delete glyph is an image. No `tintColor` or `backgroundColor` on the
+ * toolbar: on Android they stop the menu items' icons and checkmarks from drawing.
  */
 export function BudgetDetailToolbar({ onDelete }: BudgetDetailToolbarProps) {
     const t = useTranslation();

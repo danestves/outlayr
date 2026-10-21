@@ -4,19 +4,11 @@ import type { SQL } from "drizzle-orm";
 import type { Database } from "@/db/client";
 import { installmentPlans, installments, outsidePayments, transfers } from "@/db/schema";
 
-/** What belongs to a plan and goes and comes back with it. */
 const PLAN_CHILDREN = [installments, outsidePayments] as const;
 
-/**
- * Tombstones the orders `where` selects with their rows and outside payments. `unlink` also clears
- * their payments' link, leaving plain transfers, because the money did move;
- * a link to a tombstoned plan is inert, so a cascade that may be undone keeps it.
- *
- * Statements only, like `tombstoneTransfersTouchingAccount`, so the delete it
- * belongs to supplies the transaction. Its own module so the transaction and
- * account repos can call it without importing `installments-core`, which
- * imports them.
- */
+// `unlink` clears payments' link (the money did move); an undoable cascade keeps it, since a link to a tombstoned plan
+// is inert. Statements only: the caller supplies the transaction. Its own module to break an import cycle with
+// `installments-core`.
 export async function tombstonePlans(db: Database, where: SQL, now: Date, unlink: boolean): Promise<void> {
     const doomed = db
         .select({ id: installmentPlans.id })
@@ -42,17 +34,12 @@ export async function tombstonePlans(db: Database, where: SQL, now: Date, unlink
         .where(and(isNull(installmentPlans.deletedAt), where));
 }
 
-/** The purchase entry going takes its order with it, payments still linked so a restore can bring it back. */
+// Payments stay linked so a restore can bring the order back.
 export async function tombstonePlansForTransaction(db: Database, transactionId: string, now: Date): Promise<void> {
     await tombstonePlans(db, eq(installmentPlans.transactionId, transactionId), now, false);
 }
 
-/**
- * The purchase entry restored brings back what its delete took: the orders,
- * rows and outside payments tombstoned at the same instant. Ones deleted on
- * their own before it stay deleted. `restoredAt` is the entry's own stamp, so
- * they sync back with it.
- */
+// Only what was tombstoned at the entry's own instant comes back; rows deleted on their own before it stay deleted.
 export async function restorePlansForTransaction(
     db: Database,
     transactionId: string,
@@ -80,7 +67,6 @@ export async function restorePlansForTransaction(
     await db.update(installmentPlans).set({ deletedAt: null, restoredAt, updatedAt: now }).where(taken);
 }
 
-/** An account going takes its orders with it. */
 export async function tombstonePlansOnAccount(db: Database, accountId: string, now: Date): Promise<void> {
     await tombstonePlans(db, eq(installmentPlans.accountId, accountId), now, true);
 }

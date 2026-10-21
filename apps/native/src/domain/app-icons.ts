@@ -3,14 +3,8 @@ import type { TranslationKey } from "@/i18n/catalog";
 export interface AppIconChoice {
     detail: TranslationKey;
     label: TranslationKey;
-    /**
-     * The alternate's name in the asset catalogue, or `null` for the primary.
-     * iOS reports and accepts `null` for whichever icon the build ships as
-     * primary, so the Default row cannot name one — Debug and Release ship
-     * different primaries.
-     */
+    /** `null` for the primary: iOS reports it as null, and Debug and Release ship different primaries. */
     name: string | null;
-    /** Picks the preview PNG in `assets/images/app-icon-previews/`. */
     slug: string;
 }
 
@@ -47,11 +41,7 @@ export const APP_ICONS = [
     },
 ] as const satisfies readonly AppIconChoice[];
 
-/**
- * The literal slugs, so the preview map in `app/settings/app-icon.tsx` cannot
- * compile while it is missing one — a slug added here without a preview would
- * otherwise ship a blank 44pt tile.
- */
+/** Literal, so `app/settings/app-icon.tsx` fails to compile when a slug lacks a preview. */
 export type AppIconSlug = (typeof APP_ICONS)[number]["slug"];
 
 export function appIconChoice(active: string | null): AppIconChoice {
@@ -62,20 +52,12 @@ export function appIconLabel(active: string | null): TranslationKey {
     return appIconChoice(active).label;
 }
 
-/**
- * The bundle a Release build stamps as its primary. Pinned against
- * `app.config.ts` by `app-icons.test.ts`, which is the only thing keeping the
- * name here and the one the build carries in `extra` from drifting apart.
- */
+/** Pinned against `app.config.ts` by `app-icons.test.ts`, so it cannot drift from the build's `extra`. */
 export const RELEASE_PRIMARY_ICON = "Outlayr";
 
 /**
- * What the Default row may claim about the icon it stands for. It cannot claim
- * the paper Outlayr mark unconditionally: a Debug build's primary is the blue
- * blueprint icon, and iOS reports `null` for either.
- *
- * `primary` is `extra.primaryAppIcon`, which is absent — hence `null` — on a
- * build made before it was carried.
+ * A Debug build's primary is the blueprint icon and iOS reports `null` for either, so the Default row reads
+ * `extra.primaryAppIcon` (null on builds made before it was carried).
  */
 export function defaultRowDetail(primary: string | null): TranslationKey {
     return primary === RELEASE_PRIMARY_ICON ? "appIcon.default.detail" : "appIcon.default.detailDev";
@@ -83,41 +65,29 @@ export function defaultRowDetail(primary: string | null): TranslationKey {
 
 export interface AppIconState {
     active: string | null;
-    /**
-     * The change still in flight, boxed rather than kept as a bare name so that a
-     * request for the primary — whose name is `null` — is not read as no request.
-     */
+    /** Boxed so a request for the primary (name `null`) is not read as no request. */
     pending: { name: string | null } | null;
 }
 
 export type AppIconEvent =
     | { kind: "tap"; name: string | null }
     | { kind: "resolved"; name: string | null }
-    /** `reported` is what iOS says is on now, read back after the refusal. */
     | { kind: "rejected"; reported: string | null };
 
-/**
- * Returns `state` itself when the event changes nothing, so a caller can tell a
- * dropped tap from an accepted one by identity and only then reach for the
- * native call.
- */
+/** Returns `state` itself when nothing changes, so a caller can spot a dropped tap by identity. */
 export function appIconTransition(state: AppIconState, event: AppIconEvent): AppIconState {
     switch (event.kind) {
         case "tap": {
-            // Overlapping setAlternateIconName calls are a documented rejection
-            // source, and whichever settled last would win regardless of tap order.
+            // Overlapping setAlternateIconName calls are a documented rejection source, and the last to settle wins.
             return state.pending === null ? { active: event.name, pending: { name: event.name } } : state;
         }
         case "resolved": {
-            // A landing for anything but the outstanding request is stale: it would
-            // otherwise resurrect an icon the user has already moved off.
+            // A landing for anything but the outstanding request is stale and would resurrect an abandoned icon.
             return state.pending !== null && state.pending.name === event.name
                 ? { active: event.name, pending: null }
                 : state;
         }
         case "rejected": {
-            // iOS is the only record of which icon is on, so its readback outranks
-            // whatever the optimistic tap assumed.
             return { active: event.reported, pending: null };
         }
         default: {

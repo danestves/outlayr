@@ -18,7 +18,6 @@ import { InlineEditorKeyboard } from "./inline-editor-keyboard";
 interface GoalDetailViewProps {
     /** The ledger's display currency: every figure here is already valued into it. */
     currency: string;
-    /** The goal's facts, edited in place beneath the measures. */
     editor: ReactNode;
     entry: SavingsGoalDetail;
     nowMs: number;
@@ -27,14 +26,6 @@ interface GoalDetailViewProps {
 const CHART_HEIGHT = 150;
 const STATED = "font-sans-medium text-[26px] leading-[36px] tracking-tight";
 
-/**
- * One goal, read.
- *
- * The head states the decision and what it costs a month, because that is the
- * sentence the owner made; the chart shows the account against the line the date
- * demands; the strip states the three figures the chart draws. Everything below
- * is the same facts, editable — there is no separate form to open.
- */
 export function GoalDetailView({ currency, editor, entry, nowMs }: GoalDetailViewProps) {
     const t = useTranslation();
     const { language } = useLanguage();
@@ -52,14 +43,8 @@ export function GoalDetailView({ currency, editor, entry, nowMs }: GoalDetailVie
 
     const { standing } = progress;
     const ahead = (standing?.against ?? 0) >= 0;
-    /**
-     * The standing, read aloud. Null only while the goal has no line to be
-     * measured against — one created on its own target date.
-     */
     const verdict = (() => {
-        // Comparability first: `reached` can be true off a balance and a target in
-        // different currencies, and announcing it here beside a headline saying
-        // there is no rate would be the loudest of the two.
+        // Comparability first: `reached` can be true across currencies, beside a headline saying there is no rate.
         if (!entry.exact) {
             return null;
         }
@@ -77,9 +62,7 @@ export function GoalDetailView({ currency, editor, entry, nowMs }: GoalDetailVie
         });
     })();
 
-    // `standing` is null for two different reasons — the goal is reached, or its
-    // span is degenerate and there is no line to measure against. Only the first
-    // is an achievement, so they must not share a branch.
+    // `standing` is null when reached or when the span is degenerate; only the first is an achievement.
     const paceValue = (() => {
         if (!entry.exact) {
             return "—";
@@ -90,7 +73,6 @@ export function GoalDetailView({ currency, editor, entry, nowMs }: GoalDetailVie
         if (standing == null) {
             return "—";
         }
-        // A sliver either side of the line is not a verdict — see `ON_PACE_BAND`.
         if (standing.onPace) {
             return t("goals.onPace");
         }
@@ -112,10 +94,7 @@ export function GoalDetailView({ currency, editor, entry, nowMs }: GoalDetailVie
     return (
         <InlineEditorKeyboard>
             <ScrollView
-                // The editor's name field is the last thing in this scroller, so without
-                // this the keyboard covers the field it just opened. `keyboardDismissMode`
-                // is the way back out of it, and `keyboardShouldPersistTaps` is left at its
-                // default so a tap outside is the blur that commits the name.
+                // The editor's name field is last in this scroller; without this the keyboard covers it.
                 automaticallyAdjustKeyboardInsets
                 className="bg-background flex-1"
                 contentContainerStyle={{ paddingBottom: 48, paddingHorizontal: 20 }}
@@ -145,9 +124,6 @@ export function GoalDetailView({ currency, editor, entry, nowMs }: GoalDetailVie
 
                 <View onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
                     {entry.exact ? null : (
-                        // The two lines would be drawn in different currencies: the
-                        // balance in the account's own, the target in the display one.
-                        // Withheld like the verdict above it, and for the same reason.
                         <View className="border-border justify-center border-y" style={{ height: CHART_HEIGHT }}>
                             <Text className="text-footnote text-muted text-center leading-snug">
                                 {t("goals.detail.unvalued")}
@@ -155,9 +131,7 @@ export function GoalDetailView({ currency, editor, entry, nowMs }: GoalDetailVie
                         </View>
                     )}
                     {!entry.exact || width === null ? (
-                        // The chart measures its own domain, so it waits for a real width
-                        // rather than drawing once at zero and again at the true one.
-                        // Zero-height once the placeholder above has taken the space.
+                        // The chart measures its own domain, so it waits for a real width.
                         <View style={{ height: entry.exact ? CHART_HEIGHT : 0 }} />
                     ) : (
                         <GoalPaceChart
@@ -166,10 +140,8 @@ export function GoalDetailView({ currency, editor, entry, nowMs }: GoalDetailVie
                             label={verdict ? t("goals.a11y.chart", { standing: verdict }) : undefined}
                             nowMs={nowMs}
                             required={required}
-                            // The same local-day boundaries `goalRequiredLine` generates
-                            // between. Passing the raw instants put half that line
-                            // outside the domain drawing it, clamped against the left
-                            // edge, so a goal opened at noon read as far behind at once.
+                            // The local-day boundaries `goalRequiredLine` uses: raw instants clamp half the line
+                            // against the left edge, so a goal opened at noon reads as far behind.
                             startTime={startOfLocalDay(goal.dateCreated.getTime())}
                             target={target}
                             targetTime={startOfLocalDay(goal.targetDate.getTime())}

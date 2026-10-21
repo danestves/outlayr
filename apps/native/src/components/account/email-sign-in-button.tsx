@@ -8,7 +8,6 @@ import { BRAND } from "@/components/account/google-sign-in-button";
 import { Text } from "@/components/text";
 import { useTranslation } from "@/i18n/context";
 
-/** Drawn in the Google pill's palette, so the two read as one stack of choices. */
 export function EmailSignInButton({ disabled, onPress }: { disabled: boolean; onPress: () => void }) {
     const t = useTranslation();
     const { theme } = useTheme();

@@ -1,14 +1,6 @@
-/**
- * Mirrors the Swift `LogMeasure` enum. The stored numbers match the
- * `logInsightsType` preference the Swift app writes, so an install carried over
- * keeps showing what it showed.
- */
+// Stored numbers match the Swift app's `logInsightsType` preference, so a carried-over install keeps its choice.
 export type LogMeasure = "net" | "in" | "out";
 
-/**
- * Declaration order, which is also the order the two unpromoted cells render in:
- * the pair under the hero must not reshuffle as the promotion changes.
- */
 const LOG_MEASURE_ORDER: readonly LogMeasure[] = ["net", "in", "out"];
 
 const STORED = { in: 2, net: 1, out: 3 } satisfies Record<LogMeasure, number>;
@@ -38,9 +30,8 @@ export function netTotal(figures: LogFigures): number {
     return figures.income - figures.expense;
 }
 
-/** Unsigned — the sign comes from {@link measureIsPositive}. */
 export function measureMagnitude(measure: LogMeasure, figures: LogFigures): number {
-    // oxlint-disable-next-line default-case -- `LogMeasure` is a closed union — a default clause would swallow the missing-return error that forces a new member to be handled here
+    // oxlint-disable-next-line default-case -- `LogMeasure` is a closed union, and a default clause would swallow the missing-return error that forces a new member to be handled here
     switch (measure) {
         case "net": {
             return Math.abs(netTotal(figures));
@@ -55,7 +46,7 @@ export function measureMagnitude(measure: LogMeasure, figures: LogFigures): numb
 }
 
 export function measureIsPositive(measure: LogMeasure, figures: LogFigures): boolean {
-    // oxlint-disable-next-line default-case -- `LogMeasure` is a closed union — a default clause would swallow the missing-return error that forces a new member to be handled here
+    // oxlint-disable-next-line default-case -- `LogMeasure` is a closed union, and a default clause would swallow the missing-return error that forces a new member to be handled here
     switch (measure) {
         case "net": {
             return netTotal(figures) >= 0;
@@ -69,10 +60,6 @@ export function measureIsPositive(measure: LogMeasure, figures: LogFigures): boo
     }
 }
 
-/**
- * Only money actually coming in earns the income color; a positive net is still
- * just a net.
- */
 export function measureIsIncome(measure: LogMeasure): boolean {
     return measure === "in";
 }

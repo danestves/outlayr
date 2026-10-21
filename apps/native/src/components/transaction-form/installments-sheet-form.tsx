@@ -17,32 +17,25 @@ import { AmountEntrySheet } from "../amount-entry-sheet";
 
 export const MAX_COUNT = 48;
 const PERCENT = 100;
-/** No account id can collide: they are uuids. */
+// No account id can collide: they are uuids.
 export const NONE = "__none__";
 
 type PadTarget = "each" | "upfront" | { sequence: number };
 
 export interface InstallmentsSheetProps {
-    /** Accounts the upfront can come from. */
     accounts: readonly Account[];
     currency: string;
     draft: InstallmentDraft;
-    /** The entry's own rate is what is missing: the form already says so, so the sheet does not. */
+    /** The form already says the entry's own rate is missing, so the sheet does not. */
     entryRateMissing: boolean;
     onChange: (next: InstallmentDraft) => void;
-    /** The price in the plan's currency, null while there is no rate to convert it with. */
+    /** In the plan's currency; null while there is no rate to convert it with. */
     price: number | null;
     purchaseDay: Date;
     ref?: Ref<BottomSheetModal>;
-    /** What the draft generates for the price, or null while it cannot. */
     schedule: readonly ScheduledInstallment[] | null;
 }
 
-/**
- * The installments sheet's state and edits, shared by both platforms' sheets:
- * what the draft comes to, the keypad's target, which row or field is open,
- * and every change written back through `onChange`.
- */
 export function useInstallmentsSheetForm({
     accounts,
     currency,
@@ -124,7 +117,6 @@ export function useInstallmentsSheetForm({
         return row.sequence === paidBefore + 1 ? dueIn(t, row.dueDate, nowMs) : null;
     };
 
-    // While the entry's own rate is missing, the form's rate error is the one that speaks.
     let emptyNote: string | null = null;
     if (!entryRateMissing) {
         emptyNote = t(price === null ? "installments.noRate" : "installments.nothingLeft");
@@ -159,7 +151,6 @@ export function useInstallmentsSheetForm({
     };
 }
 
-/** The keypad the sheet's amounts are typed on. */
 export function InstallmentsPad({
     currency,
     form,

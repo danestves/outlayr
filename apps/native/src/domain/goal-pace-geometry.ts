@@ -1,14 +1,5 @@
 import { startOfLocalDay } from "./local-day";
 
-/**
- * The pace chart's geometry, kept apart from the canvas that draws it.
- *
- * Pure arithmetic, so it can be tested without Skia — the head has been anchored
- * to the wrong point once already, and that failure is a mark a few pixels along
- * rather than a crash.
- */
-
-/** A point on either line: a moment, and what was held or wanted at it. */
 export interface GoalLinePoint {
     time: number;
     value: number;
@@ -27,25 +18,11 @@ export interface GeometryInput {
     width: number;
 }
 
-/**
- * The money axis always contains the target and both lines, so the plot is the
- * whole decision rather than a crop of it. The time axis is the goal's own span:
- * a goal is only ever read against its own deadline.
- *
- * Exported for its test: the head has been anchored to the wrong point once
- * already, and the failure is a mark a few pixels along rather than a crash.
- */
 export function makeGeometry({ actual, height, nowMs, required, startTime, target, targetTime, width }: GeometryInput) {
-    // The deadline keeps whatever time of day the goal was created at, while
-    // `standingFor` and the required line treat it as a local midnight. Only the
-    // "is there still a future to draw" question is cut that way — the point
-    // filter below stays on real instants, since the series is stamped in them.
+    // Only `overdue` cuts the deadline on local days, like `standingFor`; the point filter stays on real instants.
     const overdue = startOfLocalDay(nowMs) >= startOfLocalDay(targetTime);
     const span = Math.max(1, targetTime - startTime);
-    // Everything below draws from the settled points only. A future-dated
-    // transaction would otherwise be drawn as observed history AND stretch the
-    // value axis to reach a balance the account does not hold, compressing the
-    // gap at today — the one distance the chart exists to show.
+    // Settled points only: a future-dated transaction would stretch the axis to a balance the account does not hold.
     const banked = actual.filter((point) => point.time <= nowMs);
     const values = [target, ...required.map((point) => point.value), ...banked.map((point) => point.value)];
     const rawTop = Math.max(...values);
@@ -64,24 +41,10 @@ export function makeGeometry({ actual, height, nowMs, required, startTime, targe
     const line = (points: readonly GoalLinePoint[]) =>
         points.map((point, index) => `${index === 0 ? "M" : "L"} ${x(point.time)} ${y(point.value)}`).join(" ");
 
-    // At the point's own timestamp — the start of the current UTC day — because
-    // that is the instant `standingFor` measures at too. Both were briefly on
-    // different footings, which drew a gap kinder than the verdict printed beside
-    // it; they are pinned together on whole days now, which is the granularity the
-    // series, the pace and the months left all already use.
     const last = banked.at(-1);
     const head = last ? { x: x(last.time), y: y(last.value) } : null;
 
-    // From where the account stands TODAY to the target, which is what "keep this
-    // pace and you land here" means — deliberately the same dash the budget chart
-    // uses for a projection.
-    //
-    // Nothing is projected once the balance has met the target: the line would run
-    // DOWN to it, reading as a plan to withdraw the surplus, next to a verdict
-    // saying the goal is done. There is no pace left to keep.
-    // Nor once the deadline is behind: both ends clamp to the axis's right edge,
-    // so the dash collapses into a vertical stroke at the border, drawing a future
-    // path beside a pace correctly saying the whole remainder is due now.
+    // No projection once the target is met (it would run DOWN to it) or the deadline is past (it collapses at an edge).
     const projectable = head !== null && (last?.value ?? 0) < target && !overdue;
     const projection = projectable ? `M ${head.x} ${head.y} L ${x(targetTime)} ${y(target)}` : null;
 

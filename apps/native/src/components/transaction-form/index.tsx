@@ -162,26 +162,12 @@ import { useSplitDraft } from "./use-split-draft";
 
 const HERO_REST_TOP = 88;
 
-/**
- * Floor for the currency step's virtualised list. A stage body has no intrinsic
- * height and an auto-sized list measures to zero for the frames the stage is
- * swapping, so the list needs a size from the first one. A fraction of the
- * window rather than a constant: the stage still has the sentence above it.
- */
+// A stage body has no intrinsic height and an auto-sized list measures zero while the stage swaps, so the list needs
+// a size from the first frame. A window fraction, since the sentence still sits above.
 const CURRENCY_LIST_FRACTION = 0.34;
 
-/** One row of pills beside the remembered ones, which come first. */
 const MERCHANT_SUGGESTION_LIMIT = 4;
 
-/**
- * What the stage at the bottom of the form is showing. One value rather than a
- * flag per surface: the stage is a single surface, so no two of these can be
- * true at once, and the sentence's washed word reads straight off it.
- *
- * There is no "closed": past an edit's resting sheet, which draws no stage,
- * it is always occupied. A form whose bottom is empty leaves no way forward
- * except knowing that a word is tappable, which is the defect the stage replaced.
- */
 type StageStep =
     | "account"
     | "amount"
@@ -199,30 +185,17 @@ type StageStep =
     | "repeat"
     | "when";
 
-/**
- * Where the stage is, and which way it just travelled. One value rather than two
- * pieces of state: the body animates in from the side it came from, so a step
- * and its direction have to change in the same commit or a return slides in as
- * a forward move.
- */
+// One value: a step and its direction must change in the same commit, or a return slides in as a forward move.
 interface StagePosition {
     forward: boolean;
     step: StageStep;
 }
 
-/**
- * The facts the footer button walks, in the order the sentence states them, so a
- * user who never realises a word is tappable still reaches a saveable entry.
- */
 const GUIDED_STEPS = ["amount", "merchant", "category", "account"] as const;
 
 type GuidedStep = (typeof GUIDED_STEPS)[number];
 
-/**
- * A rung the ladder offers but never holds the save for. The merchant is what
- * drives enrichment rather than what makes the row valid, so an entry that never
- * names one is whole — pressing the footer on that step IS the skip.
- */
+// The merchant drives enrichment, not validity, so pressing the footer on its step is the skip.
 const OPTIONAL_STEPS: ReadonlySet<GuidedStep> = new Set(["merchant"]);
 
 const GUIDED_POSITIONS = new Map<StageStep, number>(GUIDED_STEPS.map((step, index) => [step, index]));
@@ -234,15 +207,10 @@ function backStepOf(step: StageStep): StageStep {
     return step === "rateCustom" ? "rate" : "amount";
 }
 
-/** Where a step sits on the guided ladder; -1 for one that is not on it. */
 function guidedIndex(step: StageStep): number {
     return GUIDED_POSITIONS.get(step) ?? -1;
 }
 
-/**
- * The word the stage is editing, so the sentence can wash it. The currency step
- * reports the amount, whose code it is setting; both rate steps mark the source.
- */
 const STEP_SLOTS = {
     account: "account",
     amount: "amount",
@@ -263,11 +231,9 @@ const STEP_SLOTS = {
 
 type FeeOptionId = "amount" | "none" | "paidVia" | "percent" | `rate:${number}`;
 
-/** One step's body and the header it sits under, before the stage draws them. */
 interface StageStepContent {
     body: ReactNode;
     footer?: StageFooter;
-    /** Trailing meta the step needs and its body cannot state. */
     rightAction?: StageAction;
     title: string;
 }
@@ -302,44 +268,25 @@ function isProviderRate(rate: number | null | undefined, rateType: EntryRateType
     return rate != null && rateType != null && rateType !== "custom";
 }
 
-/** Separated from a plain "touched" flag so a later suggestion can still
- * replace an earlier one: only a human edit ("user") locks a field. */
+// Only a human edit ("user") locks a field, so a later suggestion can still replace an earlier one.
 type FieldSource = "initial" | "suggested" | "user";
 
-/**
- * What another surface can put in the form before the user sees it: a
- * suggestion the user still confirms, never identity or recurrence.
- *
- * A quick action, a widget or an App Intent may set only amount, direction and
- * note. The five below them are for the voice screen, whose draft the user has
- * already read on a review line — a category or account it names is one this
- * ledger resolved by name, never one guessed from outside the app.
- */
+// A quick action, widget or App Intent may set only amount, direction and note. The rest are for the voice screen,
+// whose draft the user already read, with categories and accounts this ledger resolved by name.
 export interface TransactionSeed {
     accountId?: string;
-    /**
-     * The person named an account the ledger could not place, so the form
-     * opens with none selected rather than the last used one: choosing is the
-     * point of coming here.
-     */
+    /** Named but not placed: the form opens with no account rather than the last used one. */
     accountUnresolved?: boolean;
     amount?: number;
     categoryId?: string;
     currency?: string;
     date?: Date;
-    /** The notes field; what the voice draft heard beyond the merchant. */
     details?: string;
     income?: boolean;
     note?: string;
-    /** Opens the form in subscription mode on this cadence; the voice screen's "every month". */
     recurrence?: { coefficient: number; type: number };
 }
 
-/**
- * The unsaved edits a form holds, taken off it so another form can open with
- * them: the swipe that discards an Android edit sheet offers them back. Opaque
- * outside this module; only `snapshot` makes one and only `restore` reads it.
- */
 export interface TransactionFormDraft {
     accountDeclined: boolean;
     categorySource: FieldSource;
@@ -353,30 +300,19 @@ export interface TransactionFormDraft {
 
 interface TransactionFormProps {
     /**
-     * The charge this create is repeating, from a row's own `Log again`. It may
-     * carry category and identity where {@link TransactionSeed} may not: these
-     * values came off a row inside the ledger that the user confirmed once
-     * already, not from a surface outside the app guessing at intent. It carries
-     * no date and no schedule, so the copy lands today and stays a one-off.
+     * May carry category and identity, unlike `TransactionSeed`: it came off a row the user already confirmed.
+     * No date or schedule, so the copy lands today as a one-off.
      */
     copyOf?: LogAgainDraft;
     db: Database;
     initial?: Transaction;
     mode: "create" | "edit";
-    /** Adds a destructive item to the navigation bar. Edit routes only — there is
-     * nothing to delete before the row exists. */
     onDelete?: () => void;
     onDirtyChange?: (dirty: boolean) => void;
     onDone: () => void;
-    /** Filled with a function that reads the form's unsaved edits, for as long as it is mounted. */
     draftRef?: RefObject<(() => TransactionFormDraft) | null>;
     rest?: SheetRest;
-    /**
-     * Edits a discarded form held, to open with instead of `initial`'s. The form
-     * opens dirty: saving writes them and leaving asks first, as before.
-     */
     restore?: TransactionFormDraft;
-    /** Ignored when `initial` is present — an edit is never seeded. */
     seed?: TransactionSeed;
 }
 
@@ -390,9 +326,6 @@ function seedAccount(db: Database, initial: Transaction | undefined, seed: Trans
     return (seed?.accountId ? getAccountById(db, seed.accountId) : null) ?? getLastUsedAccount(db);
 }
 
-/**
- * The suggestion names a parent, and only this ledger knows which row that is.
- */
 async function createPendingCategory(
     db: Database,
     pending: PendingCategory,
@@ -451,11 +384,7 @@ function initialEntryRateType(currency: string, rateType: string | null | undefi
     return normalized ?? "official";
 }
 
-/**
- * The rate policy in force, in the shape the rate steps and the rate clause
- * both read. `official` stands in for an absent type because that is what an
- * unanswered non-USD entry records.
- */
+// `official` stands in for an absent type: that is what an unanswered non-USD entry records.
 function rateSelectionOf(
     rate: RateEntry,
     exchangeRateType: EntryRateType | null,
@@ -472,7 +401,6 @@ interface TransactionRateControlsOptions {
     date: Date;
     exchangeRateType: EntryRateType | null;
     initialRateFromProvider: boolean;
-    /** Moves the stage. `forward` is the direction the arriving body travels in. */
     onStage: (step: StageStep, forward: boolean) => void;
     setCurrency: (currency: string) => void;
     setDate: (date: Date) => void;
@@ -494,7 +422,6 @@ function useTransactionRateControls({
     stageStep,
 }: TransactionRateControlsOptions) {
     const rateFromSuggestion = useRef(initialRateFromProvider);
-    /** The rate step is only ever on screen because it was asked for. */
     const leaveRateStep = () => {
         if (stageStep === "rate" || stageStep === "rateCustom" || stageStep === "rateUsd") {
             onStage("amount", false);
@@ -612,28 +539,24 @@ export function TransactionForm({
     const { language } = useLanguage();
     const { use24Hour } = useDisplaySettings().state;
     const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-    /** Swift's `.padding(.horizontal, 20)` content box. */
+    // Swift's `.padding(.horizontal, 20)` content box.
     const contentWidth = windowWidth - 40;
     const currencyListHeight = Math.round(windowHeight * CURRENCY_LIST_FRACTION);
     const globalCurrency = useGlobalCurrency(db);
 
     const [nameSeed] = useState(initial?.note ?? copyOf?.note ?? seed?.note ?? "");
     const [notesSeed] = useState(restore?.notes ?? initial?.details ?? copyOf?.details ?? seed?.details ?? "");
-    // The note is held in a ref, not state: it feeds a plain RN input, and
-    // lifting the string would re-render the SwiftUI `Host` below on every
-    // keystroke. The merchant name cannot be — two surfaces edit it — so it is a
-    // form field instead, read only through `Subscribe` for the same reason.
+    // The note lives in a ref: lifting it to state would re-render the SwiftUI `Host` per keystroke. The merchant name
+    // has two editors, so it is a form field, read only through `Subscribe` for the same reason.
     const notesRef = useRef(notesSeed);
 
     const { draft: identity, setDraft: setIdentity } = useIdentityDraft();
     const [identitySource, setIdentitySource] = useState<FieldSource>(restore?.identitySource ?? "initial");
     const { pickerOpen, setPickerOpen } = useIdentityFlyUp();
-    /** A failed write, held until the next attempt: this sheet stays up under it. */
     const [saveFailure, setSaveFailure] = useState<string | null>(null);
 
-    // Frozen at mount: `useForm` re-applies changed `defaultValues` on every
-    // render while untouched, and `date`/`endDate` are `new Date()` here — an
-    // inline object would silently re-seed both to "now" every render.
+    // Frozen at mount: `useForm` re-applies changed `defaultValues` while untouched, and `date`/`endDate` are
+    // `new Date()` here, so an inline object would re-seed both to now every render.
     const [initialValues] = useState(
         () => restore?.values ?? initialFormValues({ copyOf, db, globalCurrency, initial, nameSeed, seed })
     );
@@ -648,8 +571,6 @@ export function TransactionForm({
 
     const form = useForm({
         defaultValues: initialValues,
-        // Clearing the category belongs to the income change itself, not to the
-        // segmented control that happens to be the only caller today.
         listeners: {
             onChange: ({ formApi, fieldApi }) => {
                 if (fieldApi.name !== "income") {
@@ -688,13 +609,8 @@ export function TransactionForm({
 
             const baseInput = buildTransactionInput({
                 accountId: value.account?.id ?? null,
-                // At the currency's own units. Changing the currency mid-entry
-                // changes how the sentence and keypad render the figure but leaves
-                // the typed digits alone, so 12.34 entered in USD and switched to
-                // JPY read as ¥12 on screen while the row kept 12.34 — a fraction
-                // the currency has no units for. `account-editor` already rounds
-                // at save; this is the same rule, and `draft.currency` is nullable
-                // so the pure builder cannot apply it.
+                // Rounded to the currency's units at save: switching currency mid-entry leaves the typed digits alone,
+                // so 12.34 typed in USD would show as ¥12 while the row kept 12.34.
                 amount,
                 categoryId,
                 coefficient: value.coefficient,
@@ -743,11 +659,8 @@ export function TransactionForm({
                 }
             } catch (error) {
                 console.error("Failed to save transaction", error);
-                // Nothing was written, so the retry is the same tap again — but say so
-                // first: un-dimming the CTA in silence is indistinguishable from having
-                // missed the button. Under the header rather than in a toast, which
-                // this sheet would cover, and pinned rather than in the scroll, so it
-                // stays on screen while the footer is pressed again.
+                // Say so: un-dimming the CTA in silence reads as a missed tap. Pinned under the header, since a toast
+                // would sit under this sheet and the footer must stay pressable.
                 haptics("error");
                 setSaveFailure(t("transaction.save.failedBody"));
                 return;
@@ -759,10 +672,8 @@ export function TransactionForm({
                 source: "form",
                 transaction_type: value.income ? "income" : "expense",
             });
-            // The row is COMMITTED from here down, so no failure below may re-enable the
-            // CTA: a second tap runs `create` again, which mints a fresh id rather than
-            // rewriting this row, and the ledger ends up with two subscriptions — each
-            // walked forward into its own chain of charges by the next sweep.
+            // Committed from here down: no failure below may re-enable the CTA, or a second tap mints a fresh id and
+            // the ledger gets two subscriptions.
             if (value.account != null) {
                 rememberLastUsedAccount(db, value.account.id).catch((error) => {
                     console.error("Failed to remember the account", error);
@@ -783,9 +694,8 @@ export function TransactionForm({
                 answered?.key === merchantKey(value.merchant) &&
                 answered.currency === carryCurrency
             ) {
-                // The lookup was asked for on this row; its answer goes to the
-                // merchant's other rows too. Not awaited: the row is saved, and a
-                // sibling that would not take it is not this save's failure.
+                // Not awaited: the row is saved, and a sibling that would not take the answer is not this save's
+                // failure.
                 carryLookupToSiblings(savedId, value.income, value.merchant, value.txCurrency).catch((error) => {
                     console.error("Failed to carry the merchant lookup to its other rows", error);
                 });
@@ -799,19 +709,15 @@ export function TransactionForm({
                     scheduleFailed = true;
                 }
             }
-            // After the backfill, which is what moves the chain's next landing: the
-            // sweep dates its requests off that. Not awaited, and its failure is not
-            // the save's: the row is already written, so a notification the queue
-            // refused must not send this down the catch and re-enable the CTA.
+            // After the backfill, which moves the chain's next landing. Not awaited: a notification the queue refused
+            // must not send this down the catch and re-enable the CTA.
             syncSubscriptionReminders(db).catch((error) => {
                 console.error("Subscription reminder sync failed", error);
             });
             if (scheduleFailed) {
                 haptics("error");
-                // Raised before the dismissal rather than from a button inside it: the
-                // toast is mounted at the root, so it outlives this route and reads on
-                // the screen behind it — where an alert needs a presenter that is
-                // already gone by the time the modal finishes tearing down.
+                // Raised before the dismissal: the root toast outlives this route, while an alert's presenter is gone
+                // once the modal tears down.
                 notifyFailure({
                     body: t("transaction.save.scheduleFailedBody"),
                     title: t("transaction.save.scheduleFailedTitle"),
@@ -831,13 +737,9 @@ export function TransactionForm({
             }
             return await holdSubmitting();
         },
-        // The footer is never disabled, so a tap with no category lands here
-        // rather than on a button that explains nothing.
+        // The footer is never disabled, so a tap with no category lands here.
         onSubmitInvalid: ({ value }) => {
             const fields = formErrorsOf(value)?.fields ?? {};
-            // The amount flags where the category already does: the stage's
-            // footer reaches this with nothing entered, and a submit that
-            // silently did nothing would read as a missed button.
             if (fields.amount !== undefined) {
                 flagMissingAmount();
             }
@@ -847,8 +749,6 @@ export function TransactionForm({
             if (fields.exchangeRate !== undefined) {
                 flagMissingRate(fields.amount === undefined && fields.category === undefined);
             }
-            // Marking the sentence alone leaves the answer further away than the
-            // question, and the stage is where every other fact is answered.
             if (fields.amount !== undefined) {
                 enterStep("amount");
             } else if (fields.category !== undefined) {
@@ -861,9 +761,8 @@ export function TransactionForm({
             onChange: ({ value }) => formErrorsOf(value),
         },
     });
-    // Names the fields rather than taking `values` wholesale: that object gets a
-    // fresh identity on every write, so selecting it re-renders this whole screen
-    // on each amount keystroke however few fields are read out of it.
+    // Names the fields: `values` gets a fresh identity on every write, so selecting it re-renders the screen per
+    // keystroke.
     const {
         txCurrency,
         isSubscription,
@@ -915,11 +814,6 @@ export function TransactionForm({
     const minorUnits = minorUnitsFor(currency);
     const rateSuggestions = useRatesRead(() => transactionRateSuggestions(db, currency, date), [db, currency, date]);
     const rateSelection = rateSelectionOf(rateEntry, exchangeRateType, currency);
-    /**
-     * Whether this entry converts at all. `transactionRateOptions` is the single
-     * answer: it is empty for USD, which has no rate to state and so no rate
-     * clause and no rate step.
-     */
     const converts = transactionRateOptions(currency).length > 0;
     const rateInForce = effectiveEntryRate(rateSelection, rateSuggestions);
     const rateUnitLabel = t("transaction.rate.unit", pairUnitSymbols("USD", currency));
@@ -1077,15 +971,13 @@ export function TransactionForm({
         return feeDraft.kind === "percent" ? `rate:${feeDraft.rate}` : "none";
     };
 
-    // A category carried in from `copyOf` is a deliberate choice, not a blank
-    // slot an enrichment suggestion is free to fill.
+    // A category carried in from `copyOf` is a choice, not a blank an enrichment suggestion may fill.
     const [categorySource, setCategorySource] = useState<FieldSource>(
         () => restore?.categorySource ?? (initialValues.category === null ? "initial" : "user")
     );
 
-    // Registers a FieldApi under `income` purely so the form's `listeners` reach
-    // it: `setFieldValue` dispatches them through the mounted field instance, so
-    // without this the cascade above is a silent no-op.
+    // Registers a FieldApi so `listeners` fire: `setFieldValue` dispatches through the mounted field, so without it the
+    // cascade is a silent no-op.
     useField({ form, name: "income" });
 
     const [categoryError, setCategoryError] = useState(false);
@@ -1145,28 +1037,19 @@ export function TransactionForm({
     const router = useRouter();
     const accountCreateRoute = useAccountCreateRoute();
 
-    /**
-     * The one bottom surface. It rests on the keypad — the amount is the first
-     * thing a create is for, and the first thing a returning user reaches for on
-     * an edit — and every other step is entered from it and returns to it.
-     */
     const [stage, setStage] = useState<StagePosition>({ forward: true, step: "amount" });
     const stageStep = stage.step;
     const largeText = useAccessibilityTextSize();
     const [stageTurn, setStageTurn] = useState(0);
     const stageTarget = `stage-${stageTurn}`;
     const goStage = (step: StageStep, forward: boolean) => {
-        // Unconditional: no step arrives focused, so a keyboard still standing here
-        // was raised by the step or the note field being left behind, and it would
-        // cover the one arriving. A no-op when nothing is focused.
+        // Unconditional: no step arrives focused, so a standing keyboard would cover the arriving one.
         Keyboard.dismiss();
         rest?.onWake();
         setStage({ forward, step });
         setStageTurn((turn) => turn + 1);
     };
-    /** Opens a step. The arriving body travels in from the right. */
     const enterStep = (step: StageStep) => goStage(step, true);
-    /** Returns to a step already behind us, which travels the other way. */
     const leaveTo = (step: StageStep) => goStage(step, false);
     const {
         applyDerivedRate,
@@ -1329,7 +1212,6 @@ export function TransactionForm({
         isSubscription,
         mode,
     });
-    /** Why a save is refused before it writes, with the sheet that fixes it presented. */
     const saveRefusal = (amount: number, entryCurrency: string): string | null => {
         if (isRealSplit(splitAllocations) && !isBalanced(amount, splitAllocations, minorUnitsFor(entryCurrency))) {
             splitSheetRef.current?.present();
@@ -1337,7 +1219,6 @@ export function TransactionForm({
         }
         return installmentOrder.problem(amount);
     };
-    // The chip names the first cuota only once there is a draft, so only then does it follow each keypress.
     const installmentPrice = useSelector(form.store, (s) =>
         installmentOrder.drafting ? numpadToNumber(s.values.amount) : 0
     );
@@ -1348,8 +1229,7 @@ export function TransactionForm({
     const allTags = useTags(db);
     const savedTagIds = useTagIdsFor(db, initial?.id ?? null);
     const [tagsSource, setTagsSource] = useState<FieldSource>(restore?.tagsSource ?? "initial");
-    /** Until the user or a suggestion touches them, the row's tags are the saved
-     * ones — the form field is still the empty array it mounted with. */
+    // Until touched, the row's tags are the saved ones: the field is still the empty array it mounted with.
     const effectiveTagIdsOf = (tagIds: readonly string[]) => (tagsSource === "initial" ? savedTagIds : tagIds);
     const tagLabelsOf = (tagIds: readonly string[], pendingTagNames: readonly string[]) => [
         ...allTags.filter((tag) => effectiveTagIdsOf(tagIds).includes(tag.id)).map((tag) => tag.name),
@@ -1374,16 +1254,14 @@ export function TransactionForm({
     const rateShakeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const categoriesForNamespace = useCategoriesByNamespace(db, income);
-    // Shape only — the names, and what sits under what. No figures leave here.
+    // Shape only: the names and what sits under what. No figures leave here.
     const categoryTree = useMemo(() => {
         const named = categoriesForNamespace.filter((candidate) => candidate.name != null);
-        // SAFETY: `named` is filtered to rows with a non-null name just above; the
-        // column itself is nullable.
+        // SAFETY: `named` is filtered to non-null names above; the column is nullable.
         return named
             .filter((candidate) => candidate.parentId == null)
             .map((parent) => ({
-                // SAFETY on both lines: `named` is filtered to rows with a non-null name
-                // just above; the column itself is nullable.
+                // SAFETY on both lines: `named` is filtered to non-null names above.
                 children: named.filter((child) => child.parentId === parent.id).map((child) => child.name as string),
                 name: parent.name as string,
             }));
@@ -1400,12 +1278,8 @@ export function TransactionForm({
     );
 
     const logoRequestRef = useRef(0);
-    /**
-     * What the well held at the last commit, read at write time rather than
-     * closed over — the seeding effect can fill it while a request is out.
-     * Mirrored in an effect, not during render, which is a side effect the
-     * compiler cannot follow.
-     */
+    // Read at write time, not closed over: the seeding effect can fill the well while a request is out. Mirrored in an
+    // effect, since a render-time write is a side effect the compiler cannot follow.
     const latest = useRef({
         allTags,
         categories: categoriesForNamespace,
@@ -1453,25 +1327,13 @@ export function TransactionForm({
         };
     };
 
-    /**
-     * The user asked for this merchant to be looked up, on this row, and has
-     * not typed a different name since. While it stands every guard that keeps
-     * a suggestion off a field the user already filled is lifted, and the save
-     * carries the answer to the merchant's other rows.
-     */
+    // The user asked for this merchant's lookup and has not retyped the name: guards that keep suggestions off filled
+    // fields lift, and the save carries the answer to the merchant's other rows.
     const forcedLookupRef = useRef(false);
-    // Written here rather than at the call sites: the ref is read by the
-    // memoised `attachLogo`, and the compiler only allows it to change inside a
-    // hook's own callback.
-    /**
-     * The merchant and currency a requested lookup actually answered for.
-     * The save carries to siblings only when this matches what is on screen:
-     * a save before the answer lands, or after an answer of nothing, must not
-     * hand the row's own old category to rows that had none.
-     */
+    // Carried to siblings only when this matches the screen: a save before the answer, or after an empty one, must not
+    // hand the row's old category to rows that had none.
     const lookupAnsweredRef = useRef<{ currency: string | null; key: string } | null>(null);
-    // The one place `lookupAnsweredRef` is set: the compiler allows a captured
-    // ref to change inside a single hook's callback, not across two.
+    // The one place this ref is set: the compiler allows a captured ref to change inside one hook's callback, not two.
     const recordLookupAnswer = useCallback((answer: { currency: string | null; key: string } | null) => {
         lookupAnsweredRef.current = answer;
     }, []);
@@ -1480,59 +1342,42 @@ export function TransactionForm({
             forcedLookupRef.current = forced;
             if (forced) {
                 touchedSinceLookupRef.current.clear();
-                // A new ask starts unanswered: the previous answer must not let a
-                // save carry while this one is still out.
+                // A new ask starts unanswered, so the previous answer cannot let a save carry.
                 recordLookupAnswer(null);
             }
         },
         [recordLookupAnswer]
     );
 
-    /**
-     * The slots the user has filled since asking for the lookup. A late
-     * answer may replace only what was left alone: a category picked while
-     * the model was still out is a newer choice than the answer.
-     */
+    // A late answer may replace only slots left alone since the ask: a category picked meanwhile is newer.
     const touchedSinceLookupRef = useRef<Set<"category" | "identity" | "tags">>(new Set());
     const markTouched = useCallback((slot: "category" | "identity" | "tags") => {
         touchedSinceLookupRef.current.add(slot);
     }, []);
-    /** The domain whose logo is in the well, when a suggestion put it there. */
     const suggestedDomainRef = useRef<string | null>(null);
 
-    /**
-     * A suggested logo stays replaceable: typing on past one merchant to another
-     * has to move the image with the name, so only a real choice ("user") or an
-     * open picker stops it. Each run takes a ticket, and a result that settles
-     * after a newer one started is dropped rather than painted over it.
-     */
+    // A suggested logo stays replaceable so it follows the name; only a user choice or an open picker stops it. A run
+    // that settles after a newer one started is dropped.
     const attachLogo = async (domain: string | null): Promise<boolean> => {
         const blocked = () =>
             latest.current.pickerOpen ||
-            // A lookup the user asked for is a choice made now, over whatever
-            // the well holds; only an open picker outranks it.
+            // A requested lookup outranks what the well holds; only an open picker outranks it.
             ((!forcedLookupRef.current || touchedSinceLookupRef.current.has("identity")) &&
                 (latest.current.identitySource === "user" ||
-                    // An emoji or photo carried in from `initial`/`copyOf` is a choice
-                    // already made; only an empty well or an earlier suggestion moves.
+                    // An emoji or photo from `initial`/`copyOf` is a choice already made.
                     (latest.current.identitySource === "initial" && latest.current.hasIdentity)));
         if (blocked()) {
             return false;
         }
         logoRequestRef.current += 1;
         const ticket = logoRequestRef.current;
-        // The name the domain was found for. The transport rejects an answer
-        // for a name the field has left, but this pipeline is awaited on its
-        // own, and a rename during the next debounce would otherwise take
-        // the previous merchant's logo.
+        // This pipeline is awaited on its own, so a rename during the next debounce would otherwise take the previous
+        // merchant's logo.
         const askedFor = merchantKey(form.store.state.values.merchant);
         const stale = () =>
             ticket !== logoRequestRef.current ||
             merchantKey(form.store.state.values.merchant) !== askedFor ||
             blocked();
-        // The new merchant resolved to nothing, so the previous merchant's
-        // logo has to go with it — keeping it would caption this entry with
-        // the wrong brand.
         const dropSuggested = () => {
             if (latest.current.identitySource === "suggested") {
                 setIdentitySource("initial");
@@ -1544,9 +1389,7 @@ export function TransactionForm({
             }
         };
 
-        // A withdrawn domain (a currency change, a name with no answer) is
-        // known now, and the drop must not wait on a fetch that has nothing
-        // to fetch: a save in that gap would keep the wrong brand on the row.
+        // Dropped now, not after a fetch: a save in that gap would keep the wrong brand on the row.
         if (domain == null) {
             dropSuggested();
             return false;
@@ -1563,10 +1406,8 @@ export function TransactionForm({
             dropSuggested();
             return false;
         }
-        // Required lazily so rendering this form does not pull Skia's downscaler
-        // into the module graph, matching `domain/ids.ts`.
-        // SAFETY: `require` is untyped; the path is a first-party module and the
-        // asserted type is that same module's own.
+        // SAFETY: untyped `require` of a first-party module, asserted to its own type. Lazy so rendering the form does
+        // not pull Skia's downscaler into the module graph, as in `domain/ids.ts`.
         const photoStorage = require("@/lib/photo-storage") as typeof import("@/lib/photo-storage");
         let photoUri: string;
         try {
@@ -1574,13 +1415,9 @@ export function TransactionForm({
         } catch {
             return false;
         }
-        // Same tint the picker extracts for a chosen photo, so an auto-attached
-        // logo colours the well and the curtain behind it rather than sitting on
-        // the neutral fallback. An unreadable image costs the tint alone.
         const hues = await glowFromImage(photoUri);
         if (stale()) {
-            // Nothing will name this file: the row moved on, or the form is
-            // gone (the unmount bumps the ticket).
+            // Nothing will name this file: the row moved on, or the form unmounted (which bumps the ticket).
             try {
                 photoStorage.photoFiles.remove(photoUri.slice(photoUri.lastIndexOf("/") + 1));
             } catch {
@@ -1590,9 +1427,6 @@ export function TransactionForm({
         }
         suggestedDomainRef.current = domain;
         setIdentitySource("suggested");
-        // A requested lookup puts the logo in place of an emoji or glyph, not
-        // behind one; a lookup the form ran on its own only ever fills an
-        // empty well, so there is nothing there to clear.
         const replacesChoice = forcedLookupRef.current && !touchedSinceLookupRef.current.has("identity");
         setIdentity((previous) => ({
             ...previous,
@@ -1603,7 +1437,6 @@ export function TransactionForm({
         }));
         return true;
     };
-    // A logo still being fetched when the form closes has no row to land on.
     useEffect(
         () => () => {
             logoRequestRef.current += 1;
@@ -1611,16 +1444,10 @@ export function TransactionForm({
         []
     );
 
-    /*
-     * Not wrapped in `useCallback`: it both reads and sets `categorySource` and
-     * `tagsSource`, which the compiler could not reconcile with a hand-written
-     * dependency list, so it declined to optimize the whole form. Its only
-     * consumer reads it through the enrichment hook's committed snapshot rather
-     * than a dependency array, so the identity is free to change.
-     */
+    // Not `useCallback`: it reads and sets `categorySource` and `tagsSource`, which made the compiler decline the whole
+    // form. Its only consumer reads it through a committed snapshot, so its identity may change.
     const applySuggestion = (suggestion: EnrichmentSuggestion) => {
-        // Read from the ref, not a flag in state: the curated tier answers in
-        // the same tick the lookup is asked for, before a state change commits.
+        // From the ref: the curated tier answers in the same tick the lookup is asked, before state commits.
         const forced = forcedLookupRef.current;
         const answeredWithoutDomain =
             suggestion.categoryId != null ||
@@ -1629,8 +1456,7 @@ export function TransactionForm({
             suggestion.pendingTagNames.length > 0;
         const answered = answeredWithoutDomain || suggestion.domain != null;
         const answer = { currency, key: merchantKey(form.store.state.values.merchant) };
-        // A domain alone is an answer only once its logo is on the row: a save
-        // before then would carry to siblings a logo this row does not have.
+        // A domain alone is an answer only once its logo is on the row, or the save would carry a logo this row lacks.
         if (forced && answered && (suggestion.domain == null || answeredWithoutDomain)) {
             recordLookupAnswer(answer);
         }
@@ -1650,16 +1476,13 @@ export function TransactionForm({
                 setCategoryError(false);
                 setCategorySource("suggested");
             } else if (categorySource === "suggested") {
-                // This name has no answer, so the last one's category goes with it
-                // rather than captioning an entry it has nothing to do with.
                 form.setFieldValue("category", null, { dontUpdateMeta: true });
                 form.setFieldValue("pendingCategory", null, { dontUpdateMeta: true });
                 setCategorySource("initial");
             }
         }
-        // Tags an edit opened with are the user's as much as a category is, but
-        // they arrive by query rather than with `initial`, so the guard reads
-        // them at apply time. A lookup the user asked for overrides them.
+        // Tags an edit opened with are the user's, but they arrive by query rather than with `initial`, so the guard
+        // reads them at apply time.
         const savedTagsStand = tagsSource === "initial" && savedTagIds.length > 0;
         if ((forced && !touched.has("tags")) || (tagsSource !== "user" && !savedTagsStand)) {
             if (suggestion.tagIds.length > 0 || suggestion.pendingTagNames.length > 0) {
@@ -1690,9 +1513,6 @@ export function TransactionForm({
     } = useTransactionEnrichment({
         categoryTree,
         currency,
-        // An edit looks up too, but only what is empty: a saved category, tags
-        // or identity read as the user's (see the source flags), so a renamed
-        // merchant fills the gaps and nothing else.
         enabled: true,
         groundedLookup,
         income,
@@ -1705,13 +1525,9 @@ export function TransactionForm({
         resolveHistory,
         resolveLocal,
     });
-    // A field the user has already edited is theirs — it never dims, because
-    // nothing arriving can change it.
     const categoryEnriching = enriching && categorySource !== "user";
 
-    // The hook re-asks on its own when the currency or the side of the ledger
-    // changes; that ask is the form's, not the user's, so the override and
-    // the answer end here.
+    // The hook re-asks on a currency or side change; that ask is the form's, not the user's, so the override ends here.
     const seenLookupScopeRef = useRef({ currency, income });
     useEffect(() => {
         const seen = seenLookupScopeRef.current;
@@ -1729,13 +1545,8 @@ export function TransactionForm({
         lookupNow().catch(() => undefined);
     };
 
-    /**
-     * The looked-up answer, as saved on this row, applied to the merchant's
-     * other rows in the same currency. Read back from the row rather than the
-     * form, because a pending category is only given an id by the save.
-     * `forCurrency` is the row's own column, null in the default currency,
-     * so the siblings stored the same way are found.
-     */
+    // Read back from the saved row: a pending category only gets an id at save. `forCurrency` is the row's own column
+    // (null in the default currency), so siblings stored the same way match.
     const carryLookupToSiblings = async (
         savedId: string,
         forIncome: boolean,
@@ -1743,8 +1554,6 @@ export function TransactionForm({
         forCurrency: string | null
     ) => {
         const saved = getTransactionById(db, savedId);
-        // Only what the lookup put on the row and the user left there: a
-        // category or tags they chose since the tap are theirs, for this row.
         const touched = touchedSinceLookupRef.current;
         const carryCategory = categorySource === "suggested" && !touched.has("category");
         const carryTags = tagsSource === "suggested" && !touched.has("tags");
@@ -1760,8 +1569,7 @@ export function TransactionForm({
                       const imageUri = await photoStorage.persistLogoBytes(outcome.bytes);
                       return { imageColor: saved?.imageColor ?? null, imageUri };
                   };
-        // SAFETY: untyped `require`, asserted to the module's own type; lazy
-        // for the same reason as in `attachLogo`.
+        // SAFETY: untyped `require`, asserted to the module's own type; lazy as in `attachLogo`.
         const photoStorage = require("@/lib/photo-storage") as typeof import("@/lib/photo-storage");
         await applyMerchantToSiblings(db, {
             categoryId: carryCategory ? (saved?.categoryId ?? null) : null,
@@ -1793,8 +1601,6 @@ export function TransactionForm({
         []
     );
 
-    // A restored draft's identity is the one it was discarded with; the seeding
-    // below skips any identity that is not the row's own.
     const [restoredIdentity] = useState(() =>
         restore !== undefined && restore.identitySource !== "initial" ? restore.identity : null
     );
@@ -1804,13 +1610,9 @@ export function TransactionForm({
         }
     }, [restoredIdentity, setIdentity]);
 
-    // The draft is shared context, read by the fly-up hero and the picker route.
-    // Skipped once the user has touched identity, so a stale `initial`/`copyOf`
-    // reference re-rendering later never clobbers an in-progress choice.
     useEffect(() => {
-        // Also skipped once a suggestion has filled the well: these deps change on
-        // any `initial`/`copyOf` re-render, and re-seeding would wipe a logo that
-        // is still correct for the name in the field.
+        // Skipped once identity is touched or suggested: these deps change on any `initial`/`copyOf` re-render, and
+        // re-seeding would wipe an in-progress choice or a logo still correct for the name.
         if (identitySource !== "initial") {
             return;
         }
@@ -1849,13 +1651,8 @@ export function TransactionForm({
         }
     };
 
-    // The same ladder the notifications setting runs, for the same reason: a lead
-    // iOS will never deliver is a promise this row would go on repeating, so it is
-    // put back to Off rather than left standing. Neither branch schedules anything
-    // — the sweep that follows a save owns the pending requests.
-    // Picking a lead here IS the intent behind the master switch, and this row is
-    // the only place it is ever expressed — a ledger whose owner has never opened
-    // the notifications screen would otherwise arm nothing.
+    // Picking a lead here is the intent behind the master switch: a ledger whose owner never opened the notifications
+    // screen would otherwise arm nothing.
     const armSubscriptionReminders = async () => {
         await setBoolSetting(db, "subscriptionReminders", true);
     };
@@ -1916,13 +1713,8 @@ export function TransactionForm({
         shakeTimer.current = setTimeout(() => setCategoryShake(false), 500);
     };
 
-    /**
-     * Save is never `disabled`. A greyed-out button that swallows the tap leaves
-     * the screen with no way to ask what is missing, so pressing it while the
-     * entry is incomplete answers instead. Flagging only marks the word; the
-     * caller decides where to land, because a save rejected for two reasons
-     * must open the FIRST of them rather than whichever flagged last.
-     */
+    // Save is never `disabled`: pressing an incomplete entry says what is missing. Flagging only marks the word; the
+    // caller lands on the first reason, not whichever flagged last.
     const flagMissingAmount = () => {
         haptics("error");
         AccessibilityInfo.announceForAccessibility(t("transaction.amount.required"));
@@ -1941,11 +1733,9 @@ export function TransactionForm({
         rateShakeTimer.current = setTimeout(() => setRateShake(false), 500);
     };
 
-    // The spring starts here, not from the picker route's mount effect, so the
-    // hero launches on the tap frame instead of waiting for navigation to commit
-    // the new screen.
+    // The spring starts on the tap frame, not the picker route's mount, so the hero does not wait on navigation.
     const openPicker = () => {
-        // Or the note's keyboard is left standing over the picker about to be pushed.
+        // Or the note's keyboard stays standing over the pushed picker.
         Keyboard.dismiss();
         setIdentitySource("user");
         markTouched("identity");
@@ -1970,7 +1760,6 @@ export function TransactionForm({
     const categoryGlyphTint = category ? chosenCategoryTint : (pendingCategory?.color ?? colors.muted);
 
     const formDirty = useSelector(form.store, (state) => state.isDirty);
-    // A restored draft is unsaved by definition.
     const [edited, setEdited] = useState(restore !== undefined);
     const dirty = formDirty || edited || identitySource === "user";
     useEffect(() => {
@@ -2000,12 +1789,9 @@ export function TransactionForm({
         };
     });
 
-    // Narrow subscription: reading this through `useAppSettings().state` would
-    // re-render the whole form on every unrelated setting write.
+    // Narrow subscription: `useAppSettings().state` would re-render the form on every unrelated setting write.
     const coachSeen = useSettingBool("sentenceCoachSeen");
     const setSetting = useAppSettings().actions.setBool;
-    // Editing an entry is not a first run: everything is already answered, so the
-    // line would be teaching a screen the user is not being led through.
     const showCoach = mode === "create" && !coachSeen;
     const dismissCoach = () => setSetting("sentenceCoachSeen", true);
 
@@ -2022,44 +1808,26 @@ export function TransactionForm({
         return account != null || accountDeclined || (allAccounts.length === 0 && !seed?.accountUnresolved);
     };
 
-    /** The first fact still missing from `from` onwards, or null once none is. */
     const nextMissing = (amountNumber: number, merchant: string, from: number): GuidedStep | null =>
         GUIDED_STEPS.slice(from).find((step) => !answered(step, amountNumber, merchant)) ?? null;
 
-    /** Every fact the entry cannot be saved without is answered. */
     const entryWhole = (amountNumber: number, merchant: string, skipped?: GuidedStep): boolean =>
         GUIDED_STEPS.every(
             (step) => step === skipped || OPTIONAL_STEPS.has(step) || answered(step, amountNumber, merchant)
         );
 
-    /**
-     * Where a resolved step hands over: the next fact the entry needs, and the
-     * resting keypad once it needs none. Never nothing — a stage that closed on
-     * its own answer is the empty bottom the whole surface replaced.
-     */
     const advanceFrom = (step: StageStep, amountNumber: number, merchant: string): StageStep =>
         nextMissing(amountNumber, merchant, guidedIndex(step) + 1) ?? "amount";
 
-    /** Hands a resolved step over. Falling back to the keypad is a return, not an advance. */
     const advance = (step: StageStep, amountNumber: number, merchant: string) => {
         const next = advanceFrom(step, amountNumber, merchant);
         goStage(next, next !== "amount");
     };
 
-    /**
-     * The stage's one button. It reads Save once a press would save, and walks
-     * FORWARD from the step on screen otherwise — pressing it on the step it is
-     * asking for IS the skip, so a backward target would put the ladder in a
-     * loop between two unanswered facts.
-     *
-     * Running out of ladder submits rather than doing nothing: the button is
-     * never disabled, and a submit is what makes a still-missing fact say so.
-     */
+    // Walks forward from the step on screen: pressing it on the step it asks for is the skip, so a backward target
+    // would loop. Out of ladder it submits, so a still-missing fact says so.
     const stageFooter = (amountNumber: number, merchant: string): StageFooter => {
         const whole = entryWhole(amountNumber, merchant);
-        // An unnamed merchant leaves a rung on the ladder that the label has
-        // already declared unnecessary, so a whole entry submits from wherever it
-        // is standing rather than walking on to an optional step.
         const onward = whole ? null : nextMissing(amountNumber, merchant, guidedIndex(stageStep) + 1);
         const saves = whole || (stageStep === "account" && entryWhole(amountNumber, merchant, "account"));
         return {
@@ -2077,22 +1845,14 @@ export function TransactionForm({
 
     const activeSlot: TransactionSentenceMark = STEP_SLOTS[stageStep];
 
-    /**
-     * The name changing from the sentence's own inline field. `merchantSeed` is
-     * deliberately left alone: it re-seeds that field, and re-seeding it
-     * mid-keystroke would take the caret with it.
-     */
+    // `merchantSeed` is left alone: re-seeding that field mid-keystroke would take the caret with it.
     const handleMerchantChange = (next: string) => {
         setForcedLookup(false);
         form.setFieldValue("merchant", next);
         onNameChange(next);
     };
 
-    /**
-     * The name changing from the stage's merchant step — typed there, or taken
-     * off one of its rows. The sentence's field is uncontrolled, so moving it
-     * means re-seeding it.
-     */
+    // The sentence's field is uncontrolled, so moving it means re-seeding it.
     const handleStageMerchantChange = (next: string) => {
         form.setFieldValue("merchantSeed", next);
         handleMerchantChange(next);
@@ -2103,8 +1863,6 @@ export function TransactionForm({
             blank: t(accountDeclined ? "transaction.sentence.noAccount" : "transaction.sentence.blank.account"),
             field: t("transaction.field.account"),
         },
-        // A zero in the entry's own currency rather than a noun: it states that a
-        // number belongs here and what shape it takes, which "an amount" does not.
         amount: { blank: formatAmount(0, currency, true, language), field: t("transaction.field.amount") },
         category: { blank: t("transaction.sentence.blank.category"), field: t("transaction.field.category") },
         currency: { code: symbolIsShared(currency) ? currency : null, field: t("transaction.sentence.currency") },
@@ -2124,8 +1882,7 @@ export function TransactionForm({
             field: t("transaction.rate.title"),
             source: t("transaction.rate.source"),
         },
-        // Uninterpolated on purpose: with no params `t` hands back the template
-        // itself, which is what `parseSentence` reads the slot order out of.
+        // Uninterpolated: with no params `t` returns the template, which `parseSentence` reads the slot order from.
         template: t(income ? "transaction.sentence.income" : "transaction.sentence.expense"),
         when: { field: t("transaction.field.date") },
     };
@@ -2159,11 +1916,6 @@ export function TransactionForm({
         />
     ) : undefined;
 
-    /**
-     * The stage's body for every step that is not the keypad, with the header it
-     * sits under. Split from {@link renderStage} so each stays readable; the
-     * container itself is written once.
-     */
     // oxlint-disable-next-line complexity -- one branch per step of a single surface; splitting it per step would hide the fact that they are alternatives.
     const stageStepContent = (amountNumber: number, merchant: string): StageStepContent => {
         if (stageStep === "fee") {
@@ -2324,9 +2076,6 @@ export function TransactionForm({
                         placeholder={t("transaction.field.namePlaceholder")}
                         recent={recentNames}
                         recentLabel={t("transaction.merchant.recent")}
-                        // The remembered names are passed as the exclusion too: a
-                        // merchant on both rows is one merchant, and the row the
-                        // user has actually used is the one worth keeping.
                         suggestions={suggestMerchants(merchant, MERCHANT_SUGGESTION_LIMIT, recentNames)}
                         value={merchant}
                     />
@@ -2496,8 +2245,6 @@ export function TransactionForm({
             };
         }
         if (stageStep === "date") {
-            // The wheel is continuous, so it does not hand over on a change the
-            // way a named day does — the footer is the way on.
             return {
                 body: <StepDate date={date} onChange={handleDateChange} withTime />,
                 title: t("transaction.field.date"),
@@ -2514,8 +2261,6 @@ export function TransactionForm({
                         }}
                     />
                 ),
-                // The only way back to a schedule that never ends: a wheel can
-                // name a day and nothing else.
                 rightAction: {
                     label: t("common.never"),
                     onPress: () => {
@@ -2558,12 +2303,6 @@ export function TransactionForm({
         };
     };
 
-    /**
-     * The one surface pinned to the bottom, and the only thing that decides what
-     * it shows. The amount step IS the keypad, which composes the stage itself;
-     * every other step is a body inside one — including the rate step, which
-     * renders the same keys as its own child once a custom rate is chosen.
-     */
     const renderStage = (amountText: string, merchant: string) => {
         const amountNumber = numpadToNumber(amountText);
         if (stageStep === "amount") {
@@ -2588,8 +2327,6 @@ export function TransactionForm({
         return (
             <TransactionStage
                 backLabel={t("common.back")}
-                // A ledger with no account to pick has nothing this step can
-                // answer, so the button leaves for the editor that mints one.
                 footer={
                     footer ??
                     (stageStep === "account" && allAccounts.length === 0
@@ -2671,8 +2408,6 @@ export function TransactionForm({
             }
             handleTypeChange(income ? "expense" : "income");
         },
-        // The word is a way into its step as much as the other facts are, and the step
-        // is what carries the names this ledger already knows.
         onMerchantPress: () => enterStep("merchant"),
         onWhenPress: () => enterStep("when"),
         paidVia: paysBolivares
@@ -2731,8 +2466,7 @@ export function TransactionForm({
                         ? t("transaction.sentence.add.split")
                         : splitLabel(splitAllocations.length),
                 onPress: () => {
-                    // A sheet presents over the note's keyboard rather than under it, and the
-                    // field it belongs to is gone from the screen by then.
+                    // A sheet presents over the note's keyboard, not under it.
                     Keyboard.dismiss();
                     openSplit(numpadToNumber(form.state.values.amount), category?.id ?? null, minorUnits);
                     splitSheetRef.current?.present();
@@ -2748,8 +2482,6 @@ export function TransactionForm({
                 key: "repeat",
                 label: isSubscription ? repeatChipLabel() : t("transaction.sentence.add.repeat"),
                 onPress: () => enterStep("repeat"),
-                // The step names cadences, not "never": the way back off a schedule is the
-                // chip's own ✕, which only a set chip draws.
                 onRemove: () => handleKindChange("once"),
                 removeAccessibilityLabel: t("transaction.schedule.stopRepeat"),
             },
@@ -2779,13 +2511,8 @@ export function TransactionForm({
     } satisfies Partial<ComponentProps<typeof TransactionSentenceBody>>;
 
     return (
-        /**
-         * Its own PortalProvider, not the app's: PanelUI hosts portalled content at
-         * `PanelUIProvider`, which sits ABOVE `LocalDataProvider` in the root layout —
-         * so a sheet mounted there loses the database and `useLocalData` throws out of
-         * the keypad. A host inside this screen keeps the sheet under every provider
-         * the form itself has.
-         */
+        // Its own PortalProvider: PanelUI's host sits above `LocalDataProvider`, so a sheet portalled there loses the
+        // database and `useLocalData` throws.
         <PortalProvider>
             <View
                 className="flex-1"
@@ -2793,8 +2520,7 @@ export function TransactionForm({
                     containerHeight.set(e.nativeEvent.layout.height);
                 }}
             >
-                {/* First, so that on Android a sheet's own header (`cta.android.tsx`)
-                    lands above the scroller. On iOS it draws only toolbar items. */}
+                {/* First, so an Android sheet's own header (`cta.android.tsx`) lands above the scroller. */}
                 <SubscribeFields
                     selector={(s) => ({
                         amount: s.values.amount,
@@ -2922,10 +2648,7 @@ export function TransactionForm({
                     ) : null}
                 </FormScroll>
 
-                {/* The stage's merchant step edits the same string the sentence
-				    does, and the software keyboard covers a surface docked to the
-				    bottom of the screen. Only that step lifts: every other one is
-				    what the keyboard is meant to uncover. */}
+                {/* Only the merchant step lifts over the keyboard; the rest are what it should uncover. */}
                 {resting ? null : (
                     <KeyboardAvoidingView behavior="padding" enabled={stageStep === "merchant" && !largeText}>
                         <StagePartContext value="pinned">{stageFields}</StagePartContext>
@@ -3032,7 +2755,6 @@ interface FormSeed {
     seed?: TransactionSeed;
 }
 
-/** What a form opens with, from the row it edits, the row it copies, or the seed it was handed. */
 // oxlint-disable-next-line complexity -- the seed has to reconcile initial, copyOf and seed across category, currency and rate in one pass, because `useForm` only reads it once
 function initialFormValues({ copyOf, db, globalCurrency, initial, nameSeed, seed }: FormSeed) {
     const sourceId = initial?.categoryId ?? copyOf?.categoryId ?? seed?.categoryId;
@@ -3048,9 +2770,7 @@ function initialFormValues({ copyOf, db, globalCurrency, initial, nameSeed, seed
         savedFee?.feeRate == null &&
         (savedFee?.amount ?? null) === paidViaCharge(paidVia, initial.amount);
     const feeSeed: FeeDraft | null = initial && !feeFollowsPaidVia ? feeDraftOf(savedFee) : null;
-    // SAFETY: three of the fields below start empty and are filled as the form
-    // is used, so each initial literal has to carry the type the field will end
-    // up holding rather than the empty one it starts as.
+    // SAFETY: fields that start empty carry the type they end up holding, not the empty literal's.
     return {
         account: seedAccount(db, initial, seed),
         amount: amountSeed == null ? "" : numberToNumpad(amountSeed, minorUnitsFor(currencySeed ?? globalCurrency)),
@@ -3063,21 +2783,14 @@ function initialFormValues({ copyOf, db, globalCurrency, initial, nameSeed, seed
         feeCategoryId: savedFee?.categoryId ?? null,
         hasEndDate: initial?.recurringEndDate != null,
         income: seedCategory?.income ?? initial?.income ?? copyOf?.income ?? seed?.income ?? false,
-        // Seeded from the live schedule, not `onceRecurring`: that flag stays
-        // true on every occurrence the back-fill materialized, so reading it
-        // here opens a settled charge as an active subscription and
-        // re-projects the whole schedule on save. Exactly one row in a chain
-        // carries `recurringType > 0` — the one that is genuinely still
-        // charging.
+        // From the live schedule, not `onceRecurring`, which stays true on every back-filled occurrence. Only the row
+        // still charging has `recurringType > 0`.
         isSubscription:
             (initial?.recurringType ?? RECURRING_TYPE.none) !== RECURRING_TYPE.none || seed?.recurrence != null,
         leadDays: normalizeLead(initial?.reminderLeadDays ?? null),
         merchant: nameSeed,
-        // What the sentence's inline field is seeded WITH, which is not the
-        // same thing as what the entry is called. That field is uncontrolled
-        // — it has to be, or the caret would jump on every keystroke — so the
-        // only way the stage's merchant step can move it is to re-seed it,
-        // and only the stage ever writes this.
+        // Seeds the uncontrolled inline field (controlled, the caret would jump); only the stage's merchant step writes
+        // it.
         merchantSeed: nameSeed,
         paidVia,
         pendingCategory: null as PendingCategory | null,
@@ -3092,7 +2805,6 @@ function initialFormValues({ copyOf, db, globalCurrency, initial, nameSeed, seed
     };
 }
 
-/** Every field the form holds, as it opens and as a discarded draft carries them back. */
 type TransactionFormValues = ReturnType<typeof initialFormValues>;
 
 function oneYearFrom(date: Date): Date {

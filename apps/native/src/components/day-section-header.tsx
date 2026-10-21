@@ -12,21 +12,14 @@ import { MonoLabel } from "./mono-label";
 import { cn } from "./tw";
 
 interface DaySectionHeaderProps {
-    /**
-     * The top inset is the gap between one day group and the next — the previous
-     * group's 18pt trailing padding plus this header's own 10pt. The first group
-     * has no predecessor, so it gets only the 10.
-     */
     first?: boolean;
-    /** Draws the day as a shareable card. Omit on a surface that offers none. */
     onShare?: () => void;
     section: DaySection<unknown>;
 }
 
 export function DaySectionHeader({ section, first = false, onShare }: DaySectionHeaderProps) {
     const { showCents } = useDisplaySettings().state;
-    // Consuming the language here is what re-renders this header when it changes;
-    // `formatDayHeader`'s `runtimeLanguage()` default is invisible to React.
+    // Consuming the language re-renders this on a change; `formatDayHeader`'s default is invisible to React.
     const { language } = useLanguage();
     const t = useTranslation();
     const largeText = useAccessibilityTextSize();
@@ -58,9 +51,7 @@ export function DaySectionHeader({ section, first = false, onShare }: DaySection
             ]}
             owner={String(section.day.getTime())}
         >
-            {/* The menu lifts this view into its preview, so the group's own
-			    ground has to be on it — a transparent header would be snapshotted
-			    against nothing. */}
+            {/* The menu snapshots this view for its preview, so it carries the group's ground. */}
             <View className={cn("bg-background", className)}>{body}</View>
         </ActionMenu>
     );

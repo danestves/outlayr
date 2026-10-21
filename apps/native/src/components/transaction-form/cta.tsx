@@ -17,18 +17,13 @@ export interface KeyboardSave {
 export interface TransactionFormCtaProps {
     deleteLabel?: string;
     deleteTint?: string;
-    /** A lookup is out; the button waits for it rather than asking twice. */
     lookupBusy?: boolean;
     lookupLabel?: string;
     onDelete?: () => void;
-    /** Given only while editing: a new entry looks its merchant up as it is typed. */
+    /** Only while editing: a new entry looks its merchant up as it is typed. */
     onLookup?: () => void;
     save?: KeyboardSave;
-    /**
-     * Set when the form is a sheet rather than a full-screen modal. iOS ignores
-     * it: the sheet keeps its native bar. Android has no bar on a sheet, so
-     * `cta.android.tsx` draws one inside it, under this title.
-     */
+    /** iOS ignores it (the sheet keeps its native bar); Android draws a bar inside the sheet under this title. */
     sheet?: { title?: string };
 }
 

@@ -38,16 +38,7 @@ function symbol(
     return null;
 }
 
-/**
- * Ports Swift's `Transaction.effectiveColor` and `displaySymbol`
- * (`apps/ios/app/Core/Persistence/TransactionExtensions.swift:36-75`).
- *
- * The symbol falls through as a **pair**, not field by field: resolving icon and
- * emoji independently lets an emoji-only transaction claim its own emoji and the
- *category's* icon at the same time, and the tile then paints the icon — an
- * identity the user never chose. A transaction that names either one owns the
- * whole symbol.
- */
+// Ports Swift's `displaySymbol`: the symbol falls through as a pair, or an emoji-only row paints its category's icon.
 export function resolveTransactionIdentity(source: TransactionIdentitySource): TransactionIdentity {
     const resolved =
         symbol(source.icon, source.emoji) ?? symbol(source.categoryIcon, source.categoryEmoji) ?? NO_SYMBOL;

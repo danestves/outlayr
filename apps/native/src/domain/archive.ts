@@ -1,24 +1,11 @@
 import { z } from "zod";
 
-/**
- * The shape of a full-ledger archive, and the rules for reading one back.
- *
- * Separate from the CSV entirely. A CSV is an interchange format for
- * spreadsheets and is lossy by design — eight columns of a table that has thirty.
- * This is the format that exists to be restored from, so it carries every column
- * of every table verbatim and refuses anything it cannot vouch for.
- */
-
 /** Rises when a file carries something an older build would drop on restore. */
 export const ARCHIVE_VERSION = 3;
 
 export const ARCHIVE_FORMAT = "outlayr.archive";
 
-/**
- * Every table an archive carries, in the order a restore must write them:
- * `categories` first because transactions and budgets point at it, and a restore
- * into a schema with foreign keys enforced fails otherwise.
- */
+/** In restore order: with foreign keys enforced, a row written before the one it points at fails. */
 export const ARCHIVE_TABLES = [
     "categories",
     "accounts",
@@ -40,14 +27,7 @@ export const ARCHIVE_TABLES = [
 
 export type ArchiveTable = (typeof ARCHIVE_TABLES)[number];
 
-/**
- * Which columns hold an instant.
- *
- * They are written as epoch milliseconds rather than left to `JSON.stringify`,
- * which would turn a `Date` into an ISO string and read it back as a plain
- * string — every date in the ledger silently becoming text that sorts and
- * compares differently. Naming them is what makes the round trip exact.
- */
+/** Written as epoch ms: `JSON.stringify` would turn a `Date` into an ISO string that restores as text. */
 const ARCHIVE_DATE_COLUMNS = {
     accounts: ["initialBalanceDate", "dateCreated", "updatedAt", "deletedAt"],
     appMeta: [],
@@ -66,17 +46,13 @@ const ARCHIVE_DATE_COLUMNS = {
     transfers: ["date", "day", "month", "dateCreated", "updatedAt", "deletedAt"],
 } satisfies Record<ArchiveTable, readonly string[]>;
 
-/** What a column can be once it is JSON. `Date` is encoded away before this. */
 type ArchiveValue = boolean | number | string | null;
 
-/** A row as the file holds it. */
 export type ArchiveRow = Record<string, ArchiveValue>;
 
-/** A row as the database holds it — the same values, with instants still `Date`. */
 export type TableRow = Record<string, ArchiveValue | Date>;
 
 export interface ArchiveDocument {
-    /** Epoch ms, for the same reason every other instant here is. */
     exportedAt: number;
     format: typeof ARCHIVE_FORMAT;
     photos: Record<string, string>;
@@ -89,21 +65,14 @@ export function archiveFileName(now: Date): string {
     return `outlayr-archive-${stamp}.json`;
 }
 
-/** Instants out to epoch ms, so nothing depends on how JSON renders a Date. */
 export function encodeArchiveRow(row: TableRow): ArchiveRow {
-    // Every `Date` encodes, not just the listed ones: the list decides what
-    // decodes BACK to a Date, and letting an unlisted one fall through would
-    // hand `JSON.stringify` an ISO string that restores as text.
+    // Every `Date`, not just the listed ones, or an unlisted one would restore as text.
     return Object.fromEntries(
         Object.entries(row).map(([column, value]) => [column, value instanceof Date ? value.getTime() : value])
     );
 }
 
-/**
- * The inverse. A date column holding something that is not a finite number
- * decodes to null rather than to `new Date(NaN)`, which would restore a row
- * whose date throws the moment anything formats it.
- */
+/** A non-finite date decodes to null, not `new Date(NaN)`, which throws the moment anything formats it. */
 export function decodeArchiveRow(table: ArchiveTable, row: ArchiveRow): TableRow {
     const dateColumns: readonly string[] = ARCHIVE_DATE_COLUMNS[table];
     return Object.fromEntries(
@@ -123,17 +92,12 @@ export function serializeArchive(document: ArchiveDocument): string {
 
 const archiveValue = z.union([z.boolean(), z.number(), z.string(), z.null()]);
 
-/**
- * A row is a flat bag of column values, so the value union is the whole check —
- * anything nested is not something this ledger ever wrote.
- */
 const archiveRow = z.record(z.string(), archiveValue);
 
 const PHOTO_NAME = /^(?!\.{1,2}$)[^/\\]+$/;
 
 const archiveDocument = z.object({
-    // A file with an unreadable timestamp is still restorable; the stamp is only
-    // shown on the confirmation.
+    // The stamp is only shown on the confirmation, so an unreadable one does not block a restore.
     exportedAt: z.number().catch(0),
     format: z.literal(ARCHIVE_FORMAT),
     photos: z.record(z.string().regex(PHOTO_NAME), z.string()).default({}),
@@ -142,14 +106,8 @@ const archiveDocument = z.object({
 });
 
 /**
- * Reads a file back, or answers null when it is not an archive this build can
- * restore.
- *
- * Deliberately strict, and deliberately silent about why: a restore replaces the
- * whole ledger, so the failure to avoid is a half-recognised file that overwrites
- * a good ledger with a partial one. A future version number is refused rather
- * than best-guessed, because the columns it adds are exactly the ones this build
- * would drop.
+ * Strict and silent: a restore replaces the whole ledger, so a half-recognised file must never overwrite a good
+ * one. A future version is refused, since the columns it adds are exactly the ones this build would drop.
  */
 export function parseArchive(text: string): ArchiveDocument | null {
     let parsed: z.ZodSafeParseResult<z.infer<typeof archiveDocument>>;
@@ -161,9 +119,7 @@ export function parseArchive(text: string): ArchiveDocument | null {
     if (!parsed.success) {
         return null;
     }
-    // A missing table reads as empty rather than as a malformed file: an archive
-    // written before a table existed is still restorable, and the alternative is
-    // refusing a file whose data is entirely intact.
+    // A missing table reads as empty: an archive written before the table existed is still intact.
     const { tables } = parsed.data;
     return {
         exportedAt: parsed.data.exportedAt,
@@ -190,7 +146,6 @@ export function parseArchive(text: string): ArchiveDocument | null {
     };
 }
 
-/** How many rows a file would restore, for the confirmation that precedes it. */
 export function archiveRowCount(document: ArchiveDocument): number {
     return ARCHIVE_TABLES.reduce((total, table) => total + document.tables[table].length, 0);
 }

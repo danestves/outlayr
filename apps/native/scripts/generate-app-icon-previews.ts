@@ -1,20 +1,10 @@
-/**
- * Rasterizes the App Icon picker's thumbnails. Run after changing an SVG in
- * `assets/app-icon-previews/` and commit the PNGs:
- * `vp run --filter @outlayr/native gen:app-icon-previews`. Needs
- * `brew install librsvg`.
- *
- * A `.icon` bundle is compiled by `actool` at build time and has no runtime
- * representation JS can draw, so a picker row cannot show the real icon — these
- * flat previews stand in for it.
- */
+// A `.icon` bundle has no runtime form JS can draw, so the App Icon picker shows these committed PNGs instead.
 
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
 import { rasterize, requireRsvgConvert, resetDirectory } from "./hugeicon-raster";
 
-/** Points. Matches the 44pt tile Swift's `SettingsAppIconView` drew. */
 const TILE_SIZE = 44;
 
 const scriptDir = dirname(new URL(import.meta.url).pathname);

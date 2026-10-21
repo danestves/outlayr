@@ -7,29 +7,10 @@ import { usingR2 } from "./photos";
 
 const r2 = new R2(components.r2);
 
-/**
- * How much one purge pass removes.
- *
- * Bounded because a mutation has a document budget and a ledger has no upper
- * size: a single pass over a heavy account would fail, and a deletion that fails
- * on the largest accounts is the one that matters most. The caller re-runs until
- * it reports done, so the only cost of a small number is more round trips.
- */
+/** Bounded by a mutation's document budget; the caller re-runs until done. */
 export const PURGE_BATCH = 200;
 
-/**
- * Removes one batch of an account's server-side data, reporting whether any is
- * left.
- *
- * Deliberately NOT a single sweeping delete. Beyond the size limit, a resumable
- * purge is also a retryable one: a pass that dies halfway has still made
- * progress, and running it again finishes the job rather than starting over.
- *
- * Photos go first. They are the only part that lives outside Convex, so they are
- * the only part that can be orphaned by a half-finished purge — an object whose
- * accounting row is gone is invisible to every later pass and would sit in the
- * bucket forever. Ledger rows can always be found again by index.
- */
+/** Photos first: they live outside Convex, so a half-finished purge could orphan one forever. */
 export async function purgeUserBatch(ctx: MutationCtx, userId: string): Promise<{ done: boolean; removed: number }> {
     const photos = await ctx.db
         .query("photoSizes")
@@ -54,7 +35,7 @@ export async function purgeUserBatch(ctx: MutationCtx, userId: string): Promise<
         return { done: false, removed: suggestions.length };
     }
 
-    /* oxlint-disable no-await-in-loop -- the loop stops at the first table that still holds rows, so hoisting these queries would read every synced table on every pass — the document budget PURGE_BATCH exists to respect. */
+    /* oxlint-disable no-await-in-loop -- the loop stops at the first table that still holds rows; hoisting would read every synced table on every pass, past PURGE_BATCH's budget. */
     for (const table of SYNCED_TABLES) {
         const rows = await ctx.db
             .query(table)
@@ -68,9 +49,7 @@ export async function purgeUserBatch(ctx: MutationCtx, userId: string): Promise<
     }
     /* oxlint-enable no-await-in-loop */
 
-    // Last, and only once nothing else is left: it is the counter that stamps
-    // `seq`, so removing it while rows remain would restart numbering under
-    // records that already carry higher ones.
+    // Last: it stamps `seq`, so removing it early restarts numbering under higher seqs.
     const state = await ctx.db
         .query("syncState")
         .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -81,13 +60,7 @@ export async function purgeUserBatch(ctx: MutationCtx, userId: string): Promise<
     }
     return { done: true, removed: 0 };
 }
-/**
- * Frees the bytes behind a key, whichever backend holds them.
- *
- * Unlike `releaseUnreferenced` this asks no ownership question and checks no
- * references: the account itself is going, so every row that could have named
- * the object is going with it.
- */
+/** No ownership check: every row that could name the object is going too. */
 async function releaseObject(ctx: MutationCtx, key: string): Promise<void> {
     const mapping = await ctx.db
         .query("photoObjects")

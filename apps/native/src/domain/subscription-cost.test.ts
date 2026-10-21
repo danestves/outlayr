@@ -42,8 +42,6 @@ describe("normalizing one schedule to a month", () => {
 
 describe("monthlySubscriptionCost", () => {
     it("weighs a daily coffee far above a yearly renewal that costs more per charge", () => {
-        // The defect this fixes: at face value the $12 renewal outweighs the $5
-        // coffee, because each contributes exactly one charge to the list.
         const coffee = schedule(5, RECURRING_TYPE.daily);
         const renewal = schedule(12, RECURRING_TYPE.yearly);
 
@@ -116,9 +114,6 @@ describe("monthlySubscriptionCost", () => {
     });
 
     it("converts the month's figure, not the single charge, at today's rate", () => {
-        // $1200/year is $100/month, which is €90 at today's rate. Converting the
-        // $1200 first would print €1080 and then divide to €90 only by luck — a
-        // schedule whose rate moved between charges would not land there.
         const rates = buildRateTable([{ date: "2026-07-01", quote: "EUR", rate: 0.9 }]);
         const buckets = monthlySubscriptionCost(
             [
@@ -134,8 +129,6 @@ describe("monthlySubscriptionCost", () => {
     });
 
     it("converts a schedule first saved before the oldest rate held", () => {
-        // A yearly renewal saved last November predates a rate window that opens in
-        // July; valued at its saved date it would stay in dollars under a euro view.
         const rates = buildRateTable([{ date: "2026-07-01", quote: "EUR", rate: 0.9 }]);
         const buckets = monthlySubscriptionCost(
             [

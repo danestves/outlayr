@@ -170,7 +170,6 @@ async function runPruneToCompletion(t: TestClient): Promise<void> {
     await t.finishAllScheduledFunctions(vi.runAllTimers);
 }
 
-/** 250 pre-window dates: forces at least two pages at the 200-row batch size. */
 async function seedPreWindowBacklog(t: TestClient, quote: string): Promise<void> {
     for (let days = 91; days <= 340; days += 1) {
         await seedOfficialRate(t, quote, daysAgoDate(days));
@@ -179,10 +178,6 @@ async function seedPreWindowBacklog(t: TestClient, quote: string): Promise<void>
 
 describe("pruneStale", () => {
     it("keeps one pre-window row per month and every in-window row", async () => {
-        // 100 and 120 days back are both in March 2026, so only the newer survives;
-        // 200 days back is December 2025 and keeps its own anchor. A single anchor
-        // per pair would drop December entirely and leave anything older than the
-        // window valuing at face value for good.
         vi.useFakeTimers();
         vi.setSystemTime(new Date("2026-07-03T12:00:00Z"));
         const t = convexTest(schema, modules);
@@ -218,8 +213,6 @@ describe("pruneStale", () => {
 
         await runPruneToCompletion(t);
 
-        // 250 consecutive days collapse to one row per calendar month, and the
-        // newest survivor is still the row adjacent to the boundary.
         const survivors = await allRateDates(t, "VES");
         expect(survivors).toContain(daysAgoDate(91));
         expect(new Set(survivors.map((date) => date.slice(0, 7))).size).toBe(survivors.length);
@@ -239,15 +232,10 @@ describe("pruneStale", () => {
 
         const first = await t.action(internal.exchangeRates.pruneStale, {});
         expect(first.isDone).toBeFalsy();
-        // Advance past the original boundary before the continuation drains. A
-        // per-batch windowStart recompute would now classify the near-boundary
-        // rows as pre-window and delete the original pass's anchor.
+        // Past the original boundary, a per-batch windowStart recompute would delete the original pass's anchor.
         vi.setSystemTime(new Date("2026-07-06T12:00:00Z"));
         await t.finishAllScheduledFunctions(vi.runAllTimers);
 
-        // The point is the boundary, not the count: the near-boundary rows must
-        // still be classed as in-window, and the original pass's newest pre-window
-        // row must survive. A per-batch recompute would have deleted both.
         const survivors = await allRateDates(t, "VES");
         expect(survivors).toContain(originalAnchor);
         for (const date of nearBoundaryInWindow) {
@@ -269,16 +257,11 @@ describe("pruneStale", () => {
         const second = await t.action(internal.exchangeRates.pruneStale, {});
         await t.finishAllScheduledFunctions(vi.runAllTimers);
 
-        // The post-prune backlog fits one batch, so this pass is a single
-        // invocation — `deleted: 0` is the whole pass's total.
         expect(second).toStrictEqual({ deleted: 0, isDone: true });
         await expect(allRateDates(t, "VES")).resolves.toStrictEqual(survivors);
     });
 
     it("spaces the next batch out instead of dispatching it immediately", async () => {
-        // The regression: `runAfter(0)` sprinted a whole backlog in one second and
-        // blew the deployment's write budget. Asserted on the schedule rather than
-        // on `nextPruneStep` alone, so a handler that ignores the delay is caught.
         vi.useFakeTimers();
         vi.setSystemTime(new Date("2026-07-03T12:00:00Z"));
         const t = convexTest(schema, modules);
@@ -307,13 +290,10 @@ describe("pruneStale", () => {
         const t = convexTest(schema, modules);
         await seedOfficialRate(t, "VES", daysAgoDate(10));
 
-        // A caller whose clock is far enough ahead that the row has left the
-        // window. The server's own `Date.now()` still says it is inside.
         const ahead = await t.query(api.exchangeRates.pullRates, {
             at: Date.now() + 400 * 24 * 60 * 60 * 1000,
         });
 
-        // `YYYY-MM-DD` sorts lexically as it sorts chronologically.
         expect(ahead.windowStart.localeCompare(daysAgoDate(10))).toBeGreaterThan(0);
     });
 
@@ -326,12 +306,9 @@ describe("pruneStale", () => {
         await seedOfficialRate(t, "VES", daysAgoDate(200));
 
         await runPruneToCompletion(t);
-        // Unauthenticated on purpose: `pullRates` is public.
         const result = await t.query(api.exchangeRates.pullRates, {});
 
         const dates = result.rows.filter((r) => r.quote === "VES").map((r) => r.date);
-        // All three: the in-window row plus both monthly anchors. Serving only the
-        // newest anchor is what left anything older than it on face value.
         expect(dates).toHaveLength(3);
         expect(dates).toContain(daysAgoDate(10));
         expect(dates).toContain(daysAgoDate(100));
@@ -369,8 +346,6 @@ describe(nextPruneStep, () => {
     });
 
     it("a failed batch keeps the pass alive at the same cursor", () => {
-        // The bug this replaces: the failure took the reschedule down with it, so a
-        // backlog large enough to trip the write limit never drained at all.
         expect(nextPruneStep({ failed: true }, midPass)).toMatchObject({ cursor: "page-3", retries: 1 });
     });
 

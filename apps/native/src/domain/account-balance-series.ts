@@ -21,7 +21,7 @@ export interface AccountBalanceSeriesPoint {
     value: number;
 }
 
-/** Calendar arithmetic on a `YYYY-MM-DD` key; going through UTC keeps every day 24 hours long. */
+/** Through UTC, so every day is 24 hours long. */
 function addDays(dateKey: string, days: number): string {
     const date = new Date(`${dateKey}T00:00:00.000Z`);
     date.setUTCDate(date.getUTCDate() + days);
@@ -39,9 +39,8 @@ function applyCell(
 }
 
 /**
- * Daily account balance points over the recent historical window, one per LOCAL
- * day: each cell is drawn on its `plotDay` and valued at its UTC `dateKey`, the
- * split the Log keeps. Entries that predate the window become its opening value.
+ * One point per local day: each cell is drawn on its `plotDay` and valued at its UTC `dateKey`, as the Log does.
+ * Entries from before the window become its opening value.
  */
 export function accountBalanceSeries(
     account: AccountBalanceSeriesAccount,

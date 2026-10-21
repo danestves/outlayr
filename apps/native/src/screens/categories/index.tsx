@@ -59,21 +59,11 @@ import type { ThemeColors } from "@/theme/use-colors";
 
 import { CategoryGridOpen, EMPTY_MARK_TILE, EMPTY_MARK_WIDTH } from "./category-grid-open";
 
-/**
- * The row rules paint the translucent `separator` over the card (#E8E8E8 at
- * 1.23:1 light, #38383B at 1.46:1 dark), and as of iOS 26 `opaqueSeparator` sits
- * BELOW that in dark (#2A2A2C, 1.19:1), inverting the hierarchy. `systemGray3`
- * clears the rule in both schemes (1.37x / 1.28x), and being a `PlatformColor` it
- * reads the same trait collection the rules do, so the two can never drift.
- */
+/** `systemGray3`: iOS 26 dark `opaqueSeparator` sits below the `separator` rules it must clear. */
 const CONNECTOR = PlatformColor("systemGray3");
 const CONNECTOR_WEIGHT = 1;
 
-/**
- * Every row zeroes its horizontal `listRowInsets` so the connector can paint edge
- * to edge and consecutive trunks abut, which means the leading gutter the system
- * would supply is re-created here as row padding.
- */
+/** Rows zero their horizontal `listRowInsets` so connectors abut; the gutter is re-created as padding. */
 const ROW_LEADING = 16;
 const ROW_TRAILING = 20;
 const STEM_X = ROW_LEADING + PARENT_TILE / 2;
@@ -82,7 +72,7 @@ const CHILD_LEADING = STEM_X + ELBOW;
 const GROUP_GAP = 10;
 
 const STEM = [foregroundStyle(CONNECTOR), frame({ width: CONNECTOR_WEIGHT })];
-/** Not a Spacer — see `TreeConnector`. */
+/** Not a Spacer: see `TreeConnector`. */
 const STEM_HIDDEN = [...STEM, opacity(0)];
 const ELBOW_BAR = [foregroundStyle(CONNECTOR), frame({ height: CONNECTOR_WEIGHT, width: ELBOW })];
 
@@ -106,7 +96,6 @@ const CLOSING_ROW = listRowInsets({
     trailing: 0,
 });
 
-/** Text styles rather than fixed point sizes, so every font scales with Dynamic Type. */
 const SUBHEADLINE_MEDIUM = font({
     design: "rounded",
     textStyle: "subheadline",
@@ -130,12 +119,7 @@ const EMPTY_TEXT = font({
     weight: "medium",
 });
 
-/**
- * Takes the row inside its undo window out of the tree, laid out the way the
- * write will leave it: deleting a parent re-parents its subcategories to the top
- * level, so they are promoted here rather than vanishing with it and popping
- * back somewhere else ten seconds later.
- */
+/** A deleted parent's children are re-parented to the top level, so promote them here. */
 function usePendingRemoved(parents: CategoryWithChildren[], pendingId: string | null): CategoryWithChildren[] {
     return useMemo(() => {
         if (pendingId === null) {
@@ -203,8 +187,6 @@ export function Categories({ income }: { income: boolean }) {
         });
     };
 
-    // The row goes now and the write is held for the undo window, so the toast is
-    // the only thing left to state the cascade the confirmation used to carry.
     const deleteCategory = (category: Category, hasChildren: boolean) => {
         requestDelete(category.id, t(hasChildren ? "categories.undo.bodyWithChildren" : "categories.undo.body"));
     };
@@ -269,8 +251,7 @@ export function Categories({ income }: { income: boolean }) {
                     )}
 
                     {showSuggestions && suggestions.length > 0 ? (
-                        // A non-empty `title` short-circuits the `header` slot natively, so the
-                        // mono eyebrow only lands if the plain-string title is dropped.
+                        // A non-empty `title` short-circuits the `header` slot natively.
                         <Section
                             header={
                                 <Eyebrow colors={colors}>
@@ -300,8 +281,7 @@ export function Categories({ income }: { income: boolean }) {
 function CensusLine({ parents, colors }: { parents: CategoryWithChildren[]; colors: ThemeColors }) {
     const t = useTranslation();
     const children = parents.reduce((total, parent) => total + parent.children.length, 0);
-    // `parents.length` is never zero here — the empty state renders a headerless
-    // Section instead.
+    // `parents.length` is never zero here: the empty state renders a headerless Section.
     const clauses = [t("categories.census.categories", { count: parents.length })];
     if (children > 0) {
         clauses.push(t("categories.census.subcategories", { count: children }));
@@ -312,20 +292,8 @@ function CensusLine({ parents, colors }: { parents: CategoryWithChildren[]; colo
 type ConnectorKind = "branch" | "last";
 
 /**
- * The elbow lands on the row's vertical centre without anyone measuring the row:
- * SwiftUI hands the fixed-height bar its hairline first, then splits what is left
- * evenly between the two equally-flexible stems.
- *
- * A closing row hides its lower stem rather than dropping it for a `Spacer`. Both
- * do occupy the space, but they do not compete for it equally — a shape is
- * infinitely greedy where a Spacer only takes what is left over, so the stem above
- * ate most of the row and dragged the elbow well below the tile it was pointing at.
- * Two identical rectangles always halve the row, so the elbow stays centred.
- *
- * Only child and closing rows carry a connector. A parent row must not: the stem
- * would have to start at the row's centre, which is also its tile's centre, so the
- * hairline drew straight through the lower half of the glyph. Rows abut, so the
- * first child's stem already begins directly beneath the parent.
+ * Two identical rectangles halve the row; a Spacer loses to the greedy shape above and drags the elbow down. Parent
+ * rows carry none: it would cross the tile's glyph.
  */
 function TreeConnector({ kind }: { kind: ConnectorKind }) {
     return (
@@ -440,23 +408,18 @@ function CategoryRow({
         <SwipeActions modifiers={[indented ? FLUSH_ROW : PARENT_ROW, NO_RULE]}>
             <ZStack alignment="leading">
                 {indented ? <TreeConnector kind="branch" /> : null}
-                {/* The elbow lands on the tile at every Dynamic Type size only because this
-				    stack keeps SwiftUI's default `.center` alignment and symmetric vertical
-				    padding: both put the tile's centre on the row's centre, which is where
-				    the connector draws. A `firstTextBaseline` alignment is the tempting fix
-				    for accessibility sizes and would pull the elbow off the tile. */}
+                {/* The elbow meets the tile only with `.center` alignment and symmetric padding; `firstTextBaseline`
+                    pulls it off. */}
                 <HStack
                     modifiers={[
                         padding({ vertical: indented ? 3 : 4 }),
                         padding({ leading: indented ? CHILD_LEADING : ROW_LEADING }),
                         padding({ trailing: ROW_TRAILING }),
-                        // Without `hitArea`, the Spacer and amount gap are not
-                        // hit-testable, so a row tap only lands on the label.
+                        // Without `hitArea` only the label is hit-testable.
                         hitArea(outline.rectangle()),
                         onTapGesture(() => onEdit(category)),
                         accessibilityElement("combine"),
-                        // A single Section leaves VoiceOver no per-parent group boundary; the
-                        // heading trait hands it back.
+                        // One Section leaves VoiceOver no per-parent boundary; the heading trait hands it back.
                         accessibilityAddTraits(indented ? ["isButton"] : ["isButton", "isHeader"]),
                         accessibilityLabel(category.name ?? ""),
                         accessibilityValue(amountText ?? ""),
@@ -502,11 +465,7 @@ function plusGlyph({ color, size }: { color: string; size: number }) {
     return <HugeiconsIcon color={color} icon={PlusSignIcon} size={size} strokeWidth={2.4} />;
 }
 
-/**
- * Owns the group's closing rule, so every boundary has a single owner: a
- * hide-bottom and a show-top request landing on the same hairline resolve inside
- * UIKit.
- */
+/** Owns the closing rule: competing hide and show requests on one hairline resolve inside UIKit. */
 function GhostAddRow({ tint, closesTree, onPress }: { tint: string; closesTree: boolean; onPress: () => void }) {
     const t = useTranslation();
     return (

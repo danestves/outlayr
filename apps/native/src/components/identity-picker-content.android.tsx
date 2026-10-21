@@ -49,7 +49,6 @@ const PHOTO_WELL = 132;
 const PHOTO_WELL_RADIUS = 30;
 const SEARCH_HEIGHT = 48;
 const PRESSED_ALPHA = 0.1;
-/** The smallest touch target M3 allows. */
 const MIN_TARGET = 48;
 /** What a 40dp swatch needs on each side to reach `MIN_TARGET`. */
 const SWATCH_SLOP = 4;
@@ -67,7 +66,6 @@ function chunk<T>(items: readonly T[], size: number): T[][] {
     return rows;
 }
 
-/** Group headers and rows of cells, flattened so one list can virtualize them. */
 function gridRows(groups: readonly { title: string; items: readonly string[] }[]): GridRow[] {
     return groups.flatMap((group) => [
         { key: `h:${group.title}`, kind: "header" as const, title: group.title },
@@ -93,14 +91,7 @@ function glyphRows(tab: IdentityTab, query: string, t: TranslateFn): GridRow[] {
     return gridRows(CATEGORY_ICON_GROUPS.map((group) => ({ items: group.keys, title: t(group.titleKey) })));
 }
 
-/**
- * The identity picker on Android, shared by the transaction sheet
- * (`transactions/identity`) and the category one (`settings/category-symbol`):
- * the sheet header, M3 segmented buttons for the tabs, a search field on the
- * icon tab, a swatch rail from the category ramp in place of SwiftUI's
- * `ColorPicker` (Compose has none), and a virtualized glyph grid. Picks apply
- * as they are made, so the header's close button is the Done.
- */
+/** Picks apply as they are made, so the header's close button is the Done. */
 export function IdentityPickerHost({
     value,
     onChange,
@@ -145,9 +136,7 @@ export function IdentityPickerHost({
         }
     };
 
-    // The library launch itself can reject — a revoked permission, a host torn
-    // down mid-pick — and the well looks the same afterwards, so the prompt
-    // under it says so instead of the failure being silent.
+    // A rejected launch (revoked permission, host torn down) looks like a missed tap, so the prompt says so.
     const picking = useRef(false);
     const pickPhoto = () => {
         if (picking.current) {
@@ -165,8 +154,6 @@ export function IdentityPickerHost({
             });
     };
 
-    // Rebuilt only when the tab or the query changes, not on every pick, so
-    // the list keeps its data and only re-renders the rows it must.
     const rows = useMemo(() => (tab === "photo" ? [] : glyphRows(tab, query, t)), [tab, query, t]);
     // Glyph cells shrink below 48dp on narrow phones; the slop restores the target.
     const cellSlop = Math.max(0, (MIN_TARGET - cell) / 2);
@@ -194,8 +181,7 @@ export function IdentityPickerHost({
                         {t("transaction.identity.noIcons")}
                     </Text>
                 }
-                // The search field sits above with nothing else to tap, so a drag
-                // over the glyphs is the way to put its keyboard away.
+                // Dragging the glyphs is the only way to put the search keyboard away.
                 contentContainerStyle={{ paddingBottom: 24, paddingHorizontal: SYMBOL_MARGIN }}
                 data={rows}
                 initialNumToRender={12}
@@ -263,8 +249,7 @@ export function IdentityPickerHost({
             {/* The emoji palette has no keywords to search against. */}
             {tab === "icons" ? <SearchField onChange={setQuery} query={query} /> : null}
 
-            {/* The photo tab carries its own colour control, so the rail belongs to
-			    the glyph tabs alone. */}
+            {/* The photo tab has its own colour control. */}
             {showsColorRail && tab !== "photo" ? (
                 <SwatchRail onSelect={pickColor} selected={value.color} usedColors={usedColors} />
             ) : null}
@@ -274,7 +259,6 @@ export function IdentityPickerHost({
     );
 }
 
-/** An M3 search bar: a full-round container, the search glyph, and a clear button once typed in. */
 function SearchField({ query, onChange }: { query: string; onChange: (next: string) => void }) {
     const t = useTranslation();
     const m3 = useMaterialColors();
@@ -312,7 +296,6 @@ function SearchField({ query, onChange }: { query: string; onChange: (next: stri
     );
 }
 
-/** The category ramp as one scrolling row; colours other categories own are dimmed. */
 function SwatchRail({
     selected,
     usedColors,
@@ -348,11 +331,6 @@ function SwatchRail({
     );
 }
 
-/**
- * The photo well, then its glow colour: what was read off the image, which
- * any swatch of the ramp below overrides. Cropping is left to the system
- * picker's own square editor.
- */
 function PhotoPanel({
     uri,
     photoColor,
@@ -360,7 +338,6 @@ function PhotoPanel({
     onPick,
     onColorChange,
 }: {
-    /** The last pick was refused, so the prompt says so instead of inviting one. */
     failed: boolean;
     uri: string | null;
     photoColor: string | null;

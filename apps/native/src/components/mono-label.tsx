@@ -9,7 +9,6 @@ interface MonoLabelProps {
     children: string;
     className?: string;
     maxFontSizeMultiplier?: number;
-    /** Clamps the eyebrow, for rows where it shares a line with other content. */
     numberOfLines?: number;
 }
 

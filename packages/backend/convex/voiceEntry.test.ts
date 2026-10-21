@@ -365,8 +365,7 @@ describe("voice thread + speak guard ladder", () => {
         const t = harness();
         const identity = await seedAuthUser(t);
         const owner = authenticatedAs(t, identity);
-        // Installed before the thread opens: the scheduler arms its timer at
-        // `runAfter` time, and a real one an hour out would never fire here.
+        // Installed before the thread opens: the scheduler arms its timer at `runAfter` time.
         vi.useFakeTimers();
         const { threadId } = await owner.mutation(api.voiceEntry.startThread, {});
         if (threadId === null) {

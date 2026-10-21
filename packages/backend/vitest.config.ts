@@ -2,8 +2,6 @@ import { defineConfig } from "vite-plus";
 
 export default defineConfig({
     test: {
-        // A committed `.only` must not silently narrow the suite: fail the run
-        // instead, which matches what CI would do anyway.
         allowOnly: false,
         env: {
             CLOUDFLARE_ACCOUNT_ID: "test-cloudflare-account",

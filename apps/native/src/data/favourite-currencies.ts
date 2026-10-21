@@ -8,11 +8,7 @@ import { parseFavourites } from "@/domain/favourite-currencies";
 import { META_KEYS } from "./app-meta-core";
 import { useLiveValue } from "./live-query";
 
-/**
- * `db` is nullable because the currency picker sheet is mounted by forms whose
- * callers can sit above the root splash gate, where `useDatabase()` throws. No
- * open database resolves to no favourites — never to an error.
- */
+// `db` is nullable: the picker is mounted by forms that can sit above the splash gate, where `useDatabase()` throws.
 export function useFavouriteCurrencies(db: Database | null): string[] {
     const stored = useLiveValue(
         appMeta,
@@ -26,8 +22,6 @@ export function useFavouriteCurrencies(db: Database | null): string[] {
         (rows) => rows[0]?.value ?? null,
         [db]
     );
-    // Keyed on the stored string so the parsed array keeps its identity across
-    // renders the row did not change in — a picker memoised on it would otherwise
-    // rebuild its cluster on every keystroke in the search field.
+    // Keyed on the stored string so the parsed array keeps its identity, or a memoised picker rebuilds every keystroke.
     return useMemo(() => parseFavourites(stored), [stored]);
 }

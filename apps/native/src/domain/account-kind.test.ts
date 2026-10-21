@@ -27,7 +27,6 @@ describe("splitting the accounts total into own and owe", () => {
     });
 
     it("leaves the total exactly as the accounts card already reports it", () => {
-        // The whole point: this adds a reading, it does not restate the figure.
         const accounts = [
             { balance: 5012.4, kind: "asset" as const },
             { balance: -200, kind: "liability" as const },

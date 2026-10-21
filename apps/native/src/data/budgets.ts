@@ -39,24 +39,18 @@ export * from "./budgets-core";
 export type Budget = typeof budgets.$inferSelect;
 
 export interface CategoryBudgetView {
-    /** The target this window actually runs on: `limit` plus any carry, floored at zero. */
     amount: number;
-    /** Where the budget counts from. The editor writes this, and windows advance from it. */
     anchor: Date;
     /** Signed: unspent allowance inherited, or an overspend still being paid off. */
     carry: number;
     categoryId: string | null;
     color: string;
-    /** The stored currency, which is not today's when the ledger's has since changed. */
     currency: string | null;
-    /** The name as stored: null means the category's own name is standing in. */
     customName: string | null;
-    /** Storage is icon XOR emoji, so a category with an emoji has no icon. */
     emoji: string | null;
     icon: string | null;
     id: string;
     leftover: number;
-    /** The target as set, before anything carried into it. */
     limit: number;
     name: string;
     overBudget: boolean;
@@ -67,23 +61,16 @@ export interface CategoryBudgetView {
 }
 
 export interface MainBudgetView {
-    /** The target this window runs on: `limit` plus any carry, floored at zero. */
     amount: number;
-    /** Where the budget counts from. The editor writes this, and windows advance from it. */
     anchor: Date;
-    /** Signed: unspent allowance inherited, or an overspend still being paid off. */
     carry: number;
-    /** The stored currency, which is not today's when the ledger's has since changed. */
     currency: string | null;
-    /** The name as stored: null means the standing-in label is what is on screen. */
     customName: string | null;
     id: string;
     leftover: number;
-    /** The target as set, before anything carried into it. */
     limit: number;
     name: string;
     overBudget: boolean;
-    /** Whole closed periods behind the current window that hold spending. */
     periodsBack: number;
     rollover: boolean;
     spent: number;
@@ -91,7 +78,6 @@ export interface MainBudgetView {
     window: BudgetWindow;
 }
 
-/** The first day the ledger holds anything, or null while it holds nothing. */
 export function earliestDate(rows: readonly { date: Date }[]): Date | null {
     let earliest: Date | null = null;
     for (const row of rows) {
@@ -102,7 +88,6 @@ export function earliestDate(rows: readonly { date: Date }[]): Date | null {
     return earliest;
 }
 
-/** Expense rows valued in the display currency, each carrying its category's parent. */
 export function expenseContributionsFrom(
     rows: readonly (DatedValuable & { categoryId: string | null })[],
     categoryMeta: ReadonlyMap<string, { parentId: string | null }>,
@@ -119,15 +104,8 @@ export function expenseContributionsFrom(
     }));
 }
 
-/**
- * `useLiveQuery` registers a fresh database listener per call, so this list is a
- *parameter* to the budget hooks rather than something each one fetches. Call
- * it once per screen and thread the result down, or a single insert re-runs the
- * same full scan N times.
- *
- * Every expense up to now, or from `sinceMs` on for a caller that reads no
- * older row.
- */
+// `useLiveQuery` registers a listener per call: call this once per screen and thread the result down, or one insert
+// re-runs the same full scan N times.
 export function useExpenseContributions(
     db: Database,
     nowMs: number,
@@ -149,15 +127,8 @@ export function useExpenseContributions(
     );
 }
 
-/**
- * Null means no budget is set, never "not read yet": the read runs in render.
- * Rolls the persisted window forward on access.
- *
- * A negative `periodOffset` reports a closed window instead of the current one.
- * Only the current window is ever written back — browsing must not move the
- * anchor the budget is actually running on.
- */
-
+// Null means no budget is set, never "not read yet": the read runs in render. Only the current window is written
+// back: browsing a closed one must not move the anchor the budget runs on.
 export function useMainBudget(
     db: Database,
     nowMs: number,
@@ -189,8 +160,7 @@ export function useMainBudget(
         const window = shiftWindow(current.start, row.type, periodOffset);
         const spent = spentForMain(contributions, window.start, new Date(windowEndMs(window, nowMs)));
         const limit = limitIn(row, window.start, displayCurrency, rates);
-        // Anchored on the window being VIEWED, not on today's: stepping back to
-        // March must show what March actually inherited, not what this month did.
+        // Anchored on the viewed window, so stepping back to March shows what March inherited.
         const carry = row.rollover
             ? rolloverCarryFrom(contributions, null, {
                   anchor: row.dateCreated ?? window.start,
@@ -220,7 +190,6 @@ export function useMainBudget(
     }, [row, contributions, nowMs, periodOffset, displayCurrency, rates]);
 }
 
-/** A null `categoryId` scopes the series to the overall budget. */
 export function useBurndown(
     contributions: readonly ExpenseContribution[],
     nowMs: number,
@@ -263,10 +232,6 @@ export function useBurndowns(
     }, [contributions, budgetList, nowMs]);
 }
 
-/**
- * Rolls each persisted window forward on access. An empty list means the user
- * has no budgets — it is never "not read yet".
- */
 export function usePerCategoryBudgets(
     db: Database,
     nowMs: number,
@@ -330,7 +295,7 @@ export function usePerCategoryBudgets(
     }, [rows, contributions, categoryMeta, nowMs, displayCurrency, rates]);
 }
 
-/** A category budget's figures for its current window. Reads no row before {@link overBudgetReadStart}. */
+/** Reads no row before {@link overBudgetReadStart}. */
 export function categoryBudgetFigures(
     row: Budget,
     contributions: readonly ExpenseContribution[],
@@ -341,9 +306,6 @@ export function categoryBudgetFigures(
     const window = advanceBudgetWindow(row.startDate ?? now, row.type, now);
     const spent = row.categoryId ? spentForCategory(contributions, row.categoryId, window.start, now) : 0;
     const limit = limitIn(row, window.start, displayCurrency, rates);
-    // Every closed window since the anchor, but only when the budget asked
-    // for it: the walk costs a spend pass over the ledger, and a budget that
-    // does not roll over must not pay for one.
     const carry =
         row.rollover && row.categoryId
             ? rolloverCarryFrom(contributions, row.categoryId, {
@@ -356,13 +318,8 @@ export function categoryBudgetFigures(
     return { amount: effectiveLimit(limit, carry), carry, limit, spent, window };
 }
 
-/**
- * The oldest instant whose rows can move a figure of {@link categoryBudgetFigures},
- * or null when no budget reads a row: each budget's window start, or the start of
- * the oldest window its rollover carries from. Moved back to its UTC midnight,
- * because valuation converts a currency's rows a UTC day at a time and a row's
- * value depends on that day's earlier rows.
- */
+// Moved back to its UTC midnight: valuation converts a currency's rows a UTC day at a time, and a row's value depends
+// on that day's earlier rows.
 export function overBudgetReadStart(rows: readonly Budget[], now: Date): number | null {
     let earliest: number | null = null;
     for (const row of rows) {
@@ -379,10 +336,6 @@ export function overBudgetReadStart(rows: readonly Budget[], now: Date): number 
     return earliest === null ? null : Date.parse(utcDateString(earliest));
 }
 
-/**
- * The tab bar's badge. Reads only the rows the budgets' figures read, and none
- * without a category budget, not the whole history the Budgets screen needs.
- */
 export function useOverBudgetCount(db: Database, nowMs: number): number {
     const rows = useLiveQuery(budgets, () =>
         db.select(getTableColumns(budgets)).from(budgets).where(isNull(budgets.deletedAt))
@@ -394,25 +347,12 @@ export function useOverBudgetCount(db: Database, nowMs: number): number {
 }
 
 export interface CategoryBudgetDetail {
-    /** `null` once the budget is gone. */
     budget: CategoryBudgetView | null;
-    /**
-     * The ledger the carry was summed from, handed back so the screen's limit
-     * sheet can draw its curve without opening a second listener over the same
-     * rows — see {@link useExpenseContributions}.
-     */
     contributions: readonly ExpenseContribution[];
-    /** Whole closed periods behind the current window that hold spending. */
     periodsBack: number;
-    /** Newest first. */
     transactions: TransactionWithCategory[];
 }
 
-/**
- * A negative `periodOffset` reports a closed window instead of the current one.
- * Only the current window is ever written back — browsing must not move the
- * anchor the budget is actually running on.
- */
 export function useCategoryBudget(db: Database, id: string, nowMs: number, periodOffset = 0): CategoryBudgetDetail {
     const data = useLiveQuery(
         budgets,
@@ -458,18 +398,13 @@ export function useCategoryBudget(db: Database, id: string, nowMs: number, perio
     );
 
     const earliest = useEarliestContribution(db, row?.categoryId ?? null);
-    // Only the carry needs history beyond this window, and only when the budget
-    // rolls over. It is the same read the list uses, so the two screens cannot
-    // disagree about what a window inherited — a list saying one figure and the
-    // detail behind it saying another is worse than not carrying at all.
+    // The same read the list uses, so the list and its detail can't disagree on what a window inherited.
     const contributions = useExpenseContributions(db, nowMs);
 
     const budget = useMemo(() => {
         if (!(row && window)) {
             return null;
         }
-        // This screen queries its own rows instead of sharing
-        // `useExpenseContributions`, so the conversion has to happen here.
         const spent = sumValuedIn(windowTransactions, displayCurrency, rates);
         const meta = row.categoryId ? categoryMeta.get(row.categoryId) : undefined;
         const limit = limitIn(row, window.start, displayCurrency, rates);
@@ -510,14 +445,7 @@ export function useCategoryBudget(db: Database, id: string, nowMs: number, perio
     return { budget, contributions, periodsBack, transactions: windowTransactions };
 }
 
-/**
- * The oldest expense that could count toward `categoryId` — a null id meaning
- * every expense. Null when the ledger holds none.
- *
- * Ports the Swift stepper's `firstDate`: a sorted fetch's first row rather than
- * a `min()` aggregate, which comes back as a raw column value the driver does
- * not map to a Date.
- */
+// A sorted fetch's first row, not `min()`: the aggregate comes back as a raw column the driver doesn't map to a Date.
 function useEarliestContribution(db: Database, categoryId: string | null): Date | null {
     const categoryMeta = useCategoryMeta(db);
 
@@ -548,7 +476,6 @@ function useEarliestContribution(db: Database, categoryId: string | null): Date 
     return rows[0]?.date ?? null;
 }
 
-/** Null means "every category" — the overall budget's scope. */
 function contributingCategoryIds(
     categoryId: string | null,
     categoryMeta: ReadonlyMap<string, { parentId: string | null }>
@@ -565,25 +492,14 @@ function contributingCategoryIds(
     return ids;
 }
 
-/**
- * Newest first. `categoryId === null` means the overall budget (every expense);
- * returns [] until `start` is known. `endMs` is the last instant that counts —
- * now for a running window, the window's own last instant for a closed one.
- *
- * The category relationship is resolved through {@link useCategoryMeta} rather
- * than a join: expressing "this category or its children" as
- * `eq(categories.parentId, …)` inside the join makes the *row set* depend on a
- * table the subscription does not watch, so re-parenting a subcategory silently
- * adds or drops its transactions until some transaction happens to be written.
- * Resolving the id set in JS and matching with `inArray` keeps it reactive.
- */
+// Children are resolved in JS and matched with `inArray`, not joined: a join on `categories.parentId` makes the row
+// set depend on a table the subscription doesn't watch, so re-parenting a subcategory silently goes stale.
 export function useBudgetContributions(
     db: Database,
     categoryId: string | null,
     start: Date | null,
     endMs: number
 ): TransactionWithCategory[] {
-    // A null start (budget not loaded yet) must match nothing, not everything.
     const startMs = start ? start.getTime() : endMs + 1;
     const categoryMeta = useCategoryMeta(db);
 
@@ -592,8 +508,6 @@ export function useBudgetContributions(
         [categoryId, categoryMeta]
     );
 
-    // A primitive so the subscription re-runs when the contributing set changes
-    // without re-subscribing on every render's fresh array identity.
     const contributingKey = contributingIds?.join(",") ?? "";
 
     const data = useLiveQuery(
@@ -624,28 +538,16 @@ export interface UnbudgetedScope {
     emoji: string | null;
     icon: string | null;
     name: string;
-    /** Median spend per closed window. Only scopes that have one are listed. */
     typical: number;
 }
 
 export interface UnbudgetedRail {
-    /** Median spend for the whole ledger, for the Everything row. */
     everything: number | null;
-    /** Ordered by what they cost, heaviest first. */
     scopes: UnbudgetedScope[];
-    /** The window a limit set from the rail would run on. */
     window: BudgetWindow;
 }
 
-/**
- * What you spend on and have not budgeted.
- *
- * Top-level categories only: a subcategory's spend already counts toward its
- * parent, so offering both would ask for the same money twice. A category with
- * nothing spent in the sampled windows is never listed — the rail is ordered by
- * cost, and a row with no figure has nothing to sort on. Reach those through the
- * picker instead.
- */
+// Top-level only: a subcategory's spend already counts toward its parent, so offering both asks for the money twice.
 export function useUnbudgetedScopes(
     db: Database,
     nowMs: number,

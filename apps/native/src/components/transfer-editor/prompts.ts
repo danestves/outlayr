@@ -50,8 +50,7 @@ export function blockMessage(draft: Draft, t: Translate, language: Language): st
         : t("transfers.block.nothingArrives");
 }
 
-/** No resolution to offer: no fee or rate the screen could invent gives a blocked
- * transfer legs, so the prompt only names what does not add up. */
+// No resolution to offer: no fee or rate the screen could invent gives a blocked transfer legs.
 export function blockPrompt(draft: Draft, t: Translate, language: Language): TransferGapPrompt | null {
     if (draft.block === null) {
         return null;

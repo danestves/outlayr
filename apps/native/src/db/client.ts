@@ -5,27 +5,17 @@ import * as schema from "./schema";
 
 const DATABASE_NAME = "outlayr.db";
 
-/**
- * `enableChangeListener` is what powers `useLiveQuery`. Migrations are NOT run
- * here — `LocalDataProvider` awaits `migrate(db, bundle)` right after this
- * resolves.
- */
+/** `enableChangeListener` powers `useLiveQuery`. Migrations run in `LocalDataProvider`, not here. */
 export function openDatabase() {
     const sqlite = openDatabaseSync(DATABASE_NAME, {
         enableChangeListener: true,
     });
 
-    // WAL lets readers and writers proceed without blocking each other. That
-    // matters here because several `useLiveQuery` subscriptions re-run their
-    // SELECT on every write, so the default rollback journal serialises them
-    // against the write that woke them. Re-declaring WAL is a no-op.
+    // WAL, so the `useLiveQuery` SELECTs a write wakes are not serialised against it.
     sqlite.execSync("PRAGMA journal_mode = WAL");
 
-    // The schema declares `references(...)` with `onDelete: "cascade"`, but SQLite
-    // ignores those unless foreign keys are switched on per connection — so today
-    // they are documentation and `categoriesRepo.remove` cascades by hand.
-    // Enabling enforcement retroactively would fail any write touching a row that
-    // is already orphaned, so only turn it on for a store that checks out clean.
+    // SQLite ignores the schema's cascades until foreign keys are on per connection, and enabling them over orphaned
+    // rows would fail every write touching one, so only a clean store turns them on.
     const orphans = sqlite.getAllSync("PRAGMA foreign_key_check");
     if (orphans.length === 0) {
         sqlite.execSync("PRAGMA foreign_keys = ON");

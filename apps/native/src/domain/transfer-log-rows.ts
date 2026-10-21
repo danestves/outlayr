@@ -168,9 +168,8 @@ interface Recent {
 }
 
 /**
- * Both inputs are already newest-first, so this is the merge step of a merge
- * sort rather than a re-sort — the log's order is `(day desc, date desc)` and
- * re-sorting the whole list would cost the windowing that produced it.
+ * Both inputs are already newest-first, so this merges rather than re-sorts: re-sorting
+ * the whole list would cost the windowing that produced it.
  */
 export function mergeByRecency<T extends Recent>(left: readonly T[], right: readonly T[]): T[] {
     const merged: T[] = [];

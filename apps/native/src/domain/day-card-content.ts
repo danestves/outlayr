@@ -21,11 +21,9 @@ export interface CardableSection {
 }
 
 export interface DayCardOptions {
-    /** Global display code, used by a row that recorded none. */
     currency: string;
     showCents: boolean;
     swapTimeLabel: boolean;
-    /** The row's meta line prints its time on a 24-hour clock. */
     use24Hour: boolean;
 }
 
@@ -38,11 +36,7 @@ function signed(amount: number, code: string, showCents: boolean): string {
     return `${amount < 0 ? "-" : "+"}${figure(amount, code, showCents)}`;
 }
 
-/**
- * The card restates what the Log already painted, so it reads the same
- * `DaySection` and honours the same display settings — a user who turned cents
- * off should not get them back in a screenshot they share.
- */
+/** Honours the Log's display settings: someone who turned cents off must not get them back in a shared card. */
 export function dayCardContent(
     section: CardableSection,
     options: DayCardOptions,
@@ -61,8 +55,7 @@ export function dayCardContent(
                     note: row.note,
                 };
             }),
-        // Two currencies are printed side by side, never summed: the day header
-        // makes the same refusal, and inventing a rate here would contradict it.
+        // Side by side, never summed, matching the day header's refusal to invent a rate.
         total: section.totals
             .map((bucket) => signed(bucket.amount, bucket.currencyCode, options.showCents))
             .join(" / "),
