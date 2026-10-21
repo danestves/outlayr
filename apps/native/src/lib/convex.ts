@@ -464,3 +464,31 @@ export type ReceiptScanFn = (args: ScanRequest) => Promise<ScanResult>;
 export function receiptScanTransport(): ReceiptScanFn {
     return async (args) => cloudAction("receiptScan:scan", { ...args, aiConsent: AI_CONSENT_VERSION });
 }
+
+export interface InstallmentPlanRow {
+    amount: number;
+    dueDate: string;
+    fee: number;
+    paid: boolean;
+    sequence: number;
+}
+
+export interface InstallmentPlanDraft {
+    accountName: string | null;
+    currency: string | null;
+    provider: string | null;
+    rows: InstallmentPlanRow[];
+}
+
+interface InstallmentScanResult {
+    plan: InstallmentPlanDraft | null;
+    status: ScanStatus;
+}
+
+export type InstallmentScanRequest = Omit<ScanRequest, "categoryTree">;
+
+export type InstallmentScanFn = (args: InstallmentScanRequest) => Promise<InstallmentScanResult>;
+
+export function installmentScanTransport(): InstallmentScanFn {
+    return async (args) => cloudAction("installmentScan:scan", { ...args, aiConsent: AI_CONSENT_VERSION });
+}

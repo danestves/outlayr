@@ -4,12 +4,14 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { HOUR, isRateLimitError, RateLimiter } from "@convex-dev/rate-limiter";
 import { generateText, NoObjectGeneratedError, Output, TypeValidationError } from "ai";
 import type { LanguageModel } from "ai";
+import type { UserIdentity } from "convex/server";
 import { v } from "convex/values";
 import type { Infer } from "convex/values";
 import { z } from "zod";
 
 import { components, internal } from "./_generated/api";
 import { action, internalMutation } from "./_generated/server";
+import type { ActionCtx } from "./_generated/server";
 import { admitCapture } from "./lib/captures";
 import { PICKABLE_CURRENCY_CODES } from "./lib/currencies";
 import {
@@ -21,6 +23,7 @@ import {
     namesWithinBudget,
     normalizeDomain,
     pickKnown,
+    REGION_PATTERN,
     trimTo,
 } from "./lib/ledgerPrompt";
 import type { LedgerContext } from "./lib/ledgerPrompt";
@@ -37,9 +40,9 @@ const MAX_PAYMENT_LENGTH = 40;
 export const MAX_ITEMS = 60;
 const MAX_PAST_DAYS = 366 * 3;
 // The ledger's 13-digit ceiling (apps/native/src/domain/numpad.ts) keeps cent arithmetic inside float64's safe range.
-const MAX_AMOUNT = 9_999_999_999_999;
+export const MAX_AMOUNT = 9_999_999_999_999;
 // Under the client's 30s abort.
-const REQUEST_TIMEOUT_MS = 22_000;
+export const REQUEST_TIMEOUT_MS = 22_000;
 
 // A privacy boundary: the photo plus only what the model needs in this ledger's terms. No ids, balances or history.
 export const receiptScanArgs = {
@@ -55,7 +58,7 @@ export const receiptScanArgs = {
     today: v.string(),
 };
 
-const scanStatus = v.union(
+export const scanStatus = v.union(
     v.literal("ok"),
     v.literal("unauthenticated"),
     v.literal("notConfigured"),
@@ -163,8 +166,7 @@ export const modelOutputSchema = z.object({
 
 export type ModelOutput = z.infer<typeof modelOutputSchema>;
 
-const REGION_PATTERN = /^[A-Z]{2}$/;
-const KNOWN_CURRENCIES: ReadonlySet<string> = new Set(PICKABLE_CURRENCY_CODES);
+export const KNOWN_CURRENCIES: ReadonlySet<string> = new Set(PICKABLE_CURRENCY_CODES);
 
 // Unsharded, a global counter is one hot document that throws OCC write conflicts under concurrency.
 export const rateLimiter = new RateLimiter(components.rateLimiter, {
@@ -319,6 +321,25 @@ export const admit = internalMutation({
     },
 });
 
+export async function admitScan(
+    ctx: ActionCtx,
+    identity: UserIdentity
+): Promise<"ok" | "rateLimited" | "notEntitled" | "quotaExceeded"> {
+    const perUser = await rateLimiter.limit(ctx, "receiptScanPerUser", {
+        config: perUserBurst("receiptScan", await isPro(ctx, identity.subject)),
+        key: identity.tokenIdentifier,
+    });
+    if (!perUser.ok) {
+        return "rateLimited";
+    }
+    return ctx.runMutation(internal.receiptScan.admit, {}).catch((error) => {
+        if (isRateLimitError(error)) {
+            return "rateLimited" as const;
+        }
+        throw error;
+    });
+}
+
 export const scan = action({
     args: receiptScanArgs,
     handler: async (ctx, args): Promise<ScanResult> => {
@@ -346,20 +367,7 @@ export const scan = action({
             return failure("invalid");
         }
 
-        const perUser = await rateLimiter.limit(ctx, "receiptScanPerUser", {
-            config: perUserBurst("receiptScan", await isPro(ctx, identity.subject)),
-            key: identity.tokenIdentifier,
-        });
-        if (!perUser.ok) {
-            return failure("rateLimited");
-        }
-
-        const admitted = await ctx.runMutation(internal.receiptScan.admit, {}).catch((error) => {
-            if (isRateLimitError(error)) {
-                return "rateLimited" as const;
-            }
-            throw error;
-        });
+        const admitted = await admitScan(ctx, identity);
         if (admitted !== "ok") {
             return failure(admitted);
         }

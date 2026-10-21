@@ -20,6 +20,7 @@ import type * as exchangeRates from "../exchangeRates.js";
 import type * as groundedLookup from "../groundedLookup.js";
 import type * as groundedSpend from "../groundedSpend.js";
 import type * as http from "../http.js";
+import type * as installmentScan from "../installmentScan.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_captures from "../lib/captures.js";
 import type * as lib_currencies from "../lib/currencies.js";
@@ -67,6 +68,7 @@ declare const fullApi: ApiFromModules<{
   groundedLookup: typeof groundedLookup;
   groundedSpend: typeof groundedSpend;
   http: typeof http;
+  installmentScan: typeof installmentScan;
   "lib/auth": typeof lib_auth;
   "lib/captures": typeof lib_captures;
   "lib/currencies": typeof lib_currencies;

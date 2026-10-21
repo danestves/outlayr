@@ -17,6 +17,7 @@ export const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 export const LANGUAGE_PATTERN = /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{1,8}){0,12}$/;
 const DOMAIN_PATTERN = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
 export const CURRENCY_PATTERN = /^[A-Z]{3}$/;
+export const REGION_PATTERN = /^[A-Z]{2}$/;
 
 const MAX_CATEGORY_NAMES = 200;
 const MAX_ACCOUNT_NAMES = 50;
