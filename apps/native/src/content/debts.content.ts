@@ -3,10 +3,6 @@ import type { Dictionary } from "intlayer";
 
 const debts = {
     content: {
-        "debts.a11y.add": t({
-            en: "Add a debt",
-            es: "Agregar una deuda",
-        }),
         "debts.a11y.amount": t({
             en: "Edit amount",
             es: "Editar el monto",
@@ -66,10 +62,6 @@ const debts = {
         "debts.due.title": t({
             en: "Due in the next {days} days",
             es: "Por pagar en los próximos {days} días",
-        }),
-        "debts.empty": t({
-            en: "Nobody owes anybody. Add a person, a card or a loan with +.",
-            es: "Nadie le debe a nadie. Agrega una persona, tarjeta o préstamo con +.",
         }),
         "debts.error.saveFailed": t({
             en: "Couldn't save this debt. Try again.",
@@ -146,10 +138,6 @@ const debts = {
         "debts.overview.owedToYou": t({
             en: "Owed to you {amount}",
             es: "Te deben {amount}",
-        }),
-        "debts.owedToYou": t({
-            en: "Owed to you",
-            es: "Te deben",
         }),
         "debts.people": t({
             en: "People",
@@ -290,10 +278,6 @@ const debts = {
         "debts.verb.soldOnCredit": t({
             en: "Sold on credit",
             es: "Vendí a crédito",
-        }),
-        "debts.youOwe": t({
-            en: "You owe",
-            es: "Debes",
         }),
         "debts.youOweAmount": t({
             en: "You owe {amount}",

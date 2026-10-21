@@ -37,9 +37,8 @@ export function useInstallmentPlans(db: Database, nowMs: number, accountId?: str
 
 /**
  * Installments not yet covered and due within `days` of today, soonest first,
- * across every account or one: the Debts screen's due strip asks for 14 days,
- * an account's "Coming up" list passes its `accountId`. Overdue ones are
- * included.
+ * across every account or one: an account's "Coming up" list passes its
+ * `accountId`. Overdue ones are included.
  */
 export function useUpcomingInstallments(
     db: Database,

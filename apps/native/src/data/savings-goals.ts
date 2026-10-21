@@ -68,7 +68,6 @@ const NO_READ = { all: () => NO_ROWS };
  */
 export function useSavingsGoals(db: Database, nowMs: number): SavingsGoalWithProgress[] {
     const all = useLiveQuery(savingsGoals, () => savingsGoalsQuery(db));
-    // Payoff plans are drawn on the Debts screen, not as goals to save toward.
     const goals = useMemo(() => all.filter((goal) => !isPayoffPlan(goal)), [all]);
     const accounts = useAccounts(db);
     // Bounded at `now` in SQL, not filtered afterwards: a cell carries only a day

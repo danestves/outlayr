@@ -21,7 +21,7 @@ interface Wording {
 
 export interface DebtSubtitle {
     text: string | null;
-    tone: "due" | "muted" | "overdue";
+    tone: "due" | "income" | "muted" | "overdue";
 }
 
 /**
@@ -36,10 +36,19 @@ export function debtSubtitle(
     debts: DebtsScreenOverview,
     { currency, language, showCents, t }: Wording
 ): DebtSubtitle {
+    const otherCurrency = item.account.currency === currency ? null : item.account.currency;
+    if (item.kind === "person" && item.amount !== 0) {
+        const owesYou = item.balance > 0;
+        const direction = t(owesYou ? "debts.person.owesYou" : "debts.person.youOwe");
+        return {
+            text: otherCurrency === null ? direction : `${direction} · ${otherCurrency}`,
+            tone: owesYou ? "income" : "muted",
+        };
+    }
     const tone = item.id === debts.due?.next.accountId ? "due" : "muted";
     const orders = debts.installments.get(item.id);
     if (orders === undefined) {
-        return { text: item.account.currency === currency ? null : item.account.currency, tone };
+        return { text: otherCurrency, tone };
     }
     const [only, ...others] = orders.open;
     const { overdue } = orders.next;

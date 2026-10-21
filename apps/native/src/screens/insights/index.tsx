@@ -2,7 +2,7 @@ import type { MenuAction } from "@expo/ui/community/menu";
 import { useRouter } from "expo-router";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { useCallback, useMemo, useState } from "react";
-import { Platform, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { HeroNumber } from "@/components/amount-text";
 import { CategoryIconTile } from "@/components/category-icon-tile";
@@ -215,9 +215,8 @@ export function Insights() {
     const { showCents } = useDisplaySettings().state;
     const nowMs = useNow();
     const { overview: ledger, series: netWorth } = useNetWorth(db, nowMs);
-    // shortcut: iOS only until the Debts screen gets its Android build.
     const debts = useMemo(() => {
-        if (Platform.OS !== "ios" || ledger === null) {
+        if (ledger === null) {
             return null;
         }
         const split = debtsOverview(ledger.rows, currency);
@@ -494,7 +493,7 @@ export function Insights() {
                 <NetWorthCard
                     currency={currency}
                     debts={debts}
-                    onOpenDebts={() => router.push("/debts")}
+                    onOpenDebts={() => router.push("/accounts")}
                     series={netWorth}
                     showCents={showCents}
                 />

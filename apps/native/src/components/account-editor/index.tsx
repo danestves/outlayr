@@ -59,7 +59,7 @@ import { useColors } from "@/theme/use-colors";
 import { AccountEditorDetailsSection } from "./details-section";
 
 export type AccountEditorProps =
-    /** `liability` opens a new account as money owed, for the Debts screen's "+". */
+    /** `liability` opens a new account as money owed. */
     { mode: "create"; liability?: boolean } | { mode: "edit"; id: string };
 
 type IdentitySource = "initial" | "suggested" | "user";
@@ -91,6 +91,10 @@ function formKind(person: boolean, liability: boolean): AccountKind {
         return "person";
     }
     return liability ? "liability" : "asset";
+}
+
+function kindToggle(loaded: Account | null, toggle: (next: boolean) => void) {
+    return loaded == null || isPerson(loaded) ? undefined : toggle;
 }
 
 function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/client").Database }) {
@@ -150,13 +154,13 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
     const person = loaded != null && isPerson(loaded);
     const [initialValues] = useState(() => {
         const startingBalance = roundToMinorUnits(currentBalance, startingCurrency);
+        const newLiability = props.mode === "create" && props.liability === true;
         return {
             balanceText: numberToNumpad(Math.abs(startingBalance), minorUnitsFor(startingCurrency)),
             currency: startingCurrency,
-            liability:
-                toAccountKind(loaded?.kind) === "liability" || (props.mode === "create" && props.liability === true),
+            liability: toAccountKind(loaded?.kind) === "liability" || newLiability,
             name: loaded?.name ?? "",
-            negative: startingBalance < 0,
+            negative: startingBalance < 0 || newLiability,
         };
     });
     const form = useForm({
@@ -433,7 +437,7 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
                                 onCurrencyPress={openCurrencyPicker}
                                 onNameChange={onNameChange}
                                 onSubmitName={() => pressSubmit(form)}
-                                onToggleLiability={person ? undefined : (next) => form.setFieldValue("liability", next)}
+                                onToggleLiability={kindToggle(loaded, (next) => form.setFieldValue("liability", next))}
                                 onToggleSign={() => form.setFieldValue("negative", !negative)}
                                 tintColor={colors.foreground}
                             />

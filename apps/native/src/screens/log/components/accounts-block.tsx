@@ -39,7 +39,7 @@ interface AccountsBlockProps {
     onOpen: (accountId: string) => void;
     onOpenAll: () => void;
     onOpenDebts?: () => void;
-    /** Null hides the bank rows and their heading; with no debts either, the whole block. */
+    /** Null hides the bank rows and their heading. */
     overview: AccountsOverview | null;
     showCents: boolean;
     trailing?: ReactNode;
@@ -70,9 +70,13 @@ export function AccountsBlock({
     const debtsRow =
         debts !== null && onOpenDebts ? <DebtsRow debts={debts} onPress={onOpenDebts} showCents={showCents} /> : null;
     if (overview == null) {
-        return debtsRow === null ? null : (
+        return (
             <View className="gap-1.25 pt-2.5 pb-4.5">
-                {debtsRow}
+                {debtsRow ?? (
+                    <Pressable accessibilityRole="button" className="py-2 active:opacity-70" onPress={onOpenAll}>
+                        <MonoLabel className="text-tint">{t("accounts.add.prompt")}</MonoLabel>
+                    </Pressable>
+                )}
                 <View className="bg-border" style={{ borderRadius: 0.65, height: 1.3 }} />
             </View>
         );
@@ -231,7 +235,7 @@ export interface DebtsSummary {
 }
 
 /**
- * One row for everything owed both ways, opening the Debts screen. Its figure is
+ * One row for everything owed both ways. Its figure is
  * what you owe, muted like a liability's; under it, what is due in the next 14
  * days, else what you are owed.
  */

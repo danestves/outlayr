@@ -9,7 +9,6 @@ import { roundToMinorUnits } from "@/domain/money";
 import { upcomingInstallments } from "./installments-core";
 import type { InstallmentRow, PlanWithStanding, UpcomingInstallment } from "./installments-core";
 
-/** How far ahead the Debts screen's due strip and the Log's Debts row look. */
 export const DUE_WINDOW_DAYS = 14;
 
 export interface DueWindow {

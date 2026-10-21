@@ -1,5 +1,5 @@
 import type { AccountBalance } from "@outlayr/money/account-balance";
-import { isPerson, toAccountKind } from "@outlayr/money/account-kind";
+import { toAccountKind } from "@outlayr/money/account-kind";
 import { summarizeOverview } from "@outlayr/money/account-overview";
 import type { AccountsOverview, OverviewRow } from "@outlayr/money/account-overview";
 import type { RateTable } from "@outlayr/money/valuation";
@@ -36,8 +36,8 @@ export type DebtsScreenOverview = DebtsOverview<OverviewRow & { account: Account
 };
 
 /**
- * `overview`'s liabilities and people, each with its account, split the way the
- * Debts screen reads them, with the cuotas of the orders on those accounts.
+ * `overview`'s liabilities and people, each with its account, with the cuotas
+ * of the orders on those accounts.
  * `valuation.rates` has to carry every account's currency beside the display one.
  */
 function debtsIn(
@@ -61,12 +61,10 @@ function debtsIn(
 }
 
 /**
- * Every liability account and every person, valued into the ledger's display
- * currency and split the way the Debts screen reads them. Each row carries its
- * account, so the screen needs no second lookup for a name or a logo, and
- * `payoff` holds each row's plan by account id. An account or a plan whose
- * deletion is pending its undo window is left out, as on the Accounts screen,
- * so the totals move as the row leaves.
+ * Each row carries its account, so the screen needs no second lookup for a
+ * name or a logo, and `payoff` holds each row's plan by account id. An account
+ * or a plan whose deletion is pending its undo window is left out, so the
+ * totals move as the row leaves.
  */
 export function useDebtsOverview(
     db: Database,
@@ -74,16 +72,9 @@ export function useDebtsOverview(
 ): DebtsScreenOverview & { payoff: ReadonlyMap<string, PayoffLine> } {
     const all = useAccounts(db);
     const { pendingId } = useDeferredDelete("account");
-    const debts = useMemo(
-        () =>
-            all.filter(
-                (account) =>
-                    account.id !== pendingId && (isPerson(account) || toAccountKind(account.kind) === "liability")
-            ),
-        [all, pendingId]
-    );
+    const accounts = useMemo(() => all.filter((account) => account.id !== pendingId), [all, pendingId]);
     const displayCurrency = useGlobalCurrency(db);
-    const { cells, overview, rates } = useOverviewOf(db, debts, displayCurrency, nowMs);
+    const { cells, overview, rates } = useOverviewOf(db, accounts, displayCurrency, nowMs);
     const plans = useInstallmentPlans(db, nowMs);
     const goals = useLiveQuery(savingsGoals, () => savingsGoalsQuery(db));
     const { pendingId: pendingGoalId } = useDeferredDelete("goal");
@@ -91,10 +82,16 @@ export function useDebtsOverview(
         const valuation = { displayCurrency, rates };
         const live = goals.filter((goal) => goal.id !== pendingGoalId && isPayoffPlan(goal));
         return {
-            ...debtsIn(debts, overview, plans, valuation, nowMs),
-            payoff: payoffLines(live, overview?.rows ?? [], valuation, nowMs, payoffEndings(live, debts, cells, rates)),
+            ...debtsIn(accounts, overview, plans, valuation, nowMs),
+            payoff: payoffLines(
+                live,
+                overview?.rows ?? [],
+                valuation,
+                nowMs,
+                payoffEndings(live, accounts, cells, rates)
+            ),
         };
-    }, [debts, overview, plans, goals, pendingGoalId, displayCurrency, rates, cells, nowMs]);
+    }, [accounts, overview, plans, goals, pendingGoalId, displayCurrency, rates, cells, nowMs]);
 }
 
 /** The day each ended plan in `goals` ended on, by goal id, from its account's cells among `cells`. */

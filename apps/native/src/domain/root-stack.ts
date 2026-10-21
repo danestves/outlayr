@@ -14,7 +14,6 @@ export const TITLED_SCREENS: readonly {
     titleKey: TranslationKey;
 }[] = [
     { name: "accounts/index", titleKey: "accounts.title" },
-    { name: "debts/index", titleKey: "debts.title" },
     { name: "settings/about", titleKey: "nav.settings.about" },
     { name: "settings/account", titleKey: "nav.settings.account" },
     { name: "settings/app-icon", titleKey: "nav.settings.appIcon" },

@@ -320,7 +320,7 @@ export function Log() {
         debts,
         onOpen: openAccount,
         onOpenAll: () => router.push("/accounts"),
-        onOpenDebts: () => router.push("/debts"),
+        onOpenDebts: () => router.push("/accounts"),
         overview: accountsOverview,
         showCents,
     };

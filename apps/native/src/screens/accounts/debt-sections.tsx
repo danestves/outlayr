@@ -1,5 +1,4 @@
-import { Host } from "@expo/ui";
-import { HStack, Image, List, RNHostView, Section, Spacer, Text as SwiftText, VStack } from "@expo/ui/swift-ui";
+import { HStack, Image, RNHostView, Section, Spacer, Text as SwiftText, VStack } from "@expo/ui/swift-ui";
 import {
     accessibilityAddTraits,
     accessibilityElement,
@@ -12,7 +11,7 @@ import {
     monospacedDigit,
     onTapGesture,
 } from "@expo/ui/swift-ui/modifiers";
-import { Stack, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { memo, use, useCallback, useState } from "react";
 import { View } from "react-native";
 
@@ -20,26 +19,24 @@ import { AccountTile } from "@/components/account-tile";
 import { AmountsHiddenContext } from "@/components/amount-text";
 import { Eyebrow, PARENT_TILE } from "@/components/category-list-chrome";
 import { LABEL, PARENT_NAME } from "@/components/category-list-swift";
-import { EmptyState } from "@/components/empty-state";
-import { Tile } from "@/components/empty-state-parts";
-import { groupedList, groupedRows } from "@/components/native/styles";
+import { groupedRows } from "@/components/native/styles";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
-import { useDatabase } from "@/contexts/local-data-context";
-import { useGlobalCurrency } from "@/data/app-meta";
-import { useDebtsOverview } from "@/data/debts";
-import type { DebtsScreenOverview } from "@/data/debts";
+import type { DebtsScreenOverview, useDebtsOverview } from "@/data/debts";
 import type { PayoffLine } from "@/data/payoff-plans";
-import { useNow } from "@/data/use-now";
 import { formatSignedAmount } from "@/domain/account-display";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { hitArea, outline } from "@/lib/swift-ui-geometry";
+import { debtSubtitle, dueStripWording, payoffRowWording } from "@/screens/debts/debts-wording";
+import { PayoffBar } from "@/screens/debts/payoff-line";
 import { useColors } from "@/theme/use-colors";
 import type { ThemeColors } from "@/theme/use-colors";
 
-import { debtSubtitle, dueStripWording, payoffRowWording } from "./debts-wording";
-import { PayoffBar } from "./payoff-line";
-
 type DebtListRow = DebtsScreenOverview["youOwe"][number];
+
+interface SectionsProps {
+    currency: string;
+    debts: ReturnType<typeof useDebtsOverview>;
+}
 
 const TOTAL_LABEL = font({ design: "rounded", textStyle: "subheadline" });
 const TOTAL = font({ design: "rounded", textStyle: "title2", weight: "semibold" });
@@ -49,22 +46,56 @@ const APPROX = font({ design: "rounded", textStyle: "caption", weight: "semibold
 const CHEVRON = font({ design: "rounded", textStyle: "footnote", weight: "semibold" });
 const PLAN_DATE = font({ design: "rounded", textStyle: "footnote" });
 
-/**
- * Everything owed, both ways: what is due in the next 14 days, liability
- * accounts and people you owe, then the people who owe you, then the settled
- * people folded under one row. Every row opens its account, which for a person
- * is the person detail.
- */
-export function Debts() {
-    const db = useDatabase();
+export function LedgerTotals({ currency, debts }: SectionsProps) {
+    const t = useTranslation();
+    const colors = useColors();
+    const { language } = useLanguage();
+    const { showCents } = useDisplaySettings().state;
+    const format = (amount: number) => formatSignedAmount(amount, currency, showCents, language);
+    const total = (label: string, amount: number) => (
+        <VStack
+            alignment="leading"
+            modifiers={[accessibilityElement("combine"), accessibilityLabel(label), accessibilityValue(format(amount))]}
+            spacing={2}
+        >
+            <SwiftText modifiers={[TOTAL_LABEL, foregroundStyle(colors.muted)]}>{label}</SwiftText>
+            <SwiftText modifiers={[TOTAL, monospacedDigit(), lineLimit(1), foregroundStyle(LABEL)]}>
+                {format(amount)}
+            </SwiftText>
+        </VStack>
+    );
+
+    return (
+        <Section modifiers={[groupedRows(colors)]}>
+            <HStack alignment="top" spacing={16}>
+                {total(t("accounts.totals.have"), debts.haveTotal)}
+                <Spacer />
+                {total(t("accounts.totals.owe"), debts.youOweTotal)}
+            </HStack>
+            {debts.exact && debts.assetsExact ? null : (
+                <SwiftText modifiers={[APPROX, foregroundStyle(colors.subtle)]}>{`${currency}?`}</SwiftText>
+            )}
+            {debts.due === null ? null : (
+                <DueRow
+                    colors={colors}
+                    currency={currency}
+                    due={debts.due}
+                    format={format}
+                    wording={dueStripWording(debts.due, debts, { language, t })}
+                />
+            )}
+        </Section>
+    );
+}
+
+/** Every row opens its account, which for a person is the person detail. */
+export function DebtSections({ currency, debts }: SectionsProps) {
     const router = useRouter();
     const t = useTranslation();
     const colors = useColors();
     const { language } = useLanguage();
     const { showCents } = useDisplaySettings().state;
     const hidden = use(AmountsHiddenContext);
-    const currency = useGlobalCurrency(db);
-    const debts = useDebtsOverview(db, useNow());
     const [settledOpen, setSettledOpen] = useState(false);
     const rowGround = groupedRows(colors);
     const format = (amount: number) => formatSignedAmount(amount, currency, showCents, language);
@@ -74,25 +105,8 @@ export function Debts() {
         [router]
     );
 
-    const header = (
-        <>
-            <Stack.Header transparent />
-            <Stack.Screen.Title>{t("debts.title")}</Stack.Screen.Title>
-            <Stack.Screen.BackButton displayMode="minimal" />
-        </>
-    );
-
-    if (debts.youOwe.length + debts.owedToYou.length + debts.settled.length === 0) {
-        return (
-            <>
-                {header}
-                <EmptyState body={t("debts.empty")} mark={<DebtsMark />} tier="takeover" />
-            </>
-        );
-    }
-
     const wording = { currency, language, showCents, t };
-    const tones = { due: colors.tint, muted: colors.muted, overdue: colors.expense };
+    const tones = { due: colors.tint, income: colors.income, muted: colors.muted, overdue: colors.expense };
     const row = (item: DebtListRow) => {
         const subtitle = debtSubtitle(item, debts, wording);
         const line = debts.payoff.get(item.id);
@@ -112,97 +126,52 @@ export function Debts() {
             />
         );
     };
-    const total = (label: string, amount: number) => (
-        <VStack
-            alignment="leading"
-            modifiers={[accessibilityElement("combine"), accessibilityLabel(label), accessibilityValue(format(amount))]}
-            spacing={2}
-        >
-            <SwiftText modifiers={[TOTAL_LABEL, foregroundStyle(colors.muted)]}>{label}</SwiftText>
-            <SwiftText modifiers={[TOTAL, monospacedDigit(), lineLimit(1), foregroundStyle(LABEL)]}>
-                {format(amount)}
-            </SwiftText>
-        </VStack>
-    );
+    const cards = debts.youOwe.filter((item) => item.kind === "liability");
+    const people = [...debts.youOwe.filter((item) => item.kind === "person"), ...debts.owedToYou];
 
     return (
         <>
-            {header}
-            <Host style={{ flex: 1 }} useViewportSizeMeasurement>
-                <List modifiers={groupedList(colors)}>
-                    <Section modifiers={[rowGround]}>
-                        <HStack alignment="top" spacing={16}>
-                            {total(t("debts.youOwe"), debts.youOweTotal)}
-                            <Spacer />
-                            {total(t("debts.owedToYou"), debts.owedToYouTotal)}
-                        </HStack>
-                        {debts.exact ? null : (
-                            <SwiftText modifiers={[APPROX, foregroundStyle(colors.subtle)]}>{`${currency}?`}</SwiftText>
-                        )}
-                        {debts.due === null ? null : (
-                            <DueRow
-                                colors={colors}
-                                currency={currency}
-                                due={debts.due}
-                                format={format}
-                                wording={dueStripWording(debts.due, debts, wording)}
-                            />
-                        )}
-                    </Section>
-                    {debts.youOwe.length > 0 ? (
-                        <Section
-                            header={<Eyebrow colors={colors}>{t("debts.youOwe")}</Eyebrow>}
-                            modifiers={[rowGround]}
-                        >
-                            {debts.youOwe.map(row)}
-                        </Section>
-                    ) : null}
-                    {debts.owedToYou.length > 0 ? (
-                        <Section
-                            header={<Eyebrow colors={colors}>{t("debts.owedToYou")}</Eyebrow>}
-                            modifiers={[rowGround]}
-                        >
-                            {debts.owedToYou.map(row)}
-                        </Section>
-                    ) : null}
-                    {debts.settled.length > 0 ? (
-                        <Section modifiers={[rowGround]}>
-                            <HStack
-                                modifiers={[
-                                    hitArea(outline.rectangle()),
-                                    onTapGesture(() => setSettledOpen((current) => !current)),
-                                    accessibilityElement("combine"),
-                                    accessibilityAddTraits(["isButton"]),
-                                ]}
-                                spacing={12}
-                            >
-                                <SwiftText modifiers={[foregroundStyle(colors.muted)]}>
-                                    {t("debts.settled", { count: debts.settled.length })}
-                                </SwiftText>
-                                <Spacer />
-                                <Image
-                                    color={colors.muted}
-                                    modifiers={[CHEVRON]}
-                                    systemName={settledOpen ? "chevron.down" : "chevron.right"}
-                                />
-                            </HStack>
-                            {settledOpen ? debts.settled.map(row) : null}
-                        </Section>
-                    ) : null}
-                </List>
-            </Host>
+            {cards.length > 0 ? (
+                <Section
+                    header={<Eyebrow colors={colors}>{t("accounts.section.liabilities")}</Eyebrow>}
+                    modifiers={[rowGround]}
+                >
+                    {cards.map(row)}
+                </Section>
+            ) : null}
+            {people.length > 0 ? (
+                <Section
+                    header={<Eyebrow colors={colors}>{t("accounts.section.people")}</Eyebrow>}
+                    modifiers={[rowGround]}
+                >
+                    {people.map(row)}
+                </Section>
+            ) : null}
+            {debts.settled.length > 0 ? (
+                <Section modifiers={[rowGround]}>
+                    <HStack
+                        modifiers={[
+                            hitArea(outline.rectangle()),
+                            onTapGesture(() => setSettledOpen((current) => !current)),
+                            accessibilityElement("combine"),
+                            accessibilityAddTraits(["isButton"]),
+                        ]}
+                        spacing={12}
+                    >
+                        <SwiftText modifiers={[foregroundStyle(colors.muted)]}>
+                            {t("debts.settled", { count: debts.settled.length })}
+                        </SwiftText>
+                        <Spacer />
+                        <Image
+                            color={colors.muted}
+                            modifiers={[CHEVRON]}
+                            systemName={settledOpen ? "chevron.down" : "chevron.right"}
+                        />
+                    </HStack>
+                    {settledOpen ? debts.settled.map(row) : null}
+                </Section>
+            ) : null}
         </>
-    );
-}
-
-const MARK_TILE = 34;
-
-function DebtsMark() {
-    return (
-        <View className="flex-row items-center" style={{ gap: 11 }}>
-            <Tile opacity={1} size={MARK_TILE} />
-            <Tile opacity={0.28} size={MARK_TILE} />
-        </View>
     );
 }
 

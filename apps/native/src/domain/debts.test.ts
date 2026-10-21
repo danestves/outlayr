@@ -34,6 +34,7 @@ describe("the debts overview", () => {
         ]);
         expect(debts.youOweTotal).toBe(870);
         expect(debts.owedToYouTotal).toBe(95);
+        expect(debts.haveTotal).toBe(3507.4);
     });
 
     it("keeps a person whose float residue rounds to zero as settled", () => {
@@ -49,8 +50,18 @@ describe("the debts overview", () => {
         expect(Object.is(debts.youOwe[0]?.amount, 0)).toBe(true);
     });
 
+    it("holds an overdrawn account against what you have", () => {
+        const debts = debtsOverview(
+            [row("zinli", "asset", 120), row("bdv", "asset", -20.5), row("ana", "person", 5)],
+            "USD"
+        );
+        expect(debts.haveTotal).toBe(104.5);
+    });
+
     it("is approximate when any debt is, but not when only an asset is", () => {
-        expect(debtsOverview([{ ...row("zinli", "asset", 10), exact: false }], "USD").exact).toBe(true);
+        const assetOnly = debtsOverview([{ ...row("zinli", "asset", 10), exact: false }], "USD");
+        expect(assetOnly.exact).toBe(true);
+        expect(assetOnly.assetsExact).toBe(false);
         expect(debtsOverview([{ ...row("ana", "person", 10), exact: false }], "USD").exact).toBe(false);
     });
 });

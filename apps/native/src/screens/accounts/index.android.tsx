@@ -1,17 +1,18 @@
 import type { MenuComponentRef } from "@expo/ui/community/menu";
 import ArrowDataTransferHorizontalIcon from "@hugeicons-pro/core-stroke-rounded/ArrowDataTransferHorizontalIcon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
+import { toAccountKind } from "@outlayr/money/account-kind";
 import { isMultiCurrency } from "@outlayr/money/account-overview";
 import { Stack, useRouter } from "expo-router";
 import { memo, useCallback, useMemo, useRef } from "react";
 import { Pressable, ScrollView, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { ActionMenuItem } from "@/components/action-menu";
 import { CategoryIconTile } from "@/components/category-icon-tile";
 import { Eyebrow, PARENT_TILE } from "@/components/category-list-chrome";
 import { EmptyState } from "@/components/empty-state";
 import { Tile } from "@/components/empty-state-parts";
-import { useFabClearance } from "@/components/material-fab";
 import { RowMenu } from "@/components/row-menu";
 import { ScreenHeader } from "@/components/screen-header";
 import { SwipeToDelete } from "@/components/swipe-to-delete";
@@ -21,6 +22,8 @@ import { useDisplaySettings } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useAccountBalance, useBankAccounts } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
+import { useGlobalCurrency } from "@/data/app-meta";
+import { useDebtsOverview } from "@/data/debts";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useNow } from "@/data/use-now";
 import type { Database } from "@/db/client";
@@ -32,13 +35,16 @@ import type { ThemeColors } from "@/theme/use-colors";
 import { useColors } from "@/theme/use-colors";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
+import { useAddMenu } from "./add-menu";
+import { DebtSections, LedgerTotals } from "./debt-sections";
+
 /** Where the row's text starts, which is where its menu drops down from. */
 const TEXT_LEADING = 16 + PARENT_TILE + 16;
 
 /**
  * The accounts list on Android: M3 two-line rows on hairlines, with the same
  * census, rows and transfers entry as the iOS list. A row swipes left to
- * delete and holds for a menu; "New account" is the route's FAB.
+ * delete and holds for a menu.
  */
 export function Accounts() {
     const db = useDatabase();
@@ -46,9 +52,14 @@ export function Accounts() {
     const t = useTranslation();
     const colors = useColors();
     const all = useBankAccounts(db);
-    const fabClearance = useFabClearance();
+    const insets = useSafeAreaInsets();
     const { pendingId, requestDelete } = useDeferredDelete("account");
     const rows = useMemo(() => all.filter((account) => account.id !== pendingId), [all, pendingId]);
+    const assets = useMemo(() => rows.filter((account) => toAccountKind(account.kind) === "asset"), [rows]);
+    const currency = useGlobalCurrency(db);
+    const debts = useDebtsOverview(db, useNow());
+    const addMenu = useAddMenu();
+    const empty = rows.length + debts.owedToYou.length + debts.youOwe.length + debts.settled.length === 0;
 
     const openDetail = useCallback(
         (id: string) => {
@@ -80,7 +91,7 @@ export function Accounts() {
     );
 
     return (
-        <>
+        <View className="bg-m3-surface flex-1">
             <ScreenHeader title={t("accounts.title")} />
             <Stack.Screen.BackButton displayMode="minimal" />
             <Stack.Toolbar placement="right">
@@ -91,15 +102,19 @@ export function Accounts() {
                 >
                     <Stack.Toolbar.Icon {...toolbarIcon("reorder")} />
                 </Stack.Toolbar.Button>
+                {addMenu}
             </Stack.Toolbar>
-            {rows.length === 0 ? (
+            {empty ? (
                 <EmptyState body={t("accounts.empty")} mark={<AccountsMark />} tier="takeover" />
             ) : (
-                <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: fabClearance }}>
-                    <View className="px-4 pt-2 pb-2">
-                        <Eyebrow colors={colors}>{t("accounts.census", { count: rows.length })}</Eyebrow>
-                    </View>
-                    {rows.map((account) => (
+                <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
+                    <LedgerTotals currency={currency} debts={debts} />
+                    {assets.length > 0 ? (
+                        <View className="px-4 pt-4 pb-2">
+                            <Eyebrow colors={colors}>{t("accounts.census", { count: assets.length })}</Eyebrow>
+                        </View>
+                    ) : null}
+                    {assets.map((account) => (
                         <AccountRow
                             account={account}
                             colors={colors}
@@ -110,10 +125,11 @@ export function Accounts() {
                             onOpen={openDetail}
                         />
                     ))}
+                    <DebtSections currency={currency} debts={debts} />
                     {rows.length >= 2 ? <TransfersRow /> : null}
                 </ScrollView>
             )}
-        </>
+        </View>
     );
 }
 

@@ -10,7 +10,7 @@ export interface DebtsInputRow {
     kind: AccountKind;
 }
 
-/** An input row on the Debts screen, with what it owes stated as a figure. */
+/** An input row, with what it owes stated as a figure. */
 export type DebtRow<Row extends DebtsInputRow = DebtsInputRow> = Row & {
     /**
      * What is owed, stated positive. An overpaid card is the one row where it is
@@ -21,8 +21,10 @@ export type DebtRow<Row extends DebtsInputRow = DebtsInputRow> = Row & {
 };
 
 export interface DebtsOverview<Row extends DebtsInputRow = DebtsInputRow> {
+    assetsExact: boolean;
     /** False when any row fell back to face value instead of converting. */
     exact: boolean;
+    haveTotal: number;
     /** People with a positive balance, largest first. */
     owedToYou: DebtRow<Row>[];
     /** Sum of `owedToYou`, positive. */
@@ -38,13 +40,13 @@ export interface DebtsOverview<Row extends DebtsInputRow = DebtsInputRow> {
 const largestFirst = (a: { amount: number }, b: { amount: number }) => b.amount - a.amount;
 
 /**
- * Splits the debts on the ledger into the two directions the Debts screen reads.
+ * Splits the debts on the ledger into the two directions.
  *
- * Asset rows are ignored, so the Log's own overview can be passed whole. Each
- * balance is rounded to the display currency first: a person lent 0.10 and 0.20
- * and paid back 0.30 holds a float residue, and it must read as settled rather
- * than as owing you $0.00. Ties keep ledger order, the sort being stable.
- * Whatever else a row carries (the account itself, say) rides along.
+ * Each balance is rounded to the display currency first: a person lent 0.10
+ * and 0.20 and paid back 0.30 holds a float residue, and it must read as
+ * settled rather than as owing you $0.00. Ties keep ledger order, the sort
+ * being stable. Whatever else a row carries (the account itself, say) rides
+ * along.
  */
 export function debtsOverview<Row extends DebtsInputRow>(
     rows: readonly Row[],
@@ -54,9 +56,13 @@ export function debtsOverview<Row extends DebtsInputRow>(
     const owedToYou: DebtRow<Row>[] = [];
     const settled: DebtRow<Row>[] = [];
     let exact = true;
+    let assets = 0;
+    let assetsExact = true;
     for (const input of rows) {
         const { kind } = input;
         if (kind === "asset") {
+            assets += input.balance;
+            assetsExact &&= input.exact;
             continue;
         }
         exact &&= input.exact;
@@ -80,10 +86,13 @@ export function debtsOverview<Row extends DebtsInputRow>(
             list.reduce((sum, row) => sum + row.amount, 0),
             displayCurrency
         ) || 0;
+    const owedToYouTotal = total(owedToYou);
     return {
+        assetsExact,
         exact,
+        haveTotal: roundToMinorUnits(assets + owedToYouTotal, displayCurrency) || 0,
         owedToYou,
-        owedToYouTotal: total(owedToYou),
+        owedToYouTotal,
         settled,
         youOwe,
         youOweTotal: total(youOwe),

@@ -45,8 +45,7 @@ export function useAccounts(db: Database): Account[] {
 }
 
 /**
- * {@link useAccounts} without people: the lists of accounts that hold or owe
- * money (Accounts, the Log's block, pickers) leave them to the Debts screen.
+ * {@link useAccounts} without people.
  * A reader that only resolves an id keeps `useAccounts`, since an entry or a
  * transfer can point at a person.
  */
@@ -185,9 +184,7 @@ function useSettledCells(db: Database, settledAt: Date): SettledCell[] {
 export type SettledCell = AccountCellRow & PlottedCell;
 
 /**
- * `rows` valued into `displayCurrency`, with the per-account rows. The Log
- * passes every account and splits banks from debts itself, the Debts screen its
- * liabilities and people; both read the same cells, so a figure agrees on the two.
+ * `rows` valued into `displayCurrency`, with the per-account rows.
  * Hands back the rates it valued with, which carry every row's currency, and
  * the cells, so a caller can value more figures on those accounts without
  * reading them again.

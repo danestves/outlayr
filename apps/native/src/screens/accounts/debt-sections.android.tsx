@@ -1,56 +1,70 @@
 import ArrowDown01Icon from "@hugeicons-pro/core-stroke-rounded/ArrowDown01Icon";
 import ArrowUp01Icon from "@hugeicons-pro/core-stroke-rounded/ArrowUp01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
-import { Stack, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { memo, use, useCallback, useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Pressable, View } from "react-native";
 
 import { AccountTile } from "@/components/account-tile";
 import { AmountsHiddenContext } from "@/components/amount-text";
 import { Eyebrow, PARENT_TILE } from "@/components/category-list-chrome";
-import { EmptyState } from "@/components/empty-state";
-import { Tile } from "@/components/empty-state-parts";
-import { ScreenHeader } from "@/components/screen-header";
 import { Text } from "@/components/text";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
-import { useDatabase } from "@/contexts/local-data-context";
-import { useGlobalCurrency } from "@/data/app-meta";
-import { useDebtsOverview } from "@/data/debts";
-import type { DebtsScreenOverview } from "@/data/debts";
+import type { DebtsScreenOverview, useDebtsOverview } from "@/data/debts";
 import type { PayoffLine } from "@/data/payoff-plans";
-import { useNow } from "@/data/use-now";
 import { formatSignedAmount } from "@/domain/account-display";
 import { useLanguage, useTranslation } from "@/i18n/context";
+import { debtSubtitle, dueStripWording, payoffRowWording } from "@/screens/debts/debts-wording";
+import type { DebtSubtitle } from "@/screens/debts/debts-wording";
+import { PayoffBar } from "@/screens/debts/payoff-line";
 import { withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
-import { debtSubtitle, dueStripWording, payoffRowWording } from "./debts-wording";
-import type { DebtSubtitle } from "./debts-wording";
-import { PayoffBar } from "./payoff-line";
-
 type DebtListRow = DebtsScreenOverview["youOwe"][number];
+
+interface SectionsProps {
+    currency: string;
+    debts: ReturnType<typeof useDebtsOverview>;
+}
 
 const PRESSED_ALPHA = 0.1;
 
-/**
- * The Debts screen on Android: the two totals and what is due in the next 14
- * days, then M3 two-line rows on hairlines under the same sections as iOS (you
- * owe, owed to you, and the settled people folded under one row). Every row opens its account, which
- * for a person is the person detail. The route's "+" menu stays in the app bar.
- */
-export function Debts() {
-    const db = useDatabase();
+export function LedgerTotals({ currency, debts }: SectionsProps) {
+    const t = useTranslation();
+    const { language } = useLanguage();
+    const { showCents } = useDisplaySettings().state;
+    const format = (amount: number) => formatSignedAmount(amount, currency, showCents, language);
+
+    return (
+        <>
+            <View className="flex-row gap-4 px-4 pt-2 pb-2">
+                <Total amount={format(debts.haveTotal)} label={t("accounts.totals.have")} />
+                <Total amount={format(debts.youOweTotal)} end label={t("accounts.totals.owe")} />
+            </View>
+            {debts.exact && debts.assetsExact ? null : (
+                <Text className="font-sans-semibold text-label text-m3-on-surface-variant px-4">{`${currency}?`}</Text>
+            )}
+            {debts.due === null ? null : (
+                <DueStrip
+                    amount={format(debts.due.total)}
+                    currency={currency}
+                    exact={debts.due.exact}
+                    wording={dueStripWording(debts.due, debts, { language, t })}
+                />
+            )}
+        </>
+    );
+}
+
+/** Every row opens its account, which for a person is the person detail. */
+export function DebtSections({ currency, debts }: SectionsProps) {
     const router = useRouter();
     const t = useTranslation();
     const colors = useColors();
-    const insets = useSafeAreaInsets();
     const { language } = useLanguage();
     const { showCents } = useDisplaySettings().state;
     const hidden = use(AmountsHiddenContext);
-    const currency = useGlobalCurrency(db);
-    const debts = useDebtsOverview(db, useNow());
     const [settledOpen, setSettledOpen] = useState(false);
     const format = useCallback(
         (amount: number) => formatSignedAmount(amount, currency, showCents, language),
@@ -61,22 +75,6 @@ export function Debts() {
         (id: string) => router.push({ params: { accountId: id }, pathname: "/accounts/[accountId]" }),
         [router]
     );
-
-    const header = (
-        <>
-            <ScreenHeader title={t("debts.title")} />
-            <Stack.Screen.BackButton displayMode="minimal" />
-        </>
-    );
-
-    if (debts.youOwe.length + debts.owedToYou.length + debts.settled.length === 0) {
-        return (
-            <View className="bg-m3-surface flex-1">
-                {header}
-                <EmptyState body={t("debts.empty")} mark={<DebtsMark />} tier="takeover" />
-            </View>
-        );
-    }
 
     const wording = { currency, language, showCents, t };
     const row = (item: DebtListRow) => {
@@ -109,38 +107,26 @@ export function Debts() {
         );
 
     return (
-        <View className="bg-m3-surface flex-1">
-            {header}
-            <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
-                <View className="flex-row gap-4 px-4 pt-2 pb-2">
-                    <Total amount={format(debts.youOweTotal)} label={t("debts.youOwe")} />
-                    <Total amount={format(debts.owedToYouTotal)} end label={t("debts.owedToYou")} />
-                </View>
-                {debts.exact ? null : (
-                    <Text className="font-sans-semibold text-label text-m3-on-surface-variant px-4">{`${currency}?`}</Text>
-                )}
-                {debts.due === null ? null : (
-                    <DueStrip
-                        amount={format(debts.due.total)}
-                        currency={currency}
-                        exact={debts.due.exact}
-                        wording={dueStripWording(debts.due, debts, wording)}
+        <>
+            {section(
+                t("accounts.section.liabilities"),
+                debts.youOwe.filter((item) => item.kind === "liability")
+            )}
+            {section(t("accounts.section.people"), [
+                ...debts.youOwe.filter((item) => item.kind === "person"),
+                ...debts.owedToYou,
+            ])}
+            {debts.settled.length > 0 ? (
+                <>
+                    <SettledToggle
+                        count={debts.settled.length}
+                        onToggle={() => setSettledOpen((current) => !current)}
+                        open={settledOpen}
                     />
-                )}
-                {section(t("debts.youOwe"), debts.youOwe)}
-                {section(t("debts.owedToYou"), debts.owedToYou)}
-                {debts.settled.length > 0 ? (
-                    <>
-                        <SettledToggle
-                            count={debts.settled.length}
-                            onToggle={() => setSettledOpen((current) => !current)}
-                            open={settledOpen}
-                        />
-                        {settledOpen ? debts.settled.map(row) : null}
-                    </>
-                ) : null}
-            </ScrollView>
-        </View>
+                    {settledOpen ? debts.settled.map(row) : null}
+                </>
+            ) : null}
+        </>
     );
 }
 
@@ -215,17 +201,6 @@ function DueStrip({
     );
 }
 
-const MARK_TILE = 34;
-
-function DebtsMark() {
-    return (
-        <View className="flex-row items-center" style={{ gap: 11 }}>
-            <Tile opacity={1} size={MARK_TILE} />
-            <Tile opacity={0.28} size={MARK_TILE} />
-        </View>
-    );
-}
-
 interface DebtRowProps {
     currency: string;
     format: (amount: number) => string;
@@ -239,6 +214,7 @@ interface DebtRowProps {
 
 const SUBTITLE_TONE = {
     due: "text-m3-primary",
+    income: "text-income",
     muted: "text-m3-on-surface-variant",
     overdue: "text-m3-error",
     paidOff: "text-income",

@@ -67,6 +67,13 @@ function formKind(person: boolean, liability: boolean): AccountKind {
     return liability ? "liability" : "asset";
 }
 
+function sheetTitle(props: AccountEditorProps) {
+    if (props.mode === "edit") {
+        return "accounts.nav.edit";
+    }
+    return props.liability === true ? "accounts.nav.newLiability" : "accounts.nav.new";
+}
+
 function AccountEditorReady(props: AccountEditorProps & { db: Database }) {
     const { db, mode } = props;
     const editId = props.mode === "edit" ? props.id : null;
@@ -120,13 +127,13 @@ function AccountEditorReady(props: AccountEditorProps & { db: Database }) {
     const person = loaded != null && isPerson(loaded);
     const [initialValues] = useState(() => {
         const startingBalance = roundToMinorUnits(currentBalance, startingCurrency);
+        const newLiability = props.mode === "create" && props.liability === true;
         return {
             balanceText: numberToNumpad(Math.abs(startingBalance), minorUnitsFor(startingCurrency)),
             currency: startingCurrency,
-            liability:
-                toAccountKind(loaded?.kind) === "liability" || (props.mode === "create" && props.liability === true),
+            liability: toAccountKind(loaded?.kind) === "liability" || newLiability,
             name: loaded?.name ?? "",
-            negative: startingBalance < 0,
+            negative: startingBalance < 0 || newLiability,
         };
     });
     const form = useForm({
@@ -321,7 +328,7 @@ function AccountEditorReady(props: AccountEditorProps & { db: Database }) {
 
     return (
         <View className="bg-m3-surface-container-low flex-1">
-            <SheetHeader title={t(mode === "create" ? "accounts.nav.new" : "accounts.nav.edit")}>
+            <SheetHeader title={t(sheetTitle(props))}>
                 {loaded == null ? null : (
                     <SheetHeaderIconButton
                         accessibilityLabel={t("common.delete")}
@@ -388,7 +395,11 @@ function AccountEditorReady(props: AccountEditorProps & { db: Database }) {
                         onCurrencyPress={openCurrencyPicker}
                         onNameChange={onNameChange}
                         onSubmitName={() => pressSubmit(form)}
-                        onToggleLiability={person ? undefined : (next) => form.setFieldValue("liability", next)}
+                        onToggleLiability={
+                            person || props.mode === "create"
+                                ? undefined
+                                : (next) => form.setFieldValue("liability", next)
+                        }
                         onToggleSign={() => form.setFieldValue("negative", !negative)}
                     />
                 </View>

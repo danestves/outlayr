@@ -1,13 +1,14 @@
-import { Redirect, useLocalSearchParams } from "expo-router";
+import { Redirect, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 
 import AccountEditor from "@/components/account-editor";
 import { CloseToolbar } from "@/components/close-toolbar";
 import { useAccountCaps } from "@/hooks/use-pro-gate";
+import { useTranslation } from "@/i18n/context";
 
 export default function AccountCreateScreen() {
+    const t = useTranslation();
     const [caps] = useState(useAccountCaps());
-    // Set by the Debts screen's "+", for a company, card or loan, and by the account step's installment apps.
     const { kind } = useLocalSearchParams<{ kind?: string }>();
 
     // The route is externally addressable through the app's URL scheme, so the
@@ -19,6 +20,8 @@ export default function AccountCreateScreen() {
 
     return (
         <>
+            {kind === "liability" ? <Stack.Screen.Title>{t("accounts.nav.newLiability")}</Stack.Screen.Title> : null}
+
             <CloseToolbar placement="right" />
 
             <AccountEditor liability={kind === "liability"} mode="create" />

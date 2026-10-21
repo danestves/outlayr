@@ -9,7 +9,7 @@ const VERBS: readonly DebtVerb[] = ["borrowed", "gotPaidBack", "lent", "paidBack
 
 export default function NewDebtScreen() {
     const { leave, setDirty } = useDiscardGuard();
-    // Set by the person detail's buttons; the "+" on Debts opens it empty.
+    // Set by the person detail's buttons.
     const params = useLocalSearchParams<{ personId?: string; verb?: string }>();
     const verb = VERBS.find((known) => known === params.verb);
 

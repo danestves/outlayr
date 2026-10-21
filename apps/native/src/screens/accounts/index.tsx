@@ -24,6 +24,7 @@ import {
     onTapGesture,
     tint,
 } from "@expo/ui/swift-ui/modifiers";
+import { toAccountKind } from "@outlayr/money/account-kind";
 import { isMultiCurrency } from "@outlayr/money/account-overview";
 import { Stack, useRouter } from "expo-router";
 import { memo, useCallback, useMemo } from "react";
@@ -40,6 +41,8 @@ import { useDisplaySettings } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useAccountBalance, useBankAccounts } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
+import { useGlobalCurrency } from "@/data/app-meta";
+import { useDebtsOverview } from "@/data/debts";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useNow } from "@/data/use-now";
 import type { Database } from "@/db/client";
@@ -49,6 +52,9 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import { hitArea, outline } from "@/lib/swift-ui-geometry";
 import { useColors } from "@/theme/use-colors";
 import type { ThemeColors } from "@/theme/use-colors";
+
+import { useAddMenu } from "./add-menu";
+import { DebtSections, LedgerTotals } from "./debt-sections";
 
 const SUBTITLE = font({
     design: "rounded",
@@ -78,6 +84,11 @@ export function Accounts() {
     const all = useBankAccounts(db);
     const { pendingId, requestDelete } = useDeferredDelete("account");
     const rows = useMemo(() => all.filter((account) => account.id !== pendingId), [all, pendingId]);
+    const assets = useMemo(() => rows.filter((account) => toAccountKind(account.kind) === "asset"), [rows]);
+    const currency = useGlobalCurrency(db);
+    const debts = useDebtsOverview(db, useNow());
+    const addMenu = useAddMenu();
+    const empty = rows.length + debts.owedToYou.length + debts.youOwe.length + debts.settled.length === 0;
     const rowGround = groupedRows(colors);
 
     const openDetail = useCallback(
@@ -113,27 +124,34 @@ export function Accounts() {
                 >
                     <Stack.Toolbar.Icon {...toolbarIcon("reorder")} />
                 </Stack.Toolbar.Button>
+                {addMenu}
             </Stack.Toolbar>
-            {rows.length === 0 ? (
+            {empty ? (
                 <EmptyState body={t("accounts.empty")} mark={<AccountsMark />} tier="takeover" />
             ) : (
                 <Host style={{ flex: 1 }} useViewportSizeMeasurement>
                     <List modifiers={groupedList(colors)}>
-                        <Section
-                            header={<Eyebrow colors={colors}>{t("accounts.census", { count: rows.length })}</Eyebrow>}
-                            modifiers={[rowGround]}
-                        >
-                            {rows.map((account) => (
-                                <AccountRow
-                                    account={account}
-                                    colors={colors}
-                                    db={db}
-                                    key={account.id}
-                                    onDelete={deleteAccount}
-                                    onOpen={openDetail}
-                                />
-                            ))}
-                        </Section>
+                        <LedgerTotals currency={currency} debts={debts} />
+                        {assets.length > 0 ? (
+                            <Section
+                                header={
+                                    <Eyebrow colors={colors}>{t("accounts.census", { count: assets.length })}</Eyebrow>
+                                }
+                                modifiers={[rowGround]}
+                            >
+                                {assets.map((account) => (
+                                    <AccountRow
+                                        account={account}
+                                        colors={colors}
+                                        db={db}
+                                        key={account.id}
+                                        onDelete={deleteAccount}
+                                        onOpen={openDetail}
+                                    />
+                                ))}
+                            </Section>
+                        ) : null}
+                        <DebtSections currency={currency} debts={debts} />
                         {rows.length >= 2 ? (
                             <Section modifiers={[rowGround]}>
                                 <HStack

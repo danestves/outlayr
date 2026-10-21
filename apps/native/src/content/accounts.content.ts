@@ -15,13 +15,17 @@ const accounts = {
             en: "Edit balance",
             es: "Editar el saldo",
         }),
-        "accounts.a11y.new": t({
-            en: "New account",
-            es: "Nueva cuenta",
-        }),
         "accounts.a11y.reorder": t({
             en: "Reorder accounts",
             es: "Reordenar cuentas",
+        }),
+        "accounts.add.account": t({
+            en: "An account",
+            es: "Una cuenta",
+        }),
+        "accounts.add.prompt": t({
+            en: "Add an account, card or person",
+            es: "Agrega una cuenta, tarjeta o persona",
         }),
         "accounts.addAccount": t({
             en: "Add Account",
@@ -107,6 +111,10 @@ const accounts = {
             en: "New Account",
             es: "Nueva cuenta",
         }),
+        "accounts.nav.newLiability": t({
+            en: "New Card or Loan",
+            es: "Nueva tarjeta o préstamo",
+        }),
         "accounts.overview.heading": t({
             en: "Accounts",
             es: "Cuentas",
@@ -131,9 +139,25 @@ const accounts = {
             en: "Save Account",
             es: "Guardar cuenta",
         }),
+        "accounts.section.liabilities": t({
+            en: "Cards & loans",
+            es: "Tarjetas y préstamos",
+        }),
+        "accounts.section.people": t({
+            en: "People",
+            es: "Personas",
+        }),
         "accounts.title": t({
             en: "Accounts",
             es: "Cuentas",
+        }),
+        "accounts.totals.have": t({
+            en: "Have",
+            es: "Tienes",
+        }),
+        "accounts.totals.owe": t({
+            en: "Owe",
+            es: "Debes",
         }),
         "accounts.undo.body": t({
             en: "Its transactions are kept — they just stop belonging to an account.",

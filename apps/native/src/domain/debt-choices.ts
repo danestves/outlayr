@@ -9,7 +9,7 @@ export type DebtStanding = "owesYou" | "settled" | "youOwe";
 
 /**
  * Reads a person's balance, in their own currency. Rounded first, so a float
- * residue from 0.10 + 0.20 - 0.30 reads as settled, as it does on the Debts screen.
+ * residue from 0.10 + 0.20 - 0.30 reads as settled.
  */
 export function debtStanding(balance: number, currency: string): DebtStanding {
     const rounded = roundToMinorUnits(balance, currency);
