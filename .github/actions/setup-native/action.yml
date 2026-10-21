@@ -1,12 +1,9 @@
 name: Set up the native app
-description: Installs the workspace and exports one EAS environment into the job.
+description: Installs the workspace and exports the job's GitHub environment variables.
 
 inputs:
-    environment:
-        description: EAS environment to export, preview or production.
-        required: true
-    expo-token:
-        description: Expo access token that can read the project's environment variables.
+    variables:
+        description: The job's variables, as toJSON(vars).
         required: true
     hugeicons-token:
         description: Token for the private @hugeicons-pro registry.
@@ -38,35 +35,16 @@ runs:
           shell: bash
           run: vp install --frozen-lockfile
 
-        # SECRET variables can't be read outside EAS; the workflow passes those
-        # from repository secrets.
-        - name: Export the EAS environment
+        - name: Export the environment variables
           shell: bash
-          working-directory: apps/native
           env:
-              EXPO_TOKEN: ${{ inputs.expo-token }}
-              EAS_ENVIRONMENT: ${{ inputs.environment }}
+              VARIABLES: ${{ inputs.variables }}
           run: |
-              set -euo pipefail
-              npx -y eas-cli env:pull --environment "$EAS_ENVIRONMENT" --path "$RUNNER_TEMP/eas.env" --non-interactive
               python3 - <<'PY'
-              import os, secrets
-              # NPM_CONFIG_USERCONFIG points at an .npmrc on EAS's builders, which
-              # doesn't exist here; the registry step above covers it.
-              skip = {"NPM_CONFIG_USERCONFIG"}
-              with open(os.path.join(os.environ["RUNNER_TEMP"], "eas.env")) as fh, open(os.environ["GITHUB_ENV"], "a") as env:
-                  for line in fh.read().splitlines():
-                      if not line or line.startswith("#") or "=" not in line:
-                          continue
-                      name, value = line.split("=", 1)
-                      if name in skip:
-                          continue
-                      # EXPO_PUBLIC_ values ship inside the app anyway, and masking a short
-                      # one would blank that string out of every log line.
-                      if value and not name.startswith("EXPO_PUBLIC_"):
-                          print(f"::add-mask::{value}")
+              import json, os, secrets
+              with open(os.environ["GITHUB_ENV"], "a") as env:
+                  for name, value in json.loads(os.environ["VARIABLES"]).items():
                       delimiter = f"EOF_{secrets.token_hex(8)}"
                       env.write(f"{name}<<{delimiter}\n{value}\n{delimiter}\n")
                       print(f"Exported {name}")
               PY
-              rm "$RUNNER_TEMP/eas.env"

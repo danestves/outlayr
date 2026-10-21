@@ -7,9 +7,8 @@
 #
 # Repository secrets:
 #
-#   EXPO_TOKEN                     reads the EAS environment the profile names
 #   HUGEICONS_PRO_TOKEN            the private icon registry
-#   POSTHOG_CLI_API_KEY            source map uploads; SECRET on EAS, so it can't be pulled
+#   POSTHOG_CLI_API_KEY            source map uploads
 #   EAS_IOS_DIST_P12               base64 .p12 with the distribution certificate and key
 #   EAS_IOS_P12_PASSWORD
 #   EAS_IOS_PROFILE                base64 App Store profile for com.tryoutlayr.app
@@ -33,7 +32,7 @@ on:
                 description: ios | android
                 required: true
             profile:
-                description: Build profile from eas.json. Also selects the EAS environment.
+                description: Build profile from eas.json. Also selects the GitHub environment.
                 required: true
                 default: production
             # Accepted and ignored. rnd maps `resourceClass` to a runner, but its iOS
@@ -52,12 +51,10 @@ concurrency:
     cancel-in-progress: false
 
 jobs:
-    # Backend first, so the binary is never newer than the API it calls. The
-    # profile names the EAS environment, so the functions land on the deployment
-    # this binary is built to call.
-    deploy_backend:
-        name: Deploy Convex functions
+    check:
+        name: Check the build
         runs-on: ubuntu-26.04
+        environment: ${{ inputs.profile }}
         steps:
             - name: Check the build profile
               env:
@@ -73,46 +70,33 @@ jobs:
                     *) echo "::error::Unknown platform '$PLATFORM'."; exit 1 ;;
                   esac
 
-            - uses: actions/checkout@v7
-
-            - uses: ./.github/actions/setup-native
-              with:
-                  environment: ${{ inputs.profile }}
-                  expo-token: ${{ secrets.EXPO_TOKEN }}
-                  hugeicons-token: ${{ secrets.HUGEICONS_PRO_TOKEN }}
-
             # The app reads this key at runtime, so a binary built without it
             # builds fine and ships a paywall with no plans.
             - name: Check the Android release setup
               if: inputs.platform == 'android'
+              env:
+                  EXPO_PUBLIC_REVENUECAT_ANDROID_KEY: ${{ vars.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY }}
+                  PROFILE: ${{ inputs.profile }}
               run: |
-                  if [ -z "${EXPO_PUBLIC_REVENUECAT_ANDROID_KEY:-}" ]; then
-                    echo "::error::EXPO_PUBLIC_REVENUECAT_ANDROID_KEY is not set on the selected EAS environment."
+                  if [ -z "$EXPO_PUBLIC_REVENUECAT_ANDROID_KEY" ]; then
+                    echo "::error::EXPO_PUBLIC_REVENUECAT_ANDROID_KEY is not set on the $PROFILE environment."
                     exit 1
                   fi
 
-            # Fail here rather than let `convex deploy` pick up an unset variable and
-            # push to whichever deployment happens to be configured by default.
-            - name: Resolve the Convex deploy target
-              run: |
-                  if [ -n "${CONVEX_DEPLOY_KEY:-}" ]; then
-                    echo "Convex target: cloud (CONVEX_DEPLOY_KEY)"
-                  elif [ -n "${CONVEX_SELF_HOSTED_URL:-}" ] && [ -n "${CONVEX_SELF_HOSTED_ADMIN_KEY:-}" ]; then
-                    echo "Convex target: self-hosted at $CONVEX_SELF_HOSTED_URL"
-                  else
-                    echo "::error::No Convex deploy credentials on the selected EAS environment. Set CONVEX_DEPLOY_KEY, or both CONVEX_SELF_HOSTED_URL and CONVEX_SELF_HOSTED_ADMIN_KEY."
-                    exit 1
-                  fi
-
-            - name: Deploy functions
-              working-directory: packages/backend
-              run: npx convex deploy -y
+    # Backend first, so the binary is never newer than the API it calls.
+    deploy_backend:
+        needs: [check]
+        uses: ./.github/workflows/deploy-backend.yml
+        with:
+            environment: ${{ inputs.profile }}
+        secrets: inherit
 
     build:
         name: Build ${{ inputs.platform }}
         needs: [deploy_backend]
         # Same Xcode as EAS's sdk-58 image (27.0). The image is a GitHub preview.
         runs-on: ${{ inputs.platform == 'ios' && 'xcode-27' || 'ubuntu-26.04' }}
+        environment: ${{ inputs.profile }}
         timeout-minutes: 90
         env:
             EAS_PLATFORM: ${{ inputs.platform }}
@@ -128,8 +112,7 @@ jobs:
 
             - uses: ./.github/actions/setup-native
               with:
-                  environment: ${{ inputs.profile }}
-                  expo-token: ${{ secrets.EXPO_TOKEN }}
+                  variables: ${{ toJSON(vars) }}
                   hugeicons-token: ${{ secrets.HUGEICONS_PRO_TOKEN }}
 
             # EAS Build's remote counter ended at iOS 54 and Android 7. Starting past

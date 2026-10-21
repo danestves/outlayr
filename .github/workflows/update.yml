@@ -7,7 +7,7 @@ on:
         inputs:
             channel:
                 type: choice
-                description: Channel and xprem branch to publish to. Also selects the EAS environment.
+                description: Channel and xprem branch to publish to. Also selects the GitHub environment.
                 options:
                     - production
                     - preview
@@ -32,36 +32,16 @@ concurrency:
 
 jobs:
     deploy_backend:
-        name: Deploy Convex functions
-        runs-on: ubuntu-26.04
-        steps:
-            - uses: actions/checkout@v7
-
-            - uses: ./.github/actions/setup-native
-              with:
-                  environment: ${{ inputs.channel }}
-                  expo-token: ${{ secrets.EXPO_TOKEN }}
-                  hugeicons-token: ${{ secrets.HUGEICONS_PRO_TOKEN }}
-
-            - name: Resolve the Convex deploy target
-              run: |
-                  if [ -n "${CONVEX_DEPLOY_KEY:-}" ]; then
-                    echo "Convex target: cloud (CONVEX_DEPLOY_KEY)"
-                  elif [ -n "${CONVEX_SELF_HOSTED_URL:-}" ] && [ -n "${CONVEX_SELF_HOSTED_ADMIN_KEY:-}" ]; then
-                    echo "Convex target: self-hosted at $CONVEX_SELF_HOSTED_URL"
-                  else
-                    echo "::error::No Convex deploy credentials on the selected EAS environment. Set CONVEX_DEPLOY_KEY, or both CONVEX_SELF_HOSTED_URL and CONVEX_SELF_HOSTED_ADMIN_KEY."
-                    exit 1
-                  fi
-
-            - name: Deploy functions
-              working-directory: packages/backend
-              run: npx convex deploy -y
+        uses: ./.github/workflows/deploy-backend.yml
+        with:
+            environment: ${{ inputs.channel }}
+        secrets: inherit
 
     publish:
         name: Publish ${{ inputs.platform }} JS to ${{ inputs.channel }}
         needs: [deploy_backend]
         runs-on: ubuntu-26.04
+        environment: ${{ inputs.channel }}
         env:
             EAS_BUILD_PROFILE: ${{ inputs.channel }}
             RELEASE_CHANNEL: ${{ inputs.channel }}
@@ -77,8 +57,7 @@ jobs:
 
             - uses: ./.github/actions/setup-native
               with:
-                  environment: ${{ inputs.channel }}
-                  expo-token: ${{ secrets.EXPO_TOKEN }}
+                  variables: ${{ toJSON(vars) }}
                   hugeicons-token: ${{ secrets.HUGEICONS_PRO_TOKEN }}
 
             - name: Build the i18n dictionaries

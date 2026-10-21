@@ -24,7 +24,6 @@ cd "$(git rev-parse --show-toplevel)/apps/native"
 export npm_config_loglevel=error
 
 field() { python3 -c "import json,sys; d=json.loads(sys.stdin.read(),strict=False); print($1)"; }
-run() { echo "npx eas-cli workflow:run .eas/workflows/$1 --non-interactive --wait"; }
 ship="npx -y -p @react-native-feel/deploy@0.3.0 rnd build -p $platform -e $channel --json"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
@@ -81,10 +80,14 @@ fi
 
 changed=$(git diff --name-only "$base" HEAD)
 app=$(grep -E '^(apps/native/|packages/(env|money)/|pnpm-lock\.yaml$)' <<<"$changed" |
-    grep -vE '\.test\.tsx?$|__tests__/|\.md$|^apps/native/(\.eas|docs|jest|scripts)/|^apps/native/jest\.config\.js$' |
+    grep -vE '\.test\.tsx?$|__tests__/|\.md$|^apps/native/(docs|jest|scripts)/|^apps/native/jest\.config\.js$' |
     grep -vE "$foreign" || true)
 backend=$(grep -E '^packages/backend/convex/' <<<"$changed" | grep -vE '\.test\.ts$' || true)
-EAS_BUILD_PROFILE=$channel npx expo-updates fingerprint:generate --platform "$platform" >"$tmp/head.json"
+env_vars=$(gh variable list --env "$channel" --json name,value --jq '.[] | "\(.name)=\(.value)"')
+(
+    while IFS= read -r var; do export "$var"; done <<<"$env_vars"
+    DOTENV_CONFIG_PATH=/dev/null EAS_BUILD_PROFILE=$channel npx expo-updates fingerprint:generate --platform "$platform" >"$tmp/head.json"
+)
 fingerprint=$(
     python3 - "$tmp/fingerprint.json" "$tmp/head.json" <<'PY'
 import json, sys
@@ -121,7 +124,7 @@ if [ -z "$app" ] && [ -z "$backend" ]; then
     echo "VERDICT: NOTHING TO SHIP"
 elif [ -z "$app" ]; then
     echo "VERDICT: BACKEND ONLY"
-    echo "$(run deploy-backend.yml) -F environment=$channel"
+    echo "gh workflow run deploy-backend.yml -f environment=$channel"
 elif grep -q 'differs from fingerprint' <<<"$fingerprint"; then
     echo "VERDICT: BUILD"
     echo "$ship"

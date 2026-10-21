@@ -1,0 +1,52 @@
+name: Deploy the backend
+
+run-name: ${{ inputs.environment }} backend
+
+on:
+    workflow_dispatch:
+        inputs:
+            environment:
+                type: choice
+                description: GitHub environment whose Convex deployment receives the functions.
+                options:
+                    - production
+                    - preview
+                default: preview
+                required: true
+    workflow_call:
+        inputs:
+            environment:
+                type: string
+                required: true
+
+jobs:
+    deploy:
+        name: Deploy Convex functions
+        runs-on: ubuntu-26.04
+        environment: ${{ inputs.environment }}
+        steps:
+            - uses: actions/checkout@v7
+
+            - uses: ./.github/actions/setup-native
+              with:
+                  variables: ${{ toJSON(vars) }}
+                  hugeicons-token: ${{ secrets.HUGEICONS_PRO_TOKEN }}
+
+            - name: Deploy functions
+              working-directory: packages/backend
+              env:
+                  ENVIRONMENT: ${{ inputs.environment }}
+                  CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+                  CONVEX_SELF_HOSTED_ADMIN_KEY: ${{ secrets.CONVEX_SELF_HOSTED_ADMIN_KEY }}
+              run: |
+                  if [ -n "$CONVEX_DEPLOY_KEY" ]; then
+                    unset CONVEX_SELF_HOSTED_ADMIN_KEY
+                    echo "Convex target: cloud (CONVEX_DEPLOY_KEY)"
+                  elif [ -n "${CONVEX_SELF_HOSTED_URL:-}" ] && [ -n "$CONVEX_SELF_HOSTED_ADMIN_KEY" ]; then
+                    unset CONVEX_DEPLOY_KEY
+                    echo "Convex target: self-hosted at $CONVEX_SELF_HOSTED_URL"
+                  else
+                    echo "::error::No Convex deploy credentials on the $ENVIRONMENT environment. Set the CONVEX_DEPLOY_KEY secret, or the CONVEX_SELF_HOSTED_URL variable and the CONVEX_SELF_HOSTED_ADMIN_KEY secret."
+                    exit 1
+                  fi
+                  npx convex deploy -y
