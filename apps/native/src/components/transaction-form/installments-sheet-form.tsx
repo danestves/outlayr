@@ -5,8 +5,16 @@ import type { Ref } from "react";
 import type { Account } from "@/data/accounts-core";
 import { useNow } from "@/data/use-now";
 import { formatSentenceDate } from "@/domain/dates";
-import { overPrice, paidBeforeCount, rescheduled, UPFRONT_SHARES, upfrontOf } from "@/domain/installment-draft";
+import {
+    EVERY_OPTIONS,
+    overPrice,
+    paidBeforeCount,
+    rescheduled,
+    UPFRONT_SHARES,
+    upfrontOf,
+} from "@/domain/installment-draft";
 import type { InstallmentDraft } from "@/domain/installment-draft";
+import { planPhrase } from "@/domain/installment-plan-phrase";
 import type { ScheduledInstallment } from "@/domain/installments";
 import { formatAmount, minorUnitsFor } from "@/domain/money";
 import { numberToNumpad, numpadToNumber } from "@/domain/numpad";
@@ -62,6 +70,7 @@ export function useInstallmentsSheetForm({
     const paidBefore = schedule ? paidBeforeCount(draft, schedule, new Date(nowMs)) : 0;
     const total = schedule?.reduce((sum, row) => sum + row.amount, 0) ?? 0;
     const over = schedule && price !== null ? overPrice(schedule, price, currency) : 0;
+    const summary = planPhrase(t, { count: draft.count, interval: EVERY_OPTIONS[draft.every], upfront: upfront > 0 });
     const shares = [
         ...UPFRONT_SHARES.map((share) => ({
             label: `${Math.round(share * PERCENT)}%`,
@@ -145,6 +154,7 @@ export function useInstallmentsSheetForm({
         setPadText: (text: string) => setPad((current) => (current ? { ...current, text } : current)),
         shares,
         step,
+        summary,
         toggle,
         total,
         upfront,

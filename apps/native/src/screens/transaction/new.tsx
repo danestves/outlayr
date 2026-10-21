@@ -26,6 +26,7 @@ interface EntryParams {
     date?: LinkParam;
     details?: LinkParam;
     income?: LinkParam;
+    installments?: LinkParam;
     note?: LinkParam;
     recurringCoefficient?: LinkParam;
     recurringType?: LinkParam;
@@ -51,6 +52,7 @@ export function entrySeed({
     date,
     details,
     income,
+    installments,
     note,
     recurringCoefficient,
     recurringType,
@@ -70,6 +72,7 @@ export function entrySeed({
         date: Number.isNaN(seededDate.getTime()) ? undefined : seededDate,
         details: single(details),
         income: income === "1",
+        installments: installments === "1",
         note: single(note),
         recurrence:
             cadence === undefined

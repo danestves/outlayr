@@ -235,6 +235,10 @@ const installments = {
             en: "Left to pay",
             es: "Por pagar",
         }),
+        "installments.newPurchase": t({
+            en: "New purchase in installments",
+            es: "Nueva compra en cuotas",
+        }),
         "installments.next": t({
             en: "Next {date}",
             es: "Próxima {date}",
@@ -322,6 +326,46 @@ const installments = {
         "installments.payAll": t({
             en: "Pay all {amount}",
             es: "Pagar todo {amount}",
+        }),
+        "installments.plan.cuotas_one": t({
+            en: "{count} installment",
+            es: "{count} cuota",
+        }),
+        "installments.plan.cuotas_other": t({
+            en: "{count} installments",
+            es: "{count} cuotas",
+        }),
+        "installments.plan.everyDays_one": t({
+            en: "{cuotas} every day",
+            es: "{cuotas} cada día",
+        }),
+        "installments.plan.everyDays_other": t({
+            en: "{cuotas} every {count} days",
+            es: "{cuotas} cada {count} días",
+        }),
+        "installments.plan.everyMonths_one": t({
+            en: "{cuotas} every month",
+            es: "{cuotas} cada mes",
+        }),
+        "installments.plan.everyMonths_other": t({
+            en: "{cuotas} every {count} months",
+            es: "{cuotas} cada {count} meses",
+        }),
+        "installments.plan.semimonthly": t({
+            en: "{cuotas} on days {first} and {second}",
+            es: "{cuotas} los días {first} y {second}",
+        }),
+        "installments.plan.semimonthlyLast": t({
+            en: "{cuotas} on day {first} and the last day",
+            es: "{cuotas} el día {first} y el último día",
+        }),
+        "installments.plan.upfront": t({
+            en: "Upfront + {plan}",
+            es: "Inicial + {plan}",
+        }),
+        "installments.plan.weekly": t({
+            en: "{cuotas} every week",
+            es: "{cuotas} cada semana",
         }),
         "installments.reminder.ask": t({
             en: "Remind you the day before each installment?",

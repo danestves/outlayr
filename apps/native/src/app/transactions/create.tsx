@@ -16,6 +16,7 @@ export default function NewTransactionScreen() {
         currency,
         date,
         details,
+        installments,
         recurringCoefficient,
         recurringType,
     } = useLocalSearchParams<{
@@ -30,6 +31,7 @@ export default function NewTransactionScreen() {
         details?: string;
         from?: string;
         income?: string;
+        installments?: "1";
         note?: string;
         recurringCoefficient?: string;
         recurringType?: string;
@@ -46,6 +48,7 @@ export default function NewTransactionScreen() {
             details={details}
             from={from}
             income={income}
+            installments={installments}
             note={note}
             recurringCoefficient={recurringCoefficient}
             recurringType={recurringType}

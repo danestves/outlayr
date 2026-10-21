@@ -32,6 +32,7 @@ interface InstallmentOrderArgs {
     entryRate: { rate: number | null; type: EntryRateType };
     income: boolean;
     initial: Transaction | undefined;
+    intent: boolean;
     isSubscription: boolean;
     mode: "create" | "edit";
 }
@@ -46,6 +47,7 @@ export function useInstallmentOrder({
     entryRate,
     income,
     initial,
+    intent,
     isSubscription,
     mode,
 }: InstallmentOrderArgs) {
@@ -54,6 +56,7 @@ export function useInstallmentOrder({
     const { language } = useLanguage();
     const sheetRef = useRef<BottomSheetModal>(null);
     const ordered = useRef(false);
+    const prompted = useRef(!intent);
     const [draft, setDraft] = useState<InstallmentDraft | null>(null);
     // Presented from an effect: the sheet mounts with the draft, a render after the tap that makes it.
     const [presented, setPresented] = useState(0);
@@ -79,6 +82,22 @@ export function useInstallmentOrder({
             sheetRef.current?.present();
         }
     }, [presented]);
+
+    const open = () => {
+        prompted.current = true;
+        setDraft(
+            (current) =>
+                current ??
+                newInstallmentDraft(sources.find((source) => toAccountKind(source.kind) !== "liability")?.id ?? null)
+        );
+        setPresented((count) => count + 1);
+    };
+
+    const prompt = (hasPrice: boolean) => {
+        if (!prompted.current && offered && hasPrice) {
+            open();
+        }
+    };
 
     const verbs = (hasPrice: boolean, price: number): SentenceVerb[] => {
         if (planId !== null) {
@@ -111,16 +130,7 @@ export function useInstallmentOrder({
                               count: draft.count,
                           })
                         : t("installments.chip"),
-                onPress: () => {
-                    setDraft(
-                        (current) =>
-                            current ??
-                            newInstallmentDraft(
-                                sources.find((source) => toAccountKind(source.kind) !== "liability")?.id ?? null
-                            )
-                    );
-                    setPresented((count) => count + 1);
-                },
+                onPress: open,
                 onRemove: () => setDraft(null),
                 removeAccessibilityLabel: t("installments.chip"),
             },
@@ -214,5 +224,5 @@ export function useInstallmentOrder({
         );
     };
 
-    return { afterDone, drafting: draft !== null, problem, save, sheet, verbs };
+    return { afterDone, drafting: draft !== null, problem, prompt, save, sheet, verbs };
 }

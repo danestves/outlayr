@@ -1,4 +1,5 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
+import { toAccountKind } from "@outlayr/money/account-kind";
 import { ENTRY_RATE_TYPES } from "@outlayr/money/rates";
 import type { EntryRateType } from "@outlayr/money/rates";
 import { ensureRecurringType, RECURRING_TYPE } from "@outlayr/money/recurrence";
@@ -6,7 +7,7 @@ import { useField, useForm, useSelector } from "@tanstack/react-form";
 import { useRouter } from "expo-router";
 import { PortalHost, PortalProvider } from "panelui-native/primitives/portal";
 import type { ComponentProps, ReactNode, RefObject } from "react";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
     AccessibilityInfo,
     Alert,
@@ -61,6 +62,7 @@ import { cardFeeAmount, cardFeeBase, cardFeeOf, feeDraftOf, formatFeeRate, NO_FE
 import type { FeeDraft } from "@/domain/card-fee";
 import { computeCurtainHues } from "@/domain/curtain-hues";
 import { formatSentenceDate } from "@/domain/dates";
+import { installmentRegion } from "@/domain/institution-map";
 import { merchantKey } from "@/domain/merchant-resolver";
 import { suggestMerchants } from "@/domain/merchant-suggest";
 import { formatAmount, minorUnitsFor, numberLocale, roundToMinorUnits, symbolIsShared } from "@/domain/money";
@@ -283,6 +285,7 @@ export interface TransactionSeed {
     date?: Date;
     details?: string;
     income?: boolean;
+    installments?: boolean;
     note?: string;
     recurrence?: { coefficient: number; type: number };
 }
@@ -320,7 +323,7 @@ function seedAccount(db: Database, initial: Transaction | undefined, seed: Trans
     if (initial) {
         return initial.accountId ? getAccountById(db, initial.accountId) : null;
     }
-    if (seed?.accountUnresolved) {
+    if (seed?.accountUnresolved || (seed?.installments && !seed.accountId)) {
         return null;
     }
     return (seed?.accountId ? getAccountById(db, seed.accountId) : null) ?? getLastUsedAccount(db);
@@ -1209,6 +1212,7 @@ export function TransactionForm({
         entryRate: { rate: rateInForce, type: rateSelection.exchangeRateType },
         income,
         initial,
+        intent: seed?.installments === true,
         isSubscription,
         mode,
     });
@@ -1222,6 +1226,10 @@ export function TransactionForm({
     const installmentPrice = useSelector(form.store, (s) =>
         installmentOrder.drafting ? numpadToNumber(s.values.amount) : 0
     );
+    const promptInstallments = useEffectEvent((_turn: number) => installmentOrder.prompt(hasAmount));
+    useEffect(() => {
+        promptInstallments(stageTurn);
+    }, [stageTurn]);
     const [accountDeclined, setAccountDeclined] = useState(
         restore?.accountDeclined ?? (initial != null && initial.accountId == null)
     );
@@ -1506,6 +1514,9 @@ export function TransactionForm({
 
     const locale = useLocaleTag();
     const regionCode = useRegionCode();
+    const liabilities = allAccounts.filter((candidate) => toAccountKind(candidate.kind) === "liability");
+    const installmentsNarrowed =
+        seed?.installments === true && !income && (liabilities.length > 0 || installmentRegion(regionCode) !== null);
     const {
         lookupNow,
         onNameChange,
@@ -1805,7 +1816,11 @@ export function TransactionForm({
         if (step === "category") {
             return categoryLabel !== null || queueable(merchant);
         }
-        return account != null || accountDeclined || (allAccounts.length === 0 && !seed?.accountUnresolved);
+        return (
+            account != null ||
+            accountDeclined ||
+            (allAccounts.length === 0 && !seed?.accountUnresolved && !installmentsNarrowed)
+        );
     };
 
     const nextMissing = (amountNumber: number, merchant: string, from: number): GuidedStep | null =>
@@ -2105,16 +2120,21 @@ export function TransactionForm({
                 setAccountDeclined(picked === null);
                 advance("account", amountNumber, merchant);
             };
+            const apps = income ? null : <StepAccountInstallments accounts={allAccounts} onPick={pickAccount} />;
             return {
-                body: (
-                    <StepAccount
-                        accounts={allAccounts}
-                        after={income ? null : <StepAccountInstallments accounts={allAccounts} onPick={pickAccount} />}
-                        onSelect={pickAccount}
-                        people={people}
-                        selectedId={account?.id ?? null}
-                    />
-                ),
+                body:
+                    installmentsNarrowed && liabilities.length === 0 ? (
+                        apps
+                    ) : (
+                        <StepAccount
+                            accounts={installmentsNarrowed ? liabilities : allAccounts}
+                            after={apps}
+                            allowNone={!installmentsNarrowed}
+                            onSelect={pickAccount}
+                            people={installmentsNarrowed ? undefined : people}
+                            selectedId={account?.id ?? null}
+                        />
+                    ),
                 title: t("transaction.field.account"),
             };
         }
@@ -2329,7 +2349,7 @@ export function TransactionForm({
                 backLabel={t("common.back")}
                 footer={
                     footer ??
-                    (stageStep === "account" && allAccounts.length === 0
+                    (stageStep === "account" && allAccounts.length === 0 && !installmentsNarrowed
                         ? {
                               label: t("transaction.account.create"),
                               onPress: () => router.push(accountCreateRoute),

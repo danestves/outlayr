@@ -31,6 +31,12 @@ export function useAddMenu() {
             <Stack.Toolbar.MenuAction icon="person" onPress={() => router.push("/debts/new")}>
                 {t("debts.add.person")}
             </Stack.Toolbar.MenuAction>
+            <Stack.Toolbar.MenuAction
+                icon="cart"
+                onPress={() => router.push({ params: { installments: "1" }, pathname: "/transactions/create" })}
+            >
+                {t("accounts.add.installments")}
+            </Stack.Toolbar.MenuAction>
         </Stack.Toolbar.Menu>
     );
 }

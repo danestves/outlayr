@@ -6,12 +6,14 @@ import Animated, { LinearTransition } from "react-native-reanimated";
 import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
+import type { Account } from "@/data/accounts-core";
 import { useInstallmentPlans } from "@/data/installments";
 import { upcomingInstallments } from "@/data/installments-core";
 import type { PlanWithStanding, UpcomingInstallment } from "@/data/installments-core";
 import type { Database } from "@/db/client";
 import { formatSentenceDate } from "@/domain/dates";
 import { orderName } from "@/domain/installments";
+import { isInstallmentAppAccount } from "@/domain/institution-map";
 import { addLocalDays } from "@/domain/local-day";
 import { formatAmount } from "@/domain/money";
 import { useLanguage, useTranslation } from "@/i18n/context";
@@ -20,15 +22,16 @@ import { dueIn } from "@/screens/installments/labels";
 /** How far ahead "Coming up" looks: a monthly plan's next cuota is always inside it. */
 const COMING_UP_DAYS = 31;
 
-export function InstallmentSections({ accountId, db, nowMs }: { accountId: string; db: Database; nowMs: number }) {
+export function InstallmentSections({ account, db, nowMs }: { account: Account; db: Database; nowMs: number }) {
+    const router = useRouter();
     const t = useTranslation();
-    const plans = useInstallmentPlans(db, nowMs, accountId);
+    const plans = useInstallmentPlans(db, nowMs, account.id);
     const upcoming = useMemo(
         () => upcomingInstallments(plans, new Date(addLocalDays(nowMs, COMING_UP_DAYS))),
         [plans, nowMs]
     );
     const [showFinished, setShowFinished] = useState(false);
-    if (plans.length === 0) {
+    if (plans.length === 0 && !isInstallmentAppAccount(account)) {
         return null;
     }
     const open = plans.filter(({ standing }) => !standing.finished);
@@ -56,6 +59,18 @@ export function InstallmentSections({ accountId, db, nowMs }: { accountId: strin
                     </Pressable>
                 ) : null}
                 {showFinished ? finished.map((entry) => <OrderRow entry={entry} key={entry.plan.id} />) : null}
+                <Pressable
+                    accessibilityRole="button"
+                    className="border-border border-b py-3 active:opacity-60"
+                    onPress={() =>
+                        router.push({
+                            params: { accountId: account.id, installments: "1" },
+                            pathname: "/transactions/create",
+                        })
+                    }
+                >
+                    <Text className="text-tint text-body">{t("installments.newPurchase")}</Text>
+                </Pressable>
             </View>
 
             {upcoming.length > 0 ? (

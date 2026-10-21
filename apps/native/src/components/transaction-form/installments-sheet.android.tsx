@@ -69,9 +69,12 @@ export function InstallmentsSheet(props: InstallmentsSheetProps) {
                     contentContainerStyle={{ paddingBottom: insets.bottom + 16, paddingHorizontal: 16 }}
                     showsVerticalScrollIndicator={false}
                 >
-                    <Text accessibilityRole="header" className="text-m3-on-surface px-2 pb-4 text-[22px] leading-7">
-                        {t("installments.chip")}
-                    </Text>
+                    <View className="gap-1 px-2 pb-4">
+                        <Text accessibilityRole="header" className="text-m3-on-surface text-[22px] leading-7">
+                            {t("installments.chip")}
+                        </Text>
+                        <Text className="text-body text-m3-on-surface-variant">{form.summary}</Text>
+                    </View>
                     <View className="gap-4">
                         <OutlinedSelectField
                             accessibilityValue={money(upfront)}

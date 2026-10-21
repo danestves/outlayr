@@ -14,6 +14,17 @@ export function LiabilityToolbar({ account, plan }: { account: Account; plan: Pa
             <Stack.Toolbar.Menu accessibilityLabel={t("debts.a11y.more")}>
                 <Stack.Toolbar.Icon {...toolbarIcon("more")} />
                 <Stack.Toolbar.MenuAction
+                    icon="cart.badge.plus"
+                    onPress={() =>
+                        router.push({
+                            params: { accountId: account.id, installments: "1" },
+                            pathname: "/transactions/create",
+                        })
+                    }
+                >
+                    {t("installments.newPurchase")}
+                </Stack.Toolbar.MenuAction>
+                <Stack.Toolbar.MenuAction
                     icon="pencil"
                     onPress={() =>
                         router.push({ params: { accountId: account.id }, pathname: "/accounts/[accountId]/edit" })

@@ -12,6 +12,7 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { useAccounts } from "@/data/accounts";
 import type { InstallmentRow, PlanWithStanding } from "@/data/installments-core";
 import { formatSentenceDate } from "@/domain/dates";
+import { orderPlanPhrase } from "@/domain/installment-plan-phrase";
 import { orderName } from "@/domain/installments";
 import type { InstallmentStanding } from "@/domain/installments";
 import { formatAmount } from "@/domain/money";
@@ -35,6 +36,7 @@ function OrderLoaded({ entry, leave, nowMs }: { entry: PlanWithStanding; leave: 
     const account = useAccounts(db).find((row) => row.id === plan.accountId);
     const money = (value: number) => formatAmount(value, plan.currency, showCents, language);
     const name = orderName(t, purchase);
+    const planLine = orderPlanPhrase(t, standing.rows);
     const { cuotaSheetRef, deletePending, editing, pay, setEditing } = useOrderActions(entry, leave);
 
     return (
@@ -59,6 +61,7 @@ function OrderLoaded({ entry, leave, nowMs }: { entry: PlanWithStanding; leave: 
                 <View className="gap-1 pt-6">
                     <MonoLabel>{t("installments.leftToPay")}</MonoLabel>
                     <HeroNumber amount={standing.remaining} code={plan.currency} showCents={showCents} sign="" />
+                    {planLine ? <Text className="text-foreground text-subtitle">{planLine}</Text> : null}
                     {purchase ? (
                         <Text className="text-muted text-subtitle">
                             {[

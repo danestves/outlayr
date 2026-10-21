@@ -217,7 +217,7 @@ function DetailBody({
                             {summary}
                             <AccountBalanceChart account={account} cells={cells} rates={rates} showCents={showCents} />
                             {toAccountKind(account.kind) === "liability" ? (
-                                <InstallmentSections accountId={account.id} db={db} nowMs={nowMs} />
+                                <InstallmentSections account={account} db={db} nowMs={nowMs} />
                             ) : null}
                         </View>
                     )

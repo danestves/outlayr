@@ -53,9 +53,10 @@ export function InstallmentsSheet(props: InstallmentsSheetProps) {
                         maxHeight: windowHeight - insets.top - insets.bottom - SHEET_CARD_GAP - SHEET_TOP_PADDING,
                     }}
                 >
-                    <Text accessibilityRole="header" className="text-foreground pb-3 text-center text-lg font-medium">
+                    <Text accessibilityRole="header" className="text-foreground text-center text-lg font-medium">
                         {t("installments.chip")}
                     </Text>
+                    <Text className="text-muted text-subtitle pb-3 text-center">{form.summary}</Text>
                     <View className="border-border border-t">
                         <View className="border-border border-b py-3">
                             <Pressable

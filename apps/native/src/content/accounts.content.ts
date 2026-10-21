@@ -23,6 +23,10 @@ const accounts = {
             en: "An account",
             es: "Una cuenta",
         }),
+        "accounts.add.installments": t({
+            en: "A purchase in installments",
+            es: "Una compra en cuotas",
+        }),
         "accounts.add.prompt": t({
             en: "Add an account, card or person",
             es: "Agrega una cuenta, tarjeta o persona",
