@@ -16,6 +16,8 @@ Most issues are automatically fixable. See `docs/internals/linting.md` for which
 
 `docs/` is markdown only. `docs/internals/` keeps decisions, constraints and traps the source does not explain; `docs/operations/` keeps runbooks. Most changes need neither. Design mocks, screenshots and implementation plans are review material: share them in the PR or a rendered preview, never commit them. List a new doc in `docs/README.md`.
 
+Comments say why: a constraint, a platform or library quirk, a race, or an invariant another file relies on. One line, three at most, no em dashes. Don't restate names, narrate steps, or record history; reasoning about how the code got here goes in the commit message. `outlayr/no-low-value-comments` and `outlayr/no-slop-comments` enforce the mechanical part.
+
 ---
 
 ## Core Principles
@@ -142,7 +144,7 @@ Oxlint + Oxfmt's linter will catch most issues automatically. Focus your attenti
 3. **Architecture decisions** - Component structure, data flow, and API design
 4. **Edge cases** - Handle boundary conditions and error states
 5. **User experience** - Accessibility, performance, and usability considerations
-6. **Documentation** - Add comments for complex logic, but prefer self-documenting code
+6. **Documentation** - Prefer self-documenting code; comment only the why (see Documentation above)
 
 ---
 

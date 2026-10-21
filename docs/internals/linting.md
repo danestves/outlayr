@@ -170,6 +170,7 @@ Both presets claim `**/*.{test,spec}.*`, so extending both reports every asserti
 | `no-sheet-repaint` | Scoped to `components/import-sheet/**`: no `bg-background`, `bg-surface`, `bg-card` or `bg-foreground/N` in any string. |
 | `widget-module-scope` | A file with a `"widget"` directive declares nothing else at module scope; the body is evaluated in a bare `JSContext`. |
 | `editor-cta-busy` | Every `<EditorCta>` passes `busy`, so a save spins rather than only dimming. |
+| `no-slop-comments` | On for every file. A comment block (consecutive `//` lines count as one) has at most three lines, no line past column 120 unless it holds a URL, and no em dash. Lint and TypeScript directives are exempt from the length limits. Longer reasoning goes in the commit message or here. |
 | `no-low-value-comments` | On for every file. Rejects a comment that only repeats the name below it, a section divider, a test step label (`// arrange`), a `TODO`/`FIXME` with no issue link, a JSDoc type in TypeScript, an empty `@param`/`@returns`, and commented-out code. Ported from t3code, MIT: the rule and its `LICENSE` live in `packages/config/oxlint/t3code/`. |
 | `no-test-timeout-or-retry` | On in test files instead, both runners: no timeout argument on a test or hook, no `{ timeout }` or `{ retry }` options, no `jest.setTimeout`, `jest.retryTimes` or `vi.setConfig` override. A test that needs more time is waiting on something it should await. `*.live.test.ts` model probes are exempt. |
 

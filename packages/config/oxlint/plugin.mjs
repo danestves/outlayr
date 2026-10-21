@@ -333,6 +333,73 @@ const noTestTimeoutOrRetry = {
     },
 };
 
+const MAX_COMMENT_LINES = 3;
+const MAX_COMMENT_WIDTH = 120;
+const DIRECTIVE = /^\s*(?:(?:oxlint|eslint)-|@ts-|prettier-ignore|#(?:end)?region|@jsx|@refresh|global\s)/u;
+const URL = /https?:\/\//u;
+
+const contentLines = (comment) =>
+    comment.value
+        .split("\n")
+        .map((line) => line.replace(/^\s*\*?\s?/u, "").trim())
+        .filter((line) => line !== "");
+
+const noSlopComments = {
+    create(context) {
+        const { sourceCode } = context;
+        const groups = [];
+        for (const comment of sourceCode.getAllComments()) {
+            const previous = groups.at(-1)?.at(-1);
+            const continues =
+                comment.type === "Line" &&
+                previous?.type === "Line" &&
+                previous.loc.end.line === comment.loc.start.line - 1 &&
+                previous.loc.start.column === comment.loc.start.column;
+            if (continues) {
+                groups.at(-1).push(comment);
+            } else {
+                groups.push([comment]);
+            }
+        }
+
+        const report = (comments, messageId) =>
+            context.report({ loc: { end: comments.at(-1).loc.end, start: comments[0].loc.start }, messageId });
+
+        return {
+            Program() {
+                for (const comments of groups) {
+                    const lines = comments.flatMap(contentLines);
+                    if (comments.some((comment) => comment.value.includes("—"))) {
+                        report(comments, "dash");
+                    }
+                    if (lines.length === 0 || DIRECTIVE.test(comments[0].value)) {
+                        continue;
+                    }
+                    if (lines.length > MAX_COMMENT_LINES) {
+                        report(comments, "long");
+                    }
+                    const { end, start } = { end: comments.at(-1).loc.end.line, start: comments[0].loc.start.line };
+                    const wide = sourceCode.lines
+                        .slice(start - 1, end)
+                        .some((line) => line.length > MAX_COMMENT_WIDTH && !URL.test(line));
+                    if (wide) {
+                        report(comments, "wide");
+                    }
+                }
+            },
+        };
+    },
+    meta: {
+        docs: { description: "Comments are three lines of 120 columns at most, with no em dashes." },
+        messages: {
+            dash: "No em dashes in comments. Use a colon, a comma, a period or parentheses.",
+            long: "Comments get three lines at most. Keep the one thing the code can't show; longer reasoning belongs in the commit message or docs/internals.",
+            wide: "Wrap the comment at 120 columns, so three lines stay three lines.",
+        },
+        type: "suggestion",
+    },
+};
+
 export default {
     meta: { name: "outlayr" },
     rules: {
@@ -341,6 +408,7 @@ export default {
         "no-drizzle-transaction": noDrizzleTransaction,
         "no-low-value-comments": noLowValueComments,
         "no-sheet-repaint": noSheetRepaint,
+        "no-slop-comments": noSlopComments,
         "no-test-timeout-or-retry": noTestTimeoutOrRetry,
         "swiftui-list-grounds": swiftuiListGrounds,
         "widget-module-scope": widgetModuleScope,

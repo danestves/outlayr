@@ -475,6 +475,7 @@ export default defineConfig({
             "node/global-require": "off",
             "one-var": ["error", "never"],
             "outlayr/no-low-value-comments": "error",
+            "outlayr/no-slop-comments": "error",
             // Adding the `u` flag switches escape handling and `\w` semantics for
             // every regex in the CSV, currency and i18n parsers at once; named
             // capture groups rewrite the same expressions. Neither is verifiable in
