@@ -32,6 +32,7 @@ const finalConfig = configMetroIntlayerSync(
 // RevenueCat's ~1 MB web SDK only runs in browser mode; native builds always carry `RNPurchases`.
 // The AI SDK's `zod/v4` resolves to `.cjs` while the app's `zod` gets `.js`: a second ~500 KB zod.
 const BROWSER_ONLY_MODULES = new Set(["@revenuecat/purchases-js-hybrid-mappings"]);
+const FREE_ICONS = process.env.OUTLAYR_FREE_ICONS === "1";
 const upstreamResolveRequest = finalConfig.resolver.resolveRequest;
 finalConfig.resolver = {
     ...finalConfig.resolver,
@@ -39,6 +40,14 @@ finalConfig.resolver = {
         const resolve = upstreamResolveRequest ?? context.resolveRequest;
         if (platform !== "web" && BROWSER_ONLY_MODULES.has(moduleName)) {
             return { type: "empty" };
+        }
+        if (FREE_ICONS && moduleName.startsWith("@hugeicons-pro/")) {
+            const icon = moduleName.split("/").at(-1);
+            try {
+                return resolve(context, `@hugeicons/core-free-icons/${icon}`, platform);
+            } catch {
+                return resolve(context, "@hugeicons/core-free-icons/CircleDashedIcon", platform);
+            }
         }
         const resolution = resolve(context, moduleName, platform);
         if ((moduleName === "zod" || moduleName.startsWith("zod/")) && resolution.filePath?.endsWith(".cjs")) {

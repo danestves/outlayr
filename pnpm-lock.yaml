@@ -112,12 +112,6 @@ importers:
       '@expo/ui':
         specifier: ~58.0.20
         version: 58.0.20(@babel/core@7.29.7(supports-color@8.1.1))(expo@58.0.14)(react-dom@19.2.3(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1))(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)
-      '@hugeicons-pro/core-solid-rounded':
-        specifier: ^4.3.4
-        version: 4.3.4
-      '@hugeicons-pro/core-stroke-rounded':
-        specifier: ^4.3.4
-        version: 4.3.4
       '@hugeicons/react-native':
         specifier: ^1.0.16
         version: 1.0.16(react-native-svg@15.16.0(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)
@@ -344,6 +338,9 @@ importers:
       '@bacons/apple-targets':
         specifier: 5.0.0
         version: 5.0.0(expo@58.0.14)(supports-color@8.1.1)(typescript@6.0.3)
+      '@hugeicons/core-free-icons':
+        specifier: ^4.3.0
+        version: 4.3.0
       '@jest/globals':
         specifier: 30.5.2
         version: 30.5.2(supports-color@8.1.1)
@@ -395,6 +392,13 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
+    optionalDependencies:
+      '@hugeicons-pro/core-solid-rounded':
+        specifier: ^4.3.4
+        version: 4.3.4
+      '@hugeicons-pro/core-stroke-rounded':
+        specifier: ^4.3.4
+        version: 4.3.4
 
   apps/screenshots:
     dependencies:
@@ -13284,9 +13288,11 @@ snapshots:
 
   '@fontsource-variable/geist@5.3.0': {}
 
-  '@hugeicons-pro/core-solid-rounded@4.3.4': {}
+  '@hugeicons-pro/core-solid-rounded@4.3.4':
+    optional: true
 
-  '@hugeicons-pro/core-stroke-rounded@4.3.4': {}
+  '@hugeicons-pro/core-stroke-rounded@4.3.4':
+    optional: true
 
   '@hugeicons/core-free-icons@4.3.0': {}
 

@@ -27,8 +27,6 @@
         "@expo-google-fonts/google-sans-flex": "^0.4.6",
         "@expo-google-fonts/instrument-serif": "^0.4.1",
         "@expo/ui": "~58.0.20",
-        "@hugeicons-pro/core-solid-rounded": "^4.3.4",
-        "@hugeicons-pro/core-stroke-rounded": "^4.3.4",
         "@hugeicons/react-native": "^1.0.16",
         "@legendapp/list": "^3.6.0",
         "@material/material-color-utilities": "^0.4.0",
@@ -106,6 +104,7 @@
     },
     "devDependencies": {
         "@bacons/apple-targets": "5.0.0",
+        "@hugeicons/core-free-icons": "^4.3.0",
         "@jest/globals": "30.5.2",
         "@jridgewell/trace-mapping": "^0.3.31",
         "@outlayr/config": "workspace:*",
@@ -123,6 +122,10 @@
         "serve-sim": "^0.1.48",
         "tsx": "^4.23.15",
         "typescript": "catalog:"
+    },
+    "optionalDependencies": {
+        "@hugeicons-pro/core-solid-rounded": "^4.3.4",
+        "@hugeicons-pro/core-stroke-rounded": "^4.3.4"
     },
     "expo": {
         "autolinking": {
