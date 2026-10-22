@@ -83,6 +83,10 @@ const debts = {
             en: "None, it was before Outlayr",
             es: "Ninguna, fue antes de Outlayr",
         }),
+        "debts.field.outside": t({
+            en: "Outside Outlayr",
+            es: "Fuera de Outlayr",
+        }),
         "debts.field.currency": t({
             en: "Currency",
             es: "Moneda",

@@ -25,6 +25,7 @@ const EMPTY_ALIGN = Platform.OS === "android" ? "pt-10" : "justify-center";
 interface AccountPickerSheetProps {
     allowNone?: boolean;
     db: Database;
+    noneLabel?: string;
     onCreate: () => void;
     /** Fires on a swipe-dismiss too, so a presenter can undo whatever it did to open this. */
     onDismiss?: () => void;
@@ -40,6 +41,7 @@ export function AccountPickerSheet({
     onCreate,
     ref,
     allowNone = true,
+    noneLabel,
     onDismiss,
 }: AccountPickerSheetProps) {
     const t = useTranslation();
@@ -109,7 +111,7 @@ export function AccountPickerSheet({
                             {allowNone ? (
                                 <AccountRow
                                     account={null}
-                                    noneLabel={t("transaction.account.none")}
+                                    noneLabel={noneLabel ?? t("transaction.account.none")}
                                     onPick={pick}
                                     selected={selectedId === null}
                                 />

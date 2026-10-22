@@ -14,6 +14,7 @@ import {
     incomingWins,
     installmentFields,
     installmentPlanFields,
+    outsideMoveFields,
     outsidePaymentFields,
     mainBudgetFields,
     SYNCED_TABLES,
@@ -124,6 +125,12 @@ const pushRow = v.union(
         table: v.literal("outsidePayments"),
         ...tombstone,
         fields: v.object(outsidePaymentFields),
+    }),
+    v.object({
+        localId: v.string(),
+        table: v.literal("outsideMoves"),
+        ...tombstone,
+        fields: v.object(outsideMoveFields),
     }),
     v.object({
         deletedAt: v.null(),
@@ -327,6 +334,9 @@ async function upsert(
                 ...envelope,
                 ...fieldsFor<"outsidePayments">(row),
             });
+        }
+        case "outsideMoves": {
+            return await writeRow(ctx, "outsideMoves", existing, { ...envelope, ...fieldsFor<"outsideMoves">(row) });
         }
         case "savingsGoals": {
             const fields = fieldsFor<"savingsGoals">(row);

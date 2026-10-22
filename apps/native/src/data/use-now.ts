@@ -2,13 +2,18 @@ import { getTableName } from "drizzle-orm";
 import { useSyncExternalStore } from "react";
 import { AppState } from "react-native";
 
-import { outsidePayments, transactions, transfers } from "@/db/schema";
+import { outsideMoves, outsidePayments, transactions, transfers } from "@/db/schema";
 import { clockAdvances, nextClockTick } from "@/domain/clock";
 
 import { subscribeToTableChanges } from "./database-changes";
 import { useTabPaused } from "./tab-pause";
 
-const BOUNDED_TABLES: string[] = [getTableName(transactions), getTableName(transfers), getTableName(outsidePayments)];
+const BOUNDED_TABLES: string[] = [
+    getTableName(transactions),
+    getTableName(transfers),
+    getTableName(outsidePayments),
+    getTableName(outsideMoves),
+];
 const MOUNT_RESTATE_AFTER_MS = 60_000;
 
 let readingMs = Date.now();

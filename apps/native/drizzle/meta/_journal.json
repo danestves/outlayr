@@ -253,6 +253,13 @@
       "when": 1792900000002,
       "tag": "0035_installment_fees",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "6",
+      "when": 1792900000003,
+      "tag": "0036_outside_moves",
+      "breakpoints": true
     }
   ]
 }

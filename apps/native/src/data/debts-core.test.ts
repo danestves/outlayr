@@ -6,11 +6,19 @@ import { migratedDatabase } from "@/db/test-database";
 import { settledBalanceAt } from "./accounts";
 import { accountsRepo, getAccountById } from "./accounts-core";
 import { categoriesRepo } from "./categories-core";
-import { createPerson, recordBoughtOnCredit, recordDebtMovement, recordSoldOnCredit } from "./debts-core";
+import {
+    createPerson,
+    deleteOutsideMove,
+    recordBoughtOnCredit,
+    recordDebtMovement,
+    recordOutsideMove,
+    recordSoldOnCredit,
+} from "./debts-core";
 import { loadContributions } from "./insights";
 import { getTransactionById } from "./transactions-core";
 import { transfersRepo } from "./transfers-core";
 
+const SEP_20 = new Date("2026-09-20T12:00:00.000Z");
 const OCT_2 = new Date("2026-10-02T12:00:00.000Z");
 const NOW = new Date("2026-10-18T12:00:00.000Z");
 const rates = buildRateTable([]);
@@ -128,5 +136,22 @@ describe("recording a debt with a person", () => {
         await expect(balanceOf(db, zinli)).resolves.toBe(20);
         const spent = (await loadContributions(db, NOW)).filter((row) => !row.income);
         expect(spent).toStrictEqual([expect.objectContaining({ amount: 80, categoryId: repairs })]);
+    });
+
+    it("settles a debt with moves made outside Outlayr, and moves no account", async () => {
+        const db = migratedDatabase({ foreignKeys: false });
+        const zinli = await accountsRepo.create(db, { currency: "USD", initialBalance: 100, name: "Zinli" });
+        const pedro = await createPerson(db, { currency: "USD", name: "Pedro", openingBalance: -300 });
+        const person = { currency: "USD", id: pedro };
+
+        await recordOutsideMove(db, { amount: 100, date: SEP_20, person, verb: "paidBack" });
+        await recordOutsideMove(db, { amount: 30, date: OCT_2, person, verb: "borrowed" });
+        const mistaken = await recordOutsideMove(db, { amount: 50, date: OCT_2, person, verb: "paidBack" });
+
+        await expect(balanceOf(db, pedro)).resolves.toBe(-180);
+        await expect(balanceOf(db, zinli)).resolves.toBe(100);
+
+        await deleteOutsideMove(db, mistaken);
+        await expect(balanceOf(db, pedro)).resolves.toBe(-230);
     });
 });

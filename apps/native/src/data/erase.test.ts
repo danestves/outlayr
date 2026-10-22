@@ -85,6 +85,10 @@ const INSTALLMENTS_DDL = `
 		id text PRIMARY KEY NOT NULL, planId text NOT NULL, date integer NOT NULL, amount real NOT NULL,
 		amountUsd real, updatedAt integer NOT NULL, deletedAt integer, restoredAt integer
 	);
+	CREATE TABLE outsideMoves (
+		id text PRIMARY KEY NOT NULL, accountId text NOT NULL, date integer NOT NULL, amount real NOT NULL,
+		amountUsd real, note text DEFAULT '' NOT NULL, updatedAt integer NOT NULL, deletedAt integer, restoredAt integer
+	);
 `;
 
 function makeDb(ddl = `${TRANSACTIONS_DDL}${TRANSFERS_DDL}${INSTALLMENTS_DDL}`): Database {

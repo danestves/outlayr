@@ -8,6 +8,7 @@ import {
     categories,
     installmentPlans,
     installments,
+    outsideMoves,
     outsidePayments,
     mainBudget,
     outbox,
@@ -39,6 +40,7 @@ export const SYNCED_TABLES = [
     "installmentPlans",
     "installments",
     "outsidePayments",
+    "outsideMoves",
     "appMeta",
 ] as const;
 
@@ -173,6 +175,7 @@ export async function enqueueAllForSync(db: Database): Promise<void> {
     collect("installmentPlans", await db.select({ localId: installmentPlans.id }).from(installmentPlans));
     collect("installments", await db.select({ localId: installments.id }).from(installments));
     collect("outsidePayments", await db.select({ localId: outsidePayments.id }).from(outsidePayments));
+    collect("outsideMoves", await db.select({ localId: outsideMoves.id }).from(outsideMoves));
     collect(
         "appMeta",
         await db

@@ -77,6 +77,11 @@ function makeDb(): Database {
 			id text PRIMARY KEY NOT NULL, planId text NOT NULL, date integer NOT NULL, amount real NOT NULL,
 			amountUsd real, updatedAt integer NOT NULL, deletedAt integer, restoredAt integer
 		);
+		CREATE TABLE outsideMoves (
+			id text PRIMARY KEY NOT NULL, accountId text NOT NULL, date integer NOT NULL, amount real NOT NULL,
+			amountUsd real, note text DEFAULT '' NOT NULL, updatedAt integer NOT NULL, deletedAt integer,
+			restoredAt integer
+		);
 		CREATE TABLE savingsGoals (accountId text NOT NULL, updatedAt integer NOT NULL, deletedAt integer);
 		CREATE TABLE exchangeRates (
 			quote text NOT NULL, rateType text NOT NULL, date text NOT NULL, rate real NOT NULL,

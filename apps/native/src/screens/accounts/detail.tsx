@@ -3,7 +3,7 @@ import { isPerson, toAccountKind } from "@outlayr/money/account-kind";
 import { Stack, useRouter } from "expo-router";
 import type { ReactNode } from "react";
 import { memo, useCallback, useEffect, useMemo } from "react";
-import { View } from "react-native";
+import { Alert, View } from "react-native";
 
 import { HeroNumber } from "@/components/amount-text";
 import { DaySectionHeader } from "@/components/day-section-header";
@@ -19,7 +19,7 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { useAccountTransfers } from "@/data/account-transfers";
 import { useAccountBalanceDetails, useAccounts, useAccountTransactions } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
-import { useAccountPayoff } from "@/data/debts";
+import { useAccountPayoff, useOutsideMoveRows } from "@/data/debts";
 import { useOutsidePaymentRows } from "@/data/installment-reads";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useNow } from "@/data/use-now";
@@ -147,16 +147,29 @@ function DetailBody({
         toAccountKind(account.kind) === "liability" ? account : null,
         t("installments.paidOutside")
     );
+    const person = isPerson(account);
+    const { pendingId, requestDelete } = useDeferredDelete("row");
+    const moveRows = useOutsideMoveRows(db, person ? account : null, t("debts.field.outside"));
+    const liveMoves = useMemo(() => moveRows.filter((row) => row.id !== pendingId), [moveRows, pendingId]);
     const rows = useMemo(
-        () => mergeByRecency(mergeByRecency(transactionRows, transferRows), outsideRows),
-        [transactionRows, transferRows, outsideRows]
+        () => mergeByRecency(mergeByRecency(mergeByRecency(transactionRows, transferRows), outsideRows), liveMoves),
+        [transactionRows, transferRows, outsideRows, liveMoves]
     );
     const sections = useMemo(() => groupByDay(rows, account.currency, rates), [rows, account.currency, rates]);
     const transferIds = useMemo(() => new Set(transferRows.map((transfer) => transfer.id)), [transferRows]);
     // A transfer id is not a transaction id: `/transactions/[id]` finds nothing behind it.
     const outsidePlans = useMemo(() => new Map(outsideRows.map((row) => [row.id, row.planId])), [outsideRows]);
+    const moveTitles = useMemo(() => new Map(liveMoves.map((row) => [row.id, row.note])), [liveMoves]);
     const openRow = useCallback(
         (rowId: string) => {
+            const moveTitle = moveTitles.get(rowId);
+            if (moveTitle !== undefined) {
+                Alert.alert(moveTitle, undefined, [
+                    { style: "cancel", text: t("common.cancel") },
+                    { onPress: () => requestDelete(rowId), style: "destructive", text: t("common.delete") },
+                ]);
+                return;
+            }
             const planId = outsidePlans.get(rowId);
             if (planId === undefined) {
                 router.push(transferIds.has(rowId) ? `/transactions/transfers/${rowId}` : `/transactions/${rowId}`);
@@ -164,10 +177,9 @@ function DetailBody({
                 router.push({ params: { planId }, pathname: "/installments/[planId]" });
             }
         },
-        [router, transferIds, outsidePlans]
+        [router, transferIds, outsidePlans, moveTitles, requestDelete, t]
     );
 
-    const person = isPerson(account);
     const startedAt = t("accounts.detail.startedAt", {
         amount: formatSignedAmount(account.initialBalance, account.currency, showCents, language),
         month: `${monthAbbrevTitle(account.initialBalanceDate, language)} ${account.initialBalanceDate.getFullYear()}`,

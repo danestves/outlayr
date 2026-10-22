@@ -9,6 +9,7 @@ import {
     categoryFields,
     installmentFields,
     installmentPlanFields,
+    outsideMoveFields,
     outsidePaymentFields,
     mainBudgetFields,
     replicated,
@@ -178,6 +179,10 @@ export default defineSchema({
         .index("by_user_and_localId", ["userId", "localId"]),
 
     outsidePayments: defineTable({ ...replicated, ...outsidePaymentFields })
+        .index("by_user_and_seq", ["userId", "seq"])
+        .index("by_user_and_localId", ["userId", "localId"]),
+
+    outsideMoves: defineTable({ ...replicated, ...outsideMoveFields })
         .index("by_user_and_seq", ["userId", "seq"])
         .index("by_user_and_localId", ["userId", "localId"]),
 

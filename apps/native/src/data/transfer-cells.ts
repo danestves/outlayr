@@ -2,7 +2,7 @@ import type { CurrencyCell } from "@outlayr/money/currency-totals";
 import { and, count, eq, isNull, lte, sql, sum } from "drizzle-orm";
 
 import type { SpendDb } from "@/data/budget-spent";
-import { accounts, installmentPlans, outsidePayments, transfers } from "@/db/schema";
+import { accounts, installmentPlans, outsideMoves, outsidePayments, transfers } from "@/db/schema";
 
 import type { CellRow } from "./cell-query";
 
@@ -91,6 +91,23 @@ function settledOutside(now: Date) {
     return and(isNull(outsidePayments.deletedAt), isNull(installmentPlans.deletedAt), lte(outsidePayments.date, now));
 }
 
+const MOVE_UTC_DAY = sql<string>`strftime('%Y-%m-%d', ${outsideMoves.date} / 1000, 'unixepoch')`;
+const MOVE_LOCAL_DAY = sql<string>`strftime('%Y-%m-%d', ${outsideMoves.date} / 1000, 'unixepoch', 'localtime')`;
+
+const MOVE_COLUMNS = {
+    currency: accounts.currency,
+    dateKey: MOVE_UTC_DAY,
+    rows: count(),
+    total: sum(outsideMoves.amount),
+    totalUsd: sum(outsideMoves.amountUsd),
+    unconverted: sum(sql<number>`CASE WHEN ${outsideMoves.amountUsd} IS NULL THEN ${outsideMoves.amount} ELSE 0 END`),
+    unconvertedRows: sql<number>`SUM(CASE WHEN ${outsideMoves.amountUsd} IS NULL THEN 1 ELSE 0 END)`,
+} as const;
+
+function settledMoves(now: Date) {
+    return and(isNull(outsideMoves.deletedAt), lte(outsideMoves.date, now));
+}
+
 export function settledOutsidePaymentQuery(db: SpendDb, accountId: string, now: Date) {
     return db
         .select({ ...OUTSIDE_COLUMNS, plotDay: OUTSIDE_LOCAL_DAY })
@@ -98,7 +115,15 @@ export function settledOutsidePaymentQuery(db: SpendDb, accountId: string, now: 
         .innerJoin(installmentPlans, eq(installmentPlans.id, outsidePayments.planId))
         .innerJoin(accounts, eq(accounts.id, installmentPlans.accountId))
         .where(and(settledOutside(now), eq(installmentPlans.accountId, accountId)))
-        .groupBy(accounts.currency, OUTSIDE_UTC_DAY, OUTSIDE_LOCAL_DAY);
+        .groupBy(accounts.currency, OUTSIDE_UTC_DAY, OUTSIDE_LOCAL_DAY)
+        .unionAll(
+            db
+                .select({ ...MOVE_COLUMNS, plotDay: MOVE_LOCAL_DAY })
+                .from(outsideMoves)
+                .innerJoin(accounts, eq(accounts.id, outsideMoves.accountId))
+                .where(and(settledMoves(now), eq(outsideMoves.accountId, accountId)))
+                .groupBy(accounts.currency, MOVE_UTC_DAY, MOVE_LOCAL_DAY)
+        );
 }
 
 export function settledOutsidePaymentsQuery(db: SpendDb, now: Date) {
@@ -108,7 +133,15 @@ export function settledOutsidePaymentsQuery(db: SpendDb, now: Date) {
         .innerJoin(installmentPlans, eq(installmentPlans.id, outsidePayments.planId))
         .innerJoin(accounts, eq(accounts.id, installmentPlans.accountId))
         .where(settledOutside(now))
-        .groupBy(installmentPlans.accountId, accounts.currency, OUTSIDE_UTC_DAY, OUTSIDE_LOCAL_DAY);
+        .groupBy(installmentPlans.accountId, accounts.currency, OUTSIDE_UTC_DAY, OUTSIDE_LOCAL_DAY)
+        .unionAll(
+            db
+                .select({ accountId: outsideMoves.accountId, ...MOVE_COLUMNS, plotDay: MOVE_LOCAL_DAY })
+                .from(outsideMoves)
+                .innerJoin(accounts, eq(accounts.id, outsideMoves.accountId))
+                .where(settledMoves(now))
+                .groupBy(outsideMoves.accountId, accounts.currency, MOVE_UTC_DAY, MOVE_LOCAL_DAY)
+        );
 }
 
 export function toTransferCell(row: Omit<CellRow, "income">, income: boolean): CurrencyCell {

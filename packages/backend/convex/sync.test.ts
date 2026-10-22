@@ -244,6 +244,13 @@ describe("push table coverage", () => {
                 table: "outsidePayments",
                 updatedAt: 7,
             },
+            {
+                deletedAt: null,
+                fields: { accountId: "acct-1", amount: -50, amountUsd: -50, date: 1_698_000_000_000, note: "" },
+                localId: "move-1",
+                table: "outsideMoves",
+                updatedAt: 8,
+            },
         ];
 
         await pushAs(t, owner, DEVICE_A, rows);
@@ -252,6 +259,7 @@ describe("push table coverage", () => {
         expect(page.rows.map((row) => row.table).sort()).toStrictEqual([
             "installmentPlans",
             "installments",
+            "outsideMoves",
             "outsidePayments",
             "tags",
             "transactionPhotos",

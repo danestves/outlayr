@@ -1,12 +1,17 @@
 import type { EntryRateType } from "@outlayr/money/rates";
+import { and, eq, isNull } from "drizzle-orm";
 
 import type { Database } from "@/db/client";
+import { outsideMoves } from "@/db/schema";
+import { comesFromPerson } from "@/domain/debt-choices";
 import { debtLegs } from "@/domain/debts";
 import type { DebtVerb } from "@/domain/debts";
+import { newId } from "@/domain/ids";
 import { roundToMinorUnits } from "@/domain/money";
 import { translateNow } from "@/i18n/runtime";
 
 import { accountsRepo } from "./accounts-core";
+import { frozenUsdAmount } from "./frozen-usd";
 import { transactionsRepo } from "./transactions-core";
 import { transfersRepo } from "./transfers-core";
 import type { TransferInput } from "./transfers-core";
@@ -63,6 +68,37 @@ export function debtTransferInput(input: DebtMovementInput): TransferInput {
 
 export async function recordDebtMovement(db: Database, input: DebtMovementInput): Promise<string> {
     return await transfersRepo.create(db, debtTransferInput(input));
+}
+
+export interface OutsideMoveInput {
+    amount: number;
+    date: Date;
+    note?: string;
+    person: { currency: string; id: string };
+    verb: DebtVerb;
+}
+
+export async function recordOutsideMove(db: Database, input: OutsideMoveInput): Promise<string> {
+    const { date, person } = input;
+    const amount = comesFromPerson(input.verb) ? -input.amount : input.amount;
+    const id = newId();
+    await db.insert(outsideMoves).values({
+        accountId: person.id,
+        amount,
+        amountUsd: await frozenUsdAmount(db, amount, person.currency, date),
+        date,
+        id,
+        note: input.note ?? "",
+        updatedAt: new Date(),
+    });
+    return id;
+}
+
+export async function deleteOutsideMove(db: Database, id: string, now: Date = new Date()): Promise<void> {
+    await db
+        .update(outsideMoves)
+        .set({ deletedAt: now, updatedAt: now })
+        .where(and(eq(outsideMoves.id, id), isNull(outsideMoves.deletedAt)));
 }
 
 export interface OnCreditInput {

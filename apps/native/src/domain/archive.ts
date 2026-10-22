@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /** Rises when a file carries something an older build would drop on restore. */
-export const ARCHIVE_VERSION = 3;
+export const ARCHIVE_VERSION = 4;
 
 export const ARCHIVE_FORMAT = "outlayr.archive";
 
@@ -22,6 +22,7 @@ export const ARCHIVE_TABLES = [
     "installmentPlans",
     "installments",
     "outsidePayments",
+    "outsideMoves",
     "appMeta",
 ] as const;
 
@@ -36,6 +37,7 @@ const ARCHIVE_DATE_COLUMNS = {
     installmentPlans: ["dateCreated", "updatedAt", "deletedAt", "restoredAt"],
     installments: ["dueDate", "updatedAt", "deletedAt", "restoredAt"],
     mainBudget: ["startDate", "dateCreated", "updatedAt", "deletedAt"],
+    outsideMoves: ["date", "updatedAt", "deletedAt", "restoredAt"],
     outsidePayments: ["date", "updatedAt", "deletedAt", "restoredAt"],
     savingsGoals: ["dateCreated", "targetDate", "updatedAt", "deletedAt"],
     tags: ["updatedAt", "deletedAt"],
@@ -133,6 +135,7 @@ export function parseArchive(text: string): ArchiveDocument | null {
             installmentPlans: tables.installmentPlans ?? [],
             installments: tables.installments ?? [],
             mainBudget: tables.mainBudget ?? [],
+            outsideMoves: tables.outsideMoves ?? [],
             outsidePayments: tables.outsidePayments ?? [],
             savingsGoals: tables.savingsGoals ?? [],
             tags: tables.tags ?? [],

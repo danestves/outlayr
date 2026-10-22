@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 
 import type { Database } from "@/db/client";
-import { mainBudget } from "@/db/schema";
+import { mainBudget, outsideMoves } from "@/db/schema";
 import { createDeferredDelete } from "@/domain/deferred-delete";
 import type { DeferredDeleteController } from "@/domain/deferred-delete";
 import type { TranslatableKey } from "@/i18n/catalog";
@@ -11,6 +11,7 @@ import { dismissNotice, notifyFailure, notifyUndoable } from "@/lib/notify";
 import { accountsRepo } from "./accounts-core";
 import { budgetsRepo } from "./budgets-core";
 import { categoriesRepo } from "./categories-core";
+import { deleteOutsideMove } from "./debts-core";
 import { savingsGoalsRepo } from "./savings-goals-core";
 import { transactionsRepo } from "./transactions-core";
 import { transfersRepo } from "./transfers-core";
@@ -30,8 +31,12 @@ interface KindSpec {
 // The table is read at commit time, not passed in: a caller's list filtered inside the window gets it wrong, and
 // removing a transfer as a transaction updates zero rows and rejects nothing.
 async function commitRow(db: Database, id: string): Promise<void> {
-    const transfer = await transfersRepo.getById(db, id);
-    await (transfer ? transfersRepo.softDelete(db, id) : transactionsRepo.remove(db, id));
+    if (await transfersRepo.getById(db, id)) {
+        await transfersRepo.softDelete(db, id);
+        return;
+    }
+    const [move] = await db.select({ id: outsideMoves.id }).from(outsideMoves).where(eq(outsideMoves.id, id));
+    await (move ? deleteOutsideMove(db, id) : transactionsRepo.remove(db, id));
 }
 
 async function commitBudget(db: Database, id: string): Promise<void> {

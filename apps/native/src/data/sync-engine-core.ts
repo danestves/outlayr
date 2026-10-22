@@ -11,6 +11,7 @@ import {
     categories,
     installmentPlans,
     installments,
+    outsideMoves,
     outsidePayments,
     mainBudget,
     outbox,
@@ -159,6 +160,12 @@ const SPECS = {
         fields: ["planId", "date", "amount", "amountUsd"],
         id: outsidePayments.id,
         table: outsidePayments,
+    },
+    outsideMoves: {
+        dates: ["date"],
+        fields: ["accountId", "date", "amount", "amountUsd", "note"],
+        id: outsideMoves.id,
+        table: outsideMoves,
     },
     mainBudget: {
         dates: ["startDate", "dateCreated"],

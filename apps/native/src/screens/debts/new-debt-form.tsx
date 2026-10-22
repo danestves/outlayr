@@ -14,7 +14,7 @@ import { accountsRepo, getLastUsedAccount } from "@/data/accounts-core";
 import type { Account } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
 import type { Category } from "@/data/categories-core";
-import { createPerson, recordDebtMovement, recordSoldOnCredit } from "@/data/debts-core";
+import { createPerson, recordDebtMovement, recordOutsideMove, recordSoldOnCredit } from "@/data/debts-core";
 import { setPayoffPlan } from "@/data/payoff-plans";
 import { useNow } from "@/data/use-now";
 import type { Database } from "@/db/client";
@@ -45,7 +45,6 @@ export function resolvePerson(people: readonly Account[], personId: string | und
 }
 
 interface DebtDraft {
-    /** Null only for a new person whose debt predates Outlayr. */
     account: Account | null;
     amount: number;
     /** Set for a sale on credit, which records income instead of a movement. */
@@ -60,7 +59,6 @@ interface DebtDraft {
     verb: DebtVerb;
 }
 
-/** No account: the debt predates Outlayr and becomes the opening balance, negative when you borrowed. */
 async function writeDebt(db: Database, draft: DebtDraft): Promise<string> {
     const { account, amount, category, currency, person } = draft;
     const note = draft.note === "" ? undefined : draft.note;
@@ -68,6 +66,10 @@ async function writeDebt(db: Database, draft: DebtDraft): Promise<string> {
         const buyer = person ?? { currency, id: await createPerson(db, { currency, name: draft.newName }) };
         await recordSoldOnCredit(db, { amount, categoryId: category.id, date: draft.date, note, person: buyer });
         return buyer.id;
+    }
+    if (account === null && person !== null) {
+        await recordOutsideMove(db, { amount, date: draft.date, note, person, verb: draft.verb });
+        return person.id;
     }
     if (account === null) {
         return await createPerson(db, {
@@ -119,7 +121,7 @@ function readDraft(input: DraftInput) {
     const complete =
         amount > 0 &&
         (person !== null || newName !== "") &&
-        (soldOnCredit ? category !== null : account !== null || before) &&
+        (!soldOnCredit || category !== null) &&
         (!crossCurrency || theirAmount > 0);
     const theirCurrency = crossCurrency ? person.currency : null;
     const pickCurrency = person === null && (soldOnCredit || account === null);
@@ -244,7 +246,7 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
         accountId,
         accountSheet,
         accountLabel: t(incoming ? "debts.field.accountInto" : "debts.field.accountFrom"),
-        accountValue: account?.name ?? (draft.before ? t("debts.field.before") : ""),
+        accountValue: account?.name ?? t(person === null ? "debts.field.before" : "debts.field.outside"),
         amountSheet,
         amountText,
         canSave: !busy && draft.complete,
@@ -285,6 +287,7 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
 export function NewDebtSheets({ form }: { form: ReturnType<typeof useNewDebtForm> }) {
     const db = useDatabase();
     const router = useRouter();
+    const t = useTranslation();
     const accountCreateRoute = useAccountCreateRoute();
     const { accountSheet, amountSheet, categorySheet, currencySheet, person, theirSheet } = form;
 
@@ -309,8 +312,8 @@ export function NewDebtSheets({ form }: { form: ReturnType<typeof useNewDebtForm
                 />
             )}
             <AccountPickerSheet
-                allowNone={person === null}
                 db={db}
+                noneLabel={person === null ? undefined : t("debts.field.outside")}
                 onCreate={() => {
                     accountSheet.current?.dismiss();
                     router.push(accountCreateRoute);

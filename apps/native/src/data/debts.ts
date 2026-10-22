@@ -2,15 +2,18 @@ import type { AccountBalance } from "@outlayr/money/account-balance";
 import { toAccountKind } from "@outlayr/money/account-kind";
 import { summarizeOverview } from "@outlayr/money/account-overview";
 import type { AccountsOverview, OverviewRow } from "@outlayr/money/account-overview";
+import { startOfDay } from "@outlayr/money/calendar";
 import type { RateTable } from "@outlayr/money/valuation";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import { useMemo } from "react";
 
 import type { Database } from "@/db/client";
-import { savingsGoals } from "@/db/schema";
+import { outsideMoves, savingsGoals } from "@/db/schema";
 import { debtsOverview } from "@/domain/debts";
 import type { DebtsOverview } from "@/domain/debts";
 import type { PlottedCell } from "@/domain/goal-balance-series";
 import { isPayoffPlan } from "@/domain/savings-goal";
+import type { TransferLogRow } from "@/domain/transfer-log-rows";
 
 import { useAccounts, useOverviewOf } from "./accounts";
 import type { SettledCell } from "./accounts";
@@ -170,4 +173,73 @@ export function useLogOverviewIn(
         }),
         [rows, overview, plans, displayCurrency, rates, nowMs]
     );
+}
+
+function personOutsideMovesQuery(db: Database, accountId: string) {
+    return db
+        .select({
+            amount: outsideMoves.amount,
+            amountUsd: outsideMoves.amountUsd,
+            date: outsideMoves.date,
+            id: outsideMoves.id,
+            note: outsideMoves.note,
+        })
+        .from(outsideMoves)
+        .where(and(eq(outsideMoves.accountId, accountId), isNull(outsideMoves.deletedAt)))
+        .orderBy(desc(outsideMoves.date));
+}
+
+export function useOutsideMoveRows(
+    db: Database,
+    person: Pick<Account, "currency" | "id" | "name"> | null,
+    outside: string
+): TransferLogRow[] {
+    const rows = useLiveQuery(
+        outsideMoves,
+        () => (person === null ? { all: () => [] } : personOutsideMovesQuery(db, person.id)),
+        [person?.id]
+    );
+    return useMemo(() => {
+        if (person === null) {
+            return [];
+        }
+        return rows.map((row): TransferLogRow => {
+            const into = row.amount > 0;
+            const amount = Math.abs(row.amount);
+            const route = into ? `${outside} → ${person.name}` : `${person.name} → ${outside}`;
+            return {
+                amount,
+                amountUsd: row.amountUsd === null ? null : Math.abs(row.amountUsd),
+                categoryColor: null,
+                categoryEmoji: null,
+                categoryIcon: null,
+                categoryId: null,
+                categoryName: null,
+                currency: person.currency,
+                customColor: null,
+                date: row.date,
+                day: startOfDay(row.date),
+                emoji: null,
+                ends: null,
+                exchangeRate: null,
+                exchangeRateType: null,
+                excludedFromTotals: false,
+                feeForId: null,
+                icon: null,
+                id: row.id,
+                imageColor: null,
+                imageUri: null,
+                income: into,
+                installmentId: null,
+                moved: { arrived: amount, arrivedCurrency: person.currency, fee: null, outside: null, sent: amount },
+                note: row.note === "" ? route : row.note,
+                recurringAnchorDay: null,
+                recurringCoefficient: 1,
+                recurringEndDate: null,
+                recurringType: 0,
+                sign: into ? "+" : "-",
+                transferId: row.id,
+            };
+        });
+    }, [rows, person, outside]);
 }

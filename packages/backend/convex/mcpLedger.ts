@@ -210,7 +210,7 @@ export const accountBalances = internalQuery({
         const userId = caller.subject;
         const now = Date.now();
         const currency = (await setting(ctx, userId, "currency")) ?? "USD";
-        const [accountRows, transactionRows, transferRows, planRows, outsideRows, offsetMs] = await Promise.all([
+        const [accountRows, transactionRows, transferRows, planRows, outsideRows, moves, offsetMs] = await Promise.all([
             ctx.db
                 .query("accounts")
                 .withIndex("by_user_and_seq", (q) => q.eq("userId", userId))
@@ -233,6 +233,10 @@ export const accountBalances = internalQuery({
                 .collect(),
             ctx.db
                 .query("outsidePayments")
+                .withIndex("by_user_and_seq", (q) => q.eq("userId", userId))
+                .collect(),
+            ctx.db
+                .query("outsideMoves")
                 .withIndex("by_user_and_seq", (q) => q.eq("userId", userId))
                 .collect(),
             zoneOffset(ctx, userId, now),
@@ -276,6 +280,20 @@ export const accountBalances = internalQuery({
                 continue;
             }
             ledger.get(accountId)?.push({
+                amount: row.amount,
+                amountUsd: row.amountUsd,
+                currency: accountCurrency,
+                date: new Date(row.date),
+                income: true,
+                leg: "inbound",
+            });
+        }
+        for (const row of moves.sort(bySeq)) {
+            const accountCurrency = currencyOf.get(row.accountId);
+            if (row.deletedAt !== null || row.date > now || accountCurrency === undefined) {
+                continue;
+            }
+            ledger.get(row.accountId)?.push({
                 amount: row.amount,
                 amountUsd: row.amountUsd,
                 currency: accountCurrency,

@@ -370,6 +370,24 @@ export const outsidePayments = sqliteTable(
     (table) => [index("outsidePayments_planId_idx").on(table.planId)]
 );
 
+export const outsideMoves = sqliteTable(
+    "outsideMoves",
+    {
+        accountId: text("accountId")
+            .notNull()
+            .references(() => accounts.id, { onDelete: "cascade" }),
+        amount: real("amount").notNull(),
+        amountUsd: real("amountUsd"),
+        date: integer("date", { mode: "timestamp_ms" }).notNull(),
+        deletedAt: integer("deletedAt", { mode: "timestamp_ms" }),
+        id: text("id").primaryKey(),
+        note: text("note").notNull().default(""),
+        restoredAt: integer("restoredAt", { mode: "timestamp_ms" }),
+        updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).notNull(),
+    },
+    (table) => [index("outsideMoves_accountId_idx").on(table.accountId)]
+);
+
 export const tags = sqliteTable(
     "tags",
     {

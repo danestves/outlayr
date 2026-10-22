@@ -8,6 +8,7 @@ import {
     installmentPlans,
     installments,
     mainBudget,
+    outsideMoves,
     outsidePayments,
     transactions,
     transfers,
@@ -95,6 +96,10 @@ export async function eraseLedger(db: Database, scope: EraseScope): Promise<void
             .update(outsidePayments)
             .set({ amount: 0, amountUsd: null, date: ERASED_DATE, deletedAt: now, updatedAt: now })
             .where(isNull(outsidePayments.deletedAt));
+        await db
+            .update(outsideMoves)
+            .set({ amount: 0, amountUsd: null, date: ERASED_DATE, deletedAt: now, note: "", updatedAt: now })
+            .where(isNull(outsideMoves.deletedAt));
         await db
             .update(installmentPlans)
             .set({ dateCreated: ERASED_DATE, deletedAt: now, updatedAt: now })

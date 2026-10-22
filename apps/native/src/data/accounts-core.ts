@@ -4,7 +4,7 @@ import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { and, eq, isNull, max } from "drizzle-orm";
 
 import type { Database } from "@/db/client";
-import { accounts, savingsGoals, transactions } from "@/db/schema";
+import { accounts, outsideMoves, savingsGoals, transactions } from "@/db/schema";
 import { withTransaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
 
@@ -122,6 +122,10 @@ export const accountsRepo = {
         await withTransaction(db, async () => {
             await tombstoneTransfersTouchingAccount(db, id, now);
             await tombstonePlansOnAccount(db, id, now);
+            await db
+                .update(outsideMoves)
+                .set({ deletedAt: now, updatedAt: now })
+                .where(and(eq(outsideMoves.accountId, id), isNull(outsideMoves.deletedAt)));
             await db
                 .update(savingsGoals)
                 .set({ deletedAt: now, updatedAt: now })
