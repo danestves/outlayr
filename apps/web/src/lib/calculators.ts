@@ -36,7 +36,7 @@ export function subscriptionCost(items: readonly { amount: number; cadence: Cade
 const RATE_STEPS = 200;
 
 function presentValue(payment: number, count: number, rate: number): number {
-    return rate === 0 ? payment * count : (payment * (1 - (1 + rate) ** -count)) / rate;
+    return rate === 0 ? payment * count : (payment * -Math.expm1(-count * Math.log1p(rate))) / rate;
 }
 
 function periodRate(financed: number, payment: number, count: number): number | null {
@@ -70,11 +70,29 @@ export interface InstallmentPlan {
     price: number;
 }
 
-export function installmentCost({ cadence, count, down, payment, price }: InstallmentPlan) {
+function answerFor(
+    { down, payment, price }: InstallmentPlan,
+    extra: number
+): "covered" | "empty" | "less" | "more" | "paid" | "same" {
+    if (price <= 0 || (down < price && payment <= 0)) {
+        return "empty";
+    }
+    if (down >= price) {
+        return extra > 0 ? "covered" : "paid";
+    }
+    if (extra === 0) {
+        return "same";
+    }
+    return extra > 0 ? "more" : "less";
+}
+
+export function installmentCost(plan: InstallmentPlan) {
+    const { cadence, count, down, payment, price } = plan;
     const total = down + payment * count;
     const rate = periodRate(price - down, payment, count);
     return {
         annualRate: rate === null ? null : (1 + rate) ** PER_YEAR[cadence] - 1,
+        answer: answerFor(plan, total - price),
         extra: total - price,
         total,
     };

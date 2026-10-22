@@ -229,6 +229,10 @@ const tools = {
                             es: "Lo que pagas hoy ya cubre el precio de contado, así que pagas {{amount}} más que de contado.",
                         })
                     ),
+                    empty: t({
+                        en: "Add the cash price and each payment to see what the plan costs.",
+                        es: "Agrega el precio de contado y cada cuota para ver cuánto cuesta el plan.",
+                    }),
                     less: insert(
                         t({
                             en: "You pay {{amount}} less than cash. Done by {{end}}.",
@@ -241,6 +245,10 @@ const tools = {
                             es: "Pagas {{amount}} más que de contado, una tasa anual de {{rate}}. Terminas en {{end}}.",
                         })
                     ),
+                    paid: t({
+                        en: "Today's payment covers the cash price, so there is nothing left to finance.",
+                        es: "Lo que pagas hoy cubre el precio de contado, así que no queda nada por financiar.",
+                    }),
                     same: insert(
                         t({
                             en: "You pay the cash price, with no extra cost. Done by {{end}}.",

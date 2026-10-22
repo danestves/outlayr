@@ -52,18 +52,21 @@ export function InstallmentTool() {
         payment: parseAmount(payment, code),
         price: parseAmount(price, code),
     };
-    const { annualRate, extra, total } = installmentCost(plan);
+    const { annualRate, answer: kind, extra, total } = installmentCost(plan);
     const weeks = every === "twoWeeks" ? 2 : 1;
     const end = every === "month" ? labels.at.month({ n: plan.count }) : labels.at.week({ n: plan.count * weeks });
 
+    const amount = <Figure code={code} minor={Math.abs(extra)} tone={extra > 0 ? "spend" : "income"} />;
     let answer: ReactNode = page.answer.same({ end });
-    if (extra > 0 && annualRate !== null) {
-        const rate = <span className="font-mono font-medium">{formatRate(annualRate)}</span>;
-        answer = page.answer.more({ amount: <Figure code={code} minor={extra} tone="spend" />, end, rate });
-    } else if (extra > 0) {
-        answer = page.answer.covered({ amount: <Figure code={code} minor={extra} tone="spend" /> });
-    } else if (extra < 0) {
-        answer = page.answer.less({ amount: <Figure code={code} minor={-extra} tone="income" />, end });
+    if (kind === "more") {
+        const rate = <span className="font-mono font-medium">{formatRate(annualRate ?? 0)}</span>;
+        answer = page.answer.more({ amount, end, rate });
+    } else if (kind === "covered") {
+        answer = page.answer.covered({ amount });
+    } else if (kind === "less") {
+        answer = page.answer.less({ amount, end });
+    } else if (kind !== "same") {
+        answer = page.answer[kind];
     }
 
     const rows = [

@@ -43,7 +43,7 @@ describe("handleMcp", () => {
             { amount: 9.66, from: "Marta", to: "Ana" },
         ]);
         expect((await call({ people: [] })).result.isError).toBe(true);
-        expect((await call({ people: [...people, { name: "Ana", paid: 5 }] })).result.isError).toBe(true);
+        expect((await call({ people: [...people, { name: " ana", paid: 5 }] })).result.isError).toBe(true);
     });
 
     it("rejects unknown tools, resources and methods", async () => {

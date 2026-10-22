@@ -38,6 +38,7 @@ describe(installmentCost, () => {
     it("reads 0% when the installments add up to the cash price", () => {
         expect(installmentCost({ cadence: "month", count: 12, down: 0, payment: 10_000, price: 120_000 })).toEqual({
             annualRate: 0,
+            answer: "same",
             extra: 0,
             total: 120_000,
         });
@@ -53,6 +54,30 @@ describe(installmentCost, () => {
         });
         expect(extra).toBe(6620);
         expect(annualRate).toBeCloseTo(0.1268, 3);
+    });
+
+    it("keeps a positive rate when the extra is a cent on a long plan", () => {
+        const payment = 16_666_667;
+        const { annualRate } = installmentCost({
+            cadence: "week",
+            count: 600,
+            down: 0,
+            payment,
+            price: payment * 600 - 1,
+        });
+        expect(annualRate).toBeGreaterThan(0);
+    });
+
+    it.each([
+        { answer: "more", down: 100, payment: 105, price: 400 },
+        { answer: "same", down: 100, payment: 100, price: 400 },
+        { answer: "less", down: 100, payment: 90, price: 400 },
+        { answer: "covered", down: 400, payment: 105, price: 400 },
+        { answer: "paid", down: 400, payment: 0, price: 400 },
+        { answer: "empty", down: 0, payment: 105, price: 0 },
+        { answer: "empty", down: 100, payment: 0, price: 400 },
+    ])("answers $answer for $down down and 3 × $payment on $price", ({ answer, ...plan }) => {
+        expect(installmentCost({ cadence: "month", count: 3, ...plan }).answer).toBe(answer);
     });
 
     it("has no rate when the down payment covers the price", () => {

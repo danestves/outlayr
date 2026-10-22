@@ -142,9 +142,11 @@ const CALCULATORS = [
                 .array(z.object({ name: z.string().min(1).max(100), paid: Amount }))
                 .min(2)
                 .max(100)
-                .refine((people) => new Set(people.map(({ name }) => name)).size === people.length, {
-                    message: "Each person needs a different name",
-                }),
+                .refine(
+                    (people) => new Set(people.map(({ name }) => name.trim().toLowerCase())).size === people.length,
+                    { message: "Each person needs a different name" }
+                )
+                .describe("Everyone in the group, each with a different name"),
         }),
         ({ people }) => {
             const { share, total, transfers } = settleUp(people.map((person) => toCents(person.paid)));
