@@ -115,15 +115,7 @@ export function settledOutsidePaymentQuery(db: SpendDb, accountId: string, now: 
         .innerJoin(installmentPlans, eq(installmentPlans.id, outsidePayments.planId))
         .innerJoin(accounts, eq(accounts.id, installmentPlans.accountId))
         .where(and(settledOutside(now), eq(installmentPlans.accountId, accountId)))
-        .groupBy(accounts.currency, OUTSIDE_UTC_DAY, OUTSIDE_LOCAL_DAY)
-        .unionAll(
-            db
-                .select({ ...MOVE_COLUMNS, plotDay: MOVE_LOCAL_DAY })
-                .from(outsideMoves)
-                .innerJoin(accounts, eq(accounts.id, outsideMoves.accountId))
-                .where(and(settledMoves(now), eq(outsideMoves.accountId, accountId)))
-                .groupBy(accounts.currency, MOVE_UTC_DAY, MOVE_LOCAL_DAY)
-        );
+        .groupBy(accounts.currency, OUTSIDE_UTC_DAY, OUTSIDE_LOCAL_DAY);
 }
 
 export function settledOutsidePaymentsQuery(db: SpendDb, now: Date) {
@@ -133,15 +125,25 @@ export function settledOutsidePaymentsQuery(db: SpendDb, now: Date) {
         .innerJoin(installmentPlans, eq(installmentPlans.id, outsidePayments.planId))
         .innerJoin(accounts, eq(accounts.id, installmentPlans.accountId))
         .where(settledOutside(now))
-        .groupBy(installmentPlans.accountId, accounts.currency, OUTSIDE_UTC_DAY, OUTSIDE_LOCAL_DAY)
-        .unionAll(
-            db
-                .select({ accountId: outsideMoves.accountId, ...MOVE_COLUMNS, plotDay: MOVE_LOCAL_DAY })
-                .from(outsideMoves)
-                .innerJoin(accounts, eq(accounts.id, outsideMoves.accountId))
-                .where(settledMoves(now))
-                .groupBy(outsideMoves.accountId, accounts.currency, MOVE_UTC_DAY, MOVE_LOCAL_DAY)
-        );
+        .groupBy(installmentPlans.accountId, accounts.currency, OUTSIDE_UTC_DAY, OUTSIDE_LOCAL_DAY);
+}
+
+export function settledOutsideMoveQuery(db: SpendDb, accountId: string, now: Date) {
+    return db
+        .select({ ...MOVE_COLUMNS, plotDay: MOVE_LOCAL_DAY })
+        .from(outsideMoves)
+        .innerJoin(accounts, eq(accounts.id, outsideMoves.accountId))
+        .where(and(settledMoves(now), eq(outsideMoves.accountId, accountId)))
+        .groupBy(accounts.currency, MOVE_UTC_DAY, MOVE_LOCAL_DAY);
+}
+
+export function settledOutsideMovesQuery(db: SpendDb, now: Date) {
+    return db
+        .select({ accountId: outsideMoves.accountId, ...MOVE_COLUMNS, plotDay: MOVE_LOCAL_DAY })
+        .from(outsideMoves)
+        .innerJoin(accounts, eq(accounts.id, outsideMoves.accountId))
+        .where(settledMoves(now))
+        .groupBy(outsideMoves.accountId, accounts.currency, MOVE_UTC_DAY, MOVE_LOCAL_DAY);
 }
 
 export function toTransferCell(row: Omit<CellRow, "income">, income: boolean): CurrencyCell {

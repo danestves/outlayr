@@ -9,7 +9,7 @@ import { isNull } from "drizzle-orm";
 import { useMemo } from "react";
 
 import type { Database } from "@/db/client";
-import { accounts, outsidePayments, transactions, transfers } from "@/db/schema";
+import { accounts, outsideMoves, outsidePayments, transactions, transfers } from "@/db/schema";
 import type { PlottedCell } from "@/domain/goal-balance-series";
 import { roundToMinorUnits } from "@/domain/money";
 import { netWorthSeries } from "@/domain/net-worth-series";
@@ -23,6 +23,8 @@ import { useDecoratedRows } from "./transactions";
 import type { TransactionWithCategory } from "./transactions";
 import { accountTransactionsQuery } from "./transactions-core";
 import {
+    settledOutsideMoveQuery,
+    settledOutsideMovesQuery,
     settledOutsidePaymentQuery,
     settledOutsidePaymentsQuery,
     settledTransferInboundQuery,
@@ -85,7 +87,16 @@ export function useSettledAccountCells(db: Database, accountId: string, nowMs: n
         [accountId, settledAt],
         nowMs
     );
-    return useMemo(() => plottedCells(rows, outbound, inbound, outside), [rows, outbound, inbound, outside]);
+    const moves = useLiveQuery(
+        outsideMoves,
+        () => settledOutsideMoveQuery(db, accountId, settledAt),
+        [accountId, settledAt],
+        nowMs
+    );
+    return useMemo(
+        () => plottedCells(rows, outbound, inbound, [...outside, ...moves]),
+        [rows, outbound, inbound, outside, moves]
+    );
 }
 
 type PlottedRow = Omit<CellRow, "income"> & { plotDay: string };
@@ -105,13 +116,14 @@ function plottedCells(
 }
 
 export async function settledCellsAt(db: Database, accountId: string, now: Date): Promise<PlottedCell[]> {
-    const [rows, outbound, inbound, outside] = await Promise.all([
+    const [rows, outbound, inbound, outside, moves] = await Promise.all([
         settledAccountCellQuery(db, accountId, now),
         settledTransferOutboundQuery(db, accountId, now),
         settledTransferInboundQuery(db, accountId, now),
         settledOutsidePaymentQuery(db, accountId, now),
+        settledOutsideMoveQuery(db, accountId, now),
     ]);
-    return plottedCells(rows, outbound, inbound, outside);
+    return plottedCells(rows, outbound, inbound, [...outside, ...moves]);
 }
 
 export function useAccountBalanceDetails(
@@ -139,6 +151,7 @@ function useSettledCells(db: Database, settledAt: Date): SettledCell[] {
     const outbound = useLiveQuery(transfers, () => settledTransfersOutboundQuery(db, settledAt), [settledAt], clock);
     const inbound = useLiveQuery(transfers, () => settledTransfersInboundQuery(db, settledAt), [settledAt], clock);
     const outside = useLiveQuery(outsidePayments, () => settledOutsidePaymentsQuery(db, settledAt), [settledAt], clock);
+    const moves = useLiveQuery(outsideMoves, () => settledOutsideMovesQuery(db, settledAt), [settledAt], clock);
     return useMemo(
         () => [
             ...cellRows.map(({ accountId, plotDay, ...row }) => ({ ...toCurrencyCell(row), accountId, plotDay })),
@@ -147,13 +160,13 @@ function useSettledCells(db: Database, settledAt: Date): SettledCell[] {
                 accountId,
                 plotDay,
             })),
-            ...[...inbound, ...outside].map(({ accountId, plotDay, ...row }) => ({
+            ...[...inbound, ...outside, ...moves].map(({ accountId, plotDay, ...row }) => ({
                 ...toTransferCell(row, true),
                 accountId,
                 plotDay,
             })),
         ],
-        [cellRows, outbound, inbound, outside]
+        [cellRows, outbound, inbound, outside, moves]
     );
 }
 

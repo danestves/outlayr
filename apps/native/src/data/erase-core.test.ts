@@ -8,6 +8,7 @@ import {
     installmentPlans,
     installments,
     mainBudget,
+    outsideMoves,
     outsidePayments,
     transactions,
 } from "@/db/schema";
@@ -158,7 +159,7 @@ describe("eraseLedger", () => {
         expect(row.exchangeRateType).toBeNull();
     });
 
-    it("erases an order's schedule and outside payments with the entries", async () => {
+    it("erases an order's schedule and every outside payment with the entries", async () => {
         await db.insert(installmentPlans).values({
             accountId: "acct-1",
             dateCreated: AUTHORED,
@@ -177,6 +178,15 @@ describe("eraseLedger", () => {
         await db
             .insert(outsidePayments)
             .values({ amount: 20, amountUsd: 20, date: AUTHORED, id: "out-1", planId: "plan-1", updatedAt: AUTHORED });
+        await db.insert(outsideMoves).values({
+            accountId: "acct-1",
+            amount: -30,
+            amountUsd: -30,
+            date: AUTHORED,
+            id: "move-1",
+            note: "cash from Pedro",
+            updatedAt: AUTHORED,
+        });
 
         await eraseLedger(db, "transactions");
 
@@ -187,6 +197,8 @@ describe("eraseLedger", () => {
         expect(row).toMatchObject({ amount: 0, deletedAt: expect.any(Date) });
         const [outside] = await db.select().from(outsidePayments);
         expect(outside).toMatchObject({ amount: 0, amountUsd: null, deletedAt: expect.any(Date) });
+        const [move] = await db.select().from(outsideMoves);
+        expect(move).toMatchObject({ amount: 0, amountUsd: null, deletedAt: expect.any(Date), note: "" });
     });
 
     it("keeps budgets live under the transactions scope", async () => {

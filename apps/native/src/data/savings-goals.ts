@@ -6,7 +6,7 @@ import { convertUsdSum } from "@outlayr/money/valuation";
 import { useMemo } from "react";
 
 import type { Database } from "@/db/client";
-import { outsidePayments, savingsGoals, transactions, transfers } from "@/db/schema";
+import { outsideMoves, outsidePayments, savingsGoals, transactions, transfers } from "@/db/schema";
 import { goalBalanceSeries } from "@/domain/goal-balance-series";
 import type { GoalLinePoint } from "@/domain/goal-pace-geometry";
 import { startOfLocalDay } from "@/domain/local-day";
@@ -21,6 +21,7 @@ import { useLiveQuery } from "./live-query";
 import type { SavingsGoal } from "./savings-goals-core";
 import { savingsGoalsQuery } from "./savings-goals-core";
 import {
+    settledOutsideMovesQuery,
     settledOutsidePaymentsQuery,
     settledTransfersInboundQuery,
     settledTransfersOutboundQuery,
@@ -75,6 +76,12 @@ export function useSavingsGoals(db: Database, nowMs: number): SavingsGoalWithPro
         [enabled, settledAt],
         nowMs
     );
+    const moves = useLiveQuery(
+        outsideMoves,
+        () => (enabled ? settledOutsideMovesQuery(db, settledAt) : NO_READ),
+        [enabled, settledAt],
+        nowMs
+    );
     const displayCurrency = useGlobalCurrency(db);
     const rates = useBalanceRates(db, displayCurrency, accounts);
 
@@ -97,7 +104,7 @@ export function useSavingsGoals(db: Database, nowMs: number): SavingsGoalWithPro
         for (const { accountId, ...row } of outbound) {
             push(accountId, toTransferCell(row, false));
         }
-        for (const { accountId, ...row } of [...inbound, ...outside]) {
+        for (const { accountId, ...row } of [...inbound, ...outside, ...moves]) {
             push(accountId, toTransferCell(row, true));
         }
 
@@ -148,7 +155,7 @@ export function useSavingsGoals(db: Database, nowMs: number): SavingsGoalWithPro
                 },
             ];
         });
-    }, [goals, accounts, cellRows, outbound, inbound, outside, displayCurrency, rates, nowMs]);
+    }, [goals, accounts, cellRows, outbound, inbound, outside, moves, displayCurrency, rates, nowMs]);
 }
 
 function frozenInDisplay(

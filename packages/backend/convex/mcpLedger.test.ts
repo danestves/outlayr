@@ -325,6 +325,36 @@ describe("account_balances", () => {
             owned: 1080,
         });
     });
+
+    it("moves a person's balance by what was settled outside Outlayr, either way", async () => {
+        const t = await seeded({
+            accounts: [account("pedro", { initialBalance: -50, initialBalanceUsd: -50, kind: "person" })],
+            currency: "USD",
+        });
+        const move = (localId: string, amount: number, date: number, deletedAt: number | null = null) => ({
+            ...envelope(localId),
+            accountId: "pedro",
+            amount,
+            amountUsd: amount,
+            date,
+            deletedAt,
+            note: "",
+        });
+        await t.run(async (ctx) => {
+            for (const row of [
+                move("paid", 30, at("2026-10-01T12:00:00Z")),
+                move("borrowed", -20, at("2026-10-02T12:00:00Z")),
+                move("undone", 100, at("2026-10-03T12:00:00Z"), 1),
+                move("later", 10, at("2026-10-10T12:00:00Z")),
+            ]) {
+                await ctx.db.insert("outsideMoves", row);
+            }
+        });
+
+        const result = await t.query(internal.mcpLedger.accountBalances, { caller });
+
+        expect(result.accounts).toStrictEqual([expect.objectContaining({ balance: -40, name: "pedro" })]);
+    });
 });
 
 describe("budget_status", () => {

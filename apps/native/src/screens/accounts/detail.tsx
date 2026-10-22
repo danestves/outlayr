@@ -27,6 +27,7 @@ import type { Database } from "@/db/client";
 import { formatSignedAmount } from "@/domain/account-display";
 import { monthAbbrevTitle } from "@/domain/dates";
 import { groupByDay } from "@/domain/day-sections";
+import { formatAmount } from "@/domain/money";
 import { mergeByRecency } from "@/domain/transfer-log-rows";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { GoalTargetSheet } from "@/screens/budgets/components/goal-target-sheet";
@@ -159,12 +160,13 @@ function DetailBody({
     const transferIds = useMemo(() => new Set(transferRows.map((transfer) => transfer.id)), [transferRows]);
     // A transfer id is not a transaction id: `/transactions/[id]` finds nothing behind it.
     const outsidePlans = useMemo(() => new Map(outsideRows.map((row) => [row.id, row.planId])), [outsideRows]);
-    const moveTitles = useMemo(() => new Map(liveMoves.map((row) => [row.id, row.note])), [liveMoves]);
+    const moveById = useMemo(() => new Map(liveMoves.map((row) => [row.id, row])), [liveMoves]);
     const openRow = useCallback(
         (rowId: string) => {
-            const moveTitle = moveTitles.get(rowId);
-            if (moveTitle !== undefined) {
-                Alert.alert(moveTitle, undefined, [
+            const move = moveById.get(rowId);
+            if (move !== undefined) {
+                const amount = `${move.sign ?? ""}${formatAmount(move.amount, move.currency, showCents, language)}`;
+                Alert.alert(move.note, amount, [
                     { style: "cancel", text: t("common.cancel") },
                     { onPress: () => requestDelete(rowId), style: "destructive", text: t("common.delete") },
                 ]);
@@ -177,7 +179,7 @@ function DetailBody({
                 router.push({ params: { planId }, pathname: "/installments/[planId]" });
             }
         },
-        [router, transferIds, outsidePlans, moveTitles, requestDelete, t]
+        [router, transferIds, outsidePlans, moveById, requestDelete, t, showCents, language]
     );
 
     const startedAt = t("accounts.detail.startedAt", {

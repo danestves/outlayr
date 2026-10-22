@@ -175,6 +175,7 @@ describe("useSettledAccountCells", () => {
             .mockReturnValueOnce([transaction])
             .mockReturnValueOnce([outbound])
             .mockReturnValueOnce([inbound])
+            .mockReturnValueOnce([])
             .mockReturnValueOnce([]);
 
         const { result } = await renderHook(() =>
