@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AmountEntrySheet } from "@/components/amount-entry-sheet";
 import { CategoryPickerSheet } from "@/components/category-picker-sheet";
+import { CurrencyPickerSheet } from "@/components/currency-picker-sheet";
 import { EditorCta } from "@/components/editor-cta";
 import { InlineFailure } from "@/components/form/inline-failure";
 import { MonoLabel } from "@/components/mono-label";
@@ -10,6 +11,7 @@ import { Sentence } from "@/components/sentence/sentence";
 import { SentenceBlank } from "@/components/sentence/sentence-blank";
 import { SentenceValue } from "@/components/sentence/sentence-value";
 import { Text } from "@/components/text";
+import { CurrencyCode } from "@/components/transaction-form/sentence/currency-code";
 import { StageOptionRow } from "@/components/transaction-form/stage/stage-options";
 import { StepMerchant } from "@/components/transaction-form/stage/step-merchant";
 import { useDatabase } from "@/contexts/local-data-context";
@@ -26,7 +28,7 @@ export function Owe(props: OweProps) {
     const insets = useSafeAreaInsets();
     const db = useDatabase();
     const form = useOweForm(props);
-    const { active, amount, amountSheet, category, categorySheet, currency, days, payBy, person } = form;
+    const { active, amount, amountSheet, category, categorySheet, currency, currencySheet, days, payBy, person } = form;
 
     const friday = { day: days.friday.getDate() };
     const when = {
@@ -100,13 +102,23 @@ export function Owe(props: OweProps) {
         <View className="bg-background flex-1">
             <ScrollView
                 contentContainerStyle={{ gap: 24, paddingBottom: 24, paddingHorizontal: 20, paddingTop: 8 }}
-                automaticallyAdjustKeyboardInsets
                 contentInsetAdjustmentBehavior="automatic"
                 keyboardShouldPersistTaps="handled"
             >
                 <Sentence
                     slots={{
-                        amount: part("amount"),
+                        amount: (
+                            <View className="flex-row items-baseline gap-1.5">
+                                {part("amount")}
+                                {person === null ? (
+                                    <CurrencyCode
+                                        accessibilityLabel={t("transaction.sentence.currency")}
+                                        code={currency}
+                                        onPress={() => present(currencySheet)}
+                                    />
+                                ) : null}
+                            </View>
+                        ),
                         category: part("category"),
                         what: part("what"),
                         when: part("when"),
@@ -172,6 +184,14 @@ export function Owe(props: OweProps) {
                 }}
                 ref={categorySheet}
                 selectedId={category?.id ?? null}
+            />
+            <CurrencyPickerSheet
+                onSelect={(code) => {
+                    currencySheet.current?.dismiss();
+                    form.setNewCurrency(code);
+                }}
+                ref={currencySheet}
+                selected={currency}
             />
         </View>
     );

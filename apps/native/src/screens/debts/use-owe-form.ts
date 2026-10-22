@@ -43,6 +43,7 @@ export function useOweForm({ onDirtyChange, onDone }: OweProps) {
 
     const [name, setName] = useState("");
     const { person, suggestions } = resolvePerson(people, undefined, name);
+    const [newCurrency, setNewCurrency] = useState(globalCurrency);
     const [amountText, setAmountText] = useState("");
     const [what, setWhat] = useState("");
     const [category, setCategory] = useState<Category | null>(null);
@@ -53,8 +54,9 @@ export function useOweForm({ onDirtyChange, onDone }: OweProps) {
 
     const amountSheet = useRef<BottomSheetModal>(null);
     const categorySheet = useRef<BottomSheetModal>(null);
+    const currencySheet = useRef<BottomSheetModal>(null);
 
-    const currency = person?.currency ?? globalCurrency;
+    const currency = person?.currency ?? newCurrency;
     const amount = roundToMinorUnits(numpadToNumber(amountText), currency);
     const newName = person === null ? name.trim() : "";
     const targetDate = payBy === "none" ? null : days[payBy];
@@ -121,6 +123,7 @@ export function useOweForm({ onDirtyChange, onDone }: OweProps) {
         category,
         categorySheet,
         currency,
+        currencySheet,
         days,
         failure,
         name,
@@ -135,6 +138,7 @@ export function useOweForm({ onDirtyChange, onDone }: OweProps) {
         setAmountText,
         setCategory,
         setName,
+        setNewCurrency,
         setWhat,
         suggestions,
         what,
