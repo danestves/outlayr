@@ -5,7 +5,7 @@ import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import { useMemo } from "react";
 
 import type { Database } from "@/db/client";
-import { exchangeRates, installmentPlans, outsidePayments } from "@/db/schema";
+import { exchangeRates, installmentPlans, installments, outsidePayments } from "@/db/schema";
 import type { TransferLogRow } from "@/domain/transfer-log-rows";
 import { marketRateFor } from "@/domain/transfer-rate-options";
 
@@ -49,6 +49,29 @@ export function planIdForPurchase(db: Database, transactionId: string): string |
         .limit(1)
         .all();
     return plan?.id ?? null;
+}
+
+const NO_CUOTAS: ReadonlySet<string> = new Set();
+
+export function usePendingCuotas(db: Database, purchaseId: string | null): ReadonlySet<string> {
+    return useMemo(() => {
+        if (purchaseId === null) {
+            return NO_CUOTAS;
+        }
+        const rows = db
+            .select({ id: installments.id })
+            .from(installments)
+            .innerJoin(installmentPlans, eq(installmentPlans.id, installments.planId))
+            .where(
+                and(
+                    eq(installmentPlans.transactionId, purchaseId),
+                    isNull(installmentPlans.deletedAt),
+                    isNull(installments.deletedAt)
+                )
+            )
+            .all();
+        return rows.length === 0 ? NO_CUOTAS : new Set(rows.map((row) => row.id));
+    }, [db, purchaseId]);
 }
 
 function accountOutsidePaymentsQuery(db: Database, accountId: string) {
@@ -110,6 +133,7 @@ export function useOutsidePaymentRows(
                       imageColor: null,
                       imageUri: null,
                       income: true,
+                      installmentId: null,
                       moved: {
                           arrived: row.amount,
                           arrivedCurrency: account.currency,

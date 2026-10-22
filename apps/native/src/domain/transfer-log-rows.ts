@@ -59,6 +59,7 @@ export interface TransferLogRow {
     imageColor: null;
     imageUri: null;
     income: boolean;
+    installmentId: null;
     moved?: TransferMove;
     note: string;
     recurringAnchorDay: number | null;
@@ -129,6 +130,7 @@ export function toTransferLogRow(
         imageColor: null,
         imageUri: null,
         income: false,
+        installmentId: null,
         moved: fees === undefined ? undefined : transferMove(transfer, fees.get(transfer.id)),
         note:
             transfer.note === "" ? `${from?.name ?? UNKNOWN_ACCOUNT} → ${to?.name ?? UNKNOWN_ACCOUNT}` : transfer.note,

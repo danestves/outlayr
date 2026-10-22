@@ -13,6 +13,7 @@ import { TransactionRow } from "@/components/transaction-row";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { goesWithPendingDelete } from "@/data/card-fees-core";
+import { usePendingCuotas } from "@/data/installment-reads";
 import type { TransactionWithCategory } from "@/data/transactions";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useNow } from "@/data/use-now";
@@ -71,10 +72,11 @@ export function BudgetDetailView({
     const { displayCurrency, rates } = useValuation(db);
     const nowMs = useNow();
     const { pendingId, requestDelete } = useDeferredDelete("row");
+    const pendingCuotas = usePendingCuotas(db, pendingId);
     const openRowActions = useTransactionRowActions(nowMs, requestDelete);
     const rows = useMemo(
-        () => transactions.filter((row) => !goesWithPendingDelete(row, pendingId)),
-        [transactions, pendingId]
+        () => transactions.filter((row) => !goesWithPendingDelete(row, pendingId, pendingCuotas)),
+        [transactions, pendingId, pendingCuotas]
     );
     const sections = useMemo(() => groupByDay(rows, currency, rates), [rows, currency, rates]);
     const note = useMemo(

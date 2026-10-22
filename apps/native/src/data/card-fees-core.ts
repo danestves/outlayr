@@ -101,10 +101,15 @@ export function lastForeignFeeRate(db: Database, accountId: string, accountCurre
 }
 
 export function goesWithPendingDelete(
-    row: { feeForId: string | null; id: string; transferId: string | null },
-    pendingId: string | null
+    row: { feeForId: string | null; id: string; installmentId: string | null; transferId: string | null },
+    pendingId: string | null,
+    pendingCuotas: ReadonlySet<string> = new Set()
 ): boolean {
-    return pendingId !== null && [row.id, row.feeForId, row.transferId].includes(pendingId);
+    return (
+        pendingId !== null &&
+        ([row.id, row.feeForId, row.transferId].includes(pendingId) ||
+            (row.installmentId != null && pendingCuotas.has(row.installmentId)))
+    );
 }
 
 export function lastFeeCategoryId(db: Database): string | null {

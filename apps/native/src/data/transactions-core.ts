@@ -55,6 +55,7 @@ export const LOG_COLUMNS = {
     imageColor: transactions.imageColor,
     imageUri: transactions.imageUri,
     income: transactions.income,
+    installmentId: transactions.installmentId,
     note: transactions.note,
     recurringAnchorDay: transactions.recurringAnchorDay,
     recurringCoefficient: transactions.recurringCoefficient,
@@ -88,6 +89,7 @@ const DELETED_COLUMNS = {
     deletedAt: transactions.deletedAt,
     id: transactions.id,
     income: transactions.income,
+    installmentId: transactions.installmentId,
     note: transactions.note,
 } as const;
 

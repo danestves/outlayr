@@ -16,6 +16,7 @@ import { goesWithPendingDelete } from "@/data/card-fees-core";
 import { useCategoryMeta } from "@/data/categories";
 import { useLogOverviewIn } from "@/data/debts";
 import { useFavouriteCurrencies } from "@/data/favourite-currencies";
+import { usePendingCuotas } from "@/data/installment-reads";
 import { useFilteredTransactions, useUpcomingTransactions } from "@/data/log-filtered";
 import { logPeriodFromStored, storedLogPeriod, useLogInsights, useSparklineRows } from "@/data/log-totals";
 import type { LogPeriod } from "@/data/log-totals";
@@ -187,6 +188,7 @@ export function Log() {
     const sparkline = useSparkline(db, nowMs, logViewLineGraph, measure, period, firstWeekday, currency, rates);
     const transferIds = useMemo(() => new Set(transferRows.map((transfer) => transfer.id)), [transferRows]);
     const { pendingId, requestDelete } = useDeferredDelete("row");
+    const pendingCuotas = usePendingCuotas(db, pendingId);
 
     const tailTransfers = useMemo(
         () => transferRows.filter((transfer) => transfer.day.getTime() < splitMs),
@@ -209,13 +211,13 @@ export function Log() {
         [filter, tail, tailTransfers]
     );
     const visibleRows = useMemo(
-        () => listRows.filter((row) => !goesWithPendingDelete(row, pendingId)),
-        [listRows, pendingId]
+        () => listRows.filter((row) => !goesWithPendingDelete(row, pendingId, pendingCuotas)),
+        [listRows, pendingId, pendingCuotas]
     );
     const visibleTail = useMemo(() => {
-        const kept = tailRows.filter((row) => !goesWithPendingDelete(row, pendingId));
+        const kept = tailRows.filter((row) => !goesWithPendingDelete(row, pendingId, pendingCuotas));
         return kept.length === tailRows.length ? tailRows : kept;
-    }, [tailRows, pendingId]);
+    }, [tailRows, pendingId, pendingCuotas]);
     const headSections = useMemo(() => groupByDay(visibleRows, currency, rates), [visibleRows, currency, rates]);
     const groupTail = useMemo(
         () => groupByDayAsItGrows<(typeof visibleTail)[number]>(currency, rates),

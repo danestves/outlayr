@@ -26,6 +26,7 @@ function carrier(overrides: Partial<TransactionWithCategory> & { date: Date }): 
         imageColor: null,
         imageUri: null,
         income: false,
+        installmentId: null,
         note: "Netflix",
         recurringAnchorDay: null,
         recurringCoefficient: 1,
