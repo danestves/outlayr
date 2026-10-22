@@ -1,5 +1,5 @@
 import type { AccountBalanceInput } from "@outlayr/money/account-balance";
-import { toAccountKind } from "@outlayr/money/account-kind";
+import { isPerson, toAccountKind } from "@outlayr/money/account-kind";
 import { restate } from "@outlayr/money/account-overview";
 import type { OverviewRow } from "@outlayr/money/account-overview";
 import { valueCell } from "@outlayr/money/currency-totals";
@@ -84,6 +84,34 @@ async function plansOn(db: Database, account: Account, now: Date) {
     return goals
         .filter((goal) => goal.accountId === account.id && isPayoffPlan(goal))
         .map((goal) => ({ endedOn: payoffEndedOn(goal, account, cells, rates), goal }));
+}
+
+export interface OwedPlan {
+    account: Account;
+    goalId: string;
+    owed: number;
+    targetDate: Date;
+}
+
+export async function owedPayoffPlans(db: Database, now: Date = new Date()): Promise<OwedPlan[]> {
+    const [goals, rows] = await Promise.all([savingsGoalsQuery(db), accountsRepo.listActive(db)]);
+    const planned = new Set(goals.filter(isPayoffPlan).map((goal) => goal.accountId));
+    const owed = await Promise.all(
+        rows
+            .filter((row) => isPerson(row) && planned.has(row.id))
+            .map(async (row) => {
+                const plans = await plansOn(db, row, now);
+                const live = plans.find((plan) => plan.endedOn === null);
+                if (live === undefined) {
+                    return null;
+                }
+                const balance = await settledBalanceAt(db, row, await loadValuationIn(db, row.currency), now);
+                return balance.exact && balance.value < 0
+                    ? { account: row, goalId: live.goal.id, owed: -balance.value, targetDate: live.goal.targetDate }
+                    : null;
+            })
+    );
+    return owed.filter((plan) => plan !== null);
 }
 
 // A new plan anchors on the balance now, in the account's own currency, so the share paid doesn't move with the rate.

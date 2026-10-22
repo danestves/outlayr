@@ -3,6 +3,7 @@ import { describe, expect, it } from "@jest/globals";
 import {
     cuotaNotice,
     cuotaReminders,
+    DEBT_REMINDER_PREFIX,
     installmentReminderCap,
     installmentReminderId,
     orphanedInstallmentReminderIds,
@@ -78,11 +79,15 @@ describe("installmentReminderCap", () => {
 });
 
 describe("orphanedInstallmentReminderIds", () => {
-    it("cancels only cuota notices the plan dropped", () => {
+    it("cancels only cuota and debt notices the sweep dropped", () => {
         const kept = installmentReminderId("kept");
         const paid = installmentReminderId("paid");
+        const paidBack = `${DEBT_REMINDER_PREFIX}goal-1`;
         expect(
-            orphanedInstallmentReminderIds([kept], [kept, paid, "outlayr.daily-reminder.1", "outlayr.sub-due.x"])
-        ).toStrictEqual([paid]);
+            orphanedInstallmentReminderIds(
+                [kept],
+                [kept, paid, paidBack, "outlayr.daily-reminder.1", "outlayr.sub-due.x"]
+            )
+        ).toStrictEqual([paid, paidBack]);
     });
 });

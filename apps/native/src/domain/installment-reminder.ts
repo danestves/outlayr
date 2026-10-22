@@ -14,6 +14,12 @@ export const INSTALLMENT_REMINDERS_DEFAULT = false;
 
 export const INSTALLMENT_REMINDER_PREFIX = "outlayr.cuota-due.";
 
+export const DEBT_REMINDER_PREFIX = "outlayr.debt-due.";
+
+const OWN_PREFIXES = [INSTALLMENT_REMINDER_PREFIX, DEBT_REMINDER_PREFIX] as const;
+
+const isOwn = (id: string) => OWN_PREFIXES.some((prefix) => id.startsWith(prefix));
+
 export function installmentReminderId(installmentId: string): string {
     return `${INSTALLMENT_REMINDER_PREFIX}${installmentId}`;
 }
@@ -27,7 +33,7 @@ const IOS_PENDING_LIMIT = 64;
 const MAX_PENDING_INSTALLMENT_REMINDERS = 8;
 
 export function installmentReminderCap(pendingIds: readonly string[]): number {
-    const others = pendingIds.filter((id) => !id.startsWith(INSTALLMENT_REMINDER_PREFIX)).length;
+    const others = pendingIds.filter((id) => !isOwn(id)).length;
     return Math.max(0, Math.min(MAX_PENDING_INSTALLMENT_REMINDERS, IOS_PENDING_LIMIT - others));
 }
 
@@ -81,5 +87,46 @@ export function cuotaNotice(
 
 export function orphanedInstallmentReminderIds(armed: readonly string[], pendingIds: readonly string[]): string[] {
     const keep = new Set(armed);
-    return pendingIds.filter((id) => id.startsWith(INSTALLMENT_REMINDER_PREFIX) && !keep.has(id));
+    return pendingIds.filter((id) => isOwn(id) && !keep.has(id));
+}
+
+export function debtReminders<Plan extends { goalId: string; targetDate: Date }>(
+    plans: readonly Plan[],
+    now: Date,
+    time: TimeOfDay
+): (Plan & { fireAt: Date; id: string })[] {
+    return plans
+        .map((plan) => ({
+            ...plan,
+            fireAt: reminderFireAt(plan.targetDate, 1, time),
+            id: `${DEBT_REMINDER_PREFIX}${plan.goalId}`,
+        }))
+        .filter((plan) => plan.fireAt.getTime() > now.getTime());
+}
+
+export interface DebtNoticeInput {
+    accountId: string;
+    amount: number;
+    currency: string;
+    fireAt: Date;
+    id: string;
+    person: string;
+}
+
+export function debtNotice(
+    debt: DebtNoticeInput,
+    hideAmounts: boolean,
+    language: Language = runtimeLanguage()
+): DatedReminder {
+    const say = (key: TranslatableKey, params: TranslationParams) =>
+        translate(key, { catalog: CATALOGS[language], fallback: EN, params });
+    return {
+        body: hideAmounts
+            ? say("debts.reminder.bodyHidden", {})
+            : say("debts.reminder.body", { amount: formatAmount(debt.amount, debt.currency, true, language) }),
+        data: { account: debt.accountId, open: "account" },
+        fireAt: debt.fireAt,
+        id: debt.id,
+        title: say("debts.reminder.title", { person: debt.person }),
+    };
 }

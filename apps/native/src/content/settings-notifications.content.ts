@@ -36,8 +36,8 @@ const settingsNotifications = {
             es: "Solo los días sin nada registrado. Desde este dispositivo, nunca desde un servidor.",
         }),
         "settings.notifications.installmentFooter": t({
-            en: "At your reminder time, the day before each installment you still owe.",
-            es: "A la hora de tus recordatorios, el día antes de cada cuota que aún debes.",
+            en: "At your reminder time, the day before each installment you still owe, and before the day you said you'd pay a debt.",
+            es: "A la hora de tus recordatorios, el día antes de cada cuota que aún debes y del día en que dijiste que pagarías una deuda.",
         }),
         "settings.notifications.installmentSection": t({
             en: "Installments",

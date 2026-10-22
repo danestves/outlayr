@@ -42,6 +42,26 @@ export function addLocalMonths(ms: number, months: number): Date {
     return target;
 }
 
+export interface PayDays {
+    friday: Date;
+    monthEnd: Date;
+    tomorrow: Date;
+}
+
+const FRIDAY = 5;
+
+export function payDays(nowMs: number): PayDays {
+    const tomorrow = tomorrowLocal(nowMs);
+    const friday = new Date(addLocalDays(tomorrow.getTime(), 1));
+    while (friday.getDay() !== FRIDAY) {
+        friday.setDate(friday.getDate() + 1);
+    }
+    const today = new Date(nowMs);
+    const thisMonthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    const monthEnd = thisMonthEnd > tomorrow ? thisMonthEnd : new Date(today.getFullYear(), today.getMonth() + 2, 0);
+    return { friday, monthEnd, tomorrow };
+}
+
 // Material 3's picker shows the UTC day of its instant, so an evening entry west of Greenwich would open a day late.
 export function utcPickerDay(date: Date): string {
     return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())).toISOString();

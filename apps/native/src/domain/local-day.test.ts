@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "@jest/globals";
 
-import { addLocalMonths, onUtcPickerDay, startOfLocalDay, tomorrowLocal, utcPickerDay } from "./local-day";
+import { addLocalMonths, onUtcPickerDay, payDays, startOfLocalDay, tomorrowLocal, utcPickerDay } from "./local-day";
 
 const inNewYork = (...args: (number | string)[]): string =>
     execFileSync(
@@ -49,5 +49,18 @@ describe("the Material date picker's UTC days", () => {
         const entry = new Date(2026, 9, 14, 21, 45);
         const moved = onUtcPickerDay(new Date("2026-10-02T00:00:00.000Z"), entry);
         expect(moved).toStrictEqual(new Date(2026, 9, 2, 21, 45));
+    });
+});
+
+describe("payDays", () => {
+    it("offers tomorrow, the Friday after it, and a month end still ahead of tomorrow", () => {
+        const days = (year: number, month: number, day: number) => {
+            const { friday, monthEnd, tomorrow } = payDays(new Date(year, month, day, 15).getTime());
+            return [tomorrow, friday, monthEnd].map((date) => `${date.getMonth() + 1}/${date.getDate()}`);
+        };
+        expect(days(2026, 9, 21)).toStrictEqual(["10/22", "10/23", "10/31"]);
+        expect(days(2026, 9, 22)).toStrictEqual(["10/23", "10/30", "10/31"]);
+        expect(days(2026, 9, 30)).toStrictEqual(["10/31", "11/6", "11/30"]);
+        expect(days(2027, 1, 27)).toStrictEqual(["2/28", "3/5", "3/31"]);
     });
 });

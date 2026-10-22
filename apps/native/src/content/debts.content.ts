@@ -39,6 +39,10 @@ const debts = {
             en: "A company, card or loan",
             es: "Una empresa, tarjeta o préstamo",
         }),
+        "debts.add.owe": t({
+            en: "Something I owe",
+            es: "Algo que debo pagar",
+        }),
         "debts.add.person": t({
             en: "A person",
             es: "Una persona",
@@ -138,6 +142,90 @@ const debts = {
         "debts.overview.owedToYou": t({
             en: "Owed to you {amount}",
             es: "Te deben {amount}",
+        }),
+        "debts.owe.blank.what": t({
+            en: "something",
+            es: "algo",
+        }),
+        "debts.owe.blank.who": t({
+            en: "someone",
+            es: "alguien",
+        }),
+        "debts.owe.chip.friday": t({
+            en: "Friday {day}",
+            es: "Viernes {day}",
+        }),
+        "debts.owe.chip.monthEnd": t({
+            en: "End of month",
+            es: "Fin de mes",
+        }),
+        "debts.owe.chip.none": t({
+            en: "No date",
+            es: "Sin fecha",
+        }),
+        "debts.owe.chip.tomorrow": t({
+            en: "Tomorrow",
+            es: "Mañana",
+        }),
+        "debts.owe.field.amount": t({
+            en: "Amount",
+            es: "Monto",
+        }),
+        "debts.owe.field.category": t({
+            en: "Category",
+            es: "Categoría",
+        }),
+        "debts.owe.field.what": t({
+            en: "What for",
+            es: "Por qué",
+        }),
+        "debts.owe.field.when": t({
+            en: "I'll pay",
+            es: "Le pago",
+        }),
+        "debts.owe.field.who": t({
+            en: "Who",
+            es: "A quién",
+        }),
+        "debts.owe.remind": t({
+            en: "I'll remind you the day before.",
+            es: "Te aviso el día antes.",
+        }),
+        "debts.owe.sentence": t({
+            en: "I owe {amount} to {who} for {what} in {category}.",
+            es: "Le debo {amount} a {who} por {what} para {category}.",
+        }),
+        "debts.owe.title": t({
+            en: "Something I Owe",
+            es: "Algo que debo",
+        }),
+        "debts.owe.what.placeholder": t({
+            en: "Plumbing, a repair",
+            es: "Plomería, una reparación",
+        }),
+        "debts.owe.when": t({
+            en: "I'll pay {when}.",
+            es: "Le pago {when}.",
+        }),
+        "debts.owe.when.friday": t({
+            en: "on Friday {day}",
+            es: "el viernes {day}",
+        }),
+        "debts.owe.when.monthEnd": t({
+            en: "at the end of the month",
+            es: "a fin de mes",
+        }),
+        "debts.owe.when.none": t({
+            en: "when I can",
+            es: "cuando pueda",
+        }),
+        "debts.owe.when.tomorrow": t({
+            en: "tomorrow",
+            es: "mañana",
+        }),
+        "debts.owe.who.placeholder": t({
+            en: "A person or company",
+            es: "Una persona o empresa",
         }),
         "debts.people": t({
             en: "People",
@@ -254,6 +342,26 @@ const debts = {
         "debts.plan.stated.youOwe": t({
             en: "You pay {account} back by {date}",
             es: "Le pagas a {account} para el {date}",
+        }),
+        "debts.purchase.title": t({
+            en: "Bought on credit",
+            es: "Compra a crédito",
+        }),
+        "debts.reminder.ask": t({
+            en: "Remind you the day before you pay?",
+            es: "¿Te aviso el día antes de pagar?",
+        }),
+        "debts.reminder.body": t({
+            en: "You owe {amount}. Tap when it's paid.",
+            es: "Le debes {amount}. Toca cuando le pagues.",
+        }),
+        "debts.reminder.bodyHidden": t({
+            en: "Tap when it's paid.",
+            es: "Toca cuando le pagues.",
+        }),
+        "debts.reminder.title": t({
+            en: "You pay {person} tomorrow",
+            es: "Mañana le pagas a {person}",
         }),
         "debts.sale.title": t({
             en: "Sold on credit",

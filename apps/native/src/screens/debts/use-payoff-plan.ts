@@ -10,6 +10,7 @@ import { savingsGoalsRepo } from "@/data/savings-goals-core";
 import type { Database } from "@/db/client";
 import { usePayoffPlanGate } from "@/hooks/use-pro-gate";
 import { useTranslation } from "@/i18n/context";
+import { rearmInstallmentReminders } from "@/lib/installment-reminder-sync";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
 import type { GoalCommit, GoalTarget } from "@/screens/budgets/components/goal-target-sheet";
@@ -53,6 +54,7 @@ export function usePayoffPlan(db: Database, account: Account, balance: AccountBa
         }
         try {
             await setPayoffPlan(db, account, targetDate);
+            rearmInstallmentReminders(db);
             haptics("success");
         } catch (error) {
             console.error("Failed to save the payoff plan", error);
@@ -63,7 +65,10 @@ export function usePayoffPlan(db: Database, account: Account, balance: AccountBa
     const remove = () => {
         ref.current?.dismiss();
         if (live) {
-            savingsGoalsRepo.remove(db, live.goalId).catch(() => notifyFailure({ title: t("debts.plan.failed") }));
+            savingsGoalsRepo
+                .remove(db, live.goalId)
+                .then(() => rearmInstallmentReminders(db))
+                .catch(() => notifyFailure({ title: t("debts.plan.failed") }));
         }
     };
 

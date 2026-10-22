@@ -7,7 +7,7 @@ import { useColors } from "@/theme/use-colors";
 import type { CategoryIconType } from "./category-icon";
 import { CategoryIconTile } from "./category-icon-tile";
 
-const WORDS = /\s+/u;
+const WORDS = /[^\p{L}\p{N}]+/u;
 
 /** "Ana María" reads "AM", "Pedro" reads "P". */
 function initials(name: string): string {

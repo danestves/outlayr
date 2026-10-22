@@ -1,10 +1,13 @@
 import { readPlans } from "@/data/installments-core";
+import { owedPayoffPlans } from "@/data/payoff-plans";
 import { readBoolSetting, setBoolSetting } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import { accounts } from "@/db/schema";
 import {
     cuotaNotice,
     cuotaReminders,
+    debtNotice,
+    debtReminders,
     installmentReminderCap,
     orphanedInstallmentReminderIds,
 } from "@/domain/installment-reminder";
@@ -48,7 +51,7 @@ async function reconcileInstallmentReminders(db: Database): Promise<void> {
     const pending = await pendingReminderIds();
     const notices =
         decision === "schedule"
-            ? cuotaNotices(db, new Date(), await readReminderTime(db), installmentReminderCap(pending), hideAmounts)
+            ? await dueNotices(db, new Date(), await readReminderTime(db), installmentReminderCap(pending), hideAmounts)
             : [];
 
     await cancelReminders(
@@ -65,6 +68,31 @@ async function reconcileInstallmentReminders(db: Database): Promise<void> {
     if (decision === "disable") {
         await setBoolSetting(db, "installmentReminders", false);
     }
+}
+
+async function dueNotices(
+    db: Database,
+    now: Date,
+    time: TimeOfDay,
+    cap: number,
+    hideAmounts: boolean
+): Promise<DatedReminder[]> {
+    const debts = debtReminders(await owedPayoffPlans(db, now), now, time).map((plan) =>
+        debtNotice(
+            {
+                accountId: plan.account.id,
+                amount: plan.owed,
+                currency: plan.account.currency,
+                fireAt: plan.fireAt,
+                id: plan.id,
+                person: plan.account.name,
+            },
+            hideAmounts
+        )
+    );
+    return [...cuotaNotices(db, now, time, cap, hideAmounts), ...debts]
+        .sort((a, b) => a.fireAt.getTime() - b.fireAt.getTime())
+        .slice(0, cap);
 }
 
 function cuotaNotices(db: Database, now: Date, time: TimeOfDay, cap: number, hideAmounts: boolean): DatedReminder[] {

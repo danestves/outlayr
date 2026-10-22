@@ -76,6 +76,7 @@ export const MODAL_SCREENS: readonly {
     titleKey: TranslationKey;
 }[] = [
     { name: "debts/new", titleKey: "debts.new.title" },
+    { name: "debts/owe", titleKey: "debts.owe.title" },
     { name: "transactions/create", titleKey: "nav.newTransaction" },
     { name: "transactions/transfers/create", titleKey: "transfers.title" },
 ];

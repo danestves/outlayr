@@ -4,6 +4,7 @@ import { getMetaSync } from "@/data/app-meta-core";
 import { setBoolSetting } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import { enableReminderStep } from "@/domain/reminder";
+import type { TranslatableKey } from "@/i18n/catalog";
 import { translateNow } from "@/i18n/runtime";
 
 import { openNotificationSettings, reminderPermission, requestReminderPermission } from "./reminders";
@@ -52,11 +53,14 @@ export async function setDueReminders(
  * Asks only while cuota notices were never set either way; an unanswered ask writes nothing, so the next order asks
  * again. Returns whether it asks, so other prompts can stand aside.
  */
-export function askForInstallmentReminders(db: Database): boolean {
+export function askForInstallmentReminders(
+    db: Database,
+    question: TranslatableKey = "installments.reminder.ask"
+): boolean {
     if (getMetaSync(db, "installmentReminders") !== null) {
         return false;
     }
-    setTimeout(() => ask(db), AFTER_SHEET_MS);
+    setTimeout(() => ask(db, question), AFTER_SHEET_MS);
     return true;
 }
 
@@ -66,8 +70,8 @@ async function turnOn(db: Database): Promise<void> {
     }
 }
 
-function ask(db: Database): void {
-    Alert.alert(translateNow("installments.reminder.ask"), undefined, [
+function ask(db: Database, question: TranslatableKey): void {
+    Alert.alert(translateNow(question), undefined, [
         {
             onPress: () => {
                 setBoolSetting(db, "installmentReminders", false).catch((error) => {

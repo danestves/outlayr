@@ -6,7 +6,7 @@ import { migratedDatabase } from "@/db/test-database";
 import { settledBalanceAt } from "./accounts";
 import { accountsRepo, getAccountById } from "./accounts-core";
 import { categoriesRepo } from "./categories-core";
-import { createPerson, recordDebtMovement, recordSoldOnCredit } from "./debts-core";
+import { createPerson, recordBoughtOnCredit, recordDebtMovement, recordSoldOnCredit } from "./debts-core";
 import { loadContributions } from "./insights";
 import { getTransactionById } from "./transactions-core";
 import { transfersRepo } from "./transfers-core";
@@ -94,5 +94,39 @@ describe("recording a debt with a person", () => {
         await expect(balanceOf(db, zinli)).resolves.toBe(35);
         const income = (await loadContributions(db, NOW)).filter((row) => row.income);
         expect(income).toStrictEqual([expect.objectContaining({ amount: 35, categoryId: sales })]);
+    });
+
+    it("counts a job owed as spending once, and paying it back only settles it", async () => {
+        const db = migratedDatabase({ foreignKeys: false });
+        const zinli = await accountsRepo.create(db, { currency: "USD", initialBalance: 100, name: "Zinli" });
+        const jose = await createPerson(db, { currency: "USD", name: "José" });
+        const repairs = await categoriesRepo.create(db, {
+            color: "#937f2b",
+            icon: "Wrench01",
+            income: false,
+            name: "Repairs",
+        });
+
+        const job = await recordBoughtOnCredit(db, {
+            amount: 80,
+            categoryId: repairs,
+            date: OCT_2,
+            person: { currency: "USD", id: jose },
+        });
+        await expect(balanceOf(db, jose)).resolves.toBe(-80);
+        expect(getTransactionById(db, job)?.note).toBe("Bought on credit");
+
+        await recordDebtMovement(db, {
+            account: { accountId: zinli, amount: 80, currency: "USD" },
+            date: OCT_2,
+            person: { accountId: jose, amount: 80, currency: "USD" },
+            rateType: null,
+            verb: "paidBack",
+        });
+
+        await expect(balanceOf(db, jose)).resolves.toBe(0);
+        await expect(balanceOf(db, zinli)).resolves.toBe(20);
+        const spent = (await loadContributions(db, NOW)).filter((row) => !row.income);
+        expect(spent).toStrictEqual([expect.objectContaining({ amount: 80, categoryId: repairs })]);
     });
 });

@@ -25,6 +25,7 @@ import { minorUnitsFor, roundToMinorUnits } from "@/domain/money";
 import { numpadToNumber } from "@/domain/numpad";
 import { useAccountCreateRoute, usePayoffPlanGate, usePeopleCapped } from "@/hooks/use-pro-gate";
 import { useTranslation } from "@/i18n/context";
+import { rearmInstallmentReminders } from "@/lib/installment-reminder-sync";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
 
@@ -32,7 +33,7 @@ const MAX_SUGGESTIONS = 4;
 
 const sameName = (a: string, b: string) => a.trim().toLocaleLowerCase() === b.trim().toLocaleLowerCase();
 
-function resolvePerson(people: readonly Account[], personId: string | undefined, name: string) {
+export function resolvePerson(people: readonly Account[], personId: string | undefined, name: string) {
     const lockedPerson = personId === undefined ? null : (people.find((row) => row.id === personId) ?? null);
     const person = lockedPerson ?? people.find((row) => sameName(row.name, name)) ?? null;
     const query = name.trim().toLocaleLowerCase();
@@ -88,7 +89,7 @@ async function writeDebt(db: Database, draft: DebtDraft): Promise<string> {
     return target.id;
 }
 
-async function writePayoffPlan(db: Database, personId: string, targetDate: Date): Promise<void> {
+export async function writePayoffPlan(db: Database, personId: string, targetDate: Date): Promise<void> {
     const people = await accountsRepo.listActive(db);
     const person = people.find((row) => row.id === personId);
     if (person) {
@@ -224,6 +225,7 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
                 notifyFailure({ title: t("debts.plan.failed") });
             }
         }
+        rearmInstallmentReminders(db);
         haptics("success");
         onDone();
     };

@@ -21,6 +21,7 @@ const reminderTapSchema = z.union([
     z.object({ open: z.literal("log") }),
     z.object({ date: z.string().optional(), open: z.literal("create") }),
     z.object({ open: z.literal("installment"), plan: z.string() }),
+    z.object({ account: z.string(), open: z.literal("account") }),
 ]);
 
 function announcedRowId(db: Database, { charge, subscription }: z.infer<typeof subscriptionTapSchema>): string | null {
@@ -66,6 +67,8 @@ export function useSubscriptionReminderTaps(db: Database, ready: boolean): void 
                 target = id === null ? null : `/transactions/${id}`;
             } else if (parsed.data.open === "installment") {
                 target = installmentTarget(db, parsed.data.plan);
+            } else if (parsed.data.open === "account") {
+                target = `/accounts/${parsed.data.account}`;
             } else if (parsed.data.open === "create") {
                 const { date } = parsed.data;
                 target = date === undefined ? "/transactions/create" : `/transactions/create?date=${date}`;
