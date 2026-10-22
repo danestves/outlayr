@@ -4,6 +4,7 @@ import {
     INSTALLMENT_REGIONS,
     installmentAppsIn,
     installmentRegion,
+    searchInstallmentApps,
     isInstallmentAppAccount,
     resolveInstitutionDomain,
 } from "./institution-map";
@@ -58,6 +59,26 @@ describe("installmentAppsIn", () => {
         expect(apps("MX").map((app) => app.id)).toStrictEqual(["kueski-pay", "aplazo", "coppel"]);
         expect(apps("AR")).toStrictEqual([]);
         expect(apps(undefined)).toStrictEqual([]);
+    });
+});
+
+describe("searchInstallmentApps", () => {
+    it("finds an app from any country, quoted where the person lives when it is sold there", () => {
+        const found = (query: string, region: string) =>
+            searchInstallmentApps(query, installmentRegion(region)).map((app) => [
+                app.label,
+                app.currency,
+                app.regions[0],
+            ]);
+        expect(found("cash", "US")).toStrictEqual([["Cashea", "USD", "VE"]]);
+        expect(found("klar", "DE")).toStrictEqual([["Klarna", "EUR", "DE"]]);
+        expect(found("klar", "VE")).toStrictEqual([["Klarna", "USD", "US"]]);
+        expect(found("Kueski", "AR")).toStrictEqual([["Kueski Pay", "MXN", "MX"]]);
+        expect(found("  ", "VE")).toStrictEqual([]);
+    });
+
+    it("lists the apps sold where the person lives first", () => {
+        expect(searchInstallmentApps("a", "VE")[0]?.regions[0]).toBe("VE");
     });
 });
 

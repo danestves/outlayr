@@ -329,6 +329,25 @@ export function installmentAppsIn(region: InstallmentRegion | null): Installment
           }));
 }
 
+export type FoundInstallmentApp = InstallmentApp & { readonly regions: readonly InstallmentRegion[] };
+
+export function searchInstallmentApps(query: string, region: InstallmentRegion | null): FoundInstallmentApp[] {
+    const key = merchantKey(query);
+    if (key.length === 0) {
+        return [];
+    }
+    const found = INSTITUTIONS.flatMap(({ domain, id, installmentsIn, label }) => {
+        const [first] = installmentsIn ?? [];
+        if (first === undefined || !merchantKey(label).includes(key)) {
+            return [];
+        }
+        const home = region !== null && installmentsIn?.includes(region) ? region : first;
+        const regions = [home, ...(installmentsIn ?? []).filter((other) => other !== home)];
+        return [{ currency: INSTALLMENT_CURRENCIES[home], domain, id, label, regions }];
+    });
+    return found.sort((a, b) => Number(b.regions[0] === region) - Number(a.regions[0] === region));
+}
+
 const INSTITUTION_INDEX: ReadonlyMap<string, InstitutionEntry> = buildPatternIndex(INSTITUTIONS);
 
 const INSTALLMENT_APP_LABELS: ReadonlyMap<string, string> = new Map(

@@ -63,7 +63,6 @@ import type { FeeDraft } from "@/domain/card-fee";
 import { computeCurtainHues } from "@/domain/curtain-hues";
 import { formatSentenceDate } from "@/domain/dates";
 import type { InstallmentSeed } from "@/domain/installment-scan";
-import { installmentRegion } from "@/domain/institution-map";
 import { merchantKey } from "@/domain/merchant-resolver";
 import { suggestMerchants } from "@/domain/merchant-suggest";
 import { formatAmount, minorUnitsFor, numberLocale, roundToMinorUnits, symbolIsShared } from "@/domain/money";
@@ -1518,8 +1517,7 @@ export function TransactionForm({
     const locale = useLocaleTag();
     const regionCode = useRegionCode();
     const liabilities = allAccounts.filter((candidate) => toAccountKind(candidate.kind) === "liability");
-    const installmentsNarrowed =
-        seed?.installments === true && !income && (liabilities.length > 0 || installmentRegion(regionCode) !== null);
+    const installmentsNarrowed = seed?.installments === true && !income;
     const {
         lookupNow,
         onNameChange,
@@ -2123,7 +2121,13 @@ export function TransactionForm({
                 setAccountDeclined(picked === null);
                 advance("account", amountNumber, merchant);
             };
-            const apps = income ? null : <StepAccountInstallments accounts={allAccounts} onPick={pickAccount} />;
+            const apps = income ? null : (
+                <StepAccountInstallments
+                    accounts={allAccounts}
+                    onPick={pickAccount}
+                    searchable={installmentsNarrowed}
+                />
+            );
             return {
                 body:
                     installmentsNarrowed && liabilities.length === 0 ? (
@@ -2671,9 +2675,15 @@ export function TransactionForm({
                     ) : null}
                 </FormScroll>
 
-                {/* Only the merchant step lifts over the keyboard; the rest are what it should uncover. */}
+                {/* Only the steps with a text field lift over the keyboard; the rest are what it should uncover. */}
                 {resting ? null : (
-                    <KeyboardAvoidingView behavior="padding" enabled={stageStep === "merchant" && !largeText}>
+                    <KeyboardAvoidingView
+                        behavior="padding"
+                        enabled={
+                            (stageStep === "merchant" || (stageStep === "account" && installmentsNarrowed)) &&
+                            !largeText
+                        }
+                    >
                         <StagePartContext value="pinned">{stageFields}</StagePartContext>
                     </KeyboardAvoidingView>
                 )}

@@ -1,11 +1,15 @@
+import Search01Icon from "@hugeicons-pro/core-stroke-rounded/Search01Icon";
+import { HugeiconsIcon } from "@hugeicons/react-native";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 
 import { BusyText } from "@/components/busy-text";
 import { CategoryIconTile } from "@/components/category-icon-tile";
+import { ChoiceRow } from "@/components/list/list-row";
 import { MonoLabel } from "@/components/mono-label";
-import { Text } from "@/components/text";
+import { SEARCH_FIELD } from "@/components/search-field-style";
+import { Text, TextInput } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { accountsRepo, getAccountById } from "@/data/accounts-core";
 import type { Account } from "@/data/accounts-core";
@@ -14,8 +18,9 @@ import {
     installmentAppsIn,
     installmentRegion,
     isInstallmentAppAccount,
+    searchInstallmentApps,
 } from "@/domain/institution-map";
-import type { InstallmentApp } from "@/domain/institution-map";
+import type { FoundInstallmentApp, InstallmentApp } from "@/domain/institution-map";
 import { useLongWait } from "@/hooks/use-long-wait";
 import { useMerchantMark } from "@/hooks/use-merchant-mark";
 import { useAccountCaps, useLiabilityCreateRoute } from "@/hooks/use-pro-gate";
@@ -36,9 +41,10 @@ const TILE = 22;
 interface StepAccountInstallmentsProps {
     accounts: readonly Account[];
     onPick: (account: Account) => void;
+    searchable: boolean;
 }
 
-export function StepAccountInstallments({ accounts, onPick }: StepAccountInstallmentsProps) {
+export function StepAccountInstallments({ accounts, onPick, searchable }: StepAccountInstallmentsProps) {
     const db = useDatabase();
     const router = useRouter();
     const t = useTranslation();
@@ -47,6 +53,7 @@ export function StepAccountInstallments({ accounts, onPick }: StepAccountInstall
     const caps = useAccountCaps();
     const liabilityRoute = useLiabilityCreateRoute();
     const [adding, setAdding] = useState<string | null>(null);
+    const [query, setQuery] = useState("");
     const slow = useLongWait(adding !== null);
     // The ids the editor was opened over; the one it adds is the account to pick.
     const before = useRef<ReadonlySet<string> | null>(null);
@@ -64,7 +71,11 @@ export function StepAccountInstallments({ accounts, onPick }: StepAccountInstall
         accounts.filter(isInstallmentAppAccount).map((account) => installmentAppDomain(account.name))
     );
     const apps = installmentAppsIn(region).filter((app) => !taken.has(app.domain));
-    if (region === null) {
+    const matches =
+        searchable && query.trim() !== ""
+            ? searchInstallmentApps(query, region).filter((app) => !taken.has(app.domain))
+            : null;
+    if (region === null && !searchable) {
         return null;
     }
 
@@ -105,8 +116,14 @@ export function StepAccountInstallments({ accounts, onPick }: StepAccountInstall
         );
     };
 
+    const where = (app: FoundInstallmentApp) => {
+        const [home, ...others] = app.regions;
+        const country = t(`installments.country.${home}`);
+        return `${others.length > 0 ? `${country} +${others.length}` : country} · ${app.currency}`;
+    };
+
     const options: StageOptionItem<string>[] = [
-        ...apps.map((app) => ({
+        ...(matches === null ? apps : []).map((app) => ({
             accessibilityLabel: `${app.label}, ${t("installments.apps.add")}`,
             id: app.id,
             label: app.label,
@@ -125,7 +142,42 @@ export function StepAccountInstallments({ accounts, onPick }: StepAccountInstall
 
     return (
         <View className="gap-2 pt-4">
-            <MonoLabel>{t("installments.apps.in", { country: t(`installments.country.${region}`) })}</MonoLabel>
+            {searchable ? (
+                <View className="border-border flex-row items-center gap-2 border-b pb-2">
+                    <HugeiconsIcon color={colors.muted} icon={Search01Icon} size={16} strokeWidth={2} />
+                    <TextInput
+                        accessibilityLabel={t("installments.apps.search")}
+                        autoCorrect={false}
+                        clearButtonMode="while-editing"
+                        onChangeText={setQuery}
+                        placeholder={t("installments.apps.search")}
+                        placeholderTextColor={colors.muted}
+                        returnKeyType="search"
+                        style={[SEARCH_FIELD, { color: colors.foreground }]}
+                        value={query}
+                    />
+                </View>
+            ) : null}
+            {searchable || region === null ? null : (
+                <MonoLabel>{t("installments.apps.in", { country: t(`installments.country.${region}`) })}</MonoLabel>
+            )}
+            {matches?.map((app) => (
+                <ChoiceRow
+                    key={app.id}
+                    label={app.label}
+                    leading={<InstallmentAppMark domain={app.domain} />}
+                    onPress={() => {
+                        if (adding === null) {
+                            add(app);
+                        }
+                    }}
+                    selected={false}
+                    value={slow && adding === app.id ? t("installments.apps.adding") : where(app)}
+                />
+            ))}
+            {matches === null ? null : (
+                <Text className="text-footnote text-muted pt-1">{t("installments.apps.missing")}</Text>
+            )}
             <StageOptionRow
                 onSelect={(id) => {
                     const app = apps.find((candidate) => candidate.id === id);

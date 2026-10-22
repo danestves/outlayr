@@ -15,9 +15,17 @@ const installments = {
             en: "Installments in {country}",
             es: "Cuotas en {country}",
         }),
+        "installments.apps.missing": t({
+            en: "Not here? Use Other and type its name.",
+            es: "¿No está? Usa Otra y escribe el nombre.",
+        }),
         "installments.apps.other": t({
             en: "Other",
             es: "Otra",
+        }),
+        "installments.apps.search": t({
+            en: "Find your app",
+            es: "Busca tu app",
         }),
         "installments.bought": t({
             en: "Bought {date} for {price}",
