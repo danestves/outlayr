@@ -94,7 +94,7 @@ function Tool() {
             ]}
             title={page.title}
         >
-            <div data-ph-no-autocapture>
+            <div className="ph-no-capture">
                 <Calculator key={locale} />
             </div>
         </Article>

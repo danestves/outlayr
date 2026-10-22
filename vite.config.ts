@@ -315,7 +315,7 @@ export default defineConfig({
             "tailwindcss/no-contradicting-variants": "error",
             "tailwindcss/no-deprecated-classes": "error",
             "tailwindcss/no-duplicate-classes": "error",
-            "tailwindcss/no-unknown-classes": "error",
+            "tailwindcss/no-unknown-classes": ["error", { allowlist: ["ph-no-capture"] }],
             "tailwindcss/no-unnecessary-whitespace": "error",
             "typescript/consistent-type-imports": ["error", { disallowTypeAnnotations: false }],
             "unicorn/catch-error-name": "off",
