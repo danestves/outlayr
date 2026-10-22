@@ -14,8 +14,8 @@ const aiConsent = {
             es: "Funciones inteligentes",
         }),
         "aiConsent.fine": t({
-            en: "Suggestions never include amounts, dates, or accounts. We don't keep recordings or photos.",
-            es: "Las sugerencias nunca incluyen montos, fechas ni cuentas. No guardamos grabaciones ni fotos.",
+            en: "Suggestions never include amounts, dates, or accounts. We don't keep recordings, photos, or screenshots.",
+            es: "Las sugerencias nunca incluyen montos, fechas ni cuentas. No guardamos grabaciones, fotos ni capturas.",
         }),
         "aiConsent.lead": t({
             en: "These features need an account and use Claude, made by Anthropic, through our server. ElevenLabs turns recordings into text. Neither gets your name, email, or account ID.",
@@ -32,6 +32,14 @@ const aiConsent = {
         "aiConsent.notNow": t({
             en: "Not now",
             es: "Ahora no",
+        }),
+        "aiConsent.planScan": t({
+            en: "Installment plan import",
+            es: "Importar un plan de cuotas",
+        }),
+        "aiConsent.planScanSends": t({
+            en: "The screenshot, the account's name, currency, language, region, and today's date",
+            es: "La captura, el nombre de la cuenta, la moneda, el idioma, la región y la fecha de hoy",
         }),
         "aiConsent.privacy": t({
             en: "Privacy policy",

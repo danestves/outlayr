@@ -11,7 +11,7 @@ import { useAuthCovered } from "@/components/auth-cover";
 import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useAiConsent } from "@/data/settings";
-import { setBoolSetting } from "@/data/settings-core";
+import { saveAiConsent } from "@/data/settings-core";
 import type { AiConsent } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import type { TranslationKey } from "@/i18n/catalog";
@@ -24,12 +24,13 @@ import { useColors } from "@/theme/use-colors";
 const FEATURES = [
     { sends: "aiConsent.voiceSends", title: "aiConsent.voice" },
     { sends: "aiConsent.scanSends", title: "aiConsent.scan" },
+    { sends: "aiConsent.planScanSends", title: "aiConsent.planScan" },
     { sends: "aiConsent.suggestionsSends", title: "aiConsent.suggestions" },
     { sends: "aiConsent.lookupSends", title: "aiConsent.lookup" },
 ] as const satisfies readonly { sends: TranslationKey; title: TranslationKey }[];
 
 export function recordAiConsent(db: Database, allowed: boolean): void {
-    setBoolSetting(db, "aiConsentV2", allowed).catch((cause: unknown) => {
+    saveAiConsent(db, allowed).catch((cause: unknown) => {
         console.error("Saving the AI consent failed", cause);
     });
 }
@@ -86,8 +87,11 @@ export function AiConsentGate() {
     const db = useDatabase();
     const router = useRouter();
     const insets = useSafeAreaInsets();
+    const consent = useAiConsent(db);
     const answer = (allowed: boolean) => {
-        recordAiConsent(db, allowed);
+        if (allowed || consent !== "allowed") {
+            recordAiConsent(db, allowed);
+        }
         if (!allowed) {
             router.back();
         }

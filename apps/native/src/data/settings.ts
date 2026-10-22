@@ -14,7 +14,7 @@ import {
     SETTING_DEFAULTS,
     seedClockPreference,
 } from "./settings-core";
-import type { AiConsent, BoolSettingKey, NumberSettingKey } from "./settings-core";
+import type { AiConsent, AiConsentKey, BoolSettingKey, NumberSettingKey } from "./settings-core";
 
 export interface SettingsSnapshot {
     bool: (key: BoolSettingKey) => boolean;
@@ -52,12 +52,12 @@ export function useBoolSetting(db: Database | null, key: BoolSettingKey): boolea
     );
 }
 
-export function useAiConsent(db: Database | null): AiConsent {
+export function useAiConsent(db: Database | null, key: AiConsentKey = "aiConsentV2"): AiConsent {
     return useLiveValue(
         appMeta,
-        () => selectSetting(db, "aiConsentV2"),
+        () => selectSetting(db, key),
         (rows) => parseAiConsent(rows[0]?.value ?? null),
-        [db]
+        [db, key]
     );
 }
 

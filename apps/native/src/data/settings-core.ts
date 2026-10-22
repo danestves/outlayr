@@ -22,6 +22,7 @@ export type BoolSettingKey =
     | "installmentReminders"
     | "categorySuggestions"
     | "aiConsentV2"
+    | "aiConsentPlanScan"
     | "aiEnrichment"
     | "groundedLookup"
     | "hideAmounts"
@@ -48,6 +49,7 @@ export type NumberSettingKey =
 export const SETTING_DEFAULTS = {
     accentColor: DEFAULT_ACCENT_VALUE,
     aiConsentV2: false,
+    aiConsentPlanScan: false,
     aiEnrichment: true,
     animatedCharts: true,
     biometricLock: false,
@@ -125,6 +127,7 @@ export const NUMBER_ENTRY_OPTIONS: readonly ChoiceOption[] = [
  * Anthropic or ElevenLabs until it is `allowed`.
  */
 export type AiConsent = "unanswered" | "allowed" | "declined";
+export type AiConsentKey = Extract<BoolSettingKey, "aiConsentV2" | "aiConsentPlanScan">;
 
 export function parseAiConsent(raw: string | null): AiConsent {
     if (raw == null) {
@@ -174,6 +177,10 @@ export async function readRemoteEnrichment(db: Database): Promise<boolean> {
         readBoolSetting(db, "aiEnrichment"),
     ]);
     return consent && enrichment;
+}
+
+export async function saveAiConsent(db: Database, allowed: boolean): Promise<void> {
+    await Promise.all([setBoolSetting(db, "aiConsentV2", allowed), setBoolSetting(db, "aiConsentPlanScan", allowed)]);
 }
 
 export async function setBoolSetting(db: Database, key: BoolSettingKey, value: boolean): Promise<void> {

@@ -19,6 +19,7 @@ import {
     HAPTICS_OPTIONS,
     NUMBER_ENTRY_OPTIONS,
     onOffLabel,
+    saveAiConsent,
     setBoolSetting,
     setNumberSetting,
     shownHiddenLabel,
@@ -275,7 +276,11 @@ export function Settings() {
                 <ToggleRow
                     icon="Sparkles"
                     onValueChange={(next) => {
-                        setBoolSetting(db, "aiConsentV2", next);
+                        if (next) {
+                            setBoolSetting(db, "aiConsentV2", true);
+                        } else {
+                            saveAiConsent(db, false);
+                        }
                     }}
                     title={t("settings.row.sendToAi")}
                     value={aiConsent}

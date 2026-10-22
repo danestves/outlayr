@@ -187,7 +187,7 @@ export function InstallmentScanScreen({ accountId, photo }: { accountId?: string
     const router = useRouter();
     const db = useDatabase();
     const { gate } = useAuthSession();
-    const consent = useAiConsent(db);
+    const consent = useAiConsent(db, "aiConsentPlanScan");
     const [account] = useState(() => (accountId === undefined ? null : getAccountById(db, accountId)));
     const [picked] = useState(() => handedOffPhoto(photo));
     if (gate !== "signed-in") {

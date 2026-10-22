@@ -21,7 +21,7 @@ export function handedOffPhoto(token: string | undefined): ScanPhoto | null {
 export function useScreenshotImport(accountId: string): () => void {
     const router = useRouter();
     const { gate } = useAuthSession();
-    const consent = useAiConsent(useDatabase());
+    const consent = useAiConsent(useDatabase(), "aiConsentPlanScan");
     const openScan = (photo?: string) => router.push({ params: { accountId, photo }, pathname: "/installments/scan" });
     return () => {
         if (gate !== "signed-in" || consent !== "allowed") {
