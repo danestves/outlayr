@@ -223,10 +223,12 @@ const tools = {
             },
             "installment-calculator": {
                 answer: {
-                    covered: t({
-                        en: "Today's payment covers the cash price, so there is nothing left to finance.",
-                        es: "Lo que pagas hoy cubre el precio de contado, así que no queda nada por financiar.",
-                    }),
+                    covered: insert(
+                        t({
+                            en: "Today's payment already covers the cash price, so you pay {{amount}} more than cash.",
+                            es: "Lo que pagas hoy ya cubre el precio de contado, así que pagas {{amount}} más que de contado.",
+                        })
+                    ),
                     less: insert(
                         t({
                             en: "You pay {{amount}} less than cash. Done by {{end}}.",
@@ -249,8 +251,8 @@ const tools = {
                 faq: [
                     {
                         answer: t({
-                            en: "If the payments add up to the cash price, yes, and the calculator shows 0%. Check that the cash price is what you would pay without the plan.",
-                            es: "Si las cuotas suman el precio de contado, sí, y la calculadora muestra 0%. Revisa que el precio de contado sea lo que pagarías sin el plan.",
+                            en: "If the payments add up to the cash price, yes, and the calculator says there is no extra cost. Check that the cash price is what you would pay without the plan.",
+                            es: "Si las cuotas suman el precio de contado, sí, y la calculadora te dice que no hay costo extra. Revisa que el precio de contado sea lo que pagarías sin el plan.",
                         }),
                         question: t({
                             en: "Is 0% interest really free?",
@@ -368,8 +370,8 @@ const tools = {
                     paid: t({ en: "Paid", es: "Pagó" }),
                 },
                 lead: t({
-                    en: "Enter what each person paid for a trip, a dinner, or a shared house, and see who pays whom to even it out, in as few payments as possible.",
-                    es: "Anota lo que pagó cada persona en un viaje, una cena o una casa compartida, y mira quién le paga a quién para quedar a mano, con la menor cantidad de pagos.",
+                    en: "Enter what each person paid for a trip, a dinner, or a shared house, and see who pays whom to even it out.",
+                    es: "Anota lo que pagó cada persona en un viaje, una cena o una casa compartida, y mira quién le paga a quién para quedar a mano.",
                 }),
                 meta: {
                     title: t({

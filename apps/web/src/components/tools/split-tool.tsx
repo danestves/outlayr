@@ -33,7 +33,7 @@ export function SplitTool() {
     const page = pages[SLUG];
     const [code, setCode] = useState("USD");
     const { add, focusRef, remove, rows, update } = useRows<{ name: string; paid: string }>(
-        () => page.examples.map((name, index) => ({ name, paid: PAID[index] ?? "" })),
+        () => page.examples.map((name, index) => ({ name: name.value, paid: PAID[index] ?? "" })),
         { name: "", paid: "" }
     );
 

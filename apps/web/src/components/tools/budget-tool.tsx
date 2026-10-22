@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { BUDGET_SPLITS, formatAmount, parseAmount, perYear, splitBudget } from "@/lib/calculators";
+import { BUDGET_SPLITS, PER_YEAR, formatAmount, parseAmount, splitBudget } from "@/lib/calculators";
 import type { BudgetSplit } from "@/lib/calculators";
 
 import { AmountInput, Choice, CurrencyField, Field, Fields, Figure, LABEL, ToolPanel, useCadences } from "./tool-kit";
@@ -23,7 +23,7 @@ export function BudgetTool() {
     const [every, setEvery] = useState<Every>("month");
     const [split, setSplit] = useState<BudgetSplit>("50-30-20");
 
-    const yearly = parseAmount(income, code) * perYear(every);
+    const yearly = parseAmount(income, code) * PER_YEAR[every];
     const month = splitBudget(Math.round(yearly / 12), split);
     const year = splitBudget(yearly, split);
     const figure = (index: number) => <Figure code={code} minor={month[index] ?? 0} />;

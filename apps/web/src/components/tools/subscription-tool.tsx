@@ -47,7 +47,7 @@ export function SubscriptionTool() {
     const nameOf = (name: string) => name.trim() || page.fields.name.value;
     const ranked = rows
         .map((row, index) => ({ name: nameOf(row.name), id: row.id, yearly: yearly[index] ?? 0 }))
-        .toSorted((a, b) => b.yearly - a.yearly);
+        .sort((a, b) => b.yearly - a.yearly);
 
     return (
         <ToolPanel

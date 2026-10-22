@@ -1,6 +1,4 @@
 import { currencyDisplayFor, decimalsFor } from "@outlayr/money/currency";
-import { RECURRING_TYPE } from "@outlayr/money/recurrence";
-import { monthlyChargeCount } from "@outlayr/money/subscription-cost";
 
 const NOT_NUMBER = /[^\d.,]/gu;
 const SEPARATORS = /[.,]/gu;
@@ -25,23 +23,12 @@ export function formatAmount(minor: number, code: string): string {
     return `${minor < 0 ? "-" : ""}${symbol === code ? `${code} ` : symbol}${number}`;
 }
 
-export const CADENCES = {
-    month: { every: 1, type: RECURRING_TYPE.monthly },
-    quarter: { every: 3, type: RECURRING_TYPE.monthly },
-    twoWeeks: { every: 2, type: RECURRING_TYPE.weekly },
-    week: { every: 1, type: RECURRING_TYPE.weekly },
-    year: { every: 1, type: RECURRING_TYPE.yearly },
-} as const;
+export const PER_YEAR = { month: 12, quarter: 4, twoWeeks: 26, week: 52, year: 1 } as const;
 
-export type Cadence = keyof typeof CADENCES;
-
-export function perYear(cadence: Cadence): number {
-    const { every, type } = CADENCES[cadence];
-    return Math.round(monthlyChargeCount(type, every) * 12);
-}
+export type Cadence = keyof typeof PER_YEAR;
 
 export function subscriptionCost(items: readonly { amount: number; cadence: Cadence }[]) {
-    const yearly = items.map(({ amount, cadence }) => amount * perYear(cadence));
+    const yearly = items.map(({ amount, cadence }) => amount * PER_YEAR[cadence]);
     const total = yearly.reduce((sum, amount) => sum + amount, 0);
     return { monthly: Math.round(total / 12), total, yearly };
 }
@@ -87,7 +74,7 @@ export function installmentCost({ cadence, count, down, payment, price }: Instal
     const total = down + payment * count;
     const rate = periodRate(price - down, payment, count);
     return {
-        annualRate: rate === null ? null : (1 + rate) ** perYear(cadence) - 1,
+        annualRate: rate === null ? null : (1 + rate) ** PER_YEAR[cadence] - 1,
         extra: total - price,
         total,
     };
@@ -108,7 +95,7 @@ export function splitBudget(income: number, split: BudgetSplit): number[] {
     const bumped = new Set(
         exact
             .map((value, index) => ({ index, remainder: value - Math.floor(value) }))
-            .toSorted((a, b) => b.remainder - a.remainder)
+            .sort((a, b) => b.remainder - a.remainder)
             .slice(0, short)
             .map(({ index }) => index)
     );
@@ -130,7 +117,7 @@ export function settleUp(paid: readonly number[]) {
         paid
             .map((amount, index) => ({ amount: (amount - shareOf(index)) * sign, index }))
             .filter(({ amount }) => amount > 0)
-            .toSorted((a, b) => b.amount - a.amount);
+            .sort((a, b) => b.amount - a.amount);
     const owed = byBalance(1);
     const owing = byBalance(-1);
     const transfers: Transfer[] = [];

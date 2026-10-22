@@ -20,7 +20,7 @@ import {
 
 const SLUG = "installment-calculator";
 const CADENCES = ["week", "twoWeeks", "month"] as const;
-const MAX_PAYMENTS = 60;
+const MAX_PAYMENTS = 600;
 const MAX_PERCENT = 9999;
 
 type Every = (typeof CADENCES)[number];
@@ -56,13 +56,13 @@ export function InstallmentTool() {
     const weeks = every === "twoWeeks" ? 2 : 1;
     const end = every === "month" ? labels.at.month({ n: plan.count }) : labels.at.week({ n: plan.count * weeks });
 
-    let answer: ReactNode = page.answer.covered;
-    if (plan.price > plan.down && extra > 0 && annualRate !== null) {
+    let answer: ReactNode = page.answer.same({ end });
+    if (extra > 0 && annualRate !== null) {
         const rate = <span className="font-mono font-medium">{formatRate(annualRate)}</span>;
         answer = page.answer.more({ amount: <Figure code={code} minor={extra} tone="spend" />, end, rate });
-    } else if (plan.price > plan.down && extra === 0) {
-        answer = page.answer.same({ end });
-    } else if (plan.price > plan.down) {
+    } else if (extra > 0) {
+        answer = page.answer.covered({ amount: <Figure code={code} minor={extra} tone="spend" /> });
+    } else if (extra < 0) {
         answer = page.answer.less({ amount: <Figure code={code} minor={-extra} tone="income" />, end });
     }
 

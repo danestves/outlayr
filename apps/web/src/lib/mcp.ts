@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import llms from "../../public/llms.txt?raw";
-import { installmentCost, perYear, settleUp, splitBudget, subscriptionCost } from "./calculators";
+import { PER_YEAR, installmentCost, settleUp, splitBudget, subscriptionCost } from "./calculators";
 import { LEDGER_MCP_ORIGIN, SITE_URL } from "./site";
 
 const PROTOCOL_VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26"] as const;
@@ -31,6 +31,7 @@ function calculator<S extends z.ZodType>(
     input: S,
     run: (args: z.output<S>) => object
 ) {
+    const { $schema: _dialect, ...inputSchema } = z.toJSONSchema(input, { io: "input" });
     return {
         call: (params: JsonRpcRequest["params"]): Outcome => {
             const parsed = input.safeParse(params.arguments ?? {});
@@ -43,7 +44,7 @@ function calculator<S extends z.ZodType>(
         tool: {
             ...tool,
             annotations: { openWorldHint: false, readOnlyHint: true },
-            inputSchema: z.toJSONSchema(input, { io: "input" }),
+            inputSchema,
         },
     };
 }
@@ -61,7 +62,7 @@ const CALCULATORS = [
             split: z.enum(["50-30-20", "60-20-20", "70-20-10"]).default("50-30-20"),
         }),
         ({ every, income, split }) => {
-            const yearly = toCents(income) * perYear(every);
+            const yearly = toCents(income) * PER_YEAR[every];
             const parts = (total: number) => {
                 const [needs = 0, wants = 0, savings = 0] = splitBudget(total, split).map(fromCents);
                 return { needs, savings, wants };
@@ -132,7 +133,7 @@ const CALCULATORS = [
     ),
     calculator(
         {
-            description: `Splits what a group paid equally and lists the fewest payments that settle it. ${UNITS}`,
+            description: `Splits what a group paid equally and lists who pays whom to settle it, in at most one payment fewer than the number of people. ${UNITS}`,
             name: "split_expenses",
             title: "Split expenses calculator",
         },
@@ -140,7 +141,10 @@ const CALCULATORS = [
             people: z
                 .array(z.object({ name: z.string().min(1).max(100), paid: Amount }))
                 .min(2)
-                .max(100),
+                .max(100)
+                .refine((people) => new Set(people.map(({ name }) => name)).size === people.length, {
+                    message: "Each person needs a different name",
+                }),
         }),
         ({ people }) => {
             const { share, total, transfers } = settleUp(people.map((person) => toCents(person.paid)));
