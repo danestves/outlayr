@@ -192,6 +192,8 @@ The reason for each lives in the plugin, as a comment above the rule or in its m
 
 `oxlint-tailwindcss` reads `apps/native/global.css` and lints class strings against the real Uniwind theme. `apps/screenshots` is ignored by both lint and format: it is scaffolded rather than authored here, and it is Tailwind v3 against that v4 entry point, so every class would report unknown. Its hand-written `scripts/` stay checked. Only its correctness rules are on. `enforce-sort-order` and the rest of its style set are off: oxfmt already owns class order inside `cn`/`tv`/`clsx`, and the plugin's sorter would additionally reorder 302 raw `className` strings.
 
+One class the theme does not define is allowed, `ph-no-capture`: PostHog's opt-out, which keeps the web calculators out of autocapture, dead clicks and session replay. `data-ph-no-autocapture` only covers autocapture. It does nothing in `apps/native`, where posthog-react-native ignores `className`. The allowlist sits on the root rule because oxlint drops a JS plugin rule's options in an override.
+
 It earned its place on the first run by finding six classes that are not in the theme and so rendered as nothing: `text-tv`, `tracking-micro` (×2) and `text-subheadline` (×3). They now use the nearest token the theme actually defines — `text-hero`, `tracking-eyebrow` and `text-subtitle`.
 
 ## Suppressing at a call site
