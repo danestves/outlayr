@@ -1,12 +1,17 @@
 import type { RateLimitConfig } from "@convex-dev/rate-limiter";
 import { DAY } from "@convex-dev/rate-limiter";
 
-/** $10 per 1,000 Claude web searches: https://platform.claude.com/docs/en/about-claude/pricing. */
-const DEFAULT_SEARCH_PRICE_MICROS = 10_000;
-/** $0.10 per 1M input tokens on `claude-haiku-5-5`, for prompts up to 100k tokens. */
-const DEFAULT_INPUT_PRICE_MICROS_PER_TOKEN = 0.1;
-/** $0.50 per 1M output tokens on `claude-haiku-5-5`, for prompts up to 100k tokens. */
-const DEFAULT_OUTPUT_PRICE_MICROS_PER_TOKEN = 0.5;
+import { aiProvider } from "./models";
+import type { AiProvider } from "./models";
+
+/**
+ * Anthropic: $10 per 1,000 web searches, `claude-haiku-5-5` at $0.10/$0.50 per 1M tokens up to 100k-token prompts.
+ * xAI: $5 per 1,000 web searches, `grok-4.20-0309-non-reasoning` at $1.25/$2.50 per 1M tokens up to 200k-token prompts.
+ */
+const DEFAULT_PRICES = {
+    anthropic: { input: 0.1, output: 0.5, search: 10_000 },
+    xai: { input: 1.25, output: 2.5, search: 5000 },
+} as const satisfies Record<AiProvider, { input: number; output: number; search: number }>;
 export const DEFAULT_BUDGET_CEILING_MICROS = 200_000_000;
 const BUDGET_PERIOD_MS = 30 * DAY;
 export const WORST_CASE_SEARCH_CALLS = 3;
@@ -24,15 +29,15 @@ function envNumber(name: string, fallback: number): number {
 }
 
 export function searchPriceMicros(): number {
-    return envNumber("GROUNDED_SEARCH_PRICE_MICROS", DEFAULT_SEARCH_PRICE_MICROS);
+    return envNumber("GROUNDED_SEARCH_PRICE_MICROS", DEFAULT_PRICES[aiProvider()].search);
 }
 
 export function inputPriceMicrosPerToken(): number {
-    return envNumber("GROUNDED_INPUT_PRICE_MICROS_PER_TOKEN", DEFAULT_INPUT_PRICE_MICROS_PER_TOKEN);
+    return envNumber("GROUNDED_INPUT_PRICE_MICROS_PER_TOKEN", DEFAULT_PRICES[aiProvider()].input);
 }
 
 export function outputPriceMicrosPerToken(): number {
-    return envNumber("GROUNDED_OUTPUT_PRICE_MICROS_PER_TOKEN", DEFAULT_OUTPUT_PRICE_MICROS_PER_TOKEN);
+    return envNumber("GROUNDED_OUTPUT_PRICE_MICROS_PER_TOKEN", DEFAULT_PRICES[aiProvider()].output);
 }
 
 /** Read live so `npx convex env set GROUNDED_BUDGET_MICROS=0` closes the gate without a deploy. */

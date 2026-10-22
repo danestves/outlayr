@@ -1,4 +1,3 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
 import { DAY, HOUR, RateLimiter } from "@convex-dev/rate-limiter";
 import { generateText, Output } from "ai";
 import type { LanguageModel } from "ai";
@@ -14,7 +13,7 @@ import { describeTree } from "./lib/ledgerPrompt";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { perUserBurst } from "./lib/limits";
 import { knowledgeKey, knowledgeKeys } from "./lib/merchantKey";
-import { AI_CONSENT_VERSION, CLAUDE_FAST_MODEL_ID } from "./lib/models";
+import { AI_CONSENT_VERSION, resolveModel } from "./lib/models";
 import { DOMAIN_PATTERN, MAX_DOMAIN_LENGTH, MAX_TAG_LENGTH, MAX_TAGS, PICTOGRAPHIC } from "./lib/sanitizeLimits";
 import { isPro } from "./revenuecat";
 
@@ -429,8 +428,8 @@ export const suggest = action({
             return EMPTY;
         }
 
-        const apiKey = process.env.ANTHROPIC_API_KEY;
-        if (!apiKey || args.aiConsent !== AI_CONSENT_VERSION) {
+        const model = resolveModel("fast");
+        if (model === null || args.aiConsent !== AI_CONSENT_VERSION) {
             return EMPTY;
         }
 
@@ -447,8 +446,7 @@ export const suggest = action({
         }
 
         try {
-            const modelId = process.env.CLAUDE_FAST_MODEL_ID || CLAUDE_FAST_MODEL_ID;
-            const result = await runSuggest(createAnthropic({ apiKey })(modelId), {
+            const result = await runSuggest(model, {
                 categoryTree: args.categoryTree,
                 currency,
                 income: args.income,

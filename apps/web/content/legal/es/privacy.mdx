@@ -8,8 +8,8 @@ intro: "Esta política explica qué recopila Outlayr, adónde va, cuánto tiempo
 
 - Tu registro se guarda en tu dispositivo. Puedes usar Outlayr sin una cuenta y, en ese caso, tus entradas, montos y notas nunca salen de tu celular.
 - Una cuenta (Iniciar sesión con Apple, Acceder con Google, o un correo y una contraseña) activa las sugerencias de comercios, la entrada por voz, el escaneo de recibos y la importación de planes de cuotas. Con Outlayr Pro también activa la sincronización, que guarda una copia de tu registro y tus fotos en nuestros servidores hasta que elimines tu cuenta.
-- Las entradas por voz, los escaneos de recibos, las importaciones de planes de cuotas y las sugerencias de comercios los procesa Anthropic, y ElevenLabs convierte las grabaciones de voz en texto. No guardamos tus grabaciones, las fotos escaneadas ni las capturas, y nunca le enviamos a ninguna de las dos empresas tu nombre, tu correo electrónico ni tu ID de cuenta.
-- Nada va a Anthropic ni a ElevenLabs hasta que lo permitas. La app lo pregunta durante la configuración inicial, o después de que inicias sesión, y Dictar un registro y Escanear un recibo vuelven a preguntar hasta que lo permitas. Importar desde una captura, para planes de cuotas, pregunta la primera vez que lo usas, aunque ya hayas permitido lo demás. Retira tu permiso cuando quieras en **Configuración › Enviar datos a proveedores de IA**. Una vez permitido, las sugerencias de comercios y las búsquedas web quedan activadas, y cada una se puede desactivar en **Configuración › Laboratorio de funciones**.
+- Las entradas por voz, los escaneos de recibos, las importaciones de planes de cuotas y las sugerencias de comercios los procesa Anthropic, o xAI cuando Anthropic no está disponible, y ElevenLabs convierte las grabaciones de voz en texto. No guardamos tus grabaciones, las fotos escaneadas ni las capturas, y nunca le enviamos a ninguna de ellas tu nombre, tu correo electrónico ni tu ID de cuenta.
+- Nada va a estos proveedores de IA hasta que lo permitas. La app lo pregunta durante la configuración inicial, o después de que inicias sesión, y Dictar un registro y Escanear un recibo vuelven a preguntar hasta que lo permitas. Importar desde una captura, para planes de cuotas, pregunta la primera vez que lo usas, aunque ya hayas permitido lo demás. Retira tu permiso cuando quieras en **Configuración › Enviar datos a proveedores de IA**. Una vez permitido, las sugerencias de comercios y las búsquedas web quedan activadas, y cada una se puede desactivar en **Configuración › Laboratorio de funciones**.
 - La app envía analíticas de uso y reportes de fallas a PostHog: qué pantallas abres, cuándo guardas algo y los errores. Nunca montos, comercios, notas ni nombres. Empieza desactivado si la región de tu dispositivo está en el EEE o el Reino Unido, y activado en el resto del mundo. Cámbialo en **Configuración › Compartir analíticas**.
 - Este sitio web también usa PostHog, con una cookie. Si estás en el EEE o el Reino Unido, te pregunta primero. Cambia tu respuesta en el pie de página, en **Cookies**.
 - Puedes conectar a tu cuenta un asistente de IA como Claude. Una vez que lo apruebas, puede leer lo que tus dispositivos sincronizaron y, con Outlayr Pro, agregar entradas. Lo que lee se rige por la política de privacidad de ese asistente.
@@ -33,12 +33,12 @@ Todos los tipos de datos que maneja Outlayr, en un solo lugar. Las secciones sig
 | Correo electrónico, nombre, ID del proveedor, hash de la contraseña | Inicio de sesión | Nuestros servidores | Hasta la eliminación de la cuenta |
 | Correo electrónico, código de 6 dígitos | Inicio de sesión con correo | Nuestros servidores, Cloudflare | Código: 10 minutos. Correo: política de Cloudflare |
 | Sesiones, dirección IP, tipo de dispositivo | Inicio de sesión | Nuestros servidores | Hasta el cierre de sesión o la eliminación de la cuenta |
-| Nombres de comercios y categorías | Autocompletado | Nuestros servidores, Anthropic | Hasta obtener respuesta |
+| Nombres de comercios y categorías | Autocompletado | Nuestros servidores, Anthropic o xAI | Hasta obtener respuesta |
 | Grabación de voz | Entrada por voz | Nuestros servidores, ElevenLabs | No se conserva |
-| Transcripción y borrador | Entrada por voz | Nuestros servidores, ElevenLabs, Anthropic | Hasta que se cierre, o tras 1 hora de inactividad |
-| Foto del recibo | Escaneo de recibo | Nuestros servidores, Anthropic | No se conserva |
-| Captura del plan de cuotas | Importación de plan de cuotas | Nuestros servidores, Anthropic | No se conserva |
-| Descripciones del archivo | Importación de CSV | Nuestros servidores, Anthropic (Pro) | No se conservan |
+| Transcripción y borrador | Entrada por voz | Nuestros servidores, ElevenLabs, Anthropic o xAI | Hasta que se cierre, o tras 1 hora de inactividad |
+| Foto del recibo | Escaneo de recibo | Nuestros servidores, Anthropic o xAI | No se conserva |
+| Captura del plan de cuotas | Importación de plan de cuotas | Nuestros servidores, Anthropic o xAI | No se conserva |
+| Descripciones del archivo | Importación de CSV | Nuestros servidores, Anthropic o xAI (Pro) | No se conservan |
 | Dirección web, dirección IP | Logos | Logo.dev, Google | Según sus políticas |
 | Registros de compra, ID de usuario, nombre, correo electrónico | Al abrir la app, Pro | RevenueCat, Apple o Google, nuestros servidores | Hasta la eliminación de la cuenta |
 | ID de instalación, versión de la app, errores | Búsqueda de actualizaciones | Expo | Según la política de Expo |
@@ -106,7 +106,7 @@ Desactivar la sincronización hace que ese dispositivo deje de enviar cambios. N
 
 ## Sugerencias, voz y recibos
 
-Estas funciones requieren una cuenta, y ninguna funciona hasta que permites enviar datos a Anthropic y ElevenLabs cuando la app lo pregunta. Desactivar **Configuración › Enviar datos a proveedores de IA** las detiene todas. Cada solicitud va primero a nuestro servidor, que verifica tu cuenta y tus límites, y luego reenvía solo el contenido que se indica abajo. Ninguna le envía a Anthropic ni a ElevenLabs tu nombre, tu correo electrónico ni tu ID de cuenta.
+Estas funciones requieren una cuenta, y ninguna funciona hasta que permites enviar datos a Anthropic y ElevenLabs cuando la app lo pregunta. Desactivar **Configuración › Enviar datos a proveedores de IA** las detiene todas. Cada solicitud va primero a nuestro servidor, que verifica tu cuenta y tus límites, y luego reenvía solo el contenido que se indica abajo. Ninguna le envía a un proveedor de IA tu nombre, tu correo electrónico ni tu ID de cuenta.
 
 ### Sugerencias de comercios (Autocompletado)
 
@@ -148,7 +148,9 @@ El archivo se lee en tu dispositivo. Con Sugerir categoría y etiquetas activado
 
 Anthropic es la empresa estadounidense que crea los modelos de IA Claude. ElevenLabs crea los modelos de voz a texto que transcriben las entradas por voz. Ambas procesan estas solicitudes por cuenta nuestra como proveedores de servicios, según sus términos de API. Anthropic no entrena sus modelos con estos datos, y desactivamos el uso que ElevenLabs podría hacer de ellos para entrenar. Nosotros tampoco usamos tus datos para entrenar modelos de IA.
 
-Si una solicitud a Anthropic falla, el registro de errores de nuestro servidor puede incluir el nombre del comercio involucrado, para que podamos encontrar el problema.
+Cuando Anthropic no está disponible, nuestro servidor envía estas mismas solicitudes a xAI, así que lo que esta política dice que recibe Anthropic lo recibe xAI en ese momento. xAI es la empresa estadounidense que crea los modelos de IA Grok. Procesa estas solicitudes por cuenta nuestra como proveedor de servicios, según sus términos de API, que la obligan a proteger estos datos al menos tan bien como esta política y a usarlos solo para responder nuestras solicitudes.
+
+Si una solicitud a un proveedor de IA falla, el registro de errores de nuestro servidor puede incluir el nombre del comercio involucrado, para que podamos encontrar el problema.
 
 ## Apple Pay y Atajos
 
@@ -193,6 +195,7 @@ Estas empresas nos ayudan a operar Outlayr. Cada una recibe solo lo que su funci
 - **[Hetzner](https://www.hetzner.com/legal/privacy-policy)** aloja en Helsinki, Finlandia, los servidores que ejecutan nuestra base de datos y las funciones de nuestro servidor. Esos servidores guardan tu cuenta y tus datos sincronizados, y atienden cada solicitud a nuestro servidor.
 - **[Cloudflare](https://www.cloudflare.com/privacypolicy/)** almacena las fotos que adjuntas a entradas y cuentas (Cloudflare R2), cuando el respaldo de fotos está activado, y envía los correos con los códigos de inicio de sesión, para lo cual recibe tu correo electrónico y el contenido del mensaje.
 - **[Anthropic](https://www.anthropic.com/legal/privacy)** proporciona los modelos de IA Claude detrás de las sugerencias, la entrada por voz, el escaneo de recibos, la importación de planes de cuotas, la importación de CSV y las búsquedas web. Recibe el contenido descrito en [Sugerencias, voz y recibos](#sugerencias-voz-y-recibos).
+- **[xAI](https://x.ai/legal/privacy-policy)** proporciona los modelos de IA Grok que usamos en lugar de Claude cuando Anthropic no está disponible. Recibe el mismo contenido que recibiría Anthropic.
 - **[ElevenLabs](https://elevenlabs.io/privacy-policy)** convierte las grabaciones de voz en texto. Recibe la grabación y tu idioma.
 - **[RevenueCat](https://www.revenuecat.com/privacy)** lleva el control del estado de las suscripciones. Recibe un ID anónimo, o tu ID de cuenta, nombre y correo electrónico una vez que inicias sesión, y tus registros de compra.
 - **[Apple](https://www.apple.com/legal/privacy/)** proporciona Iniciar sesión con Apple, los pagos del App Store y funciones de iOS como Siri y Atajos, según su propia política.
@@ -226,8 +229,8 @@ Si estás en el Espacio Económico Europeo o en el Reino Unido, estas son las ba
 | Finalidad | Base legal |
 | --- | --- |
 | Tu cuenta, la sincronización, el almacenamiento de fotos, la entrada por voz, el escaneo de recibos, la importación de planes de cuotas, la importación de CSV, Pro y las conexiones con asistentes de IA | Contrato: necesitamos estos datos para darte lo que pides. |
-| El envío a Anthropic y ElevenLabs de entradas por voz, fotos de recibos, capturas de planes de cuotas, descripciones de CSV y nombres de comercios | Tu consentimiento, dado con Permitir cuando la app lo pregunta y retirado en **Configuración › Enviar datos a proveedores de IA**. |
-| Las sugerencias de comercios, las búsquedas web, la lista compartida de comercios y los logos | Intereses legítimos: agilizar el registro de entradas. Las sugerencias y las búsquedas web solo llegan a Anthropic una vez que lo permites, y desactivar cualquiera de ellas en el Laboratorio de funciones es la forma de oponerte. |
+| El envío a Anthropic, xAI y ElevenLabs de entradas por voz, fotos de recibos, capturas de planes de cuotas, descripciones de CSV y nombres de comercios | Tu consentimiento, dado con Permitir cuando la app lo pregunta y retirado en **Configuración › Enviar datos a proveedores de IA**. |
+| Las sugerencias de comercios, las búsquedas web, la lista compartida de comercios y los logos | Intereses legítimos: agilizar el registro de entradas. Las sugerencias y las búsquedas web solo llegan a un proveedor de IA una vez que lo permites, y desactivar cualquiera de ellas en el Laboratorio de funciones es la forma de oponerte. |
 | Las sesiones, los límites de uso, los registros de errores, los registros de herramientas de asistentes y las búsquedas de actualizaciones | Intereses legítimos: mantener Outlayr seguro, en funcionamiento y libre de abusos. |
 | Las analíticas de uso y los reportes de fallas | Tu consentimiento. Compartir analíticas empieza desactivado cuando la región de tu dispositivo está en el EEE o el Reino Unido. Activarlo es dar tu consentimiento, y desactivarlo es retirarlo. |
 | Las analíticas del sitio web | Tu consentimiento para la cookie y las grabaciones de visitas, que pedimos en tu primera visita. Rechazarla es retirarlo. Una visita rechazada se cuenta igual sin cookie, por nuestro interés legítimo en saber cuántas personas nos visitan. |
@@ -242,14 +245,14 @@ La [tabla de arriba](#datos-de-un-vistazo) indica cuánto tiempo se conserva cad
 
 - Los datos sincronizados, incluidos los registros de eliminación de las entradas que eliminaste, y las fotos respaldadas se conservan hasta que elimines tu cuenta.
 - Las conversaciones de voz se eliminan cuando cierras la pantalla de voz, o una hora después de tu último mensaje.
-- Las grabaciones pasan por nuestro servidor hacia ElevenLabs, y las fotos de recibos y las capturas de planes de cuotas hacia Anthropic. No almacenamos ninguna.
+- Las grabaciones pasan por nuestro servidor hacia ElevenLabs, y las fotos de recibos y las capturas de planes de cuotas hacia Anthropic o xAI. No almacenamos ninguna.
 - Las conexiones con asistentes de IA (el nombre y la dirección del asistente, tu aprobación y sus claves de acceso) se conservan hasta que elimines tu cuenta. Las claves de acceso dejan de funcionar tras una hora, o tras siete días sin renovarse. El registro de qué herramienta usó un asistente, y cuándo, se conserva 30 días.
 - Las solicitudes de sugerencias de comercios no se conservan una vez respondidas. Las que quedan en cola en segundo plano esperan en nuestro servidor hasta que tu dispositivo recoja la respuesta.
 - Los contadores de uso que aplican los límites de escaneos, entradas por voz y sugerencias guardan solo cantidades, asociadas a tu ID de cuenta, y se eliminan con tu cuenta.
 - Los elementos de la lista compartida de comercios no están vinculados a nadie. Se actualizan después de 30 o 90 días.
 - Los eventos de analíticas vinculados a tu cuenta se eliminan con ella. Los eventos de una instalación que nunca inició sesión llevan solo un ID de instalación aleatorio y se conservan según la política de conservación de PostHog.
 - Los eventos del sitio web llevan un ID aleatorio del navegador, o un código que cambia cada día si rechazaste las cookies, y se conservan según la política de conservación de PostHog.
-- Nuestros proveedores, incluidos Anthropic, ElevenLabs, Apple, Google y Expo, conservan los datos que reciben según sus propias políticas de conservación.
+- Nuestros proveedores, incluidos Anthropic, xAI, ElevenLabs, Apple, Google y Expo, conservan los datos que reciben según sus propias políticas de conservación.
 
 ## Eliminar y exportar
 
@@ -304,9 +307,9 @@ Si vives en California o en otro estado de EE. UU. con una ley de privacidad, es
 | --- | --- |
 | **Identificadores:** nombre, correo electrónico, ID de cuenta, ID de instalación, dirección IP | Hetzner, RevenueCat, Expo, PostHog, Logo.dev, Google, Cloudflare (correo) |
 | **Información comercial:** registros de suscripciones y compras | Apple, Google, RevenueCat, Hetzner |
-| **Información de audio y visual:** clips de voz, escaneos de recibos, capturas de planes de cuotas, fotos adjuntas | ElevenLabs (clips), Anthropic (escaneos), Cloudflare (fotos) |
+| **Información de audio y visual:** clips de voz, escaneos de recibos, capturas de planes de cuotas, fotos adjuntas | ElevenLabs (clips), Anthropic o xAI (escaneos), Cloudflare (fotos) |
 | **Actividad en internet u otras redes:** dirección IP, agente de usuario, registros de solicitudes, uso de la app y del sitio web, reportes de fallas | Hetzner, Expo, PostHog, el proveedor que aloja nuestro sitio web |
-| **Registros que creas:** entradas sincronizadas, montos, comercios, notas, presupuestos | Hetzner; nombres de comercios, categorías y cuentas a Anthropic |
+| **Registros que creas:** entradas sincronizadas, montos, comercios, notas, presupuestos | Hetzner; nombres de comercios, categorías y cuentas a Anthropic o xAI |
 
 Obtenemos esta información de ti, de tu dispositivo, de Apple y de Google, y la usamos para los fines descritos en esta política. La conservamos durante los plazos indicados en [Datos de un vistazo](#datos-de-un-vistazo).
 
@@ -321,14 +324,14 @@ Como no vendemos ni compartimos, no hay nada de lo que una señal de Global Priv
 - El tráfico entre la app, nuestros servidores y nuestros proveedores viaja por conexiones HTTPS cifradas.
 - Cada solicitud de tus datos está ligada a tu sesión iniciada, y nuestro servidor decide a qué datos puede acceder cada solicitud. Una cuenta no puede leer ni escribir el registro ni las fotos de otra.
 - Los tokens de actualización del inicio de sesión se cifran antes de guardarlos.
-- Las solicitudes a Anthropic y ElevenLabs no llevan nombre, correo electrónico ni ID de cuenta.
+- Las solicitudes a proveedores de IA no llevan nombre, correo electrónico ni ID de cuenta.
 - Puedes proteger Outlayr con el bloqueo biométrico de tu dispositivo (Face ID o Touch ID en iPhone).
 
 Ningún sistema es perfectamente seguro. Si encuentras un problema de seguridad, escribe a [support@tryoutlayr.com](mailto:support@tryoutlayr.com), y si una brecha de seguridad afecta tus datos, te avisaremos según lo exija la ley.
 
 ## Transferencias internacionales
 
-Nuestros servidores están en Helsinki, Finlandia, en la Unión Europea. danestves LLC es una empresa estadounidense, y Anthropic, ElevenLabs, RevenueCat, Expo, PostHog, Cloudflare, Logo.dev, Apple y Google tratan los datos que reciben principalmente en Estados Unidos, cuyas leyes pueden protegerlos de forma distinta a las de tu país. Escribe a [support@tryoutlayr.com](mailto:support@tryoutlayr.com) para conocer los detalles de las garantías que se aplican.
+Nuestros servidores están en Helsinki, Finlandia, en la Unión Europea. danestves LLC es una empresa estadounidense, y Anthropic, xAI, ElevenLabs, RevenueCat, Expo, PostHog, Cloudflare, Logo.dev, Apple y Google tratan los datos que reciben principalmente en Estados Unidos, cuyas leyes pueden protegerlos de forma distinta a las de tu país. Escribe a [support@tryoutlayr.com](mailto:support@tryoutlayr.com) para conocer los detalles de las garantías que se aplican.
 
 ## Menores
 

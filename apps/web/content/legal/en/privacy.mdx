@@ -8,8 +8,8 @@ intro: "This policy explains what Outlayr collects, where it goes, how long it s
 
 - Your ledger is stored on your device. You can use Outlayr without an account, and then your entries, amounts, and notes never leave the phone.
 - An account (Sign in with Apple, Google, or an email and password) turns on merchant suggestions, voice entry, receipt scans, and installment plan imports. With Outlayr Pro it also turns on sync, which keeps a copy of your ledger and photos on our servers until you delete your account.
-- Voice entries, receipt scans, installment plan imports, and merchant suggestions are processed by Anthropic, and ElevenLabs turns voice recordings into text. We don’t store your recordings, scanned photos, or screenshots, and we never send either company your name, email, or account ID.
-- Nothing goes to Anthropic or ElevenLabs until you allow it. The app asks during setup, or after you sign in, and Speak an entry and Scan a receipt ask again until you do. Import from a screenshot, for installment plans, asks the first time you use it, even if you allowed the others. Withdraw it any time in **Settings › Send data to AI providers**. Once allowed, merchant suggestions and web lookups are on, and each can be turned off in **Settings › Feature lab**.
+- Voice entries, receipt scans, installment plan imports, and merchant suggestions are processed by Anthropic, or by xAI when Anthropic is unavailable, and ElevenLabs turns voice recordings into text. We don’t store your recordings, scanned photos, or screenshots, and we never send any of them your name, email, or account ID.
+- Nothing goes to these AI providers until you allow it. The app asks during setup, or after you sign in, and Speak an entry and Scan a receipt ask again until you do. Import from a screenshot, for installment plans, asks the first time you use it, even if you allowed the others. Withdraw it any time in **Settings › Send data to AI providers**. Once allowed, merchant suggestions and web lookups are on, and each can be turned off in **Settings › Feature lab**.
 - The app sends usage analytics and crash reports to PostHog: which screens you open, when you save something, and errors. Never amounts, merchants, notes, or names. It starts off if your device’s region is in the EEA or UK, and on everywhere else. Change it in **Settings › Share analytics**.
 - This website uses PostHog too, with a cookie. If you’re in the EEA or UK, it asks first. Change your answer in the footer under **Cookies**.
 - You can connect an AI assistant such as Claude to your account. Once you approve it, it can read what your devices synced, and with Outlayr Pro add entries. What it reads is handled under that assistant’s privacy policy.
@@ -33,12 +33,12 @@ Every kind of data Outlayr handles, in one place. The sections below explain eac
 | Email, name, provider ID, password hash | Sign-in | Our servers | Until account deletion |
 | Email address, 6-digit code | Email sign-in | Our servers, Cloudflare | Code: 10 minutes. Email: Cloudflare’s policy |
 | Sessions, IP address, device type | Sign-in | Our servers | Until sign-out or account deletion |
-| Merchant and category names | Smart fill | Our servers, Anthropic | Until answered |
+| Merchant and category names | Smart fill | Our servers, Anthropic or xAI | Until answered |
 | Voice recording | Voice entry | Our servers, ElevenLabs | Not kept |
-| Transcript and draft | Voice entry | Our servers, ElevenLabs, Anthropic | Until closed, or 1 hour idle |
-| Receipt photo | Receipt scan | Our servers, Anthropic | Not kept |
-| Installment plan screenshot | Installment plan import | Our servers, Anthropic | Not kept |
-| File descriptions | CSV import | Our servers, Anthropic (Pro) | Not kept |
+| Transcript and draft | Voice entry | Our servers, ElevenLabs, Anthropic or xAI | Until closed, or 1 hour idle |
+| Receipt photo | Receipt scan | Our servers, Anthropic or xAI | Not kept |
+| Installment plan screenshot | Installment plan import | Our servers, Anthropic or xAI | Not kept |
+| File descriptions | CSV import | Our servers, Anthropic or xAI (Pro) | Not kept |
 | Web address, IP address | Logos | Logo.dev, Google | Their policies |
 | Purchase records, user ID, name, email | App opens, Pro | RevenueCat, Apple or Google, our servers | Until account deletion |
 | Install ID, app version, errors | Update checks | Expo | Expo’s policy |
@@ -106,7 +106,7 @@ Turning sync off stops that device from sending changes. It doesn’t remove wha
 
 ## Suggestions, voice, and receipts
 
-These features need an account, and none of them run until you allow sending data to Anthropic and ElevenLabs when the app asks. Turning off **Settings › Send data to AI providers** stops all of them. Each request goes to our server first, which checks your account and limits, then forwards only the content listed below. None of them send Anthropic or ElevenLabs your name, email, or account ID.
+These features need an account, and none of them run until you allow sending data to Anthropic and ElevenLabs when the app asks. Turning off **Settings › Send data to AI providers** stops all of them. Each request goes to our server first, which checks your account and limits, then forwards only the content listed below. None of them send an AI provider your name, email, or account ID.
 
 ### Merchant suggestions (Smart fill)
 
@@ -148,7 +148,9 @@ The file is read on your device. With Suggest category and tags on, descriptions
 
 Anthropic is the US company that makes the Claude AI models. ElevenLabs makes the speech-to-text models that write down voice entries. Both process these requests for us as service providers under their API terms. Anthropic doesn’t train its models on this data, and we’ve turned off ElevenLabs’ use of it for training. We don’t use your data to train AI models either.
 
-If a request to Anthropic fails, our server’s error log can include the merchant name involved, so we can find the problem.
+When Anthropic is unavailable, our server sends these same requests to xAI instead, so whatever this policy says Anthropic receives goes to xAI then. xAI is the US company that makes the Grok AI models. It processes these requests for us as a service provider under its API terms, which bind it to protect this data at least as well as this policy does and to use it only to answer our requests.
+
+If a request to an AI provider fails, our server’s error log can include the merchant name involved, so we can find the problem.
 
 ## Apple Pay and Shortcuts
 
@@ -193,6 +195,7 @@ These companies help run Outlayr. Each receives only what its job needs.
 - **[Hetzner](https://www.hetzner.com/legal/privacy-policy)** hosts the servers in Helsinki, Finland, that run our database and server functions. They hold your account and synced data, and handle every request to our server.
 - **[Cloudflare](https://www.cloudflare.com/privacypolicy/)** stores the photos you attach to entries and accounts (Cloudflare R2), when photo backup is on, and sends the emails with sign-in codes, for which it receives your email address and the email’s contents.
 - **[Anthropic](https://www.anthropic.com/legal/privacy)** provides the Claude AI models behind suggestions, voice entry, receipt scans, installment plan imports, CSV import, and web lookups. It receives the content described in [Suggestions, voice, and receipts](#suggestions-voice-and-receipts).
+- **[xAI](https://x.ai/legal/privacy-policy)** provides the Grok AI models we use instead of Claude when Anthropic is unavailable. It receives the same content Anthropic would.
 - **[ElevenLabs](https://elevenlabs.io/privacy-policy)** turns voice recordings into text. It receives the recording and your language.
 - **[RevenueCat](https://www.revenuecat.com/privacy)** tracks subscription status. It receives an anonymous ID, or your account ID, name, and email once you sign in, and your purchase records.
 - **[Apple](https://www.apple.com/legal/privacy/)** provides Sign in with Apple, App Store payments, and iOS features such as Siri and Shortcuts, under its own policy.
@@ -226,8 +229,8 @@ If you’re in the European Economic Area or the United Kingdom, we rely on thes
 | Purpose | Legal basis |
 | --- | --- |
 | Your account, sync, photo storage, voice entry, receipt scans, installment plan imports, CSV import, Pro, and AI assistant connections | Contract: we need this data to provide what you ask for. |
-| Sending voice entries, receipt photos, installment plan screenshots, CSV descriptions, and merchant names to Anthropic and ElevenLabs | Your consent, given with Allow when the app asks and withdrawn in **Settings › Send data to AI providers**. |
-| Merchant suggestions, web lookups, the shared merchant list, and logos | Legitimate interests: making entries faster to file. Suggestions and web lookups reach Anthropic only once you allow it, and turning either off in Feature lab is how you object. |
+| Sending voice entries, receipt photos, installment plan screenshots, CSV descriptions, and merchant names to Anthropic, xAI, and ElevenLabs | Your consent, given with Allow when the app asks and withdrawn in **Settings › Send data to AI providers**. |
+| Merchant suggestions, web lookups, the shared merchant list, and logos | Legitimate interests: making entries faster to file. Suggestions and web lookups reach an AI provider only once you allow it, and turning either off in Feature lab is how you object. |
 | Sessions, usage limits, error logs, assistant tool logs, and update checks | Legitimate interests: keeping Outlayr secure, working, and free of abuse. |
 | Usage analytics and crash reports | Your consent. Share analytics starts off when your device’s region is in the EEA or UK. Turning it on gives consent, and turning it off withdraws it. |
 | Website analytics | Your consent for the cookie and visit recordings, asked on your first visit. Declining withdraws it. A declined visit is still counted without a cookie, under our legitimate interest in knowing how many people visit. |
@@ -242,14 +245,14 @@ The [table above](#data-at-a-glance) lists how long each kind of data is kept. A
 
 - Synced data, including deletion records for entries you deleted, and backed-up photos are kept until you delete your account.
 - Voice conversations are deleted when you close the voice screen, or one hour after your last message.
-- Recordings pass through our server to ElevenLabs, and receipt photos and installment plan screenshots to Anthropic. We don’t store any of them.
+- Recordings pass through our server to ElevenLabs, and receipt photos and installment plan screenshots to Anthropic or xAI. We don’t store any of them.
 - AI assistant connections (the assistant’s name and address, your approval, and its access keys) are kept until you delete your account. Access keys stop working after an hour, or after seven days without renewal. The log of which assistant tool ran, and when, is kept for 30 days.
 - Merchant suggestion requests aren’t kept once answered. Ones queued in the background wait on our server until your device collects the answer.
 - Usage counters that enforce limits on scans, voice entries, and suggestions hold counts only, keyed to your account ID, and are deleted with your account.
 - Items in the shared merchant list aren’t linked to anyone. They’re refreshed after 30 or 90 days.
 - Analytics events linked to your account are deleted with it. Events from an install that never signed in carry only a random install ID and are kept under PostHog’s retention policy.
 - Website events carry a random browser ID, or a code that changes daily if you declined cookies, and are kept under PostHog’s retention policy.
-- Our providers, including Anthropic, ElevenLabs, Apple, Google, and Expo, keep the data they receive under their own retention policies.
+- Our providers, including Anthropic, xAI, ElevenLabs, Apple, Google, and Expo, keep the data they receive under their own retention policies.
 
 ## Deleting and exporting
 
@@ -304,9 +307,9 @@ If you live in California or another US state with a privacy law, this is what w
 | --- | --- |
 | **Identifiers:** name, email, account ID, install ID, IP address | Hetzner, RevenueCat, Expo, PostHog, Logo.dev, Google, Cloudflare (email) |
 | **Commercial information:** subscription and purchase records | Apple, Google, RevenueCat, Hetzner |
-| **Audio and visual information:** voice clips, receipt scans, installment plan screenshots, attached photos | ElevenLabs (clips), Anthropic (scans), Cloudflare (photos) |
+| **Audio and visual information:** voice clips, receipt scans, installment plan screenshots, attached photos | ElevenLabs (clips), Anthropic or xAI (scans), Cloudflare (photos) |
 | **Internet or network activity:** IP address, user agent, request logs, app and website usage, crash reports | Hetzner, Expo, PostHog, our website host |
-| **Records you create:** synced entries, amounts, merchants, notes, budgets | Hetzner; merchant, category, and account names to Anthropic |
+| **Records you create:** synced entries, amounts, merchants, notes, budgets | Hetzner; merchant, category, and account names to Anthropic or xAI |
 
 It comes from you, your device, Apple, and Google, and we use it for the purposes described in this policy. We keep it for the periods in [Data at a glance](#data-at-a-glance).
 
@@ -321,14 +324,14 @@ Because we don’t sell or share, there is nothing for a Global Privacy Control 
 - Traffic between the app, our servers, and our providers travels over encrypted HTTPS connections.
 - Every request for your data is tied to your signed-in session, and our server decides whose data a request can touch. One account can’t read or write another’s ledger or photos.
 - Sign-in refresh tokens are encrypted before we store them.
-- Requests to Anthropic and ElevenLabs carry no name, email, or account ID.
+- Requests to AI providers carry no name, email, or account ID.
 - You can lock Outlayr behind your device’s biometric lock (Face ID or Touch ID on iPhone).
 
 No system is perfectly secure. If you find a security problem, write to [support@tryoutlayr.com](mailto:support@tryoutlayr.com), and if a breach affects your data we’ll tell you as the law requires.
 
 ## International transfers
 
-Our servers are in Helsinki, Finland, in the European Union. danestves LLC is a US company, and Anthropic, ElevenLabs, RevenueCat, Expo, PostHog, Cloudflare, Logo.dev, Apple, and Google process the data they receive mainly in the United States, whose laws may protect it differently from your own. Write to [support@tryoutlayr.com](mailto:support@tryoutlayr.com) for details of the safeguards that apply.
+Our servers are in Helsinki, Finland, in the European Union. danestves LLC is a US company, and Anthropic, xAI, ElevenLabs, RevenueCat, Expo, PostHog, Cloudflare, Logo.dev, Apple, and Google process the data they receive mainly in the United States, whose laws may protect it differently from your own. Write to [support@tryoutlayr.com](mailto:support@tryoutlayr.com) for details of the safeguards that apply.
 
 ## Children
 

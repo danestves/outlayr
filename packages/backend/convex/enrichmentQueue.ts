@@ -1,6 +1,5 @@
 // oxlint-disable unicorn/filename-case -- the Convex module name is the function path: clients address these as enrichmentQueue:enqueue, enrichmentQueue:results and enrichmentQueue:ack
 
-import { createAnthropic } from "@ai-sdk/anthropic";
 import { vOnCompleteValidator, Workpool } from "@convex-dev/workpool";
 import { v } from "convex/values";
 import type { Infer } from "convex/values";
@@ -23,7 +22,7 @@ import type { GroundedCallDeps } from "./groundedLookup";
 import { optionalUserId, requireUserId } from "./lib/auth";
 import { knowledgeKey, knowledgeKeys } from "./lib/merchantKey";
 import { CANONICAL_CATEGORY_NAMES, KEY_PATTERN } from "./lib/merchantTrust";
-import { AI_CONSENT_VERSION, CLAUDE_FAST_MODEL_ID } from "./lib/models";
+import { AI_CONSENT_VERSION, modelIdFor, resolveModel } from "./lib/models";
 import { isPro } from "./revenuecat";
 import { enrichmentResult } from "./schema";
 
@@ -173,18 +172,14 @@ export async function resolveJob(
                 ctx,
                 row,
                 applyToTree(row.categoryTree, { ...deep, parentCategoryName: null }),
-                process.env.CLAUDE_GROUNDED_MODEL_ID || CLAUDE_FAST_MODEL_ID
+                modelIdFor("grounded")
             );
         }
     }
-    const fastModelId = process.env.CLAUDE_FAST_MODEL_ID || CLAUDE_FAST_MODEL_ID;
-    let model = deps.fast;
-    if (model === undefined) {
-        const apiKey = process.env.ANTHROPIC_API_KEY;
-        if (!apiKey) {
-            return null;
-        }
-        model = createAnthropic({ apiKey })(fastModelId);
+    const fastModelId = modelIdFor("fast");
+    const model = deps.fast ?? resolveModel("fast");
+    if (model === null) {
+        return null;
     }
     const { grounding: _grounding, ...fast } = await runSuggest(model, {
         categoryTree: row.categoryTree,
