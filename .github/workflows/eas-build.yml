@@ -140,9 +140,24 @@ jobs:
             - name: Prebuild
               run: npx expo prebuild --platform "$EAS_PLATFORM" --no-install
 
+            - name: Install ccache
+              if: inputs.platform == 'ios'
+              env:
+                  HOMEBREW_NO_AUTO_UPDATE: "1"
+              run: brew install ccache
+
+            - uses: actions/cache@v6
+              if: inputs.platform == 'ios'
+              with:
+                  path: ~/Library/Caches/ccache
+                  key: ccache-ios-${{ github.run_id }}
+                  restore-keys: ccache-ios-
+
             - name: Install pods
               if: inputs.platform == 'ios'
               working-directory: apps/native/ios
+              env:
+                  USE_CCACHE: "1"
               run: pod install
 
             # A throwaway keychain, deleted in the last step. Xcode matches profiles
@@ -238,6 +253,7 @@ jobs:
               run: |
                   set -euo pipefail
                   SCHEME=$(basename ios/*.xcworkspace .xcworkspace)
+                  ccache --zero-stats
                   if ! xcodebuild archive \
                     -workspace "ios/$SCHEME.xcworkspace" \
                     -scheme "$SCHEME" \
@@ -245,11 +261,13 @@ jobs:
                     -destination "generic/platform=iOS" \
                     -archivePath "$RUNNER_TEMP/app.xcarchive" \
                     OTHER_CODE_SIGN_FLAGS="--keychain $SIGNING_KEYCHAIN" \
+                    SWIFT_ENABLE_EXPLICIT_MODULES=NO \
                     > "$RUNNER_TEMP/xcodebuild.log" 2>&1; then
                     tail -n 200 "$RUNNER_TEMP/xcodebuild.log"
                     echo "::error::xcodebuild archive failed. The full log is in the xcode-logs artifact."
                     exit 1
                   fi
+                  ccache --show-stats --verbose
 
             - name: Export the IPA
               if: inputs.platform == 'ios'
