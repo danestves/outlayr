@@ -22,6 +22,7 @@ function sitePages(locale: Locale): SitePage[] {
     const support = getIntlayer("support", locale);
     const { notFound } = getIntlayer("site", locale);
     const { compare, guides, hubs } = getIntlayer("answers", locale);
+    const tools = getIntlayer("tools", locale);
     return [
         { description: home.meta.description, path: "/", title: home.meta.title },
         { description: about.meta.description, path: "/about", title: about.meta.title },
@@ -31,6 +32,7 @@ function sitePages(locale: Locale): SitePage[] {
         { path: "/delete-account", title: notFound.pages.deleteAccount },
         { description: hubs.guides.lead, path: "/guides", title: hubs.guides.meta.title },
         { description: hubs.compare.lead, path: "/compare", title: hubs.compare.meta.title },
+        { description: tools.hub.lead, path: "/tools", title: tools.hub.meta.title },
         ...Object.entries(guides).map(([slug, guide]) => ({
             description: guide.lead,
             path: `/guides/${slug}`,
@@ -39,6 +41,11 @@ function sitePages(locale: Locale): SitePage[] {
         ...Object.entries(compare).map(([slug, page]) => ({
             description: page.summary,
             path: `/compare/${slug}`,
+            title: page.meta.title,
+        })),
+        ...Object.entries(tools.pages).map(([slug, page]) => ({
+            description: page.lead,
+            path: `/tools/${slug}`,
             title: page.meta.title,
         })),
     ];
@@ -69,7 +76,7 @@ export function useAgentTools(locale: Locale) {
             {
                 annotations: { readOnlyHint: true },
                 description:
-                    "Search tryoutlayr.com, the site for Outlayr, a mobile expense tracker and budget app. Covers the product overview, how-to guides, comparisons with other budget apps, support, and legal pages. Returns each match's title, description, path, and URL. Leave the query empty to list every page.",
+                    "Search tryoutlayr.com, the site for Outlayr, a mobile expense tracker and budget app. Covers the product overview, how-to guides, comparisons with other budget apps, free money calculators, support, and legal pages. Returns each match's title, description, path, and URL. Leave the query empty to list every page.",
                 execute: ({ query = "" }: { query?: string }) => searchPages(pages, query).map(located),
                 inputSchema: {
                     properties: {

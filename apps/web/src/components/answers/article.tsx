@@ -37,6 +37,23 @@ export function Figures({ text }: { text: string }) {
     );
 }
 
+export function Questions({
+    items,
+}: {
+    items: readonly { answer: ReactNode; question: ReactNode & { value: string } }[];
+}) {
+    return (
+        <div className="border-border divide-border mt-8 max-w-2xl divide-y border-y">
+            {items.map((item) => (
+                <div className="py-6" data-reveal key={item.question.value}>
+                    <h3 className="text-lg font-semibold">{item.question}</h3>
+                    <p className="text-muted mt-2">{item.answer}</p>
+                </div>
+            ))}
+        </div>
+    );
+}
+
 export function nextAfter<T extends object>(record: T, slug: string, count: number) {
     const slugs = Object.keys(record);
     const at = slugs.indexOf(slug);
@@ -102,7 +119,7 @@ export function Article({
     aside?: ReactNode;
     checked?: Date;
     children?: ReactNode;
-    hub: "/compare" | "/guides";
+    hub: "/compare" | "/guides" | "/tools";
     lead: ReactNode;
     related: readonly AnswerItem[];
     sections: readonly ArticleSection[];

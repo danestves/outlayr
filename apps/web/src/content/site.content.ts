@@ -72,6 +72,7 @@ const site = {
             support: t({ en: "Support", es: "Soporte" }),
             supportDetail: t({ en: "Common questions", es: "Preguntas frecuentes" }),
             terms: t({ en: "Terms", es: "Términos" }),
+            tools: t({ en: "Calculators", es: "Calculadoras" }),
             trademarks: t({
                 en: "App Store is a service mark of Apple Inc. Google Play and the Google Play logo are trademarks of Google LLC.",
                 es: "App Store es una marca de servicio de Apple Inc. Google Play y el logotipo de Google Play son marcas comerciales de Google LLC.",

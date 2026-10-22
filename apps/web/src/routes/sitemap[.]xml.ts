@@ -6,6 +6,7 @@ import { LEGAL_DAYS, rivalChecked } from "@/lib/site";
 
 function pages(): [path: string, updated: Date | null][] {
     const { compare, guides } = getIntlayer("answers");
+    const { pages: tools } = getIntlayer("tools");
     const rivals = Object.keys(compare).map((slug): [string, Date] => [`/compare/${slug}`, rivalChecked(slug)]);
     return [
         ["/", null],
@@ -16,7 +17,9 @@ function pages(): [path: string, updated: Date | null][] {
         ["/delete-account", LEGAL_DAYS["delete-account"]],
         ["/guides", null],
         ["/compare", new Date(Math.max(...rivals.map(([, checked]) => checked.getTime())))],
+        ["/tools", null],
         ...Object.keys(guides).map((slug): [string, null] => [`/guides/${slug}`, null]),
+        ...Object.keys(tools).map((slug): [string, null] => [`/tools/${slug}`, null]),
         ...rivals,
     ];
 }

@@ -507,6 +507,9 @@ importers:
       '@mdream/js':
         specifier: ^2.0.0
         version: 2.0.0
+      '@outlayr/money':
+        specifier: workspace:*
+        version: link:../../packages/money
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(@voidzero-dev/vite-plus-core@1.0.0(@types/node@26.1.2)(esbuild@0.25.12)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))

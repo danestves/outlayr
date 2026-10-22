@@ -12,7 +12,7 @@ export interface AnswerItem {
     name: ReactNode;
     slug: string;
     text: ReactNode;
-    to: "/{-$locale}/compare/$slug" | "/{-$locale}/guides/$slug";
+    to: "/{-$locale}/compare/$slug" | "/{-$locale}/guides/$slug" | "/{-$locale}/tools/$slug";
 }
 
 const SPANS = ["lg:col-span-7", "lg:col-span-5", "lg:col-span-5", "lg:col-span-7"] as const;

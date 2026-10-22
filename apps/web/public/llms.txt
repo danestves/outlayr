@@ -78,6 +78,15 @@
 - [Wallet by BudgetBakers alternative](https://tryoutlayr.com/compare/wallet): Outlayr and Wallet on price, how entries are added, currencies, and platforms
 - [Rocket Money alternative](https://tryoutlayr.com/compare/rocket-money): Outlayr and Rocket Money on price, how entries are added, subscriptions, where each is available, and platforms. Outlayr does not cancel subscriptions for you
 
+## Calculators
+
+- [All calculators](https://tryoutlayr.com/tools): free money calculators that run in the browser; nothing typed is stored or sent
+- [50/30/20 budget calculator](https://tryoutlayr.com/tools/50-30-20-budget-calculator): splits take home pay into needs, wants, and savings by 50/30/20, 60/20/20, or 70/20/10, from weekly, two weekly, monthly, or yearly pay
+- [Subscription cost calculator](https://tryoutlayr.com/tools/subscription-cost-calculator): what a list of subscriptions costs a month and a year, counting a weekly charge 52 times a year
+- [Installment calculator](https://tryoutlayr.com/tools/installment-calculator): the total, the extra over the cash price, and the effective annual rate of an installment or buy now, pay later plan
+- [Split expenses calculator](https://tryoutlayr.com/tools/split-expenses-calculator): splits what a group paid equally and lists the fewest payments that settle it
+- The site's MCP server at https://tryoutlayr.com/mcp runs the same four calculators without signing in, as the tools budget_split, subscription_cost, installment_cost, and split_expenses
+
 ## Pages in Spanish
 
 - [Inicio](https://tryoutlayr.com/es): the home page in Latin American Spanish
@@ -85,7 +94,7 @@
 - [Política de privacidad](https://tryoutlayr.com/es/privacy): the Privacy Policy in Spanish
 - [Términos de uso](https://tryoutlayr.com/es/terms): the Terms of Use in Spanish
 - [Elimina tu cuenta](https://tryoutlayr.com/es/delete-account): account deletion in Spanish
-- Every guide and comparison has a Spanish version under https://tryoutlayr.com/es, for example https://tryoutlayr.com/es/guides/receipt-scanner
+- Every guide, comparison, and calculator has a Spanish version under https://tryoutlayr.com/es, for example https://tryoutlayr.com/es/guides/receipt-scanner
 
 ## Contact
 

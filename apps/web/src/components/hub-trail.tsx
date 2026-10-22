@@ -3,7 +3,9 @@ import { useIntlayer } from "react-intlayer";
 import { Icon } from "./icon";
 import { LocalizedLink } from "./localized-link";
 
-export function HubTrail({ hub }: { hub: "/compare" | "/guides" }) {
+const HUBS = { "/compare": "compare", "/guides": "guides", "/tools": "tools" } as const;
+
+export function HubTrail({ hub }: { hub: keyof typeof HUBS }) {
     const { footer } = useIntlayer("site");
     return (
         <LocalizedLink
@@ -11,7 +13,7 @@ export function HubTrail({ hub }: { hub: "/compare" | "/guides" }) {
             to={hub}
         >
             <Icon className="fluid group-hover:-translate-x-0.5" name="arrow-left" />
-            {hub === "/guides" ? footer.guides : footer.compare}
+            {footer[HUBS[hub]]}
         </LocalizedLink>
     );
 }

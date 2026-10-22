@@ -35,7 +35,7 @@ export function ldJson(data: Json) {
 
 const TRAILING_PERIOD = /\.$/u;
 
-export function answerTrail(locale: Locale, hub: "compare" | "guides", slug: string, title: string) {
+export function answerTrail(locale: Locale, hub: "compare" | "guides" | "tools", slug: string, title: string) {
     const crumbs = [
         { name: "Outlayr", url: pageUrl("/", locale) },
         { name: getIntlayer("site", locale).footer[hub], url: pageUrl(`/${hub}`, locale) },

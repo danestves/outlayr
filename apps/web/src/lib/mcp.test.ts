@@ -23,6 +23,28 @@ describe("handleMcp", () => {
         expect(resource.result.contents[0].text).toBe(tool.result.content[0].text);
     });
 
+    it("runs a calculator in currency units and returns bad arguments as a tool error", async () => {
+        const call = async (args: unknown) => {
+            const body = {
+                id: 1,
+                jsonrpc: "2.0",
+                method: "tools/call",
+                params: { arguments: args, name: "split_expenses" },
+            };
+            return (await post(body)).json();
+        };
+        const people = [
+            { name: "Ana", paid: 90 },
+            { name: "Luis", paid: 0 },
+            { name: "Marta", paid: 30.5 },
+        ];
+        expect((await call({ people })).result.structuredContent.transfers).toEqual([
+            { amount: 40.17, from: "Luis", to: "Ana" },
+            { amount: 9.66, from: "Marta", to: "Ana" },
+        ]);
+        expect((await call({ people: [] })).result.isError).toBe(true);
+    });
+
     it("rejects unknown tools, resources and methods", async () => {
         expect((await rpc("tools/call", { name: "nope" })).error.code).toBe(-32_602);
         expect((await rpc("resources/read", { uri: "nope" })).error.code).toBe(-32_002);

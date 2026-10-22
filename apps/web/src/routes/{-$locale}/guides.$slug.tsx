@@ -3,7 +3,7 @@ import { getIntlayer, getPrefix } from "intlayer";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
-import { Article, DELAYS, Figures, nextAfter } from "@/components/answers/article";
+import { Article, DELAYS, Figures, Questions, nextAfter } from "@/components/answers/article";
 import type { ArticleSection } from "@/components/answers/article";
 import { SayPanel, ScanPanel } from "@/components/demo/capture-panels";
 import { Icon } from "@/components/icon";
@@ -208,16 +208,7 @@ function Guide() {
         });
     }
     sections.push({
-        body: (
-            <div className="border-border divide-border mt-8 max-w-2xl divide-y border-y">
-                {guide.faq.map((item) => (
-                    <div className="py-6" data-reveal key={item.question.value}>
-                        <h3 className="text-lg font-semibold">{item.question}</h3>
-                        <p className="text-muted mt-2">{item.answer}</p>
-                    </div>
-                ))}
-            </div>
-        ),
+        body: <Questions items={guide.faq} />,
         id: "questions",
         title: labels.questions,
     });

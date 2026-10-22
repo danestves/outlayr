@@ -3,7 +3,7 @@ import { getIntlayer } from "intlayer";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import type { AnswerItem } from "@/components/answer-hub";
-import { Article, DELAYS, Figures, nextAfter } from "@/components/answers/article";
+import { Article, DELAYS, Figures, Questions, nextAfter } from "@/components/answers/article";
 import { Icon } from "@/components/icon";
 import type { IconName } from "@/components/icon";
 import { hasKey } from "@/lib/has-key";
@@ -192,16 +192,7 @@ function Compare() {
                     title: labels.fit,
                 },
                 {
-                    body: (
-                        <div className="border-border divide-border mt-8 max-w-2xl divide-y border-y">
-                            {page.faq.map((item) => (
-                                <div className="py-6" data-reveal key={item.question.value}>
-                                    <h3 className="text-lg font-semibold">{item.question}</h3>
-                                    <p className="text-muted mt-2">{item.answer}</p>
-                                </div>
-                            ))}
-                        </div>
-                    ),
+                    body: <Questions items={page.faq} />,
                     id: "questions",
                     title: labels.questions,
                 },

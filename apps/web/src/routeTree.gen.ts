@@ -29,6 +29,8 @@ import { Route as Char123LocaleChar125CompareIndexRouteImport } from './routes/{
 import { Route as Char123LocaleChar125CompareSlugRouteImport } from './routes/{-$locale}/compare.$slug'
 import { Route as Char123LocaleChar125GuidesIndexRouteImport } from './routes/{-$locale}/guides.index'
 import { Route as Char123LocaleChar125GuidesSlugRouteImport } from './routes/{-$locale}/guides.$slug'
+import { Route as Char123LocaleChar125ToolsIndexRouteImport } from './routes/{-$locale}/tools.index'
+import { Route as Char123LocaleChar125ToolsSlugRouteImport } from './routes/{-$locale}/tools.$slug'
 
 const A2aRoute = A2aRouteImport.update({
   id: '/a2a',
@@ -145,6 +147,18 @@ const Char123LocaleChar125GuidesSlugRoute =
     path: '/guides/$slug',
     getParentRoute: () => Char123LocaleChar125RouteRoute,
   } as any)
+const Char123LocaleChar125ToolsIndexRoute =
+  Char123LocaleChar125ToolsIndexRouteImport.update({
+    id: '/tools/',
+    path: '/tools/',
+    getParentRoute: () => Char123LocaleChar125RouteRoute,
+  } as any)
+const Char123LocaleChar125ToolsSlugRoute =
+  Char123LocaleChar125ToolsSlugRouteImport.update({
+    id: '/tools/$slug',
+    path: '/tools/$slug',
+    getParentRoute: () => Char123LocaleChar125RouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/{-$locale}': typeof Char123LocaleChar125RouteRouteWithChildren
@@ -165,8 +179,10 @@ export interface FileRoutesByFullPath {
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
   '/{-$locale}/compare/$slug': typeof Char123LocaleChar125CompareSlugRoute
   '/{-$locale}/guides/$slug': typeof Char123LocaleChar125GuidesSlugRoute
+  '/{-$locale}/tools/$slug': typeof Char123LocaleChar125ToolsSlugRoute
   '/{-$locale}/compare/': typeof Char123LocaleChar125CompareIndexRoute
   '/{-$locale}/guides/': typeof Char123LocaleChar125GuidesIndexRoute
+  '/{-$locale}/tools/': typeof Char123LocaleChar125ToolsIndexRoute
 }
 export interface FileRoutesByTo {
   '/a2a': typeof A2aRoute
@@ -186,8 +202,10 @@ export interface FileRoutesByTo {
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
   '/{-$locale}/compare/$slug': typeof Char123LocaleChar125CompareSlugRoute
   '/{-$locale}/guides/$slug': typeof Char123LocaleChar125GuidesSlugRoute
+  '/{-$locale}/tools/$slug': typeof Char123LocaleChar125ToolsSlugRoute
   '/{-$locale}/compare': typeof Char123LocaleChar125CompareIndexRoute
   '/{-$locale}/guides': typeof Char123LocaleChar125GuidesIndexRoute
+  '/{-$locale}/tools': typeof Char123LocaleChar125ToolsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -209,8 +227,10 @@ export interface FileRoutesById {
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
   '/{-$locale}/compare/$slug': typeof Char123LocaleChar125CompareSlugRoute
   '/{-$locale}/guides/$slug': typeof Char123LocaleChar125GuidesSlugRoute
+  '/{-$locale}/tools/$slug': typeof Char123LocaleChar125ToolsSlugRoute
   '/{-$locale}/compare/': typeof Char123LocaleChar125CompareIndexRoute
   '/{-$locale}/guides/': typeof Char123LocaleChar125GuidesIndexRoute
+  '/{-$locale}/tools/': typeof Char123LocaleChar125ToolsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -233,8 +253,10 @@ export interface FileRouteTypes {
     | '/.well-known/mcp/server-card.json'
     | '/{-$locale}/compare/$slug'
     | '/{-$locale}/guides/$slug'
+    | '/{-$locale}/tools/$slug'
     | '/{-$locale}/compare/'
     | '/{-$locale}/guides/'
+    | '/{-$locale}/tools/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/a2a'
@@ -254,8 +276,10 @@ export interface FileRouteTypes {
     | '/.well-known/mcp/server-card.json'
     | '/{-$locale}/compare/$slug'
     | '/{-$locale}/guides/$slug'
+    | '/{-$locale}/tools/$slug'
     | '/{-$locale}/compare'
     | '/{-$locale}/guides'
+    | '/{-$locale}/tools'
   id:
     | '__root__'
     | '/{-$locale}'
@@ -276,8 +300,10 @@ export interface FileRouteTypes {
     | '/.well-known/mcp/server-card.json'
     | '/{-$locale}/compare/$slug'
     | '/{-$locale}/guides/$slug'
+    | '/{-$locale}/tools/$slug'
     | '/{-$locale}/compare/'
     | '/{-$locale}/guides/'
+    | '/{-$locale}/tools/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -434,6 +460,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char123LocaleChar125GuidesSlugRouteImport
       parentRoute: typeof Char123LocaleChar125RouteRoute
     }
+    '/{-$locale}/tools/': {
+      id: '/{-$locale}/tools/'
+      path: '/tools'
+      fullPath: '/{-$locale}/tools/'
+      preLoaderRoute: typeof Char123LocaleChar125ToolsIndexRouteImport
+      parentRoute: typeof Char123LocaleChar125RouteRoute
+    }
+    '/{-$locale}/tools/$slug': {
+      id: '/{-$locale}/tools/$slug'
+      path: '/tools/$slug'
+      fullPath: '/{-$locale}/tools/$slug'
+      preLoaderRoute: typeof Char123LocaleChar125ToolsSlugRouteImport
+      parentRoute: typeof Char123LocaleChar125RouteRoute
+    }
   }
 }
 
@@ -447,8 +487,10 @@ interface Char123LocaleChar125RouteRouteChildren {
   Char123LocaleChar125IndexRoute: typeof Char123LocaleChar125IndexRoute
   Char123LocaleChar125CompareSlugRoute: typeof Char123LocaleChar125CompareSlugRoute
   Char123LocaleChar125GuidesSlugRoute: typeof Char123LocaleChar125GuidesSlugRoute
+  Char123LocaleChar125ToolsSlugRoute: typeof Char123LocaleChar125ToolsSlugRoute
   Char123LocaleChar125CompareIndexRoute: typeof Char123LocaleChar125CompareIndexRoute
   Char123LocaleChar125GuidesIndexRoute: typeof Char123LocaleChar125GuidesIndexRoute
+  Char123LocaleChar125ToolsIndexRoute: typeof Char123LocaleChar125ToolsIndexRoute
 }
 
 const Char123LocaleChar125RouteRouteChildren: Char123LocaleChar125RouteRouteChildren =
@@ -463,9 +505,11 @@ const Char123LocaleChar125RouteRouteChildren: Char123LocaleChar125RouteRouteChil
     Char123LocaleChar125IndexRoute: Char123LocaleChar125IndexRoute,
     Char123LocaleChar125CompareSlugRoute: Char123LocaleChar125CompareSlugRoute,
     Char123LocaleChar125GuidesSlugRoute: Char123LocaleChar125GuidesSlugRoute,
+    Char123LocaleChar125ToolsSlugRoute: Char123LocaleChar125ToolsSlugRoute,
     Char123LocaleChar125CompareIndexRoute:
       Char123LocaleChar125CompareIndexRoute,
     Char123LocaleChar125GuidesIndexRoute: Char123LocaleChar125GuidesIndexRoute,
+    Char123LocaleChar125ToolsIndexRoute: Char123LocaleChar125ToolsIndexRoute,
   }
 
 const Char123LocaleChar125RouteRouteWithChildren =

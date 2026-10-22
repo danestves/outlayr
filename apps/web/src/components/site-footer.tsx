@@ -64,6 +64,7 @@ export function SiteFooter() {
                         <Column title={footer.resources}>
                             <Item to="/guides">{footer.guides}</Item>
                             <Item to="/compare">{footer.compare}</Item>
+                            <Item to="/tools">{footer.tools}</Item>
                             <Item to="/support">{footer.support}</Item>
                             <li>
                                 <a className={LINK} href={SOURCE_URL}>

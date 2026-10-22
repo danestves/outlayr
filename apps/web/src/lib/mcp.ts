@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import llms from "../../public/llms.txt?raw";
+import { installmentCost, perYear, settleUp, splitBudget, subscriptionCost } from "./calculators";
 import { LEDGER_MCP_ORIGIN, SITE_URL } from "./site";
 
 const PROTOCOL_VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26"] as const;
@@ -18,6 +19,145 @@ const ABOUT_TOOL = {
     title: "About Outlayr",
 };
 
+type Outcome = { result: object } | { error: { code: number; message: string } };
+
+const toCents = (amount: number) => Math.round(amount * 100);
+const fromCents = (cents: number) => cents / 100;
+const Amount = z.number().min(0).max(1e12);
+const UNITS = "Amounts are in currency units and come back rounded to cents.";
+
+function calculator<S extends z.ZodType>(
+    tool: { description: string; name: string; title: string },
+    input: S,
+    run: (args: z.output<S>) => object
+) {
+    return {
+        call: (params: JsonRpcRequest["params"]): Outcome => {
+            const parsed = input.safeParse(params.arguments ?? {});
+            if (!parsed.success) {
+                return { result: { content: [{ text: z.prettifyError(parsed.error), type: "text" }], isError: true } };
+            }
+            const output = run(parsed.data);
+            return { result: { content: [{ text: JSON.stringify(output), type: "text" }], structuredContent: output } };
+        },
+        tool: {
+            ...tool,
+            annotations: { openWorldHint: false, readOnlyHint: true },
+            inputSchema: z.toJSONSchema(input, { io: "input" }),
+        },
+    };
+}
+
+const CALCULATORS = [
+    calculator(
+        {
+            description: `Splits take home pay by the 50/30/20 rule into needs, wants, and savings, or by 60/20/20 or 70/20/10. Weekly, two weekly, and yearly pay become a month at 52 weeks a year. ${UNITS}`,
+            name: "budget_split",
+            title: "50/30/20 budget calculator",
+        },
+        z.object({
+            every: z.enum(["week", "twoWeeks", "month", "year"]).default("month").describe("How often the pay arrives"),
+            income: Amount.describe("Take home pay, after taxes"),
+            split: z.enum(["50-30-20", "60-20-20", "70-20-10"]).default("50-30-20"),
+        }),
+        ({ every, income, split }) => {
+            const yearly = toCents(income) * perYear(every);
+            const parts = (total: number) => {
+                const [needs = 0, wants = 0, savings = 0] = splitBudget(total, split).map(fromCents);
+                return { needs, savings, wants };
+            };
+            return { monthly: parts(Math.round(yearly / 12)), yearly: parts(yearly) };
+        }
+    ),
+    calculator(
+        {
+            description: `What a list of subscriptions costs a month and a year. A weekly charge counts 52 times a year, a monthly one 12, a quarterly one 4. ${UNITS}`,
+            name: "subscription_cost",
+            title: "Subscription cost calculator",
+        },
+        z.object({
+            subscriptions: z
+                .array(
+                    z.object({
+                        every: z.enum(["week", "month", "quarter", "year"]).default("month"),
+                        name: z.string().max(100).optional(),
+                        price: Amount,
+                    })
+                )
+                .min(1)
+                .max(100),
+        }),
+        ({ subscriptions }) => {
+            const cost = subscriptionCost(
+                subscriptions.map((item) => ({ amount: toCents(item.price), cadence: item.every }))
+            );
+            return {
+                monthly: fromCents(cost.monthly),
+                subscriptions: subscriptions.map((item, index) => ({
+                    name: item.name,
+                    yearly: fromCents(cost.yearly[index] ?? 0),
+                })),
+                yearly: fromCents(cost.total),
+            };
+        }
+    ),
+    calculator(
+        {
+            description: `The real cost of an installment or buy now, pay later plan: the total paid, the extra over the cash price, and the effective annual rate. Anything paid at checkout goes in paidToday; the payments start one period later. Late fees are not included. ${UNITS}`,
+            name: "installment_cost",
+            title: "Installment calculator",
+        },
+        z.object({
+            cashPrice: Amount.describe("What the item costs paid in full today"),
+            eachPayment: Amount,
+            every: z.enum(["week", "twoWeeks", "month"]).default("month"),
+            paidToday: Amount.default(0),
+            payments: z.int().min(1).max(600).describe("Number of payments after today"),
+        }),
+        ({ cashPrice, eachPayment, every, paidToday, payments }) => {
+            const cost = installmentCost({
+                cadence: every,
+                count: payments,
+                down: toCents(paidToday),
+                payment: toCents(eachPayment),
+                price: toCents(cashPrice),
+            });
+            return {
+                effectiveAnnualRatePercent:
+                    cost.annualRate === null ? null : Math.round(cost.annualRate * 10_000) / 100,
+                extraOverCash: fromCents(cost.extra),
+                total: fromCents(cost.total),
+            };
+        }
+    ),
+    calculator(
+        {
+            description: `Splits what a group paid equally and lists the fewest payments that settle it. ${UNITS}`,
+            name: "split_expenses",
+            title: "Split expenses calculator",
+        },
+        z.object({
+            people: z
+                .array(z.object({ name: z.string().min(1).max(100), paid: Amount }))
+                .min(2)
+                .max(100),
+        }),
+        ({ people }) => {
+            const { share, total, transfers } = settleUp(people.map((person) => toCents(person.paid)));
+            const nameOf = (index: number) => people[index]?.name ?? "";
+            return {
+                shares: people.map((person, index) => ({ name: person.name, share: fromCents(share[index] ?? 0) })),
+                total: fromCents(total),
+                transfers: transfers.map((transfer) => ({
+                    amount: fromCents(transfer.amount),
+                    from: nameOf(transfer.from),
+                    to: nameOf(transfer.to),
+                })),
+            };
+        }
+    ),
+];
+
 const LLMS_RESOURCE = {
     description: "Outlayr's features, plans, privacy, and pages, written for language models.",
     mimeType: "text/markdown",
@@ -34,7 +174,8 @@ export const SERVER_CARD = {
     $schema: CARD_SCHEMA,
     ...SERVER_INFO,
     capabilities: CAPABILITIES,
-    description: "Read-only facts about the Outlayr expense tracker: features, plans, privacy, and guides.",
+    description:
+        "Read-only facts about the Outlayr expense tracker: features, plans, privacy, and guides, plus free money calculators.",
     icons: ICONS,
     remotes: [{ supportedProtocolVersions: PROTOCOL_VERSIONS, type: "streamable-http", url: `${SITE_URL}/mcp` }],
     serverInfo: SERVER_INFO,
@@ -57,11 +198,13 @@ const JsonRpcMessage = z.object({
     id: z.union([z.string(), z.number()]).optional(),
     jsonrpc: z.literal("2.0"),
     method: z.string(),
-    params: z.object({ name: z.string(), protocolVersion: z.string(), uri: z.string() }).partial().default({}),
+    params: z
+        .object({ arguments: z.unknown(), name: z.string(), protocolVersion: z.string(), uri: z.string() })
+        .partial()
+        .default({}),
 });
 
 type JsonRpcRequest = z.infer<typeof JsonRpcMessage>;
-type Outcome = { result: object } | { error: { code: number; message: string } };
 
 function reply(id: JsonRpcRequest["id"] | null, outcome: Outcome, status = 200): Response {
     return Response.json({ id, jsonrpc: "2.0", ...outcome }, { status });
@@ -78,12 +221,14 @@ function dispatch({ method, params }: JsonRpcRequest): Outcome {
             return { result: {} };
         }
         case "tools/list": {
-            return { result: { tools: [ABOUT_TOOL] } };
+            return { result: { tools: [ABOUT_TOOL, ...CALCULATORS.map(({ tool }) => tool)] } };
         }
         case "tools/call": {
-            return params.name === ABOUT_TOOL.name
-                ? { result: { content: [{ text: llms, type: "text" }] } }
-                : { error: { code: -32_602, message: `Unknown tool: ${params.name}` } };
+            if (params.name === ABOUT_TOOL.name) {
+                return { result: { content: [{ text: llms, type: "text" }] } };
+            }
+            const found = CALCULATORS.find(({ tool }) => tool.name === params.name);
+            return found ? found.call(params) : { error: { code: -32_602, message: `Unknown tool: ${params.name}` } };
         }
         case "resources/list": {
             return { result: { resources: [LLMS_RESOURCE] } };
