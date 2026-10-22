@@ -12,8 +12,8 @@ import { Closing, Questions, Tagline } from "@/components/home/questions";
 import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n";
 import { useMotionScan } from "@/lib/motion";
-import { faqPage, ldJson, pageMeta } from "@/lib/seo";
-import { COMPANY, PLAY_STORE_URL, SITE_URL } from "@/lib/site";
+import { faqPage, ldJson, mobileApp, pageMeta } from "@/lib/seo";
+import { SITE_URL } from "@/lib/site";
 
 const AGENT_LINKS = [
     '</.well-known/api-catalog>; rel="api-catalog"',
@@ -26,19 +26,11 @@ function appGraph(locale: Locale) {
     const { extras, meta } = getIntlayer("home", locale);
     return {
         "@context": "https://schema.org",
-        "@id": `${SITE_URL}/#app`,
-        "@type": "MobileApplication",
-        applicationCategory: "FinanceApplication",
-        description: meta.description,
-        downloadUrl: [PLAY_STORE_URL],
-        featureList: extras.map((extra) => `${extra.label}: ${extra.text}`),
-        image: `${SITE_URL}${LANGUAGES[locale].image}`,
-        inLanguage: Object.values(LANGUAGES).map((language) => language.lang),
-        name: "Outlayr",
-        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-        operatingSystem: "Android",
-        publisher: { "@id": `${SITE_URL}/#organization`, "@type": "Organization", name: COMPANY },
-        url: SITE_URL,
+        ...mobileApp(meta.description, {
+            featureList: extras.map((extra) => `${extra.label}: ${extra.text}`),
+            image: `${SITE_URL}${LANGUAGES[locale].image}`,
+            url: SITE_URL,
+        }),
     };
 }
 

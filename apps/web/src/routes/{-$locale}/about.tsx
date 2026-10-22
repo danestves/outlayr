@@ -6,9 +6,9 @@ import { useIntlayer } from "react-intlayer";
 import { Icon } from "@/components/icon";
 import { LocalizedLink } from "@/components/localized-link";
 import { Page } from "@/components/page";
-import { LANGUAGES, localeFromParam } from "@/lib/i18n";
-import { ORGANIZATION_ID, ldJson, pageMeta, webPage } from "@/lib/seo";
-import { PLAY_STORE_URL, SITE_URL, SUPPORT_EMAIL } from "@/lib/site";
+import { localeFromParam } from "@/lib/i18n";
+import { ORGANIZATION_ID, ldJson, mobileApp, pageMeta, webPage } from "@/lib/seo";
+import { SUPPORT_EMAIL } from "@/lib/site";
 
 const SECTION = "py-24";
 const HEADING = "text-4xl font-semibold tracking-tight md:text-5xl";
@@ -49,18 +49,7 @@ export const Route = createFileRoute("/{-$locale}/about")({
                     webPage(locale, "/about", {
                         "@type": "AboutPage",
                         about: { "@id": ORGANIZATION_ID },
-                        mainEntity: {
-                            "@id": `${SITE_URL}/#app`,
-                            "@type": "MobileApplication",
-                            applicationCategory: "FinanceApplication",
-                            description: entity,
-                            downloadUrl: [PLAY_STORE_URL],
-                            inLanguage: Object.values(LANGUAGES).map((language) => language.lang),
-                            name: "Outlayr",
-                            offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-                            operatingSystem: "Android",
-                            publisher: { "@id": ORGANIZATION_ID },
-                        },
+                        mainEntity: mobileApp(entity),
                         name: meta.title,
                     })
                 ),

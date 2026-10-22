@@ -6,6 +6,7 @@ export const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com
 export const SUPPORT_EMAIL = "support@tryoutlayr.com";
 export const COMPANY = "danestves LLC";
 export const SOURCE_URL = "https://github.com/danestves/outlayr";
+export const X_URL = "https://x.com/tryoutlayr";
 
 export const RIVALS_CHECKED = new Date(Date.UTC(2026, 9, 7));
 

@@ -16,7 +16,7 @@ import { useAgentTools } from "@/lib/agent-tools";
 import { startAnalytics } from "@/lib/analytics";
 import { LANGUAGES, localeFromParam, pageUrl } from "@/lib/i18n";
 import { useMotion } from "@/lib/motion";
-import { ORGANIZATION_ID, WEBSITE_ID, ldJson } from "@/lib/seo";
+import { APP_ID, ORGANIZATION_ID, WEBSITE_ID, ldJson } from "@/lib/seo";
 import { COMPANY, SITE_URL, SOURCE_URL, SUPPORT_EMAIL } from "@/lib/site";
 import { THEME_SCRIPT } from "@/lib/theme";
 
@@ -56,11 +56,13 @@ const SITE_GRAPH = {
             "@id": `${SITE_URL}/#source`,
             "@type": "SoftwareSourceCode",
             codeRepository: SOURCE_URL,
+            description:
+                "The source code of Outlayr: the Expo and React Native app for iPhone and Android, under GPL-3.0, and its Convex server, under AGPL-3.0.",
             license: ["https://www.gnu.org/licenses/gpl-3.0.html", "https://www.gnu.org/licenses/agpl-3.0.html"],
             name: "Outlayr",
             programmingLanguage: "TypeScript",
             publisher: { "@id": ORGANIZATION_ID },
-            targetProduct: { "@id": `${SITE_URL}/#app` },
+            targetProduct: { "@id": APP_ID },
         },
     ],
 };
@@ -130,6 +132,7 @@ export const Route = createRootRoute({
                 { content: "630", property: "og:image:height" },
                 { content: `Outlayr. ${hero.title}`, property: "og:image:alt" },
                 { content: "summary_large_image", name: "twitter:card" },
+                { content: "@tryoutlayr", name: "twitter:site" },
                 { content: "app-id=6801652978", name: "apple-itunes-app" },
             ],
             scripts: [{ children: THEME_SCRIPT }, ldJson(SITE_GRAPH)],

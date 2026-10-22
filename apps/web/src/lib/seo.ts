@@ -3,7 +3,7 @@ import type { JSX } from "react";
 
 import { LANGUAGES, pageUrl } from "./i18n";
 import type { Locale } from "./i18n";
-import { SITE_URL } from "./site";
+import { PLAY_STORE_URL, SITE_URL, X_URL } from "./site";
 
 type Json = string | number | boolean | null | readonly Json[] | { readonly [key: string]: Json | undefined };
 
@@ -66,8 +66,26 @@ export function itemList(items: readonly { name: string; url: string }[]) {
     };
 }
 
+export const APP_ID = `${SITE_URL}/#app`;
 export const ORGANIZATION_ID = `${SITE_URL}/#organization`;
 export const WEBSITE_ID = `${SITE_URL}/#website`;
+
+export function mobileApp(description: string, fields: { readonly [key: string]: Json } = {}) {
+    return {
+        "@id": APP_ID,
+        "@type": "MobileApplication",
+        applicationCategory: "FinanceApplication",
+        description,
+        downloadUrl: [PLAY_STORE_URL],
+        inLanguage: Object.values(LANGUAGES).map((language) => language.lang),
+        name: "Outlayr",
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        operatingSystem: "Android",
+        publisher: { "@id": ORGANIZATION_ID },
+        sameAs: [PLAY_STORE_URL, X_URL],
+        ...fields,
+    };
+}
 
 export function webPage(locale: Locale, path: string, fields: { readonly [key: string]: Json }) {
     return {
