@@ -68,15 +68,15 @@
 ## Comparisons
 
 - [All comparisons](https://tryoutlayr.com/compare): every comparison in one list, with a one-line summary of each app
-- [YNAB alternative](https://tryoutlayr.com/compare/ynab): Outlayr and YNAB on price, how entries are added, budgets, currencies, and platforms
-- [Monarch alternative](https://tryoutlayr.com/compare/monarch): Outlayr and Monarch on price, how entries are added, what each tracks, and platforms
-- [Copilot alternative](https://tryoutlayr.com/compare/copilot): Outlayr and Copilot on price, how entries are added, currencies, and platforms
-- [EveryDollar alternative](https://tryoutlayr.com/compare/everydollar): Outlayr and EveryDollar on price, how entries are added, currencies, where each is available, and platforms
-- [Fintonic alternative](https://tryoutlayr.com/compare/fintonic): Outlayr and Fintonic on price, how entries are added, what each tracks, where each is available, and platforms. In Spanish at https://tryoutlayr.com/es/compare/fintonic
-- [PocketGuard alternative](https://tryoutlayr.com/compare/pocketguard): Outlayr and PocketGuard on price, how entries are added, subscriptions, and platforms
-- [Spendee alternative](https://tryoutlayr.com/compare/spendee): Outlayr and Spendee on price, how entries are added, currencies, and platforms
-- [Wallet by BudgetBakers alternative](https://tryoutlayr.com/compare/wallet): Outlayr and Wallet on price, how entries are added, currencies, and platforms
-- [Rocket Money alternative](https://tryoutlayr.com/compare/rocket-money): Outlayr and Rocket Money on price, how entries are added, subscriptions, where each is available, and platforms. Outlayr does not cancel subscriptions for you
+- [YNAB alternative](https://tryoutlayr.com/compare/ynab): Outlayr and YNAB on price, how entries are added, budgets, currencies, platforms, and license
+- [Monarch alternative](https://tryoutlayr.com/compare/monarch): Outlayr and Monarch on price, how entries are added, what each tracks, platforms, and license
+- [Copilot alternative](https://tryoutlayr.com/compare/copilot): Outlayr and Copilot on price, how entries are added, currencies, platforms, and license
+- [EveryDollar alternative](https://tryoutlayr.com/compare/everydollar): Outlayr and EveryDollar on price, how entries are added, currencies, where each is available, platforms, and license
+- [Fintonic alternative](https://tryoutlayr.com/compare/fintonic): Outlayr and Fintonic on price, how entries are added, what each tracks, where each is available, platforms, and license. In Spanish at https://tryoutlayr.com/es/compare/fintonic
+- [PocketGuard alternative](https://tryoutlayr.com/compare/pocketguard): Outlayr and PocketGuard on price, how entries are added, subscriptions, platforms, and license
+- [Spendee alternative](https://tryoutlayr.com/compare/spendee): Outlayr and Spendee on price, how entries are added, currencies, platforms, and license
+- [Wallet by BudgetBakers alternative](https://tryoutlayr.com/compare/wallet): Outlayr and Wallet on price, how entries are added, currencies, platforms, and license
+- [Rocket Money alternative](https://tryoutlayr.com/compare/rocket-money): Outlayr and Rocket Money on price, how entries are added, subscriptions, where each is available, platforms, and license. Outlayr does not cancel subscriptions for you
 
 ## Calculators
 

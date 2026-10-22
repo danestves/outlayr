@@ -10,8 +10,8 @@ import {
 } from "./shared";
 
 const OUTLAYR_LEAD = {
-    en: "Outlayr is a free expense tracker you fill in by sentence, voice, or receipt.",
-    es: "Outlayr es una app gratis para controlar tus gastos que llenas con una oración, con tu voz o con un recibo.",
+    en: "Outlayr is an open source expense tracker you fill in by sentence, voice, or receipt, free to start.",
+    es: "Outlayr es una app de código abierto para controlar tus gastos que llenas con una oración, con tu voz o con un recibo, gratis para empezar.",
 } as const;
 
 const RIVALS = {
@@ -87,6 +87,12 @@ const LABELS = {
     platforms: t({ en: "Runs on", es: "Funciona en" }),
     price: t({ en: "Price", es: "Precio" }),
     subscriptions: t({ en: "Subscriptions", es: "Suscripciones" }),
+};
+
+const LICENSE_ROW = {
+    label: LABELS.license,
+    outlayr: t({ en: "Open source, GPL-3.0", es: "Código abierto, GPL-3.0" }),
+    rival: t({ en: "Closed source", es: "Código cerrado" }),
 };
 
 const COST_FAQ = {
@@ -195,6 +201,7 @@ const answers = {
                         outlayr: OUTLAYR.platforms,
                         rival: t({ en: "iPhone, iPad, Mac, web", es: "iPhone, iPad, Mac, web" }),
                     },
+                    LICENSE_ROW,
                 ],
                 site: "copilot.money",
                 source: "https://www.copilot.money/faq",
@@ -288,6 +295,7 @@ const answers = {
                         outlayr: OUTLAYR.platforms,
                         rival: t({ en: "Computer, phone, or tablet", es: "Computadora, celular o tableta" }),
                     },
+                    LICENSE_ROW,
                 ],
                 site: "ramseysolutions.com",
                 source: "https://www.ramseysolutions.com/money/everydollar",
@@ -398,6 +406,7 @@ const answers = {
                         outlayr: OUTLAYR.platforms,
                         rival: t({ en: "iPhone, Android", es: "iPhone, Android" }),
                     },
+                    LICENSE_ROW,
                 ],
                 site: "fintonic.com",
                 source: "https://www.fintonic.com/es-ES/inicio/",
@@ -484,6 +493,7 @@ const answers = {
                         outlayr: OUTLAYR.platforms,
                         rival: t({ en: "iPhone, iPad, Android, web", es: "iPhone, iPad, Android, web" }),
                     },
+                    LICENSE_ROW,
                 ],
                 site: "monarch.com",
                 source: "https://www.monarch.com/pricing",
@@ -566,6 +576,7 @@ const answers = {
                             es: "Web, iPhone, Apple Watch, Android",
                         }),
                     },
+                    LICENSE_ROW,
                 ],
                 site: "pocketguard.com",
                 source: "https://pocketguard.com/pricing/",
@@ -675,6 +686,7 @@ const answers = {
                             es: "iPhone, Android. La web es una función Premium",
                         }),
                     },
+                    LICENSE_ROW,
                 ],
                 site: "rocketmoney.com",
                 source: "https://www.rocketmoney.com/learn/personal-finance/how-much-does-rocket-money-cost",
@@ -748,6 +760,7 @@ const answers = {
                         outlayr: OUTLAYR.platforms,
                         rival: t({ en: "iPhone, Android. Web coming", es: "iPhone, Android. Web próximamente" }),
                     },
+                    LICENSE_ROW,
                 ],
                 site: "spendee.com",
                 source: "https://www.spendee.com/pricing",
@@ -814,6 +827,7 @@ const answers = {
                         outlayr: OUTLAYR.platforms,
                         rival: t({ en: "iPhone, Android, web", es: "iPhone, Android, web" }),
                     },
+                    LICENSE_ROW,
                 ],
                 site: "budgetbakers.com",
                 source: "https://budgetbakers.com/en/products/wallet/",
@@ -907,6 +921,7 @@ const answers = {
                         outlayr: OUTLAYR.platforms,
                         rival: t({ en: "iPhone, Android, web", es: "iPhone, Android, web" }),
                     },
+                    LICENSE_ROW,
                 ],
                 site: "ynab.com",
                 source: "https://www.ynab.com/pricing",
