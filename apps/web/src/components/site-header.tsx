@@ -3,6 +3,9 @@ import { getPathWithoutLocale } from "intlayer";
 import { useEffect, useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { SOURCE_URL } from "@/lib/site";
+
+import { Icon } from "./icon";
 import { LocalizedLink } from "./localized-link";
 import { LogoMark } from "./logo-mark";
 
@@ -109,6 +112,13 @@ export function SiteHeader() {
                             </li>
                         ))}
                     </ul>
+                    <a
+                        aria-label={nav.github.value}
+                        className="fluid text-muted hover:text-foreground hover:bg-foreground/5 flex size-10 items-center justify-center rounded-full active:scale-[0.98]"
+                        href={SOURCE_URL}
+                    >
+                        <Icon className="text-xl" name="github-logo" />
+                    </a>
                     <button
                         aria-controls="site-menu"
                         aria-expanded={open}

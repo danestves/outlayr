@@ -83,6 +83,7 @@ const site = {
         nav: {
             close: t({ en: "Close menu", es: "Cerrar menú" }),
             features: t({ en: "Features", es: "Funciones" }),
+            github: t({ en: "Outlayr on GitHub", es: "Outlayr en GitHub" }),
             how: t({ en: "How it works", es: "Cómo funciona" }),
             label: t({ en: "Main", es: "Principal" }),
             open: t({ en: "Open menu", es: "Abrir menú" }),
