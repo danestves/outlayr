@@ -16,6 +16,7 @@ export default function NewTransactionScreen() {
         currency,
         date,
         details,
+        installmentDraft,
         installments,
         recurringCoefficient,
         recurringType,
@@ -31,6 +32,7 @@ export default function NewTransactionScreen() {
         details?: string;
         from?: string;
         income?: string;
+        installmentDraft?: string;
         installments?: "1";
         note?: string;
         recurringCoefficient?: string;
@@ -48,6 +50,7 @@ export default function NewTransactionScreen() {
             details={details}
             from={from}
             income={income}
+            installmentDraft={installmentDraft}
             installments={installments}
             note={note}
             recurringCoefficient={recurringCoefficient}

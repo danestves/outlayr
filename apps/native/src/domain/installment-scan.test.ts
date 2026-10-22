@@ -3,7 +3,7 @@ import { describe, expect, it } from "@jest/globals";
 import type { InstallmentPlanDraft, InstallmentPlanRow } from "@/lib/convex";
 
 import { draftSchedule } from "./installment-draft";
-import { scannedOrder } from "./installment-scan";
+import { encodeInstallmentSeed, parseInstallmentSeed, scannedOrder } from "./installment-scan";
 
 const day = (year: number, month: number, date: number) => new Date(year, month - 1, date);
 
@@ -96,5 +96,36 @@ describe("scannedOrder", () => {
 
     it("is null without a cuota to schedule", () => {
         expect(scannedOrder(cashea([row(0, "2026-06-08", 60, true)]), "USD")).toBeNull();
+    });
+});
+
+describe("installment seed param", () => {
+    it("round trips a scanned order's draft and fees, edits included, with no account to pay from", () => {
+        const { order } = replayed(
+            cashea([
+                row(1, "2026-11-15", 50, true, 3),
+                row(2, "2026-12-15", 50, false),
+                row(3, "2027-01-17", 55, false),
+            ])
+        );
+        expect(Object.keys(order.draft.edits)).not.toHaveLength(0);
+        const param = encodeInstallmentSeed({ ...order, draft: { ...order.draft, upfrontAccountId: "bank" } });
+        expect(parseInstallmentSeed(param)).toStrictEqual({ draft: order.draft, fees: order.fees });
+    });
+
+    const valid = JSON.parse(encodeInstallmentSeed(replayed(LATE_TWICE).order));
+
+    it.each([
+        ["not JSON", "{count:3"],
+        ["a count past the cap", JSON.stringify({ ...valid, count: 49 })],
+        ["more cuotas paid than exist", JSON.stringify({ ...valid, paidBefore: 4 })],
+        ["a fee on a cuota that does not exist", JSON.stringify({ ...valid, fees: [{ amount: 4, sequence: 4 }] })],
+        ["an edit on a cuota that does not exist", JSON.stringify({ ...valid, edits: { 4: { amount: 1 } } })],
+        ["an edit on the upfront", JSON.stringify({ ...valid, edits: { 0: { amount: 1 } } })],
+        ["a negative fee", JSON.stringify({ ...valid, fees: [{ amount: -4, sequence: 1 }] })],
+        ["a date that is not one", JSON.stringify({ ...valid, firstDue: "tomorrow" })],
+        ["an unknown cadence", JSON.stringify({ ...valid, every: "daily" })],
+    ])("rejects %s", (_name, param) => {
+        expect(parseInstallmentSeed(param)).toBeUndefined();
     });
 });

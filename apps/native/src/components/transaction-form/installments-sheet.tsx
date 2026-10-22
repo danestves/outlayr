@@ -11,7 +11,7 @@ import { SHEET_CARD_GAP, SHEET_TOP_PADDING } from "@/components/currency-picker-
 import { ChoiceRow } from "@/components/list/list-row";
 import { revealEntering } from "@/components/sentence/sentence-motion";
 import { formatSentenceDate, formatTargetDate } from "@/domain/dates";
-import { EVERY_ORDER, rescheduled } from "@/domain/installment-draft";
+import { EVERY_ORDER, MAX_INSTALLMENT_COUNT, rescheduled } from "@/domain/installment-draft";
 import type { ScheduledInstallment } from "@/domain/installments";
 import { useSheetSurface } from "@/hooks/use-sheet-surface";
 import { useLanguage, useTranslation } from "@/i18n/context";
@@ -22,7 +22,7 @@ import { useColors } from "@/theme/use-colors";
 
 import { SheetGestureRoot } from "../sheet-gesture-root";
 import { Text } from "../text";
-import { InstallmentsPad, MAX_COUNT, NONE, useInstallmentsSheetForm } from "./installments-sheet-form";
+import { InstallmentsPad, NONE, useInstallmentsSheetForm } from "./installments-sheet-form";
 import type { InstallmentsSheetProps } from "./installments-sheet-form";
 
 export function InstallmentsSheet(props: InstallmentsSheetProps) {
@@ -107,7 +107,7 @@ export function InstallmentsSheet(props: InstallmentsSheetProps) {
                                 accessibilityLabel="+"
                                 accessibilityRole="button"
                                 className="p-2 active:opacity-60"
-                                disabled={draft.count >= MAX_COUNT}
+                                disabled={draft.count >= MAX_INSTALLMENT_COUNT}
                                 onPress={() => step(1)}
                             >
                                 <HugeiconsIcon color={colors.muted} icon={PlusSignIcon} size={16} strokeWidth={2.2} />
@@ -173,6 +173,7 @@ export function InstallmentsSheet(props: InstallmentsSheetProps) {
                                 <ScheduleRow
                                     detail={form.rowDetail(row)}
                                     editing={open === row.sequence}
+                                    fee={form.feeLine(row)}
                                     key={row.sequence}
                                     money={money}
                                     onAmount={() =>
@@ -233,6 +234,7 @@ function ShareOption({ label, onPress, selected }: { label: string; onPress: () 
 interface ScheduleRowProps {
     detail: string | null;
     editing: boolean;
+    fee: string | null;
     money: (value: number) => string;
     onAmount: () => void;
     onDate: (next: Date) => void;
@@ -247,6 +249,7 @@ interface ScheduleRowProps {
 function ScheduleRow({
     detail,
     editing,
+    fee,
     money,
     onAmount,
     onDate,
@@ -276,7 +279,10 @@ function ScheduleRow({
                         </Text>
                         {detail ? <Text className="text-muted text-subtitle">{detail}</Text> : null}
                     </View>
-                    <Text className="text-body text-foreground tabular-nums">{money(row.amount)}</Text>
+                    <View className="items-end gap-0.5">
+                        <Text className="text-body text-foreground tabular-nums">{money(row.amount)}</Text>
+                        {fee ? <Text className="text-muted text-subtitle tabular-nums">{fee}</Text> : null}
+                    </View>
                 </Pressable>
             </View>
             {editing ? (

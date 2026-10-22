@@ -62,6 +62,7 @@ import { cardFeeAmount, cardFeeBase, cardFeeOf, feeDraftOf, formatFeeRate, NO_FE
 import type { FeeDraft } from "@/domain/card-fee";
 import { computeCurtainHues } from "@/domain/curtain-hues";
 import { formatSentenceDate } from "@/domain/dates";
+import type { InstallmentSeed } from "@/domain/installment-scan";
 import { installmentRegion } from "@/domain/institution-map";
 import { merchantKey } from "@/domain/merchant-resolver";
 import { suggestMerchants } from "@/domain/merchant-suggest";
@@ -285,6 +286,7 @@ export interface TransactionSeed {
     date?: Date;
     details?: string;
     income?: boolean;
+    installmentDraft?: InstallmentSeed;
     installments?: boolean;
     note?: string;
     recurrence?: { coefficient: number; type: number };
@@ -1215,6 +1217,7 @@ export function TransactionForm({
         intent: seed?.installments === true,
         isSubscription,
         mode,
+        seeded: seed?.installmentDraft,
     });
     const saveRefusal = (amount: number, entryCurrency: string): string | null => {
         if (isRealSplit(splitAllocations) && !isBalanced(amount, splitAllocations, minorUnitsFor(entryCurrency))) {

@@ -20,7 +20,7 @@ import { OutlinedDateField } from "@/components/material/outlined-date-field";
 import { OutlinedDropdownField } from "@/components/material/outlined-dropdown-field";
 import { OutlinedSelectField } from "@/components/material/outlined-field";
 import { formatSentenceDate } from "@/domain/dates";
-import { EVERY_ORDER, rescheduled } from "@/domain/installment-draft";
+import { EVERY_ORDER, MAX_INSTALLMENT_COUNT, rescheduled } from "@/domain/installment-draft";
 import type { ScheduledInstallment } from "@/domain/installments";
 import { useSheetSurface } from "@/hooks/use-sheet-surface";
 import { useLanguage, useTranslation } from "@/i18n/context";
@@ -29,7 +29,7 @@ import { useMaterialColors } from "@/theme/use-material-colors";
 
 import { SheetGestureRoot } from "../sheet-gesture-root";
 import { Text } from "../text";
-import { InstallmentsPad, MAX_COUNT, NONE, useInstallmentsSheetForm } from "./installments-sheet-form";
+import { InstallmentsPad, NONE, useInstallmentsSheetForm } from "./installments-sheet-form";
 import type { InstallmentsSheetProps } from "./installments-sheet-form";
 
 const PRESSED_ALPHA = 0.1;
@@ -130,7 +130,7 @@ export function InstallmentsSheet(props: InstallmentsSheetProps) {
                                     />
                                     <Text className="text-body text-m3-on-surface tabular-nums">{`${draft.count} ×`}</Text>
                                     <StepButton
-                                        disabled={draft.count >= MAX_COUNT}
+                                        disabled={draft.count >= MAX_INSTALLMENT_COUNT}
                                         icon={PlusSignIcon}
                                         label="+"
                                         onPress={() => step(1)}
@@ -195,6 +195,7 @@ export function InstallmentsSheet(props: InstallmentsSheetProps) {
                                 <ScheduleRow
                                     detail={form.rowDetail(row)}
                                     editing={open === row.sequence}
+                                    fee={form.feeLine(row)}
                                     key={row.sequence}
                                     money={money}
                                     onAmount={() => openPad({ sequence: row.sequence }, row.amount)}
@@ -270,6 +271,7 @@ function StepButton({
 interface ScheduleRowProps {
     detail: string | null;
     editing: boolean;
+    fee: string | null;
     money: (value: number) => string;
     onAmount: () => void;
     onClose: () => void;
@@ -285,6 +287,7 @@ interface ScheduleRowProps {
 function ScheduleRow({
     detail,
     editing,
+    fee,
     money,
     onAmount,
     onClose,
@@ -334,7 +337,12 @@ function ScheduleRow({
                     <View className="flex-1">
                         <ListItemText supporting={[detail]} title={isUpfront ? t("installments.upfront") : date} />
                     </View>
-                    <Text className="text-body text-m3-on-surface tabular-nums">{amount}</Text>
+                    <View className="items-end">
+                        <Text className="text-body text-m3-on-surface tabular-nums">{amount}</Text>
+                        {fee ? (
+                            <Text className="text-caption text-m3-on-surface-variant tabular-nums">{fee}</Text>
+                        ) : null}
+                    </View>
                 </Pressable>
             </View>
             {editing ? (

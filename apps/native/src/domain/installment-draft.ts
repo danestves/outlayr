@@ -42,6 +42,7 @@ export interface InstallmentDraft {
 }
 
 export const DEFAULT_INSTALLMENT_COUNT = 3;
+export const MAX_INSTALLMENT_COUNT = 48;
 
 export function newInstallmentDraft(upfrontAccountId: string | null): InstallmentDraft {
     return {

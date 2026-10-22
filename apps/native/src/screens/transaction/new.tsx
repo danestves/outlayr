@@ -8,6 +8,7 @@ import { TransactionForm } from "@/components/transaction-form";
 import type { TransactionSeed } from "@/components/transaction-form";
 import { useDatabase } from "@/contexts/local-data-context";
 import { getTransactionById } from "@/data/transactions-core";
+import { parseInstallmentSeed } from "@/domain/installment-scan";
 import { AMOUNT_CEILING } from "@/domain/numpad";
 import { logAgainDraft } from "@/domain/transaction-actions";
 import type { LogAgainDraft } from "@/domain/transaction-actions";
@@ -26,6 +27,7 @@ interface EntryParams {
     date?: LinkParam;
     details?: LinkParam;
     income?: LinkParam;
+    installmentDraft?: LinkParam;
     installments?: LinkParam;
     note?: LinkParam;
     recurringCoefficient?: LinkParam;
@@ -52,6 +54,7 @@ export function entrySeed({
     date,
     details,
     income,
+    installmentDraft,
     installments,
     note,
     recurringCoefficient,
@@ -72,6 +75,7 @@ export function entrySeed({
         date: Number.isNaN(seededDate.getTime()) ? undefined : seededDate,
         details: single(details),
         income: income === "1",
+        installmentDraft: parseInstallmentSeed(single(installmentDraft)),
         installments: installments === "1",
         note: single(note),
         recurrence:

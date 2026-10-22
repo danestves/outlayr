@@ -92,6 +92,7 @@ export const ROOT_STACK_SCREEN_NAMES = {
         "accounts/reorder",
         "accounts/[accountId]/index",
         "installments/[planId]",
+        "installments/scan",
         "settings/categories/reorder",
         "settings/licenses/[name]",
         "settings/category-symbol",

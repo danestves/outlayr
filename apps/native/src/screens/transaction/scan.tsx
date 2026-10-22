@@ -47,6 +47,7 @@ import { useReceiptScan } from "@/hooks/use-receipt-scan";
 import type { ScanFailure, ScanPhoto } from "@/hooks/use-receipt-scan";
 import { useRegionCode } from "@/hooks/use-region-code";
 import { isLimitRefusal, useLimitNotice } from "@/hooks/use-usage-limits";
+import type { TranslatableKey } from "@/i18n/catalog";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
@@ -70,7 +71,7 @@ const LINE_STAGGER_MS = 34;
 const LINE_STAGGER_MAX_MS = 560;
 const STATUS_SWEEP_MS = 1800;
 
-const FAILURE_KEY = {
+export const FAILURE_KEY = {
     denied: "receipt.failed.denied",
     noCamera: "receipt.failed.noCamera",
     notConfigured: "receipt.failed.notConfigured",
@@ -86,7 +87,7 @@ const FAILURE_KEY = {
 } as const satisfies Record<ScanFailure, string>;
 
 /** A failure the same photo may survive: nothing was wrong with the picture. */
-const RETRYABLE: ReadonlySet<ScanFailure> = new Set(["offline", "provider", "rateLimited", "timeout"]);
+export const RETRYABLE: ReadonlySet<ScanFailure> = new Set(["offline", "provider", "rateLimited", "timeout"]);
 
 function dayLabel(date: Date, now: Date, t: TranslateFn, language: Language): string {
     const target = startOfDay(date).getTime();
@@ -106,13 +107,24 @@ function fitPhoto(photo: ScanPhoto, maxWidth: number, maxHeight: number): StageB
     return { height: Math.round(scale), width: Math.round(scale * aspect) };
 }
 
+export function useStageBox(): (photo: ScanPhoto) => StageBox {
+    const insets = useSafeAreaInsets();
+    const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+    return (photo) =>
+        fitPhoto(
+            photo,
+            windowWidth - STAGE_GUTTER * 2,
+            Math.min(STAGE_MAX_HEIGHT, (windowHeight - insets.top - insets.bottom) * STAGE_MAX_HEIGHT_RATIO)
+        );
+}
+
 function thumbBox(photo: ScanPhoto): StageBox {
     const aspect = photo.width > 0 && photo.height > 0 ? photo.width / photo.height : 0.7;
     const width = Math.min(THUMB_MAX_WIDTH, Math.max(THUMB_MIN_WIDTH, Math.round(THUMB_HEIGHT * aspect)));
     return { height: THUMB_HEIGHT, width };
 }
 
-function ScanShell({
+export function ScanShell({
     bottom,
     children,
     closeDisabled = false,
@@ -154,7 +166,7 @@ function ScanShell({
     );
 }
 
-function StatusLine({
+export function StatusLine({
     children,
     thinking = false,
     waiting = false,
@@ -189,13 +201,13 @@ function StatusLine({
     );
 }
 
-interface BarAction {
+export interface BarAction {
     icon?: typeof Camera01Icon;
     label: string;
     onPress: () => void;
 }
 
-function BottomBar({
+export function BottomBar({
     disabled = false,
     primary,
     secondary,
@@ -500,15 +512,21 @@ function ReviewSheet({
     );
 }
 
-function ScanGateScreen({ gate }: { gate: Exclude<AuthGate, "signed-in"> }) {
+export function ScanGateScreen({
+    failures = FAILURE_KEY,
+    gate,
+}: {
+    failures?: Readonly<Record<ScanFailure, TranslatableKey>>;
+    gate: Exclude<AuthGate, "signed-in">;
+}) {
     const router = useRouter();
     const t = useTranslation();
     const colors = useColors();
     let status = t("receipt.state.preparing");
     if (gate === "unconfigured") {
-        status = t("receipt.failed.notConfigured");
+        status = t(failures.notConfigured);
     } else if (gate === "signed-out") {
-        status = t("receipt.failed.unauthenticated");
+        status = t(failures.unauthenticated);
     }
     return (
         <ScanShell bottom={null} onClose={() => router.back()}>
@@ -566,8 +584,6 @@ function ScanFlowScreen() {
     const t = useTranslation();
     const colors = useColors();
     const haptics = useHaptics();
-    const insets = useSafeAreaInsets();
-    const { width: windowWidth, height: windowHeight } = useWindowDimensions();
     const { language } = useLanguage();
     const localeTag = useLocaleTag();
     const regionCode = useRegionCode();
@@ -732,12 +748,7 @@ function ScanFlowScreen() {
         Linking.openSettings().catch(() => undefined);
     }, []);
 
-    const stageBox = (photo: ScanPhoto) =>
-        fitPhoto(
-            photo,
-            windowWidth - STAGE_GUTTER * 2,
-            Math.min(STAGE_MAX_HEIGHT, (windowHeight - insets.top - insets.bottom) * STAGE_MAX_HEIGHT_RATIO)
-        );
+    const stageBox = useStageBox();
 
     const cameraAction: BarAction = { icon: Camera01Icon, label: t("receipt.action.camera"), onPress: takePhoto };
     const libraryAction: BarAction = {

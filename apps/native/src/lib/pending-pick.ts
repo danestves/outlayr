@@ -2,7 +2,7 @@ import type { ImagePickerResult } from "expo-image-picker";
 
 import { duringHandoff } from "@/lib/app-handoff";
 
-export type PickOwner = "identity-picker" | "receipt-scan";
+export type PickOwner = "identity-picker" | "installment-scan" | "receipt-scan";
 
 /**
  * Every system camera and library launch goes through here: the app lock hears about the trip out, and on Android

@@ -1,18 +1,72 @@
 import { decimalsFor } from "@outlayr/money/currency";
 import { roundMoney } from "@outlayr/money/round";
+import { z } from "zod";
 
 import type { InstallmentPlanDraft } from "@/lib/convex";
 
-import { draftSchedule, EVERY_OPTIONS, EVERY_ORDER } from "./installment-draft";
+import { draftSchedule, EVERY_OPTIONS, EVERY_ORDER, MAX_INSTALLMENT_COUNT } from "./installment-draft";
 import type { EveryOption, InstallmentDraft } from "./installment-draft";
 import { generateSchedule } from "./installments";
 import { addLocalDays, addLocalMonths } from "./local-day";
+import { AMOUNT_CEILING } from "./numpad";
 
-export interface ScannedOrder {
+export interface InstallmentSeed {
     draft: InstallmentDraft;
     fees: { amount: number; sequence: number }[];
+}
+
+export interface ScannedOrder extends InstallmentSeed {
     price: number;
     purchaseDay: Date;
+}
+
+const seedMoney = z.number().positive().lt(AMOUNT_CEILING);
+const seedDate = z.iso.datetime().transform((iso) => new Date(iso));
+
+const seedSchema = z
+    .object({
+        count: z.int().min(1).max(MAX_INSTALLMENT_COUNT),
+        each: seedMoney.nullable(),
+        edits: z.record(
+            z.string().regex(/^[1-9]\d*$/),
+            z.object({ amount: seedMoney.optional(), dueDate: seedDate.optional() })
+        ),
+        every: z.enum(EVERY_ORDER),
+        fees: z.array(z.object({ amount: seedMoney, sequence: z.int().min(0) })),
+        firstDue: seedDate.nullable(),
+        paidBefore: z.int().min(0).nullable(),
+        upfront: z.union([
+            z.object({ amount: z.number().min(0).lt(AMOUNT_CEILING) }),
+            z.object({ share: z.number().gt(0).lt(1) }),
+        ]),
+    })
+    .refine(
+        ({ count, edits, fees, paidBefore }) =>
+            (paidBefore ?? 0) <= count &&
+            fees.every((fee) => fee.sequence <= count) &&
+            Object.keys(edits).every((sequence) => Number(sequence) <= count)
+    );
+
+export function encodeInstallmentSeed({ draft, fees }: InstallmentSeed): string {
+    return JSON.stringify({ ...draft, fees });
+}
+
+export function parseInstallmentSeed(param: string | undefined): InstallmentSeed | undefined {
+    if (param === undefined) {
+        return undefined;
+    }
+    let json: unknown;
+    try {
+        json = JSON.parse(param);
+    } catch {
+        return undefined;
+    }
+    const parsed = seedSchema.safeParse(json);
+    if (!parsed.success) {
+        return undefined;
+    }
+    const { fees, ...draft } = parsed.data;
+    return { draft: { ...draft, upfrontAccountId: null }, fees };
 }
 
 interface ScannedRow {

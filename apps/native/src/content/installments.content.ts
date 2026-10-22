@@ -203,6 +203,10 @@ const installments = {
             en: "{amount} + {fee} late fee",
             es: "{amount} + {fee} recargo",
         }),
+        "installments.fee.extra": t({
+            en: "+ {fee} late fee",
+            es: "+ {fee} recargo",
+        }),
         "installments.fee.label": t({
             en: "Late fee",
             es: "Recargo",
@@ -410,6 +414,42 @@ const installments = {
         "installments.reminder.turnOn": t({
             en: "Turn on",
             es: "Activar",
+        }),
+        "installments.scan.choose": t({
+            en: "Choose screenshot",
+            es: "Elegir captura",
+        }),
+        "installments.scan.currency": t({
+            en: "This plan is in {plan} and {account} is in {currency}.",
+            es: "Este plan está en {plan} y {account} está en {currency}.",
+        }),
+        "installments.scan.import": t({
+            en: "Import from a screenshot",
+            es: "Importar desde una captura",
+        }),
+        "installments.scan.intro": t({
+            en: "A screenshot of the order's payment plan.",
+            es: "Una captura del plan de pagos de la orden.",
+        }),
+        "installments.scan.notConfigured": t({
+            en: "Importing a screenshot needs the cloud tier.",
+            es: "Para importar una captura se necesita el servicio en la nube.",
+        }),
+        "installments.scan.provider": t({
+            en: "Couldn't read the plan.",
+            es: "No pude leer el plan.",
+        }),
+        "installments.scan.reading": t({
+            en: "Reading the plan…",
+            es: "Leyendo el plan…",
+        }),
+        "installments.scan.unauthenticated": t({
+            en: "Sign in to import a screenshot.",
+            es: "Inicia sesión para importar una captura.",
+        }),
+        "installments.scan.unclear": t({
+            en: "Didn't find a payment plan in that image.",
+            es: "No encontré un plan de cuotas en esa imagen.",
         }),
         "installments.schedule": t({
             en: "Schedule",

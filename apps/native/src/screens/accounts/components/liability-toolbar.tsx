@@ -5,10 +5,12 @@ import type { Account } from "@/data/accounts-core";
 import { useTranslation } from "@/i18n/context";
 import { payoffMenuActions } from "@/screens/debts/payoff-menu-actions";
 import type { PayoffPlanControls } from "@/screens/debts/use-payoff-plan";
+import { useScreenshotImport } from "@/screens/installments/use-screenshot-import";
 
 export function LiabilityToolbar({ account, plan }: { account: Account; plan: PayoffPlanControls }) {
     const router = useRouter();
     const t = useTranslation();
+    const importScreenshot = useScreenshotImport(account.id);
     return (
         <Stack.Toolbar placement="right">
             <Stack.Toolbar.Menu accessibilityLabel={t("debts.a11y.more")}>
@@ -23,6 +25,9 @@ export function LiabilityToolbar({ account, plan }: { account: Account; plan: Pa
                     }
                 >
                     {t("installments.newPurchase")}
+                </Stack.Toolbar.MenuAction>
+                <Stack.Toolbar.MenuAction icon="text.viewfinder" onPress={importScreenshot}>
+                    {t("installments.scan.import")}
                 </Stack.Toolbar.MenuAction>
                 <Stack.Toolbar.MenuAction
                     icon="pencil"

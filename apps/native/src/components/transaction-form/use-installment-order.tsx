@@ -6,18 +6,20 @@ import { useEffect, useRef, useState } from "react";
 
 import type { Account } from "@/data/accounts-core";
 import { paymentRate, planIdForPurchase } from "@/data/installment-reads";
-import { installmentsRepo } from "@/data/installments-core";
+import { installmentsRepo, liveInstallmentsQuery } from "@/data/installments-core";
 import type { PaymentSource } from "@/data/installments-core";
 import type { Transaction, TransactionInput } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 import { draftSchedule, newInstallmentDraft, paidBeforeCount, planPrice, upfrontOf } from "@/domain/installment-draft";
 import type { InstallmentDraft } from "@/domain/installment-draft";
 import { paymentSource, paymentSources } from "@/domain/installment-payment";
+import type { InstallmentSeed } from "@/domain/installment-scan";
 import { formatAmount } from "@/domain/money";
 import { transactionRateError } from "@/domain/transaction-entry-rate";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { askForInstallmentReminders } from "@/lib/due-reminders";
 import { rearmInstallmentReminders } from "@/lib/installment-reminder-sync";
+import { notifyFailure } from "@/lib/notify";
 
 import { InstallmentsSheet } from "./installments-sheet";
 import type { SentenceVerb } from "./sentence/fact-glyphs";
@@ -35,6 +37,7 @@ interface InstallmentOrderArgs {
     intent: boolean;
     isSubscription: boolean;
     mode: "create" | "edit";
+    seeded: InstallmentSeed | undefined;
 }
 
 // Editing an entry that has an order opens the order instead: its rows are edited there, never regenerated here.
@@ -50,6 +53,7 @@ export function useInstallmentOrder({
     intent,
     isSubscription,
     mode,
+    seeded,
 }: InstallmentOrderArgs) {
     const router = useRouter();
     const t = useTranslation();
@@ -88,6 +92,7 @@ export function useInstallmentOrder({
         setDraft(
             (current) =>
                 current ??
+                seeded?.draft ??
                 newInstallmentDraft(sources.find((source) => toAccountKind(source.kind) !== "liability")?.id ?? null)
         );
         setPresented((count) => count + 1);
@@ -168,6 +173,35 @@ export function useInstallmentOrder({
         return reason;
     };
 
+    const addSeededFees = async (orderPlanId: string, paidOutside: number) => {
+        const cuotas = liveInstallmentsQuery(db)
+            .all()
+            .filter((row) => row.planId === orderPlanId);
+        try {
+            await Promise.all(
+                (seeded?.fees ?? []).map(async (fee) => {
+                    const cuota = cuotas.find((row) => row.sequence === fee.sequence);
+                    if (cuota === undefined) {
+                        return;
+                    }
+                    const charged = new Date(Math.min(cuota.dueDate.getTime(), Date.now()));
+                    await installmentsRepo.addFee(db, { amount: fee.amount, date: charged, installmentId: cuota.id });
+                    if (fee.sequence <= paidOutside) {
+                        await installmentsRepo.recordPayment(db, {
+                            amount: fee.amount,
+                            date: charged,
+                            planId: orderPlanId,
+                            source: null,
+                        });
+                    }
+                })
+            );
+        } catch (error) {
+            console.error("Failed to save a scanned late fee", error);
+            notifyFailure({ body: t("installments.failedBody"), title: t("installments.failedTitle") });
+        }
+    };
+
     /** Null when installments are off. */
     const save = (
         input: TransactionInput,
@@ -181,16 +215,18 @@ export function useInstallmentOrder({
             return null;
         }
         const hasUpfront = schedule.some((row) => row.sequence === 0);
+        const paidOutside = paidBeforeCount(draft, schedule, new Date());
         return installmentsRepo
             .createOrder(db, {
                 inSameTransaction,
-                installmentsPaidOutside: paidBeforeCount(draft, schedule, new Date()),
+                installmentsPaidOutside: paidOutside,
                 purchase: { ...input, accountId: account.id },
                 schedule,
                 upfront: hasUpfront ? upfrontSource(plan) : undefined,
             })
-            .then(({ transactionId }) => {
+            .then(async ({ planId: orderPlanId, transactionId }) => {
                 ordered.current = true;
+                await addSeededFees(orderPlanId, paidOutside);
                 rearmInstallmentReminders(db);
                 return transactionId;
             });
@@ -215,6 +251,7 @@ export function useInstallmentOrder({
                         exchangeRateType: entryRate.type,
                     }) !== null
                 }
+                fees={seeded?.fees ?? []}
                 onChange={setDraft}
                 price={plan}
                 purchaseDay={date}

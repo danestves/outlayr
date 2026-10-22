@@ -7,6 +7,7 @@ import { useNow } from "@/data/use-now";
 import { formatSentenceDate } from "@/domain/dates";
 import {
     EVERY_OPTIONS,
+    MAX_INSTALLMENT_COUNT,
     overPrice,
     paidBeforeCount,
     rescheduled,
@@ -15,6 +16,7 @@ import {
 } from "@/domain/installment-draft";
 import type { InstallmentDraft } from "@/domain/installment-draft";
 import { planPhrase } from "@/domain/installment-plan-phrase";
+import type { InstallmentSeed } from "@/domain/installment-scan";
 import type { ScheduledInstallment } from "@/domain/installments";
 import { formatAmount, minorUnitsFor } from "@/domain/money";
 import { numberToNumpad, numpadToNumber } from "@/domain/numpad";
@@ -23,7 +25,6 @@ import { dueIn } from "@/screens/installments/labels";
 
 import { AmountEntrySheet } from "../amount-entry-sheet";
 
-export const MAX_COUNT = 48;
 const PERCENT = 100;
 // No account id can collide: they are uuids.
 export const NONE = "__none__";
@@ -36,6 +37,7 @@ export interface InstallmentsSheetProps {
     draft: InstallmentDraft;
     /** The form already says the entry's own rate is missing, so the sheet does not. */
     entryRateMissing: boolean;
+    fees: InstallmentSeed["fees"];
     onChange: (next: InstallmentDraft) => void;
     /** In the plan's currency; null while there is no rate to convert it with. */
     price: number | null;
@@ -49,6 +51,7 @@ export function useInstallmentsSheetForm({
     currency,
     draft,
     entryRateMissing,
+    fees,
     onChange,
     price,
     schedule,
@@ -126,19 +129,25 @@ export function useInstallmentsSheetForm({
         return row.sequence === paidBefore + 1 ? dueIn(t, row.dueDate, nowMs) : null;
     };
 
+    const feeLine = (row: ScheduledInstallment): string | null => {
+        const fee = fees.find((candidate) => candidate.sequence === row.sequence);
+        return fee ? t("installments.fee.extra", { fee: money(fee.amount) }) : null;
+    };
+
     let emptyNote: string | null = null;
     if (!entryRateMissing) {
         emptyNote = t(price === null ? "installments.noRate" : "installments.nothingLeft");
     }
 
     const step = (by: number) =>
-        onChange(rescheduled(draft, { count: Math.min(MAX_COUNT, Math.max(1, draft.count + by)) }));
+        onChange(rescheduled(draft, { count: Math.min(MAX_INSTALLMENT_COUNT, Math.max(1, draft.count + by)) }));
 
     return {
         closePad,
         each,
         editDate,
         emptyNote,
+        feeLine,
         firstDue,
         from,
         minorUnits,

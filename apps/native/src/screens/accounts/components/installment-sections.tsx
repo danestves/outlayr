@@ -18,6 +18,7 @@ import { addLocalDays } from "@/domain/local-day";
 import { formatAmount } from "@/domain/money";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { dueIn } from "@/screens/installments/labels";
+import { useScreenshotImport } from "@/screens/installments/use-screenshot-import";
 
 /** How far ahead "Coming up" looks: a monthly plan's next cuota is always inside it. */
 const COMING_UP_DAYS = 31;
@@ -31,6 +32,7 @@ export function InstallmentSections({ account, db, nowMs }: { account: Account; 
         [plans, nowMs]
     );
     const [showFinished, setShowFinished] = useState(false);
+    const importScreenshot = useScreenshotImport(account.id);
     if (plans.length === 0 && !isInstallmentAppAccount(account)) {
         return null;
     }
@@ -70,6 +72,13 @@ export function InstallmentSections({ account, db, nowMs }: { account: Account; 
                     }
                 >
                     <Text className="text-tint text-body">{t("installments.newPurchase")}</Text>
+                </Pressable>
+                <Pressable
+                    accessibilityRole="button"
+                    className="border-border border-b py-3 active:opacity-60"
+                    onPress={importScreenshot}
+                >
+                    <Text className="text-tint text-body">{t("installments.scan.import")}</Text>
                 </Pressable>
             </View>
 
