@@ -147,7 +147,7 @@ function NumpadKeyTile({
     const t = useTranslation();
     // Holds the separator's cell open so "0" stays centred under "8".
     if (hidden) {
-        return <View className="min-h-12 flex-1" />;
+        return <View className="min-h-12 w-0 flex-1" />;
     }
     return (
         <Pressable
@@ -156,7 +156,7 @@ function NumpadKeyTile({
             }
             accessibilityLabel={label === "back" ? t("transaction.numpad.delete") : glyph}
             accessibilityRole="button"
-            className="min-h-12 flex-1 items-center justify-center overflow-hidden rounded-xl active:scale-[0.96] active:opacity-65"
+            className="min-h-12 w-0 flex-1 items-center justify-center overflow-hidden rounded-xl active:scale-[0.96] active:opacity-65"
             onAccessibilityAction={
                 onLongPress
                     ? (event: AccessibilityActionEvent) => {
