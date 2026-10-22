@@ -23,7 +23,7 @@ import type { GroundedCallDeps } from "./groundedLookup";
 import { optionalUserId, requireUserId } from "./lib/auth";
 import { knowledgeKey, knowledgeKeys } from "./lib/merchantKey";
 import { CANONICAL_CATEGORY_NAMES, KEY_PATTERN } from "./lib/merchantTrust";
-import { AI_CONSENT_VERSION, CLAUDE_FAST_MODEL_ID, CLAUDE_MODEL_ID } from "./lib/models";
+import { AI_CONSENT_VERSION, CLAUDE_FAST_MODEL_ID } from "./lib/models";
 import { isPro } from "./revenuecat";
 import { enrichmentResult } from "./schema";
 
@@ -173,7 +173,7 @@ export async function resolveJob(
                 ctx,
                 row,
                 applyToTree(row.categoryTree, { ...deep, parentCategoryName: null }),
-                process.env.CLAUDE_GROUNDED_MODEL_ID || CLAUDE_MODEL_ID
+                process.env.CLAUDE_GROUNDED_MODEL_ID || CLAUDE_FAST_MODEL_ID
             );
         }
     }

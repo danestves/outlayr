@@ -3,10 +3,10 @@ import { DAY } from "@convex-dev/rate-limiter";
 
 /** $10 per 1,000 Claude web searches: https://platform.claude.com/docs/en/about-claude/pricing. */
 const DEFAULT_SEARCH_PRICE_MICROS = 10_000;
-/** $2 per 1M input tokens on `claude-sonnet-5-5`. */
-const DEFAULT_INPUT_PRICE_MICROS_PER_TOKEN = 2;
-/** $10 per 1M output tokens on `claude-sonnet-5-5`. */
-const DEFAULT_OUTPUT_PRICE_MICROS_PER_TOKEN = 10;
+/** $0.10 per 1M input tokens on `claude-haiku-5-5`, for prompts up to 100k tokens. */
+const DEFAULT_INPUT_PRICE_MICROS_PER_TOKEN = 0.1;
+/** $0.50 per 1M output tokens on `claude-haiku-5-5`, for prompts up to 100k tokens. */
+const DEFAULT_OUTPUT_PRICE_MICROS_PER_TOKEN = 0.5;
 export const DEFAULT_BUDGET_CEILING_MICROS = 200_000_000;
 const BUDGET_PERIOD_MS = 30 * DAY;
 export const WORST_CASE_SEARCH_CALLS = 3;

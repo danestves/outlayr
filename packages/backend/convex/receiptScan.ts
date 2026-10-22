@@ -25,7 +25,7 @@ import {
 } from "./lib/ledgerPrompt";
 import type { LedgerContext } from "./lib/ledgerPrompt";
 import { perUserBurst } from "./lib/limits";
-import { AI_CONSENT_VERSION, CLAUDE_MODEL_ID } from "./lib/models";
+import { AI_CONSENT_VERSION, CLAUDE_FAST_MODEL_ID } from "./lib/models";
 import { isPro } from "./revenuecat";
 
 // A Convex value tops out at 1MB and the photo travels as one; the client re-encodes to fit.
@@ -195,7 +195,7 @@ export function buildPrompt(args: LedgerContext): string {
         'kind is "refund" only for a return or refund slip where money came back to the person; otherwise "expense".',
         `The person's categories, with any nested under them, are: ${describeTree(args.categoryTree)}. Pick the one that fits the merchant and the items best and answer its name verbatim, or null when none fits. Never invent a category name.`,
         args.accounts.length > 0
-            ? `Their accounts are: ${args.accounts.join(", ")}. Set accountName verbatim only when the payment line clearly names one of them (a card brand or bank that matches an account's name); otherwise null.`
+            ? `Their accounts are: ${args.accounts.join(", ")}. Set accountName verbatim only when the payment line clearly names one of them (a card brand or bank printed there that appears in an account's name, so "Mastercard ••1234" names an account called "Mastercard Santander"); otherwise null.`
             : "They have no accounts; accountName is null.",
         args.language
             ? `The person's language is ${args.language}; keep item and merchant names as printed, do not translate them.`
@@ -364,7 +364,7 @@ export const scan = action({
             return failure(admitted);
         }
 
-        const modelId = process.env.CLAUDE_MODEL_ID || CLAUDE_MODEL_ID;
+        const modelId = process.env.CLAUDE_FAST_MODEL_ID || CLAUDE_FAST_MODEL_ID;
         return readReceipt(createAnthropic({ apiKey })(modelId), args.image, {
             accounts: args.accounts,
             categoryTree: args.categoryTree,

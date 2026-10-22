@@ -8,7 +8,7 @@ import { readFile } from "node:fs/promises";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { describe, expect, it } from "vite-plus/test";
 
-import { CLAUDE_MODEL_ID } from "./lib/models";
+import { CLAUDE_FAST_MODEL_ID } from "./lib/models";
 import { readReceipt } from "./receiptScan";
 
 const live = process.env.RUN_LIVE_MODEL_TESTS === "1" && Boolean(process.env.ANTHROPIC_API_KEY);
@@ -23,7 +23,7 @@ describe.skipIf(!live)("receipt scan, live", () => {
     it("a euro supermarket ticket becomes a draft in EUR with its lines", async () => {
         const anthropic = createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
         const result = await readReceipt(
-            anthropic(process.env.CLAUDE_MODEL_ID || CLAUDE_MODEL_ID),
+            anthropic(process.env.CLAUDE_FAST_MODEL_ID || CLAUDE_FAST_MODEL_ID),
             await imageBytes(RECEIPT_PATH),
             {
                 accounts: ["Visa Sabadell", "Cash"],

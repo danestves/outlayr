@@ -28,7 +28,7 @@ describe(estimateMicros, () => {
 
 describe(measureMicros, () => {
     it("sums search calls and token usage at the configured unit prices", () => {
-        expect(measureMicros({ inputTokens: 1000, outputTokens: 100 }, 1)).toBe(10_000 + 1000 * 2 + 100 * 10);
+        expect(measureMicros({ inputTokens: 1000, outputTokens: 100 }, 1)).toBe(10_000 + 1000 * 0.1 + 100 * 0.5);
     });
 
     it("undefined token counts contribute zero rather than throwing", () => {

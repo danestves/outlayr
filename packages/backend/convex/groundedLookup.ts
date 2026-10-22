@@ -25,7 +25,7 @@ import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { knowledgeKeys } from "./lib/merchantKey";
 import { CANONICAL_CATEGORY_NAMES, KEY_PATTERN, shouldPublish } from "./lib/merchantTrust";
 import type { KnowledgeCandidate } from "./lib/merchantTrust";
-import { CLAUDE_MODEL_ID } from "./lib/models";
+import { CLAUDE_FAST_MODEL_ID } from "./lib/models";
 import { budgetConfig, estimateMicros, measureMicros, WORST_CASE_SEARCH_CALLS } from "./lib/spend";
 
 const CANONICAL_NAMES_LIST = [...CANONICAL_CATEGORY_NAMES].join(", ");
@@ -220,14 +220,14 @@ export async function groundedAnswer(
     }
 
     let deps = overrideDeps;
-    let modelId: string = CLAUDE_MODEL_ID;
+    let modelId: string = CLAUDE_FAST_MODEL_ID;
     if (!deps) {
         const apiKey = process.env.ANTHROPIC_API_KEY;
         if (!apiKey) {
             return null;
         }
         const anthropic = createAnthropic({ apiKey });
-        modelId = process.env.CLAUDE_GROUNDED_MODEL_ID || CLAUDE_MODEL_ID;
+        modelId = process.env.CLAUDE_GROUNDED_MODEL_ID || CLAUDE_FAST_MODEL_ID;
         deps = {
             grounding: anthropic(modelId),
             groundingTools: { web_search: anthropic.tools.webSearch_20250305({ maxUses: WORST_CASE_SEARCH_CALLS }) },

@@ -16,7 +16,7 @@ import { describeTree } from "./lib/ledgerPrompt";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { perUserBurst } from "./lib/limits";
 import { knowledgeKeys, merchantKey } from "./lib/merchantKey";
-import { AI_CONSENT_VERSION, CLAUDE_MODEL_ID } from "./lib/models";
+import { AI_CONSENT_VERSION, CLAUDE_FAST_MODEL_ID } from "./lib/models";
 import { isPro } from "./revenuecat";
 
 const MAX_LABELS = 200;
@@ -257,7 +257,7 @@ export const csvImport = action({
             return { status: "ok", suggestions: known };
         }
 
-        const modelId = process.env.CLAUDE_MODEL_ID || CLAUDE_MODEL_ID;
+        const modelId = process.env.CLAUDE_FAST_MODEL_ID || CLAUDE_FAST_MODEL_ID;
         const classified = await classify(createAnthropic({ apiKey })(modelId), {
             categoryTree: args.categoryTree,
             labels: remaining,

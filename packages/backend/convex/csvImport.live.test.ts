@@ -10,7 +10,7 @@ import { describe, expect, it, vi } from "vite-plus/test";
 
 import { api } from "./_generated/api";
 import { classify } from "./csvImport";
-import { AI_CONSENT_VERSION, CLAUDE_MODEL_ID } from "./lib/models";
+import { AI_CONSENT_VERSION, CLAUDE_FAST_MODEL_ID } from "./lib/models";
 import schema from "./schema";
 import { authenticatedAs, seedProUser } from "./test.helpers";
 
@@ -19,7 +19,7 @@ const modules = import.meta.glob("./**/*.ts");
 const apiKey = process.env.ANTHROPIC_API_KEY ?? "";
 const enabled = process.env.RUN_LIVE_MODEL_TESTS === "1" && apiKey !== "";
 
-const MODEL_ID = process.env.CLAUDE_MODEL_ID ?? CLAUDE_MODEL_ID;
+const MODEL_ID = process.env.CLAUDE_FAST_MODEL_ID ?? CLAUDE_FAST_MODEL_ID;
 
 /** Merchants absent from the on-device map, so the model is the only tier left. */
 const LABELS = ["Panaderia La Espiga SC", "Ferreteria Don Pepe", "Cafe Tostado Rincon"];
