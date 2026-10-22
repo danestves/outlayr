@@ -65,8 +65,8 @@ everything (`body::before`).
 
 - Nav: the floating glass island (`site-header.tsx`), a morphing hamburger and a full-screen
   blurred menu on phones. No store badge in the nav.
-- Store CTAs: `StoreBadges`, the official Apple badge plus the Google Play badge shown disabled
-  with "Coming soon". Never a custom store button.
+- Store CTAs: `StoreBadges`, the Google Play badge plus the official Apple badge shown disabled
+  with "Coming soon" until App Store review passes. Never a custom store button.
 - Icons: `Icon` from `src/components/icon.tsx` (Phosphor regular paths). Add new ones from
   `@phosphor-icons/core` the same way. No other icon set.
 - Footer: logo and tagline, three short link columns, language links, theme and cookie selects.

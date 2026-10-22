@@ -39,6 +39,7 @@ const site = {
         },
         badges: {
             appStore: t({ en: "Download on the App Store", es: "Descárgalo en el App Store" }),
+            comingSoon: t({ en: "Coming soon", es: "Próximamente" }),
             googlePlay: t({ en: "Get it on Google Play", es: "Disponible en Google Play" }),
         },
         consent: {

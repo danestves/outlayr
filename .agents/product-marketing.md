@@ -7,7 +7,7 @@
 **One-liner:** An expense tracker and budget app where you log a purchase in one sentence.
 **What it does:** You log a purchase by typing one sentence, saying it, or scanning the receipt. Budgets, savings goals, subscriptions, accounts, and insights update as you log. Entries live on the phone first; sync is optional.
 **Product category:** Expense tracker / budget app / money manager (App Store: Finance, Productivity).
-**Product type:** Consumer mobile app (iPhone and Android).
+**Product type:** Consumer mobile app (Android today, iPhone coming soon).
 **Business model:** Freemium. Free tracker; Outlayr Pro as monthly, yearly, or one-time purchase. Prices vary by country and are not published on the site.
 
 ## Target Audience
@@ -56,6 +56,7 @@
 | Is it free? | The tracker is free; Pro raises limits and adds sync. |
 | Is my data private? | The ledger stays on the phone unless you turn on sync or use server features. No ads, never sold; usage analytics and crash reports go to PostHog, never amounts or merchants. |
 | Is it on Android? | Yes, on Google Play. |
+| Is it on iPhone? | Soon, on the App Store. |
 
 **Anti-persona:** People who want automatic bank-feed syncing.
 
@@ -94,10 +95,11 @@ Never target "budget app without bank linking" style queries: they can only be w
 ## Goals
 **Business goal:** Downloads on the App Store and Google Play.
 **Conversion action:** Tap a store badge.
-**Current metrics:** Live on the App Store and Google Play.
+**Current metrics:** Live on Google Play; the App Store release waits on Apple review.
 
 ## Changelog
 *Newest first. One line per revision: what changed and why.*
+- v2.3 (2026-10-22): Google Play is public while Apple review is pending, so the site shows the App Store as coming soon.
 - v2.2 (2026-10-21): Android is live on Google Play, so the site and goals stop calling it coming soon.
 - v2.1 (2026-10-09): Entity sentence names the subscription tracker too, with its Spanish form, matching /about, the home FAQ, and llms.txt.
 - v2 (2026-10-07): Direct competitors, the entity sentence, and search targets, from the ASO and web search research.

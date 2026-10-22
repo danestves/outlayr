@@ -2,7 +2,7 @@ import { useIntlayer, useLocale } from "react-intlayer";
 
 import { capture } from "@/lib/analytics";
 import type { Locale } from "@/lib/i18n";
-import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/site";
+import { PLAY_STORE_URL } from "@/lib/site";
 
 const APP_STORE_BADGE = {
     en: "/badges/app-store.svg",
@@ -24,19 +24,6 @@ export function StoreBadges({ placement }: { placement: Placement }) {
         <div className="flex flex-wrap items-center gap-4">
             <a
                 className="fluid shrink-0 hover:-translate-y-0.5 active:translate-y-px"
-                href={APP_STORE_URL}
-                onClick={() => capture("app_store_badge_clicked", { placement })}
-            >
-                <img
-                    alt={badges.appStore.value}
-                    className="h-12 w-auto"
-                    height={40}
-                    src={APP_STORE_BADGE[locale]}
-                    width={120}
-                />
-            </a>
-            <a
-                className="fluid shrink-0 hover:-translate-y-0.5 active:translate-y-px"
                 href={PLAY_STORE_URL}
                 onClick={() => capture("google_play_badge_clicked", { placement })}
             >
@@ -48,6 +35,16 @@ export function StoreBadges({ placement }: { placement: Placement }) {
                     width={googlePlay.width}
                 />
             </a>
+            <span aria-disabled="true" className="flex shrink-0 items-center gap-3">
+                <img
+                    alt={`${badges.appStore.value}, ${badges.comingSoon.value}`}
+                    className="h-12 w-auto opacity-40 grayscale"
+                    height={40}
+                    src={APP_STORE_BADGE[locale]}
+                    width={120}
+                />
+                <span className="text-muted text-sm">{badges.comingSoon}</span>
+            </span>
         </div>
     );
 }

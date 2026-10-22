@@ -72,7 +72,7 @@ const OUTLAYR = {
         en: "Daily spending, budgets, and savings goals",
         es: "Gastos diarios, presupuestos y metas de ahorro",
     }),
-    platforms: t({ en: "iPhone, Android", es: "iPhone, Android" }),
+    platforms: t({ en: "Android. iPhone soon", es: "Android. Pronto en iPhone" }),
     price: t({ en: "Free. Pro monthly, yearly, or once", es: "Gratis. Pro al mes, al año o en un solo pago" }),
 };
 
@@ -1584,8 +1584,8 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "It depends on where you want it to run. Cashew and Flow are phone apps, and Cashew also runs on the web. Actual Budget runs on Windows, macOS, Linux, and the web, with envelope budgeting. Firefly III runs on your own server. Outlayr logs by sentence, voice, or receipt on iPhone, with Android coming. All five are free to start.",
-                            es: "Depende de dónde quieras usarla. Cashew y Flow son apps para el celular, y Cashew también funciona en la web. Actual Budget funciona en Windows, macOS, Linux y la web, con presupuesto por sobres. Firefly III funciona en tu propio servidor. Outlayr registra con una oración, tu voz o un recibo en iPhone, y pronto llegará a Android. Las cinco son gratis para empezar.",
+                            en: "It depends on where you want it to run. Cashew and Flow are phone apps, and Cashew also runs on the web. Actual Budget runs on Windows, macOS, Linux, and the web, with envelope budgeting. Firefly III runs on your own server. Outlayr logs by sentence, voice, or receipt on Android, with iPhone coming. All five are free to start.",
+                            es: "Depende de dónde quieras usarla. Cashew y Flow son apps para el celular, y Cashew también funciona en la web. Actual Budget funciona en Windows, macOS, Linux y la web, con presupuesto por sobres. Firefly III funciona en tu propio servidor. Outlayr registra con una oración, tu voz o un recibo en Android, y pronto llegará a iPhone. Las cinco son gratis para empezar.",
                         }),
                         question: t({
                             en: "What is the best open source expense tracker?",
