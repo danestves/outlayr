@@ -1,5 +1,6 @@
 // oxlint-disable unicorn/filename-case -- the Convex module name is the function path: this file is addressed as internal.groundedLookup.run by callers and by jobs already queued in _scheduled_functions
 
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { generateText, isStepCount } from "ai";
 import type { LanguageModel, ToolSet } from "ai";
 import { v } from "convex/values";
@@ -24,7 +25,7 @@ import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { knowledgeKeys } from "./lib/merchantKey";
 import { CANONICAL_CATEGORY_NAMES, KEY_PATTERN, shouldPublish } from "./lib/merchantTrust";
 import type { KnowledgeCandidate } from "./lib/merchantTrust";
-import { modelIdFor, resolveGrounding } from "./lib/models";
+import { CLAUDE_FAST_MODEL_ID } from "./lib/models";
 import { budgetConfig, estimateMicros, measureMicros, WORST_CASE_SEARCH_CALLS } from "./lib/spend";
 
 const CANONICAL_NAMES_LIST = [...CANONICAL_CATEGORY_NAMES].join(", ");
@@ -218,10 +219,19 @@ export async function groundedAnswer(
         return null;
     }
 
-    const modelId = modelIdFor("grounded");
-    const deps = overrideDeps ?? resolveGrounding(WORST_CASE_SEARCH_CALLS);
-    if (deps === null) {
-        return null;
+    let deps = overrideDeps;
+    let modelId: string = CLAUDE_FAST_MODEL_ID;
+    if (!deps) {
+        const apiKey = process.env.ANTHROPIC_API_KEY;
+        if (!apiKey) {
+            return null;
+        }
+        const anthropic = createAnthropic({ apiKey });
+        modelId = process.env.CLAUDE_GROUNDED_MODEL_ID || CLAUDE_FAST_MODEL_ID;
+        deps = {
+            grounding: anthropic(modelId),
+            groundingTools: { web_search: anthropic.tools.webSearch_20250305({ maxUses: WORST_CASE_SEARCH_CALLS }) },
+        };
     }
 
     let outcome: GroundedCallOutcome;

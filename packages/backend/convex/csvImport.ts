@@ -1,5 +1,6 @@
 // oxlint-disable unicorn/filename-case -- the Convex module name is the function path: clients call this action as api.csvImport.csvImport
 
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
 import { generateText, NoObjectGeneratedError, Output, TypeValidationError } from "ai";
 import type { LanguageModel } from "ai";
@@ -15,7 +16,7 @@ import { describeTree } from "./lib/ledgerPrompt";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { perUserBurst } from "./lib/limits";
 import { knowledgeKeys, merchantKey } from "./lib/merchantKey";
-import { AI_CONSENT_VERSION, resolveModel } from "./lib/models";
+import { AI_CONSENT_VERSION, CLAUDE_FAST_MODEL_ID } from "./lib/models";
 import { isPro } from "./revenuecat";
 
 const MAX_LABELS = 200;
@@ -200,8 +201,8 @@ export const csvImport = action({
             return failure("unauthenticated");
         }
 
-        const model = resolveModel("fast");
-        if (model === null || args.aiConsent !== AI_CONSENT_VERSION) {
+        const apiKey = process.env.ANTHROPIC_API_KEY;
+        if (!apiKey || args.aiConsent !== AI_CONSENT_VERSION) {
             return failure("notConfigured");
         }
 
@@ -256,7 +257,8 @@ export const csvImport = action({
             return { status: "ok", suggestions: known };
         }
 
-        const classified = await classify(model, {
+        const modelId = process.env.CLAUDE_FAST_MODEL_ID || CLAUDE_FAST_MODEL_ID;
+        const classified = await classify(createAnthropic({ apiKey })(modelId), {
             categoryTree: args.categoryTree,
             labels: remaining,
         });

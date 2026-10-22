@@ -1,3 +1,4 @@
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { generateText, NoObjectGeneratedError, Output, TypeValidationError } from "ai";
 import type { LanguageModel } from "ai";
 import { v } from "convex/values";
@@ -15,7 +16,7 @@ import {
     trimTo,
 } from "./lib/ledgerPrompt";
 import type { LedgerContext } from "./lib/ledgerPrompt";
-import { AI_CONSENT_VERSION, resolveModel } from "./lib/models";
+import { AI_CONSENT_VERSION, CLAUDE_MODEL_ID } from "./lib/models";
 import {
     admitScan,
     KNOWN_CURRENCIES,
@@ -225,8 +226,8 @@ export const scan = action({
             return failure("unauthenticated");
         }
 
-        const model = resolveModel("smart");
-        if (model === null || args.aiConsent !== AI_CONSENT_VERSION) {
+        const apiKey = process.env.ANTHROPIC_API_KEY;
+        if (!apiKey || args.aiConsent !== AI_CONSENT_VERSION) {
             return failure("notConfigured");
         }
 
@@ -247,7 +248,8 @@ export const scan = action({
             return failure(admitted);
         }
 
-        return readInstallmentPlan(model, args.image, {
+        const modelId = process.env.CLAUDE_MODEL_ID || CLAUDE_MODEL_ID;
+        return readInstallmentPlan(createAnthropic({ apiKey })(modelId), args.image, {
             accounts: args.accounts,
             currency: args.currency,
             language: args.language,

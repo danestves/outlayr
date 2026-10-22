@@ -1,5 +1,6 @@
 // oxlint-disable unicorn/filename-case -- the Convex module name is the function path: clients call this action as api.receiptScan.scan
 
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { HOUR, isRateLimitError, RateLimiter } from "@convex-dev/rate-limiter";
 import { generateText, NoObjectGeneratedError, Output, TypeValidationError } from "ai";
 import type { LanguageModel } from "ai";
@@ -27,7 +28,7 @@ import {
 } from "./lib/ledgerPrompt";
 import type { LedgerContext } from "./lib/ledgerPrompt";
 import { perUserBurst } from "./lib/limits";
-import { AI_CONSENT_VERSION, resolveModel } from "./lib/models";
+import { AI_CONSENT_VERSION, CLAUDE_FAST_MODEL_ID } from "./lib/models";
 import { isPro } from "./revenuecat";
 
 // A Convex value tops out at 1MB and the photo travels as one; the client re-encodes to fit.
@@ -348,8 +349,8 @@ export const scan = action({
         }
 
         // Read per call, so clearing the key with `npx convex env set` takes effect on the next scan.
-        const model = resolveModel("fast");
-        if (model === null || args.aiConsent !== AI_CONSENT_VERSION) {
+        const apiKey = process.env.ANTHROPIC_API_KEY;
+        if (!apiKey || args.aiConsent !== AI_CONSENT_VERSION) {
             return failure("notConfigured");
         }
 
@@ -371,7 +372,8 @@ export const scan = action({
             return failure(admitted);
         }
 
-        return readReceipt(model, args.image, {
+        const modelId = process.env.CLAUDE_FAST_MODEL_ID || CLAUDE_FAST_MODEL_ID;
+        return readReceipt(createAnthropic({ apiKey })(modelId), args.image, {
             accounts: args.accounts,
             categoryTree: args.categoryTree,
             currency: args.currency,

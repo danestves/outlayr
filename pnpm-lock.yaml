@@ -599,9 +599,6 @@ importers:
       '@ai-sdk/elevenlabs':
         specifier: 3.0.60
         version: 3.0.60(zod@4.6.5)
-      '@ai-sdk/xai':
-        specifier: 5.0.21
-        version: 5.0.21(zod@4.6.5)
       '@better-auth/expo':
         specifier: 'catalog:'
         version: 1.6.15(778b7327cad7cfe90f474462be4a322a)
@@ -754,12 +751,6 @@ packages:
   '@ai-sdk/provider@4.0.27':
     resolution: {integrity: sha512-TtWwm6SxFiPomlMIbTQa+yhJte+w4/oCsW+wJrJzMC3MqHpAY9e5dJF1Y4HxyKt3W2Csac0KiI76Ckio11TFYw==}
     engines: {node: '>=22'}
-
-  '@ai-sdk/xai@5.0.21':
-    resolution: {integrity: sha512-aJIkbaXBW2AqSprShXLDEqDqiJf8AvsHlVx0tZaD407iM3MvNTjvxtx2VTL1WObwi3XbOUNhsSU37ci2RzlHmg==}
-    engines: {node: '>=22'}
-    peerDependencies:
-      zod: ^3.25.76 || ^4.1.8
 
   '@alloc/quick-lru@5.3.0':
     resolution: {integrity: sha512-U4+70Pc5ZS9osnCBCE5Jha/ciHM+Yp+CNMNC/7HvYbNRk1Ldd+f7qO65W5qfhu/TCv+/ozljlXXe9Nj8419DMA==}
@@ -10618,12 +10609,6 @@ snapshots:
   '@ai-sdk/provider@4.0.27':
     dependencies:
       json-schema: 0.4.0
-
-  '@ai-sdk/xai@5.0.21(zod@4.6.5)':
-    dependencies:
-      '@ai-sdk/provider': 4.0.27
-      '@ai-sdk/provider-utils': 5.0.59(zod@4.6.5)
-      zod: 4.6.5
 
   '@alloc/quick-lru@5.3.0': {}
 

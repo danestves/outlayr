@@ -1,5 +1,6 @@
 // oxlint-disable unicorn/filename-case -- the Convex module name is the function path: clients call these as api.voiceEntry.*
 
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { createElevenLabs } from "@ai-sdk/elevenlabs";
 import {
     Agent,
@@ -38,7 +39,7 @@ import {
 } from "./lib/ledgerPrompt";
 import type { LedgerContext } from "./lib/ledgerPrompt";
 import { perUserBurst } from "./lib/limits";
-import { AI_CONSENT_VERSION, ELEVENLABS_TRANSCRIPTION_MODEL_ID, resolveModel } from "./lib/models";
+import { AI_CONSENT_VERSION, CLAUDE_MODEL_ID, ELEVENLABS_TRANSCRIPTION_MODEL_ID } from "./lib/models";
 import { isPro } from "./revenuecat";
 
 // A Convex value tops out at 1MB; a minute of AAC at the client's 48kbps mono preset is ~360KB.
@@ -450,9 +451,9 @@ export const speak = action({
         }
 
         // Read per call, so clearing a key with `npx convex env set` takes effect on the next clip.
-        const model = resolveModel("smart");
+        const apiKey = process.env.ANTHROPIC_API_KEY;
         const transcriptionKey = process.env.ELEVENLABS_API_KEY;
-        if (model === null || !transcriptionKey || args.aiConsent !== AI_CONSENT_VERSION) {
+        if (!apiKey || !transcriptionKey || args.aiConsent !== AI_CONSENT_VERSION) {
             return failure("notConfigured");
         }
 
@@ -506,7 +507,8 @@ export const speak = action({
             language: args.language,
             today: args.today,
         };
-        const agent = voiceAgent(model, context, heard.text);
+        const modelId = process.env.CLAUDE_MODEL_ID || CLAUDE_MODEL_ID;
+        const agent = voiceAgent(createAnthropic({ apiKey })(modelId), context, heard.text);
         const { message, messageId } = await saveMessage(ctx, components.agent, {
             prompt: heard.text,
             threadId: args.threadId,
