@@ -57,9 +57,9 @@ describe(installmentCost, () => {
     });
 
     it("keeps a positive rate when the extra is a cent on a long plan", () => {
-        const payment = 16_666_667;
+        const payment = 166_666_666_667;
         const { annualRate } = installmentCost({
-            cadence: "week",
+            cadence: "month",
             count: 600,
             down: 0,
             payment,

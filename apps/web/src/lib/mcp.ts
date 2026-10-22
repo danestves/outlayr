@@ -139,13 +139,12 @@ const CALCULATORS = [
         },
         z.object({
             people: z
-                .array(z.object({ name: z.string().min(1).max(100), paid: Amount }))
+                .array(z.object({ name: z.string().trim().min(1).max(100), paid: Amount }))
                 .min(2)
                 .max(100)
-                .refine(
-                    (people) => new Set(people.map(({ name }) => name.trim().toLowerCase())).size === people.length,
-                    { message: "Each person needs a different name" }
-                )
+                .refine((people) => new Set(people.map(({ name }) => name.toLowerCase())).size === people.length, {
+                    message: "Each person needs a different name",
+                })
                 .describe("Everyone in the group, each with a different name"),
         }),
         ({ people }) => {

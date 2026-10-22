@@ -218,7 +218,6 @@ export function RemoveButton({
         <button
             aria-label={label}
             className="fluid text-muted hover:text-foreground hover:bg-foreground/5 flex size-8 cursor-pointer items-center justify-center justify-self-end rounded-full disabled:invisible"
-            data-ph-no-autocapture
             disabled={disabled}
             onClick={onRemove}
             type="button"

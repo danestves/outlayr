@@ -89,11 +89,12 @@ function answerFor(
 export function installmentCost(plan: InstallmentPlan) {
     const { cadence, count, down, payment, price } = plan;
     const total = down + payment * count;
+    const extra = total - price;
     const rate = periodRate(price - down, payment, count);
     return {
-        annualRate: rate === null ? null : (1 + rate) ** PER_YEAR[cadence] - 1,
-        answer: answerFor(plan, total - price),
-        extra: total - price,
+        annualRate: rate === null ? null : Math.expm1(PER_YEAR[cadence] * Math.log1p(rate)),
+        answer: answerFor(plan, extra),
+        extra,
         total,
     };
 }
