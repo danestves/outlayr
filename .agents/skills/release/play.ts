@@ -25,6 +25,7 @@ interface Track {
 function usage(): never {
     console.error(`usage: play.ts upload <aab> preview
        play.ts upload <aab> production "<English notes>" "<Spanish notes>"
+       play.ts notes "<English notes>" "<Spanish notes>"
        play.ts status`);
     process.exit(2);
 }
@@ -58,7 +59,7 @@ async function accessToken(): Promise<string> {
 }
 
 const [command, ...args] = process.argv.slice(2);
-if (command !== "upload" && command !== "status") {
+if (command !== "upload" && command !== "notes" && command !== "status") {
     usage();
 }
 const token = await accessToken();
@@ -85,6 +86,11 @@ async function inEdit(change: (edit: string) => Promise<void>): Promise<void> {
 const putTrack = (edit: string, track: Track) =>
     call("PUT", `${API}/edits/${edit}/tracks/${track.track}`, JSON.stringify(track));
 
+const releaseNotes = (english: string, spanish: string) =>
+    Object.entries(NOTE_LANGUAGES).flatMap(([language, codes]) =>
+        codes.map((code) => ({ language: code, text: language === "en" ? english : spanish }))
+    );
+
 function describe(release: Release): string {
     const share = release.userFraction === undefined ? "" : ` at ${release.userFraction * 100}%`;
     return `${release.versionCodes?.join(",") ?? "-"} ${release.status}${share}`;
@@ -107,17 +113,41 @@ if (command === "upload") {
             await readFile(aab),
             "application/octet-stream"
         );
-        const releaseNotes =
-            channel === "production"
-                ? Object.entries(NOTE_LANGUAGES).flatMap(([language, codes]) =>
-                      codes.map((code) => ({ language: code, text: language === "en" ? english : spanish }))
-                  )
-                : undefined;
         await putTrack(edit, {
-            releases: [{ releaseNotes, status: "completed", versionCodes: [String(versionCode)] }],
+            releases: [
+                {
+                    releaseNotes: channel === "production" ? releaseNotes(english, spanish) : undefined,
+                    status: "completed",
+                    versionCodes: [String(versionCode)],
+                },
+            ],
             track,
         });
         console.log(`versionCode ${versionCode} committed to the ${track} track`);
+    });
+}
+
+if (command === "notes") {
+    const [english, spanish] = args;
+    if (!(english && spanish)) {
+        usage();
+    }
+    await inEdit(async (edit) => {
+        const track = await call<Track>("GET", `${API}/edits/${edit}/tracks/production`);
+        const releases = track.releases ?? [];
+        if (releases.length === 0) {
+            throw new Error("The production track has no release to change");
+        }
+        const newest = String(Math.max(...releases.flatMap((release) => release.versionCodes ?? []).map(Number)));
+        await putTrack(edit, {
+            ...track,
+            releases: releases.map((release) =>
+                release.versionCodes?.includes(newest)
+                    ? { ...release, releaseNotes: releaseNotes(english, spanish) }
+                    : release
+            ),
+        });
+        console.log(`versionCode ${newest} notes replaced on the production track`);
     });
 }
 

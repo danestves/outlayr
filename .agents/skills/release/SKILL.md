@@ -58,7 +58,18 @@ The in-app What's new sheet shows `message` verbatim, split on `\n`:
 - No bullet marks, semicolons, or em dashes. English only.
 - Leave out chores, tests, refactors, backend-only work, and changes only the other platform shows.
 
-A production Android build carries Play's What's new notes under the same rules, once in English and once in Spanish, at most 500 characters each.
+Store notes cover the same changes, once in English and once in Spanish, as plain text with a little personality:
+
+- One short line on what the release is about, a blank line, then one `•` line per change.
+- Lead with what the person gets, or the question they'd ask: "Owe the plumber for today's job? Log it and pick when you'll pay".
+- No emoji, semicolons, or em dashes.
+- Play: a production Android build, at most 500 characters each. `play.ts notes` replaces them while the release is in review.
+- App Store: the version's What's New, for en-US and es-MX, set before that version goes to review. Apple refuses it on a first version.
+
+  ```sh
+  asc apps info edit --app 6801652978 --version <version> --platform IOS --locale en-US --whats-new "$(cat notes-en.txt)"
+  asc apps info edit --app 6801652978 --version <version> --platform IOS --locale es-MX --whats-new "$(cat notes-es.txt)"
+  ```
 
 ## 4. Dispatch and wait
 
@@ -82,8 +93,9 @@ rnd submit -p ios --profile production --path build/<name>.ipa --groups Internal
 rnd can't submit to Play, so Android uploads with `play.ts`. Preview lands on the internal track, rolled out to testers. Production goes to Google's review and then to every user:
 
 ```sh
-node ../.agents/skills/release/play.ts upload build/<name>.aab preview
-node ../.agents/skills/release/play.ts upload build/<name>.aab production $'First change' $'Primer cambio'
+node ../../.agents/skills/release/play.ts upload build/<name>.aab preview
+node ../../.agents/skills/release/play.ts upload build/<name>.aab production "$(cat notes-en.txt)" "$(cat notes-es.txt)"
+node ../../.agents/skills/release/play.ts notes "$(cat notes-en.txt)" "$(cat notes-es.txt)"   # replace them later
 ```
 
 Rough durations: backend about 3 minutes, OTA about 5, a store build about 35 including the backend. If a run fails, read `gh run view <runId> --log-failed`, and on iOS the `xcode-logs` artifact. Report the failing step and don't retry blindly.
