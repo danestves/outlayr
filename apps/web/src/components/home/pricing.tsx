@@ -49,7 +49,10 @@ export function Pricing() {
                             <span className="text-tint text-sm font-medium">{pricing.trial}</span>
                         </h3>
                         <p className="mt-4 flex items-baseline gap-2">
-                            <span className="text-5xl font-semibold tracking-tight">{pricing.price}</span>
+                            <span className="text-5xl font-semibold tracking-tight">
+                                {pricing.price}
+                                <span className="text-2xl opacity-60">{pricing.cents}</span>
+                            </span>
                             <span className="text-base opacity-60">{pricing.month}</span>
                         </p>
                         <p className="mt-3 text-sm opacity-60">{pricing.other}</p>

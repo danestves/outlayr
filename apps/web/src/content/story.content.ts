@@ -81,6 +81,7 @@ const story = {
         pause: t({ en: "Pause the film", es: "Pausar el video" }),
         play: t({ en: "Play the film", es: "Reproducir el video" }),
         pricing: {
+            cents: t({ en: ".99", es: ".99" }),
             label: t({ en: "Pricing", es: "Precios" }),
             lead: t({
                 en: "The tracker is free and has no ads. Pro lifts the limits and adds sync. Cancel anytime from your app store, or buy it once.",
@@ -92,7 +93,7 @@ const story = {
                 es: "Precios de Estados Unidos. Tu tienda de apps muestra el precio de tu país.",
             }),
             other: t({ en: "Or $49.99 a year, or $129.99 once.", es: "O US$49.99 al año, o US$129.99 una sola vez." }),
-            price: t({ en: "$7.99", es: "US$7.99" }),
+            price: t({ en: "$7", es: "US$7" }),
             trial: t({ en: "7 days free on yearly", es: "7 días gratis en el plan anual" }),
             title: t({
                 en: "Free to start. Pro when you want more.",
