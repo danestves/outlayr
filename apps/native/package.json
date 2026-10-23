@@ -6,18 +6,17 @@
     "scripts": {
         "android": "expo run:android",
         "bench:bundle": "node --import tsx scripts/bench/bundle.ts",
-        "check-types": "intlayer build && tsc --noEmit",
+        "check-types": "vp run i18n:build && tsc --noEmit",
         "db:generate": "drizzle-kit generate",
-        "dev": "intlayer build && expo start --dev-client --clear",
+        "dev": "vp run i18n:build && expo start --dev-client --clear",
         "eas-build-post-install": "intlayer build",
         "gen:app-icon-previews": "node --import tsx scripts/generate-app-icon-previews.ts",
         "gen:icons": "node --import tsx scripts/generate-icons.ts",
-        "i18n:build": "intlayer build",
         "i18n:test": "intlayer test",
         "ios": "expo run:ios",
         "sim": "serve-sim",
-        "start": "intlayer build && expo start",
-        "test": "intlayer build && jest"
+        "start": "vp run i18n:build && expo start",
+        "test": "vp run i18n:build && jest"
     },
     "dependencies": {
         "@better-auth/expo": "catalog:",
