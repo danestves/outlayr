@@ -17,10 +17,6 @@ const story = {
             }),
         },
         hero: {
-            lead: t({
-                en: "Type what you bought the way you would say it, say it out loud, or scan the receipt. Budgets, subscriptions, and every account keep up on their own.",
-                es: "Escribe lo que compraste como lo dirías, dilo en voz alta o escanea el recibo. Tus presupuestos, suscripciones y cuentas se actualizan solos.",
-            }),
             proof: [
                 t({ en: "Free plan", es: "Plan gratis" }),
                 t({ en: "No ads", es: "Sin anuncios" }),

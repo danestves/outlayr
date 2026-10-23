@@ -1,6 +1,8 @@
 import { useIntlayer } from "react-intlayer";
 
 import { BudgetCard, InsightsCard } from "@/components/app-ui/app-ui";
+import { formatMoney } from "@/components/demo/money";
+import { useNames } from "@/components/demo/use-names";
 import { Icon } from "@/components/icon";
 import { StoreBadges } from "@/components/store-badges";
 import { CONTAINER } from "@/lib/layout";
@@ -11,6 +13,8 @@ import { LoopVideo, Phone, videoUrl } from "./media";
 export function Hero() {
     const { hero } = useIntlayer("home");
     const story = useIntlayer("story");
+    const { day, voiceAt } = useIntlayer("demo");
+    const nameOf = useNames();
     return (
         <section className="relative" id="top">
             <div className={`${CONTAINER} grid items-center gap-16 pt-24 pb-24 lg:grid-cols-12`}>
@@ -25,9 +29,26 @@ export function Hero() {
                     >
                         {hero.title}
                     </h1>
-                    <p className="text-muted mt-6 max-w-[680px] text-lg delay-200 md:text-xl" data-reveal>
-                        {story.hero.lead}
-                    </p>
+                    <div className="mt-8 grid max-w-[680px] items-center gap-4 sm:grid-cols-[auto_1fr] sm:gap-8">
+                        <p
+                            className="border-foreground flex items-center justify-between gap-4 border-b py-3 text-xl delay-200 sm:min-w-60"
+                            data-reveal
+                        >
+                            blue bottle 4.50
+                            <Icon className="text-muted text-base" name="arrow-elbow-down-left" />
+                        </p>
+                        <div className="sm:border-border delay-300 sm:border-l sm:pl-8" data-reveal>
+                            <p className="text-4xl font-semibold tracking-tight tabular-nums">
+                                {formatMoney(4.5, "USD")}
+                            </p>
+                            <p className="mt-1 text-lg">
+                                <span className="text-muted">{voiceAt}</span> Blue Bottle
+                            </p>
+                            <p className="text-muted mt-0.5 text-sm">
+                                {nameOf("Coffee")} · {day.today}
+                            </p>
+                        </div>
+                    </div>
                     <div className="mt-10 delay-300" data-reveal>
                         <StoreBadges placement="hero" />
                     </div>
