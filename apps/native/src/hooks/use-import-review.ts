@@ -2,11 +2,11 @@ import { and, eq, gte, isNull, lte } from "drizzle-orm";
 import { useCallback, useEffect, useMemo } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
-import { revalidateForeignKeys } from "@/db/client";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { useLiveQuery } from "@/data/live-query";
 import { applyImport, buildImportPlan } from "@/data/transfer-core";
 import type { ImportEntry, ImportPlan, SkipReason } from "@/data/transfer-core";
+import { revalidateForeignKeys } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
 import { fingerprintsOf, flagDuplicates } from "@/domain/import-dedup";
 import type { ImportCommitState } from "@/domain/import-flow";

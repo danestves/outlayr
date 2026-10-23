@@ -1,6 +1,6 @@
-import { revalidateForeignKeys } from "@/db/client";
 import { accountLedgerState, discardAccountLedger, replaceLocalFromAccount } from "@/data/adoption-engine-core";
 import type { AdoptionEngine } from "@/data/ledger-adoption";
+import { revalidateForeignKeys } from "@/db/client";
 import type { Database } from "@/db/client";
 import { syncTransport } from "@/lib/convex";
 

@@ -9,10 +9,10 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { eraseData } from "@/data/erase";
 import type { EraseResidue, EraseScope } from "@/data/erase";
 import { useTransactionCount } from "@/data/transactions";
+import { revalidateForeignKeys } from "@/db/client";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
-import { revalidateForeignKeys } from "@/db/client";
 import { clearStoredPhotos } from "@/lib/photo-storage";
 import { clearSpotlight } from "@/lib/spotlight";
 

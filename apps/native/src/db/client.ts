@@ -1,3 +1,4 @@
+import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import { openDatabaseSync } from "expo-sqlite";
 
@@ -31,7 +32,9 @@ export async function closeDatabase(database: Database): Promise<void> {
 
 /** `foreign_key_check` walks tombstones included; zero means declared cascades may enforce outright. */
 function foreignKeyConflicts(db: Database): number {
-    const conflicts = db.$client.getAllSync("PRAGMA foreign_key_check");
+    const conflicts = db.all<{ table: string; rowid: number; parent: string; fkid: number }>(
+        sql`PRAGMA foreign_key_check`
+    );
     if (conflicts.length > 0) {
         console.warn(
             `[db] ${conflicts.length} orphaned row(s) found — leaving foreign_keys off. ` +
@@ -42,14 +45,13 @@ function foreignKeyConflicts(db: Database): number {
 }
 
 function recordForeignKeysPassed(db: Database): void {
-    db.$client.runSync(
-        "INSERT INTO appMeta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-        [META_KEYS.fkCheckPass, FOREIGN_KEYS_STAMP]
-    );
+    db.insert(schema.appMeta)
+        .values({ key: META_KEYS.fkCheckPass, value: FOREIGN_KEYS_STAMP })
+        .onConflictDoUpdate({ target: schema.appMeta.key, set: { value: FOREIGN_KEYS_STAMP } });
 }
 
 function forgetForeignKeysRecord(db: Database): void {
-    db.$client.runSync("DELETE FROM appMeta WHERE key = ?", [META_KEYS.fkCheckPass]);
+    db.delete(schema.appMeta).where(eq(schema.appMeta.key, META_KEYS.fkCheckPass));
 }
 
 /**
