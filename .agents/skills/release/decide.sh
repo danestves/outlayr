@@ -74,9 +74,8 @@ builds = [
     if "distribution=store;" in run["displayTitle"]
 ]
 if builds:
-    newest = max(builds, key=lambda build: tuple(map(int, build["version"].split("."))))
-    here = any(build["here"] and build["version"] == newest["version"] for build in builds)
-    fields = [newest["version"], newest["sha"], int(here)]
+    newest = max(builds, key=lambda build: (tuple(map(int, build["version"].split("."))), build["here"]))
+    fields = [newest["version"], newest["sha"], int(newest["here"])]
     if own := next((build for build in builds if build["here"]), None):
         numbers = ",".join(str(build["number"]) for build in builds if build["here"] and build["version"] == own["version"])
         fields += [own["version"], numbers]

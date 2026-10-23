@@ -55,7 +55,7 @@ Both platforms and both channels share one version line, so a version names the 
 
 1. While this platform's newest version isn't live, the build keeps it. On iOS that's until App Store Connect approves it (TestFlight, in review, or pulled from review all keep it). On Android it's until a build of it is on the production track; the internal track keeps it.
 2. Once it's live, the build takes the newest version on any store build if this platform hasn't built it yet and adds no app change of its own since. That's Android catching up to an iOS 1.2.4.
-3. Otherwise it bumps from that newest version, by the conventional commits that touched this platform's app since: `feat!` or `fix!` is major, `feat` is minor, anything else is patch. `refactor!` and `chore!` break code, not the app, so they don't count.
+3. Otherwise it bumps from that newest version, by the conventional commits that touched this platform's app since its own build of it: `feat!` or `fix!` is major, `feat` is minor, anything else is patch. `refactor!` and `chore!` break code, not the app, so they don't count.
 
 Step 1 asks `asc` and `play.ts status`, so a build verdict needs both logged in. If either fails, `decide.sh` exits rather than guess.
 
