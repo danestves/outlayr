@@ -14,7 +14,9 @@ const DATABASE_NAME = "outlayr.db";
  */
 const FOREIGN_KEYS_STAMP = String(migrationsBundle.journal.entries.at(-1)?.when ?? 0);
 
-/** `enableChangeListener` powers `useLiveQuery`. Migrations and the foreign-key gate run in `LocalDataProvider`, not here. */
+/** `enableChangeListener` powers `useLiveQuery`. Migrations, the foreign-key gate and the bootstrap run in
+ * `LocalDataProvider`, not here.
+ */
 export function openDatabase() {
     const sqlite = openDatabaseSync(DATABASE_NAME, {
         enableChangeListener: true,
