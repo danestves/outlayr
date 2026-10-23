@@ -29,6 +29,7 @@ Every kind of data Outlayr handles, in one place. The sections below explain eac
 | Data | When | Where it goes | Kept |
 | --- | --- | --- | --- |
 | Your ledger and its photos | Always | Your device | Until you erase it |
+| Notification titles and text | Notification access on Android | Your device | Last one per app, up to 20 apps, and the last 5 logged |
 | Synced ledger, deleted entries, photos | Sync on (Pro) | Our servers | Until account deletion |
 | Email, name, provider ID, password hash | Sign-in | Our servers | Until account deletion |
 | Email address, 6-digit code | Email sign-in | Our servers, Cloudflare | Code: 10 minutes. Email: Cloudflare’s policy |
@@ -110,7 +111,7 @@ These features need an account, and none of them run until you allow sending dat
 
 ### Merchant suggestions (Smart fill)
 
-When you type, speak, scan, or log from Apple Pay a merchant Outlayr doesn’t recognize on the device, the app sends our server the merchant name, whether the entry is an expense or income, its currency code, your language and device region, and the names of your categories. Never the amount, date, notes, or account.
+When you type, speak, scan, or log from Apple Pay or a notification a merchant Outlayr doesn’t recognize on the device, the app sends our server the merchant name, whether the entry is an expense or income, its currency code, your language and device region, and the names of your categories. Never the amount, date, notes, or account.
 
 Our server first checks a shared list of known merchants (below). If the merchant isn’t there, it asks Anthropic’s Claude model, and the answer (a category, tags, an emoji, and the merchant’s web address) comes back to your device. Saved entries that still have no logo may be looked up again in the background. Those requests wait on our server only until your device collects the answer.
 
@@ -156,6 +157,14 @@ On iPhone, Outlayr can log card purchases for you through Apple’s Shortcuts ap
 
 When the automation runs, Shortcuts gives Outlayr the amount, merchant, and card name of an Apple Pay purchase, or the title and text of a notification from an app you pick, such as your bank. Outlayr reads the amount and merchant on your phone, matches the card to one of your accounts by name, and adds the entry. Nothing from the automation is sent to us. The new entry is then like any other: it syncs if sync is on, and its merchant name can be used for a [merchant suggestion](#suggestions-voice-and-receipts).
 
+## Notification access on Android
+
+On Android, Outlayr can log purchases from your notifications. Nothing is read until you open **Settings › Auto-logging**, tap **Allow notification access**, and turn it on for Outlayr in Android’s settings.
+
+With access on, Android shows Outlayr every notification your phone receives. Outlayr checks each one on your phone for an amount and ignores the rest. For an app that sends one with an amount, it keeps the app’s name and the title and text of its latest such notification, for up to 20 apps, so it can list them under **Log from**. It logs purchases only from the apps you turn on there, and Google Wallet starts on. From those, it reads the amount, the merchant, and the card a Google Wallet notification names, matches the card or app to one of your accounts, adds the entry, and confirms it with a notification of its own. It also keeps the text of the last 5 notifications it logged.
+
+None of this is sent to us or to anyone else. The new entry is then like any other: it syncs if sync is on, and its merchant name can be used for a [merchant suggestion](#suggestions-voice-and-receipts). To stop, turn an app off under **Log from**, or turn off notification access for Outlayr in Android’s settings. Deleting the app removes what it kept.
+
 ## AI assistants
 
 You can connect an AI assistant that supports the Model Context Protocol (MCP), such as Claude, to your Outlayr account. Nothing is connected until you add Outlayr in the assistant, sign in with Apple or Google, and approve the assistant on a screen that shows its name and the site your access goes to. We ask for that approval every time an assistant connects.
@@ -182,7 +191,8 @@ The app asks for each permission the first time a feature needs it. You can chan
 - **Photos:** choosing a receipt to scan, a screenshot of an installment plan to import, or a custom image for a transaction or account.
 - **Microphone:** recording an entry you speak, only while you speak.
 - **Face ID:** unlocking Outlayr when the lock is on.
-- **Notifications:** the reminders you turn on.
+- **Notifications:** the reminders you turn on, and the confirmation when Outlayr logs a purchase for you.
+- **Notification access** (Android): reading notifications to log purchases, as described in [Notification access on Android](#notification-access-on-android).
 
 Outlayr doesn’t ask for your location or contacts, or for permission to track you.
 
@@ -231,7 +241,7 @@ If you’re in the European Economic Area or the United Kingdom, we rely on thes
 | Sessions, usage limits, error logs, assistant tool logs, and update checks | Legitimate interests: keeping Outlayr secure, working, and free of abuse. |
 | Usage analytics and crash reports | Your consent. Share analytics starts off when your device’s region is in the EEA or UK. Turning it on gives consent, and turning it off withdraws it. |
 | Website analytics | Your consent for the cookie and visit recordings, asked on your first visit. Declining withdraws it. A declined visit is still counted without a cookie, under our legitimate interest in knowing how many people visit. |
-| Camera, microphone, photos, biometric lock, and notifications | Your permission, given when your device asks and withdrawn in its settings. |
+| Camera, microphone, photos, biometric lock, notifications, and notification access | Your permission, given when your device asks and withdrawn in its settings. |
 | Answering lawful requests and keeping records the law requires | Legal obligation. |
 
 You can object to any processing based on legitimate interests by writing to [support@tryoutlayr.com](mailto:support@tryoutlayr.com).

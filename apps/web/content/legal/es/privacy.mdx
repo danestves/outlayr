@@ -29,6 +29,7 @@ Todos los tipos de datos que maneja Outlayr, en un solo lugar. Las secciones sig
 | Datos | Cuándo | Adónde van | Se conservan |
 | --- | --- | --- | --- |
 | Tu registro y sus fotos | Siempre | Tu dispositivo | Hasta que los borres |
+| Títulos y texto de notificaciones | Acceso a notificaciones en Android | Tu dispositivo | La última de cada app, hasta 20 apps, y las últimas 5 registradas |
 | Registro sincronizado, entradas eliminadas, fotos | Sincronización activada (Pro) | Nuestros servidores | Hasta la eliminación de la cuenta |
 | Correo electrónico, nombre, ID del proveedor, hash de la contraseña | Inicio de sesión | Nuestros servidores | Hasta la eliminación de la cuenta |
 | Correo electrónico, código de 6 dígitos | Inicio de sesión con correo | Nuestros servidores, Cloudflare | Código: 10 minutos. Correo: política de Cloudflare |
@@ -110,7 +111,7 @@ Estas funciones requieren una cuenta, y ninguna funciona hasta que permites envi
 
 ### Sugerencias de comercios (Autocompletado)
 
-Cuando escribes, dictas, escaneas o registras desde Apple Pay un comercio que Outlayr no reconoce en el dispositivo, la app le envía a nuestro servidor el nombre del comercio, si la entrada es un gasto o un ingreso, su código de moneda, tu idioma y la región del dispositivo, y los nombres de tus categorías. Nunca el monto, la fecha, las notas ni la cuenta.
+Cuando escribes, dictas, escaneas o registras desde Apple Pay o una notificación un comercio que Outlayr no reconoce en el dispositivo, la app le envía a nuestro servidor el nombre del comercio, si la entrada es un gasto o un ingreso, su código de moneda, tu idioma y la región del dispositivo, y los nombres de tus categorías. Nunca el monto, la fecha, las notas ni la cuenta.
 
 Nuestro servidor primero revisa una lista compartida de comercios conocidos (más abajo). Si el comercio no está ahí, le pregunta al modelo Claude de Anthropic, y la respuesta (una categoría, etiquetas, un emoji y la dirección web del comercio) vuelve a tu dispositivo. Las entradas guardadas que aún no tienen logo pueden volver a consultarse en segundo plano. Esas solicitudes esperan en nuestro servidor solo hasta que tu dispositivo recoja la respuesta.
 
@@ -156,6 +157,14 @@ En iPhone, Outlayr puede registrar tus compras con tarjeta a través de la app A
 
 Cuando la automatización se ejecuta, Atajos le da a Outlayr el monto, el comercio y el nombre de la tarjeta de una compra con Apple Pay, o el título y el texto de una notificación de una app que elijas, como la de tu banco. Outlayr lee el monto y el comercio en tu celular, asocia la tarjeta con una de tus cuentas por su nombre y agrega la entrada. Nada de la automatización se nos envía. A partir de ahí, la nueva entrada es como cualquier otra: se sincroniza si la sincronización está activada, y su nombre de comercio puede usarse para una [sugerencia de comercio](#sugerencias-voz-y-recibos).
 
+## Acceso a notificaciones en Android
+
+En Android, Outlayr puede registrar compras a partir de tus notificaciones. No lee nada hasta que abres **Configuración › Registro automático**, tocas **Permitir acceso a notificaciones** y lo activas para Outlayr en los ajustes de Android.
+
+Con el acceso activado, Android le muestra a Outlayr cada notificación que recibe tu celular. Outlayr revisa cada una en tu celular en busca de un monto e ignora el resto. De cada app que envía una con un monto, guarda el nombre de la app y el título y el texto de la última de esas notificaciones, hasta 20 apps, para mostrarlas en **Registrar desde**. Solo registra compras de las apps que actives ahí, y Google Wallet viene activada. De esas, lee el monto, el comercio y la tarjeta que nombra una notificación de Google Wallet, asocia la tarjeta o la app con una de tus cuentas, agrega la entrada y te lo confirma con una notificación propia. También guarda el texto de las últimas 5 notificaciones que registró.
+
+Nada de esto se nos envía a nosotros ni a nadie más. A partir de ahí, la nueva entrada es como cualquier otra: se sincroniza si la sincronización está activada, y su nombre de comercio puede usarse para una [sugerencia de comercio](#sugerencias-voz-y-recibos). Para detenerlo, desactiva una app en **Registrar desde**, o quita el acceso a notificaciones de Outlayr en los ajustes de Android. Al borrar la app se elimina lo que guardó.
+
 ## Asistentes de IA
 
 Puedes conectar a tu cuenta de Outlayr un asistente de IA compatible con el Model Context Protocol (MCP), como Claude. No se conecta nada hasta que agregas Outlayr en el asistente, inicias sesión con Apple o Google y apruebas el asistente en una pantalla que muestra su nombre y el sitio al que va tu acceso. Pedimos esa aprobación cada vez que un asistente se conecta.
@@ -182,7 +191,8 @@ La app pide cada permiso la primera vez que una función lo necesita. Puedes cam
 - **Fotos:** elegir un recibo para escanear, una captura de un plan de cuotas para importar, o una imagen personalizada para una transacción o una cuenta.
 - **Micrófono:** grabar una entrada que dictas, solo mientras hablas.
 - **Face ID:** desbloquear Outlayr cuando el bloqueo está activado.
-- **Notificaciones:** los recordatorios que activas.
+- **Notificaciones:** los recordatorios que activas, y la confirmación cuando Outlayr registra una compra por ti.
+- **Acceso a notificaciones** (Android): leer notificaciones para registrar compras, como se describe en [Acceso a notificaciones en Android](#acceso-a-notificaciones-en-android).
 
 Outlayr no pide tu ubicación ni tus contactos, ni permiso para rastrearte.
 
@@ -231,7 +241,7 @@ Si estás en el Espacio Económico Europeo o en el Reino Unido, estas son las ba
 | Las sesiones, los límites de uso, los registros de errores, los registros de herramientas de asistentes y las búsquedas de actualizaciones | Intereses legítimos: mantener Outlayr seguro, en funcionamiento y libre de abusos. |
 | Las analíticas de uso y los reportes de fallas | Tu consentimiento. Compartir analíticas empieza desactivado cuando la región de tu dispositivo está en el EEE o el Reino Unido. Activarlo es dar tu consentimiento, y desactivarlo es retirarlo. |
 | Las analíticas del sitio web | Tu consentimiento para la cookie y las grabaciones de visitas, que pedimos en tu primera visita. Rechazarla es retirarlo. Una visita rechazada se cuenta igual sin cookie, por nuestro interés legítimo en saber cuántas personas nos visitan. |
-| La cámara, el micrófono, las fotos, el bloqueo biométrico y las notificaciones | Tu consentimiento, que das cuando tu dispositivo te pide permiso y retiras en su configuración. |
+| La cámara, el micrófono, las fotos, el bloqueo biométrico, las notificaciones y el acceso a notificaciones | Tu consentimiento, que das cuando tu dispositivo te pide permiso y retiras en su configuración. |
 | Atender requerimientos legales y conservar los registros que exige la ley | Obligación legal. |
 
 Puedes oponerte a cualquier tratamiento basado en intereses legítimos escribiendo a [support@tryoutlayr.com](mailto:support@tryoutlayr.com).
