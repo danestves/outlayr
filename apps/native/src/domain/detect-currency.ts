@@ -1,8 +1,10 @@
 import { CURRENCY_META, PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
 
+const symbolKey = (symbol: string): string => symbol.replaceAll(/[.,\s]/g, "");
+
 const BY_SYMBOL = new Map<string, string[]>();
 for (const code of PICKABLE_CURRENCY_CODES) {
-    const { symbol } = CURRENCY_META[code];
+    const symbol = symbolKey(CURRENCY_META[code].symbol);
     const existing = BY_SYMBOL.get(symbol);
     if (existing) {
         existing.push(code);
