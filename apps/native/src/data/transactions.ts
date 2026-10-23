@@ -81,7 +81,6 @@ const NO_READ = { all: () => NO_ROWS };
  * Category fields come from {@link useCategoryMeta}, not a join, so a rename repaints without a transaction write.
  * The window grows by days rather than paging: `useLiveQuery` re-runs on every write, and a cursor would shift.
  * Only `head` follows the clock; `tail` appends the new days on paging and keeps its row objects.
- * `enabled` false skips the three reads for a viewer that shows none of them; a filter flip back re-reads at once.
  */
 export function useLoggedTransactions(db: Database, nowMs: number, days: number, enabled = true): LoggedTransactions {
     const dayRows = useLiveQuery(
