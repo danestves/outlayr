@@ -1,4 +1,5 @@
 import type { Href } from "expo-router";
+import { Platform } from "react-native";
 
 import type { RootStackGroup } from "@/domain/auth-gate";
 import type { TranslationKey } from "@/i18n/catalog";
@@ -26,7 +27,7 @@ export const TITLED_SCREENS: readonly {
     { name: "settings/time", titleKey: "nav.settings.time" },
     { name: "settings/upcoming", titleKey: "nav.settings.upcoming" },
     { name: "settings/usage", titleKey: "nav.settings.usage" },
-    { name: "settings/wallet", titleKey: "nav.settings.wallet" },
+    { name: "settings/wallet", titleKey: Platform.OS === "android" ? "nav.settings.autoLog" : "nav.settings.wallet" },
 ];
 
 export const SHEET_SCREENS: readonly {

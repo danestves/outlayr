@@ -100,6 +100,11 @@ export function publishIntentSnapshot(snapshot: IntentSnapshot): void {
 }
 
 function queueDirectory(): Directory | null {
+    if (Platform.OS === "android") {
+        const directory = new Directory(Paths.document, QUEUE_DIRECTORY);
+        directory.create({ idempotent: true, intermediates: true });
+        return directory;
+    }
     if (Platform.OS !== "ios" || !APP_GROUP) {
         return null;
     }

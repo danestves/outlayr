@@ -243,13 +243,11 @@ export function Settings() {
             </SettingsSection>
 
             <SettingsSection title={t("settings.section.device")}>
-                {Platform.OS === "ios" ? (
-                    <LinkRow
-                        icon="Wallet01"
-                        onPress={() => router.push("/settings/wallet")}
-                        title={t("settings.row.wallet")}
-                    />
-                ) : null}
+                <LinkRow
+                    icon="Wallet01"
+                    onPress={() => router.push("/settings/wallet")}
+                    title={t(Platform.OS === "ios" ? "settings.row.wallet" : "settings.row.autoLog")}
+                />
                 <LinkRow
                     icon="Notification03"
                     onPress={() => router.push("/settings/notifications")}
