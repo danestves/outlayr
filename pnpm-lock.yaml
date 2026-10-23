@@ -117,8 +117,8 @@ importers:
         version: 4.5.4
     devDependencies:
       '@types/react':
-        specifier: 19.2.7
-        version: 19.2.7
+        specifier: ^19.2.18
+        version: 19.3.0
       '@types/web':
         specifier: 0.0.166
         version: 0.0.166
@@ -5400,9 +5400,6 @@ packages:
 
   '@types/react@19.2.18':
     resolution: {integrity: sha512-AnzbBERsrLKtk2XSfTbYRLjQPdy116Sty4q+T+Bp3IC4l6jNBvreVPAHmpq9qhXQM7CXZPjLVmGMw9sy+hxQ3w==}
-
-  '@types/react@19.2.7':
-    resolution: {integrity: sha512-MWtvHrGZLFttgeEj28VXHxpmwYbor/ATPYbBfSFZEIRK0ecCFLl2Qo55z52Hss+UV9CRN7trSeq1zbgx7YDWWg==}
 
   '@types/react@19.3.0':
     resolution: {integrity: sha512-N0rFCuH9YoxG9/m61l9MfpJKfmLOVU0em7ipIz6TRgSSkvReLB9vL85GB+yr8Bs5leqpvg96JSwF4ZS1s4viQg==}
@@ -17783,10 +17780,6 @@ snapshots:
       '@types/react': 19.3.0
 
   '@types/react@19.2.18':
-    dependencies:
-      csstype: 3.2.3
-
-  '@types/react@19.2.7':
     dependencies:
       csstype: 3.2.3
 
