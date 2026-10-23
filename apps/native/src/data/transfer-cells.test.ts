@@ -251,15 +251,31 @@ describe("settledTransfersQuery answers for both legs in one statement", () => {
 
     it("groups cross-currency legs per direction, so an account both sending and receiving keeps two cells", async () => {
         const db = makeDb();
-        await addTransfer(db, { exchangeRate: 60, exchangeRateType: "custom", fromAccountId: "a", id: "t1", toAccountId: "b", toAmount: 6000, toCurrency: "VES" });
-        await addTransfer(db, { fromAccountId: "b", fromAmount: 3, fromCurrency: "VES", id: "t2", toAccountId: "a", toAmount: 0.05, toCurrency: "USD" });
+        await addTransfer(db, {
+            exchangeRate: 60,
+            exchangeRateType: "custom",
+            fromAccountId: "a",
+            id: "t1",
+            toAccountId: "b",
+            toAmount: 6000,
+            toCurrency: "VES",
+        });
+        await addTransfer(db, {
+            fromAccountId: "b",
+            fromAmount: 3,
+            fromCurrency: "VES",
+            id: "t2",
+            toAccountId: "a",
+            toAmount: 0.05,
+            toCurrency: "USD",
+        });
 
         const merged = await settledTransfersQuery(db, DAY);
 
         expect(
-            merged.map(({ accountId, currency, leg }) => ({ accountId, currency, leg })).sort((l, r) =>
-                `${l.accountId}${l.leg}`.localeCompare(`${r.accountId}${r.leg}`)
-            )
+            merged
+                .map(({ accountId, currency, leg }) => ({ accountId, currency, leg }))
+                .sort((l, r) => `${l.accountId}${l.leg}`.localeCompare(`${r.accountId}${r.leg}`))
         ).toStrictEqual([
             { accountId: "a", currency: "USD", leg: "in" },
             { accountId: "a", currency: "USD", leg: "out" },

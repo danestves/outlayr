@@ -85,7 +85,12 @@ export function settledTransfersQuery(db: SpendDb, now: Date) {
         .groupBy(transfers.fromAccountId, transfers.fromCurrency, TRANSFER_UTC_DAY, TRANSFER_LOCAL_DAY)
         .unionAll(
             db
-                .select({ leg: LEG_IN, accountId: transfers.toAccountId, ...INBOUND_COLUMNS, plotDay: TRANSFER_LOCAL_DAY })
+                .select({
+                    leg: LEG_IN,
+                    accountId: transfers.toAccountId,
+                    ...INBOUND_COLUMNS,
+                    plotDay: TRANSFER_LOCAL_DAY,
+                })
                 .from(transfers)
                 .where(and(isNull(transfers.deletedAt), lte(transfers.date, now)))
                 .groupBy(transfers.toAccountId, transfers.toCurrency, TRANSFER_UTC_DAY, TRANSFER_LOCAL_DAY)
