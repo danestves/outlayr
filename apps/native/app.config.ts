@@ -346,7 +346,7 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
           }
         : { url: UPDATES_URL },
     userInterfaceStyle: "automatic",
-    version: "1.0.0",
+    version: process.env.APP_VERSION ?? "1.0.0",
 });
 
 export default getConfig;
