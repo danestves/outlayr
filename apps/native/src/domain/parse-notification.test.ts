@@ -124,6 +124,19 @@ describe("parseNotification", () => {
         });
     });
 
+    it("reads a dollar amount written US$ or U$S, as Latin American locales print it", () => {
+        for (const body of ["US$ 8,75", "US$8,75", "8,75 US$"]) {
+            expect(parseNotification(`Farmatodo\n${body} con Visa ••4821`)).toMatchObject({
+                amount: 8.75,
+                merchant: "Farmatodo",
+            });
+        }
+        expect(parseNotification("Compraste U$S 25,00 en Amazon con tu tarjeta")).toMatchObject({
+            amount: 25,
+            merchant: "Amazon",
+        });
+    });
+
     it("reads Google Wallet's tap: merchant title, amount and masked card in the body", () => {
         const spanish = "Test Market\n1.234,56\u00A0€ con Mastercard Open Debit\u202F••0000";
         expect(parseNotification(spanish)).toStrictEqual({

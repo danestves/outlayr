@@ -1,5 +1,6 @@
 import { CURRENCY_META, PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
 
+import { SYMBOL_ALIASES } from "./detect-currency";
 import { detectDecimalSeparator, parseCsvAmount } from "./transaction-csv";
 
 export interface ParsedNotification {
@@ -13,7 +14,9 @@ function escape(text: string): string {
     return text.replaceAll(/[.*+?^${}()|[\]\\/]/g, String.raw`\$&`);
 }
 
-const SYMBOLS = [...new Set(Object.values(CURRENCY_META).map((meta) => meta.symbol))]
+const SYMBOLS = [
+    ...new Set([...Object.values(CURRENCY_META).map((meta) => meta.symbol), ...Object.keys(SYMBOL_ALIASES)]),
+]
     .sort((a, b) => b.length - a.length)
     .map(escape)
     .join("|");

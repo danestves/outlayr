@@ -13,6 +13,9 @@ for (const code of PICKABLE_CURRENCY_CODES) {
 
 const CODES = new Set<string>(PICKABLE_CURRENCY_CODES);
 
+export const SYMBOL_ALIASES = { U$S: "USD", US$: "USD" } as const satisfies Record<string, string>;
+const ALIAS_CODE = new Map<string, string>(Object.entries(SYMBOL_ALIASES));
+
 /**
  * e.g. "€12,40" → "EUR". Null unless the text identifies exactly one currency: a bare "$12.40" is shared by USD,
  * CAD, AUD, MXN and more.
@@ -35,6 +38,11 @@ export function detectCurrency(text: string | null | undefined): string | null {
         .trim();
     if (!symbol) {
         return null;
+    }
+
+    const alias = ALIAS_CODE.get(symbol);
+    if (alias) {
+        return alias;
     }
 
     const matches = BY_SYMBOL.get(symbol);
