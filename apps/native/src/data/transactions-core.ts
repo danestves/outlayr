@@ -78,7 +78,9 @@ export function logWindowDaysQuery(db: SpendDb, nowMs: number, days: number) {
         .limit(days);
 }
 
-/** COUNT in SQLite: the settings screens only read the number, so moving the ledger's ids across the bridge buys nothing. */
+/** COUNT in SQLite: the settings screens only read the number, so moving all the ledger's ids across the
+ * bridge buys nothing.
+ */
 export function ledgerSizeQuery(db: SpendDb) {
     return db.select({ live: count() }).from(transactions).where(isNull(transactions.deletedAt));
 }

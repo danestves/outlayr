@@ -9,7 +9,9 @@ import * as schema from "./schema";
 
 const DATABASE_NAME = "outlayr.db";
 
-/** Reread whenever a migration is appended: the journal's newest stamp names the schema the check conceded. */
+/** Reread whenever a migration is appended: the journal's newest stamp names the schema the check conceded.
+ * Sparse: a later schema also invalidates the recorded verdict below.
+ */
 const FOREIGN_KEYS_STAMP = String(migrationsBundle.journal.entries.at(-1)?.when ?? 0);
 
 /** `enableChangeListener` powers `useLiveQuery`. Migrations and the foreign-key gate run in `LocalDataProvider`, not here. */
