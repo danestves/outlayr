@@ -599,11 +599,11 @@ describe("restoring a tombstoned transaction", () => {
     });
 
     it("puts the entry back in every read that hides tombstones", async () => {
-        await expect(ledgerSizeQuery(db)).resolves.toStrictEqual([]);
+        await expect(ledgerSizeQuery(db)).resolves.toStrictEqual([{ live: 0 }]);
 
         await transactionsRepo.restore(db, id, RESTORED_AT);
 
-        expect((await ledgerSizeQuery(db)).map((row) => row.id)).toStrictEqual([id]);
+        await expect(ledgerSizeQuery(db)).resolves.toStrictEqual([{ live: 1 }]);
         await expect(logWindowDaysQuery(db, Date.now(), 30)).resolves.toHaveLength(1);
     });
 
@@ -759,15 +759,15 @@ describe("switching sync off over a ledger already logged", () => {
     it("stops the queue without taking a row off this device", async () => {
         const db = syncedDb();
         await setSyncEnabled(db, true);
-        const kept = await transactionsRepo.create(db, DRAFT);
+        await transactionsRepo.create(db, DRAFT);
         const tombstoned = await transactionsRepo.create(db, DRAFT);
         await transactionsRepo.remove(db, tombstoned, DELETED_AT);
 
         await setSyncEnabled(db, false);
-        const afterOff = await transactionsRepo.create(db, DRAFT);
+        await transactionsRepo.create(db, DRAFT);
 
         await expect(db.select({ seq: outbox.seq }).from(outbox)).resolves.toStrictEqual([]);
-        expect((await ledgerSizeQuery(db)).map((row) => row.id).sort()).toStrictEqual([kept, afterOff].sort());
+        expect((await ledgerSizeQuery(db))[0]?.live).toBe(2);
         expect((await deletedTransactionsQuery(db)).map((row) => row.id)).toStrictEqual([tombstoned]);
     });
 });
