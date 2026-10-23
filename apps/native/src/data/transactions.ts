@@ -78,13 +78,22 @@ interface LogTail {
     splitMs: number;
 }
 
+const NO_ROWS: never[] = [];
+// Inert reads stay subscribed but run no SQL: flipping `enabled` back on re-reads in that render.
+const NO_READ = { all: () => NO_ROWS };
+
 /**
  * Category fields come from {@link useCategoryMeta}, not a join, so a rename repaints without a transaction write.
  * The window grows by days rather than paging: `useLiveQuery` re-runs on every write, and a cursor would shift.
  * Only `head` follows the clock; `tail` appends the new days on paging and keeps its row objects.
  */
-export function useLoggedTransactions(db: Database, nowMs: number, days: number): LoggedTransactions {
-    const dayRows = useLiveQuery(transactions, () => logWindowDaysQuery(db, nowMs, days), [nowMs, days], nowMs);
+export function useLoggedTransactions(db: Database, nowMs: number, days: number, enabled = true): LoggedTransactions {
+    const dayRows = useLiveQuery(
+        transactions,
+        () => (enabled ? logWindowDaysQuery(db, nowMs, days) : NO_READ),
+        [enabled, nowMs, days],
+        nowMs
+    );
 
     const floorMs = dayRows.at(-1)?.day?.getTime() ?? null;
     const reachedEnd = dayRows.length < days;
@@ -93,21 +102,24 @@ export function useLoggedTransactions(db: Database, nowMs: number, days: number)
 
     const headData = useLiveQuery(
         transactions,
-        () => logWindowRowsQuery(db, nowMs, headFloorMs),
-        [nowMs, headFloorMs],
+        () => (enabled ? logWindowRowsQuery(db, nowMs, headFloorMs) : NO_READ),
+        [enabled, nowMs, headFloorMs],
         nowMs
     );
     const tailFloorMs = Math.min(floorMs ?? splitMs, splitMs);
     const tailRead = useLiveRead(
         transactions,
         (previous: LogTail | null): LogTail => {
+            if (!enabled) {
+                return { floorMs: tailFloorMs, rows: NO_ROWS, splitMs };
+            }
             const grown = previous !== null && previous.splitMs === splitMs && tailFloorMs < previous.floorMs;
             const rows = grown
                 ? [...previous.rows, ...logTailRowsQuery(db, tailFloorMs, previous.floorMs).all()]
                 : logTailRowsQuery(db, tailFloorMs, splitMs).all();
             return { floorMs: tailFloorMs, rows, splitMs };
         },
-        [tailFloorMs, splitMs],
+        [enabled, tailFloorMs, splitMs],
         (cached, next) => sameRows(cached.rows, next.rows)
     );
     const head = useDecoratedRows(db, headData);
