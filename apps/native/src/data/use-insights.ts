@@ -7,8 +7,7 @@ import { categories, transactions } from "@/db/schema";
 import { useLanguage } from "@/i18n/context";
 
 import {
-    bucketSeries,
-    categoryBreakdown,
+    aggregateInsightsWindows,
     categoryMovers,
     DEFAULT_INSIGHTS_CALENDAR,
     elapsedSlots,
@@ -18,7 +17,6 @@ import {
     windowLabel,
     windowShortLabel,
     windowStart,
-    windowTotals,
     withCategoryDeltas,
 } from "./insights";
 import type {
@@ -145,10 +143,16 @@ export function useInsights(
             parentId: row.categoryId ? (categoriesById.get(row.categoryId)?.parentId ?? null) : null,
         }));
         const now = new Date(nowMs);
-        const buckets = bucketSeries(rows, period, measure, now, offset, cal, language);
+        const {
+            buckets,
+            categories: composition,
+            income,
+            priorCategories: priorComposition,
+            priorIncome,
+            priorSpent,
+            spent,
+        } = aggregateInsightsWindows(rows, categoriesById, period, measure, now, offset, cal, language);
         const total = periodTotal(buckets);
-        const { income, spent } = windowTotals(rows, period, now, offset, cal);
-        const prior = windowTotals(rows, period, now, offset - 1, cal);
         const net = income - spent;
         const divisor = elapsedSlots(period, now, offset, cal);
 
@@ -157,8 +161,6 @@ export function useInsights(
         const earliest = earliestRaw == null ? null : new Date(Number(earliestRaw));
         const minOffset = earliest ? Math.min(0, offsetForDate(period, earliest, now, cal)) : 0;
 
-        const composition = categoryBreakdown(rows, categoriesById, period, measure, now, offset, cal);
-        const priorComposition = categoryBreakdown(rows, categoriesById, period, measure, now, offset - 1, cal);
         let compositionTotal = 0;
         for (const item of composition) {
             compositionTotal += item.amount;
@@ -181,8 +183,8 @@ export function useInsights(
             nextLabel: windowShortLabel(period, offset + 1, now, cal, language),
             prevLabel: windowShortLabel(period, offset - 1, now, cal, language),
             priorLabel: windowLabel(period, offset - 1, now, cal, language),
-            priorMeasure: measure === "income" ? prior.income : prior.spent,
-            priorNet: prior.income - prior.spent,
+            priorMeasure: measure === "income" ? priorIncome : priorSpent,
+            priorNet: priorIncome - priorSpent,
             rows,
             spent,
             start: windowStart(period, now, offset, cal),
