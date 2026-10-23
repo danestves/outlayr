@@ -1,3 +1,5 @@
+import { useRouter } from "expo-router";
+import { isAvailableAsync } from "expo-store-review";
 import { View } from "react-native";
 
 import { FirstRun } from "@/components/first-run";
@@ -32,13 +34,22 @@ function MockNotification({ body, back }: { body: string; back?: boolean }) {
 
 export function OnboardingRhythm() {
     const db = useDatabase();
+    const router = useRouter();
     const t = useTranslation();
 
-    // `finishOnboarding` settles the root guard, which swaps this stack. Nothing navigates.
     const finish = () => {
-        finishOnboarding(db).catch((cause: unknown) => {
-            console.error("Finishing onboarding failed", cause);
-        });
+        isAvailableAsync()
+            .catch(() => false)
+            .then(async (rateable) => {
+                if (rateable) {
+                    router.push("/onboarding/rating");
+                    return;
+                }
+                await finishOnboarding(db);
+            })
+            .catch((cause: unknown) => {
+                console.error("Finishing onboarding failed", cause);
+            });
     };
 
     const remind = () => {

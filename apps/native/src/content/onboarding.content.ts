@@ -51,6 +51,18 @@ const onboarding = {
             en: "What are your numbers in?",
             es: "¿En qué moneda manejas tu dinero?",
         }),
+        "onboarding.rating.body": t({
+            en: "A rating in the store helps others find it.",
+            es: "Una calificación en la tienda ayuda a que otros lo encuentren.",
+        }),
+        "onboarding.rating.eyebrow": t({
+            en: "Rating",
+            es: "Calificación",
+        }),
+        "onboarding.rating.title": t({
+            en: "Outlayr is made by one person",
+            es: "Outlayr lo hace una sola persona",
+        }),
         "onboarding.rhythm.body": t({
             en: "One quiet nudge each evening. iOS isn't asked for permission until your first entry is saved.",
             es: "Un aviso discreto cada noche. iOS no te pide permiso hasta que guardes tu primera entrada.",

@@ -262,6 +262,7 @@ function RootStack() {
                 <Stack.Screen name="onboarding/currency" options={chrome.firstRunStep} />
                 <Stack.Screen name="onboarding/smart-features" options={chrome.firstRunStep} />
                 <Stack.Screen name="onboarding/rhythm" options={chrome.firstRunStep} />
+                <Stack.Screen name="onboarding/rating" options={chrome.firstRunStep} />
             </Stack.Protected>
 
             {/* Behind onboarding: only the currency step writes `currencyChosen`, and canonicalization declines every

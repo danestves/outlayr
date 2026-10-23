@@ -4,6 +4,7 @@ import CheckmarkCircle02SolidIcon from "@hugeicons-pro/core-solid-rounded/Checkm
 import Cancel01Icon from "@hugeicons-pro/core-stroke-rounded/Cancel01Icon";
 import CircleIcon from "@hugeicons-pro/core-stroke-rounded/CircleIcon";
 import Search01Icon from "@hugeicons-pro/core-stroke-rounded/Search01Icon";
+import StarIcon from "@hugeicons-pro/core-stroke-rounded/StarIcon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import type { IconSvgElement } from "@hugeicons/react-native";
 
@@ -15,6 +16,7 @@ const GLYPHS = {
     "exclamationmark.circle.fill": AlertCircleSolidIcon,
     magnifyingglass: Search01Icon,
     "plus.circle.fill": AddCircleSolidIcon,
+    star: StarIcon,
     xmark: Cancel01Icon,
 } as const satisfies Record<AppSymbolName, IconSvgElement>;
 
