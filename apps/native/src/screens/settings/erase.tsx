@@ -12,6 +12,7 @@ import { useTransactionCount } from "@/data/transactions";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
+import { revalidateForeignKeys } from "@/db/client";
 import { clearStoredPhotos } from "@/lib/photo-storage";
 import { clearSpotlight } from "@/lib/spotlight";
 
@@ -29,6 +30,7 @@ export function EraseData() {
             {
                 onPress: () => {
                     eraseData(db, scope, RESIDUE)
+                        .then(() => revalidateForeignKeys(db))
                         .then(() => router.back())
                         .catch((cause: unknown) => {
                             console.error("Erase failed", cause);

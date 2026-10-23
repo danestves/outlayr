@@ -7,6 +7,7 @@ import { SettingsAction } from "@/components/settings/settings-action";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
+import { revalidateForeignKeys } from "@/db/client";
 import { restoreArchive } from "@/data/archive-core";
 import { reconcilePhotos } from "@/data/photo-store-core";
 import { archiveRowCount, parseArchive } from "@/domain/archive";
@@ -31,7 +32,10 @@ export function RestoreData() {
                 writePhotosBase64(document.photos);
                 return restoreArchive(db, document);
             })
-            .then(() => reconcilePhotos(db, photoFiles, Date.now()))
+            .then(() => {
+                revalidateForeignKeys(db);
+                return reconcilePhotos(db, photoFiles, Date.now());
+            })
             .finally(() => armLogoBackfill(db))
             .then(() => router.back())
             .catch(() => {

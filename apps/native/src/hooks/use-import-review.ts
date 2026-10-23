@@ -2,6 +2,7 @@ import { and, eq, gte, isNull, lte } from "drizzle-orm";
 import { useCallback, useEffect, useMemo } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
+import { revalidateForeignKeys } from "@/db/client";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { useLiveQuery } from "@/data/live-query";
 import { applyImport, buildImportPlan } from "@/data/transfer-core";
@@ -193,6 +194,7 @@ export function useImportReview(): ImportReviewResult {
             .catch(() => entries)
             .then((decorated) => applyImport(db, { ...plan, entries: decorated }))
             .then((count) => {
+                revalidateForeignKeys(db);
                 haptics("success");
                 // The draft is NOT cleared here: the done step still reads the
                 // committed counts. Dismissing the sheet after a success clears.
