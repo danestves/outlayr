@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, isNotNull, isNull, lt, lte } from "drizzle-orm";
+import { and, desc, gte, isNotNull, isNull, lt, lte } from "drizzle-orm";
 import { useMemo } from "react";
 
 import type { Database } from "@/db/client";
@@ -11,6 +11,10 @@ import type { TransferLogRow } from "@/domain/transfer-log-rows";
 
 import { useAccounts } from "./accounts";
 import { useLiveQuery } from "./live-query";
+
+const NO_ROWS: never[] = [];
+// Inert reads stay subscribed but run no SQL: bounds arriving re-read in that render.
+const NO_READ = { all: () => NO_ROWS };
 
 export interface TransferBounds {
     /**
@@ -59,18 +63,16 @@ export function useTransferFees(db: Database, enabled = true) {
     const feeRows = useLiveQuery(
         transactions,
         () =>
-            db
-                .select({
-                    accountId: transactions.accountId,
-                    amount: transactions.amount,
-                    transferId: transactions.transferId,
-                })
-                .from(transactions)
-                .where(
-                    enabled
-                        ? and(isNotNull(transactions.transferId), isNull(transactions.deletedAt))
-                        : eq(transactions.id, "")
-                ),
+            enabled
+                ? db
+                      .select({
+                          accountId: transactions.accountId,
+                          amount: transactions.amount,
+                          transferId: transactions.transferId,
+                      })
+                      .from(transactions)
+                      .where(and(isNotNull(transactions.transferId), isNull(transactions.deletedAt)))
+                : NO_READ,
         [enabled]
     );
     return useMemo(() => new Map(feeRows.map((fee) => [fee.transferId ?? "", fee])), [feeRows]);
@@ -82,13 +84,13 @@ export function useLogTransfers(db: Database, nowMs: number, bounds: TransferBou
     const rows = useLiveQuery(
         transfers,
         () =>
-            db
-                .select()
-                .from(transfers)
-                .where(
-                    bounds === null
-                        ? eq(transfers.id, "")
-                        : and(
+            bounds === null
+                ? NO_READ
+                : db
+                      .select()
+                      .from(transfers)
+                      .where(
+                          and(
                               isNull(transfers.deletedAt),
                               lte(transfers.date, new Date(nowMs)),
                               bounds.since
@@ -96,8 +98,8 @@ export function useLogTransfers(db: Database, nowMs: number, bounds: TransferBou
                                   : undefined,
                               bounds.until ? lt(transfers.date, bounds.until) : undefined
                           )
-                )
-                .orderBy(desc(transfers.day), desc(transfers.date)),
+                      )
+                      .orderBy(desc(transfers.day), desc(transfers.date)),
         [nowMs, bounds === null, bounds?.floorOn, bounds?.since?.getTime() ?? 0, bounds?.until?.getTime() ?? 0],
         nowMs
     );

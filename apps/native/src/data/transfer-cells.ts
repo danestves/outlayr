@@ -11,6 +11,12 @@ const TRANSFER_UTC_DAY = sql<string>`strftime('%Y-%m-%d', ${transfers.date} / 10
 /** Where a transfer leg is PLOTTED, never where it is valued (see `LOCAL_DAY`). */
 const TRANSFER_LOCAL_DAY = sql<string>`strftime('%Y-%m-%d', ${transfers.date} / 1000, 'unixepoch', 'localtime')`;
 
+/** Which leg {@link settledTransfersQuery} tags: `out` reads its `from` side, later stamped `income: false`. */
+type TransferLeg = "in" | "out";
+
+const LEG_OUT = sql<TransferLeg>`'out'`;
+const LEG_IN = sql<TransferLeg>`'in'`;
+
 /**
  * No `income` column: a transfer row has no direction of its own, so {@link toTransferCell}
  * stamps it from the side the row is read from.
@@ -65,6 +71,25 @@ export function settledTransfersInboundQuery(db: SpendDb, now: Date) {
         .from(transfers)
         .where(and(isNull(transfers.deletedAt), lte(transfers.date, now)))
         .groupBy(transfers.toAccountId, transfers.toCurrency, TRANSFER_UTC_DAY, TRANSFER_LOCAL_DAY);
+}
+
+/**
+ * Both whole-ledger legs in one statement: each arm keeps its own group-by expressions, so every leg's rows are the
+ * same cells the separate queries return, in the same order the callers reassemble them (outbound arm first).
+ */
+export function settledTransfersQuery(db: SpendDb, now: Date) {
+    return db
+        .select({ leg: LEG_OUT, accountId: transfers.fromAccountId, ...OUTBOUND_COLUMNS, plotDay: TRANSFER_LOCAL_DAY })
+        .from(transfers)
+        .where(and(isNull(transfers.deletedAt), lte(transfers.date, now)))
+        .groupBy(transfers.fromAccountId, transfers.fromCurrency, TRANSFER_UTC_DAY, TRANSFER_LOCAL_DAY)
+        .unionAll(
+            db
+                .select({ leg: LEG_IN, accountId: transfers.toAccountId, ...INBOUND_COLUMNS, plotDay: TRANSFER_LOCAL_DAY })
+                .from(transfers)
+                .where(and(isNull(transfers.deletedAt), lte(transfers.date, now)))
+                .groupBy(transfers.toAccountId, transfers.toCurrency, TRANSFER_UTC_DAY, TRANSFER_LOCAL_DAY)
+        );
 }
 
 const OUTSIDE_UTC_DAY = sql<string>`strftime('%Y-%m-%d', ${outsidePayments.date} / 1000, 'unixepoch')`;

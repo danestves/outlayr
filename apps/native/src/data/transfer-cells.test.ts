@@ -13,6 +13,7 @@ import {
     settledTransferOutboundQuery,
     settledTransfersInboundQuery,
     settledTransfersOutboundQuery,
+    settledTransfersQuery,
     toTransferCell,
 } from "./transfer-cells";
 
@@ -227,5 +228,43 @@ describe("allTransferCells splits the whole ledger by account in one read", () =
                 scoped.sort((l, r) => Number(l.income) - Number(r.income))
             );
         }
+    });
+});
+
+describe("settledTransfersQuery answers for both legs in one statement", () => {
+    it("returns each leg's own cells, outbound arm first, as the two single-direction queries do", async () => {
+        const db = makeDb();
+        await addTransfer(db, { fromAccountId: "a", id: "t1", toAccountId: "b" });
+        await addTransfer(db, { fromAccountId: "c", fromAmount: 40, id: "t2", toAccountId: "a" });
+
+        const merged = await settledTransfersQuery(db, DAY);
+        const [outbound, inbound] = await Promise.all([
+            settledTransfersOutboundQuery(db, DAY),
+            settledTransfersInboundQuery(db, DAY),
+        ]);
+
+        expect(merged.filter((leg) => leg.leg === "out")).toStrictEqual(
+            outbound.map((row) => ({ ...row, leg: "out" }))
+        );
+        expect(merged.filter((leg) => leg.leg === "in")).toStrictEqual(inbound.map((row) => ({ ...row, leg: "in" })));
+    });
+
+    it("groups cross-currency legs per direction, so an account both sending and receiving keeps two cells", async () => {
+        const db = makeDb();
+        await addTransfer(db, { exchangeRate: 60, exchangeRateType: "custom", fromAccountId: "a", id: "t1", toAccountId: "b", toAmount: 6000, toCurrency: "VES" });
+        await addTransfer(db, { fromAccountId: "b", fromAmount: 3, fromCurrency: "VES", id: "t2", toAccountId: "a", toAmount: 0.05, toCurrency: "USD" });
+
+        const merged = await settledTransfersQuery(db, DAY);
+
+        expect(
+            merged.map(({ accountId, currency, leg }) => ({ accountId, currency, leg })).sort((l, r) =>
+                `${l.accountId}${l.leg}`.localeCompare(`${r.accountId}${r.leg}`)
+            )
+        ).toStrictEqual([
+            { accountId: "a", currency: "USD", leg: "in" },
+            { accountId: "a", currency: "USD", leg: "out" },
+            { accountId: "b", currency: "VES", leg: "in" },
+            { accountId: "b", currency: "VES", leg: "out" },
+        ]);
     });
 });
