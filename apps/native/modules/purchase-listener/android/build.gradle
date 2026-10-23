@@ -22,3 +22,14 @@ android {
     abortOnError false
   }
 }
+
+dependencies {
+  def notifications = findProject(':expo-notifications')
+  if (notifications != null) {
+    compileOnly notifications
+  } else {
+    def manifest = ["node", "--print", "require.resolve('expo-notifications/package.json')"].execute(null, projectDir).text.trim()
+    def version = new groovy.json.JsonSlurper().parse(new File(manifest)).version
+    compileOnly "host.exp.exponent:expo.modules.notifications:${version}"
+  }
+}

@@ -31,10 +31,10 @@ class PurchaseListenerModule : Module() {
       }
     }
 
-    Function("setMoneyPattern") { source: String, ignoreCase: Boolean ->
+    Function("setSnapshot") { json: String ->
       val context = appContext.reactContext
       if (context != null) {
-        PurchaseListenerStore.setMoneyPattern(context, source, ignoreCase)
+        PurchaseListenerStore.setSnapshot(context, json)
       }
     }
 

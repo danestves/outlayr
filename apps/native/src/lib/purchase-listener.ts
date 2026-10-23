@@ -13,7 +13,7 @@ interface PurchaseListenerModule {
     openSettings: () => void;
     senders: () => PurchaseSender[];
     setApps: (packages: string[]) => void;
-    setMoneyPattern: (source: string, ignoreCase: boolean) => void;
+    setSnapshot: (json: string) => void;
 }
 
 export const purchaseListener = requireOptionalNativeModule<PurchaseListenerModule>("PurchaseListener");

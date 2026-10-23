@@ -38,6 +38,7 @@ const STOP = String.raw`(?=\s+(?:with|using|via|on|for|con|usando|por|el|la|desd
 const PAID_TO = new RegExp(String.raw`\b(?:at|in|en|to|a|de|@)\s+(.+?)${STOP}`, "iu");
 const RECEIVED_FROM = new RegExp(String.raw`\b(?:from|de|por parte de)\s+(.+?)${STOP}`, "iu");
 
+const CARD_USED = new RegExp(String.raw`\b(?:with|con)\s+([^\n]*?[•*]{2,}\s?\d{4})(?!\d)`, "iu");
 const CARD_REFERENCE = new RegExp(String.raw`\byour\b.*\bcard\b|\btu\b.*\btarjeta\b|[x*•]{3,}[-\s]?\d{3,4}`, "iu");
 const PARENTHESIZED = new RegExp(String.raw`\(([^()]+)\)`, "u");
 
@@ -50,6 +51,7 @@ const POS_PREFIX = new RegExp(
 export const NOTIFICATION_PATTERNS = {
     afterNumber: AFTER_NUMBER,
     cardReference: CARD_REFERENCE,
+    cardUsed: CARD_USED,
     declined: DECLINED,
     incoming: INCOMING,
     money: MONEY,

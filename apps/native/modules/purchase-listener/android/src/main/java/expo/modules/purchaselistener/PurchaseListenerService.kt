@@ -13,12 +13,19 @@ import android.os.Bundle
 import android.provider.Settings
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
+import expo.modules.notifications.notifications.model.NotificationContent
+import expo.modules.notifications.notifications.model.NotificationRequest
+import expo.modules.notifications.notifications.triggers.ChannelAwareTrigger
+import expo.modules.notifications.service.NotificationsService
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
+import java.security.MessageDigest
+import java.text.Normalizer
 import java.util.UUID
 import java.util.regex.Pattern
+import expo.modules.notifications.notifications.model.Notification as ExpoNotification
 
 class PurchaseListenerService : NotificationListenerService() {
   override fun onNotificationPosted(sbn: StatusBarNotification) {
@@ -32,20 +39,23 @@ class PurchaseListenerService : NotificationListenerService() {
 internal object PurchaseListenerStore {
   private const val PREFS = "purchase-listener"
   private const val KEY_APPS = "apps"
-  private const val KEY_PATTERN = "moneyPattern"
-  private const val KEY_IGNORE_CASE = "moneyPatternIgnoreCase"
+  private const val KEY_PUSHED = "pushed"
   private const val KEY_SENDERS = "senders"
+  private const val KEY_SNAPSHOT = "snapshot"
+  private const val PUSH_CHANNEL = "purchases"
+  private const val PUSH_WINDOW_MS = 10 * 60 * 1000L
   private const val QUEUE_DIRECTORY = "pending-writes"
   private const val QUEUE_FILE = "queue.jsonl"
   private const val SENDER_LIMIT = 20
   private const val SENDER_TEXT_CAP = 200
+  private const val WALLET = "com.google.android.apps.walletnfcrel"
   private val WHITESPACE = Regex("\\s+")
-  private val DEFAULT_APPS = setOf("com.google.android.apps.walletnfcrel")
+  private val SPACES = Regex("[\\s\\u00a0\\u202f]+")
+  private val DEFAULT_APPS = setOf(WALLET)
 
   private val lock = Any()
-  private var compiledKey: String? = null
-  private var compiledIgnoreCase = false
-  private var compiled: Pattern? = null
+  private var snapshotKey: String? = null
+  private var snapshot: Snapshot? = null
 
   fun isEnabled(context: Context): Boolean {
     val component = ComponentName(context, PurchaseListenerService::class.java)
@@ -80,12 +90,9 @@ internal object PurchaseListenerStore {
     }
   }
 
-  fun setMoneyPattern(context: Context, source: String, ignoreCase: Boolean) {
+  fun setSnapshot(context: Context, json: String) {
     synchronized(lock) {
-      prefs(context).edit()
-        .putString(KEY_PATTERN, source)
-        .putBoolean(KEY_IGNORE_CASE, ignoreCase)
-        .apply()
+      prefs(context).edit().putString(KEY_SNAPSHOT, json).apply()
     }
   }
 
@@ -120,15 +127,149 @@ internal object PurchaseListenerStore {
     val label = label(context, sbn.packageName, extras)
     synchronized(lock) {
       val preferences = prefs(context)
-      val source = preferences.getString(KEY_PATTERN, null)?.takeIf { it.isNotEmpty() }
-      val matched = source != null && matches(source, preferences.getBoolean(KEY_IGNORE_CASE, false), text)
+      val current = snapshot(preferences)
+      val money = current?.pattern("money")
+      val matched = money?.matcher(text)?.find() == true
       if (matched) {
         remember(preferences, sbn.packageName, label, text, sbn.postTime)
       }
       val allowed = preferences.getStringSet(KEY_APPS, DEFAULT_APPS)?.contains(sbn.packageName) == true
-      if (allowed && (matched || source == null)) {
-        append(context, line(label, text, sbn.postTime))
+      if (!allowed || !(matched || money == null)) return
+      val card = (if (sbn.packageName == WALLET) current?.group("cardUsed", text) else null)
+        ?.replace(SPACES, " ")
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+        ?: label
+      val id = UUID.randomUUID().toString()
+      val key = dedupeKey(text)
+      append(context, line(id, card, text, key, sbn.postTime))
+      if (current != null) {
+        confirm(context, preferences, current, id, card, text, key)
       }
+    }
+  }
+
+  private fun confirm(
+    context: Context,
+    preferences: SharedPreferences,
+    snapshot: Snapshot,
+    id: String,
+    card: String,
+    text: String,
+    key: String,
+  ) {
+    val manager = context.getSystemService(NotificationManager::class.java) ?: return
+    if (!manager.areNotificationsEnabled()) return
+    val purchase = read(snapshot, text) ?: return
+    if (!claim(preferences, key)) return
+    val known = snapshot.cards.optJSONObject(card)
+    val cardLabel = if (known == null) card else known.optString("label").takeIf { !known.isNull("label") && it.isNotEmpty() }
+    val pickCard = known?.optBoolean("pick") == true
+    val merchant = purchase.merchant.orEmpty()
+    val amount = if (purchase.income) "+${purchase.amountText}" else purchase.amountText
+    val places = snapshot.places.optJSONObject(if (purchase.income) "income" else "expense")
+    val category = if (merchant.isEmpty()) null else places?.optString(placeKey(merchant))?.takeIf { it.isNotEmpty() }
+    val newPlace = snapshot.newPlace.takeIf { merchant.isNotEmpty() && category == null && !pickCard && it.isNotEmpty() }
+    val content = NotificationContent.Builder()
+      .setTitle(if (merchant.isEmpty()) amount else "$amount · $merchant")
+      .setText(listOfNotNull(category, cardLabel, newPlace).joinToString(" · "))
+      .setBody(JSONObject().put("walletWrite", id).put("pickCard", pickCard).put("card", card))
+      .setAutoDismiss(true)
+      .build()
+    val request = NotificationRequest(UUID.randomUUID().toString(), content, ChannelAwareTrigger(PUSH_CHANNEL))
+    NotificationsService.present(context, ExpoNotification(request))
+  }
+
+  private class Purchase(val amountText: String, val income: Boolean, val merchant: String?)
+
+  private fun read(snapshot: Snapshot, text: String): Purchase? {
+    val money = snapshot.pattern("money")?.matcher(text) ?: return null
+    if (!money.find() || snapshot.found("declined", text)) return null
+    val amountText = money.group().trim()
+    if (amountText.none { it in '1'..'9' }) return null
+    val income = snapshot.found("incoming", text)
+    val tail = text.substring(money.end())
+    val named = snapshot.group(if (income) "receivedFrom" else "paidTo", tail)?.trim()?.takeIf { it.isNotEmpty() }
+    val raw = when {
+      named == null -> lineBefore(snapshot, text.substring(0, money.start()))
+      snapshot.found("cardReference", named) -> snapshot.group("parenthesized", tail)
+      else -> named
+    }
+    val head = raw?.substringBefore(",")
+    val merchant = head?.let { snapshot.pattern("posPrefix")?.matcher(it)?.replaceFirst("") ?: it }
+    return Purchase(amountText, income, merchant?.trim()?.takeIf { it.isNotEmpty() })
+  }
+
+  private fun lineBefore(snapshot: Snapshot, above: String): String? {
+    val lines = above.split("\n")
+    if (lines.size < 2 || lines.last().isNotBlank()) return null
+    val line = lines[lines.size - 2].trim()
+    return if (line.isEmpty() || snapshot.found("afterNumber", line)) null else line
+  }
+
+  private fun placeKey(merchant: String): String {
+    val folded = merchant.map { if (it.code < 128) it.lowercaseChar() else it }.joinToString("")
+    return Normalizer.normalize(folded, Normalizer.Form.NFC)
+  }
+
+  private fun claim(preferences: SharedPreferences, key: String): Boolean {
+    val now = System.currentTimeMillis()
+    val digest = MessageDigest.getInstance("SHA-256")
+      .digest(key.toByteArray(Charsets.UTF_8))
+      .joinToString("") { "%02x".format(it) }
+    val pushed = try {
+      JSONObject(preferences.getString(KEY_PUSHED, null) ?: "{}")
+    } catch (_: Exception) {
+      JSONObject()
+    }
+    val recent = JSONObject()
+    for (name in pushed.keys()) {
+      val at = pushed.optLong(name)
+      if (now - at in 0..PUSH_WINDOW_MS) recent.put(name, at)
+    }
+    if (recent.has(digest)) return false
+    recent.put(digest, now)
+    preferences.edit().putString(KEY_PUSHED, recent.toString()).apply()
+    return true
+  }
+
+  private fun snapshot(preferences: SharedPreferences): Snapshot? {
+    val raw = preferences.getString(KEY_SNAPSHOT, null)
+    if (raw != snapshotKey) {
+      snapshotKey = raw
+      snapshot = raw?.let {
+        try {
+          Snapshot(JSONObject(it))
+        } catch (_: Exception) {
+          null
+        }
+      }
+    }
+    return snapshot
+  }
+
+  private class Snapshot(json: JSONObject) {
+    val cards: JSONObject = json.optJSONObject("cards") ?: JSONObject()
+    val newPlace: String = json.optString("newPlace")
+    val places: JSONObject = json.optJSONObject("places") ?: JSONObject()
+    private val patterns = json.optJSONObject("patterns")
+    private val compiled = mutableMapOf<String, Pattern?>()
+
+    fun pattern(name: String): Pattern? = compiled.getOrPut(name) {
+      val item = patterns?.optJSONObject(name) ?: return@getOrPut null
+      try {
+        val flags = if (item.optBoolean("ignoreCase")) Pattern.CASE_INSENSITIVE or Pattern.UNICODE_CASE else 0
+        Pattern.compile(item.getString("source"), flags)
+      } catch (_: Exception) {
+        null
+      }
+    }
+
+    fun found(name: String, text: String): Boolean = pattern(name)?.matcher(text)?.find() == true
+
+    fun group(name: String, text: String): String? {
+      val matcher = pattern(name)?.matcher(text) ?: return null
+      return if (matcher.find() && matcher.groupCount() >= 1) matcher.group(1) else null
     }
   }
 
@@ -172,20 +313,6 @@ internal object PurchaseListenerStore {
     } catch (_: Exception) {
     }
     return packageName
-  }
-
-  private fun matches(source: String, ignoreCase: Boolean, text: String): Boolean {
-    if (compiledKey != source || compiledIgnoreCase != ignoreCase) {
-      compiledKey = source
-      compiledIgnoreCase = ignoreCase
-      compiled = try {
-        val flags = if (ignoreCase) Pattern.CASE_INSENSITIVE or Pattern.UNICODE_CASE else 0
-        Pattern.compile(source, flags)
-      } catch (_: Exception) {
-        null
-      }
-    }
-    return compiled?.matcher(text)?.find() == true
   }
 
   private data class Sender(val packageName: String, val label: String, val text: String, val at: Long)
@@ -245,9 +372,9 @@ internal object PurchaseListenerStore {
     return "notification:expense:$collapsed"
   }
 
-  private fun line(label: String, text: String, postedAt: Long): String {
+  private fun line(id: String, card: String, text: String, key: String, postedAt: Long): String {
     return JSONObject()
-      .put("id", UUID.randomUUID().toString())
+      .put("id", id)
       .put("amount", 0)
       .put("income", false)
       .put("note", "")
@@ -255,9 +382,9 @@ internal object PurchaseListenerStore {
       .put("categoryId", JSONObject.NULL)
       .put("date", postedAt)
       .put("amountText", JSONObject.NULL)
-      .put("card", label)
+      .put("card", card)
       .put("currency", JSONObject.NULL)
-      .put("dedupeKey", dedupeKey(text))
+      .put("dedupeKey", key)
       .put("text", text)
       .toString() + "\n"
   }

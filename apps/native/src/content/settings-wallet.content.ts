@@ -155,6 +155,10 @@ const settingsWallet = {
             en: "Open Shortcuts",
             es: "Abrir Atajos",
         }),
+        "settings.wallet.pushChannel": t({
+            en: "Logged purchases",
+            es: "Compras registradas",
+        }),
         "settings.wallet.pushNewPlace": t({
             en: "New place, tap to pick a category.",
             es: "Lugar nuevo, toca para elegir una categoría.",
