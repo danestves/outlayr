@@ -18,7 +18,15 @@ import { migratedDatabase, transactionalDatabase } from "@/db/test-database";
 
 import { incomingWins } from "../../../../packages/backend/convex/lib/syncTables";
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
-import { applyPulledRows, drainOutbox, incomingWinsLocally, pullAndApply, runSync, specFor } from "./sync-engine-core";
+import {
+    applyPulledRows,
+    drainOutbox,
+    ID_CHUNK,
+    incomingWinsLocally,
+    pullAndApply,
+    runSync,
+    specFor,
+} from "./sync-engine-core";
 import type { PullFn, PulledRow, PushFn, WireRow } from "./sync-engine-core";
 import { getSyncCursor, outboxPendingCount, SYNCED_TABLES, setSyncCursor, setSyncEnabled } from "./sync-outbox-core";
 import { transactionsRepo } from "./transactions-core";
@@ -982,6 +990,28 @@ describe("r3 — invariants Convex cannot hold", () => {
         const live = (await db.select().from(mainBudget)).filter((row) => row.deletedAt === null);
         expect(live).toHaveLength(1);
         expect(live[0].id).toBe("remote");
+    });
+});
+
+describe("a pulled page that outgrows the queue lookup's chunk", () => {
+    it("still defers to an unsent local edit queued beyond the first chunk", async () => {
+        const db = makeDb();
+        await setSyncEnabled(db, true);
+        await addTransaction(db, "t1", { note: "mine", updatedAt: AT(5000) });
+
+        // Last in the page, so its id falls past the 300-id cut the outbox lookup shares with `rowsById`.
+        const fillers = Array.from({ length: ID_CHUNK + 9 }, (_, index) => txRow(`fill-${index}`, index + 1, 5000));
+        const page = {
+            cursor: ID_CHUNK + 10,
+            rows: [...fillers, txRow("t1", ID_CHUNK + 10, 5000, { fields: { note: "theirs" } })],
+        };
+
+        const result = await applyPulledRows(db, page);
+
+        expect(result.applied).toBe(ID_CHUNK + 9);
+        const [row] = await db.select().from(transactions).where(eqId("t1"));
+        expect(row.note).toBe("mine");
+        await expect(outboxPendingCount(db)).resolves.toBe(1);
     });
 });
 
