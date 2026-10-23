@@ -2,7 +2,7 @@
 set -eu
 
 clips="public/clips"
-out="../apps/native/assets/images/recipe"
+out="../native/assets/images/recipe"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 

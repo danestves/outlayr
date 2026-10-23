@@ -8,8 +8,8 @@
 > — [EAS docs](https://docs.expo.dev/build-reference/easignore/)
 
 The moment that file exists, **every `.gitignore` in the repo stops applying to the upload**. So
-`.easignore` restates all four of them — root, `apps/native`, `packages/backend`,
-`apps/screenshots` — before it adds anything of its own.
+`.easignore` restates all five of them — root, `apps/native`, `packages/backend`,
+`apps/screenshots`, `apps/clips` — before it adds anything of its own.
 
 This is the trap the file exists to survive. Appending one convenience line is safe; *starting* a
 fresh short file is not. Deleting the restated block would upload `apps/native/ios` — 1.2 GB of
