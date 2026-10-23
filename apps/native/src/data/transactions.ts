@@ -5,7 +5,7 @@ import { transactions } from "@/db/schema";
 import { growing } from "@/lib/growing";
 
 import { useCategoryMeta } from "./categories";
-import { useLiveQuery, useLiveRead } from "./live-query";
+import { useLiveQuery, useLiveRead, useLiveValue } from "./live-query";
 import { sameRows } from "./same-rows";
 import {
     ledgerSizeQuery,
@@ -17,7 +17,12 @@ import {
 import type { LOG_COLUMNS, Transaction } from "./transactions-core";
 
 export function useTransactionCount(db: Database): number {
-    return useLiveQuery(transactions, () => ledgerSizeQuery(db)).length;
+    // Aggregation without a group-by always reports one row, even over an empty ledger.
+    return useLiveValue(
+        transactions,
+        () => ledgerSizeQuery(db),
+        (rows) => rows[0]?.live ?? 0
+    );
 }
 
 export interface CategoryDisplay {
