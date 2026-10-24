@@ -2,8 +2,7 @@ import { createFileRoute, notFound, rootRouteId } from "@tanstack/react-router";
 import { getIntlayer } from "intlayer";
 import { useIntlayer, useLocale } from "react-intlayer";
 
-import type { AnswerItem } from "@/components/answer-hub";
-import { Article, DELAYS, Figures, Questions, nextAfter } from "@/components/answers/article";
+import { Article, CompareTable, DELAYS, Questions } from "@/components/answers/article";
 import { Icon } from "@/components/icon";
 import type { IconName } from "@/components/icon";
 import { hasKey } from "@/lib/has-key";
@@ -51,7 +50,7 @@ export const Route = createFileRoute("/{-$locale}/compare/$slug")({
 
 function Compare() {
     const slug = Route.useLoaderData();
-    const { compare, guides, labels } = useIntlayer("answers");
+    const { compare, labels } = useIntlayer("answers");
     const { locale } = useLocale();
     const page = compare[slug];
     const checked = rivalChecked(slug);
@@ -59,71 +58,28 @@ function Compare() {
         { items: page.fit.outlayr, name: "Outlayr", tone: "text-tint" },
         { items: page.fit.rival, name: page.rival.value, tone: "text-muted" },
     ];
-    const listedIn: AnswerItem[] = [];
-    for (const [guideSlug, guide] of Object.entries(guides)) {
-        for (const app of "apps" in guide ? guide.apps : []) {
-            if (app.slug.value === slug) {
-                listedIn.push({ name: guide.title, slug: guideSlug, text: guide.lead, to: "/{-$locale}/guides/$slug" });
-            }
-        }
-    }
-    const related: AnswerItem[] = [
-        ...listedIn,
-        ...nextAfter(compare, slug, 3 - listedIn.length).map((other) => ({
-            name: compare[other].title,
-            slug: other,
-            text: compare[other].summary,
-            to: "/{-$locale}/compare/$slug" as const,
-        })),
-    ];
     return (
         <Article
-            checked={checked}
+            dated={{ day: checked, label: "checkedOn" }}
             hub="/compare"
             lead={page.lead}
-            related={related}
+            related={page.related}
             sections={[
                 {
                     body: (
                         <>
-                            <div
-                                className="-mx-6 mt-8 overflow-x-auto overscroll-x-contain px-6 delay-100 md:mx-0 md:px-0"
-                                data-reveal
-                            >
-                                <table className="w-full min-w-xl border-collapse text-left tabular-nums">
-                                    <thead>
-                                        <tr className="border-foreground border-b">
-                                            <th className="w-1/5 py-3 pr-6" scope="col">
-                                                <span className="sr-only">{labels.feature}</span>
-                                            </th>
-                                            <th className="py-3 pr-6 font-semibold" scope="col">
-                                                Outlayr
-                                            </th>
-                                            <th className="text-muted py-3 font-semibold" scope="col">
-                                                {page.rival}
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {page.rows.map((row) => (
-                                            <tr className="border-border border-b align-top" key={row.label.value}>
-                                                <th
-                                                    className="text-muted py-4 pr-6 font-mono text-xs font-normal tracking-widest uppercase"
-                                                    scope="row"
-                                                >
-                                                    {row.label}
-                                                </th>
-                                                <td className="py-4 pr-6">
-                                                    <Figures text={row.outlayr.value} />
-                                                </td>
-                                                <td className="text-muted py-4">
-                                                    <Figures text={row.rival.value} />
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                            <CompareTable
+                                columns={[
+                                    { id: "outlayr", name: "Outlayr" },
+                                    { id: "rival", muted: true, name: page.rival },
+                                ]}
+                                corner={labels.feature.value}
+                                rows={page.rows.map((row) => ({
+                                    cells: [row.outlayr.value, row.rival.value],
+                                    id: row.label.value,
+                                    label: row.label,
+                                }))}
+                            />
                             <p className="text-muted mt-4 text-sm">
                                 {labels.source({ name: page.rival.value })}{" "}
                                 <a

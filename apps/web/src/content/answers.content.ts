@@ -1,6 +1,8 @@
 import { insert, t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
+import type { PageRef } from "@/lib/site";
+
 import {
     ACCOUNTS_SCREEN_ALT,
     BUDGETS_SCREEN_ALT,
@@ -90,6 +92,7 @@ const LABELS = {
     platforms: t({ en: "Runs on", es: "Funciona en" }),
     price: t({ en: "Price", es: "Precio" }),
     subscriptions: t({ en: "Subscriptions", es: "Suscripciones" }),
+    watch: t({ en: "Watch out for", es: "Ten en cuenta" }),
 };
 
 const LICENSE_ROW = {
@@ -183,6 +186,7 @@ const answers = {
                         es: "Alternativa a Copilot Money: Outlayr vs Copilot",
                     }),
                 },
+                related: ["/compare/monarch", "/compare/everydollar", "/compare/ynab"] satisfies PageRef[],
                 rival: "Copilot",
                 rows: [
                     {
@@ -267,6 +271,7 @@ const answers = {
                         es: "Alternativa a EveryDollar: Outlayr vs EveryDollar",
                     }),
                 },
+                related: ["/compare/ynab", "/compare/copilot", "/tools/50-30-20-budget-calculator"] satisfies PageRef[],
                 rival: "EveryDollar",
                 rows: [
                     {
@@ -377,6 +382,11 @@ const answers = {
                         es: "Alternativa a Fintonic: Outlayr vs Fintonic",
                     }),
                 },
+                related: [
+                    "/guides/best-expense-tracker-apps",
+                    "/guides/multi-currency-expense-tracker",
+                    "/compare/wallet",
+                ] satisfies PageRef[],
                 rival: "Fintonic",
                 rows: [
                     {
@@ -479,6 +489,11 @@ const answers = {
                         es: "Alternativa a Monarch Money: Outlayr vs Monarch",
                     }),
                 },
+                related: [
+                    "/guides/best-subscription-tracker-apps",
+                    "/compare/copilot",
+                    "/guides/mint-alternative",
+                ] satisfies PageRef[],
                 rival: "Monarch",
                 rows: [
                     {
@@ -560,6 +575,11 @@ const answers = {
                         es: "Alternativa a PocketGuard: Outlayr vs PocketGuard",
                     }),
                 },
+                related: [
+                    "/guides/best-subscription-tracker-apps",
+                    "/compare/rocket-money",
+                    "/guides/subscription-tracker",
+                ] satisfies PageRef[],
                 rival: "PocketGuard",
                 rows: [
                     {
@@ -663,6 +683,11 @@ const answers = {
                         es: "Alternativa a Rocket Money: Outlayr vs Rocket Money",
                     }),
                 },
+                related: [
+                    "/guides/best-subscription-tracker-apps",
+                    "/compare/pocketguard",
+                    "/guides/subscription-tracker",
+                ] satisfies PageRef[],
                 rival: "Rocket Money",
                 rows: [
                     {
@@ -758,6 +783,11 @@ const answers = {
                         es: "Alternativa a Spendee: Outlayr vs Spendee",
                     }),
                 },
+                related: [
+                    "/guides/best-expense-tracker-apps",
+                    "/compare/wallet",
+                    "/compare/fintonic",
+                ] satisfies PageRef[],
                 rival: "Spendee",
                 rows: [
                     {
@@ -826,6 +856,11 @@ const answers = {
                         es: "Alternativa a Wallet by BudgetBakers: Outlayr vs Wallet",
                     }),
                 },
+                related: [
+                    "/guides/best-expense-tracker-apps",
+                    "/guides/best-open-source-expense-tracker-apps",
+                    "/compare/fintonic",
+                ] satisfies PageRef[],
                 rival: "Wallet by BudgetBakers",
                 rows: [
                     {
@@ -919,6 +954,11 @@ const answers = {
                         es: "Alternativa a YNAB: Outlayr vs YNAB (precio y monedas)",
                     }),
                 },
+                related: [
+                    "/guides/best-expense-tracker-apps",
+                    "/compare/everydollar",
+                    "/compare/copilot",
+                ] satisfies PageRef[],
                 rival: "YNAB",
                 rows: [
                     {
@@ -1056,6 +1096,11 @@ const answers = {
                     en: "Outlayr Log showing a $42.00 Costco purchase logged today, above the entries from earlier days.",
                     es: "Registro de Outlayr con una compra de $42.00 en Costco registrada hoy, arriba de los registros de días anteriores.",
                 }),
+                related: [
+                    "/guides/voice-expense-tracker",
+                    "/guides/receipt-scanner",
+                    "/guides/best-expense-tracker-apps",
+                ] satisfies PageRef[],
                 steps: [
                     {
                         text: t({
@@ -1117,6 +1162,14 @@ const answers = {
                                     es: "iPhone y Android, con sincronización por Google Drive o Dropbox",
                                 }),
                             },
+                            {
+                                label: LABELS.watch,
+                                source: "https://www.monefy.com/",
+                                text: t({
+                                    en: "Unlimited accounts and recurring transactions need the paid upgrade",
+                                    es: "Las cuentas ilimitadas y los movimientos recurrentes requieren la mejora de pago",
+                                }),
+                            },
                         ],
                         name: "Monefy",
                         slug: "monefy",
@@ -1161,6 +1214,14 @@ const answers = {
                                 source: "https://www.realbyteapps.com/",
                                 text: t({ en: "iPhone, Android", es: "iPhone, Android" }),
                             },
+                            {
+                                label: LABELS.watch,
+                                source: "https://help.realbyteapps.com/hc/en-us/articles/360042988234-How-to-add-sub-currencies",
+                                text: t({
+                                    en: "Rates for other currencies are ones you update by hand",
+                                    es: "Las tasas de las otras monedas las actualizas a mano",
+                                }),
+                            },
                         ],
                         name: "Money Manager",
                         slug: "money-manager",
@@ -1180,6 +1241,13 @@ const answers = {
                                 text: t({
                                     en: "20 voice or receipt captures every 30 days, 2 accounts, 2 category budgets, and accounts in one currency",
                                     es: "20 capturas de voz o de recibos cada 30 días, 2 cuentas, 2 presupuestos por categoría y cuentas en una moneda",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                text: t({
+                                    en: "Voice entry and receipt scans need an account and a connection, with 20 captures every 30 days on the free plan. There is no web app",
+                                    es: "Dictar y escanear recibos requiere una cuenta y conexión, con 20 capturas cada 30 días en el plan gratis. No tiene app web",
                                 }),
                             },
                         ],
@@ -1213,7 +1281,18 @@ const answers = {
                             {
                                 label: LABELS.platforms,
                                 source: "https://www.spendee.com/pricing",
-                                text: t({ en: "iPhone, Android. Web coming", es: "iPhone, Android. Web próximamente" }),
+                                text: t({
+                                    en: "iPhone, Android, and web. Budgets on the web are coming",
+                                    es: "iPhone, Android y web. Los presupuestos en la web llegan pronto",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://www.spendee.com/pricing",
+                                text: t({
+                                    en: "The free plan holds 1 wallet and 1 budget, and bank sync needs Premium",
+                                    es: "El plan gratis permite 1 billetera y 1 presupuesto, y la sincronización bancaria requiere Premium",
+                                }),
                             },
                         ],
                         name: "Spendee",
@@ -1251,6 +1330,14 @@ const answers = {
                                 source: "https://budgetbakers.com/en/products/wallet/",
                                 text: t({ en: "iPhone, Android, web", es: "iPhone, Android, web" }),
                             },
+                            {
+                                label: LABELS.watch,
+                                source: "https://support.budgetbakers.com/hc/en-us/articles/7151349344018-Everything-about-Premium",
+                                text: t({
+                                    en: "Premium prices are shown only in the app, and bank sync needs Premium",
+                                    es: "Los precios de Premium solo aparecen en la app, y la sincronización bancaria requiere Premium",
+                                }),
+                            },
                         ],
                         name: "Wallet by BudgetBakers",
                         slug: "wallet",
@@ -1285,6 +1372,14 @@ const answers = {
                                 text: t({
                                     en: "iPhone, iPad, Android, Apple Watch, web",
                                     es: "iPhone, iPad, Android, Apple Watch, web",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://www.ynab.com/pricing",
+                                text: t({
+                                    en: "No free plan after the 34-day trial, and one currency per spending plan",
+                                    es: "No tiene plan gratis después de la prueba de 34 días, y usa una moneda por plan de gastos",
                                 }),
                             },
                         ],
@@ -1381,6 +1476,25 @@ const answers = {
                         es: "Mejores apps para controlar gastos (2026) · Outlayr",
                     }),
                 },
+                picked: [
+                    t({
+                        en: "Each app here tracks what you spend on a phone, and each one fits a different need, from logging in two taps to syncing a bank or giving every dollar a job. They are in alphabetical order, not ranked.",
+                        es: "Cada app de esta lista lleva lo que gastas desde el celular, y cada una sirve para algo distinto, desde registrar en dos toques hasta sincronizar el banco o darle un trabajo a cada dólar. Van en orden alfabético, no por puesto.",
+                    }),
+                    t({
+                        en: "Every detail about the other apps was read on that app's own site, help center, or store listing on the date below the table, and links to the page it came from. These are the facts as each app states them, not results of our own testing.",
+                        es: "Cada dato de las otras apps se leyó en el sitio, el centro de ayuda o la ficha de la tienda de esa app en la fecha que aparece bajo la tabla, y enlaza a la página de donde salió. Son los datos tal como los da cada app, no resultados de pruebas nuestras.",
+                    }),
+                    t({
+                        en: "Outlayr is ours. It gets the same facts as the others, including its own Watch out for row.",
+                        es: "Outlayr es nuestra. Tiene los mismos datos que las demás, incluida su propia fila de Ten en cuenta.",
+                    }),
+                ],
+                related: [
+                    "/guides/voice-expense-tracker",
+                    "/compare/fintonic",
+                    "/guides/best-open-source-expense-tracker-apps",
+                ] satisfies PageRef[],
                 sources: t({
                     en: "Each detail about the other apps links to the page it was read on",
                     es: "Los datos de las otras apps enlazan a la página donde se leyeron",
@@ -1404,10 +1518,10 @@ const answers = {
                             },
                             {
                                 label: LABELS.entries,
-                                source: "https://actualbudget.org/",
+                                source: "https://actualbudget.org/docs/advanced/bank-sync/",
                                 text: t({
-                                    en: "By hand, QIF, OFX, QFX, CAMT.053, or CSV files, and bank sync through GoCardless in the EU and UK or SimpleFIN in the US and Canada",
-                                    es: "A mano, archivos QIF, OFX, QFX, CAMT.053 o CSV, y sincronización bancaria con GoCardless en la UE y el Reino Unido o con SimpleFIN en EE. UU. y Canadá",
+                                    en: "By hand, QIF, OFX, QFX, CAMT.053, or CSV files, and bank sync through a server you run, with Enable Banking in Europe, SimpleFIN in North America, Akahu in New Zealand, or Pluggy.ai in Brazil",
+                                    es: "A mano, archivos QIF, OFX, QFX, CAMT.053 o CSV, y sincronización bancaria con un servidor propio, con Enable Banking en Europa, SimpleFIN en Norteamérica, Akahu en Nueva Zelanda o Pluggy.ai en Brasil",
                                 }),
                             },
                             {
@@ -1435,6 +1549,14 @@ const answers = {
                                 label: LABELS.license,
                                 source: "https://github.com/actualbudget/actual",
                                 text: t({ en: "MIT", es: "MIT" }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://actualbudget.org/docs/install/",
+                                text: t({
+                                    en: "Your devices sync only through a server you run or rent",
+                                    es: "Tus dispositivos solo se sincronizan con un servidor que manejas o alquilas",
+                                }),
                             },
                         ],
                         name: "Actual Budget",
@@ -1479,6 +1601,14 @@ const answers = {
                                 label: LABELS.license,
                                 source: "https://github.com/jameskokoska/Cashew",
                                 text: t({ en: "GPL-3.0", es: "GPL-3.0" }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://apps.apple.com/us/app/cashew-expense-budget-tracker/id6463662930",
+                                text: t({
+                                    en: "Some features are in Cashew Pro, a paid upgrade",
+                                    es: "Algunas funciones están en Cashew Pro, una mejora de pago",
+                                }),
                             },
                         ],
                         name: "Cashew",
@@ -1532,6 +1662,14 @@ const answers = {
                                 source: "https://github.com/firefly-iii/firefly-iii",
                                 text: t({ en: "AGPL-3.0", es: "AGPL-3.0" }),
                             },
+                            {
+                                label: LABELS.watch,
+                                source: "https://github.com/firefly-iii/firefly-iii",
+                                text: t({
+                                    en: "You run it on your own server with Docker, or pay for hosting, and phone apps come from third parties",
+                                    es: "La usas en tu propio servidor con Docker, o pagas un alojamiento, y las apps para celular las hacen terceros",
+                                }),
+                            },
                         ],
                         name: "Firefly III",
                         slug: "firefly-iii",
@@ -1576,6 +1714,14 @@ const answers = {
                                 source: "https://github.com/flow-mn/flow",
                                 text: t({ en: "GPL-3.0", es: "GPL-3.0" }),
                             },
+                            {
+                                label: LABELS.watch,
+                                source: "https://github.com/flow-mn/flow",
+                                text: t({
+                                    en: "The phone apps are in beta, and exchange rates need a connection",
+                                    es: "Las apps para celular están en beta, y las tasas de cambio necesitan conexión",
+                                }),
+                            },
                         ],
                         name: "Flow",
                         slug: "flow",
@@ -1595,6 +1741,13 @@ const answers = {
                                 source: "https://github.com/danestves/outlayr",
                                 text: t({ en: "GPL-3.0 app, AGPL-3.0 server", es: "App GPL-3.0, servidor AGPL-3.0" }),
                             },
+                            {
+                                label: LABELS.watch,
+                                text: t({
+                                    en: "Voice entry and receipt scans run on Outlayr's servers through Anthropic and ElevenLabs, and need an account. Typing works offline",
+                                    es: "Dictar y escanear recibos pasa por los servidores de Outlayr, con Anthropic y ElevenLabs, y requiere una cuenta. Escribir funciona sin conexión",
+                                }),
+                            },
                         ],
                         name: "Outlayr",
                         slug: "outlayr",
@@ -1605,8 +1758,8 @@ const answers = {
                     {
                         label: "Actual Budget",
                         text: t({
-                            en: "Best if you want envelope budgeting on a computer, with bank sync in the US, Canada, the UK, or the EU",
-                            es: "Ideal si quieres presupuestar por sobres en la computadora, con sincronización bancaria en EE. UU., Canadá, el Reino Unido o la UE",
+                            en: "Best if you want envelope budgeting on a computer, with bank sync through your own server in North America, Europe, New Zealand, or Brazil",
+                            es: "Ideal si quieres presupuestar por sobres en la computadora, con sincronización bancaria desde tu propio servidor en Norteamérica, Europa, Nueva Zelanda o Brasil",
                         }),
                     },
                     {
@@ -1676,6 +1829,25 @@ const answers = {
                         es: "Mejores apps de gastos de código abierto (2026) · Outlayr",
                     }),
                 },
+                picked: [
+                    t({
+                        en: "Each app here publishes its code under an open source license, and each one fits a different need, from a phone app that works offline to a server you run yourself. They are in alphabetical order, not ranked.",
+                        es: "Cada app de esta lista publica su código con una licencia de código abierto, y cada una sirve para algo distinto, desde una app para el celular que funciona sin conexión hasta un servidor que manejas tú. Van en orden alfabético, no por puesto.",
+                    }),
+                    t({
+                        en: "Every detail about the other apps was read on that app's own site, code repository, or store listing on the date below the table, and links to the page it came from. These are the facts as each app states them, not results of our own testing.",
+                        es: "Cada dato de las otras apps se leyó en el sitio, el repositorio de código o la ficha de la tienda de esa app en la fecha que aparece bajo la tabla, y enlaza a la página de donde salió. Son los datos tal como los da cada app, no resultados de pruebas nuestras.",
+                    }),
+                    t({
+                        en: "Outlayr is ours. It gets the same facts as the others, including its own Watch out for row.",
+                        es: "Outlayr es nuestra. Tiene los mismos datos que las demás, incluida su propia fila de Ten en cuenta.",
+                    }),
+                ],
+                related: [
+                    "/guides/best-expense-tracker-apps",
+                    "/compare/wallet",
+                    "/compare/spendee",
+                ] satisfies PageRef[],
                 sources: t({
                     en: "Each detail about the other apps links to the page it was read on",
                     es: "Los datos de las otras apps enlazan a la página donde se leyeron",
@@ -1726,6 +1898,14 @@ const answers = {
                                 source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
                                 text: "iPhone",
                             },
+                            {
+                                label: LABELS.watch,
+                                source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
+                                text: t({
+                                    en: "iPhone only, and you add each subscription yourself",
+                                    es: "Solo para iPhone, y agregas tú cada suscripción",
+                                }),
+                            },
                         ],
                         name: "Bobby",
                         slug: "bobby",
@@ -1770,6 +1950,14 @@ const answers = {
                                 source: "https://www.monarch.com/download",
                                 text: t({ en: "Web, iPhone, iPad, Android", es: "Web, iPhone, iPad, Android" }),
                             },
+                            {
+                                label: LABELS.watch,
+                                source: "https://www.monarch.com/pricing",
+                                text: t({
+                                    en: "No free plan after the 7-day trial, and only in the United States and Canada",
+                                    es: "No tiene plan gratis después de la prueba de 7 días, y solo funciona en Estados Unidos y Canadá",
+                                }),
+                            },
                         ],
                         name: "Monarch",
                         slug: "monarch",
@@ -1790,10 +1978,10 @@ const answers = {
                                 }),
                             },
                             {
-                                label: t({ en: "Not included", es: "No incluye" }),
+                                label: LABELS.watch,
                                 text: t({
-                                    en: "Finding subscriptions for you, cancelling them, or negotiating bills",
-                                    es: "Encontrar suscripciones por ti, cancelarlas o negociar facturas",
+                                    en: "It doesn't find subscriptions for you, cancel them, or negotiate bills. You add each one once",
+                                    es: "No encuentra suscripciones por ti, no las cancela ni negocia facturas. Agregas cada una una vez",
                                 }),
                             },
                         ],
@@ -1841,6 +2029,14 @@ const answers = {
                                 text: t({
                                     en: "Web, iPhone, Apple Watch, Android",
                                     es: "Web, iPhone, Apple Watch, Android",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://pocketguard.com/pricing/",
+                                text: t({
+                                    en: "No free plan after the 7-day trial, and you cancel each subscription with the service yourself",
+                                    es: "No tiene plan gratis después de la prueba de 7 días, y cancelas tú cada suscripción con el servicio",
                                 }),
                             },
                         ],
@@ -1896,6 +2092,14 @@ const answers = {
                                 text: t({
                                     en: "iPhone, Android. Web is a Premium feature",
                                     es: "iPhone, Android. La web es una función Premium",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://www.rocketmoney.com/learn/personal-finance/how-much-does-rocket-money-cost",
+                                text: t({
+                                    en: "Only in the United States, manual transactions need Premium, and bill negotiation costs 35% to 60% of the first year's savings",
+                                    es: "Solo en Estados Unidos, los movimientos a mano requieren Premium y negociar facturas cuesta del 35% al 60% del ahorro del primer año",
                                 }),
                             },
                         ],
@@ -1997,6 +2201,25 @@ const answers = {
                         es: "Mejores apps para controlar suscripciones (2026) · Outlayr",
                     }),
                 },
+                picked: [
+                    t({
+                        en: "Each app here shows what your subscriptions cost, whether you add them yourself or the app finds them in linked accounts, and each one fits a different need. They are in alphabetical order, not ranked.",
+                        es: "Cada app de esta lista te muestra cuánto cuestan tus suscripciones, ya sea que las agregues tú o que la app las encuentre en tus cuentas vinculadas, y cada una sirve para algo distinto. Van en orden alfabético, no por puesto.",
+                    }),
+                    t({
+                        en: "Every detail about the other apps was read on that app's own site, help center, or store listing on the date below the table, and links to the page it came from. These are the facts as each app states them, not results of our own testing.",
+                        es: "Cada dato de las otras apps se leyó en el sitio, el centro de ayuda o la ficha de la tienda de esa app en la fecha que aparece bajo la tabla, y enlaza a la página de donde salió. Son los datos tal como los da cada app, no resultados de pruebas nuestras.",
+                    }),
+                    t({
+                        en: "Outlayr is ours. It gets the same facts as the others, including its own Watch out for row.",
+                        es: "Outlayr es nuestra. Tiene los mismos datos que las demás, incluida su propia fila de Ten en cuenta.",
+                    }),
+                ],
+                related: [
+                    "/guides/subscription-tracker",
+                    "/tools/subscription-cost-calculator",
+                    "/compare/rocket-money",
+                ] satisfies PageRef[],
                 sources: t({
                     en: "Each detail about the other apps links to the page it was read on",
                     es: "Los datos de las otras apps enlazan a la página donde se leyeron",
@@ -2095,6 +2318,11 @@ const answers = {
                     }),
                 },
                 plateAlt: BUDGETS_SCREEN_ALT,
+                related: [
+                    "/tools/50-30-20-budget-calculator",
+                    "/tools/installment-calculator",
+                    "/compare/ynab",
+                ] satisfies PageRef[],
                 steps: [
                     {
                         text: t({
@@ -2212,6 +2440,11 @@ const answers = {
                     en: "Outlayr Log with a $42.00 Costco purchase at the top and the entries from earlier days below.",
                     es: "Registro de Outlayr con una compra de $42.00 en Costco arriba y los registros de días anteriores abajo.",
                 }),
+                related: [
+                    "/guides/expense-tracker-template",
+                    "/compare/monarch",
+                    "/guides/best-expense-tracker-apps",
+                ] satisfies PageRef[],
                 steps: [
                     {
                         text: t({
@@ -2332,6 +2565,11 @@ const answers = {
                     }),
                 },
                 plateAlt: ACCOUNTS_SCREEN_ALT,
+                related: [
+                    "/tools/split-expenses-calculator",
+                    "/compare/spendee",
+                    "/guides/expense-tracker-template",
+                ] satisfies PageRef[],
                 steps: [
                     {
                         text: t({
@@ -2446,6 +2684,11 @@ const answers = {
                     en: "A Target receipt read into an entry: store, date, total, and category, then saved to the Log.",
                     es: "Un recibo de Farmatodo convertido en un registro: tienda, fecha, total y categoría, y luego guardado en el Registro.",
                 }),
+                related: [
+                    "/guides/voice-expense-tracker",
+                    "/guides/best-expense-tracker-apps",
+                    "/guides/budget-planner",
+                ] satisfies PageRef[],
                 steps: [
                     {
                         text: t({
@@ -2581,18 +2824,23 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Outlayr logs each subscription on the day it charges, adds up what your subscriptions and bills cost per month, and can remind you before the next charge.",
+                        en: "Outlayr logs each subscription on the day it charges, adds up what your subscriptions and bills cost a month, and reminds you before the next charge.",
                         es: "Outlayr registra cada suscripción el día que te cobra, suma lo que te cuestan al mes tus suscripciones y pagos fijos, y te avisa antes del siguiente cobro.",
                     }),
                     title: t({
-                        en: "Subscription Tracker: Monthly Cost and Reminders · Outlayr",
-                        es: "Control de suscripciones: costo mensual y avisos · Outlayr",
+                        en: "Subscription Tracker App with Reminders · Outlayr",
+                        es: "App de control de suscripciones con avisos · Outlayr",
                     }),
                 },
                 plateAlt: t({
                     en: "Outlayr Upcoming entries: Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, rent, Netflix, and Planet Fitness, $2,036.54 per month in total.",
                     es: "Próximos registros en Outlayr: Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, la renta, Netflix y Planet Fitness, $2,036.54 al mes en total.",
                 }),
+                related: [
+                    "/guides/best-subscription-tracker-apps",
+                    "/tools/subscription-cost-calculator",
+                    "/compare/rocket-money",
+                ] satisfies PageRef[],
                 steps: [
                     {
                         text: t({
@@ -2617,8 +2865,8 @@ const answers = {
                     },
                 ],
                 title: t({
-                    en: "Track every subscription and what it costs a month.",
-                    es: "Controla tus suscripciones y lo que te cuestan al mes.",
+                    en: "A subscription tracker that reminds you before each charge.",
+                    es: "Un control de suscripciones que te avisa antes de cada cobro.",
                 }),
             },
             "expense-tracker-template": {
@@ -2714,6 +2962,11 @@ const answers = {
                         es: "Plantilla de control de gastos para Excel (CSV) · Outlayr",
                     }),
                 },
+                related: [
+                    "/guides/mint-alternative",
+                    "/guides/best-expense-tracker-apps",
+                    "/guides/multi-currency-expense-tracker",
+                ] satisfies PageRef[],
                 steps: [
                     {
                         text: t({
@@ -2845,6 +3098,11 @@ const answers = {
                     en: "Outlayr voice entry: a spoken sentence becomes $12.50 at Blue Bottle under Coffee, and a spoken correction moves it to yesterday.",
                     es: "Registro por voz de Outlayr: una oración dictada se convierte en $12.50 en Juan Valdez en Café, y una corrección dicha lo pasa a ayer.",
                 }),
+                related: [
+                    "/guides/receipt-scanner",
+                    "/guides/best-expense-tracker-apps",
+                    "/guides/apple-pay-expense-tracker",
+                ] satisfies PageRef[],
                 steps: [
                     {
                         text: t({
@@ -2917,8 +3175,16 @@ const answers = {
             checked: insert(t({ en: ", checked {{date}}.", es: ", revisados el {{date}}." })),
             source: insert(t({ en: "{{name}} details from", es: "Datos de {{name}} tomados de" })),
             steps: t({ en: "How it works", es: "Cómo funciona" }),
+            summary: {
+                app: t({ en: "App", es: "App" }),
+                bestIf: t({ en: "Who it fits", es: "Para quién es" }),
+                platforms: LABELS.platforms,
+                price: LABELS.price,
+            },
+            updatedOn: insert(t({ en: "Updated {{date}}", es: "Actualizado el {{date}}" })),
             checkedOn: insert(t({ en: "Checked {{date}}", es: "Revisado el {{date}}" })),
             contents: t({ en: "On this page", es: "En esta página" }),
+            picked: t({ en: "How we picked", es: "Cómo las elegimos" }),
             cta: {
                 lead: t({
                     en: "Free to start. No ads on any plan.",

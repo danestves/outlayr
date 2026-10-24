@@ -4,7 +4,7 @@ import { useIntlayer } from "react-intlayer";
 
 import { AnswerHub } from "@/components/answer-hub";
 import { localeFromParam, pageUrl } from "@/lib/i18n";
-import { itemList, ldJson, pageMeta } from "@/lib/seo";
+import { hubTrail, itemList, ldJson, pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/{-$locale}/guides/")({
     component: Guides,
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/{-$locale}/guides/")({
         }));
         return {
             meta: pageMeta(hubs.guides.meta.title, hubs.guides.lead),
-            scripts: [ldJson(itemList(items))],
+            scripts: [ldJson(itemList(items)), ldJson(hubTrail(locale, "guides"))],
         };
     },
 });

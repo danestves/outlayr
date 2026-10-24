@@ -3,28 +3,30 @@ import { getIntlayer, getPrefix } from "intlayer";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
-import { Article, DELAYS, Figures, Questions, nextAfter } from "@/components/answers/article";
+import { Article, CompareTable, DELAYS, Figures, Questions } from "@/components/answers/article";
 import type { ArticleSection } from "@/components/answers/article";
 import { SayPanel, ScanPanel } from "@/components/demo/capture-panels";
+import { screenSources } from "@/components/home/media";
 import { Icon } from "@/components/icon";
 import { hasKey } from "@/lib/has-key";
 import { LANGUAGES, localeFromParam, pageUrl } from "@/lib/i18n";
-import { answerTrail, faqPage, itemList, ldJson, pageMeta, webPage } from "@/lib/seo";
-import { longDate } from "@/lib/site";
+import type { Locale } from "@/lib/i18n";
+import { answerTrail, article, faqPage, itemList, ldJson, pageMeta, webPage } from "@/lib/seo";
+import { guideUpdated, listChecked, longDate } from "@/lib/site";
 
 type GuideSlug = keyof ReturnType<typeof getIntlayer<"answers">>["guides"];
 
 const PLATES = {
-    "apple-pay-expense-tracker": "/screens/log-an-expense.webp",
+    "apple-pay-expense-tracker": "log-an-expense",
     "best-expense-tracker-apps": null,
     "best-open-source-expense-tracker-apps": null,
     "best-subscription-tracker-apps": null,
-    "budget-planner": "/screens/04.webp",
+    "budget-planner": "04",
     "expense-tracker-template": null,
-    "mint-alternative": "/screens/log-an-expense.webp",
-    "multi-currency-expense-tracker": "/screens/06.webp",
+    "mint-alternative": "log-an-expense",
+    "multi-currency-expense-tracker": "06",
     "receipt-scanner": "scan",
-    "subscription-tracker": "/screens/10.webp",
+    "subscription-tracker": "10",
     "voice-expense-tracker": "say",
 } as const satisfies Record<GuideSlug, string | null>;
 
@@ -33,18 +35,12 @@ const PANELS = {
     scan: { frame: 5, Panel: ScanPanel },
 } as const;
 
-const LISTS_CHECKED = new Date(Date.UTC(2026, 9, 9));
-
-const LISTS_RECHECKED = {
-    "best-open-source-expense-tracker-apps": new Date(Date.UTC(2026, 9, 20)),
-};
-
-function listChecked(slug: GuideSlug): Date {
-    return hasKey(LISTS_RECHECKED, slug) ? LISTS_RECHECKED[slug] : LISTS_CHECKED;
+function plateImage(slug: GuideSlug, locale: Locale) {
+    const plate = PLATES[slug];
+    return plate === null || hasKey(PANELS, plate) ? null : screenSources(plate, locale);
 }
 
 const WWW = /^www\./u;
-const WEBP = /\.webp$/u;
 
 const LABEL = "text-muted font-mono text-xs tracking-widest uppercase";
 
@@ -62,18 +58,54 @@ export const Route = createFileRoute("/{-$locale}/guides/$slug")({
         }
         const locale = localeFromParam(params.locale);
         const guide = getIntlayer("answers", locale).guides[loaderData];
-        const url = pageUrl(`/guides/${loaderData}`, locale);
+        const path = `/guides/${loaderData}`;
+        const url = pageUrl(path, locale);
+        const updated = guideUpdated(loaderData);
+        const plate = plateImage(loaderData, locale);
         return {
+            links: plate
+                ? [
+                      {
+                          as: "image",
+                          fetchPriority: "high",
+                          href: plate.src,
+                          media: "(prefers-color-scheme: light)",
+                          rel: "preload",
+                          type: "image/webp",
+                      },
+                      {
+                          as: "image",
+                          fetchPriority: "high",
+                          href: plate.dark,
+                          media: "(prefers-color-scheme: dark)",
+                          rel: "preload",
+                          type: "image/webp",
+                      },
+                  ]
+                : [],
             meta: pageMeta(guide.meta.title, guide.meta.description),
             scripts: [
+                ldJson(
+                    article(locale, path, {
+                        dateModified: updated,
+                        description: guide.meta.description,
+                        headline: guide.title,
+                    })
+                ),
                 ldJson(faqPage(guide.faq, LANGUAGES[locale].lang)),
                 ldJson(answerTrail(locale, "guides", loaderData, guide.title)),
                 ...("apps" in guide
                     ? [
-                          ldJson(itemList(guide.apps.map((app) => ({ name: app.name, url: `${url}#${app.slug}` })))),
+                          ldJson({
+                              ...itemList(guide.apps.map((app) => ({ name: app.name, url: `${url}#${app.slug}` }))),
+                              "@id": `${url}#list`,
+                          }),
                           ldJson(
-                              webPage(locale, `/guides/${loaderData}`, {
-                                  dateModified: listChecked(loaderData).toISOString().slice(0, 10),
+                              webPage(locale, path, {
+                                  "@id": url,
+                                  dateModified: updated.toISOString().slice(0, 10),
+                                  mainEntity: { "@id": `${url}#list` },
+                                  name: guide.meta.title,
                               })
                           ),
                       ]
@@ -83,30 +115,28 @@ export const Route = createFileRoute("/{-$locale}/guides/$slug")({
     },
 });
 
-function GuidePlate({ alt, plate }: { alt: string; plate: string }) {
+function GuidePlate({ alt, locale, plate }: { alt: string; locale: Locale; plate: string }) {
     if (!hasKey(PANELS, plate)) {
+        const { dark, src } = screenSources(plate, locale);
         return (
             <figure className="bg-surface mx-auto w-full max-w-sm rounded-3xl p-2 lg:max-w-xs">
                 <div className="aspect-4/5 overflow-hidden rounded-2xl lg:aspect-auto">
-                    {/* Both lazy: a hidden lazy image is never fetched, so only the painted theme's plate loads. */}
                     <img
                         alt={alt}
                         className="light-only size-full object-cover object-top lg:h-auto"
                         decoding="async"
-                        fetchPriority="high"
+                        fetchPriority="low"
                         height={1912}
-                        loading="lazy"
-                        src={plate}
+                        src={src}
                         width={880}
                     />
                     <img
                         alt={alt}
                         className="dark-only size-full object-cover object-top lg:h-auto"
                         decoding="async"
-                        fetchPriority="high"
+                        fetchPriority="low"
                         height={1912}
-                        loading="lazy"
-                        src={plate.replace(WEBP, "-dark.webp")}
+                        src={dark}
                         width={880}
                     />
                 </div>
@@ -136,6 +166,10 @@ function Source({ href }: { href: string }) {
     );
 }
 
+function textOf(facts: readonly { label: { value: string }; text: { value: string } }[], label: string): string {
+    return facts.find((fact) => fact.label.value === label)?.text.value ?? "";
+}
+
 function Guide() {
     const slug = Route.useLoaderData();
     const { compare, guides, labels } = useIntlayer("answers");
@@ -143,6 +177,21 @@ function Guide() {
     const guide = guides[slug];
     const plate = PLATES[slug];
     const sections: ArticleSection[] = [];
+    if ("picked" in guide) {
+        sections.push({
+            body: (
+                <div className="text-muted mt-8 flex max-w-2xl flex-col gap-4 text-lg">
+                    {guide.picked.map((paragraph) => (
+                        <p data-reveal key={paragraph.value}>
+                            {paragraph}
+                        </p>
+                    ))}
+                </div>
+            ),
+            id: "how-we-picked",
+            title: labels.picked,
+        });
+    }
     if ("apps" in guide) {
         for (const app of guide.apps) {
             sections.push({
@@ -227,36 +276,53 @@ function Guide() {
         <Article
             actions={download}
             aside={
-                plate !== null && "plateAlt" in guide ? <GuidePlate alt={guide.plateAlt.value} plate={plate} /> : null
+                plate !== null && "plateAlt" in guide ? (
+                    <GuidePlate alt={guide.plateAlt.value} locale={locale} plate={plate} />
+                ) : null
             }
-            checked={"apps" in guide ? listChecked(slug) : undefined}
+            dated={{ day: guideUpdated(slug), label: "updatedOn" }}
             hub="/guides"
             lead={guide.lead}
-            related={nextAfter(guides, slug, 3).map((other) => ({
-                name: guides[other].title,
-                slug: other,
-                text: guides[other].lead,
-                to: "/{-$locale}/guides/$slug",
-            }))}
+            related={guide.related}
             sections={sections}
             title={guide.title}
         >
-            <dl className="bg-surface grid gap-x-8 gap-y-6 rounded-3xl p-6 sm:grid-cols-2 md:p-8" data-reveal>
-                {guide.facts.map((fact) => (
-                    <div key={fact.label.value}>
-                        <dt className={LABEL}>{fact.label}</dt>
-                        <dd className="mt-2">
-                            <Figures text={fact.text.value} />
-                        </dd>
-                    </div>
-                ))}
-            </dl>
             {"apps" in guide ? (
-                <p className="text-muted mt-4 text-sm">
-                    {guide.sources}
-                    {labels.checked({ date: longDate(listChecked(slug), LANGUAGES[locale].date) })}
-                </p>
-            ) : null}
+                <>
+                    <CompareTable
+                        columns={[
+                            { id: "best-if", name: labels.summary.bestIf },
+                            { id: "price", name: labels.summary.price },
+                            { id: "platforms", name: labels.summary.platforms },
+                        ]}
+                        corner={labels.summary.app.value}
+                        rows={guide.apps.map((app) => ({
+                            cells: [
+                                textOf(guide.facts, app.name.value),
+                                textOf(app.facts, labels.summary.price.value),
+                                textOf(app.facts, labels.summary.platforms.value),
+                            ],
+                            id: app.slug.value,
+                            label: app.name,
+                        }))}
+                    />
+                    <p className="text-muted mt-4 text-sm">
+                        {guide.sources}
+                        {labels.checked({ date: longDate(listChecked(slug), LANGUAGES[locale].date) })}
+                    </p>
+                </>
+            ) : (
+                <dl className="bg-surface grid gap-x-8 gap-y-6 rounded-3xl p-6 sm:grid-cols-2 md:p-8" data-reveal>
+                    {guide.facts.map((fact) => (
+                        <div key={fact.label.value}>
+                            <dt className={LABEL}>{fact.label}</dt>
+                            <dd className="mt-2">
+                                <Figures text={fact.text.value} />
+                            </dd>
+                        </div>
+                    ))}
+                </dl>
+            )}
         </Article>
     );
 }

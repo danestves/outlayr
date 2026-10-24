@@ -12,6 +12,7 @@ import { LANGUAGES } from "@/lib/i18n";
 import { CONTAINER } from "@/lib/layout";
 import { useMotionScan } from "@/lib/motion";
 import { longDate } from "@/lib/site";
+import type { PageRef } from "@/lib/site";
 
 export interface ArticleSection {
     body: ReactNode;
@@ -54,10 +55,86 @@ export function Questions({
     );
 }
 
-export function nextAfter<T extends object>(record: T, slug: string, count: number) {
-    const slugs = Object.keys(record);
-    const at = slugs.indexOf(slug);
-    return [...slugs.slice(at + 1), ...slugs.slice(0, at)].filter((key) => hasKey(record, key)).slice(0, count);
+function useRelated(refs: readonly PageRef[]): AnswerItem[] {
+    const { compare, guides } = useIntlayer("answers");
+    const { pages } = useIntlayer("tools");
+    const { footer } = useIntlayer("site");
+    return refs.map((ref) => {
+        const [, hub = "", slug = ""] = ref.split("/");
+        if (hub === "guides" && hasKey(guides, slug)) {
+            const guide = guides[slug];
+            return { kicker: footer.guides, name: guide.title, slug, text: guide.lead, to: "/{-$locale}/guides/$slug" };
+        }
+        if (hub === "compare" && hasKey(compare, slug)) {
+            const page = compare[slug];
+            return {
+                kicker: footer.compare,
+                name: page.title,
+                slug,
+                text: page.summary,
+                to: "/{-$locale}/compare/$slug",
+            };
+        }
+        if (hub === "tools" && hasKey(pages, slug)) {
+            const page = pages[slug];
+            return { kicker: footer.tools, name: page.title, slug, text: page.lead, to: "/{-$locale}/tools/$slug" };
+        }
+        throw new Error(`No page for related link ${ref}`);
+    });
+}
+
+export function CompareTable({
+    columns,
+    corner,
+    rows,
+}: {
+    columns: readonly { id: string; muted?: boolean; name: ReactNode }[];
+    corner: string;
+    rows: readonly { cells: readonly string[]; id: string; label: ReactNode }[];
+}) {
+    const last = columns.length - 1;
+    return (
+        <div className="-mx-6 mt-8 overflow-x-auto overscroll-x-contain px-6 delay-100 md:mx-0 md:px-0" data-reveal>
+            <table className="w-full min-w-xl border-collapse text-left tabular-nums">
+                <thead>
+                    <tr className="border-foreground border-b">
+                        <th className="w-1/5 py-3 pr-6" scope="col">
+                            <span className="sr-only">{corner}</span>
+                        </th>
+                        {columns.map((column, index) => (
+                            <th
+                                className={`py-3 font-semibold ${column.muted ? "text-muted" : ""} ${index < last ? "pr-6" : ""}`}
+                                key={column.id}
+                                scope="col"
+                            >
+                                {column.name}
+                            </th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows.map((row) => (
+                        <tr className="border-border border-b align-top" key={row.id}>
+                            <th
+                                className="text-muted py-4 pr-6 font-mono text-xs font-normal tracking-widest uppercase"
+                                scope="row"
+                            >
+                                {row.label}
+                            </th>
+                            {columns.map((column, index) => (
+                                <td
+                                    className={`py-4 ${column.muted ? "text-muted" : ""} ${index < last ? "pr-6" : ""}`}
+                                    key={column.id}
+                                >
+                                    <Figures text={row.cells[index] ?? ""} />
+                                </td>
+                            ))}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
 }
 
 function Contents({ sections }: { sections: readonly ArticleSection[] }) {
@@ -107,8 +184,8 @@ function Contents({ sections }: { sections: readonly ArticleSection[] }) {
 export function Article({
     actions,
     aside,
-    checked,
     children,
+    dated,
     hub,
     lead,
     related,
@@ -117,17 +194,18 @@ export function Article({
 }: {
     actions?: ReactNode;
     aside?: ReactNode;
-    checked?: Date;
     children?: ReactNode;
+    dated?: { day: Date; label: "checkedOn" | "updatedOn" };
     hub: "/compare" | "/guides" | "/tools";
     lead: ReactNode;
-    related: readonly AnswerItem[];
+    related: readonly PageRef[];
     sections: readonly ArticleSection[];
     title: ReactNode;
 }) {
     useMotionScan();
     const { labels } = useIntlayer("answers");
     const { locale } = useLocale();
+    const cards = useRelated(related);
     return (
         <main className={`${CONTAINER} pt-24 pb-24`} id="main">
             <header className="mt-16 grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
@@ -144,13 +222,13 @@ export function Article({
                     <p className="text-muted mt-6 max-w-[680px] text-lg delay-200 md:text-xl" data-reveal>
                         {lead}
                     </p>
-                    {checked ? (
+                    {dated ? (
                         <p
                             className="text-muted mt-8 font-mono text-xs tracking-widest uppercase delay-300"
                             data-reveal
                         >
-                            <time dateTime={checked.toISOString().slice(0, 10)}>
-                                {labels.checkedOn({ date: longDate(checked, LANGUAGES[locale].date) })}
+                            <time dateTime={dated.day.toISOString().slice(0, 10)}>
+                                {labels[dated.label]({ date: longDate(dated.day, LANGUAGES[locale].date) })}
                             </time>
                         </p>
                     ) : null}
@@ -203,7 +281,7 @@ export function Article({
                     {labels.related}
                 </h2>
                 <ul className="mt-8 grid gap-4 md:grid-cols-3">
-                    {related.map((item, index) => (
+                    {cards.map((item, index) => (
                         <li className={DELAYS[index]} data-reveal key={item.slug}>
                             <AnswerCard heading="h3" item={item} />
                         </li>
