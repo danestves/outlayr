@@ -1,10 +1,10 @@
-import { useIntlayer } from "react-intlayer";
+import { useIntlayer, useLocale } from "react-intlayer";
 
 import { Icon } from "@/components/icon";
 import type { IconName } from "@/components/icon";
 import { CONTAINER } from "@/lib/layout";
 
-import { Phone, Screen } from "./media";
+import { Phone, Screen, screenSources } from "./media";
 import { HEADING, LABEL } from "./problem";
 
 const SHIFTS = ["translate-y-12", "", "-translate-y-12", "", "translate-y-12"] as const;
@@ -13,13 +13,14 @@ const TRUST: IconName[] = ["prohibit", "fingerprint", "wifi-slash", "export"];
 export function Screens() {
     const { hero, tour } = useIntlayer("home");
     const { screens } = useIntlayer("story");
+    const { locale } = useLocale();
     const [budgets, insights, accounts, subscriptions] = tour;
     const shots = [
-        { alt: budgets?.alt.value ?? "", src: "/screens/04.webp" },
-        { alt: insights?.alt.value ?? "", src: "/screens/05.webp" },
-        { alt: hero.videoLabel.value, src: "/screens/log-an-expense.webp" },
-        { alt: subscriptions?.alt.value ?? "", src: "/screens/10.webp" },
-        { alt: accounts?.alt.value ?? "", src: "/screens/06.webp" },
+        { alt: budgets?.alt.value ?? "", ...screenSources("04", locale) },
+        { alt: insights?.alt.value ?? "", ...screenSources("05", locale) },
+        { alt: hero.videoLabel.value, ...screenSources("log-an-expense", locale) },
+        { alt: subscriptions?.alt.value ?? "", ...screenSources("10", locale) },
+        { alt: accounts?.alt.value ?? "", ...screenSources("06", locale) },
     ];
     return (
         <section aria-label={screens.label.value} className="overflow-clip py-24">
@@ -31,7 +32,7 @@ export function Screens() {
                         key={shot.src}
                     >
                         <Phone className="drop-shadow-[0_32px_48px_rgb(19_18_9/0.3)]">
-                            <Screen alt={shot.alt} src={shot.src} />
+                            <Screen alt={shot.alt} dark={shot.dark} src={shot.src} />
                         </Phone>
                     </div>
                 ))}

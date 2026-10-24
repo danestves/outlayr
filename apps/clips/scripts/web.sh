@@ -22,6 +22,7 @@ film() {
         -movflags +faststart "$out/$id.av1.mp4"
     remotion still "$work/bundle" "$id" "$work/$id.png" --frame="$poster" --image-format=png --log=error
     magick "$work/$id.png" -resize 1080x -quality 84 "$out/$id.webp"
+    magick "$work/$id.png" -resize 720x -quality 84 "$out/$id-720.webp"
 }
 
 for mode in light dark; do
