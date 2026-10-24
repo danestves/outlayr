@@ -1,3 +1,5 @@
+import type { Locale } from "@/lib/i18n";
+
 import type { Currency } from "./money";
 
 type Kind = "expense" | "income";
@@ -13,7 +15,6 @@ const GUIDED_INDEX = new Map<Step, number>(GUIDED.map((step, index) => [step, in
 
 export const CURRENCY_CODES = ["USD", "EUR", "MXN", "VES"] as const satisfies readonly Currency[];
 export const WHEN_OPTIONS = ["today", "yesterday"] as const satisfies readonly When[];
-export const ACCOUNTS = ["Chase", "Apple Card", "Amex Gold", "Zinli", "Cash", "Ally Savings"] as const;
 export const CATEGORIES = {
     expense: [
         "Groceries",
@@ -27,18 +28,6 @@ export const CATEGORIES = {
     ],
     income: ["Paycheck", "Freelance", "Part-Time", "Business", "Investments", "Interest", "Bonus", "Tips"],
 } as const satisfies Record<Kind, readonly string[]>;
-export const RECENT_MERCHANTS = {
-    expense: ["Costco", "Lyft", "Nike", "Target", "GitHub", "Figma"],
-    income: ["Upwork", "Deel"],
-} as const satisfies Record<Kind, readonly string[]>;
-const KNOWN_MERCHANTS = new Map([
-    ["costco", "Groceries"],
-    ["figma", "Subscriptions"],
-    ["github", "Subscriptions"],
-    ["lyft", "Transport"],
-    ["nike", "Fashion"],
-    ["target", "Shopping"],
-]);
 
 const MAX_INTEGER_DIGITS = 7;
 export const MAX_NAME_LENGTH = 50;
@@ -88,6 +77,7 @@ export interface State {
     aim: Target | null;
     cursor: number;
     draft: Draft;
+    locale: Locale;
     log: readonly Row[];
     nextId: number;
     step: Step;
@@ -114,52 +104,133 @@ export const BLANK: Draft = {
     when: "today",
 };
 
-const FIRST_ENTRY: Entry = {
-    account: "Chase",
-    category: "Groceries",
-    currency: "USD",
-    keys: ["4", "2"],
-    kind: "expense",
-    merchant: "Costco",
-    when: "today",
-};
+interface Cast {
+    accounts: readonly string[];
+    entries: readonly [Entry, ...Entry[]];
+    knownMerchants: ReadonlyMap<string, string>;
+    recentMerchants: Record<Kind, readonly string[]>;
+    seedLog: readonly Row[];
+}
 
-const ENTRIES: readonly Entry[] = [
-    FIRST_ENTRY,
-    {
-        account: "Apple Card",
-        category: "Transport",
-        currency: "USD",
-        keys: ["1", "4", ".", "6"],
-        kind: "expense",
-        merchant: "Lyft",
-        when: "today",
+export const CASTS = {
+    en: {
+        accounts: ["Chase", "Apple Card", "Amex Gold", "Zinli", "Cash", "Ally Savings"],
+        entries: [
+            {
+                account: "Chase",
+                category: "Groceries",
+                currency: "USD",
+                keys: ["4", "2"],
+                kind: "expense",
+                merchant: "Costco",
+                when: "today",
+            },
+            {
+                account: "Apple Card",
+                category: "Transport",
+                currency: "USD",
+                keys: ["1", "4", ".", "6"],
+                kind: "expense",
+                merchant: "Lyft",
+                when: "today",
+            },
+            {
+                account: "Zinli",
+                category: "Freelance",
+                currency: "USD",
+                keys: ["1", "4", "5", "0"],
+                kind: "income",
+                merchant: "Upwork",
+                when: "yesterday",
+            },
+            {
+                account: "Amex Gold",
+                category: "Fashion",
+                currency: "EUR",
+                keys: ["8", "9"],
+                kind: "expense",
+                merchant: "Nike",
+                when: "today",
+            },
+        ],
+        knownMerchants: new Map([
+            ["costco", "Groceries"],
+            ["figma", "Subscriptions"],
+            ["github", "Subscriptions"],
+            ["lyft", "Transport"],
+            ["nike", "Fashion"],
+            ["target", "Shopping"],
+        ]),
+        recentMerchants: {
+            expense: ["Costco", "Lyft", "Nike", "Target", "GitHub", "Figma"],
+            income: ["Upwork", "Deel"],
+        },
+        seedLog: [
+            { amount: 15, category: "Subscriptions", currency: "USD", id: 3, income: false, merchant: "Figma" },
+            { amount: 54.28, category: "Shopping", currency: "USD", id: 2, income: false, merchant: "Target" },
+            { amount: 4, category: "Subscriptions", currency: "USD", id: 1, income: false, merchant: "GitHub" },
+        ],
     },
-    {
-        account: "Zinli",
-        category: "Freelance",
-        currency: "USD",
-        keys: ["1", "4", "5", "0"],
-        kind: "income",
-        merchant: "Upwork",
-        when: "yesterday",
+    es: {
+        accounts: ["BBVA", "Mercado Pago", "Nu", "Zinli", "Cash", "Banesco"],
+        entries: [
+            {
+                account: "BBVA",
+                category: "Shopping",
+                currency: "USD",
+                keys: ["4", "2"],
+                kind: "expense",
+                merchant: "Mercado Libre",
+                when: "today",
+            },
+            {
+                account: "Mercado Pago",
+                category: "Transport",
+                currency: "USD",
+                keys: ["1", "4", ".", "6"],
+                kind: "expense",
+                merchant: "DiDi",
+                when: "today",
+            },
+            {
+                account: "Zinli",
+                category: "Freelance",
+                currency: "USD",
+                keys: ["1", "4", "5", "0"],
+                kind: "income",
+                merchant: "Upwork",
+                when: "yesterday",
+            },
+            {
+                account: "Nu",
+                category: "Fashion",
+                currency: "EUR",
+                keys: ["8", "9"],
+                kind: "expense",
+                merchant: "Zara",
+                when: "today",
+            },
+        ],
+        knownMerchants: new Map([
+            ["didi", "Transport"],
+            ["farmatodo", "Shopping"],
+            ["mercado libre", "Shopping"],
+            ["netflix", "Subscriptions"],
+            ["rappi", "Dining Out"],
+            ["spotify", "Subscriptions"],
+            ["zara", "Fashion"],
+        ]),
+        recentMerchants: {
+            expense: ["Mercado Libre", "DiDi", "Zara", "Farmatodo", "Rappi", "Spotify"],
+            income: ["Upwork", "Deel"],
+        },
+        seedLog: [
+            { amount: 15, category: "Subscriptions", currency: "USD", id: 3, income: false, merchant: "Netflix" },
+            { amount: 54.28, category: "Shopping", currency: "USD", id: 2, income: false, merchant: "Farmatodo" },
+            { amount: 4, category: "Subscriptions", currency: "USD", id: 1, income: false, merchant: "Spotify" },
+        ],
     },
-    {
-        account: "Amex Gold",
-        category: "Fashion",
-        currency: "EUR",
-        keys: ["8", "9"],
-        kind: "expense",
-        merchant: "Nike",
-        when: "today",
-    },
-];
-
-const SEED_LOG: readonly Row[] = [
-    { amount: 15, category: "Subscriptions", currency: "USD", id: 3, income: false, merchant: "Figma" },
-    { amount: 54.28, category: "Shopping", currency: "USD", id: 2, income: false, merchant: "Target" },
-    { amount: 4, category: "Subscriptions", currency: "USD", id: 1, income: false, merchant: "GitHub" },
-];
+} as const satisfies Record<Locale, Cast>;
 
 const PACE = {
     choose: 750,
@@ -194,8 +265,8 @@ export function amountOf(draft: Draft): number {
     return Number.isFinite(value) ? value : 0;
 }
 
-function suggestedCategory(kind: Kind, merchant: string): string | null {
-    return kind === "expense" ? (KNOWN_MERCHANTS.get(merchant.trim().toLowerCase()) ?? null) : null;
+function suggestedCategory(cast: Cast, kind: Kind, merchant: string): string | null {
+    return kind === "expense" ? (cast.knownMerchants.get(merchant.trim().toLowerCase()) ?? null) : null;
 }
 
 function answered(draft: Draft, step: GuidedStep): boolean {
@@ -231,11 +302,11 @@ function advance(state: State, draft: Draft, from: Step): State {
     return { ...state, draft, step: nextMissing(draft, afterStep(from)) ?? "amount" };
 }
 
-function named(draft: Draft, merchant: string): Draft {
+function named(cast: Cast, draft: Draft, merchant: string): Draft {
     if (draft.categoryChosen) {
         return { ...draft, merchant };
     }
-    return { ...draft, category: suggestedCategory(draft.kind, merchant), merchant };
+    return { ...draft, category: suggestedCategory(cast, draft.kind, merchant), merchant };
 }
 
 function save(state: State): State {
@@ -262,7 +333,7 @@ function save(state: State): State {
 function choose(state: State, value: string): State {
     const { draft } = state;
     if (state.step === "merchant") {
-        return { ...state, draft: named(draft, value) };
+        return { ...state, draft: named(CASTS[state.locale], draft, value) };
     }
     if (state.step === "category") {
         return advance(state, { ...draft, category: value, categoryChosen: true }, "category");
@@ -287,7 +358,7 @@ function apply(state: State, action: VisitorAction): State {
             return { ...state, draft: { ...draft, amount: press(draft.amount, action.key) } };
         }
         case "name": {
-            return { ...state, draft: named(draft, action.value) };
+            return { ...state, draft: named(CASTS[state.locale], draft, action.value) };
         }
         case "currency": {
             return { ...state, draft: { ...draft, currency: action.value }, step: "amount" };
@@ -310,7 +381,7 @@ function apply(state: State, action: VisitorAction): State {
     }
 }
 
-function movesFor(entry: Entry): Move[] {
+function movesFor(cast: Cast, entry: Entry): Move[] {
     const moves: Move[] = [];
     if (entry.kind === "income") {
         moves.push({ type: "kind" });
@@ -322,7 +393,7 @@ function movesFor(entry: Entry): Move[] {
         moves.push({ key, type: "key" });
     }
     moves.push({ type: "footer" }, { type: "choose", value: entry.merchant }, { type: "footer" });
-    if (suggestedCategory(entry.kind, entry.merchant) !== entry.category) {
+    if (suggestedCategory(cast, entry.kind, entry.merchant) !== entry.category) {
         moves.push({ type: "choose", value: entry.category });
     }
     moves.push({ type: "choose", value: entry.account });
@@ -333,9 +404,18 @@ function movesFor(entry: Entry): Move[] {
     return moves;
 }
 
-const PLAYS = ENTRIES.map(movesFor);
-const SCRIPT = PLAYS.flat();
-const ENTRY_STARTS = PLAYS.map((_, index) => PLAYS.slice(0, index).reduce((total, moves) => total + moves.length, 0));
+function scriptOf(cast: Cast) {
+    const plays = cast.entries.map((entry) => movesFor(cast, entry));
+    return {
+        moves: plays.flat(),
+        starts: plays.map((_, index) => plays.slice(0, index).reduce((total, moves) => total + moves.length, 0)),
+    };
+}
+
+const SCRIPTS = { en: scriptOf(CASTS.en), es: scriptOf(CASTS.es) } satisfies Record<
+    Locale,
+    ReturnType<typeof scriptOf>
+>;
 
 function targetOf(move: Move): Target {
     switch (move.type) {
@@ -356,14 +436,15 @@ function targetOf(move: Move): Target {
 }
 
 function autoplay(state: State): State {
-    const move = SCRIPT[state.cursor];
+    const { moves } = SCRIPTS[state.locale];
+    const move = moves[state.cursor];
     if (move === undefined) {
         return state;
     }
     if (state.aim === null) {
         return { ...state, aim: targetOf(move) };
     }
-    return { ...apply(state, move), aim: null, cursor: (state.cursor + 1) % SCRIPT.length };
+    return { ...apply(state, move), aim: null, cursor: (state.cursor + 1) % moves.length };
 }
 
 export function reduce(state: State, action: Action): State {
@@ -371,36 +452,42 @@ export function reduce(state: State, action: Action): State {
         return autoplay(state);
     }
     if (action.type === "restart") {
-        const cursor = ENTRY_STARTS.findLast((start) => start <= state.cursor) ?? 0;
+        const cursor = SCRIPTS[state.locale].starts.findLast((start) => start <= state.cursor) ?? 0;
         return { ...state, aim: null, cursor, draft: BLANK, step: "amount" };
     }
     return { ...apply(state, action), aim: null };
 }
 
 export function delayOf(state: State): number {
-    const move = SCRIPT[state.cursor];
+    const { moves, starts } = SCRIPTS[state.locale];
+    const move = moves[state.cursor];
     if (state.aim !== null || move === undefined) {
         return AIM_MS;
     }
-    const settle = ENTRY_STARTS.includes(state.cursor) ? AFTER_SAVE_MS : 0;
+    const settle = starts.includes(state.cursor) ? AFTER_SAVE_MS : 0;
     const saving = move.type === "footer" && isWhole(state.draft);
     return settle + (saving ? SAVE_MS : PACE[move.type]);
 }
 
-export const INITIAL: State = {
-    aim: null,
-    cursor: movesFor(FIRST_ENTRY).length - 1,
-    draft: {
-        account: FIRST_ENTRY.account,
-        amount: FIRST_ENTRY.keys.reduce(press, ""),
-        category: FIRST_ENTRY.category,
-        categoryChosen: false,
-        currency: FIRST_ENTRY.currency,
-        kind: FIRST_ENTRY.kind,
-        merchant: FIRST_ENTRY.merchant,
-        when: FIRST_ENTRY.when,
-    },
-    log: SEED_LOG,
-    nextId: SEED_LOG.length + 1,
-    step: "amount",
-};
+export function initialState(locale: Locale): State {
+    const cast: Cast = CASTS[locale];
+    const [first] = cast.entries;
+    return {
+        aim: null,
+        cursor: movesFor(cast, first).length - 1,
+        draft: {
+            account: first.account,
+            amount: first.keys.reduce(press, ""),
+            category: first.category,
+            categoryChosen: false,
+            currency: first.currency,
+            kind: first.kind,
+            merchant: first.merchant,
+            when: first.when,
+        },
+        locale,
+        log: cast.seedLog,
+        nextId: cast.seedLog.length + 1,
+        step: "amount",
+    };
+}

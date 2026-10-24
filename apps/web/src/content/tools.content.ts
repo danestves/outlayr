@@ -17,9 +17,16 @@ const tools = {
                 es: "Reparte tu sueldo, suma tus suscripciones, mira cuánto cuesta de verdad un plan de cuotas o salda una cuenta compartida. Gratis, y nada de lo que escribes sale de tu navegador.",
             }),
             meta: {
+                description: t({
+                    en: "Split a paycheck, add up your subscriptions, see what an installment plan really costs, or settle a shared bill. Free, and nothing you type leaves your browser.",
+                    es: "Reparte tu sueldo, suma tus suscripciones, mira cuánto cuesta un plan de cuotas o salda una cuenta compartida. Gratis, y nada sale de tu navegador.",
+                }),
                 title: t({ en: "Free Money Calculators · Outlayr", es: "Calculadoras de dinero gratis · Outlayr" }),
             },
-            title: t({ en: "Quick math for everyday money.", es: "Cuentas rápidas para el dinero de cada día." }),
+            title: t({
+                en: "Free money calculators for everyday math.",
+                es: "Calculadoras de dinero gratis para cada día.",
+            }),
         },
         labels: {
             at: {
@@ -57,7 +64,7 @@ const tools = {
                         name: t({ en: "Needs", es: "Necesidades" }),
                         text: t({
                             en: "Rent, groceries, utilities, transport, insurance, minimum debt payments",
-                            es: "Alquiler, súper, servicios, transporte, seguros, pagos mínimos de deudas",
+                            es: "Renta, súper, servicios, transporte, seguros, pagos mínimos de deudas",
                         }),
                     },
                     {
@@ -123,8 +130,8 @@ const tools = {
                 },
                 method: [
                     t({
-                        en: "The 50/30/20 rule splits what you take home after taxes: half for needs, 30% for things you want, and 20% for savings and paying down debt. Elizabeth Warren popularized it in All Your Worth, the book she wrote with her daughter, Amelia Warren Tyagi.",
-                        es: "La regla 50/30/20 reparte lo que te queda después de impuestos: la mitad para necesidades, 30% para gustos y 20% para ahorrar y pagar deudas. La popularizó Elizabeth Warren en All Your Worth, el libro que escribió con su hija, Amelia Warren Tyagi.",
+                        en: "The 50/30/20 rule splits what you take home after taxes: half for needs, 30% for things you want, and 20% for savings and paying down debt. Elizabeth Warren and her daughter, Amelia Warren Tyagi, set it out in their 2005 book All Your Worth: The Ultimate Lifetime Money Plan.",
+                        es: "La regla 50/30/20 reparte lo que te queda después de impuestos: la mitad para necesidades, 30% para gustos y 20% para ahorrar y pagar deudas. La propusieron Elizabeth Warren y su hija, Amelia Warren Tyagi, en su libro de 2005 All Your Worth: The Ultimate Lifetime Money Plan.",
                     }),
                     t({
                         en: "Paid weekly or every two weeks? The calculator first turns your pay into a year at 52 weeks, then a month, so a month gets 4.33 weekly paychecks, not 4.",
@@ -132,7 +139,7 @@ const tools = {
                     }),
                     t({
                         en: "If half your pay doesn't cover your needs, as in a city with high rent, start from 60/20/20 or 70/20/10 and work your way back.",
-                        es: "Si la mitad de tu sueldo no alcanza para las necesidades, como pasa en una ciudad con alquileres caros, empieza con 60/20/20 o 70/20/10 y ve ajustando.",
+                        es: "Si la mitad de tu sueldo no alcanza para las necesidades, como pasa en una ciudad donde la renta es cara, empieza con 60/20/20 o 70/20/10 y ve ajustando.",
                     }),
                 ],
                 title: t({ en: "50/30/20 budget calculator", es: "Calculadora de presupuesto 50/30/20" }),
@@ -207,6 +214,10 @@ const tools = {
                         es: "Cada precio se convierte primero en un costo anual: un cobro semanal cuenta 52 veces, uno mensual 12, uno cada 3 meses 4 y uno anual una vez. La cifra mensual es ese total dividido entre 12.",
                     }),
                     t({
+                        en: "As a formula: yearly cost = the sum of each price × its charges a year, and monthly cost = yearly cost ÷ 12.",
+                        es: "Como fórmula: costo anual = la suma de cada precio × sus cobros al año, y costo mensual = costo anual ÷ 12.",
+                    }),
+                    t({
                         en: "That is why a $5 weekly charge costs $21.67 a month, not $20: a month is a bit more than 4 weeks.",
                         es: "Por eso un cobro semanal de $5 cuesta $21.67 al mes y no $20: un mes es un poco más de 4 semanas.",
                     }),
@@ -279,8 +290,8 @@ const tools = {
                     },
                     {
                         answer: t({
-                            en: "Yes. Take a screenshot of the plan in your installment app and Outlayr fills in each payment, what is already paid, and any late fees. It can remind you the day before each one is due.",
-                            es: "Sí. Toma una captura del plan en tu app de cuotas y Outlayr llena cada cuota, lo que ya pagaste y los recargos por atraso. Puede avisarte el día antes de cada pago.",
+                            en: "Yes. Outlayr tracks purchases in installments from buy now, pay later apps such as Cashea, Klarna, and Afterpay, and from cards: the upfront payment, each installment, and any late fees, with a reminder the day before each one is due. For an order already in progress, take a screenshot of its payment plan and Outlayr fills in each payment and what is already paid. The free plan holds 2 installment apps, and each screenshot counts as one capture.",
+                            es: "Sí. Outlayr lleva las compras en cuotas de apps como Cashea, Klarna y Afterpay, y de tus tarjetas: la inicial, cada cuota y los recargos por atraso, con un aviso el día antes de cada pago. Para una compra que ya va por la mitad, toma una captura de su plan de pagos y Outlayr llena cada cuota y lo que ya pagaste. El plan gratis permite 2 apps de cuotas, y cada captura de pantalla cuenta como una captura.",
                         }),
                         question: t({
                             en: "Can Outlayr track my installments?",
@@ -301,18 +312,22 @@ const tools = {
                 }),
                 meta: {
                     title: t({
-                        en: "Installment Calculator: The Real Cost of Paying Later · Outlayr",
-                        es: "Calculadora de cuotas: cuánto cuesta pagar a plazos · Outlayr",
+                        en: "Installment Calculator: The Real Cost of Paying Later",
+                        es: "Calculadora de cuotas: cuánto cuesta pagar a plazos",
                     }),
                 },
                 method: [
                     t({
-                        en: "The calculator adds what you pay today to every installment and compares the total with the cash price. The difference is what the plan costs you.",
-                        es: "La calculadora suma lo que pagas hoy y todas las cuotas, y compara el total con el precio de contado. La diferencia es lo que te cuesta el plan.",
+                        en: "The calculator adds what you pay today to every installment and compares the total with the cash price: total = paid today + payments × each payment, and extra = total − cash price.",
+                        es: "La calculadora suma lo que pagas hoy y todas las cuotas, y compara el total con el precio de contado: total = lo que pagas hoy + cuotas × cada cuota, y lo que pagas de más = total − precio de contado.",
                     }),
                     t({
                         en: "The yearly rate is the interest rate that makes those payments worth exactly what you financed, the cash price minus today's payment. It compounds over a year, like an effective annual rate, so a small fee on a short plan shows its real size.",
                         es: "La tasa anual es la tasa de interés con la que esas cuotas valen justo lo que financiaste, el precio de contado menos lo que pagas hoy. Se compone a un año, como una tasa efectiva anual, así que un cargo chico en un plan corto muestra su tamaño real.",
+                    }),
+                    t({
+                        en: "As a formula: find the rate r per payment period where each payment × (1 − (1 + r)^−n) ÷ r = cash price − paid today, with n payments. The yearly rate is (1 + r)^k − 1, where k is 52 for weekly payments, 26 for every 2 weeks, and 12 for monthly. With the starting example, $300 financed in 3 payments of $105 every 2 weeks, r is about 2.48%, and (1.0248)^26 − 1 is about 89%.",
+                        es: "Como fórmula: busca la tasa r por período donde cada cuota × (1 − (1 + r)^−n) ÷ r = precio de contado − lo que pagas hoy, con n cuotas. La tasa anual es (1 + r)^k − 1, donde k es 52 si pagas cada semana, 26 si pagas cada 2 semanas y 12 si pagas cada mes. Con el ejemplo inicial, $300 financiados en 3 cuotas de $105 cada 2 semanas, r es cerca de 2.48%, y (1.0248)^26 − 1 da cerca de 89%.",
                     }),
                     t({
                         en: "Late fees are not included. Most plans charge one when a payment is late, which raises the real cost.",
@@ -363,8 +378,8 @@ const tools = {
                     },
                     {
                         answer: t({
-                            en: "Yes. Each person gets their own account in Outlayr, so money you lent, borrowed, or owe for a job or purchase shows as a balance until it is paid back.",
-                            es: "Sí. Cada persona tiene su propia cuenta en Outlayr, así que lo que prestaste, lo que te prestaron o lo que debes por un trabajo o una compra queda como saldo hasta que se paga.",
+                            en: "Yes. Each person gets their own account in Outlayr, so money you lent, borrowed, sold on credit, or owe for a job or purchase shows as a balance until it is paid back. Add a payoff plan with a date and Outlayr shows what that takes a month, and whether you are ahead or behind. The free plan holds 3 people and 2 payoff plans.",
+                            es: "Sí. Cada persona tiene su propia cuenta en Outlayr, así que lo que prestaste, lo que te prestaron, lo que vendiste a crédito o lo que debes por un trabajo o una compra queda como saldo hasta que se paga. Ponle un plan de pago con fecha y Outlayr te muestra cuánto toca al mes y si vas adelantado o atrasado. El plan gratis permite 3 personas y 2 planes de pago.",
                         }),
                         question: t({
                             en: "Can Outlayr keep track of who owes me?",
@@ -384,7 +399,7 @@ const tools = {
                 meta: {
                     title: t({
                         en: "Split Expenses Calculator: Who Owes Whom · Outlayr",
-                        es: "Calculadora para dividir gastos: quién le debe a quién · Outlayr",
+                        es: "Calculadora para dividir gastos: quién le debe a quién",
                     }),
                 },
                 method: [

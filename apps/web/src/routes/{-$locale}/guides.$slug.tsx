@@ -64,7 +64,7 @@ export const Route = createFileRoute("/{-$locale}/guides/$slug")({
         const guide = getIntlayer("answers", locale).guides[loaderData];
         const url = pageUrl(`/guides/${loaderData}`, locale);
         return {
-            meta: pageMeta(guide.meta.title, guide.lead),
+            meta: pageMeta(guide.meta.title, guide.meta.description),
             scripts: [
                 ldJson(faqPage(guide.faq, LANGUAGES[locale].lang)),
                 ldJson(answerTrail(locale, "guides", loaderData, guide.title)),

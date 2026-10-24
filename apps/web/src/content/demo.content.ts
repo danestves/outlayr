@@ -75,7 +75,7 @@ const demo = {
         said: {
             first: t({
                 en: "$12.50 at Blue Bottle for coffee on my Apple Card",
-                es: "$12.50 de café en Blue Bottle con mi Apple Card",
+                es: "$12.50 de café en Juan Valdez con mi tarjeta Nu",
             }),
             fix: t({ en: "Actually, that was yesterday", es: "En realidad, fue ayer" }),
         },

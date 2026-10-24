@@ -16,7 +16,7 @@ export const Route = createFileRoute("/{-$locale}/tools/")({
             url: pageUrl(`/tools/${slug}`, locale),
         }));
         return {
-            meta: pageMeta(hub.meta.title, hub.lead),
+            meta: pageMeta(hub.meta.title, hub.meta.description),
             scripts: [ldJson(itemList(items))],
         };
     },
