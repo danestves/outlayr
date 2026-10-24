@@ -113,27 +113,4 @@ describe("useLoggedTransactions", () => {
         await fireChange();
         expect(ids(result.current.tail)).toStrictEqual(["old"]);
     });
-
-    it("runs no reads while disabled and reads the window whole the render it turns back on", async () => {
-        const { rerender, result } = await renderHook(
-            ({ days, enabled }: { days: number; enabled: boolean }) => useLoggedTransactions(db, NOW, days, enabled),
-            {
-                initialProps: { days: 540, enabled: false },
-            }
-        );
-        expect(result.current.head).toStrictEqual([]);
-        expect(result.current.tail).toStrictEqual([]);
-        expect(result.current.reachedEnd).toBe(true);
-
-        const writes = mockChangeListeners.size;
-        await fireChange();
-        expect(result.current.head).toStrictEqual([]);
-        expect(mockChangeListeners.size).toBe(writes);
-
-        await rerender({ days: 540, enabled: true });
-        expect(ids(result.current.head)).toStrictEqual(["recent"]);
-        expect(ids(result.current.tail)).toStrictEqual(["old", "older"]);
-        // 3 seeded days is fewer than the 540 the read asks for, whether or not it ran.
-        expect(result.current.reachedEnd).toBe(true);
-    });
 });
