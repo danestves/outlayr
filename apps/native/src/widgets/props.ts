@@ -7,7 +7,7 @@ import { and, asc, desc, isNull, lte } from "drizzle-orm";
 import { getMeta, META_KEYS } from "@/data/app-meta-core";
 import type { SpendDb } from "@/data/budget-spent";
 import { OVERALL_BUDGET_ID } from "@/data/budgets-core";
-import { bucketSeries, categoryBreakdown, loadContributions, windowLabel, windowTotals } from "@/data/insights";
+import { aggregateInsightsWindows, loadContributions, windowLabel } from "@/data/insights";
 import type { InsightsCalendar, InsightsPeriod, WindowTotals } from "@/data/insights";
 import { writeIdsByTransaction } from "@/data/pending-writes-core";
 import { parseBoolSetting, parseIntSetting } from "@/data/settings-core";
@@ -604,7 +604,7 @@ async function buildWatchEntries(
     });
 }
 
-/** `today` from raw contributions: `windowTotals` has no day window. */
+/** `today` from raw contributions: `aggregateInsightsWindows` has no day window. */
 function buildLedgerHeaders(
     contributions: readonly Contribution[],
     now: Date,
@@ -620,24 +620,17 @@ function buildLedgerHeaders(
         } satisfies Record<LedgerHeaderMeasure, LedgerHeaderProps>;
     };
 
+    const totalsOf = (period: InsightsPeriod) =>
+        aggregateInsightsWindows(contributions, new Map(), period, "spent", now, 0, calendar);
     const startToday = startOfDay(now);
     return {
-        month: measures(
-            translateNow("insights.period.month").toUpperCase(),
-            windowTotals(contributions, "month", now, 0, calendar)
-        ),
+        month: measures(translateNow("insights.period.month").toUpperCase(), totalsOf("month")),
         today: measures(translateNow("common.today").toUpperCase(), {
             income: sumIncome(contributions, startToday, now),
             spent: sumExpenses(contributions, startToday, now, null),
         }),
-        week: measures(
-            translateNow("insights.period.week").toUpperCase(),
-            windowTotals(contributions, "week", now, 0, calendar)
-        ),
-        year: measures(
-            translateNow("insights.period.year").toUpperCase(),
-            windowTotals(contributions, "year", now, 0, calendar)
-        ),
+        week: measures(translateNow("insights.period.week").toUpperCase(), totalsOf("week")),
+        year: measures(translateNow("insights.period.year").toUpperCase(), totalsOf("year")),
     } satisfies Record<LedgerHeaderPeriod, Record<LedgerHeaderMeasure, LedgerHeaderProps>>;
 }
 
@@ -649,19 +642,16 @@ function buildInsights(
     calendar: InsightsCalendar,
     money: Money
 ): InsightsViewProps {
-    const totals = windowTotals(contributions, period, now, 0, calendar);
-    const net = totals.income - totals.spent;
-    const slices = categoryBreakdown(contributions, categoriesById, period, "spent", now, 0, calendar).slice(
-        0,
-        SLICE_LIMIT
-    );
+    const aggregate = aggregateInsightsWindows(contributions, categoriesById, period, "spent", now, 0, calendar);
+    const net = aggregate.income - aggregate.spent;
+    const slices = aggregate.categories.slice(0, SLICE_LIMIT);
 
     return {
-        bars: bucketSeries(contributions, period, "spent", now, 0, calendar).map((bucket) => ({
+        bars: aggregate.buckets.map((bucket) => ({
             x: bucket.label,
             y: bucket.value,
         })),
-        income: money(totals.income),
+        income: money(aggregate.income),
         net: money(Math.abs(net)),
         netPositive: net >= 0,
         periodLabel: translateNow(PERIOD_EYEBROW[period]).toUpperCase(),
@@ -672,7 +662,7 @@ function buildInsights(
             fraction: slice.fraction,
             name: slice.name,
         })),
-        spent: money(totals.spent),
+        spent: money(aggregate.spent),
         url: DEEP_LINKS.insights,
     };
 }

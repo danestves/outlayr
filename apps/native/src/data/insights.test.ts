@@ -7,10 +7,9 @@ import { categories, transactions } from "@/db/schema";
 import * as schema from "@/db/schema";
 
 import {
+    aggregateInsightsWindows,
     bucketDateLabel,
     bucketRanges,
-    bucketSeries,
-    categoryBreakdown,
     elapsedSlots,
     loadContributions,
     monthPeriodStart,
@@ -20,9 +19,8 @@ import {
     windowLabel,
     windowShortLabel,
     windowStart,
-    windowTotals,
 } from "./insights";
-import type { CategoryMeta, InsightsContribution } from "./insights";
+import type { CategoryMeta, InsightsContribution, InsightsMeasure, InsightsPeriod } from "./insights";
 
 type TestDb = ReturnType<typeof makeDb>;
 
@@ -172,6 +170,9 @@ async function seed(db: TestDb): Promise<void> {
 let contributions: InsightsContribution[];
 let categoriesById: Map<string, CategoryMeta>;
 
+const windows = (period: InsightsPeriod, measure: InsightsMeasure, offset = 0) =>
+    aggregateInsightsWindows(contributions, categoriesById, period, measure, NOW, offset);
+
 beforeAll(async () => {
     const db = makeDb();
     await seed(db);
@@ -234,7 +235,7 @@ describe("loadContributions", () => {
         });
 
         expect(rows.find((row) => row.date.getTime() === pendingDate.getTime())?.amount).toBe(0);
-        expect(periodTotal(bucketSeries(rows, "month", "spent", NOW))).toBe(165);
+        expect(periodTotal(aggregateInsightsWindows(rows, new Map(), "month", "spent", NOW).buckets)).toBe(165);
     });
 });
 
@@ -304,9 +305,9 @@ describe("elapsedSlots", () => {
     });
 });
 
-describe("bucketSeries — spent", () => {
+describe("buckets for spent", () => {
     it("buckets the month, excluding income, soft-deleted, and future", () => {
-        const buckets = bucketSeries(contributions, "month", "spent", NOW);
+        const { buckets } = windows("month", "spent");
         expect(periodTotal(buckets)).toBe(165);
         expect(buckets[0].value).toBe(10); // Jul 1
         expect(buckets[7].value).toBe(0); // Jul 8 was soft-deleted
@@ -315,16 +316,16 @@ describe("bucketSeries — spent", () => {
     });
 });
 
-describe("bucketSeries — income and net", () => {
+describe("buckets for income and net", () => {
     it("income counts only inflows", () => {
-        const buckets = bucketSeries(contributions, "month", "income", NOW);
+        const { buckets } = windows("month", "income");
         expect(periodTotal(buckets)).toBe(540);
         expect(buckets[2].value).toBe(500); // Jul 3
         expect(buckets[14].value).toBe(40); // Jul 15
     });
 
     it("net signs each flow (income − expense)", () => {
-        const buckets = bucketSeries(contributions, "month", "net", NOW);
+        const { buckets } = windows("month", "net");
         expect(periodTotal(buckets)).toBe(375); // 540 − 165
         expect(buckets[0].value).toBe(-10); // Jul 1 expense
         expect(buckets[2].value).toBe(500); // Jul 3 income
@@ -332,9 +333,9 @@ describe("bucketSeries — income and net", () => {
     });
 });
 
-describe("categoryBreakdown", () => {
+describe("category composition", () => {
     it("rolls subcategories into their parent and sorts desc", () => {
-        const rows = categoryBreakdown(contributions, categoriesById, "month", "spent", NOW);
+        const rows = windows("month", "spent").categories;
         expect(rows).toHaveLength(2);
         expect(rows[0].id).toBe("rent");
         expect(rows[0].amount).toBe(130);
@@ -345,7 +346,7 @@ describe("categoryBreakdown", () => {
     });
 
     it("carries an emoji identity, not only an icon one", () => {
-        const rows = categoryBreakdown(contributions, categoriesById, "month", "spent", NOW);
+        const rows = windows("month", "spent").categories;
         const rent = rows.find((row) => row.id === "rent");
         expect(rent?.emoji).toBe("🏠");
         expect(rent?.icon).toBeNull();
@@ -355,7 +356,7 @@ describe("categoryBreakdown", () => {
     });
 
     it("income reads only inflow categories", () => {
-        const rows = categoryBreakdown(contributions, categoriesById, "month", "income", NOW);
+        const rows = windows("month", "income").categories;
         expect(rows).toHaveLength(1);
         expect(rows[0].id).toBe("sal");
         expect(rows[0].amount).toBe(540);
@@ -363,8 +364,8 @@ describe("categoryBreakdown", () => {
     });
 
     it("net mirrors the outflow composition", () => {
-        const spent = categoryBreakdown(contributions, categoriesById, "month", "spent", NOW);
-        const net = categoryBreakdown(contributions, categoriesById, "month", "net", NOW);
+        const spent = windows("month", "spent").categories;
+        const net = windows("month", "net").categories;
         expect(net.map((r) => [r.id, r.amount])).toStrictEqual(spent.map((r) => [r.id, r.amount]));
     });
 });
@@ -377,20 +378,27 @@ describe("bucketRanges — window offset", () => {
     });
 });
 
-describe("windowTotals", () => {
+describe("window totals", () => {
     it("tracks the offset window", () => {
-        expect(windowTotals(contributions, "month", NOW, -1)).toStrictEqual({
-            income: 0,
-            spent: 8,
-        });
-        expect(windowTotals(contributions, "week", NOW, 0)).toStrictEqual({
-            income: 40,
-            spent: 30,
-        });
-        expect(windowTotals(contributions, "week", NOW, -1)).toStrictEqual({
-            income: 0,
-            spent: 105,
-        });
+        const totals = (period: InsightsPeriod, offset: number) => {
+            const { income, spent } = windows(period, "spent", offset);
+            return { income, spent };
+        };
+        expect(totals("month", -1)).toStrictEqual({ income: 0, spent: 8 });
+        expect(totals("week", 0)).toStrictEqual({ income: 40, spent: 30 });
+        expect(totals("week", -1)).toStrictEqual({ income: 0, spent: 105 });
+    });
+
+    it("reads the prior window exactly as that window reads itself", () => {
+        for (const period of ["week", "month", "year"] as const) {
+            const current = windows(period, "spent");
+            const prior = windows(period, "spent", -1);
+            expect([current.priorIncome, current.priorSpent, current.priorCategories]).toStrictEqual([
+                prior.income,
+                prior.spent,
+                prior.categories,
+            ]);
+        }
     });
 });
 

@@ -61,7 +61,8 @@ export function measureRiseIsFavourable(measure: InsightsMeasure): boolean {
     return measure !== "spent";
 }
 
-// Not {@link measureRiseIsFavourable}: `categoryBreakdown` reads outflow under `net`, so a category rising is bad news.
+// Not {@link measureRiseIsFavourable}: `aggregateInsightsWindows` reads outflow under `net`, so a category rising is
+// bad news.
 export function breakdownRiseIsFavourable(measure: InsightsMeasure): boolean {
     return measure === "income";
 }

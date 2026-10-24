@@ -158,45 +158,6 @@ function measureValue(income: boolean, amount: number, measure: InsightsMeasure)
     }
 }
 
-export function bucketSeries(
-    rows: readonly InsightsContribution[],
-    period: InsightsPeriod,
-    measure: InsightsMeasure,
-    now: Date,
-    offset = 0,
-    calendar: InsightsCalendar = DEFAULT_INSIGHTS_CALENDAR,
-    language: Language = runtimeLanguage()
-): InsightsBucket[] {
-    const nowMs = now.getTime();
-    const buckets: InsightsBucket[] = bucketRanges(period, now, offset, calendar, language).map((r) => ({
-        ...r,
-        value: 0,
-    }));
-    const last = buckets.at(-1);
-    if (!last) {
-        return buckets;
-    }
-    const start = buckets[0].start.getTime();
-    const end = last.end.getTime();
-    for (const row of rows) {
-        const t = row.date.getTime();
-        if (t > nowMs || t < start || t >= end) {
-            continue;
-        }
-        const value = measureValue(row.income, row.amount, measure);
-        if (value === 0) {
-            continue;
-        }
-        for (const bucket of buckets) {
-            if (t >= bucket.start.getTime() && t < bucket.end.getTime()) {
-                bucket.value += value;
-                break;
-            }
-        }
-    }
-    return buckets;
-}
-
 export function runningTotals(buckets: readonly InsightsBucket[]): number[] {
     const totals: number[] = [];
     let carried = 0;
@@ -226,23 +187,6 @@ function windowBounds(
         end: last.end.getTime(),
         start: ranges[0].start.getTime(),
     };
-}
-
-/** `income` reads inflows; `spent` and `net` both read the outflow composition. */
-export function categoryBreakdown(
-    rows: readonly InsightsContribution[],
-    categoriesById: ReadonlyMap<string, CategoryMeta>,
-    period: InsightsPeriod,
-    measure: InsightsMeasure,
-    now: Date,
-    offset = 0,
-    calendar: InsightsCalendar = DEFAULT_INSIGHTS_CALENDAR
-): CategoryBreakdownEntry[] {
-    const bounds = windowBounds(period, now, offset, calendar);
-    if (!bounds) {
-        return [];
-    }
-    return categoryBreakdownWithin(rows, categoriesById, measure, bounds, now);
 }
 
 function breakdownEntries(
@@ -394,34 +338,6 @@ export interface WindowTotals {
     spent: number;
 }
 
-export function windowTotals(
-    rows: readonly InsightsContribution[],
-    period: InsightsPeriod,
-    now: Date,
-    offset = 0,
-    calendar: InsightsCalendar = DEFAULT_INSIGHTS_CALENDAR
-): WindowTotals {
-    const bounds = windowBounds(period, now, offset, calendar);
-    if (!bounds) {
-        return { income: 0, spent: 0 };
-    }
-    const nowMs = now.getTime();
-    let income = 0;
-    let spent = 0;
-    for (const row of rows) {
-        const t = row.date.getTime();
-        if (t > nowMs || t < bounds.start || t >= bounds.end) {
-            continue;
-        }
-        if (row.income) {
-            income += row.amount;
-        } else {
-            spent += row.amount;
-        }
-    }
-    return { income, spent };
-}
-
 /**
  * Both insight windows from one walk. The current window carries `buckets` (the chart's series for `measure`)
  * and `categories`; the prior one only feeds deltas and the comparison rows, so totals plus its own
@@ -437,9 +353,7 @@ export interface InsightsWindowsAggregate {
     spent: number;
 }
 
-// One walk replaces five: buckets, totals and category sums per window, each previously re-traversing the
-// valued rows. Ranges come from the same `bucketRanges`/`windowBounds` calls, so membership, addition order
-// and entry order match the per-consumer pieces.
+/** `income` reads inflows; `spent` and `net` both read the outflow composition. */
 export function aggregateInsightsWindows(
     rows: readonly InsightsContribution[],
     categoriesById: ReadonlyMap<string, CategoryMeta>,
@@ -453,20 +367,7 @@ export function aggregateInsightsWindows(
     const nowMs = now.getTime();
     const wantIncome = measure === "income";
     const ranges = bucketRanges(period, now, offset, calendar, language);
-    const last = ranges.at(-1);
     const priorBounds = windowBounds(period, now, offset - 1, calendar);
-    if (!last) {
-        return {
-            buckets: [],
-            categories: [],
-            income: 0,
-            priorCategories: [],
-            priorIncome: 0,
-            priorSpent: 0,
-            spent: 0,
-        };
-    }
-
     const buckets: InsightsBucket[] = ranges.map((range) => ({ ...range, value: 0 }));
     const starts = buckets.map((bucket) => bucket.start.getTime());
     const ends = buckets.map((bucket) => bucket.end.getTime());
@@ -489,8 +390,6 @@ export function aggregateInsightsWindows(
             continue;
         }
         const inCurrent = t >= start && t < end;
-        // Only bucket addends are gated on a zero `measureValue`: totals and sums add the raw amount, zero
-        // included, exactly like the separate passes did.
         if (inCurrent) {
             const value = measureValue(row.income, row.amount, measure);
             if (value !== 0) {
