@@ -28,17 +28,20 @@ export function Figure({ minor, code, tone }: { code: string; minor: number; ton
 export function ToolPanel({
     answer,
     children,
+    label,
     preview,
     tool,
 }: {
     answer: ReactNode;
     children: ReactNode;
+    label: string;
     preview?: ReactNode;
     tool: string;
 }) {
     const used = useRef(false);
     return (
         <form
+            aria-label={label}
             className={`bg-surface grid gap-2 rounded-3xl p-2 ${preview ? "lg:grid-cols-[minmax(0,1fr)_17rem]" : ""}`}
             data-reveal
             onInput={() => {
@@ -50,9 +53,9 @@ export function ToolPanel({
             onSubmit={(event) => event.preventDefault()}
         >
             <div className="flex min-w-0 flex-col">
-                <p className="px-4 pt-4 pb-6 text-2xl leading-snug font-semibold tracking-tight md:px-6 md:pt-6 md:text-3xl">
+                <output className="block px-4 pt-4 pb-6 text-2xl leading-snug font-semibold tracking-tight md:px-6 md:pt-6 md:text-3xl">
                     {answer}
-                </p>
+                </output>
                 {children}
             </div>
             {preview}
@@ -61,7 +64,11 @@ export function ToolPanel({
 }
 
 export function Fields({ children, className }: { children: ReactNode; className: string }) {
-    return <div className={`bg-border grid gap-px overflow-hidden rounded-2xl ${className}`}>{children}</div>;
+    return (
+        <div className={`bg-border grid gap-px overflow-hidden rounded-2xl ${className}`} data-fields>
+            {children}
+        </div>
+    );
 }
 
 export function Field({ children, label }: { children: ReactNode; label: ReactNode }) {

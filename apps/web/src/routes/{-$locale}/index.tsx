@@ -10,10 +10,8 @@ import { Pricing } from "@/components/home/pricing";
 import { Problem } from "@/components/home/problem";
 import { Closing, Questions, Tagline } from "@/components/home/questions";
 import { LANGUAGES, localeFromParam } from "@/lib/i18n";
-import type { Locale } from "@/lib/i18n";
 import { useMotionScan } from "@/lib/motion";
-import { faqPage, ldJson, mobileApp, pageMeta } from "@/lib/seo";
-import { SITE_URL } from "@/lib/site";
+import { faqPage, ldJson, pageMeta } from "@/lib/seo";
 
 const AGENT_LINKS = [
     '</.well-known/api-catalog>; rel="api-catalog"',
@@ -21,18 +19,6 @@ const AGENT_LINKS = [
     '</llms.txt>; rel="service-doc"; type="text/plain"',
     '</.well-known/ai-catalog.json>; rel="ai-catalog"',
 ].join(", ");
-
-function appGraph(locale: Locale) {
-    const { extras, meta } = getIntlayer("home", locale);
-    return {
-        "@context": "https://schema.org",
-        ...mobileApp(meta.description, {
-            featureList: extras.map((extra) => `${extra.label}: ${extra.text}`),
-            image: `${SITE_URL}${LANGUAGES[locale].image}`,
-            url: SITE_URL,
-        }),
-    };
-}
 
 export const Route = createFileRoute("/{-$locale}/")({
     component: HomePage,
@@ -60,7 +46,7 @@ export const Route = createFileRoute("/{-$locale}/")({
                 },
             ],
             meta: pageMeta(meta.title, meta.description),
-            scripts: [ldJson(appGraph(locale)), ldJson(faqPage(faq, LANGUAGES[locale].lang))],
+            scripts: [ldJson(faqPage(faq, LANGUAGES[locale].lang))],
         };
     },
 });

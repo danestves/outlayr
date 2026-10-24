@@ -30,7 +30,11 @@ export function BudgetTool() {
 
     return (
         <>
-            <ToolPanel answer={page.answer({ needs: figure(0), savings: figure(2), wants: figure(1) })} tool={SLUG}>
+            <ToolPanel
+                label={page.title.value}
+                answer={page.answer({ needs: figure(0), savings: figure(2), wants: figure(1) })}
+                tool={SLUG}
+            >
                 <Fields className="grid-cols-2 md:grid-cols-4">
                     <Field label={page.fields.income}>
                         <AmountInput code={code} onChange={setIncome} value={income} />

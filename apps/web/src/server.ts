@@ -11,7 +11,6 @@ const HIDDEN = [
     "embed",
     "fieldset",
     "footer",
-    "form",
     "iframe",
     "input",
     "nav",
@@ -19,6 +18,7 @@ const HIDDEN = [
     "select",
     "textarea",
     '[aria-hidden="true"]',
+    "[data-fields]",
     ".dark-only",
 ];
 
