@@ -17,7 +17,7 @@ import type { GoalProgress } from "@/domain/savings-goal";
 import { useAccounts, useBalanceRates, useSettledAccountCells } from "./accounts";
 import { useGlobalCurrency } from "./app-meta";
 import { settledAccountsCellQuery, toCurrencyCell } from "./cell-query";
-import { useLiveQuery } from "./live-query";
+import { NO_READ, useLiveQuery } from "./live-query";
 import type { SavingsGoal } from "./savings-goals-core";
 import { savingsGoalsQuery } from "./savings-goals-core";
 import {
@@ -39,9 +39,6 @@ export interface SavingsGoalWithProgress {
     start: number;
     target: number;
 }
-
-const NO_ROWS: never[] = [];
-const NO_READ = { all: () => NO_ROWS };
 
 // Every figure is valued into the display currency. `nowMs` is the screen's `useNow()` reading, not a `Date.now()` in
 // the memo: pace and months left are clock-relative, and a data-keyed memo would freeze them past midnight.

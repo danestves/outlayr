@@ -10,11 +10,7 @@ import { toTransferLogRow } from "@/domain/transfer-log-rows";
 import type { TransferLogRow } from "@/domain/transfer-log-rows";
 
 import { useAccounts } from "./accounts";
-import { useLiveQuery } from "./live-query";
-
-const NO_ROWS: never[] = [];
-// Inert reads stay subscribed but run no SQL: bounds arriving re-read in that render.
-const NO_READ = { all: () => NO_ROWS };
+import { NO_READ, useLiveQuery } from "./live-query";
 
 export interface TransferBounds {
     /**

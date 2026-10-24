@@ -10,11 +10,7 @@ import { transactions } from "@/db/schema";
 import type { LogFigures } from "@/domain/log-measure";
 
 import { logCellQuery, toCurrencyCells } from "./cell-query";
-import { useLiveQuery } from "./live-query";
-
-const NO_ROWS: never[] = [];
-// Inert reads stay subscribed but run no SQL: enabling the chart re-reads in that render.
-const NO_READ = { all: () => NO_ROWS };
+import { NO_READ, useLiveQuery } from "./live-query";
 
 export type LogPeriod = "day" | "week" | "month" | "year" | "all";
 

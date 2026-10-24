@@ -5,7 +5,7 @@ import { transactions } from "@/db/schema";
 import { growing } from "@/lib/growing";
 
 import { useCategoryMeta } from "./categories";
-import { useLiveQuery, useLiveRead, useLiveValue } from "./live-query";
+import { NO_READ, NO_ROWS, useLiveQuery, useLiveRead, useLiveValue } from "./live-query";
 import { sameRows } from "./same-rows";
 import {
     ledgerSizeQuery,
@@ -77,10 +77,6 @@ interface LogTail {
     rows: LogRow[];
     splitMs: number;
 }
-
-const NO_ROWS: never[] = [];
-// Inert reads stay subscribed but run no SQL: flipping `enabled` back on re-reads in that render.
-const NO_READ = { all: () => NO_ROWS };
 
 /**
  * Category fields come from {@link useCategoryMeta}, not a join, so a rename repaints without a transaction write.

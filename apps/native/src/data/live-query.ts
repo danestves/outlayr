@@ -12,6 +12,9 @@ export interface SyncQuery<TRow> {
     all: () => TRow[];
 }
 
+export const NO_ROWS: never[] = [];
+export const NO_READ = { all: () => NO_ROWS };
+
 // Equals no value, so React's change check re-renders and the render reads instead.
 const SKIPPED_READ = Symbol("skipped read");
 

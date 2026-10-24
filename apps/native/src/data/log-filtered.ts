@@ -9,14 +9,10 @@ import type { LogFilter } from "@/domain/log-filter";
 import { cursorEnd, cursorStart } from "@/domain/log-period-cursor";
 
 import { useCategoryMeta } from "./categories";
-import { useLiveQuery } from "./live-query";
+import { NO_READ, useLiveQuery } from "./live-query";
 import { useDecoratedRows } from "./transactions";
 import type { TransactionWithCategory } from "./transactions";
 import { LOG_COLUMNS } from "./transactions-core";
-
-const NO_ROWS: never[] = [];
-// Inert reads stay subscribed but run no SQL: a scope flip back re-reads in that render.
-const NO_READ = { all: () => NO_ROWS };
 
 export interface LogFilterScope {
     categoryId: string | null;
