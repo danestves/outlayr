@@ -19,6 +19,7 @@ const HIDDEN = [
     "textarea",
     '[aria-hidden="true"]',
     "[data-fields]",
+    "[data-kicker]",
     ".dark-only",
 ];
 
