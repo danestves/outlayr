@@ -11,7 +11,7 @@ import type { LocalizedTo } from "./localized-link";
 import { LogoMark } from "./logo-mark";
 import { ThemeSwitch } from "./theme-switch";
 
-const LINK = "fluid text-muted hover:text-foreground";
+const LINK = "fluid text-muted hover:text-foreground -my-1.5 inline-block py-1.5";
 
 function Column({ children, title }: { children: ReactNode; title: ReactNode }) {
     return (
