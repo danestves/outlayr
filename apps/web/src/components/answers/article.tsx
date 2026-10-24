@@ -130,6 +130,10 @@ function useRelated(refs: readonly PageRef[]): AnswerItem[] {
     });
 }
 
+const LABEL = "text-muted font-mono text-xs font-normal tracking-widest uppercase";
+const HEAD =
+    "text-lg font-semibold md:text-muted md:font-mono md:text-xs md:font-normal md:tracking-widest md:uppercase";
+
 export function CompareTable({
     columns,
     corner,
@@ -140,18 +144,21 @@ export function CompareTable({
     rows: readonly { cells: readonly string[]; id: string; label: ReactNode }[];
 }) {
     const last = columns.length - 1;
+    const paired = columns.length === 2;
+    const row = paired ? "grid grid-cols-2 gap-x-4 md:table-row" : "grid grid-cols-1 md:table-row";
     return (
-        <div className="-mx-6 mt-8 overflow-x-auto overscroll-x-contain px-6 delay-100 md:mx-0 md:px-0" data-reveal>
-            <table className="w-full min-w-xl border-collapse text-left tabular-nums">
-                <thead>
-                    <tr className="border-foreground border-b">
-                        <th className="w-1/5 py-3 pr-6" scope="col">
+        <div className="mt-8 delay-100" data-reveal>
+            <table className="block w-full border-collapse text-left tabular-nums md:table">
+                <thead className={paired ? "block md:table-header-group" : "hidden md:table-header-group"}>
+                    <tr className={`border-foreground border-b ${row}`}>
+                        <th className="hidden w-1/5 py-3 pr-6 md:table-cell" scope="col">
                             <span className="sr-only">{corner}</span>
                         </th>
                         {columns.map((column, index) => (
                             <th
-                                className={`py-3 font-semibold ${column.muted ? "text-muted" : ""} ${index < last ? "pr-6" : ""}`}
+                                className={`py-3 font-semibold ${column.muted ? "text-muted" : ""} ${index < last ? "md:pr-6" : ""}`}
                                 key={column.id}
+
                                 scope="col"
                             >
                                 {column.name}
@@ -159,21 +166,27 @@ export function CompareTable({
                         ))}
                     </tr>
                 </thead>
-                <tbody>
-                    {rows.map((row) => (
-                        <tr className="border-border border-b align-top" key={row.id}>
+                <tbody className="block md:table-row-group">
+                    {rows.map((item) => (
+                        <tr className={`border-border border-b align-top ${row} pb-4 md:pb-0`} key={item.id}>
                             <th
-                                className="text-muted py-4 pr-6 font-mono text-xs font-normal tracking-widest uppercase"
+                                className={`col-span-full pt-4 pb-2 md:table-cell md:py-4 md:pr-6 ${paired ? LABEL : HEAD}`}
+
                                 scope="row"
                             >
-                                {row.label}
+                                {item.label}
                             </th>
                             {columns.map((column, index) => (
                                 <td
-                                    className={`py-4 ${column.muted ? "text-muted" : ""} ${index < last ? "pr-6" : ""}`}
+                                    className={`md:table-cell md:py-4 ${column.muted ? "text-muted" : ""} ${index < last ? "md:pr-6" : ""} ${paired ? "" : "pt-2"}`}
                                     key={column.id}
                                 >
-                                    <Figures text={row.cells[index] ?? ""} />
+                                    {paired ? null : (
+                                        <span aria-hidden="true" className={`${LABEL} block md:hidden`}>
+                                            {column.name}
+                                        </span>
+                                    )}
+                                    <Figures text={item.cells[index] ?? ""} />
                                 </td>
                             ))}
                         </tr>
