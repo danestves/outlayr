@@ -1,4 +1,3 @@
-import geistMono from "@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url";
 import geist from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
 import { HeadContent, Scripts, createRootRoute, useParams } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
@@ -94,6 +93,7 @@ export const Route = createRootRoute({
         const path = getPathWithoutLocale(leaf?.pathname ?? "/");
         const found = matches.every((match) => match.status === "success" && !match._notFound);
         const { hero, meta } = getIntlayer("home", locale);
+        const { notFound } = getIntlayer("site", locale);
         return {
             links: [
                 ...(found
@@ -108,14 +108,8 @@ export const Route = createRootRoute({
                       ]
                     : []),
                 { href: appCss, rel: "stylesheet" },
-                // The latin faces the first paint sets, fetched with the CSS instead of after it.
-                ...[geist, geistMono].map((href) => ({
-                    as: "font",
-                    crossOrigin: "anonymous" as const,
-                    href,
-                    rel: "preload",
-                    type: "font/woff2",
-                })),
+                // The latin face the first paint sets, fetched with the CSS instead of after it.
+                { as: "font", crossOrigin: "anonymous", href: geist, rel: "preload", type: "font/woff2" },
                 { href: "/favicon.svg", rel: "icon", type: "image/svg+xml" },
                 {
                     href: "/favicon-light.png",
@@ -136,6 +130,8 @@ export const Route = createRootRoute({
             meta: [
                 { charSet: "utf-8" },
                 { content: "width=device-width, initial-scale=1", name: "viewport" },
+                ...(found ? [] : [{ title: `${notFound.meta} · Outlayr` }]),
+                { content: "max-image-preview:large", name: "robots" },
                 { content: "#ffffff", name: "theme-color" },
                 { content: "Outlayr", property: "og:site_name" },
                 { content: "website", property: "og:type" },
