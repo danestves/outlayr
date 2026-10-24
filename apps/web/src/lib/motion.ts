@@ -38,17 +38,14 @@ let scanner: (() => void) | null = null;
 
 export function useMotion() {
     useEffect(() => {
-        const reveals = new IntersectionObserver(
-            (entries) => {
-                for (const entry of entries) {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add("is-in");
-                        reveals.unobserve(entry.target);
-                    }
+        const reveals = new IntersectionObserver((entries) => {
+            for (const entry of entries) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add("is-in");
+                    reveals.unobserve(entry.target);
                 }
-            },
-            { rootMargin: "0px 0px -8% 0px" }
-        );
+            }
+        });
         const words = new IntersectionObserver(
             (entries) => {
                 for (const entry of entries) {
