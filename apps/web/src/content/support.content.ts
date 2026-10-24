@@ -79,7 +79,7 @@ const support = {
             }),
             title: t({
                 en: "Outlayr Support: Restore Pro, Export or Delete Your Data",
-                es: "Soporte de Outlayr: restaura Pro, exporta o elimina tus datos",
+                es: "Soporte de Outlayr: restaura Pro, exporta o borra tus datos",
             }),
         },
         title: t({ en: "Outlayr support", es: "Soporte de Outlayr" }),

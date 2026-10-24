@@ -16,7 +16,7 @@ export const Route = createFileRoute("/{-$locale}/compare/")({
             url: pageUrl(`/compare/${slug}`, locale),
         }));
         return {
-            meta: pageMeta(hubs.compare.meta.title, hubs.compare.lead),
+            meta: pageMeta(hubs.compare.meta.title, hubs.compare.meta.description),
             scripts: [ldJson(itemList(items))],
         };
     },

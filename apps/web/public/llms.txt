@@ -2,6 +2,8 @@
 
 > Outlayr is an open source mobile expense tracker, budget app, and subscription tracker, made by danestves LLC. You log a purchase by typing one sentence, saying it, or scanning the receipt. Budgets, savings goals, subscriptions, and insights update as you log. Available on Android from Google Play, and coming soon to the App Store for iPhone (iOS 18 or later). English and Spanish.
 
+Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr.com), a payments company.
+
 ## What it does
 
 - Log an expense or income as one sentence ("Spent $42.00 at Costco for Groceries from Chase today"), tapping any word to change it.
@@ -25,7 +27,7 @@
 
 - Free: logging, budgets, goals, insights, subscriptions, debts, installments, and iPhone widgets. 20 voice, receipt, or payment plan captures every 30 days, 2 accounts, 2 installment apps, 3 people, 2 payoff plans, 2 category budgets, and 1 account currency.
 - Outlayr Pro: 500 captures every 30 days, unlimited accounts, installment apps, people, payoff plans, category budgets, and account currencies, sync across devices, receipt photo backup, AI matching on CSV import, web merchant lookup, and 5 app icons on iPhone.
-- Pro is billed monthly or yearly, or bought once. Prices are set per country and shown in the app store before purchase.
+- Pro is billed monthly or yearly, or bought once. US prices: $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Prices vary by country and the app store shows yours before purchase.
 
 ## Privacy
 
@@ -46,7 +48,7 @@
 ## Pages
 
 - [Home](https://tryoutlayr.com/): product overview, plans, and answers to common questions
-- [About](https://tryoutlayr.com/about): Outlayr at a glance, with the maker, platforms, languages, plans and free-plan limits, where data lives, the source code, and what Outlayr does not do
+- [About](https://tryoutlayr.com/about): Outlayr at a glance, with the maker, debts and installments, platforms, languages, plans, US prices and free-plan limits, where data lives, the source code, and what Outlayr does not do
 - [Support](https://tryoutlayr.com/support): restoring and cancelling Pro, refunds, exporting and deleting data
 - [Privacy Policy](https://tryoutlayr.com/privacy): what is collected, where it goes, and how long it is kept
 - [Terms of Use](https://tryoutlayr.com/terms): the terms for Outlayr and Outlayr Pro

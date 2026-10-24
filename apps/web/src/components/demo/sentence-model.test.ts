@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { BLANK, INITIAL, press, reduce } from "./sentence-model";
+import { BLANK, CASTS, CATEGORIES, initialState, press, reduce } from "./sentence-model";
 import type { Key, State } from "./sentence-model";
 
 const typed = (keys: readonly Key[]) => keys.reduce(press, "");
@@ -21,6 +21,7 @@ describe("press", () => {
 });
 
 describe("reduce", () => {
+    const INITIAL = initialState("en");
     const visit = (state: State, keys: readonly Key[]) =>
         keys.reduce((next, key) => reduce(next, { key, type: "key" }), state);
 
@@ -42,5 +43,35 @@ describe("reduce", () => {
     it("suggests the category of a known merchant", () => {
         const next = reduce({ ...INITIAL, draft: BLANK, step: "merchant" }, { type: "name", value: "Costco" });
         expect(next.draft.category).toBe("Groceries");
+    });
+});
+
+describe.each(["en", "es"] as const)("the %s autoplay", (locale) => {
+    it("picks only options the stage shows and files each entry as scripted", () => {
+        const { accounts, entries, recentMerchants } = CASTS[locale];
+        for (const entry of entries) {
+            expect(accounts).toContain(entry.account);
+            expect(recentMerchants[entry.kind]).toContain(entry.merchant);
+            expect(CATEGORIES[entry.kind]).toContain(entry.category);
+        }
+        let state = initialState(locale);
+        const filed = [];
+        for (let tick = 0; tick < 1000 && filed.length < entries.length; tick += 1) {
+            const next = reduce(state, { type: "auto" });
+            if (next.nextId > state.nextId) {
+                filed.push(next.log[0]);
+            }
+            state = next;
+        }
+        expect(filed).toStrictEqual(
+            entries.map((entry) =>
+                expect.objectContaining({
+                    category: entry.category,
+                    currency: entry.currency,
+                    income: entry.kind === "income",
+                    merchant: entry.merchant,
+                })
+            )
+        );
     });
 });

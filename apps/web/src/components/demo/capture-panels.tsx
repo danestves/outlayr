@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
-import { useIntlayer } from "react-intlayer";
+import { useIntlayer, useLocale } from "react-intlayer";
+
+import type { Locale } from "@/lib/i18n";
 
 import { formatMoney, signedMoney } from "./money";
 import { useNames } from "./use-names";
@@ -7,26 +9,58 @@ import { useNames } from "./use-names";
 const FADE_IN =
     "transition-[opacity,translate] duration-200 ease-out motion-reduce:transition-none starting:translate-y-1 starting:opacity-0";
 
-const RECEIPT = [
-    { left: "TARGET", mark: 1, right: "" },
-    { left: "BROOKLYN, NY", mark: null, right: "" },
-    { left: "09/21/2026", mark: 2, right: "14:32" },
-    { left: "PAPER TOWELS", mark: null, right: "17.99" },
-    { left: "LAUNDRY PODS", mark: null, right: "12.49" },
-    { left: "BATH TOWEL", mark: null, right: "19.49" },
-    { left: "SUBTOTAL", mark: null, right: "49.97" },
-    { left: "TAX", mark: null, right: "4.31" },
-    { left: "TOTAL", mark: 3, right: "54.28" },
-    { left: "AMEX", mark: null, right: "•••• 1008" },
-] as const;
+const COFFEE_SHOP = { en: "Blue Bottle", es: "Juan Valdez" } as const satisfies Record<Locale, string>;
 
-const CSV_ROWS = [
-    { amount: "-142.18", category: "Groceries", date: "09/18", label: "COSTCO WHOLESALE #482", matchedAt: 1 },
-    { amount: "-18.40", category: "Transport", date: "09/19", label: "LYFT *RIDE", matchedAt: 1 },
-    { amount: "-4.00", category: "Subscriptions", date: "09/20", label: "GITHUB", matchedAt: 1 },
-    { amount: "-6.25", category: "Coffee", date: "09/21", label: "SQ *BLUE BOTTLE COFFEE", matchedAt: 2 },
-    { amount: "-38.90", category: "Dining Out", date: "09/22", label: "TST* SUSHI WAY", matchedAt: 2 },
-] as const;
+const STORE = { en: "Target", es: "Farmatodo" } as const satisfies Record<Locale, string>;
+
+const RECEIPT = {
+    en: [
+        { left: "TARGET", mark: 1, right: "" },
+        { left: "BROOKLYN, NY", mark: null, right: "" },
+        { left: "09/21/2026", mark: 2, right: "14:32" },
+        { left: "PAPER TOWELS", mark: null, right: "17.99" },
+        { left: "LAUNDRY PODS", mark: null, right: "12.49" },
+        { left: "BATH TOWEL", mark: null, right: "19.49" },
+        { left: "SUBTOTAL", mark: null, right: "49.97" },
+        { left: "TAX", mark: null, right: "4.31" },
+        { left: "TOTAL", mark: 3, right: "54.28" },
+        { left: "AMEX", mark: null, right: "•••• 1008" },
+    ],
+    es: [
+        { left: "FARMATODO", mark: 1, right: "" },
+        { left: "SUCURSAL 214", mark: null, right: "" },
+        { left: "21/09/2026", mark: 2, right: "14:32" },
+        { left: "TOALLAS DE PAPEL", mark: null, right: "17.99" },
+        { left: "DETERGENTE", mark: null, right: "12.49" },
+        { left: "TOALLA DE BAÑO", mark: null, right: "19.49" },
+        { left: "SUBTOTAL", mark: null, right: "49.97" },
+        { left: "IMPUESTO", mark: null, right: "4.31" },
+        { left: "TOTAL", mark: 3, right: "54.28" },
+        { left: "VISA", mark: null, right: "•••• 1008" },
+    ],
+} as const satisfies Record<Locale, readonly { left: string; mark: number | null; right: string }[]>;
+
+const CSV_FILE = { en: "chase-activity.csv", es: "bbva-movimientos.csv" } as const satisfies Record<Locale, string>;
+
+const CSV_ROWS = {
+    en: [
+        { amount: "-142.18", category: "Groceries", date: "09/18", label: "COSTCO WHOLESALE #482", matchedAt: 1 },
+        { amount: "-18.40", category: "Transport", date: "09/19", label: "LYFT *RIDE", matchedAt: 1 },
+        { amount: "-4.00", category: "Subscriptions", date: "09/20", label: "GITHUB", matchedAt: 1 },
+        { amount: "-6.25", category: "Coffee", date: "09/21", label: "SQ *BLUE BOTTLE COFFEE", matchedAt: 2 },
+        { amount: "-38.90", category: "Dining Out", date: "09/22", label: "TST* SUSHI WAY", matchedAt: 2 },
+    ],
+    es: [
+        { amount: "-142.18", category: "Shopping", date: "18/09", label: "MERCADOLIBRE*COMPRA", matchedAt: 1 },
+        { amount: "-18.40", category: "Transport", date: "19/09", label: "DIDI *VIAJE", matchedAt: 1 },
+        { amount: "-4.00", category: "Subscriptions", date: "20/09", label: "SPOTIFY", matchedAt: 1 },
+        { amount: "-6.25", category: "Coffee", date: "21/09", label: "JUAN VALDEZ CAFE 0412", matchedAt: 2 },
+        { amount: "-38.90", category: "Dining Out", date: "22/09", label: "RAPPI*RESTAURANTE", matchedAt: 2 },
+    ],
+} as const satisfies Record<
+    Locale,
+    readonly { amount: string; category: string; date: string; label: string; matchedAt: number }[]
+>;
 
 interface PanelProps {
     frame: number;
@@ -93,7 +127,9 @@ function sayStatus(frame: number) {
 
 export function SayPanel({ frame }: PanelProps) {
     const { day, said, status, voiceAt } = useIntlayer("demo");
+    const { locale } = useLocale();
     const nameOf = useNames();
+    const shop = COFFEE_SHOP[locale];
     const heard = frame === 2 || frame >= 5;
     const coffee = nameOf("Coffee");
     return (
@@ -103,7 +139,7 @@ export function SayPanel({ frame }: PanelProps) {
                     <div className={FADE_IN}>
                         <p className="text-4xl font-semibold tracking-tight tabular-nums">{formatMoney(12.5, "USD")}</p>
                         <p className="mt-1 text-lg">
-                            <span className="text-muted">{voiceAt}</span> Blue Bottle
+                            <span className="text-muted">{voiceAt}</span> {shop}
                         </p>
                         <p className="text-muted mt-0.5 text-sm">
                             {coffee} · {frame >= 5 ? day.yesterday : day.today}
@@ -132,7 +168,7 @@ export function SayPanel({ frame }: PanelProps) {
                     ) : null}
                 </ol>
             ) : null}
-            {frame >= 6 ? <Logged amount={12.5} category="Coffee" merchant="Blue Bottle" /> : null}
+            {frame >= 6 ? <Logged amount={12.5} category="Coffee" merchant={shop} /> : null}
         </Frame>
     );
 }
@@ -158,9 +194,10 @@ function scanStatus(frame: number) {
 
 export function ScanPanel({ frame }: PanelProps) {
     const { scan, status } = useIntlayer("demo");
+    const { locale } = useLocale();
     const nameOf = useNames();
     const fields = [
-        { id: "store", label: scan.store, shownAt: 1, value: "Target" },
+        { id: "store", label: scan.store, shownAt: 1, value: STORE[locale] },
         { id: "date", label: scan.date, shownAt: 2, value: scan.dateValue },
         { id: "total", label: scan.total, shownAt: 3, value: formatMoney(54.28, "USD") },
         { id: "category", label: scan.category, shownAt: 4, value: nameOf("Shopping") },
@@ -172,7 +209,7 @@ export function ScanPanel({ frame }: PanelProps) {
                     aria-hidden="true"
                     className="border-border bg-surface self-start border px-2.5 py-3 font-mono text-[0.625rem] leading-4"
                 >
-                    {RECEIPT.map((line) => (
+                    {RECEIPT[locale].map((line) => (
                         <p
                             className={`flex justify-between gap-2 transition-colors duration-150 ease-out ${line.mark === frame ? "bg-tint text-background" : ""}`}
                             key={line.left}
@@ -197,21 +234,22 @@ export function ScanPanel({ frame }: PanelProps) {
                     ))}
                 </dl>
             </div>
-            {frame >= 5 ? <Logged amount={54.28} category="Shopping" merchant="Target" /> : null}
+            {frame >= 5 ? <Logged amount={54.28} category="Shopping" merchant={STORE[locale]} /> : null}
         </Frame>
     );
 }
 
 function ImportPanel({ frame }: PanelProps) {
     const { importFootnote, importStatus } = useIntlayer("demo");
+    const { locale } = useLocale();
     const nameOf = useNames();
     return (
         <Frame status={importStatus[frame] ?? importStatus[0]} tag={frame === 2 ? "Pro" : undefined}>
             <p className="text-muted border-border border-b pb-2 font-mono text-xs tracking-widest uppercase">
-                chase-activity.csv
+                {CSV_FILE[locale]}
             </p>
             <ol>
-                {CSV_ROWS.map((row) => (
+                {CSV_ROWS[locale].map((row) => (
                     <li
                         className="border-border grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 border-b py-2"
                         key={row.label}

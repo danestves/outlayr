@@ -73,7 +73,10 @@ const OUTLAYR = {
         es: "Gastos diarios, presupuestos y metas de ahorro",
     }),
     platforms: t({ en: "Android. iPhone soon", es: "Android. Pronto en iPhone" }),
-    price: t({ en: "Free. Pro monthly, yearly, or once", es: "Gratis. Pro al mes, al año o en un solo pago" }),
+    price: t({
+        en: "Free. Pro is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once in the US. Prices vary by country",
+        es: "Gratis. Pro cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago en Estados Unidos. Los precios cambian según el país",
+    }),
 };
 
 const LABELS = {
@@ -97,8 +100,8 @@ const LICENSE_ROW = {
 
 const COST_FAQ = {
     answer: t({
-        en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 20 voice or receipt captures every 30 days, 2 accounts, 2 category budgets, and accounts in one currency. Outlayr Pro raises those limits and adds sync. It is billed monthly or yearly, or bought once, at prices set per country in your app store.",
-        es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 20 capturas de voz o de recibos cada 30 días, 2 cuentas, 2 presupuestos por categoría y cuentas en una moneda. Outlayr Pro sube esos límites y agrega la sincronización. Se paga al mes, al año o en un solo pago, con precios por país en tu tienda de apps.",
+        en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 20 voice or receipt captures every 30 days, 2 accounts, 2 category budgets, and accounts in one currency. Outlayr Pro raises those limits and adds sync. In the United States it is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Your app store shows the price for your country.",
+        es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 20 capturas de voz o de recibos cada 30 días, 2 cuentas, 2 presupuestos por categoría y cuentas en una moneda. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
     }),
     question: t({ en: "How much does Outlayr cost?", es: "¿Cuánto cuesta Outlayr?" }),
 };
@@ -135,8 +138,8 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "It is if you want to start free, live outside the United States, or would rather say or scan a purchase than type it. Copilot fits better if you want linked accounts to sync on their own, or use it on a Mac or an iPad.",
-                            es: "Sí, si quieres empezar gratis, vives fuera de Estados Unidos o prefieres dictar o escanear una compra en vez de escribirla. Copilot te conviene más si quieres que tus cuentas vinculadas se sincronicen solas, o si lo usas en una Mac o un iPad.",
+                            en: "It is if you want to start free, live outside the United States, or would rather say or scan a purchase than fill in a form. Copilot fits better if you want linked accounts to sync on their own, or use it on a Mac or an iPad.",
+                            es: "Sí, si quieres empezar gratis, vives fuera de Estados Unidos o prefieres dictar o escanear una compra en vez de llenar un formulario. Copilot te conviene más si quieres que tus cuentas vinculadas se sincronicen solas, o si lo usas en una Mac o un iPad.",
                         }),
                         question: t({
                             en: "Is Outlayr a good Copilot alternative?",
@@ -171,9 +174,13 @@ const answers = {
                     es: `${OUTLAYR_LEAD.es} ${RIVALS.copilot.es}`,
                 }),
                 meta: {
+                    description: t({
+                        en: "Copilot is a paid money app for Apple devices and the web that syncs linked accounts. Outlayr is an open source alternative, free to start.",
+                        es: "Copilot es una app de pago para dispositivos Apple y la web que sincroniza tus cuentas. Outlayr es una alternativa de código abierto, gratis para empezar.",
+                    }),
                     title: t({
-                        en: "Copilot Money Alternative: Outlayr vs Copilot (Price, Currencies)",
-                        es: "Alternativa a Copilot Money: Outlayr vs Copilot (precio y monedas)",
+                        en: "Copilot Money Alternative: Outlayr vs Copilot",
+                        es: "Alternativa a Copilot Money: Outlayr vs Copilot",
                     }),
                 },
                 rival: "Copilot",
@@ -182,8 +189,8 @@ const answers = {
                         label: LABELS.price,
                         outlayr: OUTLAYR.price,
                         rival: t({
-                            en: "$13 a month or $95 a year, after a 1-month free trial",
-                            es: "$13 al mes o $95 al año, después de una prueba gratis de 1 mes",
+                            en: "$95 a year, after a 1-month free trial. No free plan",
+                            es: "US$95 al año, después de una prueba gratis de 1 mes. Sin plan gratis",
                         }),
                     },
                     {
@@ -212,8 +219,8 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "It is if you live outside the United States, spend in more than one currency, or would rather say or scan a purchase than type it. EveryDollar fits better if you want transactions streamed from your bank, or budget on a computer too.",
-                            es: "Sí, si vives fuera de Estados Unidos, gastas en más de una moneda o prefieres dictar o escanear una compra en vez de escribirla. EveryDollar te conviene más si quieres que los movimientos lleguen desde tu banco, o si también haces tu presupuesto en la computadora.",
+                            en: "It is if you live outside the United States, spend in more than one currency, or would rather say or scan a purchase than fill in a form. EveryDollar fits better if you want transactions streamed from your bank, or budget on a computer too.",
+                            es: "Sí, si vives fuera de Estados Unidos, gastas en más de una moneda o prefieres dictar o escanear una compra en vez de llenar un formulario. EveryDollar te conviene más si quieres que los movimientos lleguen desde tu banco, o si también haces tu presupuesto en la computadora.",
                         }),
                         question: t({
                             en: "Is Outlayr a good EveryDollar alternative?",
@@ -222,8 +229,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes. Outlayr is offered in 175 countries and regions, Canada included, with 165 currencies. EveryDollar's mobile app is sold in the United States App Store and Google Play only, and it supports US dollars.",
-                            es: "Sí. Outlayr se ofrece en 175 países y regiones, Canadá incluido, con 165 monedas. La app móvil de EveryDollar solo se vende en el App Store y Google Play de Estados Unidos, y admite dólares estadounidenses.",
+                            en: "Yes. Outlayr is offered in 175 countries and regions, Canada included, with 165 currencies. EveryDollar's mobile app and Premium are only available in the United States; elsewhere you can make a free budget on EveryDollar.com.",
+                            es: "Sí. Outlayr se ofrece en 175 países y regiones, Canadá incluido, con 165 monedas. La app móvil y Premium de EveryDollar solo están disponibles en Estados Unidos; en otros países puedes armar un presupuesto gratis en EveryDollar.com.",
                         }),
                         question: t({
                             en: "Does Outlayr work in Canada and outside the United States?",
@@ -251,6 +258,10 @@ const answers = {
                     es: `${OUTLAYR_LEAD.es} ${RIVALS.everydollar.es}`,
                 }),
                 meta: {
+                    description: t({
+                        en: "EveryDollar is a Ramsey Solutions budget app sold in the US, with bank connections in Premium. Outlayr is an open source alternative in 165 currencies.",
+                        es: "EveryDollar es una app de presupuesto de Ramsey que se vende en EE. UU. Outlayr es una alternativa de código abierto, gratis para empezar, con 165 monedas.",
+                    }),
                     title: t({
                         en: "EveryDollar Alternative: Outlayr vs EveryDollar",
                         es: "Alternativa a EveryDollar: Outlayr vs EveryDollar",
@@ -263,7 +274,7 @@ const answers = {
                         outlayr: OUTLAYR.price,
                         rival: t({
                             en: "Free version. Premium is $17.99 a month or $79.99 a year, after a 14-day trial",
-                            es: "Versión gratis. Premium cuesta $17.99 al mes o $79.99 al año, después de una prueba de 14 días",
+                            es: "Versión gratis. Premium cuesta US$17.99 al mes o US$79.99 al año, después de una prueba de 14 días",
                         }),
                     },
                     {
@@ -275,19 +286,14 @@ const answers = {
                         }),
                     },
                     {
-                        label: LABELS.currencies,
-                        outlayr: OUTLAYR.currencies,
-                        rival: t({ en: "US dollars only", es: "Solo dólares estadounidenses" }),
-                    },
-                    {
                         label: LABELS.availability,
                         outlayr: t({
                             en: "175 countries and regions",
                             es: "175 países y regiones",
                         }),
                         rival: t({
-                            en: "Mobile app in the United States only",
-                            es: "App móvil solo en Estados Unidos",
+                            en: "Mobile app and Premium in the United States only. Elsewhere, a free budget on EveryDollar.com",
+                            es: "App móvil y Premium solo en Estados Unidos. En otros países, un presupuesto gratis en EveryDollar.com",
                         }),
                     },
                     {
@@ -362,6 +368,10 @@ const answers = {
                     es: `${OUTLAYR_LEAD.es} ${RIVALS.fintonic.es}`,
                 }),
                 meta: {
+                    description: t({
+                        en: "Fintonic is a free app in Spain that reads Spanish bank accounts and arranges loans. Outlayr is an open source alternative for cash, cards, and 165 currencies.",
+                        es: "Fintonic es una app gratis en España que lee tus cuentas bancarias españolas. Outlayr es una alternativa de código abierto para efectivo y 165 monedas.",
+                    }),
                     title: t({
                         en: "Fintonic Alternative: Outlayr vs Fintonic",
                         es: "Alternativa a Fintonic: Outlayr vs Fintonic",
@@ -460,9 +470,13 @@ const answers = {
                     es: `${OUTLAYR_LEAD.es} ${RIVALS.monarch.es}`,
                 }),
                 meta: {
+                    description: t({
+                        en: "Monarch is a paid money dashboard that syncs linked accounts in the US and Canada. Outlayr is an open source alternative in 175 countries and 165 currencies.",
+                        es: "Monarch es un panel de finanzas de pago para EE. UU. y Canadá. Outlayr es una alternativa de código abierto, gratis para empezar, en 175 países y 165 monedas.",
+                    }),
                     title: t({
-                        en: "Monarch Money Alternative: Outlayr vs Monarch (Price, Platforms)",
-                        es: "Alternativa a Monarch Money: Outlayr vs Monarch (precio y plataformas)",
+                        en: "Monarch Money Alternative: Outlayr vs Monarch",
+                        es: "Alternativa a Monarch Money: Outlayr vs Monarch",
                     }),
                 },
                 rival: "Monarch",
@@ -472,7 +486,7 @@ const answers = {
                         outlayr: OUTLAYR.price,
                         rival: t({
                             en: "$14.99 a month or $99.99 a year, after a 7-day trial. Plus is $199.99 a year",
-                            es: "$14.99 al mes o $99.99 al año, después de una prueba de 7 días. Plus cuesta $199.99 al año",
+                            es: "US$14.99 al mes o US$99.99 al año, después de una prueba de 7 días. Plus cuesta US$199.99 al año",
                         }),
                     },
                     {
@@ -504,8 +518,8 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "It is if you want to start free, spend in more than one currency, or would rather say or scan a purchase than type it. PocketGuard fits better if you want linked accounts to sync on their own, a web app today, or an Apple Watch app.",
-                            es: "Sí, si quieres empezar gratis, gastas en más de una moneda o prefieres dictar o escanear una compra en vez de escribirla. PocketGuard te conviene más si quieres que tus cuentas vinculadas se sincronicen solas, una app web hoy o una app para Apple Watch.",
+                            en: "It is if you want to start free, spend in more than one currency, or would rather say or scan a purchase than fill in a form. PocketGuard fits better if you want linked accounts to sync on their own, a web app today, or an Apple Watch app.",
+                            es: "Sí, si quieres empezar gratis, gastas en más de una moneda o prefieres dictar o escanear una compra en vez de llenar un formulario. PocketGuard te conviene más si quieres que tus cuentas vinculadas se sincronicen solas, una app web hoy o una app para Apple Watch.",
                         }),
                         question: t({
                             en: "Is Outlayr a good PocketGuard alternative?",
@@ -537,6 +551,10 @@ const answers = {
                     es: `${OUTLAYR_LEAD.es} ${RIVALS.pocketguard.es}`,
                 }),
                 meta: {
+                    description: t({
+                        en: "PocketGuard is a paid budget app that syncs linked bank accounts. Outlayr is an open source alternative you fill in by sentence, voice, or receipt.",
+                        es: "PocketGuard es una app de presupuesto de pago que sincroniza tus cuentas. Outlayr es una alternativa de código abierto que llenas con una oración, voz o recibo.",
+                    }),
                     title: t({
                         en: "PocketGuard Alternative: Outlayr vs PocketGuard",
                         es: "Alternativa a PocketGuard: Outlayr vs PocketGuard",
@@ -549,7 +567,7 @@ const answers = {
                         outlayr: OUTLAYR.price,
                         rival: t({
                             en: "$12.99 a month, $74.99 a year, or $149.99 once, after a 7-day trial",
-                            es: "$12.99 al mes, $74.99 al año o $149.99 en un solo pago, después de una prueba de 7 días",
+                            es: "US$12.99 al mes, US$74.99 al año o US$149.99 en un solo pago, después de una prueba de 7 días",
                         }),
                     },
                     {
@@ -636,6 +654,10 @@ const answers = {
                     es: `${OUTLAYR_LEAD.es} ${RIVALS.rocketMoney.es}`,
                 }),
                 meta: {
+                    description: t({
+                        en: "Rocket Money is a US subscription and budget app whose team cancels subscriptions in Premium. Outlayr is an open source alternative in 165 currencies.",
+                        es: "Rocket Money es una app de suscripciones para EE. UU. que las cancela en Premium. Outlayr es una alternativa de código abierto con 165 monedas.",
+                    }),
                     title: t({
                         en: "Rocket Money Alternative: Outlayr vs Rocket Money",
                         es: "Alternativa a Rocket Money: Outlayr vs Rocket Money",
@@ -648,7 +670,7 @@ const answers = {
                         outlayr: OUTLAYR.price,
                         rival: t({
                             en: "Free plan. Premium is pay what you want, typically $7 to $14 a month. Premium+ is $15 a month",
-                            es: "Plan gratis. Premium es paga lo que quieras, normalmente de $7 a $14 al mes. Premium+ cuesta $15 al mes",
+                            es: "Plan gratis. Premium es paga lo que quieras, normalmente de US$7 a US$14 al mes. Premium+ cuesta US$15 al mes",
                         }),
                     },
                     {
@@ -700,8 +722,8 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "It is if you would rather say or scan a purchase than type it, want each purchase converted at the rate from its day, or want two budgets on the free plan. Spendee fits better if you want bank sync.",
-                            es: "Sí, si prefieres dictar o escanear una compra en vez de escribirla, quieres cada compra convertida con la tasa de su día o quieres dos presupuestos en el plan gratis. Spendee te conviene más si quieres sincronización bancaria.",
+                            en: "It is if you would rather say or scan a purchase than fill in a form, want each purchase converted at the rate from its day, or want two budgets on the free plan. Spendee fits better if you want bank sync.",
+                            es: "Sí, si prefieres dictar o escanear una compra en vez de llenar un formulario, quieres cada compra convertida con la tasa de su día o quieres dos presupuestos en el plan gratis. Spendee te conviene más si quieres sincronización bancaria.",
                         }),
                         question: t({
                             en: "Is Outlayr a good Spendee alternative?",
@@ -727,6 +749,10 @@ const answers = {
                     es: `${OUTLAYR_LEAD.es} ${RIVALS.spendee.es}`,
                 }),
                 meta: {
+                    description: t({
+                        en: "Spendee is a budget app with cash wallets and bank sync in Premium. Outlayr is an open source alternative that converts each purchase at its day's rate.",
+                        es: "Spendee es una app de presupuesto con sincronización bancaria en Premium. Outlayr es una alternativa de código abierto con la tasa del día de cada compra.",
+                    }),
                     title: t({
                         en: "Spendee Alternative: Outlayr vs Spendee",
                         es: "Alternativa a Spendee: Outlayr vs Spendee",
@@ -738,8 +764,8 @@ const answers = {
                         label: LABELS.price,
                         outlayr: OUTLAYR.price,
                         rival: t({
-                            en: "Free basic plan with 1 budget. Plus $1.99 a month or $14.99 a year, Premium $5.99 a month or $35.99 a year, after a 7-day trial. Prices vary by country",
-                            es: "Plan básico gratis con 1 presupuesto. Plus $1.99 al mes o $14.99 al año, Premium $5.99 al mes o $35.99 al año, después de una prueba de 7 días. Los precios cambian según el país",
+                            en: "Free basic plan with 1 wallet and 1 budget. Plus $1.99 a month or $14.99 a year, Premium $5.99 a month or $35.99 a year, after a 7-day trial. Prices vary by country",
+                            es: "Plan básico gratis con 1 billetera y 1 presupuesto. Plus US$1.99 al mes o US$14.99 al año, Premium US$5.99 al mes o US$35.99 al año, después de una prueba de 7 días. Los precios cambian según el país",
                         }),
                     },
                     {
@@ -771,8 +797,8 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "It is if you would rather say or scan a purchase than type it, or want each purchase converted at the rate from its day. Wallet fits better if you want bank sync, or need a web app today.",
-                            es: "Sí, si prefieres dictar o escanear una compra en vez de escribirla, o quieres cada compra convertida con la tasa de su día. Wallet te conviene más si quieres sincronización bancaria, o necesitas una app web hoy.",
+                            en: "It is if you would rather say or scan a purchase than fill in a form, or want each purchase converted at the rate from its day. Wallet fits better if you want bank sync, or need a web app today.",
+                            es: "Sí, si prefieres dictar o escanear una compra en vez de llenar un formulario, o quieres cada compra convertida con la tasa de su día. Wallet te conviene más si quieres sincronización bancaria, o necesitas una app web hoy.",
                         }),
                         question: t({
                             en: "Is Outlayr a good alternative to Wallet by BudgetBakers?",
@@ -791,6 +817,10 @@ const answers = {
                     es: `${OUTLAYR_LEAD.es} ${RIVALS.wallet.es}`,
                 }),
                 meta: {
+                    description: t({
+                        en: "Wallet by BudgetBakers has a free tier for tracking by hand and bank sync in Premium. Outlayr is an open source alternative you fill in by sentence.",
+                        es: "Wallet by BudgetBakers registra a mano gratis y sincroniza bancos en Premium. Outlayr es una alternativa de código abierto, gratis para empezar.",
+                    }),
                     title: t({
                         en: "Wallet by BudgetBakers Alternative: Outlayr vs Wallet",
                         es: "Alternativa a Wallet by BudgetBakers: Outlayr vs Wallet",
@@ -841,8 +871,8 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "It is if you want to start free, spend in more than one currency, or would rather say or scan a purchase than type it. YNAB fits better if you want your bank to import transactions, or follow its give every dollar a job method.",
-                            es: "Sí, si quieres empezar gratis, gastas en más de una moneda o prefieres dictar o escanear una compra en vez de escribirla. YNAB te conviene más si quieres que tu banco importe los movimientos, o si sigues su método de darle un trabajo a cada dólar.",
+                            en: "It is if you want to start free, spend in more than one currency, or would rather say or scan a purchase than fill in a form. YNAB fits better if you want your bank to import transactions, or follow its give every dollar a job method.",
+                            es: "Sí, si quieres empezar gratis, gastas en más de una moneda o prefieres dictar o escanear una compra en vez de llenar un formulario. YNAB te conviene más si quieres que tu banco importe los movimientos, o si sigues su método de darle un trabajo a cada dólar.",
                         }),
                         question: t({
                             en: "Is Outlayr a good YNAB alternative?",
@@ -880,9 +910,13 @@ const answers = {
                     es: `${OUTLAYR_LEAD.es} ${RIVALS.ynab.es}`,
                 }),
                 meta: {
+                    description: t({
+                        en: "YNAB is a paid budgeting method built on bank imports, at $109 a year. Outlayr is an open source alternative you fill in by sentence, voice, or receipt.",
+                        es: "YNAB es un método de presupuesto de pago, US$109 al año, basado en importar del banco. Outlayr es una alternativa de código abierto, gratis para empezar.",
+                    }),
                     title: t({
-                        en: "YNAB Alternative: Outlayr vs YNAB (Price, Currencies, Platforms)",
-                        es: "Alternativa a YNAB: Outlayr vs YNAB (precio, monedas y plataformas)",
+                        en: "YNAB Alternative: Outlayr vs YNAB (Price, Currencies)",
+                        es: "Alternativa a YNAB: Outlayr vs YNAB (precio y monedas)",
                     }),
                 },
                 rival: "YNAB",
@@ -892,7 +926,7 @@ const answers = {
                         outlayr: OUTLAYR.price,
                         rival: t({
                             en: "$14.99 a month or $109 a year, after a 34-day trial",
-                            es: "$14.99 al mes o $109 al año, después de una prueba de 34 días",
+                            es: "US$14.99 al mes o US$109 al año, después de una prueba de 34 días",
                         }),
                     },
                     {
@@ -1009,9 +1043,13 @@ const answers = {
                     es: "En iPhone, Outlayr registra cada compra con Apple Pay cuando acercas tu tarjeta. Una automatización de Atajos envía el monto, el comercio y la tarjeta al Registro.",
                 }),
                 meta: {
+                    description: t({
+                        en: "On iPhone, Outlayr logs each Apple Pay purchase when you tap your card. A Shortcuts automation sends the amount, the merchant, and the card to the Log.",
+                        es: "En iPhone, Outlayr registra cada compra con Apple Pay al acercar tu tarjeta. Una automatización de Atajos envía el monto, el comercio y la tarjeta.",
+                    }),
                     title: t({
                         en: "Apple Pay Expense Tracker: Log Each Tap · Outlayr",
-                        es: "Control de gastos con Apple Pay: registra cada pago · Outlayr",
+                        es: "Control de gastos con Apple Pay: cada pago · Outlayr",
                     }),
                 },
                 plateAlt: t({
@@ -1156,7 +1194,7 @@ const answers = {
                                 source: "https://www.spendee.com/pricing",
                                 text: t({
                                     en: "Free basic plan with 1 wallet and 1 budget. Plus $1.99 a month or $14.99 a year, Premium $5.99 a month or $35.99 a year, after a 7-day trial. Prices vary by country",
-                                    es: "Plan básico gratis con 1 billetera y 1 presupuesto. Plus $1.99 al mes o $14.99 al año, Premium $5.99 al mes o $35.99 al año, después de una prueba de 7 días. Los precios cambian según el país",
+                                    es: "Plan básico gratis con 1 billetera y 1 presupuesto. Plus US$1.99 al mes o US$14.99 al año, Premium US$5.99 al mes o US$35.99 al año, después de una prueba de 7 días. Los precios cambian según el país",
                                 }),
                             },
                             {
@@ -1225,7 +1263,7 @@ const answers = {
                                 source: "https://www.ynab.com/pricing",
                                 text: t({
                                     en: "$14.99 a month or $109 a year, after a 34-day trial",
-                                    es: "$14.99 al mes o $109 al año, después de una prueba de 34 días",
+                                    es: "US$14.99 al mes o US$109 al año, después de una prueba de 34 días",
                                 }),
                             },
                             {
@@ -1334,9 +1372,13 @@ const answers = {
                     es: "Seis apps para controlar gastos, cada una mejor para algo distinto: Monefy, Money Manager, Outlayr, Spendee, Wallet by BudgetBakers y YNAB. Todas menos YNAB son gratis para empezar. Outlayr es nuestra; las otras cinco no.",
                 }),
                 meta: {
+                    description: t({
+                        en: "Monefy, Money Manager, Outlayr, Spendee, Wallet, and YNAB compared on price, entry, currencies, and platforms. Outlayr is ours; the other five are not.",
+                        es: "Monefy, Money Manager, Outlayr, Spendee, Wallet y YNAB comparadas en precio, registro, monedas y plataformas. Outlayr es nuestra; las otras cinco no.",
+                    }),
                     title: t({
                         en: "Best Expense Tracker Apps, Compared (2026) · Outlayr",
-                        es: "Mejores apps para controlar gastos, comparadas (2026) · Outlayr",
+                        es: "Mejores apps para controlar gastos (2026) · Outlayr",
                     }),
                 },
                 sources: t({
@@ -1409,7 +1451,7 @@ const answers = {
                                 source: "https://apps.apple.com/us/app/cashew-expense-budget-tracker/id6463662930",
                                 text: t({
                                     en: "Free. Cashew Pro is $1.49 a month, $11.99 a year, or $19.99 once on the US App Store",
-                                    es: "Gratis. Cashew Pro cuesta $1.49 al mes, $11.99 al año o $19.99 en un solo pago en el App Store de EE. UU.",
+                                    es: "Gratis. Cashew Pro cuesta US$1.49 al mes, US$11.99 al año o US$19.99 en un solo pago en el App Store de EE. UU.",
                                 }),
                             },
                             {
@@ -1625,6 +1667,10 @@ const answers = {
                     es: "Cinco apps de gastos de código abierto, cada una mejor para algo distinto: Actual Budget, Cashew, Firefly III, Flow y Outlayr. Cualquiera puede leer el código de las cinco. Outlayr es nuestra; las otras cuatro no.",
                 }),
                 meta: {
+                    description: t({
+                        en: "Actual Budget, Cashew, Firefly III, Flow, and Outlayr compared on price, entry, currencies, platforms, and license. Outlayr is ours; the others are not.",
+                        es: "Actual Budget, Cashew, Firefly III, Flow y Outlayr comparadas en precio, registro, monedas, plataformas y licencia. Outlayr es nuestra; las demás no.",
+                    }),
                     title: t({
                         en: "Best Open Source Expense Tracker Apps (2026) · Outlayr",
                         es: "Mejores apps de gastos de código abierto (2026) · Outlayr",
@@ -1648,7 +1694,7 @@ const answers = {
                                 source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
                                 text: t({
                                     en: "Free, with in-app purchases from $0.99 to $2.99 in the US App Store",
-                                    es: "Gratis, con compras dentro de la app de $0.99 a $2.99 en el App Store de EE. UU.",
+                                    es: "Gratis, con compras dentro de la app de US$0.99 a US$2.99 en el App Store de EE. UU.",
                                 }),
                             },
                             {
@@ -1695,7 +1741,7 @@ const answers = {
                                 source: "https://www.monarch.com/pricing",
                                 text: t({
                                     en: "$14.99 a month or $99.99 a year, after a 7-day trial. Plus is $199.99 a year",
-                                    es: "$14.99 al mes o $99.99 al año, después de una prueba de 7 días. Plus cuesta $199.99 al año",
+                                    es: "US$14.99 al mes o US$99.99 al año, después de una prueba de 7 días. Plus cuesta US$199.99 al año",
                                 }),
                             },
                             {
@@ -1762,7 +1808,7 @@ const answers = {
                                 source: "https://pocketguard.com/pricing/",
                                 text: t({
                                     en: "$12.99 a month, $74.99 a year, or $149.99 once, after a 7-day trial",
-                                    es: "$12.99 al mes, $74.99 al año o $149.99 en un solo pago, después de una prueba de 7 días",
+                                    es: "US$12.99 al mes, US$74.99 al año o US$149.99 en un solo pago, después de una prueba de 7 días",
                                 }),
                             },
                             {
@@ -1809,7 +1855,7 @@ const answers = {
                                 source: "https://www.rocketmoney.com/learn/personal-finance/how-much-does-rocket-money-cost",
                                 text: t({
                                     en: "Free plan. Premium is pay what you want, typically $7 to $14 a month. Premium+ is $15 a month",
-                                    es: "Plan gratis. Premium es paga lo que quieras, normalmente de $7 a $14 al mes. Premium+ cuesta $15 al mes",
+                                    es: "Plan gratis. Premium es paga lo que quieras, normalmente de US$7 a US$14 al mes. Premium+ cuesta US$15 al mes",
                                 }),
                             },
                             {
@@ -1942,6 +1988,10 @@ const answers = {
                     es: "Cinco apps para controlar suscripciones, cada una mejor para algo distinto: Bobby, Monarch, Outlayr, PocketGuard y Rocket Money. Outlayr es nuestra; las otras cuatro no. Outlayr no cancela suscripciones ni negocia facturas, y el equipo de Rocket Money hace las dos cosas.",
                 }),
                 meta: {
+                    description: t({
+                        en: "Bobby, Monarch, Outlayr, PocketGuard, and Rocket Money compared on price, how subscriptions get in, and where each works. Outlayr is ours; the rest are not.",
+                        es: "Bobby, Monarch, Outlayr, PocketGuard y Rocket Money comparadas en precio, cómo entran las suscripciones y dónde funcionan. Outlayr es nuestra.",
+                    }),
                     title: t({
                         en: "Best Subscription Tracker Apps, Compared (2026) · Outlayr",
                         es: "Mejores apps para controlar suscripciones (2026) · Outlayr",
@@ -2035,6 +2085,10 @@ const answers = {
                     es: "Outlayr pone un presupuesto por categoría o uno para todo el mes, acumula lo que no gastaste y te dice a dónde te lleva tu ritmo antes de que termine el mes.",
                 }),
                 meta: {
+                    description: t({
+                        en: "Outlayr sets a budget per category or one for the whole month, carries over what you did not spend, and says where your current pace ends.",
+                        es: "Outlayr pone un presupuesto por categoría o uno para todo el mes, acumula lo que no gastaste y te dice a dónde te lleva tu ritmo antes de que termine el mes.",
+                    }),
                     title: t({
                         en: "Budget Planner App: Limits, Carry-Over, and Pace · Outlayr",
                         es: "App de presupuesto mensual: límites y ritmo · Outlayr",
@@ -2131,8 +2185,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Logging, budgets, goals, and subscriptions are free, and so is importing the rows whose Mint category matches one of yours by name. Matching the other Mint category names to yours with AI needs Outlayr Pro. Pro is billed monthly or yearly, or bought once.",
-                            es: "Registrar, los presupuestos, las metas y las suscripciones son gratis, igual que importar las filas cuya categoría de Mint coincide por nombre con una de las tuyas. Asignar los demás nombres de categoría de Mint a los tuyos con IA requiere Outlayr Pro. Pro se paga al mes, al año o en un solo pago.",
+                            en: "Logging, budgets, goals, and subscriptions are free, and so is importing the rows whose Mint category matches one of yours by name. Matching the other Mint category names to yours with AI needs Outlayr Pro, which is $7.99 a month, $49.99 a year, or $129.99 once in the United States.",
+                            es: "Registrar, los presupuestos, las metas y las suscripciones son gratis, igual que importar las filas cuya categoría de Mint coincide por nombre con una de las tuyas. Asignar los demás nombres de categoría de Mint a los tuyos con IA requiere Outlayr Pro, que en Estados Unidos cuesta US$7.99 al mes, US$49.99 al año o US$129.99 en un solo pago.",
                         }),
                         question: t({
                             en: "Is Outlayr free like Mint was?",
@@ -2145,6 +2199,10 @@ const answers = {
                     es: "Mint ahora vive en Credit Karma, según Intuit. Outlayr importa el CSV que exportaste de Mint y sigue con tus presupuestos y tus gastos en tu celular.",
                 }),
                 meta: {
+                    description: t({
+                        en: "Mint now lives on Credit Karma. Outlayr imports the CSV you exported from Mint and keeps your budgets and spending going on your phone.",
+                        es: "Mint ahora vive en Credit Karma, según Intuit. Outlayr importa el CSV que exportaste de Mint y sigue con tus presupuestos y tus gastos en tu celular.",
+                    }),
                     title: t({
                         en: "Mint Alternative: Import Your Mint CSV · Outlayr",
                         es: "Alternativa a Mint: importa tu CSV de Mint · Outlayr",
@@ -2157,8 +2215,8 @@ const answers = {
                 steps: [
                     {
                         text: t({
-                            en: "Save the CSV you exported from Mint to Files or iCloud Drive on your iPhone. Split it by year if it has more than 5,000 rows.",
-                            es: "Guarda el CSV que exportaste de Mint en Archivos o iCloud Drive en tu iPhone. Divídelo por año si tiene más de 5,000 filas.",
+                            en: "Save the CSV you exported from Mint to Files or iCloud Drive on your iPhone. On Android, save it to Downloads or Google Drive. Split it by year if it has more than 5,000 rows.",
+                            es: "Guarda el CSV que exportaste de Mint en Archivos o iCloud Drive en tu iPhone. En Android, guárdalo en Descargas o en Google Drive. Divídelo por año si tiene más de 5,000 filas.",
                         }),
                         title: t({ en: "Find your Mint CSV", es: "Busca tu CSV de Mint" }),
                     },
@@ -2264,9 +2322,13 @@ const answers = {
                     es: "Outlayr registra cada compra en cualquiera de 165 monedas, de dólares y pesos a bolívares, y convierte tus presupuestos y totales a tu moneda principal con la tasa del día en que pagaste. Funciona igual de viaje y en casa con más de una moneda.",
                 }),
                 meta: {
+                    description: t({
+                        en: "Log each purchase in any of 165 currencies, from dollars to bolívares, and read budgets and totals in your main currency at the rate from the day you paid.",
+                        es: "Registra cada compra en cualquiera de 165 monedas, de dólares a bolívares, y lee tus presupuestos en tu moneda principal con la tasa del día en que pagaste.",
+                    }),
                     title: t({
-                        en: "Travel and Multi-Currency Expense Tracker App: 165 Currencies · Outlayr",
-                        es: "App para controlar gastos en viajes y en varias monedas · Outlayr",
+                        en: "Multi-Currency Expense Tracker for Travel · Outlayr",
+                        es: "Controla gastos en varias monedas y de viaje · Outlayr",
                     }),
                 },
                 plateAlt: ACCOUNTS_SCREEN_ALT,
@@ -2371,6 +2433,10 @@ const answers = {
                     es: "Toma una foto de un recibo y Outlayr lee la tienda, la fecha, el total y cada línea, y llena el registro para que lo guardes.",
                 }),
                 meta: {
+                    description: t({
+                        en: "Take a photo of a receipt and Outlayr reads the store, the date, the total, and every line, then fills in the entry for you to save.",
+                        es: "Toma una foto de un recibo y Outlayr lee la tienda, la fecha, el total y cada línea, y llena el registro para que lo guardes.",
+                    }),
                     title: t({
                         en: "Receipt Scanner App: Photo to Expense · Outlayr",
                         es: "Escáner de recibos: de la foto al gasto · Outlayr",
@@ -2378,7 +2444,7 @@ const answers = {
                 },
                 plateAlt: t({
                     en: "A Target receipt read into an entry: store, date, total, and category, then saved to the Log.",
-                    es: "Un recibo de Target convertido en un registro: tienda, fecha, total y categoría, y luego guardado en el Registro.",
+                    es: "Un recibo de Farmatodo convertido en un registro: tienda, fecha, total y categoría, y luego guardado en el Registro.",
                 }),
                 steps: [
                     {
@@ -2514,6 +2580,10 @@ const answers = {
                     es: "Outlayr registra cada suscripción el día que te cobra, suma cuánto te cuestan al mes tus suscripciones y pagos fijos, y puede avisarte antes del siguiente cobro.",
                 }),
                 meta: {
+                    description: t({
+                        en: "Outlayr logs each subscription on the day it charges, adds up what your subscriptions and bills cost per month, and can remind you before the next charge.",
+                        es: "Outlayr registra cada suscripción el día que te cobra, suma lo que te cuestan al mes tus suscripciones y pagos fijos, y te avisa antes del siguiente cobro.",
+                    }),
                     title: t({
                         en: "Subscription Tracker: Monthly Cost and Reminders · Outlayr",
                         es: "Control de suscripciones: costo mensual y avisos · Outlayr",
@@ -2635,9 +2705,13 @@ const answers = {
                     es: "Una plantilla CSV gratis para Excel, Numbers y Google Sheets, con las columnas que lee la importación de CSV de Outlayr. Lleva tus gastos en la hoja de cálculo y pasa las filas a Outlayr cuando te cambies a la app.",
                 }),
                 meta: {
+                    description: t({
+                        en: "A free CSV expense tracker template for Excel, Numbers, and Google Sheets, with the columns Outlayr's CSV import reads when you move to the app.",
+                        es: "Plantilla CSV gratis para Excel, Numbers y Google Sheets, con las columnas que lee la importación de CSV de Outlayr cuando te cambies a la app.",
+                    }),
                     title: t({
-                        en: "Expense Tracker Template for Excel and Google Sheets (Free CSV) · Outlayr",
-                        es: "Plantilla de control de gastos en Excel gratis (CSV) · Outlayr",
+                        en: "Expense Tracker Template for Excel and Google Sheets",
+                        es: "Plantilla de control de gastos para Excel (CSV) · Outlayr",
                     }),
                 },
                 steps: [
@@ -2650,8 +2724,8 @@ const answers = {
                     },
                     {
                         text: t({
-                            en: "Keep commas between columns, and save the file to Files or iCloud Drive on your iPhone.",
-                            es: "Deja las comas entre columnas y guarda el archivo en Archivos o iCloud Drive en tu iPhone.",
+                            en: "Keep commas between columns, and save the file to Files or iCloud Drive on your iPhone. On Android, save it to Downloads or Google Drive.",
+                            es: "Deja las comas entre columnas y guarda el archivo en Archivos o iCloud Drive en tu iPhone. En Android, guárdalo en Descargas o en Google Drive.",
                         }),
                         title: t({ en: "Save it as a CSV", es: "Guárdala como CSV" }),
                     },
@@ -2758,14 +2832,18 @@ const answers = {
                     es: "Dicta una compra en una oración y Outlayr llena el monto, el comercio, la categoría, la fecha y la cuenta que nombres. Revísala, corrige lo que haga falta diciéndolo de nuevo y guárdala.",
                 }),
                 meta: {
+                    description: t({
+                        en: "Say a purchase in one sentence and Outlayr fills in the amount, merchant, category, date, and account. Fix anything by saying it again, then save.",
+                        es: "Dicta una compra en una oración y Outlayr llena el monto, el comercio, la categoría, la fecha y la cuenta. Corrige lo que haga falta diciéndolo de nuevo.",
+                    }),
                     title: t({
-                        en: "AI Voice Expense Tracker: Say a Purchase to Log It · Outlayr",
-                        es: "Registrar gastos por voz con IA · Outlayr",
+                        en: "Voice Expense Tracker: Say What You Spent · Outlayr",
+                        es: "Registra gastos por voz: dicta lo que gastaste · Outlayr",
                     }),
                 },
                 plateAlt: t({
                     en: "Outlayr voice entry: a spoken sentence becomes $12.50 at Blue Bottle under Coffee, and a spoken correction moves it to yesterday.",
-                    es: "Registro por voz de Outlayr: una oración dictada se convierte en $12.50 en Blue Bottle en Café, y una corrección dicha lo pasa a ayer.",
+                    es: "Registro por voz de Outlayr: una oración dictada se convierte en $12.50 en Juan Valdez en Café, y una corrección dicha lo pasa a ayer.",
                 }),
                 steps: [
                     {
@@ -2778,7 +2856,7 @@ const answers = {
                     {
                         text: t({
                             en: "Say the amount and where, like 12.50 at Blue Bottle for coffee on my Apple Card.",
-                            es: "Di el monto y dónde, por ejemplo 12.50 de café en Blue Bottle con mi Apple Card.",
+                            es: "Di el monto y dónde, por ejemplo 12.50 de café en Juan Valdez con mi tarjeta Nu.",
                         }),
                         title: t({ en: "Say the purchase", es: "Dicta la compra" }),
                     },
@@ -2803,9 +2881,13 @@ const answers = {
                     es: `${OUTLAYR_LEAD.es} Cada página pone lado a lado el precio, cómo registras y las plataformas, revisados en el sitio de la otra app.`,
                 }),
                 meta: {
+                    description: t({
+                        en: "Outlayr next to YNAB, Monarch, Copilot, Spendee, and five more apps: price, how entries get in, and platforms, checked at each app's own site.",
+                        es: "Outlayr junto a YNAB, Monarch, Copilot, Spendee y cinco apps más: precio, cómo registras y plataformas, revisados en el sitio de cada app.",
+                    }),
                     title: t({
-                        en: "Budget App Comparisons: Outlayr vs YNAB, Monarch, and More",
-                        es: "Comparativas de apps de presupuesto: Outlayr vs YNAB, Monarch y más",
+                        en: "Outlayr vs YNAB, Monarch, Copilot, and More: Compared",
+                        es: "Outlayr vs YNAB, Monarch, Copilot y más: comparativas",
                     }),
                 },
                 title: t({ en: "Outlayr next to the apps you know.", es: "Outlayr junto a las apps que conoces." }),
@@ -2821,7 +2903,10 @@ const answers = {
                         es: "Guías para controlar tus gastos · Outlayr",
                     }),
                 },
-                title: t({ en: "How Outlayr does it.", es: "Cómo lo hace Outlayr." }),
+                title: t({
+                    en: "Expense tracking guides, step by step.",
+                    es: "Guías para controlar tus gastos, paso a paso.",
+                }),
             },
         },
         labels: {

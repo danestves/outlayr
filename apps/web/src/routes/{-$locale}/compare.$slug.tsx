@@ -35,7 +35,7 @@ export const Route = createFileRoute("/{-$locale}/compare/$slug")({
         const locale = localeFromParam(params.locale);
         const rival = getIntlayer("answers", locale).compare[loaderData];
         return {
-            meta: pageMeta(rival.meta.title, rival.lead),
+            meta: pageMeta(rival.meta.title, rival.meta.description),
             scripts: [
                 ldJson(faqPage(rival.faq, LANGUAGES[locale].lang)),
                 ldJson(answerTrail(locale, "compare", loaderData, rival.title)),
