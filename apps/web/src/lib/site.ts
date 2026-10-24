@@ -1,4 +1,14 @@
+import type { getIntlayer } from "intlayer";
+
 import { hasKey } from "./has-key";
+
+type Answers = ReturnType<typeof getIntlayer<"answers">>;
+type ToolPages = ReturnType<typeof getIntlayer<"tools">>["pages"];
+
+export type PageRef =
+    | `/compare/${Extract<keyof Answers["compare"], string>}`
+    | `/guides/${Extract<keyof Answers["guides"], string>}`
+    | `/tools/${Extract<keyof ToolPages, string>}`;
 
 export const SITE_URL = "https://tryoutlayr.com";
 export const LEDGER_MCP_ORIGIN = "https://edge.tryoutlayr.com";
@@ -18,6 +28,23 @@ const RIVALS_RECHECKED = {
 
 export function rivalChecked(slug: string): Date {
     return hasKey(RIVALS_RECHECKED, slug) ? RIVALS_RECHECKED[slug] : RIVALS_CHECKED;
+}
+
+export const LISTS_CHECKED = new Date(Date.UTC(2026, 9, 9));
+
+const LISTS_RECHECKED = {
+    "best-open-source-expense-tracker-apps": new Date(Date.UTC(2026, 9, 20)),
+};
+
+export function listChecked(slug: string): Date {
+    return hasKey(LISTS_RECHECKED, slug) ? LISTS_RECHECKED[slug] : LISTS_CHECKED;
+}
+
+export const GUIDES_UPDATED = new Date(Date.UTC(2026, 9, 23));
+
+export function guideUpdated(slug: string): Date {
+    const checked = listChecked(slug);
+    return checked > GUIDES_UPDATED ? checked : GUIDES_UPDATED;
 }
 
 export const LEGAL_DAYS = {

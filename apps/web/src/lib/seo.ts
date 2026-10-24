@@ -124,3 +124,42 @@ export function webPage(locale: Locale, path: string, fields: { readonly [key: s
         ...fields,
     };
 }
+
+export function hubTrail(locale: Locale, hub: "compare" | "guides" | "tools") {
+    const crumbs = [
+        { name: "Outlayr", url: pageUrl("/", locale) },
+        { name: getIntlayer("site", locale).footer[hub], url: pageUrl(`/${hub}`, locale) },
+    ];
+    return {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: crumbs.map((crumb, index) => ({
+            "@type": "ListItem",
+            item: crumb.url,
+            name: crumb.name,
+            position: index + 1,
+        })),
+    };
+}
+
+export function article(
+    locale: Locale,
+    path: string,
+    { dateModified, description, headline }: { dateModified: Date; description: string; headline: string }
+) {
+    const url = pageUrl(path, locale);
+    return {
+        "@context": "https://schema.org",
+        "@id": `${url}#article`,
+        "@type": "Article",
+        author: { "@id": ORGANIZATION_ID },
+        dateModified: dateModified.toISOString().slice(0, 10),
+        description,
+        headline: headline.replace(TRAILING_PERIOD, ""),
+        image: `${SITE_URL}${LANGUAGES[locale].image}`,
+        inLanguage: LANGUAGES[locale].lang,
+        isPartOf: { "@id": WEBSITE_ID },
+        mainEntityOfPage: { "@id": url, "@type": "WebPage" },
+        publisher: { "@id": ORGANIZATION_ID },
+    };
+}

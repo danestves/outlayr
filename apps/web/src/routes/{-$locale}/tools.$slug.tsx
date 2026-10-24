@@ -3,7 +3,7 @@ import { getIntlayer } from "intlayer";
 import type { ComponentType } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
-import { Article, Questions, nextAfter } from "@/components/answers/article";
+import { Article, Questions } from "@/components/answers/article";
 import { BudgetTool } from "@/components/tools/budget-tool";
 import { InstallmentTool } from "@/components/tools/installment-tool";
 import { SplitTool } from "@/components/tools/split-tool";
@@ -70,12 +70,7 @@ function Tool() {
         <Article
             hub="/tools"
             lead={page.lead}
-            related={nextAfter(pages, slug, 3).map((other) => ({
-                name: pages[other].title,
-                slug: other,
-                text: pages[other].lead,
-                to: "/{-$locale}/tools/$slug",
-            }))}
+            related={page.related}
             sections={[
                 {
                     body: (

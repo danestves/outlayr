@@ -1,6 +1,8 @@
 import { insert, t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
+import type { PageRef } from "@/lib/site";
+
 const PRIVACY_FAQ = {
     answer: t({
         en: "No. The math runs in your browser, and nothing you type is stored or sent anywhere.",
@@ -142,6 +144,11 @@ const tools = {
                         es: "Si la mitad de tu sueldo no alcanza para las necesidades, como pasa en una ciudad donde la renta es cara, empieza con 60/20/20 o 70/20/10 y ve ajustando.",
                     }),
                 ],
+                related: [
+                    "/guides/budget-planner",
+                    "/tools/installment-calculator",
+                    "/compare/everydollar",
+                ] satisfies PageRef[],
                 title: t({ en: "50/30/20 budget calculator", es: "Calculadora de presupuesto 50/30/20" }),
             },
             "subscription-cost-calculator": {
@@ -230,6 +237,11 @@ const tools = {
                     month: t({ en: "a month", es: "al mes" }),
                     title: t({ en: "Subscriptions", es: "Suscripciones" }),
                 },
+                related: [
+                    "/guides/subscription-tracker",
+                    "/guides/best-subscription-tracker-apps",
+                    "/compare/pocketguard",
+                ] satisfies PageRef[],
                 title: t({ en: "Subscription cost calculator", es: "Calculadora de suscripciones" }),
             },
             "installment-calculator": {
@@ -338,6 +350,11 @@ const tools = {
                     left: t({ en: "Left to pay", es: "Te falta pagar" }),
                     paid: insert(t({ en: "Paid {{paid}} of {{count}}", es: "Pagaste {{paid}} de {{count}}" })),
                 },
+                related: [
+                    "/guides/budget-planner",
+                    "/tools/50-30-20-budget-calculator",
+                    "/tools/split-expenses-calculator",
+                ] satisfies PageRef[],
                 title: t({ en: "Installment calculator", es: "Calculadora de cuotas" }),
             },
             "split-expenses-calculator": {
@@ -416,6 +433,11 @@ const tools = {
                         es: "Si el total no se divide exacto, los centavos que sobran le tocan a las primeras personas de la lista.",
                     }),
                 ],
+                related: [
+                    "/guides/multi-currency-expense-tracker",
+                    "/tools/50-30-20-budget-calculator",
+                    "/guides/expense-tracker-template",
+                ] satisfies PageRef[],
                 settled: t({
                     en: "Everyone paid their share. Nobody owes anything.",
                     es: "Todos pagaron su parte. Nadie debe nada.",
