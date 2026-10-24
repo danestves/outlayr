@@ -382,21 +382,18 @@ function groupByTable<T extends { tableName: string; localId: string }>(entries:
  * back through the `(tableName, localId)` index instead of copying the whole outbox inside every page's batch.
  */
 async function outboxPending(db: Database, grouped: ReadonlyMap<SyncedTable, PulledRow[]>): Promise<Set<string>> {
-    const pending = new Set<string>();
-    /* oxlint-disable no-await-in-loop -- the lookups share the one SQLite transaction this runs in, so issuing them together interleaves statements against that connection */
-    for (const [table, rows] of grouped) {
-        const ids = new Set(rows.map((row) => row.localId));
-        for (const chunk of chunkRows([...ids], ID_CHUNK)) {
-            for (const entry of await db
-                .select({ localId: outbox.localId })
-                .from(outbox)
-                .where(and(eq(outbox.tableName, table), inArray(outbox.localId, chunk)))) {
-                pending.add(`${table}\0${entry.localId}`);
-            }
-        }
-    }
-    /* oxlint-enable no-await-in-loop */
-    return pending;
+    const batches = await Promise.all(
+        [...grouped].flatMap(([table, rows]) =>
+            chunkRows([...new Set(rows.map((row) => row.localId))], ID_CHUNK).map(async (chunk) => {
+                const entries = await db
+                    .select({ localId: outbox.localId })
+                    .from(outbox)
+                    .where(and(eq(outbox.tableName, table), inArray(outbox.localId, chunk)));
+                return entries.map((entry) => `${table}\0${entry.localId}`);
+            })
+        )
+    );
+    return new Set(batches.flat());
 }
 
 /**
