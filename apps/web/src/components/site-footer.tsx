@@ -48,6 +48,16 @@ export function SiteFooter() {
                             Outlayr
                         </LocalizedLink>
                         <p className="text-muted mt-4 text-sm">{footer.tagline}</p>
+                        <a className="mt-6 inline-block" href="https://peerpush.com/p/outlayr">
+                            <img
+                                alt="Outlayr on PeerPush"
+                                className="h-auto w-[230px]"
+                                height="65"
+                                loading="lazy"
+                                src="https://peerpush.com/p/outlayr/badge.png"
+                                width="230"
+                            />
+                        </a>
                     </div>
                     <nav aria-label={footer.nav.value} className="grid grid-cols-2 gap-x-12 gap-y-10 sm:grid-cols-3">
                         <Column title={footer.product}>
