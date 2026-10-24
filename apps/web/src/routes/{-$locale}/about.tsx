@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getIntlayer } from "intlayer";
 import type { ReactNode } from "react";
-import { useIntlayer } from "react-intlayer";
+import { useIntlayer, useLocale } from "react-intlayer";
 
+import { screenSources } from "@/components/home/media";
 import { Icon } from "@/components/icon";
 import { LocalizedLink } from "@/components/localized-link";
 import { Page } from "@/components/page";
@@ -27,14 +28,14 @@ const FACT_SPANS = [
     "md:col-span-2 lg:col-span-12",
 ] as const;
 const SHOTS = [
-    { id: "budgets", path: "/screens/04" },
-    { id: "insights", path: "/screens/05" },
-    { id: "accounts", path: "/screens/06" },
-    { id: "subscriptions", path: "/screens/10" },
+    { id: "budgets", name: "04" },
+    { id: "insights", name: "05" },
+    { id: "accounts", name: "06" },
+    { id: "subscriptions", name: "10" },
 ] as const;
 const THEMES = [
-    { className: "light-only", suffix: "" },
-    { className: "dark-only", suffix: "-dark" },
+    { className: "light-only", source: "src" },
+    { className: "dark-only", source: "dark" },
 ] as const;
 
 export const Route = createFileRoute("/{-$locale}/about")({
@@ -133,6 +134,7 @@ function Facts() {
 
 function Press() {
     const { appIcon, press, shots } = useIntlayer("about");
+    const { locale } = useLocale();
     return (
         <section className={SECTION}>
             <h2 className={HEADING} data-reveal>
@@ -158,17 +160,17 @@ function Press() {
                 {SHOTS.map((shot, index) => (
                     <li className={index % 2 === 0 ? "delay-100" : "delay-150"} data-reveal key={shot.id}>
                         {THEMES.map((theme) => (
-                            <div className={theme.className} key={theme.suffix}>
+                            <div className={theme.className} key={theme.source}>
                                 <a
                                     className="fluid bg-surface hover:bg-foreground/5 flex flex-col gap-4 rounded-3xl p-4 active:scale-[0.98] md:p-6"
-                                    href={`${shot.path}${theme.suffix}.webp`}
+                                    href={screenSources(shot.name, locale)[theme.source]}
                                 >
                                     <img
                                         alt=""
                                         className="w-full rounded-[15.5%/7.1%]"
                                         height={1912}
                                         loading="lazy"
-                                        src={`${shot.path}${theme.suffix}.webp`}
+                                        src={screenSources(shot.name, locale)[theme.source]}
                                         width={880}
                                     />
                                     <PressLabel detail="880 × 1912" label={shots[shot.id]} />

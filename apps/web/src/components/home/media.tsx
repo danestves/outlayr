@@ -54,7 +54,24 @@ export function Phone({ children, className = "" }: { children: ReactNode; class
     );
 }
 
-export function Screen({ alt, eager = false, src }: { alt: string; eager?: boolean; src: string }) {
+const SPANISH_SCREENS = new Set(["04", "05", "06", "10"]);
+
+export function screenSources(name: string, locale: string) {
+    const spanish = locale === "es" && SPANISH_SCREENS.has(name);
+    return { dark: `/screens/${name}-dark.webp`, src: spanish ? `/screens/es/${name}.webp` : `/screens/${name}.webp` };
+}
+
+export function Screen({
+    alt,
+    dark,
+    eager = false,
+    src,
+}: {
+    alt: string;
+    dark?: string;
+    eager?: boolean;
+    src: string;
+}) {
     return (
         <>
             <img
@@ -72,7 +89,7 @@ export function Screen({ alt, eager = false, src }: { alt: string; eager?: boole
                 decoding="async"
                 height={1912}
                 loading={eager ? "eager" : "lazy"}
-                src={src.replace(/\.webp$/u, "-dark.webp")}
+                src={dark ?? src.replace(/\.webp$/u, "-dark.webp")}
                 width={880}
             />
         </>

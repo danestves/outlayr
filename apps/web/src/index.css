@@ -182,25 +182,27 @@
             transition-timing-function: var(--ease-fluid);
         }
 
-        .js [data-reveal]:not(.is-in, main > :first-child [data-reveal]) {
+        .js [data-reveal]:not(.is-in, main > :first-child [data-reveal], [data-reveal="now"]) {
             opacity: 0;
             transform: translateY(4rem);
         }
 
         @starting-style {
-            main > :first-child [data-reveal] {
+            main > :first-child [data-reveal],
+            [data-reveal="now"] {
                 opacity: 0;
                 transform: translateY(4rem);
             }
         }
 
         @media (min-width: 48rem) {
-            .js [data-reveal]:not(.is-in, main > :first-child [data-reveal]) {
+            .js [data-reveal]:not(.is-in, main > :first-child [data-reveal], [data-reveal="now"]) {
                 filter: blur(12px);
             }
 
             @starting-style {
-                main > :first-child [data-reveal] {
+                main > :first-child [data-reveal],
+                [data-reveal="now"] {
                     filter: blur(12px);
                 }
             }

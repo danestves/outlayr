@@ -43,7 +43,7 @@ export function ToolPanel({
         <form
             aria-label={label}
             className={`bg-surface grid gap-2 rounded-3xl p-2 ${preview ? "lg:grid-cols-[minmax(0,1fr)_17rem]" : ""}`}
-            data-reveal
+            data-reveal="now"
             onInput={() => {
                 if (!used.current) {
                     used.current = true;
