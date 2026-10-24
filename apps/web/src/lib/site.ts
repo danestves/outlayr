@@ -16,6 +16,7 @@ export const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com
 export const SUPPORT_EMAIL = "support@tryoutlayr.com";
 export const COMPANY = "danestves LLC";
 export const SOURCE_URL = "https://github.com/danestves/outlayr";
+export const WIKIDATA_URL = "https://www.wikidata.org/wiki/Q141838558";
 export const X_URL = "https://x.com/tryoutlayr";
 export const FOUNDER = {
     github: "https://github.com/danestves",

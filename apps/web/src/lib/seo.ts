@@ -3,7 +3,7 @@ import type { JSX } from "react";
 
 import { LANGUAGES, pageUrl } from "./i18n";
 import type { Locale } from "./i18n";
-import { LEGAL_DAYS, PLAY_STORE_URL, SITE_URL, SOURCE_URL, X_URL } from "./site";
+import { LEGAL_DAYS, PLAY_STORE_URL, SITE_URL, SOURCE_URL, WIKIDATA_URL, X_URL } from "./site";
 
 type Json = string | number | boolean | null | readonly Json[] | { readonly [key: string]: Json | undefined };
 
@@ -101,7 +101,7 @@ export function mobileApp(locale: Locale, description: string, fields: { readonl
         offers: offers(locale),
         operatingSystem: "Android",
         publisher: { "@id": ORGANIZATION_ID },
-        sameAs: [PLAY_STORE_URL, X_URL, SOURCE_URL],
+        sameAs: [PLAY_STORE_URL, X_URL, SOURCE_URL, WIKIDATA_URL],
         url: pageUrl("/", locale),
         ...fields,
     };
