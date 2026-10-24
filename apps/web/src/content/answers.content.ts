@@ -53,6 +53,14 @@ const RIVALS = {
         en: "Fintonic is a free app in Spain that reads your connected Spanish bank accounts, scores your finances with its FinScore, and arranges loans with over 40 lenders.",
         es: "Fintonic es una app gratis en España que lee tus cuentas de bancos españoles conectadas, califica tus finanzas con su FinScore y te consigue préstamos con más de 40 entidades.",
     },
+    goodbudget: {
+        en: "Goodbudget is an envelope budgeting app for the web, Android, and iPhone, with a free plan and bank sync for US banks in Premium.",
+        es: "Goodbudget es una app de presupuesto por sobres para la web, Android y iPhone, con un plan gratis y sincronización con bancos de EE. UU. en Premium.",
+    },
+    monefy: {
+        en: "Monefy is an expense tracker for iPhone and Android that records a purchase in two taps, free at its core, with an optional paid upgrade.",
+        es: "Monefy es una app para controlar gastos en iPhone y Android que registra una compra en dos toques, gratis en lo básico, con una mejora de pago opcional.",
+    },
 } as const;
 
 const OUTLAYR_SUBSCRIPTIONS = t({
@@ -87,10 +95,12 @@ const LABELS = {
     currencies: t({ en: "Currencies", es: "Monedas" }),
     entries: t({ en: "Adding entries", es: "Cómo registras" }),
     focus: t({ en: "Tracks", es: "Sigue" }),
+    free: t({ en: "Free plan", es: "Plan gratis" }),
     license: t({ en: "License", es: "Licencia" }),
     phone: t({ en: "On a phone", es: "En el celular" }),
     platforms: t({ en: "Runs on", es: "Funciona en" }),
     price: t({ en: "Price", es: "Precio" }),
+    style: t({ en: "Budget style", es: "Tipo de presupuesto" }),
     subscriptions: t({ en: "Subscriptions", es: "Suscripciones" }),
     watch: t({ en: "Watch out for", es: "Ten en cuenta" }),
 };
@@ -140,6 +150,469 @@ const SYNC_ACCOUNTS = t({
     en: "Want linked accounts to sync on their own",
     es: "Quieres que tus cuentas vinculadas se sincronicen solas",
 });
+
+const OUTLAYR_FREE = t({
+    en: "2 accounts, 2 category budgets plus one for the month, 20 voice or receipt captures every 30 days, and accounts in one currency",
+    es: "2 cuentas, 2 presupuestos por categoría más uno para el mes, 20 capturas de voz o de recibos cada 30 días y cuentas en una moneda",
+});
+
+const LIST_SOURCES = t({
+    en: "Each detail about the other apps links to the page it was read on",
+    es: "Los datos de las otras apps enlazan a la página donde se leyeron",
+});
+
+const LIST_PICKED_FACTS = t({
+    en: "Every detail about the other apps was read on that app's own site or help center on the date below the table, and links to the page it came from. These are the facts as each app states them, not results of our own testing.",
+    es: "Cada dato de las otras apps se leyó en el sitio o el centro de ayuda de esa app en la fecha que aparece bajo la tabla, y enlaza a la página de donde salió. Son los datos tal como los da cada app, no resultados de pruebas nuestras.",
+});
+
+const LIST_PICKED_OURS = t({
+    en: "Outlayr is ours. It gets the same facts as the others, including its own Watch out for row.",
+    es: "Outlayr es nuestra. Tiene los mismos datos que las demás, incluida su propia fila de Ten en cuenta.",
+});
+
+const CSV_INTO_OUTLAYR = {
+    en: "Import it in Settings, under Import data, as a CSV file. Outlayr needs a date, an amount, and a category or description column, with commas between columns, so save a file with semicolons or tabs as a comma CSV first. It finds the category by a header that says Category.",
+    es: "Impórtalo en Configuración, en Importar datos, como archivo CSV. Outlayr necesita una columna de fecha, una de monto y una de categoría o descripción, con comas entre columnas, así que guarda antes como CSV con comas un archivo que use punto y coma o tabulaciones. Encuentra la categoría por un encabezado que diga Category.",
+} as const;
+
+const SIGN_LOST = {
+    en: "Amounts come in positive, so add a Type column with Expense or Income if your file mixes both.",
+    es: "Los montos entran en positivo, así que agrega una columna Type con Expense o Income si tu archivo mezcla los dos.",
+} as const;
+
+const ACTUAL = {
+    facts: [
+        {
+            label: LABELS.price,
+            source: "https://actualbudget.org/docs/install/",
+            text: t({
+                en: "Free. Syncing between devices needs a server you run or rent, such as PikaPods or Fly.io",
+                es: "Gratis. Para sincronizar dispositivos necesitas un servidor propio o rentado, como PikaPods o Fly.io",
+            }),
+        },
+        {
+            label: LABELS.style,
+            source: "https://actualbudget.org/",
+            text: t({ en: "Envelopes", es: "Sobres" }),
+        },
+        {
+            label: LABELS.entries,
+            source: "https://actualbudget.org/",
+            text: t({
+                en: "By hand, QIF, OFX, QFX, CAMT.053, and CSV files, importers for YNAB4 and nYNAB, and bank sync through its server",
+                es: "A mano, archivos QIF, OFX, QFX, CAMT.053 y CSV, importadores para YNAB4 y nYNAB, y sincronización bancaria a través de su servidor",
+            }),
+        },
+        {
+            label: LABELS.currencies,
+            source: "https://actualbudget.org/docs/budgeting/multi-currency/",
+            text: t({
+                en: "One. It does not support multiple currencies, and an experimental rule converts at a fixed rate you type",
+                es: "Una. No admite varias monedas, y una regla experimental convierte con una tasa fija que escribes tú",
+            }),
+        },
+        {
+            label: LABELS.platforms,
+            source: "https://actualbudget.org/docs/install/",
+            text: t({
+                en: "Windows, Mac, Linux, and the browser through a server",
+                es: "Windows, Mac, Linux y el navegador, a través de un servidor",
+            }),
+        },
+        {
+            label: LABELS.phone,
+            source: "https://actualbudget.org/docs/install/",
+            text: t({
+                en: "A web page you install, which works offline",
+                es: "Una página web que instalas y que funciona sin conexión",
+            }),
+        },
+        {
+            label: LABELS.watch,
+            source: "https://actualbudget.org/docs/advanced/bank-sync/",
+            text: t({
+                en: "Devices do not sync until you run or rent a server, and its homepage still lists GoCardless bank sync, which is closed to new accounts",
+                es: "Los dispositivos no se sincronizan hasta que montes o rentes un servidor, y su página principal todavía anuncia GoCardless, que ya no acepta cuentas nuevas",
+            }),
+        },
+    ],
+    name: "Actual Budget",
+    slug: "actual",
+    summary: t({
+        en: "Actual Budget is a free, local-first envelope budgeting app for Windows, Mac, Linux, and the browser, open source under the MIT license.",
+        es: "Actual Budget es una app gratis de presupuesto por sobres que guarda tus datos primero en tu equipo, para Windows, Mac, Linux y el navegador, de código abierto con licencia MIT.",
+    }),
+};
+
+const COPILOT_FACTS = [
+    {
+        label: LABELS.price,
+        source: "https://copilot.money/pricing/",
+        text: t({
+            en: "$95 a year, after a 1-month trial. No free plan",
+            es: "US$95 al año, después de una prueba de 1 mes. Sin plan gratis",
+        }),
+    },
+    {
+        label: LABELS.entries,
+        source: "https://www.copilot.money/faq",
+        text: t({
+            en: "Synced from linked US accounts, or by hand",
+            es: "Sincronizados desde cuentas vinculadas de EE. UU., o a mano",
+        }),
+    },
+    {
+        label: LABELS.currencies,
+        source: "https://help.copilot.money/en/articles/10715424-international-currency",
+        text: t({ en: "US dollars only, with no conversion", es: "Solo dólares estadounidenses, sin conversión" }),
+    },
+    {
+        label: LABELS.platforms,
+        source: "https://help.copilot.money/en/articles/11780342-copilot-money-for-web",
+        text: t({ en: "iPhone, iPad, Mac, web. No Android", es: "iPhone, iPad, Mac, web. Sin Android" }),
+    },
+];
+
+const EVERYDOLLAR_FACTS = [
+    {
+        label: LABELS.price,
+        source: "https://everydollar.help.ramseysolutions.com/hc/en-us/articles/21544207900685-EveryDollar-Premium-Subscription-Cost",
+        text: t({
+            en: "Free version. Premium is $17.99 a month or $79.99 a year, after a 14-day trial",
+            es: "Versión gratis. Premium cuesta US$17.99 al mes o US$79.99 al año, después de una prueba de 14 días",
+        }),
+    },
+    {
+        label: LABELS.style,
+        source: "https://www.ramseysolutions.com/money/everydollar",
+        text: t({ en: "A zero-based monthly budget", es: "Un presupuesto mensual de base cero" }),
+    },
+    {
+        label: LABELS.entries,
+        source: "https://everydollar.help.ramseysolutions.com/hc/en-us/articles/360040571391-Export-Tracked-Transactions",
+        text: t({
+            en: "By hand. Bank connect pulls transactions in Premium. No file import",
+            es: "A mano. La conexión al banco trae los movimientos en Premium. No importa archivos",
+        }),
+    },
+    {
+        label: LABELS.availability,
+        source: "https://everydollar.help.ramseysolutions.com/hc/en-us/articles/21544207900685-EveryDollar-Premium-Subscription-Cost",
+        text: t({
+            en: "Mobile app and Premium in the US only. Elsewhere, a free budget on EveryDollar.com",
+            es: "App móvil y Premium solo en EE. UU. En otros países, un presupuesto gratis en EveryDollar.com",
+        }),
+    },
+    {
+        label: LABELS.platforms,
+        source: "https://www.ramseysolutions.com/money/everydollar",
+        text: t({ en: "Computer, phone, or tablet", es: "Computadora, celular o tableta" }),
+    },
+];
+
+const GOODBUDGET = {
+    facts: [
+        {
+            label: LABELS.price,
+            source: "https://goodbudget.com/blog/2024/08/changes-to-goodbudgets-plan-offerings/",
+            text: t({
+                en: "Free plan. Premium is $10 a month or $80 a year",
+                es: "Plan gratis. Premium cuesta US$10 al mes o US$80 al año",
+            }),
+        },
+        {
+            label: LABELS.free,
+            source: "https://goodbudget.com/help/billing/subscribe-to-goodbudget/",
+            text: t({
+                en: "10 envelopes plus 10 annual or goal envelopes, 1 account, 2 devices, and 1 year of history",
+                es: "10 sobres más 10 sobres anuales o de metas, 1 cuenta, 2 dispositivos y 1 año de historial",
+            }),
+        },
+        {
+            label: LABELS.style,
+            source: "https://goodbudget.com/help/billing/subscribe-to-goodbudget/",
+            text: t({ en: "Envelopes", es: "Sobres" }),
+        },
+        {
+            label: LABELS.entries,
+            source: "https://goodbudget.com/help/using-accounts/import/",
+            text: t({
+                en: "By hand, or QFX, OFX, and CSV files. Bank sync for US banks in Premium",
+                es: "A mano, o archivos QFX, OFX y CSV. Sincronización con bancos de EE. UU. en Premium",
+            }),
+        },
+        {
+            label: LABELS.currencies,
+            source: "https://goodbudget.com/help/budgeting-with-goodbudget/5/",
+            text: t({
+                en: "No currency symbols in the app or on the web",
+                es: "No usa símbolos de moneda en la app ni en la web",
+            }),
+        },
+        {
+            label: LABELS.platforms,
+            source: "https://goodbudget.com/help/mobile-apps/",
+            text: t({ en: "Web, Android, iPhone", es: "Web, Android, iPhone" }),
+        },
+        {
+            label: LABELS.watch,
+            source: "https://goodbudget.com/help/billing/subscribe-to-goodbudget/",
+            text: t({
+                en: "The free plan keeps 1 year of history, 20 envelopes, and 1 account",
+                es: "El plan gratis guarda 1 año de historial, 20 sobres y 1 cuenta",
+            }),
+        },
+    ],
+    name: "Goodbudget",
+    slug: "goodbudget",
+    summary: t(RIVALS.goodbudget),
+};
+
+const MONARCH = {
+    facts: [
+        {
+            label: LABELS.price,
+            source: "https://www.monarch.com/pricing",
+            text: t({
+                en: "$14.99 a month or $99.99 a year, after a 7-day trial. Plus is $199.99 a year",
+                es: "US$14.99 al mes o US$99.99 al año, después de una prueba de 7 días. Plus cuesta US$199.99 al año",
+            }),
+        },
+        {
+            label: LABELS.entries,
+            source: "https://help.monarch.com/hc/en-us/articles/4409682789908-Importing-Transactions-Manually",
+            text: t({
+                en: "Synced from more than 13,000 banks and institutions, manual accounts, or CSV import on the web",
+                es: "Sincronizados desde más de 13,000 bancos e instituciones, cuentas manuales o importación de CSV en la web",
+            }),
+        },
+        {
+            label: LABELS.currencies,
+            source: "https://help.monarch.com/hc/en-us/articles/360048393552-International-Accounts-and-Currency",
+            text: t({
+                en: "Everything shows in dollars, with no conversion",
+                es: "Todo se muestra en dólares, sin conversión",
+            }),
+        },
+        {
+            label: LABELS.platforms,
+            source: "https://www.monarch.com/download",
+            text: t({
+                en: "Web, iPhone, iPad, Android, in the US and Canada",
+                es: "Web, iPhone, iPad, Android, en EE. UU. y Canadá",
+            }),
+        },
+        {
+            label: LABELS.watch,
+            source: "https://help.monarch.com/hc/en-us/articles/360048393552-International-Accounts-and-Currency",
+            text: t({
+                en: "Accounts in different currencies add up as if they were one: 10,000 CAD and 10,000 USD show as $20,000",
+                es: "Las cuentas en monedas distintas se suman como si fueran una: 10,000 CAD y 10,000 USD aparecen como $20,000",
+            }),
+        },
+    ],
+    name: "Monarch Money",
+    slug: "monarch",
+    summary: t(RIVALS.monarch),
+};
+
+const OUTLAYR_FACTS = [
+    { label: LABELS.price, text: OUTLAYR.price },
+    { label: LABELS.style, text: OUTLAYR.budgets },
+    { label: LABELS.entries, text: OUTLAYR.entries },
+    { label: LABELS.currencies, text: OUTLAYR.currencies },
+    { label: LABELS.platforms, text: OUTLAYR.platforms },
+    { label: LABELS.free, text: OUTLAYR_FREE },
+];
+
+const POCKETGUARD = {
+    facts: [
+        {
+            label: LABELS.price,
+            source: "https://pocketguard.com/pricing/",
+            text: t({
+                en: "$12.99 a month, $74.99 a year, or $149.99 once, after a 7-day trial",
+                es: "US$12.99 al mes, US$74.99 al año o US$149.99 en un solo pago, después de una prueba de 7 días",
+            }),
+        },
+        {
+            label: LABELS.style,
+            source: "https://pocketguard.com/pricing/",
+            text: t({ en: "Zero-based, envelopes, or by category", es: "Base cero, sobres o por categoría" }),
+        },
+        {
+            label: LABELS.entries,
+            source: "https://pocketguard.com/help/pocketguard-plus-overview/",
+            text: t({
+                en: "Synced from linked accounts in the US and Canada, cash transactions, or CSV import",
+                es: "Sincronizados desde cuentas vinculadas de EE. UU. y Canadá, movimientos en efectivo o importación de CSV",
+            }),
+        },
+        {
+            label: LABELS.platforms,
+            source: "https://pocketguard.com/pricing/",
+            text: t({ en: "Web, iPhone, Apple Watch, Android", es: "Web, iPhone, Apple Watch, Android" }),
+        },
+        {
+            label: LABELS.watch,
+            source: "https://pocketguard.com/pricing/",
+            text: t({
+                en: "Its pricing page shows no free plan, and its site says it is not available in some regions",
+                es: "Su página de precios no muestra un plan gratis, y su sitio dice que no está disponible en algunas regiones",
+            }),
+        },
+    ],
+    name: "PocketGuard",
+    slug: "pocketguard",
+    summary: t(RIVALS.pocketguard),
+};
+
+const ROCKET_MONEY = {
+    facts: [
+        {
+            label: LABELS.price,
+            source: "https://www.rocketmoney.com/learn/personal-finance/how-much-does-rocket-money-cost",
+            text: t({
+                en: "Free plan. Premium is $7 to $14 a month, pay what you think is fair. Premium+ is $15 a month",
+                es: "Plan gratis. Premium cuesta de US$7 a US$14 al mes, pagas lo que te parezca justo. Premium+ cuesta US$15 al mes",
+            }),
+        },
+        {
+            label: LABELS.entries,
+            source: "https://www.rocketmoney.com/learn/personal-finance/how-much-does-rocket-money-cost",
+            text: t({
+                en: "Synced from linked accounts. Adding transactions by hand is Premium",
+                es: "Sincronizados desde cuentas vinculadas. Agregar movimientos a mano es de Premium",
+            }),
+        },
+        {
+            label: LABELS.availability,
+            source: "https://help.rocketmoney.com/en/articles/79778-does-rocket-money-support-international-banks",
+            text: t({ en: "The US, with US banks", es: "Estados Unidos, con bancos de EE. UU." }),
+        },
+        {
+            label: LABELS.platforms,
+            source: "https://help.rocketmoney.com/en/articles/12166750-rocket-money-for-desktop",
+            text: t({
+                en: "iPhone, Android. The website is for Premium members",
+                es: "iPhone, Android. El sitio web es solo para miembros Premium",
+            }),
+        },
+        {
+            label: LABELS.watch,
+            source: "https://www.rocketmoney.com/learn/personal-finance/how-much-does-rocket-money-cost",
+            text: t({
+                en: "On the free plan you cannot add transactions by hand or export them",
+                es: "En el plan gratis no puedes agregar movimientos a mano ni exportarlos",
+            }),
+        },
+    ],
+    name: "Rocket Money",
+    slug: "rocket-money",
+    summary: t({
+        en: "Rocket Money is a subscription and bill tracker with budgeting for the United States, free to start, with a Premium plan you pay what you think is fair for.",
+        es: "Rocket Money es una app para controlar suscripciones y facturas, con presupuesto, para Estados Unidos, gratis para empezar y con un plan Premium en el que pagas lo que te parezca justo.",
+    }),
+};
+
+const SPENDEE = {
+    facts: [
+        {
+            label: LABELS.price,
+            source: "https://www.spendee.com/pricing",
+            text: t({
+                en: "Free Basic plan with 1 cash wallet and 1 budget. Plus $1.99 a month or $14.99 a year, Premium $5.99 a month or $35.99 a year, after a 7-day trial. Prices vary by country",
+                es: "Plan Basic gratis con 1 billetera de efectivo y 1 presupuesto. Plus US$1.99 al mes o US$14.99 al año, Premium US$5.99 al mes o US$35.99 al año, después de una prueba de 7 días. Los precios cambian según el país",
+            }),
+        },
+        {
+            label: LABELS.entries,
+            source: "https://help.spendee.com/article/209-data-import",
+            text: t({
+                en: "By hand, bank sync in Premium, or CSV and XLS files on the web, into cash wallets",
+                es: "A mano, sincronización bancaria en Premium, o archivos CSV y XLS en la web, en billeteras de efectivo",
+            }),
+        },
+        {
+            label: LABELS.currencies,
+            source: "https://help.spendee.com/article/231-how-to-setchange-the-currency-and-exchange-rate",
+            text: t({
+                en: "A currency per wallet, with your own exchange rate per transaction. A wallet's currency locks once it has transactions",
+                es: "Una moneda por billetera, con tu propia tasa por movimiento. La moneda de una billetera queda fija cuando ya tiene movimientos",
+            }),
+        },
+        {
+            label: LABELS.platforms,
+            source: "https://www.spendee.com/pricing",
+            text: t({
+                en: "iPhone, Android, web. Budgets are on the phone only for now",
+                es: "iPhone, Android, web. Por ahora los presupuestos solo están en el celular",
+            }),
+        },
+        {
+            label: LABELS.watch,
+            source: "https://help.spendee.com/article/137-export-transactions",
+            text: t({
+                en: "The free plan exports only the last 365 days, and export works on the phone only",
+                es: "El plan gratis exporta solo los últimos 365 días, y exportar solo funciona en el celular",
+            }),
+        },
+    ],
+    name: "Spendee",
+    slug: "spendee",
+    summary: t(RIVALS.spendee),
+};
+
+const YNAB = {
+    facts: [
+        {
+            label: LABELS.price,
+            source: "https://www.ynab.com/pricing",
+            text: t({
+                en: "$14.99 a month or $109 a year, after a 34-day trial. Students get 365 days free",
+                es: "US$14.99 al mes o US$109 al año, después de una prueba de 34 días. Los estudiantes tienen 365 días gratis",
+            }),
+        },
+        {
+            label: LABELS.style,
+            source: "https://www.ynab.com/",
+            text: t({
+                en: "You decide what your money is for before you spend it",
+                es: "Decides para qué es tu dinero antes de gastarlo",
+            }),
+        },
+        {
+            label: LABELS.entries,
+            source: "https://www.ynab.com/whats-new/file-based-import-elevated",
+            text: t({
+                en: "By hand, Direct Import from select US, Canadian, UK, and EU banks, or CSV files",
+                es: "A mano, Direct Import desde algunos bancos de EE. UU., Canadá, Reino Unido y la UE, o archivos CSV",
+            }),
+        },
+        {
+            label: LABELS.currencies,
+            source: "https://www.ynab.com/pricing",
+            text: t({ en: "One per plan", es: "Una por plan" }),
+        },
+        {
+            label: LABELS.platforms,
+            source: "https://www.ynab.com/pricing",
+            text: t({ en: "iPhone, Android, web, Apple Watch", es: "iPhone, Android, web, Apple Watch" }),
+        },
+        {
+            label: LABELS.watch,
+            source: "https://support.ynab.com/en_us/how-to-export-plan-data-Sy_CouWA9",
+            text: t({
+                en: "No free plan after the trial, and export is web only, without targets or category notes",
+                es: "Sin plan gratis después de la prueba, y exportar es solo en la web, sin metas ni notas de categoría",
+            }),
+        },
+    ],
+    name: "YNAB",
+    slug: "ynab",
+    summary: t(RIVALS.ynab),
+};
 
 const answers = {
     content: {
@@ -225,7 +698,7 @@ const answers = {
                         }),
                     },
                 ],
-                related: ["/compare/monarch", "/compare/everydollar", "/compare/ynab"] satisfies PageRef[],
+                related: ["/guides/ynab-alternatives", "/compare/monarch", "/compare/everydollar"] satisfies PageRef[],
                 rival: "Copilot",
                 rows: [
                     {
@@ -342,7 +815,7 @@ const answers = {
                         }),
                     },
                 ],
-                related: ["/compare/ynab", "/compare/copilot", "/tools/50-30-20-budget-calculator"] satisfies PageRef[],
+                related: ["/guides/best-budget-apps", "/compare/ynab", "/compare/copilot"] satisfies PageRef[],
                 rival: "EveryDollar",
                 rows: [
                     {
@@ -535,6 +1008,166 @@ const answers = {
                 summary: t(RIVALS.fintonic),
                 title: t({ en: "Outlayr as a Fintonic alternative.", es: "Outlayr como alternativa a Fintonic." }),
             },
+            goodbudget: {
+                faq: [
+                    {
+                        answer: t({
+                            en: "It is if you spend in more than one currency, want all your history on the free plan, or would rather say or scan a purchase than fill in a form. Goodbudget fits better if you budget with envelopes, need a web or iPhone app today, or want US bank accounts to sync in Premium.",
+                            es: "Sí, si gastas en más de una moneda, quieres todo tu historial en el plan gratis o prefieres dictar o escanear una compra en vez de llenar un formulario. Goodbudget te conviene más si presupuestas con sobres, necesitas una app web o para iPhone hoy, o quieres que tus cuentas de bancos de EE. UU. se sincronicen en Premium.",
+                        }),
+                        question: t({
+                            en: "Is Outlayr a good Goodbudget alternative?",
+                            es: "¿Outlayr es una buena alternativa a Goodbudget?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Not by that name. You set a limit per category, or one for the month, for a day, a week, a month, or a year. Turn on carry-over and what you do not spend is added to the next period, much like cash left in an envelope, and what you overspend comes off the next one.",
+                            es: "No con ese nombre. Pones un límite por categoría, o uno para el mes, por día, semana, mes o año. Activa Acumular lo que sobre y lo que no gastes se suma al período siguiente, como el efectivo que queda en un sobre, y lo que te pases se resta del siguiente.",
+                        }),
+                        question: t({ en: "Does Outlayr have envelopes?", es: "¿Outlayr tiene sobres?" }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. Each purchase keeps its currency, from 165, and totals convert to your main currency at the rate from the day of each purchase. Goodbudget shows no currency symbols in the app or on the web.",
+                            es: "Sí. Cada compra conserva su moneda, entre 165, y los totales se convierten a tu moneda principal con la tasa del día de cada compra. Goodbudget no muestra símbolos de moneda en la app ni en la web.",
+                        }),
+                        question: t({
+                            en: "Does Outlayr show currencies?",
+                            es: "¿Outlayr muestra monedas?",
+                        }),
+                    },
+                    COST_FAQ,
+                ],
+                fit: {
+                    outlayr: [
+                        SEVERAL_CURRENCIES,
+                        t({
+                            en: "Want all your history on the free plan",
+                            es: "Quieres todo tu historial en el plan gratis",
+                        }),
+                        SAY_OR_SCAN,
+                    ],
+                    rival: [
+                        t({ en: "Budget with envelopes", es: "Presupuestas con sobres" }),
+                        t({
+                            en: "Need a web app or an iPhone app today",
+                            es: "Necesitas una app web o para iPhone hoy",
+                        }),
+                        t({
+                            en: "Want US bank accounts to sync on their own",
+                            es: "Quieres que tus cuentas de bancos de EE. UU. se sincronicen solas",
+                        }),
+                    ],
+                },
+                lead: t({
+                    en: `${OUTLAYR_LEAD.en} ${RIVALS.goodbudget.en}`,
+                    es: `${OUTLAYR_LEAD.es} ${RIVALS.goodbudget.es}`,
+                }),
+                meta: {
+                    description: t({
+                        en: "Outlayr vs Goodbudget: envelopes or category limits with a pace, currencies, free plans, and price. Goodbudget facts checked on its own site, October 2026.",
+                        es: "Outlayr vs Goodbudget: sobres o límites con ritmo, monedas, planes gratis y precio. Datos de Goodbudget revisados en su propio sitio, octubre de 2026.",
+                    }),
+                    title: t({
+                        en: "Goodbudget Alternative: Outlayr vs Goodbudget",
+                        es: "Alternativa a Goodbudget: Outlayr vs Goodbudget",
+                    }),
+                },
+                moving: [
+                    {
+                        label: MOVING.export,
+                        text: t({
+                            en: "How Goodbudget exports your history was not part of what we checked, so there are no export steps here. If you have your Goodbudget transactions as a CSV, the rows below say what Outlayr does with it.",
+                            es: "Cómo exporta Goodbudget tu historial no fue parte de lo que revisamos, así que aquí no hay pasos para exportar. Si tienes tus movimientos de Goodbudget en un CSV, las filas de abajo dicen qué hace Outlayr con él.",
+                        }),
+                    },
+                    {
+                        label: MOVING.file,
+                        source: "https://goodbudget.com/help/budgeting-with-goodbudget/5/",
+                        text: t({
+                            en: "Goodbudget shows no currency symbols, so add a Currency column with codes like USD or MXN if you track more than one. Rows without one land in your main currency.",
+                            es: "Goodbudget no muestra símbolos de moneda, así que agrega una columna Currency con códigos como USD o MXN si llevas más de una. Las filas sin ella entran en tu moneda principal.",
+                        }),
+                    },
+                    {
+                        label: MOVING.into,
+                        text: t({
+                            en: `${CSV_INTO_OUTLAYR.en} If your envelope names sit under another header, rename it to Category. ${SIGN_LOST.en}`,
+                            es: `${CSV_INTO_OUTLAYR.es} Si tus nombres de sobres están bajo otro encabezado, cámbialo a Category. ${SIGN_LOST.es}`,
+                        }),
+                    },
+                    {
+                        label: MOVING.lost,
+                        text: t({
+                            en: "Accounts and envelope amounts. Set your limits again on Budgets, and turn on carry-over to keep what you do not spend.",
+                            es: "Las cuentas y los montos de los sobres. Vuelve a poner tus límites en Presupuestos y activa Acumular lo que sobre para conservar lo que no gastes.",
+                        }),
+                    },
+                ],
+                related: [
+                    "/guides/best-budget-apps",
+                    "/guides/ynab-alternatives",
+                    "/guides/budget-planner",
+                ] satisfies PageRef[],
+                rival: "Goodbudget",
+                rows: [
+                    {
+                        label: LABELS.price,
+                        outlayr: OUTLAYR.price,
+                        rival: t({
+                            en: "Free plan. Premium is $10 a month or $80 a year",
+                            es: "Plan gratis. Premium cuesta US$10 al mes o US$80 al año",
+                        }),
+                    },
+                    {
+                        label: LABELS.free,
+                        outlayr: OUTLAYR_FREE,
+                        rival: t({
+                            en: "10 envelopes plus 10 annual or goal envelopes, 1 account, 2 devices, and 1 year of history",
+                            es: "10 sobres más 10 sobres anuales o de metas, 1 cuenta, 2 dispositivos y 1 año de historial",
+                        }),
+                    },
+                    {
+                        label: LABELS.budgets,
+                        outlayr: OUTLAYR.budgets,
+                        rival: t({ en: "Envelopes", es: "Sobres" }),
+                    },
+                    {
+                        label: LABELS.entries,
+                        outlayr: OUTLAYR.entries,
+                        rival: t({
+                            en: "By hand, or QFX, OFX, and CSV files. Bank sync for US banks in Premium",
+                            es: "A mano, o archivos QFX, OFX y CSV. Sincronización con bancos de EE. UU. en Premium",
+                        }),
+                    },
+                    {
+                        label: LABELS.currencies,
+                        outlayr: OUTLAYR.currencies,
+                        rival: t({ en: "No currency symbols at all", es: "No usa símbolos de moneda" }),
+                    },
+                    {
+                        label: LABELS.platforms,
+                        outlayr: OUTLAYR.platforms,
+                        rival: t({ en: "Web, Android, iPhone", es: "Web, Android, iPhone" }),
+                    },
+                    {
+                        label: LABELS.license,
+                        outlayr: LICENSE_ROW.outlayr,
+                        rival: t({
+                            en: "No open source license stated",
+                            es: "No indica una licencia de código abierto",
+                        }),
+                    },
+                ],
+                site: "goodbudget.com",
+                source: "https://goodbudget.com/help/billing/subscribe-to-goodbudget/",
+                summary: t(RIVALS.goodbudget),
+                title: t({
+                    en: "Outlayr as a Goodbudget alternative.",
+                    es: "Outlayr como alternativa a Goodbudget.",
+                }),
+            },
             monarch: {
                 faq: [
                     {
@@ -662,6 +1295,173 @@ const answers = {
                 source: "https://www.monarch.com/pricing",
                 summary: t(RIVALS.monarch),
                 title: t({ en: "Outlayr as a Monarch alternative.", es: "Outlayr como alternativa a Monarch." }),
+            },
+            monefy: {
+                faq: [
+                    {
+                        answer: t({
+                            en: "It is if you want each purchase converted at the rate from its day, recurring entries and reminders on the free plan, or would rather say or scan a purchase than fill in a form. Monefy fits better if you want to log in two taps, sync through your own Google Drive or Dropbox, or use an iPhone today.",
+                            es: "Sí, si quieres cada compra convertida con la tasa de su día, registros recurrentes y avisos en el plan gratis, o prefieres dictar o escanear una compra en vez de llenar un formulario. Monefy te conviene más si quieres registrar en dos toques, sincronizar con tu propio Google Drive o Dropbox, o usar un iPhone hoy.",
+                        }),
+                        question: t({
+                            en: "Is Outlayr a good Monefy alternative?",
+                            es: "¿Outlayr es una buena alternativa a Monefy?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "The rate from the day of each purchase, so entries you already logged do not move when the rate does. You can also type the rate you actually got. Monefy uses rates you type, and counts 1 to 1 when there is none.",
+                            es: "La tasa del día de cada compra, así que los registros que ya hiciste no cambian cuando la tasa se mueve. También puedes escribir la tasa que te dieron. Monefy usa tasas que escribes tú, y cuenta 1 a 1 cuando no hay ninguna.",
+                        }),
+                        question: RATE_FAQ.question,
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. Subscriptions, bills, and paychecks log themselves on their day, with a reminder before each charge, on the free plan. In Monefy, recurring transactions are part of the paid upgrade.",
+                            es: "Sí. Las suscripciones, los pagos fijos y el sueldo se registran solos en su día, con un aviso antes de cada cobro, en el plan gratis. En Monefy, los movimientos recurrentes son parte de la mejora de pago.",
+                        }),
+                        question: t({
+                            en: "Are recurring entries free in Outlayr?",
+                            es: "¿Los registros recurrentes son gratis en Outlayr?",
+                        }),
+                    },
+                    COST_FAQ,
+                ],
+                fit: {
+                    outlayr: [
+                        DAY_RATE,
+                        t({
+                            en: "Want recurring entries and reminders on the free plan",
+                            es: "Quieres registros recurrentes y avisos en el plan gratis",
+                        }),
+                        SAY_OR_SCAN,
+                    ],
+                    rival: [
+                        t({
+                            en: "Want to log a purchase in two taps",
+                            es: "Quieres registrar una compra en dos toques",
+                        }),
+                        t({
+                            en: "Want sync through your own Google Drive or Dropbox",
+                            es: "Quieres sincronizar con tu propio Google Drive o Dropbox",
+                        }),
+                        t({ en: "Use an iPhone today", es: "Usas un iPhone hoy" }),
+                    ],
+                },
+                lead: t({
+                    en: `${OUTLAYR_LEAD.en} ${RIVALS.monefy.en}`,
+                    es: `${OUTLAYR_LEAD.es} ${RIVALS.monefy.es}`,
+                }),
+                meta: {
+                    description: t({
+                        en: "Outlayr vs Monefy: exchange rates from the day or typed by hand, recurring entries, sync, and price. Monefy facts checked on its own site, October 2026.",
+                        es: "Outlayr vs Monefy: tasas del día o escritas a mano, registros recurrentes, sincronización y precio. Datos de Monefy revisados en su sitio, octubre de 2026.",
+                    }),
+                    title: t({
+                        en: "Monefy Alternative: Outlayr vs Monefy",
+                        es: "Alternativa a Monefy: Outlayr vs Monefy",
+                    }),
+                },
+                moving: [
+                    {
+                        label: MOVING.export,
+                        source: "https://www.monefy.com/help-center",
+                        text: t({
+                            en: "How Monefy exports your entries was not part of what we checked. Its help center describes restoring a Monefy backup, not a CSV export, so there are no export steps here.",
+                            es: "Cómo exporta Monefy tus registros no fue parte de lo que revisamos. Su centro de ayuda describe cómo restaurar un respaldo de Monefy, no una exportación a CSV, así que aquí no hay pasos para exportar.",
+                        }),
+                    },
+                    {
+                        label: MOVING.file,
+                        source: "https://www.monefy.com/help-center",
+                        text: t({
+                            en: "Monefy gives each account its own currency. If you get your entries out as a CSV, keep a Currency column with 3-letter codes like EUR or VES, and each row keeps its currency.",
+                            es: "Monefy le da a cada cuenta su propia moneda. Si sacas tus registros en un CSV, deja una columna Currency con códigos de 3 letras como EUR o VES, y cada fila conserva su moneda.",
+                        }),
+                    },
+                    {
+                        label: MOVING.into,
+                        text: t({
+                            en: `${CSV_INTO_OUTLAYR.en} ${SIGN_LOST.en}`,
+                            es: `${CSV_INTO_OUTLAYR.es} ${SIGN_LOST.es}`,
+                        }),
+                    },
+                    {
+                        label: MOVING.lost,
+                        text: t({
+                            en: "Accounts. On the free plan, Outlayr holds 2 accounts in one currency, and Pro allows any number of both.",
+                            es: "Las cuentas. En el plan gratis, Outlayr permite 2 cuentas en una moneda, y Pro permite las que quieras de ambas.",
+                        }),
+                    },
+                ],
+                related: [
+                    "/guides/best-expense-tracker-apps",
+                    "/guides/multi-currency-expense-tracker",
+                    "/compare/spendee",
+                ] satisfies PageRef[],
+                rival: "Monefy",
+                rows: [
+                    {
+                        label: LABELS.price,
+                        outlayr: OUTLAYR.price,
+                        rival: t({
+                            en: "Free core app. A paid upgrade, priced in the app, adds unlimited accounts, recurring transactions, and advanced filters",
+                            es: "La app básica es gratis. Una mejora de pago, con precio en la app, agrega cuentas ilimitadas, movimientos recurrentes y filtros avanzados",
+                        }),
+                    },
+                    {
+                        label: LABELS.entries,
+                        outlayr: OUTLAYR.entries,
+                        rival: t({
+                            en: "By hand in two taps. Its site mentions importing statements",
+                            es: "A mano en dos toques. Su sitio menciona importar estados de cuenta",
+                        }),
+                    },
+                    {
+                        label: LABELS.currencies,
+                        outlayr: OUTLAYR.currencies,
+                        rival: t({
+                            en: "150+, with rates you type. With no rate, it counts 1 to 1",
+                            es: "Más de 150, con tasas que escribes tú. Sin tasa, cuenta 1 a 1",
+                        }),
+                    },
+                    {
+                        label: LABELS.subscriptions,
+                        outlayr: OUTLAYR_SUBSCRIPTIONS,
+                        rival: t({
+                            en: "Recurring transactions are part of the paid upgrade",
+                            es: "Los movimientos recurrentes son parte de la mejora de pago",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Sync", es: "Sincronización" }),
+                        outlayr: t({
+                            en: "With Pro, through your Outlayr account",
+                            es: "Con Pro, a través de tu cuenta de Outlayr",
+                        }),
+                        rival: t({
+                            en: "A database file in your own Google Drive or Dropbox",
+                            es: "Un archivo de base de datos en tu propio Google Drive o Dropbox",
+                        }),
+                    },
+                    {
+                        label: LABELS.platforms,
+                        outlayr: OUTLAYR.platforms,
+                        rival: t({ en: "iPhone, Android", es: "iPhone, Android" }),
+                    },
+                    {
+                        label: LABELS.license,
+                        outlayr: LICENSE_ROW.outlayr,
+                        rival: t({
+                            en: "No open source license stated",
+                            es: "No indica una licencia de código abierto",
+                        }),
+                    },
+                ],
+                site: "monefy.com",
+                source: "https://www.monefy.com/",
+                summary: t(RIVALS.monefy),
+                title: t({ en: "Outlayr as a Monefy alternative.", es: "Outlayr como alternativa a Monefy." }),
             },
             pocketguard: {
                 faq: [
@@ -1016,7 +1816,7 @@ const answers = {
                 related: [
                     "/guides/best-expense-tracker-apps",
                     "/compare/wallet",
-                    "/compare/fintonic",
+                    "/compare/monefy",
                 ] satisfies PageRef[],
                 rival: "Spendee",
                 rows: [
@@ -1171,12 +1971,12 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "It is if you want to start free, spend in more than one currency, or would rather say or scan a purchase than fill in a form. YNAB fits better if you want your bank to import transactions, or follow its give every dollar a job method.",
-                            es: "Sí, si quieres empezar gratis, gastas en más de una moneda o prefieres dictar o escanear una compra en vez de llenar un formulario. YNAB te conviene más si quieres que tu banco importe los movimientos, o si sigues su método de darle un trabajo a cada dólar.",
+                            en: "It is if you want to start free, spend in more than one currency, or would rather say or scan a purchase than fill in a form. YNAB fits better if you want your bank to import transactions, or follow its give every dollar a job method. For six more options, see YNAB alternatives.",
+                            es: "Sí, si quieres empezar gratis, gastas en más de una moneda o prefieres dictar o escanear una compra en vez de llenar un formulario. YNAB te conviene más si quieres que tu banco importe los movimientos, o si sigues su método de darle un trabajo a cada dólar. Para ver seis opciones más, mira Alternativas a YNAB.",
                         }),
                         question: t({
-                            en: "Is Outlayr a good YNAB alternative?",
-                            es: "¿Outlayr es una buena alternativa a YNAB?",
+                            en: "Should I use Outlayr or YNAB?",
+                            es: "¿Me conviene Outlayr o YNAB?",
                         }),
                     },
                     {
@@ -1211,12 +2011,12 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "YNAB is a paid budgeting method built on bank imports, at $109 a year. Outlayr is an open source alternative you fill in by sentence, voice, or receipt.",
-                        es: "YNAB es un método de presupuesto de pago, US$109 al año, basado en importar del banco. Outlayr es una alternativa de código abierto, gratis para empezar.",
+                        en: "YNAB is $14.99 a month or $109 a year, with one currency per plan. Outlayr starts free with 165 currencies. Price, entries, and platforms side by side.",
+                        es: "YNAB cuesta US$14.99 al mes o US$109 al año, con una moneda por plan. Outlayr empieza gratis, con 165 monedas. Precio, registros y plataformas lado a lado.",
                     }),
                     title: t({
-                        en: "YNAB Alternative: Outlayr vs YNAB (Price, Currencies)",
-                        es: "Alternativa a YNAB: Outlayr vs YNAB (precio y monedas)",
+                        en: "Outlayr vs YNAB: Price, Currencies, Platforms (2026)",
+                        es: "Outlayr vs YNAB: precio, monedas y plataformas (2026)",
                     }),
                 },
                 moving: [
@@ -1251,11 +2051,7 @@ const answers = {
                         }),
                     },
                 ],
-                related: [
-                    "/guides/best-expense-tracker-apps",
-                    "/compare/everydollar",
-                    "/compare/copilot",
-                ] satisfies PageRef[],
+                related: ["/guides/ynab-alternatives", "/compare/everydollar", "/compare/copilot"] satisfies PageRef[],
                 rival: "YNAB",
                 rows: [
                     {
@@ -1297,10 +2093,310 @@ const answers = {
                 site: "ynab.com",
                 source: "https://www.ynab.com/pricing",
                 summary: t(RIVALS.ynab),
-                title: t({ en: "Outlayr as a YNAB alternative.", es: "Outlayr como alternativa a YNAB." }),
+                title: t({ en: "Outlayr vs YNAB.", es: "Outlayr vs YNAB." }),
             },
         },
         guides: {
+            "ai-expense-tracker": {
+                facts: [
+                    {
+                        label: t({ en: "Fills in", es: "Llena" }),
+                        text: t({
+                            en: "The amount, the merchant, the category, the account, the date, and the currency",
+                            es: "El monto, el comercio, la categoría, la cuenta, la fecha y la moneda",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Say it", es: "Díctala" }),
+                        text: t({
+                            en: "In your own words, in English or Spanish, up to 45 seconds a clip",
+                            es: "Con tus palabras, en inglés o en español, hasta 45 segundos por grabación",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Type it", es: "Escríbela" }),
+                        text: t({
+                            en: "Tap each underlined word of the sentence. It works with no signal and no account",
+                            es: "Toca cada palabra subrayada de la oración. Funciona sin señal y sin cuenta",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Fixes", es: "Correcciones" }),
+                        text: t({
+                            en: "Say what changed, and only that part updates",
+                            es: "Di lo que cambió y solo esa parte se actualiza",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Free plan", es: "Plan gratis" }),
+                        text: t({
+                            en: "Typing has no limit. 20 voice or receipt captures every 30 days, 500 with Pro",
+                            es: "Escribir no tiene límite. 20 capturas de voz o de recibos cada 30 días, 500 con Pro",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Needs", es: "Requiere" }),
+                        text: t({
+                            en: "Voice and receipts need an account and a connection. Typing needs neither",
+                            es: "La voz y los recibos requieren una cuenta y conexión. Escribir no requiere ninguna de las dos",
+                        }),
+                    },
+                ],
+                faq: [
+                    {
+                        answer: t({
+                            en: "For voice and receipts, yes. AI reads what you say or the receipt you photograph and fills in the entry for you to check. Typing is a sentence you fill in by tapping. Once you allow AI features, Outlayr can also suggest a category for a merchant it does not know, sending the merchant name but never the amount, the date, or the account.",
+                            es: "Para la voz y los recibos, sí. La IA lee lo que dictas o el recibo que fotografías y llena el registro para que lo revises. Escribir es llenar una oración tocando cada palabra. Cuando permites las funciones de IA, Outlayr también puede sugerir una categoría para un comercio que no conoce, enviando el nombre del comercio pero nunca el monto, la fecha ni la cuenta.",
+                        }),
+                        question: t({
+                            en: "Is Outlayr an AI expense tracker?",
+                            es: "¿Outlayr es una app de gastos con IA?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "No. The typed sentence is a form: you tap each word to fill it in. To log a purchase in your own words, say it, and voice entry fills in the same sentence from what it hears.",
+                            es: "No. La oración que escribes es un formulario: tocas cada palabra para llenarla. Para registrar una compra con tus palabras, díctala, y el registro por voz llena la misma oración con lo que escucha.",
+                        }),
+                        question: t({
+                            en: "Can I type a purchase in my own words?",
+                            es: "¿Puedo escribir una compra con mis propias palabras?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "English and Spanish. Voice entry listens in the language the app is set to.",
+                            es: "Inglés y español. El registro por voz escucha en el idioma que tenga la app.",
+                        }),
+                        question: t({ en: "Which languages does it understand?", es: "¿Qué idiomas entiende?" }),
+                    },
+                    {
+                        answer: t({
+                            en: "20 captures every 30 days, shared with receipt scans, and each clip is one. Outlayr Pro raises that to 500. Typing has no limit.",
+                            es: "20 capturas cada 30 días, compartidas con el escaneo de recibos, y cada grabación es una. Outlayr Pro lo sube a 500. Escribir no tiene límite.",
+                        }),
+                        question: t({
+                            en: "How many voice entries are free?",
+                            es: "¿Cuántos registros por voz son gratis?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Say what changed, like “no, that was yesterday” or “make it groceries”, and only that field updates. Or tap Finish in the form and edit it by hand.",
+                            es: "Di lo que cambió, como “no, fue ayer” o “ponlo en supermercado”, y solo ese campo se actualiza. O toca Terminar en el formulario y edítalo a mano.",
+                        }),
+                        question: t({ en: "What if it gets a field wrong?", es: "¿Y si se equivoca en un campo?" }),
+                    },
+                ],
+                lead: t({
+                    en: "An AI expense tracker turns a purchase you describe in your own words into a saved entry. In Outlayr, AI reads the sentence you say and the receipt you photograph, then fills in the amount, merchant, category, account, date, and currency. Typing fills the same sentence with taps, on your phone, with no signal needed.",
+                    es: "Una app de gastos con IA convierte una compra que describes con tus palabras en un registro guardado. En Outlayr, la IA lee la oración que dictas y el recibo que fotografías, y llena el monto, el comercio, la categoría, la cuenta, la fecha y la moneda. Al escribir, llenas la misma oración con toques en tu celular, sin necesidad de señal.",
+                }),
+                meta: {
+                    description: t({
+                        en: "Say a purchase in your own words and Outlayr's AI fills in the amount, merchant, category, account, date, and currency. Typing it works offline.",
+                        es: "Dicta una compra y la IA de Outlayr llena el monto, el comercio, la categoría, la cuenta, la fecha y la moneda. Escribirla funciona sin conexión.",
+                    }),
+                    title: t({
+                        en: "AI Expense Tracker: Log a Purchase in One Sentence · Outlayr",
+                        es: "Control de gastos con IA: dicta una compra · Outlayr",
+                    }),
+                },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "These examples assume a ledger in US dollars with accounts named Amex, Visa, Chase, and Zinli, and categories named Coffee, Dining Out, Freelance, and Entertainment. Outlayr matches against the names you have.",
+                                es: "Estos ejemplos suponen un registro en dólares con cuentas llamadas Amex, Banesco, Zinli y Visa, y categorías llamadas Café, Salud, Freelance y Entretenimiento. Outlayr compara con los nombres que tú tengas.",
+                            }),
+                            t({
+                                en: "“Twelve fifty at Starbucks yesterday on the Amex” becomes $12.50 at Starbucks, under Coffee, on the Amex, dated yesterday. Saying “No, that was today, and put it under groceries” then changes only the date and the category.",
+                                es: "“Doce cincuenta en Starbucks ayer con la Amex” queda como 12.50 USD en Starbucks, en Café, con la Amex, con fecha de ayer. Si luego dices “No, fue hoy, y ponlo en supermercado”, solo cambian la fecha y la categoría.",
+                            }),
+                            t({
+                                en: "“Twenty euros for lunch at Café de Flore on the Visa” becomes €20.00 at Café de Flore, under Dining Out, on the Visa, dated today, counted in dollars at the rate from that day.",
+                                es: "“Mil doscientos cincuenta bolívares en Farmatodo con Banesco” queda como 1,250.00 VES en Farmatodo, en Salud, con Banesco, con fecha de hoy, sumado en dólares con la tasa de ese día.",
+                            }),
+                            t({
+                                en: "“Got paid 1,450 from Upwork into Zinli last Friday” becomes $1,450.00 received from Upwork, under Freelance, into Zinli, dated last Friday.",
+                                es: "“Me pagaron 1,450 de Upwork en Zinli el viernes pasado” queda como 1,450.00 USD recibidos de Upwork, en Freelance, en Zinli, con fecha del viernes pasado.",
+                            }),
+                            t({
+                                en: "“Netflix, 15.49 every month on the Chase card” becomes $15.49 at Netflix, under Entertainment, on Chase, dated today and repeating every month.",
+                                es: "“Netflix, 6.99 cada mes con la Visa” queda como 6.99 USD en Netflix, en Entretenimiento, con la Visa, con fecha de hoy y repitiéndose cada mes.",
+                            }),
+                        ],
+                        id: "examples",
+                        title: t({ en: "Four examples", es: "Cuatro ejemplos" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Typed entries save on your phone first, so a purchase logged on a plane is on the Log right away. A purchase in another currency converts at the newest rate already saved on your phone for that day or before, and you can type the rate you got instead.",
+                                es: "Los registros que escribes se guardan primero en tu celular, así que una compra que anotas en un avión aparece en el Registro al momento. Una compra en otra moneda se convierte con la tasa más reciente que ya está guardada en tu celular para ese día o antes, y también puedes escribir la tasa que te dieron.",
+                            }),
+                            t({
+                                en: "Voice entry and receipt scanning need a connection. With none, they say you are offline and nothing is sent. With Pro, sync sends your entries to your other devices once you are back online.",
+                                es: "El registro por voz y el escaneo de recibos necesitan conexión. Sin ella, te avisan que estás sin conexión y no se envía nada. Con Pro, la sincronización envía tus registros a tus otros dispositivos cuando vuelves a tener conexión.",
+                            }),
+                        ],
+                        id: "offline",
+                        title: t({ en: "What happens offline", es: "Qué pasa sin conexión" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Without an account you can type entries, set budgets and subscriptions, import a CSV matched by category name, and export your data. Signing in is needed for voice entry and receipt scanning, and, with Pro, for AI matching on import and for sync.",
+                                es: "Sin cuenta puedes escribir registros, armar presupuestos y suscripciones, importar un CSV emparejado por nombre de categoría y exportar tus datos. Iniciar sesión es necesario para dictar registros y escanear recibos, y, con Pro, para la asignación con IA al importar y para la sincronización.",
+                            }),
+                            t({
+                                en: "Before the first clip or receipt, Outlayr asks whether it may send data to its AI providers. A voice clip sends the recording, your account and category names, your currency, your language, and today's date, and no balances or past entries.",
+                                es: "Antes de la primera grabación o del primer recibo, Outlayr te pregunta si puede enviar datos a sus proveedores de IA. Una grabación envía el audio, los nombres de tus cuentas y categorías, tu moneda, tu idioma y la fecha de hoy, y ni saldos ni registros anteriores.",
+                            }),
+                        ],
+                        id: "account",
+                        title: t({ en: "What needs an account", es: "Qué requiere una cuenta" }),
+                    },
+                ],
+                plateAlt: t({
+                    en: "Outlayr voice entry: a spoken sentence becomes $12.50 at Blue Bottle under Coffee, and a spoken correction moves it to yesterday.",
+                    es: "Registro por voz de Outlayr: una oración dictada se convierte en $12.50 en Juan Valdez en Café, y una corrección dicha lo pasa a ayer.",
+                }),
+                related: [
+                    "/guides/voice-expense-tracker",
+                    "/guides/receipt-scanner",
+                    "/guides/multi-currency-expense-tracker",
+                ] satisfies PageRef[],
+                steps: [
+                    {
+                        text: t({
+                            en: "Tap the + button, then Add a transaction to type it, or Speak an entry to say it.",
+                            es: "Toca el botón +, luego Agregar una transacción para escribirla, o Dictar un registro para decirla.",
+                        }),
+                        title: t({ en: "Open the form", es: "Abre el formulario" }),
+                    },
+                    {
+                        text: t({
+                            en: "To type it, tap each underlined word of the sentence, like Spent $12.50 at Blue Bottle for Coffee from Apple Card today. To say it, describe the purchase the way you would tell a friend.",
+                            es: "Para escribirla, toca cada palabra subrayada de la oración, como Gasté $12.50 en Blue Bottle para Café con Apple Card hoy. Para dictarla, describe la compra como se la contarías a un amigo.",
+                        }),
+                        title: t({ en: "Fill in the sentence", es: "Llena la oración" }),
+                    },
+                    {
+                        text: t({
+                            en: "Check each word, say a correction or tap the one that is off, then save. Your budgets update right away.",
+                            es: "Revisa cada palabra, di una corrección o toca la que no está bien, y guarda. Tus presupuestos se actualizan al momento.",
+                        }),
+                        title: t({ en: "Check and save", es: "Revisa y guarda" }),
+                    },
+                ],
+                table: {
+                    caption: t({
+                        en: "Categories and accounts come from your own lists. A spoken date can go back up to a year.",
+                        es: "Las categorías y las cuentas salen de tus propias listas. Una fecha dictada puede ir hasta un año atrás.",
+                    }),
+                    columns: [
+                        t({ en: "When you say it", es: "Cuando lo dictas" }),
+                        t({ en: "When you type it", es: "Cuando lo escribes" }),
+                    ],
+                    corner: t({ en: "Field", es: "Campo" }),
+                    rows: [
+                        {
+                            cells: [
+                                t({
+                                    en: "The number you say, like “twelve fifty”",
+                                    es: "El número que dices, como “doce cincuenta”",
+                                }),
+                                t({ en: "The number pad", es: "El teclado numérico" }),
+                            ],
+                            label: t({ en: "Amount", es: "Monto" }),
+                        },
+                        {
+                            cells: [
+                                t({
+                                    en: "Where the money went or came from: “at Starbucks”, “from Upwork”. With none, a short description of the purchase",
+                                    es: "A dónde fue o de dónde vino el dinero: “en Starbucks”, “de Upwork”. Si no dices ninguno, una descripción corta de la compra",
+                                }),
+                                t({
+                                    en: "You type the name. A merchant you logged before, or a well-known one, brings its category",
+                                    es: "Escribes el nombre. Un comercio que ya registraste, o uno conocido, trae su categoría",
+                                }),
+                            ],
+                            label: t({ en: "Merchant", es: "Comercio" }),
+                        },
+                        {
+                            cells: [
+                                t({
+                                    en: "Words like “for coffee” or “under groceries”, matched to your categories. It never makes up a new one",
+                                    es: "Palabras como “de café” o “en supermercado”, emparejadas con tus categorías. Nunca inventa una nueva",
+                                }),
+                                t({ en: "You pick it from your categories", es: "La eliges entre tus categorías" }),
+                            ],
+                            label: t({ en: "Category", es: "Categoría" }),
+                        },
+                        {
+                            cells: [
+                                t({
+                                    en: "One of your account names, like “on the Amex”. A name that matches none of yours is left for you to pick",
+                                    es: "El nombre de una de tus cuentas, como “con la Amex”. Si no coincide con ninguna, queda para que la elijas",
+                                }),
+                                t({ en: "You pick it from your accounts", es: "La eliges entre tus cuentas" }),
+                            ],
+                            label: t({ en: "Account", es: "Cuenta" }),
+                        },
+                        {
+                            cells: [
+                                t({
+                                    en: "“yesterday”, “last Friday”, “this morning”. Nothing said means today",
+                                    es: "“ayer”, “el viernes pasado”, “esta mañana”. Si no dices nada, es hoy",
+                                }),
+                                t({
+                                    en: "Today, yesterday, a day of the past week, or the calendar",
+                                    es: "Hoy, ayer, un día de la última semana o el calendario",
+                                }),
+                            ],
+                            label: t({ en: "Date", es: "Fecha" }),
+                        },
+                        {
+                            cells: [
+                                t({
+                                    en: "Only a currency you name, like “euros”, “MXN”, or “€”. Otherwise your main currency",
+                                    es: "Solo una moneda que nombres, como “euros”, “MXN” o “€”. Si no, tu moneda principal",
+                                }),
+                                t({ en: "Tap the code next to the amount", es: "Toca el código junto al monto" }),
+                            ],
+                            label: t({ en: "Currency", es: "Moneda" }),
+                        },
+                        {
+                            cells: [
+                                t({
+                                    en: "“got paid” or “a refund” logs income, and “moved 500 from Checking to Savings” logs a transfer. Anything else is an expense",
+                                    es: "“me pagaron” o “un reembolso” registra un ingreso, y “pasé 500 de Ahorros a Corriente” registra una transferencia. Todo lo demás es un gasto",
+                                }),
+                                t({
+                                    en: "Tap Spent to switch it to Received",
+                                    es: "Toca Gasté para cambiarlo a Recibí",
+                                }),
+                            ],
+                            label: t({ en: "Expense or income", es: "Gasto o ingreso" }),
+                        },
+                        {
+                            cells: [
+                                t({
+                                    en: "“every month”, “weekly”, “a subscription”",
+                                    es: "“cada mes”, “cada semana”, “una suscripción”",
+                                }),
+                                t({ en: "Tap repeat under the sentence", es: "Toca repetir debajo de la oración" }),
+                            ],
+                            label: t({ en: "Repeats", es: "Se repite" }),
+                        },
+                    ],
+                },
+                title: t({
+                    en: "Log an expense by typing or saying one sentence.",
+                    es: "Registra un gasto escribiendo o dictando una oración.",
+                }),
+            },
             "apple-pay-expense-tracker": {
                 facts: [
                     {
@@ -1502,6 +2598,207 @@ const answers = {
                 title: t({
                     en: "Log Apple Pay purchases as you pay.",
                     es: "Registra tus compras con Apple Pay al pagar.",
+                }),
+            },
+            "best-budget-apps": {
+                apps: [
+                    ACTUAL,
+                    {
+                        facts: [
+                            ...EVERYDOLLAR_FACTS,
+                            {
+                                label: LABELS.watch,
+                                source: "https://everydollar.help.ramseysolutions.com/hc/en-us/articles/21544207900685-EveryDollar-Premium-Subscription-Cost",
+                                text: t({
+                                    en: "Outside the US you get only the free web budget, with no mobile app",
+                                    es: "Fuera de EE. UU. solo tienes el presupuesto gratis en la web, sin app móvil",
+                                }),
+                            },
+                        ],
+                        name: "EveryDollar",
+                        slug: "everydollar",
+                        summary: t(RIVALS.everydollar),
+                    },
+                    GOODBUDGET,
+                    MONARCH,
+                    {
+                        facts: [
+                            ...OUTLAYR_FACTS,
+                            {
+                                label: LABELS.watch,
+                                text: t({
+                                    en: "Android only until the iPhone app is out, and no web app. The free plan holds 2 category budgets plus one for the month",
+                                    es: "Solo en Android hasta que salga la app para iPhone, y sin app web. El plan gratis permite 2 presupuestos por categoría más uno para el mes",
+                                }),
+                            },
+                        ],
+                        name: "Outlayr",
+                        slug: "outlayr",
+                        summary: t(OUTLAYR_LEAD),
+                    },
+                    POCKETGUARD,
+                    SPENDEE,
+                    YNAB,
+                ],
+                facts: [
+                    {
+                        label: "Actual Budget",
+                        text: t({
+                            en: "Best if you want free envelope budgeting on a computer, and can run or rent a server to sync",
+                            es: "Ideal si quieres presupuestar por sobres gratis en la computadora y puedes montar o rentar un servidor para sincronizar",
+                        }),
+                    },
+                    {
+                        label: "EveryDollar",
+                        text: t({
+                            en: "Best if you live in the US and want a zero-based monthly budget with a free version",
+                            es: "Ideal si vives en EE. UU. y quieres un presupuesto mensual de base cero con versión gratis",
+                        }),
+                    },
+                    {
+                        label: "Goodbudget",
+                        text: t({
+                            en: "Best if you want envelopes on the web, Android, and iPhone, starting free",
+                            es: "Ideal si quieres sobres en la web, Android y iPhone, empezando gratis",
+                        }),
+                    },
+                    {
+                        label: "Monarch Money",
+                        text: t({
+                            en: "Best if you live in the US or Canada and want budgets next to net worth, reports, and goals from linked accounts",
+                            es: "Ideal si vives en EE. UU. o Canadá y quieres tus presupuestos junto a tu patrimonio, reportes y metas desde cuentas vinculadas",
+                        }),
+                    },
+                    {
+                        label: "Outlayr",
+                        text: t({
+                            en: "Best if you want a limit per category or for the month that says where your pace ends, in any of 165 currencies",
+                            es: "Ideal si quieres un límite por categoría o para el mes que te diga a dónde te lleva tu ritmo, en cualquiera de 165 monedas",
+                        }),
+                    },
+                    {
+                        label: "PocketGuard",
+                        text: t({
+                            en: "Best if you live in the US or Canada and want zero-based, envelope, or category budgets from linked accounts",
+                            es: "Ideal si vives en EE. UU. o Canadá y quieres presupuestos de base cero, por sobres o por categoría desde cuentas vinculadas",
+                        }),
+                    },
+                    {
+                        label: "Spendee",
+                        text: t({
+                            en: "Best if you want wallets in different currencies, with bank sync in Premium for banks across Europe and Latin America",
+                            es: "Ideal si quieres billeteras en distintas monedas, con sincronización en Premium para bancos de Europa y Latinoamérica",
+                        }),
+                    },
+                    {
+                        label: "YNAB",
+                        text: t({
+                            en: "Best if you want to decide what each dollar is for before you spend it, and are fine paying after the trial",
+                            es: "Ideal si quieres decidir para qué es cada dólar antes de gastarlo y no te molesta pagar después de la prueba",
+                        }),
+                    },
+                ],
+                faq: [
+                    {
+                        answer: t({
+                            en: "The one that matches how you budget. For envelopes, Actual Budget is free on a computer and Goodbudget runs on the web and both phones. To plan every dollar ahead, EveryDollar is zero-based in the US, and YNAB has you decide what your money is for before you spend it. PocketGuard offers several styles with linked accounts in the US and Canada. Outlayr sets a limit per category or month and says where your pace ends.",
+                            es: "La que coincide con cómo presupuestas. Para sobres, Actual Budget es gratis en la computadora y Goodbudget funciona en la web y en los dos celulares. Para planear cada dólar por adelantado, EveryDollar es de base cero en EE. UU., y YNAB te pide decidir para qué es tu dinero antes de gastarlo. PocketGuard ofrece varios estilos con cuentas vinculadas en EE. UU. y Canadá. Outlayr pone un límite por categoría o por mes y te dice a dónde te lleva tu ritmo.",
+                        }),
+                        question: t({
+                            en: "What is the best budget app?",
+                            es: "¿Cuál es la mejor app de presupuesto?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Actual Budget is free software, with a server needed to sync devices. Goodbudget's free plan has 20 envelopes, 1 account, and 1 year of history. Spendee Basic has 1 wallet and 1 budget. EveryDollar has a free version, web only outside the US. Outlayr's free plan has 2 category budgets plus one for the month, and 2 accounts. Monarch, PocketGuard, and YNAB are paid after a trial.",
+                            es: "Actual Budget es software gratis, con un servidor necesario para sincronizar dispositivos. El plan gratis de Goodbudget tiene 20 sobres, 1 cuenta y 1 año de historial. Spendee Basic tiene 1 billetera y 1 presupuesto. EveryDollar tiene una versión gratis, solo en la web fuera de EE. UU. El plan gratis de Outlayr tiene 2 presupuestos por categoría más uno para el mes, y 2 cuentas. Monarch, PocketGuard y YNAB son de pago después de una prueba.",
+                        }),
+                        question: t({
+                            en: "What is the best free budget app?",
+                            es: "¿Cuál es la mejor app de presupuesto gratis?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Outlayr converts 165 currencies to your main one at the rate from the day of each purchase. Spendee gives each wallet its own currency and lets you set a rate per transaction. YNAB uses one currency per plan, Actual Budget one with an experimental fixed-rate rule, and Monarch shows everything as dollars. Goodbudget shows no currency symbols. EveryDollar and PocketGuard do not say.",
+                            es: "Outlayr convierte 165 monedas a tu moneda principal con la tasa del día de cada compra. Spendee le da a cada billetera su propia moneda y te deja poner una tasa por movimiento. YNAB usa una moneda por plan, Actual Budget una con una regla experimental de tasa fija y Monarch lo muestra todo en dólares. Goodbudget no muestra símbolos de moneda. EveryDollar y PocketGuard no lo dicen.",
+                        }),
+                        question: t({
+                            en: "Which budget app works in more than one currency?",
+                            es: "¿Qué app de presupuesto funciona con más de una moneda?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "EveryDollar's mobile app and Premium are US only, and Monarch is for the US and Canada. PocketGuard links accounts in the US and Canada, and Goodbudget's bank sync is for US banks. YNAB imports from select US, Canadian, UK, and EU banks. Spendee connects banks in many countries, including much of Europe and Latin America. Outlayr works in English and Spanish, with 165 currencies.",
+                            es: "La app móvil y el Premium de EveryDollar son solo para EE. UU., y Monarch es para EE. UU. y Canadá. PocketGuard vincula cuentas de EE. UU. y Canadá, y la sincronización de Goodbudget es para bancos de EE. UU. YNAB importa desde algunos bancos de EE. UU., Canadá, Reino Unido y la UE. Spendee conecta bancos de muchos países, entre ellos buena parte de Europa y Latinoamérica. Outlayr funciona en inglés y en español, con 165 monedas.",
+                        }),
+                        question: t({
+                            en: "Which budget apps work outside the United States?",
+                            es: "¿Qué apps de presupuesto funcionan fuera de Estados Unidos?",
+                        }),
+                    },
+                    COST_FAQ,
+                ],
+                lead: t({
+                    en: "A budget app sets how much you plan to spend and tracks what you actually spend against it. Eight follow, each best for a different way to budget: Actual Budget, EveryDollar, Goodbudget, Monarch Money, Outlayr, PocketGuard, Spendee, and YNAB. Outlayr is ours; the other seven are not.",
+                    es: "Una app de presupuesto define cuánto planeas gastar y sigue lo que de verdad gastas contra ese plan. Aquí van ocho, cada una mejor para una forma distinta de presupuestar: Actual Budget, EveryDollar, Goodbudget, Monarch Money, Outlayr, PocketGuard, Spendee y YNAB. Outlayr es nuestra; las otras siete no.",
+                }),
+                meta: {
+                    description: t({
+                        en: "Eight budget apps by how they budget: envelopes, zero-based, or a limit with a pace. Price, platforms, entries, and currencies, checked October 2026.",
+                        es: "Ocho apps de presupuesto por estilo: sobres, base cero o un límite con ritmo. Precio, plataformas, registros y monedas, revisados en octubre de 2026.",
+                    }),
+                    title: t({
+                        en: "Best Budget Apps, Compared (2026) · Outlayr",
+                        es: "Mejores apps de presupuesto, comparadas (2026) · Outlayr",
+                    }),
+                },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "Envelopes. You split your money into envelopes, one per category, and spend only what is in each. When one is empty, that spending stops until you refill it. Actual Budget and Goodbudget are built on envelopes, and PocketGuard offers them too.",
+                                es: "Sobres. Divides tu dinero en sobres, uno por categoría, y gastas solo lo que hay en cada uno. Cuando uno se vacía, ese gasto se detiene hasta que lo vuelvas a llenar. Actual Budget y Goodbudget funcionan con sobres, y PocketGuard también los ofrece.",
+                            }),
+                            t({
+                                en: "Zero-based. Before the month starts, you give every unit of income a job until nothing is left to assign. EveryDollar is a zero-based monthly budget, and PocketGuard offers it too. YNAB works the same way in its own words: you decide what your money is for before you spend it.",
+                                es: "Base cero. Antes de que empiece el mes, le das un trabajo a cada unidad de tu ingreso hasta que no queda nada por asignar. EveryDollar es un presupuesto mensual de base cero, y PocketGuard también lo ofrece. YNAB funciona igual, en sus propias palabras: decides para qué es tu dinero antes de gastarlo.",
+                            }),
+                            t({
+                                en: "A limit with a pace. You set a limit per category, or one for the month, and log as you go. The app tells you what is left and where your pace ends. Outlayr works this way, carries over what you did not spend, and says how far short this pace ends or the day the money ran out.",
+                                es: "Un límite con ritmo. Pones un límite por categoría, o uno para el mes, y registras sobre la marcha. La app te dice cuánto queda y a dónde te lleva tu ritmo. Outlayr funciona así, acumula lo que no gastaste y te dice cuánto te va a faltar a este ritmo o el día en que se acabó el dinero.",
+                            }),
+                            t({
+                                en: "If you want to plan every dollar ahead, start zero-based. If you want to stop overspending in a few categories without planning the whole month, a limit with a pace takes less upkeep. Envelopes suit people who think in cash, even when they pay by card.",
+                                es: "Si quieres planear cada peso por adelantado, empieza con base cero. Si quieres dejar de pasarte en unas pocas categorías sin planear todo el mes, un límite con ritmo pide menos trabajo. Los sobres son para quien piensa en efectivo, aunque pague con tarjeta.",
+                            }),
+                        ],
+                        id: "kinds",
+                        title: t({
+                            en: "Which kind of budget app fits you",
+                            es: "Qué tipo de app de presupuesto te conviene",
+                        }),
+                    },
+                ],
+                picked: [
+                    t({
+                        en: "Each app here plans what you will spend, not only what you spent, and each one fits a different way to budget, from envelopes to zero-based to a limit with a pace. They are in alphabetical order, not ranked.",
+                        es: "Cada app de esta lista planea lo que vas a gastar, no solo lo que ya gastaste, y cada una sirve para una forma distinta de presupuestar, de los sobres a la base cero o a un límite con ritmo. Van en orden alfabético, no por puesto.",
+                    }),
+                    LIST_PICKED_FACTS,
+                    LIST_PICKED_OURS,
+                ],
+                related: [
+                    "/guides/budget-planner",
+                    "/guides/ynab-alternatives",
+                    "/compare/goodbudget",
+                ] satisfies PageRef[],
+                sources: LIST_SOURCES,
+                title: t({
+                    en: "The best budget apps, by how you budget.",
+                    es: "Las mejores apps de presupuesto, según cómo presupuestas.",
                 }),
             },
             "best-expense-tracker-apps": {
@@ -2761,9 +4058,9 @@ const answers = {
                 ],
                 plateAlt: BUDGETS_SCREEN_ALT,
                 related: [
+                    "/guides/best-budget-apps",
                     "/tools/50-30-20-budget-calculator",
                     "/tools/installment-calculator",
-                    "/compare/ynab",
                 ] satisfies PageRef[],
                 steps: [
                     {
@@ -2793,64 +4090,427 @@ const answers = {
                     es: "Arma tu presupuesto y ve a dónde te lleva este ritmo.",
                 }),
             },
-            "mint-alternative": {
+            "how-to-track-expenses": {
                 facts: [
                     {
-                        label: t({ en: "Import", es: "Importa" }),
+                        label: t({ en: "Method", es: "Método" }),
                         text: t({
-                            en: "Your Mint CSV, with its date, description, amount, type, and category columns matched for you",
-                            es: "Tu CSV de Mint, con las columnas de fecha, descripción, monto, tipo y categoría asignadas solas",
+                            en: "A spreadsheet, an app, or cash envelopes",
+                            es: "Hoja de cálculo, app o sobres de efectivo",
                         }),
                     },
                     {
                         label: t({ en: "Categories", es: "Categorías" }),
+                        text: t({ en: "6 to 10 to start", es: "Entre 6 y 10 para empezar" }),
+                    },
+                    {
+                        label: t({ en: "When to log", es: "Cuándo anotar" }),
+                        text: t({ en: "The day you spend", es: "El mismo día del gasto" }),
+                    },
+                    {
+                        label: t({ en: "Review", es: "Revisión" }),
                         text: t({
-                            en: "Mint's category names are matched to yours by AI matching",
-                            es: "Los nombres de categoría de Mint se asignan a los tuyos con la asignación con IA",
+                            en: "10 minutes a week, and a close at month end",
+                            es: "10 minutos cada semana y un cierre al final del mes",
                         }),
                     },
                     {
-                        label: t({ en: "Duplicates", es: "Duplicados" }),
+                        label: t({ en: "More than one currency", es: "Varias monedas" }),
                         text: t({
-                            en: "Rows that look already imported are flagged before you save",
-                            es: "Las filas que parecen ya importadas se marcan antes de guardar",
+                            en: "Note the currency and the rate you paid at",
+                            es: "Anota la moneda y la tasa con la que pagaste",
                         }),
                     },
                     {
-                        label: t({ en: "Budgets", es: "Presupuestos" }),
-                        text: OUTLAYR.budgets,
+                        label: t({ en: "Template", es: "Plantilla" }),
+                        text: t({ en: "Free, in Excel or CSV", es: "Gratis, en Excel o en CSV" }),
                     },
+                ],
+                faq: [
                     {
-                        label: t({ en: "After", es: "Después" }),
-                        text: t({
-                            en: "Log new purchases by sentence, voice, or receipt",
-                            es: "Registra compras nuevas con una oración, con tu voz o con un recibo",
+                        answer: t({
+                            en: "The one you will use every day. If you spend the day at a computer, a spreadsheet; if you pay for most things from your phone, an app; if you pay mostly in cash, envelopes. You can also mix them: envelopes for groceries and a spreadsheet or an app for the rest.",
+                            es: "La que vas a usar todos los días. Si pasas el día en la computadora, una hoja de cálculo; si pagas casi todo desde el celular, una app; si pagas casi todo en efectivo, sobres. También puedes combinarlos: sobres para el supermercado y una hoja o una app para lo demás.",
+                        }),
+                        question: t({
+                            en: "What is the best way to track my expenses?",
+                            es: "¿Cuál es la mejor forma de llevar el control de mis gastos?",
                         }),
                     },
                     {
-                        label: t({ en: "Plans", es: "Planes" }),
+                        answer: t({
+                            en: "6 to 10 at first. With too many, every expense becomes a decision and it is easier to quit. Split a category only when it grows, like food into groceries and eating out.",
+                            es: "Entre 6 y 10 al principio. Con demasiadas, cada gasto se vuelve una decisión y es más fácil dejarlo. Divide una categoría solo cuando crezca, por ejemplo comida en supermercado y comidas fuera.",
+                        }),
+                        question: t({
+                            en: "How many expense categories should I use?",
+                            es: "¿Cuántas categorías de gastos debo usar?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "About 10 minutes a week, and a close at the end of the month. The weekly check lets you correct in time; the close tells you whether next month's plan needs to change.",
+                            es: "Unos 10 minutos cada semana y un cierre al final del mes. La revisión semanal te deja corregir a tiempo; el cierre te dice si el plan del mes siguiente tiene que cambiar.",
+                        }),
+                        question: t({
+                            en: "How often should I review my expenses?",
+                            es: "¿Cada cuánto debo revisar mis gastos?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Log each expense in the currency you paid in, with the rate you got that day. When you add up, convert everything to one main currency at each expense's rate. That way your totals do not change every time the rate moves.",
+                            es: "Anota cada gasto en la moneda en que pagaste y la tasa que usaste ese día. Al sumar, convierte todo a una moneda principal con la tasa de cada gasto. Así tus totales no cambian cada vez que la tasa se mueve.",
+                        }),
+                        question: t({
+                            en: "How do I track expenses in more than one currency?",
+                            es: "¿Cómo llevo el control si gasto en dólares y en bolívares o pesos?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. Our Excel template has a transactions sheet, a monthly summary for the currency you pick, budget against spending per category, and a chart. It also comes as a CSV.",
+                            es: "Sí. Nuestra plantilla en Excel trae una hoja de movimientos, un resumen del mes en la moneda que elijas, el presupuesto contra lo gastado por categoría y un gráfico. También viene en CSV.",
+                        }),
+                        question: t({
+                            en: "Is there a free expense tracking template?",
+                            es: "¿Hay una plantilla gratis para llevar el control de gastos?",
+                        }),
+                    },
+                ],
+                lead: t({
+                    en: "Tracking your expenses means writing down everything you pay for, grouping it by category, and comparing at the end of the month what you spent with what you meant to spend. You can do it in a spreadsheet, in an app, or with cash envelopes. The method matters less than the habit: log every day, even when it is a small amount.",
+                    es: "Llevar el control de tus gastos es anotar cada cosa que pagas, agruparla por categoría y comparar al final del mes lo que gastaste con lo que querías gastar. Se puede hacer con una hoja de cálculo, con una app o con sobres de efectivo. El método importa menos que la constancia: anotar todos los días, aunque sea poco.",
+                }),
+                meta: {
+                    description: t({
+                        en: "Three ways to track your expenses: a spreadsheet, an app, or cash envelopes. How to pick categories, log every expense, and review your month.",
+                        es: "Tres formas de llevar el control de gastos: hoja de cálculo, app o sobres de efectivo. Cómo elegir categorías, anotar cada gasto y cerrar el mes.",
+                    }),
+                    title: t({
+                        en: "How to Track Your Expenses: 3 Methods That Work · Outlayr",
+                        es: "Cómo llevar el control de gastos personales · Outlayr",
+                    }),
+                },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "Spreadsheet. One row per expense, with the date, a note, the amount, the currency, and the category. A formula like SUMIFS adds up each category by month. Our free template already has those formulas, a monthly summary, and a chart.",
+                                es: "Hoja de cálculo. Una fila por gasto, con fecha, nota, monto, moneda y categoría. Una fórmula como SUMAR.SI.CONJUNTO suma cada categoría por mes. Nuestra plantilla gratis ya trae esas fórmulas, un resumen del mes y un gráfico.",
+                            }),
+                            t({
+                                en: "App. An app saves each expense in seconds and does the math for you. Some read receipts or understand what you say, and others connect to your bank. Before you pick one, check which countries it works in, whether it handles your currency, and what it costs after the trial.",
+                                es: "App. Una app guarda cada gasto en segundos y hace las sumas por ti. Algunas leen recibos o entienden lo que dictas, y otras se conectan a tu banco. Antes de elegir, revisa en qué países funciona, si maneja tu moneda y cuánto cuesta después de la prueba.",
+                            }),
+                            t({
+                                en: "Cash envelopes. At the start of the month you put each category's cash in its own envelope. When an envelope is empty, that spending is over until next month. It works well for groceries and going out, and badly for subscriptions and card payments. Some budget apps copy the method with virtual envelopes.",
+                                es: "Sobres de efectivo. Al inicio del mes separas el efectivo de cada categoría en un sobre. Cuando un sobre se vacía, se acabó ese gasto hasta el mes siguiente. Funciona muy bien con el supermercado y las salidas, y mal con las suscripciones y los pagos con tarjeta. Algunas apps de presupuesto copian el método con sobres virtuales.",
+                            }),
+                        ],
+                        id: "methods",
+                        title: t({ en: "Three methods, compared", es: "Tres métodos, comparados" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "If you do not know how much to give each category, the 50/30/20 rule is a starting point: 50% for needs, 30% for wants, and 20% for savings or debt. Our calculator does the math with your income, per week, every two weeks, or per month. After a month of logging, adjust the split to what you actually spend.",
+                                es: "Si no sabes cuánto asignar a cada categoría, la regla 50/30/20 es un punto de partida: 50% para necesidades, 30% para gustos y 20% para ahorro o deudas. Nuestra calculadora hace la cuenta con tu ingreso, por semana, por quincena o por mes. Después de un mes de registros, ajusta los porcentajes a lo que de verdad gastas.",
+                            }),
+                        ],
+                        id: "split",
+                        title: t({ en: "How to split what you earn", es: "Cómo repartir lo que ganas" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "If you are paid in dollars and spend in pesos or euros, log each expense in the currency you paid in, with the rate you got. To add up the month, convert everything to one currency at each day's rate, not today's. That way an expense from three weeks ago does not change when the rate moves.",
+                                es: "Si te pagan en dólares y gastas en bolívares o en pesos, anota cada gasto en la moneda en que pagaste y la tasa que usaste. Para sumar el mes, conviértelo todo a una sola moneda con la tasa de cada día, no con la de hoy. Así un gasto de hace tres semanas no cambia cuando la tasa se mueve.",
+                            }),
+                        ],
+                        id: "currencies",
+                        title: t({
+                            en: "If you spend in more than one currency",
+                            es: "Si gastas en más de una moneda",
+                        }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Logging only the big expenses. The small ones add up to more than you think.",
+                                es: "Anotar solo los gastos grandes. Los pequeños suman más de lo que parece.",
+                            }),
+                            t({
+                                en: "Forgetting cash and bank fees, and starting with too many categories.",
+                                es: "Olvidar el efectivo y las comisiones del banco, y empezar con demasiadas categorías.",
+                            }),
+                            t({
+                                en: "Checking only once the money has run out, or quitting after a bad month. An expensive month is information too.",
+                                es: "Revisar solo cuando ya se acabó el dinero, o dejarlo después de un mal mes. Un mes caro también es información.",
+                            }),
+                        ],
+                        id: "mistakes",
+                        title: t({ en: "Common mistakes", es: "Errores comunes" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Outlayr, the app we make, logs an expense when you type a sentence, say it, or scan the receipt, in 165 currencies at the rate of the day. It is free to start on Android, with iPhone coming soon. If you already keep a spreadsheet, you can import it as a CSV.",
+                                es: "Outlayr, la app que hacemos nosotros, registra un gasto cuando escribes una oración, la dictas o escaneas el recibo, en 165 monedas con la tasa del día. Es gratis para empezar en Android y pronto llegará a iPhone. Si ya llevas una hoja de cálculo, puedes importarla como CSV.",
+                            }),
+                        ],
+                        id: "app",
+                        title: t({ en: "If you would rather use an app", es: "Si prefieres una app" }),
+                    },
+                ],
+                related: [
+                    "/guides/expense-tracker-template",
+                    "/tools/50-30-20-budget-calculator",
+                    "/guides/budget-planner",
+                ] satisfies PageRef[],
+                steps: [
+                    {
                         text: t({
-                            en: "Rows whose category matches one of yours by name import on any plan. Outlayr Pro matches the rest with AI, up to 5,000 rows a file",
-                            es: "Las filas cuya categoría coincide por nombre con una de las tuyas se importan en cualquier plan. Outlayr Pro asigna el resto con IA, hasta 5,000 filas por archivo",
+                            en: "A spreadsheet if you like seeing the formulas, an app if you want to log from your phone in seconds, envelopes if you pay for almost everything in cash.",
+                            es: "Hoja de cálculo si te gusta ver las fórmulas, app si quieres anotar desde el celular en segundos, sobres si pagas casi todo en efectivo.",
+                        }),
+                        title: t({ en: "Pick a method", es: "Elige un método" }),
+                    },
+                    {
+                        text: t({
+                            en: "Start with a few: housing, groceries, eating out, transport, utilities, health, subscriptions, and other. You can split them later.",
+                            es: "Empieza con pocas: vivienda, supermercado, comidas fuera, transporte, servicios, salud, suscripciones y otros. Podrás dividirlas después.",
+                        }),
+                        title: t({ en: "Set your categories", es: "Define tus categorías" }),
+                    },
+                    {
+                        text: t({
+                            en: "Include the coffee, the tip, and the bank fees. Small things are what you forget.",
+                            es: "Incluye el café, la propina y las comisiones del banco. Lo pequeño es lo que más se olvida.",
+                        }),
+                        title: t({ en: "Log every expense the same day", es: "Anota cada gasto el mismo día" }),
+                    },
+                    {
+                        text: t({
+                            en: "Rent, utilities, and subscriptions repeat. Write them down once with the day they charge, so none of them surprises you.",
+                            es: "La renta, los servicios y las suscripciones se repiten. Anótalos una vez con su día de cobro para que no te sorprendan.",
+                        }),
+                        title: t({ en: "Log fixed costs once", es: "Registra lo fijo una sola vez" }),
+                    },
+                    {
+                        text: t({
+                            en: "Each week, look at what you have spent per category and compare it with the week before. At month end, add up each category, compare it with your plan, and adjust next month's.",
+                            es: "Cada semana, mira cuánto llevas por categoría y compáralo con la semana anterior. Al final del mes, suma cada categoría, compárala con tu plan y ajusta el del mes siguiente.",
+                        }),
+                        title: t({ en: "Review weekly, close monthly", es: "Revisa cada semana, cierra cada mes" }),
+                    },
+                ],
+                table: {
+                    caption: t({
+                        en: "You can mix them: envelopes for groceries, and a spreadsheet or an app for the rest.",
+                        es: "Puedes combinarlos: sobres para el supermercado, y una hoja de cálculo o una app para lo demás.",
+                    }),
+                    columns: [
+                        t({ en: "Suits you if", es: "Te conviene si" }),
+                        t({ en: "What it asks of you", es: "Lo que pide de ti" }),
+                    ],
+                    corner: t({ en: "Method", es: "Método" }),
+                    rows: [
+                        {
+                            cells: [
+                                t({
+                                    en: "You want full control, for free, and like seeing the formulas",
+                                    es: "Quieres control total, gratis, y te gusta ver las fórmulas",
+                                }),
+                                t({
+                                    en: "Opening it every day and typing each expense",
+                                    es: "Abrirla cada día y escribir cada gasto",
+                                }),
+                            ],
+                            label: t({ en: "Spreadsheet", es: "Hoja de cálculo" }),
+                        },
+                        {
+                            cells: [
+                                t({
+                                    en: "You want to log in seconds from your phone and have it add up for you",
+                                    es: "Quieres anotar en segundos desde el celular y que sume sola",
+                                }),
+                                t({
+                                    en: "Picking an app and, for some, paying a subscription",
+                                    es: "Elegir una app y, en algunas, pagar una suscripción",
+                                }),
+                            ],
+                            label: t({ en: "App", es: "App" }),
+                        },
+                        {
+                            cells: [
+                                t({
+                                    en: "You pay for almost everything in cash and want a cap you cannot break",
+                                    es: "Pagas casi todo en efectivo y quieres un tope que no se pueda pasar",
+                                }),
+                                t({
+                                    en: "Taking out the cash and splitting it into envelopes. It does not work for card payments",
+                                    es: "Retirar el efectivo y separarlo en sobres. No sirve para pagos con tarjeta",
+                                }),
+                            ],
+                            label: t({ en: "Cash envelopes", es: "Sobres de efectivo" }),
+                        },
+                    ],
+                },
+                title: t({
+                    en: "How to track your personal expenses.",
+                    es: "Cómo llevar el control de tus gastos personales.",
+                }),
+            },
+            "mint-alternative": {
+                apps: [
+                    {
+                        facts: [
+                            ...COPILOT_FACTS,
+                            {
+                                label: LABELS.watch,
+                                source: "https://help.copilot.money/en/articles/10262766-investment-account-limitations",
+                                text: t({
+                                    en: "No CSV or XLS import, so your Mint history cannot come in",
+                                    es: "No importa CSV ni XLS, así que tu historial de Mint no puede entrar",
+                                }),
+                            },
+                        ],
+                        name: "Copilot Money",
+                        slug: "copilot",
+                        summary: t(RIVALS.copilot),
+                    },
+                    {
+                        facts: [
+                            ...EVERYDOLLAR_FACTS,
+                            {
+                                label: LABELS.watch,
+                                source: "https://everydollar.help.ramseysolutions.com/hc/en-us/articles/360040571391-Export-Tracked-Transactions",
+                                text: t({
+                                    en: "It imports no files, so your Mint history cannot come in, and outside the US you get only the free web budget",
+                                    es: "No importa archivos, así que tu historial de Mint no puede entrar, y fuera de EE. UU. solo tienes el presupuesto gratis en la web",
+                                }),
+                            },
+                        ],
+                        name: "EveryDollar",
+                        slug: "everydollar",
+                        summary: t(RIVALS.everydollar),
+                    },
+                    GOODBUDGET,
+                    MONARCH,
+                    {
+                        facts: [
+                            ...OUTLAYR_FACTS,
+                            {
+                                label: LABELS.watch,
+                                text: t({
+                                    en: "Android only until the iPhone app is out, and no web app. A Mint CSV comes in without accounts, tags, or splits",
+                                    es: "Solo en Android hasta que salga la app para iPhone, y sin app web. Un CSV de Mint entra sin cuentas, etiquetas ni divisiones",
+                                }),
+                            },
+                        ],
+                        name: "Outlayr",
+                        slug: "outlayr",
+                        summary: t(OUTLAYR_LEAD),
+                    },
+                    POCKETGUARD,
+                    ROCKET_MONEY,
+                    YNAB,
+                ],
+                facts: [
+                    {
+                        label: "Copilot Money",
+                        text: t({
+                            en: "Best if you live in the US, use an iPhone, iPad, or Mac, and want linked accounts to sync on their own",
+                            es: "Ideal si vives en EE. UU., usas iPhone, iPad o Mac y quieres que tus cuentas vinculadas se sincronicen solas",
+                        }),
+                    },
+                    {
+                        label: "EveryDollar",
+                        text: t({
+                            en: "Best if you live in the US and want a zero-based monthly budget with a free version",
+                            es: "Ideal si vives en EE. UU. y quieres un presupuesto mensual de base cero con versión gratis",
+                        }),
+                    },
+                    {
+                        label: "Goodbudget",
+                        text: t({
+                            en: "Best if you want envelopes by hand on the web, Android, and iPhone, and can bring a CSV",
+                            es: "Ideal si quieres sobres a mano en la web, Android y iPhone, y puedes traer un CSV",
+                        }),
+                    },
+                    {
+                        label: "Monarch Money",
+                        text: t({
+                            en: "Best if you live in the US or Canada and want net worth, budgets, reports, and goals from linked accounts",
+                            es: "Ideal si vives en EE. UU. o Canadá y quieres patrimonio, presupuestos, reportes y metas desde cuentas vinculadas",
+                        }),
+                    },
+                    {
+                        label: "Outlayr",
+                        text: t({
+                            en: "Best if you want to keep your Mint history from its CSV and log new purchases by sentence, voice, or receipt",
+                            es: "Ideal si quieres conservar tu historial de Mint desde su CSV y registrar compras nuevas con una oración, tu voz o un recibo",
+                        }),
+                    },
+                    {
+                        label: "PocketGuard",
+                        text: t({
+                            en: "Best if you live in the US or Canada, want linked accounts to sync, and would rather pay once",
+                            es: "Ideal si vives en EE. UU. o Canadá, quieres que tus cuentas vinculadas se sincronicen y prefieres pagar una sola vez",
+                        }),
+                    },
+                    {
+                        label: "Rocket Money",
+                        text: t({
+                            en: "Best if you live in the US and want subscriptions, bills, and a budget from linked accounts, starting free",
+                            es: "Ideal si vives en EE. UU. y quieres suscripciones, facturas y presupuesto desde cuentas vinculadas, empezando gratis",
+                        }),
+                    },
+                    {
+                        label: "YNAB",
+                        text: t({
+                            en: "Best if you want to decide what your money is for before you spend it, with bank import in the US, Canada, the UK, or the EU",
+                            es: "Ideal si quieres decidir para qué es tu dinero antes de gastarlo, con importación bancaria en EE. UU., Canadá, Reino Unido o la UE",
                         }),
                     },
                 ],
                 faq: [
                     {
                         answer: t({
-                            en: "Intuit says Mint has been reimagined on Credit Karma. If you want a budget app instead, Outlayr imports the CSV you exported from Mint.",
-                            es: "Intuit dice que Mint ahora vive en Credit Karma. Si prefieres una app de presupuesto, Outlayr importa el CSV que exportaste de Mint.",
+                            en: "Intuit says Mint has been reimagined on Credit Karma. If you want a budget app instead, the eight on this page are options, and Outlayr imports the CSV you exported from Mint.",
+                            es: "Intuit dice que Mint ahora vive en Credit Karma. Si prefieres una app de presupuesto, las ocho de esta página son opciones, y Outlayr importa el CSV que exportaste de Mint.",
                         }),
                         question: t({ en: "What replaced Mint?", es: "¿Qué reemplazó a Mint?" }),
                     },
                     {
                         answer: t({
-                            en: "Yes, if you exported a CSV from Mint. Outlayr reads its date, description, amount, type, and category columns, links each Mint category that matches one of yours by name, and flags rows that look already imported before you save. With Outlayr Pro, the other Mint category names are matched to yours with AI, up to 5,000 rows a file, so split a longer export by year.",
-                            es: "Sí, si exportaste un CSV de Mint. Outlayr lee sus columnas de fecha, descripción, monto, tipo y categoría, vincula cada categoría de Mint que coincide por nombre con una de las tuyas y marca las filas que parecen ya importadas antes de guardar. Con Outlayr Pro, los demás nombres de categoría de Mint se asignan a los tuyos con IA, hasta 5,000 filas por archivo, así que divide una exportación más larga por año.",
+                            en: "It depends on what you used Mint for. For linked accounts that sync on their own, Monarch works in the US and Canada, and Copilot and Rocket Money in the US. For a budget you run yourself, EveryDollar is zero-based, Goodbudget uses envelopes, and YNAB asks you to decide what money is for before you spend it. Outlayr imports your Mint CSV and logs new purchases by sentence, voice, or receipt.",
+                            es: "Depende de para qué usabas Mint. Para cuentas vinculadas que se sincronizan solas, Monarch funciona en EE. UU. y Canadá, y Copilot y Rocket Money en EE. UU. Para un presupuesto que llevas tú, EveryDollar es de base cero, Goodbudget usa sobres y YNAB te pide decidir para qué es tu dinero antes de gastarlo. Outlayr importa tu CSV de Mint y registra compras nuevas con una oración, tu voz o un recibo.",
+                        }),
+                        question: t({
+                            en: "What is the best Mint alternative?",
+                            es: "¿Cuál es la mejor alternativa a Mint?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes, if you exported a CSV from Mint. Outlayr links each Mint category that matches one of yours by name, and flags rows that look already imported before you save. With Outlayr Pro, the other Mint category names are matched to yours with AI, up to 5,000 rows a file, so split a longer export by year.",
+                            es: "Sí, si exportaste un CSV de Mint. Outlayr vincula cada categoría de Mint que coincide por nombre con una de las tuyas y marca las filas que parecen ya importadas antes de guardar. Con Outlayr Pro, los demás nombres de categoría de Mint se asignan a los tuyos con IA, hasta 5,000 filas por archivo, así que divide una exportación más larga por año.",
                         }),
                         question: t({
                             en: "Can I import my Mint data into Outlayr?",
                             es: "¿Puedo importar mis datos de Mint a Outlayr?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Goodbudget, Monarch on the web, Outlayr, PocketGuard, and YNAB. Copilot imports no CSV or XLS files, and EveryDollar imports no files. Rocket Money's site does not say.",
+                            es: "Goodbudget, Monarch en la web, Outlayr, PocketGuard y YNAB. Copilot no importa archivos CSV ni XLS, y EveryDollar no importa archivos. El sitio de Rocket Money no lo dice.",
+                        }),
+                        question: t({
+                            en: "Which Mint alternatives can import a CSV?",
+                            es: "¿Qué alternativas a Mint pueden importar un CSV?",
                         }),
                     },
                     {
@@ -2865,28 +4525,53 @@ const answers = {
                     },
                 ],
                 lead: t({
-                    en: "Mint has been reimagined on Credit Karma, in Intuit's words. Outlayr imports the CSV you exported from Mint, then keeps your budgets and spending going on your phone.",
-                    es: "Mint ahora vive en Credit Karma, según Intuit. Outlayr importa el CSV que exportaste de Mint y sigue con tus presupuestos y tus gastos en tu celular.",
+                    en: "A Mint alternative is an app that takes over the budgets and spending you kept in Mint, which Intuit says has been reimagined on Credit Karma. Eight follow, each best for something different: Copilot Money, EveryDollar, Goodbudget, Monarch Money, Outlayr, PocketGuard, Rocket Money, and YNAB. Outlayr is ours; the other seven are not, and it imports the CSV you exported from Mint.",
+                    es: "Una alternativa a Mint es una app que se queda con los presupuestos y los gastos que llevabas en Mint, que según Intuit ahora vive en Credit Karma. Aquí van ocho, cada una mejor para algo distinto: Copilot Money, EveryDollar, Goodbudget, Monarch Money, Outlayr, PocketGuard, Rocket Money y YNAB. Outlayr es nuestra; las otras siete no, y Outlayr importa el CSV que exportaste de Mint.",
                 }),
                 meta: {
                     description: t({
-                        en: "Mint now lives on Credit Karma. Outlayr imports the CSV you exported from Mint and keeps your budgets and spending going on your phone.",
-                        es: "Mint ahora vive en Credit Karma, según Intuit. Outlayr importa el CSV que exportaste de Mint y sigue con tus presupuestos y tus gastos en tu celular.",
+                        en: "Mint now lives on Credit Karma. Eight apps to move to, from Monarch and Copilot to YNAB and Goodbudget, and how to import your Mint CSV into Outlayr.",
+                        es: "Mint ahora vive en Credit Karma. Ocho apps a las que puedes cambiarte, de Monarch y Copilot a YNAB y Goodbudget, y cómo importar tu CSV de Mint a Outlayr.",
                     }),
                     title: t({
-                        en: "Mint Alternative: Import Your Mint CSV · Outlayr",
-                        es: "Alternativa a Mint: importa tu CSV de Mint · Outlayr",
+                        en: "Mint Alternatives in 2026: 8 Apps Compared · Outlayr",
+                        es: "Alternativas a Mint en 2026: 8 apps comparadas · Outlayr",
                     }),
                 },
-                plateAlt: t({
-                    en: "Outlayr Log with a $42.00 Costco purchase at the top and the entries from earlier days below.",
-                    es: "Registro de Outlayr con una compra de $42.00 en Costco arriba y los registros de días anteriores abajo.",
-                }),
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "Outlayr needs a date, an amount, and a category or description column, with commas between columns. Each Mint category that matches one of yours by name links on any plan. With Pro, AI matches the other category names to yours, up to 5,000 rows and 2 MB a file, and only merchant and category names are sent, never amounts, dates, or the file.",
+                                es: "Outlayr necesita una columna de fecha, una de monto y una de categoría o descripción, con comas entre columnas. Cada categoría de Mint que coincide por nombre con una de las tuyas se vincula en cualquier plan. Con Pro, la IA asigna los demás nombres de categoría a los tuyos, hasta 5,000 filas y 2 MB por archivo, y solo se envían nombres de comercios y de categorías, nunca montos, fechas ni el archivo.",
+                            }),
+                            t({
+                                en: "A Type column with words like debit and credit, or expense and income, keeps each row on its side. Without one, amounts come in positive and a row follows its category's income setting. Accounts, tags, and splits do not come in, so imported rows have no account.",
+                                es: "Una columna Type con palabras como debit y credit, o expense e income, mantiene cada fila como gasto o ingreso. Sin ella, los montos entran en positivo y cada fila sigue lo que diga su categoría. Las cuentas, las etiquetas y las divisiones no entran, así que las filas importadas no tienen cuenta.",
+                            }),
+                            t({
+                                en: "Rows that look already imported are flagged before you save, and rows Outlayr cannot read or match to a category are listed as skipped, with the reason.",
+                                es: "Las filas que parecen ya importadas se marcan antes de guardar, y las que Outlayr no puede leer ni asignar a una categoría aparecen como omitidas, con el motivo.",
+                            }),
+                        ],
+                        id: "mint-csv",
+                        title: t({ en: "What comes in from your Mint CSV", es: "Qué entra desde tu CSV de Mint" }),
+                    },
+                ],
+                picked: [
+                    t({
+                        en: "Each app here is one people move to from Mint, and each one fits a different reason, from linked accounts to a budget you run yourself to keeping the history in your Mint CSV. They are in alphabetical order, not ranked.",
+                        es: "Cada app de esta lista es una a la que la gente se cambia desde Mint, y cada una sirve para algo distinto, de las cuentas vinculadas a un presupuesto que llevas tú o a conservar el historial de tu CSV de Mint. Van en orden alfabético, no por puesto.",
+                    }),
+                    LIST_PICKED_FACTS,
+                    LIST_PICKED_OURS,
+                ],
                 related: [
                     "/guides/expense-tracker-template",
                     "/compare/monarch",
-                    "/guides/best-expense-tracker-apps",
+                    "/guides/best-budget-apps",
                 ] satisfies PageRef[],
+                sources: LIST_SOURCES,
                 steps: [
                     {
                         text: t({
@@ -2911,8 +4596,8 @@ const answers = {
                     },
                 ],
                 title: t({
-                    en: "A Mint alternative that takes your Mint CSV.",
-                    es: "Una alternativa a Mint que importa tu CSV de Mint.",
+                    en: "Mint alternatives, and how to bring your Mint CSV.",
+                    es: "Alternativas a Mint, y cómo traer tu CSV de Mint.",
                 }),
             },
             "multi-currency-expense-tracker": {
@@ -3270,7 +4955,7 @@ const answers = {
                 }),
                 related: [
                     "/guides/voice-expense-tracker",
-                    "/guides/best-expense-tracker-apps",
+                    "/guides/ai-expense-tracker",
                     "/guides/budget-planner",
                 ] satisfies PageRef[],
                 steps: [
@@ -3454,14 +5139,37 @@ const answers = {
                 }),
             },
             "expense-tracker-template": {
-                download: {
-                    href: t({
-                        en: "/templates/expense-tracker-template.csv",
-                        es: "/templates/plantilla-control-de-gastos.csv",
-                    }),
-                    label: t({ en: "Download the template (CSV)", es: "Descargar la plantilla (CSV)" }),
-                },
+                downloads: [
+                    {
+                        href: t({
+                            en: "/templates/expense-tracker-template.xlsx",
+                            es: "/templates/plantilla-control-de-gastos.xlsx",
+                        }),
+                        label: t({ en: "Download for Excel (.xlsx)", es: "Descargar para Excel (.xlsx)" }),
+                    },
+                    {
+                        href: t({
+                            en: "/templates/expense-tracker-template.csv",
+                            es: "/templates/plantilla-control-de-gastos.csv",
+                        }),
+                        label: t({ en: "Download the CSV", es: "Descargar el CSV" }),
+                    },
+                ],
                 facts: [
+                    {
+                        label: t({ en: "Sheets", es: "Hojas" }),
+                        text: t({
+                            en: "Transactions, Summary, and How to import, in an Excel workbook. The CSV is the Transactions sheet on its own",
+                            es: "Movimientos, Resumen y Cómo importar, en un libro de Excel. El CSV es solo la hoja Movimientos",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Summary", es: "Resumen" }),
+                        text: t({
+                            en: "Income, spending, and net for the month and currency you pick, spending against a budget per category, and a chart",
+                            es: "Ingresos, gastos y neto del mes y la moneda que elijas, lo gastado contra un presupuesto por categoría y un gráfico",
+                        }),
+                    },
                     {
                         label: t({ en: "Columns", es: "Columnas" }),
                         text: t({
@@ -3494,8 +5202,8 @@ const answers = {
                     {
                         label: t({ en: "Import", es: "Importa" }),
                         text: t({
-                            en: "In Settings, under Import data, as a CSV file",
-                            es: "En Configuración, en Importar datos, como archivo CSV",
+                            en: "In Settings, under Import data, as a CSV file. From the workbook, save the Transactions sheet as CSV first",
+                            es: "En Configuración, en Importar datos, como archivo CSV. Desde el libro, guarda antes la hoja Movimientos como CSV",
                         }),
                     },
                     {
@@ -3509,8 +5217,8 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "Yes. Download it and use it in any spreadsheet app for as long as you like. Importing it into Outlayr is free too for every row whose category matches one of yours by name; the English file uses the categories a new Outlayr ledger starts with. Outlayr Pro matches other category names to yours with AI.",
-                            es: "Sí. Descárgala y úsala en cualquier hoja de cálculo el tiempo que quieras. Importarla a Outlayr también es gratis para cada fila cuya categoría coincide por nombre con una de las tuyas. Outlayr Pro asigna los demás nombres de categoría a los tuyos con IA.",
+                            en: "Yes, the Excel workbook and the CSV. Use them in any spreadsheet app for as long as you like. Importing into Outlayr is free too for every row whose category matches one of yours by name; the English file uses the categories a new Outlayr ledger starts with. Outlayr Pro matches other category names to yours with AI.",
+                            es: "Sí, tanto el libro de Excel como el CSV. Úsalos en cualquier hoja de cálculo el tiempo que quieras. Importarlos a Outlayr también es gratis para cada fila cuya categoría coincide por nombre con una de las tuyas. Outlayr Pro asigna los demás nombres de categoría a los tuyos con IA.",
                         }),
                         question: t({ en: "Is the template free?", es: "¿La plantilla es gratis?" }),
                     },
@@ -3526,6 +5234,26 @@ const answers = {
                     },
                     {
                         answer: t({
+                            en: "No. Outlayr imports CSV files only. Open the Transactions sheet and save it as CSV UTF-8, which Excel writes for that sheet alone, then import that file.",
+                            es: "No. Outlayr solo importa archivos CSV. Abre la hoja Movimientos y guárdala como CSV UTF-8, que Excel escribe solo para esa hoja, y luego importa ese archivo.",
+                        }),
+                        question: t({
+                            en: "Can I import the Excel file directly?",
+                            es: "¿Puedo importar el archivo de Excel directamente?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "No. Only the rows on Transactions come in. Set your budgets again in Outlayr on Budgets, where it also shows where your pace ends.",
+                            es: "No. Solo entran las filas de Movimientos. Vuelve a poner tus presupuestos en Outlayr, en Presupuestos, donde además te muestra a dónde te lleva tu ritmo.",
+                        }),
+                        question: t({
+                            en: "Do my budgets import too?",
+                            es: "¿Mis presupuestos también se importan?",
+                        }),
+                    },
+                    {
+                        answer: t({
                             en: "It is listed as skipped before anything is saved, with the reason: an unreadable date or amount, or no matching category. Rows that look already imported are flagged too, so you can leave them out.",
                             es: "Aparece como omitida antes de guardar, con el motivo: una fecha o un monto ilegible, o sin categoría coincidente. Las filas que parecen ya importadas también se marcan, para que las dejes fuera.",
                         }),
@@ -3533,22 +5261,22 @@ const answers = {
                     },
                 ],
                 lead: t({
-                    en: "A free CSV template for Excel, Numbers, and Google Sheets, with the columns Outlayr's CSV import reads. Track your spending in the spreadsheet, and bring the rows into Outlayr when you move to the app.",
-                    es: "Una plantilla CSV gratis para Excel, Numbers y Google Sheets, con las columnas que lee la importación de CSV de Outlayr. Lleva tus gastos en la hoja de cálculo y pasa las filas a Outlayr cuando te cambies a la app.",
+                    en: "An expense tracker template is a spreadsheet where you log each expense and it adds them up for you. This one is a free Excel workbook with a monthly summary, spending against a budget per category, and a chart, and also a plain CSV. Both have the columns Outlayr's CSV import reads, for when you move to the app.",
+                    es: "Una plantilla de control de gastos es una hoja de cálculo donde anotas cada gasto y ella hace las sumas por ti. Esta es un libro de Excel gratis con un resumen del mes, lo gastado contra un presupuesto por categoría y un gráfico, y también un CSV simple. Los dos tienen las columnas que lee la importación de CSV de Outlayr, para cuando te cambies a la app.",
                 }),
                 meta: {
                     description: t({
-                        en: "A free CSV expense tracker template for Excel, Numbers, and Google Sheets, with the columns Outlayr's CSV import reads when you move to the app.",
-                        es: "Plantilla CSV gratis para Excel, Numbers y Google Sheets, con las columnas que lee la importación de CSV de Outlayr cuando te cambies a la app.",
+                        en: "A free Excel expense tracker with a monthly summary for the currency you pick, spending against a budget by category, and a chart. Also as a CSV.",
+                        es: "Plantilla de control de gastos en Excel gratis: resumen del mes por moneda, lo gastado contra un presupuesto por categoría y un gráfico. También en CSV.",
                     }),
                     title: t({
-                        en: "Expense Tracker Template for Excel and Google Sheets",
-                        es: "Plantilla de control de gastos para Excel (CSV) · Outlayr",
+                        en: "Free Expense Tracker Template for Excel (2026) · Outlayr",
+                        es: "Plantilla de control de gastos en Excel gratis · Outlayr",
                     }),
                 },
                 related: [
                     "/guides/mint-alternative",
-                    "/guides/best-expense-tracker-apps",
+                    "/guides/how-to-track-expenses",
                     "/guides/multi-currency-expense-tracker",
                 ] satisfies PageRef[],
                 steps: [
@@ -3561,8 +5289,8 @@ const answers = {
                     },
                     {
                         text: t({
-                            en: "Keep commas between columns, and save the file to Files or iCloud Drive on your iPhone. On Android, save it to Downloads or Google Drive.",
-                            es: "Deja las comas entre columnas y guarda el archivo en Archivos o iCloud Drive en tu iPhone. En Android, guárdalo en Descargas o en Google Drive.",
+                            en: "From the Excel workbook, save only the Transactions sheet as CSV UTF-8. Keep commas between columns, and save the file to Files or iCloud Drive on your iPhone. On Android, save it to Downloads or Google Drive.",
+                            es: "Desde el libro de Excel, guarda solo la hoja Movimientos como CSV UTF-8. Deja las comas entre columnas y guarda el archivo en Archivos o iCloud Drive en tu iPhone. En Android, guárdalo en Descargas o en Google Drive.",
                         }),
                         title: t({ en: "Save it as a CSV", es: "Guárdala como CSV" }),
                     },
@@ -3574,9 +5302,34 @@ const answers = {
                         title: t({ en: "Import it in Outlayr", es: "Impórtala en Outlayr" }),
                     },
                 ],
+                table: {
+                    caption: t({
+                        en: "The Summary sheet with the sample rows, for October 2026 in US dollars: 3,200.00 income, 1,776.67 spent, 1,423.33 net. Type a budget next to each category and Left fills in. Change the month or the currency at the top of the sheet.",
+                        es: "La hoja Resumen con las filas de ejemplo, para octubre de 2026 en dólares: 1,500.00 de ingresos, 580.59 gastado y 919.41 neto. Salud y Restaurantes quedan en 0.00 porque se pagaron en bolívares y en pesos. Escribe un presupuesto junto a cada categoría y Disponible se llena solo. Cambia el mes o la moneda arriba de la hoja.",
+                    }),
+                    columns: [t({ en: "Spent", es: "Gastado" })],
+                    corner: t({ en: "Category", es: "Categoría" }),
+                    rows: [
+                        { cells: [t({ en: "1,450.00", es: "450.00" })], label: t({ en: "Rent", es: "Renta" }) },
+                        {
+                            cells: [t({ en: "142.18", es: "85.40" })],
+                            label: t({ en: "Groceries", es: "Supermercado" }),
+                        },
+                        { cells: [t({ en: "48.20", es: "0.00" })], label: t({ en: "Fuel", es: "Salud" }) },
+                        { cells: [t({ en: "96.30", es: "38.20" })], label: t({ en: "Utilities", es: "Servicios" }) },
+                        {
+                            cells: [t({ en: "24.50", es: "0.00" })],
+                            label: t({ en: "Dining Out", es: "Restaurantes" }),
+                        },
+                        {
+                            cells: [t({ en: "15.49", es: "6.99" })],
+                            label: t({ en: "Entertainment", es: "Entretenimiento" }),
+                        },
+                    ],
+                },
                 title: t({
-                    en: "An expense tracker template that Outlayr can import.",
-                    es: "Plantilla de control de gastos en Excel que Outlayr puede importar.",
+                    en: "Free expense tracker template for Excel.",
+                    es: "Plantilla de control de gastos en Excel, gratis.",
                 }),
             },
             "voice-expense-tracker": {
@@ -3684,7 +5437,7 @@ const answers = {
                 }),
                 related: [
                     "/guides/receipt-scanner",
-                    "/guides/best-expense-tracker-apps",
+                    "/guides/ai-expense-tracker",
                     "/guides/apple-pay-expense-tracker",
                 ] satisfies PageRef[],
                 steps: [
@@ -3715,6 +5468,203 @@ const answers = {
                     es: "Dicta un gasto y Outlayr lo registra.",
                 }),
             },
+            "ynab-alternatives": {
+                apps: [
+                    ACTUAL,
+                    {
+                        facts: [
+                            ...COPILOT_FACTS,
+                            {
+                                label: LABELS.watch,
+                                source: "https://help.copilot.money/en/articles/10262766-investment-account-limitations",
+                                text: t({
+                                    en: "No CSV or XLS import, so your YNAB history cannot come in",
+                                    es: "No importa CSV ni XLS, así que tu historial de YNAB no puede entrar",
+                                }),
+                            },
+                        ],
+                        name: "Copilot Money",
+                        slug: "copilot",
+                        summary: t(RIVALS.copilot),
+                    },
+                    {
+                        facts: [
+                            ...EVERYDOLLAR_FACTS,
+                            {
+                                label: LABELS.watch,
+                                source: "https://everydollar.help.ramseysolutions.com/hc/en-us/articles/360040571391-Export-Tracked-Transactions",
+                                text: t({
+                                    en: "Outside the US you get only the free web budget, and CSV export is Premium, one month per file",
+                                    es: "Fuera de EE. UU. solo tienes el presupuesto gratis en la web, y exportar a CSV es de Premium, un mes por archivo",
+                                }),
+                            },
+                        ],
+                        name: "EveryDollar",
+                        slug: "everydollar",
+                        summary: t(RIVALS.everydollar),
+                    },
+                    GOODBUDGET,
+                    MONARCH,
+                    {
+                        facts: [
+                            ...OUTLAYR_FACTS,
+                            {
+                                label: LABELS.watch,
+                                text: t({
+                                    en: "Android only until the iPhone app is out, and no web app. A YNAB export comes in as a comma-separated CSV, without accounts or split lines",
+                                    es: "Solo en Android hasta que salga la app para iPhone, y sin app web. Una exportación de YNAB entra como CSV separado por comas, sin cuentas ni divisiones",
+                                }),
+                            },
+                        ],
+                        name: "Outlayr",
+                        slug: "outlayr",
+                        summary: t(OUTLAYR_LEAD),
+                    },
+                    POCKETGUARD,
+                ],
+                facts: [
+                    {
+                        label: "Actual Budget",
+                        text: t({
+                            en: "Best if you want free envelope budgeting on a computer, and to bring your YNAB plan with its YNAB importers",
+                            es: "Ideal si quieres presupuestar por sobres gratis en la computadora y traer tu plan de YNAB con sus importadores",
+                        }),
+                    },
+                    {
+                        label: "Copilot Money",
+                        text: t({
+                            en: "Best if you live in the US, use an iPhone, iPad, or Mac, and want linked accounts to sync on their own",
+                            es: "Ideal si vives en EE. UU., usas iPhone, iPad o Mac y quieres que tus cuentas vinculadas se sincronicen solas",
+                        }),
+                    },
+                    {
+                        label: "EveryDollar",
+                        text: t({
+                            en: "Best if you live in the US and want a zero-based monthly budget with a free version",
+                            es: "Ideal si vives en EE. UU. y quieres un presupuesto mensual de base cero con versión gratis",
+                        }),
+                    },
+                    {
+                        label: "Goodbudget",
+                        text: t({
+                            en: "Best if you want envelopes by hand on the web, Android, and iPhone",
+                            es: "Ideal si quieres sobres a mano en la web, Android y iPhone",
+                        }),
+                    },
+                    {
+                        label: "Monarch Money",
+                        text: t({
+                            en: "Best if you live in the US or Canada and want net worth, budgets, reports, and goals from linked accounts",
+                            es: "Ideal si vives en EE. UU. o Canadá y quieres patrimonio, presupuestos, reportes y metas desde cuentas vinculadas",
+                        }),
+                    },
+                    {
+                        label: "Outlayr",
+                        text: t({
+                            en: "Best if you spend in more than one currency and want to start free, logging by sentence, voice, or receipt",
+                            es: "Ideal si gastas en más de una moneda y quieres empezar gratis, registrando con una oración, tu voz o un recibo",
+                        }),
+                    },
+                    {
+                        label: "PocketGuard",
+                        text: t({
+                            en: "Best if you live in the US or Canada, want linked accounts to sync, and would rather pay once",
+                            es: "Ideal si vives en EE. UU. o Canadá, quieres que tus cuentas vinculadas se sincronicen y prefieres pagar una sola vez",
+                        }),
+                    },
+                ],
+                faq: [
+                    {
+                        answer: t({
+                            en: "It depends on what you want to keep. Actual Budget keeps envelope budgeting, free, and imports YNAB plans. EveryDollar keeps a zero-based monthly budget in the US. Goodbudget keeps envelopes on the web and both phones. Monarch and Copilot sync linked accounts in the US, and Monarch also in Canada. PocketGuard syncs linked accounts in the US and Canada and can be bought once. Outlayr starts free and logs by sentence, voice, or receipt in 165 currencies.",
+                            es: "Depende de lo que quieras conservar. Actual Budget conserva el presupuesto por sobres, gratis, e importa planes de YNAB. EveryDollar conserva un presupuesto mensual de base cero en EE. UU. Goodbudget conserva los sobres en la web y en los dos celulares. Monarch y Copilot sincronizan cuentas vinculadas en EE. UU., y Monarch también en Canadá. PocketGuard sincroniza cuentas vinculadas en EE. UU. y Canadá y se puede comprar en un solo pago. Outlayr empieza gratis y registra con una oración, tu voz o un recibo en 165 monedas.",
+                        }),
+                        question: t({
+                            en: "What is the best YNAB alternative?",
+                            es: "¿Cuál es la mejor alternativa a YNAB?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. Actual Budget is free software, though syncing devices needs a server. EveryDollar has a free version, Goodbudget a free plan with 20 envelopes, 1 account, and 1 year of history, and Outlayr a free plan with 2 accounts and 2 category budgets. Copilot, Monarch, and PocketGuard are paid after a trial.",
+                            es: "Sí. Actual Budget es software gratis, aunque sincronizar dispositivos requiere un servidor. EveryDollar tiene una versión gratis, Goodbudget un plan gratis con 20 sobres, 1 cuenta y 1 año de historial, y Outlayr un plan gratis con 2 cuentas y 2 presupuestos por categoría. Copilot, Monarch y PocketGuard son de pago después de una prueba.",
+                        }),
+                        question: t({
+                            en: "Is there a free YNAB alternative?",
+                            es: "¿Hay una alternativa gratis a YNAB?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Of these seven, Outlayr is the only one whose own site says it converts between currencies: 165 of them, each purchase at the rate from its day. Actual Budget offers an experimental fixed-rate rule. Goodbudget shows no currency symbols, Monarch shows everything as dollars, and Copilot is US dollars only. EveryDollar and PocketGuard do not say.",
+                            es: "De estas siete, Outlayr es la única cuyo propio sitio dice que convierte entre monedas: 165, cada compra con la tasa de su día. Actual Budget ofrece una regla experimental con tasa fija. Goodbudget no muestra símbolos de moneda, Monarch lo muestra todo en dólares y Copilot solo usa dólares estadounidenses. EveryDollar y PocketGuard no lo dicen.",
+                        }),
+                        question: t({
+                            en: "Which YNAB alternative handles more than one currency?",
+                            es: "¿Qué alternativa a YNAB maneja más de una moneda?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes, the transactions. Export your plan from YNAB's web app, then import the transactions file in Outlayr under Settings, Import data, CSV file. The date, the payee, and the category come in; accounts, splits, and targets do not. Save a tab-separated file as a comma CSV first.",
+                            es: "Sí, los movimientos. Exporta tu plan desde la app web de YNAB y luego importa el archivo de movimientos en Outlayr en Configuración, Importar datos, Archivo CSV. Entran la fecha, el beneficiario y la categoría; no entran las cuentas, las divisiones ni las metas. Si el archivo está separado por tabulaciones, guárdalo antes como CSV con comas.",
+                        }),
+                        question: t({
+                            en: "Can I move my YNAB history to Outlayr?",
+                            es: "¿Puedo pasar mi historial de YNAB a Outlayr?",
+                        }),
+                    },
+                    COST_FAQ,
+                ],
+                lead: t({
+                    en: "A YNAB alternative is a budget app you move to when YNAB's $109 a year, its one currency per plan, or its way of budgeting stops fitting. Seven follow, each best for something different: Actual Budget, Copilot Money, EveryDollar, Goodbudget, Monarch Money, Outlayr, and PocketGuard. Outlayr is ours; the other six are not.",
+                    es: "Una alternativa a YNAB es una app de presupuesto a la que te cambias cuando los US$109 al año de YNAB, su única moneda por plan o su forma de presupuestar dejan de servirte. Aquí van siete, cada una mejor para algo distinto: Actual Budget, Copilot Money, EveryDollar, Goodbudget, Monarch Money, Outlayr y PocketGuard. Outlayr es nuestra; las otras seis no.",
+                }),
+                meta: {
+                    description: t({
+                        en: "Actual Budget, Copilot, EveryDollar, Goodbudget, Monarch, Outlayr, and PocketGuard next to YNAB: price, platforms, how entries get in, and currencies.",
+                        es: "Actual Budget, Copilot, EveryDollar, Goodbudget, Monarch, Outlayr y PocketGuard junto a YNAB: precio, plataformas, cómo registras y monedas.",
+                    }),
+                    title: t({
+                        en: "7 YNAB Alternatives, Compared (2026) · Outlayr",
+                        es: "7 alternativas a YNAB, comparadas (2026) · Outlayr",
+                    }),
+                },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "YNAB exports from its web app only. Click your plan's name at the top of the left sidebar, then Export Plan, and you get two files: your plan and your transactions. For currencies written with a decimal comma, YNAB writes tab-separated files. The export leaves out targets and category notes, and photos come out one at a time. If you only tried YNAB, export soon: it deletes inactive trial accounts 120 days after the trial ends.",
+                                es: "YNAB exporta solo desde su app web. Haz clic en el nombre de tu plan, arriba en la barra lateral izquierda, y luego en Export Plan, y recibes dos archivos: tu plan y tus movimientos. En las monedas que usan coma decimal, YNAB escribe archivos separados por tabulaciones. La exportación no incluye las metas ni las notas de categoría, y las fotos salen de una en una. Si solo probaste YNAB, exporta pronto: borra las cuentas de prueba inactivas 120 días después de que termina la prueba.",
+                            }),
+                            t({
+                                en: "Actual Budget has importers for YNAB4 and nYNAB. Goodbudget, Monarch on the web, PocketGuard, and Outlayr take a CSV. Copilot imports no CSV or XLS files, and EveryDollar imports no files.",
+                                es: "Actual Budget tiene importadores para YNAB4 y nYNAB. Goodbudget, Monarch en la web, PocketGuard y Outlayr aceptan un CSV. Copilot no importa archivos CSV ni XLS, y EveryDollar no importa archivos.",
+                            }),
+                            t({
+                                en: "In Outlayr, import the transactions file. The date, the payee, and the category come in, while accounts, flags, cleared status, split lines, the plan file, and targets do not. Outlayr reads comma-separated files only and one amount column, so save a tab-separated file as CSV first, and if your file splits outflow and inflow, merge them into one column and add a Type column with Expense or Income.",
+                                es: "En Outlayr, importa el archivo de movimientos. Entran la fecha, el beneficiario y la categoría, y no entran las cuentas, las banderas, el estado de conciliado, las divisiones, el archivo del plan ni las metas. Outlayr solo lee archivos separados por comas y una sola columna de monto, así que guarda antes como CSV un archivo separado por tabulaciones, y si tu archivo separa salidas y entradas, únelas en una columna y agrega una columna Type con Expense o Income.",
+                            }),
+                        ],
+                        id: "ynab-history",
+                        title: t({ en: "Bringing your YNAB history", es: "Cómo traer tu historial de YNAB" }),
+                    },
+                ],
+                picked: [
+                    t({
+                        en: "Each app here is a budget app people move to from YNAB, and each one fits a different reason to leave, from price to currencies to how entries get in. They are in alphabetical order, not ranked.",
+                        es: "Cada app de esta lista es una app de presupuesto a la que la gente se cambia desde YNAB, y cada una sirve para una razón distinta para irse, del precio a las monedas o a cómo registras. Van en orden alfabético, no por puesto.",
+                    }),
+                    LIST_PICKED_FACTS,
+                    LIST_PICKED_OURS,
+                ],
+                related: ["/compare/ynab", "/guides/best-budget-apps", "/compare/goodbudget"] satisfies PageRef[],
+                sources: LIST_SOURCES,
+                title: t({
+                    en: "YNAB alternatives, by what you need.",
+                    es: "Alternativas a YNAB, según lo que necesitas.",
+                }),
+            },
         },
         hubs: {
             compare: {
@@ -3724,8 +5674,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Outlayr next to YNAB, Monarch, Copilot, Spendee, and five more apps: price, how entries get in, and platforms, checked at each app's own site.",
-                        es: "Outlayr junto a YNAB, Monarch, Copilot, Spendee y cinco apps más: precio, cómo registras y plataformas, revisados en el sitio de cada app.",
+                        en: "Outlayr next to YNAB, Monarch, Copilot, Spendee, and seven more apps: price, how entries get in, and platforms, checked at each app's own site.",
+                        es: "Outlayr junto a YNAB, Monarch, Copilot, Spendee y siete apps más: precio, cómo registras y plataformas, revisados en el sitio de cada app.",
                     }),
                     title: t({
                         en: "Outlayr vs YNAB, Monarch, Copilot, and More: Compared",

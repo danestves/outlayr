@@ -17,17 +17,21 @@ import { guideUpdated, listChecked, longDate } from "@/lib/site";
 type GuideSlug = keyof ReturnType<typeof getIntlayer<"answers">>["guides"];
 
 const PLATES = {
+    "ai-expense-tracker": "say",
     "apple-pay-expense-tracker": "log-an-expense",
+    "best-budget-apps": null,
     "best-expense-tracker-apps": null,
     "best-open-source-expense-tracker-apps": null,
     "best-subscription-tracker-apps": null,
     "budget-planner": "04",
     "expense-tracker-template": null,
-    "mint-alternative": "log-an-expense",
+    "how-to-track-expenses": null,
+    "mint-alternative": null,
     "multi-currency-expense-tracker": "06",
     "receipt-scanner": "scan",
     "subscription-tracker": "10",
     "voice-expense-tracker": "say",
+    "ynab-alternatives": null,
 } as const satisfies Record<GuideSlug, string | null>;
 
 const PANELS = {
@@ -233,20 +237,40 @@ function Guide() {
         id: "questions",
         title: labels.questions,
     });
-    const download: ReactNode =
-        "download" in guide ? (
-            <a
-                className="fluid bg-foreground text-background inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold hover:-translate-y-0.5 active:translate-y-px"
-                download
-                href={guide.download.href.value}
-            >
-                <Icon className="text-base" name="download-simple" />
-                {guide.download.label}
-            </a>
+    const downloads: ReactNode =
+        "downloads" in guide ? (
+            <div className="flex flex-wrap gap-3">
+                {guide.downloads.map((file, index) => (
+                    <a
+                        className={`fluid inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold hover:-translate-y-0.5 active:translate-y-px ${index === 0 ? "bg-foreground text-background" : "bg-surface hover:bg-foreground/5"}`}
+                        download
+                        href={file.href.value}
+                        key={file.href.value}
+                    >
+                        <Icon className="text-base" name="download-simple" />
+                        {file.label}
+                    </a>
+                ))}
+            </div>
+        ) : null;
+    const table: ReactNode =
+        "table" in guide ? (
+            <>
+                <CompareTable
+                    columns={guide.table.columns.map((column) => ({ id: column.value, name: column }))}
+                    corner={guide.table.corner.value}
+                    rows={guide.table.rows.map((row) => ({
+                        cells: row.cells.map((cell) => cell.value),
+                        id: row.label.value,
+                        label: row.label,
+                    }))}
+                />
+                <p className="text-muted mt-4 text-sm">{guide.table.caption}</p>
+            </>
         ) : null;
     return (
         <Article
-            actions={download}
+            actions={downloads}
             aside={
                 plate !== null && "plateAlt" in guide ? (
                     <GuidePlate alt={guide.plateAlt.value} locale={locale} plate={plate} />
@@ -284,16 +308,22 @@ function Guide() {
                     </p>
                 </>
             ) : (
-                <dl className="bg-surface grid gap-x-8 gap-y-6 rounded-3xl p-6 sm:grid-cols-2 md:p-8" data-reveal>
-                    {guide.facts.map((fact) => (
-                        <div key={fact.label.value}>
-                            <dt className={LABEL}>{fact.label}</dt>
-                            <dd className="mt-2">
-                                <Figures text={fact.text.value} />
-                            </dd>
-                        </div>
-                    ))}
-                </dl>
+                <>
+                    {table}
+                    <dl
+                        className={`bg-surface grid gap-x-8 gap-y-6 rounded-3xl p-6 sm:grid-cols-2 md:p-8 ${table ? "mt-16" : ""}`}
+                        data-reveal
+                    >
+                        {guide.facts.map((fact) => (
+                            <div key={fact.label.value}>
+                                <dt className={LABEL}>{fact.label}</dt>
+                                <dd className="mt-2">
+                                    <Figures text={fact.text.value} />
+                                </dd>
+                            </div>
+                        ))}
+                    </dl>
+                </>
             )}
         </Article>
     );
