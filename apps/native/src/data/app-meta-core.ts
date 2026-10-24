@@ -12,8 +12,6 @@ export const META_KEYS = {
     /** `bootstrap` seeds `currency` unconditionally, so only this tells a chosen code from the default. */
     currencyChosen: "currencyChosen",
     enrichmentOutbox: "enrichmentOutbox",
-    /** Value is the journal stamp the cold-start foreign-key check conceded; wipes rewrite it via revalidation. */
-    fkCheckPass: "fkCheckPass",
     favouriteCurrencies: "favouriteCurrencies",
     firstLaunch: "firstLaunch",
     lastTransactionAccount: "lastTransactionAccount",

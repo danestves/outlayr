@@ -4,7 +4,7 @@ import { createContext, use, useCallback, useEffect, useMemo, useRef, useState }
 
 import { bootstrapLocalData } from "@/data/bootstrap";
 import { settleLegacyOnboarding } from "@/data/onboarding-core";
-import { gateForeignKeys, openDatabase } from "@/db/client";
+import { openDatabase } from "@/db/client";
 import type { Database } from "@/db/client";
 
 import migrationsBundle from "../../drizzle/migrations";
@@ -56,9 +56,6 @@ async function openLocalData(cancelled: () => boolean): Promise<LocalDataState |
         if (cancelled()) {
             return null;
         }
-        // The gate reads (and may stamp) appMeta, so it must follow the migrations that create it, and precede the
-        // bootstrap writes whose cascades it enforces.
-        gateForeignKeys(database);
         await bootstrapLocalData(database);
         if (cancelled()) {
             return null;

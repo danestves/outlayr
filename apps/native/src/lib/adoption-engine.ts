@@ -1,6 +1,5 @@
 import { accountLedgerState, discardAccountLedger, replaceLocalFromAccount } from "@/data/adoption-engine-core";
 import type { AdoptionEngine } from "@/data/ledger-adoption";
-import { revalidateForeignKeys } from "@/db/client";
 import type { Database } from "@/db/client";
 import { syncTransport } from "@/lib/convex";
 
@@ -16,10 +15,6 @@ export function adoptionEngine(db: Database | null): AdoptionEngine | null {
     return {
         accountLedger: () => accountLedgerState(transport.pull),
         discardAccountLedger: () => discardAccountLedger(db, transport),
-        replaceFromAccount: async () => {
-            // A replace wipes every synced table, so the store the FK verdict describes no longer exists.
-            await replaceLocalFromAccount(db, transport.pull);
-            revalidateForeignKeys(db);
-        },
+        replaceFromAccount: () => replaceLocalFromAccount(db, transport.pull),
     };
 }

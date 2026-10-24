@@ -9,7 +9,6 @@ import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { restoreArchive } from "@/data/archive-core";
 import { reconcilePhotos } from "@/data/photo-store-core";
-import { revalidateForeignKeys } from "@/db/client";
 import { archiveRowCount, parseArchive } from "@/domain/archive";
 import type { ArchiveDocument } from "@/domain/archive";
 import { useTranslation } from "@/i18n/context";
@@ -32,10 +31,7 @@ export function RestoreData() {
                 writePhotosBase64(document.photos);
                 return restoreArchive(db, document);
             })
-            .then(() => {
-                revalidateForeignKeys(db);
-                return reconcilePhotos(db, photoFiles, Date.now());
-            })
+            .then(() => reconcilePhotos(db, photoFiles, Date.now()))
             .finally(() => armLogoBackfill(db))
             .then(() => router.back())
             .catch(() => {
