@@ -5715,6 +5715,7 @@ const answers = {
                 platforms: LABELS.platforms,
                 price: LABELS.price,
             },
+            byline: t({ en: "By Daniel Esteves", es: "Por Daniel Esteves" }),
             updatedOn: insert(t({ en: "Updated {{date}}", es: "Actualizado el {{date}}" })),
             checkedOn: insert(t({ en: "Checked {{date}}", es: "Revisado el {{date}}" })),
             contents: t({ en: "On this page", es: "En esta página" }),

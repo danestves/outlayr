@@ -6,6 +6,7 @@ import { AnswerCard } from "@/components/answer-hub";
 import type { AnswerItem } from "@/components/answer-hub";
 import { HubTrail } from "@/components/hub-trail";
 import { Icon } from "@/components/icon";
+import { LocalizedLink } from "@/components/localized-link";
 import { ASIDE, COLUMNS } from "@/components/page";
 import { StoreBadges } from "@/components/store-badges";
 import { hasKey } from "@/lib/has-key";
@@ -231,6 +232,7 @@ function Contents({ sections }: { sections: readonly ArticleSection[] }) {
 export function Article({
     actions,
     aside,
+    badges = true,
     children,
     dated,
     hub,
@@ -241,6 +243,7 @@ export function Article({
 }: {
     actions?: ReactNode;
     aside?: ReactNode;
+    badges?: boolean;
     children?: ReactNode;
     dated?: { day: Date; label: "checkedOn" | "updatedOn" };
     hub: "/compare" | "/guides" | "/tools";
@@ -269,19 +272,22 @@ export function Article({
                     <p className="text-muted mt-6 max-w-[680px] text-lg delay-200 md:text-xl" data-reveal>
                         {lead}
                     </p>
-                    {dated ? (
-                        <p
-                            className="text-muted mt-8 font-mono text-xs tracking-widest uppercase delay-300"
-                            data-reveal
-                        >
-                            <time dateTime={dated.day.toISOString().slice(0, 10)}>
-                                {labels[dated.label]({ date: longDate(dated.day, LANGUAGES[locale].date) })}
-                            </time>
-                        </p>
-                    ) : null}
-                    {actions ? (
+                    <p className="text-muted mt-8 font-mono text-xs tracking-widest uppercase delay-300" data-reveal>
+                        <LocalizedLink className="fluid hover:text-foreground" hash="maker" to="/about">
+                            {labels.byline}
+                        </LocalizedLink>
+                        {dated ? (
+                            <>
+                                {" · "}
+                                <time dateTime={dated.day.toISOString().slice(0, 10)}>
+                                    {labels[dated.label]({ date: longDate(dated.day, LANGUAGES[locale].date) })}
+                                </time>
+                            </>
+                        ) : null}
+                    </p>
+                    {actions || badges ? (
                         <div className="mt-10 delay-300" data-reveal>
-                            {actions}
+                            {actions ?? <StoreBadges placement="intro" />}
                         </div>
                     ) : null}
                 </div>

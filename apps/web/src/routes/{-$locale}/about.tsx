@@ -9,7 +9,7 @@ import { LocalizedLink } from "@/components/localized-link";
 import { Page } from "@/components/page";
 import { localeFromParam } from "@/lib/i18n";
 import { APP_ID, ORGANIZATION_ID, ldJson, pageMeta, webPage } from "@/lib/seo";
-import { SUPPORT_EMAIL } from "@/lib/site";
+import { FOUNDER, SUPPORT_EMAIL } from "@/lib/site";
 
 const SECTION = "py-24";
 const HEADING = "text-4xl font-semibold tracking-tight md:text-5xl";
@@ -25,7 +25,6 @@ const FACT_SPANS = [
     "lg:col-span-7",
     "lg:col-span-8",
     "lg:col-span-4",
-    "md:col-span-2 lg:col-span-12",
 ] as const;
 const SHOTS = [
     { id: "budgets", name: "04" },
@@ -127,8 +126,62 @@ function Facts() {
                         <dd className="text-base md:text-lg">{fact.text}</dd>
                     </div>
                 ))}
+                <Maker />
             </dl>
         </section>
+    );
+}
+
+const MAKER_LINK = "fluid decoration-border hover:decoration-foreground underline underline-offset-4";
+
+function Maker() {
+    const { maker } = useIntlayer("about");
+    return (
+        <div
+            className="bg-surface flex scroll-mt-24 flex-col gap-8 rounded-3xl p-6 md:col-span-2 md:p-8 lg:col-span-12"
+            data-reveal
+            data-spot
+            id="maker"
+        >
+            <dt className={`${LABEL} text-muted`}>{maker.label}</dt>
+            <dd className="flex flex-col gap-6">
+                <div className="flex items-center gap-4">
+                    <img
+                        alt=""
+                        className="size-14 rounded-full"
+                        height={56}
+                        loading="lazy"
+                        src={FOUNDER.image}
+                        width={56}
+                    />
+                    <div>
+                        <p className="text-lg font-semibold">{maker.name}</p>
+                        <p className="text-muted">{maker.role}</p>
+                    </div>
+                </div>
+                <div className="flex max-w-[880px] flex-col gap-2">
+                    <p className="text-base md:text-lg">{maker.bio}</p>
+                    <p className="text-muted text-sm">{maker.company}</p>
+                </div>
+                <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                    <li>
+                        <a className={MAKER_LINK} href={FOUNDER.github} rel="me">
+                            GitHub
+                        </a>
+                    </li>
+                    <li>
+                        <a className={MAKER_LINK} href={FOUNDER.x} rel="me">
+                            X
+                        </a>
+                    </li>
+                    <li>
+                        <a className={MAKER_LINK} href={FOUNDER.website} rel="me">
+                            {maker.website}
+                        </a>
+                    </li>
+                </ul>
+            </dd>
+        </div>
     );
 }
 

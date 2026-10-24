@@ -93,13 +93,6 @@ const about = {
                 }),
             },
             {
-                label: t({ en: "Maker", es: "Empresa" }),
-                text: t({
-                    en: "danestves LLC, a Delaware limited liability company. 651 N Broad St, Suite 201, Middletown, DE 19709, USA. Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr.com), a payments company.",
-                    es: "danestves LLC, una sociedad de responsabilidad limitada de Delaware. 651 N Broad St, Suite 201, Middletown, DE 19709, EE. UU. Outlayr, la app de danestves LLC, no tiene relación con Outlayr, Inc. (outlayr.com), una empresa de pagos.",
-                }),
-            },
-            {
                 label: t({ en: "Does not", es: "No hace" }),
                 text: t({
                     en: "Outlayr does not cancel subscriptions or negotiate bills for you.",
@@ -115,6 +108,20 @@ const about = {
             },
         ],
         factsTitle: t({ en: "Outlayr at a glance", es: "Outlayr de un vistazo" }),
+        maker: {
+            bio: t({
+                en: "A software developer from Venezuela, building software since 2016. He makes Outlayr in the open, under his company.",
+                es: "Desarrollador de software venezolano, construyendo software desde 2016. Hace Outlayr en abierto, bajo su empresa.",
+            }),
+            company: t({
+                en: "danestves LLC, a Delaware limited liability company. 651 N Broad St, Suite 201, Middletown, DE 19709, USA. Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr.com), a payments company.",
+                es: "danestves LLC, una sociedad de responsabilidad limitada de Delaware. 651 N Broad St, Suite 201, Middletown, DE 19709, EE. UU. Outlayr, la app de danestves LLC, no tiene relación con Outlayr, Inc. (outlayr.com), una empresa de pagos.",
+            }),
+            label: t({ en: "Maker", es: "Quién la hace" }),
+            name: "Daniel Esteves",
+            role: t({ en: "Founder and developer", es: "Fundador y desarrollador" }),
+            website: "danestves.com",
+        },
         meta: {
             description: t({
                 en: "Outlayr is an open source expense tracker, budget app, and subscription tracker by danestves LLC: platforms, plans, free limits, and where your data lives.",

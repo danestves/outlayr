@@ -17,6 +17,12 @@ export const SUPPORT_EMAIL = "support@tryoutlayr.com";
 export const COMPANY = "danestves LLC";
 export const SOURCE_URL = "https://github.com/danestves/outlayr";
 export const X_URL = "https://x.com/tryoutlayr";
+export const FOUNDER = {
+    github: "https://github.com/danestves",
+    image: "/about/daniel-esteves.webp",
+    website: "https://danestves.com",
+    x: "https://x.com/danestves",
+} as const;
 
 export const RIVALS_CHECKED = new Date(Date.UTC(2026, 9, 7));
 
