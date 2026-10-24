@@ -114,7 +114,7 @@ export function SiteHeader() {
                     </ul>
                     <a
                         aria-label={nav.github.value}
-                        className="fluid text-muted hover:text-foreground hover:bg-foreground/5 flex size-10 items-center justify-center rounded-full active:scale-[0.98]"
+                        className="fluid text-muted hover:text-foreground hover:bg-foreground/5 flex size-11 items-center justify-center rounded-full active:scale-[0.98]"
                         href={SOURCE_URL}
                     >
                         <Icon className="text-xl" name="github-logo" />
@@ -123,7 +123,7 @@ export function SiteHeader() {
                         aria-controls="site-menu"
                         aria-expanded={open}
                         aria-label={open ? nav.close.value : nav.open.value}
-                        className="fluid hover:bg-foreground/5 relative size-10 rounded-full active:scale-[0.98] md:hidden"
+                        className="fluid hover:bg-foreground/5 relative size-11 rounded-full active:scale-[0.98] md:hidden"
                         onClick={() => setOpen(!open)}
                         type="button"
                     >
