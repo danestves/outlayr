@@ -142,6 +142,8 @@ export function Log() {
     }));
 
     const [days, setDays] = useState(LOG_PAGE_DAYS);
+    // One flag behind every `not all` branch: the head/tail reads are Log's money, and filters read none of them.
+    const readingHead = filter === "all";
 
     const categoryMeta = useCategoryMeta(db);
     const filterableCategories = useMemo(
@@ -153,7 +155,7 @@ export function Log() {
     const cursorUnit: CursorUnit = filter === "week" || filter === "month" ? filter : "day";
     const cursor = cursors[cursorUnit];
 
-    const { head, reachedEnd, splitMs, tail } = useLoggedTransactions(db, nowMs, days);
+    const { head, reachedEnd, splitMs, tail } = useLoggedTransactions(db, nowMs, days, readingHead);
     const transferBounds = useMemo(
         () =>
             logTransferBounds({
@@ -172,7 +174,9 @@ export function Log() {
         firstWeekday,
         income,
     });
-    const upcoming = useUpcomingTransactions(db, nowMs, showUpcomingSoon);
+    // The section renders only under its own filter or the all view's setting, so the scan waits for either.
+    const showUpcomingSection = filter === "upcoming" || (filter === "all" && showUpcoming);
+    const upcoming = useUpcomingTransactions(db, nowMs, showUpcomingSoon, showUpcomingSection);
     const insights = useLogInsights(db, nowMs, period, firstWeekday, currency, rates);
     const currencyOptions = useMemo(
         () =>
@@ -255,7 +259,6 @@ export function Log() {
         ? filterDetail(filter, { cursor, firstWeekday, income })
         : filterScopeLabel(t, filter, activeCategoryId ? categoryMeta.get(activeCategoryId)?.name : null, income);
 
-    const showUpcomingSection = filter === "upcoming" || (filter === "all" && showUpcoming);
     // Filtered like the day sections, or a deleted future row lingers under the undo toast.
     const upcomingRows = useMemo(
         () => (showUpcomingSection ? upcoming.rows.filter((row) => !goesWithPendingDelete(row, pendingId)) : []),

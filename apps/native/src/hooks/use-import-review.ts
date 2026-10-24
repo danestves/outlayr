@@ -6,6 +6,7 @@ import { useGlobalCurrency } from "@/data/app-meta";
 import { useLiveQuery } from "@/data/live-query";
 import { applyImport, buildImportPlan } from "@/data/transfer-core";
 import type { ImportEntry, ImportPlan, SkipReason } from "@/data/transfer-core";
+import { revalidateForeignKeys } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
 import { fingerprintsOf, flagDuplicates } from "@/domain/import-dedup";
 import type { ImportCommitState } from "@/domain/import-flow";
@@ -193,6 +194,7 @@ export function useImportReview(): ImportReviewResult {
             .catch(() => entries)
             .then((decorated) => applyImport(db, { ...plan, entries: decorated }))
             .then((count) => {
+                revalidateForeignKeys(db);
                 haptics("success");
                 // The draft is NOT cleared here: the done step still reads the
                 // committed counts. Dismissing the sheet after a success clears.

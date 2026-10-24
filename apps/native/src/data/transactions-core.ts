@@ -4,7 +4,7 @@ import type { CanonicalUsd } from "@outlayr/money/canonical-usd";
 import type { EntryRateType } from "@outlayr/money/rates";
 import { isTransactionRateNeeded } from "@outlayr/money/rates";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
-import { and, asc, desc, eq, gt, gte, inArray, isNotNull, isNull, lt, lte, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, gte, inArray, isNotNull, isNull, lt, lte, sql } from "drizzle-orm";
 
 import type { Database } from "@/db/client";
 import { accounts, categories, installments, transactions, transfers } from "@/db/schema";
@@ -78,8 +78,11 @@ export function logWindowDaysQuery(db: SpendDb, nowMs: number, days: number) {
         .limit(days);
 }
 
+/** COUNT in SQLite: the settings screens only read the number, so moving all the ledger's ids across the
+ * bridge buys nothing.
+ */
 export function ledgerSizeQuery(db: SpendDb) {
-    return db.select({ id: transactions.id }).from(transactions).where(isNull(transactions.deletedAt));
+    return db.select({ live: count() }).from(transactions).where(isNull(transactions.deletedAt));
 }
 
 const DELETED_COLUMNS = {

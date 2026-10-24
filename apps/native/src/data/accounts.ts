@@ -29,8 +29,7 @@ import {
     settledOutsidePaymentsQuery,
     settledTransferInboundQuery,
     settledTransferOutboundQuery,
-    settledTransfersInboundQuery,
-    settledTransfersOutboundQuery,
+    settledTransfersQuery,
     toTransferCell,
 } from "./transfer-cells";
 import { useValuation, useValuationIn } from "./use-valuation";
@@ -148,14 +147,15 @@ export function useAccountBalance(
 function useSettledCells(db: Database, settledAt: Date): SettledCell[] {
     const clock = settledAt.getTime();
     const cellRows = useLiveQuery(transactions, () => settledAccountsCellQuery(db, settledAt), [settledAt], clock);
-    const outbound = useLiveQuery(transfers, () => settledTransfersOutboundQuery(db, settledAt), [settledAt], clock);
-    const inbound = useLiveQuery(transfers, () => settledTransfersInboundQuery(db, settledAt), [settledAt], clock);
+    const legs = useLiveQuery(transfers, () => settledTransfersQuery(db, settledAt), [settledAt], clock);
+    const outbound = useMemo(() => legs.filter((leg) => leg.leg === "out"), [legs]);
+    const inbound = useMemo(() => legs.filter((leg) => leg.leg === "in"), [legs]);
     const outside = useLiveQuery(outsidePayments, () => settledOutsidePaymentsQuery(db, settledAt), [settledAt], clock);
     const moves = useLiveQuery(outsideMoves, () => settledOutsideMovesQuery(db, settledAt), [settledAt], clock);
     return useMemo(
         () => [
             ...cellRows.map(({ accountId, plotDay, ...row }) => ({ ...toCurrencyCell(row), accountId, plotDay })),
-            ...outbound.map(({ accountId, plotDay, ...row }) => ({
+            ...outbound.map(({ accountId, leg: _leg, plotDay, ...row }) => ({
                 ...toTransferCell(row, false),
                 accountId,
                 plotDay,
