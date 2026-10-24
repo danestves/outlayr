@@ -14,13 +14,13 @@ const GOOGLE_PLAY_BADGE = {
     es: { height: 192, src: "/badges/google-play-es.png", width: 646 },
 } as const satisfies Record<Locale, { height: number; src: string; width: number }>;
 
-type Placement = "answer" | "closing" | "hero" | "story";
+type Placement = "answer" | "closing" | "hero" | "intro" | "story";
 
 export function StoreBadges({ placement }: { placement: Placement }) {
     const { badges } = useIntlayer("site");
     const { locale } = useLocale();
     const googlePlay = GOOGLE_PLAY_BADGE[locale];
-    const loading = placement === "hero" ? "eager" : "lazy";
+    const loading = placement === "hero" || placement === "intro" ? "eager" : "lazy";
     return (
         <div className="flex flex-wrap items-center gap-4">
             <a

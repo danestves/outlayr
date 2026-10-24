@@ -16,8 +16,8 @@ import { startAnalytics } from "@/lib/analytics";
 import { LANGUAGES, localeFromParam, pageUrl } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n";
 import { useMotion } from "@/lib/motion";
-import { APP_ID, ORGANIZATION_ID, WEBSITE_ID, ldJson, mobileApp } from "@/lib/seo";
-import { COMPANY, SITE_URL, SOURCE_URL, SUPPORT_EMAIL, X_URL } from "@/lib/site";
+import { APP_ID, FOUNDER_ID, ORGANIZATION_ID, WEBSITE_ID, ldJson, mobileApp } from "@/lib/seo";
+import { COMPANY, FOUNDER, SITE_URL, SOURCE_URL, SUPPORT_EMAIL, X_URL } from "@/lib/site";
 import { THEME_SCRIPT } from "@/lib/theme";
 
 import appCss from "../index.css?url";
@@ -51,11 +51,22 @@ function siteGraph(locale: Locale) {
                 },
                 disambiguatingDescription: ORGANIZATION_NOTE,
                 email: SUPPORT_EMAIL,
+                founder: { "@id": FOUNDER_ID },
                 legalName: COMPANY,
                 logo: `${SITE_URL}/apple-touch-icon.png`,
                 name: "Outlayr",
                 sameAs: [X_URL, SOURCE_URL],
                 url: SITE_URL,
+            },
+            {
+                "@id": FOUNDER_ID,
+                "@type": "Person",
+                image: `${SITE_URL}${FOUNDER.image}`,
+                jobTitle: "Founder and developer",
+                name: "Daniel Esteves",
+                sameAs: [FOUNDER.github, FOUNDER.x, FOUNDER.website],
+                url: `${SITE_URL}/about#maker`,
+                worksFor: { "@id": ORGANIZATION_ID },
             },
             {
                 "@id": WEBSITE_ID,

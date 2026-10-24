@@ -68,6 +68,7 @@ function Tool() {
     const Calculator = CALCULATORS[slug];
     return (
         <Article
+            badges={false}
             hub="/tools"
             lead={page.lead}
             related={page.related}

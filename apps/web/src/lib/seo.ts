@@ -69,6 +69,7 @@ export function itemList(items: readonly { name: string; url: string }[]) {
 export const APP_ID = `${SITE_URL}/#app`;
 export const ORGANIZATION_ID = `${SITE_URL}/#organization`;
 export const WEBSITE_ID = `${SITE_URL}/#website`;
+export const FOUNDER_ID = `${SITE_URL}/about#daniel-esteves`;
 
 function billed(price: string, billingDuration: string) {
     return { "@type": "UnitPriceSpecification", billingDuration, price, priceCurrency: "USD" };
@@ -152,7 +153,7 @@ export function article(
         "@context": "https://schema.org",
         "@id": `${url}#article`,
         "@type": "Article",
-        author: { "@id": ORGANIZATION_ID },
+        author: { "@id": FOUNDER_ID },
         dateModified: dateModified.toISOString().slice(0, 10),
         description,
         headline: headline.replace(TRAILING_PERIOD, ""),
