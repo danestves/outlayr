@@ -58,6 +58,19 @@ function notify() {
     }
 }
 
+const INTERACTIONS = ["keydown", "pointerdown", "scroll"] as const;
+
+function recordOnFirstInteraction(client: PostHog) {
+    const controller = new AbortController();
+    const start = () => {
+        controller.abort();
+        client.startSessionRecording();
+    };
+    for (const type of INTERACTIONS) {
+        window.addEventListener(type, start, { capture: true, passive: true, signal: controller.signal });
+    }
+}
+
 export async function startAnalytics(country: string | null) {
     if (!TOKEN || starting) {
         return;
@@ -70,8 +83,13 @@ export async function startAnalytics(country: string | null) {
         capture_exceptions: true,
         cookieless_mode: "on_reject",
         defaults: "2026-08-30",
+        disable_conversations: true,
+        disable_product_tours: true,
+        disable_session_recording: true,
+        disable_surveys: true,
         ui_host: "https://us.posthog.com",
     });
+    recordOnFirstInteraction(client);
     const sendsGpc = "globalPrivacyControl" in navigator && navigator.globalPrivacyControl === true;
     const asksFirst = country === null || ASK_FIRST.has(country) || sendsGpc;
     if (!asksFirst && client.get_explicit_consent_status() === "pending") {
