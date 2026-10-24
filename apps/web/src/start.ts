@@ -8,7 +8,8 @@ const canonicalUrl = createMiddleware().server(({ next, request }) => {
     const url = new URL(request.url);
     const host = request.headers.get("host") ?? url.host;
     const insecure = request.headers.get("cf-visitor")?.includes('"scheme":"http"') ?? false;
-    const path = url.pathname === "/policy" ? "/privacy" : url.pathname.replace(TRAILING_SLASH, "$1");
+    const lower = url.pathname.toLowerCase().replace(TRAILING_SLASH, "$1");
+    const path = lower === "/policy" ? "/privacy" : lower;
     if (!insecure && !WWW.test(host) && path === url.pathname) {
         return next();
     }
