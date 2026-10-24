@@ -24,10 +24,19 @@ const RIVALS_RECHECKED = {
     copilot: new Date(Date.UTC(2026, 9, 23)),
     everydollar: new Date(Date.UTC(2026, 9, 23)),
     fintonic: new Date(Date.UTC(2026, 9, 9)),
+    spendee: new Date(Date.UTC(2026, 9, 23)),
+    ynab: new Date(Date.UTC(2026, 9, 23)),
 };
 
 export function rivalChecked(slug: string): Date {
     return hasKey(RIVALS_RECHECKED, slug) ? RIVALS_RECHECKED[slug] : RIVALS_CHECKED;
+}
+
+export const EXPORTS_CHECKED = new Date(Date.UTC(2026, 9, 23));
+
+export function compareUpdated(slug: string): Date {
+    const checked = rivalChecked(slug);
+    return checked > EXPORTS_CHECKED ? checked : EXPORTS_CHECKED;
 }
 
 export const LISTS_CHECKED = new Date(Date.UTC(2026, 9, 9));
