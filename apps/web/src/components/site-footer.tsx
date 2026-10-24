@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { CONTAINER } from "@/lib/layout";
-import { COMPANY, SOURCE_URL, SUPPORT_EMAIL } from "@/lib/site";
+import { COMPANY, COMPANY_URL, SOURCE_URL, SUPPORT_EMAIL } from "@/lib/site";
 
 import { ConsentSwitch } from "./consent-switch";
 import { LanguageSwitch } from "./language-switch";
@@ -96,7 +96,10 @@ export function SiteFooter() {
                 </div>
                 <div className="border-border mt-12 flex flex-col gap-6 border-t pt-8 md:flex-row md:items-center md:justify-between">
                     <p className="text-muted text-xs">
-                        © {new Date().getUTCFullYear()} {COMPANY}
+                        © {new Date().getUTCFullYear()}{" "}
+                        <a className="fluid hover:text-foreground" href={COMPANY_URL}>
+                            {COMPANY}
+                        </a>
                     </p>
                     <div className="flex flex-wrap items-center gap-3">
                         <LanguageSwitch />
