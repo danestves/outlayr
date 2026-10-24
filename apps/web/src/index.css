@@ -182,6 +182,11 @@
             transition-timing-function: var(--ease-fluid);
         }
 
+        main > :first-child [data-reveal],
+        [data-reveal="now"] {
+            transition-duration: 500ms;
+        }
+
         .js [data-reveal]:not(.is-in, main > :first-child [data-reveal], [data-reveal="now"]) {
             opacity: 0;
             transform: translateY(4rem);

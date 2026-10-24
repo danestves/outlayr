@@ -46,7 +46,10 @@ export function Pricing() {
                     <div className="min-h-40">
                         <h3 className="flex flex-wrap items-center gap-x-3 gap-y-1 text-lg font-semibold">
                             Outlayr Pro
-                            <span className="text-tint text-sm font-medium">{pricing.trial}</span>
+                            <span className="flex items-center gap-2 text-sm font-medium">
+                                <span className="bg-tint size-2 rounded-sm" />
+                                {pricing.trial}
+                            </span>
                         </h3>
                         <p className="mt-4 flex items-baseline gap-2">
                             <span className="text-5xl font-semibold tracking-tight">
