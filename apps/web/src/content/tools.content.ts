@@ -219,7 +219,7 @@ const tools = {
                     }),
                     t({
                         en: "That is why a $5 weekly charge costs $21.67 a month, not $20: a month is a bit more than 4 weeks.",
-                        es: "Por eso un cobro semanal de $5 cuesta $21.67 al mes y no $20: un mes es un poco más de 4 semanas.",
+                        es: "Por eso un cobro semanal de US$5 cuesta US$21.67 al mes y no US$20: un mes es un poco más de 4 semanas.",
                     }),
                     t({
                         en: "Outlayr's subscriptions screen counts the same way, so the totals match once you log them there.",
@@ -281,7 +281,7 @@ const tools = {
                     {
                         answer: t({
                             en: "Because the plan is short. With the starting example, $15 extra on a $400 order over six weeks works out to about 89% a year: the fee pays for six weeks of credit, not a year.",
-                            es: "Porque el plan es corto. Con el ejemplo inicial, $15 de más en una compra de $400 a seis semanas equivalen a cerca de 89% al año: el cargo paga seis semanas de crédito, no un año.",
+                            es: "Porque el plan es corto. Con el ejemplo inicial, US$15 de más en una compra de US$400 a seis semanas equivalen a cerca de 89% al año: el cargo paga seis semanas de crédito, no un año.",
                         }),
                         question: t({
                             en: "Why is the yearly rate so high for a small fee?",
@@ -327,7 +327,7 @@ const tools = {
                     }),
                     t({
                         en: "As a formula: find the rate r per payment period where each payment × (1 − (1 + r)^−n) ÷ r = cash price − paid today, with n payments. The yearly rate is (1 + r)^k − 1, where k is 52 for weekly payments, 26 for every 2 weeks, and 12 for monthly. With the starting example, $300 financed in 3 payments of $105 every 2 weeks, r is about 2.48%, and (1.0248)^26 − 1 is about 89%.",
-                        es: "Como fórmula: busca la tasa r por período donde cada cuota × (1 − (1 + r)^−n) ÷ r = precio de contado − lo que pagas hoy, con n cuotas. La tasa anual es (1 + r)^k − 1, donde k es 52 si pagas cada semana, 26 si pagas cada 2 semanas y 12 si pagas cada mes. Con el ejemplo inicial, $300 financiados en 3 cuotas de $105 cada 2 semanas, r es cerca de 2.48%, y (1.0248)^26 − 1 da cerca de 89%.",
+                        es: "Como fórmula: busca la tasa r por período donde cada cuota × (1 − (1 + r)^−n) ÷ r = precio de contado − lo que pagas hoy, con n cuotas. La tasa anual es (1 + r)^k − 1, donde k es 52 si pagas cada semana, 26 si pagas cada 2 semanas y 12 si pagas cada mes. Con el ejemplo inicial, US$300 financiados en 3 cuotas de US$105 cada 2 semanas, r es cerca de 2.48%, y (1.0248)^26 − 1 da cerca de 89%.",
                     }),
                     t({
                         en: "Late fees are not included. Most plans charge one when a payment is late, which raises the real cost.",

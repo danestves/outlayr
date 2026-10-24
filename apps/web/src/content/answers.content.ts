@@ -189,8 +189,8 @@ const answers = {
                         label: LABELS.price,
                         outlayr: OUTLAYR.price,
                         rival: t({
-                            en: "$13 a month or $95 a year, after a 1-month free trial",
-                            es: "$13 al mes o $95 al año, después de una prueba gratis de 1 mes",
+                            en: "$95 a year, after a 1-month free trial. No free plan",
+                            es: "US$95 al año, después de una prueba gratis de 1 mes. Sin plan gratis",
                         }),
                     },
                     {
@@ -229,8 +229,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes. Outlayr is offered in 175 countries and regions, Canada included, with 165 currencies. EveryDollar's mobile app is sold in the United States App Store and Google Play only, and it supports US dollars.",
-                            es: "Sí. Outlayr se ofrece en 175 países y regiones, Canadá incluido, con 165 monedas. La app móvil de EveryDollar solo se vende en el App Store y Google Play de Estados Unidos, y admite dólares estadounidenses.",
+                            en: "Yes. Outlayr is offered in 175 countries and regions, Canada included, with 165 currencies. EveryDollar's mobile app and Premium are only available in the United States; elsewhere you can make a free budget on EveryDollar.com.",
+                            es: "Sí. Outlayr se ofrece en 175 países y regiones, Canadá incluido, con 165 monedas. La app móvil y Premium de EveryDollar solo están disponibles en Estados Unidos; en otros países puedes armar un presupuesto gratis en EveryDollar.com.",
                         }),
                         question: t({
                             en: "Does Outlayr work in Canada and outside the United States?",
@@ -274,7 +274,7 @@ const answers = {
                         outlayr: OUTLAYR.price,
                         rival: t({
                             en: "Free version. Premium is $17.99 a month or $79.99 a year, after a 14-day trial",
-                            es: "Versión gratis. Premium cuesta $17.99 al mes o $79.99 al año, después de una prueba de 14 días",
+                            es: "Versión gratis. Premium cuesta US$17.99 al mes o US$79.99 al año, después de una prueba de 14 días",
                         }),
                     },
                     {
@@ -286,19 +286,14 @@ const answers = {
                         }),
                     },
                     {
-                        label: LABELS.currencies,
-                        outlayr: OUTLAYR.currencies,
-                        rival: t({ en: "US dollars only", es: "Solo dólares estadounidenses" }),
-                    },
-                    {
                         label: LABELS.availability,
                         outlayr: t({
                             en: "175 countries and regions",
                             es: "175 países y regiones",
                         }),
                         rival: t({
-                            en: "Mobile app in the United States only",
-                            es: "App móvil solo en Estados Unidos",
+                            en: "Mobile app and Premium in the United States only. Elsewhere, a free budget on EveryDollar.com",
+                            es: "App móvil y Premium solo en Estados Unidos. En otros países, un presupuesto gratis en EveryDollar.com",
                         }),
                     },
                     {
@@ -491,7 +486,7 @@ const answers = {
                         outlayr: OUTLAYR.price,
                         rival: t({
                             en: "$14.99 a month or $99.99 a year, after a 7-day trial. Plus is $199.99 a year",
-                            es: "$14.99 al mes o $99.99 al año, después de una prueba de 7 días. Plus cuesta $199.99 al año",
+                            es: "US$14.99 al mes o US$99.99 al año, después de una prueba de 7 días. Plus cuesta US$199.99 al año",
                         }),
                     },
                     {
@@ -572,7 +567,7 @@ const answers = {
                         outlayr: OUTLAYR.price,
                         rival: t({
                             en: "$12.99 a month, $74.99 a year, or $149.99 once, after a 7-day trial",
-                            es: "$12.99 al mes, $74.99 al año o $149.99 en un solo pago, después de una prueba de 7 días",
+                            es: "US$12.99 al mes, US$74.99 al año o US$149.99 en un solo pago, después de una prueba de 7 días",
                         }),
                     },
                     {
@@ -675,7 +670,7 @@ const answers = {
                         outlayr: OUTLAYR.price,
                         rival: t({
                             en: "Free plan. Premium is pay what you want, typically $7 to $14 a month. Premium+ is $15 a month",
-                            es: "Plan gratis. Premium es paga lo que quieras, normalmente de $7 a $14 al mes. Premium+ cuesta $15 al mes",
+                            es: "Plan gratis. Premium es paga lo que quieras, normalmente de US$7 a US$14 al mes. Premium+ cuesta US$15 al mes",
                         }),
                     },
                     {
@@ -770,7 +765,7 @@ const answers = {
                         outlayr: OUTLAYR.price,
                         rival: t({
                             en: "Free basic plan with 1 wallet and 1 budget. Plus $1.99 a month or $14.99 a year, Premium $5.99 a month or $35.99 a year, after a 7-day trial. Prices vary by country",
-                            es: "Plan básico gratis con 1 billetera y 1 presupuesto. Plus $1.99 al mes o $14.99 al año, Premium $5.99 al mes o $35.99 al año, después de una prueba de 7 días. Los precios cambian según el país",
+                            es: "Plan básico gratis con 1 billetera y 1 presupuesto. Plus US$1.99 al mes o US$14.99 al año, Premium US$5.99 al mes o US$35.99 al año, después de una prueba de 7 días. Los precios cambian según el país",
                         }),
                     },
                     {
@@ -931,7 +926,7 @@ const answers = {
                         outlayr: OUTLAYR.price,
                         rival: t({
                             en: "$14.99 a month or $109 a year, after a 34-day trial",
-                            es: "$14.99 al mes o $109 al año, después de una prueba de 34 días",
+                            es: "US$14.99 al mes o US$109 al año, después de una prueba de 34 días",
                         }),
                     },
                     {
@@ -1199,7 +1194,7 @@ const answers = {
                                 source: "https://www.spendee.com/pricing",
                                 text: t({
                                     en: "Free basic plan with 1 wallet and 1 budget. Plus $1.99 a month or $14.99 a year, Premium $5.99 a month or $35.99 a year, after a 7-day trial. Prices vary by country",
-                                    es: "Plan básico gratis con 1 billetera y 1 presupuesto. Plus $1.99 al mes o $14.99 al año, Premium $5.99 al mes o $35.99 al año, después de una prueba de 7 días. Los precios cambian según el país",
+                                    es: "Plan básico gratis con 1 billetera y 1 presupuesto. Plus US$1.99 al mes o US$14.99 al año, Premium US$5.99 al mes o US$35.99 al año, después de una prueba de 7 días. Los precios cambian según el país",
                                 }),
                             },
                             {
@@ -1268,7 +1263,7 @@ const answers = {
                                 source: "https://www.ynab.com/pricing",
                                 text: t({
                                     en: "$14.99 a month or $109 a year, after a 34-day trial",
-                                    es: "$14.99 al mes o $109 al año, después de una prueba de 34 días",
+                                    es: "US$14.99 al mes o US$109 al año, después de una prueba de 34 días",
                                 }),
                             },
                             {
@@ -1456,7 +1451,7 @@ const answers = {
                                 source: "https://apps.apple.com/us/app/cashew-expense-budget-tracker/id6463662930",
                                 text: t({
                                     en: "Free. Cashew Pro is $1.49 a month, $11.99 a year, or $19.99 once on the US App Store",
-                                    es: "Gratis. Cashew Pro cuesta $1.49 al mes, $11.99 al año o $19.99 en un solo pago en el App Store de EE. UU.",
+                                    es: "Gratis. Cashew Pro cuesta US$1.49 al mes, US$11.99 al año o US$19.99 en un solo pago en el App Store de EE. UU.",
                                 }),
                             },
                             {
@@ -1699,7 +1694,7 @@ const answers = {
                                 source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
                                 text: t({
                                     en: "Free, with in-app purchases from $0.99 to $2.99 in the US App Store",
-                                    es: "Gratis, con compras dentro de la app de $0.99 a $2.99 en el App Store de EE. UU.",
+                                    es: "Gratis, con compras dentro de la app de US$0.99 a US$2.99 en el App Store de EE. UU.",
                                 }),
                             },
                             {
@@ -1746,7 +1741,7 @@ const answers = {
                                 source: "https://www.monarch.com/pricing",
                                 text: t({
                                     en: "$14.99 a month or $99.99 a year, after a 7-day trial. Plus is $199.99 a year",
-                                    es: "$14.99 al mes o $99.99 al año, después de una prueba de 7 días. Plus cuesta $199.99 al año",
+                                    es: "US$14.99 al mes o US$99.99 al año, después de una prueba de 7 días. Plus cuesta US$199.99 al año",
                                 }),
                             },
                             {
@@ -1813,7 +1808,7 @@ const answers = {
                                 source: "https://pocketguard.com/pricing/",
                                 text: t({
                                     en: "$12.99 a month, $74.99 a year, or $149.99 once, after a 7-day trial",
-                                    es: "$12.99 al mes, $74.99 al año o $149.99 en un solo pago, después de una prueba de 7 días",
+                                    es: "US$12.99 al mes, US$74.99 al año o US$149.99 en un solo pago, después de una prueba de 7 días",
                                 }),
                             },
                             {
@@ -1860,7 +1855,7 @@ const answers = {
                                 source: "https://www.rocketmoney.com/learn/personal-finance/how-much-does-rocket-money-cost",
                                 text: t({
                                     en: "Free plan. Premium is pay what you want, typically $7 to $14 a month. Premium+ is $15 a month",
-                                    es: "Plan gratis. Premium es paga lo que quieras, normalmente de $7 a $14 al mes. Premium+ cuesta $15 al mes",
+                                    es: "Plan gratis. Premium es paga lo que quieras, normalmente de US$7 a US$14 al mes. Premium+ cuesta US$15 al mes",
                                 }),
                             },
                             {
@@ -2842,8 +2837,8 @@ const answers = {
                         es: "Dicta una compra en una oración y Outlayr llena el monto, el comercio, la categoría, la fecha y la cuenta. Corrige lo que haga falta diciéndolo de nuevo.",
                     }),
                     title: t({
-                        en: "AI Voice Expense Tracker: Say a Purchase to Log It · Outlayr",
-                        es: "Registrar gastos por voz con IA · Outlayr",
+                        en: "Voice Expense Tracker: Say What You Spent · Outlayr",
+                        es: "Registra gastos por voz: dicta lo que gastaste · Outlayr",
                     }),
                 },
                 plateAlt: t({

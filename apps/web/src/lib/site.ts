@@ -11,6 +11,8 @@ export const X_URL = "https://x.com/tryoutlayr";
 export const RIVALS_CHECKED = new Date(Date.UTC(2026, 9, 7));
 
 const RIVALS_RECHECKED = {
+    copilot: new Date(Date.UTC(2026, 9, 23)),
+    everydollar: new Date(Date.UTC(2026, 9, 23)),
     fintonic: new Date(Date.UTC(2026, 9, 9)),
 };
 
