@@ -7,7 +7,7 @@ import { Icon } from "@/components/icon";
 import { LocalizedLink } from "@/components/localized-link";
 import { Page } from "@/components/page";
 import { localeFromParam } from "@/lib/i18n";
-import { ORGANIZATION_ID, ldJson, mobileApp, pageMeta, webPage } from "@/lib/seo";
+import { APP_ID, ORGANIZATION_ID, ldJson, pageMeta, webPage } from "@/lib/seo";
 import { SUPPORT_EMAIL } from "@/lib/site";
 
 const SECTION = "py-24";
@@ -41,7 +41,7 @@ export const Route = createFileRoute("/{-$locale}/about")({
     component: About,
     head: ({ params }) => {
         const locale = localeFromParam(params.locale);
-        const { entity, meta } = getIntlayer("about", locale);
+        const { meta } = getIntlayer("about", locale);
         return {
             meta: pageMeta(meta.title, meta.description),
             scripts: [
@@ -49,7 +49,7 @@ export const Route = createFileRoute("/{-$locale}/about")({
                     webPage(locale, "/about", {
                         "@type": "AboutPage",
                         about: { "@id": ORGANIZATION_ID },
-                        mainEntity: mobileApp(entity),
+                        mainEntity: { "@id": APP_ID },
                         name: meta.title,
                     })
                 ),
