@@ -6,25 +6,27 @@ import { useIntlayer, useLocale } from "react-intlayer";
 import { Article, CompareTable, DELAYS, Figures, Questions } from "@/components/answers/article";
 import type { ArticleSection } from "@/components/answers/article";
 import { SayPanel, ScanPanel } from "@/components/demo/capture-panels";
+import { screenSources } from "@/components/home/media";
 import { Icon } from "@/components/icon";
 import { hasKey } from "@/lib/has-key";
 import { LANGUAGES, localeFromParam, pageUrl } from "@/lib/i18n";
+import type { Locale } from "@/lib/i18n";
 import { answerTrail, article, faqPage, itemList, ldJson, pageMeta, webPage } from "@/lib/seo";
 import { guideUpdated, listChecked, longDate } from "@/lib/site";
 
 type GuideSlug = keyof ReturnType<typeof getIntlayer<"answers">>["guides"];
 
 const PLATES = {
-    "apple-pay-expense-tracker": "/screens/log-an-expense.webp",
+    "apple-pay-expense-tracker": "log-an-expense",
     "best-expense-tracker-apps": null,
     "best-open-source-expense-tracker-apps": null,
     "best-subscription-tracker-apps": null,
-    "budget-planner": "/screens/04.webp",
+    "budget-planner": "04",
     "expense-tracker-template": null,
-    "mint-alternative": "/screens/log-an-expense.webp",
-    "multi-currency-expense-tracker": "/screens/06.webp",
+    "mint-alternative": "log-an-expense",
+    "multi-currency-expense-tracker": "06",
     "receipt-scanner": "scan",
-    "subscription-tracker": "/screens/10.webp",
+    "subscription-tracker": "10",
     "voice-expense-tracker": "say",
 } as const satisfies Record<GuideSlug, string | null>;
 
@@ -33,13 +35,12 @@ const PANELS = {
     scan: { frame: 5, Panel: ScanPanel },
 } as const;
 
-function plateImage(slug: GuideSlug): string | null {
+function plateImage(slug: GuideSlug, locale: Locale) {
     const plate = PLATES[slug];
-    return plate === null || hasKey(PANELS, plate) ? null : plate;
+    return plate === null || hasKey(PANELS, plate) ? null : screenSources(plate, locale);
 }
 
 const WWW = /^www\./u;
-const WEBP = /\.webp$/u;
 
 const LABEL = "text-muted font-mono text-xs tracking-widest uppercase";
 
@@ -60,14 +61,14 @@ export const Route = createFileRoute("/{-$locale}/guides/$slug")({
         const path = `/guides/${loaderData}`;
         const url = pageUrl(path, locale);
         const updated = guideUpdated(loaderData);
-        const plate = plateImage(loaderData);
+        const plate = plateImage(loaderData, locale);
         return {
             links: plate
                 ? [
                       {
                           as: "image",
                           fetchPriority: "high",
-                          href: plate,
+                          href: plate.src,
                           media: "(prefers-color-scheme: light)",
                           rel: "preload",
                           type: "image/webp",
@@ -75,7 +76,7 @@ export const Route = createFileRoute("/{-$locale}/guides/$slug")({
                       {
                           as: "image",
                           fetchPriority: "high",
-                          href: plate.replace(WEBP, "-dark.webp"),
+                          href: plate.dark,
                           media: "(prefers-color-scheme: dark)",
                           rel: "preload",
                           type: "image/webp",
@@ -114,8 +115,9 @@ export const Route = createFileRoute("/{-$locale}/guides/$slug")({
     },
 });
 
-function GuidePlate({ alt, plate }: { alt: string; plate: string }) {
+function GuidePlate({ alt, locale, plate }: { alt: string; locale: Locale; plate: string }) {
     if (!hasKey(PANELS, plate)) {
+        const { dark, src } = screenSources(plate, locale);
         return (
             <figure className="bg-surface mx-auto w-full max-w-sm rounded-3xl p-2 lg:max-w-xs">
                 <div className="aspect-4/5 overflow-hidden rounded-2xl lg:aspect-auto">
@@ -125,7 +127,7 @@ function GuidePlate({ alt, plate }: { alt: string; plate: string }) {
                         decoding="async"
                         fetchPriority="low"
                         height={1912}
-                        src={plate}
+                        src={src}
                         width={880}
                     />
                     <img
@@ -134,7 +136,7 @@ function GuidePlate({ alt, plate }: { alt: string; plate: string }) {
                         decoding="async"
                         fetchPriority="low"
                         height={1912}
-                        src={plate.replace(WEBP, "-dark.webp")}
+                        src={dark}
                         width={880}
                     />
                 </div>
@@ -274,7 +276,9 @@ function Guide() {
         <Article
             actions={download}
             aside={
-                plate !== null && "plateAlt" in guide ? <GuidePlate alt={guide.plateAlt.value} plate={plate} /> : null
+                plate !== null && "plateAlt" in guide ? (
+                    <GuidePlate alt={guide.plateAlt.value} locale={locale} plate={plate} />
+                ) : null
             }
             dated={{ day: guideUpdated(slug), label: "updatedOn" }}
             hub="/guides"
