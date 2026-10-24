@@ -65,6 +65,10 @@ export function Hero() {
                     <div className="relative mx-auto w-3/5 max-w-80 sm:w-1/2 lg:w-2/3">
                         <Phone className="drop-shadow-[0_32px_48px_rgb(19_18_9/0.3)]">
                             <LoopVideo
+                                av1={{
+                                    dark: videoUrl("log-an-expense-dark.av1.mp4"),
+                                    light: videoUrl("log-an-expense.av1.mp4"),
+                                }}
                                 className="phone-screen bg-app-bg overflow-hidden"
                                 label={hero.videoLabel.value}
                                 poster={HERO_POSTER}

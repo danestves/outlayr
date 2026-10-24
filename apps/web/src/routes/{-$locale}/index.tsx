@@ -27,24 +27,16 @@ export const Route = createFileRoute("/{-$locale}/")({
         const locale = localeFromParam(params.locale);
         const { faq, meta } = getIntlayer("home", locale);
         return {
-            links: [
-                {
-                    as: "image",
-                    fetchPriority: "high",
-                    href: HERO_POSTER.light,
-                    media: "(prefers-color-scheme: light)",
-                    rel: "preload",
-                    type: "image/webp",
-                },
-                {
-                    as: "image",
-                    fetchPriority: "high",
-                    href: HERO_POSTER.dark,
-                    media: "(prefers-color-scheme: dark)",
-                    rel: "preload",
-                    type: "image/webp",
-                },
-            ],
+            links: (["light", "dark"] as const).map((variant) => ({
+                as: "image",
+                fetchPriority: "high" as const,
+                href: HERO_POSTER.variants[variant].src,
+                imageSizes: HERO_POSTER.sizes,
+                imageSrcSet: HERO_POSTER.variants[variant].srcSet,
+                media: `(prefers-color-scheme: ${variant})`,
+                rel: "preload",
+                type: "image/webp",
+            })),
             meta: pageMeta(meta.title, meta.description),
             scripts: [ldJson(faqPage(faq, LANGUAGES[locale].lang))],
         };
