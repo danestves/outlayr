@@ -11,7 +11,7 @@ const { default: server } = await import("./server");
 
 const PAGE = `<html><head><title>Outlayr</title></head><body>
 <nav>Menu</nav>
-<main><h1>Track every expense.</h1><span aria-hidden="true">Decoration</span><img class="dark-only" alt="Dark shot" src="/a.webp"/></main>
+<main><h1>Track every expense.</h1><span aria-hidden="true">Decoration</span><img class="dark-only" alt="Dark shot" src="/a.webp"/><dl class="grid"><dt class="label">Currencies</dt><dd>165, at the rate of the day</dd></dl></main>
 <footer>Legal</footer>
 </body></html>`;
 
@@ -34,6 +34,9 @@ it("serves the main content as markdown to a client that prefers it, even on a n
     expect(response.headers.get("content-type")).toBe("text/markdown; charset=utf-8");
     expect(response.headers.get("vary")).toContain("Accept");
     expect(markdown).toContain("# Track every expense.");
+    expect(markdown).toContain("**Currencies**");
+    expect(markdown).toContain("165, at the rate of the day");
+    expect(markdown).not.toMatch(/<\/?d[dlt]\b/u);
     for (const hidden of ["Menu", "Decoration", "Dark shot", "Legal"]) {
         expect(markdown).not.toContain(hidden);
     }
