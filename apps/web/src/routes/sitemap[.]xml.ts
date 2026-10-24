@@ -2,12 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { defaultLocale, getIntlayer, locales } from "intlayer";
 
 import { LANGUAGES, pageUrl } from "@/lib/i18n";
-import { LEGAL_DAYS, guideUpdated, rivalChecked } from "@/lib/site";
+import { LEGAL_DAYS, compareUpdated, guideUpdated } from "@/lib/site";
 
 function pages(): [path: string, updated: Date | null][] {
     const { compare, guides } = getIntlayer("answers");
     const { pages: tools } = getIntlayer("tools");
-    const rivals = Object.keys(compare).map((slug): [string, Date] => [`/compare/${slug}`, rivalChecked(slug)]);
+    const rivals = Object.keys(compare).map((slug): [string, Date] => [`/compare/${slug}`, compareUpdated(slug)]);
     const answers = Object.keys(guides).map((slug): [string, Date] => [`/guides/${slug}`, guideUpdated(slug)]);
     return [
         ["/", null],

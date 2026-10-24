@@ -3,7 +3,7 @@ import { getIntlayer, getPrefix } from "intlayer";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
-import { Article, CompareTable, DELAYS, Figures, Questions } from "@/components/answers/article";
+import { Article, CompareTable, DELAYS, FactList, Figures, Prose, Questions } from "@/components/answers/article";
 import type { ArticleSection } from "@/components/answers/article";
 import { SayPanel, ScanPanel } from "@/components/demo/capture-panels";
 import { screenSources } from "@/components/home/media";
@@ -39,8 +39,6 @@ function plateImage(slug: GuideSlug, locale: Locale) {
     const plate = PLATES[slug];
     return plate === null || hasKey(PANELS, plate) ? null : screenSources(plate, locale);
 }
-
-const WWW = /^www\./u;
 
 const LABEL = "text-muted font-mono text-xs tracking-widest uppercase";
 
@@ -154,18 +152,6 @@ function GuidePlate({ alt, locale, plate }: { alt: string; locale: Locale; plate
     );
 }
 
-function Source({ href }: { href: string }) {
-    return (
-        <a
-            className="fluid text-muted hover:text-foreground ml-2 inline-flex items-center gap-1 font-mono text-xs whitespace-nowrap"
-            href={href}
-        >
-            {new URL(href).hostname.replace(WWW, "")}
-            <Icon name="arrow-up-right" />
-        </a>
-    );
-}
-
 function textOf(facts: readonly { label: { value: string }; text: { value: string } }[], label: string): string {
     return facts.find((fact) => fact.label.value === label)?.text.value ?? "";
 }
@@ -179,15 +165,7 @@ function Guide() {
     const sections: ArticleSection[] = [];
     if ("picked" in guide) {
         sections.push({
-            body: (
-                <div className="text-muted mt-8 flex max-w-2xl flex-col gap-4 text-lg">
-                    {guide.picked.map((paragraph) => (
-                        <p data-reveal key={paragraph.value}>
-                            {paragraph}
-                        </p>
-                    ))}
-                </div>
-            ),
+            body: <Prose paragraphs={guide.picked} />,
             id: "how-we-picked",
             title: labels.picked,
         });
@@ -200,20 +178,7 @@ function Guide() {
                         <p className="text-muted mt-4 max-w-2xl text-lg delay-100" data-reveal>
                             {app.summary}
                         </p>
-                        <dl className="border-border mt-8 border-t delay-150" data-reveal>
-                            {app.facts.map((fact) => (
-                                <div
-                                    className="border-border grid gap-2 border-b py-4 sm:grid-cols-4 sm:gap-6"
-                                    key={fact.label.value}
-                                >
-                                    <dt className={`${LABEL} sm:pt-1`}>{fact.label}</dt>
-                                    <dd className="sm:col-span-3">
-                                        <Figures text={fact.text.value} />
-                                        {"source" in fact ? <Source href={fact.source.value} /> : null}
-                                    </dd>
-                                </div>
-                            ))}
-                        </dl>
+                        <FactList facts={app.facts} />
                         {hasKey(compare, app.slug.value) ? (
                             <Link
                                 className="fluid bg-surface hover:bg-foreground/5 group mt-6 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold"
@@ -254,6 +219,13 @@ function Guide() {
             ),
             id: "steps",
             title: labels.steps,
+        });
+    }
+    for (const section of "more" in guide ? guide.more : []) {
+        sections.push({
+            body: <Prose paragraphs={section.body} />,
+            id: section.id.value,
+            title: section.title,
         });
     }
     sections.push({

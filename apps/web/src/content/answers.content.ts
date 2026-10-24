@@ -95,6 +95,13 @@ const LABELS = {
     watch: t({ en: "Watch out for", es: "Ten en cuenta" }),
 };
 
+const MOVING = {
+    export: t({ en: "Export", es: "Exportar" }),
+    file: t({ en: "The file", es: "El archivo" }),
+    into: t({ en: "Into Outlayr", es: "En Outlayr" }),
+    lost: t({ en: "Doesn't come across", es: "Lo que no pasa" }),
+};
+
 const LICENSE_ROW = {
     label: LABELS.license,
     outlayr: t({ en: "Open source, GPL-3.0", es: "Código abierto, GPL-3.0" }),
@@ -186,6 +193,38 @@ const answers = {
                         es: "Alternativa a Copilot Money: Outlayr vs Copilot",
                     }),
                 },
+                moving: [
+                    {
+                        label: MOVING.export,
+                        source: "https://help.copilot.money/en/articles/5944414-exporting-your-transaction-data",
+                        text: t({
+                            en: "On iPhone, open Settings, scroll to Account, tap Export your transactions, and save the CSV to Files. On a Mac, an iPad, or the web, export from the Transactions tab, all of them or a filtered set.",
+                            es: "En iPhone, abre Settings, baja hasta Account, toca Export your transactions y guarda el CSV en Archivos. En una Mac, un iPad o la web, exporta desde la pestaña Transactions, todos o los que filtres.",
+                        }),
+                    },
+                    {
+                        label: MOVING.file,
+                        source: "https://help.copilot.money/en/articles/5944414-exporting-your-transaction-data",
+                        text: t({
+                            en: "A CSV with the date, name, amount, category and parent category, transaction type, account, notes, and whether each transaction was excluded.",
+                            es: "Un CSV con la fecha, el nombre, el monto, la categoría y su categoría principal, el tipo de movimiento, la cuenta, las notas y si cada movimiento estaba excluido.",
+                        }),
+                    },
+                    {
+                        label: MOVING.into,
+                        text: t({
+                            en: "Import it in Settings, under Import data, as a CSV file. The date, the name, the category, and the amount come across. Delete the excluded rows first, since Outlayr imports every row, and check the columns Outlayr picked before you import.",
+                            es: "Impórtalo en Configuración, en Importar datos, como archivo CSV. Pasan la fecha, el nombre, la categoría y el monto. Borra primero las filas excluidas, porque Outlayr importa todas, y revisa las columnas que eligió Outlayr antes de importar.",
+                        }),
+                    },
+                    {
+                        label: MOVING.lost,
+                        text: t({
+                            en: "Parent categories, accounts, pending status, and links to recurring charges.",
+                            es: "Las categorías principales, las cuentas, el estado pendiente y los vínculos con cobros recurrentes.",
+                        }),
+                    },
+                ],
                 related: ["/compare/monarch", "/compare/everydollar", "/compare/ynab"] satisfies PageRef[],
                 rival: "Copilot",
                 rows: [
@@ -271,6 +310,38 @@ const answers = {
                         es: "Alternativa a EveryDollar: Outlayr vs EveryDollar",
                     }),
                 },
+                moving: [
+                    {
+                        label: MOVING.export,
+                        source: "https://everydollar.help.ramseysolutions.com/hc/en-us/articles/360040571391-Export-Tracked-Transactions",
+                        text: t({
+                            en: "Sign in at EveryDollar.com, scroll to the bottom of the budget, choose Download CSV, and pick the month's tracked transactions. Change the month in the drop-down at the top left and repeat for each month.",
+                            es: "Inicia sesión en EveryDollar.com, baja hasta el final del presupuesto, elige Download CSV y escoge los movimientos registrados del mes. Cambia el mes en el menú de arriba a la izquierda y repite con cada mes.",
+                        }),
+                    },
+                    {
+                        label: MOVING.file,
+                        source: "https://everydollar.help.ramseysolutions.com/hc/en-us/articles/360040571391-Export-Tracked-Transactions",
+                        text: t({
+                            en: "One CSV per month, on the website and with Premium only. It holds each tracked transaction's budget group, budget item, type, date, merchant, account, amount, and note.",
+                            es: "Un CSV por mes, solo en la web y con Premium. Tiene el grupo y la partida del presupuesto, el tipo, la fecha, el comercio, la cuenta, el monto y la nota de cada movimiento registrado.",
+                        }),
+                    },
+                    {
+                        label: MOVING.into,
+                        text: t({
+                            en: "Import each month's file in Settings, under Import data, as a CSV file. Outlayr finds the date, the merchant, and the amount; pick the budget item column as the category by hand, since its name doesn't say category.",
+                            es: "Importa el archivo de cada mes en Configuración, en Importar datos, como archivo CSV. Outlayr encuentra la fecha, el comercio y el monto; elige a mano la columna de la partida como categoría, porque su nombre no dice categoría.",
+                        }),
+                    },
+                    {
+                        label: MOVING.lost,
+                        text: t({
+                            en: "Budget groups, accounts, untracked transactions, and what you planned for each item. A year of history takes 12 files.",
+                            es: "Los grupos del presupuesto, las cuentas, los movimientos sin registrar y lo que planeaste para cada partida. Un año de historial son 12 archivos.",
+                        }),
+                    },
+                ],
                 related: ["/compare/ynab", "/compare/copilot", "/tools/50-30-20-budget-calculator"] satisfies PageRef[],
                 rival: "EveryDollar",
                 rows: [
@@ -382,6 +453,37 @@ const answers = {
                         es: "Alternativa a Fintonic: Outlayr vs Fintonic",
                     }),
                 },
+                moving: [
+                    {
+                        label: MOVING.export,
+                        source: "https://www.fintonic.com/blog/descubre-el-nuevo-fintonic/",
+                        text: t({
+                            en: "Fintonic's site doesn't describe an export today. Its blog said in 2018 that you could download your movements as an Excel file, but not where to find it.",
+                            es: "El sitio de Fintonic no explica hoy cómo exportar. Su blog decía en 2018 que podías descargar tus movimientos en un Excel, pero no dónde encontrarlo.",
+                        }),
+                    },
+                    {
+                        label: MOVING.file,
+                        text: t({
+                            en: "If you get an Excel file, save it as a comma-separated CSV first, since Outlayr reads only CSV files.",
+                            es: "Si consigues un Excel, guárdalo primero como CSV separado por comas, porque Outlayr solo lee archivos CSV.",
+                        }),
+                    },
+                    {
+                        label: MOVING.into,
+                        text: t({
+                            en: "Import it in Settings, under Import data, as a CSV file, and check the columns Outlayr picked before you import. Or start fresh: type a purchase as one sentence, say it, or scan the receipt.",
+                            es: "Impórtalo en Configuración, en Importar datos, como archivo CSV, y revisa las columnas que eligió Outlayr antes de importar. O empieza de cero: escribe una compra en una oración, díctala o escanea el recibo.",
+                        }),
+                    },
+                    {
+                        label: MOVING.lost,
+                        text: t({
+                            en: "Your FinScore, alerts, and loan offers stay in Fintonic.",
+                            es: "Tu FinScore, las alertas y las ofertas de préstamos se quedan en Fintonic.",
+                        }),
+                    },
+                ],
                 related: [
                     "/guides/best-expense-tracker-apps",
                     "/guides/multi-currency-expense-tracker",
@@ -489,6 +591,38 @@ const answers = {
                         es: "Alternativa a Monarch Money: Outlayr vs Monarch",
                     }),
                 },
+                moving: [
+                    {
+                        label: MOVING.export,
+                        source: "https://help.monarch.com/hc/en-us/articles/15526600975764-Downloading-Transaction-or-Account-History",
+                        text: t({
+                            en: "On the web, open Settings, then Data, and choose Download Transactions. For one account, open it, click Edit, then Download transactions.",
+                            es: "En la web, abre Settings, luego Data, y elige Download Transactions. Para una sola cuenta, ábrela, haz clic en Edit y luego en Download transactions.",
+                        }),
+                    },
+                    {
+                        label: MOVING.file,
+                        source: "https://help.monarch.com/hc/en-us/articles/15526600975764-Downloading-Transaction-or-Account-History",
+                        text: t({
+                            en: "A CSV. Monarch suggests 5,000 transactions or fewer per download, split by date range, and your history stays downloadable after your subscription or trial ends.",
+                            es: "Un CSV. Monarch sugiere 5,000 movimientos o menos por descarga, divididos por fechas, y tu historial se puede descargar aunque termine tu suscripción o tu prueba.",
+                        }),
+                    },
+                    {
+                        label: MOVING.into,
+                        text: t({
+                            en: "Import it in Settings, under Import data, as a CSV file. The date, the merchant, the category, and the amount come across. If amounts carry a minus sign, Outlayr drops it and reads every amount as positive, so refunds and income come in as expenses unless their category is an income category in Outlayr.",
+                            es: "Impórtalo en Configuración, en Importar datos, como archivo CSV. Pasan la fecha, el comercio, la categoría y el monto. Si los montos llevan signo menos, Outlayr lo quita y lee cada monto en positivo, así que los reembolsos y los ingresos entran como gastos salvo que su categoría sea de ingresos en Outlayr.",
+                        }),
+                    },
+                    {
+                        label: MOVING.lost,
+                        text: t({
+                            en: "Accounts, tags, balance history, and budgets.",
+                            es: "Las cuentas, las etiquetas, el historial de saldos y los presupuestos.",
+                        }),
+                    },
+                ],
                 related: [
                     "/guides/best-subscription-tracker-apps",
                     "/compare/copilot",
@@ -575,6 +709,38 @@ const answers = {
                         es: "Alternativa a PocketGuard: Outlayr vs PocketGuard",
                     }),
                 },
+                moving: [
+                    {
+                        label: MOVING.export,
+                        source: "https://web.archive.org/web/20261010222740/https://pocketguard.com/help/export-transactions/",
+                        text: t({
+                            en: "PocketGuard's help center lists Export transactions under Transactions, behind the download icon, or in the sidebar, as a PocketGuard Plus feature. It emails you a link that works for 24 hours.",
+                            es: "El centro de ayuda de PocketGuard ubica Export transactions en Transactions, tras el ícono de descarga, o en la barra lateral, como función de PocketGuard Plus. Te envía por correo un enlace que dura 24 horas.",
+                        }),
+                    },
+                    {
+                        label: MOVING.file,
+                        source: "https://web.archive.org/web/20261010222740/https://pocketguard.com/help/export-transactions/",
+                        text: t({
+                            en: "A CSV with the history of all your linked accounts. PocketGuard doesn't list its columns.",
+                            es: "Un CSV con el historial de todas tus cuentas vinculadas. PocketGuard no publica sus columnas.",
+                        }),
+                    },
+                    {
+                        label: MOVING.into,
+                        text: t({
+                            en: "Import it in Settings, under Import data, as a CSV file, and check that Outlayr picked the date, the amount, and the category before you import.",
+                            es: "Impórtalo en Configuración, en Importar datos, como archivo CSV, y revisa que Outlayr haya elegido la fecha, el monto y la categoría antes de importar.",
+                        }),
+                    },
+                    {
+                        label: MOVING.lost,
+                        text: t({
+                            en: "Outlayr's import has no field for accounts, budgets, or recurring bills, so set up charges that repeat again in Outlayr.",
+                            es: "La importación de Outlayr no tiene campos para cuentas, presupuestos ni pagos recurrentes, así que vuelve a crear en Outlayr los cobros que se repiten.",
+                        }),
+                    },
+                ],
                 related: [
                     "/guides/best-subscription-tracker-apps",
                     "/compare/rocket-money",
@@ -683,6 +849,38 @@ const answers = {
                         es: "Alternativa a Rocket Money: Outlayr vs Rocket Money",
                     }),
                 },
+                moving: [
+                    {
+                        label: MOVING.export,
+                        source: "https://help.rocketmoney.com/en/articles/10296106-exporting-transactions",
+                        text: t({
+                            en: "In the app, open Transactions, tap the menu in the upper right, then CSV Download, pick your filters, and tap Export. On the web, open Transactions and choose Export.",
+                            es: "En la app, abre Transactions, toca el menú arriba a la derecha, luego CSV Download, elige tus filtros y toca Export. En la web, abre Transactions y elige Export.",
+                        }),
+                    },
+                    {
+                        label: MOVING.file,
+                        source: "https://help.rocketmoney.com/en/articles/10296106-exporting-transactions",
+                        text: t({
+                            en: "A CSV, sent as a download link by email. Export is a Premium feature, and the file opens only on a computer, not on a phone.",
+                            es: "Un CSV que llega como enlace de descarga por correo. Exportar es una función Premium, y el archivo solo se abre en una computadora, no en el celular.",
+                        }),
+                    },
+                    {
+                        label: MOVING.into,
+                        text: t({
+                            en: "Save the file to Google Drive or iCloud Drive from your computer, then import it in Settings, under Import data, as a CSV file. Rocket Money doesn't list its columns, so check that Outlayr picked the date, the amount, and the category before you import.",
+                            es: "Guarda el archivo en Google Drive o iCloud Drive desde tu computadora y luego impórtalo en Configuración, en Importar datos, como archivo CSV. Rocket Money no publica sus columnas, así que revisa que Outlayr haya elegido la fecha, el monto y la categoría antes de importar.",
+                        }),
+                    },
+                    {
+                        label: MOVING.lost,
+                        text: t({
+                            en: "Outlayr's import has no field for accounts, tags, split lines, or budgets. Subscriptions come in as one-off entries, so set each one to repeat in Outlayr.",
+                            es: "La importación de Outlayr no tiene campos para cuentas, etiquetas, divisiones ni presupuestos. Las suscripciones entran como registros sueltos, así que configura cada una para que se repita en Outlayr.",
+                        }),
+                    },
+                ],
                 related: [
                     "/guides/best-subscription-tracker-apps",
                     "/compare/pocketguard",
@@ -783,6 +981,38 @@ const answers = {
                         es: "Alternativa a Spendee: Outlayr vs Spendee",
                     }),
                 },
+                moving: [
+                    {
+                        label: MOVING.export,
+                        source: "https://help.spendee.com/article/137-export-transactions",
+                        text: t({
+                            en: "In the phone app, open More, then Export, pick the wallets and the time period, and choose CSV. Export isn't in Spendee's web app yet.",
+                            es: "En la app del celular, abre More, luego Export, elige las billeteras y el período, y escoge CSV. Exportar todavía no está en la app web de Spendee.",
+                        }),
+                    },
+                    {
+                        label: MOVING.file,
+                        source: "https://help.spendee.com/article/137-export-transactions",
+                        text: t({
+                            en: "CSV or XLS. The free plan exports the last 365 days; Plus and Premium have no date limit.",
+                            es: "CSV o XLS. El plan gratis exporta los últimos 365 días; Plus y Premium no tienen límite de fechas.",
+                        }),
+                    },
+                    {
+                        label: MOVING.into,
+                        text: t({
+                            en: "Choose CSV, since Outlayr doesn't read XLS files, then import it in Settings, under Import data, as a CSV file. Spendee doesn't list its columns, so check that Outlayr picked the date, the amount, and the category before you import.",
+                            es: "Elige CSV, porque Outlayr no lee archivos XLS, y luego impórtalo en Configuración, en Importar datos, como archivo CSV. Spendee no publica sus columnas, así que revisa que Outlayr haya elegido la fecha, el monto y la categoría antes de importar.",
+                        }),
+                    },
+                    {
+                        label: MOVING.lost,
+                        text: t({
+                            en: "Labels, wallets, and budgets, and on Spendee's free plan, anything older than a year.",
+                            es: "Las etiquetas, las billeteras y los presupuestos, y en el plan gratis de Spendee, todo lo anterior a un año.",
+                        }),
+                    },
+                ],
                 related: [
                     "/guides/best-expense-tracker-apps",
                     "/compare/wallet",
@@ -814,7 +1044,10 @@ const answers = {
                     {
                         label: LABELS.platforms,
                         outlayr: OUTLAYR.platforms,
-                        rival: t({ en: "iPhone, Android. Web coming", es: "iPhone, Android. Web próximamente" }),
+                        rival: t({
+                            en: "iPhone, Android, and web. Budgets on the web are coming",
+                            es: "iPhone, Android y web. Los presupuestos en la web llegan pronto",
+                        }),
                     },
                     LICENSE_ROW,
                 ],
@@ -856,6 +1089,38 @@ const answers = {
                         es: "Alternativa a Wallet by BudgetBakers: Outlayr vs Wallet",
                     }),
                 },
+                moving: [
+                    {
+                        label: MOVING.export,
+                        source: "https://support.budgetbakers.com/hc/en-us/articles/7151606064018-How-to-export-transactions-from-Wallet",
+                        text: t({
+                            en: "On Android, open the menu at the top left, then Others, then Export, set any filters, and choose CSV. In the web app, open Records, select the rows, and choose Export, then Export to CSV. The iPhone app can't export.",
+                            es: "En Android, abre el menú de arriba a la izquierda, luego Others y Export, pon los filtros que quieras y elige CSV. En la app web, abre Records, selecciona las filas y elige Export y luego Export to CSV. La app de iPhone no puede exportar.",
+                        }),
+                    },
+                    {
+                        label: MOVING.file,
+                        source: "https://support.budgetbakers.com/hc/en-us/articles/10105401036690-Backup-Measures-and-Data-Loss",
+                        text: t({
+                            en: "CSV, XLS, or PDF, with each record's date, amount, category, and account. Export is a Premium feature, and it leaves out budgets, goals, and recurring payments.",
+                            es: "CSV, XLS o PDF, con la fecha, el monto, la categoría y la cuenta de cada registro. Exportar es una función Premium, y no incluye presupuestos, metas ni pagos recurrentes.",
+                        }),
+                    },
+                    {
+                        label: MOVING.into,
+                        text: t({
+                            en: "Import the CSV in Settings, under Import data, as a CSV file. The date, the category, and the amount come across.",
+                            es: "Importa el CSV en Configuración, en Importar datos, como archivo CSV. Pasan la fecha, la categoría y el monto.",
+                        }),
+                    },
+                    {
+                        label: MOVING.lost,
+                        text: t({
+                            en: "Accounts, payment types, and transfers as transfers.",
+                            es: "Las cuentas, los tipos de pago y las transferencias como transferencias.",
+                        }),
+                    },
+                ],
                 related: [
                     "/guides/best-expense-tracker-apps",
                     "/guides/best-open-source-expense-tracker-apps",
@@ -954,6 +1219,38 @@ const answers = {
                         es: "Alternativa a YNAB: Outlayr vs YNAB (precio y monedas)",
                     }),
                 },
+                moving: [
+                    {
+                        label: MOVING.export,
+                        source: "https://support.ynab.com/en_us/how-to-export-plan-data-Sy_CouWA9",
+                        text: t({
+                            en: "On the web, click your plan name at the top of the sidebar and choose Export Plan. It downloads your plan and your transactions as two files. To export only some transactions, select them in an account and choose More, then Export.",
+                            es: "En la web, haz clic en el nombre de tu plan arriba de la barra lateral y elige Export Plan. Descarga tu plan y tus movimientos en dos archivos. Para exportar solo algunos movimientos, selecciónalos en una cuenta y elige More y luego Export.",
+                        }),
+                    },
+                    {
+                        label: MOVING.file,
+                        source: "https://support.ynab.com/en_us/how-to-export-plan-data-Sy_CouWA9",
+                        text: t({
+                            en: "CSV, or TSV for currencies written with a decimal comma. Export works only on the web, and it leaves out targets and category notes.",
+                            es: "CSV, o TSV para las monedas que usan coma decimal. Solo se exporta desde la web, y no incluye las metas ni las notas de categoría.",
+                        }),
+                    },
+                    {
+                        label: MOVING.into,
+                        text: t({
+                            en: "Import the transactions file in Settings, under Import data, as a CSV file. The date, the payee or memo, the category, and the amount come across. Outlayr reads only comma-separated files, so save a TSV as CSV first, and it reads one amount column, kept positive, so add a Type column with Income or Expense if your file splits outflow and inflow.",
+                            es: "Importa el archivo de movimientos en Configuración, en Importar datos, como archivo CSV. Pasan la fecha, el beneficiario o la nota, la categoría y el monto. Outlayr solo lee archivos separados por comas, así que guarda un TSV como CSV primero, y lee una sola columna de monto, siempre en positivo, así que agrega una columna Type con Income o Expense si tu archivo separa salidas y entradas.",
+                        }),
+                    },
+                    {
+                        label: MOVING.lost,
+                        text: t({
+                            en: "Accounts, flags, cleared status, split lines, and the plan file with what you assigned to each category.",
+                            es: "Las cuentas, las banderas, el estado de conciliado, las divisiones y el archivo del plan con lo que asignaste a cada categoría.",
+                        }),
+                    },
+                ],
                 related: [
                     "/guides/best-expense-tracker-apps",
                     "/compare/everydollar",
@@ -1077,6 +1374,26 @@ const answers = {
                             es: "¿Y las tarjetas que no están en Apple Pay?",
                         }),
                     },
+                    {
+                        answer: t({
+                            en: "No. It works on the free plan and doesn't use your voice or receipt captures. The automation runs on your iPhone and passes Outlayr the amount, the store, and the card from Wallet.",
+                            es: "No. Funciona en el plan gratis y no usa tus capturas de voz ni de recibos. La automatización se ejecuta en tu iPhone y le pasa a Outlayr el monto, la tienda y la tarjeta desde Wallet.",
+                        }),
+                        question: t({
+                            en: "Does Apple Pay logging cost anything?",
+                            es: "¿Registrar con Apple Pay cuesta algo?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. The automation can run for any card in Wallet, and you choose the Outlayr account for each card the first time you pay with it.",
+                            es: "Sí. La automatización puede ejecutarse con cualquier tarjeta de Wallet, y eliges la cuenta de Outlayr de cada tarjeta la primera vez que pagas con ella.",
+                        }),
+                        question: t({
+                            en: "Does it work with every card in Wallet?",
+                            es: "¿Funciona con todas las tarjetas de Wallet?",
+                        }),
+                    },
                 ],
                 lead: t({
                     en: "On iPhone, Outlayr logs each Apple Pay purchase when you tap your card. A Shortcuts automation sends the amount, the merchant, and the card to the Log.",
@@ -1092,6 +1409,64 @@ const answers = {
                         es: "Control de gastos con Apple Pay: cada pago · Outlayr",
                     }),
                 },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "Before iOS 27 there is no shared shortcut, so setting up the Apple Pay expense tracker takes a few taps in the Shortcuts app. Open Automation, tap +, and choose Wallet, which is called Transaction before iOS 26. Pick your cards, turn Run Immediately on and Notify When Run off, then tap Next and New Blank Automation.",
+                                es: "Antes de iOS 27 no hay un atajo compartido, así que configurar el control de gastos con Apple Pay toma unos toques en la app Atajos. Abre Automatización, toca + y elige Wallet, que se llama Transacción antes de iOS 26. Elige tus tarjetas, deja Ejecutar de inmediato activado y Notificar al ejecutar desactivado, y toca Siguiente y luego Nueva automatización en blanco.",
+                            }),
+                            t({
+                                en: "Tap Add Action, search Outlayr, and pick Log a Wallet Transaction. Fill its Amount, Merchant, and Card fields from the Shortcut Input, then tap Done. Outlayr's Settings, under Apple Pay, walks through the same steps.",
+                                es: "Toca Agregar acción, busca Outlayr y elige Log a Wallet Transaction. Completa sus campos Amount, Merchant y Card con la Entrada de atajo y toca Listo. En Configuración de Outlayr, en Apple Pay, están los mismos pasos.",
+                            }),
+                        ],
+                        id: "by-hand",
+                        title: t({ en: "Set it up by hand before iOS 27", es: "Configúralo a mano antes de iOS 27" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "The first purchase with a new card adds it to Settings, under Apple Pay, where Outlayr asks which account it is. From then on, that card's purchases go to that account. A store Outlayr hasn't seen asks you to pick a category, and you can change any entry later like one you typed.",
+                                es: "La primera compra con una tarjeta nueva la agrega a Configuración, en Apple Pay, donde Outlayr te pregunta qué cuenta es. Desde ahí, las compras de esa tarjeta van a esa cuenta. Una tienda que Outlayr no conoce te pide elegir una categoría, y puedes cambiar cualquier registro después como uno que escribiste.",
+                            }),
+                            t({
+                                en: "The same screen shows when the automation last ran and the purchases it logged, so you can tell it's working. Pay with a card to try it. If a card is filed under the wrong account, choose another one there, and its next purchases follow.",
+                                es: "La misma pantalla muestra cuándo se ejecutó la automatización por última vez y las compras que registró, para que sepas que funciona. Paga con una tarjeta para probarlo. Si una tarjeta quedó en la cuenta equivocada, elige otra ahí, y sus siguientes compras irán a esa cuenta.",
+                            }),
+                        ],
+                        id: "cards",
+                        title: t({ en: "Cards, accounts, and categories", es: "Tarjetas, cuentas y categorías" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "A second shortcut, Outlayr - Bank Notifications, reads the purchase notifications your bank's app sends. Get the bank shortcut from the same screen, tap App and pick your banks, then turn it on in Automation. Pick only bank and card apps.",
+                                es: "Un segundo atajo, Outlayr - Bank Notifications, lee las notificaciones de compra que envía la app de tu banco. Obtén el atajo del banco desde la misma pantalla, toca App y elige tus bancos, y actívalo en Automatización. Elige solo apps de bancos y tarjetas.",
+                            }),
+                            t({
+                                en: "This covers cards you swipe or tap without Apple Pay, as long as your bank's app sends a notification with the amount; those apps show up in the same list. When you pay with Apple Pay and your bank also sends a notification, the tap and the notification land as one entry, not two.",
+                                es: "Así se registran las tarjetas que pasas o acercas sin Apple Pay, siempre que la app de tu banco envíe una notificación con el monto; esas apps aparecen en la misma lista. Cuando pagas con Apple Pay y tu banco también te envía una notificación, el pago y la notificación quedan en un solo registro, no en dos.",
+                            }),
+                        ],
+                        id: "bank-apps",
+                        title: t({ en: "Cards that aren't in Apple Pay", es: "Tarjetas que no están en Apple Pay" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Each tap runs in the background, so Outlayr doesn't open. A notification shows the amount and the store, with the category Outlayr already uses for that store, or a note to pick one when the store is new. Apple Pay logging works on the free plan and doesn't use any of your captures.",
+                                es: "Cada pago se registra en segundo plano, así que Outlayr no se abre. Una notificación muestra el monto y la tienda, con la categoría que Outlayr ya usa para esa tienda, o un aviso para elegir una cuando la tienda es nueva. El registro con Apple Pay funciona en el plan gratis y no usa ninguna de tus capturas.",
+                            }),
+                            t({
+                                en: "The currency comes from the amount's symbol. When a symbol belongs to several currencies, like $, Outlayr uses the currency of the account the card is filed under, so a peso card logs pesos. Wallet can run the automation twice for one purchase, when the card is authorized and again when the charge settles, and Outlayr keeps one entry.",
+                                es: "La moneda sale del símbolo del monto. Cuando un símbolo es de varias monedas, como $, Outlayr usa la moneda de la cuenta donde está la tarjeta, así que una tarjeta en pesos registra pesos. Wallet puede ejecutar la automatización dos veces por una compra, cuando se autoriza la tarjeta y otra vez cuando se liquida el cobro, y Outlayr deja un solo registro.",
+                            }),
+                        ],
+                        id: "after-tap",
+                        title: t({ en: "What happens after a tap", es: "Qué pasa después de pagar" }),
+                    },
+                ],
                 plateAlt: t({
                     en: "Outlayr Log showing a $42.00 Costco purchase logged today, above the entries from earlier days.",
                     es: "Registro de Outlayr con una compra de $42.00 en Costco registrada hoy, arriba de los registros de días anteriores.",
@@ -2317,6 +2692,73 @@ const answers = {
                         es: "App de presupuesto mensual: límites y ritmo · Outlayr",
                     }),
                 },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "Outlayr's budget planner starts from what you already spend. Each category without a budget shows what you typically spend there, and as you drag to set a limit, Outlayr replays your last period against it: whether it would have held and with how much to spare, or the day you would have run out.",
+                                es: "La app de presupuesto mensual de Outlayr parte de lo que ya gastas. Cada categoría sin presupuesto muestra lo que gastas normalmente ahí, y mientras arrastras para poner un límite, Outlayr repasa tu último período con ese límite: si te habría alcanzado y con cuánto de sobra, o el día en que se te habría acabado.",
+                            }),
+                            t({
+                                en: "A budget can cover one category or everything, for a day, a week, a month, or a year. If you start one partway through a period, Outlayr tells you how much is already spent, so you know if you begin over. Not sure where to start? The 50/30/20 calculator splits your take home pay into needs, wants, and savings.",
+                                es: "Un presupuesto puede cubrir una categoría o todo, por un día, una semana, un mes o un año. Si empiezas uno a mitad de un período, Outlayr te dice cuánto llevas gastado, para que sepas si empiezas por encima. ¿No sabes por dónde empezar? La calculadora 50/30/20 reparte tu sueldo neto entre necesidades, gustos y ahorro.",
+                            }),
+                        ],
+                        id: "limit",
+                        title: t({
+                            en: "Pick a limit from your own numbers",
+                            es: "Elige un límite con tus propios números",
+                        }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Each budget shows what is left, what is left each day, and the share already spent. When your pace runs ahead of the limit, it says so in plain words, like still solvent, but on this pace the period ends $319 short. If the money already ran out, it shows the day and how many days early.",
+                                es: "Cada presupuesto muestra lo que queda, lo que queda por día y cuánto llevas gastado. Cuando tu ritmo va por delante del límite, te lo dice en palabras simples, por ejemplo todavía te alcanza, pero a este ritmo te van a faltar $319 al final del período. Si el dinero ya se acabó, te muestra el día y cuántos días antes.",
+                            }),
+                            t({
+                                en: "The overall budget also names the category that took the biggest share, so you know where to look first.",
+                                es: "El presupuesto general también te dice qué categoría se llevó la mayor parte, para que sepas dónde mirar primero.",
+                            }),
+                        ],
+                        id: "pace",
+                        title: t({
+                            en: "Read the pace, not just what's left",
+                            es: "Mira el ritmo, no solo lo que queda",
+                        }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Turn on carry-over and what you don't spend is added to the next period, while what you overspend is taken off it, so a quiet month gives you room in the next one. Turning it off later drops what was carried in.",
+                                es: "Activa Acumular lo que sobre y lo que no gastes se suma al período siguiente, y lo que te pases se le resta, así que un mes tranquilo te da margen en el siguiente. Si lo desactivas después, se pierde lo acumulado.",
+                            }),
+                            t({
+                                en: "If you're paid on the 15th, set your month to start on the 15th in Settings, under Time frames, and budgets and insights run from payday to payday. The free plan includes 2 category budgets plus the overall one; Outlayr Pro has no limit.",
+                                es: "Si te pagan el 15, pon que tu mes empiece el 15 en Configuración, en Períodos de tiempo, y los presupuestos y las estadísticas corren de un día de pago al siguiente. El plan gratis incluye 2 presupuestos por categoría además del general; Outlayr Pro no tiene límite.",
+                            }),
+                        ],
+                        id: "payday",
+                        title: t({ en: "Carry-over and payday", es: "Acumular y el día de pago" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Use one overall budget if you want a single number for the month, or category budgets for the places where money leaks, like Dining Out or Subscriptions. They work together: the overall budget counts everything, and each category budget counts only its own entries.",
+                                es: "Usa un presupuesto general si quieres un solo número para el mes, o presupuestos por categoría para donde se te va el dinero, como Restaurantes o Suscripciones. Funcionan juntos: el general cuenta todo, y cada presupuesto por categoría cuenta solo sus registros.",
+                            }),
+                            t({
+                                en: "Budgets update as you log, whether you type a sentence, say it, scan a receipt, or import a CSV, and subscriptions count on the day they charge. Transfers between your own accounts never count as spending. Changing a limit applies to the current period, and past periods stay as they were.",
+                                es: "Los presupuestos se actualizan mientras registras, ya sea que escribas una oración, la dictes, escanees un recibo o importes un CSV, y las suscripciones cuentan el día que te cobran. Las transferencias entre tus propias cuentas nunca cuentan como gasto. Cambiar un límite aplica al período actual, y los períodos anteriores quedan como estaban.",
+                            }),
+                        ],
+                        id: "kinds",
+                        title: t({
+                            en: "One overall budget, or one per category",
+                            es: "Un presupuesto general, o uno por categoría",
+                        }),
+                    },
+                ],
                 plateAlt: BUDGETS_SCREEN_ALT,
                 related: [
                     "/tools/50-30-20-budget-calculator",
@@ -2521,8 +2963,8 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "The rate from the day of the purchase. Entries you already logged do not change when the rate moves. You can type your own rate when the one you got was different.",
-                            es: "La tasa del día de la compra. Los registros que ya hiciste no cambian cuando la tasa se mueve. Puedes escribir tu propia tasa cuando la que te dieron fue distinta.",
+                            en: "The rate from the day of the purchase, from Open Exchange Rates, or for bolívares the BCV rate published through Cotizave. Entries you already logged do not change when the rate moves. You can type your own rate when the one you got was different.",
+                            es: "La tasa del día de la compra, de Open Exchange Rates, o para los bolívares la tasa del BCV que publica Cotizave. Los registros que ya hiciste no cambian cuando la tasa se mueve. Puedes escribir tu propia tasa cuando la que te dieron fue distinta.",
                         }),
                         question: t({
                             en: "Which exchange rate does Outlayr use?",
@@ -2564,6 +3006,70 @@ const answers = {
                         es: "Controla gastos en varias monedas y de viaje · Outlayr",
                     }),
                 },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "Outlayr is a multi-currency expense tracker that keeps the rate it used next to every entry. Rates for its 165 currencies come from Open Exchange Rates and refresh every hour. Bolívar rates come from Cotizave, which publishes the Banco Central de Venezuela (BCV) rate for the dollar and the euro and the USDT rate on Binance, and they refresh every 72 minutes.",
+                                es: "Outlayr es una app para controlar gastos en varias monedas que guarda la tasa que usó junto a cada registro. Las tasas de sus 165 monedas vienen de Open Exchange Rates y se actualizan cada hora. Las del bolívar vienen de Cotizave, que publica la tasa del Banco Central de Venezuela (BCV) para el dólar y el euro y la tasa del USDT en Binance, y se actualizan cada 72 minutos.",
+                            }),
+                            t({
+                                en: "Each rate shows how fresh it is, like As of 09:05 for one fetched today, or 3 days old when the newest rate is older than the day of the entry. If there is no rate yet for that day, Outlayr says so, and the entry counts in dollars once it has one.",
+                                es: "Cada tasa muestra qué tan reciente es, por ejemplo Hoy, 09:05 para una de hoy, o De hace 3 días cuando la más nueva es anterior al día del registro. Si todavía no hay tasa para ese día, Outlayr te lo dice, y el registro suma en dólares cuando tenga una.",
+                            }),
+                        ],
+                        id: "rates",
+                        title: t({ en: "Where the rates come from", es: "De dónde salen las tasas" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "When you log a purchase in another currency, the sentence also shows what it comes to in dollars and which rate did it, like $21.70 at the official rate. That is the rate from the day of the purchase, and it stays with the entry, so what you already logged doesn't move when the market does.",
+                                es: "Cuando registras una compra en otra moneda, la oración también muestra cuánto es en dólares y con qué tasa, por ejemplo US$21.70 a la tasa oficial. Es la tasa del día de la compra, y se queda con el registro, así que lo que ya registraste no cambia cuando se mueve el mercado.",
+                            }),
+                            t({
+                                en: "To use another rate, tap the rate in the sentence and pick one, or choose My rate and type the rate you actually got. Outlayr shows the last rate you typed so you can reuse it. You can also tap the dollar amount and type what you paid in dollars, and Outlayr works out the rate from the two amounts.",
+                                es: "Para usar otra tasa, toca la tasa en la oración y elige otra, o elige Mi tasa y escribe la que te dieron. Outlayr te muestra la última tasa que escribiste para que la uses de nuevo. También puedes tocar el monto en dólares y escribir lo que pagaste en dólares, y Outlayr calcula la tasa a partir de los dos montos.",
+                            }),
+                        ],
+                        id: "your-rate",
+                        title: t({
+                            en: "The rate of the day, or the one you got",
+                            es: "La tasa del día, o la que te dieron",
+                        }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "In Venezuela, the official BCV rate and the rate people actually pay can be far apart. For a purchase in bolívares, Outlayr offers USD (BCV) and EUR (BCV), both from the central bank's published rates, and My rate for anything else, such as the parallel rate you paid.",
+                                es: "En Venezuela, la tasa oficial del BCV y la que de verdad pagas pueden estar muy lejos. Para una compra en bolívares, Outlayr te ofrece USD (BCV) y EUR (BCV), las dos de las tasas que publica el banco central, y Mi tasa para cualquier otra, como la tasa paralela que pagaste.",
+                            }),
+                            t({
+                                en: "If a shop priced something in dollars and charged you in bolívares, log the bolívar amount, tap the dollar amount, and type the dollar price; the rate comes out of the two. Changing dollars into bolívares between your own accounts is a transfer, not spending, and there the rate list also offers USDT (Binance), which is saved as your own rate.",
+                                es: "Si una tienda puso el precio en dólares y te cobró en bolívares, registra el monto en bolívares, toca el monto en dólares y escribe el precio en dólares; la tasa sale de los dos. Cambiar dólares a bolívares entre tus propias cuentas es una transferencia, no un gasto, y ahí la lista de tasas también te ofrece USDT (Binance), que se guarda como tu propia tasa.",
+                            }),
+                        ],
+                        id: "bolivares",
+                        title: t({
+                            en: "Bolívares: the BCV rate or the one you paid",
+                            es: "Bolívares: la tasa del BCV o la que pagaste",
+                        }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "On a trip, log each purchase in the currency on the receipt as you go, and every total still reads in your main currency. Each account keeps its own currency and balance, so a dollar card and cash in euros stay apart. You can log in any of the 165 currencies on any plan; the free plan holds accounts in one currency, and Outlayr Pro in as many as you need.",
+                                es: "De viaje, registra cada compra en la moneda del recibo, y todos los totales se siguen leyendo en tu moneda principal. Cada cuenta tiene su propia moneda y su saldo, así que una tarjeta en dólares y el efectivo en euros quedan separados. Puedes registrar en cualquiera de las 165 monedas con cualquier plan; el plan gratis permite cuentas en una moneda, y Outlayr Pro en las que necesites.",
+                            }),
+                            t({
+                                en: "Splitting costs with friends? The split expenses calculator works out who pays whom, once you agree on one currency and a rate.",
+                                es: "¿Dividen gastos entre amigos? La calculadora para dividir gastos te dice quién le paga a quién, una vez que acuerden una moneda y una tasa.",
+                            }),
+                        ],
+                        id: "travel",
+                        title: t({ en: "On a trip", es: "De viaje" }),
+                    },
+                ],
                 plateAlt: ACCOUNTS_SCREEN_ALT,
                 related: [
                     "/tools/split-expenses-calculator",
@@ -2665,6 +3171,26 @@ const answers = {
                             es: "¿El escaneo de recibos funciona sin conexión?",
                         }),
                     },
+                    {
+                        answer: t({
+                            en: "The photo you scan is read by Anthropic's Claude and isn't stored after the scan. With Outlayr Pro, receipt photo backup keeps the photo with its entry through sync.",
+                            es: "La foto que escaneas la lee Claude, de Anthropic, y no se guarda después del escaneo. Con Outlayr Pro, el respaldo de fotos guarda la foto junto a su registro con la sincronización.",
+                        }),
+                        question: t({
+                            en: "Does Outlayr keep my receipt photos?",
+                            es: "¿Outlayr guarda las fotos de mis recibos?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. It keeps store and item names as printed, without translating them, and reads the currency from the printed code, or from the symbol and your region. The entry converts at the rate from the receipt's date.",
+                            es: "Sí. Deja los nombres de la tienda y de los productos como están impresos, sin traducirlos, y lee la moneda del código impreso, o del símbolo y tu región. El registro se convierte con la tasa de la fecha del recibo.",
+                        }),
+                        question: t({
+                            en: "Can it read receipts in other languages and currencies?",
+                            es: "¿Puede leer recibos en otros idiomas y monedas?",
+                        }),
+                    },
                 ],
                 lead: t({
                     en: "Take a photo of a receipt and Outlayr reads the store, the date, the total, and every line, then fills in the entry for you to save.",
@@ -2680,6 +3206,64 @@ const answers = {
                         es: "Escáner de recibos: de la foto al gasto · Outlayr",
                     }),
                 },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "Outlayr's receipt scanner reads the store name the way the brand writes it, the purchase date, and the total you paid after tax, tip, and discounts. It also reads up to 60 lines with their quantity and price, the subtotal, tax, and tip lines, and how you paid, like Visa •••• 4242, when the receipt prints them.",
+                                es: "El escáner de recibos de Outlayr lee el nombre de la tienda como lo escribe la marca, la fecha de la compra y el total que pagaste con impuestos, propina y descuentos. También lee hasta 60 líneas con su cantidad y su precio, las líneas de subtotal, impuesto y propina, y cómo pagaste, por ejemplo Visa •••• 4242, cuando el recibo las imprime.",
+                            }),
+                            t({
+                                en: "It picks one of your own categories for the store and its items. If the payment line names a card that appears in one of your account names, the entry goes to that account. The currency comes from the code printed on the receipt, or from the symbol and your region when only a symbol is printed. A refund slip comes back as money in, not as a purchase.",
+                                es: "Elige una de tus propias categorías según la tienda y lo que compraste. Si la línea de pago nombra una tarjeta que aparece en el nombre de una de tus cuentas, el registro va a esa cuenta. La moneda sale del código impreso en el recibo, o del símbolo y tu región cuando solo hay un símbolo. Un recibo de devolución vuelve como dinero que entra, no como una compra.",
+                            }),
+                        ],
+                        id: "reads",
+                        title: t({ en: "What a scan reads", es: "Qué lee un escaneo" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Nothing is saved until you look at it. The review shows the amount, the store, the category, the date, how you paid, and every line read from the receipt. Tap Save, or Finish in the form to change anything by hand, and Scan another if you have a stack of receipts to get through.",
+                                es: "Nada se guarda hasta que lo revisas. La revisión muestra el monto, la tienda, la categoría, la fecha, cómo pagaste y cada línea leída del recibo. Toca Guardar, o Terminar en el formulario para cambiar algo a mano, y Escanear otro si tienes una pila de recibos por pasar.",
+                            }),
+                            t({
+                                en: "If the photo has no receipt in it, or the receipt can't be read, Outlayr says so, and you can try again or pick another photo. A receipt in another currency is converted at the rate from its date, like any other entry.",
+                                es: "Si la foto no tiene un recibo o no se puede leer, Outlayr te lo dice, y puedes intentarlo de nuevo o elegir otra foto. Un recibo en otra moneda se convierte con la tasa de su fecha, como cualquier otro registro.",
+                            }),
+                        ],
+                        id: "review",
+                        title: t({ en: "Check it before you save", es: "Revísalo antes de guardar" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Scanning needs an account, a connection, and your OK to send the photo to an AI provider. The photo is read by Anthropic's Claude, and it isn't stored after the scan. Each scan counts as one capture: 20 every 30 days on the free plan, shared with voice entry, and 500 with Outlayr Pro, which also backs up the receipt photo.",
+                                es: "Para escanear necesitas una cuenta, conexión y aceptar que la foto se envíe a un proveedor de IA. La foto la lee Claude, de Anthropic, y no se guarda después del escaneo. Cada escaneo cuenta como una captura: 20 cada 30 días en el plan gratis, compartidas con el registro por voz, y 500 con Outlayr Pro, que además respalda la foto del recibo.",
+                            }),
+                            t({
+                                en: "Typing works with no signal, so when you're offline you can type the purchase as one sentence and scan the next receipt later.",
+                                es: "Escribir funciona sin señal, así que cuando estés sin conexión puedes escribir la compra en una oración y escanear el siguiente recibo después.",
+                            }),
+                        ],
+                        id: "needs",
+                        title: t({ en: "What a scan needs", es: "Qué necesita un escaneo" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Besides store receipts, the scanner reads invoices and bills, like a utility bill or a restaurant check with the tip written in. A menu, a product, or a photo of a screen isn't a receipt, and Outlayr says it didn't find one instead of guessing.",
+                                es: "Además de los recibos de tiendas, el escáner lee facturas y cuentas, como el recibo de la luz o la cuenta de un restaurante con la propina escrita. Un menú, un producto o la foto de una pantalla no son un recibo, y Outlayr te dice que no encontró uno en vez de adivinar.",
+                            }),
+                            t({
+                                en: "A printed date is read against today, so a two-digit year means the most recent one and a receipt is never dated in the future. Scanning a stack in a hurry? If you send many in a short time, Outlayr asks you to give it a moment before the next one.",
+                                es: "Una fecha impresa se lee contra la de hoy, así que un año de dos dígitos es el más reciente y un recibo nunca queda con fecha futura. ¿Escaneas una pila con prisa? Si envías muchos en poco tiempo, Outlayr te pide un momento antes del siguiente.",
+                            }),
+                        ],
+                        id: "what-counts",
+                        title: t({ en: "Receipts, invoices, and bills", es: "Recibos, facturas y cuentas" }),
+                    },
+                ],
                 plateAlt: t({
                     en: "A Target receipt read into an entry: store, date, total, and category, then saved to the Log.",
                     es: "Un recibo de Farmatodo convertido en un registro: tienda, fecha, total y categoría, y luego guardado en el Registro.",
@@ -3192,37 +3776,13 @@ const answers = {
                 }),
                 title: t({ en: "Track every expense in one sentence.", es: "Registra cada gasto en una oración." }),
             },
-            outlayrDoes: t({ en: "What Outlayr does", es: "Qué hace Outlayr" }),
-            outlayrPoints: {
-                sentence: {
-                    text: t({
-                        en: "Type a purchase as one sentence, say it, or scan the receipt.",
-                        es: "Escribe una compra en una oración, díctala o escanea el recibo.",
-                    }),
-                    title: t({ en: "Log in one sentence", es: "Registra en una oración" }),
-                },
-                currencies: {
-                    text: t({
-                        en: "Each purchase converts to your main currency at the rate from its day.",
-                        es: "Cada compra se convierte a tu moneda principal con la tasa de su día.",
-                    }),
-                    title: t({ en: "165 currencies", es: "165 monedas" }),
-                },
-                ledger: {
-                    text: t({
-                        en: "It reaches our servers only if you sign in and turn on sync, or use a feature that needs them, like receipt scanning.",
-                        es: "Solo llega a nuestros servidores si inicias sesión y activas la sincronización, o si usas una función que los necesite, como el escaneo de recibos.",
-                    }),
-                    title: t({ en: "Your ledger stays on your phone", es: "Tu registro se queda en tu celular" }),
-                },
-                free: {
-                    text: t({
-                        en: "Budgets, goals, subscriptions, and widgets are free. Outlayr Pro raises the limits and adds sync.",
-                        es: "Los presupuestos, las metas, las suscripciones y los widgets son gratis. Outlayr Pro sube los límites y agrega la sincronización.",
-                    }),
-                    title: t({ en: "Free to start", es: "Gratis para empezar" }),
-                },
-            },
+            exportsChecked: insert(
+                t({
+                    en: "Each export detail links to the page it was read on, checked {{date}}.",
+                    es: "Cada dato de exportación enlaza a la página donde se leyó, revisado el {{date}}.",
+                })
+            ),
+            movingFrom: insert(t({ en: "Moving from {{name}}", es: "Cómo pasarte desde {{name}}" })),
             related: t({ en: "Keep reading", es: "Sigue leyendo" }),
             sideBySide: insert(t({ en: "Outlayr and {{name}}, side by side", es: "Outlayr y {{name}}, lado a lado" })),
         },

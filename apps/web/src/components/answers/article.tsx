@@ -5,6 +5,7 @@ import { useIntlayer, useLocale } from "react-intlayer";
 import { AnswerCard } from "@/components/answer-hub";
 import type { AnswerItem } from "@/components/answer-hub";
 import { HubTrail } from "@/components/hub-trail";
+import { Icon } from "@/components/icon";
 import { ASIDE, COLUMNS } from "@/components/page";
 import { StoreBadges } from "@/components/store-badges";
 import { hasKey } from "@/lib/has-key";
@@ -35,6 +36,52 @@ export function Figures({ text }: { text: string }) {
         ) : (
             part
         )
+    );
+}
+
+const WWW = /^www\./u;
+
+function Source({ href }: { href: string }) {
+    return (
+        <a
+            className="fluid text-muted hover:text-foreground ml-2 inline-flex items-center gap-1 font-mono text-xs whitespace-nowrap"
+            href={href}
+        >
+            {new URL(href).hostname.replace(WWW, "")}
+            <Icon name="arrow-up-right" />
+        </a>
+    );
+}
+
+export function FactList({
+    facts,
+}: {
+    facts: readonly { label: ReactNode & { value: string }; source?: { value: string }; text: { value: string } }[];
+}) {
+    return (
+        <dl className="border-border mt-8 border-t delay-150" data-reveal>
+            {facts.map((fact) => (
+                <div className="border-border grid gap-2 border-b py-4 sm:grid-cols-4 sm:gap-6" key={fact.label.value}>
+                    <dt className="text-muted font-mono text-xs tracking-widest uppercase sm:pt-1">{fact.label}</dt>
+                    <dd className="sm:col-span-3">
+                        <Figures text={fact.text.value} />
+                        {fact.source ? <Source href={fact.source.value} /> : null}
+                    </dd>
+                </div>
+            ))}
+        </dl>
+    );
+}
+
+export function Prose({ paragraphs }: { paragraphs: readonly (ReactNode & { value: string })[] }) {
+    return (
+        <div className="text-muted mt-8 flex max-w-2xl flex-col gap-4 text-lg">
+            {paragraphs.map((paragraph) => (
+                <p data-reveal key={paragraph.value}>
+                    {paragraph}
+                </p>
+            ))}
+        </div>
     );
 }
 

@@ -2,22 +2,12 @@ import { createFileRoute, notFound, rootRouteId } from "@tanstack/react-router";
 import { getIntlayer } from "intlayer";
 import { useIntlayer, useLocale } from "react-intlayer";
 
-import { Article, CompareTable, DELAYS, Questions } from "@/components/answers/article";
+import { Article, CompareTable, DELAYS, FactList, Questions } from "@/components/answers/article";
 import { Icon } from "@/components/icon";
-import type { IconName } from "@/components/icon";
 import { hasKey } from "@/lib/has-key";
 import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import { answerTrail, faqPage, ldJson, pageMeta, webPage } from "@/lib/seo";
-import { longDate, rivalChecked } from "@/lib/site";
-
-type Labels = ReturnType<typeof getIntlayer<"answers">>["labels"];
-
-const POINTS = [
-    { icon: "text-aa", id: "sentence", span: "md:col-span-3" },
-    { icon: "currency-circle-dollar", id: "currencies", span: "md:col-span-2" },
-    { icon: "device-mobile", id: "ledger", span: "md:col-span-2" },
-    { icon: "check-circle", id: "free", span: "md:col-span-3" },
-] as const satisfies readonly { icon: IconName; id: keyof Labels["outlayrPoints"]; span: string }[];
+import { EXPORTS_CHECKED, compareUpdated, longDate, rivalChecked } from "@/lib/site";
 
 export const Route = createFileRoute("/{-$locale}/compare/$slug")({
     component: Compare,
@@ -40,7 +30,7 @@ export const Route = createFileRoute("/{-$locale}/compare/$slug")({
                 ldJson(answerTrail(locale, "compare", loaderData, rival.title)),
                 ldJson(
                     webPage(locale, `/compare/${loaderData}`, {
-                        dateModified: rivalChecked(loaderData).toISOString().slice(0, 10),
+                        dateModified: compareUpdated(loaderData).toISOString().slice(0, 10),
                     })
                 ),
             ],
@@ -97,31 +87,6 @@ function Compare() {
                 },
                 {
                     body: (
-                        <ul className="mt-8 grid gap-4 md:grid-cols-5">
-                            {POINTS.map((point, index) => (
-                                <li
-                                    className={`bg-surface flex gap-4 rounded-3xl p-6 md:block md:p-8 ${point.span} ${index % 2 === 1 ? "delay-100" : ""}`}
-                                    data-reveal
-                                    key={point.id}
-                                >
-                                    <span className="bg-raised text-tint flex size-10 shrink-0 items-center justify-center rounded-full">
-                                        <Icon className="text-xl" name={point.icon} />
-                                    </span>
-                                    <div className="md:mt-8">
-                                        <h3 className="text-xl font-semibold tracking-tight">
-                                            {labels.outlayrPoints[point.id].title}
-                                        </h3>
-                                        <p className="text-muted mt-2">{labels.outlayrPoints[point.id].text}</p>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    ),
-                    id: "outlayr",
-                    title: labels.outlayrDoes,
-                },
-                {
-                    body: (
                         <div className="mt-8 grid gap-4 md:grid-cols-2">
                             {sides.map((side, index) => (
                                 <div
@@ -146,6 +111,18 @@ function Compare() {
                     ),
                     id: "fit",
                     title: labels.fit,
+                },
+                {
+                    body: (
+                        <>
+                            <FactList facts={page.moving} />
+                            <p className="text-muted mt-4 text-sm">
+                                {labels.exportsChecked({ date: longDate(EXPORTS_CHECKED, LANGUAGES[locale].date) })}
+                            </p>
+                        </>
+                    ),
+                    id: "moving",
+                    title: labels.movingFrom({ name: page.rival.value }),
                 },
                 {
                     body: <Questions items={page.faq} />,
