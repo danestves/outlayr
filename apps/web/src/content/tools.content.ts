@@ -146,8 +146,8 @@ const tools = {
                 ],
                 related: [
                     "/guides/budget-planner",
-                    "/tools/installment-calculator",
-                    "/compare/everydollar",
+                    "/guides/best-budget-apps",
+                    "/guides/how-to-track-expenses",
                 ] satisfies PageRef[],
                 title: t({ en: "50/30/20 budget calculator", es: "Calculadora de presupuesto 50/30/20" }),
             },

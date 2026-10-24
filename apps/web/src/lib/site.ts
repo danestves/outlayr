@@ -24,6 +24,8 @@ const RIVALS_RECHECKED = {
     copilot: new Date(Date.UTC(2026, 9, 23)),
     everydollar: new Date(Date.UTC(2026, 9, 23)),
     fintonic: new Date(Date.UTC(2026, 9, 9)),
+    goodbudget: new Date(Date.UTC(2026, 9, 23)),
+    monefy: new Date(Date.UTC(2026, 9, 23)),
     spendee: new Date(Date.UTC(2026, 9, 23)),
     ynab: new Date(Date.UTC(2026, 9, 23)),
 };
@@ -42,7 +44,10 @@ export function compareUpdated(slug: string): Date {
 export const LISTS_CHECKED = new Date(Date.UTC(2026, 9, 9));
 
 const LISTS_RECHECKED = {
+    "best-budget-apps": new Date(Date.UTC(2026, 9, 23)),
     "best-open-source-expense-tracker-apps": new Date(Date.UTC(2026, 9, 20)),
+    "mint-alternative": new Date(Date.UTC(2026, 9, 23)),
+    "ynab-alternatives": new Date(Date.UTC(2026, 9, 23)),
 };
 
 export function listChecked(slug: string): Date {
