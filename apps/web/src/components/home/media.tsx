@@ -6,8 +6,26 @@ import { Icon } from "@/components/icon";
 import { useReducedMotion } from "@/lib/reduced-motion";
 import { usePaintedTheme } from "@/lib/theme";
 
-const BEZEL = "/app/iphone.webp";
+const BEZEL = {
+    sizes: "(min-width: 40rem) 320px, 224px",
+    src: "/app/iphone.webp",
+    srcSet: "/app/iphone-500.webp 500w, /app/iphone.webp 1000w",
+};
 const AV1 = 'video/mp4; codecs="av01.0.08M.08"';
+const FILM_SIZES = "(min-width: 64rem) 664px, calc(100vw - 3rem)";
+const VARIANTS = [
+    { className: "light-only", variant: "light" },
+    { className: "dark-only", variant: "dark" },
+] as const;
+
+type Variant = (typeof VARIANTS)[number]["variant"];
+
+export interface Poster {
+    height: number;
+    sizes: string;
+    variants: Record<Variant, { src: string; srcSet: string }>;
+    width: number;
+}
 
 const VIDEOS = import.meta.glob<string>("/src/assets/videos/*", { eager: true, import: "default" });
 
@@ -23,12 +41,38 @@ export function Phone({ children, className = "" }: { children: ReactNode; class
     return (
         <div className={`phone ${className}`}>
             {children}
-            <img alt="" className="phone-bezel" height={2041} src={BEZEL} width={1000} />
+            <img
+                alt=""
+                className="phone-bezel"
+                height={2041}
+                sizes={BEZEL.sizes}
+                src={BEZEL.src}
+                srcSet={BEZEL.srcSet}
+                width={1000}
+            />
         </div>
     );
 }
 
-export function Screen({ alt, eager = false, src }: { alt: string; eager?: boolean; src: string }) {
+const SPANISH_SCREENS = new Set(["04", "05", "06", "10", "log-an-expense"]);
+
+export function screenSources(name: string, locale: string) {
+    const spanish = locale === "es" && SPANISH_SCREENS.has(name);
+    const base = spanish ? `/screens/es/${name}` : `/screens/${name}`;
+    return { dark: `${base}-dark.webp`, src: `${base}.webp` };
+}
+
+export function Screen({
+    alt,
+    dark,
+    eager = false,
+    src,
+}: {
+    alt: string;
+    dark?: string;
+    eager?: boolean;
+    src: string;
+}) {
     return (
         <>
             <img
@@ -46,7 +90,7 @@ export function Screen({ alt, eager = false, src }: { alt: string; eager?: boole
                 decoding="async"
                 height={1912}
                 loading={eager ? "eager" : "lazy"}
-                src={src.replace(/\.webp$/u, "-dark.webp")}
+                src={dark ?? src.replace(/\.webp$/u, "-dark.webp")}
                 width={880}
             />
         </>
@@ -74,17 +118,14 @@ export function LoopVideo({
     av1,
     className = "relative",
     label,
-    lazyPoster = false,
     poster,
     sources,
 }: {
-    av1?: { dark: string; light: string };
+    av1?: Record<Variant, string>;
     className?: string;
     label: string;
-    /** For a video below the fold: a `poster` attribute is fetched at once, a lazy image only when near. */
-    lazyPoster?: boolean;
-    poster: { dark: string; light: string };
-    sources: { dark: string; light: string };
+    poster: Poster;
+    sources: Record<Variant, string>;
 }) {
     const { pause, play } = useIntlayer("story");
     const reduced = useReducedMotion();
@@ -119,33 +160,35 @@ export function LoopVideo({
 
     return (
         <div className={className} ref={ref}>
-            {theme === null || !lazyPoster ? null : (
+            {VARIANTS.map(({ className: only, variant }) => (
                 <img
                     alt=""
-                    className="absolute inset-0 size-full object-cover"
+                    className={`${only} absolute inset-0 size-full object-cover`}
                     decoding="async"
-                    height={1080}
+                    height={poster.height}
+                    key={variant}
                     loading="lazy"
-                    src={poster[theme]}
-                    width={1080}
+                    sizes={poster.sizes}
+                    src={poster.variants[variant].src}
+                    srcSet={poster.variants[variant].srcSet}
+                    width={poster.width}
                 />
-            )}
+            ))}
             {theme === null ? null : (
                 <video
                     aria-label={label}
-                    className={lazyPoster ? "relative size-full object-cover" : "size-full object-cover"}
+                    className="relative size-full object-cover"
                     data-variant={theme}
-                    height={1080}
+                    height={poster.height}
                     key={theme}
                     loop
                     muted
                     onPause={() => setPaused(true)}
                     onPlay={() => setPaused(false)}
                     playsInline
-                    poster={lazyPoster ? undefined : poster[theme]}
                     preload="none"
                     ref={video}
-                    width={1080}
+                    width={poster.width}
                 >
                     {av1 === undefined ? null : <source src={av1[theme]} type={AV1} />}
                     <source src={sources[theme]} type="video/mp4" />
@@ -166,14 +209,23 @@ export function LoopVideo({
 export function Film({ label, name }: { label: string; name: string }) {
     const { locale } = useLocale();
     const cut = locale === "es" ? "-es" : "";
+    const clip = (variant: Variant, kind: string) => videoUrl(`${name}-${variant}${cut}${kind}`);
+    const still = (variant: Variant) => ({
+        src: clip(variant, ".webp"),
+        srcSet: `${clip(variant, "-720.webp")} 720w, ${clip(variant, ".webp")} 1080w`,
+    });
     return (
         <LoopVideo
+            av1={{ dark: clip("dark", ".av1.mp4"), light: clip("light", ".av1.mp4") }}
             className="bg-surface relative aspect-square"
-            lazyPoster
-            av1={{ dark: videoUrl(`${name}-dark${cut}.av1.mp4`), light: videoUrl(`${name}-light${cut}.av1.mp4`) }}
             label={label}
-            poster={{ dark: videoUrl(`${name}-dark${cut}.webp`), light: videoUrl(`${name}-light${cut}.webp`) }}
-            sources={{ dark: videoUrl(`${name}-dark${cut}.mp4`), light: videoUrl(`${name}-light${cut}.mp4`) }}
+            poster={{
+                height: 1080,
+                sizes: FILM_SIZES,
+                variants: { dark: still("dark"), light: still("light") },
+                width: 1080,
+            }}
+            sources={{ dark: clip("dark", ".mp4"), light: clip("light", ".mp4") }}
         />
     );
 }

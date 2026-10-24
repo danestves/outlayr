@@ -17,10 +17,6 @@ const story = {
             }),
         },
         hero: {
-            lead: t({
-                en: "Type what you bought the way you would say it, say it out loud, or scan the receipt. Budgets, subscriptions, and every account keep up on their own.",
-                es: "Escribe lo que compraste como lo dirías, dilo en voz alta o escanea el recibo. Tus presupuestos, suscripciones y cuentas se actualizan solos.",
-            }),
             proof: [
                 t({ en: "Free plan", es: "Plan gratis" }),
                 t({ en: "No ads", es: "Sin anuncios" }),
@@ -132,11 +128,11 @@ const story = {
                 { tag: "", text: t({ en: "Spent", es: "Gasté" }) },
                 { tag: "amount", text: t({ en: "$42.00", es: "$42.00" }) },
                 { tag: "", text: t({ en: "at", es: "en" }) },
-                { tag: "merchant", text: t({ en: "Costco", es: "Costco" }) },
+                { tag: "merchant", text: t({ en: "Costco", es: "Mercado Libre" }) },
                 { tag: "", text: t({ en: "for", es: "para" }) },
-                { tag: "category", text: t({ en: "Groceries", es: "Súper" }) },
+                { tag: "category", text: t({ en: "Groceries", es: "Compras" }) },
                 { tag: "", text: t({ en: "from", es: "con" }) },
-                { tag: "account", text: t({ en: "Chase", es: "Chase" }) },
+                { tag: "account", text: t({ en: "Chase", es: "BBVA" }) },
                 { tag: "date", text: t({ en: "today", es: "hoy" }) },
             ],
             title: t({ en: "Your money lives in ten places.", es: "Tu dinero vive en diez lugares." }),
@@ -168,7 +164,7 @@ const story = {
                 {
                     body: t({
                         en: "Entries save on the phone first, so typing an entry works anywhere.",
-                        es: "Los registros se guardan primero en el teléfono, así que escribir un registro funciona en cualquier lugar.",
+                        es: "Los registros se guardan primero en el celular, así que escribir un registro funciona en cualquier lugar.",
                     }),
                     title: t({ en: "Works with no signal", es: "Funciona sin señal" }),
                 },
@@ -184,7 +180,7 @@ const story = {
                 en: "It reaches our servers only when you turn on sync or use a feature that needs them, like receipt scanning.",
                 es: "Solo llega a nuestros servidores si activas la sincronización o usas una función que los necesita, como escanear recibos.",
             }),
-            title: t({ en: "Your ledger stays on your phone.", es: "Tus registros se quedan en tu teléfono." }),
+            title: t({ en: "Your ledger stays on your phone.", es: "Tus registros se quedan en tu celular." }),
         },
     },
     key: "story",

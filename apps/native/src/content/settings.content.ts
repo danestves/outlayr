@@ -207,6 +207,10 @@ const settings = {
             en: "Authentication",
             es: "Autenticación",
         }),
+        "settings.row.autoLog": t({
+            en: "Auto-logging",
+            es: "Registro automático",
+        }),
         "settings.row.categories": t({
             en: "Categories",
             es: "Categorías",

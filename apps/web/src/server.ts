@@ -11,7 +11,6 @@ const HIDDEN = [
     "embed",
     "fieldset",
     "footer",
-    "form",
     "iframe",
     "input",
     "nav",
@@ -19,11 +18,25 @@ const HIDDEN = [
     "select",
     "textarea",
     '[aria-hidden="true"]',
+    "[data-fields]",
+    "[data-kicker]",
     ".dark-only",
 ];
 
+const DEFINITION_LIST: readonly (readonly [RegExp, string])[] = [
+    [/<\/?dl\b[^>]*>/gu, ""],
+    [/<dt\b[^>]*>/gu, "<p><strong>"],
+    [/<\/dt>/gu, "</strong></p>"],
+    [/<dd\b[^>]*>/gu, "<p>"],
+    [/<\/dd>/gu, "</p>"],
+];
+
+function flattenDefinitions(html: string): string {
+    return DEFINITION_LIST.reduce((out, [pattern, replacement]) => out.replace(pattern, replacement), html);
+}
+
 function toMarkdown(html: string): string {
-    return htmlToMarkdown(html, {
+    return htmlToMarkdown(flattenDefinitions(html), {
         clean: clean(),
         origin: SITE_URL,
         plugins: [frontmatterPlugin(), isolateMainPlugin(), filterPlugin({ exclude: HIDDEN })],

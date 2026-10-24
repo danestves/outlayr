@@ -15,6 +15,12 @@ describe("detectCurrency", () => {
         expect(detectCurrency("USD 8")).toBe("USD");
     });
 
+    it("reads US$ and U$S as US dollars", () => {
+        expect(detectCurrency("US$ 8,75")).toBe("USD");
+        expect(detectCurrency("8,75 US$")).toBe("USD");
+        expect(detectCurrency("U$S 25,00")).toBe("USD");
+    });
+
     it("declines a shared symbol rather than guessing a country", () => {
         // The catalog has "$" on 22 currencies and "£" on 9.
         expect(detectCurrency("$12.40")).toBeNull();

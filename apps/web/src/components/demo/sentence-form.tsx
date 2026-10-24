@@ -1,24 +1,24 @@
 import { useEffect, useEffectEvent, useId, useReducer, useRef, useState } from "react";
 import type { FocusEvent, KeyboardEvent, ReactNode } from "react";
-import { useIntlayer } from "react-intlayer";
+import { useIntlayer, useLocale } from "react-intlayer";
 
 import { capture } from "@/lib/analytics";
+import type { Locale } from "@/lib/i18n";
 
 import { formatMoney, signedMoney } from "./money";
 import type { Currency } from "./money";
 import {
-    ACCOUNTS,
     BLANK,
+    CASTS,
     CATEGORIES,
     CURRENCY_CODES,
-    INITIAL,
     KEYS,
     MAX_NAME_LENGTH,
-    RECENT_MERCHANTS,
     RESUME_MS,
     WHEN_OPTIONS,
     amountOf,
     delayOf,
+    initialState,
     isWhole,
     reduce,
 } from "./sentence-model";
@@ -30,6 +30,11 @@ const HAIRLINE_GRID = "gap-2";
 const CELL = "fluid bg-raised hover:bg-foreground/5 rounded-xl active:scale-[0.98]";
 
 export function SentenceForm() {
+    const { locale } = useLocale();
+    return <Demo key={locale} locale={locale} />;
+}
+
+function Demo({ locale }: { locale: Locale }) {
     const { added, blank, cta, kind, lead, log, sentence, sizer, steps } = useIntlayer("demo");
     const nameOf = useNames();
     const root = useRef<HTMLDivElement>(null);
@@ -37,7 +42,7 @@ export function SentenceForm() {
     const pendingFocus = useRef<FocusIntent>(null);
     const stageId = useId();
     const { running } = useAutoplay(root);
-    const [state, dispatch] = useReducer(reduce, INITIAL);
+    const [state, dispatch] = useReducer(reduce, locale, initialState);
     const [edited, setEdited] = useState(false);
     const [idle, setIdle] = useState(true);
     const [touches, setTouches] = useState(0);
@@ -208,7 +213,7 @@ export function SentenceForm() {
                         ) : null}
                     </div>
                     <div className="h-48">
-                        <StageBody aim={aim} draft={draft} step={step} visit={visit} />
+                        <StageBody aim={aim} draft={draft} locale={state.locale} step={step} visit={visit} />
                     </div>
                     <button
                         className={`fluid bg-tint mt-4 h-12 w-full rounded-full font-semibold text-white hover:opacity-90 active:scale-[0.98] ${aim === "footer" ? "opacity-80" : ""}`}
@@ -256,7 +261,19 @@ export function SentenceForm() {
     );
 }
 
-function StageBody({ aim, draft, step, visit }: { aim: Target | null; draft: Draft; step: Step; visit: Visit }) {
+function StageBody({
+    aim,
+    draft,
+    locale,
+    step,
+    visit,
+}: {
+    aim: Target | null;
+    draft: Draft;
+    locale: Locale;
+    step: Step;
+    visit: Visit;
+}) {
     const content = useIntlayer("demo");
     const nameOf = useNames();
     switch (step) {
@@ -315,7 +332,7 @@ function StageBody({ aim, draft, step, visit }: { aim: Target | null; draft: Dra
                             onPick={(value) => visit({ type: "choose", value })}
                             rows="auto-rows-[2.75rem]"
                             selected={draft.merchant.trim()}
-                            values={RECENT_MERCHANTS[draft.kind]}
+                            values={CASTS[locale].recentMerchants[draft.kind]}
                         />
                     </div>
                 </div>
@@ -339,7 +356,7 @@ function StageBody({ aim, draft, step, visit }: { aim: Target | null; draft: Dra
                     label={nameOf}
                     onPick={(value) => visit({ type: "choose", value })}
                     selected={draft.account}
-                    values={ACCOUNTS}
+                    values={CASTS[locale].accounts}
                 />
             );
         }

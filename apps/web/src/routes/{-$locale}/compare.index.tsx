@@ -4,7 +4,7 @@ import { useIntlayer } from "react-intlayer";
 
 import { AnswerHub } from "@/components/answer-hub";
 import { localeFromParam, pageUrl } from "@/lib/i18n";
-import { itemList, ldJson, pageMeta } from "@/lib/seo";
+import { hubTrail, itemList, ldJson, pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/{-$locale}/compare/")({
     component: Comparisons,
@@ -16,8 +16,8 @@ export const Route = createFileRoute("/{-$locale}/compare/")({
             url: pageUrl(`/compare/${slug}`, locale),
         }));
         return {
-            meta: pageMeta(hubs.compare.meta.title, hubs.compare.lead),
-            scripts: [ldJson(itemList(items))],
+            meta: pageMeta(hubs.compare.meta.title, hubs.compare.meta.description),
+            scripts: [ldJson(itemList(items)), ldJson(hubTrail(locale, "compare"))],
         };
     },
 });

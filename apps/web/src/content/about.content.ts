@@ -40,6 +40,20 @@ const about = {
                 }),
             },
             {
+                label: t({ en: "Debts", es: "Deudas" }),
+                text: t({
+                    en: "Money you lent or borrowed, a sale on credit, or a job or purchase you will pay later, each with its person and an optional payoff plan. One Accounts screen shows what you have and what you owe.",
+                    es: "Lo que prestaste o te prestaron, una venta a crédito o un trabajo o una compra que pagarás después, cada uno con su persona y un plan de pago opcional. Una sola pantalla de Cuentas muestra lo que tienes y lo que debes.",
+                }),
+            },
+            {
+                label: t({ en: "Installments", es: "Cuotas" }),
+                text: t({
+                    en: "Purchases from buy now, pay later apps such as Cashea and Klarna: the upfront payment and each installment, a reminder the day before each one is due, and late fees. An order already in progress can be read from a screenshot of its payment plan.",
+                    es: "Compras en apps de cuotas como Cashea y Klarna: la inicial y cada cuota, un aviso el día antes de cada pago y los recargos por atraso. Una compra que ya va por la mitad se puede leer desde una captura de su plan de pagos.",
+                }),
+            },
+            {
                 label: t({ en: "Platforms", es: "Plataformas" }),
                 text: t({
                     en: "Android. iPhone with iOS 18 or later is coming soon to the App Store.",
@@ -60,29 +74,22 @@ const about = {
             {
                 label: t({ en: "Price", es: "Precio" }),
                 text: t({
-                    en: "Pro is billed monthly or yearly, or bought once, at prices set per country in your app store. There are no ads on any plan.",
-                    es: "Pro se paga al mes, al año o en un solo pago, con precios por país en tu tienda de apps. No hay anuncios en ningún plan.",
+                    en: "Free to start. In the United States, Pro is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Your app store shows the price for your country. There are no ads on any plan.",
+                    es: "Gratis para empezar. En Estados Unidos, Pro cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país. No hay anuncios en ningún plan.",
                 }),
             },
             {
                 label: t({ en: "Free plan", es: "Plan gratis" }),
                 text: t({
-                    en: "Logging, budgets, goals, insights, subscriptions, and widgets, with 20 voice or receipt captures every 30 days, 2 accounts, 2 category budgets, 1 account currency, and 1 app icon.",
-                    es: "Registros, presupuestos, metas, estadísticas, suscripciones y widgets, con 20 capturas de voz o de recibos cada 30 días, 2 cuentas, 2 presupuestos por categoría, 1 moneda para tus cuentas y 1 ícono de la app.",
+                    en: "Logging, budgets, goals, insights, subscriptions, debts, installments, and widgets, with 20 voice, receipt, or payment plan captures every 30 days, 2 accounts, 2 installment apps, 3 people, 2 payoff plans, 2 category budgets, 1 account currency, and 1 app icon.",
+                    es: "Registros, presupuestos, metas, estadísticas, suscripciones, deudas, cuotas y widgets, con 20 capturas de voz, de recibos o de planes de pago cada 30 días, 2 cuentas, 2 apps de cuotas, 3 personas, 2 planes de pago, 2 presupuestos por categoría, 1 moneda para tus cuentas y 1 ícono de la app.",
                 }),
             },
             {
                 label: "Outlayr Pro",
                 text: t({
-                    en: "500 captures every 30 days, unlimited accounts, category budgets, and account currencies, sync across devices, receipt photo backup, AI matching on CSV import, web merchant lookup, and 5 app icons.",
-                    es: "500 capturas cada 30 días, cuentas, presupuestos por categoría y monedas sin límite, sincronización entre dispositivos, respaldo de las fotos de tus recibos, asignación con IA al importar un CSV, búsqueda web de comercios y 5 íconos de la app.",
-                }),
-            },
-            {
-                label: t({ en: "Maker", es: "Empresa" }),
-                text: t({
-                    en: "danestves LLC, a Delaware limited liability company. 651 N Broad St, Suite 201, Middletown, DE 19709, USA.",
-                    es: "danestves LLC, una sociedad de responsabilidad limitada de Delaware. 651 N Broad St, Suite 201, Middletown, DE 19709, EE. UU.",
+                    en: "500 captures every 30 days, unlimited accounts, installment apps, people, payoff plans, category budgets, and account currencies, sync across devices, receipt photo backup, AI matching on CSV import, web merchant lookup, and 5 app icons.",
+                    es: "500 capturas cada 30 días, cuentas, apps de cuotas, personas, planes de pago, presupuestos por categoría y monedas sin límite, sincronización entre dispositivos, respaldo de las fotos de tus recibos, asignación con IA al importar un CSV, búsqueda web de comercios y 5 íconos de la app.",
                 }),
             },
             {
@@ -101,10 +108,24 @@ const about = {
             },
         ],
         factsTitle: t({ en: "Outlayr at a glance", es: "Outlayr de un vistazo" }),
+        maker: {
+            bio: t({
+                en: "A software developer from Venezuela, building software since 2016. He makes Outlayr in the open, under his company.",
+                es: "Desarrollador de software venezolano, construyendo software desde 2016. Hace Outlayr en abierto, bajo su empresa.",
+            }),
+            company: t({
+                en: "danestves LLC, a Delaware limited liability company. 651 N Broad St, Suite 201, Middletown, DE 19709, USA. Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr.com), a payments company.",
+                es: "danestves LLC, una sociedad de responsabilidad limitada de Delaware. 651 N Broad St, Suite 201, Middletown, DE 19709, EE. UU. Outlayr, la app de danestves LLC, no tiene relación con Outlayr, Inc. (outlayr.com), una empresa de pagos.",
+            }),
+            label: t({ en: "Maker", es: "Quién la hace" }),
+            name: "Daniel Esteves",
+            role: t({ en: "Founder and developer", es: "Fundador y desarrollador" }),
+            website: "danestves.com",
+        },
         meta: {
             description: t({
-                en: "Outlayr is an open source mobile expense tracker, budget app, and subscription tracker, made by danestves LLC. Platforms, languages, plans, free limits, and where your data lives.",
-                es: "Outlayr es una app móvil de código abierto para controlar tus gastos, tu presupuesto y tus suscripciones, hecha por danestves LLC. Plataformas, idiomas, planes, límites y dónde están tus datos.",
+                en: "Outlayr is an open source expense tracker, budget app, and subscription tracker by danestves LLC: platforms, plans, free limits, and where your data lives.",
+                es: "Outlayr es una app de código abierto para controlar gastos, presupuesto y suscripciones, de danestves LLC: plataformas, planes, límites y tus datos.",
             }),
             title: t({
                 en: "About Outlayr: the expense tracker by danestves LLC",

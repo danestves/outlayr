@@ -36,17 +36,30 @@ The script is read-only. It prints:
 - every commit merged since the later of the two
 - the app and backend files those commits touched
 - the fingerprint check against the build
+- for a build, its version and the commits that set it
 - a verdict, with the exact command to run
 
 | Verdict | Action |
 | --- | --- |
 | `NOTHING TO SHIP` | Report and stop. If the fingerprint differs, say that the next app change will need a build. |
 | `BACKEND ONLY` | Dispatch `deploy-backend.yml`. The app bundle doesn't import `packages/backend`, so there's nothing to publish. |
-| `OTA` | Write the message (step 3), then dispatch `update.yml`. |
-| `BUILD` | Dispatch `eas-build.yml` with the command it prints, then ship the binary (step 4). The printed fingerprint diff names the native source that forced it. |
+| `OTA` | Write the message (step 3), then dispatch `update.yml` with the build's version it prints. |
+| `BUILD` | Dispatch `eas-build.yml` with the command it prints, which carries the version, then ship the binary (step 4). The printed fingerprint diff names the native source that forced it. |
 | `FIRST BUILD` | **Stop and ask.** No GitHub store build exists on this channel, so this binary would move testers onto a different backend, and every earlier EAS build stops receiving OTAs from this one on. Run `gh variable get EXPO_PUBLIC_CONVEX_URL --env $channel` and name the backend the binary would call. Check the setup below. |
 
 Before dispatching, read the commit list against the verdict. The file classification is a heuristic, but the fingerprint check is not. On Android it relies on a patched `@expo/fingerprint` that sees the Expo modules; `decide.sh` exits if the fingerprint lists none, and that is a stop to report, never one to work around. If a commit contradicts the verdict, for example a user-visible change that the path rules missed, stop and explain instead of dispatching.
+
+### Version
+
+Both platforms and both channels share one version line, so a version names the same changes in either store. The run names carry each build's version; runs without one shipped 1.0.0. `decide.sh` picks the build's version in this order:
+
+1. While this platform's newest version isn't live, the build keeps it. On iOS that's until App Store Connect approves it (TestFlight, in review, or pulled from review all keep it). On Android it's until a build of it is on the production track; the internal track keeps it.
+2. Once it's live, the build takes the newest version on any store build if this platform hasn't built it yet and adds no app change of its own since. That's Android catching up to an iOS 1.2.4.
+3. Otherwise it bumps from that newest version, by the conventional commits that touched this platform's app since its own build of it: `feat!` or `fix!` is major, `feat` is minor, anything else is patch. `refactor!` and `chore!` break code, not the app, so they don't count.
+
+Step 1 asks `asc` and `play.ts status`, so a build verdict needs both logged in. If either fails, `decide.sh` exits rather than guess.
+
+A platform can skip numbers, for example Android going from 1.2.3 to 1.2.5. Neither store cares. A major is a **stop and ask**: name the commits that made it, because the app may not have changed enough to deserve one.
 
 Before an `OTA` or `BUILD`, run `node --import tsx scripts/licenses.ts --check` from `apps/native`. If it reports the open source licenses list as stale, **stop and ask**: a dependency change shipped without regenerating it, and the fix is a PR, not an edit on detached main.
 
@@ -64,7 +77,7 @@ Store notes cover the same changes, once in English and once in Spanish, as plai
 - Lead with what the person gets, or the question they'd ask: "Owe the plumber for today's job? Log it and pick when you'll pay".
 - No emoji, semicolons, or em dashes.
 - Play: a production Android build, at most 500 characters each. `play.ts notes` replaces them while the release is in review.
-- App Store: the version's What's New, for en-US and es-MX, set before that version goes to review. Apple refuses it on a first version.
+- App Store: the version's What's New, for en-US and es-MX, set before that version goes to review. Apple refuses it on a first version. The App Store version has to carry the build's version: create it with `asc versions create` when a build starts a new one.
 
   ```sh
   asc apps info edit --app 6801652978 --version <version> --platform IOS --locale en-US --whats-new "$(cat notes-en.txt)"
@@ -76,7 +89,7 @@ Store notes cover the same changes, once in English and once in Spanish, as plai
 From `apps/native`, run the command the verdict printed (with the message filled in for an OTA) in a background shell. Every verdict dispatches a GitHub run, which `gh workflow run` prints the URL of; watch it to the end:
 
 ```sh
-gh workflow run update.yml -f channel=$channel -f platform=ios -f message=$'First change\nSecond change'
+gh workflow run update.yml -f channel=$channel -f platform=ios -f version=1.2.4 -f message=$'First change\nSecond change'
 gh run watch <run id> --exit-status
 ```
 
@@ -113,7 +126,7 @@ Rough durations: backend about 3 minutes, OTA about 5, a store build about 35 in
 - **Build**: the run's `fingerprint` artifact holds the runtime OTAs target from now on; `decide.sh` reads it. On iOS, `rnd submit:status -p ios` lists the new TestFlight build. On Android, `play.ts status` lists the new versionCode on its track.
 - **Backend**: a `SUCCESS` run is the check.
 
-Report the verdict, the commits it shipped, the run id, the update group or build number, and the runtime.
+Report the verdict, the commits it shipped, the run id, the version, the update group or build number, and the runtime.
 
 ## Build setup
 
@@ -131,6 +144,7 @@ Before a `FIRST BUILD`, confirm each of these exists and name any that don't:
 - Never run `eoas publish` from the laptop. Only the workflow sets `EAS_BUILD_PROFILE` and exports the GitHub environment, so a local publish lands under a runtime no binary has, or bundles the wrong backend URL.
 - Never deploy Convex from the laptop. The workflows take the target from the GitHub environment, and a local `.env.local` doesn't.
 - Compare against the last build, never the last OTA. An OTA inherits its build's runtime.
+- An OTA replaces the app's `Constants.expoConfig`, version included, so `update.yml` needs its build's version. Without it, Settings and the review prompt see whatever `app.config.ts` falls back to.
 - An OTA reaches only builds with the same runtime. Devices on older builds keep their JS.
 - The file lists skip what only the other platform builds from: `.android.` siblings on iOS, `app-intents/` and `targets/` on Android. The fingerprint doesn't, so an App Intents change can make Android's fingerprint differ with nothing to ship.
 - The runtime can change with no native edit: `apps/native/package.json` scripts are hashed, and adding any workspace package can re-hash pnpm peer directories. The fingerprint catches both, the file list doesn't.

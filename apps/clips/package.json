@@ -1,9 +1,9 @@
 {
-    "name": "outlayr-video",
+    "name": "@outlayr/clips",
     "private": true,
     "type": "module",
     "scripts": {
-        "dev": "remotion studio",
+        "studio": "remotion studio",
         "render": "remotion render BankShortcut-en out/bank-shortcut-en.mp4 && remotion render BankShortcut-es out/bank-shortcut-es.mp4",
         "render:web": "sh scripts/web.sh",
         "loops": "sh scripts/loops.sh",
@@ -11,7 +11,7 @@
     },
     "dependencies": {
         "@remotion/cli": "4.0.534",
-        "@remotion/google-fonts": "^4.0.534",
+        "@remotion/google-fonts": "4.0.534",
         "@remotion/media": "4.0.534",
         "@remotion/transitions": "4.0.534",
         "react": "19.2.3",
@@ -19,8 +19,8 @@
         "remotion": "4.0.534"
     },
     "devDependencies": {
-        "@types/react": "19.2.7",
+        "@types/react": "^19.2.18",
         "@types/web": "0.0.166",
-        "typescript": "5.9.3"
+        "typescript": "catalog:"
     }
 }

@@ -124,6 +124,35 @@ describe("parseNotification", () => {
         });
     });
 
+    it("reads a dollar amount written US$ or U$S, as Latin American locales print it", () => {
+        for (const body of ["US$ 8,75", "US$8,75", "8,75 US$"]) {
+            expect(parseNotification(`Farmatodo\n${body} con Visa ••4821`)).toMatchObject({
+                amount: 8.75,
+                merchant: "Farmatodo",
+            });
+        }
+        expect(parseNotification("Compraste U$S 25,00 en Amazon con tu tarjeta")).toMatchObject({
+            amount: 25,
+            merchant: "Amazon",
+        });
+    });
+
+    it("reads Google Wallet's tap: merchant title, amount and masked card in the body", () => {
+        const spanish = "Test Market\n1.234,56\u00A0€ con Mastercard Open Debit\u202F••0000";
+        expect(parseNotification(spanish)).toStrictEqual({
+            amount: 1234.56,
+            amountText: "1.234,56\u00A0€",
+            income: false,
+            merchant: "Test Market",
+        });
+        expect(NOTIFICATION_PATTERNS.cardUsed.exec(spanish)?.[1]).toBe("Mastercard Open Debit\u202F••0000");
+        expect(NOTIFICATION_PATTERNS.cardUsed.exec("CULVERS\n$31.64 with Like U •• 0780")?.[1]).toBe("Like U •• 0780");
+        expect(NOTIFICATION_PATTERNS.cardUsed.exec("Pollos con Papas\n5,99 € con Visa ••0000")?.[1]).toBe(
+            "Visa ••0000"
+        );
+        expect(NOTIFICATION_PATTERNS.cardUsed.exec("Google Wallet\nHas pagado 5,99 EUR en Test Market.")).toBeNull();
+    });
+
     it("skips a notification with no amount", () => {
         expect(parseNotification("Your statement is ready")).toBeNull();
     });

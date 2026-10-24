@@ -82,6 +82,7 @@ export function InstallmentTool() {
 
     return (
         <ToolPanel
+            label={page.title.value}
             answer={answer}
             preview={
                 <AppCard

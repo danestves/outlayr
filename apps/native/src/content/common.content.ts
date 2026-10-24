@@ -175,6 +175,10 @@ const common = {
             en: "App icon",
             es: "Ícono de la app",
         }),
+        "nav.settings.autoLog": t({
+            en: "Auto-logging",
+            es: "Registro automático",
+        }),
         "nav.settings.currency": t({
             en: "Currency",
             es: "Moneda",

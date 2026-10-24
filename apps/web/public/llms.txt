@@ -2,6 +2,8 @@
 
 > Outlayr is an open source mobile expense tracker, budget app, and subscription tracker, made by danestves LLC. You log a purchase by typing one sentence, saying it, or scanning the receipt. Budgets, savings goals, subscriptions, and insights update as you log. Available on Android from Google Play, and coming soon to the App Store for iPhone (iOS 18 or later). English and Spanish.
 
+Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr.com), a payments company.
+
 ## What it does
 
 - Log an expense or income as one sentence ("Spent $42.00 at Costco for Groceries from Chase today"), tapping any word to change it.
@@ -25,7 +27,7 @@
 
 - Free: logging, budgets, goals, insights, subscriptions, debts, installments, and iPhone widgets. 20 voice, receipt, or payment plan captures every 30 days, 2 accounts, 2 installment apps, 3 people, 2 payoff plans, 2 category budgets, and 1 account currency.
 - Outlayr Pro: 500 captures every 30 days, unlimited accounts, installment apps, people, payoff plans, category budgets, and account currencies, sync across devices, receipt photo backup, AI matching on CSV import, web merchant lookup, and 5 app icons on iPhone.
-- Pro is billed monthly or yearly, or bought once. Prices are set per country and shown in the app store before purchase.
+- Pro is billed monthly or yearly, or bought once. US prices: $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Prices vary by country and the app store shows yours before purchase.
 
 ## Privacy
 
@@ -46,7 +48,7 @@
 ## Pages
 
 - [Home](https://tryoutlayr.com/): product overview, plans, and answers to common questions
-- [About](https://tryoutlayr.com/about): Outlayr at a glance, with the maker, platforms, languages, plans and free-plan limits, where data lives, the source code, and what Outlayr does not do
+- [About](https://tryoutlayr.com/about): Outlayr at a glance, with the maker, debts and installments, platforms, languages, plans, US prices and free-plan limits, where data lives, the source code, and what Outlayr does not do
 - [Support](https://tryoutlayr.com/support): restoring and cancelling Pro, refunds, exporting and deleting data
 - [Privacy Policy](https://tryoutlayr.com/privacy): what is collected, where it goes, and how long it is kept
 - [Terms of Use](https://tryoutlayr.com/terms): the terms for Outlayr and Outlayr Pro
@@ -55,30 +57,36 @@
 ## Guides
 
 - [All guides](https://tryoutlayr.com/guides): every guide in one list
-- [Multi-currency and travel expense tracking](https://tryoutlayr.com/guides/multi-currency-expense-tracker): 165 currencies, from dollars and pesos to bolívares, the rate from the day of each purchase, and accounts that each keep their own currency, at home or on a trip
+- [AI expense tracker](https://tryoutlayr.com/guides/ai-expense-tracker): which words fill the amount, merchant, category, account, date, and currency when you say a purchase, how the typed sentence fills the same fields by tapping, four worked examples, what works offline, and what needs an account. AI reads spoken entries and receipts; the typed sentence is a form
+- [How to track expenses](https://tryoutlayr.com/guides/how-to-track-expenses): three methods (a spreadsheet, an app, or cash envelopes), how to pick categories, log every expense, review weekly and close the month, the 50/30/20 split, and tracking in more than one currency. Written in Spanish first at https://tryoutlayr.com/es/guides/how-to-track-expenses
+- [Best budget apps](https://tryoutlayr.com/guides/best-budget-apps): Actual Budget, EveryDollar, Goodbudget, Monarch Money, Outlayr, PocketGuard, Spendee, and YNAB by budget style (envelopes, zero-based, or a limit with a pace), with price, how entries get in, currencies, and platforms, each detail linked to the page it was read on. Outlayr is ours
+- [YNAB alternatives](https://tryoutlayr.com/guides/ynab-alternatives): Actual Budget, Copilot Money, EveryDollar, Goodbudget, Monarch Money, Outlayr, and PocketGuard by the need each fits, with price, how entries get in, currencies, and platforms, plus how to export from YNAB and which of them take the file. Outlayr is ours
+- [Multi-currency and travel expense tracking](https://tryoutlayr.com/guides/multi-currency-expense-tracker): 165 currencies, from dollars and pesos to bolívares, the rate from the day of each purchase (Open Exchange Rates, and the BCV rate through Cotizave for bolívares), typing your own rate or the dollar amount you paid, the USDT (Binance) rate for dollar to bolívar transfers, and accounts that each keep their own currency, at home or on a trip
 - [Apple Pay logging](https://tryoutlayr.com/guides/apple-pay-expense-tracker): how a Shortcuts automation logs each Apple Pay purchase on iPhone
 - [Budget planner](https://tryoutlayr.com/guides/budget-planner): category or overall budgets by day, week, month, or year, carry-over, where the current pace ends, and a month that can start on payday
 - [Best subscription tracker apps](https://tryoutlayr.com/guides/best-subscription-tracker-apps): Bobby, Monarch, Outlayr, PocketGuard, and Rocket Money by the need each fits, with price, how entries get in, subscriptions, where each works, and platforms, each detail linked to the page it was read on. Outlayr is ours. Rocket Money's team cancels subscriptions and negotiates bills; Outlayr does neither
 - [Best expense tracker apps](https://tryoutlayr.com/guides/best-expense-tracker-apps): Monefy, Money Manager, Outlayr, Spendee, Wallet by BudgetBakers, and YNAB by the need each fits, with price, how entries get in, currencies, and platforms, each detail linked to the page it was read on. Outlayr is ours
 - [Best open source expense tracker apps](https://tryoutlayr.com/guides/best-open-source-expense-tracker-apps): Actual Budget, Cashew, Firefly III, Flow, and Outlayr by the need each fits, with price, how entries get in, currencies, platforms, and license, each detail linked to the page it was read on. Outlayr is ours
-- [Mint alternative](https://tryoutlayr.com/guides/mint-alternative): importing a Mint CSV export into Outlayr, which rows import on any plan, and how Pro matches the other category names to yours with AI
-- [Receipt scanner](https://tryoutlayr.com/guides/receipt-scanner): what a scan reads, the free and Pro capture limits, and what it needs
+- [Mint alternatives](https://tryoutlayr.com/guides/mint-alternative): Copilot Money, EveryDollar, Goodbudget, Monarch Money, Outlayr, PocketGuard, Rocket Money, and YNAB by the need each fits, which of them import a CSV, and how to import a Mint CSV export into Outlayr: which rows import on any plan, and how Pro matches the other category names to yours with AI. Outlayr is ours
+- [Receipt scanner](https://tryoutlayr.com/guides/receipt-scanner): what a scan reads (store, date, total, up to 60 lines, tax, tip, and how you paid), how the category, account, and currency are picked, refunds, invoices and bills, the review before saving, the free and Pro capture limits, and what it needs
 - [Subscription tracker](https://tryoutlayr.com/guides/subscription-tracker): recurring charges that log themselves, an Upcoming list with what your subscriptions and bills cost per month, and reminders before each charge. Outlayr does not cancel subscriptions for you
-- [Expense tracker template](https://tryoutlayr.com/guides/expense-tracker-template): a free CSV template for Excel, Numbers, and Google Sheets with the columns Outlayr's CSV import reads; rows whose category matches one of yours by name import on any plan, and Outlayr Pro matches the rest with AI, up to 5,000 rows and 2 MB a file. The Spanish page offers a Spanish file: https://tryoutlayr.com/es/guides/expense-tracker-template
+- [Expense tracker template](https://tryoutlayr.com/guides/expense-tracker-template): a free Excel workbook (Transactions, a Summary with income, spending, and net for the month and currency you pick, spending against a budget per category, and a chart, and How to import) and a plain CSV, both with the columns Outlayr's CSV import reads; rows whose category matches one of yours by name import on any plan, and Outlayr Pro matches the rest with AI, up to 5,000 rows and 2 MB a file. The Spanish page offers a Spanish file: https://tryoutlayr.com/es/guides/expense-tracker-template
 - [Voice expense tracker](https://tryoutlayr.com/guides/voice-expense-tracker): saying a purchase in English or Spanish, what voice entry fills in, how spoken corrections work, and the 20 free captures every 30 days
 
 ## Comparisons
 
 - [All comparisons](https://tryoutlayr.com/compare): every comparison in one list, with a one-line summary of each app
-- [YNAB alternative](https://tryoutlayr.com/compare/ynab): Outlayr and YNAB on price, how entries are added, budgets, currencies, platforms, and license
-- [Monarch alternative](https://tryoutlayr.com/compare/monarch): Outlayr and Monarch on price, how entries are added, what each tracks, platforms, and license
-- [Copilot alternative](https://tryoutlayr.com/compare/copilot): Outlayr and Copilot on price, how entries are added, currencies, platforms, and license
-- [EveryDollar alternative](https://tryoutlayr.com/compare/everydollar): Outlayr and EveryDollar on price, how entries are added, currencies, where each is available, platforms, and license
-- [Fintonic alternative](https://tryoutlayr.com/compare/fintonic): Outlayr and Fintonic on price, how entries are added, what each tracks, where each is available, platforms, and license. In Spanish at https://tryoutlayr.com/es/compare/fintonic
-- [PocketGuard alternative](https://tryoutlayr.com/compare/pocketguard): Outlayr and PocketGuard on price, how entries are added, subscriptions, platforms, and license
-- [Spendee alternative](https://tryoutlayr.com/compare/spendee): Outlayr and Spendee on price, how entries are added, currencies, platforms, and license
-- [Wallet by BudgetBakers alternative](https://tryoutlayr.com/compare/wallet): Outlayr and Wallet on price, how entries are added, currencies, platforms, and license
-- [Rocket Money alternative](https://tryoutlayr.com/compare/rocket-money): Outlayr and Rocket Money on price, how entries are added, subscriptions, where each is available, platforms, and license. Outlayr does not cancel subscriptions for you
+- [Outlayr vs YNAB](https://tryoutlayr.com/compare/ynab): Outlayr and YNAB on price, how entries are added, budgets, currencies, platforms, and license, plus how to export from YNAB, what reaches Outlayr's CSV import, and what doesn't
+- [Monarch alternative](https://tryoutlayr.com/compare/monarch): Outlayr and Monarch on price, how entries are added, what each tracks, platforms, and license, plus how to export from Monarch, what reaches Outlayr's CSV import, and what doesn't
+- [Copilot alternative](https://tryoutlayr.com/compare/copilot): Outlayr and Copilot on price, how entries are added, currencies, platforms, and license, plus how to export from Copilot, what reaches Outlayr's CSV import, and what doesn't
+- [EveryDollar alternative](https://tryoutlayr.com/compare/everydollar): Outlayr and EveryDollar on price, how entries are added, currencies, where each is available, platforms, and license, plus how to export from EveryDollar, what reaches Outlayr's CSV import, and what doesn't
+- [Goodbudget alternative](https://tryoutlayr.com/compare/goodbudget): Outlayr and Goodbudget on price, free plans, envelopes against category limits, how entries are added, currencies, platforms, and license, plus what Outlayr's CSV import does with a Goodbudget file and what doesn't come across
+- [Monefy alternative](https://tryoutlayr.com/compare/monefy): Outlayr and Monefy on price, how entries are added, exchange rates, recurring entries, sync, platforms, and license, plus what Outlayr's CSV import does with your Monefy entries and what doesn't come across
+- [Fintonic alternative](https://tryoutlayr.com/compare/fintonic): Outlayr and Fintonic on price, how entries are added, what each tracks, where each is available, platforms, and license, plus how to export from Fintonic, what reaches Outlayr's CSV import, and what doesn't. In Spanish at https://tryoutlayr.com/es/compare/fintonic
+- [PocketGuard alternative](https://tryoutlayr.com/compare/pocketguard): Outlayr and PocketGuard on price, how entries are added, subscriptions, platforms, and license, plus how to export from PocketGuard, what reaches Outlayr's CSV import, and what doesn't
+- [Spendee alternative](https://tryoutlayr.com/compare/spendee): Outlayr and Spendee on price, how entries are added, currencies, platforms, and license, plus how to export from Spendee, what reaches Outlayr's CSV import, and what doesn't
+- [Wallet by BudgetBakers alternative](https://tryoutlayr.com/compare/wallet): Outlayr and Wallet on price, how entries are added, currencies, platforms, and license, plus how to export from Wallet by BudgetBakers, what reaches Outlayr's CSV import, and what doesn't
+- [Rocket Money alternative](https://tryoutlayr.com/compare/rocket-money): Outlayr and Rocket Money on price, how entries are added, subscriptions, where each is available, platforms, and license, plus how to export from Rocket Money, what reaches Outlayr's CSV import, and what doesn't. Outlayr does not cancel subscriptions for you
 
 ## Calculators
 

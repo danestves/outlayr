@@ -19,5 +19,5 @@ export const BUDGETS_SCREEN_ALT = t({
 
 export const ACCOUNTS_SCREEN_ALT = t({
     en: "Outlayr Accounts screen listing eight accounts, including Banesco in bolívares and an Apple Card with a negative balance, above a Transfer button.",
-    es: "Pantalla de cuentas de Outlayr con ocho cuentas, entre ellas Banesco en bolívares y una Apple Card con saldo negativo, arriba de un botón para transferir.",
+    es: "Pantalla de cuentas de Outlayr: tienes $26,175.52 y debes $2,082.70, con seis cuentas, entre ellas Banesco en bolívares, y dos tarjetas, Amex Gold y Apple Card.",
 });

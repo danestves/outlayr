@@ -12,6 +12,7 @@ import type { Href } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BackHandler, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import Animated, {
+    createAnimatedComponent,
     FadeIn,
     FadeInDown,
     FadeOut,
@@ -33,7 +34,7 @@ import { useHaptics } from "@/lib/use-haptics";
 import { withAlpha } from "@/theme/shade";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+const AnimatedPressable = createAnimatedComponent(Pressable);
 
 const FAB_SIZE = 56;
 const FAB_CORNER = 16;

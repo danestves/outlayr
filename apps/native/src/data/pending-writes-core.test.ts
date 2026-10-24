@@ -150,6 +150,32 @@ describe("applyPendingWrites", () => {
         ]);
     });
 
+    it("files a Venezuelan bank's Bs. push in bolívares, not Bolivian bolivianos", async () => {
+        await db.insert(accounts).values({
+            currency: "VES",
+            dateCreated: NOW,
+            id: "acc-banesco",
+            initialBalanceDate: NOW,
+            name: "Banesco",
+            updatedAt: NOW,
+        });
+        const push = walletWrite("bs", {
+            amount: 0,
+            amountText: null,
+            card: "Banesco",
+            dedupeKey: "notification:expense:bs",
+            note: "",
+            text: "Compra aprobada\nCompra por Bs. 4.150,50 en Panadería Sol con tu tarjeta terminada en 1234",
+        });
+
+        await applyPendingWrites(db, [push], NOW);
+
+        const [row] = await db
+            .select({ accountId: transactions.accountId, amount: transactions.amount, currency: transactions.currency })
+            .from(transactions);
+        expect(row).toStrictEqual({ accountId: "acc-banesco", amount: 4150.5, currency: "VES" });
+    });
+
     it("reads a notification job's amount and merchant, and files it by account", async () => {
         await seedAccounts(db);
         const job = walletWrite("push", {

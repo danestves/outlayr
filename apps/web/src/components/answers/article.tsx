@@ -5,6 +5,8 @@ import { useIntlayer, useLocale } from "react-intlayer";
 import { AnswerCard } from "@/components/answer-hub";
 import type { AnswerItem } from "@/components/answer-hub";
 import { HubTrail } from "@/components/hub-trail";
+import { Icon } from "@/components/icon";
+import { LocalizedLink } from "@/components/localized-link";
 import { ASIDE, COLUMNS } from "@/components/page";
 import { StoreBadges } from "@/components/store-badges";
 import { hasKey } from "@/lib/has-key";
@@ -12,6 +14,7 @@ import { LANGUAGES } from "@/lib/i18n";
 import { CONTAINER } from "@/lib/layout";
 import { useMotionScan } from "@/lib/motion";
 import { longDate } from "@/lib/site";
+import type { PageRef } from "@/lib/site";
 
 export interface ArticleSection {
     body: ReactNode;
@@ -37,6 +40,52 @@ export function Figures({ text }: { text: string }) {
     );
 }
 
+const WWW = /^www\./u;
+
+function Source({ href }: { href: string }) {
+    return (
+        <a
+            className="fluid text-muted hover:text-foreground ml-2 inline-flex items-center gap-1 font-mono text-xs whitespace-nowrap"
+            href={href}
+        >
+            {new URL(href).hostname.replace(WWW, "")}
+            <Icon name="arrow-up-right" />
+        </a>
+    );
+}
+
+export function FactList({
+    facts,
+}: {
+    facts: readonly { label: ReactNode & { value: string }; source?: { value: string }; text: { value: string } }[];
+}) {
+    return (
+        <dl className="border-border mt-8 border-t delay-150" data-reveal>
+            {facts.map((fact) => (
+                <div className="border-border grid gap-2 border-b py-4 sm:grid-cols-4 sm:gap-6" key={fact.label.value}>
+                    <dt className="text-muted font-mono text-xs tracking-widest uppercase sm:pt-1">{fact.label}</dt>
+                    <dd className="sm:col-span-3">
+                        <Figures text={fact.text.value} />
+                        {fact.source ? <Source href={fact.source.value} /> : null}
+                    </dd>
+                </div>
+            ))}
+        </dl>
+    );
+}
+
+export function Prose({ paragraphs }: { paragraphs: readonly (ReactNode & { value: string })[] }) {
+    return (
+        <div className="text-muted mt-8 flex max-w-2xl flex-col gap-4 text-lg">
+            {paragraphs.map((paragraph) => (
+                <p data-reveal key={paragraph.value}>
+                    {paragraph}
+                </p>
+            ))}
+        </div>
+    );
+}
+
 export function Questions({
     items,
 }: {
@@ -54,10 +103,99 @@ export function Questions({
     );
 }
 
-export function nextAfter<T extends object>(record: T, slug: string, count: number) {
-    const slugs = Object.keys(record);
-    const at = slugs.indexOf(slug);
-    return [...slugs.slice(at + 1), ...slugs.slice(0, at)].filter((key) => hasKey(record, key)).slice(0, count);
+function useRelated(refs: readonly PageRef[]): AnswerItem[] {
+    const { compare, guides } = useIntlayer("answers");
+    const { pages } = useIntlayer("tools");
+    const { footer } = useIntlayer("site");
+    return refs.map((ref) => {
+        const [, hub = "", slug = ""] = ref.split("/");
+        if (hub === "guides" && hasKey(guides, slug)) {
+            const guide = guides[slug];
+            return { kicker: footer.guides, name: guide.title, slug, text: guide.lead, to: "/{-$locale}/guides/$slug" };
+        }
+        if (hub === "compare" && hasKey(compare, slug)) {
+            const page = compare[slug];
+            return {
+                kicker: footer.compare,
+                name: page.title,
+                slug,
+                text: page.summary,
+                to: "/{-$locale}/compare/$slug",
+            };
+        }
+        if (hub === "tools" && hasKey(pages, slug)) {
+            const page = pages[slug];
+            return { kicker: footer.tools, name: page.title, slug, text: page.lead, to: "/{-$locale}/tools/$slug" };
+        }
+        throw new Error(`No page for related link ${ref}`);
+    });
+}
+
+const LABEL = "text-muted font-mono text-xs font-normal tracking-widest uppercase";
+const HEAD =
+    "text-lg font-semibold md:text-muted md:font-mono md:text-xs md:font-normal md:tracking-widest md:uppercase";
+
+export function CompareTable({
+    columns,
+    corner,
+    rows,
+}: {
+    columns: readonly { id: string; muted?: boolean; name: ReactNode }[];
+    corner: string;
+    rows: readonly { cells: readonly string[]; id: string; label: ReactNode }[];
+}) {
+    const last = columns.length - 1;
+    const paired = columns.length === 2;
+    const row = paired ? "grid grid-cols-2 gap-x-4 md:table-row" : "grid grid-cols-1 md:table-row";
+    return (
+        <div className="mt-8 delay-100" data-reveal>
+            <table className="block w-full border-collapse text-left tabular-nums md:table">
+                <thead className={paired ? "block md:table-header-group" : "hidden md:table-header-group"}>
+                    <tr className={`border-foreground border-b ${row}`}>
+                        <th className="hidden w-1/5 py-3 pr-6 md:table-cell" scope="col">
+                            <span className="sr-only">{corner}</span>
+                        </th>
+                        {columns.map((column, index) => (
+                            <th
+                                className={`py-3 font-semibold ${column.muted ? "text-muted" : ""} ${index < last ? "md:pr-6" : ""}`}
+                                key={column.id}
+
+                                scope="col"
+                            >
+                                {column.name}
+                            </th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody className="block md:table-row-group">
+                    {rows.map((item) => (
+                        <tr className={`border-border border-b align-top ${row} pb-4 md:pb-0`} key={item.id}>
+                            <th
+                                className={`col-span-full pt-4 pb-2 md:table-cell md:py-4 md:pr-6 ${paired ? LABEL : HEAD}`}
+
+                                scope="row"
+                            >
+                                {item.label}
+                            </th>
+                            {columns.map((column, index) => (
+                                <td
+                                    className={`md:table-cell md:py-4 ${column.muted ? "text-muted" : ""} ${index < last ? "md:pr-6" : ""} ${paired ? "" : "pt-2"}`}
+                                    key={column.id}
+                                >
+                                    {paired ? null : (
+                                        <span aria-hidden="true" className={`${LABEL} block md:hidden`}>
+                                            {column.name}
+                                        </span>
+                                    )}
+                                    <Figures text={item.cells[index] ?? ""} />
+                                </td>
+                            ))}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
 }
 
 function Contents({ sections }: { sections: readonly ArticleSection[] }) {
@@ -107,8 +245,9 @@ function Contents({ sections }: { sections: readonly ArticleSection[] }) {
 export function Article({
     actions,
     aside,
-    checked,
+    badges = true,
     children,
+    dated,
     hub,
     lead,
     related,
@@ -117,17 +256,19 @@ export function Article({
 }: {
     actions?: ReactNode;
     aside?: ReactNode;
-    checked?: Date;
+    badges?: boolean;
     children?: ReactNode;
+    dated?: { day: Date; label: "checkedOn" | "updatedOn" };
     hub: "/compare" | "/guides" | "/tools";
     lead: ReactNode;
-    related: readonly AnswerItem[];
+    related: readonly PageRef[];
     sections: readonly ArticleSection[];
     title: ReactNode;
 }) {
     useMotionScan();
     const { labels } = useIntlayer("answers");
     const { locale } = useLocale();
+    const cards = useRelated(related);
     return (
         <main className={`${CONTAINER} pt-24 pb-24`} id="main">
             <header className="mt-16 grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
@@ -144,19 +285,22 @@ export function Article({
                     <p className="text-muted mt-6 max-w-[680px] text-lg delay-200 md:text-xl" data-reveal>
                         {lead}
                     </p>
-                    {checked ? (
-                        <p
-                            className="text-muted mt-8 font-mono text-xs tracking-widest uppercase delay-300"
-                            data-reveal
-                        >
-                            <time dateTime={checked.toISOString().slice(0, 10)}>
-                                {labels.checkedOn({ date: longDate(checked, LANGUAGES[locale].date) })}
-                            </time>
-                        </p>
-                    ) : null}
-                    {actions ? (
+                    <p className="text-muted mt-8 font-mono text-xs tracking-widest uppercase delay-300" data-reveal>
+                        <LocalizedLink className="fluid hover:text-foreground" hash="maker" to="/about">
+                            {labels.byline}
+                        </LocalizedLink>
+                        {dated ? (
+                            <>
+                                {" · "}
+                                <time dateTime={dated.day.toISOString().slice(0, 10)}>
+                                    {labels[dated.label]({ date: longDate(dated.day, LANGUAGES[locale].date) })}
+                                </time>
+                            </>
+                        ) : null}
+                    </p>
+                    {actions || badges ? (
                         <div className="mt-10 delay-300" data-reveal>
-                            {actions}
+                            {actions ?? <StoreBadges placement="intro" />}
                         </div>
                     ) : null}
                 </div>
@@ -203,7 +347,7 @@ export function Article({
                     {labels.related}
                 </h2>
                 <ul className="mt-8 grid gap-4 md:grid-cols-3">
-                    {related.map((item, index) => (
+                    {cards.map((item, index) => (
                         <li className={DELAYS[index]} data-reveal key={item.slug}>
                             <AnswerCard heading="h3" item={item} />
                         </li>

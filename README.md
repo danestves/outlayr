@@ -24,12 +24,12 @@ apps/
   native/        Expo + React Native app, iOS and Android
   web/           tryoutlayr.com, TanStack Start
   screenshots/   App Store screenshot editor
+  clips/         Remotion videos for the site, socials and in-app loops
 packages/
   backend/       Convex: auth, sync, exchange rates
   money/         Money math shared by app and backend
   env/           Typed env for each app
   config/        Shared tsconfig and lint presets
-video/           Remotion marketing clips
 ```
 
 ## Getting started

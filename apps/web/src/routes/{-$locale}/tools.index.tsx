@@ -4,7 +4,7 @@ import { useIntlayer } from "react-intlayer";
 
 import { AnswerHub } from "@/components/answer-hub";
 import { localeFromParam, pageUrl } from "@/lib/i18n";
-import { itemList, ldJson, pageMeta } from "@/lib/seo";
+import { hubTrail, itemList, ldJson, pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/{-$locale}/tools/")({
     component: Tools,
@@ -16,8 +16,8 @@ export const Route = createFileRoute("/{-$locale}/tools/")({
             url: pageUrl(`/tools/${slug}`, locale),
         }));
         return {
-            meta: pageMeta(hub.meta.title, hub.lead),
-            scripts: [ldJson(itemList(items))],
+            meta: pageMeta(hub.meta.title, hub.meta.description),
+            scripts: [ldJson(itemList(items)), ldJson(hubTrail(locale, "tools"))],
         };
     },
 });

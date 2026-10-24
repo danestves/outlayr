@@ -1,6 +1,8 @@
 import "dotenv/config";
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
+import type { AndroidShortcut } from "./plugins/with-android-shortcuts";
+
 const buildProfile = process.env.EAS_BUILD_PROFILE;
 const isProduction = buildProfile === "production";
 
@@ -119,6 +121,39 @@ const WIDGETS = [
     },
 ];
 
+type QuickAction = AndroidShortcut & { readonly iosIcon: string };
+
+const QUICK_ACTIONS = [
+    {
+        glyph: "add",
+        href: "outlayr://new",
+        id: "log-expense",
+        iosIcon: "symbol:plus.circle.fill",
+        title: { en: "Log Expense", es: "Registrar gasto" },
+    },
+    {
+        glyph: "income",
+        href: "outlayr://new?income=1",
+        id: "log-income",
+        iosIcon: "symbol:arrow.down.circle.fill",
+        title: { en: "Log Income", es: "Registrar ingreso" },
+    },
+    {
+        glyph: "search",
+        href: "outlayr://search",
+        id: "search",
+        iosIcon: "symbol:magnifyingglass",
+        title: { en: "Search Entries", es: "Buscar" },
+    },
+    {
+        glyph: "budgets",
+        href: "outlayr://budgets",
+        id: "budgets",
+        iosIcon: "symbol:chart.pie.fill",
+        title: { en: "Budgets", es: "Presupuestos" },
+    },
+] as const satisfies readonly QuickAction[];
+
 const GOOGLE_CLIENT_SUFFIX = /\.apps\.googleusercontent\.com$/i;
 
 function googleIosUrlScheme(clientId: string | undefined): string {
@@ -214,34 +249,15 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
         [
             "expo-quick-actions",
             {
-                iosActions: [
-                    {
-                        icon: "symbol:plus.circle.fill",
-                        id: "log-expense",
-                        params: { href: "outlayr://new" },
-                        title: "Log Expense",
-                    },
-                    {
-                        icon: "symbol:arrow.down.circle.fill",
-                        id: "log-income",
-                        params: { href: "outlayr://new?income=1" },
-                        title: "Log Income",
-                    },
-                    {
-                        icon: "symbol:magnifyingglass",
-                        id: "search",
-                        params: { href: "outlayr://search" },
-                        title: "Search Entries",
-                    },
-                    {
-                        icon: "symbol:chart.pie.fill",
-                        id: "budgets",
-                        params: { href: "outlayr://budgets" },
-                        title: "Budgets",
-                    },
-                ],
+                iosActions: QUICK_ACTIONS.map((action) => ({
+                    icon: action.iosIcon,
+                    id: action.id,
+                    params: { href: action.href },
+                    title: action.title.en,
+                })),
             },
         ],
+        ["./plugins/with-android-shortcuts.ts", { shortcuts: QUICK_ACTIONS }],
         [
             "expo-splash-screen",
             {
@@ -330,7 +346,7 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
           }
         : { url: UPDATES_URL },
     userInterfaceStyle: "automatic",
-    version: "1.0.0",
+    version: process.env.APP_VERSION ?? "1.0.0",
 });
 
 export default getConfig;

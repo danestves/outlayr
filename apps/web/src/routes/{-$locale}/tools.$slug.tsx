@@ -3,7 +3,7 @@ import { getIntlayer } from "intlayer";
 import type { ComponentType } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
-import { Article, Questions, nextAfter } from "@/components/answers/article";
+import { Article, Prose, Questions } from "@/components/answers/article";
 import { BudgetTool } from "@/components/tools/budget-tool";
 import { InstallmentTool } from "@/components/tools/installment-tool";
 import { SplitTool } from "@/components/tools/split-tool";
@@ -68,25 +68,13 @@ function Tool() {
     const Calculator = CALCULATORS[slug];
     return (
         <Article
+            badges={false}
             hub="/tools"
             lead={page.lead}
-            related={nextAfter(pages, slug, 3).map((other) => ({
-                name: pages[other].title,
-                slug: other,
-                text: pages[other].lead,
-                to: "/{-$locale}/tools/$slug",
-            }))}
+            related={page.related}
             sections={[
                 {
-                    body: (
-                        <div className="text-muted mt-8 flex max-w-2xl flex-col gap-4 text-lg">
-                            {page.method.map((paragraph) => (
-                                <p data-reveal key={paragraph.value}>
-                                    {paragraph}
-                                </p>
-                            ))}
-                        </div>
-                    ),
+                    body: <Prose paragraphs={page.method} />,
                     id: "method",
                     title: labels.method,
                 },

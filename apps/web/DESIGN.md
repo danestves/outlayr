@@ -54,6 +54,9 @@ everything (`body::before`).
   700ms on color, opacity and transforms. Never `ease`, `linear`, or bouncy curves.
 - Reveals: add `data-reveal` to any element. It fades up 4rem (and un-blurs from 12px on
   `md+`) over 1000ms when it scrolls in. Stagger with `delay-100`, `delay-150`, `delay-200` …
+  The first block of each page (`main > :first-child`) and anything marked `data-reveal="now"`
+  fade in from CSS at first paint instead, over 500ms, so the first screen never waits for
+  hydration and its largest text lands sooner.
 - Tagline words: wrap each word in `<span data-word>`; it lights from 30% to 100% as it crosses
   a line 60% down the viewport.
 - Spotlight borders: `data-spot` on a rounded card.

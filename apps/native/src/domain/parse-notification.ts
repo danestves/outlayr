@@ -1,5 +1,6 @@
 import { CURRENCY_META, PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
 
+import { SYMBOL_ALIASES } from "./detect-currency";
 import { detectDecimalSeparator, parseCsvAmount } from "./transaction-csv";
 
 export interface ParsedNotification {
@@ -13,7 +14,9 @@ function escape(text: string): string {
     return text.replaceAll(/[.*+?^${}()|[\]\\/]/g, String.raw`\$&`);
 }
 
-const SYMBOLS = [...new Set(Object.values(CURRENCY_META).map((meta) => meta.symbol))]
+const SYMBOLS = [
+    ...new Set([...Object.values(CURRENCY_META).map((meta) => meta.symbol), ...Object.keys(SYMBOL_ALIASES)]),
+]
     .sort((a, b) => b.length - a.length)
     .map(escape)
     .join("|");
@@ -38,6 +41,7 @@ const STOP = String.raw`(?=\s+(?:with|using|via|on|for|con|usando|por|el|la|desd
 const PAID_TO = new RegExp(String.raw`\b(?:at|in|en|to|a|de|@)\s+(.+?)${STOP}`, "iu");
 const RECEIVED_FROM = new RegExp(String.raw`\b(?:from|de|por parte de)\s+(.+?)${STOP}`, "iu");
 
+const CARD_USED = new RegExp(String.raw`\b(?:with|con)\s+([^\n]*?[•*]{2,}\s?\d{4})(?!\d)`, "iu");
 const CARD_REFERENCE = new RegExp(String.raw`\byour\b.*\bcard\b|\btu\b.*\btarjeta\b|[x*•]{3,}[-\s]?\d{3,4}`, "iu");
 const PARENTHESIZED = new RegExp(String.raw`\(([^()]+)\)`, "u");
 
@@ -50,6 +54,7 @@ const POS_PREFIX = new RegExp(
 export const NOTIFICATION_PATTERNS = {
     afterNumber: AFTER_NUMBER,
     cardReference: CARD_REFERENCE,
+    cardUsed: CARD_USED,
     declined: DECLINED,
     incoming: INCOMING,
     money: MONEY,

@@ -3,6 +3,22 @@ import type { Dictionary } from "intlayer";
 
 const settingsWallet = {
     content: {
+        "settings.wallet.accessRow": t({
+            en: "Notification access",
+            es: "Acceso a notificaciones",
+        }),
+        "settings.wallet.allowAccess": t({
+            en: "Allow notification access",
+            es: "Permitir acceso a notificaciones",
+        }),
+        "settings.wallet.allowAccessDetail": t({
+            en: "Android opens Settings. Outlayr only keeps notifications from apps you turn on here.",
+            es: "Android te lleva a Ajustes. Outlayr solo guarda las de apps que actives aquí.",
+        }),
+        "settings.wallet.androidLead": t({
+            en: "Every Google Wallet payment and every purchase your bank notifies you of lands on the Log, filed under the account it matches.",
+            es: "Cada pago con Google Wallet y cada compra que te notifique tu banco llega al registro, en la cuenta que coincida.",
+        }),
         "settings.wallet.applePayRow": t({
             en: "Apple Pay taps",
             es: "Pagos con Apple Pay",
@@ -119,6 +135,10 @@ const settingsWallet = {
             en: "No cards yet",
             es: "Aún no hay tarjetas",
         }),
+        "settings.wallet.noSources": t({
+            en: "Pay with Google Wallet or wait for a purchase notification from your bank.",
+            es: "Paga con Google Wallet o espera una notificación de compra de tu banco.",
+        }),
         "settings.wallet.nothingLogged": t({
             en: "Nothing logged yet",
             es: "Nada registrado aún",
@@ -134,6 +154,10 @@ const settingsWallet = {
         "settings.wallet.open": t({
             en: "Open Shortcuts",
             es: "Abrir Atajos",
+        }),
+        "settings.wallet.pushChannel": t({
+            en: "Logged purchases",
+            es: "Compras registradas",
         }),
         "settings.wallet.pushNewPlace": t({
             en: "New place, tap to pick a category.",
@@ -158,6 +182,14 @@ const settingsWallet = {
         "settings.wallet.show": t({
             en: "Show",
             es: "Ver",
+        }),
+        "settings.wallet.sourcesFooter": t({
+            en: "Apps that notified you of an amount show up here.",
+            es: "Aparecen las apps que te notificaron un monto.",
+        }),
+        "settings.wallet.sourcesSection": t({
+            en: "Log from",
+            es: "Registrar desde",
         }),
         "settings.wallet.step1": t({
             en: "Automation, then +",

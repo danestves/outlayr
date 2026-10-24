@@ -44,6 +44,7 @@ export function SplitTool() {
     return (
         <>
             <ToolPanel
+                label={page.title.value}
                 answer={page.answer({
                     count: String(rows.length),
                     share: <Figure code={code} minor={Math.round(total / Math.max(1, rows.length))} />,

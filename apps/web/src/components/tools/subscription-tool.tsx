@@ -51,6 +51,7 @@ export function SubscriptionTool() {
 
     return (
         <ToolPanel
+            label={page.title.value}
             answer={
                 total > 0
                     ? page.answer({

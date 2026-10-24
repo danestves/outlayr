@@ -101,8 +101,8 @@ const home = {
             },
             {
                 answer: t({
-                    en: "Yes. Outlayr Pro is billed monthly or yearly, or bought once, at prices set per country in your app store. There are no ads on any plan.",
-                    es: "Sí. Outlayr Pro se paga al mes, al año o en un solo pago, con precios por país en tu tienda de apps. No hay anuncios en ningún plan.",
+                    en: "Yes. In the United States, Outlayr Pro is $129.99 once, or $7.99 a month or $49.99 a year with 7 days free. Your app store shows the price for your country. There are no ads on any plan.",
+                    es: "Sí. En Estados Unidos, Outlayr Pro cuesta US$129.99 en un solo pago, o US$7.99 al mes o US$49.99 al año con 7 días gratis. Tu tienda de apps muestra el precio de tu país. No hay anuncios en ningún plan.",
                 }),
                 question: t({
                     en: "Can I buy Outlayr Pro once instead of subscribing?",
@@ -193,7 +193,7 @@ const home = {
         meta: {
             description: t({
                 en: "Outlayr is a mobile expense tracker and budget app. Log a purchase in one sentence, by voice, or from a receipt, and track every subscription. Free to start.",
-                es: "Outlayr es una app móvil para controlar tus gastos y tu presupuesto. Registra una compra en una oración, con tu voz o con un recibo, y controla tus suscripciones. Gratis para empezar.",
+                es: "Outlayr es una app para controlar tus gastos y tu presupuesto. Registra una compra en una oración, con tu voz o con un recibo, y controla tus suscripciones.",
             }),
             title: t({
                 en: "Outlayr: Expense Tracker, Budget App & Subscription Tracker",

@@ -1,0 +1,35 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+group = 'expo.modules.purchaselistener'
+version = '1.0.0'
+
+def expoModulesCorePlugin = new File(project(":expo-modules-core").projectDir.absolutePath, "ExpoModulesCorePlugin.gradle")
+apply from: expoModulesCorePlugin
+applyKotlinExpoModulesCorePlugin()
+useCoreDependencies()
+useExpoPublishing()
+
+useDefaultAndroidSdkVersions()
+
+android {
+  namespace "expo.modules.purchaselistener"
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+  }
+  lintOptions {
+    abortOnError false
+  }
+}
+
+dependencies {
+  def notifications = findProject(':expo-notifications')
+  if (notifications != null) {
+    compileOnly notifications
+  } else {
+    def manifest = ["node", "--print", "require.resolve('expo-notifications/package.json')"].execute(null, projectDir).text.trim()
+    def version = new groovy.json.JsonSlurper().parse(new File(manifest)).version
+    compileOnly "host.exp.exponent:expo.modules.notifications:${version}"
+  }
+}

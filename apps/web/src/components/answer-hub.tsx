@@ -20,23 +20,34 @@ const SPANS = ["lg:col-span-7", "lg:col-span-5", "lg:col-span-5", "lg:col-span-7
 export function AnswerCard({ heading: Heading, item }: { heading: "h2" | "h3"; item: AnswerItem }) {
     const { locale } = useLocale();
     return (
-        <Link
+        <div
             className="fluid bg-surface group flex h-full flex-col justify-between gap-8 rounded-3xl p-6 md:min-h-56 md:gap-12 md:p-8"
             data-spot
-            params={{ locale: getPrefix(locale).localePrefix, slug: item.slug }}
-            to={item.to}
         >
             <div>
                 {item.kicker ? (
-                    <p className="text-muted mb-4 font-mono text-xs tracking-widest uppercase">{item.kicker}</p>
+                    <p className="text-muted mb-4 font-mono text-xs tracking-widest uppercase" data-kicker>
+                        {item.kicker}
+                    </p>
                 ) : null}
-                <Heading className="text-2xl font-semibold tracking-tight">{item.name}</Heading>
+                <Heading className="text-2xl font-semibold tracking-tight">
+                    <Link
+                        className="focus-visible:after:outline-tint after:absolute after:inset-0 after:rounded-3xl focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-[3px] focus-visible:after:outline-solid"
+                        params={{ locale: getPrefix(locale).localePrefix, slug: item.slug }}
+                        to={item.to}
+                    >
+                        {item.name}
+                    </Link>
+                </Heading>
                 <p className="text-muted mt-3 line-clamp-2 max-w-md">{item.text}</p>
             </div>
-            <span className="bg-raised flex size-10 items-center justify-center self-end rounded-full">
+            <span
+                aria-hidden="true"
+                className="bg-raised flex size-10 items-center justify-center self-end rounded-full"
+            >
                 <Icon className="fluid group-hover:translate-x-0.5" name="arrow-right" />
             </span>
-        </Link>
+        </div>
     );
 }
 
