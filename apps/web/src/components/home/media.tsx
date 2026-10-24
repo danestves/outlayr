@@ -58,7 +58,8 @@ const SPANISH_SCREENS = new Set(["04", "05", "06", "10"]);
 
 export function screenSources(name: string, locale: string) {
     const spanish = locale === "es" && SPANISH_SCREENS.has(name);
-    return { dark: `/screens/${name}-dark.webp`, src: spanish ? `/screens/es/${name}.webp` : `/screens/${name}.webp` };
+    const base = spanish ? `/screens/es/${name}` : `/screens/${name}`;
+    return { dark: `${base}-dark.webp`, src: `${base}.webp` };
 }
 
 export function Screen({
