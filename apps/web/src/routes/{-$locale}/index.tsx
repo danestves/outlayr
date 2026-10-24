@@ -5,7 +5,7 @@ import { Extras, Screens, Trust } from "@/components/home/details";
 import { Features } from "@/components/home/features";
 import { Guides } from "@/components/home/guides";
 import { Hero } from "@/components/home/hero";
-import { HERO_POSTER } from "@/components/home/hero-poster";
+import { heroPoster } from "@/components/home/hero-poster";
 import { HowItWorks } from "@/components/home/how-it-works";
 import { Pricing } from "@/components/home/pricing";
 import { Problem } from "@/components/home/problem";
@@ -27,13 +27,14 @@ export const Route = createFileRoute("/{-$locale}/")({
     head: ({ params }) => {
         const locale = localeFromParam(params.locale);
         const { faq, meta } = getIntlayer("home", locale);
+        const poster = heroPoster(locale);
         return {
             links: (["light", "dark"] as const).map((variant) => ({
                 as: "image",
                 fetchPriority: "high" as const,
-                href: HERO_POSTER.variants[variant].src,
-                imageSizes: HERO_POSTER.sizes,
-                imageSrcSet: HERO_POSTER.variants[variant].srcSet,
+                href: poster.variants[variant].src,
+                imageSizes: poster.sizes,
+                imageSrcSet: poster.variants[variant].srcSet,
                 media: `(prefers-color-scheme: ${variant})`,
                 rel: "preload",
                 type: "image/webp",

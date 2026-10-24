@@ -54,7 +54,7 @@ export function Phone({ children, className = "" }: { children: ReactNode; class
     );
 }
 
-const SPANISH_SCREENS = new Set(["04", "05", "06", "10"]);
+const SPANISH_SCREENS = new Set(["04", "05", "06", "10", "log-an-expense"]);
 
 export function screenSources(name: string, locale: string) {
     const spanish = locale === "es" && SPANISH_SCREENS.has(name);
