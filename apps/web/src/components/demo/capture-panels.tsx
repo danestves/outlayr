@@ -9,7 +9,7 @@ import { useNames } from "./use-names";
 const FADE_IN =
     "transition-[opacity,translate] duration-200 ease-out motion-reduce:transition-none starting:translate-y-1 starting:opacity-0";
 
-const COFFEE_SHOP = { en: "Blue Bottle", es: "Juan Valdez" } as const satisfies Record<Locale, string>;
+export const COFFEE_SHOP = { en: "Blue Bottle", es: "Juan Valdez" } as const satisfies Record<Locale, string>;
 
 const STORE = { en: "Target", es: "Farmatodo" } as const satisfies Record<Locale, string>;
 
