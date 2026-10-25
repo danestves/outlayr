@@ -5,6 +5,7 @@ import { cn } from "./tw";
 export const MONO_LABEL_CLASS = "text-eyebrow tracking-eyebrow font-mono uppercase";
 
 interface MonoLabelProps {
+    accessibilityLabel?: string;
     accessibilityRole?: "header";
     children: string;
     className?: string;
@@ -14,6 +15,7 @@ interface MonoLabelProps {
 
 /** Callers pass already-composed copy, e.g. "SPENT · THIS MONTH". */
 export function MonoLabel({
+    accessibilityLabel,
     accessibilityRole,
     children,
     className,
@@ -22,6 +24,7 @@ export function MonoLabel({
 }: MonoLabelProps) {
     return (
         <Text
+            accessibilityLabel={accessibilityLabel}
             accessibilityRole={accessibilityRole}
             className={cn(MONO_LABEL_CLASS, "text-muted", className)}
             maxFontSizeMultiplier={maxFontSizeMultiplier}

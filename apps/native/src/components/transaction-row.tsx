@@ -167,11 +167,11 @@ function RowMeta({
                     </View>
                 ) : null}
                 {unplaced ? (
-                    <View
-                        accessibilityLabel={t("log.row.unplaced", { code: currency })}
-                        className="border-border rounded-[3px] border px-[3px]"
-                    >
-                        <MonoLabel className="text-subtle">{`${currency}?`}</MonoLabel>
+                    <View className="border-border rounded-[3px] border px-[3px]">
+                        <MonoLabel
+                            accessibilityLabel={t("log.row.unplaced", { code: currency })}
+                            className="text-subtle"
+                        >{`${currency}?`}</MonoLabel>
                     </View>
                 ) : null}
                 {rateNeeded ? (
