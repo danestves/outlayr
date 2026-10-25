@@ -2,7 +2,9 @@ import { env } from "@outlayr/env/backend";
 
 export const EMAIL_CODE_TTL_SECONDS = 10 * 60;
 
-type Language = "en" | "es";
+const LANGUAGES = ["en", "es", "pt"] as const;
+
+type Language = (typeof LANGUAGES)[number];
 
 interface Email {
     subject: string;
@@ -11,43 +13,65 @@ interface Email {
 
 /** The app sends its own language, which can differ from the device's, on every request that can send mail. */
 export function emailLanguage(headers: Headers | undefined): Language {
-    return headers?.get("accept-language")?.toLowerCase().startsWith("es") ? "es" : "en";
+    const primary = headers?.get("accept-language")?.toLowerCase().slice(0, 2);
+    return LANGUAGES.find((language) => language === primary) ?? "en";
 }
 
+interface CodeCopy {
+    expiry: (minutes: number) => string;
+    reset: string;
+    subject: (otp: string) => string;
+    verify: string;
+}
+
+const CODE_EMAIL = {
+    en: {
+        expiry: (minutes: number) =>
+            `It expires in ${minutes} minutes. If you didn't ask for it, you can ignore this email.`,
+        reset: "Use this code to reset your Outlayr password:",
+        subject: (otp: string) => `Your Outlayr code: ${otp}`,
+        verify: "Use this code to confirm your email for Outlayr:",
+    },
+    es: {
+        expiry: (minutes: number) => `Caduca en ${minutes} minutos. Si no lo pediste, puedes ignorar este correo.`,
+        reset: "Usa este código para restablecer tu contraseña de Outlayr:",
+        subject: (otp: string) => `Tu código de Outlayr: ${otp}`,
+        verify: "Usa este código para confirmar tu correo en Outlayr:",
+    },
+    pt: {
+        expiry: (minutes: number) => `Ele expira em ${minutes} minutos. Se você não pediu, pode ignorar este e-mail.`,
+        reset: "Use este código para redefinir sua senha do Outlayr:",
+        subject: (otp: string) => `Seu código do Outlayr: ${otp}`,
+        verify: "Use este código para confirmar seu e-mail no Outlayr:",
+    },
+} satisfies Record<Language, CodeCopy>;
+
 export function codeEmail(otp: string, purpose: "verify" | "reset", language: Language): Email {
-    const minutes = EMAIL_CODE_TTL_SECONDS / 60;
-    if (language === "es") {
-        const lead =
-            purpose === "verify"
-                ? "Usa este código para confirmar tu correo en Outlayr:"
-                : "Usa este código para restablecer tu contraseña de Outlayr:";
-        return {
-            subject: `Tu código de Outlayr: ${otp}`,
-            text: `${lead}\n\n${otp}\n\nCaduca en ${minutes} minutos. Si no lo pediste, puedes ignorar este correo.`,
-        };
-    }
-    const lead =
-        purpose === "verify"
-            ? "Use this code to confirm your email for Outlayr:"
-            : "Use this code to reset your Outlayr password:";
+    const copy = CODE_EMAIL[language];
     return {
-        subject: `Your Outlayr code: ${otp}`,
-        text: `${lead}\n\n${otp}\n\nIt expires in ${minutes} minutes. If you didn't ask for it, you can ignore this email.`,
+        subject: copy.subject(otp),
+        text: `${copy[purpose]}\n\n${otp}\n\n${copy.expiry(EMAIL_CODE_TTL_SECONDS / 60)}`,
     };
 }
 
 /** Sign-up answers an existing email exactly like a new one, so the owner hears about it here instead. */
-export function accountExistsEmail(language: Language): Email {
-    if (language === "es") {
-        return {
-            subject: "Ya tienes una cuenta de Outlayr",
-            text: "Este correo ya tiene una cuenta de Outlayr. Inicia sesión con ella, o elige ¿Olvidaste tu contraseña? para crear una nueva.\n\nSi no lo pediste, puedes ignorar este correo.",
-        };
-    }
-    return {
+const ACCOUNT_EXISTS_EMAIL = {
+    en: {
         subject: "You already have an Outlayr account",
         text: "This email already has an Outlayr account. Sign in with it, or choose Forgot password? to set a new one.\n\nIf you didn't ask for this, you can ignore this email.",
-    };
+    },
+    es: {
+        subject: "Ya tienes una cuenta de Outlayr",
+        text: "Este correo ya tiene una cuenta de Outlayr. Inicia sesión con ella, o elige ¿Olvidaste tu contraseña? para crear una nueva.\n\nSi no lo pediste, puedes ignorar este correo.",
+    },
+    pt: {
+        subject: "Você já tem uma conta do Outlayr",
+        text: "Este e-mail já tem uma conta do Outlayr. Entre com ela ou escolha Esqueceu a senha? para criar uma nova.\n\nSe você não pediu isso, pode ignorar este e-mail.",
+    },
+} satisfies Record<Language, Email>;
+
+export function accountExistsEmail(language: Language): Email {
+    return ACCOUNT_EXISTS_EMAIL[language];
 }
 
 const SEND_TIMEOUT_MS = 10_000;

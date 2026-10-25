@@ -7,5 +7,5 @@ export function flyleafDate(date: Date, language: Language): string {
     const day = date.getDate();
     const month = monthLongTitle(date, language);
     const year = date.getFullYear();
-    return language === "es" ? `${day} de ${month} de ${year}` : `${month} ${day}, ${year}`;
+    return language === "en" ? `${month} ${day}, ${year}` : `${day} de ${month} de ${year}`;
 }

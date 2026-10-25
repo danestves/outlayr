@@ -1,4 +1,4 @@
-export const SUPPORTED_LANGUAGES = ["en", "es"] as const;
+export const SUPPORTED_LANGUAGES = ["en", "es", "pt"] as const;
 
 export type Language = (typeof SUPPORTED_LANGUAGES)[number];
 
@@ -8,6 +8,7 @@ export const DEFAULT_LANGUAGE: Language = "en";
 const LANGUAGE_NAMES = {
     en: "English",
     es: "Español",
+    pt: "Português",
 } satisfies Record<Language, string>;
 
 export function languageLabel(language: Language): string {

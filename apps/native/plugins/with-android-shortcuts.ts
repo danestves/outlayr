@@ -66,11 +66,15 @@ const GLYPHS = {
 
 type GlyphName = keyof typeof GLYPHS;
 
+const TRANSLATED_LANGUAGES = ["es", "pt"] as const;
+
+type TranslatedLanguage = (typeof TRANSLATED_LANGUAGES)[number];
+
 export interface AndroidShortcut {
     readonly glyph: GlyphName;
     readonly href: string;
     readonly id: string;
-    readonly title: { readonly en: string; readonly es: string };
+    readonly title: { readonly en: string } & Readonly<Record<TranslatedLanguage, string>>;
 }
 
 interface Options {
@@ -143,7 +147,7 @@ async function writeResources(
             await writeFile(path.join(res, "drawable-v26", `${name}.xml`), adaptiveIconXml(name));
         })
     );
-    await writeSpanishStrings(res, shortcuts);
+    await Promise.all(TRANSLATED_LANGUAGES.map((language) => writeTranslatedStrings(res, shortcuts, language)));
 }
 
 async function launcherClass(projectRoot: string, packageName: string): Promise<string> {
@@ -158,8 +162,12 @@ async function launcherClass(projectRoot: string, packageName: string): Promise<
     return name.startsWith(".") ? `${packageName}${name}` : name;
 }
 
-async function writeSpanishStrings(res: string, shortcuts: readonly AndroidShortcut[]): Promise<void> {
-    const stringsPath = path.join(res, "values-es", "strings.xml");
+async function writeTranslatedStrings(
+    res: string,
+    shortcuts: readonly AndroidShortcut[],
+    language: TranslatedLanguage
+): Promise<void> {
+    const stringsPath = path.join(res, `values-${language}`, "strings.xml");
     const xml = await AndroidConfig.Resources.readResourcesXMLAsync({ path: stringsPath });
     await XML.writeXMLAsync({
         path: stringsPath,
@@ -167,7 +175,7 @@ async function writeSpanishStrings(res: string, shortcuts: readonly AndroidShort
             shortcuts.map((shortcut) =>
                 AndroidConfig.Resources.buildResourceItem({
                     name: resourceName(shortcut.id),
-                    value: shortcut.title.es,
+                    value: shortcut.title[language],
                 })
             ),
             xml

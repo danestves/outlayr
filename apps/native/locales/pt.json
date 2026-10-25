@@ -1,0 +1,8 @@
+{
+    "ios": {
+        "NSCameraUsageDescription": "O Outlayr usa a câmera para escanear um recibo ou anexar uma foto a um lançamento. As fotos escaneadas vão para a Anthropic para serem lidas. As anexadas, não.",
+        "NSFaceIDUsageDescription": "O Outlayr usa o Face ID para desbloquear seus lançamentos.",
+        "NSMicrophoneUsageDescription": "O Outlayr escuta enquanto você dita um lançamento. A gravação vai para a ElevenLabs, que a transcreve para você.",
+        "NSPhotoLibraryUsageDescription": "O Outlayr usa suas fotos para colocar um logo em um lançamento, anexar uma foto a ele ou escanear um recibo ou uma compra parcelada. As fotos escaneadas vão para a Anthropic para serem lidas. As outras, não."
+    }
+}

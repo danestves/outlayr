@@ -23,9 +23,11 @@ describe("catalog parity", () => {
         }
     });
 
-    it("translates every English key into Spanish", () => {
-        const missing = Object.keys(EN).filter((key) => !(key in CATALOGS.es));
-        expect(missing).toStrictEqual([]);
+    it("translates every English key into every other language", () => {
+        for (const language of SUPPORTED_LANGUAGES) {
+            const missing = Object.keys(EN).filter((key) => !(key in CATALOGS[language]));
+            expect(missing).toStrictEqual([]);
+        }
     });
 
     it("declares every key in exactly one dictionary", () => {
@@ -39,13 +41,15 @@ describe("catalog parity", () => {
         }
     });
 
-    it("uses the same placeholders in both languages", () => {
-        for (const [key, english] of Object.entries(EN)) {
-            const spanish = CATALOGS.es[key];
-            if (!spanish) {
-                continue;
+    it("uses the same placeholders in every language", () => {
+        for (const language of SUPPORTED_LANGUAGES) {
+            for (const [key, english] of Object.entries(EN)) {
+                const translated = CATALOGS[language][key];
+                if (!translated) {
+                    continue;
+                }
+                expect([...placeholders(translated)].sort()).toStrictEqual([...placeholders(english)].sort());
             }
-            expect([...placeholders(spanish)].sort()).toStrictEqual([...placeholders(english)].sort());
         }
     });
 
@@ -87,7 +91,7 @@ describe("catalog parity", () => {
         }
     });
 
-    it("leaves no empty string in either catalog", () => {
+    it("leaves no empty string in any catalog", () => {
         for (const catalogName of SUPPORTED_LANGUAGES) {
             for (const [, value] of Object.entries(CATALOGS[catalogName])) {
                 expect(value.trim().length > 0).toBeTruthy();

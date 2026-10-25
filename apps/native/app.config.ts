@@ -129,28 +129,28 @@ const QUICK_ACTIONS = [
         href: "outlayr://new",
         id: "log-expense",
         iosIcon: "symbol:plus.circle.fill",
-        title: { en: "Log Expense", es: "Registrar gasto" },
+        title: { en: "Log Expense", es: "Registrar gasto", pt: "Registrar despesa" },
     },
     {
         glyph: "income",
         href: "outlayr://new?income=1",
         id: "log-income",
         iosIcon: "symbol:arrow.down.circle.fill",
-        title: { en: "Log Income", es: "Registrar ingreso" },
+        title: { en: "Log Income", es: "Registrar ingreso", pt: "Registrar receita" },
     },
     {
         glyph: "search",
         href: "outlayr://search",
         id: "search",
         iosIcon: "symbol:magnifyingglass",
-        title: { en: "Search Entries", es: "Buscar" },
+        title: { en: "Search Entries", es: "Buscar", pt: "Buscar" },
     },
     {
         glyph: "budgets",
         href: "outlayr://budgets",
         id: "budgets",
         iosIcon: "symbol:chart.pie.fill",
-        title: { en: "Budgets", es: "Presupuestos" },
+        title: { en: "Budgets", es: "Presupuestos", pt: "Orçamentos" },
     },
 ] as const satisfies readonly QuickAction[];
 
@@ -217,13 +217,14 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
     },
     locales: {
         es: "./locales/es.json",
+        pt: "./locales/pt.json",
     },
     name: "Outlayr",
     owner: "danestves-llc",
     platforms: ["ios", "android"],
     plugins: [
         "expo-router",
-        ["expo-localization", { supportedLocales: ["en", "es"] }],
+        ["expo-localization", { supportedLocales: ["en", "es", "pt"] }],
         "expo-image",
         "expo-sqlite",
         [

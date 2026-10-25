@@ -6,26 +6,32 @@ const watch = {
         "watch.all": t({
             en: "All",
             es: "Todas",
+            pt: "Todas",
         }),
         "watch.average": t({
             en: "Avg",
             es: "Prom.",
+            pt: "Méd.",
         }),
         "watch.empty": t({
             en: "Nothing logged yet",
             es: "Nada registrado aún",
+            pt: "Nada registrado ainda",
         }),
         "watch.recent": t({
             en: "Recent",
             es: "Recientes",
+            pt: "Recentes",
         }),
         "watch.spent": t({
             en: "spent",
             es: "gastado",
+            pt: "gasto",
         }),
         "watch.week": t({
             en: "Last 7 days",
             es: "Últimos 7 días",
+            pt: "Últimos 7 dias",
         }),
     },
     key: "watch" as const,

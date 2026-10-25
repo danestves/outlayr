@@ -129,11 +129,16 @@ function catalogFor(locale: Language): Catalog {
 export const EN = catalogFor("en");
 
 let spanish: Catalog | undefined;
+let portuguese: Catalog | undefined;
 
 export const CATALOGS = {
     en: EN,
     get es() {
         spanish ??= catalogFor("es");
         return spanish;
+    },
+    get pt() {
+        portuguese ??= catalogFor("pt");
+        return portuguese;
     },
 } satisfies Record<Language, Catalog>;
