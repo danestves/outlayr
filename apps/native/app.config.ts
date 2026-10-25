@@ -284,9 +284,10 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
         [
             "expo-image-picker",
             {
-                cameraPermission: "Outlayr uses the camera to scan a receipt. The photo goes to Anthropic to read it.",
+                cameraPermission:
+                    "Outlayr uses the camera to scan a receipt or attach a photo to a transaction. Scanned photos go to Anthropic to read them. Attached photos don't.",
                 photosPermission:
-                    "Outlayr uses your photos to set a custom logo for a transaction or to scan a receipt, which sends that photo to Anthropic to read it.",
+                    "Outlayr uses your photos to set a transaction's logo, attach a photo to it, or scan a receipt or installment plan. Scanned photos go to Anthropic to read them. The others don't.",
             },
         ],
         [

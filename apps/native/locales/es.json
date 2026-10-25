@@ -1,8 +1,8 @@
 {
     "ios": {
-        "NSCameraUsageDescription": "Outlayr usa la cámara para escanear un recibo. La foto va a Anthropic para leerlo.",
+        "NSCameraUsageDescription": "Outlayr usa la cámara para escanear un recibo o adjuntar una foto a una transacción. Las fotos escaneadas van a Anthropic para leerlas. Las adjuntas no.",
         "NSFaceIDUsageDescription": "Outlayr usa Face ID para desbloquear tu registro.",
         "NSMicrophoneUsageDescription": "Outlayr te escucha mientras dictas un registro. La grabación va a ElevenLabs para anotarlo por ti.",
-        "NSPhotoLibraryUsageDescription": "Outlayr usa tus fotos para ponerle un logo a una transacción o escanear un recibo, que envía esa foto a Anthropic para leerlo."
+        "NSPhotoLibraryUsageDescription": "Outlayr usa tus fotos para ponerle un logo a una transacción, adjuntarle una foto o escanear un recibo o un plan de cuotas. Las fotos escaneadas van a Anthropic para leerlas. Las demás no."
     }
 }
