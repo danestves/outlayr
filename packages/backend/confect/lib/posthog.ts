@@ -1,9 +1,11 @@
 import { env } from "@outlayr/env/backend";
-import { z } from "zod";
+import * as Schema from "effect/Schema";
 
 const POSTHOG_TIMEOUT_MS = 10_000;
 
-const bulkDeleteResponse = z.object({ deletion_errors: z.array(z.unknown()) });
+const decodeBulkDeleteResponse = Schema.decodeUnknownSync(
+    Schema.Struct({ deletion_errors: Schema.Array(Schema.Unknown) })
+);
 
 export async function erasePostHogPerson(distinctId: string): Promise<void> {
     if (!(env.POSTHOG_PERSONAL_API_KEY && env.POSTHOG_PROJECT_ID)) {
@@ -23,7 +25,7 @@ export async function erasePostHogPerson(distinctId: string): Promise<void> {
     if (!response.ok) {
         throw new Error(`PostHog person erase failed with ${response.status}`);
     }
-    if (bulkDeleteResponse.parse(await response.json()).deletion_errors.length > 0) {
+    if (decodeBulkDeleteResponse(await response.json()).deletion_errors.length > 0) {
         throw new Error("PostHog reported deletion errors for the person");
     }
 }
