@@ -1,0 +1,18 @@
+{
+    "$schema": "https://schema.railpack.com",
+    "packages": {
+        "node": "24",
+        "pnpm": "11.20.0"
+    },
+    "steps": {
+        "install": {
+            "commands": ["CI=1 pnpm install --frozen-lockfile --trust-lockfile --filter @outlayr/web..."]
+        },
+        "build": {
+            "commands": ["cd apps/web && ./node_modules/.bin/vp build"]
+        }
+    },
+    "deploy": {
+        "startCommand": "node apps/web/.output/server/index.mjs"
+    }
+}
