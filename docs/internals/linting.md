@@ -41,6 +41,8 @@ If you re-enable any of these, run `vp run -r --no-cache test` and `vp run -r --
 
 **`no-redeclare`.** It does not see TypeScript's separate value and type namespaces, so it flags the Effect idiom of a schema and its type sharing one name (`const EntryRateType = Schema.Literals([...])` beside `type EntryRateType = typeof EntryRateType.Type`). `tsc` already rejects a real redeclaration of a binding.
 
+**`max-classes-per-file`.** An Effect module declares its service tag and each of its `Schema.TaggedError` failures as a class, so one module per service means several classes per module.
+
 **`func-style` and `react/function-component-definition`.** Components and helpers are declared with `function` throughout and the tree relies on hoisting (`RootNavigator` references `RouteGate` above its definition). That is 2000+ declarations; converting them is an idiom change, not a toolchain migration.
 
 **`unicorn/prefer-module`, `node/global-require`.** Metro resolves `require()` for static assets and for the native modules that must not load at import time.
@@ -77,7 +79,7 @@ If you re-enable any of these, run `vp run -r --no-cache test` and `vp run -r --
 | `db/transaction.ts` | `outlayr/no-drizzle-transaction` | Where `withTransaction` is implemented, so it necessarily calls the API the rule bans. |
 | `lib/convex.ts`, `data/sync-engine-core.ts` | `anti-slop/no-chained-type-assertions` | Two assertion chains against a type we do not own: React Native's `BodyInit` omits the typed array its `fetch` actually sends, and drizzle's builders are generic per table so `Database` shares no members with the single-code-path writer the sync engine calls. |
 | `convex/providerLifecycle.ts` | `anti-slop/no-unknown-returns` | `AppleLifecycleContext` is a structural view of better-auth's endpoint context. Its members are better-auth's to declare: tightening `updateAccount` to the `void` the callers use removes the overlap the assertion needs. |
-| `MANUAL_MEMO_FILES` (130 files) | `outlayr/no-manual-memo` → `allowManualMemo` | The ratchet. Those files may keep `useMemo`, `useCallback` and `memo`; every other file in `apps/native/src` may not. Memo directives stay banned everywhere. Drop a file from the list once its memoization is gone, and never add one. oxlint 1.85 keeps a JS plugin rule's options in an override, which this relies on. |
+| `MANUAL_MEMO_FILES` | `outlayr/no-manual-memo` → `allowManualMemo` | The ratchet. Those files may keep `useMemo`, `useCallback` and `memo`; every other file in `apps/native/src` may not. Memo directives stay banned everywhere. Drop a file from the list once its memoization is gone, and never add one. oxlint 1.85 keeps a JS plugin rule's options in an override, which this relies on. |
 | `lib/app-icon.android.ts`, `navigation/stack-chrome.ts` | `outlayr/no-hookless-use-function` | Platform siblings of a hook that does call hooks. They must keep its name, so callers obey the rules of hooks on every platform, and they return a module constant, so there is nothing to cache. |
 | `convex/account.test.ts` | `outlayr/require-suppression-reason` | One reasonless `eslint-disable-next-line no-await-in-loop`, which is also unused there (`no-await-in-loop` is off in tests). It lives in `packages/backend`, whose migration owns the file; delete the directive and this exemption together. |
 
@@ -180,7 +182,7 @@ The last five findings were `exhaustive-effect-dependencies`: a dependency the e
 - `lib/ledger-adoption.tsx`: `??=` was the only path to `db`, and the compiler cannot lower `??=`, so `db` looked unused. It is an explicit `if` now.
 - `apps/web` demo `sentence-form.tsx`: `idle` and the `touches` counter are one `number | null`, null while idle.
 
-oxlint's compiler rules are a port and do not see every bailout: `try`/`finally`, value blocks inside `try`/`catch` and `??=` pass lint and still make the real compiler skip the component, which then ships unmemoized. `src/test-react-compiler.ts` compiles every `src` file with the app's own `babel.config.js` and Metro's release caller, and fails on any bailout outside `KNOWN_BAILOUTS` (12 files today). It also fails when a listed file compiles, so the list only shrinks. The compiler itself is about 80% of the cost, close to three CPU minutes for the tree under jest, so it runs as four `react-compiler-coverage-N.test.ts` shards that jest spreads across workers.
+oxlint's compiler rules are a port and do not see every bailout: `try`/`finally`, value blocks inside `try`/`catch` and `??=` pass lint and still make the real compiler skip the component, which then ships unmemoized. `src/test-react-compiler.ts` compiles every `src` file with the app's own `babel.config.js` and Metro's release caller, and fails on any bailout outside `KNOWN_BAILOUTS`. It also fails when a listed file compiles, so the list only shrinks. The compiler itself is about 80% of the cost, close to three CPU minutes for the tree under jest, so it runs as four `react-compiler-coverage-N.test.ts` shards that jest spreads across workers.
 
 ## Why jest and vitest are re-anchored
 

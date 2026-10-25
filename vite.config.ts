@@ -460,6 +460,7 @@ export default defineConfig({
             complexity: ["error", { max: 35 }],
             eqeqeq: ["error", "always", { null: "ignore" }],
             "func-style": "off",
+            "max-classes-per-file": "off",
             "no-eq-null": "off",
             "no-redeclare": "off",
             "no-use-before-define": ["error", { classes: false, functions: false, variables: false }],
