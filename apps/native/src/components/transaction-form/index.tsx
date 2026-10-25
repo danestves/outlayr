@@ -2544,8 +2544,7 @@ export function TransactionForm({
                 },
             },
             {
-                accessibilityLabel:
-                    attachments.length === 0 ? addLabel(t("transaction.sentence.add.attach")) : undefined,
+                accessibilityLabel: attachments.length === 0 ? t("transaction.attachments.add") : undefined,
                 active: attachments.length > 0,
                 key: "attach",
                 label:

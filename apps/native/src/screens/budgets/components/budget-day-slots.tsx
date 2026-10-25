@@ -18,7 +18,6 @@ interface BudgetDaySlotsProps {
     contributions: readonly ExpenseContribution[];
     currency: string;
     limit: number;
-    noun?: string;
     nowMs: number;
     tint?: string;
     window: BudgetWindow;
@@ -38,7 +37,6 @@ export function BudgetDaySlots({
     nowMs,
     categoryId = null,
     currency,
-    noun = "purchase",
     compact = false,
     className,
     tint,
@@ -62,7 +60,7 @@ export function BudgetDaySlots({
     }
 
     const span = (value: number) => `${(value / slots.scale) * 100}%` as const;
-    const sentence = dayVerdictSentence(slots, noun, t);
+    const sentence = dayVerdictSentence(slots, null, t);
 
     return (
         <View className={cn(compact ? "pt-1.5" : "pt-4", className)}>
