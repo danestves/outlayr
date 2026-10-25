@@ -216,6 +216,7 @@ const common = {
         "nav.settings.appIcon": t({
             en: "App icon",
             es: "Ícono de la app",
+            "es-ES": "Icono de la app",
             pt: "Ícone do app",
         }),
         "nav.settings.currency": t({
@@ -301,6 +302,7 @@ const common = {
         "nav.tab.settings": t({
             en: "Settings",
             es: "Configuración",
+            "es-ES": "Ajustes",
             pt: "Ajustes",
         }),
         "notFound.action": t({

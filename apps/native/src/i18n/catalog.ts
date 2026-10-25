@@ -129,6 +129,7 @@ function catalogFor(locale: Language): Catalog {
 export const EN = catalogFor("en");
 
 let spanish: Catalog | undefined;
+let spainSpanish: Catalog | undefined;
 let portuguese: Catalog | undefined;
 
 export const CATALOGS = {
@@ -136,6 +137,10 @@ export const CATALOGS = {
     get es() {
         spanish ??= catalogFor("es");
         return spanish;
+    },
+    get "es-ES"() {
+        spainSpanish ??= catalogFor("es-ES");
+        return spainSpanish;
     },
     get pt() {
         portuguese ??= catalogFor("pt");

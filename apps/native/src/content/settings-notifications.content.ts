@@ -16,11 +16,15 @@ const settingsNotifications = {
         "settings.notifications.deniedBody": t({
             en: "Outlayr cannot ask again once you have declined. Turn notifications on for Outlayr in iOS Settings and this switch will follow.",
             es: "Como ya las rechazaste, Outlayr no puede volver a preguntarte. Activa las notificaciones de Outlayr en Configuración y este interruptor se actualizará solo.",
+            "es-ES":
+                "Como ya las has rechazado, Outlayr no puede volver a preguntarte. Activa las notificaciones de Outlayr en Ajustes y este interruptor se actualizará solo.",
             pt: "Como você já recusou, o Outlayr não pode perguntar de novo. Ative as notificações do Outlayr nos Ajustes do iOS e este botão se atualiza sozinho.",
         }),
         "settings.notifications.deniedBody.android": t({
             en: "Outlayr cannot ask again once you have declined. Turn notifications on for Outlayr in your phone's settings and this switch will follow.",
             es: "Como ya las rechazaste, Outlayr no puede volver a preguntarte. Activa las notificaciones de Outlayr en la configuración del celular y este interruptor se actualizará solo.",
+            "es-ES":
+                "Como ya las has rechazado, Outlayr no puede volver a preguntarte. Activa las notificaciones de Outlayr en los ajustes del móvil y este interruptor se actualizará solo.",
             pt: "Como você já recusou, o Outlayr não pode perguntar de novo. Ative as notificações do Outlayr nas configurações do celular e este botão se atualiza sozinho.",
         }),
         "settings.notifications.deniedTitle": t({
@@ -81,6 +85,7 @@ const settingsNotifications = {
         "settings.notifications.openSettings": t({
             en: "Open Settings",
             es: "Abrir Configuración",
+            "es-ES": "Abrir Ajustes",
             pt: "Abrir Ajustes",
         }),
         "settings.notifications.section": t({

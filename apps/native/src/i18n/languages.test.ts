@@ -9,6 +9,13 @@ describe("languageFromTag", () => {
         expect(languageFromTag("en-GB")).toBe("en");
     });
 
+    it("keeps Spain apart from the rest of Spanish", () => {
+        expect(languageFromTag("es-ES")).toBe("es-ES");
+        expect(languageFromTag("es_ES")).toBe("es-ES");
+        expect(languageFromTag("es-AR")).toBe("es");
+        expect(languageFromTag("es")).toBe("es");
+    });
+
     it("is case insensitive", () => {
         expect(languageFromTag("ES-mx")).toBe("es");
     });

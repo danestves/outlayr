@@ -6,6 +6,7 @@ const search = {
         "search.empty.idle.body": t({
             en: "Find an entry by its note, category, or amount.",
             es: "Encuentra un registro por su nota, categoría o monto.",
+            "es-ES": "Encuentra un registro por su nota, categoría o importe.",
             pt: "Encontre um lançamento pela nota, categoria ou valor.",
         }),
         "search.empty.idle.title": t({

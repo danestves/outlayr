@@ -16,11 +16,13 @@ const importSheet = {
         "import.declinedBody": t({
             en: "AI suggestions are off in Settings.",
             es: "Las sugerencias de IA están desactivadas en Configuración.",
+            "es-ES": "Las sugerencias de IA están desactivadas en Ajustes.",
             pt: "As sugestões de IA estão desativadas em Ajustes.",
         }),
         "import.doneAddedLabel": t({
             en: "Added",
             es: "Agregadas",
+            "es-ES": "Añadidas",
             pt: "Adicionados",
         }),
         "import.doneStamp": t({
@@ -66,6 +68,7 @@ const importSheet = {
         "import.errorTooFewColumnsBody": t({
             en: "Outlayr needs at least a date, an amount, and a category or description column.",
             es: "Outlayr necesita al menos una fecha, un monto y una columna de categoría o descripción.",
+            "es-ES": "Outlayr necesita al menos una fecha, un importe y una columna de categoría o descripción.",
             pt: "O Outlayr precisa de pelo menos uma data, um valor e uma coluna de categoria ou descrição.",
         }),
         "import.errorTooFewColumnsTitle": t({
@@ -121,11 +124,14 @@ const importSheet = {
         "import.mappingGapGuidance": t({
             en: "Add a header row that names the missing column, or choose a file that already has one.",
             es: "Agrega una fila de encabezado que nombre la columna faltante, o elige un archivo que ya la tenga.",
+            "es-ES":
+                "Añade una fila de encabezado que nombre la columna que falta, o elige un archivo que ya la tenga.",
             pt: "Adicione uma linha de cabeçalho com o nome da coluna que falta, ou escolha um arquivo que já tenha uma.",
         }),
         "import.mappingGapNoAmount": t({
             en: "No amount column",
             es: "No hay columna de monto",
+            "es-ES": "No hay columna de importe",
             pt: "Sem coluna de valor",
         }),
         "import.mappingGapNoDate": t({
@@ -176,6 +182,8 @@ const importSheet = {
         "import.resolveFootnote": t({
             en: "Only unmatched merchant names and your category names are sent — never your amounts, dates, or the file itself.",
             es: "Solo se envían los nombres de comercios sin coincidencia y los de tus categorías. Nunca tus montos, fechas ni el archivo.",
+            "es-ES":
+                "Solo se envían los nombres de comercios sin coincidencia y los de tus categorías. Nunca tus importes, fechas ni el archivo.",
             pt: "Só enviamos os nomes de estabelecimentos sem correspondência e os nomes das suas categorias. Nunca seus valores, datas ou o próprio arquivo.",
         }),
         "import.resolveReviewCta": t({
@@ -271,6 +279,7 @@ const importSheet = {
         "import.skipReasonAmount": t({
             en: "Unreadable amount",
             es: "Monto ilegible",
+            "es-ES": "Importe ilegible",
             pt: "Valor ilegível",
         }),
         "import.skipReasonCategory": t({
@@ -286,6 +295,7 @@ const importSheet = {
         "import.skipReasonRate": t({
             en: "Invalid exchange-rate metadata",
             es: "Metadatos de tasa de cambio no válidos",
+            "es-ES": "Metadatos de tipo de cambio no válidos",
             pt: "Metadados de cotação inválidos",
         }),
         "import.sourceEyebrow": t({
@@ -371,6 +381,7 @@ const importSheet = {
         "import.unavailableRateLimited": t({
             en: "Too many imports this hour.",
             es: "Hiciste demasiadas importaciones en esta hora.",
+            "es-ES": "Has hecho demasiadas importaciones en esta hora.",
             pt: "Importações demais nesta hora.",
         }),
         "import.unavailableTimeout": t({

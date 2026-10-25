@@ -171,6 +171,7 @@ const budgets = {
         "budgets.empty.action": t({
             en: "Add a Transaction",
             es: "Agregar una transacción",
+            "es-ES": "Añadir una transacción",
             pt: "Adicionar um lançamento",
         }),
         "budgets.empty.body": t({
@@ -181,6 +182,7 @@ const budgets = {
         "budgets.empty.title": t({
             en: "Budget Your Finances",
             es: "Arma tu presupuesto",
+            "es-ES": "Crea tu presupuesto",
             pt: "Monte seu orçamento",
         }),
         "budgets.expenses_one": t({

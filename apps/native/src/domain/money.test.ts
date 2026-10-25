@@ -18,6 +18,7 @@ describe("regionalLocale", () => {
     it("takes the marks from the device's region", () => {
         expect(regionalLocale("es", MEXICO)).toStrictEqual({ decimal: ".", group: ",", tag: "es-MX" });
         expect(regionalLocale("es", ARGENTINA)).toStrictEqual({ decimal: ",", group: ".", tag: "es-AR" });
+        expect(regionalLocale("es-ES", MEXICO)).toStrictEqual({ decimal: ".", group: ",", tag: "es-MX" });
     });
 
     it("falls back to Latin American Spanish and Brazilian Portuguese when the device cannot be read", () => {

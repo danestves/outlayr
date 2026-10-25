@@ -31,16 +31,19 @@ const accounts = {
         "accounts.add.installments": t({
             en: "A purchase in installments",
             es: "Una compra en cuotas",
+            "es-ES": "Una compra a plazos",
             pt: "Uma compra parcelada",
         }),
         "accounts.add.prompt": t({
             en: "Add an account, card or person",
             es: "Agrega una cuenta, tarjeta o persona",
+            "es-ES": "Añade una cuenta, tarjeta o persona",
             pt: "Adicione uma conta, cartão ou pessoa",
         }),
         "accounts.addAccount": t({
             en: "Add Account",
             es: "Agregar cuenta",
+            "es-ES": "Añadir cuenta",
             pt: "Adicionar conta",
         }),
         "accounts.census_one": t({
@@ -131,6 +134,7 @@ const accounts = {
         "accounts.namePlaceholder": t({
             en: "Chase, Cash, Nubank…",
             es: "Chase, Efectivo, Nubank…",
+            "es-ES": "BBVA, Efectivo, Revolut…",
             pt: "Nubank, Dinheiro, Itaú…",
         }),
         "accounts.nav.edit": t({

@@ -6,6 +6,7 @@ const debts = {
         "debts.a11y.amount": t({
             en: "Edit amount",
             es: "Editar el monto",
+            "es-ES": "Editar el importe",
             pt: "Editar o valor",
         }),
         "debts.a11y.more": t({
@@ -161,6 +162,7 @@ const debts = {
         "debts.next.orders": t({
             en: "Next {amount} · {date} · {count} orders",
             es: "Próxima {amount} · {date} · {count} órdenes",
+            "es-ES": "Próxima {amount} · {date} · {count} pedidos",
             pt: "Próxima {amount} · {date} · {count} compras",
         }),
         "debts.overdue.of": t({
@@ -171,6 +173,7 @@ const debts = {
         "debts.overdue.orders": t({
             en: "{amount} · {date} · {count} orders",
             es: "{amount} · {date} · {count} órdenes",
+            "es-ES": "{amount} · {date} · {count} pedidos",
             pt: "{amount} · {date} · {count} compras",
         }),
         "debts.overview.due": t({
@@ -216,6 +219,7 @@ const debts = {
         "debts.owe.field.amount": t({
             en: "Amount",
             es: "Monto",
+            "es-ES": "Importe",
             pt: "Valor",
         }),
         "debts.owe.field.category": t({
@@ -256,6 +260,7 @@ const debts = {
         "debts.owe.what.placeholder": t({
             en: "Plumbing, a repair",
             es: "Plomería, una reparación",
+            "es-ES": "Fontanería, una reparación",
             pt: "Encanamento, um conserto",
         }),
         "debts.owe.when": t({
@@ -301,6 +306,7 @@ const debts = {
         "debts.person.empty": t({
             en: "What moves between you two will gather here.",
             es: "Aquí vas a ver lo que se mueva entre ustedes.",
+            "es-ES": "Aquí vas a ver lo que se mueva entre vosotros.",
             pt: "O que acontecer entre vocês aparece aqui.",
         }),
         "debts.person.owesYou": t({

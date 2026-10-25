@@ -26,6 +26,7 @@ const goals = {
         "goals.a11y.unvalued": t({
             en: "{name}. No exchange rate for this account yet, so its progress cannot be stated.",
             es: "{name}. Aún no hay tasa de cambio para esta cuenta, así que no se puede mostrar su progreso.",
+            "es-ES": "{name}. Aún no hay tipo de cambio para esta cuenta, así que no se puede mostrar su progreso.",
             pt: "{name}. Ainda não há cotação para esta conta, então não dá para mostrar o progresso.",
         }),
         "goals.add": t({
@@ -46,11 +47,14 @@ const goals = {
         "goals.card.unvalued": t({
             en: "No rate yet",
             es: "Sin tasa aún",
+            "es-ES": "Sin tipo de cambio aún",
             pt: "Sem cotação ainda",
         }),
         "goals.currencyMoved.body": t({
             en: "The ledger's currency changed while you were setting this goal, so the amount no longer means what it did. Set it again.",
             es: "La moneda de tu registro cambió mientras creabas esta meta, así que el monto ya no significa lo mismo. Créala de nuevo.",
+            "es-ES":
+                "La moneda de tu registro cambió mientras creabas esta meta, así que el importe ya no significa lo mismo. Créala de nuevo.",
             pt: "A moeda dos seus lançamentos mudou enquanto você criava esta meta, então o valor não significa mais o mesmo. Crie de novo.",
         }),
         "goals.currencyMoved.title": t({
@@ -81,6 +85,7 @@ const goals = {
         "goals.detail.unvalued": t({
             en: "No exchange rate for this account yet, so there is nothing to plot against the target.",
             es: "Aún no hay tasa de cambio para esta cuenta, así que no hay nada que trazar frente al objetivo.",
+            "es-ES": "Aún no hay tipo de cambio para esta cuenta, así que no hay nada que trazar frente al objetivo.",
             pt: "Ainda não há cotação para esta conta, então não há nada para comparar com o objetivo.",
         }),
         "goals.detail.verdictAhead": t({
@@ -122,6 +127,7 @@ const goals = {
         "goals.editor.currency": t({
             en: "Set in {from}, read here in {to} at the rate on the day it was set.",
             es: "Definida en {from}, mostrada en {to} con la tasa del día en que se creó.",
+            "es-ES": "Definida en {from}, mostrada en {to} con el tipo de cambio del día en que se creó.",
             pt: "Definida em {from}, exibida em {to} com a cotação do dia em que foi criada.",
         }),
         "goals.editor.delete": t({
@@ -152,6 +158,7 @@ const goals = {
         "goals.empty.body": t({
             en: "A goal names an amount, an account and a date, then tells you what that costs a month.",
             es: "Una meta define un monto, una cuenta y una fecha, y te dice cuánto apartar al mes.",
+            "es-ES": "Una meta define un importe, una cuenta y una fecha, y te dice cuánto apartar al mes.",
             pt: "Uma meta define um valor, uma conta e uma data, e diz quanto separar por mês.",
         }),
         "goals.failedBody": t({
@@ -192,6 +199,7 @@ const goals = {
         "goals.sheet.amountBlank": t({
             en: "an amount",
             es: "un monto",
+            "es-ES": "un importe",
             pt: "um valor",
         }),
         "goals.sheet.commit": t({
@@ -212,6 +220,7 @@ const goals = {
         "goals.sheet.editTargetA11y": t({
             en: "Edit target amount",
             es: "Editar monto objetivo",
+            "es-ES": "Editar importe objetivo",
             pt: "Editar o valor do objetivo",
         }),
         "goals.sheet.holds": t({
@@ -228,6 +237,7 @@ const goals = {
         "goals.sheet.stated": t({
             en: "Put {amount} in {account} by {date}",
             es: "Junta {amount} en {account} para {date}",
+            "es-ES": "Ahorra {amount} en {account} para {date}",
             pt: "Junte {amount} em {account} até {date}",
         }),
         "goals.summary.toGo": t({
@@ -238,6 +248,7 @@ const goals = {
         "goals.toGo": t({
             en: "to go",
             es: "por juntar",
+            "es-ES": "por ahorrar",
             pt: "a juntar",
         }),
         "goals.undo.deleted": t({
@@ -248,6 +259,8 @@ const goals = {
         "goals.unvalued.body": t({
             en: "{account}'s balance can't be converted yet, and a goal freezes it as its starting point. Try again once its exchange rate is available.",
             es: "El saldo de {account} aún no se puede convertir, y una meta lo congela como punto de partida. Inténtalo de nuevo cuando haya tasa de cambio.",
+            "es-ES":
+                "El saldo de {account} aún no se puede convertir, y una meta lo congela como punto de partida. Inténtalo de nuevo cuando haya tipo de cambio.",
             pt: "O saldo de {account} ainda não pode ser convertido, e uma meta o congela como ponto de partida. Tente de novo quando houver cotação.",
         }),
         "goals.unvalued.title": t({

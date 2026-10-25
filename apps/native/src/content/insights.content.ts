@@ -166,6 +166,7 @@ const insights = {
         "insights.quiet.accessibility": t({
             en: "{measure} has nothing to chart {period}. {sentence}",
             es: "{measure} no tiene nada que graficar {period}. {sentence}",
+            "es-ES": "{measure} no tiene nada que mostrar {period}. {sentence}",
             pt: "{measure} não tem nada para mostrar {period}. {sentence}",
         }),
         "insights.quiet.alternative": t({
@@ -196,6 +197,7 @@ const insights = {
         "insights.quiet.title": t({
             en: "Nothing to chart",
             es: "Nada que graficar",
+            "es-ES": "Nada que mostrar",
             pt: "Nada para mostrar",
         }),
         "insights.sample.badge": t({

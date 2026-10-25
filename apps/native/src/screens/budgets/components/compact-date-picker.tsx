@@ -4,6 +4,7 @@ import { useMemo } from "react";
 
 import { useRegionCode } from "@/hooks/use-region-code";
 import { useLanguage } from "@/i18n/context";
+import { languageSubtag } from "@/i18n/languages";
 
 export interface CompactDatePickerProps {
     height?: number;
@@ -41,7 +42,9 @@ export function useDatePickerLocale() {
     // @expo/ui drops an id missing from `Locale.availableIdentifiers`, which has no `en_VE`. Hermes resolves
     // against that list, so `en-VE` comes back as `en` and `en-GB` as itself.
     const id = useMemo(
-        () => new Intl.DateTimeFormat(region ? `${language}-${region}` : language).resolvedOptions().locale,
+        () =>
+            new Intl.DateTimeFormat(region ? `${languageSubtag(language)}-${region}` : language).resolvedOptions()
+                .locale,
         [language, region]
     );
     return environment({ key: "locale", value: id.replace("-", "_") });

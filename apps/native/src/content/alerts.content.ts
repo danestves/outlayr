@@ -66,6 +66,7 @@ const alerts = {
         "reminder.daily.first": t({
             en: "Tap to add your first expense.",
             es: "Toca para agregar tu primer gasto.",
+            "es-ES": "Toca para añadir tu primer gasto.",
             pt: "Toque para adicionar sua primeira despesa.",
         }),
         "reminder.daily.lastOn": t({

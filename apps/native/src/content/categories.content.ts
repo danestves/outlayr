@@ -26,11 +26,13 @@ const categories = {
         "categories.addCategory": t({
             en: "Add Category",
             es: "Agregar categoría",
+            "es-ES": "Añadir categoría",
             pt: "Adicionar categoria",
         }),
         "categories.addSubcategory": t({
             en: "Add Subcategory",
             es: "Agregar subcategoría",
+            "es-ES": "Añadir subcategoría",
             pt: "Adicionar subcategoria",
         }),
         "categories.census.categories_one": t({
@@ -56,11 +58,13 @@ const categories = {
         "categories.empty.expense": t({
             en: "No expense categories found, click the ‘New’ button to add some",
             es: "Aún no hay categorías de gasto. Toca + para agregar una.",
+            "es-ES": "Aún no hay categorías de gasto. Toca + para añadir una.",
             pt: "Ainda não há categorias de despesa. Toque em + para adicionar uma.",
         }),
         "categories.empty.income": t({
             en: "No income categories found, click the ‘New’ button to add some",
             es: "Aún no hay categorías de ingreso. Toca + para agregar una.",
+            "es-ES": "Aún no hay categorías de ingreso. Toca + para añadir una.",
             pt: "Ainda não há categorias de receita. Toque em + para adicionar uma.",
         }),
         "categories.error.deleteTitle": t({
@@ -81,6 +85,7 @@ const categories = {
         "categories.error.duplicateIcon": t({
             en: "Another category already uses this icon.",
             es: "Otra categoría ya usa este ícono.",
+            "es-ES": "Otra categoría ya usa este icono.",
             pt: "Outra categoria já usa este ícone.",
         }),
         "categories.error.duplicateName": t({
@@ -96,16 +101,19 @@ const categories = {
         "categories.error.incomplete": t({
             en: "Please choose an icon or emoji, and a name.",
             es: "Elige un ícono o emoji, y un nombre.",
+            "es-ES": "Elige un icono o emoji, y un nombre.",
             pt: "Escolha um ícone ou emoji e um nome.",
         }),
         "categories.error.missingIcon": t({
             en: "Please choose an icon or emoji for the category.",
             es: "Elige un ícono o emoji para la categoría.",
+            "es-ES": "Elige un icono o emoji para la categoría.",
             pt: "Escolha um ícone ou emoji para a categoria.",
         }),
         "categories.error.missingName": t({
             en: "Please enter a name for this category.",
             es: "Ingresa un nombre para esta categoría.",
+            "es-ES": "Introduce un nombre para esta categoría.",
             pt: "Digite um nome para esta categoria.",
         }),
         "categories.field.name": t({
@@ -151,16 +159,19 @@ const categories = {
         "categories.namePlaceholder.expense": t({
             en: "Groceries, Rent…",
             es: "Súper, Renta…",
+            "es-ES": "Súper, Alquiler…",
             pt: "Mercado, Aluguel…",
         }),
         "categories.namePlaceholder.income": t({
             en: "Salary, Freelance…",
             es: "Sueldo, Freelance…",
+            "es-ES": "Nómina, Freelance…",
             pt: "Salário, Freela…",
         }),
         "categories.namePlaceholder.subcategory": t({
             en: "Coffee, Snacks…",
             es: "Café, Botanas…",
+            "es-ES": "Café, Aperitivos…",
             pt: "Café, Lanches…",
         }),
         "categories.reorderTitle": t({
@@ -191,6 +202,7 @@ const categories = {
         "categories.toast.added": t({
             en: "Category added",
             es: "Categoría agregada",
+            "es-ES": "Categoría añadida",
             pt: "Categoria adicionada",
         }),
         "categories.undo.body": t({

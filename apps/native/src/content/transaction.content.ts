@@ -31,16 +31,19 @@ const transaction = {
         "transaction.amount.required": t({
             en: "Type an amount first",
             es: "Primero escribe un monto",
+            "es-ES": "Primero escribe un importe",
             pt: "Primeiro digite um valor",
         }),
         "transaction.attachments.add": t({
             en: "Add a file",
             es: "Agregar un archivo",
+            "es-ES": "Añadir un archivo",
             pt: "Adicionar um arquivo",
         }),
         "transaction.attachments.add.camera": t({
             en: "Take photo",
             es: "Tomar foto",
+            "es-ES": "Hacer foto",
             pt: "Tirar foto",
         }),
         "transaction.attachments.add.files": t({
@@ -56,6 +59,7 @@ const transaction = {
         "transaction.attachments.failed.denied": t({
             en: "Outlayr needs the camera to take a photo.",
             es: "Outlayr necesita la cámara para tomar una foto.",
+            "es-ES": "Outlayr necesita la cámara para hacer una foto.",
             pt: "O Outlayr precisa da câmera para tirar uma foto.",
         }),
         "transaction.attachments.failed.full": t({
@@ -176,11 +180,13 @@ const transaction = {
         "transaction.cta.add": t({
             en: "Add Transaction",
             es: "Agregar transacción",
+            "es-ES": "Añadir transacción",
             pt: "Adicionar lançamento",
         }),
         "transaction.cta.addSubscription": t({
             en: "Add Subscription",
             es: "Agregar suscripción",
+            "es-ES": "Añadir suscripción",
             pt: "Adicionar assinatura",
         }),
         "transaction.cta.lookup": t({
@@ -201,6 +207,7 @@ const transaction = {
         "transaction.fee.amount": t({
             en: "Amount",
             es: "Monto",
+            "es-ES": "Importe",
             pt: "Valor",
         }),
         "transaction.fee.bankTitle": t({
@@ -266,6 +273,7 @@ const transaction = {
         "transaction.field.amount": t({
             en: "Amount",
             es: "Monto",
+            "es-ES": "Importe",
             pt: "Valor",
         }),
         "transaction.field.category": t({
@@ -351,21 +359,25 @@ const transaction = {
         "transaction.identity.hero.chooseIcon": t({
             en: "Choose an icon & color",
             es: "Elige un ícono y color",
+            "es-ES": "Elige un icono y color",
             pt: "Escolha um ícone e uma cor",
         }),
         "transaction.identity.hero.icon": t({
             en: "Category icon",
             es: "Ícono de categoría",
+            "es-ES": "Icono de categoría",
             pt: "Ícone da categoria",
         }),
         "transaction.identity.hero.iconHint": t({
             en: "Opens the icon picker",
             es: "Abre el selector de íconos",
+            "es-ES": "Abre el selector de iconos",
             pt: "Abre o seletor de ícones",
         }),
         "transaction.identity.hero.logo": t({
             en: "Add a logo or icon",
             es: "Agrega un logo o ícono",
+            "es-ES": "Añade un logo o icono",
             pt: "Adicione um logo ou ícone",
         }),
         "transaction.identity.hero.logoHint": t({
@@ -376,6 +388,7 @@ const transaction = {
         "transaction.identity.hero.removeIcon": t({
             en: "Remove icon",
             es: "Quitar ícono",
+            "es-ES": "Quitar icono",
             pt: "Remover ícone",
         }),
         "transaction.identity.hero.removeLogo": t({
@@ -391,6 +404,7 @@ const transaction = {
         "transaction.identity.noIcons": t({
             en: "No icons found",
             es: "No se encontraron íconos",
+            "es-ES": "No se encontraron iconos",
             pt: "Nenhum ícone encontrado",
         }),
         "transaction.identity.pickPhotoFirst": t({
@@ -406,6 +420,7 @@ const transaction = {
         "transaction.identity.searchIcons": t({
             en: "Search icons",
             es: "Buscar íconos",
+            "es-ES": "Buscar iconos",
             pt: "Buscar ícones",
         }),
         "transaction.identity.selectPhoto": t({
@@ -426,6 +441,7 @@ const transaction = {
         "transaction.identity.tab.icons": t({
             en: "Icons",
             es: "Íconos",
+            "es-ES": "Iconos",
             pt: "Ícones",
         }),
         "transaction.identity.tab.photo": t({
@@ -607,6 +623,7 @@ const transaction = {
         "transaction.rate.custom": t({
             en: "My rate",
             es: "Mi tasa",
+            "es-ES": "Mi tipo de cambio",
             pt: "Minha cotação",
         }),
         "transaction.rate.daysOld_one": t({
@@ -622,31 +639,37 @@ const transaction = {
         "transaction.rate.deltaAbove": t({
             en: "{percent} above {source}",
             es: "{percent} sobre la {source}",
+            "es-ES": "{percent} sobre el {source}",
             pt: "{percent} acima da {source}",
         }),
         "transaction.rate.deltaBelow": t({
             en: "{percent} below {source}",
             es: "{percent} bajo la {source}",
+            "es-ES": "{percent} bajo el {source}",
             pt: "{percent} abaixo da {source}",
         }),
         "transaction.rate.deltaLess": t({
             en: "{amount} less than at {source}",
             es: "{amount} menos que a la {source}",
+            "es-ES": "{amount} menos que al {source}",
             pt: "{amount} a menos que pela {source}",
         }),
         "transaction.rate.deltaMore": t({
             en: "{amount} more than at {source}",
             es: "{amount} más que a la {source}",
+            "es-ES": "{amount} más que al {source}",
             pt: "{amount} a mais que pela {source}",
         }),
         "transaction.rate.deltaSame": t({
             en: "Same as {source}",
             es: "Igual a la {source}",
+            "es-ES": "Igual al {source}",
             pt: "Igual à {source}",
         }),
         "transaction.rate.derived": t({
             en: "Rate from what you paid: {rate}",
             es: "Tasa según lo que pagaste: {rate}",
+            "es-ES": "Tipo de cambio según lo que pagaste: {rate}",
             pt: "Cotação pelo que você pagou: {rate}",
         }),
         "transaction.rate.eur_reference": t({
@@ -662,6 +685,7 @@ const transaction = {
         "transaction.rate.lastUsed": t({
             en: "Last used {rate} · {date}",
             es: "Última usada {rate} · {date}",
+            "es-ES": "Último usado {rate} · {date}",
             pt: "Última usada {rate} · {date}",
         }),
         "transaction.rate.official": t({
@@ -677,16 +701,19 @@ const transaction = {
         "transaction.rate.required": t({
             en: "Type a rate first",
             es: "Primero escribe una tasa",
+            "es-ES": "Primero escribe un tipo de cambio",
             pt: "Primeiro digite uma cotação",
         }),
         "transaction.rate.source": t({
             en: "Rate source",
             es: "Fuente de la tasa",
+            "es-ES": "Fuente del tipo de cambio",
             pt: "Fonte da cotação",
         }),
         "transaction.rate.title": t({
             en: "Rate",
             es: "Tasa",
+            "es-ES": "Tipo de cambio",
             pt: "Cotação",
         }),
         "transaction.rate.type": t({
@@ -697,6 +724,7 @@ const transaction = {
         "transaction.rate.typeHint": t({
             en: "Type the rate you got",
             es: "Escribe la tasa que te dieron",
+            "es-ES": "Escribe el tipo de cambio que te dieron",
             pt: "Digite a cotação que você conseguiu",
         }),
         "transaction.rate.unavailable": t({
@@ -844,21 +872,25 @@ const transaction = {
         "transaction.sentence.add.icon": t({
             en: "icon",
             es: "ícono",
+            "es-ES": "icono",
             pt: "ícone",
         }),
         "transaction.sentence.add.label": t({
             en: "Add {fact}",
             es: "Agregar {fact}",
+            "es-ES": "Añadir {fact}",
             pt: "Adicionar {fact}",
         }),
         "transaction.sentence.add.more": t({
             en: "add",
             es: "agregar",
+            "es-ES": "añadir",
             pt: "adicionar",
         }),
         "transaction.sentence.add.moreLabel": t({
             en: "Add details",
             es: "Agregar detalles",
+            "es-ES": "Añadir detalles",
             pt: "Adicionar detalhes",
         }),
         "transaction.sentence.add.note": t({
@@ -911,6 +943,7 @@ const transaction = {
         "transaction.sentence.blank.rate": t({
             en: "a rate",
             es: "una tasa",
+            "es-ES": "un tipo de cambio",
             pt: "uma cotação",
         }),
         "transaction.sentence.coach": t({
@@ -926,6 +959,7 @@ const transaction = {
         "transaction.sentence.currency": t({
             en: "Change the amount's currency",
             es: "Cambiar la moneda del monto",
+            "es-ES": "Cambiar la moneda del importe",
             pt: "Trocar a moeda do valor",
         }),
         // Layout, not just copy: `parseSentence` reads the slot order straight out of these templates.
@@ -1007,11 +1041,13 @@ const transaction = {
         "transaction.sentence.rate.provider": t({
             en: ", {converted} at the {rateSource} rate.",
             es: ", {converted} a la tasa {rateSource}.",
+            "es-ES": ", {converted} al tipo de cambio {rateSource}.",
             pt: ", {converted} pela cotação {rateSource}.",
         }),
         "transaction.sentence.rateSource.custom": t({
             en: "my",
             es: "mi tasa",
+            "es-ES": "mi tipo de cambio",
             pt: "minha cotação",
         }),
         "transaction.sentence.rateSource.eur_reference": t({
@@ -1042,6 +1078,7 @@ const transaction = {
         "transaction.sentence.set.icon": t({
             en: "Change icon",
             es: "Cambiar ícono",
+            "es-ES": "Cambiar icono",
             pt: "Trocar ícone",
         }),
         "transaction.sentence.set.repeatDaily": t({
@@ -1102,6 +1139,7 @@ const transaction = {
         "transaction.split.addCategory": t({
             en: "Add category",
             es: "Agregar categoría",
+            "es-ES": "Añadir categoría",
             pt: "Adicionar categoria",
         }),
         "transaction.split.balanced": t({
@@ -1127,6 +1165,7 @@ const transaction = {
         "transaction.split.editAmount": t({
             en: "Edit amount",
             es: "Editar monto",
+            "es-ES": "Editar importe",
             pt: "Editar valor",
         }),
         "transaction.split.fillRest": t({
@@ -1152,6 +1191,7 @@ const transaction = {
         "transaction.split.unbalanced": t({
             en: "The split does not add up to the amount.",
             es: "La división no suma el monto.",
+            "es-ES": "La división no suma el importe.",
             pt: "A soma da divisão não bate com o valor.",
         }),
         "transaction.stopRecurring.failedBody": t({
@@ -1172,16 +1212,19 @@ const transaction = {
         "transaction.tags.create": t({
             en: 'Add "{name}"',
             es: 'Agregar "{name}"',
+            "es-ES": 'Añadir "{name}"',
             pt: "Adicionar “{name}”",
         }),
         "transaction.tags.empty": t({
             en: "No tags yet. Type a name to add one.",
             es: "Aún no hay etiquetas. Escribe un nombre para agregar una.",
+            "es-ES": "Aún no hay etiquetas. Escribe un nombre para añadir una.",
             pt: "Nenhuma tag ainda. Digite um nome para adicionar uma.",
         }),
         "transaction.tags.searchPlaceholder": t({
             en: "Search or add",
             es: "Buscar o agregar",
+            "es-ES": "Buscar o añadir",
             pt: "Buscar ou adicionar",
         }),
         "transaction.tags.title": t({
@@ -1192,16 +1235,19 @@ const transaction = {
         "transaction.toast.added": t({
             en: "Added",
             es: "Agregada",
+            "es-ES": "Añadida",
             pt: "Adicionado",
         }),
         "transaction.toast.another": t({
             en: "Add another",
             es: "Agregar otra",
+            "es-ES": "Añadir otra",
             pt: "Adicionar outro",
         }),
         "transaction.toast.subscriptionAdded": t({
             en: "Subscription added",
             es: "Suscripción agregada",
+            "es-ES": "Suscripción añadida",
             pt: "Assinatura adicionada",
         }),
         // Bare nouns, unlike `transaction.interval.*`: the sentence styles the count on its own.

@@ -11,6 +11,7 @@ const receipt = {
         "receipt.action.camera": t({
             en: "Take a photo",
             es: "Tomar foto",
+            "es-ES": "Hacer foto",
             pt: "Tirar foto",
         }),
         "receipt.action.edit": t({
@@ -41,6 +42,7 @@ const receipt = {
         "receipt.action.settings": t({
             en: "Open Settings",
             es: "Abrir Configuración",
+            "es-ES": "Abrir Ajustes",
             pt: "Abrir Ajustes",
         }),
         "receipt.close": t({
@@ -56,6 +58,7 @@ const receipt = {
         "receipt.failed.denied": t({
             en: "Outlayr needs the camera to scan a receipt.",
             es: "Outlayr necesita la cámara para escanear un recibo.",
+            "es-ES": "Outlayr necesita la cámara para escanear un ticket.",
             pt: "O Outlayr precisa da câmera para escanear um recibo.",
         }),
         "receipt.failed.noCamera": t({
@@ -66,11 +69,14 @@ const receipt = {
         "receipt.failed.notConfigured": t({
             en: "Scanning a receipt needs the cloud tier.",
             es: "Para escanear recibos se necesita el servicio en la nube.",
+            "es-ES": "Para escanear tickets se necesita el servicio en la nube.",
             pt: "Escanear recibos requer o serviço na nuvem.",
         }),
         "receipt.failed.notEntitled": t({
             en: "Your free captures, voice and receipts together, are used up. They come back within 30 days; Pro lifts the limit.",
             es: "Ya usaste tus capturas gratis (voz y recibos). Se renuevan en menos de 30 días; con Pro no tienes ese límite.",
+            "es-ES":
+                "Ya has usado tus capturas gratis (voz y tickets). Se renuevan en menos de 30 días; con Pro no tienes ese límite.",
             pt: "Você já usou suas capturas grátis (voz e recibos). Elas se renovam em até 30 dias; com o Pro não há esse limite.",
         }),
         "receipt.failed.offline": t({
@@ -81,16 +87,19 @@ const receipt = {
         "receipt.failed.provider": t({
             en: "Couldn't read the receipt.",
             es: "No pude leer el recibo.",
+            "es-ES": "No pude leer el ticket.",
             pt: "Não consegui ler o recibo.",
         }),
         "receipt.failed.quotaExceeded": t({
             en: "The fair-use limit for captures is reached. It resets within 30 days.",
             es: "Llegaste al límite de uso justo de capturas. Se renueva en menos de 30 días.",
+            "es-ES": "Has llegado al límite de uso justo de capturas. Se renueva en menos de 30 días.",
             pt: "Você atingiu o limite de uso justo de capturas. Ele se renova em até 30 dias.",
         }),
         "receipt.failed.rateLimited": t({
             en: "That's a lot of receipts at once. Give it a moment.",
             es: "Son muchos recibos seguidos. Espera un momento.",
+            "es-ES": "Son muchos tickets seguidos. Espera un momento.",
             pt: "São muitos recibos seguidos. Espere um momento.",
         }),
         "receipt.failed.timeout": t({
@@ -101,11 +110,13 @@ const receipt = {
         "receipt.failed.unauthenticated": t({
             en: "Sign in to scan a receipt.",
             es: "Inicia sesión para escanear un recibo.",
+            "es-ES": "Inicia sesión para escanear un ticket.",
             pt: "Entre para escanear um recibo.",
         }),
         "receipt.failed.unclear": t({
             en: "Didn't find a receipt in that photo.",
             es: "No encontré un recibo en esa foto.",
+            "es-ES": "No encontré un ticket en esa foto.",
             pt: "Não encontrei um recibo nessa foto.",
         }),
         "receipt.failed.unreadable": t({
@@ -172,6 +183,7 @@ const receipt = {
         "receipt.review.noRate": t({
             en: "No {currency} rate for that day yet",
             es: "Aún no hay tasa de {currency} para ese día",
+            "es-ES": "Aún no hay tipo de cambio de {currency} para ese día",
             pt: "Ainda não há cotação de {currency} para esse dia",
         }),
         "receipt.review.paid": t({
@@ -212,11 +224,13 @@ const receipt = {
         "receipt.state.reading": t({
             en: "Reading the receipt…",
             es: "Leyendo el recibo…",
+            "es-ES": "Leyendo el ticket…",
             pt: "Lendo o recibo…",
         }),
         "receipt.title": t({
             en: "Scan a receipt",
             es: "Escanear un recibo",
+            "es-ES": "Escanear un ticket",
             pt: "Escanear um recibo",
         }),
     },

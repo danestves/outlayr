@@ -76,11 +76,13 @@ const settings = {
         "settings.appIcon.failedBody": t({
             en: "iOS refused the change. Your home screen still shows the icon marked here.",
             es: "iOS rechazó el cambio. Tu pantalla de inicio sigue mostrando el ícono marcado aquí.",
+            "es-ES": "iOS ha rechazado el cambio. Tu pantalla de inicio sigue mostrando el icono marcado aquí.",
             pt: "O iOS recusou a mudança. Sua tela de início continua mostrando o ícone marcado aqui.",
         }),
         "settings.appIcon.failedTitle": t({
             en: "Icon unchanged",
             es: "El ícono no cambió",
+            "es-ES": "El icono no ha cambiado",
             pt: "O ícone não mudou",
         }),
         "settings.appIcon.section": t({
@@ -91,6 +93,7 @@ const settings = {
         "settings.appIcon.unsupported": t({
             en: "This device does not allow the app icon to be changed.",
             es: "Este dispositivo no permite cambiar el ícono de la app.",
+            "es-ES": "Este dispositivo no permite cambiar el icono de la app.",
             pt: "Este dispositivo não permite mudar o ícone do app.",
         }),
         "settings.colorScheme.dark": t({
@@ -131,6 +134,7 @@ const settings = {
         "settings.currency.favourite": t({
             en: "Add {code} to favourites",
             es: "Agregar {code} a favoritas",
+            "es-ES": "Añadir {code} a favoritas",
             pt: "Adicionar {code} às favoritas",
         }),
         "settings.currency.favouriteAction": t({
@@ -171,6 +175,7 @@ const settings = {
         "settings.currency.favouritesHint": t({
             en: "Hold a currency to keep it here.",
             es: "Mantén presionada una moneda para guardarla aquí.",
+            "es-ES": "Mantén pulsada una moneda para guardarla aquí.",
             pt: "Toque e segure uma moeda para mantê-la aqui.",
         }),
         "settings.currency.search": t({
@@ -226,6 +231,7 @@ const settings = {
         "settings.numberEntry.type1": t({
             en: "Cents last",
             es: "Centavos al final",
+            "es-ES": "Céntimos al final",
             pt: "Centavos no final",
         }),
         "settings.numberEntry.type2": t({
@@ -251,6 +257,7 @@ const settings = {
         "settings.row.appIcon": t({
             en: "App icon",
             es: "Ícono de la app",
+            "es-ES": "Icono de la app",
             pt: "Ícone do app",
         }),
         "settings.row.authentication": t({
@@ -286,6 +293,7 @@ const settings = {
         "settings.row.displayCents": t({
             en: "Show cents",
             es: "Mostrar centavos",
+            "es-ES": "Mostrar céntimos",
             pt: "Mostrar centavos",
         }),
         "settings.row.erase": t({
@@ -346,6 +354,7 @@ const settings = {
         "settings.row.numberEntry": t({
             en: "Number entry",
             es: "Escritura de montos",
+            "es-ES": "Escritura de importes",
             pt: "Digitação de valores",
         }),
         "settings.row.privacy": t({
@@ -356,11 +365,13 @@ const settings = {
         "settings.row.rate": t({
             en: "Rate on the App Store",
             es: "Califícanos en el App Store",
+            "es-ES": "Valóranos en el App Store",
             pt: "Avalie na App Store",
         }),
         "settings.row.rate.android": t({
             en: "Rate on Google Play",
             es: "Califícanos en Google Play",
+            "es-ES": "Valóranos en Google Play",
             pt: "Avalie no Google Play",
         }),
         "settings.row.restore": t({
@@ -411,6 +422,7 @@ const settings = {
         "settings.screenTitle": t({
             en: "Settings",
             es: "Configuración",
+            "es-ES": "Ajustes",
             pt: "Ajustes",
         }),
         "settings.section.about": t({

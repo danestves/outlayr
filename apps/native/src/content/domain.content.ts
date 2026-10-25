@@ -7,11 +7,13 @@ const domain = {
         "appIcon.default.detail": t({
             en: "The Outlayr mark on paper. The icon the app ships with.",
             es: "La marca de Outlayr sobre papel. El ícono con el que viene la app.",
+            "es-ES": "La marca de Outlayr sobre papel. El icono con el que viene la app.",
             pt: "A marca do Outlayr sobre papel. O ícone que vem com o app.",
         }),
         "appIcon.default.detailDev": t({
             en: "The blueprint mark. The icon this development build ships with.",
             es: "La marca como plano técnico. El ícono de esta compilación de desarrollo.",
+            "es-ES": "La marca como plano técnico. El icono de esta compilación de desarrollo.",
             pt: "A marca como planta técnica. O ícone desta versão de desenvolvimento.",
         }),
         "appIcon.default.label": t({
@@ -72,6 +74,7 @@ const domain = {
         "clock.deviceNote": t({
             en: "Starts on whatever your device uses; changing it here takes over.",
             es: "Usa la configuración de tu dispositivo hasta que la cambies aquí.",
+            "es-ES": "Usa los ajustes de tu dispositivo hasta que lo cambies aquí.",
             pt: "Segue o ajuste do seu dispositivo até você mudar aqui.",
         }),
         "clock.section": t({
@@ -92,16 +95,22 @@ const domain = {
         "coverage.pending": t({
             en: "Rates are still catching up: {count} of {total} entries are counted at the amount they were logged in.",
             es: "Las tasas se están actualizando: {count} de {total} registros se cuentan con su monto original.",
+            "es-ES":
+                "Los tipos de cambio se están actualizando: {count} de {total} registros se cuentan con su importe original.",
             pt: "As cotações ainda estão sendo atualizadas: {count} de {total} lançamentos contam pelo valor original.",
         }),
         "coverage.pendingAndPredate": t({
             en: "Rates are still catching up: {count} of {total} entries are counted at the amount they were logged in. {predate} more predate the rate history and always will be.",
             es: "Las tasas se están actualizando: {count} de {total} registros se cuentan con su monto original. Otros {predate} son anteriores al historial de tasas y así se van a quedar.",
+            "es-ES":
+                "Los tipos de cambio se están actualizando: {count} de {total} registros se cuentan con su importe original. Otros {predate} son anteriores al historial de tipos de cambio y así se van a quedar.",
             pt: "As cotações ainda estão sendo atualizadas: {count} de {total} lançamentos contam pelo valor original. Outros {predate} são anteriores ao histórico de cotações e vão continuar assim.",
         }),
         "coverage.predateOnly": t({
             en: "{count} of {total} entries predate the rate history, so they are counted at the amount they were logged in.",
             es: "{count} de {total} registros son anteriores al historial de tasas, así que se cuentan con su monto original.",
+            "es-ES":
+                "{count} de {total} registros son anteriores al historial de tipos de cambio, así que se cuentan con su importe original.",
             pt: "{count} de {total} lançamentos são anteriores ao histórico de cotações, então contam pelo valor original.",
         }),
         "dates.meridiem.am": t({ en: "AM", es: "a. m.", pt: "AM" }),
@@ -232,6 +241,7 @@ const domain = {
         "lock.fallback": t({
             en: "Choose Unlock again to enter your device passcode.",
             es: "Toca Desbloquear otra vez para ingresar el código de tu dispositivo.",
+            "es-ES": "Toca Desbloquear otra vez para introducir el código de tu dispositivo.",
             pt: "Toque em Desbloquear de novo para digitar o código do dispositivo.",
         }),
         "lock.lockout": t({
@@ -287,16 +297,19 @@ const domain = {
         "merchantTag.Cable": t({
             en: "Cable",
             es: "Cable",
+            "es-ES": "TV de pago",
             pt: "TV a cabo",
         }),
         "merchantTag.Car Share": t({
             en: "Car Share",
             es: "Carro compartido",
+            "es-ES": "Coche compartido",
             pt: "Carro compartilhado",
         }),
         "merchantTag.Convenience": t({
             en: "Convenience",
             es: "Tienda de conveniencia",
+            "es-ES": "Tienda de barrio",
             pt: "Conveniência",
         }),
         "merchantTag.Delivery": t({
@@ -382,6 +395,7 @@ const domain = {
         "merchantTag.Marketplace": t({
             en: "Marketplace",
             es: "Tienda en línea",
+            "es-ES": "Tienda online",
             pt: "Marketplace",
         }),
         "merchantTag.Micromobility": t({
@@ -422,6 +436,7 @@ const domain = {
         "merchantTag.Rideshare": t({
             en: "Rideshare",
             es: "Transporte por app",
+            "es-ES": "VTC",
             pt: "Transporte por app",
         }),
         "merchantTag.Security": t({

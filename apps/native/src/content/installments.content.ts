@@ -6,16 +6,19 @@ const installments = {
         "installments.apps.add": t({
             en: "Add",
             es: "Agregar",
+            "es-ES": "Añadir",
             pt: "Adicionar",
         }),
         "installments.apps.adding": t({
             en: "Adding…",
             es: "Agregando…",
+            "es-ES": "Añadiendo…",
             pt: "Adicionando…",
         }),
         "installments.apps.in": t({
             en: "Installments in {country}",
             es: "Cuotas en {country}",
+            "es-ES": "Pago a plazos en {country}",
             pt: "Parcelamento · {country}",
         }),
         "installments.apps.missing": t({
@@ -126,6 +129,7 @@ const installments = {
         "installments.country.SA": t({
             en: "Saudi Arabia",
             es: "Arabia Saudita",
+            "es-ES": "Arabia Saudí",
             pt: "Arábia Saudita",
         }),
         "installments.country.SE": t({
@@ -156,6 +160,7 @@ const installments = {
         "installments.cuota.amount": t({
             en: "Amount",
             es: "Monto",
+            "es-ES": "Importe",
             pt: "Valor",
         }),
         "installments.cuota.delete": t({
@@ -256,6 +261,7 @@ const installments = {
         "installments.fee.add": t({
             en: "Add late fee",
             es: "Agregar recargo",
+            "es-ES": "Añadir recargo",
             pt: "Adicionar multa",
         }),
         "installments.fee.breakdown": t({
@@ -341,6 +347,7 @@ const installments = {
         "installments.newPurchase": t({
             en: "New purchase in installments",
             es: "Nueva compra en cuotas",
+            "es-ES": "Nueva compra a plazos",
             pt: "Nova compra parcelada",
         }),
         "installments.next": t({
@@ -351,6 +358,7 @@ const installments = {
         "installments.noRate": t({
             en: "No rate for this day yet, so the amount can't be converted.",
             es: "Aún no hay tasa para este día, así que no se puede convertir el monto.",
+            "es-ES": "Aún no hay tipo de cambio para este día, así que no se puede convertir el importe.",
             pt: "Ainda não há cotação para este dia, então não dá para converter o valor.",
         }),
         "installments.none": t({
@@ -366,16 +374,19 @@ const installments = {
         "installments.nothingLeft": t({
             en: "The upfront covers the whole price.",
             es: "La inicial cubre todo el precio.",
+            "es-ES": "La entrada cubre todo el precio.",
             pt: "A entrada cobre o preço todo.",
         }),
         "installments.order": t({
             en: "Order",
             es: "Orden",
+            "es-ES": "Pedido",
             pt: "Compra",
         }),
         "installments.orders": t({
             en: "Orders",
             es: "Órdenes",
+            "es-ES": "Pedidos",
             pt: "Compras",
         }),
         "installments.overPrice": t({
@@ -496,6 +507,7 @@ const installments = {
         "installments.plan.upfront": t({
             en: "Upfront + {plan}",
             es: "Inicial + {plan}",
+            "es-ES": "Entrada + {plan}",
             pt: "Entrada + {plan}",
         }),
         "installments.plan.weekly": t({
@@ -546,6 +558,7 @@ const installments = {
         "installments.scan.intro": t({
             en: "A screenshot of the order's payment plan.",
             es: "Una captura del plan de pagos de la orden.",
+            "es-ES": "Una captura del plan de pagos del pedido.",
             pt: "Uma captura de tela do plano de pagamento da compra.",
         }),
         "installments.scan.notConfigured": t({
@@ -576,6 +589,7 @@ const installments = {
         "installments.schedule": t({
             en: "Schedule",
             es: "Cronograma",
+            "es-ES": "Calendario",
             pt: "Cronograma",
         }),
         "installments.then": t({
@@ -591,6 +605,7 @@ const installments = {
         "installments.upfront": t({
             en: "Upfront",
             es: "Inicial",
+            "es-ES": "Entrada",
             pt: "Entrada",
         }),
     },

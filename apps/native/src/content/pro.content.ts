@@ -246,6 +246,7 @@ const pro = {
         "pro.row.icons": t({
             en: "App icons",
             es: "Íconos de la app",
+            "es-ES": "Iconos de la app",
             pt: "Ícones do app",
         }),
         "pro.row.import": t({
@@ -256,6 +257,7 @@ const pro = {
         "pro.row.installmentApps": t({
             en: "Installment apps",
             es: "Apps de cuotas",
+            "es-ES": "Apps de pago a plazos",
             pt: "Apps de parcelamento",
         }),
         "pro.row.payoffPlans": t({
@@ -271,6 +273,7 @@ const pro = {
         "pro.row.photos": t({
             en: "Receipt photo backup",
             es: "Respaldo de fotos",
+            "es-ES": "Copia de seguridad de fotos",
             pt: "Backup de fotos",
         }),
         "pro.syncPendingBody": t({

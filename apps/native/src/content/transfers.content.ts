@@ -96,11 +96,13 @@ const transfers = {
         "transfers.field.rate": t({
             en: "Rate",
             es: "Tasa",
+            "es-ES": "Tipo de cambio",
             pt: "Cotação",
         }),
         "transfers.field.rateType": t({
             en: "Rate source",
             es: "Fuente de la tasa",
+            "es-ES": "Fuente del tipo de cambio",
             pt: "Fonte da cotação",
         }),
         "transfers.field.sent": t({
@@ -141,11 +143,13 @@ const transfers = {
         "transfers.rate.lastUsed": t({
             en: "Last used · {date}",
             es: "Última · {date}",
+            "es-ES": "Último · {date}",
             pt: "Última usada · {date}",
         }),
         "transfers.rate.unavailable": t({
             en: "No rate for this pair. Enter one.",
             es: "No hay tasa para este par. Ingresa una.",
+            "es-ES": "No hay tipo de cambio para este par. Introduce uno.",
             pt: "Sem cotação para este par. Digite uma.",
         }),
         "transfers.save": t({
@@ -161,6 +165,7 @@ const transfers = {
         "transfers.saved.another": t({
             en: "Add another",
             es: "Agregar otra",
+            "es-ES": "Añadir otra",
             pt: "Adicionar outra",
         }),
         "transfers.saved.from": t({
@@ -171,6 +176,7 @@ const transfers = {
         "transfers.saved.title": t({
             en: "Transfer added",
             es: "Transferencia agregada",
+            "es-ES": "Transferencia añadida",
             pt: "Transferência adicionada",
         }),
         "transfers.sentence.blank.account": t({
@@ -181,6 +187,7 @@ const transfers = {
         "transfers.sentence.blank.amount": t({
             en: "an amount",
             es: "un monto",
+            "es-ES": "un importe",
             pt: "um valor",
         }),
         "transfers.sentence.blank.noFee": t({
@@ -191,6 +198,7 @@ const transfers = {
         "transfers.sentence.blank.rate": t({
             en: "a rate",
             es: "una tasa",
+            "es-ES": "un tipo de cambio",
             pt: "uma cotação",
         }),
         "transfers.sentence.fee": t({
@@ -226,6 +234,7 @@ const transfers = {
         "transfers.sentence.rate": t({
             en: "At the {rateType} rate, {rate}, it arrives as {arrives}.",
             es: "A la tasa {rateType}, {rate}, llega como {arrives}.",
+            "es-ES": "Al tipo de cambio {rateType}, {rate}, llega como {arrives}.",
             pt: "Pela cotação {rateType}, {rate}, chega como {arrives}.",
         }),
         "transfers.sentence.rateCustom": t({

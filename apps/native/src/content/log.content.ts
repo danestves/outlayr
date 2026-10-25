@@ -11,16 +11,19 @@ const log = {
         "log.add.menu": t({
             en: "Add",
             es: "Agregar",
+            "es-ES": "Añadir",
             pt: "Adicionar",
         }),
         "log.add.scan": t({
             en: "Scan a receipt",
             es: "Escanear un recibo",
+            "es-ES": "Escanear un ticket",
             pt: "Escanear um recibo",
         }),
         "log.add.transaction": t({
             en: "Add a transaction",
             es: "Agregar una transacción",
+            "es-ES": "Añadir una transacción",
             pt: "Adicionar um lançamento",
         }),
         "log.add.transfer": t({
@@ -36,16 +39,19 @@ const log = {
         "log.amounts.hidden": t({
             en: "Amount hidden",
             es: "Monto oculto",
+            "es-ES": "Importe oculto",
             pt: "Valor oculto",
         }),
         "log.amounts.hide": t({
             en: "Hide amounts",
             es: "Ocultar montos",
+            "es-ES": "Ocultar importes",
             pt: "Ocultar valores",
         }),
         "log.amounts.show": t({
             en: "Show amounts",
             es: "Mostrar montos",
+            "es-ES": "Mostrar importes",
             pt: "Mostrar valores",
         }),
         "log.chip.earlier": t({
@@ -271,11 +277,13 @@ const log = {
         "log.row.rateNeeded": t({
             en: "Rate needed",
             es: "Falta la tasa",
+            "es-ES": "Falta el tipo de cambio",
             pt: "Falta a cotação",
         }),
         "log.row.rateNeededAccessibility": t({
             en: "Custom exchange rate confirmation needed. Open this transaction to confirm it.",
             es: "Se necesita confirmar la tasa de cambio personalizada. Abre esta transacción para confirmarla.",
+            "es-ES": "Hay que confirmar el tipo de cambio personalizado. Abre esta transacción para confirmarlo.",
             pt: "É preciso confirmar a cotação personalizada. Abra este lançamento para confirmá-la.",
         }),
         "log.row.unplaced": t({
