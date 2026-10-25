@@ -183,8 +183,9 @@ export function Paywall() {
     const [plans, setPlans] = useState<readonly Plan[] | null>(null);
     const [selected, setSelected] = useState<PlanKind | null>(null);
     const [busy, setBusy] = useState<"buy" | "confirm" | "restore" | null>(null);
-    const [failed, setFailed] = useState(false);
     const [attempt, setAttempt] = useState(0);
+    const [failedAttempt, setFailedAttempt] = useState<number | null>(null);
+    const failed = failedAttempt === attempt;
     const [failure, setFailure] = useState<TranslationKey | null>(null);
 
     useEffect(() => {
@@ -200,7 +201,7 @@ export function Paywall() {
             })
             .catch(() => {
                 if (!cancelled) {
-                    setFailed(true);
+                    setFailedAttempt(attempt);
                 }
             });
         return () => {
@@ -209,7 +210,6 @@ export function Paywall() {
     }, [attempt, eligibleForTrial, getPackages]);
 
     const retry = () => {
-        setFailed(false);
         setPlans(null);
         setAttempt((count) => count + 1);
     };

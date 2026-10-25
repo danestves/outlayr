@@ -44,12 +44,11 @@ function Demo({ locale }: { locale: Locale }) {
     const { running } = useAutoplay(root);
     const [state, dispatch] = useReducer(reduce, locale, initialState);
     const [edited, setEdited] = useState(false);
-    const [idle, setIdle] = useState(true);
-    const [touches, setTouches] = useState(0);
+    const [touches, setTouches] = useState<number | null>(null);
     const [focusWithin, setFocusWithin] = useState(false);
     const [announcement, setAnnouncement] = useState<ReactNode>(null);
 
-    const live = running && idle && !edited && !focusWithin;
+    const live = running && touches === null && !edited && !focusWithin;
     const tick = useEffectEvent(() => dispatch({ type: "auto" }));
 
     useEffect(() => {
@@ -61,15 +60,15 @@ function Demo({ locale }: { locale: Locale }) {
     }, [live, state]);
 
     useEffect(() => {
-        if (idle || edited || focusWithin || !running) {
+        if (touches === null || edited || focusWithin || !running) {
             return;
         }
         const timer = window.setTimeout(() => {
-            setIdle(true);
+            setTouches(null);
             dispatch({ type: "restart" });
         }, RESUME_MS);
         return () => window.clearTimeout(timer);
-    }, [edited, focusWithin, idle, running, touches]);
+    }, [edited, focusWithin, running, touches]);
 
     useEffect(() => {
         const want = pendingFocus.current;
@@ -90,8 +89,7 @@ function Demo({ locale }: { locale: Locale }) {
         }
         pendingFocus.current = focus;
         dispatch(action);
-        setIdle(false);
-        setTouches((count) => count + 1);
+        setTouches((count) => (count ?? 0) + 1);
         if (edits) {
             setEdited(true);
         }

@@ -127,9 +127,11 @@ export function LedgerAdoptionProvider({ children }: { children: ReactNode }) {
         };
 
         const reconcile = async () => {
-            slot.inFlight ??= runReconcile().finally(() => {
-                slot.inFlight = null;
-            });
+            if (slot.inFlight === null) {
+                slot.inFlight = runReconcile().finally(() => {
+                    slot.inFlight = null;
+                });
+            }
             const outcome = await slot.inFlight;
             if (!cancelled) {
                 setReconciled(outcome);

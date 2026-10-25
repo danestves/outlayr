@@ -1,5 +1,5 @@
 import { env } from "@outlayr/env/native";
-import { usePathname, useSegments } from "expo-router";
+import { useSegments } from "expo-router";
 import PostHog from "posthog-react-native";
 import { useEffect } from "react";
 import { Platform } from "react-native";
@@ -22,11 +22,10 @@ export const posthog =
         : null;
 
 export function useScreenTracking() {
-    const pathname = usePathname();
     const screen = useSegments().join("/");
     useEffect(() => {
         if (screen) {
             posthog?.screen(screen);
         }
-    }, [pathname, screen]);
+    }, [screen]);
 }

@@ -11,7 +11,7 @@ vp check         # report only
 
 Pre-commit runs `vp staged`, which applies `vp check --fix` to staged files and re-stages what it rewrites, so a lint error blocks the commit rather than half-applying it; the Claude Code hook runs `vp check --fix`. Pre-push (`.vite-hooks/pre-push`) runs `vp run -r --cache check-types` and then only the tests related to files changed since `origin/main`. It never runs `vp check`. The CI workflow (`.github/workflows/ci.yml`) runs `vp check` on every pull request, plus `check-types` and the tests of each package the diff touches and of the packages that depend on it. Changes outside `apps/` and `packages/` other than docs run every package, and so do pushes to `main`. Its `Check` job fails when any other job fails.
 
-The gate is green: **no errors and 6 warnings**, all extra-dependency findings from React Compiler rules that are `warn` rather than `error` — see "Warnings, not errors" below.
+The gate is green: **no errors and no warnings**. The React Compiler rules are errors; see "React Compiler" below.
 
 The test-file scope was re-derived from scratch in August 2026: every carve-out was deleted, the full 3,130 findings were worked through, and each rule that went back off carries the count it reported and what fixing it actually cost. See "How the test scope was measured".
 
@@ -77,6 +77,9 @@ If you re-enable any of these, run `vp run -r --no-cache test` and `vp run -r --
 | `db/transaction.ts` | `outlayr/no-drizzle-transaction` | Where `withTransaction` is implemented, so it necessarily calls the API the rule bans. |
 | `lib/convex.ts`, `data/sync-engine-core.ts` | `anti-slop/no-chained-type-assertions` | Two assertion chains against a type we do not own: React Native's `BodyInit` omits the typed array its `fetch` actually sends, and drizzle's builders are generic per table so `Database` shares no members with the single-code-path writer the sync engine calls. |
 | `convex/providerLifecycle.ts` | `anti-slop/no-unknown-returns` | `AppleLifecycleContext` is a structural view of better-auth's endpoint context. Its members are better-auth's to declare: tightening `updateAccount` to the `void` the callers use removes the overlap the assertion needs. |
+| `MANUAL_MEMO_FILES` (130 files) | `outlayr/no-manual-memo` → `allowManualMemo` | The ratchet. Those files may keep `useMemo`, `useCallback` and `memo`; every other file in `apps/native/src` may not. Memo directives stay banned everywhere. Drop a file from the list once its memoization is gone, and never add one. oxlint 1.85 keeps a JS plugin rule's options in an override, which this relies on. |
+| `lib/app-icon.android.ts`, `navigation/stack-chrome.ts` | `outlayr/no-hookless-use-function` | Platform siblings of a hook that does call hooks. They must keep its name, so callers obey the rules of hooks on every platform, and they return a module constant, so there is nothing to cache. |
+| `convex/account.test.ts` | `outlayr/require-suppression-reason` | One reasonless `eslint-disable-next-line no-await-in-loop`, which is also unused there (`no-await-in-loop` is off in tests). It lives in `packages/backend`, whose migration owns the file; delete the directive and this exemption together. |
 
 `complexity` is set to **35**. oxlint counts *cyclomatic* complexity where Biome counted *cognitive*, so the old threshold of 25 does not carry across. On the new metric the barely-over cluster sits at 26–33; only `TransactionForm` is genuinely out of hand; its three suppressions are the only ones in the tree and each names that as known debt.
 
@@ -163,11 +166,21 @@ Two traps worth knowing before editing a mock factory, both from
   export lands as `undefined` and the suite fails with "Number of calls: 0".
   Type the wrapper `(...args: Parameters<typeof mockFn>)`.
 
-## Warnings, not errors
+## React Compiler
 
-The React Compiler rules (`REACT_COMPILER_RULES` in `vite.config.ts`) and `react/exhaustive-deps` are set to `warn` rather than `error`. Biome never ran the compiler rules, so every finding they reported was pre-existing and they were left as a backlog rather than a gate. That backlog was worked off, and the `warn` severity is what keeps a new one visible without failing the build.
+`apps/native` ships through the React Compiler (`experiments.reactCompiler` in `app.config.ts`; babel-preset-expo adds the plugin when Metro's caller sets `supportsReactCompiler`). `apps/web` does not run it: `@vitejs/plugin-react` there has no compiler plugin.
 
-oxlint 1.79 split the single `react/react-compiler` rule into 22 per-category rules. Two of them, `exhaustive-effect-dependencies` (5) and `memo-dependencies` (1), report extra dependencies the old rule never did; those 6 are the current warnings. Each removal changes when an effect or memo recomputes, so they are a reviewed backlog, not an autofix. `react/todo` is off: it reports syntax the compiler cannot lower yet. No source file disables a `react/*` rule: code the compiler would skip is restructured instead, and `react/rule-suppression` reports any disable that comes back.
+The compiler rules (`REACT_COMPILER_RULES` in `vite.config.ts`) are **errors**. `react/exhaustive-deps` stays `warn`, with no findings. `react/todo` is off: it reports syntax the compiler cannot lower yet, which the coverage test below tracks per file instead. No source file disables a `react/*` rule: code the compiler would skip is restructured, and `react/rule-suppression` reports any disable that comes back.
+
+The last five findings were `exhaustive-effect-dependencies`: a dependency the effect never reads, used as a trigger. Each was removed without changing when anything runs:
+
+- `sentence-value.tsx`: the rule moved into `SentenceRule`, keyed by the fact's identity, so a new fact remounts it and its mount effect draws it.
+- `lib/posthog.ts`: `useScreenTracking` depends on the screen only; `Analytics` renders it keyed by `usePathname()`, so a new path still records a screen.
+- `screens/paywall`: `failed` is derived, `failedAttempt === attempt`, so the effect records which attempt failed and a retry clears it by moving `attempt`.
+- `lib/ledger-adoption.tsx`: `??=` was the only path to `db`, and the compiler cannot lower `??=`, so `db` looked unused. It is an explicit `if` now.
+- `apps/web` demo `sentence-form.tsx`: `idle` and the `touches` counter are one `number | null`, null while idle.
+
+oxlint's compiler rules are a port and do not see every bailout: `try`/`finally`, value blocks inside `try`/`catch` and `??=` pass lint and still make the real compiler skip the component, which then ships unmemoized. `src/test-react-compiler.ts` compiles every `src` file with the app's own `babel.config.js` and Metro's release caller, and fails on any bailout outside `KNOWN_BAILOUTS` (12 files today). It also fails when a listed file compiles, so the list only shrinks. The compiler itself is about 80% of the cost, close to three CPU minutes for the tree under jest, so it runs as four `react-compiler-coverage-N.test.ts` shards that jest spreads across workers.
 
 ## Why jest and vitest are re-anchored
 
@@ -175,7 +188,7 @@ Both presets claim `**/*.{test,spec}.*`, so extending both reports every asserti
 
 ## outlayr
 
-`packages/config/oxlint/plugin.mjs` is the repo's own plugin, registered as `outlayr/*`. Each rule replaced a jest suite that read source files as text and asserted with a regex (`grounds.test.ts`, `transaction-guard.test.ts`, `widget-scope.test.ts`, `no-background.test.ts`, the `EditorCta` call-site scan). On the AST the same invariant reports at the offending line, ignores comments, and fires in the editor instead of after a full jest run. The rules are on for `apps/native/src/**` only and off in tests, where a `<List>` fixture or a `db.transaction` double is not a shipped screen.
+`packages/config/oxlint/plugin.mjs` is the repo's own plugin, registered as `outlayr/*`. Each of the first six rules below replaced a jest suite that read source files as text and asserted with a regex (`grounds.test.ts`, `transaction-guard.test.ts`, `widget-scope.test.ts`, `no-background.test.ts`, the `EditorCta` call-site scan). On the AST the same invariant reports at the offending line, ignores comments, and fires in the editor instead of after a full jest run. Those six are on for `apps/native/src/**` only and off in tests, where a `<List>` fixture or a `db.transaction` double is not a shipped screen.
 
 | Rule | Invariant |
 |---|---|
@@ -188,8 +201,33 @@ Both presets claim `**/*.{test,spec}.*`, so extending both reports every asserti
 | `no-slop-comments` | On for every file. A comment block (consecutive `//` lines count as one) has at most three lines, no line past column 120 unless it holds a URL, and no em dash. Lint and TypeScript directives are exempt from the length limits. Longer reasoning goes in the commit message or here. |
 | `no-low-value-comments` | On for every file. Rejects a comment that only repeats the name below it, a section divider, a test step label (`// arrange`), a `TODO`/`FIXME` with no issue link, a JSDoc type in TypeScript, an empty `@param`/`@returns`, and commented-out code. Ported from t3code, MIT: the rule and its `LICENSE` live in `packages/config/oxlint/t3code/`. |
 | `no-test-timeout-or-retry` | On in test files instead, both runners: no timeout argument on a test or hook, no `{ timeout }` or `{ retry }` options, no `jest.setTimeout`, `jest.retryTimes` or `vi.setConfig` override. A test that needs more time is waiting on something it should await. `*.live.test.ts` model probes are exempt. |
+| `no-manual-memo` | `apps/native/src`: no `useMemo`, `useCallback`, `memo` or memo directive (`"use memo"`, `"use no memo"`, `"use no forget"`). The compiler memoizes, and a directive hides a bailout from the coverage test. Ratcheted by `MANUAL_MEMO_FILES`, see "Rules we scoped". |
+| `no-hookless-use-function` | `apps/native/src`: a `use*` function must call a hook. The compiler only compiles functions that do, so a hookless one rebuilds what it returns on every render. Rename it, as `unconfiguredSession` in `lib/auth-client.ts` was. |
+| `no-hermes-unsupported-apis` | `apps/native/src`, and what it imports at runtime from `packages/money/src`, `packages/env/src` and `convex/lib/syncTables.ts`: no `Array#toSorted` and no `Intl.Segmenter`. Neither name is in the shipped Hermes (260318099.0.4) VM, while `toReversed`, `toSpliced` and `with` are, so those stay allowed. Tests run on node and are exempt. |
+| `prefer-effect-fn` | Every file outside the node-side scope: a function that only returns `Effect.gen(...)` is written `Effect.fn("Module.operation")(...)`, which names its span. |
+| `prefer-catch-tags` | Every file: `Effect.catchTags({ Tag: handler })` rather than `Effect.catchTag`, even for one tag. |
+| `no-inline-schema-compile` | Every file: no `Schema.decodeUnknownSync(S)(input)` and friends inside a function, which compiles the decoder on every call. Hoist the compiled function to module scope. |
+| `require-suppression-reason` | Every file: an `oxlint-disable`, `eslint-disable`, `@ts-expect-error`, `@ts-ignore` or `@effect-diagnostics` directive ends with `-- reason` or sits under a comment that gives one. |
+
+The rows from `no-manual-memo` down are ported under the MIT License; the upstream license sits beside them and each file's first line links its source. Ported and skipped:
+
+- `no-manual-effect-runtime-in-tests` bans `Effect.runPromise` in tests in favour of `@effect/vitest`, which this repo does not use, and `apps/native` runs jest. Revisit with `@effect/vitest`.
+- `no-manual-memo` is not on in `apps/web`: without the compiler there, nothing replaces the memoization it would remove. The site has no `useMemo`, `useCallback` or `memo` today.
+- The rest of that plugin duplicates `no-low-value-comments` and `no-test-timeout-or-retry`, or polices another product's components, RPC layer, browser tests and styling.
 
 The reason for each lives in the plugin, as a comment above the rule or in its message. To prove a rule still fires, break the invariant in a shipped file and run `vp check`; every rule was verified that way when it landed.
+
+## Effect diagnostics
+
+`@effect/language-service` is a TypeScript plugin in `packages/config/tsconfig.base.json`, so it reaches `packages/money`, `packages/env` and `apps/web`, not `apps/native` (Expo's base) or the Convex tsconfig. `tsc` ignores plugins, so these diagnostics show in the editor and from the CLI, not in `check-types`:
+
+```bash
+vp exec effect-language-service diagnostics --project packages/money/tsconfig.json --strict
+```
+
+On top of the defaults (which already make `floatingEffect`, `missingEffectContext`, `missingEffectError` and `missingReturnYieldStar` errors), `diagnosticSeverity` raises the checks that catch a wrong program inside an Effect: `any` or `unknown` in the error channel, a global `Error` failure or catch, leaked requirements, a missing service dependency, `Schema.*Sync` and `JSON` where a schema belongs, and `Date`, `console`, `Math.random`, timers, `fetch` and `crypto.randomUUID` used inside an Effect instead of its services. `nodeBuiltinImport` stays off (scripts and the web build read `node:fs` legitimately), and so does `instanceOfSchema`: `instanceof` on a `Schema.TaggedError` class is how plain `catch` blocks narrow.
+
+The tree has no findings. Patching `tsc` (`effect-language-service patch`) would make them fail `check-types`, but it rewrites `typescript` inside the pnpm store, which every worktree on a machine shares.
 
 ## Tailwind
 
@@ -204,6 +242,8 @@ It earned its place on the first run by finding six classes that are not in the 
 ```ts
 // oxlint-disable-next-line no-await-in-loop -- rows apply in seq order — the server hands out one per accepted row, and a second row with the same localId needs the first upsert to be observable
 ```
+
+`outlayr/require-suppression-reason` rejects a directive with no reason.
 
 The reason after `--` names the actual constraint. `intentional`, `needed here`, `false positive` and `by design` are not reasons. Several rules can share one directive: `// oxlint-disable-next-line no-bitwise, unicorn/prefer-code-point -- …`. Stacking two `disable-next-line` comments does **not** work — the first one then points at the second comment rather than at the code.
 
