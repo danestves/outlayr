@@ -5,7 +5,7 @@ const MAX_EPOCH_MS = 8.64e15;
 // Convex's float64 accepts non-finite values, so every user-supplied number passes this before storage or math.
 export function assertFiniteNumber(value: number, label: string): void {
     if (!Number.isFinite(value)) {
-        throw new MoneyValidationError(`${label} must be a finite number, got: ${value}`);
+        throw new MoneyValidationError({ message: `${label} must be a finite number, got: ${value}` });
     }
 }
 
@@ -19,7 +19,9 @@ export function assertOptionalFiniteNumber(value: number | undefined, label: str
 export function assertValidEpochMs(value: number, label: string): void {
     assertFiniteNumber(value, label);
     if (Math.abs(value) > MAX_EPOCH_MS) {
-        throw new MoneyValidationError(`${label} must be a valid epoch-milliseconds timestamp, got: ${value}`);
+        throw new MoneyValidationError({
+            message: `${label} must be a valid epoch-milliseconds timestamp, got: ${value}`,
+        });
     }
 }
 

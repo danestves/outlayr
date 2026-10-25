@@ -1,17 +1,19 @@
 import { dinero, toDecimal, USD } from "dinero.js/bigint";
+import * as Schema from "effect/Schema";
 
 import { MoneyValidationError } from "./errors";
 import { DECIMAL_RADIX, divideHalfEven, toScaledInt, USD_SCALE } from "./scaled-int";
 import type { ScaledInt } from "./scaled-int";
 
 /** `binance` is VES-per-USDT market data only, never an entry type. */
-export const MARKET_RATE_TYPES = ["official", "eur_reference", "binance"] as const;
+export const MarketRateType = Schema.Literals(["official", "eur_reference", "binance"]);
+export type MarketRateType = typeof MarketRateType.Type;
+export const MARKET_RATE_TYPES = MarketRateType.literals;
 
-// Not `MARKET_RATE_TYPES`: `binance` is USDT, not USD, and `custom` is a user-supplied operation rate.
-export const ENTRY_RATE_TYPES = ["official", "eur_reference", "custom"] as const;
-
-export type MarketRateType = (typeof MARKET_RATE_TYPES)[number];
-export type EntryRateType = (typeof ENTRY_RATE_TYPES)[number];
+// Not `MarketRateType`: `binance` is USDT, not USD, and `custom` is a user-supplied operation rate.
+export const EntryRateType = Schema.Literals(["official", "eur_reference", "custom"]);
+export type EntryRateType = typeof EntryRateType.Type;
+export const ENTRY_RATE_TYPES = EntryRateType.literals;
 
 export interface RateRow {
     date: string;
@@ -30,31 +32,31 @@ export async function resolveEntryRate(
 ): Promise<number> {
     if (rateType === "custom") {
         if (customRate === undefined) {
-            throw new MoneyValidationError('customRate is required when exchangeRateType is "custom"');
+            throw new MoneyValidationError({ message: 'customRate is required when exchangeRateType is "custom"' });
         }
         if (!Number.isFinite(customRate) || customRate <= 0) {
-            throw new MoneyValidationError("customRate must be a positive number");
+            throw new MoneyValidationError({ message: "customRate must be a positive number" });
         }
         return customRate;
     }
     if (customRate !== undefined) {
-        throw new MoneyValidationError('customRate is only allowed when exchangeRateType is "custom"');
+        throw new MoneyValidationError({ message: 'customRate is only allowed when exchangeRateType is "custom"' });
     }
     if (rateType === "eur_reference" && currency !== "VES") {
-        throw new MoneyValidationError("eur_reference rates are only available for VES amounts");
+        throw new MoneyValidationError({ message: "eur_reference rates are only available for VES amounts" });
     }
     const row = await lookup(currency, rateType, date);
     if (!row) {
-        throw new MoneyValidationError(`No ${rateType} rate available for ${currency} on ${date}`);
+        throw new MoneyValidationError({ message: `No ${rateType} rate available for ${currency} on ${date}` });
     }
     return requirePositiveRate(row.rate, currency, rateType, date);
 }
 
 function requirePositiveRate(rate: number, currency: string, rateType: string, date: string): number {
     if (!Number.isFinite(rate) || rate <= 0) {
-        throw new MoneyValidationError(
-            `Resolved ${rateType} rate for ${currency} on ${date} must be a positive number, got: ${rate}`
-        );
+        throw new MoneyValidationError({
+            message: `Resolved ${rateType} rate for ${currency} on ${date} must be a positive number, got: ${rate}`,
+        });
     }
     return rate;
 }
@@ -84,9 +86,9 @@ export function computeAmountUSD(input: ComputeAmountUSDInput): number {
         toScaledInt(requirePositiveRate(input.exchangeRate, "the entry", input.exchangeRateType, input.date))
     );
     if (!Number.isFinite(amountUSD)) {
-        throw new MoneyValidationError(
-            `Computed USD amount is not finite (baseAmount ${input.baseAmount} at rate ${input.exchangeRate})`
-        );
+        throw new MoneyValidationError({
+            message: `Computed USD amount is not finite (baseAmount ${input.baseAmount} at rate ${input.exchangeRate})`,
+        });
     }
     return amountUSD;
 }

@@ -105,6 +105,13 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 
 - Use ref as a prop instead of `React.forwardRef`
 
+**Effect (v4):**
+
+- Import modules by subpath (`import * as Schema from "effect/Schema"`), never from `"effect"`: its root entry re-exports all 143 modules and Metro does not tree-shake
+- Errors are `Schema.TaggedError` classes; they stay `instanceof Error` and can be declared as typed errors on Confect functions
+- Domain enums are schemas (`Schema.Literals([...])`); derive the type with `typeof X.Type` instead of writing a parallel union
+- Name reusable effectful functions with `Effect.fn("Module.operation")`, and run an effect only at an edge (a Convex handler, an event handler, a service start), never inside another effect
+
 **Solid/Svelte/Vue/Qwik:**
 
 - Use `class` and `for` attributes (not `className` or `htmlFor`)

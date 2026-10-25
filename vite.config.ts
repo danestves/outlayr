@@ -293,6 +293,7 @@ export default defineConfig({
             eqeqeq: ["error", "always", { null: "ignore" }],
             "func-style": "off",
             "no-eq-null": "off",
+            "no-redeclare": "off",
             "no-use-before-define": ["error", { classes: false, functions: false, variables: false }],
             "node/global-require": "off",
             "one-var": ["error", "never"],
@@ -326,6 +327,7 @@ export default defineConfig({
             "unicorn/prefer-module": "off",
             "unicorn/prefer-number-coercion": "off",
             "unicorn/prefer-set-has": "off",
+            "unicorn/throw-new-error": "off",
         },
         settings: {
             tailwindcss: {
