@@ -6,11 +6,11 @@ import type { TranslationKey } from "@/i18n/catalog";
 export type LockGate = "open" | "shut";
 
 /**
- * `inactive` counts: iOS takes the app-switcher snapshot during it, so waiting
- * for `background` would publish a thumbnail of the ledger.
+ * `inactive` doesn't: a Face ID sheet, Apple Pay or Control Center cause it, and relocking there re-prompts over the
+ * prompt that caused it. `AppLockGate` covers the app-switcher snapshot during `inactive` instead.
  */
 export function relocksOnPhase(phase: AppStateStatus): boolean {
-    return phase !== "active";
+    return phase === "background";
 }
 
 /**

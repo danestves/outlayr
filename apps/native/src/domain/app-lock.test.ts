@@ -22,12 +22,12 @@ describe("app lock gate", () => {
 });
 
 describe("app lock re-arming", () => {
-    it("re-arms on inactive, not just background", () => {
-        expect(relocksOnPhase("inactive")).toBe(true);
+    it("re-arms when the app goes to the background", () => {
         expect(relocksOnPhase("background")).toBe(true);
     });
 
-    it("does not re-arm while the app is in front", () => {
+    it("does not re-arm while a system sheet such as Face ID makes the app inactive", () => {
+        expect(relocksOnPhase("inactive")).toBe(false);
         expect(relocksOnPhase("active")).toBe(false);
     });
 });

@@ -2,7 +2,7 @@ import SquareLock02Icon from "@hugeicons-pro/core-solid-rounded/SquareLock02Icon
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import { createContext, use, useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { Pressable, View } from "react-native";
+import { AppState, Pressable, View } from "react-native";
 
 import { Text } from "@/components/text";
 import { useSettingBool } from "@/contexts/display-settings-context";
@@ -104,6 +104,33 @@ export function AppLockGate({ children }: { children: ReactNode }) {
                     }}
                 />
             ) : null}
+            {gate === "open" && enabled && enforceable === true ? <SwitcherShield /> : null}
+        </View>
+    );
+}
+
+const outOfFront = (phase: typeof AppState.currentState) => phase === "inactive" || phase === "background";
+
+// iOS snapshots the app-switcher card during `inactive`, before a `background` relock could render.
+function SwitcherShield() {
+    const colors = useColors();
+    const [covering, setCovering] = useState(() => outOfFront(AppState.currentState));
+
+    useEffect(() => {
+        const subscription = AppState.addEventListener("change", (phase) => {
+            setCovering(outOfFront(phase));
+        });
+        return () => {
+            subscription.remove();
+        };
+    }, []);
+
+    if (!covering) {
+        return null;
+    }
+    return (
+        <View className="bg-background absolute inset-0 items-center justify-center">
+            <HugeiconsIcon color={colors.subtle} icon={SquareLock02Icon} size={56} />
         </View>
     );
 }

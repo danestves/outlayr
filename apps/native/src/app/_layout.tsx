@@ -19,8 +19,8 @@ import { SafeAreaListener, SafeAreaProvider } from "react-native-safe-area-conte
 import { Uniwind, useCSSVariable } from "uniwind";
 
 import { AiConsentSheet } from "@/components/ai-consent";
-import { AppLockGate } from "@/components/app-lock-gate";
-import { AuthCover } from "@/components/auth-cover";
+import { AppLockGate, useAppLockOpen } from "@/components/app-lock-gate";
+import { AuthCover, useAuthCovered } from "@/components/auth-cover";
 import { CelebrationConfetti } from "@/components/confetti";
 import { LocalDataError } from "@/components/local-data-error";
 import { Text } from "@/components/text";
@@ -243,6 +243,8 @@ function RootStack() {
     const { height: windowHeight } = useWindowDimensions();
     const pickerDetent = identityPickerDetent(windowHeight);
     const chrome = useStackChrome();
+    const lockOpen = useAppLockOpen();
+    const covered = useAuthCovered();
     useSeededClockPreference(db);
 
     const group = rootStackGroup({
@@ -251,8 +253,11 @@ function RootStack() {
         onboarded,
         reconciled: adoption === "settled",
     });
-    useWalletPushTaps(db, group === "ledger");
-    useSubscriptionReminderTaps(db, group === "ledger");
+    // A sheet opened over the lock or restoring cover shows the entry on top of it. The tap stays the last response
+    // until a handler clears it, so holding the hooks back delays it rather than dropping it.
+    const tapsReady = group === "ledger" && lockOpen && !covered;
+    useWalletPushTaps(db, tapsReady);
+    useSubscriptionReminderTaps(db, tapsReady);
 
     return (
         <Stack>
