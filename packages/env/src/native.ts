@@ -1,21 +1,47 @@
 import { createEnv } from "@t3-oss/env-core";
-import { z } from "zod";
+import * as Schema from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
+
+const TAB_OR_NEWLINE = /[\t\n\r]/g;
+
+const optionalString = Schema.toStandardSchemaV1(Schema.UndefinedOr(Schema.String));
 
 const convexUrlSchema = (exampleHost: string) =>
-    z.url().refine((url) => new URL(url).hostname !== exampleHost, {
-        message: `Replace the ${exampleHost} placeholder before running the app`,
-    });
+    Schema.toStandardSchemaV1(
+        Schema.UndefinedOr(
+            Schema.String.pipe(
+                Schema.decodeTo(
+                    Schema.String.check(
+                        Schema.makeFilter((url) => {
+                            const hostname = URL.parse(url)?.hostname;
+                            if (hostname === undefined) {
+                                return "Invalid URL";
+                            }
+                            return (
+                                hostname !== exampleHost ||
+                                `Replace the ${exampleHost} placeholder before running the app`
+                            );
+                        })
+                    ),
+                    SchemaTransformation.transform({
+                        decode: (url) => url.trim().replace(TAB_OR_NEWLINE, ""),
+                        encode: (url) => url,
+                    })
+                )
+            )
+        )
+    );
 
 export const env = createEnv({
     client: {
-        EXPO_PUBLIC_CONVEX_SITE_URL: convexUrlSchema("example.convex.site").optional(),
-        EXPO_PUBLIC_CONVEX_URL: convexUrlSchema("example.convex.cloud").optional(),
-        EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS: z.string().optional(),
-        EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB: z.string().optional(),
-        EXPO_PUBLIC_LOGO_DEV_TOKEN: z.string().optional(),
-        EXPO_PUBLIC_POSTHOG_PROJECT_TOKEN: z.string().optional(),
-        EXPO_PUBLIC_REVENUECAT_ANDROID_KEY: z.string().optional(),
-        EXPO_PUBLIC_REVENUECAT_IOS_KEY: z.string().optional(),
+        EXPO_PUBLIC_CONVEX_SITE_URL: convexUrlSchema("example.convex.site"),
+        EXPO_PUBLIC_CONVEX_URL: convexUrlSchema("example.convex.cloud"),
+        EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS: optionalString,
+        EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB: optionalString,
+        EXPO_PUBLIC_LOGO_DEV_TOKEN: optionalString,
+        EXPO_PUBLIC_POSTHOG_PROJECT_TOKEN: optionalString,
+        EXPO_PUBLIC_REVENUECAT_ANDROID_KEY: optionalString,
+        EXPO_PUBLIC_REVENUECAT_IOS_KEY: optionalString,
     },
     clientPrefix: "EXPO_PUBLIC_",
     emptyStringAsUndefined: true,

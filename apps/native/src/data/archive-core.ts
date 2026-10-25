@@ -1,6 +1,6 @@
 import { inArray } from "drizzle-orm";
 import type { SQLiteTable } from "drizzle-orm/sqlite-core";
-import { z } from "zod";
+import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import {
@@ -83,11 +83,13 @@ export async function buildArchive(
 // A replace in one transaction: a restore that emptied the tables and failed would leave nothing, and a merge would
 // keep rows the archive deleted. Deletes run in reverse table order and inserts forward, so no row points at an
 // unwritten parent.
+const isImageUri = Schema.is(Schema.String);
+
 export async function restoreArchive(db: Database, document: ArchiveDocument): Promise<number> {
     let written = 0;
     const carried = (row: TableRow) => {
-        const uri = z.string().safeParse(row.imageUri);
-        return uri.success && Object.hasOwn(document.photos, photoFileName(uri.data));
+        const uri = row.imageUri;
+        return isImageUri(uri) && Object.hasOwn(document.photos, photoFileName(uri));
     };
     await withTransaction(db, async () => {
         for (const table of [...ARCHIVE_TABLES].reverse()) {

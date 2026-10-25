@@ -1,5 +1,6 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
-import { z } from "zod";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
@@ -53,12 +54,14 @@ export interface ApplyDeps {
 
 export const MIN_KEY_LENGTH = 3;
 const MAX_OUTBOX = 100;
-const outboxSchema = z.array(z.string()).catch([]);
+const decodeOutbox = Schema.decodeUnknownSync(
+    Schema.mutable(Schema.Array(Schema.String)).pipe(Schema.catchDecoding(() => Effect.succeedSome([])))
+);
 
 async function readOutbox(db: Database): Promise<string[]> {
     const raw = await getMeta(db, META_KEYS.enrichmentOutbox);
     try {
-        return outboxSchema.parse(JSON.parse(raw ?? "[]"));
+        return decodeOutbox(JSON.parse(raw ?? "[]"));
     } catch {
         return [];
     }

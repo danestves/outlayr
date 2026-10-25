@@ -1,7 +1,9 @@
 import { firstOfMonth, startOfDay } from "@outlayr/money/calendar";
 import { anchorDayOf, nextDate, RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { and, between, desc, eq, gt, inArray, isNull, like, or, sql } from "drizzle-orm";
-import { z } from "zod";
+import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
@@ -38,22 +40,28 @@ export const SUBSCRIPTION_PRICE_BAND = { max: 2, min: 0.5 } as const;
 const AMOUNT_EPSILON = 0.005;
 const MAX_MISSED_LANDINGS = 60;
 
-const repricedSchema = z.object({
-    currency: z.string(),
-    from: z.number().finite(),
-    note: z.string(),
-    to: z.number().finite(),
+function orNullOnFailure<S extends Schema.Top>(schema: S) {
+    return Schema.NullOr(schema).pipe(Schema.catchDecoding(() => Effect.succeedSome(null)));
+}
+
+const RepricedSubscription = Schema.Struct({
+    currency: Schema.String,
+    from: Schema.Finite,
+    note: Schema.String,
+    to: Schema.Finite,
 });
 
-export type RepricedSubscription = z.infer<typeof repricedSchema>;
+export type RepricedSubscription = typeof RepricedSubscription.Type;
+
+const decodeRepriced = Schema.decodeUnknownOption(Schema.Array(orNullOnFailure(RepricedSubscription)));
 
 export function parseRepriced(raw: string | null | undefined): RepricedSubscription[] {
     if (!raw) {
         return [];
     }
     try {
-        const parsed = z.array(repricedSchema.nullable().catch(null)).safeParse(JSON.parse(raw));
-        return parsed.success ? parsed.data.filter((entry) => entry !== null) : [];
+        const parsed = decodeRepriced(JSON.parse(raw));
+        return Option.isSome(parsed) ? parsed.value.filter((entry) => entry !== null) : [];
     } catch {
         return [];
     }
@@ -67,36 +75,37 @@ export async function takeRepriced(db: Database): Promise<RepricedSubscription[]
     return entries;
 }
 
-export interface LastWalletEntry {
+const LastWalletEntry = Schema.Struct({
     /** Epoch ms of the commit, not of the purchase. */
-    at: number;
-    push?: true;
-    txId: string;
-}
+    at: Schema.Finite,
+    push: Schema.optional(Schema.Literal(true)),
+    txId: Schema.String,
+});
 
-const lastWalletEntrySchema = z.object({ at: z.number().finite(), push: z.literal(true).optional(), txId: z.string() });
+export type LastWalletEntry = typeof LastWalletEntry.Type;
+
+const decodeLastWalletEntry = Schema.decodeUnknownOption(LastWalletEntry);
 
 export function parseLastWalletEntry(raw: string | null | undefined): LastWalletEntry | null {
     if (!raw) {
         return null;
     }
     try {
-        const parsed = lastWalletEntrySchema.safeParse(JSON.parse(raw));
-        return parsed.success ? parsed.data : null;
+        return Option.getOrNull(decodeLastWalletEntry(JSON.parse(raw)));
     } catch {
         return null;
     }
 }
 
-const notificationTextSchema = z.object({
-    amountText: z.string().nullable(),
-    at: z.number().finite(),
-    text: z.string(),
+const NotificationText = Schema.Struct({
+    amountText: Schema.NullOr(Schema.String),
+    at: Schema.Finite,
+    text: Schema.String,
 });
 
-export type NotificationText = z.infer<typeof notificationTextSchema>;
+export type NotificationText = typeof NotificationText.Type;
 
-const notificationTextsSchema = z.array(notificationTextSchema.nullable().catch(null));
+const decodeNotificationTexts = Schema.decodeUnknownOption(Schema.Array(orNullOnFailure(NotificationText)));
 const NOTIFICATION_TEXTS_LIMIT = 5;
 
 export function parseNotificationTexts(raw: string | null | undefined): NotificationText[] {
@@ -104,8 +113,8 @@ export function parseNotificationTexts(raw: string | null | undefined): Notifica
         return [];
     }
     try {
-        const parsed = notificationTextsSchema.safeParse(JSON.parse(raw));
-        return parsed.success ? parsed.data.filter((entry) => entry !== null) : [];
+        const parsed = decodeNotificationTexts(JSON.parse(raw));
+        return Option.isSome(parsed) ? parsed.value.filter((entry) => entry !== null) : [];
     } catch {
         return [];
     }
@@ -121,24 +130,24 @@ async function rememberNotification(db: Database, entry: NotificationText): Prom
     await setMeta(db, META_KEYS.notificationTexts, JSON.stringify(next));
 }
 
-const walletCardSchema = z.object({
-    accountId: z.string().nullable().optional(),
-    lastAt: z.number().finite(),
-    text: z.string(),
-    waiting: z.array(z.string()).optional(),
+const WalletCard = Schema.Struct({
+    accountId: Schema.optional(Schema.NullOr(Schema.String)),
+    lastAt: Schema.Finite,
+    text: Schema.String,
+    waiting: Schema.mutableKey(Schema.optional(Schema.Array(Schema.String))),
 });
 
-export type WalletCard = z.infer<typeof walletCardSchema>;
+export type WalletCard = typeof WalletCard.Type;
 
-const walletCardsSchema = z.array(walletCardSchema.nullable().catch(null));
+const decodeWalletCards = Schema.decodeUnknownOption(Schema.Array(orNullOnFailure(WalletCard)));
 
 export function parseWalletCards(raw: string | null | undefined): WalletCard[] {
     if (!raw) {
         return [];
     }
     try {
-        const parsed = walletCardsSchema.safeParse(JSON.parse(raw));
-        return parsed.success ? parsed.data.filter((card) => card !== null) : [];
+        const parsed = decodeWalletCards(JSON.parse(raw));
+        return Option.isSome(parsed) ? parsed.value.filter((card) => card !== null) : [];
     } catch {
         return [];
     }
@@ -260,29 +269,19 @@ function readNotification(job: PendingWrite): PendingWrite | null {
 const LEDGER_LIMIT = 100;
 const LEDGER_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 
-interface LedgerEntry {
-    at: number;
-    date?: number;
-    id: string;
-    key: string | null;
-    source?: string;
-    txId: string;
-}
+const LedgerEntry = Schema.Struct({
+    at: Schema.Finite,
+    date: Schema.optional(Schema.Finite),
+    id: Schema.String,
+    key: Schema.NullOr(Schema.String),
+    source: Schema.optional(Schema.String),
+    txId: Schema.String,
+});
 
-const ledgerSchema = z.array(
-    z
-        .object({
-            at: z.number().finite(),
-            date: z.number().finite().optional(),
-            id: z.string(),
-            key: z.string().nullable(),
-            source: z.string().optional(),
-            txId: z.string(),
-        })
-        // Per entry: one bad row must not discard the only record of which purchases were committed.
-        .nullable()
-        .catch(null)
-);
+type LedgerEntry = typeof LedgerEntry.Type;
+
+// Per entry: one bad row must not discard the only record of which purchases were committed.
+const decodeLedger = Schema.decodeUnknownOption(Schema.Array(orNullOnFailure(LedgerEntry)));
 
 export async function appliedWriteIds(db: SpendDb, since: number): Promise<string[]> {
     const ledger = await readLedger(db);
@@ -300,8 +299,8 @@ async function readLedger(db: SpendDb): Promise<LedgerEntry[]> {
         return [];
     }
     try {
-        const parsed = ledgerSchema.safeParse(JSON.parse(raw));
-        return parsed.success ? parsed.data.filter((entry) => entry !== null) : [];
+        const parsed = decodeLedger(JSON.parse(raw));
+        return Option.isSome(parsed) ? parsed.value.filter((entry) => entry !== null) : [];
     } catch {
         return [];
     }

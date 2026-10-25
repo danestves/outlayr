@@ -1,4 +1,6 @@
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import {
     addNotificationResponseReceivedListener,
     clearLastNotificationResponse,
@@ -8,23 +10,24 @@ import type { NotificationResponse } from "expo-notifications";
 import { useRouter } from "expo-router";
 import type { Href } from "expo-router";
 import { useEffect } from "react";
-import { z } from "zod";
 
 import { readPlans } from "@/data/installments-core";
 import { backfillRecurring } from "@/data/recurrence-backfill";
 import { getTransactionById } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 
-const subscriptionTapSchema = z.object({ charge: z.string(), subscription: z.string() });
-const reminderTapSchema = z.union([
-    subscriptionTapSchema,
-    z.object({ open: z.literal("log") }),
-    z.object({ date: z.string().optional(), open: z.literal("create") }),
-    z.object({ open: z.literal("installment"), plan: z.string() }),
-    z.object({ account: z.string(), open: z.literal("account") }),
-]);
+const SubscriptionTap = Schema.Struct({ charge: Schema.String, subscription: Schema.String });
+const decodeReminderTap = Schema.decodeUnknownOption(
+    Schema.Union([
+        SubscriptionTap,
+        Schema.Struct({ open: Schema.Literal("log") }),
+        Schema.Struct({ date: Schema.optional(Schema.String), open: Schema.Literal("create") }),
+        Schema.Struct({ open: Schema.Literal("installment"), plan: Schema.String }),
+        Schema.Struct({ account: Schema.String, open: Schema.Literal("account") }),
+    ])
+);
 
-function announcedRowId(db: Database, { charge, subscription }: z.infer<typeof subscriptionTapSchema>): string | null {
+function announcedRowId(db: Database, { charge, subscription }: typeof SubscriptionTap.Type): string | null {
     const landed = getTransactionById(db, charge);
     if (landed !== null && landed.deletedAt === null) {
         return charge;
@@ -55,22 +58,22 @@ export function useSubscriptionReminderTaps(db: Database, ready: boolean): void 
         }
         let disposed = false;
         const open = async (response: NotificationResponse | null) => {
-            const parsed = reminderTapSchema.safeParse(response?.notification.request.content.data);
-            if (!parsed.success || response === null) {
+            const parsed = decodeReminderTap(response?.notification.request.content.data);
+            if (Option.isNone(parsed) || response === null) {
                 return;
             }
             const tap = `${response.notification.request.identifier}@${response.notification.date}`;
             let target: Href | null = "/";
-            if ("subscription" in parsed.data) {
-                await backfillRecurring(db, parsed.data.subscription);
-                const id = announcedRowId(db, parsed.data);
+            if ("subscription" in parsed.value) {
+                await backfillRecurring(db, parsed.value.subscription);
+                const id = announcedRowId(db, parsed.value);
                 target = id === null ? null : `/transactions/${id}`;
-            } else if (parsed.data.open === "installment") {
-                target = installmentTarget(db, parsed.data.plan);
-            } else if (parsed.data.open === "account") {
-                target = `/accounts/${parsed.data.account}`;
-            } else if (parsed.data.open === "create") {
-                const { date } = parsed.data;
+            } else if (parsed.value.open === "installment") {
+                target = installmentTarget(db, parsed.value.plan);
+            } else if (parsed.value.open === "account") {
+                target = `/accounts/${parsed.value.account}`;
+            } else if (parsed.value.open === "create") {
+                const { date } = parsed.value;
                 target = date === undefined ? "/transactions/create" : `/transactions/create?date=${date}`;
             }
             if (disposed || tap === handled || target === null) {

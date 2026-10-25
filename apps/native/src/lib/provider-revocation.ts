@@ -1,23 +1,23 @@
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import { getItemAsync, setItemAsync } from "expo-secure-store";
-import { z } from "zod";
 
 export const PROVIDER_BINDING_KEY = "outlayr.provider-binding";
 
-export interface ProviderBinding {
-    betterAuthUserId: string;
-    provider: "apple" | "google" | "password";
-    providerSubject: string;
-}
-
-const providerBinding = z.object({
-    betterAuthUserId: z.string().min(1),
-    provider: z.enum(["apple", "google", "password"]),
-    providerSubject: z.string().min(1),
+const ProviderBinding = Schema.Struct({
+    betterAuthUserId: Schema.NonEmptyString,
+    provider: Schema.Literals(["apple", "google", "password"]),
+    providerSubject: Schema.NonEmptyString,
 });
+
+export type ProviderBinding = typeof ProviderBinding.Type;
+
+const isProviderBinding = Schema.is(ProviderBinding);
+const decodeProviderBinding = Schema.decodeUnknownOption(ProviderBinding);
 
 /** Call only once the matching Better Auth session is established. */
 export async function persistProviderBinding(binding: ProviderBinding): Promise<void> {
-    if (!providerBinding.safeParse(binding).success) {
+    if (!isProviderBinding(binding)) {
         throw new Error("Provider binding is invalid");
     }
     await setItemAsync(PROVIDER_BINDING_KEY, JSON.stringify(binding));
@@ -28,19 +28,19 @@ export async function providerBindingFor(betterAuthUserId: string): Promise<Prov
     if (raw === null) {
         throw new Error("Provider revocation requires reauthentication");
     }
-    let parsed: z.ZodSafeParseResult<ProviderBinding>;
+    let parsed: Option.Option<ProviderBinding>;
     try {
-        parsed = providerBinding.safeParse(JSON.parse(raw));
+        parsed = decodeProviderBinding(JSON.parse(raw));
     } catch (cause) {
         throw new Error("Provider revocation requires reauthentication", { cause });
     }
-    if (!parsed.success) {
+    if (Option.isNone(parsed)) {
         throw new Error("Provider revocation requires reauthentication");
     }
-    if (parsed.data.betterAuthUserId !== betterAuthUserId) {
+    if (parsed.value.betterAuthUserId !== betterAuthUserId) {
         throw new Error("Provider binding does not match this account");
     }
-    return parsed.data;
+    return parsed.value;
 }
 
 export async function revokeGoogleProviderSubject(providerSubject: string): Promise<void> {

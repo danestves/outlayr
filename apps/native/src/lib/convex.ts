@@ -2,8 +2,9 @@ import type { StreamArgs, SyncStreamsReturnValue, UIMessage } from "@convex-dev/
 import { utcDateString } from "@outlayr/money/dates";
 import { makeFunctionReference } from "convex/server";
 import type { PaginationOptions, PaginationResult } from "convex/server";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import { useSyncExternalStore } from "react";
-import { z } from "zod";
 
 import type { AnsweredJob, EnrichmentJobRequest } from "@/data/enrichment-queue-core";
 import type { PhotoTransport } from "@/data/photo-sync-core";
@@ -78,15 +79,19 @@ export function ratesPuller(): PullRatesFn {
     return async (args) => cloudQuery("exchangeRates:pullRates", { ...args, at: rateWindowAt() });
 }
 
-const rateWireRows = z.array(
-    z.object({
-        date: z.string(),
-        fetchedAt: z.number(),
-        quote: z.string(),
-        rate: z.number(),
-        rateType: z.string(),
-        source: z.string(),
-    })
+const decodeRateWireRows = Schema.decodeUnknownOption(
+    Schema.mutable(
+        Schema.Array(
+            Schema.Struct({
+                date: Schema.String,
+                fetchedAt: Schema.Finite,
+                quote: Schema.String,
+                rate: Schema.Finite,
+                rateType: Schema.String,
+                source: Schema.String,
+            })
+        )
+    )
 );
 
 export function watchRecentRates(onRows: (rows: RateWireRow[]) => void): () => void {
@@ -99,14 +104,14 @@ export function watchRecentRates(onRows: (rows: RateWireRow[]) => void): () => v
         { at: rateWindowAt() } as never
     );
     return watch.onUpdate(() => {
-        let rows: ReturnType<typeof rateWireRows.safeParse> | null = null;
+        let rows: ReturnType<typeof decodeRateWireRows> | null = null;
         try {
-            rows = rateWireRows.safeParse(watch.localQueryResult());
+            rows = decodeRateWireRows(watch.localQueryResult());
         } catch {
             rows = null;
         }
-        if (rows?.success && rows.data.length > 0) {
-            onRows(rows.data);
+        if (rows !== null && Option.isSome(rows) && rows.value.length > 0) {
+            onRows(rows.value);
         }
     });
 }
@@ -123,6 +128,8 @@ export function syncTransport(): SyncTransport {
     };
 }
 
+const isWatermark = Schema.is(Schema.Finite);
+
 export function watchSyncWatermark(onWatermark: (watermark: number) => void): () => void {
     if (cloudRuntime === null) {
         return () => undefined;
@@ -131,9 +138,9 @@ export function watchSyncWatermark(onWatermark: (watermark: number) => void): ()
     const watch = cloudRuntime.convex.watchQuery("sync:currentSeq" as never, {} as never);
     return watch.onUpdate(() => {
         try {
-            const watermark = z.number().safeParse(watch.localQueryResult());
-            if (watermark.success) {
-                onWatermark(watermark.data);
+            const watermark = watch.localQueryResult();
+            if (isWatermark(watermark)) {
+                onWatermark(watermark);
             }
         } catch {
             // Refused while signed out; the same socket delivers a value once a token is set, so stay subscribed.
@@ -168,22 +175,26 @@ export function enrichmentTransport(): EnrichmentFn | null {
     return async (args) => cloudAction("enrichment:suggest", { ...args, aiConsent: AI_CONSENT_VERSION });
 }
 
-const answeredJobs = z.array(
-    z.object({
-        localId: z.string(),
-        name: z.string(),
-        result: z
-            .object({
-                categoryName: z.string().nullable(),
-                domain: z.string().nullable(),
-                emoji: z.string().nullable(),
-                isNewCategory: z.boolean(),
-                merchantName: z.string().nullable(),
-                parentCategoryName: z.string().nullable(),
-                tags: z.array(z.string()),
+const decodeAnsweredJobs = Schema.decodeUnknownOption(
+    Schema.mutable(
+        Schema.Array(
+            Schema.Struct({
+                localId: Schema.String,
+                name: Schema.String,
+                result: Schema.NullOr(
+                    Schema.Struct({
+                        categoryName: Schema.NullOr(Schema.String),
+                        domain: Schema.NullOr(Schema.String),
+                        emoji: Schema.NullOr(Schema.String),
+                        isNewCategory: Schema.Boolean,
+                        merchantName: Schema.NullOr(Schema.String),
+                        parentCategoryName: Schema.NullOr(Schema.String),
+                        tags: Schema.Array(Schema.String),
+                    })
+                ),
             })
-            .nullable(),
-    })
+        )
+    )
 );
 
 export interface EnrichmentQueueTransport {
@@ -206,14 +217,14 @@ export function watchEnrichmentResults(onJobs: (jobs: AnsweredJob[]) => void): (
     // SAFETY: addressed by path for the reason given on `cloudQuery`.
     const watch = cloudRuntime.convex.watchQuery("enrichmentQueue:results" as never, {} as never);
     return watch.onUpdate(() => {
-        let jobs: ReturnType<typeof answeredJobs.safeParse> | null = null;
+        let jobs: ReturnType<typeof decodeAnsweredJobs> | null = null;
         try {
-            jobs = answeredJobs.safeParse(watch.localQueryResult());
+            jobs = decodeAnsweredJobs(watch.localQueryResult());
         } catch {
             jobs = null;
         }
-        if (jobs?.success && jobs.data.length > 0) {
-            onJobs(jobs.data);
+        if (jobs !== null && Option.isSome(jobs) && jobs.value.length > 0) {
+            onJobs(jobs.value);
         }
     });
 }
@@ -360,7 +371,7 @@ export function voiceThreadTransport(): VoiceThreadTransport {
 }
 
 /** Convex file storage answers the PUT with the id it allocated; R2 sends nothing. */
-const uploadReceipt = z.object({ storageId: z.string().optional() });
+const decodeUploadReceipt = Schema.decodeUnknownOption(Schema.Struct({ storageId: Schema.optional(Schema.String) }));
 
 export function photoTransport(): PhotoTransport {
     return {
@@ -389,8 +400,7 @@ export function photoTransport(): PhotoTransport {
                 throw new Error(`Photo upload failed: ${response.status}`);
             }
             try {
-                const body = uploadReceipt.safeParse(await response.json());
-                return body.success ? (body.data.storageId ?? null) : null;
+                return Option.getOrUndefined(decodeUploadReceipt(await response.json()))?.storageId ?? null;
             } catch {
                 return null;
             }

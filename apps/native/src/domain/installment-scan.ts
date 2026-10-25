@@ -1,6 +1,8 @@
 import { decimalsFor } from "@outlayr/money/currency";
 import { roundMoney } from "@outlayr/money/round";
-import { z } from "zod";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 import type { InstallmentPlanDraft } from "@/lib/convex";
 
@@ -20,32 +22,47 @@ export interface ScannedOrder extends InstallmentSeed {
     purchaseDay: Date;
 }
 
-const seedMoney = z.number().positive().lt(AMOUNT_CEILING);
-const seedDate = z.iso.datetime().transform((iso) => new Date(iso));
+const ISO_INSTANT =
+    /^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$/;
+const SEQUENCE_KEY = /^[1-9]\d*$/;
 
-const seedSchema = z
-    .object({
-        count: z.int().min(1).max(MAX_INSTALLMENT_COUNT),
-        each: seedMoney.nullable(),
-        edits: z.record(
-            z.string().regex(/^[1-9]\d*$/),
-            z.object({ amount: seedMoney.optional(), dueDate: seedDate.optional() })
-        ),
-        every: z.enum(EVERY_ORDER),
-        fees: z.array(z.object({ amount: seedMoney, sequence: z.int().min(0) })),
-        firstDue: seedDate.nullable(),
-        paidBefore: z.int().min(0).nullable(),
-        upfront: z.union([
-            z.object({ amount: z.number().min(0).lt(AMOUNT_CEILING) }),
-            z.object({ share: z.number().gt(0).lt(1) }),
+const seedMoney = Schema.Finite.check(Schema.isGreaterThan(0), Schema.isLessThan(AMOUNT_CEILING));
+const seedDate = Schema.String.check(Schema.isPattern(ISO_INSTANT)).pipe(
+    Schema.decodeTo(Schema.Date, SchemaTransformation.dateFromString)
+);
+const wholeNumber = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
+
+const decodeSeed = Schema.decodeUnknownOption(
+    Schema.Struct({
+        count: Schema.Int.check(Schema.isBetween({ maximum: MAX_INSTALLMENT_COUNT, minimum: 1 })),
+        each: Schema.NullOr(seedMoney),
+        edits: Schema.Record(
+            Schema.String,
+            Schema.Struct({ amount: Schema.optional(seedMoney), dueDate: Schema.optional(seedDate) })
+        ).check(Schema.makeFilter((edits) => Object.keys(edits).every((sequence) => SEQUENCE_KEY.test(sequence)))),
+        every: Schema.Literals(EVERY_ORDER),
+        fees: Schema.mutable(Schema.Array(Schema.Struct({ amount: seedMoney, sequence: wholeNumber }))),
+        firstDue: Schema.NullOr(seedDate),
+        paidBefore: Schema.NullOr(wholeNumber),
+        upfront: Schema.Union([
+            Schema.Struct({
+                amount: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0), Schema.isLessThan(AMOUNT_CEILING)),
+            }),
+            Schema.Struct({
+                share: Schema.Finite.check(
+                    Schema.isBetween({ exclusiveMaximum: true, exclusiveMinimum: true, maximum: 1, minimum: 0 })
+                ),
+            }),
         ]),
-    })
-    .refine(
-        ({ count, edits, fees, paidBefore }) =>
-            (paidBefore ?? 0) <= count &&
-            fees.every((fee) => fee.sequence <= count) &&
-            Object.keys(edits).every((sequence) => Number(sequence) <= count)
-    );
+    }).check(
+        Schema.makeFilter(
+            ({ count, edits, fees, paidBefore }) =>
+                (paidBefore ?? 0) <= count &&
+                fees.every((fee) => fee.sequence <= count) &&
+                Object.keys(edits).every((sequence) => Number(sequence) <= count)
+        )
+    )
+);
 
 export function encodeInstallmentSeed({ draft, fees }: InstallmentSeed): string {
     return JSON.stringify({ ...draft, fees });
@@ -61,11 +78,11 @@ export function parseInstallmentSeed(param: string | undefined): InstallmentSeed
     } catch {
         return undefined;
     }
-    const parsed = seedSchema.safeParse(json);
-    if (!parsed.success) {
+    const parsed = decodeSeed(json);
+    if (Option.isNone(parsed)) {
         return undefined;
     }
-    const { fees, ...draft } = parsed.data;
+    const { fees, ...draft } = parsed.value;
     return { draft: { ...draft, upfrontAccountId: null }, fees };
 }
 

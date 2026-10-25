@@ -1,18 +1,28 @@
-import { z } from "zod";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 
 const QUERY_PARAMS = /\nparams: [\s\S]*$/u;
 
-const exceptionList = z.array(z.object({ value: z.string().optional() }).catchall(z.custom<z.core.util.JSONType>()));
+const decodeExceptionList = Schema.decodeUnknownOption(
+    Schema.Array(
+        Schema.StructWithRest(Schema.Struct({ value: Schema.optional(Schema.String) }), [
+            Schema.Record(
+                Schema.String,
+                Schema.declare((_value: unknown): _value is Schema.MutableJson => true)
+            ),
+        ])
+    )
+);
 
-export function scrubQueryParams<Event extends { properties?: Record<string, z.core.util.JSONType> }>(
+export function scrubQueryParams<Event extends { properties?: Record<string, Schema.MutableJson> }>(
     event: Event | null
 ): Event | null {
     const properties = event?.properties;
-    const exceptions = exceptionList.safeParse(properties?.$exception_list);
-    if (properties === undefined || !exceptions.success) {
+    const exceptions = decodeExceptionList(properties?.$exception_list);
+    if (properties === undefined || Option.isNone(exceptions)) {
         return event;
     }
-    properties.$exception_list = exceptions.data.map(({ value, ...rest }) =>
+    properties.$exception_list = exceptions.value.map(({ value, ...rest }) =>
         value === undefined ? rest : { ...rest, value: value.replace(QUERY_PARAMS, "") }
     );
     return event;

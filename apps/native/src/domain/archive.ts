@@ -1,4 +1,6 @@
-import { z } from "zod";
+import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 
 /** Rises when a file carries something an older build would drop on restore. */
 export const ARCHIVE_VERSION = 5;
@@ -76,6 +78,8 @@ export function encodeArchiveRow(row: TableRow): ArchiveRow {
     );
 }
 
+const isInstant = Schema.is(Schema.Finite);
+
 /** A non-finite date decodes to null, not `new Date(NaN)`, which throws the moment anything formats it. */
 export function decodeArchiveRow(table: ArchiveTable, row: ArchiveRow): TableRow {
     const dateColumns: readonly string[] = ARCHIVE_DATE_COLUMNS[table];
@@ -84,8 +88,7 @@ export function decodeArchiveRow(table: ArchiveTable, row: ArchiveRow): TableRow
             if (!dateColumns.includes(column)) {
                 return [column, value];
             }
-            const instant = z.number().finite().safeParse(value);
-            return [column, instant.success ? new Date(instant.data) : null];
+            return [column, isInstant(value) ? new Date(value) : null];
         })
     );
 }
@@ -94,41 +97,48 @@ export function serializeArchive(document: ArchiveDocument): string {
     return JSON.stringify(document);
 }
 
-const archiveValue = z.union([z.boolean(), z.number(), z.string(), z.null()]);
+const archiveValue = Schema.Union([Schema.Boolean, Schema.Finite, Schema.String, Schema.Null]);
 
-const archiveRow = z.record(z.string(), archiveValue);
+const archiveRow = Schema.Record(Schema.String, archiveValue);
 
 const PHOTO_NAME = /^(?!\.{1,2}$)[^/\\]+$/;
 
-const archiveDocument = z.object({
-    // The stamp is only shown on the confirmation, so an unreadable one does not block a restore.
-    exportedAt: z.number().catch(0),
-    format: z.literal(ARCHIVE_FORMAT),
-    photos: z.record(z.string().regex(PHOTO_NAME), z.string()).default({}),
-    tables: z.record(z.string(), z.array(archiveRow)),
-    version: z.number().int().min(1).max(ARCHIVE_VERSION),
-});
+const decodeArchiveDocument = Schema.decodeUnknownOption(
+    Schema.Struct({
+        // The stamp is only shown on the confirmation, so an unreadable one does not block a restore.
+        exportedAt: Schema.Finite.pipe(
+            Schema.withDecodingDefault(Effect.succeed(0)),
+            Schema.catchDecoding(() => Effect.succeedSome(0))
+        ),
+        format: Schema.Literal(ARCHIVE_FORMAT),
+        photos: Schema.Record(Schema.String, Schema.String)
+            .check(Schema.makeFilter((photos) => Object.keys(photos).every((name) => PHOTO_NAME.test(name))))
+            .pipe(Schema.withDecodingDefault(Effect.succeed({}))),
+        tables: Schema.Record(Schema.String, Schema.mutable(Schema.Array(archiveRow))),
+        version: Schema.Int.check(Schema.isBetween({ maximum: ARCHIVE_VERSION, minimum: 1 })),
+    })
+);
 
 /**
  * Strict and silent: a restore replaces the whole ledger, so a half-recognised file must never overwrite a good
  * one. A future version is refused, since the columns it adds are exactly the ones this build would drop.
  */
 export function parseArchive(text: string): ArchiveDocument | null {
-    let parsed: z.ZodSafeParseResult<z.infer<typeof archiveDocument>>;
+    let parsed: ReturnType<typeof decodeArchiveDocument>;
     try {
-        parsed = archiveDocument.safeParse(JSON.parse(text));
+        parsed = decodeArchiveDocument(JSON.parse(text));
     } catch {
         return null;
     }
-    if (!parsed.success) {
+    if (Option.isNone(parsed)) {
         return null;
     }
     // A missing table reads as empty: an archive written before the table existed is still intact.
-    const { tables } = parsed.data;
+    const { tables } = parsed.value;
     return {
-        exportedAt: parsed.data.exportedAt,
+        exportedAt: parsed.value.exportedAt,
         format: ARCHIVE_FORMAT,
-        photos: parsed.data.photos,
+        photos: parsed.value.photos,
         tables: {
             accounts: tables.accounts ?? [],
             appMeta: tables.appMeta ?? [],
@@ -148,7 +158,7 @@ export function parseArchive(text: string): ArchiveDocument | null {
             transactions: tables.transactions ?? [],
             transfers: tables.transfers ?? [],
         },
-        version: parsed.data.version,
+        version: parsed.value.version,
     };
 }
 

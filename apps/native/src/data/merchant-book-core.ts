@@ -1,4 +1,5 @@
-import { z } from "zod";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import type { RemoteEnrichmentResult } from "@/domain/enrichment-cache";
@@ -10,21 +11,24 @@ export const BOOK_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 export const MAX_BOOK_ENTRIES = 500;
 const MIN_KEY_LENGTH = 3;
 
-const entrySchema = z.object({
-    answer: z.object({
-        categoryName: z.string().nullable(),
-        domain: z.string().nullable(),
-        emoji: z.string().nullable(),
-        isNewCategory: z.boolean(),
-        parentCategoryName: z.string().nullable(),
-        tags: z.array(z.string()),
-    }),
-    expiresAt: z.number(),
-});
+const Book = Schema.Record(
+    Schema.String,
+    Schema.Struct({
+        answer: Schema.Struct({
+            categoryName: Schema.NullOr(Schema.String),
+            domain: Schema.NullOr(Schema.String),
+            emoji: Schema.NullOr(Schema.String),
+            isNewCategory: Schema.Boolean,
+            parentCategoryName: Schema.NullOr(Schema.String),
+            tags: Schema.Array(Schema.String),
+        }),
+        expiresAt: Schema.Finite,
+    })
+);
 
-const bookSchema = z.record(z.string(), entrySchema).catch({});
+type Book = typeof Book.Type;
 
-type Book = z.infer<typeof bookSchema>;
+const decodeBook = Schema.decodeUnknownSync(Book.pipe(Schema.catchDecoding(() => Effect.succeedSome({}))));
 
 export interface RememberedAnswer extends RemoteEnrichmentResult {
     readonly merchantName: string | null;
@@ -41,7 +45,7 @@ function bookKeys(name: string, currency: string | null | undefined, merchantNam
 async function readBook(db: Database): Promise<Book> {
     const raw = await getMeta(db, META_KEYS.merchantBook);
     try {
-        return bookSchema.parse(JSON.parse(raw ?? "{}"));
+        return decodeBook(JSON.parse(raw ?? "{}"));
     } catch {
         return {};
     }

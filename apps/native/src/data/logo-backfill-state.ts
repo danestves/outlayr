@@ -1,5 +1,6 @@
 import { inArray } from "drizzle-orm";
-import { z } from "zod";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
@@ -19,7 +20,7 @@ function serialized<T>(task: () => Promise<T>): Promise<T> {
     return next;
 }
 
-const idList = z.array(z.string());
+const decodeIdList = Schema.decodeUnknownOption(Schema.mutable(Schema.Array(Schema.String)));
 
 async function readIds(db: SpendDb, key: string): Promise<string[]> {
     const raw = await getMeta(db, key);
@@ -27,8 +28,7 @@ async function readIds(db: SpendDb, key: string): Promise<string[]> {
         return [];
     }
     try {
-        const parsed = idList.safeParse(JSON.parse(raw));
-        return parsed.success ? parsed.data : [];
+        return Option.getOrElse(decodeIdList(JSON.parse(raw)), () => []);
     } catch {
         return [];
     }
@@ -58,7 +58,7 @@ export function rememberLogoDismissal(db: SpendDb, id: string): Promise<void> {
     });
 }
 
-const stampedIds = z.record(z.string(), z.number().finite());
+const decodeStampedIds = Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Finite));
 
 async function readStamped(db: SpendDb, key: string): Promise<Record<string, number>> {
     const raw = await getMeta(db, key);
@@ -66,8 +66,7 @@ async function readStamped(db: SpendDb, key: string): Promise<Record<string, num
         return {};
     }
     try {
-        const parsed = stampedIds.safeParse(JSON.parse(raw));
-        return parsed.success ? parsed.data : {};
+        return Option.getOrElse(decodeStampedIds(JSON.parse(raw)), () => ({}));
     } catch {
         return {};
     }

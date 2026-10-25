@@ -429,7 +429,7 @@ export const make = Effect.gen(function* make() {
             Effect.map((pro): typeof PurchaseOutcome.Type => (pro ? "pro" : "unentitled")),
             Effect.catchTags({
                 RevenueCatError: (error) =>
-                    purchaseCancelled.safeParse(error.cause).success
+                    Schema.is(purchaseCancelled)(error.cause)
                         ? call("refresh", sdk.refreshProEntitlement).pipe(
                               Effect.map((pro): typeof PurchaseOutcome.Type => (pro ? "pro" : "cancelled"))
                           )

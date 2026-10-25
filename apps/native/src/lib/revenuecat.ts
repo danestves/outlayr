@@ -1,8 +1,8 @@
 import { env } from "@outlayr/env/native";
+import * as Schema from "effect/Schema";
 import { Platform } from "react-native";
 import Purchases, { INTRO_ELIGIBILITY_STATUS, LOG_LEVEL } from "react-native-purchases";
 import type { CustomerInfo, PurchasesPackage } from "react-native-purchases";
-import { z } from "zod";
 
 import { duringHandoff } from "@/lib/app-handoff";
 import type { AccountProfile } from "@/lib/auth-session";
@@ -93,4 +93,4 @@ export async function restoreAndCheckPro(): Promise<boolean> {
     return hasProEntitlement(await Purchases.restorePurchases());
 }
 
-export const purchaseCancelled = z.object({ userCancelled: z.literal(true) });
+export const purchaseCancelled = Schema.Struct({ userCancelled: Schema.Literal(true) });

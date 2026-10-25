@@ -1,12 +1,12 @@
 import ViewIcon from "@hugeicons-pro/core-stroke-rounded/ViewIcon";
 import ViewOffSlashIcon from "@hugeicons-pro/core-stroke-rounded/ViewOffSlashIcon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
+import * as Schema from "effect/Schema";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import type { ComponentProps, ReactNode } from "react";
 import { KeyboardAvoidingView, Pressable, View } from "react-native";
 import { useCSSVariable } from "uniwind";
-import { z } from "zod";
 
 import type { EmailSignInRoute } from "@/components/account/provider-sign-in-buttons";
 import { FirstRun } from "@/components/first-run";
@@ -22,7 +22,7 @@ type AuthClient = NonNullable<typeof authClient>;
 
 const STEPS = ["sign-in", "create", "verify", "forgot", "reset"] as const;
 type Step = (typeof STEPS)[number];
-const stepParam = z.enum(STEPS).catch("sign-in");
+const isStep = Schema.is(Schema.Literals(STEPS));
 
 const CODE_LENGTH = 6;
 const CODE_SLOTS = Array.from({ length: CODE_LENGTH }, (_, slot) => slot);
@@ -50,7 +50,7 @@ export function EmailSignIn({ route }: { route: EmailSignInRoute }) {
     };
     return (
         <KeyboardAvoidingView behavior="padding" className="bg-fr-ground flex-1">
-            {steps[stepParam.parse(params.step)]}
+            {steps[isStep(params.step) ? params.step : "sign-in"]}
         </KeyboardAvoidingView>
     );
 }

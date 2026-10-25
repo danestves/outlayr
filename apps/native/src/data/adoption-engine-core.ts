@@ -1,5 +1,5 @@
 import { eq, inArray } from "drizzle-orm";
-import { z } from "zod";
+import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { appMeta } from "@/db/schema";
@@ -14,7 +14,7 @@ import { getOrCreateDeviceId, SYNCED_META_KEYS, SYNCED_TABLES, setSyncCursor } f
 
 type Row = Record<string, LocalValue>;
 
-const rowId = z.string();
+const isRowId = Schema.is(Schema.String);
 
 function rowKey(table: SyncedTable, localId: string): string {
     return `${table}\0${localId}`;
@@ -59,9 +59,9 @@ async function localRows(db: Database, table: SyncedTable): Promise<Map<string, 
     const idName = spec.id.name;
     const byId = new Map<string, Row>();
     for (const row of rows) {
-        const id = rowId.safeParse(row[idName]);
-        if (id.success) {
-            byId.set(id.data, row);
+        const id = row[idName];
+        if (isRowId(id)) {
+            byId.set(id, row);
         }
     }
     return byId;
