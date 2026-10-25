@@ -15,7 +15,6 @@ const KNOWN_BAILOUTS = [
     "src/components/transaction-form/stage/step-account-installments.tsx",
     "src/components/transaction-form/use-installment-order.tsx",
     "src/data/live-query.ts",
-    "src/data/use-sync-engine.ts",
     "src/hooks/use-receipt-scan.ts",
     "src/lib/ledger-adoption.tsx",
     "src/screens/debts/new-debt-form.tsx",
