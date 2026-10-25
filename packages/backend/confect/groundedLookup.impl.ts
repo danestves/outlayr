@@ -1,11 +1,21 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
 import databaseSchema from "./_generated/schema";
-import { run } from "./groundedLookup";
+import { ActionCtx } from "./_generated/services";
+import { runGroundedLookup } from "./groundedLookup";
 import spec from "./groundedLookup.spec";
 
-export default GroupImpl.make(databaseSchema, spec).pipe(
-    Layer.provide(FunctionImpl.make(databaseSchema, spec, "run", run)),
-    GroupImpl.finalize
+const run = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "run",
+    Effect.fn("GroundedLookup.run")(function* run(args) {
+        const ctx = yield* ActionCtx;
+        yield* Effect.promise(() => runGroundedLookup(ctx, args));
+        return null;
+    })
 );
+
+export default GroupImpl.make(databaseSchema, spec).pipe(Layer.provide(run), GroupImpl.finalize);

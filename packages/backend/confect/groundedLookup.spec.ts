@@ -1,5 +1,17 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
+import * as Schema from "effect/Schema";
 
-import type { run } from "./groundedLookup";
-
-export default GroupSpec.make().addFunction(FunctionSpec.convexInternalAction<typeof run>()("run"));
+export default GroupSpec.make().addFunction(
+    FunctionSpec.internalAction({
+        name: "run",
+        args: () => ({
+            currency: Schema.optional(Schema.String),
+            income: Schema.Boolean,
+            key: Schema.String,
+            locale: Schema.optional(Schema.String),
+            name: Schema.String,
+            regionCode: Schema.optional(Schema.String),
+        }),
+        returns: () => Schema.Null,
+    })
+);

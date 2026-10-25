@@ -4,9 +4,9 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vite-plus/test";
 
 import { internal } from "../convex/_generated/api";
+import * as merchantKnowledge from "../convex/merchantKnowledge";
 import schema from "../convex/schema";
 import { MODEL_TTL_MS } from "./lib/merchantTrust";
-import * as merchantKnowledge from "./merchantKnowledge";
 
 const modules = import.meta.glob("../convex/**/*.ts");
 

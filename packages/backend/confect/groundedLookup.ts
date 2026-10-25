@@ -3,11 +3,10 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { generateText, isStepCount } from "ai";
 import type { LanguageModel, ToolSet } from "ai";
-import { v } from "convex/values";
-import { z } from "zod";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 
 import { internal } from "../convex/_generated/api";
-import { internalAction } from "../convex/_generated/server";
 import type { ActionCtx } from "../convex/_generated/server";
 import {
     DESCRIPTOR_LINE,
@@ -55,17 +54,19 @@ export interface GroundedCallDeps {
     groundingTools: ToolSet;
 }
 
-const groundedOutputSchema = z.object({
-    canonicalCategory: z.string().nullish(),
-    categoryName: z.string().nullable(),
-    domain: z.string().nullable(),
-    domainConfidence: z.enum(["high", "medium", "low"]).nullish(),
-    emoji: z.string().nullish(),
-    merchantName: z.string().nullish(),
-    tags: z.array(z.string()),
+const GroundedOutput = Schema.Struct({
+    canonicalCategory: Schema.optional(Schema.NullOr(Schema.String)),
+    categoryName: Schema.NullOr(Schema.String),
+    domain: Schema.NullOr(Schema.String),
+    domainConfidence: Schema.optional(Schema.NullOr(Schema.Literals(["high", "medium", "low"]))),
+    emoji: Schema.optional(Schema.NullOr(Schema.String)),
+    merchantName: Schema.optional(Schema.NullOr(Schema.String)),
+    tags: Schema.Array(Schema.String),
 });
 
-const UNPARSEABLE_GROUNDED_OUTPUT: z.infer<typeof groundedOutputSchema> = {
+const decodeGroundedOutput = Schema.decodeUnknownOption(GroundedOutput);
+
+const UNPARSEABLE_GROUNDED_OUTPUT: typeof GroundedOutput.Type = {
     categoryName: null,
     domain: null,
     emoji: null,
@@ -117,7 +118,7 @@ function extractJsonCandidate(text: string): string | null {
     return text.slice(start, end + 1);
 }
 
-function parseGroundedOutput(text: string): z.infer<typeof groundedOutputSchema> {
+function parseGroundedOutput(text: string): typeof GroundedOutput.Type {
     const jsonText = extractJsonCandidate(text);
     if (jsonText === null) {
         return UNPARSEABLE_GROUNDED_OUTPUT;
@@ -128,8 +129,7 @@ function parseGroundedOutput(text: string): z.infer<typeof groundedOutputSchema>
     } catch {
         return UNPARSEABLE_GROUNDED_OUTPUT;
     }
-    const parsed = groundedOutputSchema.safeParse(raw);
-    return parsed.success ? parsed.data : UNPARSEABLE_GROUNDED_OUTPUT;
+    return Option.getOrElse(decodeGroundedOutput(raw), () => UNPARSEABLE_GROUNDED_OUTPUT);
 }
 
 export interface GroundedAnswer {
@@ -304,19 +304,3 @@ export async function runGroundedLookup(
     }
     await groundedAnswer(ctx, args, overrideDeps);
 }
-
-export const run = internalAction({
-    args: {
-        currency: v.optional(v.string()),
-        income: v.boolean(),
-        key: v.string(),
-        locale: v.optional(v.string()),
-        name: v.string(),
-        regionCode: v.optional(v.string()),
-    },
-    handler: async (ctx, args) => {
-        await runGroundedLookup(ctx, args);
-        return null;
-    },
-    returns: v.null(),
-});

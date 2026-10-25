@@ -1,5 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
+import * as Schema from "effect/Schema";
 
-import type { fetchRates } from "./openexchangerates";
-
-export default GroupSpec.make().addFunction(FunctionSpec.convexInternalAction<typeof fetchRates>()("fetchRates"));
+export default GroupSpec.make().addFunction(
+    FunctionSpec.internalAction({ name: "fetchRates", args: () => ({}), returns: () => Schema.Null })
+);
