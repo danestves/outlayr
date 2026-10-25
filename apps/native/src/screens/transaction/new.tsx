@@ -21,6 +21,7 @@ interface EntryParams {
     accountId?: LinkParam;
     accountUnresolved?: LinkParam;
     amount?: LinkParam;
+    attachment?: LinkParam;
     categoryId?: LinkParam;
     currency?: LinkParam;
     /** Epoch milliseconds. */
@@ -35,6 +36,7 @@ interface EntryParams {
 }
 
 const PLAIN_DECIMAL = /^\d+(?:\.\d+)?$/;
+const SCAN_ATTACHMENT = /^[\da-f-]{36}\.jpg$/i;
 
 function single(param: LinkParam | undefined): string | undefined {
     return Array.isArray(param) ? undefined : param;
@@ -49,6 +51,7 @@ export function entrySeed({
     accountId,
     accountUnresolved,
     amount,
+    attachment,
     categoryId,
     currency,
     date,
@@ -65,11 +68,14 @@ export function entrySeed({
     const seededType = plainNumber(recurringType);
     const seededCoefficient = plainNumber(recurringCoefficient);
     const seededCurrency = single(currency);
+    const seededAttachment = single(attachment);
     const cadence = SELECTABLE_RECURRING_TYPES.find((type) => type === seededType);
     return {
         accountId: single(accountId),
         accountUnresolved: accountUnresolved === "1",
         amount: seededAmount > 0 && Math.round(seededAmount) < AMOUNT_CEILING ? seededAmount : undefined,
+        attachment:
+            seededAttachment !== undefined && SCAN_ATTACHMENT.test(seededAttachment) ? seededAttachment : undefined,
         categoryId: single(categoryId),
         currency: seededCurrency !== undefined && isPickableCurrency(seededCurrency) ? seededCurrency : undefined,
         date: Number.isNaN(seededDate.getTime()) ? undefined : seededDate,

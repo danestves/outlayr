@@ -260,6 +260,13 @@
       "when": 1792900000003,
       "tag": "0036_outside_moves",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "6",
+      "when": 1792900000004,
+      "tag": "0037_transaction_attachments",
+      "breakpoints": true
     }
   ]
 }

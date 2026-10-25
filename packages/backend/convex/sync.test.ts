@@ -251,6 +251,13 @@ describe("push table coverage", () => {
                 table: "outsideMoves",
                 updatedAt: 8,
             },
+            {
+                deletedAt: null,
+                fields: { imageKey: null, name: "invoice.pdf", sortOrder: 0, transactionId: "tx-1" },
+                localId: "att-1",
+                table: "transactionAttachments",
+                updatedAt: 9,
+            },
         ];
 
         await pushAs(t, owner, DEVICE_A, rows);
@@ -262,6 +269,7 @@ describe("push table coverage", () => {
             "outsideMoves",
             "outsidePayments",
             "tags",
+            "transactionAttachments",
             "transactionPhotos",
             "transactionSplits",
             "transactionTags",

@@ -10,6 +10,7 @@ import {
     mainBudget,
     outsideMoves,
     outsidePayments,
+    transactionAttachments,
     transactions,
     transfers,
 } from "@/db/schema";
@@ -100,6 +101,10 @@ export async function eraseLedger(db: Database, scope: EraseScope): Promise<void
             .update(outsideMoves)
             .set({ amount: 0, amountUsd: null, date: ERASED_DATE, deletedAt: now, note: "", updatedAt: now })
             .where(isNull(outsideMoves.deletedAt));
+        await db
+            .update(transactionAttachments)
+            .set({ deletedAt: now, imageKey: null, imageUri: null, name: null, updatedAt: now })
+            .where(isNull(transactionAttachments.deletedAt));
         await db
             .update(installmentPlans)
             .set({ dateCreated: ERASED_DATE, deletedAt: now, updatedAt: now })

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import BetterSqlite3 from "better-sqlite3";
 
-import { accounts, transactions } from "@/db/schema";
+import { accounts, transactionAttachments, transactions } from "@/db/schema";
 import { testSpendDb } from "@/db/test-database";
 
 import type { SpendDb } from "./budget-spent";
@@ -68,6 +68,16 @@ function makeDb(): SpendDb {
 			imageKey text,
 			sortOrder integer NOT NULL DEFAULT 0,
 			dateCreated integer NOT NULL,
+			updatedAt integer NOT NULL,
+			deletedAt integer
+		);
+		CREATE TABLE transactionAttachments (
+			id text PRIMARY KEY NOT NULL,
+			transactionId text NOT NULL,
+			imageKey text,
+			imageUri text,
+			name text,
+			sortOrder integer NOT NULL DEFAULT 0,
 			updatedAt integer NOT NULL,
 			deletedAt integer
 		);
@@ -273,6 +283,21 @@ describe("reconcilePhotos", () => {
 
         expect(files.removed).toStrictEqual([]);
         await expect(storedAccountUri(db, "a1")).resolves.toBe(`${DIRECTORY}/logo.jpg`);
+        expect(result.purged).toBe(0);
+    });
+
+    it("keeps a PDF only an attachment references", async () => {
+        await db.insert(transactionAttachments).values({
+            id: "att-1",
+            imageUri: `${DIRECTORY}/invoice.pdf`,
+            transactionId: "t1",
+            updatedAt: new Date(NOW),
+        });
+        const files = new FakeFiles([["invoice.pdf", SETTLED]]);
+
+        const result = await reconcilePhotos(db, files, NOW);
+
+        expect(files.removed).toStrictEqual([]);
         expect(result.purged).toBe(0);
     });
 

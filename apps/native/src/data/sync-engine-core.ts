@@ -17,6 +17,7 @@ import {
     outbox,
     savingsGoals,
     tags,
+    transactionAttachments,
     transactionPhotos,
     transactionSplits,
     transactions,
@@ -200,6 +201,12 @@ const SPECS = {
         fields: ["name", "color", "sortOrder"],
         id: tags.id,
         table: tags,
+    },
+    transactionAttachments: {
+        dates: [],
+        fields: ["transactionId", "imageKey", "name", "sortOrder"],
+        id: transactionAttachments.id,
+        table: transactionAttachments,
     },
     transactionPhotos: {
         dates: [],

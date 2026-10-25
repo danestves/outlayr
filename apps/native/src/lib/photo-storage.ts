@@ -1,10 +1,12 @@
 import { FilterMode, ImageFormat, MipmapMode, Skia } from "@shopify/react-native-skia";
 import { Directory, File, Paths } from "expo-file-system";
 
+import { MAX_ATTACHMENT_BYTES } from "@/data/attachments-core";
 import { PHOTO_DIRECTORY, photoExtension, photoFileName } from "@/data/photo-store-core";
 import type { PhotoFiles } from "@/data/photo-store-core";
 import { newId } from "@/domain/ids";
 import { decodeImage, drawOnPlate } from "@/lib/logo-plating";
+import { prepareReceiptImage } from "@/lib/receipt-image";
 
 /** Matches Swift `TransactionImageIngestion.maxDimension`: a photo is never drawn past the 132pt identity well. */
 const MAX_DIMENSION = 512;
@@ -140,6 +142,43 @@ export async function persistLogoBytes(bytes: Uint8Array): Promise<string> {
     } finally {
         temp.delete();
     }
+}
+
+export type AttachmentIntake = { imageUri: string; name: string | null } | { failure: "tooLarge" | "unreadable" };
+
+const PDF_SIGNATURE = "%PDF-";
+
+function writeAttachment(bytes: Uint8Array, extension: ".jpg" | ".pdf"): string {
+    const target = new File(photoDirectory(), `${newId()}${extension}`);
+    target.create({ overwrite: true });
+    target.writeSync(bytes);
+    return target.uri;
+}
+
+export function persistAttachmentBytes(bytes: Uint8Array): string {
+    return writeAttachment(bytes, ".jpg");
+}
+
+export async function persistAttachmentPhoto(sourceUri: string): Promise<AttachmentIntake> {
+    const prepared = await prepareReceiptImage(sourceUri);
+    return prepared === null
+        ? { failure: "unreadable" }
+        : { imageUri: writeAttachment(new Uint8Array(prepared.bytes), ".jpg"), name: null };
+}
+
+export function persistAttachmentPdf(sourceUri: string, name: string | null): AttachmentIntake {
+    const source = new File(sourceUri);
+    if (!source.exists) {
+        return { failure: "unreadable" };
+    }
+    if (source.size > MAX_ATTACHMENT_BYTES) {
+        return { failure: "tooLarge" };
+    }
+    const bytes = source.bytesSync();
+    if (String.fromCodePoint(...bytes.subarray(0, PDF_SIGNATURE.length)) !== PDF_SIGNATURE) {
+        return { failure: "unreadable" };
+    }
+    return { imageUri: writeAttachment(bytes, ".pdf"), name };
 }
 
 export function storedPhotosBase64(): Record<string, string> {

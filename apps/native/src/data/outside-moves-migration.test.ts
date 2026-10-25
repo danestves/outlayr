@@ -30,6 +30,7 @@ describe("the migration that adds outside moves", () => {
             "outsidePayments",
             "transfers",
             "outsideMoves",
+            "transactionAttachments",
         ]);
     });
 });

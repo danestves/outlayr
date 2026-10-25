@@ -21,6 +21,7 @@ import {
     savingsGoalFields,
     tagFields,
     transactionFields,
+    transactionAttachmentFields,
     transactionPhotoFields,
     transactionSplitFields,
     transactionTagFields,
@@ -83,6 +84,12 @@ const pushRow = v.union(
         table: v.literal("transactionTags"),
         ...tombstone,
         fields: v.object(transactionTagFields),
+    }),
+    v.object({
+        localId: v.string(),
+        table: v.literal("transactionAttachments"),
+        ...tombstone,
+        fields: v.object(transactionAttachmentFields),
     }),
     v.object({
         localId: v.string(),
@@ -300,6 +307,12 @@ async function upsert(
             return await writeRow(ctx, "transactionTags", existing, {
                 ...envelope,
                 ...fieldsFor<"transactionTags">(row),
+            });
+        }
+        case "transactionAttachments": {
+            return await writeRow(ctx, "transactionAttachments", existing, {
+                ...envelope,
+                ...fieldsFor<"transactionAttachments">(row),
             });
         }
         case "transactionPhotos": {

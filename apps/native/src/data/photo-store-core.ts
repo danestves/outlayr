@@ -1,7 +1,7 @@
 import { eq, isNotNull } from "drizzle-orm";
 import type { AnySQLiteColumn, SQLiteTable } from "drizzle-orm/sqlite-core";
 
-import { accounts, transactions } from "@/db/schema";
+import { accounts, transactionAttachments, transactions } from "@/db/schema";
 
 import type { SpendDb } from "./budget-spent";
 
@@ -27,6 +27,12 @@ export const PHOTO_TABLES: readonly PhotoTable[] = [
         imageKey: accounts.imageKey,
         imageUri: accounts.imageUri,
         table: accounts,
+    },
+    {
+        id: transactionAttachments.id,
+        imageKey: transactionAttachments.imageKey,
+        imageUri: transactionAttachments.imageUri,
+        table: transactionAttachments,
     },
 ];
 

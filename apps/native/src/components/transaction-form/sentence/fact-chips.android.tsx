@@ -3,6 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react-native";
 import { Pressable, View } from "react-native";
 import Animated, { LinearTransition } from "react-native-reanimated";
 
+import { TapMenu } from "@/components/tap-menu";
 import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
 import { useHaptics } from "@/lib/use-haptics";
@@ -90,8 +91,14 @@ function FactChip({ verb }: { verb: SentenceVerb }) {
 
 export const FactChips: typeof FactChipsBase = ({ chips }) => (
     <Animated.View className="mt-7 flex-row flex-wrap gap-2" layout={LinearTransition.duration(240)}>
-        {chips.map((verb) => (
-            <FactChip key={verb.key} verb={verb} />
-        ))}
+        {chips.map((verb) =>
+            verb.menu === undefined ? (
+                <FactChip key={verb.key} verb={verb} />
+            ) : (
+                <TapMenu accessibilityLabel={verb.accessibilityLabel ?? verb.label} items={verb.menu} key={verb.key}>
+                    <FactChip verb={verb} />
+                </TapMenu>
+            )
+        )}
     </Animated.View>
 );

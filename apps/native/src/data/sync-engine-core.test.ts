@@ -156,6 +156,7 @@ describe("the replicated column set", () => {
         "transactions.imageUri",
         "transactions.reminderLeadDays",
         "transactionPhotos.imageUri",
+        "transactionAttachments.imageUri",
         "accounts.imageUri",
     ]);
 

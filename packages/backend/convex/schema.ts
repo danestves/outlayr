@@ -16,6 +16,7 @@ import {
     savingsGoalFields,
     tagFields,
     transactionColumns,
+    transactionAttachmentFields,
     transactionPhotoFields,
     transactionSplitFields,
     transactionTagFields,
@@ -198,6 +199,11 @@ export default defineSchema({
     tags: defineTable({ ...replicated, ...tagFields })
         .index("by_user_and_seq", ["userId", "seq"])
         .index("by_user_and_localId", ["userId", "localId"]),
+
+    transactionAttachments: defineTable({ ...replicated, ...transactionAttachmentFields })
+        .index("by_user_and_seq", ["userId", "seq"])
+        .index("by_user_and_localId", ["userId", "localId"])
+        .index("by_user_and_imageKey", ["userId", "imageKey"]),
 
     transactionPhotos: defineTable({ ...replicated, ...transactionPhotoFields })
         .index("by_user_and_seq", ["userId", "seq"])

@@ -1,3 +1,4 @@
+import Attachment01SolidIcon from "@hugeicons-pro/core-solid-rounded/Attachment01Icon";
 import Calendar03SolidIcon from "@hugeicons-pro/core-solid-rounded/Calendar03Icon";
 import DivideSignCircleSolidIcon from "@hugeicons-pro/core-solid-rounded/DivideSignCircleIcon";
 import NoteEditSolidIcon from "@hugeicons-pro/core-solid-rounded/NoteEditIcon";
@@ -5,6 +6,7 @@ import PercentCircleSolidIcon from "@hugeicons-pro/core-solid-rounded/PercentCir
 import RepeatSolidIcon from "@hugeicons-pro/core-solid-rounded/RepeatIcon";
 import SparklesSolidIcon from "@hugeicons-pro/core-solid-rounded/SparklesIcon";
 import Tag01SolidIcon from "@hugeicons-pro/core-solid-rounded/Tag01Icon";
+import Attachment01Icon from "@hugeicons-pro/core-stroke-rounded/Attachment01Icon";
 import Calendar03Icon from "@hugeicons-pro/core-stroke-rounded/Calendar03Icon";
 import DivideSignCircleIcon from "@hugeicons-pro/core-stroke-rounded/DivideSignCircleIcon";
 import NoteEditIcon from "@hugeicons-pro/core-stroke-rounded/NoteEditIcon";
@@ -15,9 +17,12 @@ import SparklesIcon from "@hugeicons-pro/core-stroke-rounded/SparklesIcon";
 import Tag01Icon from "@hugeicons-pro/core-stroke-rounded/Tag01Icon";
 import type { IconSvgElement } from "@hugeicons/react-native";
 
+import type { ActionMenuItem } from "@/components/action-menu";
+
 // No platform twin: `fact-chips.tsx` and its Android sibling share it.
 export const FACT_GLYPHS = {
     add: { set: PlusSignIcon, unset: PlusSignIcon },
+    attach: { set: Attachment01SolidIcon, unset: Attachment01Icon },
     fee: { set: PercentCircleSolidIcon, unset: PercentCircleIcon },
     icon: { set: SparklesSolidIcon, unset: SparklesIcon },
     installments: { set: Calendar03SolidIcon, unset: Calendar03Icon },
@@ -36,6 +41,7 @@ export interface SentenceVerb {
     key: SentenceFactKey;
     /** Once the fact is set this is its value ("monthly", "3 ways"), not the noun that offered it. */
     label: string;
+    menu?: readonly ActionMenuItem[];
     onPress: () => void;
     onRemove?: () => void;
     removeAccessibilityLabel?: string;

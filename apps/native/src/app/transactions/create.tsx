@@ -8,6 +8,7 @@ export default function NewTransactionScreen() {
     const {
         income,
         amount,
+        attachment,
         note,
         from,
         categoryId,
@@ -25,6 +26,7 @@ export default function NewTransactionScreen() {
         /** "1" when the voice draft named an account the ledger could not place. */
         accountUnresolved?: string;
         amount?: string;
+        attachment?: string;
         categoryId?: string;
         currency?: string;
         /** Epoch milliseconds. */
@@ -44,6 +46,7 @@ export default function NewTransactionScreen() {
             accountId={accountId}
             accountUnresolved={accountUnresolved}
             amount={amount}
+            attachment={attachment}
             categoryId={categoryId}
             currency={currency}
             date={date}

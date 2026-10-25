@@ -29,6 +29,8 @@ import { useBankAccounts, usePeople } from "@/data/accounts";
 import { getAccountById, getLastUsedAccount, rememberLastUsedAccount } from "@/data/accounts-core";
 import type { Account } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
+import { attachmentsRepo } from "@/data/attachments-core";
+import type { AttachmentDraft } from "@/data/attachments-core";
 import {
     cardFeeFor,
     feeRatesOn,
@@ -136,6 +138,7 @@ import { TagPickerSheet } from "../tag-picker-sheet";
 import { Text } from "../text";
 import { ThinkingOrb } from "../thinking-orb/thinking-orb";
 import { TransactionFormAmountPad } from "./amount-pad";
+import { AttachmentStrip } from "./attachment-strip";
 import { TransactionFormCta } from "./cta";
 import { FormScroll, FormScrollItem, FormScrollStageTarget } from "./form-scroll";
 import { FeeTotal } from "./sentence/fee-total";
@@ -159,6 +162,7 @@ import { StepRate, StepRateField } from "./stage/step-rate";
 import type { StepRateOption } from "./stage/step-rate";
 import { StepRepeat } from "./stage/step-repeat";
 import { StepWhen } from "./stage/step-when";
+import { useAttachmentDraft } from "./use-attachment-draft";
 import { useInstallmentOrder } from "./use-installment-order";
 import { useSplitDraft } from "./use-split-draft";
 
@@ -277,6 +281,7 @@ type FieldSource = "initial" | "suggested" | "user";
 // whose draft the user already read, with categories and accounts this ledger resolved by name.
 export interface TransactionSeed {
     accountId?: string;
+    attachment?: string;
     /** Named but not placed: the form opens with no account rather than the last used one. */
     accountUnresolved?: boolean;
     amount?: number;
@@ -293,6 +298,7 @@ export interface TransactionSeed {
 
 export interface TransactionFormDraft {
     accountDeclined: boolean;
+    attachments: AttachmentDraft[];
     categorySource: FieldSource;
     identity: ReturnType<typeof useIdentityDraft>["draft"];
     identitySource: FieldSource;
@@ -653,6 +659,7 @@ export function TransactionForm({
                     isRealSplit(splitAllocations) ? splitAllocations : [],
                     minorUnitsFor(entryCurrency)
                 );
+                await attachmentsRepo.writeFor(db, id, attachments);
             };
             let savedId: string;
             try {
@@ -1773,6 +1780,19 @@ export function TransactionForm({
 
     const formDirty = useSelector(form.store, (state) => state.isDirty);
     const [edited, setEdited] = useState(restore !== undefined);
+    const attachmentDraft = useAttachmentDraft({
+        db,
+        initial,
+        mode,
+        onEdit: () => setEdited(true),
+        onFailure: (message) => {
+            haptics("error");
+            setSaveFailure(message);
+        },
+        restored: restore?.attachments,
+        seeded: seed?.attachment,
+    });
+    const { attachments } = attachmentDraft;
     const dirty = formDirty || edited || identitySource === "user";
     useEffect(() => {
         onDirtyChange?.(dirty);
@@ -1788,6 +1808,7 @@ export function TransactionForm({
         }
         draftRef.current = () => ({
             accountDeclined,
+            attachments,
             categorySource,
             identity,
             identitySource,
@@ -2522,6 +2543,18 @@ export function TransactionForm({
                     setNoteAsked(true);
                 },
             },
+            {
+                accessibilityLabel:
+                    attachments.length === 0 ? addLabel(t("transaction.sentence.add.attach")) : undefined,
+                active: attachments.length > 0,
+                key: "attach",
+                label:
+                    attachments.length === 0
+                        ? t("transaction.sentence.add.attach")
+                        : t("transaction.sentence.set.attach", { count: attachments.length }),
+                menu: attachmentDraft.menu,
+                onPress: Keyboard.dismiss,
+            },
             ...(feeable && !feeShown()
                 ? [
                       {
@@ -2641,6 +2674,19 @@ export function TransactionForm({
                             );
                         }}
                     </SubscribeFields>
+
+                    {attachments.length > 0 && !resting ? (
+                        <FormScrollItem>
+                            <View style={{ width: contentWidth }}>
+                                <AttachmentStrip
+                                    attachments={attachments}
+                                    menu={attachmentDraft.menu}
+                                    onPreview={attachmentDraft.preview}
+                                    onRemove={attachmentDraft.remove}
+                                />
+                            </View>
+                        </FormScrollItem>
+                    ) : null}
 
                     {noteOpen && !resting ? (
                         <FormScrollItem reveal={noteAsked}>

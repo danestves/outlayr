@@ -24,9 +24,11 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { useBankAccounts } from "@/data/accounts";
 import { getAccountById, rememberLastUsedAccount } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
+import { attachmentsRepo } from "@/data/attachments-core";
 import { suggestedCardFee } from "@/data/card-fees-core";
 import { useCategoriesByNamespace } from "@/data/categories";
 import { getCategoryById } from "@/data/categories-core";
+import { photoFileName } from "@/data/photo-store-core";
 import { useAiConsent } from "@/data/settings";
 import { transactionsRepo } from "@/data/transactions-core";
 import { useValuationIn } from "@/data/use-valuation";
@@ -53,6 +55,7 @@ import type { TranslateFn } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
 import { useAuthSession } from "@/lib/auth-session";
 import { freshEntries } from "@/lib/fresh-entries";
+import { persistAttachmentBytes } from "@/lib/photo-storage";
 import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
 import { useColors } from "@/theme/use-colors";
@@ -577,6 +580,15 @@ function receiptEntry(
     };
 }
 
+function keptScan(image: ArrayBuffer): string | null {
+    try {
+        return persistAttachmentBytes(new Uint8Array(image));
+    } catch (error) {
+        console.error("Failed to keep the scanned receipt", error);
+        return null;
+    }
+}
+
 function ScanFlowScreen() {
     const router = useRouter();
     const entitled = useProEntitled();
@@ -689,13 +701,14 @@ function ScanFlowScreen() {
     }, [router]);
 
     const openForm = useCallback(
-        (draft: ResolvedReceipt) => {
+        (draft: ResolvedReceipt, attachment: string | null) => {
             // An account sync removed is a question for the form, not a seed to swap for the last used.
             const accountLive = draft.accountId === null || live.accountIds.has(draft.accountId);
             const params = {
                 accountId: accountLive ? (draft.accountId ?? undefined) : undefined,
                 accountUnresolved: draft.accountUnresolved || !accountLive ? "1" : undefined,
                 amount: String(draft.amount),
+                attachment: attachment === null ? undefined : photoFileName(attachment),
                 categoryId: draft.categoryId ?? undefined,
                 currency: draft.currency,
                 date: String(draft.date.getTime()),
@@ -709,17 +722,31 @@ function ScanFlowScreen() {
     );
 
     const save = useCallback(
-        (draft: ResolvedReceipt, categoryId: string) => {
+        (draft: ResolvedReceipt, categoryId: string, image: ArrayBuffer) => {
             setSaving(true);
             const write = async () => {
+                const attachment = keptScan(image);
                 try {
-                    const id = await transactionsRepo.create(db, receiptEntry(db, draft, categoryId, detailsOf(draft)));
+                    const id = await transactionsRepo.create(
+                        db,
+                        receiptEntry(db, draft, categoryId, detailsOf(draft)),
+                        {
+                            inSameTransaction: (created) =>
+                                attachmentsRepo.writeFor(
+                                    db,
+                                    created,
+                                    attachment === null
+                                        ? []
+                                        : [{ id: null, imageKey: null, imageUri: attachment, name: null }]
+                                ),
+                        }
+                    );
                     freshEntries.mark(id);
                 } catch {
                     // The row did not land; the form has the failure strip this screen lacks.
                     setSaving(false);
                     if (isMounted()) {
-                        openForm(draft);
+                        openForm(draft, attachment);
                     }
                     return;
                 }
@@ -765,10 +792,19 @@ function ScanFlowScreen() {
                         disabled={saving}
                         primary={
                             savableCategoryId === null
-                                ? { label: t("receipt.action.finish"), onPress: () => openForm(receipt) }
-                                : { label: t("receipt.action.save"), onPress: () => save(receipt, savableCategoryId) }
+                                ? {
+                                      label: t("receipt.action.finish"),
+                                      onPress: () => openForm(receipt, keptScan(phase.image)),
+                                  }
+                                : {
+                                      label: t("receipt.action.save"),
+                                      onPress: () => save(receipt, savableCategoryId, phase.image),
+                                  }
                         }
-                        secondary={{ label: t("receipt.action.edit"), onPress: () => openForm(receipt) }}
+                        secondary={{
+                            label: t("receipt.action.edit"),
+                            onPress: () => openForm(receipt, keptScan(phase.image)),
+                        }}
                         tertiary={{ label: t("receipt.action.another"), onPress: reset }}
                     />
                 }

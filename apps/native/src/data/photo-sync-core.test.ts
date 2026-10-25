@@ -80,6 +80,16 @@ function makeDb(): SpendDb {
 			updatedAt integer NOT NULL,
 			deletedAt integer
 		);
+		CREATE TABLE transactionAttachments (
+			id text PRIMARY KEY NOT NULL,
+			transactionId text NOT NULL,
+			imageKey text,
+			imageUri text,
+			name text,
+			sortOrder integer NOT NULL DEFAULT 0,
+			updatedAt integer NOT NULL,
+			deletedAt integer
+		);
 	`);
     return testSpendDb(sqlite);
 }

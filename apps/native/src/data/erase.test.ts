@@ -89,6 +89,10 @@ const INSTALLMENTS_DDL = `
 		id text PRIMARY KEY NOT NULL, accountId text NOT NULL, date integer NOT NULL, amount real NOT NULL,
 		amountUsd real, note text DEFAULT '' NOT NULL, updatedAt integer NOT NULL, deletedAt integer, restoredAt integer
 	);
+	CREATE TABLE transactionAttachments (
+		id text PRIMARY KEY NOT NULL, transactionId text NOT NULL, imageKey text, imageUri text, name text,
+		sortOrder integer DEFAULT 0 NOT NULL, updatedAt integer NOT NULL, deletedAt integer
+	);
 `;
 
 function makeDb(ddl = `${TRANSACTIONS_DDL}${TRANSFERS_DDL}${INSTALLMENTS_DDL}`): Database {

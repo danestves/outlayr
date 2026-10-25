@@ -10,6 +10,7 @@ import {
     mainBudget,
     outsideMoves,
     outsidePayments,
+    transactionAttachments,
     transactions,
 } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
@@ -199,6 +200,22 @@ describe("eraseLedger", () => {
         expect(outside).toMatchObject({ amount: 0, amountUsd: null, deletedAt: expect.any(Date) });
         const [move] = await db.select().from(outsideMoves);
         expect(move).toMatchObject({ amount: 0, amountUsd: null, deletedAt: expect.any(Date), note: "" });
+    });
+
+    it("strips an attachment down to a tombstone that names no file", async () => {
+        await db.insert(transactionAttachments).values({
+            id: "att-1",
+            imageKey: "transaction-photos/user-1/att-1.pdf",
+            imageUri: "file:///photos/att-1.pdf",
+            name: "invoice-0412.pdf",
+            transactionId: "tx-1",
+            updatedAt: AUTHORED,
+        });
+
+        await eraseLedger(db, "transactions");
+
+        const [row] = await db.select().from(transactionAttachments);
+        expect(row).toMatchObject({ deletedAt: expect.any(Date), imageKey: null, imageUri: null, name: null });
     });
 
     it("keeps budgets live under the transactions scope", async () => {

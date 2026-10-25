@@ -357,6 +357,27 @@ describe("releaseUnreferenced", () => {
         ).resolves.toStrictEqual({ released: false });
     });
 
+    it("keeps an object only an attachment row names", async () => {
+        const t = harness();
+        const owner = await seedProUser(t);
+        const key = photoKeyFor(owner.userId, "invoice.pdf");
+        await push(t, owner, [
+            {
+                deletedAt: null,
+                fields: { imageKey: key, name: "invoice.pdf", sortOrder: 0, transactionId: "t1" },
+                localId: "att-1",
+                table: "transactionAttachments",
+                updatedAt: 100,
+            },
+        ]);
+
+        await expect(
+            authenticatedAs(t, owner).mutation(api.photos.releaseUnreferenced, {
+                key,
+            })
+        ).resolves.toStrictEqual({ released: false });
+    });
+
     it("does not see another account's row as a reference", async () => {
         const t = harness();
         const owner = await seedProUser(t);

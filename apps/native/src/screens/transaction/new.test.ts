@@ -35,6 +35,7 @@ describe("entrySeed", () => {
         ["amount", "0"],
         ["amount", "1e21"],
         ["amount", "0x10"],
+        ["attachment", "../SQLite/outlayr.db"],
         ["currency", "DOGE"],
         ["date", "99999999999999999999"],
         ["recurringType", "9"],

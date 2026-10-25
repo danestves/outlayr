@@ -236,11 +236,11 @@ export const readUrls = mutation({
 
 // Must match apps/native/src/data/photo-store-core.ts: a table left out reads as unreferenced and its bytes are
 // freed while a row still points at them.
-const IMAGE_KEY_TABLES = ["transactions", "accounts", "transactionPhotos"] as const;
+const IMAGE_KEY_TABLES = ["transactions", "accounts", "transactionPhotos", "transactionAttachments"] as const;
 
 // Tombstoned rows count: undo restores from them and a device that has not pulled yet still renders them.
 async function isReferenced(ctx: MutationCtx, userId: string, key: string): Promise<boolean> {
-    /* oxlint-disable no-await-in-loop -- the first table that names the key answers the question; running all three would read rows nobody needs */
+    /* oxlint-disable no-await-in-loop -- the first table that names the key answers the question; running them all would read rows nobody needs */
     for (const table of IMAGE_KEY_TABLES) {
         const row = await ctx.db
             .query(table)

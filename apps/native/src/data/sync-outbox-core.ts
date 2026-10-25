@@ -14,6 +14,7 @@ import {
     outbox,
     savingsGoals,
     tags,
+    transactionAttachments,
     transactionPhotos,
     transactionSplits,
     transactions,
@@ -41,6 +42,7 @@ export const SYNCED_TABLES = [
     "installments",
     "outsidePayments",
     "outsideMoves",
+    "transactionAttachments",
     "appMeta",
 ] as const;
 
@@ -177,6 +179,10 @@ export async function enqueueAllForSync(db: Database): Promise<void> {
     collect("outsidePayments", await db.select({ localId: outsidePayments.id }).from(outsidePayments));
     collect("outsideMoves", await db.select({ localId: outsideMoves.id }).from(outsideMoves));
     collect(
+        "transactionAttachments",
+        await db.select({ localId: transactionAttachments.id }).from(transactionAttachments)
+    );
+    collect(
         "appMeta",
         await db
             .select({ localId: appMeta.key })
@@ -211,6 +217,10 @@ export async function resetSyncForAccountSwitch(db: Database): Promise<void> {
         await db.update(transactions).set({ imageKey: null }).where(isNotNull(transactions.imageUri));
         await db.update(accounts).set({ imageKey: null }).where(isNotNull(accounts.imageUri));
         await db.update(transactionPhotos).set({ imageKey: null }).where(isNotNull(transactionPhotos.imageUri));
+        await db
+            .update(transactionAttachments)
+            .set({ imageKey: null })
+            .where(isNotNull(transactionAttachments.imageUri));
         await db.delete(outbox);
         await db
             .delete(appMeta)

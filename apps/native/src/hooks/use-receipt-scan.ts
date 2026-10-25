@@ -45,7 +45,7 @@ type ScanPhase<Context, Draft> =
     | { kind: "idle" }
     | { kind: "picking"; source: ScanSource }
     | { kind: "scanning"; photo: ScanPhoto }
-    | { context: Context; draft: Draft; kind: "review"; photo: ScanPhoto }
+    | { context: Context; draft: Draft; image: ArrayBuffer; kind: "review"; photo: ScanPhoto }
     | { kind: "failed"; photo: ScanPhoto | null; reason: ScanFailure };
 
 type ScanSend<Draft> = (image: ArrayBuffer, today: string) => Promise<{ draft: Draft | null; status: string }>;
@@ -167,7 +167,7 @@ export function useImageScan<Context, Draft>({
                 return;
             }
             if (settled.status === "ok" && settled.draft !== null) {
-                setPhase({ context: sentContext, draft: settled.draft, kind: "review", photo });
+                setPhase({ context: sentContext, draft: settled.draft, image: prepared.bytes, kind: "review", photo });
                 return;
             }
             setPhase({ kind: "failed", photo, reason: failureFor(settled.status) });

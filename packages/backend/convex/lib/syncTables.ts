@@ -162,6 +162,13 @@ export const transactionPhotoFields = {
     transactionId: v.string(),
 };
 
+export const transactionAttachmentFields = {
+    imageKey: v.union(v.string(), v.null()),
+    name: v.union(v.string(), v.null()),
+    sortOrder: v.number(),
+    transactionId: v.string(),
+};
+
 export const transactionSplitFields = {
     amount: v.number(),
     categoryId: v.union(v.string(), v.null()),
@@ -216,6 +223,7 @@ const TOMBSTONED_TABLES = [
     "installments",
     "outsidePayments",
     "outsideMoves",
+    "transactionAttachments",
 ] as const;
 
 // Pull order. `appMeta` goes last: its identity is a key, so nothing keys off its position.
@@ -235,6 +243,7 @@ export const FIELDS_BY_TABLE = {
     outsidePayments: outsidePaymentFields,
     savingsGoals: savingsGoalFields,
     tags: tagFields,
+    transactionAttachments: transactionAttachmentFields,
     transactionPhotos: transactionPhotoFields,
     transactionSplits: transactionSplitFields,
     transactionTags: transactionTagFields,

@@ -27,6 +27,54 @@ const transaction = {
             en: "Type an amount first",
             es: "Primero escribe un monto",
         }),
+        "transaction.attachments.add": t({
+            en: "Add a file",
+            es: "Agregar un archivo",
+        }),
+        "transaction.attachments.add.camera": t({
+            en: "Take photo",
+            es: "Tomar foto",
+        }),
+        "transaction.attachments.add.files": t({
+            en: "Choose file",
+            es: "Elegir archivo",
+        }),
+        "transaction.attachments.add.library": t({
+            en: "Choose photo",
+            es: "Elegir foto",
+        }),
+        "transaction.attachments.failed.denied": t({
+            en: "Outlayr needs the camera to take a photo.",
+            es: "Outlayr necesita la cámara para tomar una foto.",
+        }),
+        "transaction.attachments.failed.full": t({
+            en: "An entry holds up to 10 files.",
+            es: "Un registro admite hasta 10 archivos.",
+        }),
+        "transaction.attachments.failed.open": t({
+            en: "Couldn't open that file.",
+            es: "No se pudo abrir ese archivo.",
+        }),
+        "transaction.attachments.failed.tooLarge": t({
+            en: "Files over 10 MB can't be attached.",
+            es: "No se pueden adjuntar archivos de más de 10 MB.",
+        }),
+        "transaction.attachments.failed.unreadable": t({
+            en: "Couldn't read that file. Attach a photo or a PDF.",
+            es: "No se pudo leer ese archivo. Adjunta una foto o un PDF.",
+        }),
+        "transaction.attachments.pending": t({
+            en: "Downloading",
+            es: "Descargando",
+        }),
+        "transaction.attachments.photo": t({
+            en: "Photo",
+            es: "Foto",
+        }),
+        "transaction.attachments.remove": t({
+            en: "Remove",
+            es: "Quitar",
+        }),
         "transaction.cadence.daily": t({
             en: "Daily",
             es: "Diario",
@@ -618,6 +666,10 @@ const transaction = {
             en: "Stop repeating",
             es: "Dejar de repetir",
         }),
+        "transaction.sentence.add.attach": t({
+            en: "attach",
+            es: "adjuntar",
+        }),
         "transaction.sentence.add.fee": t({
             en: "fee",
             es: "comisión",
@@ -772,6 +824,14 @@ const transaction = {
         "transaction.sentence.rateSource.officialBcv": t({
             en: "USD (BCV)",
             es: "USD (BCV)",
+        }),
+        "transaction.sentence.set.attach_one": t({
+            en: "1 file",
+            es: "1 archivo",
+        }),
+        "transaction.sentence.set.attach_other": t({
+            en: "{count} files",
+            es: "{count} archivos",
         }),
         "transaction.sentence.set.icon": t({
             en: "Change icon",

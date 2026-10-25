@@ -29,6 +29,7 @@ function emptyDocument(): ArchiveDocument {
             outsidePayments: [],
             savingsGoals: [],
             tags: [],
+            transactionAttachments: [],
             transactionPhotos: [],
             transactionSplits: [],
             transactionTags: [],

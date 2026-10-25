@@ -275,6 +275,23 @@ export const transactionPhotos = sqliteTable(
     (table) => [index("transactionPhotos_transactionId_idx").on(table.transactionId)]
 );
 
+export const transactionAttachments = sqliteTable(
+    "transactionAttachments",
+    {
+        deletedAt: integer("deletedAt", { mode: "timestamp_ms" }),
+        id: text("id").primaryKey(),
+        imageKey: text("imageKey"),
+        imageUri: text("imageUri"),
+        name: text("name"),
+        sortOrder: integer("sortOrder").notNull().default(0),
+        transactionId: text("transactionId")
+            .notNull()
+            .references(() => transactions.id),
+        updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).notNull(),
+    },
+    (table) => [index("transactionAttachments_transactionId_idx").on(table.transactionId)]
+);
+
 /** Progress is the account's balance, so no parallel record of the money can drift (`domain/savings-goal.ts`). */
 export const savingsGoals = sqliteTable(
     "savingsGoals",
