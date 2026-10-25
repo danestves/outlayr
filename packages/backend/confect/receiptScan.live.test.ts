@@ -6,6 +6,7 @@
 import { readFile } from "node:fs/promises";
 
 import { createAnthropic } from "@ai-sdk/anthropic";
+import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vite-plus/test";
 
 import { CLAUDE_FAST_MODEL_ID } from "./lib/models";
@@ -22,20 +23,22 @@ async function imageBytes(path: string): Promise<ArrayBuffer> {
 describe.skipIf(!live)("receipt scan, live", () => {
     it("a euro supermarket ticket becomes a draft in EUR with its lines", async () => {
         const anthropic = createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-        const result = await readReceipt(
-            anthropic(process.env.CLAUDE_FAST_MODEL_ID || CLAUDE_FAST_MODEL_ID),
-            await imageBytes(RECEIPT_PATH),
-            {
-                accounts: ["Visa Sabadell", "Cash"],
-                categoryTree: [
-                    { children: ["Coffee"], name: "Food" },
-                    { children: [], name: "Groceries" },
-                ],
-                currency: "USD",
-                language: "es-ES",
-                regionCode: "ES",
-                today: "2026-09-05",
-            }
+        const result = await Effect.runPromise(
+            readReceipt(
+                anthropic(process.env.CLAUDE_FAST_MODEL_ID || CLAUDE_FAST_MODEL_ID),
+                await imageBytes(RECEIPT_PATH),
+                {
+                    accounts: ["Visa Sabadell", "Cash"],
+                    categoryTree: [
+                        { children: ["Coffee"], name: "Food" },
+                        { children: [], name: "Groceries" },
+                    ],
+                    currency: "USD",
+                    language: "es-ES",
+                    regionCode: "ES",
+                    today: "2026-09-05",
+                }
+            )
         );
 
         console.info(JSON.stringify(result, null, 2));

@@ -5,6 +5,7 @@ import workpoolTest from "@convex-dev/workpool/test";
 import { MockLanguageModelV3 } from "ai/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
+import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vite-plus/test";
 
 import { api, internal } from "../convex/_generated/api";
@@ -127,7 +128,9 @@ describe(resolveJob, () => {
             },
         });
 
-        const answer = await t.action((ctx) => resolveJob(ctx, queuedRow({ grounded: true }), { fast: silent }));
+        const answer = await t.action((ctx) =>
+            Effect.runPromise(resolveJob(ctx, queuedRow({ grounded: true }), { fast: silent }))
+        );
 
         expect(answer).toMatchObject({
             categoryName: "Travel",
@@ -156,7 +159,12 @@ describe(resolveJob, () => {
         });
         const resolve = () =>
             t.action((ctx) =>
-                resolveJob(ctx, queuedRow({ grounded: true }), { fast, grounded: { grounding, groundingTools: {} } })
+                Effect.runPromise(
+                    resolveJob(ctx, queuedRow({ grounded: true }), {
+                        fast,
+                        grounded: { grounding, groundingTools: {} },
+                    })
+                )
             );
 
         await resolve();
@@ -177,7 +185,9 @@ describe(resolveJob, () => {
             tags: ["luggage"],
         });
 
-        const answer = await t.action((ctx) => resolveJob(ctx, queuedRow({ grounded: false }), { fast }));
+        const answer = await t.action((ctx) =>
+            Effect.runPromise(resolveJob(ctx, queuedRow({ grounded: false }), { fast }))
+        );
 
         expect(answer).toMatchObject({ categoryName: "Travel", domain: null, merchantName: "Care4Bag" });
     });
@@ -195,7 +205,9 @@ describe("shared answers", () => {
             tags: ["lodging"],
         });
 
-        await t.action((ctx) => resolveJob(ctx, queuedRow({ grounded: false, name: "AIRBNB * HMASFW2JP2" }), { fast }));
+        await t.action((ctx) =>
+            Effect.runPromise(resolveJob(ctx, queuedRow({ grounded: false, name: "AIRBNB * HMASFW2JP2" }), { fast }))
+        );
 
         const later = await t.query(internal.merchantKnowledge.lookup, {
             keys: knowledgeKeys("AIRBNB * ZX81KQ7", "EUR"),
@@ -216,7 +228,7 @@ describe("shared answers", () => {
         });
 
         await t.action((ctx) =>
-            resolveJob(ctx, queuedRow({ categoryTree: [{ children: [], name: "Trips" }] }), { fast })
+            Effect.runPromise(resolveJob(ctx, queuedRow({ categoryTree: [{ children: [], name: "Trips" }] }), { fast }))
         );
 
         await expect(t.run((ctx) => ctx.db.query("merchantKnowledge").collect())).resolves.toStrictEqual([]);

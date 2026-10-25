@@ -1,5 +1,5 @@
 export interface CategoryBranch {
-    children: string[];
+    children: readonly string[];
     name: string;
 }
 

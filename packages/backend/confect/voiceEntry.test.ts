@@ -6,6 +6,7 @@ import rateLimiterTest from "@convex-dev/rate-limiter/test";
 import { MockTranscriptionModelV4 } from "ai/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
+import * as Effect from "effect/Effect";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { api, components } from "../convex/_generated/api";
@@ -220,12 +221,16 @@ describe("normalizeDraft", () => {
 
 describe("transcribeClip", () => {
     it("hands back the trimmed transcript, and empty for silence", async () => {
-        await expect(transcribeClip(mockTranscriber("  hello  "), CLIP, "en-US")).resolves.toStrictEqual({
+        await expect(
+            Effect.runPromise(transcribeClip(mockTranscriber("  hello  "), CLIP, "en-US"))
+        ).resolves.toStrictEqual({
             text: "hello",
         });
-        await expect(transcribeClip(mockTranscriber("   "), CLIP, undefined)).resolves.toStrictEqual({
-            error: "empty",
-        });
+        await expect(Effect.runPromise(transcribeClip(mockTranscriber("   "), CLIP, undefined))).resolves.toStrictEqual(
+            {
+                error: "empty",
+            }
+        );
     });
 
     it("passes the language to the provider as a bare language code", async () => {
@@ -243,7 +248,7 @@ describe("transcribeClip", () => {
                 };
             },
         });
-        await transcribeClip(model, CLIP, "es-VE");
+        await Effect.runPromise(transcribeClip(model, CLIP, "es-VE"));
         expect(seen).toStrictEqual([
             {
                 elevenlabs: {

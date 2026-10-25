@@ -1,33 +1,14 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
-import { generateText, NoObjectGeneratedError, Output, TypeValidationError } from "ai";
+import { generateText, Output } from "ai";
 import type { LanguageModel } from "ai";
-import { v } from "convex/values";
-import type { Infer } from "convex/values";
-import { z } from "zod";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
-import { action } from "../convex/_generated/server";
-import { traced } from "./lib/aiTracing";
-import {
-    CURRENCY_PATTERN,
-    DATE_PATTERN,
-    LANGUAGE_PATTERN,
-    namesWithinBudget,
-    pickKnown,
-    REGION_PATTERN,
-    trimTo,
-} from "./lib/ledgerPrompt";
+import type { InstallmentPlanDraft, InstallmentScanResult } from "./installmentScan.spec";
+import { pickKnown, trimTo } from "./lib/ledgerPrompt";
 import type { LedgerContext } from "./lib/ledgerPrompt";
-import { AI_CONSENT_VERSION, CLAUDE_MODEL_ID } from "./lib/models";
-import {
-    admitScan,
-    KNOWN_CURRENCIES,
-    looksLikeJpeg,
-    MAX_AMOUNT,
-    MAX_IMAGE_BYTES,
-    REQUEST_TIMEOUT_MS,
-    scanStatus,
-} from "./receiptScan";
-import type { ScanStatus } from "./receiptScan";
+import { modelCallError, modelSchema } from "./lib/modelCall";
+import { KNOWN_CURRENCIES, MAX_AMOUNT, REQUEST_TIMEOUT_MS } from "./receiptScan";
+import type { ScanStatus } from "./receiptScan.spec";
 
 export const MAX_INSTALLMENTS = 48;
 const MAX_PROVIDER_LENGTH = 40;
@@ -35,64 +16,34 @@ const MAX_YEARS_AWAY = 5;
 const ANCHOR_AHEAD_DAYS = 45;
 const DAY_MS = 86_400_000;
 
-export const installmentScanArgs = {
-    accounts: v.array(v.string()),
-    aiConsent: v.optional(v.number()),
-    currency: v.string(),
-    image: v.bytes(),
-    language: v.optional(v.string()),
-    regionCode: v.optional(v.string()),
-    today: v.string(),
-};
-
-const planRow = v.object({
-    amount: v.number(),
-    dueDate: v.string(),
-    fee: v.number(),
-    paid: v.boolean(),
-    sequence: v.number(),
-});
-
-const planDraft = v.object({
-    accountName: v.union(v.string(), v.null()),
-    currency: v.union(v.string(), v.null()),
-    provider: v.union(v.string(), v.null()),
-    rows: v.array(planRow),
-});
-
-const scanResult = v.object({
-    plan: v.union(planDraft, v.null()),
-    status: scanStatus,
-});
-
-export type InstallmentPlanDraft = Infer<typeof planDraft>;
-export type InstallmentScanResult = Infer<typeof scanResult>;
 export type PlanContext = Omit<LedgerContext, "categoryTree">;
 
-function failure(status: Exclude<ScanStatus, "ok">): InstallmentScanResult {
+export function failure(status: Exclude<typeof ScanStatus.Type, "ok">): typeof InstallmentScanResult.Type {
     return { plan: null, status };
 }
 
-export const modelOutputSchema = z.object({
-    accountName: z.string().nullable(),
-    currency: z.string().nullable(),
-    found: z.boolean(),
-    provider: z.string().nullable(),
-    rows: z.array(
-        z.object({
-            amount: z.number(),
-            day: z.number(),
-            fee: z.number(),
-            month: z.number(),
-            paid: z.boolean(),
-            sequence: z.number(),
-            year: z.number().nullable(),
+export const ModelOutput = Schema.Struct({
+    accountName: Schema.NullOr(Schema.String),
+    currency: Schema.NullOr(Schema.String),
+    found: Schema.Boolean,
+    provider: Schema.NullOr(Schema.String),
+    rows: Schema.Array(
+        Schema.Struct({
+            amount: Schema.Finite,
+            day: Schema.Finite,
+            fee: Schema.Finite,
+            month: Schema.Finite,
+            paid: Schema.Boolean,
+            sequence: Schema.Finite,
+            year: Schema.NullOr(Schema.Finite),
         })
     ),
 });
 
-export type ModelOutput = z.infer<typeof modelOutputSchema>;
+export type ModelOutput = typeof ModelOutput.Type;
 type ModelRow = ModelOutput["rows"][number];
+
+const modelOutputSchema = modelSchema(ModelOutput);
 
 export function buildPrompt(context: PlanContext): string {
     return [
@@ -147,7 +98,7 @@ function validAmount(amount: number): boolean {
     return Number.isFinite(amount) && amount > 0 && amount <= MAX_AMOUNT;
 }
 
-export function normalizePlan(output: ModelOutput, context: PlanContext): InstallmentPlanDraft | null {
+export function normalizePlan(output: ModelOutput, context: PlanContext): typeof InstallmentPlanDraft.Type | null {
     const todayMs = Date.parse(`${context.today}T00:00:00Z`);
     const rows = output.rows.toSorted((a, b) => a.sequence - b.sequence);
     const first = rows[0]?.sequence === 0 ? 0 : 1;
@@ -161,7 +112,7 @@ export function normalizePlan(output: ModelOutput, context: PlanContext): Instal
     ) {
         return null;
     }
-    const planned: InstallmentPlanDraft["rows"] = [];
+    const planned: (typeof InstallmentPlanDraft.Type)["rows"][number][] = [];
     let previousMs: number | null = null;
     for (const row of rows) {
         const ms = resolveDay(row, previousMs, todayMs);
@@ -186,77 +137,34 @@ export function normalizePlan(output: ModelOutput, context: PlanContext): Instal
     };
 }
 
-export async function readInstallmentPlan(
-    model: LanguageModel,
-    image: ArrayBuffer,
-    context: PlanContext
-): Promise<InstallmentScanResult> {
-    try {
-        const { output } = await generateText({
-            abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-            maxRetries: 0,
-            messages: [
-                {
-                    content: [
-                        { data: new Uint8Array(image), mediaType: "image/jpeg", type: "file" },
-                        { text: "Read this payment plan.", type: "text" },
+export const readInstallmentPlan = Effect.fn("InstallmentScan.readInstallmentPlan")(
+    function* readInstallmentPlan(model: LanguageModel, image: ArrayBuffer, context: PlanContext) {
+        const { output } = yield* Effect.tryPromise({
+            catch: modelCallError,
+            try: () =>
+                generateText({
+                    abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+                    maxRetries: 0,
+                    messages: [
+                        {
+                            content: [
+                                { data: new Uint8Array(image), mediaType: "image/jpeg", type: "file" },
+                                { text: "Read this payment plan.", type: "text" },
+                            ],
+                            role: "user",
+                        },
                     ],
-                    role: "user",
-                },
-            ],
-            model,
-            output: Output.object({ schema: modelOutputSchema }),
-            reasoning: "low",
-            system: buildPrompt(context),
+                    model,
+                    output: Output.object({ schema: modelOutputSchema }),
+                    reasoning: "low",
+                    system: buildPrompt(context),
+                }),
         });
         const plan = normalizePlan(output, context);
-        return plan === null ? failure("unclear") : { plan, status: "ok" };
-    } catch (error) {
-        if (NoObjectGeneratedError.isInstance(error) || TypeValidationError.isInstance(error)) {
-            return failure("invalidResponse");
-        }
-        return failure("providerError");
-    }
-}
-
-export const scan = action({
-    args: installmentScanArgs,
-    handler: async (ctx, args): Promise<InstallmentScanResult> => {
-        const identity = await ctx.auth.getUserIdentity();
-        if (identity === null) {
-            return failure("unauthenticated");
-        }
-
-        const apiKey = process.env.ANTHROPIC_API_KEY;
-        if (!apiKey || args.aiConsent !== AI_CONSENT_VERSION) {
-            return failure("notConfigured");
-        }
-
-        if (
-            args.image.byteLength > MAX_IMAGE_BYTES ||
-            !looksLikeJpeg(args.image) ||
-            !namesWithinBudget([], args.accounts) ||
-            !DATE_PATTERN.test(args.today) ||
-            !CURRENCY_PATTERN.test(args.currency) ||
-            (args.language !== undefined && !LANGUAGE_PATTERN.test(args.language)) ||
-            (args.regionCode !== undefined && !REGION_PATTERN.test(args.regionCode))
-        ) {
-            return failure("invalid");
-        }
-
-        const admitted = await admitScan(ctx, identity);
-        if (admitted !== "ok") {
-            return failure(admitted);
-        }
-
-        const modelId = process.env.CLAUDE_MODEL_ID || CLAUDE_MODEL_ID;
-        return readInstallmentPlan(traced(createAnthropic({ apiKey })(modelId), "installment_scan"), args.image, {
-            accounts: args.accounts,
-            currency: args.currency,
-            language: args.language,
-            regionCode: args.regionCode,
-            today: args.today,
-        });
+        return plan === null ? failure("unclear") : { plan, status: "ok" as const };
     },
-    returns: scanResult,
-});
+    Effect.catchTags({
+        ModelCallError: ({ reason }) =>
+            Effect.succeed(failure(reason === "invalidResponse" ? "invalidResponse" : "providerError")),
+    })
+);

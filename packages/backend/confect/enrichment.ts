@@ -1,25 +1,22 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
 import { DAY, HOUR, RateLimiter } from "@convex-dev/rate-limiter";
 import { generateText, Output } from "ai";
 import type { LanguageModel } from "ai";
-import { v } from "convex/values";
-import { z } from "zod";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import { components, internal } from "../convex/_generated/api";
-import { action, internalQuery } from "../convex/_generated/server";
 import type { ActionCtx } from "../convex/_generated/server";
-import { traced } from "./lib/aiTracing";
-import { optionalUserId } from "./lib/auth";
+import type { Suggestion } from "./enrichment.spec";
 import { PICKABLE_CURRENCY_CODES } from "./lib/currencies";
 import { describeTree } from "./lib/ledgerPrompt";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { perUserBurst } from "./lib/limits";
-import { knowledgeKey, knowledgeKeys } from "./lib/merchantKey";
-import { AI_CONSENT_VERSION, CLAUDE_FAST_MODEL_ID } from "./lib/models";
+import { knowledgeKey } from "./lib/merchantKey";
+import { modelCallError, modelSchema } from "./lib/modelCall";
 import { DOMAIN_PATTERN, MAX_DOMAIN_LENGTH, MAX_TAG_LENGTH, MAX_TAGS, PICTOGRAPHIC } from "./lib/sanitizeLimits";
-import { isPro } from "./revenuecat";
 
-const MIN_NAME_LENGTH = 3;
+export const MIN_NAME_LENGTH = 3;
 export const MAX_NAME_LENGTH = 64;
 const MAX_CATEGORY_NAME_LENGTH = 40;
 const MAX_KNOWN_CATEGORY_NAMES = 60;
@@ -29,48 +26,6 @@ export const REQUEST_TIMEOUT_MS = 8000;
 export const BACKGROUND_REQUEST_TIMEOUT_MS = 60_000;
 
 export const GROUNDED_REQUEST_TIMEOUT_MS = 120_000;
-
-/** A privacy boundary: only the merchant name and the user's category names leave the device. */
-export const suggestArgs = {
-    /** `AI_CONSENT_VERSION`; anything else reads the shared merchant list but never reaches a provider. */
-    aiConsent: v.optional(v.number()),
-    background: v.optional(v.boolean()),
-    categoryTree: v.array(v.object({ children: v.array(v.string()), name: v.string() })),
-    /** A code, never an amount: it survives travel where `regionCode` would mislead. */
-    currency: v.optional(v.string()),
-    /** Dual-authority: a forged `true` needs the synced `appMeta` row to agree; `false` always blocks. */
-    groundedLookup: v.boolean(),
-    income: v.boolean(),
-    knowledgeOnly: v.optional(v.boolean()),
-    locale: v.optional(v.string()),
-    name: v.string(),
-    /** The device region, which `locale` cannot stand in for. */
-    regionCode: v.optional(v.string()),
-};
-
-const suggestion = v.object({
-    categoryName: v.union(v.string(), v.null()),
-    domain: v.union(v.string(), v.null()),
-    emoji: v.union(v.string(), v.null()),
-    /** The client must not cache this as a final null result. */
-    grounding: v.boolean(),
-    isNewCategory: v.boolean(),
-    merchantName: v.union(v.string(), v.null()),
-    /** Set only when the suggestion belongs under an existing category. */
-    parentCategoryName: v.union(v.string(), v.null()),
-    tags: v.array(v.string()),
-});
-
-export interface Suggestion {
-    categoryName: string | null;
-    merchantName: string | null;
-    domain: string | null;
-    emoji: string | null;
-    grounding: boolean;
-    isNewCategory: boolean;
-    parentCategoryName: string | null;
-    tags: string[];
-}
 
 export const EMPTY: Suggestion = {
     categoryName: null,
@@ -90,19 +45,21 @@ function domainAccepted(confidence: (typeof DOMAIN_CONFIDENCE)[number] | null | 
 }
 
 /** Untrusted model output; this is only the JSON shape. */
-const modelOutputSchema = z.object({
+const ModelOutput = Schema.Struct({
     /** Brand before domain measurably fixes the domain's spelling. */
-    brand: z.string().nullish(),
-    categoryName: z.string().nullable(),
-    domain: z.string().nullable(),
+    brand: Schema.optionalKey(Schema.NullOr(Schema.String)),
+    categoryName: Schema.NullOr(Schema.String),
+    domain: Schema.NullOr(Schema.String),
     /** Only `high` keeps the domain, so the prompt can demand a best guess. */
-    domainConfidence: z.enum(DOMAIN_CONFIDENCE).nullish(),
-    emoji: z.string().nullish(),
-    isNewCategory: z.boolean(),
+    domainConfidence: Schema.optionalKey(Schema.NullOr(Schema.Literals(DOMAIN_CONFIDENCE))),
+    emoji: Schema.optionalKey(Schema.NullOr(Schema.String)),
+    isNewCategory: Schema.Boolean,
     // Nullish: a missing optional field must not cost the category and tags.
-    parentCategoryName: z.string().nullish(),
-    tags: z.array(z.string()),
+    parentCategoryName: Schema.optionalKey(Schema.NullOr(Schema.String)),
+    tags: Schema.Array(Schema.String),
 });
+
+const modelOutputSchema = modelSchema(ModelOutput);
 
 /** Keyed by `identity.tokenIdentifier`, never a client argument; checked before the sharded global limit. */
 export const rateLimiter = new RateLimiter(components.rateLimiter, {
@@ -293,20 +250,27 @@ export function applyToTree(tree: readonly CategoryBranch[], candidate: TreeCand
 }
 
 /** Exported so tests can inject a fake model. */
-export async function runSuggest(model: LanguageModel, args: RunSuggestArgs): Promise<Suggestion> {
+export const runSuggest = Effect.fn("Enrichment.runSuggest")(function* runSuggest(
+    model: LanguageModel,
+    args: RunSuggestArgs
+) {
     const tree = args.categoryTree.slice(0, MAX_KNOWN_CATEGORY_NAMES);
 
-    const { output } = await generateText({
-        abortSignal: AbortSignal.timeout(args.timeoutMs ?? REQUEST_TIMEOUT_MS),
-        // The SDK's 2 default retries alone would outlast the client's 9s abort.
-        maxRetries: 0,
-        model,
-        output: Output.object({ schema: modelOutputSchema }),
-        prompt: buildPrompt(args.name, args.income, args.locale, args.regionCode, args.currency, tree),
-        reasoning: "none",
+    const { output } = yield* Effect.tryPromise({
+        catch: modelCallError,
+        try: () =>
+            generateText({
+                abortSignal: AbortSignal.timeout(args.timeoutMs ?? REQUEST_TIMEOUT_MS),
+                // The SDK's 2 default retries alone would outlast the client's 9s abort.
+                maxRetries: 0,
+                model,
+                output: Output.object({ schema: modelOutputSchema }),
+                prompt: buildPrompt(args.name, args.income, args.locale, args.regionCode, args.currency, tree),
+                reasoning: "none",
+            }),
     });
 
-    return {
+    const suggestion: Suggestion = {
         ...applyToTree(args.categoryTree, {
             categoryName: sanitizeCategoryName(output.categoryName),
             // A guessed domain is a wrong logo; only null lets the grounded tier take over.
@@ -318,29 +282,10 @@ export async function runSuggest(model: LanguageModel, args: RunSuggestArgs): Pr
         }),
         grounding: false,
     };
-}
-
-const GROUNDED_LOOKUP_META_KEY = "groundedLookup";
-
-/**
- * Keyed by the Better Auth user id, as `sync.ts` writes it. An absent row means consented; a lost session answers
- * false.
- */
-export const groundedConsent = internalQuery({
-    args: {},
-    handler: async (ctx) => {
-        const userId = await optionalUserId(ctx);
-        if (userId === null) {
-            return false;
-        }
-        const row = await ctx.db
-            .query("appMeta")
-            .withIndex("by_user_and_key", (q) => q.eq("userId", userId).eq("key", GROUNDED_LOOKUP_META_KEY))
-            .unique();
-        return row === null || row.value !== "false";
-    },
-    returns: v.boolean(),
+    return suggestion;
 });
+
+export const GROUNDED_LOOKUP_META_KEY = "groundedLookup";
 
 export interface GroundedScheduleArgs {
     currency?: string;
@@ -362,140 +307,41 @@ export function needsGroundedLookup(result: Pick<Suggestion, "categoryName" | "d
  * `groundedPerKey` read and `groundedPerUser` spent here; `categoryTree` is not a parameter, so scheduled args cannot
  * carry it.
  */
-export async function maybeScheduleGrounded(
+export const maybeScheduleGrounded = Effect.fn("Enrichment.maybeScheduleGrounded")(function* maybeScheduleGrounded(
     ctx: GroundedScheduleCtx,
     tokenIdentifier: string,
     args: GroundedScheduleArgs
-): Promise<boolean> {
+): Effect.fn.Return<boolean> {
     if (!args.groundedLookup) {
         return false;
     }
-    const consented = await ctx.runQuery(internal.enrichment.groundedConsent, {});
+    const consented = yield* Effect.promise(() => ctx.runQuery(internal.enrichment.groundedConsent, {}));
     if (!consented) {
         return false;
     }
     const key = knowledgeKey(args.name, args.currency);
-    const fresh = await rateLimiter.check(ctx, "groundedPerKey", { key });
+    const fresh = yield* Effect.promise(() => rateLimiter.check(ctx, "groundedPerKey", { key }));
     if (!fresh.ok) {
-        const spent = await rateLimiter.getValue(ctx, "groundedPerKey", { key });
-        return Date.now() - spent.ts < GROUNDED_REQUEST_TIMEOUT_MS;
+        const spent = yield* Effect.promise(() => rateLimiter.getValue(ctx, "groundedPerKey", { key }));
+        return (yield* Clock.currentTimeMillis) - spent.ts < GROUNDED_REQUEST_TIMEOUT_MS;
     }
-    const gate = await rateLimiter.limit(ctx, "groundedPerUser", {
-        key: tokenIdentifier,
-    });
+    const gate = yield* Effect.promise(() =>
+        rateLimiter.limit(ctx, "groundedPerUser", {
+            key: tokenIdentifier,
+        })
+    );
     if (!gate.ok) {
         return false;
     }
-    await ctx.scheduler.runAfter(0, internal.groundedLookup.run, {
-        currency: args.currency,
-        income: args.income,
-        key,
-        locale: args.locale,
-        name: args.name,
-        regionCode: args.regionCode,
-    });
+    yield* Effect.promise(() =>
+        ctx.scheduler.runAfter(0, internal.groundedLookup.run, {
+            currency: args.currency,
+            income: args.income,
+            key,
+            locale: args.locale,
+            name: args.name,
+            regionCode: args.regionCode,
+        })
+    );
     return true;
-}
-
-/** Read live so `npx convex env set ANTHROPIC_API_KEY=""` takes effect on the next call. */
-export const suggest = action({
-    args: suggestArgs,
-    handler: async (ctx, args): Promise<Suggestion> => {
-        const identity = await ctx.auth.getUserIdentity();
-        if (identity === null) {
-            return EMPTY;
-        }
-
-        const trimmedName = args.name.trim();
-        if (trimmedName.length < MIN_NAME_LENGTH || trimmedName.length > MAX_NAME_LENGTH) {
-            return EMPTY;
-        }
-
-        const regionCode = sanitizeRegionCode(args.regionCode);
-        const currency = sanitizeCurrencyCode(args.currency);
-
-        // Tier 1.5 spends no rate limit and runs before the API key check, so a hit works without the key.
-        const cached = await ctx.runQuery(internal.merchantKnowledge.lookup, {
-            keys: knowledgeKeys(trimmedName, currency),
-            now: Date.now(),
-        });
-        if (cached !== null) {
-            return {
-                ...applyToTree(args.categoryTree, cached),
-                grounding: false,
-            };
-        }
-
-        if (args.knowledgeOnly === true) {
-            return EMPTY;
-        }
-
-        const apiKey = process.env.ANTHROPIC_API_KEY;
-        if (!apiKey || args.aiConsent !== AI_CONSENT_VERSION) {
-            return EMPTY;
-        }
-
-        const perUser = await rateLimiter.limit(ctx, args.background ? "enrichmentBackground" : "enrichmentPerUser", {
-            key: identity.tokenIdentifier,
-        });
-        if (!perUser.ok) {
-            return EMPTY;
-        }
-
-        const global = await rateLimiter.limit(ctx, "enrichmentGlobal");
-        if (!global.ok) {
-            return EMPTY;
-        }
-
-        try {
-            const modelId = process.env.CLAUDE_FAST_MODEL_ID || CLAUDE_FAST_MODEL_ID;
-            const result = await runSuggest(traced(createAnthropic({ apiKey })(modelId), "category_suggest"), {
-                categoryTree: args.categoryTree,
-                currency,
-                income: args.income,
-                locale: args.locale,
-                name: trimmedName,
-                regionCode,
-            });
-
-            // Never awaited: it fills Tier 1.5 for the NEXT lookup.
-            if (needsGroundedLookup(result)) {
-                const scheduled =
-                    args.groundedLookup &&
-                    (await isPro(ctx, identity.subject)) &&
-                    (await maybeScheduleGrounded(ctx, identity.tokenIdentifier, {
-                        currency,
-                        groundedLookup: args.groundedLookup,
-                        income: args.income,
-                        locale: args.locale,
-                        name: trimmedName,
-                        regionCode,
-                    }));
-                // `grounding: true` stops the client caching this as final.
-                if (scheduled) {
-                    return { ...result, grounding: true };
-                }
-            }
-            return result;
-        } catch (error) {
-            console.warn(
-                `[enrichment] model call threw for "${trimmedName}":`,
-                error instanceof Error ? `${error.name}: ${error.message}` : String(error)
-            );
-            const scheduled =
-                args.groundedLookup &&
-                (await isPro(ctx, identity.subject)) &&
-                (await maybeScheduleGrounded(ctx, identity.tokenIdentifier, {
-                    currency,
-                    groundedLookup: args.groundedLookup,
-                    income: args.income,
-                    locale: args.locale,
-                    name: trimmedName,
-                    regionCode,
-                }));
-            // Not a thrown ConvexError: an ordinary timeout should not fill the logs with stack traces.
-            return { ...EMPTY, grounding: scheduled };
-        }
-    },
-    returns: suggestion,
 });
