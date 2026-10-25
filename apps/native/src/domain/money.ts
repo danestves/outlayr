@@ -27,6 +27,7 @@ const REGIONAL_FALLBACK = {
     es: { decimal: ".", group: ",", tag: "es-419" },
     "es-ES": { decimal: ",", group: ".", tag: "es-ES" },
     pt: { decimal: ",", group: ".", tag: "pt-BR" },
+    "pt-PT": { decimal: ",", group: "\u00A0", tag: "pt-PT" },
 } satisfies Record<RegionalLanguage, NumberLocale>;
 
 export function regionalLocale(language: RegionalLanguage, device: DeviceNumbers | null): NumberLocale {

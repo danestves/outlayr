@@ -8,11 +8,13 @@ const settingsFeatureLab = {
             es: "Al agregar una transacción",
             "es-ES": "Al añadir una transacción",
             pt: "Ao adicionar um lançamento",
+            "pt-PT": "Ao adicionar um registo",
         }),
         "settings.featureLab.aiEnrichment": t({
             en: "Suggest category and tags",
             es: "Sugerir categoría y etiquetas",
             pt: "Sugerir categoria e tags",
+            "pt-PT": "Sugerir categoria e etiquetas",
         }),
         "settings.featureLab.aiEnrichmentNote": t({
             en: "Well-known services are recognised on this device, and only their web address goes to a logo service to fetch the logo. For anything else, only the merchant name of an entry (typed, spoken, scanned or logged from Wallet), whether it is an expense or income, its currency code, your language and device region, and your own category names leave the device, never amounts, dates or accounts, and the web address that comes back goes to the same logo service. A recent entry saved without a logo is looked up again in the background.",
@@ -20,6 +22,8 @@ const settingsFeatureLab = {
             "es-ES":
                 "Los servicios conocidos se reconocen en este dispositivo, y solo su dirección web va a un servicio de logos para traer el logo. Para todo lo demás, solo salen del dispositivo el nombre del comercio de una entrada (escrita, dictada, escaneada o registrada desde Cartera), si es gasto o ingreso, su código de moneda, tu idioma y la región del dispositivo, y los nombres de tus categorías. Nunca importes, fechas ni cuentas. La dirección web que vuelve va al mismo servicio de logos. Si una entrada reciente se guardó sin logo, se vuelve a buscar en segundo plano.",
             pt: "Serviços conhecidos são reconhecidos neste dispositivo, e só o endereço web deles vai para um serviço de logos para buscar o logo. Para todo o resto, só saem do dispositivo o nome do estabelecimento de um lançamento (digitado, falado, escaneado ou registrado pela Carteira), se é despesa ou receita, o código da moeda, seu idioma e a região do dispositivo, e os nomes das suas categorias. Nunca valores, datas ou contas. O endereço web que volta vai para o mesmo serviço de logos. Se um lançamento recente foi salvo sem logo, ele é buscado de novo em segundo plano.",
+            "pt-PT":
+                "Os serviços conhecidos são reconhecidos neste dispositivo, e só o endereço web deles vai para um serviço de logótipos para obter o logótipo. Para todo o resto, só saem do dispositivo o nome do estabelecimento de um registo (escrito, falado, digitalizado ou registado pela Carteira), se é despesa ou receita, o código da moeda, o seu idioma e a região do dispositivo, e os nomes das suas categorias. Nunca valores, datas ou contas. O endereço web que volta vai para o mesmo serviço de logótipos. Se um registo recente foi guardado sem logótipo, é pesquisado novamente em segundo plano.",
         }),
         "settings.featureLab.aiSection": t({
             en: "Smart fill",
@@ -35,6 +39,8 @@ const settingsFeatureLab = {
             en: "Off lays the budgets out as a two-up grid of cards instead of a list.",
             es: "Si lo desactivas, los presupuestos se muestran en una cuadrícula de tarjetas de dos en dos en vez de una lista.",
             pt: "Se desativado, os orçamentos aparecem em uma grade de cartões, dois por linha, em vez de uma lista.",
+            "pt-PT":
+                "Se desativado, os orçamentos aparecem numa grelha de cartões, dois por linha, em vez de uma lista.",
         }),
         "settings.featureLab.budgetsSection": t({
             en: "Budgets",
@@ -51,6 +57,7 @@ const settingsFeatureLab = {
             es: "Lanza confeti sobre una transacción en el momento en que la agregas.",
             "es-ES": "Lanza confeti sobre una transacción en el momento en que la añades.",
             pt: "Joga confete sobre um lançamento assim que você o adiciona.",
+            "pt-PT": "Atira confetti sobre um registo assim que o adiciona.",
         }),
         "settings.featureLab.experimental": t({
             en: "Experimental: these can change or disappear.",
@@ -61,6 +68,7 @@ const settingsFeatureLab = {
             en: "Look up new merchants",
             es: "Buscar comercios nuevos",
             pt: "Buscar estabelecimentos novos",
+            "pt-PT": "Pesquisar estabelecimentos novos",
         }),
         "settings.featureLab.groundedLookupNote": t({
             en: "For a merchant nobody has seen before, the name, whether it is an expense or income, the entry's currency code and your language and device region may be searched on the web to learn its category, never on the transaction you're entering, and never with any amount, date or account. Off keeps every lookup on this device and the ones already known.",
@@ -68,6 +76,8 @@ const settingsFeatureLab = {
             "es-ES":
                 "Para un comercio que nadie ha visto antes, el nombre, si es gasto o ingreso, el código de moneda de la entrada y tu idioma y región pueden buscarse en la web para conocer su categoría. Nunca para la transacción que estás introduciendo y nunca con importes, fechas ni cuentas. Si lo desactivas, cada búsqueda se queda en este dispositivo y en los comercios ya conocidos.",
             pt: "Para um estabelecimento que ninguém viu antes, o nome, se é despesa ou receita, o código da moeda do lançamento, seu idioma e a região do dispositivo podem ser buscados na web para descobrir a categoria. Nunca para o lançamento que você está registrando e nunca com valores, datas ou contas. Se desativado, cada busca fica restrita a este dispositivo e aos estabelecimentos já conhecidos.",
+            "pt-PT":
+                "Para um estabelecimento que ninguém viu antes, o nome, se é despesa ou receita, o código da moeda do registo, o seu idioma e a região do dispositivo podem ser pesquisados na web para descobrir a categoria. Nunca para o registo que está a criar e nunca com valores, datas ou contas. Se desativado, cada pesquisa fica restrita a este dispositivo e aos estabelecimentos já conhecidos.",
         }),
         "settings.featureLab.lineGraph": t({
             en: "Show line graph",
@@ -78,21 +88,26 @@ const settingsFeatureLab = {
             en: "The Log",
             es: "El registro",
             pt: "Lançamentos",
+            "pt-PT": "Registos",
         }),
         "settings.featureLab.swapTime": t({
             en: "Replace time label",
             es: "Reemplazar etiqueta de hora",
             pt: "Trocar o horário pela categoria",
+            "pt-PT": "Trocar a hora pela categoria",
         }),
         "settings.featureLab.swapTimeNote": t({
             en: "Each transaction shows its category instead of its time. If you never write your own note, the note is already the category name, so both lines will read the same.",
             es: "Cada transacción muestra su categoría en vez de su hora. Si nunca escribes tu propia nota, la nota ya es el nombre de la categoría, así que ambas líneas dirán lo mismo.",
             pt: "Cada lançamento mostra a categoria em vez do horário. Se você nunca escreve uma nota própria, a nota já é o nome da categoria, então as duas linhas vão dizer o mesmo.",
+            "pt-PT":
+                "Cada registo mostra a categoria em vez da hora. Se nunca escreve uma nota própria, a nota já é o nome da categoria, por isso as duas linhas vão dizer o mesmo.",
         }),
         "settings.featureLab.transactionRowsSection": t({
             en: "Transaction rows",
             es: "Filas de transacción",
             pt: "Linhas de lançamento",
+            "pt-PT": "Linhas de registo",
         }),
         "settings.featureLab.aiProvidersNote": t({
             en: "Both go to Claude, made by Anthropic, and only while Send data to AI providers is on in Settings.",
@@ -100,6 +115,8 @@ const settingsFeatureLab = {
             "es-ES":
                 "Ambas van a Claude, de Anthropic, y solo mientras Enviar datos a proveedores de IA esté activado en Ajustes.",
             pt: "As duas buscas vão para o Claude, da Anthropic, e só enquanto Enviar dados a provedores de IA estiver ativado em Ajustes.",
+            "pt-PT":
+                "As duas pesquisas vão para o Claude, da Anthropic, e só enquanto Enviar dados a fornecedores de IA estiver ativado nas Definições.",
         }),
     },
     key: "settings-feature-lab" as const,

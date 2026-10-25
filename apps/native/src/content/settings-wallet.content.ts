@@ -27,11 +27,14 @@ const settingsWallet = {
             en: "Android opens Settings. Outlayr only keeps notifications from apps you turn on here.",
             es: "Android te lleva a Ajustes. Outlayr solo guarda las de apps que actives aquí.",
             pt: "O Android abre as Configurações. O Outlayr só mantém notificações dos apps que você ativar aqui.",
+            "pt-PT": "O Android abre as Definições. O Outlayr só guarda notificações das apps que ativar aqui.",
         }),
         "settings.wallet.androidLead": t({
             en: "Every Google Wallet payment and every purchase your bank notifies you of lands on the Log, filed under the account it matches.",
             es: "Cada pago con Google Wallet y cada compra que te notifique tu banco llega al registro, en la cuenta que coincida.",
             pt: "Cada pagamento com o Google Wallet e cada compra que seu banco notificar vai para Lançamentos, na conta que corresponder.",
+            "pt-PT":
+                "Cada pagamento com o Google Wallet e cada compra que o seu banco notificar vai para Registos, na conta correspondente.",
         }),
         "settings.wallet.automationDetail": t({
             en: "Wallet trigger runs Outlayr - Apple Pay",
@@ -49,11 +52,13 @@ const settingsWallet = {
             en: "Automation in Shortcuts",
             es: "Automatización en Atajos",
             pt: "Automação no app Atalhos",
+            "pt-PT": "Automação na app Atalhos",
         }),
         "settings.wallet.bankFooter": t({
             en: "Pick only bank and card apps. A tap and its bank push land as one row.",
             es: "Elige solo apps de bancos y tarjetas. Un pago y la notificación de su banco quedan en una sola fila.",
             pt: "Escolha só apps de bancos e cartões. Um pagamento e a notificação do banco viram uma só linha.",
+            "pt-PT": "Escolha só apps de bancos e cartões. Um pagamento e a notificação do banco ficam numa só linha.",
         }),
         "settings.wallet.bankGet": t({
             en: "Get the bank shortcut",
@@ -64,6 +69,7 @@ const settingsWallet = {
             en: "Every purchase your bank app notifies you of lands on the Log, filed under the account it matches.",
             es: "Cada compra que te notifique la app de tu banco llega al registro, en la cuenta que coincida.",
             pt: "Cada compra que o app do seu banco notificar vai para Lançamentos, na conta que corresponder.",
+            "pt-PT": "Cada compra que a app do seu banco notificar vai para Registos, na conta correspondente.",
         }),
         "settings.wallet.bankSection": t({
             en: "Bank notifications",
@@ -85,6 +91,7 @@ const settingsWallet = {
             en: "Tap App, pick your banks",
             es: "Toca App y elige tus bancos",
             pt: "Toque em App e escolha seus bancos",
+            "pt-PT": "Toque em App e escolha os seus bancos",
         }),
         "settings.wallet.bankStep3": t({
             en: "Turn it on in Automation",
@@ -95,6 +102,8 @@ const settingsWallet = {
             en: "Each card you pay with and each bank app that notifies you shows up here. Its purchases go to the account you choose.",
             es: "Cada tarjeta con la que pagas y cada app de banco que te notifica aparece aquí. Sus compras van a la cuenta que elijas.",
             pt: "Cada cartão com que você paga e cada app de banco que te notifica aparece aqui. As compras vão para a conta que você escolher.",
+            "pt-PT":
+                "Cada cartão com que paga e cada app de banco que o notifica aparece aqui. As compras vão para a conta que escolher.",
         }),
         "settings.wallet.cardsSection": t({
             en: "Cards and apps",
@@ -135,16 +144,19 @@ const settingsWallet = {
             en: "Last logged",
             es: "Último registro",
             pt: "Último lançamento",
+            "pt-PT": "Último registo",
         }),
         "settings.wallet.lastTap": t({
             en: "Last used {when}",
             es: "Último uso {when}",
             pt: "Último uso em {when}",
+            "pt-PT": "Última utilização em {when}",
         }),
         "settings.wallet.lead": t({
             en: "Every card tap lands on the Log, filed under the account it matches.",
             es: "Cada pago con tarjeta llega al registro, en la cuenta que coincida.",
             pt: "Cada pagamento por aproximação vai para Lançamentos, na conta que corresponder.",
+            "pt-PT": "Cada pagamento por aproximação vai para Registos, na conta correspondente.",
         }),
         "settings.wallet.manualStep1": t({
             en: "Next, then New Blank Automation",
@@ -156,6 +168,7 @@ const settingsWallet = {
             es: "Agregar acción, busca Outlayr",
             "es-ES": "Añadir acción, busca Outlayr",
             pt: "Adicionar Ação, busque Outlayr",
+            "pt-PT": "Adicionar Ação, pesquise Outlayr",
         }),
         "settings.wallet.manualStep2Detail": t({
             en: "Pick Log a Wallet Transaction",
@@ -192,6 +205,7 @@ const settingsWallet = {
             en: "Nothing logged yet",
             es: "Nada registrado aún",
             pt: "Nada registrado ainda",
+            "pt-PT": "Nada registado ainda",
         }),
         "settings.wallet.nothingYet": t({
             en: "Nothing yet",
@@ -212,6 +226,7 @@ const settingsWallet = {
             en: "Logged purchases",
             es: "Compras registradas",
             pt: "Compras registradas",
+            "pt-PT": "Compras registadas",
         }),
         "settings.wallet.pushNewPlace": t({
             en: "New place, tap to pick a category.",
@@ -222,6 +237,7 @@ const settingsWallet = {
             en: "Which account is {card}? Tap to pick.",
             es: "¿Qué cuenta es {card}? Toca para elegirla.",
             pt: "Qual conta é {card}? Toque para escolher.",
+            "pt-PT": "Que conta é {card}? Toque para escolher.",
         }),
         "settings.wallet.ranAt": t({
             en: "The automation ran {when}",
@@ -248,11 +264,13 @@ const settingsWallet = {
             es: "Aparecen las apps que te notificaron un monto.",
             "es-ES": "Aparecen las apps que te han notificado un importe.",
             pt: "Aqui aparecem os apps que te notificaram um valor.",
+            "pt-PT": "Aqui aparecem as apps que lhe notificaram um valor.",
         }),
         "settings.wallet.sourcesSection": t({
             en: "Log from",
             es: "Registrar desde",
             pt: "Registrar de",
+            "pt-PT": "Registar de",
         }),
         "settings.wallet.step1": t({
             en: "Automation, then +",
@@ -274,6 +292,7 @@ const settingsWallet = {
             en: "Pick your cards",
             es: "Elige tus tarjetas",
             pt: "Escolha seus cartões",
+            "pt-PT": "Escolha os seus cartões",
         }),
         "settings.wallet.step3Detail": t({
             en: "Run Immediately on, Notify When Run off",
@@ -291,6 +310,7 @@ const settingsWallet = {
             en: "Turn it on in Shortcuts",
             es: "Actívalo en Atajos",
             pt: "Ative no app Atalhos",
+            "pt-PT": "Ative na app Atalhos",
         }),
         "settings.wallet.tryIt": t({
             en: "Tap a card to try it",
@@ -306,6 +326,7 @@ const settingsWallet = {
             en: "New shortcut, then search Automation",
             es: "Nuevo atajo, luego busca Automatización",
             pt: "Novo atalho, depois busque Automação",
+            "pt-PT": "Novo atalho, depois pesquise Automação",
         }),
         "settings.wallet.v27Manual2": t({
             en: "Pick Wallet",
@@ -327,6 +348,7 @@ const settingsWallet = {
             en: "A shared automation arrives turned off",
             es: "Una automatización compartida llega desactivada",
             pt: "Uma automação compartilhada chega desativada",
+            "pt-PT": "Uma automação partilhada chega desativada",
         }),
         "settings.wallet.v27Step2": t({
             en: "Turn on Outlayr - Apple Pay",

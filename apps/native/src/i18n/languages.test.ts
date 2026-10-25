@@ -16,6 +16,13 @@ describe("languageFromTag", () => {
         expect(languageFromTag("es")).toBe("es");
     });
 
+    it("keeps Portugal apart from Brazilian Portuguese", () => {
+        expect(languageFromTag("pt-PT")).toBe("pt-PT");
+        expect(languageFromTag("pt_PT")).toBe("pt-PT");
+        expect(languageFromTag("pt-BR")).toBe("pt");
+        expect(languageFromTag("pt")).toBe("pt");
+    });
+
     it("is case insensitive", () => {
         expect(languageFromTag("ES-mx")).toBe("es");
     });

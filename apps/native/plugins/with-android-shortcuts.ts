@@ -66,7 +66,7 @@ const GLYPHS = {
 
 type GlyphName = keyof typeof GLYPHS;
 
-const TRANSLATED_LANGUAGES = ["es", "pt"] as const;
+const TRANSLATED_LANGUAGES = ["es", "pt", "pt-PT"] as const;
 
 type TranslatedLanguage = (typeof TRANSLATED_LANGUAGES)[number];
 
@@ -167,7 +167,7 @@ async function writeTranslatedStrings(
     shortcuts: readonly AndroidShortcut[],
     language: TranslatedLanguage
 ): Promise<void> {
-    const stringsPath = path.join(res, `values-${language}`, "strings.xml");
+    const stringsPath = path.join(res, `values-${language.replace("-", "-r")}`, "strings.xml");
     const xml = await AndroidConfig.Resources.readResourcesXMLAsync({ path: stringsPath });
     await XML.writeXMLAsync({
         path: stringsPath,

@@ -27,12 +27,14 @@ const voice = {
             en: "Save",
             es: "Guardar",
             pt: "Salvar",
+            "pt-PT": "Guardar",
         }),
         "voice.action.settings": t({
             en: "Open Settings",
             es: "Abrir Configuración",
             "es-ES": "Abrir Ajustes",
             pt: "Abrir Ajustes",
+            "pt-PT": "Abrir Definições",
         }),
         "voice.close": t({
             en: "Close",
@@ -43,11 +45,13 @@ const voice = {
             en: "Outlayr needs the microphone to hear you.",
             es: "Outlayr necesita el micrófono para escucharte.",
             pt: "O Outlayr precisa do microfone para ouvir você.",
+            "pt-PT": "O Outlayr precisa do microfone para ouvir o que diz.",
         }),
         "voice.failed.notConfigured": t({
             en: "Speaking an entry needs the cloud tier.",
             es: "Para dictar un registro se necesita el servicio en la nube.",
             pt: "Ditar um lançamento requer o serviço na nuvem.",
+            "pt-PT": "Ditar um registo requer o serviço na nuvem.",
         }),
         "voice.failed.notEntitled": t({
             en: "Your free captures, voice and receipts together, are used up. They come back within 30 days; Pro lifts the limit.",
@@ -55,11 +59,14 @@ const voice = {
             "es-ES":
                 "Ya has usado tus capturas gratis (voz y tickets). Se renuevan en menos de 30 días; con Pro no tienes ese límite.",
             pt: "Você já usou suas capturas grátis (voz e recibos). Elas se renovam em até 30 dias; com o Pro não há esse limite.",
+            "pt-PT":
+                "Já usou as suas capturas grátis (voz e talões). Renovam-se no prazo de 30 dias; com o Pro não há este limite.",
         }),
         "voice.failed.offline": t({
             en: "You're offline.",
             es: "Estás sin conexión.",
             pt: "Você está sem conexão.",
+            "pt-PT": "Está sem ligação.",
         }),
         "voice.failed.provider": t({
             en: "Couldn't write that down.",
@@ -71,11 +78,13 @@ const voice = {
             es: "Llegaste al límite de uso justo de capturas. Se renueva en menos de 30 días.",
             "es-ES": "Has llegado al límite de uso justo de capturas. Se renueva en menos de 30 días.",
             pt: "Você atingiu o limite de uso justo de capturas. Ele se renova em até 30 dias.",
+            "pt-PT": "Atingiu o limite de utilização justa de capturas. Renova-se no prazo de 30 dias.",
         }),
         "voice.failed.rateLimited": t({
             en: "That's a lot of entries at once. Give it a moment.",
             es: "Son muchos registros seguidos. Espera un momento.",
             pt: "São muitos lançamentos seguidos. Espere um momento.",
+            "pt-PT": "São muitos registos seguidos. Espere um momento.",
         }),
         "voice.failed.silent": t({
             en: "Didn't hear anything.",
@@ -86,16 +95,19 @@ const voice = {
             en: "That took too long.",
             es: "Tardó demasiado.",
             pt: "Demorou demais.",
+            "pt-PT": "Demorou demasiado.",
         }),
         "voice.failed.unauthenticated": t({
             en: "Sign in to speak an entry.",
             es: "Inicia sesión para dictar un registro.",
             pt: "Entre para ditar um lançamento.",
+            "pt-PT": "Inicie sessão para ditar um registo.",
         }),
         "voice.failed.unclear": t({
             en: "Didn't catch a transaction in that.",
             es: "No detecté ninguna transacción ahí.",
             pt: "Não identifiquei nenhum lançamento aí.",
+            "pt-PT": "Não identifiquei nenhum registo no que disse.",
         }),
         "voice.hint": t({
             en: "Try “{example}”",
@@ -177,16 +189,19 @@ const voice = {
             en: "Listening…",
             es: "Escuchando…",
             pt: "Ouvindo…",
+            "pt-PT": "A ouvir…",
         }),
         "voice.state.starting": t({
             en: "Getting ready…",
             es: "Preparando…",
             pt: "Preparando…",
+            "pt-PT": "A preparar…",
         }),
         "voice.state.thinking": t({
             en: "Writing it down…",
             es: "Anotando…",
             pt: "Anotando…",
+            "pt-PT": "A anotar…",
         }),
         "voice.turn.field.account": t({
             en: "account",

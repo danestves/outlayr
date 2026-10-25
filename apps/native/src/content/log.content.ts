@@ -19,12 +19,14 @@ const log = {
             es: "Escanear un recibo",
             "es-ES": "Escanear un ticket",
             pt: "Escanear um recibo",
+            "pt-PT": "Digitalizar um talão",
         }),
         "log.add.transaction": t({
             en: "Add a transaction",
             es: "Agregar una transacción",
             "es-ES": "Añadir una transacción",
             pt: "Adicionar um lançamento",
+            "pt-PT": "Adicionar um registo",
         }),
         "log.add.transfer": t({
             en: "Move money",
@@ -35,6 +37,7 @@ const log = {
             en: "Speak an entry",
             es: "Dictar un registro",
             pt: "Ditar um lançamento",
+            "pt-PT": "Ditar um registo",
         }),
         "log.amounts.hidden": t({
             en: "Amount hidden",
@@ -78,26 +81,31 @@ const log = {
             en: "Nothing was removed, so it's back on your log. Try again.",
             es: "No se eliminó nada, así que volvió a tu registro. Inténtalo de nuevo.",
             pt: "Nada foi apagado, então ele voltou para seus lançamentos. Tente de novo.",
+            "pt-PT": "Nada foi apagado, por isso voltou aos seus registos. Tente de novo.",
         }),
         "log.delete.failedTitle": t({
             en: "Couldn't delete the entry",
             es: "No se pudo eliminar el registro",
             pt: "Não foi possível apagar o lançamento",
+            "pt-PT": "Não foi possível apagar o registo",
         }),
         "log.empty.body": t({
             en: "Your first entry sets the baseline everything else is measured against.",
             es: "Tu primer registro define la base con la que se compara todo lo demás.",
             pt: "Seu primeiro lançamento define a base com que todo o resto é comparado.",
+            "pt-PT": "O seu primeiro registo define a base com que todo o resto é comparado.",
         }),
         "log.empty.title": t({
             en: "Nothing logged yet",
             es: "Aún no hay registros",
             pt: "Nada registrado ainda",
+            "pt-PT": "Nada registado ainda",
         }),
         "log.filter.all": t({
             en: "all entries",
             es: "todos los registros",
             pt: "todos os lançamentos",
+            "pt-PT": "todos os registos",
         }),
         "log.filter.category": t({
             en: "by category",
@@ -158,6 +166,7 @@ const log = {
             en: "Currency shown",
             es: "Moneda mostrada",
             pt: "Moeda exibida",
+            "pt-PT": "Moeda apresentada",
         }),
         "log.ledger.showFigure": t({
             en: "Show this figure",
@@ -183,6 +192,7 @@ const log = {
             en: "No entries found.",
             es: "No se encontraron registros.",
             pt: "Nenhum lançamento encontrado.",
+            "pt-PT": "Nenhum registo encontrado.",
         }),
         "log.period.all": t({
             en: "all time",
@@ -213,6 +223,7 @@ const log = {
             en: "Double tap and hold to open actions for this entry",
             es: "Toca dos veces y mantén para abrir las acciones de este registro",
             pt: "Toque duas vezes e segure para abrir as ações deste lançamento",
+            "pt-PT": "Toque duas vezes e mantenha premido para abrir as ações deste registo",
         }),
         "log.row.amountExpense": t({
             en: "Expense {amount}",
@@ -248,6 +259,7 @@ const log = {
             en: "{arrived} arrived after a {fee} fee",
             es: "Llegaron {arrived} tras una comisión de {fee}",
             pt: "Chegaram {arrived} após uma tarifa de {fee}",
+            "pt-PT": "Chegaram {arrived} após uma comissão de {fee}",
         }),
         "log.row.delete": t({
             en: "Delete",
@@ -258,16 +270,19 @@ const log = {
             en: "Delete transaction",
             es: "Eliminar transacción",
             pt: "Apagar lançamento",
+            "pt-PT": "Apagar registo",
         }),
         "log.row.fee": t({
             en: "+{amount} fee",
             es: "+{amount} de comisión",
             pt: "+{amount} de tarifa",
+            "pt-PT": "+{amount} de comissão",
         }),
         "log.row.feeIncluded": t({
             en: "{subtitle}, fee included",
             es: "{subtitle}, comisión incluida",
             pt: "{subtitle}, tarifa incluída",
+            "pt-PT": "{subtitle}, comissão incluída",
         }),
         "log.row.outside": t({
             en: "{amount} from another account",
@@ -285,11 +300,13 @@ const log = {
             es: "Se necesita confirmar la tasa de cambio personalizada. Abre esta transacción para confirmarla.",
             "es-ES": "Hay que confirmar el tipo de cambio personalizado. Abre esta transacción para confirmarlo.",
             pt: "É preciso confirmar a cotação personalizada. Abra este lançamento para confirmá-la.",
+            "pt-PT": "É preciso confirmar a cotação personalizada. Abra este registo para a confirmar.",
         }),
         "log.row.unplaced": t({
             en: "Currency not recorded, shown as {code}",
             es: "Moneda no registrada, se muestra como {code}",
             pt: "Moeda não registrada, exibida como {code}",
+            "pt-PT": "Moeda não registada, apresentada como {code}",
         }),
         "log.scope.clear": t({
             en: "Clear",
@@ -305,6 +322,7 @@ const log = {
             en: "Log",
             es: "Registro",
             pt: "Lançamentos",
+            "pt-PT": "Registos",
         }),
         "log.toolbar.filter": t({
             en: "Filter",
@@ -320,6 +338,7 @@ const log = {
             en: "Search",
             es: "Buscar",
             pt: "Buscar",
+            "pt-PT": "Pesquisar",
         }),
         "log.toolbar.show": t({
             en: "Show",
@@ -340,6 +359,7 @@ const log = {
             en: "Log deleted",
             es: "Registro eliminado",
             pt: "Lançamento apagado",
+            "pt-PT": "Registo apagado",
         }),
         "log.upcoming.heading": t({
             en: "UPCOMING",

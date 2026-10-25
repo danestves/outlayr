@@ -12,12 +12,14 @@ const importSheet = {
             en: "Choose a different file",
             es: "Elegir otro archivo",
             pt: "Escolher outro arquivo",
+            "pt-PT": "Escolher outro ficheiro",
         }),
         "import.declinedBody": t({
             en: "AI suggestions are off in Settings.",
             es: "Las sugerencias de IA están desactivadas en Configuración.",
             "es-ES": "Las sugerencias de IA están desactivadas en Ajustes.",
             pt: "As sugestões de IA estão desativadas em Ajustes.",
+            "pt-PT": "As sugestões de IA estão desativadas nas Definições.",
         }),
         "import.doneAddedLabel": t({
             en: "Added",
@@ -34,36 +36,43 @@ const importSheet = {
             en: "{count} duplicates skipped · {month} is on the Log",
             es: "{count} duplicados omitidos · {month} ya está en el registro",
             pt: "{count} duplicados ignorados · {month} já está em Lançamentos",
+            "pt-PT": "{count} duplicados ignorados · {month} já está em Registos",
         }),
         "import.doneSublineNoDuplicates": t({
             en: "{month} is on the Log",
             es: "{month} ya está en el registro",
             pt: "{month} já está em Lançamentos",
+            "pt-PT": "{month} já está em Registos",
         }),
         "import.errorEmptyBody": t({
             en: "We couldn't find any comma-separated data in this file.",
             es: "No encontramos datos separados por comas en este archivo.",
             pt: "Não encontramos dados separados por vírgula neste arquivo.",
+            "pt-PT": "Não encontrámos dados separados por vírgulas neste ficheiro.",
         }),
         "import.errorEmptyTitle": t({
             en: "This doesn't look like a CSV file",
             es: "Esto no parece un archivo CSV",
             pt: "Isto não parece um arquivo CSV",
+            "pt-PT": "Isto não parece um ficheiro CSV",
         }),
         "import.errorIoTitle": t({
             en: "We couldn't read that file",
             es: "No pudimos leer ese archivo",
             pt: "Não conseguimos ler esse arquivo",
+            "pt-PT": "Não conseguimos ler esse ficheiro",
         }),
         "import.errorNoDataBody": t({
             en: "This file has a header row but no data below it.",
             es: "Este archivo tiene encabezados, pero no hay datos debajo.",
             pt: "Este arquivo tem cabeçalho, mas nenhum dado abaixo dele.",
+            "pt-PT": "Este ficheiro tem cabeçalho, mas não tem dados abaixo dele.",
         }),
         "import.errorNoDataTitle": t({
             en: "No transactions found in this file",
             es: "No se encontraron transacciones en este archivo",
             pt: "Nenhum lançamento encontrado neste arquivo",
+            "pt-PT": "Nenhum registo encontrado neste ficheiro",
         }),
         "import.errorTooFewColumnsBody": t({
             en: "Outlayr needs at least a date, an amount, and a category or description column.",
@@ -75,6 +84,7 @@ const importSheet = {
             en: "This file has fewer than 3 columns",
             es: "Este archivo tiene menos de 3 columnas",
             pt: "Este arquivo tem menos de 3 colunas",
+            "pt-PT": "Este ficheiro tem menos de 3 colunas",
         }),
         "import.errorTooLargeBody": t({
             en: "Try exporting a smaller date range from your bank.",
@@ -85,6 +95,7 @@ const importSheet = {
             en: "This file is too large to open",
             es: "Este archivo es demasiado grande para abrirlo",
             pt: "Este arquivo é grande demais para abrir",
+            "pt-PT": "Este ficheiro é demasiado grande para abrir",
         }),
         "import.fileColumnsLabel": t({
             en: "Columns",
@@ -100,16 +111,19 @@ const importSheet = {
             en: "No file chosen",
             es: "Ningún archivo elegido",
             pt: "Nenhum arquivo escolhido",
+            "pt-PT": "Nenhum ficheiro escolhido",
         }),
         "import.fileNoCategoryColumn": t({
             en: "No category column — we'll read the Description column instead.",
             es: "No hay columna de categoría, así que vamos a leer la columna Descripción.",
             pt: "Sem coluna de categoria, então vamos ler a coluna Descrição.",
+            "pt-PT": "Sem coluna de categoria, por isso vamos ler a coluna Descrição.",
         }),
         "import.fileOnDeviceNote": t({
             en: "Large files are read on your device only.",
             es: "Los archivos grandes se leen solo en tu dispositivo.",
             pt: "Arquivos grandes são lidos só no seu dispositivo.",
+            "pt-PT": "Os ficheiros grandes só são lidos no seu dispositivo.",
         }),
         "import.fileReadOnDevice": t({
             en: "Read on this device",
@@ -127,6 +141,8 @@ const importSheet = {
             "es-ES":
                 "Añade una fila de encabezado que nombre la columna que falta, o elige un archivo que ya la tenga.",
             pt: "Adicione uma linha de cabeçalho com o nome da coluna que falta, ou escolha um arquivo que já tenha uma.",
+            "pt-PT":
+                "Adicione uma linha de cabeçalho com o nome da coluna que falta, ou escolha um ficheiro que já tenha uma.",
         }),
         "import.mappingGapNoAmount": t({
             en: "No amount column",
@@ -148,16 +164,19 @@ const importSheet = {
             en: "We couldn't find the right columns",
             es: "No pudimos encontrar las columnas correctas",
             pt: "Não encontramos as colunas certas",
+            "pt-PT": "Não encontrámos as colunas certas",
         }),
         "import.openFeatureLab": t({
             en: "Open Feature Lab",
             es: "Abrir Laboratorio de funciones",
             pt: "Abrir Laboratório de recursos",
+            "pt-PT": "Abrir Laboratório de funcionalidades",
         }),
         "import.readingFile": t({
             en: "Reading the file…",
             es: "Leyendo el archivo…",
             pt: "Lendo o arquivo…",
+            "pt-PT": "A ler o ficheiro…",
         }),
         "import.resolveDetailMatched": t({
             en: "{matched} of {total} merchants",
@@ -185,51 +204,62 @@ const importSheet = {
             "es-ES":
                 "Solo se envían los nombres de comercios sin coincidencia y los de tus categorías. Nunca tus importes, fechas ni el archivo.",
             pt: "Só enviamos os nomes de estabelecimentos sem correspondência e os nomes das suas categorias. Nunca seus valores, datas ou o próprio arquivo.",
+            "pt-PT":
+                "Só enviamos os nomes de estabelecimentos sem correspondência e os nomes das suas categorias. Nunca os seus valores, datas ou o próprio ficheiro.",
         }),
         "import.resolveReviewCta": t({
             en: "Review {count} transactions",
             es: "Revisar {count} transacciones",
             pt: "Revisar {count} lançamentos",
+            "pt-PT": "Rever {count} registos",
         }),
         "import.resolveRunningAsked": t({
             en: "Asked the model",
             es: "Consultamos al modelo",
             pt: "Consultamos o modelo",
+            "pt-PT": "Consultámos o modelo",
         }),
         "import.resolveRunningMatched": t({
             en: "Matched on device",
             es: "Buscamos coincidencias en el dispositivo",
             pt: "Comparamos no dispositivo",
+            "pt-PT": "Comparámos no dispositivo",
         }),
         "import.resolveRunningReadFile": t({
             en: "Read the file",
             es: "Leímos el archivo",
             pt: "Lemos o arquivo",
+            "pt-PT": "Lemos o ficheiro",
         }),
         "import.resumeBody": t({
             en: "Your file and progress were kept.",
             es: "Tu archivo y tu progreso quedaron guardados.",
             pt: "Seu arquivo e seu progresso foram mantidos.",
+            "pt-PT": "O seu ficheiro e o seu progresso foram mantidos.",
         }),
         "import.resumeNotice": t({
             en: "Picking up where you left off",
             es: "Continuamos donde lo dejaste",
             pt: "Continuando de onde você parou",
+            "pt-PT": "A continuar de onde parou",
         }),
         "import.reviewCommitConfirmCta": t({
             en: "Import {count} transactions?",
             es: "¿Importar {count} transacciones?",
             pt: "Importar {count} lançamentos?",
+            "pt-PT": "Importar {count} registos?",
         }),
         "import.reviewCommitCta": t({
             en: "Import {count} transactions",
             es: "Importar {count} transacciones",
             pt: "Importar {count} lançamentos",
+            "pt-PT": "Importar {count} registos",
         }),
         "import.reviewCommitFailedBody": t({
             en: "The write failed, so your ledger is unchanged. Your selections are still here.",
             es: "No se pudo guardar, así que tu registro no cambió. Tus selecciones siguen aquí.",
             pt: "A gravação falhou, então seus lançamentos não mudaram. Suas seleções continuam aqui.",
+            "pt-PT": "A gravação falhou, por isso os seus registos não mudaram. As suas seleções continuam aqui.",
         }),
         "import.reviewCommitFailedTitle": t({
             en: "Nothing was imported",
@@ -240,11 +270,13 @@ const importSheet = {
             en: "Importing {count} transaction…",
             es: "Importando {count} transacción…",
             pt: "Importando {count} lançamento…",
+            "pt-PT": "A importar {count} registo…",
         }),
         "import.reviewCommitting_other": t({
             en: "Importing {count} transactions…",
             es: "Importando {count} transacciones…",
             pt: "Importando {count} lançamentos…",
+            "pt-PT": "A importar {count} registos…",
         }),
         "import.reviewDuplicateCaption": t({
             en: "Looks already imported.",
@@ -297,16 +329,19 @@ const importSheet = {
             es: "Metadatos de tasa de cambio no válidos",
             "es-ES": "Metadatos de tipo de cambio no válidos",
             pt: "Metadados de cotação inválidos",
+            "pt-PT": "Metadados de câmbio inválidos",
         }),
         "import.sourceEyebrow": t({
             en: "Bring data in",
             es: "Trae tus datos",
             pt: "Traga seus dados",
+            "pt-PT": "Traga os seus dados",
         }),
         "import.sourceLede": t({
             en: "Bring transactions in from a file. Everything is read on your device.",
             es: "Trae transacciones desde un archivo. Todo se lee en tu dispositivo.",
             pt: "Traga lançamentos de um arquivo. Tudo é lido no seu dispositivo.",
+            "pt-PT": "Traga registos de um ficheiro. Tudo é lido no seu dispositivo.",
         }),
         "import.startOver": t({
             en: "Start over",
@@ -322,16 +357,19 @@ const importSheet = {
             en: "Choose a file",
             es: "Elige un archivo",
             pt: "Escolha um arquivo",
+            "pt-PT": "Escolha um ficheiro",
         }),
         "import.titleResolve": t({
             en: "Preparing",
             es: "Preparando",
             pt: "Preparando",
+            "pt-PT": "A preparar",
         }),
         "import.titleReview": t({
             en: "Review",
             es: "Revisar",
             pt: "Revisar",
+            "pt-PT": "Rever",
         }),
         "import.titleSource": t({
             en: "Import",
@@ -347,6 +385,7 @@ const importSheet = {
             en: "We didn't understand the answer, so we ignored all of it.",
             es: "No entendimos la respuesta, así que la ignoramos por completo.",
             pt: "Não entendemos a resposta, então ignoramos tudo.",
+            "pt-PT": "Não percebemos a resposta, por isso ignorámos tudo.",
         }),
         "import.unavailableNoEntries": t({
             en: "None of its rows matched one of your categories on your device.",
@@ -367,11 +406,13 @@ const importSheet = {
             en: "You're offline.",
             es: "Estás sin conexión.",
             pt: "Você está sem conexão.",
+            "pt-PT": "Está sem ligação.",
         }),
         "import.unavailableOverCap": t({
             en: "This file is too large to send, so it was read on your device only.",
             es: "Este archivo es demasiado grande para enviarlo, así que se leyó solo en tu dispositivo.",
             pt: "Este arquivo é grande demais para enviar, então foi lido só no seu dispositivo.",
+            "pt-PT": "Este ficheiro é demasiado grande para enviar, por isso só foi lido no seu dispositivo.",
         }),
         "import.unavailableProviderError": t({
             en: "The service didn't answer.",
@@ -383,11 +424,13 @@ const importSheet = {
             es: "Hiciste demasiadas importaciones en esta hora.",
             "es-ES": "Has hecho demasiadas importaciones en esta hora.",
             pt: "Importações demais nesta hora.",
+            "pt-PT": "Demasiadas importações nesta hora.",
         }),
         "import.unavailableTimeout": t({
             en: "It took too long.",
             es: "Tardó demasiado.",
             pt: "Demorou demais.",
+            "pt-PT": "Demorou demasiado.",
         }),
         "import.unavailableTitle": t({
             en: "Suggestions are unavailable",
@@ -398,6 +441,7 @@ const importSheet = {
             en: "Sign in to get AI suggestions.",
             es: "Inicia sesión para obtener sugerencias de IA.",
             pt: "Entre para receber sugestões de IA.",
+            "pt-PT": "Inicie sessão para receber sugestões de IA.",
         }),
     },
     key: "import" as const,

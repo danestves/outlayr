@@ -12,21 +12,27 @@ const settingsData = {
             en: "Nothing has been deleted. Entries you delete arrive here and wait. Outlayr never throws one away.",
             es: "No has eliminado nada. Las entradas que elimines llegan aquí y te esperan. Outlayr nunca descarta ninguna.",
             pt: "Nada foi apagado. Os lançamentos que você apagar chegam aqui e ficam esperando. O Outlayr nunca joga nenhum fora.",
+            "pt-PT":
+                "Nada foi apagado. Os registos que apagar vêm parar aqui e ficam à espera. O Outlayr nunca deita nenhum fora.",
         }),
         "settings.deleted.failedBody": t({
             en: "It is still here and nothing was lost. Try restoring it again.",
             es: "Sigue aquí y no se perdió nada. Intenta restaurarla de nuevo.",
             pt: "Ele continua aqui e nada se perdeu. Tente restaurá-lo de novo.",
+            "pt-PT": "Continua aqui e nada se perdeu. Tente restaurá-lo novamente.",
         }),
         "settings.deleted.failedTitle": t({
             en: "Entry not restored",
             es: "La entrada no se restauró",
             pt: "O lançamento não foi restaurado",
+            "pt-PT": "O registo não foi restaurado",
         }),
         "settings.deleted.footer": t({
             en: "Restoring puts the entry back on the Log exactly where its date belongs. A subscription you ended stays ended: only the charge comes back, never the schedule.",
             es: "Restaurar devuelve la entrada al registro justo donde le corresponde por fecha. Una suscripción que terminaste sigue terminada: vuelve solo el cargo, nunca la programación.",
             pt: "Restaurar coloca o lançamento de volta na aba Lançamentos, bem no lugar da data dele. Uma assinatura que você encerrou continua encerrada: só a cobrança volta, nunca a programação.",
+            "pt-PT":
+                "Restaurar volta a pôr o registo no separador Registos, mesmo no lugar da sua data. Uma subscrição que encerrou continua encerrada: só a cobrança volta, nunca o agendamento.",
         }),
         "settings.deleted.navTitle": t({
             en: "Recently deleted",
@@ -47,6 +53,7 @@ const settingsData = {
             en: "Deleted entries",
             es: "Entradas eliminadas",
             pt: "Lançamentos apagados",
+            "pt-PT": "Registos apagados",
         }),
         "settings.erase.action": t({
             en: "Erase",
@@ -59,6 +66,8 @@ const settingsData = {
             "es-ES":
                 "Se eliminarán todas las transacciones, plantillas recurrentes, transferencias, presupuestos y fotos. Tus cuentas, categorías, metas de ahorro, etiquetas y ajustes se conservan. Esto no se puede deshacer.",
             pt: "Todos os lançamentos, modelos recorrentes, transferências, orçamentos e fotos serão apagados. Suas contas, categorias, metas de economia, tags e ajustes são mantidos. Isso não pode ser desfeito.",
+            "pt-PT":
+                "Todos os registos, modelos recorrentes, transferências, orçamentos e fotos serão apagados. As suas contas, categorias, objetivos de poupança, etiquetas e definições são mantidos. Isto não pode ser desfeito.",
         }),
         "settings.erase.confirmEverythingTitle": t({
             en: "Erase everything?",
@@ -69,11 +78,14 @@ const settingsData = {
             en: "Every transaction and recurring template will be deleted. Budgets and categories are kept. This can't be undone.",
             es: "Se eliminarán todas las transacciones y plantillas recurrentes. Los presupuestos y las categorías se conservan. Esto no se puede deshacer.",
             pt: "Todos os lançamentos e modelos recorrentes serão apagados. Orçamentos e categorias são mantidos. Isso não pode ser desfeito.",
+            "pt-PT":
+                "Todos os registos e modelos recorrentes serão apagados. Os orçamentos e as categorias são mantidos. Isto não pode ser desfeito.",
         }),
         "settings.erase.confirmTransactionsTitle": t({
             en: "Erase transactions?",
             es: "¿Borrar las transacciones?",
             pt: "Apagar os lançamentos?",
+            "pt-PT": "Apagar os registos?",
         }),
         "settings.erase.failedBody": t({
             en: "Part of your data may still be on this device. Try erasing again.",
@@ -84,6 +96,7 @@ const settingsData = {
             en: "Erase didn't finish",
             es: "El borrado no terminó",
             pt: "Não deu para apagar tudo",
+            "pt-PT": "Não foi possível apagar tudo",
         }),
         "settings.erase.footer": t({
             en: "Your categories are kept either way: they are the vocabulary you built, not the records you logged.",
@@ -91,6 +104,8 @@ const settingsData = {
             "es-ES":
                 "Tus categorías se conservan en ambos casos: son el vocabulario que creaste, no los registros que anotaste.",
             pt: "Suas categorias são mantidas nos dois casos: são o vocabulário que você criou, não os registros que você fez.",
+            "pt-PT":
+                "As suas categorias são mantidas em ambos os casos: são o vocabulário que criou, não os registos que fez.",
         }),
         "settings.erase.onThisDevice": t({
             en: "On this device",
@@ -106,21 +121,25 @@ const settingsData = {
             en: "transaction logged",
             es: "transacción registrada",
             pt: "lançamento registrado",
+            "pt-PT": "registo efetuado",
         }),
         "settings.erase.transactionsAndBudgets": t({
             en: "Transactions and budgets",
             es: "Transacciones y presupuestos",
             pt: "Lançamentos e orçamentos",
+            "pt-PT": "Registos e orçamentos",
         }),
         "settings.erase.transactionsLogged": t({
             en: "transactions logged",
             es: "transacciones registradas",
             pt: "lançamentos registrados",
+            "pt-PT": "registos efetuados",
         }),
         "settings.erase.transactionsOnly": t({
             en: "Transactions only",
             es: "Solo las transacciones",
             pt: "Só os lançamentos",
+            "pt-PT": "Só os registos",
         }),
         "settings.export.action": t({
             en: "Export CSV",
@@ -136,6 +155,8 @@ const settingsData = {
             en: "Carries every entry, category and budget in full, including the things the CSV leaves behind. This is the file to restore from.",
             es: "Incluye cada registro, categoría y presupuesto completos, con todo lo que el CSV deja fuera. Es el archivo que usas para restaurar.",
             pt: "Inclui cada lançamento, categoria e orçamento por completo, com tudo o que o CSV deixa de fora. É deste arquivo que você restaura.",
+            "pt-PT":
+                "Inclui cada registo, categoria e orçamento por completo, com tudo o que o CSV deixa de fora. É a partir deste ficheiro que pode restaurar.",
         }),
         "settings.export.archiveShareTitle": t({
             en: "Outlayr archive",
@@ -158,11 +179,14 @@ const settingsData = {
             "es-ES":
                 "Las fechas van en formato ISO 8601 y los importes como decimales simples sin separador de miles, así que el archivo se vuelve a leer en Outlayr (o en una hoja de cálculo) con las mismas cifras.",
             pt: "As datas vão no formato ISO 8601 e os valores como decimais simples, sem separador de milhar, então o arquivo volta para o Outlayr (ou para uma planilha) com os mesmos números.",
+            "pt-PT":
+                "As datas vão no formato ISO 8601 e os valores como decimais simples, sem separador de milhares, por isso o ficheiro volta ao Outlayr (ou a uma folha de cálculo) com os mesmos números.",
         }),
         "settings.export.failedBody": t({
             en: "The file couldn't be written.",
             es: "No se pudo escribir el archivo.",
             pt: "Não foi possível gravar o arquivo.",
+            "pt-PT": "Não foi possível gravar o ficheiro.",
         }),
         "settings.export.failedTitle": t({
             en: "Export failed",
@@ -173,16 +197,20 @@ const settingsData = {
             en: "Deleted transactions are left out. Every other transaction is written, newest first, in eight columns.",
             es: "Las transacciones eliminadas se omiten. Todas las demás se escriben, de la más reciente a la más antigua, en ocho columnas.",
             pt: "Os lançamentos apagados ficam de fora. Todos os outros são gravados, do mais recente ao mais antigo, em oito colunas.",
+            "pt-PT":
+                "Os registos apagados ficam de fora. Todos os outros são gravados, do mais recente ao mais antigo, em oito colunas.",
         }),
         "settings.export.omitted": t({
             en: "Not in the file",
             es: "No está en el archivo",
             pt: "Fora do arquivo",
+            "pt-PT": "Fora do ficheiro",
         }),
         "settings.export.omittedDetails": t({
             en: "Notes: the longer text under a transaction",
             es: "Notas: el texto largo debajo de una transacción",
             pt: "Notas: o texto mais longo abaixo de um lançamento",
+            "pt-PT": "Notas: o texto mais longo abaixo de um registo",
         }),
         "settings.export.omittedLook": t({
             en: "Emoji, icon and color",
@@ -196,6 +224,8 @@ const settingsData = {
             "es-ES":
                 "Un CSV es una copia legible de tus cifras, no una copia de seguridad. Al volver a importarlo solo se recrean la fecha, el nombre, el importe, la moneda y el tipo de cada transacción, y vincula cada una con la categoría del mismo nombre, porque el archivo no puede crear categorías. Tus presupuestos, tus categorías y todo lo anterior existen únicamente en este dispositivo.",
             pt: "Um CSV é uma cópia legível dos seus números, não um backup. Ao importá-lo de volta, só a data, o nome, o valor, a moeda e o tipo de cada lançamento são recriados, e cada um é ligado à categoria de mesmo nome, porque o arquivo não pode criar categorias. Seus orçamentos, suas categorias e tudo o que está listado acima existem só neste dispositivo.",
+            "pt-PT":
+                "Um CSV é uma cópia legível dos seus números, não um backup. Ao importá-lo de volta, só a data, o nome, o valor, a moeda e o tipo de cada registo são recriados, e cada um é associado à categoria com o mesmo nome, porque o ficheiro não pode criar categorias. Os seus orçamentos, as suas categorias e tudo o que está listado acima existem só neste dispositivo.",
         }),
         "settings.export.omittedPhotos": t({
             en: "Photos",
@@ -206,16 +236,19 @@ const settingsData = {
             en: "Subscription schedules and their reminders",
             es: "La programación de las suscripciones y sus recordatorios",
             pt: "A programação das assinaturas e seus lembretes",
+            "pt-PT": "O agendamento das subscrições e os seus lembretes",
         }),
         "settings.export.preparing": t({
             en: "Preparing the file\u2026",
             es: "Preparando el archivo\u2026",
             pt: "Preparando o arquivo…",
+            "pt-PT": "A preparar o ficheiro…",
         }),
         "settings.export.preparingArchive": t({
             en: "Preparing the archive\u2026",
             es: "Preparando el archivo completo\u2026",
             pt: "Preparando o arquivo completo…",
+            "pt-PT": "A preparar o arquivo completo…",
         }),
         "settings.export.ready": t({
             en: "Ready to export",
@@ -226,16 +259,19 @@ const settingsData = {
             en: "Export transactions",
             es: "Exportar transacciones",
             pt: "Exportar lançamentos",
+            "pt-PT": "Exportar registos",
         }),
         "settings.export.transaction": t({
             en: "transaction",
             es: "transacción",
             pt: "lançamento",
+            "pt-PT": "registo",
         }),
         "settings.export.transactions": t({
             en: "transactions",
             es: "transacciones",
             pt: "lançamentos",
+            "pt-PT": "registos",
         }),
         "settings.import.sourceCsvSubtitle": t({
             en: "Comma-separated values from your bank.",
@@ -246,6 +282,7 @@ const settingsData = {
             en: "CSV file",
             es: "Archivo CSV",
             pt: "Arquivo CSV",
+            "pt-PT": "Ficheiro CSV",
         }),
         "settings.restore.action": t({
             en: "Restore from an archive",
@@ -256,11 +293,13 @@ const settingsData = {
             en: "The file could not be read, or it was written by a newer version of the app.",
             es: "No se pudo leer el archivo, o lo escribió una versión más reciente de la app.",
             pt: "Não foi possível ler o arquivo, ou ele foi gravado por uma versão mais nova do app.",
+            "pt-PT": "Não foi possível ler o ficheiro, ou foi gravado por uma versão mais recente da app.",
         }),
         "settings.restore.badArchiveTitle": t({
             en: "That is not an Outlayr archive",
             es: "Ese no es un archivo de Outlayr",
             pt: "Esse não é um arquivo do Outlayr",
+            "pt-PT": "Isto não é um arquivo do Outlayr",
         }),
         "settings.restore.confirmAction": t({
             en: "Replace",
@@ -271,11 +310,14 @@ const settingsData = {
             en: "Everything on this device is replaced by the {count} rows in the archive. This cannot be undone.",
             es: "Todo lo de este dispositivo se reemplaza por las {count} filas del archivo. Esto no se puede deshacer.",
             pt: "Tudo neste dispositivo é substituído pelas {count} linhas do arquivo. Isso não pode ser desfeito.",
+            "pt-PT":
+                "Tudo neste dispositivo é substituído pelas {count} linhas do arquivo. Isto não pode ser desfeito.",
         }),
         "settings.restore.confirmTitle": t({
             en: "Replace this ledger?",
             es: "¿Reemplazar este registro?",
             pt: "Substituir estes lançamentos?",
+            "pt-PT": "Substituir estes registos?",
         }),
         "settings.restore.eyebrow": t({
             en: "Restore everything",
@@ -286,6 +328,7 @@ const settingsData = {
             en: "That file couldn't be opened.",
             es: "No se pudo abrir ese archivo.",
             pt: "Não foi possível abrir esse arquivo.",
+            "pt-PT": "Não foi possível abrir esse ficheiro.",
         }),
         "settings.restore.failedTitle": t({
             en: "Restore failed",
@@ -296,6 +339,7 @@ const settingsData = {
             en: "This replaces every transaction, category and budget on this device. It cannot be undone.",
             es: "Esto reemplaza cada transacción, categoría y presupuesto de este dispositivo. No se puede deshacer.",
             pt: "Isso substitui cada lançamento, categoria e orçamento deste dispositivo. Não pode ser desfeito.",
+            "pt-PT": "Isto substitui cada registo, categoria e orçamento deste dispositivo. Não pode ser desfeito.",
         }),
         "settings.restore.intro": t({
             en: "A full archive replaces this ledger with the one in the file. Use it to move to a new phone, not to add entries.",
@@ -303,16 +347,20 @@ const settingsData = {
             "es-ES":
                 "Un archivo completo reemplaza este registro por el del archivo. Sirve para pasarte a un móvil nuevo, no para añadir registros.",
             pt: "Um arquivo completo substitui estes lançamentos pelos do arquivo. Serve para passar para um celular novo, não para adicionar lançamentos.",
+            "pt-PT":
+                "Um arquivo completo substitui estes registos pelos do ficheiro. Serve para mudar para um telemóvel novo, não para adicionar registos.",
         }),
         "settings.restore.restoring_one": t({
             en: "Restoring {count} row\u2026",
             es: "Restaurando {count} fila\u2026",
             pt: "Restaurando {count} linha…",
+            "pt-PT": "A restaurar {count} linha…",
         }),
         "settings.restore.restoring_other": t({
             en: "Restoring {count} rows\u2026",
             es: "Restaurando {count} filas\u2026",
             pt: "Restaurando {count} linhas…",
+            "pt-PT": "A restaurar {count} linhas…",
         }),
     },
     key: "settings-data" as const,

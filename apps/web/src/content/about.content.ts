@@ -63,8 +63,8 @@ const about = {
             {
                 label: t({ en: "Languages", es: "Idiomas" }),
                 text: t({
-                    en: "English, Spanish from Latin America and from Spain, and Brazilian Portuguese.",
-                    es: "Inglés, español de Latinoamérica y de España, y portugués de Brasil.",
+                    en: "English, Spanish from Latin America and from Spain, and Portuguese from Brazil and from Portugal.",
+                    es: "Inglés, español de Latinoamérica y de España, y portugués de Brasil y de Portugal.",
                 }),
             },
             {

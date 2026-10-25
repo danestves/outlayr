@@ -12,6 +12,7 @@ const transaction = {
             en: "No accounts yet. Create one to keep this entry's balance somewhere.",
             es: "Aún no tienes cuentas. Crea una para llevar el saldo de esta entrada.",
             pt: "Você ainda não tem contas. Crie uma para acompanhar o saldo deste lançamento.",
+            "pt-PT": "Ainda não tem contas. Crie uma para acompanhar o saldo deste registo.",
         }),
         "transaction.account.none": t({
             en: "None",
@@ -27,18 +28,21 @@ const transaction = {
             en: "Change currency",
             es: "Cambiar moneda",
             pt: "Trocar moeda",
+            "pt-PT": "Alterar moeda",
         }),
         "transaction.amount.required": t({
             en: "Type an amount first",
             es: "Primero escribe un monto",
             "es-ES": "Primero escribe un importe",
             pt: "Primeiro digite um valor",
+            "pt-PT": "Introduza primeiro um valor",
         }),
         "transaction.attachments.add": t({
             en: "Add a file",
             es: "Agregar un archivo",
             "es-ES": "Añadir un archivo",
             pt: "Adicionar um arquivo",
+            "pt-PT": "Adicionar um ficheiro",
         }),
         "transaction.attachments.add.camera": t({
             en: "Take photo",
@@ -50,6 +54,7 @@ const transaction = {
             en: "Choose file",
             es: "Elegir archivo",
             pt: "Escolher arquivo",
+            "pt-PT": "Escolher ficheiro",
         }),
         "transaction.attachments.add.library": t({
             en: "Choose photo",
@@ -61,31 +66,37 @@ const transaction = {
             es: "Outlayr necesita la cámara para tomar una foto.",
             "es-ES": "Outlayr necesita la cámara para hacer una foto.",
             pt: "O Outlayr precisa da câmera para tirar uma foto.",
+            "pt-PT": "O Outlayr precisa da câmara para tirar uma foto.",
         }),
         "transaction.attachments.failed.full": t({
             en: "An entry holds up to 10 files.",
             es: "Un registro admite hasta 10 archivos.",
             pt: "Um lançamento aceita até 10 arquivos.",
+            "pt-PT": "Um registo aceita até 10 ficheiros.",
         }),
         "transaction.attachments.failed.open": t({
             en: "Couldn't open that file.",
             es: "No se pudo abrir ese archivo.",
             pt: "Não foi possível abrir esse arquivo.",
+            "pt-PT": "Não foi possível abrir esse ficheiro.",
         }),
         "transaction.attachments.failed.tooLarge": t({
             en: "Files over 10 MB can't be attached.",
             es: "No se pueden adjuntar archivos de más de 10 MB.",
             pt: "Não é possível anexar arquivos com mais de 10 MB.",
+            "pt-PT": "Não é possível anexar ficheiros com mais de 10 MB.",
         }),
         "transaction.attachments.failed.unreadable": t({
             en: "Couldn't read that file. Attach a photo or a PDF.",
             es: "No se pudo leer ese archivo. Adjunta una foto o un PDF.",
             pt: "Não foi possível ler esse arquivo. Anexe uma foto ou um PDF.",
+            "pt-PT": "Não foi possível ler esse ficheiro. Anexe uma foto ou um PDF.",
         }),
         "transaction.attachments.pending": t({
             en: "Downloading",
             es: "Descargando",
             pt: "Baixando",
+            "pt-PT": "A transferir",
         }),
         "transaction.attachments.photo": t({
             en: "Photo",
@@ -176,28 +187,33 @@ const transaction = {
             en: "Search categories",
             es: "Buscar categorías",
             pt: "Buscar categorias",
+            "pt-PT": "Pesquisar categorias",
         }),
         "transaction.cta.add": t({
             en: "Add Transaction",
             es: "Agregar transacción",
             "es-ES": "Añadir transacción",
             pt: "Adicionar lançamento",
+            "pt-PT": "Adicionar registo",
         }),
         "transaction.cta.addSubscription": t({
             en: "Add Subscription",
             es: "Agregar suscripción",
             "es-ES": "Añadir suscripción",
             pt: "Adicionar assinatura",
+            "pt-PT": "Adicionar subscrição",
         }),
         "transaction.cta.lookup": t({
             en: "Look up merchant",
             es: "Buscar comercio",
             pt: "Buscar estabelecimento",
+            "pt-PT": "Pesquisar estabelecimento",
         }),
         "transaction.cta.save": t({
             en: "Save Changes",
             es: "Guardar cambios",
             pt: "Salvar alterações",
+            "pt-PT": "Guardar alterações",
         }),
         "transaction.edit.title": t({
             en: "Edit",
@@ -214,11 +230,13 @@ const transaction = {
             en: "Bank fee",
             es: "Comisión del banco",
             pt: "Tarifa bancária",
+            "pt-PT": "Comissão bancária",
         }),
         "transaction.fee.comesTo": t({
             en: "a {amount} fee",
             es: "una comisión de {amount}",
             pt: "uma tarifa de {amount}",
+            "pt-PT": "uma comissão de {amount}",
         }),
         "transaction.fee.line": t({
             en: "{base} plus {fee}",
@@ -229,6 +247,7 @@ const transaction = {
             en: "Logged as",
             es: "Se registra en",
             pt: "Registrada em",
+            "pt-PT": "Registada em",
         }),
         "transaction.fee.none": t({
             en: "None",
@@ -239,11 +258,13 @@ const transaction = {
             en: "Fee · {merchant}",
             es: "Comisión · {merchant}",
             pt: "Tarifa · {merchant}",
+            "pt-PT": "Comissão · {merchant}",
         }),
         "transaction.fee.part": t({
             en: "{fee} in fees",
             es: "{fee} de comisión",
             pt: "{fee} de tarifa",
+            "pt-PT": "{fee} de comissão",
         }),
         "transaction.fee.pays": t({
             en: "{account} pays",
@@ -254,16 +275,19 @@ const transaction = {
             en: "Percent",
             es: "Porcentaje",
             pt: "Porcentagem",
+            "pt-PT": "Percentagem",
         }),
         "transaction.fee.title": t({
             en: "Card fee",
             es: "Comisión de la tarjeta",
             pt: "Tarifa do cartão",
+            "pt-PT": "Comissão do cartão",
         }),
         "transaction.fee.total": t({
             en: "Total with fee",
             es: "Total con comisión",
             pt: "Total com tarifa",
+            "pt-PT": "Total com comissão",
         }),
         "transaction.field.account": t({
             en: "Account",
@@ -300,6 +324,7 @@ const transaction = {
             en: "Netflix, Groceries…",
             es: "Netflix, Súper…",
             pt: "Netflix, Mercado…",
+            "pt-PT": "Netflix, Supermercado…",
         }),
         "transaction.field.notes": t({
             en: "Notes",
@@ -325,21 +350,25 @@ const transaction = {
             en: "Time",
             es: "Hora",
             pt: "Horário",
+            "pt-PT": "Hora",
         }),
         "transaction.identity.autoDetected": t({
             en: "Auto-detected",
             es: "Detectado automáticamente",
             pt: "Detectado automaticamente",
+            "pt-PT": "Detetado automaticamente",
         }),
         "transaction.identity.changePhoto": t({
             en: "Change photo",
             es: "Cambiar foto",
             pt: "Trocar foto",
+            "pt-PT": "Alterar foto",
         }),
         "transaction.identity.changePhotoPrompt": t({
             en: "Tap to change photo",
             es: "Toca para cambiar la foto",
             pt: "Toque para trocar a foto",
+            "pt-PT": "Toque para alterar a foto",
         }),
         "transaction.identity.color": t({
             en: "Color",
@@ -379,11 +408,13 @@ const transaction = {
             es: "Agrega un logo o ícono",
             "es-ES": "Añade un logo o icono",
             pt: "Adicione um logo ou ícone",
+            "pt-PT": "Adicione um logótipo ou ícone",
         }),
         "transaction.identity.hero.logoHint": t({
             en: "Opens the logo picker",
             es: "Abre el selector de logos",
             pt: "Abre o seletor de logos",
+            "pt-PT": "Abre o seletor de logótipos",
         }),
         "transaction.identity.hero.removeIcon": t({
             en: "Remove icon",
@@ -395,11 +426,13 @@ const transaction = {
             en: "Remove logo",
             es: "Quitar logo",
             pt: "Remover logo",
+            "pt-PT": "Remover logótipo",
         }),
         "transaction.identity.hero.tapToChange": t({
             en: "Tap to change",
             es: "Toca para cambiar",
             pt: "Toque para trocar",
+            "pt-PT": "Toque para alterar",
         }),
         "transaction.identity.noIcons": t({
             en: "No icons found",
@@ -422,6 +455,7 @@ const transaction = {
             es: "Buscar íconos",
             "es-ES": "Buscar iconos",
             pt: "Buscar ícones",
+            "pt-PT": "Pesquisar ícones",
         }),
         "transaction.identity.selectPhoto": t({
             en: "Select photo",
@@ -493,21 +527,26 @@ const transaction = {
             en: "Outlayr could not open your data. This is often temporary — try again first. Your ledger is still on this device.",
             es: "Outlayr no pudo abrir tus datos. Suele ser algo temporal, así que inténtalo de nuevo. Tu registro sigue en este dispositivo.",
             pt: "O Outlayr não conseguiu abrir seus dados. Isso costuma ser temporário, então tente de novo primeiro. Seus lançamentos continuam neste dispositivo.",
+            "pt-PT":
+                "O Outlayr não conseguiu abrir os seus dados. Isto costuma ser temporário, por isso comece por tentar de novo. Os seus registos continuam neste dispositivo.",
         }),
         "transaction.localData.retrying": t({
             en: "Trying…",
             es: "Intentando…",
             pt: "Tentando…",
+            "pt-PT": "A tentar…",
         }),
         "transaction.localData.title": t({
             en: "Something Went Wrong",
             es: "Algo salió mal",
             pt: "Algo deu errado",
+            "pt-PT": "Algo correu mal",
         }),
         "transaction.lock.checking": t({
             en: "Checking…",
             es: "Verificando…",
             pt: "Verificando…",
+            "pt-PT": "A verificar…",
         }),
         "transaction.lock.prompt": t({
             en: "Unlock Outlayr",
@@ -579,6 +618,7 @@ const transaction = {
             en: "How you paid",
             es: "Cómo pagaste",
             pt: "Como você pagou",
+            "pt-PT": "Como pagou",
         }),
         "transaction.paidVia.value.card": t({
             en: "card",
@@ -625,6 +665,7 @@ const transaction = {
             es: "Mi tasa",
             "es-ES": "Mi tipo de cambio",
             pt: "Minha cotação",
+            "pt-PT": "A minha cotação",
         }),
         "transaction.rate.daysOld_one": t({
             en: "{count} day old · {date}",
@@ -671,6 +712,7 @@ const transaction = {
             es: "Tasa según lo que pagaste: {rate}",
             "es-ES": "Tipo de cambio según lo que pagaste: {rate}",
             pt: "Cotação pelo que você pagou: {rate}",
+            "pt-PT": "Cotação pelo que pagou: {rate}",
         }),
         "transaction.rate.eur_reference": t({
             en: "EUR (BCV)",
@@ -703,6 +745,7 @@ const transaction = {
             es: "Primero escribe una tasa",
             "es-ES": "Primero escribe un tipo de cambio",
             pt: "Primeiro digite uma cotação",
+            "pt-PT": "Introduza primeiro uma cotação",
         }),
         "transaction.rate.source": t({
             en: "Rate source",
@@ -720,12 +763,14 @@ const transaction = {
             en: "Type",
             es: "Escribir",
             pt: "Digitar",
+            "pt-PT": "Introduzir",
         }),
         "transaction.rate.typeHint": t({
             en: "Type the rate you got",
             es: "Escribe la tasa que te dieron",
             "es-ES": "Escribe el tipo de cambio que te dieron",
             pt: "Digite a cotação que você conseguiu",
+            "pt-PT": "Introduza a cotação que obteve",
         }),
         "transaction.rate.unavailable": t({
             en: "Unavailable",
@@ -771,11 +816,14 @@ const transaction = {
             en: "Nothing was saved. Try again.",
             es: "No se guardó nada. Inténtalo de nuevo.",
             pt: "Nada foi salvo. Tente de novo.",
+            "pt-PT": "Nada foi guardado. Tente de novo.",
         }),
         "transaction.save.scheduleFailedBody": t({
             en: "Your subscription was saved, but its charges could not be logged. Outlayr will try again the next time you open it.",
             es: "Tu suscripción se guardó, pero no se pudieron registrar sus cargos. Outlayr volverá a intentarlo la próxima vez que la abras.",
             pt: "Sua assinatura foi salva, mas não foi possível registrar as cobranças. O Outlayr vai tentar de novo na próxima vez que você abrir o app.",
+            "pt-PT":
+                "A sua subscrição foi guardada, mas não foi possível registar as cobranças. O Outlayr vai tentar de novo na próxima vez que abrir a app.",
         }),
         "transaction.save.scheduleFailedTitle": t({
             en: "Schedule not applied",
@@ -837,6 +885,7 @@ const transaction = {
             en: "A month too short for that day charges on its last day instead.",
             es: "Si el mes no tiene ese día, se cobra el último día del mes.",
             pt: "Se o mês não tiver esse dia, a cobrança cai no último dia do mês.",
+            "pt-PT": "Se o mês não tiver esse dia, a cobrança passa para o último dia do mês.",
         }),
         "transaction.schedule.shortMonthTag": t({
             en: "short month",
@@ -868,6 +917,7 @@ const transaction = {
             en: "fee",
             es: "comisión",
             pt: "tarifa",
+            "pt-PT": "comissão",
         }),
         "transaction.sentence.add.icon": t({
             en: "icon",
@@ -912,6 +962,7 @@ const transaction = {
             en: "tags",
             es: "etiquetas",
             pt: "tags",
+            "pt-PT": "etiquetas",
         }),
         // Nouns, not questions: the template supplies the preposition, so "at {merchant}" must read with the blank in
         // place. The Spanish article carries its noun's gender, so these are not one shared word.
@@ -950,17 +1001,20 @@ const transaction = {
             en: "Every underlined word is yours to change. Tap one, or just keep going below.",
             es: "Puedes cambiar cualquier palabra subrayada. Toca una o sigue abajo.",
             pt: "Você pode mudar qualquer palavra sublinhada. Toque em uma ou continue abaixo.",
+            "pt-PT": "Pode alterar qualquer palavra sublinhada. Toque numa ou continue abaixo.",
         }),
         "transaction.sentence.coachDismiss": t({
             en: "Got it",
             es: "Entendido",
             pt: "Entendi",
+            "pt-PT": "Entendido",
         }),
         "transaction.sentence.currency": t({
             en: "Change the amount's currency",
             es: "Cambiar la moneda del monto",
             "es-ES": "Cambiar la moneda del importe",
             pt: "Trocar a moeda do valor",
+            "pt-PT": "Alterar a moeda do valor",
         }),
         // Layout, not just copy: `parseSentence` reads the slot order straight out of these templates.
         "transaction.sentence.expense": t({
@@ -987,6 +1041,7 @@ const transaction = {
             en: "Tagged {tags}.",
             es: "Con {tags}.",
             pt: "Tags: {tags}.",
+            "pt-PT": "Etiquetas: {tags}.",
         }),
         "transaction.sentence.income": t({
             en: "{kind} {amount} from {merchant} for {category} into {account} {when}.",
@@ -1069,17 +1124,20 @@ const transaction = {
             en: "1 file",
             es: "1 archivo",
             pt: "1 arquivo",
+            "pt-PT": "1 ficheiro",
         }),
         "transaction.sentence.set.attach_other": t({
             en: "{count} files",
             es: "{count} archivos",
             pt: "{count} arquivos",
+            "pt-PT": "{count} ficheiros",
         }),
         "transaction.sentence.set.icon": t({
             en: "Change icon",
             es: "Cambiar ícono",
             "es-ES": "Cambiar icono",
             pt: "Trocar ícone",
+            "pt-PT": "Alterar ícone",
         }),
         "transaction.sentence.set.repeatDaily": t({
             en: "daily",
@@ -1193,11 +1251,13 @@ const transaction = {
             es: "La división no suma el monto.",
             "es-ES": "La división no suma el importe.",
             pt: "A soma da divisão não bate com o valor.",
+            "pt-PT": "A soma da divisão não corresponde ao valor.",
         }),
         "transaction.stopRecurring.failedBody": t({
             en: "The schedule couldn't be stopped, so the next charge will still be logged.",
             es: "No se pudo detener la programación, así que el próximo cargo se registrará igual.",
             pt: "Não foi possível parar a recorrência, então a próxima cobrança ainda será registrada.",
+            "pt-PT": "Não foi possível parar a recorrência, por isso a próxima cobrança ainda será registada.",
         }),
         "transaction.stopRecurring.failedTitle": t({
             en: "Still recurring",
@@ -1208,6 +1268,7 @@ const transaction = {
             en: "Recurring stopped",
             es: "Ya no se repite",
             pt: "Não se repete mais",
+            "pt-PT": "Já não se repete",
         }),
         "transaction.tags.create": t({
             en: 'Add "{name}"',
@@ -1220,17 +1281,20 @@ const transaction = {
             es: "Aún no hay etiquetas. Escribe un nombre para agregar una.",
             "es-ES": "Aún no hay etiquetas. Escribe un nombre para añadir una.",
             pt: "Nenhuma tag ainda. Digite um nome para adicionar uma.",
+            "pt-PT": "Ainda sem etiquetas. Escreva um nome para adicionar uma.",
         }),
         "transaction.tags.searchPlaceholder": t({
             en: "Search or add",
             es: "Buscar o agregar",
             "es-ES": "Buscar o añadir",
             pt: "Buscar ou adicionar",
+            "pt-PT": "Pesquisar ou adicionar",
         }),
         "transaction.tags.title": t({
             en: "Tags",
             es: "Etiquetas",
             pt: "Tags",
+            "pt-PT": "Etiquetas",
         }),
         "transaction.toast.added": t({
             en: "Added",
@@ -1249,6 +1313,7 @@ const transaction = {
             es: "Suscripción agregada",
             "es-ES": "Suscripción añadida",
             pt: "Assinatura adicionada",
+            "pt-PT": "Subscrição adicionada",
         }),
         // Bare nouns, unlike `transaction.interval.*`: the sentence styles the count on its own.
         "transaction.unit.day": t({ en: "day", es: "día", pt: "dia" }),

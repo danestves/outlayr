@@ -14,6 +14,7 @@ const aiConsent = {
             en: "Smart features",
             es: "Funciones inteligentes",
             pt: "Recursos inteligentes",
+            "pt-PT": "Funcionalidades inteligentes",
         }),
         "aiConsent.fine": t({
             en: "Suggestions never include amounts, dates, or accounts. We don't keep recordings, photos, or screenshots.",
@@ -21,21 +22,27 @@ const aiConsent = {
             "es-ES":
                 "Las sugerencias nunca incluyen importes, fechas ni cuentas. No guardamos grabaciones, fotos ni capturas.",
             pt: "As sugestões nunca incluem valores, datas ou contas. Não armazenamos gravações, fotos nem capturas de tela.",
+            "pt-PT":
+                "As sugestões nunca incluem valores, datas ou contas. Não guardamos gravações, fotos nem capturas de ecrã.",
         }),
         "aiConsent.lead": t({
             en: "These features need an account and use Claude, made by Anthropic, through our server. ElevenLabs turns recordings into text. Neither gets your name, email, or account ID.",
             es: "Estas funciones necesitan una cuenta y usan Claude, de Anthropic, a través de nuestro servidor. ElevenLabs convierte las grabaciones en texto. Ninguna recibe tu nombre, tu correo ni el ID de tu cuenta.",
             pt: "Estes recursos precisam de uma conta e usam o Claude, da Anthropic, pelo nosso servidor. A ElevenLabs transforma gravações em texto. Nenhuma das duas recebe seu nome, e-mail ou ID da conta.",
+            "pt-PT":
+                "Estas funcionalidades precisam de uma conta e usam o Claude, da Anthropic, através do nosso servidor. A ElevenLabs transforma gravações em texto. Nenhuma das duas recebe o seu nome, e-mail ou ID da conta.",
         }),
         "aiConsent.lookup": t({
             en: "Web lookup",
             es: "Búsqueda web",
             pt: "Busca na web",
+            "pt-PT": "Pesquisa na web",
         }),
         "aiConsent.lookupSends": t({
             en: "Anthropic may search the web for a merchant's name",
             es: "Anthropic puede buscar en la web el nombre de un comercio",
             pt: "A Anthropic pode buscar na web o nome de um estabelecimento",
+            "pt-PT": "A Anthropic pode pesquisar na web o nome de um estabelecimento",
         }),
         "aiConsent.notNow": t({
             en: "Not now",
@@ -46,11 +53,13 @@ const aiConsent = {
             en: "Installment plan import",
             es: "Importar un plan de cuotas",
             pt: "Importar compra parcelada",
+            "pt-PT": "Importar compra a prestações",
         }),
         "aiConsent.planScanSends": t({
             en: "The screenshot, the account's name, currency, language, region, and today's date",
             es: "La captura, el nombre de la cuenta, la moneda, el idioma, la región y la fecha de hoy",
             pt: "A captura de tela, o nome da conta, a moeda, o idioma, a região e a data de hoje",
+            "pt-PT": "A captura de ecrã, o nome da conta, a moeda, o idioma, a região e a data de hoje",
         }),
         "aiConsent.privacy": t({
             en: "Privacy policy",
@@ -62,6 +71,7 @@ const aiConsent = {
             es: "Escanear un recibo",
             "es-ES": "Escanear un ticket",
             pt: "Escanear recibo",
+            "pt-PT": "Digitalizar talão",
         }),
         "aiConsent.scanSends": t({
             en: "The photo, plus the same details as voice entry and your region",
@@ -87,6 +97,7 @@ const aiConsent = {
             en: "Voice entry",
             es: "Dictar un registro",
             pt: "Ditar um lançamento",
+            "pt-PT": "Ditar um registo",
         }),
         "aiConsent.voiceSends": t({
             en: "The recording, your account and category names, currency, language, and today's date",

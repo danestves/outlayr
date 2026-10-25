@@ -22,6 +22,7 @@ const pro = {
             en: "Checking…",
             es: "Comprobando…",
             pt: "Verificando…",
+            "pt-PT": "A verificar…",
         }),
         "pro.col.free": t({
             en: "Free",
@@ -42,11 +43,13 @@ const pro = {
             en: "Get Pro for {price}/month",
             es: "Obtén Pro por {price}/mes",
             pt: "Assinar o Pro por {price}/mês",
+            "pt-PT": "Subscrever o Pro por {price}/mês",
         }),
         "pro.cta.buyYearly": t({
             en: "Get Pro for {price}/year",
             es: "Obtén Pro por {price}/año",
             pt: "Assinar o Pro por {price}/ano",
+            "pt-PT": "Subscrever o Pro por {price}/ano",
         }),
         "pro.cta.continue": t({
             en: "Continue",
@@ -57,6 +60,7 @@ const pro = {
             en: "Start {days} days free",
             es: "Prueba {days} días gratis",
             pt: "Testar grátis por {days} dias",
+            "pt-PT": "Experimentar {days} dias grátis",
         }),
         "pro.cta.then": t({
             en: "then {price}",
@@ -77,6 +81,7 @@ const pro = {
             en: "Unlocking Pro…",
             es: "Activando Pro…",
             pt: "Desbloqueando o Pro…",
+            "pt-PT": "A desbloquear o Pro…",
         }),
         "pro.entry.title": t({
             en: "Outlayr Pro",
@@ -102,6 +107,7 @@ const pro = {
             en: "The purchase did not finish. If the store charged you, Restore will unlock Pro.",
             es: "La compra no se completó. Si la tienda te cobró, toca Restaurar para activar Pro.",
             pt: "A compra não foi concluída. Se a loja cobrou, toque em Restaurar para desbloquear o Pro.",
+            "pt-PT": "A compra não foi concluída. Se a loja lhe cobrou, toque em Restaurar para desbloquear o Pro.",
         }),
         "pro.legal.privacy": t({
             en: "Privacy",
@@ -117,6 +123,7 @@ const pro = {
             en: "Restoring…",
             es: "Restaurando…",
             pt: "Restaurando…",
+            "pt-PT": "A restaurar…",
         }),
         "pro.legal.terms": t({
             en: "Terms",
@@ -127,16 +134,21 @@ const pro = {
             en: "Sign in before buying Pro, so the purchase follows your ledger to every device.",
             es: "Inicia sesión antes de comprar Pro para que la compra te acompañe en todos tus dispositivos.",
             pt: "Entre antes de comprar o Pro, para que a compra acompanhe seus lançamentos em todos os dispositivos.",
+            "pt-PT":
+                "Inicie sessão antes de comprar o Pro, para que a compra acompanhe os seus registos em todos os dispositivos.",
         }),
         "pro.needsCloud": t({
             en: "This build has no Outlayr account service, so most of Pro has nowhere to run. Nothing is for sale here.",
             es: "Esta versión no tiene el servicio de cuentas de Outlayr, así que la mayor parte de Pro no tiene dónde funcionar. Aquí no hay nada en venta.",
             pt: "Esta versão não tem o serviço de contas do Outlayr, então a maior parte do Pro não tem onde funcionar. Nada está à venda aqui.",
+            "pt-PT":
+                "Esta versão não tem o serviço de contas do Outlayr, por isso a maior parte do Pro não tem onde funcionar. Nada está à venda aqui.",
         }),
         "pro.nothingRestoredBody": t({
             en: "Nothing restored an active Pro on this store account.",
             es: "No encontramos Pro activo en esta cuenta de la tienda.",
             pt: "Não encontramos um Pro ativo nesta conta da loja.",
+            "pt-PT": "Não encontrámos um Pro ativo nesta conta da loja.",
         }),
         "pro.plan.annual": t({
             en: "Yearly",
@@ -157,6 +169,7 @@ const pro = {
             en: "Loading plans…",
             es: "Cargando planes…",
             pt: "Carregando planos…",
+            "pt-PT": "A carregar planos…",
         }),
         "pro.plan.monthly": t({
             en: "Monthly",
@@ -182,6 +195,7 @@ const pro = {
             en: "Save {percent}%",
             es: "Ahorra {percent}%",
             pt: "Economize {percent}%",
+            "pt-PT": "Poupe {percent}%",
         }),
         "pro.plan.trial": t({
             en: "{days} days free",
@@ -192,16 +206,21 @@ const pro = {
             en: "Manage subscription",
             es: "Gestionar suscripción",
             pt: "Gerenciar assinatura",
+            "pt-PT": "Gerir subscrição",
         }),
         "pro.play.renews": t({
             en: "Subscriptions renew automatically until you cancel them. Cancel anytime in Google Play.",
             es: "Las suscripciones se renuevan automáticamente hasta que las canceles. Cancélalas cuando quieras en Google Play.",
             pt: "As assinaturas são renovadas automaticamente até você cancelar. Cancele quando quiser no Google Play.",
+            "pt-PT":
+                "As subscrições são renovadas automaticamente até as cancelar. Cancele quando quiser no Google Play.",
         }),
         "pro.play.trial": t({
             en: "When the free trial ends it becomes a paid subscription, unless you cancel before then.",
             es: "Cuando termine la prueba gratuita, pasará a ser una suscripción de pago, salvo que la canceles antes.",
             pt: "Quando o teste grátis terminar, ele vira uma assinatura paga, a menos que você cancele antes.",
+            "pt-PT":
+                "Quando o período experimental terminar, passa a ser uma subscrição paga, a menos que cancele antes.",
         }),
         "pro.restoreFailedBody": t({
             en: "The restore could not be completed. Check the connection and try again.",
@@ -248,6 +267,7 @@ const pro = {
             es: "Íconos de la app",
             "es-ES": "Iconos de la app",
             pt: "Ícones do app",
+            "pt-PT": "Ícones da app",
         }),
         "pro.row.import": t({
             en: "AI matching on import",
@@ -259,22 +279,26 @@ const pro = {
             es: "Apps de cuotas",
             "es-ES": "Apps de pago a plazos",
             pt: "Apps de parcelamento",
+            "pt-PT": "Apps de prestações",
         }),
         "pro.row.payoffPlans": t({
             en: "Payoff plans",
             es: "Planes de pago",
             pt: "Planos de quitação",
+            "pt-PT": "Planos de liquidação",
         }),
         "pro.row.lookup": t({
             en: "Web merchant lookup",
             es: "Búsqueda web de comercios",
             pt: "Busca de estabelecimentos na web",
+            "pt-PT": "Pesquisa de estabelecimentos na web",
         }),
         "pro.row.photos": t({
             en: "Receipt photo backup",
             es: "Respaldo de fotos",
             "es-ES": "Copia de seguridad de fotos",
             pt: "Backup de fotos",
+            "pt-PT": "Cópia de segurança de fotos",
         }),
         "pro.syncPendingBody": t({
             en: "The purchase went through, but the server has not confirmed it yet. Try again in a moment.",
@@ -295,6 +319,8 @@ const pro = {
             en: "Pro is active on this store account, but the server has not confirmed it, so syncing and the AI features stay off until it does.",
             es: "Pro está activo en esta cuenta de la tienda, pero el servidor aún no lo confirma, así que la sincronización y las funciones con IA siguen desactivadas hasta entonces.",
             pt: "O Pro está ativo nesta conta da loja, mas o servidor ainda não confirmou, então a sincronização e os recursos de IA ficam desativados até lá.",
+            "pt-PT":
+                "O Pro está ativo nesta conta da loja, mas o servidor ainda não confirmou, por isso a sincronização e as funcionalidades de IA ficam desativadas até lá.",
         }),
         "pro.unentitledBody": t({
             en: "The purchase completed but Pro did not unlock. Try Restore, and write to support if it stays locked.",

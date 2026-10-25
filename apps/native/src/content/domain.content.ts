@@ -9,6 +9,7 @@ const domain = {
             es: "La marca de Outlayr sobre papel. El ícono con el que viene la app.",
             "es-ES": "La marca de Outlayr sobre papel. El icono con el que viene la app.",
             pt: "A marca do Outlayr sobre papel. O ícone que vem com o app.",
+            "pt-PT": "A marca do Outlayr sobre papel. O ícone que vem com a app.",
         }),
         "appIcon.default.detailDev": t({
             en: "The blueprint mark. The icon this development build ships with.",
@@ -20,6 +21,7 @@ const domain = {
             en: "Default",
             es: "Predeterminado",
             pt: "Padrão",
+            "pt-PT": "Predefinido",
         }),
         "appIcon.emboss.detail": t({
             en: "Paper on paper. The mark reads only in its shadow.",
@@ -35,6 +37,7 @@ const domain = {
             en: "Outline only, drawn in a single ink hairline.",
             es: "Solo el contorno, trazado en una línea de tinta.",
             pt: "Só o contorno, traçado em uma linha fina de tinta.",
+            "pt-PT": "Só o contorno, traçado numa linha fina de tinta.",
         }),
         "appIcon.hairline.label": t({
             en: "Hairline",
@@ -45,6 +48,7 @@ const domain = {
             en: "The mark inverted — paper on ink, for darker home screens.",
             es: "La marca invertida: papel sobre tinta, para pantallas de inicio más oscuras.",
             pt: "A marca invertida: papel sobre tinta, para telas de início mais escuras.",
+            "pt-PT": "A marca invertida: papel sobre tinta, para ecrãs principais mais escuros.",
         }),
         "appIcon.ink.label": t({
             en: "Ink",
@@ -55,6 +59,7 @@ const domain = {
             en: "A flat grey field with the ink mark. Quiet and neutral.",
             es: "Un campo gris plano con la marca en tinta. Discreto y neutral.",
             pt: "Um fundo cinza liso com a marca em tinta. Discreto e neutro.",
+            "pt-PT": "Um fundo cinzento liso com a marca em tinta. Discreto e neutro.",
         }),
         "appIcon.mono.label": t({
             en: "Mono",
@@ -76,6 +81,7 @@ const domain = {
             es: "Usa la configuración de tu dispositivo hasta que la cambies aquí.",
             "es-ES": "Usa los ajustes de tu dispositivo hasta que lo cambies aquí.",
             pt: "Segue o ajuste do seu dispositivo até você mudar aqui.",
+            "pt-PT": "Segue a definição do seu dispositivo até a alterar aqui.",
         }),
         "clock.section": t({
             en: "Clock",
@@ -98,6 +104,8 @@ const domain = {
             "es-ES":
                 "Los tipos de cambio se están actualizando: {count} de {total} registros se cuentan con su importe original.",
             pt: "As cotações ainda estão sendo atualizadas: {count} de {total} lançamentos contam pelo valor original.",
+            "pt-PT":
+                "As cotações ainda estão a ser atualizadas: {count} de {total} registos contam pelo valor original.",
         }),
         "coverage.pendingAndPredate": t({
             en: "Rates are still catching up: {count} of {total} entries are counted at the amount they were logged in. {predate} more predate the rate history and always will be.",
@@ -105,6 +113,8 @@ const domain = {
             "es-ES":
                 "Los tipos de cambio se están actualizando: {count} de {total} registros se cuentan con su importe original. Otros {predate} son anteriores al historial de tipos de cambio y así se van a quedar.",
             pt: "As cotações ainda estão sendo atualizadas: {count} de {total} lançamentos contam pelo valor original. Outros {predate} são anteriores ao histórico de cotações e vão continuar assim.",
+            "pt-PT":
+                "As cotações ainda estão a ser atualizadas: {count} de {total} registos contam pelo valor original. Outros {predate} são anteriores ao histórico de cotações e vão continuar assim.",
         }),
         "coverage.predateOnly": t({
             en: "{count} of {total} entries predate the rate history, so they are counted at the amount they were logged in.",
@@ -112,6 +122,8 @@ const domain = {
             "es-ES":
                 "{count} de {total} registros son anteriores al historial de tipos de cambio, así que se cuentan con su importe original.",
             pt: "{count} de {total} lançamentos são anteriores ao histórico de cotações, então contam pelo valor original.",
+            "pt-PT":
+                "{count} de {total} registos são anteriores ao histórico de cotações, por isso contam pelo valor original.",
         }),
         "dates.meridiem.am": t({ en: "AM", es: "a. m.", pt: "AM" }),
         "dates.meridiem.pm": t({ en: "PM", es: "p. m.", pt: "PM" }),
@@ -237,17 +249,20 @@ const domain = {
             en: "That did not match. Try again.",
             es: "No coincidió. Inténtalo de nuevo.",
             pt: "Não confere. Tente de novo.",
+            "pt-PT": "Não corresponde. Tente de novo.",
         }),
         "lock.fallback": t({
             en: "Choose Unlock again to enter your device passcode.",
             es: "Toca Desbloquear otra vez para ingresar el código de tu dispositivo.",
             "es-ES": "Toca Desbloquear otra vez para introducir el código de tu dispositivo.",
             pt: "Toque em Desbloquear de novo para digitar o código do dispositivo.",
+            "pt-PT": "Toque em Desbloquear de novo para introduzir o código do dispositivo.",
         }),
         "lock.lockout": t({
             en: "Too many attempts. Unlock with your device passcode instead.",
             es: "Demasiados intentos. Desbloquea con el código de tu dispositivo.",
             pt: "Muitas tentativas. Desbloqueie com o código do dispositivo.",
+            "pt-PT": "Demasiadas tentativas. Desbloqueie com o código do dispositivo.",
         }),
         "lock.timeout": t({
             en: "The prompt timed out. Try again.",
@@ -278,6 +293,7 @@ const domain = {
             en: "Apparel",
             es: "Ropa",
             pt: "Roupas",
+            "pt-PT": "Vestuário",
         }),
         "merchantTag.Apple": t({
             en: "Apple",
@@ -299,12 +315,14 @@ const domain = {
             es: "Cable",
             "es-ES": "TV de pago",
             pt: "TV a cabo",
+            "pt-PT": "TV por cabo",
         }),
         "merchantTag.Car Share": t({
             en: "Car Share",
             es: "Carro compartido",
             "es-ES": "Coche compartido",
             pt: "Carro compartilhado",
+            "pt-PT": "Carro partilhado",
         }),
         "merchantTag.Convenience": t({
             en: "Convenience",
@@ -316,6 +334,7 @@ const domain = {
             en: "Delivery",
             es: "A domicilio",
             pt: "Delivery",
+            "pt-PT": "Entregas",
         }),
         "merchantTag.Design": t({
             en: "Design",
@@ -336,11 +355,13 @@ const domain = {
             en: "Electricity",
             es: "Electricidad",
             pt: "Energia",
+            "pt-PT": "Eletricidade",
         }),
         "merchantTag.Electronics": t({
             en: "Electronics",
             es: "Electrónica",
             pt: "Eletrônicos",
+            "pt-PT": "Eletrónica",
         }),
         "merchantTag.Fast Food": t({
             en: "Fast Food",
@@ -366,6 +387,7 @@ const domain = {
             en: "Gaming",
             es: "Videojuegos",
             pt: "Games",
+            "pt-PT": "Jogos",
         }),
         "merchantTag.Gas": t({
             en: "Gas",
@@ -376,11 +398,13 @@ const domain = {
             en: "Groceries",
             es: "Supermercado",
             pt: "Mercado",
+            "pt-PT": "Supermercado",
         }),
         "merchantTag.Home Improvement": t({
             en: "Home Improvement",
             es: "Ferretería",
             pt: "Material de construção",
+            "pt-PT": "Bricolage",
         }),
         "merchantTag.Internet": t({
             en: "Internet",
@@ -391,6 +415,7 @@ const domain = {
             en: "Learning",
             es: "Aprendizaje",
             pt: "Aprendizado",
+            "pt-PT": "Aprendizagem",
         }),
         "merchantTag.Marketplace": t({
             en: "Marketplace",
@@ -448,6 +473,7 @@ const domain = {
             en: "Sports",
             es: "Deportes",
             pt: "Esportes",
+            "pt-PT": "Desporto",
         }),
         "merchantTag.Storage": t({
             en: "Storage",
@@ -463,6 +489,7 @@ const domain = {
             en: "Subscription",
             es: "Suscripción",
             pt: "Assinatura",
+            "pt-PT": "Subscrição",
         }),
         "merchantTag.Transit": t({
             en: "Transit",
@@ -478,11 +505,13 @@ const domain = {
             en: "Warehouse",
             es: "Mayorista",
             pt: "Atacado",
+            "pt-PT": "Grossista",
         }),
         "merchantTag.Waste": t({
             en: "Waste",
             es: "Basura",
             pt: "Coleta de lixo",
+            "pt-PT": "Recolha de lixo",
         }),
         "merchantTag.Water": t({
             en: "Water",
@@ -498,6 +527,7 @@ const domain = {
             en: "Wholesale",
             es: "Mayorista",
             pt: "Atacado",
+            "pt-PT": "Grossista",
         }),
         "merchantTag.Writing": t({
             en: "Writing",
