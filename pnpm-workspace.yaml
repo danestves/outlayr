@@ -47,6 +47,7 @@ minimumReleaseAgeExclude:
     - panelui-native@0.75.1
 
 patchedDependencies:
+    "@confect/server@10.3.2": patches/@confect__server@10.3.2.patch
     "@expo/fingerprint@0.21.6": patches/@expo__fingerprint@0.21.6.patch
     expo-router@58.0.25: patches/expo-router@58.0.25.patch
     expo-widgets@58.0.22: patches/expo-widgets@58.0.22.patch

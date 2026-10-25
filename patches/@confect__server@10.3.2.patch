@@ -1,0 +1,60 @@
+diff --git a/dist/OrderedQuery.js b/dist/OrderedQuery.js
+index ea15380a1605aa758d1ee6f3f00ee9e766b2abe6..3d48dc0b3ab675c0945a818b3a31df7e5898730f 100644
+--- a/dist/OrderedQuery.js
++++ b/dist/OrderedQuery.js
+@@ -1,6 +1,7 @@
+ import { __exportAll } from "./_virtual/_rolldown/runtime.js";
+ import { decode } from "./Document.js";
+ import * as Effect from "effect/Effect";
++import * as Option from "effect/Option";
+ import { identity, pipe } from "effect/Function";
+ import * as Stream from "effect/Stream";
+ //#region src/OrderedQuery.ts
+@@ -8,8 +9,8 @@ var OrderedQuery_exports = /* @__PURE__ */ __exportAll({ make: () => make });
+ const make = (query, table) => {
+ 	const streamEncoded = Stream.fromAsyncIterable(query, identity).pipe(Stream.orDie);
+ 	const stream = () => pipe(streamEncoded, Stream.mapEffect(decode(table)));
+-	const first = () => pipe(stream(), Stream.take(1), Stream.runHead);
+-	const take = (n) => pipe(stream(), Stream.take(n), Stream.runCollect);
++	const take = (n) => pipe(Effect.promise(() => query.take(n)), Effect.flatMap((docs) => Effect.forEach(docs, decode(table))));
++	const first = () => pipe(take(1), Effect.map((docs) => docs.length === 0 ? Option.none() : Option.some(docs[0])));
+ 	const collect = () => pipe(stream(), Stream.runCollect);
+ 	return {
+ 		first,
+diff --git a/src/OrderedQuery.ts b/src/OrderedQuery.ts
+index b701039cde60dc346b16a831d59ae7b4f5b2146d..3171c148bbc62bb9b875a9fd453acdb81dce73c5 100644
+--- a/src/OrderedQuery.ts
++++ b/src/OrderedQuery.ts
+@@ -6,7 +6,7 @@ import type {
+   PaginationResult,
+ } from "convex/server";
+ import { identity, pipe } from "effect/Function";
+-import type { Option } from "effect";
++import * as Option from "effect/Option";
+ import * as Effect from "effect/Effect";
+ import * as Stream from "effect/Stream";
+ import * as Document from "./Document";
+@@ -55,11 +55,19 @@ export const make = <Table_ extends Table.AnyWithProps>(
+   const stream: OrderedQueryFunction<"stream"> = () =>
+     pipe(streamEncoded, Stream.mapEffect(Document.decode(table)));
+ 
+-  const first: OrderedQueryFunction<"first"> = () =>
+-    pipe(stream(), Stream.take(1), Stream.runHead);
+-
+   const take: OrderedQueryFunction<"take"> = (n: number) =>
+-    pipe(stream(), Stream.take(n), Stream.runCollect);
++    pipe(
++      Effect.promise(() => query.take(n)),
++      Effect.flatMap((docs) => Effect.forEach(docs, Document.decode(table))),
++    );
++
++  const first: OrderedQueryFunction<"first"> = () =>
++    pipe(
++      take(1),
++      Effect.map((docs) =>
++        docs.length === 0 ? Option.none() : Option.some(docs[0]),
++      ),
++    );
+ 
+   const collect: OrderedQueryFunction<"collect"> = () =>
+     pipe(stream(), Stream.runCollect);
