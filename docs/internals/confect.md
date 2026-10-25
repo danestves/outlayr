@@ -20,7 +20,7 @@ Codegen deletes every other `.ts` file in `convex/`, so nothing hand-written can
 
 A group starts as plain functions: `<group>.ts` holds the Convex `query`/`mutation`/`action` definitions, the spec declares each one with `FunctionSpec.convexPublicQuery<typeof fn>()("name")` and friends, and the impl hands them to `FunctionImpl.make` untouched. Paths, args and returns stay what Convex sees today.
 
-Moving a group to Effect rewrites its spec (schemas for args and returns) and its impl (Effect handlers); the file names and function paths stay.
+Moving a group to Effect rewrites its spec (schemas for args and returns) and its impl (Effect handlers); the file names and function paths stay. `exchangeRates` is the first group done this way. An Effect function always has a returns validator, so a converted query that had none gains one.
 
 ## Schema equivalence
 
