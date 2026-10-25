@@ -8,7 +8,7 @@ import { DEFAULT_CURRENCY } from "@/domain/money";
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
 import { seedCategories } from "./categories-core";
 
-// Awaited by `LocalDataProvider` before `ready`, so the first screen sees its categories. The locale seeds only the
+// Awaited by `LocalDatabase.open` before `ready`, so the first screen sees its categories. The locale seeds only the
 // favourites: onboarding asks for the ledger's own currency.
 export async function bootstrapLocalData(db: Database): Promise<void> {
     const done = await getMeta(db, META_KEYS.firstLaunch);

@@ -1,5 +1,6 @@
 import "../../global.css";
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
+import { RegistryContext } from "@effect/atom-react/RegistryContext";
 import { GeistMono_400Regular } from "@expo-google-fonts/geist-mono/400Regular";
 import { GeistMono_500Medium } from "@expo-google-fonts/geist-mono/500Medium";
 import { InstrumentSerif_400Regular } from "@expo-google-fonts/instrument-serif/400Regular";
@@ -27,7 +28,7 @@ import { Text } from "@/components/text";
 import { UpdateSheet } from "@/components/update-sheet";
 import { AppSettingsProvider } from "@/contexts/display-settings-context";
 import { IdentityDraftProvider } from "@/contexts/identity-draft-context";
-import { LocalDataProvider, useDatabase, useLocalData } from "@/contexts/local-data-context";
+import { useDatabase, useLocalData } from "@/contexts/local-data-context";
 import { RevenueCatProvider } from "@/contexts/revenuecat-context";
 import { BackgroundWork } from "@/data/background-work";
 import { useAccountDeferred, useOnboardingSettled } from "@/data/onboarding";
@@ -50,6 +51,7 @@ import { identityPickerDetent } from "@/lib/sheet-detents";
 import { useSubscriptionReminderTaps } from "@/lib/use-subscription-reminder-taps";
 import { useWalletPushTaps } from "@/lib/use-wallet-push-taps";
 import { useStackChrome } from "@/navigation/stack-chrome";
+import { appAtomRegistry } from "@/state/atom-registry";
 import { BODY_FONTS } from "@/theme/body-fonts";
 import { useAccent } from "@/theme/use-accent";
 import { useApplyThemePreference } from "@/theme/use-theme-preference";
@@ -334,16 +336,16 @@ export default function RootLayout() {
     });
 
     return (
-        <SafeAreaProvider>
-            <SafeAreaListener
-                onChange={({ insets }) => {
-                    Uniwind.updateInsets(insets);
-                }}
-            >
-                <PanelUIProvider>
-                    <LanguageProvider>
-                        <CloudRuntimeProvider>
-                            <LocalDataProvider>
+        <RegistryContext value={appAtomRegistry}>
+            <SafeAreaProvider>
+                <SafeAreaListener
+                    onChange={({ insets }) => {
+                        Uniwind.updateInsets(insets);
+                    }}
+                >
+                    <PanelUIProvider>
+                        <LanguageProvider>
+                            <CloudRuntimeProvider>
                                 <DeferredDeleteProvider>
                                     <AppSettingsProvider>
                                         <IdentityDraftProvider>
@@ -351,11 +353,11 @@ export default function RootLayout() {
                                         </IdentityDraftProvider>
                                     </AppSettingsProvider>
                                 </DeferredDeleteProvider>
-                            </LocalDataProvider>
-                        </CloudRuntimeProvider>
-                    </LanguageProvider>
-                </PanelUIProvider>
-            </SafeAreaListener>
-        </SafeAreaProvider>
+                            </CloudRuntimeProvider>
+                        </LanguageProvider>
+                    </PanelUIProvider>
+                </SafeAreaListener>
+            </SafeAreaProvider>
+        </RegistryContext>
     );
 }

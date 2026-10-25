@@ -5,7 +5,7 @@ import * as schema from "./schema";
 
 const DATABASE_NAME = "outlayr.db";
 
-/** `enableChangeListener` powers `useLiveQuery`. Migrations run in `LocalDataProvider`, not here. */
+/** `enableChangeListener` powers `useLiveQuery`. Migrations run in `LocalDatabase.open`, not here. */
 export function openDatabase() {
     const sqlite = openDatabaseSync(DATABASE_NAME, {
         enableChangeListener: true,

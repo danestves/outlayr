@@ -75,7 +75,6 @@ const MANUAL_MEMO_FILES = [
     "apps/native/src/contexts/csv-import-context.tsx",
     "apps/native/src/contexts/display-settings-context.tsx",
     "apps/native/src/contexts/identity-draft-context.tsx",
-    "apps/native/src/contexts/local-data-context.tsx",
     "apps/native/src/contexts/revenuecat-context.tsx",
     "apps/native/src/data/account-transfers.ts",
     "apps/native/src/data/accounts.ts",

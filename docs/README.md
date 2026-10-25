@@ -8,6 +8,7 @@ Start with the [README](../README.md). Internal notes keep decisions, constraint
 
 - [Convex sync](./internals/convex-sync.md)
 - [Linting and formatting](./internals/linting.md)
+- [Effect services](./internals/effect-services.md)
 - [Library traps](./internals/library-traps.md)
 - [What EAS Build uploads](./internals/eas-upload.md)
 - [App icon bundles pinned to the Xcode 26 schema](./internals/app-icon.md)
