@@ -3,7 +3,7 @@ export const PUBLISH_DEBOUNCE_MS = 750;
 
 /**
  * Every pass rewrites a whole domain, so it trails the tiles by design. Only an accelerator: a change event is not
- * owed for every write (see the truncate-optimization note in `use-system-sync.ts`).
+ * owed for every write (see the truncate-optimization note in `system-sync.ts`).
  */
 export const SPOTLIGHT_DEBOUNCE_MS = 20_000;
 

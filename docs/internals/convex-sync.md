@@ -182,7 +182,7 @@ streams into one causally-ordered log.
 
    Triggers, not repo calls, because writes already happen outside the repos:
    `src/data/recurrence-backfill.ts`, `src/data/canonicalize-backfill.ts`, and the App
-   Intents drain at `src/lib/use-system-sync.ts:125+`. A repo-level outbox would have to
+   Intents drain in `src/lib/system-sync.ts`. A repo-level outbox would have to
    touch every one of them and would silently miss the next one.
 
 2. **Drain.** Read up to **500** outbox rows, join out the full current row from its
@@ -212,7 +212,7 @@ streams into one causally-ordered log.
 
 ### Trigger cadence
 
-Reuse the existing hook shape at `src/lib/use-system-sync.ts`: sync on
+`src/data/sync-engine.ts` syncs on
 `AppState → active`, on outbox-non-empty (debounced ~2 s, same pattern as `publish()`),
 and on the `nextSeq` subscription firing. Never on the write path itself.
 
@@ -432,7 +432,7 @@ Kept because the reasoning still explains why the write path looks the way it do
 And one hazard the applier must design around:
 
 3. **The applier must invalidate explicitly — but not for the reason previously recorded.**
-   An earlier note at `src/lib/use-system-sync.ts` claimed writes inside a Drizzle
+   An earlier note in the system sync hook claimed writes inside a Drizzle
    transaction do not reach `addDatabaseChangeListener`, citing an instrumented pull that
    wrote 12 588 `exchangeRates` rows while the listener saw nothing. **That diagnosis is
    wrong and has been retracted.** Those writes were never in a transaction:
