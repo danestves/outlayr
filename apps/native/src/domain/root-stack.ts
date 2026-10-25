@@ -106,13 +106,7 @@ export const ROOT_STACK_SCREEN_NAMES = {
         "transactions/scan",
         "transactions/identity",
     ],
-    onboarding: [
-        "onboarding/index",
-        "onboarding/currency",
-        "onboarding/smart-features",
-        "onboarding/rhythm",
-        "onboarding/rating",
-    ],
+    onboarding: ["onboarding/index", "onboarding/currency", "onboarding/smart-features", "onboarding/rhythm"],
     "sign-in": ["auth/sign-in", "auth/email"],
 } satisfies Readonly<Record<RootStackGroup, readonly string[]>>;
 
