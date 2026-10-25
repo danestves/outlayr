@@ -1,10 +1,13 @@
-import { Linking } from "react-native";
+import { Linking, Platform } from "react-native";
 
 /**
  * Re-share whenever `LogWalletTransactionIntent`'s parameters change: a shortcut snapshots the action. Inside, Currency
  * Code reads off the Amount (never Shortcut Input) and Card is the raw Card or Pass, whose Name is "Payment Method".
  */
 export const WALLET_SHORTCUT_URL: string | null = "https://www.icloud.com/shortcuts/8da78a0436dc4e94be4674ca6cb439db";
+
+/** iOS 27 keeps a shortcut's triggers inside it, so a shared link installs the whole automation. */
+export const TRIGGERS_IN_SHORTCUTS = Number.parseInt(String(Platform.Version), 10) >= 27;
 
 export const BANK_SHORTCUT_URL = "https://www.icloud.com/shortcuts/e0327cbcd7b34718ba42cae568f0dc12";
 

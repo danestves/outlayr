@@ -52,7 +52,7 @@ export function useWalletPushTaps(db: Database, ready: boolean): void {
             const asks = pickCard === true && unattached && (card === undefined || (await cardStillAsks(db, card)));
             let target: Href | null = null;
             if (asks) {
-                target = "/settings/wallet";
+                target = "/settings/integrations";
             } else if (txId) {
                 target = `/transactions/${txId}`;
             }

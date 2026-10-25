@@ -175,10 +175,6 @@ const common = {
             en: "App icon",
             es: "Ícono de la app",
         }),
-        "nav.settings.autoLog": t({
-            en: "Auto-logging",
-            es: "Registro automático",
-        }),
         "nav.settings.currency": t({
             en: "Currency",
             es: "Moneda",
@@ -194,6 +190,10 @@ const common = {
         "nav.settings.featureLab": t({
             en: "Feature lab",
             es: "Laboratorio de funciones",
+        }),
+        "nav.settings.integrations": t({
+            en: "Integrations",
+            es: "Integraciones",
         }),
         "nav.settings.notifications": t({
             en: "Notifications",
@@ -218,6 +218,10 @@ const common = {
         "nav.settings.wallet": t({
             en: "Apple Pay",
             es: "Apple Pay",
+        }),
+        "nav.settings.wallet.android": t({
+            en: "Google Wallet and banks",
+            es: "Google Wallet y bancos",
         }),
         "nav.subcategory": t({
             en: "Subcategory",

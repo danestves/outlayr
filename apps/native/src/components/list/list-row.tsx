@@ -13,12 +13,22 @@ import { useColors } from "@/theme/use-colors";
 
 export { PickerRow } from "@/components/list/picker-row";
 
-export function SettingsSection({ title, footer, children }: { title: string; footer?: string; children?: ReactNode }) {
+export function SettingsSection({
+    title,
+    footer,
+    children,
+}: {
+    title?: string;
+    footer?: string;
+    children?: ReactNode;
+}) {
     return (
         <View className="pt-6">
-            <View className="pb-1.5">
-                <MonoLabel accessibilityRole="header">{title}</MonoLabel>
-            </View>
+            {title ? (
+                <View className="pb-1.5">
+                    <MonoLabel accessibilityRole="header">{title}</MonoLabel>
+                </View>
+            ) : null}
             <View className="border-border border-t">{children}</View>
             {footer ? <Text className="text-muted text-subtitle pt-2 leading-snug">{footer}</Text> : null}
         </View>

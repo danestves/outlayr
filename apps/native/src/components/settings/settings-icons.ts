@@ -31,6 +31,7 @@ import Mic01Icon from "@hugeicons-pro/core-stroke-rounded/Mic01Icon";
 import MoneyAdd01Icon from "@hugeicons-pro/core-stroke-rounded/MoneyAdd01Icon";
 import NewTwitterIcon from "@hugeicons-pro/core-stroke-rounded/NewTwitterIcon";
 import Notification03Icon from "@hugeicons-pro/core-stroke-rounded/Notification03Icon";
+import Plug01Icon from "@hugeicons-pro/core-stroke-rounded/Plug01Icon";
 import SecurityCheckIcon from "@hugeicons-pro/core-stroke-rounded/SecurityCheckIcon";
 import Share08Icon from "@hugeicons-pro/core-stroke-rounded/Share08Icon";
 import SmartPhone01Icon from "@hugeicons-pro/core-stroke-rounded/SmartPhone01Icon";
@@ -81,6 +82,7 @@ const REGISTRY = {
     MoneyAdd01: MoneyAdd01Icon,
     NewTwitter: NewTwitterIcon,
     Notification03: Notification03Icon,
+    Plug01: Plug01Icon,
     SecurityCheck: SecurityCheckIcon,
     Share08: Share08Icon,
     SmartPhone01: SmartPhone01Icon,

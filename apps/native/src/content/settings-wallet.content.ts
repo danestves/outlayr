@@ -3,6 +3,14 @@ import type { Dictionary } from "intlayer";
 
 const settingsWallet = {
     content: {
+        "settings.integrations.onCount_one": t({
+            en: "{count} on",
+            es: "{count} activa",
+        }),
+        "settings.integrations.onCount_other": t({
+            en: "{count} on",
+            es: "{count} activas",
+        }),
         "settings.wallet.accessRow": t({
             en: "Notification access",
             es: "Acceso a notificaciones",
@@ -18,10 +26,6 @@ const settingsWallet = {
         "settings.wallet.androidLead": t({
             en: "Every Google Wallet payment and every purchase your bank notifies you of lands on the Log, filed under the account it matches.",
             es: "Cada pago con Google Wallet y cada compra que te notifique tu banco llega al registro, en la cuenta que coincida.",
-        }),
-        "settings.wallet.applePayRow": t({
-            en: "Apple Pay taps",
-            es: "Pagos con Apple Pay",
         }),
         "settings.wallet.automationDetail": t({
             en: "Wallet trigger runs Outlayr - Apple Pay",
@@ -42,6 +46,10 @@ const settingsWallet = {
         "settings.wallet.bankGet": t({
             en: "Get the bank shortcut",
             es: "Obtener el atajo del banco",
+        }),
+        "settings.wallet.bankLead": t({
+            en: "Every purchase your bank app notifies you of lands on the Log, filed under the account it matches.",
+            es: "Cada compra que te notifique la app de tu banco llega al registro, en la cuenta que coincida.",
         }),
         "settings.wallet.bankSection": t({
             en: "Bank notifications",

@@ -1,5 +1,8 @@
 import { and, eq, isNull } from "drizzle-orm";
+import { Image } from "expo-image";
+import { Carousel } from "panelui-native/components/carousel";
 import { View } from "react-native";
+import type { ImageRequireSource } from "react-native";
 
 import { PickerRow, SettingsSection } from "@/components/list/list-row";
 import { MonoLabel } from "@/components/mono-label";
@@ -14,6 +17,7 @@ import type { Database } from "@/db/client";
 import { appMeta, transactions } from "@/db/schema";
 import { formatChargeDate, formatSentenceDate, formatTime } from "@/domain/dates";
 import { formatAmount } from "@/domain/money";
+import type { TranslationKey } from "@/i18n/catalog";
 import { useLanguage, useTranslation } from "@/i18n/context";
 
 export function LastEntry({ db, txId }: { db: Database; txId: string }) {
@@ -122,5 +126,61 @@ export function CardsSection({ db }: { db: Database }) {
                 })
             )}
         </SettingsSection>
+    );
+}
+
+export interface Step {
+    detail?: TranslationKey;
+    frame?: ImageRequireSource;
+    title: TranslationKey;
+}
+
+const FRAME_WIDTH = 150;
+const FRAME_HEIGHT = 325;
+/** Three lines of caption: the longest step title wraps to three in Spanish. */
+const CAPTION_HEIGHT = 62;
+const FRAME_GAP = 12;
+const FRAME_RADIUS = 12;
+
+export function FrameStrip({ steps }: { steps: readonly Step[] }) {
+    const t = useTranslation();
+    const framed = steps.flatMap((step, index) =>
+        step.frame ? [{ ...step, frame: step.frame, number: index + 1 }] : []
+    );
+    if (framed.length === 0) {
+        return null;
+    }
+    return (
+        <Carousel align="start" className="-mx-5 pt-3" itemSize={FRAME_WIDTH + FRAME_GAP}>
+            <Carousel.Content style={{ height: FRAME_HEIGHT + CAPTION_HEIGHT }}>
+                {framed.map((step) => (
+                    <Carousel.Item className="gap-1.5 pl-5" key={step.title}>
+                        <Image
+                            contentFit="cover"
+                            source={step.frame}
+                            style={{ borderRadius: FRAME_RADIUS, height: FRAME_HEIGHT, width: FRAME_WIDTH }}
+                        />
+                        <Text className="text-muted text-subtitle" numberOfLines={3} style={{ width: FRAME_WIDTH }}>
+                            <Text className="text-foreground font-mono tabular-nums">{String(step.number)}</Text>
+                            {`  ${t(step.title)}`}
+                        </Text>
+                    </Carousel.Item>
+                ))}
+            </Carousel.Content>
+        </Carousel>
+    );
+}
+
+export function CheckRow({ title, detail }: { detail?: string; title: string }) {
+    return (
+        <View className="border-border flex-row items-center gap-3 border-b py-3">
+            <View className="bg-income h-5.5 w-5.5 items-center justify-center rounded-full">
+                <Text className="text-background text-eyebrow font-sans-semibold">✓</Text>
+            </View>
+            <Text className="text-body text-foreground flex-1" numberOfLines={1}>
+                {title}
+            </Text>
+            {detail ? <Text className="text-body text-muted">{detail}</Text> : null}
+        </View>
     );
 }

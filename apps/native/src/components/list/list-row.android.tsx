@@ -14,12 +14,22 @@ import type { ChoiceRow as IosChoiceRow, LinkRow as IosLinkRow, ToggleRow as Ios
 
 export { PickerRow } from "@/components/list/picker-row";
 
-export function SettingsSection({ title, footer, children }: { title: string; footer?: string; children?: ReactNode }) {
+export function SettingsSection({
+    title,
+    footer,
+    children,
+}: {
+    title?: string;
+    footer?: string;
+    children?: ReactNode;
+}) {
     return (
         <View className="pt-5">
-            <View className="pb-1">
-                <MonoLabel accessibilityRole="header">{title}</MonoLabel>
-            </View>
+            {title ? (
+                <View className="pb-1">
+                    <MonoLabel accessibilityRole="header">{title}</MonoLabel>
+                </View>
+            ) : null}
             <View>{children}</View>
             {footer ? <Text className="text-caption text-m3-on-surface-variant pt-2 leading-5">{footer}</Text> : null}
         </View>

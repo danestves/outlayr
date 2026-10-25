@@ -207,10 +207,6 @@ const settings = {
             en: "Authentication",
             es: "Autenticación",
         }),
-        "settings.row.autoLog": t({
-            en: "Auto-logging",
-            es: "Registro automático",
-        }),
         "settings.row.categories": t({
             en: "Categories",
             es: "Categorías",
@@ -262,6 +258,10 @@ const settings = {
         "settings.row.incomeTracking": t({
             en: "Income tracking",
             es: "Seguimiento de ingresos",
+        }),
+        "settings.row.integrations": t({
+            en: "Integrations",
+            es: "Integraciones",
         }),
         "settings.row.language": t({
             en: "Language (iOS)",
@@ -326,10 +326,6 @@ const settings = {
         "settings.row.upcoming": t({
             en: "Upcoming entries",
             es: "Próximos registros",
-        }),
-        "settings.row.wallet": t({
-            en: "Apple Pay",
-            es: "Apple Pay",
         }),
         "settings.screenTitle": t({
             en: "Settings",

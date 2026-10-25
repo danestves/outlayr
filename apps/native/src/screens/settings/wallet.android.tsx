@@ -1,8 +1,7 @@
 import { Switch } from "@expo/ui/jetpack-compose";
 import { eq } from "drizzle-orm";
 import { Button } from "panelui-native/components/button";
-import { useEffect, useState } from "react";
-import { AppState, View } from "react-native";
+import { View } from "react-native";
 
 import { LinkRow, SettingsSection } from "@/components/list/list-row";
 import { ListItemFrame } from "@/components/list/material-list-item";
@@ -18,25 +17,12 @@ import { appMeta } from "@/db/schema";
 import { useTranslation } from "@/i18n/context";
 import { purchaseListener } from "@/lib/purchase-listener";
 import type { PurchaseSender } from "@/lib/purchase-listener";
+import { usePurchaseListener } from "@/lib/use-purchase-listener";
 import type { Wallet as IosWallet } from "@/screens/settings/wallet";
 
-import { CardsSection, LastEntry } from "./wallet-parts";
+import { LastEntry } from "./wallet-parts";
 
 const LINE_BREAKS = /\s*\n\s*/g;
-
-interface ListenerState {
-    allowed: ReadonlySet<string>;
-    enabled: boolean;
-    senders: PurchaseSender[];
-}
-
-function readListener(): ListenerState {
-    return {
-        allowed: new Set(purchaseListener?.apps()),
-        enabled: purchaseListener?.isEnabled() ?? false,
-        senders: purchaseListener?.senders() ?? [],
-    };
-}
 
 function openSettings() {
     purchaseListener?.openSettings();
@@ -45,22 +31,13 @@ function openSettings() {
 export const Wallet: typeof IosWallet = () => {
     const db = useDatabase();
     const t = useTranslation();
-    const [listener, setListener] = useState(readListener);
+    const [listener, refreshListener] = usePurchaseListener();
     const last = useLiveValue(
         appMeta,
         () => db.select().from(appMeta).where(eq(appMeta.key, META_KEYS.lastWalletEntry)),
         (rows) => rows[0]?.value ?? null
     );
     const lastEntry = parseLastWalletEntry(last);
-
-    useEffect(() => {
-        const subscription = AppState.addEventListener("change", (state) => {
-            if (state === "active") {
-                setListener(readListener());
-            }
-        });
-        return () => subscription.remove();
-    }, []);
 
     const toggle = (packageName: string, on: boolean) => {
         const next = new Set(listener.allowed);
@@ -70,7 +47,7 @@ export const Wallet: typeof IosWallet = () => {
             next.delete(packageName);
         }
         purchaseListener?.setApps([...next]);
-        setListener(readListener());
+        refreshListener();
     };
 
     if (!listener.enabled) {
@@ -120,8 +97,6 @@ export const Wallet: typeof IosWallet = () => {
                     ))
                 )}
             </SettingsSection>
-
-            <CardsSection db={db} />
 
             <View className="pt-5">
                 <LinkRow onPress={openSettings} title={t("settings.wallet.accessRow")} value={t(onOffLabel(true))} />

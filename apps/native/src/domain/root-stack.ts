@@ -1,5 +1,4 @@
 import type { Href } from "expo-router";
-import { Platform } from "react-native";
 
 import type { RootStackGroup } from "@/domain/auth-gate";
 import type { TranslationKey } from "@/i18n/catalog";
@@ -20,6 +19,9 @@ export const TITLED_SCREENS: readonly {
     { name: "settings/erase", titleKey: "nav.settings.erase" },
     { name: "settings/export", titleKey: "nav.settings.export" },
     { name: "settings/feature-lab", titleKey: "nav.settings.featureLab" },
+    { name: "settings/integrations/bank", titleKey: "settings.wallet.bankSection" },
+    { name: "settings/integrations/index", titleKey: "nav.settings.integrations" },
+    { name: "settings/integrations/wallet", titleKey: "nav.settings.wallet" },
     { name: "settings/licenses/index", titleKey: "settings.about.openSourceLicenses" },
     { name: "settings/notifications", titleKey: "nav.settings.notifications" },
     { name: "settings/restore", titleKey: "nav.settings.restore" },
@@ -27,7 +29,6 @@ export const TITLED_SCREENS: readonly {
     { name: "settings/time", titleKey: "nav.settings.time" },
     { name: "settings/upcoming", titleKey: "nav.settings.upcoming" },
     { name: "settings/usage", titleKey: "nav.settings.usage" },
-    { name: "settings/wallet", titleKey: Platform.OS === "android" ? "nav.settings.autoLog" : "nav.settings.wallet" },
 ];
 
 export const SHEET_SCREENS: readonly {

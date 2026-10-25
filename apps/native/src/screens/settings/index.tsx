@@ -52,6 +52,8 @@ import type { SupportDiagnostics } from "@/lib/support-mailto";
 import { THEME_OPTIONS } from "@/theme/theme-preference";
 import { useIsDark } from "@/theme/use-is-dark";
 
+import { useIntegrationsOn } from "./integrations-on";
+
 const SUPPORT_EMAIL = "support@tryoutlayr.com";
 
 const DATA_LINKS = [
@@ -90,6 +92,7 @@ export function Settings() {
     const coverage = useValuationCoverage(db);
     const sync = useSyncStatus(db);
     const proEntitled = useProEntitled();
+    const integrationsOn = useIntegrationsOn(db);
     const { state: settings } = useAppSettings();
     const { showCents } = useDisplaySettings().state;
     const showNotifications = settings.bool("showNotifications");
@@ -134,6 +137,19 @@ export function Settings() {
                         value={syncValue}
                     />
                 )}
+            </SettingsSection>
+
+            <SettingsSection>
+                <LinkRow
+                    icon="Plug01"
+                    onPress={() => router.push("/settings/integrations")}
+                    title={t("settings.row.integrations")}
+                    value={
+                        integrationsOn > 0
+                            ? t("settings.integrations.onCount", { count: integrationsOn })
+                            : t(onOffLabel(false))
+                    }
+                />
             </SettingsSection>
 
             <SettingsSection footer={coverageNote(coverage, t) ?? undefined} title={t("settings.section.money")}>
@@ -243,11 +259,6 @@ export function Settings() {
             </SettingsSection>
 
             <SettingsSection title={t("settings.section.device")}>
-                <LinkRow
-                    icon="Wallet01"
-                    onPress={() => router.push("/settings/wallet")}
-                    title={t(Platform.OS === "ios" ? "settings.row.wallet" : "settings.row.autoLog")}
-                />
                 <LinkRow
                     icon="Notification03"
                     onPress={() => router.push("/settings/notifications")}
