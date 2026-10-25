@@ -2,7 +2,7 @@ import { describe, expect, it } from "@jest/globals";
 import type { ExpenseContribution } from "@outlayr/money/budget-spent";
 import type { BudgetWindow } from "@outlayr/money/budget-window";
 
-import { EN } from "@/i18n/catalog";
+import { CATALOGS, EN } from "@/i18n/catalog";
 import type { TranslateFn } from "@/i18n/context";
 import { translate } from "@/i18n/translate";
 
@@ -27,6 +27,7 @@ function expense(
 }
 
 const t: TranslateFn = (key, params) => translate(key, { catalog: EN, fallback: EN, params });
+const tEs: TranslateFn = (key, params) => translate(key, { catalog: CATALOGS.es, fallback: EN, params });
 
 describe("categoryMedian", () => {
     it("counts a subcategory's purchases as the parent's", () => {
@@ -124,7 +125,17 @@ describe("buildDaySlots", () => {
         expect(slots.overflow).toBe(1);
         expect(slots.remaining).toBe(-7);
         expect(slots.verdict).toBe("over");
-        expect(dayVerdictSentence(slots, "Coffee", t)).toBe("One Coffee too many.");
+        expect(dayVerdictSentence(slots, "Coffee", t)).toBe("One purchase too many in Coffee.");
+    });
+
+    it("names no category on the overall budget, in any language", () => {
+        const rows = [expense(25, 10), expense(25, 8), expense(25, 9), expense(25, 9, "rent")];
+
+        const slots = buildDaySlots(rows, { categoryId: null, limit: 20, now: NOW, window: TODAY });
+
+        expect(slots.overflow).toBe(2);
+        expect(dayVerdictSentence(slots, null, t)).toBe("2 purchases too many.");
+        expect(dayVerdictSentence(slots, null, tEs)).toBe("2 gastos de más.");
     });
 
     it("spans past the limit so an overshoot stays on the bar", () => {

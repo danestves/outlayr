@@ -105,8 +105,8 @@ export function buildDaySlots(rows: readonly ExpenseContribution[], options: Day
     };
 }
 
-/** `noun` is what the overflow counts: the category, or "purchase" on the overall budget. */
-export function dayVerdictSentence(slots: DaySlots, noun: string, t: TranslateFn): string | null {
+/** `category` names a category budget's category; the overall budget passes `null`. */
+export function dayVerdictSentence(slots: DaySlots, category: string | null, t: TranslateFn): string | null {
     switch (slots.verdict) {
         case "room": {
             return t("daySlots.room");
@@ -115,7 +115,9 @@ export function dayVerdictSentence(slots: DaySlots, noun: string, t: TranslateFn
             return t("daySlots.tight");
         }
         case "over": {
-            return t("daySlots.over", { count: slots.overflow, noun });
+            return category === null
+                ? t("daySlots.over", { count: slots.overflow })
+                : t("daySlots.overIn", { category, count: slots.overflow });
         }
         default: {
             return null;

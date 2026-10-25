@@ -154,15 +154,25 @@ const domain = {
         "dates.weekdayLong.4": t({ en: "Thursday", es: "jueves", pt: "quinta-feira" }),
         "dates.weekdayLong.5": t({ en: "Friday", es: "viernes", pt: "sexta-feira" }),
         "dates.weekdayLong.6": t({ en: "Saturday", es: "sábado", pt: "sábado" }),
+        "daySlots.overIn_one": t({
+            en: "One purchase too many in {category}.",
+            es: "Un gasto de más en {category}.",
+            pt: "Um gasto a mais em {category}.",
+        }),
+        "daySlots.overIn_other": t({
+            en: "{count} purchases too many in {category}.",
+            es: "{count} gastos de más en {category}.",
+            pt: "{count} gastos a mais em {category}.",
+        }),
         "daySlots.over_one": t({
-            en: "One {noun} too many.",
-            es: "Un gasto de más en {noun}.",
-            pt: "Um gasto a mais em {noun}.",
+            en: "One purchase too many.",
+            es: "Un gasto de más.",
+            pt: "Um gasto a mais.",
         }),
         "daySlots.over_other": t({
-            en: "{count} {noun} too many.",
-            es: "{count} gastos de más en {noun}.",
-            pt: "{count} gastos a mais em {noun}.",
+            en: "{count} purchases too many.",
+            es: "{count} gastos de más.",
+            pt: "{count} gastos a mais.",
         }),
         "daySlots.room": t({
             en: "Room for one more.",
