@@ -14,7 +14,7 @@ export const SITE_URL = "https://tryoutlayr.com";
 export const LEDGER_MCP_ORIGIN = "https://edge.tryoutlayr.com";
 export const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.tryoutlayr.app";
 /** The app speaks more languages than this site, which stays English and Spanish. */
-export const APP_LANGUAGES = ["en", "es-419", "pt-BR"] as const;
+export const APP_LANGUAGES = ["en", "es-419", "es-ES", "pt-BR"] as const;
 export const SUPPORT_EMAIL = "support@tryoutlayr.com";
 export const COMPANY = "danestves LLC";
 export const COMPANY_URL = "https://danestves.com/";

@@ -4,6 +4,7 @@ import { roundMoney } from "@outlayr/money/round";
 import type { Locale } from "expo-localization";
 
 import { firstLocale } from "@/i18n/device-language";
+import { languageSubtag } from "@/i18n/languages";
 import type { Language } from "@/i18n/languages";
 import { runtimeLanguage } from "@/i18n/runtime";
 
@@ -22,9 +23,9 @@ type DeviceNumbers = Pick<Locale, "decimalSeparator" | "digitGroupingSeparator" 
 
 type RegionalLanguage = Exclude<Language, "en">;
 
-/** Where the device's region cannot be read: Latin American Spanish and Brazilian Portuguese. */
 const REGIONAL_FALLBACK = {
     es: { decimal: ".", group: ",", tag: "es-419" },
+    "es-ES": { decimal: ",", group: ".", tag: "es-ES" },
     pt: { decimal: ",", group: ".", tag: "pt-BR" },
 } satisfies Record<RegionalLanguage, NumberLocale>;
 
@@ -33,7 +34,7 @@ export function regionalLocale(language: RegionalLanguage, device: DeviceNumbers
     return {
         decimal: device?.decimalSeparator ?? fallback.decimal,
         group: device?.digitGroupingSeparator ?? fallback.group,
-        tag: device?.regionCode ? `${language}-${device.regionCode}` : fallback.tag,
+        tag: device?.regionCode ? `${languageSubtag(language)}-${device.regionCode}` : fallback.tag,
     };
 }
 

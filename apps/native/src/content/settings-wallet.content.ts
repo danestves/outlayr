@@ -36,11 +36,13 @@ const settingsWallet = {
         "settings.wallet.automationDetail": t({
             en: "Wallet trigger runs Outlayr - Apple Pay",
             es: "El disparador de Wallet ejecuta Outlayr - Apple Pay",
+            "es-ES": "El disparador de Cartera ejecuta Outlayr - Apple Pay",
             pt: "O acionador Carteira executa Outlayr - Apple Pay",
         }),
         "settings.wallet.automationDetailInline": t({
             en: "Wallet trigger runs Log a Wallet Transaction",
             es: "El disparador de Wallet ejecuta Log a Wallet Transaction",
+            "es-ES": "El disparador de Cartera ejecuta Log a Wallet Transaction",
             pt: "O acionador Carteira executa Log a Wallet Transaction",
         }),
         "settings.wallet.automationRow": t({
@@ -76,6 +78,7 @@ const settingsWallet = {
         "settings.wallet.bankStep1": t({
             en: "Add Shortcut",
             es: "Agregar atajo",
+            "es-ES": "Añadir atajo",
             pt: "Adicionar Atalho",
         }),
         "settings.wallet.bankStep2": t({
@@ -151,6 +154,7 @@ const settingsWallet = {
         "settings.wallet.manualStep2": t({
             en: "Add Action, search Outlayr",
             es: "Agregar acción, busca Outlayr",
+            "es-ES": "Añadir acción, busca Outlayr",
             pt: "Adicionar Ação, busque Outlayr",
         }),
         "settings.wallet.manualStep2Detail": t({
@@ -171,6 +175,7 @@ const settingsWallet = {
         "settings.wallet.manualStep3Detail27": t({
             en: "Tap each, pick the Wallet variable above the keyboard, then the matching field",
             es: "Toca cada uno, elige la variable de Wallet sobre el teclado y luego el campo que corresponde",
+            "es-ES": "Toca cada uno, elige la variable de Cartera sobre el teclado y luego el campo que corresponde",
             pt: "Toque em cada um, escolha a variável Carteira acima do teclado e depois o campo correspondente",
         }),
         "settings.wallet.noCards": t({
@@ -241,6 +246,7 @@ const settingsWallet = {
         "settings.wallet.sourcesFooter": t({
             en: "Apps that notified you of an amount show up here.",
             es: "Aparecen las apps que te notificaron un monto.",
+            "es-ES": "Aparecen las apps que te han notificado un importe.",
             pt: "Aqui aparecem os apps que te notificaram um valor.",
         }),
         "settings.wallet.sourcesSection": t({
@@ -256,6 +262,7 @@ const settingsWallet = {
         "settings.wallet.step2": t({
             en: "Choose Wallet",
             es: "Elige Wallet",
+            "es-ES": "Elige Cartera",
             pt: "Escolha Carteira",
         }),
         "settings.wallet.step2Detail": t({
@@ -271,11 +278,13 @@ const settingsWallet = {
         "settings.wallet.step3Detail": t({
             en: "Run Immediately on, Notify When Run off",
             es: "Ejecutar de inmediato activado, Notificar al ejecutar desactivado",
+            "es-ES": "Ejecutar inmediatamente activado, Notificar cuando se ejecute desactivado",
             pt: "Executar Imediatamente ativado, Notificar Quando Executar desativado",
         }),
         "settings.wallet.step5": t({
             en: "Done",
             es: "Listo",
+            "es-ES": "OK",
             pt: "OK",
         }),
         "settings.wallet.stepsSection": t({
@@ -301,6 +310,7 @@ const settingsWallet = {
         "settings.wallet.v27Manual2": t({
             en: "Pick Wallet",
             es: "Elige Wallet",
+            "es-ES": "Elige Cartera",
             pt: "Escolha Carteira",
         }),
         "settings.wallet.v27Manual2Detail": t({

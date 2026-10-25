@@ -11,6 +11,7 @@ const watch = {
         "watch.average": t({
             en: "Avg",
             es: "Prom.",
+            "es-ES": "Media",
             pt: "Méd.",
         }),
         "watch.empty": t({

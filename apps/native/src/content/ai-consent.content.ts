@@ -18,6 +18,8 @@ const aiConsent = {
         "aiConsent.fine": t({
             en: "Suggestions never include amounts, dates, or accounts. We don't keep recordings, photos, or screenshots.",
             es: "Las sugerencias nunca incluyen montos, fechas ni cuentas. No guardamos grabaciones, fotos ni capturas.",
+            "es-ES":
+                "Las sugerencias nunca incluyen importes, fechas ni cuentas. No guardamos grabaciones, fotos ni capturas.",
             pt: "As sugestões nunca incluem valores, datas ou contas. Não armazenamos gravações, fotos nem capturas de tela.",
         }),
         "aiConsent.lead": t({
@@ -58,6 +60,7 @@ const aiConsent = {
         "aiConsent.scan": t({
             en: "Receipt scan",
             es: "Escanear un recibo",
+            "es-ES": "Escanear un ticket",
             pt: "Escanear recibo",
         }),
         "aiConsent.scanSends": t({

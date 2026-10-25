@@ -217,6 +217,7 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
     },
     locales: {
         es: "./locales/es.json",
+        "es-ES": "./locales/es-ES.json",
         pt: "./locales/pt.json",
     },
     name: "Outlayr",
@@ -224,7 +225,7 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
     platforms: ["ios", "android"],
     plugins: [
         "expo-router",
-        ["expo-localization", { supportedLocales: ["en", "es", "pt"] }],
+        ["expo-localization", { supportedLocales: ["en", "es", "es-ES", "pt"] }],
         "expo-image",
         "expo-sqlite",
         [

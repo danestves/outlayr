@@ -56,6 +56,8 @@ const settingsData = {
         "settings.erase.confirmEverythingBody": t({
             en: "Every transaction, recurring template, transfer, budget and photo will be deleted. Your accounts, categories, savings goals, tags and settings are kept. This can't be undone.",
             es: "Se eliminarán todas las transacciones, plantillas recurrentes, transferencias, presupuestos y fotos. Tus cuentas, categorías, metas de ahorro, etiquetas y configuración se conservan. Esto no se puede deshacer.",
+            "es-ES":
+                "Se eliminarán todas las transacciones, plantillas recurrentes, transferencias, presupuestos y fotos. Tus cuentas, categorías, metas de ahorro, etiquetas y ajustes se conservan. Esto no se puede deshacer.",
             pt: "Todos os lançamentos, modelos recorrentes, transferências, orçamentos e fotos serão apagados. Suas contas, categorias, metas de economia, tags e ajustes são mantidos. Isso não pode ser desfeito.",
         }),
         "settings.erase.confirmEverythingTitle": t({
@@ -86,6 +88,8 @@ const settingsData = {
         "settings.erase.footer": t({
             en: "Your categories are kept either way: they are the vocabulary you built, not the records you logged.",
             es: "Tus categorías se conservan en ambos casos: son el vocabulario que armaste, no los registros que anotaste.",
+            "es-ES":
+                "Tus categorías se conservan en ambos casos: son el vocabulario que creaste, no los registros que anotaste.",
             pt: "Suas categorias são mantidas nos dois casos: são o vocabulário que você criou, não os registros que você fez.",
         }),
         "settings.erase.onThisDevice": t({
@@ -151,6 +155,8 @@ const settingsData = {
         "settings.export.columnsNote": t({
             en: "Dates are ISO 8601 instants and amounts are plain decimals with no grouping, so the file reads back into Outlayr (or into a spreadsheet) as the same figures.",
             es: "Las fechas van en formato ISO 8601 y los montos como decimales simples sin separador de miles, así que el archivo se vuelve a leer en Outlayr (o en una hoja de cálculo) con las mismas cifras.",
+            "es-ES":
+                "Las fechas van en formato ISO 8601 y los importes como decimales simples sin separador de miles, así que el archivo se vuelve a leer en Outlayr (o en una hoja de cálculo) con las mismas cifras.",
             pt: "As datas vão no formato ISO 8601 e os valores como decimais simples, sem separador de milhar, então o arquivo volta para o Outlayr (ou para uma planilha) com os mesmos números.",
         }),
         "settings.export.failedBody": t({
@@ -181,11 +187,14 @@ const settingsData = {
         "settings.export.omittedLook": t({
             en: "Emoji, icon and color",
             es: "Emoji, ícono y color",
+            "es-ES": "Emoji, icono y color",
             pt: "Emoji, ícone e cor",
         }),
         "settings.export.omittedNote": t({
             en: "A CSV is a readable copy of your figures, not a backup. Reading one back in re-creates only the date, name, amount, currency and type of each transaction, and links each one to the category with the same name, because the file cannot create a category. Your budgets, your categories and everything listed above live only on this device.",
             es: "Un CSV es una copia legible de tus cifras, no un respaldo. Al volver a importarlo solo se recrean la fecha, el nombre, el monto, la moneda y el tipo de cada transacción, y vincula cada una con la categoría del mismo nombre, porque el archivo no puede crear categorías. Tus presupuestos, tus categorías y todo lo anterior existen únicamente en este dispositivo.",
+            "es-ES":
+                "Un CSV es una copia legible de tus cifras, no una copia de seguridad. Al volver a importarlo solo se recrean la fecha, el nombre, el importe, la moneda y el tipo de cada transacción, y vincula cada una con la categoría del mismo nombre, porque el archivo no puede crear categorías. Tus presupuestos, tus categorías y todo lo anterior existen únicamente en este dispositivo.",
             pt: "Um CSV é uma cópia legível dos seus números, não um backup. Ao importá-lo de volta, só a data, o nome, o valor, a moeda e o tipo de cada lançamento são recriados, e cada um é ligado à categoria de mesmo nome, porque o arquivo não pode criar categorias. Seus orçamentos, suas categorias e tudo o que está listado acima existem só neste dispositivo.",
         }),
         "settings.export.omittedPhotos": t({
@@ -291,6 +300,8 @@ const settingsData = {
         "settings.restore.intro": t({
             en: "A full archive replaces this ledger with the one in the file. Use it to move to a new phone, not to add entries.",
             es: "Un archivo completo reemplaza este registro por el del archivo. Sirve para pasarte a un celular nuevo, no para agregar registros.",
+            "es-ES":
+                "Un archivo completo reemplaza este registro por el del archivo. Sirve para pasarte a un móvil nuevo, no para añadir registros.",
             pt: "Um arquivo completo substitui estes lançamentos pelos do arquivo. Serve para passar para um celular novo, não para adicionar lançamentos.",
         }),
         "settings.restore.restoring_one": t({

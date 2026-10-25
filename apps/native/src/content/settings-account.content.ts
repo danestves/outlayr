@@ -131,6 +131,8 @@ const settingsAccount = {
         "settings.account.signOutFooter": t({
             en: "Signing out ends the session on this phone. Every transaction, budget and category stays exactly where it is.",
             es: "Cerrar sesión solo afecta a este celular. Tus transacciones, presupuestos y categorías se quedan tal como están.",
+            "es-ES":
+                "Cerrar sesión solo afecta a este móvil. Tus transacciones, presupuestos y categorías se quedan tal como están.",
             pt: "Sair encerra a sessão neste celular. Cada lançamento, orçamento e categoria continua exatamente onde está.",
         }),
         "settings.account.signedInAs": t({
@@ -181,6 +183,8 @@ const settingsAccount = {
         "settings.sync.footer": t({
             en: "Turning sync off keeps every transaction, budget and category on this phone; it only stops queueing them for your account. Turning it back on hands over everything logged in between.",
             es: "Si desactivas la sincronización, cada transacción, presupuesto y categoría se queda en este celular; solo deja de enviarse a tu cuenta. Al activarla de nuevo, se envía todo lo que registraste mientras tanto.",
+            "es-ES":
+                "Si desactivas la sincronización, cada transacción, presupuesto y categoría se queda en este móvil; solo deja de enviarse a tu cuenta. Al activarla de nuevo, se envía todo lo que registraste mientras tanto.",
             pt: "Desativar a sincronização mantém cada lançamento, orçamento e categoria neste celular; só deixa de enviá-los para sua conta. Ao ativar de novo, tudo o que você registrou nesse meio-tempo é enviado.",
         }),
         "settings.sync.lastSynced": t({
@@ -216,6 +220,7 @@ const settingsAccount = {
         "settings.sync.offDetail": t({
             en: "Nothing leaves this phone. Your ledger is complete here and works exactly as it does now.",
             es: "Nada sale de este celular. Tu registro está completo aquí y funciona igual que ahora.",
+            "es-ES": "Nada sale de este móvil. Tu registro está completo aquí y funciona igual que ahora.",
             pt: "Nada sai deste celular. Seus lançamentos estão completos aqui e funcionam exatamente como agora.",
         }),
         "settings.sync.on": t({
@@ -236,6 +241,8 @@ const settingsAccount = {
         "settings.sync.pausedDetail": t({
             en: "Syncing needs Outlayr Pro. Your ledger is complete on this phone and keeps working; changes wait here until Pro is active again.",
             es: "Sincronizar requiere Outlayr Pro. Tu registro está completo en este celular y sigue funcionando; los cambios esperan aquí hasta que Pro esté activo otra vez.",
+            "es-ES":
+                "Sincronizar requiere Outlayr Pro. Tu registro está completo en este móvil y sigue funcionando; los cambios esperan aquí hasta que Pro esté activo otra vez.",
             pt: "Sincronizar requer o Outlayr Pro. Seus lançamentos estão completos neste celular e continuam funcionando; as mudanças esperam aqui até o Pro estar ativo de novo.",
         }),
         "settings.sync.pending": t({
@@ -286,6 +293,7 @@ const settingsAccount = {
         "settings.usage.capturesKinds": t({
             en: "Voice and receipts",
             es: "Voz y recibos",
+            "es-ES": "Voz y tickets",
             pt: "Voz e recibos",
         }),
         "settings.usage.fullIn": t({
@@ -306,6 +314,7 @@ const settingsAccount = {
         "settings.usage.receipts": t({
             en: "Receipt scans",
             es: "Escaneos de recibos",
+            "es-ES": "Escaneos de tickets",
             pt: "Escaneamento de recibos",
         }),
         "settings.usage.resets": t({

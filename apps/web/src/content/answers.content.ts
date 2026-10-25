@@ -3128,8 +3128,8 @@ const answers = {
                     COST_FAQ,
                     {
                         answer: t({
-                            en: "Yes. The app and this site are in English and Latin American Spanish, and the app is in Brazilian Portuguese too.",
-                            es: "Sí. La app y este sitio están en inglés y en español de Latinoamérica, y la app también está en portugués de Brasil.",
+                            en: "Yes. The app and this site are in English and Latin American Spanish, and the app is in Spain's Spanish and Brazilian Portuguese too.",
+                            es: "Sí. La app y este sitio están en inglés y en español de Latinoamérica, y la app también está en español de España y portugués de Brasil.",
                         }),
                         question: t({ en: "Is Outlayr in Spanish?", es: "¿Outlayr está en español?" }),
                     },

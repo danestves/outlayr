@@ -31,6 +31,7 @@ const voice = {
         "voice.action.settings": t({
             en: "Open Settings",
             es: "Abrir Configuración",
+            "es-ES": "Abrir Ajustes",
             pt: "Abrir Ajustes",
         }),
         "voice.close": t({
@@ -51,6 +52,8 @@ const voice = {
         "voice.failed.notEntitled": t({
             en: "Your free captures, voice and receipts together, are used up. They come back within 30 days; Pro lifts the limit.",
             es: "Ya usaste tus capturas gratis (voz y recibos). Se renuevan en menos de 30 días; con Pro no tienes ese límite.",
+            "es-ES":
+                "Ya has usado tus capturas gratis (voz y tickets). Se renuevan en menos de 30 días; con Pro no tienes ese límite.",
             pt: "Você já usou suas capturas grátis (voz e recibos). Elas se renovam em até 30 dias; com o Pro não há esse limite.",
         }),
         "voice.failed.offline": t({
@@ -66,6 +69,7 @@ const voice = {
         "voice.failed.quotaExceeded": t({
             en: "The fair-use limit for captures is reached. It resets within 30 days.",
             es: "Llegaste al límite de uso justo de capturas. Se renueva en menos de 30 días.",
+            "es-ES": "Has llegado al límite de uso justo de capturas. Se renueva en menos de 30 días.",
             pt: "Você atingiu o limite de uso justo de capturas. Ele se renova em até 30 dias.",
         }),
         "voice.failed.rateLimited": t({
@@ -192,6 +196,7 @@ const voice = {
         "voice.turn.field.amount": t({
             en: "amount",
             es: "monto",
+            "es-ES": "importe",
             pt: "valor",
         }),
         "voice.turn.field.category": t({

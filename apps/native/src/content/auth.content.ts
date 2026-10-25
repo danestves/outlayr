@@ -16,11 +16,15 @@ const auth = {
         "auth.adopt.confirm.keepAccount": t({
             en: "This phone's entries will be deleted and cannot be recovered. Your account's ledger is what remains.",
             es: "Las entradas de este celular se borrarán y no se podrán recuperar. Solo queda el registro de tu cuenta.",
+            "es-ES":
+                "Las entradas de este móvil se borrarán y no se podrán recuperar. Solo queda el registro de tu cuenta.",
             pt: "Os lançamentos deste celular serão apagados e não poderão ser recuperados. Só ficam os lançamentos da sua conta.",
         }),
         "auth.adopt.confirm.keepLocal": t({
             en: "Your account's entries will be deleted and cannot be recovered. This phone's ledger is what remains.",
             es: "Las entradas de tu cuenta se borrarán y no se podrán recuperar. Solo queda el registro de este celular.",
+            "es-ES":
+                "Las entradas de tu cuenta se borrarán y no se podrán recuperar. Solo queda el registro de este móvil.",
             pt: "Os lançamentos da sua conta serão apagados e não poderão ser recuperados. Só ficam os lançamentos deste celular.",
         }),
         "auth.adopt.confirm.proceed": t({
@@ -46,6 +50,7 @@ const auth = {
         "auth.adopt.keepAccount.body": t({
             en: "Deletes every entry on this phone and replaces it with your account's ledger.",
             es: "Borra cada entrada de este celular y la reemplaza con el registro de tu cuenta.",
+            "es-ES": "Borra cada entrada de este móvil y la reemplaza con el registro de tu cuenta.",
             pt: "Apaga todos os lançamentos deste celular e os substitui pelos da sua conta.",
         }),
         "auth.adopt.keepAccount.title": t({
@@ -56,16 +61,20 @@ const auth = {
         "auth.adopt.keepLocal.body": t({
             en: "Deletes every entry your account holds and replaces it with this phone's ledger.",
             es: "Borra cada entrada que tiene tu cuenta y la reemplaza con el registro de este celular.",
+            "es-ES": "Borra cada entrada que tiene tu cuenta y la reemplaza con el registro de este móvil.",
             pt: "Apaga todos os lançamentos da sua conta e os substitui pelos deste celular.",
         }),
         "auth.adopt.keepLocal.title": t({
             en: "Keep only this phone's",
             es: "Conservar solo el de este celular",
+            "es-ES": "Conservar solo el de este móvil",
             pt: "Manter só os deste celular",
         }),
         "auth.adopt.merge.body": t({
             en: "Every entry from this phone and from your account survives. Nothing is deleted. Duplicate categories are yours to tidy up afterwards.",
             es: "Se quedan todas las entradas de este celular y de tu cuenta. No se borra nada. Si quedan categorías duplicadas, puedes ordenarlas después.",
+            "es-ES":
+                "Se quedan todas las entradas de este móvil y de tu cuenta. No se borra nada. Si quedan categorías duplicadas, puedes ordenarlas después.",
             pt: "Todos os lançamentos deste celular e da sua conta continuam. Nada é apagado. Se sobrarem categorias duplicadas, você pode arrumá-las depois.",
         }),
         "auth.adopt.merge.title": t({
@@ -76,6 +85,7 @@ const auth = {
         "auth.adopt.title": t({
             en: "This phone and your account both hold entries",
             es: "Este celular y tu cuenta tienen entradas",
+            "es-ES": "Este móvil y tu cuenta tienen entradas",
             pt: "Este celular e sua conta têm lançamentos",
         }),
         "auth.adopt.working": t({
@@ -121,6 +131,7 @@ const auth = {
         "auth.email.error.code": t({
             en: "That code is wrong or expired.",
             es: "Ese código no es válido o ya caducó.",
+            "es-ES": "Ese código no es válido o ya ha caducado.",
             pt: "Esse código está errado ou expirou.",
         }),
         "auth.email.error.credentials": t({
@@ -251,6 +262,8 @@ const auth = {
         "auth.signIn.body": t({
             en: "Your ledger is on this phone and it stays there. An account means it survives losing the phone.",
             es: "Tu registro vive en este celular y ahí se queda. Con una cuenta, sobrevive aunque pierdas el celular.",
+            "es-ES":
+                "Tu registro vive en este móvil y ahí se queda. Con una cuenta, sobrevive aunque pierdas el móvil.",
             pt: "Seus lançamentos estão neste celular e continuam aqui. Com uma conta, eles sobrevivem mesmo se você perder o celular.",
         }),
         "auth.signIn.eyebrow": t({
