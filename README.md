@@ -15,7 +15,7 @@ Outlayr is an open source mobile expense tracker, budget app, and subscription t
 - Savings goals, accounts, transfers and 165 currencies, converted at the rate from the day of each purchase
 - Subscriptions and paychecks that log themselves, with a reminder before each charge
 - Insights, Home and Lock Screen widgets, Face ID lock, CSV import and export
-- Works offline, in English and Spanish
+- Works offline, in English, Spanish, and Portuguese
 
 ## Layout
 

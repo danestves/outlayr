@@ -874,8 +874,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes. Outlayr is offered in 175 countries and regions, Chile and Mexico included, with 165 currencies, in English and Spanish. Fintonic is offered only in Spain and connects Spanish banks.",
-                            es: "Sí. Outlayr se ofrece en 175 países y regiones, Chile y México incluidos, con 165 monedas, en inglés y en español. Fintonic solo se ofrece en España y conecta bancos españoles.",
+                            en: "Yes. Outlayr is offered in 175 countries and regions, Chile and Mexico included, with 165 currencies, in English, Spanish, and Portuguese. Fintonic is offered only in Spain and connects Spanish banks.",
+                            es: "Sí. Outlayr se ofrece en 175 países y regiones, Chile y México incluidos, con 165 monedas, en inglés, español y portugués. Fintonic solo se ofrece en España y conecta bancos españoles.",
                         }),
                         question: t({
                             en: "Does Outlayr work in Chile and Mexico?",
@@ -1182,8 +1182,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes. Outlayr is offered in 175 countries and regions, in English and Spanish. Monarch is available in the United States and Canada.",
-                            es: "Sí. Outlayr se ofrece en 175 países y regiones, en inglés y en español. Monarch está disponible en Estados Unidos y Canadá.",
+                            en: "Yes. Outlayr is offered in 175 countries and regions, in English, Spanish, and Portuguese. Monarch is available in the United States and Canada.",
+                            es: "Sí. Outlayr se ofrece en 175 países y regiones, en inglés, español y portugués. Monarch está disponible en Estados Unidos y Canadá.",
                         }),
                         question: t({
                             en: "Is Outlayr available outside the United States and Canada?",
@@ -1614,8 +1614,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes. Outlayr is offered in 175 countries and regions, with 165 currencies, in English and Spanish. Rocket Money is available in the United States, with U.S. banks.",
-                            es: "Sí. Outlayr se ofrece en 175 países y regiones, con 165 monedas, en inglés y en español. Rocket Money está disponible en Estados Unidos, con bancos de EE. UU.",
+                            en: "Yes. Outlayr is offered in 175 countries and regions, with 165 currencies, in English, Spanish, and Portuguese. Rocket Money is available in the United States, with U.S. banks.",
+                            es: "Sí. Outlayr se ofrece en 175 países y regiones, con 165 monedas, en inglés, español y portugués. Rocket Money está disponible en Estados Unidos, con bancos de EE. UU.",
                         }),
                         question: t({
                             en: "Does Outlayr work outside the United States?",
@@ -2109,8 +2109,8 @@ const answers = {
                     {
                         label: t({ en: "Say it", es: "Díctala" }),
                         text: t({
-                            en: "In your own words, in English or Spanish, up to 45 seconds a clip",
-                            es: "Con tus palabras, en inglés o en español, hasta 45 segundos por grabación",
+                            en: "In your own words, in English, Spanish, or Portuguese, up to 45 seconds a clip",
+                            es: "Con tus palabras, en inglés, español o portugués, hasta 45 segundos por grabación",
                         }),
                     },
                     {
@@ -2165,8 +2165,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "English and Spanish. Voice entry listens in the language the app is set to.",
-                            es: "Inglés y español. El registro por voz escucha en el idioma que tenga la app.",
+                            en: "English, Spanish, and Portuguese. Voice entry listens in the language the app is set to.",
+                            es: "Inglés, español y portugués. El registro por voz escucha en el idioma que tenga la app.",
                         }),
                         question: t({ en: "Which languages does it understand?", es: "¿Qué idiomas entiende?" }),
                     },
@@ -2731,8 +2731,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "EveryDollar's mobile app and Premium are US only, and Monarch is for the US and Canada. PocketGuard links accounts in the US and Canada, and Goodbudget's bank sync is for US banks. YNAB imports from select US, Canadian, UK, and EU banks. Spendee connects banks in many countries, including much of Europe and Latin America. Outlayr works in English and Spanish, with 165 currencies.",
-                            es: "La app móvil y el Premium de EveryDollar son solo para EE. UU., y Monarch es para EE. UU. y Canadá. PocketGuard vincula cuentas de EE. UU. y Canadá, y la sincronización de Goodbudget es para bancos de EE. UU. YNAB importa desde algunos bancos de EE. UU., Canadá, Reino Unido y la UE. Spendee conecta bancos de muchos países, entre ellos buena parte de Europa y Latinoamérica. Outlayr funciona en inglés y en español, con 165 monedas.",
+                            en: "EveryDollar's mobile app and Premium are US only, and Monarch is for the US and Canada. PocketGuard links accounts in the US and Canada, and Goodbudget's bank sync is for US banks. YNAB imports from select US, Canadian, UK, and EU banks. Spendee connects banks in many countries, including much of Europe and Latin America. Outlayr works in English, Spanish, and Portuguese, with 165 currencies.",
+                            es: "La app móvil y el Premium de EveryDollar son solo para EE. UU., y Monarch es para EE. UU. y Canadá. PocketGuard vincula cuentas de EE. UU. y Canadá, y la sincronización de Goodbudget es para bancos de EE. UU. YNAB importa desde algunos bancos de EE. UU., Canadá, Reino Unido y la UE. Spendee conecta bancos de muchos países, entre ellos buena parte de Europa y Latinoamérica. Outlayr funciona en inglés, español y portugués, con 165 monedas.",
                         }),
                         question: t({
                             en: "Which budget apps work outside the United States?",
@@ -3128,8 +3128,8 @@ const answers = {
                     COST_FAQ,
                     {
                         answer: t({
-                            en: "Yes. The app and this site are in English and Latin American Spanish.",
-                            es: "Sí. La app y este sitio están en inglés y en español de Latinoamérica.",
+                            en: "Yes. The app and this site are in English and Latin American Spanish, and the app is in Brazilian Portuguese too.",
+                            es: "Sí. La app y este sitio están en inglés y en español de Latinoamérica, y la app también está en portugués de Brasil.",
                         }),
                         question: t({ en: "Is Outlayr in Spanish?", es: "¿Outlayr está en español?" }),
                     },
@@ -3850,8 +3850,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Rocket Money is available in the United States only, and Monarch in the United States and Canada. PocketGuard links accounts in the US, Canada, and the UK. Outlayr is offered in 175 countries and regions, in English and Spanish.",
-                            es: "Rocket Money solo está disponible en Estados Unidos, y Monarch en Estados Unidos y Canadá. PocketGuard vincula cuentas de EE. UU., Canadá y Reino Unido. Outlayr se ofrece en 175 países y regiones, en inglés y en español.",
+                            en: "Rocket Money is available in the United States only, and Monarch in the United States and Canada. PocketGuard links accounts in the US, Canada, and the UK. Outlayr is offered in 175 countries and regions, in English, Spanish, and Portuguese.",
+                            es: "Rocket Money solo está disponible en Estados Unidos, y Monarch en Estados Unidos y Canadá. PocketGuard vincula cuentas de EE. UU., Canadá y Reino Unido. Outlayr se ofrece en 175 países y regiones, en inglés, español y portugués.",
                         }),
                         question: t({
                             en: "Which subscription trackers work outside the United States?",
@@ -5358,8 +5358,8 @@ const answers = {
                     {
                         label: t({ en: "Languages", es: "Idiomas" }),
                         text: t({
-                            en: "English and Spanish, following the app's language",
-                            es: "Inglés y español, según el idioma de la app",
+                            en: "English, Spanish, and Portuguese, following the app's language",
+                            es: "Inglés, español y portugués, según el idioma de la app",
                         }),
                     },
                     {
@@ -5398,8 +5398,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "English and Spanish. Outlayr listens in the language the app is set to.",
-                            es: "Inglés y español. Outlayr escucha en el idioma que tenga la app.",
+                            en: "English, Spanish, and Portuguese. Outlayr listens in the language the app is set to.",
+                            es: "Inglés, español y portugués. Outlayr escucha en el idioma que tenga la app.",
                         }),
                         question: t({
                             en: "Which languages does voice entry understand?",

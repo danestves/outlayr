@@ -1,6 +1,6 @@
 # Outlayr
 
-> Outlayr is an open source mobile expense tracker, budget app, and subscription tracker, made by danestves LLC. You log a purchase by typing one sentence, saying it, or scanning the receipt. Budgets, savings goals, subscriptions, and insights update as you log. Available on Android from Google Play, and coming soon to the App Store for iPhone (iOS 18 or later). English and Spanish.
+> Outlayr is an open source mobile expense tracker, budget app, and subscription tracker, made by danestves LLC. You log a purchase by typing one sentence, saying it, or scanning the receipt. Budgets, savings goals, subscriptions, and insights update as you log. Available on Android from Google Play, and coming soon to the App Store for iPhone (iOS 18 or later). English, Spanish, and Portuguese.
 
 Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr.com), a payments company.
 
@@ -71,7 +71,7 @@ Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr
 - [Receipt scanner](https://tryoutlayr.com/guides/receipt-scanner): what a scan reads (store, date, total, up to 60 lines, tax, tip, and how you paid), how the category, account, and currency are picked, refunds, invoices and bills, the review before saving, the free and Pro capture limits, and what it needs
 - [Subscription tracker](https://tryoutlayr.com/guides/subscription-tracker): recurring charges that log themselves, an Upcoming list with what your subscriptions and bills cost per month, and reminders before each charge. Outlayr does not cancel subscriptions for you
 - [Expense tracker template](https://tryoutlayr.com/guides/expense-tracker-template): a free Excel workbook (Transactions, a Summary with income, spending, and net for the month and currency you pick, spending against a budget per category, and a chart, and How to import) and a plain CSV, both with the columns Outlayr's CSV import reads; rows whose category matches one of yours by name import on any plan, and Outlayr Pro matches the rest with AI, up to 5,000 rows and 2 MB a file. The Spanish page offers a Spanish file: https://tryoutlayr.com/es/guides/expense-tracker-template
-- [Voice expense tracker](https://tryoutlayr.com/guides/voice-expense-tracker): saying a purchase in English or Spanish, what voice entry fills in, how spoken corrections work, and the 20 free captures every 30 days
+- [Voice expense tracker](https://tryoutlayr.com/guides/voice-expense-tracker): saying a purchase in English, Spanish, or Portuguese, what voice entry fills in, how spoken corrections work, and the 20 free captures every 30 days
 
 ## Comparisons
 

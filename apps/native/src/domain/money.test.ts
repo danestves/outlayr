@@ -5,8 +5,8 @@ import {
     amountParts,
     formatAmount,
     formatFixed,
-    latinAmericanLocale,
     minorUnitsFor,
+    regionalLocale,
     roundToMinorUnits,
     symbolIsShared,
 } from "./money";
@@ -14,14 +14,15 @@ import {
 const ARGENTINA = { decimalSeparator: ",", digitGroupingSeparator: ".", regionCode: "AR" };
 const MEXICO = { decimalSeparator: ".", digitGroupingSeparator: ",", regionCode: "MX" };
 
-describe("latinAmericanLocale", () => {
+describe("regionalLocale", () => {
     it("takes the marks from the device's region", () => {
-        expect(latinAmericanLocale(MEXICO)).toStrictEqual({ decimal: ".", group: ",", tag: "es-MX" });
-        expect(latinAmericanLocale(ARGENTINA)).toStrictEqual({ decimal: ",", group: ".", tag: "es-AR" });
+        expect(regionalLocale("es", MEXICO)).toStrictEqual({ decimal: ".", group: ",", tag: "es-MX" });
+        expect(regionalLocale("es", ARGENTINA)).toStrictEqual({ decimal: ",", group: ".", tag: "es-AR" });
     });
 
-    it("falls back to Latin American Spanish when the device cannot be read", () => {
-        expect(latinAmericanLocale(null)).toStrictEqual({ decimal: ".", group: ",", tag: "es-419" });
+    it("falls back to Latin American Spanish and Brazilian Portuguese when the device cannot be read", () => {
+        expect(regionalLocale("es", null)).toStrictEqual({ decimal: ".", group: ",", tag: "es-419" });
+        expect(regionalLocale("pt", null)).toStrictEqual({ decimal: ",", group: ".", tag: "pt-BR" });
     });
 });
 

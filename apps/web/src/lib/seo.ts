@@ -3,7 +3,7 @@ import type { JSX } from "react";
 
 import { LANGUAGES, pageUrl } from "./i18n";
 import type { Locale } from "./i18n";
-import { LEGAL_DAYS, PLAY_STORE_URL, SITE_URL, SOURCE_URL, WIKIDATA_URL, X_URL } from "./site";
+import { APP_LANGUAGES, LEGAL_DAYS, PLAY_STORE_URL, SITE_URL, SOURCE_URL, WIKIDATA_URL, X_URL } from "./site";
 
 type Json = string | number | boolean | null | readonly Json[] | { readonly [key: string]: Json | undefined };
 
@@ -96,7 +96,7 @@ export function mobileApp(locale: Locale, description: string, fields: { readonl
         applicationCategory: "FinanceApplication",
         description,
         downloadUrl: [PLAY_STORE_URL],
-        inLanguage: Object.values(LANGUAGES).map((language) => language.lang),
+        inLanguage: APP_LANGUAGES,
         name: "Outlayr",
         offers: offers(locale),
         operatingSystem: "Android",

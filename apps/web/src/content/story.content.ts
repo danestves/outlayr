@@ -21,7 +21,7 @@ const story = {
                 t({ en: "Free plan", es: "Plan gratis" }),
                 t({ en: "No ads", es: "Sin anuncios" }),
                 t({ en: "165 currencies", es: "165 monedas" }),
-                t({ en: "English and Spanish", es: "Inglés y español" }),
+                t({ en: "3 languages", es: "3 idiomas" }),
             ],
             status: t({
                 en: "Now on Google Play. Coming soon to the App Store.",

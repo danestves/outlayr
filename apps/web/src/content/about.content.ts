@@ -62,7 +62,10 @@ const about = {
             },
             {
                 label: t({ en: "Languages", es: "Idiomas" }),
-                text: t({ en: "English and Latin American Spanish.", es: "Inglés y español de Latinoamérica." }),
+                text: t({
+                    en: "English, Latin American Spanish, and Brazilian Portuguese.",
+                    es: "Inglés, español de Latinoamérica y portugués de Brasil.",
+                }),
             },
             {
                 label: t({ en: "Account", es: "Cuenta" }),

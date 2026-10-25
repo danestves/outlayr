@@ -20,16 +20,25 @@ const ENGLISH: NumberLocale = { decimal: ".", group: ",", tag: "en-US" };
 
 type DeviceNumbers = Pick<Locale, "decimalSeparator" | "digitGroupingSeparator" | "regionCode">;
 
-export function latinAmericanLocale(device: DeviceNumbers | null): NumberLocale {
+type RegionalLanguage = Exclude<Language, "en">;
+
+/** Where the device's region cannot be read: Latin American Spanish and Brazilian Portuguese. */
+const REGIONAL_FALLBACK = {
+    es: { decimal: ".", group: ",", tag: "es-419" },
+    pt: { decimal: ",", group: ".", tag: "pt-BR" },
+} satisfies Record<RegionalLanguage, NumberLocale>;
+
+export function regionalLocale(language: RegionalLanguage, device: DeviceNumbers | null): NumberLocale {
+    const fallback = REGIONAL_FALLBACK[language];
     return {
-        decimal: device?.decimalSeparator ?? ".",
-        group: device?.digitGroupingSeparator ?? ",",
-        tag: device?.regionCode ? `es-${device.regionCode}` : "es-419",
+        decimal: device?.decimalSeparator ?? fallback.decimal,
+        group: device?.digitGroupingSeparator ?? fallback.group,
+        tag: device?.regionCode ? `${language}-${device.regionCode}` : fallback.tag,
     };
 }
 
 // ponytail: read once per launch; a region changed mid-session shows after a relaunch.
-let spanish: NumberLocale | undefined;
+const regional: Partial<Record<RegionalLanguage, NumberLocale>> = {};
 
 const THOUSANDS = /\B(?=(\d{3})+(?!\d))/g;
 
@@ -50,8 +59,8 @@ export function numberLocale(language: Language = runtimeLanguage()): NumberLoca
     if (language === "en") {
         return ENGLISH;
     }
-    spanish ??= latinAmericanLocale(firstLocale());
-    return spanish;
+    regional[language] ??= regionalLocale(language, firstLocale());
+    return regional[language];
 }
 
 export { decimalsFor as minorUnitsFor } from "@outlayr/money/currency";
