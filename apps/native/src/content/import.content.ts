@@ -231,14 +231,6 @@ const importSheet = {
             en: "Invalid exchange-rate metadata",
             es: "Metadatos de tasa de cambio no válidos",
         }),
-        "import.sourceComingSoon": t({
-            en: "Coming soon",
-            es: "Próximamente",
-        }),
-        "import.sourceCount": t({
-            en: "{count} of {total}",
-            es: "{count} de {total}",
-        }),
         "import.sourceEyebrow": t({
             en: "Bring data in",
             es: "Trae tus datos",
