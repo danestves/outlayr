@@ -175,11 +175,13 @@ function RowMeta({
                     </View>
                 ) : null}
                 {rateNeeded ? (
-                    <View
-                        accessibilityLabel={t("log.row.rateNeededAccessibility")}
-                        className="border-warning rounded-[3px] border px-[3px]"
-                    >
-                        <MonoLabel className="text-foreground">{t("log.row.rateNeeded")}</MonoLabel>
+                    <View className="border-warning rounded-[3px] border px-[3px]">
+                        <MonoLabel
+                            accessibilityLabel={t("log.row.rateNeededAccessibility")}
+                            className="text-foreground"
+                        >
+                            {t("log.row.rateNeeded")}
+                        </MonoLabel>
                     </View>
                 ) : null}
             </View>
