@@ -2,7 +2,7 @@ import { env } from "@outlayr/env/backend";
 
 export const EMAIL_CODE_TTL_SECONDS = 10 * 60;
 
-const LANGUAGES = ["en", "es", "pt"] as const;
+const LANGUAGES = ["en", "es", "fr", "pt"] as const;
 
 type Language = (typeof LANGUAGES)[number];
 
@@ -38,6 +38,13 @@ const CODE_EMAIL = {
         subject: (otp: string) => `Tu código de Outlayr: ${otp}`,
         verify: "Usa este código para confirmar tu correo en Outlayr:",
     },
+    fr: {
+        expiry: (minutes: number) =>
+            `Il expire dans ${minutes}\u00A0minutes. Si vous ne l'avez pas demandé, vous pouvez ignorer cet e-mail.`,
+        reset: "Utilisez ce code pour réinitialiser votre mot de passe Outlayr\u00A0:",
+        subject: (otp: string) => `Votre code Outlayr\u00A0: ${otp}`,
+        verify: "Utilisez ce code pour confirmer votre e-mail sur Outlayr\u00A0:",
+    },
     pt: {
         expiry: (minutes: number) => `Ele expira em ${minutes} minutos. Se você não pediu, pode ignorar este e-mail.`,
         reset: "Use este código para redefinir sua senha do Outlayr:",
@@ -63,6 +70,10 @@ const ACCOUNT_EXISTS_EMAIL = {
     es: {
         subject: "Ya tienes una cuenta de Outlayr",
         text: "Este correo ya tiene una cuenta de Outlayr. Inicia sesión con ella, o elige ¿Olvidaste tu contraseña? para crear una nueva.\n\nSi no lo pediste, puedes ignorar este correo.",
+    },
+    fr: {
+        subject: "Vous avez déjà un compte Outlayr",
+        text: "Cet e-mail a déjà un compte Outlayr. Connectez-vous avec, ou choisissez Mot de passe oublié\u00A0? pour en définir un nouveau.\n\nSi vous n'avez rien demandé, vous pouvez ignorer cet e-mail.",
     },
     pt: {
         subject: "Você já tem uma conta do Outlayr",

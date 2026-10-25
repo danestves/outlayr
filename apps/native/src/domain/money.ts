@@ -26,6 +26,7 @@ type RegionalLanguage = Exclude<Language, "en">;
 const REGIONAL_FALLBACK = {
     es: { decimal: ".", group: ",", tag: "es-419" },
     "es-ES": { decimal: ",", group: ".", tag: "es-ES" },
+    fr: { decimal: ",", group: "\u202F", tag: "fr-FR" },
     pt: { decimal: ",", group: ".", tag: "pt-BR" },
     "pt-PT": { decimal: ",", group: "\u00A0", tag: "pt-PT" },
 } satisfies Record<RegionalLanguage, NumberLocale>;

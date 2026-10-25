@@ -51,8 +51,8 @@ const support = {
             },
             {
                 answer: t({
-                    en: "English, Spanish, and Portuguese. Switch between them in Settings, under Language.",
-                    es: "Inglés, español y portugués. Cambia entre ellos en Configuración, en Idioma.",
+                    en: "English, Spanish, Portuguese, and French. Switch between them in Settings, under Language.",
+                    es: "Inglés, español, portugués y francés. Cambia entre ellos en Configuración, en Idioma.",
                 }),
                 question: t({ en: "Which languages does Outlayr speak?", es: "¿En qué idiomas está Outlayr?" }),
             },

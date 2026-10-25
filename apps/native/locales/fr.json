@@ -1,0 +1,8 @@
+{
+    "ios": {
+        "NSCameraUsageDescription": "Outlayr utilise l'appareil photo pour scanner un ticket ou joindre une photo à une opération. Les photos scannées sont envoyées à Anthropic pour être lues. Les photos jointes, non.",
+        "NSFaceIDUsageDescription": "Outlayr utilise Face ID pour déverrouiller votre journal.",
+        "NSMicrophoneUsageDescription": "Outlayr vous écoute pendant que vous dictez une opération. L'enregistrement est envoyé à ElevenLabs, qui le transcrit pour vous.",
+        "NSPhotoLibraryUsageDescription": "Outlayr utilise vos photos pour ajouter un logo à une opération, y joindre une photo ou scanner un ticket ou un paiement en plusieurs fois. Les photos scannées sont envoyées à Anthropic pour être lues. Les autres, non."
+    }
+}

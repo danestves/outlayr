@@ -66,7 +66,7 @@ const GLYPHS = {
 
 type GlyphName = keyof typeof GLYPHS;
 
-const TRANSLATED_LANGUAGES = ["es", "pt", "pt-PT"] as const;
+const TRANSLATED_LANGUAGES = ["es", "fr", "pt", "pt-PT"] as const;
 
 type TranslatedLanguage = (typeof TRANSLATED_LANGUAGES)[number];
 

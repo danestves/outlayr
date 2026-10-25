@@ -7,12 +7,14 @@ const settingsFeatureLab = {
             en: "Adding a transaction",
             es: "Al agregar una transacción",
             "es-ES": "Al añadir una transacción",
+            fr: "Saisie d'une opération",
             pt: "Ao adicionar um lançamento",
             "pt-PT": "Ao adicionar um registo",
         }),
         "settings.featureLab.aiEnrichment": t({
             en: "Suggest category and tags",
             es: "Sugerir categoría y etiquetas",
+            fr: "Suggérer catégorie et étiquettes",
             pt: "Sugerir categoria e tags",
             "pt-PT": "Sugerir categoria e etiquetas",
         }),
@@ -21,6 +23,7 @@ const settingsFeatureLab = {
             es: "Los servicios conocidos se reconocen en este dispositivo, y solo su dirección web va a un servicio de logos para traer el logo. Para todo lo demás, solo salen del dispositivo el nombre del comercio de una entrada (escrita, dictada, escaneada o registrada desde Wallet), si es gasto o ingreso, su código de moneda, tu idioma y la región del dispositivo, y los nombres de tus categorías. Nunca montos, fechas ni cuentas. La dirección web que vuelve va al mismo servicio de logos. Si una entrada reciente se guardó sin logo, se vuelve a buscar en segundo plano.",
             "es-ES":
                 "Los servicios conocidos se reconocen en este dispositivo, y solo su dirección web va a un servicio de logos para traer el logo. Para todo lo demás, solo salen del dispositivo el nombre del comercio de una entrada (escrita, dictada, escaneada o registrada desde Cartera), si es gasto o ingreso, su código de moneda, tu idioma y la región del dispositivo, y los nombres de tus categorías. Nunca importes, fechas ni cuentas. La dirección web que vuelve va al mismo servicio de logos. Si una entrada reciente se guardó sin logo, se vuelve a buscar en segundo plano.",
+            fr: "Les services connus sont reconnus sur cet appareil, et seule leur adresse web est envoyée à un service de logos pour récupérer le logo. Pour tout le reste, seuls le nom du commerçant d'une opération (tapée, dictée, scannée ou saisie depuis Cartes), son type (dépense ou revenu), son code de devise, votre langue et la région de l'appareil, et vos propres noms de catégories quittent l'appareil, jamais les montants, les dates ni les comptes. L'adresse web renvoyée part vers le même service de logos. Une opération récente enregistrée sans logo est recherchée de nouveau en arrière-plan.",
             pt: "Serviços conhecidos são reconhecidos neste dispositivo, e só o endereço web deles vai para um serviço de logos para buscar o logo. Para todo o resto, só saem do dispositivo o nome do estabelecimento de um lançamento (digitado, falado, escaneado ou registrado pela Carteira), se é despesa ou receita, o código da moeda, seu idioma e a região do dispositivo, e os nomes das suas categorias. Nunca valores, datas ou contas. O endereço web que volta vai para o mesmo serviço de logos. Se um lançamento recente foi salvo sem logo, ele é buscado de novo em segundo plano.",
             "pt-PT":
                 "Os serviços conhecidos são reconhecidos neste dispositivo, e só o endereço web deles vai para um serviço de logótipos para obter o logótipo. Para todo o resto, só saem do dispositivo o nome do estabelecimento de um registo (escrito, falado, digitalizado ou registado pela Carteira), se é despesa ou receita, o código da moeda, o seu idioma e a região do dispositivo, e os nomes das suas categorias. Nunca valores, datas ou contas. O endereço web que volta vai para o mesmo serviço de logótipos. Se um registo recente foi guardado sem logótipo, é pesquisado novamente em segundo plano.",
@@ -28,16 +31,19 @@ const settingsFeatureLab = {
         "settings.featureLab.aiSection": t({
             en: "Smart fill",
             es: "Autocompletado",
+            fr: "Remplissage intelligent",
             pt: "Preenchimento inteligente",
         }),
         "settings.featureLab.budgetRows": t({
             en: "Budget rows",
             es: "Filas de presupuesto",
+            fr: "Lignes de budget",
             pt: "Orçamentos em linhas",
         }),
         "settings.featureLab.budgetRowsNote": t({
             en: "Off lays the budgets out as a two-up grid of cards instead of a list.",
             es: "Si lo desactivas, los presupuestos se muestran en una cuadrícula de tarjetas de dos en dos en vez de una lista.",
+            fr: "Désactivé, les budgets s'affichent en grille de tuiles sur deux colonnes au lieu d'une liste.",
             pt: "Se desativado, os orçamentos aparecem em uma grade de cartões, dois por linha, em vez de uma lista.",
             "pt-PT":
                 "Se desativado, os orçamentos aparecem numa grelha de cartões, dois por linha, em vez de uma lista.",
@@ -45,28 +51,33 @@ const settingsFeatureLab = {
         "settings.featureLab.budgetsSection": t({
             en: "Budgets",
             es: "Presupuestos",
+            fr: "Budgets",
             pt: "Orçamentos",
         }),
         "settings.featureLab.confetti": t({
             en: "Celebrate expenses",
             es: "Celebrar gastos",
+            fr: "Fêter les dépenses",
             pt: "Celebrar despesas",
         }),
         "settings.featureLab.confettiNote": t({
             en: "Throws confetti over a transaction the moment you add it.",
             es: "Lanza confeti sobre una transacción en el momento en que la agregas.",
             "es-ES": "Lanza confeti sobre una transacción en el momento en que la añades.",
+            fr: "Lance des confettis sur une opération dès que vous l'ajoutez.",
             pt: "Joga confete sobre um lançamento assim que você o adiciona.",
             "pt-PT": "Atira confetti sobre um registo assim que o adiciona.",
         }),
         "settings.featureLab.experimental": t({
             en: "Experimental: these can change or disappear.",
             es: "Experimental: esto puede cambiar o desaparecer.",
+            fr: "Expérimental : ces options peuvent changer ou disparaître.",
             pt: "Experimental: isto pode mudar ou desaparecer.",
         }),
         "settings.featureLab.groundedLookup": t({
             en: "Look up new merchants",
             es: "Buscar comercios nuevos",
+            fr: "Rechercher les nouveaux commerçants",
             pt: "Buscar estabelecimentos novos",
             "pt-PT": "Pesquisar estabelecimentos novos",
         }),
@@ -75,6 +86,7 @@ const settingsFeatureLab = {
             es: "Para un comercio que nadie ha visto antes, el nombre, si es gasto o ingreso, el código de moneda de la entrada y tu idioma y región pueden buscarse en la web para conocer su categoría. Nunca para la transacción que estás ingresando y nunca con montos, fechas ni cuentas. Si lo desactivas, cada búsqueda se queda en este dispositivo y en los comercios ya conocidos.",
             "es-ES":
                 "Para un comercio que nadie ha visto antes, el nombre, si es gasto o ingreso, el código de moneda de la entrada y tu idioma y región pueden buscarse en la web para conocer su categoría. Nunca para la transacción que estás introduciendo y nunca con importes, fechas ni cuentas. Si lo desactivas, cada búsqueda se queda en este dispositivo y en los comercios ya conocidos.",
+            fr: "Pour un commerçant que personne n'a encore vu, son nom, son type (dépense ou revenu), le code de devise de l'opération, votre langue et la région de l'appareil peuvent être recherchés sur le web pour connaître sa catégorie, jamais pour l'opération que vous saisissez, et jamais avec un montant, une date ou un compte. Désactivé, chaque recherche reste sur cet appareil et parmi les commerçants déjà connus.",
             pt: "Para um estabelecimento que ninguém viu antes, o nome, se é despesa ou receita, o código da moeda do lançamento, seu idioma e a região do dispositivo podem ser buscados na web para descobrir a categoria. Nunca para o lançamento que você está registrando e nunca com valores, datas ou contas. Se desativado, cada busca fica restrita a este dispositivo e aos estabelecimentos já conhecidos.",
             "pt-PT":
                 "Para um estabelecimento que ninguém viu antes, o nome, se é despesa ou receita, o código da moeda do registo, o seu idioma e a região do dispositivo podem ser pesquisados na web para descobrir a categoria. Nunca para o registo que está a criar e nunca com valores, datas ou contas. Se desativado, cada pesquisa fica restrita a este dispositivo e aos estabelecimentos já conhecidos.",
@@ -82,23 +94,27 @@ const settingsFeatureLab = {
         "settings.featureLab.lineGraph": t({
             en: "Show line graph",
             es: "Mostrar gráfico de líneas",
+            fr: "Afficher la courbe",
             pt: "Mostrar gráfico de linha",
         }),
         "settings.featureLab.logSection": t({
             en: "The Log",
             es: "El registro",
+            fr: "Journal",
             pt: "Lançamentos",
             "pt-PT": "Registos",
         }),
         "settings.featureLab.swapTime": t({
             en: "Replace time label",
             es: "Reemplazar etiqueta de hora",
+            fr: "Remplacer l'heure",
             pt: "Trocar o horário pela categoria",
             "pt-PT": "Trocar a hora pela categoria",
         }),
         "settings.featureLab.swapTimeNote": t({
             en: "Each transaction shows its category instead of its time. If you never write your own note, the note is already the category name, so both lines will read the same.",
             es: "Cada transacción muestra su categoría en vez de su hora. Si nunca escribes tu propia nota, la nota ya es el nombre de la categoría, así que ambas líneas dirán lo mismo.",
+            fr: "Chaque opération affiche sa catégorie au lieu de son heure. Si vous n'écrivez jamais de note, la note est déjà le nom de la catégorie, et les deux lignes seront identiques.",
             pt: "Cada lançamento mostra a categoria em vez do horário. Se você nunca escreve uma nota própria, a nota já é o nome da categoria, então as duas linhas vão dizer o mesmo.",
             "pt-PT":
                 "Cada registo mostra a categoria em vez da hora. Se nunca escreve uma nota própria, a nota já é o nome da categoria, por isso as duas linhas vão dizer o mesmo.",
@@ -106,6 +122,7 @@ const settingsFeatureLab = {
         "settings.featureLab.transactionRowsSection": t({
             en: "Transaction rows",
             es: "Filas de transacción",
+            fr: "Lignes d'opération",
             pt: "Linhas de lançamento",
             "pt-PT": "Linhas de registo",
         }),
@@ -114,6 +131,7 @@ const settingsFeatureLab = {
             es: "Ambas van a Claude, de Anthropic, y solo mientras Enviar datos a proveedores de IA esté activado en Configuración.",
             "es-ES":
                 "Ambas van a Claude, de Anthropic, y solo mientras Enviar datos a proveedores de IA esté activado en Ajustes.",
+            fr: "Les deux passent par Claude, d'Anthropic, et seulement si Envoyer des données aux fournisseurs d'IA est activé dans Réglages.",
             pt: "As duas buscas vão para o Claude, da Anthropic, e só enquanto Enviar dados a provedores de IA estiver ativado em Ajustes.",
             "pt-PT":
                 "As duas pesquisas vão para o Claude, da Anthropic, e só enquanto Enviar dados a fornecedores de IA estiver ativado nas Definições.",

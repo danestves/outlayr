@@ -130,6 +130,7 @@ export const EN = catalogFor("en");
 
 let spanish: Catalog | undefined;
 let spainSpanish: Catalog | undefined;
+let french: Catalog | undefined;
 let portuguese: Catalog | undefined;
 let portugalPortuguese: Catalog | undefined;
 
@@ -142,6 +143,10 @@ export const CATALOGS = {
     get "es-ES"() {
         spainSpanish ??= catalogFor("es-ES");
         return spainSpanish;
+    },
+    get fr() {
+        french ??= catalogFor("fr");
+        return french;
     },
     get pt() {
         portuguese ??= catalogFor("pt");
