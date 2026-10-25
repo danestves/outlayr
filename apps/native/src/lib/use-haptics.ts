@@ -25,8 +25,8 @@ const NOTIFICATION = {
 } as const;
 
 /**
- * Nullable `db`: `IdentityDraftProvider` sits above the splash gate, where `useDatabase()` throws. Null resolves to
- * silence, never the default, which is why this is not `useSettingNumber`.
+ * Nullable `db`: a caller above the splash gate, where `useDatabase()` throws, gets null. Null resolves to silence,
+ * never the default, which is why this is not `useSettingNumber`.
  */
 function useHapticsLevel(): number | null {
     const { db } = useLocalData();
