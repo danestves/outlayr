@@ -34,6 +34,11 @@ describe("interpolate", () => {
     it("renders an explicit null as empty rather than leaking the token", () => {
         expect(interpolate("Delete '{name}'?", { name: null })).toBe("Delete ''?");
     });
+
+    it("lets an abbreviated date end the sentence with a single period", () => {
+        expect(interpolate("Moins qu'en {prior}.", { prior: "18 - 24 oct." })).toBe("Moins qu'en 18 - 24 oct.");
+        expect(interpolate("Le {date}, puis", { date: "25 oct." })).toBe("Le 25 oct., puis");
+    });
 });
 
 describe("translate", () => {

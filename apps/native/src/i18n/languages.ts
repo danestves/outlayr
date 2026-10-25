@@ -1,4 +1,4 @@
-export const SUPPORTED_LANGUAGES = ["en", "es", "es-ES", "pt", "pt-PT"] as const;
+export const SUPPORTED_LANGUAGES = ["en", "es", "es-ES", "fr", "pt", "pt-PT"] as const;
 
 export type Language = (typeof SUPPORTED_LANGUAGES)[number];
 
@@ -9,6 +9,7 @@ const LANGUAGE_NAMES = {
     en: "English",
     es: "Español",
     "es-ES": "Español (España)",
+    fr: "Français",
     pt: "Português",
     "pt-PT": "Português (Portugal)",
 } satisfies Record<Language, string>;
