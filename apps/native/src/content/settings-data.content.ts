@@ -183,14 +183,6 @@ const settingsData = {
             en: "transactions",
             es: "transacciones",
         }),
-        "settings.import.sourceClipboardSubtitle": t({
-            en: "Transactions copied from another app.",
-            es: "Transacciones copiadas de otra app.",
-        }),
-        "settings.import.sourceClipboardTitle": t({
-            en: "Paste from clipboard",
-            es: "Pegar del portapapeles",
-        }),
         "settings.import.sourceCsvSubtitle": t({
             en: "Comma-separated values from your bank.",
             es: "Valores separados por comas de tu banco.",
@@ -198,14 +190,6 @@ const settingsData = {
         "settings.import.sourceCsvTitle": t({
             en: "CSV file",
             es: "Archivo CSV",
-        }),
-        "settings.import.sourceScreenshotSubtitle": t({
-            en: "A screenshot of a statement or receipt.",
-            es: "Una captura de un estado de cuenta o recibo.",
-        }),
-        "settings.import.sourceScreenshotTitle": t({
-            en: "Import from a screenshot",
-            es: "Importar desde una captura",
         }),
         "settings.restore.action": t({
             en: "Restore from an archive",
