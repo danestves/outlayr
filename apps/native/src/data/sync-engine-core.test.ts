@@ -16,7 +16,7 @@ import {
 } from "@/db/schema";
 import { migratedDatabase, transactionalDatabase } from "@/db/test-database";
 
-import { incomingWins } from "../../../../packages/backend/convex/lib/syncTables";
+import { incomingWins } from "../../../../packages/backend/confect/lib/syncTables";
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
 import {
     applyPulledRows,
@@ -33,7 +33,7 @@ import { transactionsRepo } from "./transactions-core";
 
 const makeDb = (): Database => migratedDatabase();
 
-/** A minimal server using the real `incomingWins`; the Convex handler is tested in `convex/sync.test.ts`. */
+/** A minimal server using the real `incomingWins`; the Convex handler is tested in `confect/sync.test.ts`. */
 function makeServer() {
     const rows = new Map<string, PulledRow>();
     let nextSeq = 1;
@@ -214,7 +214,7 @@ describe("incomingWinsLocally", () => {
     });
 });
 
-// Mirrors the server's cases in `packages/backend/convex/lib/syncTables.test.ts`; the two must agree.
+// Mirrors the server's cases in `packages/backend/confect/lib/syncTables.test.ts`; the two must agree.
 describe("incomingWinsLocally across a restore", () => {
     const live = (updatedAt: number, restoredAt: number | null = null) => ({ deletedAt: null, restoredAt, updatedAt });
     const deleted = (deletedAt: number, restoredAt: number | null = null) => ({

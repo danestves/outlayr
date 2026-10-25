@@ -156,7 +156,7 @@ fi
 
 changed=$(git diff --name-only "$base" HEAD)
 app=$(app_files <<<"$changed")
-backend=$(grep -E '^packages/backend/convex/' <<<"$changed" | grep -vE '\.test\.ts$' || true)
+backend=$(grep -E '^packages/backend/(convex|confect)/' <<<"$changed" | grep -vE '\.test\.ts$' || true)
 env_vars=$(gh variable list --env "$channel" --json name,value --jq '.[] | "\(.name)=\(.value)"')
 (
     while IFS= read -r var; do export "$var"; done <<<"$env_vars"

@@ -1,6 +1,6 @@
 import type { CategoryBranch } from "@/lib/convex";
 
-// Mirrors `namesWithinBudget` in `packages/backend/convex/voiceEntry.ts` and `receiptScan.ts`, or an oversized
+// Mirrors `namesWithinBudget` in `packages/backend/confect/voiceEntry.ts` and `receiptScan.ts`, or an oversized
 // ledger would fail every attempt as `invalid`.
 const MAX_CATEGORY_NAMES = 200;
 const MAX_ACCOUNT_NAMES = 50;

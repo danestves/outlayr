@@ -8,9 +8,7 @@
  * @module
  */
 
-import type * as account from "../account.js";
 import type * as accountDeletion from "../accountDeletion.js";
-import type * as auth from "../auth.js";
 import type * as cotizave from "../cotizave.js";
 import type * as crons from "../crons.js";
 import type * as csvImport from "../csvImport.js";
@@ -21,22 +19,6 @@ import type * as groundedLookup from "../groundedLookup.js";
 import type * as groundedSpend from "../groundedSpend.js";
 import type * as http from "../http.js";
 import type * as installmentScan from "../installmentScan.js";
-import type * as lib_aiTracing from "../lib/aiTracing.js";
-import type * as lib_auth from "../lib/auth.js";
-import type * as lib_captures from "../lib/captures.js";
-import type * as lib_currencies from "../lib/currencies.js";
-import type * as lib_email from "../lib/email.js";
-import type * as lib_ledgerPrompt from "../lib/ledgerPrompt.js";
-import type * as lib_limits from "../lib/limits.js";
-import type * as lib_merchantKey from "../lib/merchantKey.js";
-import type * as lib_merchantTrust from "../lib/merchantTrust.js";
-import type * as lib_models from "../lib/models.js";
-import type * as lib_photoKeys from "../lib/photoKeys.js";
-import type * as lib_posthog from "../lib/posthog.js";
-import type * as lib_sanitizeLimits from "../lib/sanitizeLimits.js";
-import type * as lib_sha256Hex from "../lib/sha256Hex.js";
-import type * as lib_spend from "../lib/spend.js";
-import type * as lib_syncTables from "../lib/syncTables.js";
 import type * as limits from "../limits.js";
 import type * as mcp from "../mcp.js";
 import type * as mcpEntries from "../mcpEntries.js";
@@ -44,7 +26,6 @@ import type * as mcpLedger from "../mcpLedger.js";
 import type * as merchantKnowledge from "../merchantKnowledge.js";
 import type * as openexchangerates from "../openexchangerates.js";
 import type * as photos from "../photos.js";
-import type * as providerLifecycle from "../providerLifecycle.js";
 import type * as receiptScan from "../receiptScan.js";
 import type * as revenuecat from "../revenuecat.js";
 import type * as sync from "../sync.js";
@@ -57,9 +38,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  account: typeof account;
   accountDeletion: typeof accountDeletion;
-  auth: typeof auth;
   cotizave: typeof cotizave;
   crons: typeof crons;
   csvImport: typeof csvImport;
@@ -70,22 +49,6 @@ declare const fullApi: ApiFromModules<{
   groundedSpend: typeof groundedSpend;
   http: typeof http;
   installmentScan: typeof installmentScan;
-  "lib/aiTracing": typeof lib_aiTracing;
-  "lib/auth": typeof lib_auth;
-  "lib/captures": typeof lib_captures;
-  "lib/currencies": typeof lib_currencies;
-  "lib/email": typeof lib_email;
-  "lib/ledgerPrompt": typeof lib_ledgerPrompt;
-  "lib/limits": typeof lib_limits;
-  "lib/merchantKey": typeof lib_merchantKey;
-  "lib/merchantTrust": typeof lib_merchantTrust;
-  "lib/models": typeof lib_models;
-  "lib/photoKeys": typeof lib_photoKeys;
-  "lib/posthog": typeof lib_posthog;
-  "lib/sanitizeLimits": typeof lib_sanitizeLimits;
-  "lib/sha256Hex": typeof lib_sha256Hex;
-  "lib/spend": typeof lib_spend;
-  "lib/syncTables": typeof lib_syncTables;
   limits: typeof limits;
   mcp: typeof mcp;
   mcpEntries: typeof mcpEntries;
@@ -93,7 +56,6 @@ declare const fullApi: ApiFromModules<{
   merchantKnowledge: typeof merchantKnowledge;
   openexchangerates: typeof openexchangerates;
   photos: typeof photos;
-  providerLifecycle: typeof providerLifecycle;
   receiptScan: typeof receiptScan;
   revenuecat: typeof revenuecat;
   sync: typeof sync;

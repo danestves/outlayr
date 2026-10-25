@@ -39,10 +39,10 @@ import {
 
 export type SyncedTable = (typeof SYNCED_TABLES)[number];
 
-/** Mirrors `PUSH_BATCH_LIMIT` in `packages/backend/convex/sync.ts`. */
+/** Mirrors `PUSH_BATCH_LIMIT` in `packages/backend/confect/sync.ts`. */
 export const PUSH_BATCH_LIMIT = 500;
 
-/** Mirrors `PULL_PAGE_LIMIT` in `packages/backend/convex/sync.ts`. */
+/** Mirrors `PULL_PAGE_LIMIT` in `packages/backend/confect/sync.ts`. */
 export const PULL_PAGE_LIMIT = 1000;
 
 /** Chunked against SQLite's bound-variable limit; `outboxPending`'s lookups share it with `rowsById`. */
@@ -86,7 +86,7 @@ interface TableSpec {
      */
     defaults?: Readonly<Record<string, WireValue>>;
     /**
-     * Must name exactly the columns of the Convex table in `packages/backend/convex/lib/syncTables.ts`. A missing
+     * Must name exactly the columns of the Convex table in `packages/backend/confect/lib/syncTables.ts`. A missing
      * column replicates as silently absent, so `sync-engine-core.test.ts` checks this list against the schema.
      */
     fields: readonly string[];
@@ -485,7 +485,7 @@ interface LocalVersion {
     updatedAt: number | null;
 }
 
-/** Mirrors `era` in `packages/backend/convex/lib/syncTables.ts`. */
+/** Mirrors `era` in `packages/backend/confect/lib/syncTables.ts`. */
 function era(version: { deletedAt: number | null; restoredAt?: number | null }): number {
     const restoredAt = version.restoredAt ?? 0;
     return version.deletedAt === null ? restoredAt : Math.max(version.deletedAt, restoredAt);

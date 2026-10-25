@@ -221,7 +221,7 @@ The reason for each lives in the plugin, as a comment above the rule or in its m
 
 ## Effect diagnostics
 
-`@effect/language-service` is a TypeScript plugin in `packages/config/tsconfig.base.json`, so it reaches `packages/money`, `packages/env` and `apps/web`, not `apps/native` (Expo's base) or the Convex tsconfig. `tsc` ignores plugins, so these diagnostics show in the editor and from the CLI, not in `check-types`:
+`@effect/language-service` is a TypeScript plugin in `packages/config/tsconfig.base.json`, which reaches `packages/money`, `packages/env` and `apps/web`. `apps/native/tsconfig.json` and `packages/backend/tsconfig.json` extend Expo's and Convex's bases instead, so each repeats the same plugin block. `tsc` ignores plugins, so these diagnostics show in the editor and from the CLI, not in `check-types`:
 
 ```bash
 vp exec effect-language-service diagnostics --project packages/money/tsconfig.json --strict

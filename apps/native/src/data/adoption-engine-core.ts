@@ -106,7 +106,7 @@ export async function replaceLocalFromAccount(db: Database, pull: PullFn, now: D
     /* oxlint-enable no-await-in-loop */
 }
 
-// Not tombstone-all-then-push: `incomingWins` (packages/backend/convex/lib/syncTables.ts) lets a delete beat a live
+// Not tombstone-all-then-push: `incomingWins` (packages/backend/confect/lib/syncTables.ts) lets a delete beat a live
 // row regardless of `updatedAt`. Shared rows stay alive with `updatedAt` (and `restoredAt`) lifted past the account's;
 // only rows this device never saw are tombstoned.
 export async function discardAccountLedger(
@@ -187,7 +187,7 @@ export async function discardAccountLedger(
         });
     }
 
-    /* oxlint-disable no-await-in-loop -- the backend hands out `seq` one per accepted row in arrival order (`packages/backend/convex/sync.ts`), so overlapping batches would interleave the account's change log */
+    /* oxlint-disable no-await-in-loop -- the backend hands out `seq` one per accepted row in arrival order (`packages/backend/confect/sync.ts`), so overlapping batches would interleave the account's change log */
     for (let i = 0; i < tombstones.length; i += PUSH_BATCH_LIMIT) {
         await transport.push({
             deviceId,

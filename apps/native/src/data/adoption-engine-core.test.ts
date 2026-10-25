@@ -5,7 +5,7 @@ import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
 import { migratedSqlite, testDatabase } from "@/db/test-database";
 
-import { incomingWins } from "../../../../packages/backend/convex/lib/syncTables";
+import { incomingWins } from "../../../../packages/backend/confect/lib/syncTables";
 import { accountLedgerState, discardAccountLedger, replaceLocalFromAccount } from "./adoption-engine-core";
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
 import { candidateLogoIds, rememberLogoCandidate } from "./logo-backfill-state";

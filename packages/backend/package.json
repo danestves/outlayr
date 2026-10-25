@@ -5,8 +5,8 @@
     "license": "AGPL-3.0-only",
     "author": "",
     "scripts": {
-        "check-types": "tsc --noEmit -p convex",
-        "dev": "convex dev",
+        "check-types": "tsc --noEmit",
+        "dev": "convex dev --start \"confect dev\"",
         "dev:setup": "convex dev --configure --until-success",
         "test": "vp test run"
     },
@@ -14,6 +14,8 @@
         "@ai-sdk/anthropic": "4.0.79",
         "@ai-sdk/elevenlabs": "3.0.60",
         "@better-auth/expo": "catalog:",
+        "@confect/core": "catalog:",
+        "@confect/server": "catalog:",
         "@convex-dev/agent": "catalog:",
         "@convex-dev/better-auth": "catalog:",
         "@convex-dev/mcp": "0.1.0-alpha.7",
@@ -26,10 +28,12 @@
         "better-auth": "catalog:",
         "convex": "catalog:",
         "convex-revenuecat": "^0.3.2",
+        "effect": "catalog:",
         "jose": "^6.2.4",
         "zod": "catalog:"
     },
     "devDependencies": {
+        "@confect/cli": "catalog:",
         "@edge-runtime/vm": "^5.0.0",
         "@outlayr/config": "workspace:*",
         "@types/node": "^26.1.1",

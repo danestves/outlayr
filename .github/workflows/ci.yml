@@ -94,6 +94,14 @@ jobs:
               if: env.TYPECHECK != ''
               run: vp run $TYPECHECK check-types
 
+            - name: Confect codegen is committed
+              if: env.TYPECHECK == '-r' || contains(env.TYPECHECK, '@outlayr/backend')
+              working-directory: packages/backend
+              run: |
+                  vp exec confect codegen
+                  git add --intent-to-add confect convex
+                  git diff --exit-code -- confect convex
+
             - name: i18n coverage
               if: needs.changes.outputs.native == 'true'
               run: vp run --filter @outlayr/native i18n:test

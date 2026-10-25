@@ -1,9 +1,9 @@
 import { httpRouter } from "convex/server";
 
+import { authComponent, createAuth } from "../confect/lib/betterAuth";
+import { mcp } from "../confect/mcp";
+import { revenuecat } from "../confect/revenuecat";
 import { httpAction } from "./_generated/server";
-import { authComponent, createAuth } from "./auth";
-import { mcp } from "./mcp";
-import { revenuecat } from "./revenuecat";
 
 const http = httpRouter();
 
