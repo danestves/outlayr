@@ -11,7 +11,6 @@ export const posthog =
     !__DEV__ && env.EXPO_PUBLIC_POSTHOG_PROJECT_TOKEN
         ? new PostHog(env.EXPO_PUBLIC_POSTHOG_PROJECT_TOKEN, {
               before_send: scrubQueryParams,
-              // The SDK only fills $os_name from expo-device, which we do not ship.
               customAppProperties: (properties) => ({
                   ...properties,
                   $os_name: Platform.select({ android: "Android", ios: "iOS" }),
