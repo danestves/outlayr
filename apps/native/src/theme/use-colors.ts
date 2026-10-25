@@ -11,7 +11,6 @@ const COLOR_VARIABLES = {
     dangerOnWash: "--danger-on-wash",
     expense: "--expense",
     foreground: "--foreground",
-    frMuted: "--fr-muted",
     future: "--future",
     groupedBackground: "--grouped-background",
     income: "--income",

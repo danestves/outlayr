@@ -8,7 +8,6 @@ export type AppSymbolName =
     | "exclamationmark.circle.fill"
     | "magnifyingglass"
     | "plus.circle.fill"
-    | "star"
     | "xmark";
 
 export type AppSymbolProps = Omit<SymbolViewProps, "name"> & { name: AppSymbolName };
