@@ -18,6 +18,7 @@ const watch = {
             en: "Nothing logged yet",
             es: "Nada registrado aún",
             pt: "Nada registrado ainda",
+            "pt-PT": "Nada registado ainda",
         }),
         "watch.recent": t({
             en: "Recent",

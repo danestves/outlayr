@@ -1,0 +1,8 @@
+{
+    "ios": {
+        "NSCameraUsageDescription": "O Outlayr usa a câmara para digitalizar um talão ou anexar uma foto a um registo. As fotos digitalizadas vão para a Anthropic para serem lidas. As anexadas, não.",
+        "NSFaceIDUsageDescription": "O Outlayr usa o Face ID para desbloquear os seus registos.",
+        "NSMicrophoneUsageDescription": "O Outlayr ouve enquanto dita um registo. A gravação vai para a ElevenLabs, que a transcreve por si.",
+        "NSPhotoLibraryUsageDescription": "O Outlayr usa as suas fotos para pôr um logótipo num registo, anexar-lhe uma foto ou digitalizar um talão ou uma compra a prestações. As fotos digitalizadas vão para a Anthropic para serem lidas. As outras, não."
+    }
+}

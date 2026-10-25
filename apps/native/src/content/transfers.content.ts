@@ -27,11 +27,13 @@ const transfers = {
             en: "The fee is {amount} more than arrives",
             es: "La comisión supera por {amount} lo que llega",
             pt: "A tarifa supera em {amount} o que chega",
+            "pt-PT": "A comissão supera em {amount} o que chega",
         }),
         "transfers.block.nothingArrives": t({
             en: "Nothing would arrive. The fee takes it all.",
             es: "No llegaría nada: la comisión se lo lleva todo.",
             pt: "Nada chegaria: a tarifa leva tudo.",
+            "pt-PT": "Nada chegaria: a comissão leva tudo.",
         }),
         "transfers.delete.row": t({
             en: "Delete Transfer",
@@ -52,6 +54,7 @@ const transfers = {
             en: "Fee · {from} → {to}",
             es: "Comisión · {from} → {to}",
             pt: "Tarifa · {from} → {to}",
+            "pt-PT": "Comissão · {from} → {to}",
         }),
         "transfers.fee.onTop": t({
             en: "On top",
@@ -72,11 +75,13 @@ const transfers = {
             en: "Fee",
             es: "Comisión",
             pt: "Tarifa",
+            "pt-PT": "Comissão",
         }),
         "transfers.field.feeSide": t({
             en: "Fee charged to",
             es: "Comisión cobrada a",
             pt: "Tarifa cobrada em",
+            "pt-PT": "Comissão cobrada em",
         }),
         "transfers.field.from": t({
             en: "From",
@@ -109,6 +114,7 @@ const transfers = {
             en: "You send",
             es: "Envías",
             pt: "Você envia",
+            "pt-PT": "Envia",
         }),
         "transfers.field.to": t({
             en: "To",
@@ -119,6 +125,7 @@ const transfers = {
             en: "It's a fee",
             es: "Es una comisión",
             pt: "É uma tarifa",
+            "pt-PT": "É uma comissão",
         }),
         "transfers.gap.itsOnTop": t({
             en: "It's on top",
@@ -151,16 +158,19 @@ const transfers = {
             es: "No hay tasa para este par. Ingresa una.",
             "es-ES": "No hay tipo de cambio para este par. Introduce uno.",
             pt: "Sem cotação para este par. Digite uma.",
+            "pt-PT": "Sem cotação para este par. Introduza uma.",
         }),
         "transfers.save": t({
             en: "Save Transfer",
             es: "Guardar transferencia",
             pt: "Salvar transferência",
+            "pt-PT": "Guardar transferência",
         }),
         "transfers.save.failed": t({
             en: "Couldn't save this transfer. Try again.",
             es: "No se pudo guardar la transferencia. Inténtalo de nuevo.",
             pt: "Não foi possível salvar a transferência. Tente de novo.",
+            "pt-PT": "Não foi possível guardar a transferência. Tente de novo.",
         }),
         "transfers.saved.another": t({
             en: "Add another",
@@ -194,6 +204,7 @@ const transfers = {
             en: "No fee",
             es: "Sin comisión",
             pt: "Sem tarifa",
+            "pt-PT": "Sem comissão",
         }),
         "transfers.sentence.blank.rate": t({
             en: "a rate",
@@ -205,16 +216,19 @@ const transfers = {
             en: "A {fee} fee from {feeSide}.",
             es: "Comisión de {fee} desde {feeSide}.",
             pt: "Tarifa de {fee} cobrada em {feeSide}.",
+            "pt-PT": "Comissão de {fee} cobrada em {feeSide}.",
         }),
         "transfers.sentence.feeArrives": t({
             en: "After a {fee} fee from {feeSide}, {arrives} arrives.",
             es: "Tras una comisión de {fee} desde {feeSide}, llegan {arrives}.",
             pt: "Após uma tarifa de {fee} cobrada em {feeSide}, chegam {arrives}.",
+            "pt-PT": "Após uma comissão de {fee} cobrada em {feeSide}, chegam {arrives}.",
         }),
         "transfers.sentence.feeOnTop": t({
             en: "Plus a {fee} fee from {feeSide}.",
             es: "Más una comisión de {fee} desde {feeSide}.",
             pt: "Mais uma tarifa de {fee} cobrada em {feeSide}.",
+            "pt-PT": "Mais uma comissão de {fee} cobrada em {feeSide}.",
         }),
         "transfers.sentence.move": t({
             en: "Move {amount} from {from} to {to} {when}.",

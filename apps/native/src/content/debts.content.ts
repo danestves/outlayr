@@ -18,16 +18,19 @@ const debts = {
             en: "Borrow",
             es: "Pedir prestado",
             pt: "Pegar emprestado",
+            "pt-PT": "Pedir emprestado",
         }),
         "debts.action.borrowMore": t({
             en: "Borrow more",
             es: "Pedir más",
             pt: "Pegar mais",
+            "pt-PT": "Pedir mais",
         }),
         "debts.action.gotPaidBack": t({
             en: "Got paid back",
             es: "Me pagó",
             pt: "Me pagou",
+            "pt-PT": "Pagou-me",
         }),
         "debts.action.lend": t({
             en: "Lend",
@@ -88,6 +91,7 @@ const debts = {
             en: "Couldn't save this debt. Try again.",
             es: "No se pudo guardar la deuda. Inténtalo de nuevo.",
             pt: "Não foi possível salvar esta dívida. Tente de novo.",
+            "pt-PT": "Não foi possível guardar esta dívida. Tente de novo.",
         }),
         "debts.field.accountFrom": t({
             en: "From",
@@ -185,6 +189,7 @@ const debts = {
             en: "Owed to you {amount}",
             es: "Te deben {amount}",
             pt: "Te devem {amount}",
+            "pt-PT": "Devem-lhe {amount}",
         }),
         "debts.owe.blank.what": t({
             en: "something",
@@ -246,6 +251,7 @@ const debts = {
             en: "I'll remind you the day before.",
             es: "Te aviso el día antes.",
             pt: "Te aviso um dia antes.",
+            "pt-PT": "Aviso um dia antes.",
         }),
         "debts.owe.sentence": t({
             en: "I owe {amount} to {who} for {what} in {category}.",
@@ -262,6 +268,7 @@ const debts = {
             es: "Plomería, una reparación",
             "es-ES": "Fontanería, una reparación",
             pt: "Encanamento, um conserto",
+            "pt-PT": "Canalização, uma reparação",
         }),
         "debts.owe.when": t({
             en: "I'll pay {when}.",
@@ -302,17 +309,20 @@ const debts = {
             en: "Everything recorded with them is deleted too.",
             es: "También se borra todo lo registrado con esta persona.",
             pt: "Tudo o que foi registrado com essa pessoa também é apagado.",
+            "pt-PT": "Tudo o que foi registado com essa pessoa também é apagado.",
         }),
         "debts.person.empty": t({
             en: "What moves between you two will gather here.",
             es: "Aquí vas a ver lo que se mueva entre ustedes.",
             "es-ES": "Aquí vas a ver lo que se mueva entre vosotros.",
             pt: "O que acontecer entre vocês aparece aqui.",
+            "pt-PT": "O que acontecer entre os dois aparece aqui.",
         }),
         "debts.person.owesYou": t({
             en: "Owes you",
             es: "Te debe",
             pt: "Te deve",
+            "pt-PT": "Deve-lhe",
         }),
         "debts.person.rename": t({
             en: "Rename",
@@ -328,6 +338,7 @@ const debts = {
             en: "You owe",
             es: "Le debes",
             pt: "Você deve",
+            "pt-PT": "Deve",
         }),
         "debts.plan.behind": t({
             en: "{amount} behind",
@@ -378,11 +389,13 @@ const debts = {
             en: "Couldn't save this plan. Try again.",
             es: "No se pudo guardar el plan. Inténtalo de nuevo.",
             pt: "Não foi possível salvar o plano. Tente de novo.",
+            "pt-PT": "Não foi possível guardar o plano. Tente de novo.",
         }),
         "debts.plan.paidBack": t({
             en: "Paid back {date}",
             es: "Saldado el {date}",
             pt: "Quitado em {date}",
+            "pt-PT": "Liquidado em {date}",
         }),
         "debts.plan.paidOff": t({
             en: "Paid off {date}",
@@ -423,21 +436,25 @@ const debts = {
             en: "Save plan",
             es: "Guardar plan",
             pt: "Salvar plano",
+            "pt-PT": "Guardar plano",
         }),
         "debts.plan.stated.liability": t({
             en: "Pay off {account} by {date}",
             es: "Paga {account} para el {date}",
             pt: "Quite {account} até {date}",
+            "pt-PT": "Pague a {account} até {date}",
         }),
         "debts.plan.stated.owesYou": t({
             en: "{account} pays you back by {date}",
             es: "{account} te paga para el {date}",
             pt: "{account} te paga até {date}",
+            "pt-PT": "{account} paga-lhe até {date}",
         }),
         "debts.plan.stated.youOwe": t({
             en: "You pay {account} back by {date}",
             es: "Le pagas a {account} para el {date}",
             pt: "Você paga {account} até {date}",
+            "pt-PT": "Paga a {account} até {date}",
         }),
         "debts.purchase.title": t({
             en: "Bought on credit",
@@ -453,6 +470,7 @@ const debts = {
             en: "You owe {amount}. Tap when it's paid.",
             es: "Le debes {amount}. Toca cuando le pagues.",
             pt: "Você deve {amount}. Toque quando pagar.",
+            "pt-PT": "Deve {amount}. Toque quando pagar.",
         }),
         "debts.reminder.bodyHidden": t({
             en: "Tap when it's paid.",
@@ -463,6 +481,7 @@ const debts = {
             en: "You pay {person} tomorrow",
             es: "Mañana le pagas a {person}",
             pt: "Amanhã você paga {person}",
+            "pt-PT": "Amanhã paga a {person}",
         }),
         "debts.sale.title": t({
             en: "Sold on credit",
@@ -483,6 +502,7 @@ const debts = {
             en: "I borrowed",
             es: "Me prestaron",
             pt: "Peguei emprestado",
+            "pt-PT": "Pedi emprestado",
         }),
         "debts.verb.lent": t({
             en: "I lent",
@@ -498,6 +518,7 @@ const debts = {
             en: "You owe {amount}",
             es: "Debes {amount}",
             pt: "Você deve {amount}",
+            "pt-PT": "Deve {amount}",
         }),
     },
     key: "debts" as const,

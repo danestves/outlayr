@@ -33,6 +33,7 @@ const accounts = {
             es: "Una compra en cuotas",
             "es-ES": "Una compra a plazos",
             pt: "Uma compra parcelada",
+            "pt-PT": "Uma compra a prestações",
         }),
         "accounts.add.prompt": t({
             en: "Add an account, card or person",
@@ -80,6 +81,7 @@ const accounts = {
             en: "Nothing attached yet — this account's transactions will gather here.",
             es: "Todavía no hay nada. Aquí vas a ver las transacciones de esta cuenta.",
             pt: "Ainda não há nada. Os lançamentos desta conta vão aparecer aqui.",
+            "pt-PT": "Ainda não há nada. Os registos desta conta vão aparecer aqui.",
         }),
         "accounts.detail.startedAt": t({
             en: "Started at {amount} · {month}",
@@ -100,11 +102,13 @@ const accounts = {
             en: "Something went wrong. Please try again.",
             es: "Algo salió mal. Inténtalo de nuevo.",
             pt: "Algo deu errado. Tente de novo.",
+            "pt-PT": "Algo correu mal. Tente de novo.",
         }),
         "accounts.error.saveFailed": t({
             en: "Couldn't save this account. Try again.",
             es: "No se pudo guardar la cuenta. Inténtalo de nuevo.",
             pt: "Não foi possível salvar a conta. Tente de novo.",
+            "pt-PT": "Não foi possível guardar a conta. Tente de novo.",
         }),
         "accounts.field.balance": t({
             en: "Balance",
@@ -120,6 +124,7 @@ const accounts = {
             en: "Money I owe",
             es: "Dinero que debo",
             pt: "Dinheiro que eu devo",
+            "pt-PT": "Dinheiro que devo",
         }),
         "accounts.field.name": t({
             en: "Name",
@@ -136,6 +141,7 @@ const accounts = {
             es: "Chase, Efectivo, Nubank…",
             "es-ES": "BBVA, Efectivo, Revolut…",
             pt: "Nubank, Dinheiro, Itaú…",
+            "pt-PT": "Millennium, Dinheiro, Revolut…",
         }),
         "accounts.nav.edit": t({
             en: "Edit Account",
@@ -181,6 +187,7 @@ const accounts = {
             en: "Save Account",
             es: "Guardar cuenta",
             pt: "Salvar conta",
+            "pt-PT": "Guardar conta",
         }),
         "accounts.section.liabilities": t({
             en: "Cards & loans",
@@ -201,16 +208,19 @@ const accounts = {
             en: "Have",
             es: "Tienes",
             pt: "Você tem",
+            "pt-PT": "Tem",
         }),
         "accounts.totals.owe": t({
             en: "Owe",
             es: "Debes",
             pt: "Você deve",
+            "pt-PT": "Deve",
         }),
         "accounts.undo.body": t({
             en: "Its transactions are kept — they just stop belonging to an account.",
             es: "Sus transacciones se conservan; solo dejan de pertenecer a una cuenta.",
             pt: "Os lançamentos são mantidos; só deixam de pertencer a uma conta.",
+            "pt-PT": "Os registos são mantidos; só deixam de pertencer a uma conta.",
         }),
         "accounts.undo.deleted": t({
             en: "Account deleted",

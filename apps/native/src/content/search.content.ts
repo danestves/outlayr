@@ -8,16 +8,19 @@ const search = {
             es: "Encuentra un registro por su nota, categoría o monto.",
             "es-ES": "Encuentra un registro por su nota, categoría o importe.",
             pt: "Encontre um lançamento pela nota, categoria ou valor.",
+            "pt-PT": "Encontre um registo pela nota, categoria ou valor.",
         }),
         "search.empty.idle.title": t({
             en: "Search your ledger",
             es: "Busca en tu registro",
             pt: "Busque nos seus lançamentos",
+            "pt-PT": "Pesquise nos seus registos",
         }),
         "search.empty.noResults.body": t({
             en: "No entry matches “{query}”.",
             es: "Ningún registro coincide con “{query}”.",
             pt: "Nenhum lançamento corresponde a “{query}”.",
+            "pt-PT": "Nenhum registo corresponde a “{query}”.",
         }),
         "search.empty.noResults.title": t({
             en: "No matches",
@@ -28,6 +31,7 @@ const search = {
             en: "Search entry by note",
             es: "Buscar registro por nota",
             pt: "Buscar lançamento por nota",
+            "pt-PT": "Pesquisar registo por nota",
         }),
         "search.results.count_one": t({
             en: "{count} result",

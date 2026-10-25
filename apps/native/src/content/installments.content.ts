@@ -14,17 +14,20 @@ const installments = {
             es: "Agregando…",
             "es-ES": "Añadiendo…",
             pt: "Adicionando…",
+            "pt-PT": "A adicionar…",
         }),
         "installments.apps.in": t({
             en: "Installments in {country}",
             es: "Cuotas en {country}",
             "es-ES": "Pago a plazos en {country}",
             pt: "Parcelamento · {country}",
+            "pt-PT": "Prestações · {country}",
         }),
         "installments.apps.missing": t({
             en: "Not here? Use Other and type its name.",
             es: "¿No está? Usa Otra y escribe el nombre.",
             pt: "Não está aqui? Use Outro e digite o nome.",
+            "pt-PT": "Não está aqui? Use Outro e escreva o nome.",
         }),
         "installments.apps.other": t({
             en: "Other",
@@ -35,6 +38,7 @@ const installments = {
             en: "Find your app",
             es: "Busca tu app",
             pt: "Encontre seu app",
+            "pt-PT": "Encontre a sua app",
         }),
         "installments.bought": t({
             en: "Bought {date} for {price}",
@@ -45,6 +49,7 @@ const installments = {
             en: "Installments",
             es: "Cuotas",
             pt: "Parcelas",
+            "pt-PT": "Prestações",
         }),
         "installments.chipSet": t({
             en: "{count} × {amount}",
@@ -55,6 +60,7 @@ const installments = {
             en: "Coming up",
             es: "Próximas cuotas",
             pt: "Próximas parcelas",
+            "pt-PT": "Próximas prestações",
         }),
         "installments.country.AE": t({
             en: "United Arab Emirates",
@@ -156,6 +162,7 @@ const installments = {
             en: "Installment {index} of {count}",
             es: "Cuota {index} de {count}",
             pt: "Parcela {index} de {count}",
+            "pt-PT": "Prestação {index} de {count}",
         }),
         "installments.cuota.amount": t({
             en: "Amount",
@@ -167,6 +174,7 @@ const installments = {
             en: "Delete installment",
             es: "Eliminar cuota",
             pt: "Apagar parcela",
+            "pt-PT": "Apagar prestação",
         }),
         "installments.cuota.due": t({
             en: "Due",
@@ -177,6 +185,7 @@ const installments = {
             en: "Delete pending installments",
             es: "Eliminar cuotas pendientes",
             pt: "Apagar parcelas pendentes",
+            "pt-PT": "Apagar prestações pendentes",
         }),
         "installments.deletePending.body": t({
             en: "What's already paid stays.",
@@ -237,6 +246,7 @@ const installments = {
             en: "Every month",
             es: "Cada mes",
             pt: "Todo mês",
+            "pt-PT": "Todos os meses",
         }),
         "installments.every.monthly.providers": t({
             en: "Cards, Addi, Mercado Pago",
@@ -247,6 +257,7 @@ const installments = {
             en: "Every week",
             es: "Cada semana",
             pt: "Toda semana",
+            "pt-PT": "Todas as semanas",
         }),
         "installments.failedBody": t({
             en: "Nothing was changed. Try again.",
@@ -257,6 +268,7 @@ const installments = {
             en: "Couldn't save",
             es: "No se pudo guardar",
             pt: "Não foi possível salvar",
+            "pt-PT": "Não foi possível guardar",
         }),
         "installments.fee.add": t({
             en: "Add late fee",
@@ -298,16 +310,19 @@ const installments = {
             en: "{count} paid off",
             es: "{count} pagada",
             pt: "{count} quitada",
+            "pt-PT": "{count} liquidada",
         }),
         "installments.finished_other": t({
             en: "{count} paid off",
             es: "{count} pagadas",
             pt: "{count} quitadas",
+            "pt-PT": "{count} liquidadas",
         }),
         "installments.firstDue": t({
             en: "First due",
             es: "Primera cuota",
             pt: "Primeira parcela",
+            "pt-PT": "Primeira prestação",
         }),
         "installments.forOrder": t({
             en: "{order} · {index} of {count}",
@@ -328,6 +343,7 @@ const installments = {
             en: "Paid outside Outlayr. You owe {account} less, no bank changes.",
             es: "Pagado fuera de Outlayr. Le debes menos a {account} y ningún banco cambia.",
             pt: "Pago fora do Outlayr. Você fica devendo menos a {account}, sem mexer em nenhum banco.",
+            "pt-PT": "Pago fora do Outlayr. Fica a dever menos a {account}, sem mexer em nenhum banco.",
         }),
         "installments.inDays_one": t({
             en: "in {count} day",
@@ -349,6 +365,7 @@ const installments = {
             es: "Nueva compra en cuotas",
             "es-ES": "Nueva compra a plazos",
             pt: "Nova compra parcelada",
+            "pt-PT": "Nova compra a prestações",
         }),
         "installments.next": t({
             en: "Next {date}",
@@ -360,6 +377,7 @@ const installments = {
             es: "Aún no hay tasa para este día, así que no se puede convertir el monto.",
             "es-ES": "Aún no hay tipo de cambio para este día, así que no se puede convertir el importe.",
             pt: "Ainda não há cotação para este dia, então não dá para converter o valor.",
+            "pt-PT": "Ainda não há cotação para este dia, por isso não é possível converter o valor.",
         }),
         "installments.none": t({
             en: "None",
@@ -468,16 +486,19 @@ const installments = {
             en: "{count} installment",
             es: "{count} cuota",
             pt: "{count} parcela",
+            "pt-PT": "{count} prestação",
         }),
         "installments.plan.cuotas_other": t({
             en: "{count} installments",
             es: "{count} cuotas",
             pt: "{count} parcelas",
+            "pt-PT": "{count} prestações",
         }),
         "installments.plan.everyDays_one": t({
             en: "{cuotas} every day",
             es: "{cuotas} cada día",
             pt: "{cuotas} todo dia",
+            "pt-PT": "{cuotas} todos os dias",
         }),
         "installments.plan.everyDays_other": t({
             en: "{cuotas} every {count} days",
@@ -488,6 +509,7 @@ const installments = {
             en: "{cuotas} every month",
             es: "{cuotas} cada mes",
             pt: "{cuotas} todo mês",
+            "pt-PT": "{cuotas} todos os meses",
         }),
         "installments.plan.everyMonths_other": t({
             en: "{cuotas} every {count} months",
@@ -514,11 +536,13 @@ const installments = {
             en: "{cuotas} every week",
             es: "{cuotas} cada semana",
             pt: "{cuotas} toda semana",
+            "pt-PT": "{cuotas} todas as semanas",
         }),
         "installments.reminder.ask": t({
             en: "Remind you the day before each installment?",
             es: "¿Te aviso el día antes de cada cuota?",
             pt: "Avisar um dia antes de cada parcela?",
+            "pt-PT": "Avisar um dia antes de cada prestação?",
         }),
         "installments.reminder.body": t({
             en: "{amount} to {account}. Tap when it's paid.",
@@ -544,6 +568,7 @@ const installments = {
             en: "Choose screenshot",
             es: "Elegir captura",
             pt: "Escolher captura de tela",
+            "pt-PT": "Escolher captura de ecrã",
         }),
         "installments.scan.currency": t({
             en: "This plan is in {plan} and {account} is in {currency}.",
@@ -554,17 +579,20 @@ const installments = {
             en: "Import from a screenshot",
             es: "Importar desde una captura",
             pt: "Importar de uma captura de tela",
+            "pt-PT": "Importar de uma captura de ecrã",
         }),
         "installments.scan.intro": t({
             en: "A screenshot of the order's payment plan.",
             es: "Una captura del plan de pagos de la orden.",
             "es-ES": "Una captura del plan de pagos del pedido.",
             pt: "Uma captura de tela do plano de pagamento da compra.",
+            "pt-PT": "Uma captura de ecrã do plano de pagamento da compra.",
         }),
         "installments.scan.notConfigured": t({
             en: "Importing a screenshot needs the cloud tier.",
             es: "Para importar una captura se necesita el servicio en la nube.",
             pt: "Importar uma captura de tela requer o serviço na nuvem.",
+            "pt-PT": "Importar uma captura de ecrã requer o serviço na nuvem.",
         }),
         "installments.scan.provider": t({
             en: "Couldn't read the plan.",
@@ -575,16 +603,19 @@ const installments = {
             en: "Reading the plan…",
             es: "Leyendo el plan…",
             pt: "Lendo o plano…",
+            "pt-PT": "A ler o plano…",
         }),
         "installments.scan.unauthenticated": t({
             en: "Sign in to import a screenshot.",
             es: "Inicia sesión para importar una captura.",
             pt: "Entre para importar uma captura de tela.",
+            "pt-PT": "Inicie sessão para importar uma captura de ecrã.",
         }),
         "installments.scan.unclear": t({
             en: "Didn't find a payment plan in that image.",
             es: "No encontré un plan de cuotas en esa imagen.",
             pt: "Não encontrei um plano de parcelas nessa imagem.",
+            "pt-PT": "Não encontrei um plano de prestações nessa imagem.",
         }),
         "installments.schedule": t({
             en: "Schedule",

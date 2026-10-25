@@ -17,6 +17,7 @@ const common = {
             en: "Clear search",
             es: "Borrar búsqueda",
             pt: "Limpar busca",
+            "pt-PT": "Limpar pesquisa",
         }),
         "common.close": t({
             en: "Close",
@@ -42,6 +43,7 @@ const common = {
             en: "Your changes won't be saved.",
             es: "Tus cambios no se guardarán.",
             pt: "Suas alterações não serão salvas.",
+            "pt-PT": "As suas alterações não serão guardadas.",
         }),
         "common.discard.confirm": t({
             en: "Discard",
@@ -57,6 +59,7 @@ const common = {
             en: "Keep editing",
             es: "Seguir editando",
             pt: "Continuar editando",
+            "pt-PT": "Continuar a editar",
         }),
         "common.discard.restoreFailed": t({
             en: "Edits not restored",
@@ -67,6 +70,7 @@ const common = {
             en: "It was changed or deleted in the meantime.",
             es: "Se modificó o se eliminó mientras tanto.",
             pt: "Foi alterado ou apagado nesse meio-tempo.",
+            "pt-PT": "Foi alterado ou apagado entretanto.",
         }),
         "common.discard.title": t({
             en: "Discard changes?",
@@ -137,6 +141,7 @@ const common = {
             en: "Save",
             es: "Guardar",
             pt: "Salvar",
+            "pt-PT": "Guardar",
         }),
         "common.shown": t({
             en: "Shown",
@@ -167,11 +172,13 @@ const common = {
             en: "Outlayr hit an unexpected error. Your data is untouched — try again.",
             es: "Outlayr tuvo un error inesperado. Tus datos están intactos. Inténtalo de nuevo.",
             pt: "O Outlayr encontrou um erro inesperado. Seus dados estão intactos. Tente de novo.",
+            "pt-PT": "O Outlayr encontrou um erro inesperado. Os seus dados estão intactos. Tente de novo.",
         }),
         "error.boundary.title": t({
             en: "Something Went Wrong",
             es: "Algo salió mal",
             pt: "Algo deu errado",
+            "pt-PT": "Algo correu mal",
         }),
         "nav.categories": t({
             en: "Categories",
@@ -197,16 +204,19 @@ const common = {
             en: "New Transaction",
             es: "Nueva transacción",
             pt: "Novo lançamento",
+            "pt-PT": "Novo registo",
         }),
         "nav.search": t({
             en: "Search",
             es: "Buscar",
             pt: "Buscar",
+            "pt-PT": "Pesquisar",
         }),
         "nav.settings.about": t({
             en: "About and credits",
             es: "Acerca de y créditos",
             pt: "Sobre e créditos",
+            "pt-PT": "Acerca da app e créditos",
         }),
         "nav.settings.account": t({
             en: "Account",
@@ -218,6 +228,7 @@ const common = {
             es: "Ícono de la app",
             "es-ES": "Icono de la app",
             pt: "Ícone do app",
+            "pt-PT": "Ícone da app",
         }),
         "nav.settings.currency": t({
             en: "Currency",
@@ -238,6 +249,7 @@ const common = {
             en: "Feature lab",
             es: "Laboratorio de funciones",
             pt: "Laboratório de recursos",
+            "pt-PT": "Laboratório de funcionalidades",
         }),
         "nav.settings.integrations": t({
             en: "Integrations",
@@ -263,11 +275,13 @@ const common = {
             en: "Upcoming entries",
             es: "Próximos registros",
             pt: "Próximos lançamentos",
+            "pt-PT": "Próximos registos",
         }),
         "nav.settings.usage": t({
             en: "Usage",
             es: "Uso",
             pt: "Uso",
+            "pt-PT": "Utilização",
         }),
         "nav.settings.wallet": t({
             en: "Apple Pay",
@@ -298,22 +312,26 @@ const common = {
             en: "Log",
             es: "Registro",
             pt: "Lançamentos",
+            "pt-PT": "Registos",
         }),
         "nav.tab.settings": t({
             en: "Settings",
             es: "Configuración",
             "es-ES": "Ajustes",
             pt: "Ajustes",
+            "pt-PT": "Definições",
         }),
         "notFound.action": t({
             en: "Back to the Log",
             es: "Volver al registro",
             pt: "Voltar para Lançamentos",
+            "pt-PT": "Voltar aos Registos",
         }),
         "notFound.body": t({
             en: "That link does not point anywhere in Outlayr. Your ledger is where you left it.",
             es: "Ese enlace no lleva a ninguna parte en Outlayr. Tu registro sigue donde lo dejaste.",
             pt: "Esse link não leva a lugar nenhum no Outlayr. Seus lançamentos continuam onde você deixou.",
+            "pt-PT": "Esta ligação não leva a lado nenhum no Outlayr. Os seus registos continuam onde os deixou.",
         }),
         "notFound.navTitle": t({
             en: "Not Found",
@@ -351,6 +369,7 @@ const common = {
             en: "Entry",
             es: "Registro",
             pt: "Lançamento",
+            "pt-PT": "Registo",
         }),
     },
     key: "common" as const,

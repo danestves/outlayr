@@ -27,6 +27,8 @@ const settings = {
             en: "Outlayr is open source and free forever. It is built on the foundation of Dime, a beautiful expense tracker created by Rafael Soh, and is distributed under the GNU General Public License v3.0.",
             es: "Outlayr es de código abierto y gratuito para siempre. Está basado en Dime, una hermosa app de gastos creada por Rafael Soh, y se distribuye bajo la GNU General Public License v3.0.",
             pt: "O Outlayr é de código aberto e gratuito para sempre. É baseado no Dime, um lindo app de gastos criado por Rafael Soh, e é distribuído sob a GNU General Public License v3.0.",
+            "pt-PT":
+                "O Outlayr é de código aberto e gratuito para sempre. É baseado no Dime, uma bela app de despesas criada por Rafael Soh, e é distribuído ao abrigo da GNU General Public License v3.0.",
         }),
         "settings.about.licenceHeading": t({
             en: "Licence",
@@ -42,6 +44,7 @@ const settings = {
             en: "Logos provided by Logo.dev",
             es: "Logos proporcionados por Logo.dev",
             pt: "Logos fornecidos por Logo.dev",
+            "pt-PT": "Logótipos fornecidos por Logo.dev",
         }),
         "settings.about.openSourceLicenses": t({
             en: "Open source licenses",
@@ -67,17 +70,21 @@ const settings = {
             en: "Outlayr comes with ABSOLUTELY NO WARRANTY, to the extent permitted by law. You may redistribute it under the terms of the GNU General Public License v3.0.",
             es: "Outlayr se distribuye SIN NINGUNA GARANTÍA, en la medida permitida por la ley. Puedes redistribuirlo bajo los términos de la GNU General Public License v3.0.",
             pt: "O Outlayr vem SEM NENHUMA GARANTIA, na medida permitida pela lei. Você pode redistribuí-lo sob os termos da GNU General Public License v3.0.",
+            "pt-PT":
+                "O Outlayr é fornecido SEM QUALQUER GARANTIA, na medida permitida por lei. Pode redistribuí-lo nos termos da GNU General Public License v3.0.",
         }),
         "settings.appIcon.alertNote": t({
             en: "iOS confirms every change with an alert of its own.",
             es: "iOS confirma cada cambio con su propia alerta.",
             pt: "O iOS confirma cada mudança com um alerta próprio.",
+            "pt-PT": "O iOS confirma cada alteração com um alerta próprio.",
         }),
         "settings.appIcon.failedBody": t({
             en: "iOS refused the change. Your home screen still shows the icon marked here.",
             es: "iOS rechazó el cambio. Tu pantalla de inicio sigue mostrando el ícono marcado aquí.",
             "es-ES": "iOS ha rechazado el cambio. Tu pantalla de inicio sigue mostrando el icono marcado aquí.",
             pt: "O iOS recusou a mudança. Sua tela de início continua mostrando o ícone marcado aqui.",
+            "pt-PT": "O iOS recusou a alteração. O seu ecrã principal continua a mostrar o ícone marcado aqui.",
         }),
         "settings.appIcon.failedTitle": t({
             en: "Icon unchanged",
@@ -89,12 +96,14 @@ const settings = {
             en: "Home screen",
             es: "Pantalla de inicio",
             pt: "Tela de início",
+            "pt-PT": "Ecrã principal",
         }),
         "settings.appIcon.unsupported": t({
             en: "This device does not allow the app icon to be changed.",
             es: "Este dispositivo no permite cambiar el ícono de la app.",
             "es-ES": "Este dispositivo no permite cambiar el icono de la app.",
             pt: "Este dispositivo não permite mudar o ícone do app.",
+            "pt-PT": "Este dispositivo não permite alterar o ícone da app.",
         }),
         "settings.colorScheme.dark": t({
             en: "Dark",
@@ -105,6 +114,7 @@ const settings = {
             en: "Always dark, whatever the device does.",
             es: "Siempre oscuro, sin importar tu dispositivo.",
             pt: "Sempre escuro, não importa o dispositivo.",
+            "pt-PT": "Sempre escuro, seja qual for o dispositivo.",
         }),
         "settings.colorScheme.light": t({
             en: "Light",
@@ -115,6 +125,7 @@ const settings = {
             en: "Always light, whatever the device does.",
             es: "Siempre claro, sin importar tu dispositivo.",
             pt: "Sempre claro, não importa o dispositivo.",
+            "pt-PT": "Sempre claro, seja qual for o dispositivo.",
         }),
         "settings.colorScheme.system": t({
             en: "System",
@@ -141,16 +152,19 @@ const settings = {
             en: "Favourite",
             es: "Favorita",
             pt: "Favoritar",
+            "pt-PT": "Tornar favorita",
         }),
         "settings.currency.favouriteFailedBody": t({
             en: "Your favourites were not changed.",
             es: "Tus favoritas no se cambiaron.",
             pt: "Suas favoritas não foram alteradas.",
+            "pt-PT": "As suas favoritas não foram alteradas.",
         }),
         "settings.currency.favouriteFailedTitle": t({
             en: "Couldn't save that",
             es: "No se pudo guardar",
             pt: "Não foi possível salvar",
+            "pt-PT": "Não foi possível guardar",
         }),
         "settings.currency.favourites": t({
             en: "Favourites",
@@ -166,6 +180,7 @@ const settings = {
             en: "Remove one to make room.",
             es: "Quita una para hacer espacio.",
             pt: "Remova uma para abrir espaço.",
+            "pt-PT": "Remova uma para libertar espaço.",
         }),
         "settings.currency.favouritesFullShort": t({
             en: "Full ({limit})",
@@ -177,11 +192,13 @@ const settings = {
             es: "Mantén presionada una moneda para guardarla aquí.",
             "es-ES": "Mantén pulsada una moneda para guardarla aquí.",
             pt: "Toque e segure uma moeda para mantê-la aqui.",
+            "pt-PT": "Mantenha premida uma moeda para a fixar aqui.",
         }),
         "settings.currency.search": t({
             en: "Search currencies",
             es: "Buscar monedas",
             pt: "Buscar moedas",
+            "pt-PT": "Pesquisar moedas",
         }),
         "settings.currency.unfavourite": t({
             en: "Remove {code} from favourites",
@@ -233,6 +250,7 @@ const settings = {
             es: "Centavos al final",
             "es-ES": "Céntimos al final",
             pt: "Centavos no final",
+            "pt-PT": "Cêntimos no fim",
         }),
         "settings.numberEntry.type2": t({
             en: "Decimal point",
@@ -243,6 +261,7 @@ const settings = {
             en: "About and credits",
             es: "Acerca de y créditos",
             pt: "Sobre e créditos",
+            "pt-PT": "Acerca da app e créditos",
         }),
         "settings.row.accounts": t({
             en: "Accounts",
@@ -259,6 +278,7 @@ const settings = {
             es: "Ícono de la app",
             "es-ES": "Icono de la app",
             pt: "Ícone do app",
+            "pt-PT": "Ícone da app",
         }),
         "settings.row.authentication": t({
             en: "Authentication",
@@ -279,6 +299,7 @@ const settings = {
             en: "Contact support",
             es: "Contactar soporte",
             pt: "Falar com o suporte",
+            "pt-PT": "Contactar o suporte",
         }),
         "settings.row.currency": t({
             en: "Currency",
@@ -295,6 +316,7 @@ const settings = {
             es: "Mostrar centavos",
             "es-ES": "Mostrar céntimos",
             pt: "Mostrar centavos",
+            "pt-PT": "Mostrar cêntimos",
         }),
         "settings.row.erase": t({
             en: "Erase data",
@@ -310,6 +332,7 @@ const settings = {
             en: "Feature lab",
             es: "Laboratorio de funciones",
             pt: "Laboratório de recursos",
+            "pt-PT": "Laboratório de funcionalidades",
         }),
         "settings.row.followX": t({
             en: "Follow Outlayr on X",
@@ -330,6 +353,7 @@ const settings = {
             en: "Income tracking",
             es: "Seguimiento de ingresos",
             pt: "Controle de receitas",
+            "pt-PT": "Controlo de receitas",
         }),
         "settings.row.integrations": t({
             en: "Integrations",
@@ -356,6 +380,7 @@ const settings = {
             es: "Escritura de montos",
             "es-ES": "Escritura de importes",
             pt: "Digitação de valores",
+            "pt-PT": "Introdução de valores",
         }),
         "settings.row.privacy": t({
             en: "Privacy policy",
@@ -383,16 +408,19 @@ const settings = {
             en: "Send data to AI providers",
             es: "Enviar datos a proveedores de IA",
             pt: "Enviar dados a provedores de IA",
+            "pt-PT": "Enviar dados a fornecedores de IA",
         }),
         "settings.row.share": t({
             en: "Share Outlayr",
             es: "Compartir Outlayr",
             pt: "Compartilhar o Outlayr",
+            "pt-PT": "Partilhar o Outlayr",
         }),
         "settings.row.shareAnalytics": t({
             en: "Share analytics",
             es: "Compartir analíticas",
             pt: "Compartilhar análises",
+            "pt-PT": "Partilhar análises",
         }),
         "settings.row.sync": t({
             en: "Sync",
@@ -403,6 +431,7 @@ const settings = {
             en: "Terms of use",
             es: "Términos de uso",
             pt: "Termos de uso",
+            "pt-PT": "Termos de utilização",
         }),
         "settings.row.theme": t({
             en: "Accent",
@@ -418,17 +447,20 @@ const settings = {
             en: "Upcoming entries",
             es: "Próximos registros",
             pt: "Próximos lançamentos",
+            "pt-PT": "Próximos registos",
         }),
         "settings.screenTitle": t({
             en: "Settings",
             es: "Configuración",
             "es-ES": "Ajustes",
             pt: "Ajustes",
+            "pt-PT": "Definições",
         }),
         "settings.section.about": t({
             en: "About",
             es: "Acerca de",
             pt: "Sobre",
+            "pt-PT": "Acerca de",
         }),
         "settings.section.account": t({
             en: "Account",
@@ -454,6 +486,7 @@ const settings = {
             en: "Ledger",
             es: "Registro",
             pt: "Lançamentos",
+            "pt-PT": "Registos",
         }),
         "settings.section.money": t({
             en: "Money",
@@ -464,6 +497,7 @@ const settings = {
             en: "Track your money with Outlayr. {url}",
             es: "Controla tu dinero con Outlayr: {url}",
             pt: "Controle seu dinheiro com o Outlayr: {url}",
+            "pt-PT": "Controle o seu dinheiro com o Outlayr: {url}",
         }),
         "settings.support.subject": t({
             en: "Outlayr feedback",
@@ -519,6 +553,7 @@ const settings = {
             en: "Close and reopen the app for the month start to take full effect.",
             es: "Cierra y vuelve a abrir la app para que el nuevo inicio de mes se aplique por completo.",
             pt: "Feche e abra o app de novo para que o novo início do mês valha por completo.",
+            "pt-PT": "Feche e volte a abrir a app para que o novo início do mês tenha efeito total.",
         }),
         "settings.time.startsSection": t({
             en: "Starts on",
@@ -539,16 +574,20 @@ const settings = {
             en: "Show on the Log",
             es: "Mostrar en el registro",
             pt: "Mostrar em Lançamentos",
+            "pt-PT": "Mostrar em Registos",
         }),
         "settings.upcoming.empty": t({
             en: "Nothing is scheduled ahead of today.",
             es: "No hay nada programado después de hoy.",
             pt: "Nada programado depois de hoje.",
+            "pt-PT": "Nada agendado para depois de hoje.",
         }),
         "settings.upcoming.footer": t({
             en: "Transactions dated in the future sit at the top of the Log, above today. Hiding them there never hides them here.",
             es: "Las transacciones con fecha futura aparecen al inicio del registro, encima de hoy. Ocultarlas ahí nunca las oculta aquí.",
             pt: "Os lançamentos com data futura ficam no topo da aba Lançamentos, acima de hoje. Ocultá-los lá nunca os oculta aqui.",
+            "pt-PT":
+                "Os registos com data futura ficam no topo do separador Registos, acima de hoje. Ocultá-los lá nunca os oculta aqui.",
         }),
         "settings.upcoming.limitToSoon": t({
             en: "Limit to 14-Day Outlook",
@@ -559,6 +598,7 @@ const settings = {
             en: "On the Log",
             es: "En el registro",
             pt: "Em Lançamentos",
+            "pt-PT": "Em Registos",
         }),
     },
     key: "settings" as const,

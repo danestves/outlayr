@@ -7,6 +7,7 @@ const settingsAccount = {
             en: "Checking\u2026",
             es: "Verificando…",
             pt: "Verificando…",
+            "pt-PT": "A verificar…",
         }),
         "settings.account.delete": t({
             en: "Delete account",
@@ -22,6 +23,8 @@ const settingsAccount = {
             en: "Your account and everything synced to it are removed for good. The ledger on this device is not touched.",
             es: "Tu cuenta y todo lo sincronizado en ella se eliminan de forma definitiva. El registro de este dispositivo no se toca.",
             pt: "Sua conta e tudo o que foi sincronizado com ela são apagados para sempre. Os lançamentos deste dispositivo não são afetados.",
+            "pt-PT":
+                "A sua conta e tudo o que foi sincronizado com ela são apagados para sempre. Os registos deste dispositivo não são afetados.",
         }),
         "settings.account.deleteConfirmTitle": t({
             en: "Delete this account?",
@@ -32,16 +35,20 @@ const settingsAccount = {
             en: "Deletes your account and everything synced to it. The ledger on this device stays, and signing in again adopts it.",
             es: "Elimina tu cuenta y todo lo sincronizado en ella. El registro de este dispositivo se conserva y, si vuelves a iniciar sesión, se suma a tu cuenta.",
             pt: "Apaga sua conta e tudo o que foi sincronizado com ela. Os lançamentos deste dispositivo ficam e, se você entrar de novo, passam para a sua conta.",
+            "pt-PT":
+                "Apaga a sua conta e tudo o que foi sincronizado com ela. Os registos deste dispositivo ficam e, se voltar a iniciar sessão, passam para a sua conta.",
         }),
         "settings.account.deleteSection": t({
             en: "Deleting your account",
             es: "Eliminar tu cuenta",
             pt: "Apagar sua conta",
+            "pt-PT": "Apagar a sua conta",
         }),
         "settings.account.deleting": t({
             en: "Deleting…",
             es: "Eliminando…",
             pt: "Apagando…",
+            "pt-PT": "A apagar…",
         }),
         "settings.account.eraseDevice": t({
             en: "Delete account and erase this device",
@@ -57,6 +64,7 @@ const settingsAccount = {
             en: "This permanently removes your account and all erasable Outlayr data on this device.",
             es: "Esto elimina de forma permanente tu cuenta y todos los datos borrables de Outlayr en este dispositivo.",
             pt: "Isso remove para sempre sua conta e todos os dados apagáveis do Outlayr neste dispositivo.",
+            "pt-PT": "Isto remove para sempre a sua conta e todos os dados apagáveis do Outlayr neste dispositivo.",
         }),
         "settings.account.eraseDeviceConfirmTitle": t({
             en: "Erase this device too?",
@@ -67,6 +75,8 @@ const settingsAccount = {
             en: "Erases Outlayr data on this device after your cloud account is deleted. System permissions and widget placement remain controlled by the OS.",
             es: "Borra los datos de Outlayr de este dispositivo después de eliminar tu cuenta en la nube. Los permisos del sistema y la ubicación de los widgets siguen bajo control del sistema operativo.",
             pt: "Apaga os dados do Outlayr deste dispositivo depois que sua conta na nuvem for apagada. As permissões do sistema e a posição dos widgets continuam sob controle do sistema operacional.",
+            "pt-PT":
+                "Apaga os dados do Outlayr deste dispositivo depois de a sua conta na nuvem ser apagada. As permissões do sistema e a posição dos widgets continuam a ser controladas pelo sistema operativo.",
         }),
         "settings.account.eraseDeviceSection": t({
             en: "Erase this device",
@@ -82,6 +92,7 @@ const settingsAccount = {
             en: "Sign-in didn't complete. Your ledger on this device is untouched.",
             es: "El inicio de sesi\u00F3n no se complet\u00F3. Tu registro en este dispositivo est\u00E1 intacto.",
             pt: "Não foi possível entrar. Seus lançamentos neste dispositivo estão intactos.",
+            "pt-PT": "Não foi possível iniciar sessão. Os seus registos neste dispositivo estão intactos.",
         }),
         "settings.account.notSignedIn": t({
             en: "Not signed in",
@@ -112,21 +123,26 @@ const settingsAccount = {
             en: "Sign in",
             es: "Iniciar sesión",
             pt: "Entrar",
+            "pt-PT": "Iniciar sessão",
         }),
         "settings.account.signInFooter": t({
             en: "Signing in does not change your ledger. It lets you choose whether to sync this device with your account.",
             es: "Iniciar sesión no cambia tu registro. Te permite elegir si quieres sincronizar este dispositivo con tu cuenta.",
             pt: "Entrar não muda seus lançamentos. Só permite escolher se você quer sincronizar este dispositivo com sua conta.",
+            "pt-PT":
+                "Iniciar sessão não altera os seus registos. Só permite escolher se quer sincronizar este dispositivo com a sua conta.",
         }),
         "settings.account.signInSection": t({
             en: "Sign in",
             es: "Iniciar sesi\u00F3n",
             pt: "Entrar",
+            "pt-PT": "Iniciar sessão",
         }),
         "settings.account.signOut": t({
             en: "Sign Out",
             es: "Cerrar sesi\u00F3n",
             pt: "Sair",
+            "pt-PT": "Terminar sessão",
         }),
         "settings.account.signOutFooter": t({
             en: "Signing out ends the session on this phone. Every transaction, budget and category stays exactly where it is.",
@@ -134,6 +150,8 @@ const settingsAccount = {
             "es-ES":
                 "Cerrar sesión solo afecta a este móvil. Tus transacciones, presupuestos y categorías se quedan tal como están.",
             pt: "Sair encerra a sessão neste celular. Cada lançamento, orçamento e categoria continua exatamente onde está.",
+            "pt-PT":
+                "A sessão termina só neste telemóvel. Cada registo, orçamento e categoria continua exatamente onde está.",
         }),
         "settings.account.signedInAs": t({
             en: "Signed in as",
@@ -149,21 +167,27 @@ const settingsAccount = {
             en: "Outlayr keeps your ledger on this device and behaves exactly the same signed out. An account lets you choose to sync it with your other devices.",
             es: "Outlayr guarda tu registro en este dispositivo y funciona igual sin sesión. Con una cuenta, puedes sincronizarlo con tus otros dispositivos si quieres.",
             pt: "O Outlayr mantém seus lançamentos neste dispositivo e funciona do mesmo jeito sem sessão iniciada. Com uma conta, você pode sincronizá-los com seus outros dispositivos, se quiser.",
+            "pt-PT":
+                "O Outlayr mantém os seus registos neste dispositivo e funciona da mesma forma sem sessão iniciada. Com uma conta, pode sincronizá-los com os seus outros dispositivos, se quiser.",
         }),
         "settings.account.signingOut": t({
             en: "Signing out\u2026",
             es: "Cerrando sesi\u00F3n\u2026",
             pt: "Saindo…",
+            "pt-PT": "A terminar sessão…",
         }),
         "settings.account.unavailable": t({
             en: "Cloud features unavailable",
             es: "Funciones en la nube no disponibles",
             pt: "Recursos na nuvem indisponíveis",
+            "pt-PT": "Funcionalidades na nuvem indisponíveis",
         }),
         "settings.account.unavailableDetail": t({
             en: "This build is not configured for cloud features. Your ledger remains available on this device.",
             es: "Esta compilaci\u00F3n no est\u00E1 configurada para funciones en la nube. Tu registro sigue disponible en este dispositivo.",
             pt: "Esta versão não está configurada para recursos na nuvem. Seus lançamentos continuam disponíveis neste dispositivo.",
+            "pt-PT":
+                "Esta versão não está configurada para funcionalidades na nuvem. Os seus registos continuam disponíveis neste dispositivo.",
         }),
         "settings.sync.eyebrow": t({
             en: "This device",
@@ -174,6 +198,8 @@ const settingsAccount = {
             en: "The switch is where it was and your ledger is untouched. Try again in a moment.",
             es: "El interruptor sigue como estaba y tu registro está intacto. Inténtalo de nuevo en un momento.",
             pt: "O botão continua como estava e seus lançamentos estão intactos. Tente de novo em instantes.",
+            "pt-PT":
+                "O botão continua como estava e os seus registos estão intactos. Tente novamente dentro de instantes.",
         }),
         "settings.sync.failedTitle": t({
             en: "Sync setting unchanged",
@@ -186,6 +212,8 @@ const settingsAccount = {
             "es-ES":
                 "Si desactivas la sincronización, cada transacción, presupuesto y categoría se queda en este móvil; solo deja de enviarse a tu cuenta. Al activarla de nuevo, se envía todo lo que registraste mientras tanto.",
             pt: "Desativar a sincronização mantém cada lançamento, orçamento e categoria neste celular; só deixa de enviá-los para sua conta. Ao ativar de novo, tudo o que você registrou nesse meio-tempo é enviado.",
+            "pt-PT":
+                "Desativar a sincronização mantém cada registo, orçamento e categoria neste telemóvel; só deixa de os enviar para a sua conta. Ao voltar a ativar, tudo o que registou entretanto é enviado.",
         }),
         "settings.sync.lastSynced": t({
             en: "Last synced",
@@ -201,6 +229,8 @@ const settingsAccount = {
             en: "Sync needs an account to replicate to. Until you sign in your ledger stays on this device, which is all Outlayr ever needed to work.",
             es: "Para sincronizar necesitas una cuenta. Hasta que inicies sesión, tu registro se queda en este dispositivo, y eso es todo lo que Outlayr necesita para funcionar.",
             pt: "Para sincronizar, você precisa de uma conta. Até você entrar, seus lançamentos ficam neste dispositivo, e é só disso que o Outlayr precisa para funcionar.",
+            "pt-PT":
+                "Para sincronizar, precisa de uma conta. Até iniciar sessão, os seus registos ficam neste dispositivo, e é só disso que o Outlayr precisa para funcionar.",
         }),
         "settings.sync.never": t({
             en: "Not synced yet",
@@ -222,16 +252,20 @@ const settingsAccount = {
             es: "Nada sale de este celular. Tu registro está completo aquí y funciona igual que ahora.",
             "es-ES": "Nada sale de este móvil. Tu registro está completo aquí y funciona igual que ahora.",
             pt: "Nada sai deste celular. Seus lançamentos estão completos aqui e funcionam exatamente como agora.",
+            "pt-PT":
+                "Nada sai deste telemóvel. Os seus registos estão completos aqui e funcionam exatamente como agora.",
         }),
         "settings.sync.on": t({
             en: "Syncing",
             es: "Sincronizando",
             pt: "Sincronizando",
+            "pt-PT": "A sincronizar",
         }),
         "settings.sync.onDetail": t({
             en: "Every change you make here is queued for your account and reaches your other devices.",
             es: "Cada cambio que haces aquí se pone en cola para tu cuenta y llega a tus otros dispositivos.",
             pt: "Cada mudança que você faz aqui entra na fila da sua conta e chega aos seus outros dispositivos.",
+            "pt-PT": "Cada alteração que faz aqui entra na fila da sua conta e chega aos seus outros dispositivos.",
         }),
         "settings.sync.paused": t({
             en: "Paused",
@@ -244,16 +278,20 @@ const settingsAccount = {
             "es-ES":
                 "Sincronizar requiere Outlayr Pro. Tu registro está completo en este móvil y sigue funcionando; los cambios esperan aquí hasta que Pro esté activo otra vez.",
             pt: "Sincronizar requer o Outlayr Pro. Seus lançamentos estão completos neste celular e continuam funcionando; as mudanças esperam aqui até o Pro estar ativo de novo.",
+            "pt-PT":
+                "Sincronizar requer o Outlayr Pro. Os seus registos estão completos neste telemóvel e continuam a funcionar; as alterações esperam aqui até o Pro voltar a estar ativo.",
         }),
         "settings.sync.pending": t({
             en: "{count} waiting to sync",
             es: "{count} por sincronizar",
             pt: "{count} aguardando sincronização",
+            "pt-PT": "{count} por sincronizar",
         }),
         "settings.sync.pendingOne": t({
             en: "1 waiting to sync",
             es: "1 por sincronizar",
             pt: "1 aguardando sincronização",
+            "pt-PT": "1 por sincronizar",
         }),
         "settings.sync.section": t({
             en: "Replication",
@@ -264,6 +302,7 @@ const settingsAccount = {
             en: "Status",
             es: "Estado",
             pt: "Status",
+            "pt-PT": "Estado",
         }),
         "settings.sync.toggle": t({
             en: "Sync this device",
@@ -274,16 +313,19 @@ const settingsAccount = {
             en: "Up to date",
             es: "Al día",
             pt: "Em dia",
+            "pt-PT": "Atualizado",
         }),
         "settings.sync.waiting": t({
             en: "Waiting to sync",
             es: "Por sincronizar",
             pt: "Aguardando sincronização",
+            "pt-PT": "A aguardar sincronização",
         }),
         "settings.sync.working": t({
             en: "Working…",
             es: "Procesando…",
             pt: "Processando…",
+            "pt-PT": "A processar…",
         }),
         "settings.usage.captures": t({
             en: "of {count} captures",
@@ -295,6 +337,7 @@ const settingsAccount = {
             es: "Voz y recibos",
             "es-ES": "Voz y tickets",
             pt: "Voz e recibos",
+            "pt-PT": "Voz e talões",
         }),
         "settings.usage.fullIn": t({
             en: "Full in {time}",
@@ -316,6 +359,7 @@ const settingsAccount = {
             es: "Escaneos de recibos",
             "es-ES": "Escaneos de tickets",
             pt: "Escaneamento de recibos",
+            "pt-PT": "Digitalização de talões",
         }),
         "settings.usage.resets": t({
             en: "Resets {date}",
@@ -336,11 +380,13 @@ const settingsAccount = {
             en: "No captures left",
             es: "No te quedan capturas",
             pt: "Suas capturas acabaram",
+            "pt-PT": "As suas capturas acabaram",
         }),
         "settings.usage.toast.last": t({
             en: "That was your last capture",
             es: "Esa fue tu última captura",
             pt: "Essa foi sua última captura",
+            "pt-PT": "Esta foi a sua última captura",
         }),
         "settings.usage.toast.moreOn": t({
             en: "{count} more on {date}",
@@ -356,6 +402,7 @@ const settingsAccount = {
             en: "Usage",
             es: "Uso",
             pt: "Uso",
+            "pt-PT": "Utilização",
         }),
         "settings.usage.voice": t({
             en: "Voice",

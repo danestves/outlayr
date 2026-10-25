@@ -42,6 +42,7 @@ const budgets = {
             en: "Something went wrong deleting this budget, so it is still here. Try again.",
             es: "Algo salió mal al eliminar este presupuesto, así que sigue aquí. Inténtalo de nuevo.",
             pt: "Algo deu errado ao apagar este orçamento, então ele continua aqui. Tente de novo.",
+            "pt-PT": "Algo correu mal ao apagar este orçamento, por isso continua aqui. Tente de novo.",
         }),
         "budgets.delete.failedTitle": t({
             en: "Not deleted",
@@ -97,6 +98,7 @@ const budgets = {
             en: "TRANSACTIONS",
             es: "TRANSACCIONES",
             pt: "LANÇAMENTOS",
+            "pt-PT": "REGISTOS",
         }),
         "budgets.detail.unspent": t({
             en: "unspent",
@@ -112,21 +114,25 @@ const budgets = {
             en: "What you don't spend is added to the next period, and what you overspend is taken off it.",
             es: "Lo que no gastes se suma al período siguiente, y lo que te pases se le resta.",
             pt: "O que você não gastar é somado ao próximo período, e o que passar é descontado dele.",
+            "pt-PT": "O que não gastar é somado ao próximo período, e o que gastar a mais é descontado dele.",
         }),
         "budgets.editor.closedWindow": t({
             en: "Editing changes the current window, not this one.",
             es: "Si lo editas, cambia el período actual, no este.",
             pt: "Editar muda o período atual, não este.",
+            "pt-PT": "Editar altera o período atual, não este.",
         }),
         "budgets.editor.currency": t({
             en: "Set in {from}. Saving restates it in {to}.",
             es: "Está en {from}. Al guardar, se convierte a {to}.",
             pt: "Está em {from}. Ao salvar, é convertido para {to}.",
+            "pt-PT": "Está em {from}. Ao guardar, é convertido para {to}.",
         }),
         "budgets.editor.dropCarry": t({
             en: "Turning this off drops the {carry} carried in.",
             es: "Si lo desactivas, pierdes los {carry} acumulados.",
             pt: "Se desativar, você perde os {carry} acumulados.",
+            "pt-PT": "Se desativar, perde os {carry} acumulados.",
         }),
         "budgets.editor.every": t({
             en: "Every",
@@ -173,6 +179,7 @@ const budgets = {
             es: "Agregar una transacción",
             "es-ES": "Añadir una transacción",
             pt: "Adicionar um lançamento",
+            "pt-PT": "Adicionar um registo",
         }),
         "budgets.empty.body": t({
             en: "Link budgets to categories and set appropriate expenditure goals.",
@@ -184,6 +191,7 @@ const budgets = {
             es: "Arma tu presupuesto",
             "es-ES": "Crea tu presupuesto",
             pt: "Monte seu orçamento",
+            "pt-PT": "Crie o seu orçamento",
         }),
         "budgets.expenses_one": t({
             en: "{count} expense",
@@ -235,6 +243,7 @@ const budgets = {
             en: "Still solvent, but on this pace the period ends {amount} short.",
             es: "Todavía te alcanza, pero a este ritmo te van a faltar {amount} al final del período.",
             pt: "Ainda dá, mas nesse ritmo vão faltar {amount} no fim do período.",
+            "pt-PT": "Ainda dá, mas a este ritmo vão faltar {amount} no fim do período.",
         }),
         "budgets.hero.verdictRanOutEarly": t({
             en: "Ran out {date}, {days} early.",
@@ -260,6 +269,7 @@ const budgets = {
             en: "{over} OF {total} OVER",
             es: "{over} DE {total} EXCEDIDOS",
             pt: "{over} DE {total} ESTOURADOS",
+            "pt-PT": "{over} DE {total} EXCEDIDOS",
         }),
         "budgets.measure.limit": t({
             en: "LIMIT",
@@ -366,6 +376,7 @@ const budgets = {
             en: "Limit {amount} {period}. Drag up or down to change it.",
             es: "Límite {amount} {period}. Arrastra hacia arriba o abajo para cambiarlo.",
             pt: "Limite de {amount} {period}. Arraste para cima ou para baixo para mudar.",
+            "pt-PT": "Limite de {amount} {period}. Arraste para cima ou para baixo para alterar.",
         }),
         "budgets.picker.held": t({
             en: "{window} would have held — {amount} to spare.",
@@ -376,6 +387,7 @@ const budgets = {
             en: "Nothing spent in {window} yet.",
             es: "Todavía no has gastado nada en {window}.",
             pt: "Você ainda não gastou nada em {window}.",
+            "pt-PT": "Ainda não gastou nada em {window}.",
         }),
         "budgets.picker.ranOutEarly": t({
             en: "You would have run out on {date}, {days} early.",
@@ -426,6 +438,7 @@ const budgets = {
             en: "Double tap and hold to open actions for this budget",
             es: "Toca dos veces y mantén para abrir las acciones de este presupuesto",
             pt: "Toque duas vezes e segure para abrir as ações deste orçamento",
+            "pt-PT": "Toque duas vezes e mantenha premido para abrir as ações deste orçamento",
         }),
         "budgets.row.deleteA11y": t({
             en: "Delete the {name} budget",
@@ -436,11 +449,13 @@ const budgets = {
             en: "Something went wrong writing this budget, so nothing was saved. Try again.",
             es: "Algo salió mal al guardar este presupuesto, así que no se guardó nada. Inténtalo de nuevo.",
             pt: "Algo deu errado ao salvar este orçamento, então nada foi salvo. Tente de novo.",
+            "pt-PT": "Algo correu mal ao guardar este orçamento, por isso nada foi guardado. Tente de novo.",
         }),
         "budgets.save.failedTitle": t({
             en: "Not saved",
             es: "No se guardó",
             pt: "Não foi salvo",
+            "pt-PT": "Não foi guardado",
         }),
         "budgets.scope.everything": t({
             en: "Everything",
@@ -451,6 +466,7 @@ const budgets = {
             en: "Already {amount} spent. This starts you {over} over.",
             es: "Ya llevas {amount} gastados. Empiezas {over} por encima.",
             pt: "Você já gastou {amount}. Começa {over} acima do limite.",
+            "pt-PT": "Já gastou {amount}. Começa {over} acima do limite.",
         }),
         "budgets.sheet.editLimitA11y": t({
             en: "Edit the limit",
@@ -461,6 +477,7 @@ const budgets = {
             en: "{over} of the last {total} went over",
             es: "Te pasaste en {over} de los últimos {total}",
             pt: "Você estourou em {over} dos últimos {total}",
+            "pt-PT": "Excedeu o limite em {over} dos últimos {total}",
         }),
         "budgets.sheet.perDay": t({
             en: "{amount} a day for the {days} left",
@@ -471,17 +488,20 @@ const budgets = {
             en: "One overall budget at a time. This changes the one you have.",
             es: "Solo puedes tener un presupuesto general. Esto cambia el que ya tienes.",
             pt: "Só pode haver um orçamento geral. Isto muda o que você já tem.",
+            "pt-PT": "Só pode haver um orçamento geral. Isto altera o que já tem.",
         }),
         // Word order is the translator's: `{scope}` is a category name or "everything", `{period}` a period phrase.
         "budgets.sheet.stated": t({
             en: "Keep {scope} under {period}",
             es: "Tu límite para {scope} {period}",
             pt: "Seu limite para {scope} {period}",
+            "pt-PT": "O seu limite para {scope} {period}",
         }),
         "budgets.sheet.tapToType": t({
             en: "tap to type",
             es: "toca para escribir",
             pt: "toque para digitar",
+            "pt-PT": "toque para escrever",
         }),
         "budgets.sheet.typical": t({
             en: "typical {amount}",

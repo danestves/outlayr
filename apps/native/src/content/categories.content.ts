@@ -115,6 +115,7 @@ const categories = {
             es: "Ingresa un nombre para esta categoría.",
             "es-ES": "Introduce un nombre para esta categoría.",
             pt: "Digite um nome para esta categoria.",
+            "pt-PT": "Introduza um nome para esta categoria.",
         }),
         "categories.field.name": t({
             en: "Name",
@@ -130,6 +131,7 @@ const categories = {
             en: "Income categories use the income color.",
             es: "Las categorías de ingreso usan el color de ingreso.",
             pt: "Categorias de receita usam a cor de receita.",
+            "pt-PT": "As categorias de receita usam a cor de receita.",
         }),
         "categories.inherits": t({
             en: "Inherits {parent}'s color.",
@@ -161,12 +163,14 @@ const categories = {
             es: "Súper, Renta…",
             "es-ES": "Súper, Alquiler…",
             pt: "Mercado, Aluguel…",
+            "pt-PT": "Supermercado, Renda…",
         }),
         "categories.namePlaceholder.income": t({
             en: "Salary, Freelance…",
             es: "Sueldo, Freelance…",
             "es-ES": "Nómina, Freelance…",
             pt: "Salário, Freela…",
+            "pt-PT": "Salário, Freelance…",
         }),
         "categories.namePlaceholder.subcategory": t({
             en: "Coffee, Snacks…",
@@ -183,11 +187,13 @@ const categories = {
             en: "Save Category",
             es: "Guardar categoría",
             pt: "Salvar categoria",
+            "pt-PT": "Guardar categoria",
         }),
         "categories.saveSubcategory": t({
             en: "Save Subcategory",
             es: "Guardar subcategoría",
             pt: "Salvar subcategoria",
+            "pt-PT": "Guardar subcategoria",
         }),
         "categories.suggested.eyebrow": t({
             en: "Suggested · {count}",
@@ -209,11 +215,13 @@ const categories = {
             en: "Its transactions go with it.",
             es: "Sus transacciones se borran con ella.",
             pt: "Os lançamentos dela vão junto.",
+            "pt-PT": "Os registos vão com ela.",
         }),
         "categories.undo.bodyWithChildren": t({
             en: "Its transactions go with it; its subcategories move to the top level.",
             es: "Sus transacciones se borran con ella; sus subcategorías pasan al nivel superior.",
             pt: "Os lançamentos dela vão junto; as subcategorias passam para o nível principal.",
+            "pt-PT": "Os registos vão com ela; as subcategorias passam para o nível principal.",
         }),
         "categories.undo.deleted": t({
             en: "Category deleted",

@@ -129,28 +129,28 @@ const QUICK_ACTIONS = [
         href: "outlayr://new",
         id: "log-expense",
         iosIcon: "symbol:plus.circle.fill",
-        title: { en: "Log Expense", es: "Registrar gasto", pt: "Registrar despesa" },
+        title: { en: "Log Expense", es: "Registrar gasto", pt: "Registrar despesa", "pt-PT": "Registar despesa" },
     },
     {
         glyph: "income",
         href: "outlayr://new?income=1",
         id: "log-income",
         iosIcon: "symbol:arrow.down.circle.fill",
-        title: { en: "Log Income", es: "Registrar ingreso", pt: "Registrar receita" },
+        title: { en: "Log Income", es: "Registrar ingreso", pt: "Registrar receita", "pt-PT": "Registar receita" },
     },
     {
         glyph: "search",
         href: "outlayr://search",
         id: "search",
         iosIcon: "symbol:magnifyingglass",
-        title: { en: "Search Entries", es: "Buscar", pt: "Buscar" },
+        title: { en: "Search Entries", es: "Buscar", pt: "Buscar", "pt-PT": "Pesquisar" },
     },
     {
         glyph: "budgets",
         href: "outlayr://budgets",
         id: "budgets",
         iosIcon: "symbol:chart.pie.fill",
-        title: { en: "Budgets", es: "Presupuestos", pt: "Orçamentos" },
+        title: { en: "Budgets", es: "Presupuestos", pt: "Orçamentos", "pt-PT": "Orçamentos" },
     },
 ] as const satisfies readonly QuickAction[];
 
@@ -219,13 +219,14 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
         es: "./locales/es.json",
         "es-ES": "./locales/es-ES.json",
         pt: "./locales/pt.json",
+        "pt-PT": "./locales/pt-PT.json",
     },
     name: "Outlayr",
     owner: "danestves-llc",
     platforms: ["ios", "android"],
     plugins: [
         "expo-router",
-        ["expo-localization", { supportedLocales: ["en", "es", "es-ES", "pt"] }],
+        ["expo-localization", { supportedLocales: ["en", "es", "es-ES", "pt", "pt-PT"] }],
         "expo-image",
         "expo-sqlite",
         [

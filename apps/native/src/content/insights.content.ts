@@ -72,6 +72,7 @@ const insights = {
             en: "No entries found.",
             es: "No se encontraron registros.",
             pt: "Nenhum lançamento encontrado.",
+            "pt-PT": "Nenhum registo encontrado.",
         }),
         "insights.list.more": t({
             en: "{count} more",
@@ -132,21 +133,25 @@ const insights = {
             en: "Net worth",
             es: "Patrimonio",
             pt: "Patrimônio",
+            "pt-PT": "Património",
         }),
         "insights.netWorth.summary": t({
             en: "Net worth. {amount} on {date}.",
             es: "Patrimonio. {amount} el {date}.",
             pt: "Patrimônio. {amount} em {date}.",
+            "pt-PT": "Património. {amount} em {date}.",
         }),
         "insights.netWorth.summaryApproximate": t({
             en: "Net worth. About {amount} on {date}.",
             es: "Patrimonio. Aproximadamente {amount} el {date}.",
             pt: "Patrimônio. Cerca de {amount} em {date}.",
+            "pt-PT": "Património. Cerca de {amount} em {date}.",
         }),
         "insights.period.change": t({
             en: "Change period",
             es: "Cambiar período",
             pt: "Mudar período",
+            "pt-PT": "Alterar período",
         }),
         "insights.period.month": t({
             en: "Month",
@@ -178,6 +183,7 @@ const insights = {
             en: "Nothing logged {period}.",
             es: "Nada registrado {period}.",
             pt: "Nada registrado {period}.",
+            "pt-PT": "Nada registado {period}.",
         }),
         "insights.quiet.thisMonth": t({
             en: "this month",
@@ -209,11 +215,13 @@ const insights = {
             en: "Yours starts filling in from your first entry.",
             es: "El tuyo empieza a llenarse desde tu primer registro.",
             pt: "O seu começa a se preencher no seu primeiro lançamento.",
+            "pt-PT": "O seu começa a preencher-se com o seu primeiro registo.",
         }),
         "insights.sample.cta": t({
             en: "Log your first expense",
             es: "Registra tu primer gasto",
             pt: "Registre sua primeira despesa",
+            "pt-PT": "Registe a sua primeira despesa",
         }),
         "insights.sample.dining": t({
             en: "Dining Out",
@@ -224,6 +232,7 @@ const insights = {
             en: "Groceries",
             es: "Súper",
             pt: "Mercado",
+            "pt-PT": "Supermercado",
         }),
         "insights.sample.headline": t({
             en: "This is what a month looks like",
@@ -314,6 +323,7 @@ const insights = {
             en: "Window shown",
             es: "Fechas mostradas",
             pt: "Datas exibidas",
+            "pt-PT": "Datas mostradas",
         }),
         "insights.window.title": t({
             en: "Window",

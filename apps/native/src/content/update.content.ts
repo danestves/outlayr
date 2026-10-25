@@ -32,6 +32,7 @@ const update = {
             en: "Updating, the app restarts when it is done",
             es: "Actualizando, la app se reinicia al terminar",
             pt: "Atualizando, o app reinicia ao terminar",
+            "pt-PT": "A atualizar, a app reinicia ao terminar",
         }),
     },
     key: "update" as const,

@@ -12,6 +12,7 @@ const settingsNotifications = {
             en: "Custom time",
             es: "Hora personalizada",
             pt: "Horário personalizado",
+            "pt-PT": "Hora personalizada",
         }),
         "settings.notifications.deniedBody": t({
             en: "Outlayr cannot ask again once you have declined. Turn notifications on for Outlayr in iOS Settings and this switch will follow.",
@@ -19,6 +20,8 @@ const settingsNotifications = {
             "es-ES":
                 "Como ya las has rechazado, Outlayr no puede volver a preguntarte. Activa las notificaciones de Outlayr en Ajustes y este interruptor se actualizará solo.",
             pt: "Como você já recusou, o Outlayr não pode perguntar de novo. Ative as notificações do Outlayr nos Ajustes do iOS e este botão se atualiza sozinho.",
+            "pt-PT":
+                "Como já recusou, o Outlayr não pode voltar a perguntar. Ative as notificações do Outlayr nas Definições do iOS e este botão atualiza-se sozinho.",
         }),
         "settings.notifications.deniedBody.android": t({
             en: "Outlayr cannot ask again once you have declined. Turn notifications on for Outlayr in your phone's settings and this switch will follow.",
@@ -26,6 +29,8 @@ const settingsNotifications = {
             "es-ES":
                 "Como ya las has rechazado, Outlayr no puede volver a preguntarte. Activa las notificaciones de Outlayr en los ajustes del móvil y este interruptor se actualizará solo.",
             pt: "Como você já recusou, o Outlayr não pode perguntar de novo. Ative as notificações do Outlayr nas configurações do celular e este botão se atualiza sozinho.",
+            "pt-PT":
+                "Como já recusou, o Outlayr não pode voltar a perguntar. Ative as notificações do Outlayr nas definições do telemóvel e este botão atualiza-se sozinho.",
         }),
         "settings.notifications.deniedTitle": t({
             en: "Notifications are off",
@@ -36,6 +41,7 @@ const settingsNotifications = {
             en: "Every evening",
             es: "Cada noche",
             pt: "Toda noite",
+            "pt-PT": "Todas as noites",
         }),
         "settings.notifications.eveningDetail": t({
             en: "A nudge at {time}, once the day is mostly done.",
@@ -46,31 +52,38 @@ const settingsNotifications = {
             en: "Only on days with nothing logged. From this device, never a server.",
             es: "Solo los días sin nada registrado. Desde este dispositivo, nunca desde un servidor.",
             pt: "Só nos dias sem nada registrado. Deste dispositivo, nunca de um servidor.",
+            "pt-PT": "Só nos dias sem nada registado. Deste dispositivo, nunca de um servidor.",
         }),
         "settings.notifications.installmentFooter": t({
             en: "At your reminder time, the day before each installment you still owe, and before the day you said you'd pay a debt.",
             es: "A la hora de tus recordatorios, el día antes de cada cuota que aún debes y del día en que dijiste que pagarías una deuda.",
             pt: "No horário dos seus lembretes, no dia anterior a cada parcela que você ainda deve e antes do dia em que você disse que pagaria uma dívida.",
+            "pt-PT":
+                "À hora dos seus lembretes, no dia anterior a cada prestação que ainda deve e antes do dia em que disse que pagaria uma dívida.",
         }),
         "settings.notifications.installmentSection": t({
             en: "Installments",
             es: "Cuotas",
             pt: "Parcelas",
+            "pt-PT": "Prestações",
         }),
         "settings.notifications.installmentToggle": t({
             en: "Remind me the day before",
             es: "Avísame el día antes",
             pt: "Me avise no dia anterior",
+            "pt-PT": "Avise-me no dia anterior",
         }),
         "settings.notifications.morning": t({
             en: "Every morning",
             es: "Cada mañana",
             pt: "Toda manhã",
+            "pt-PT": "Todas as manhãs",
         }),
         "settings.notifications.morningDetail": t({
             en: "A nudge at {time}, before the day has spent anything.",
             es: "Un aviso a las {time}, antes de que hayas gastado algo.",
             pt: "Um lembrete às {time}, antes de você gastar qualquer coisa no dia.",
+            "pt-PT": "Um lembrete às {time}, antes de gastar alguma coisa no dia.",
         }),
         "settings.notifications.nextAt": t({
             en: "Next reminder at {time}.",
@@ -87,6 +100,7 @@ const settingsNotifications = {
             es: "Abrir Configuración",
             "es-ES": "Abrir Ajustes",
             pt: "Abrir Ajustes",
+            "pt-PT": "Abrir Definições",
         }),
         "settings.notifications.section": t({
             en: "Daily reminder",
@@ -97,26 +111,32 @@ const settingsNotifications = {
             en: "Each subscription decides how far ahead it warns you, on its own screen. Off silences all of them without changing what any one of them says.",
             es: "Cada suscripción define en su propia pantalla con cuánta anticipación te avisa. Si lo desactivas, se silencian todas sin cambiar su configuración.",
             pt: "Cada assinatura define, na própria tela, com quanta antecedência te avisa. Desativar silencia todas, sem mudar o que cada uma diz.",
+            "pt-PT":
+                "Cada subscrição define, no seu próprio ecrã, com quanta antecedência o avisa. Desativar silencia todas, sem alterar o que cada uma diz.",
         }),
         "settings.notifications.subscriptionSection": t({
             en: "Subscription charges",
             es: "Cobros de suscripciones",
             pt: "Cobranças de assinaturas",
+            "pt-PT": "Cobranças de subscrições",
         }),
         "settings.notifications.subscriptionToggle": t({
             en: "Warn me before a charge",
             es: "Avísame antes de un cobro",
             pt: "Me avise antes de uma cobrança",
+            "pt-PT": "Avise-me antes de uma cobrança",
         }),
         "settings.notifications.time": t({
             en: "Time",
             es: "Hora",
             pt: "Horário",
+            "pt-PT": "Hora",
         }),
         "settings.notifications.toggle": t({
             en: "Remind me to log",
             es: "Recuérdame registrar",
             pt: "Me lembre de registrar",
+            "pt-PT": "Lembre-me de registar",
         }),
         "settings.notifications.whenSection": t({
             en: "When",

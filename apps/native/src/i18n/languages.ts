@@ -1,4 +1,4 @@
-export const SUPPORTED_LANGUAGES = ["en", "es", "es-ES", "pt"] as const;
+export const SUPPORTED_LANGUAGES = ["en", "es", "es-ES", "pt", "pt-PT"] as const;
 
 export type Language = (typeof SUPPORTED_LANGUAGES)[number];
 
@@ -10,6 +10,7 @@ const LANGUAGE_NAMES = {
     es: "Español",
     "es-ES": "Español (España)",
     pt: "Português",
+    "pt-PT": "Português (Portugal)",
 } satisfies Record<Language, string>;
 
 export function languageLabel(language: Language): string {
@@ -30,6 +31,9 @@ export function languageFromTag(tag: string | null | undefined): Language | null
     const [primary, ...subtags] = tag.toLowerCase().split(TAG_SUBTAG_SEPARATOR);
     if (primary === "es" && subtags.includes("es")) {
         return "es-ES";
+    }
+    if (primary === "pt" && subtags.includes("pt")) {
+        return "pt-PT";
     }
     return primary && isLanguage(primary) ? primary : null;
 }
