@@ -147,17 +147,19 @@ function RowMeta({
     return (
         <>
             <View className="flex-row flex-wrap items-center gap-1.25">
-                <Text className={cn(ROW_TYPE.subtitle, future ? "text-subtle" : "text-muted")} numberOfLines={1}>
+                <Text
+                    accessibilityLabel={fee ? t("log.row.feeIncluded", { subtitle }) : undefined}
+                    className={cn(ROW_TYPE.subtitle, future ? "text-subtle" : "text-muted")}
+                    numberOfLines={1}
+                >
                     {subtitle}
                 </Text>
                 {fee ? (
-                    <View accessibilityLabel={t("log.row.feeIncluded")}>
-                        <HugeiconsIcon
-                            color={future ? colors.subtle : colors.muted}
-                            icon={PercentCircleSolidIcon}
-                            size={FEE_MARK_SIZE}
-                        />
-                    </View>
+                    <HugeiconsIcon
+                        color={future ? colors.subtle : colors.muted}
+                        icon={PercentCircleSolidIcon}
+                        size={FEE_MARK_SIZE}
+                    />
                 ) : null}
                 {foreignCode && !showOriginal ? (
                     <View className="border-border rounded-[3px] border px-[3px]">

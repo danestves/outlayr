@@ -208,8 +208,8 @@ const log = {
             es: "+{amount} de comisión",
         }),
         "log.row.feeIncluded": t({
-            en: "Fee included",
-            es: "Comisión incluida",
+            en: "{subtitle}, fee included",
+            es: "{subtitle}, comisión incluida",
         }),
         "log.row.outside": t({
             en: "{amount} from another account",
