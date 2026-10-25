@@ -48,16 +48,28 @@ export function SiteFooter() {
                             Outlayr
                         </LocalizedLink>
                         <p className="text-muted mt-4 text-sm">{footer.tagline}</p>
-                        <a className="mt-6 inline-block" href="https://peerpush.com/p/outlayr">
-                            <img
-                                alt="Outlayr on PeerPush"
-                                className="h-auto w-[230px]"
-                                height="65"
-                                loading="lazy"
-                                src="https://peerpush.com/p/outlayr/badge.png"
-                                width="230"
-                            />
-                        </a>
+                        <div className="mt-6 flex flex-col items-start gap-3">
+                            <a href="https://peerpush.com/p/outlayr">
+                                <img
+                                    alt="Outlayr on PeerPush"
+                                    className="h-auto w-[230px]"
+                                    height="65"
+                                    loading="lazy"
+                                    src="https://peerpush.com/p/outlayr/badge.png"
+                                    width="230"
+                                />
+                            </a>
+                            <a href="https://alternativeto.net/software/outlayr/about/?utm_source=badge&utm_medium=referral">
+                                <img
+                                    alt="Outlayr | AlternativeTo"
+                                    className="h-auto w-[244px]"
+                                    height="79"
+                                    loading="lazy"
+                                    src="https://alternativeto.net/static/badges/badge-compact-color.svg"
+                                    width="244"
+                                />
+                            </a>
+                        </div>
                     </div>
                     <nav aria-label={footer.nav.value} className="grid grid-cols-2 gap-x-12 gap-y-10 sm:grid-cols-3">
                         <Column title={footer.product}>
