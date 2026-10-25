@@ -2,7 +2,7 @@ import { SectionList } from "@legendapp/list/section-list";
 import { cellFigures, toCells } from "@outlayr/money/currency-totals";
 import type { CurrencyFigures } from "@outlayr/money/currency-totals";
 import { useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
 
 import { MeasureCellAmount } from "@/components/amount-text";
@@ -25,11 +25,11 @@ import { SearchEmptyState } from "./components/search-empty-state";
 
 const READ_DEBOUNCE_MS = 150;
 
-function emptyState(query: string, rowCount: number) {
+function emptyState(query: string, noResults: boolean) {
     if (query.trim() === "") {
         return <SearchEmptyState kind="idle" />;
     }
-    if (rowCount === 0) {
+    if (noResults) {
         return <SearchEmptyState kind="noResults" query={query} />;
     }
     return null;
@@ -54,11 +54,12 @@ export function Search() {
     }, [query]);
 
     const found = useSearchedTransactions(db, readQuery, nowMs);
-    const rows = useMemo(() => found.filter((row) => !goesWithPendingDelete(row, pendingId)), [found, pendingId]);
-    const sections = useMemo(() => groupByDay(rows, currency, rates), [rows, currency, rates]);
-    const figures = useMemo(() => cellFigures(toCells(rows), currency, rates), [rows, currency, rates]);
+    const rows = found.filter((row) => !goesWithPendingDelete(row, pendingId));
+    const sections = groupByDay(rows, currency, rates);
+    const figures = cellFigures(toCells(rows), currency, rates);
+    const count = sections.reduce((total, section) => total + section.data.length, 0);
 
-    const empty = emptyState(query.trim() === "" ? "" : readQuery, rows.length);
+    const empty = emptyState(query.trim() === "" ? "" : readQuery, rows.length === 0);
 
     return (
         <>
@@ -84,13 +85,7 @@ export function Search() {
                     contentInsetAdjustmentBehavior="automatic"
                     keyboardDismissMode="on-drag"
                     keyExtractor={(item) => item.id}
-                    ListHeaderComponent={
-                        <SearchResultsTotal
-                            count={sections.reduce((count, section) => count + section.data.length, 0)}
-                            figures={figures}
-                            showCents={showCents}
-                        />
-                    }
+                    ListHeaderComponent={<SearchResultsTotal count={count} figures={figures} showCents={showCents} />}
                     recycleItems
                     renderItem={({ item }) => (
                         <TransactionRow

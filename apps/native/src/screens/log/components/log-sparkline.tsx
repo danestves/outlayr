@@ -1,4 +1,4 @@
-import { use, useMemo, useState } from "react";
+import { use, useState } from "react";
 import { View } from "react-native";
 import { GestureDetector, usePanGesture } from "react-native-gesture-handler";
 import { createAnimatedComponent, useAnimatedProps, useReducedMotion } from "react-native-reanimated";
@@ -37,6 +37,30 @@ interface LogSparklineProps {
     range: number;
 }
 
+function sparklineGeometry(points: readonly SparklinePoint[], width: number) {
+    if (points.length < 2 || width <= 0) {
+        return null;
+    }
+    const amounts = points.map((point) => point.amount);
+    const max = Math.max(...amounts);
+    const min = Math.min(...amounts);
+    const span = max - min || 1;
+    const step = width / (points.length - 1);
+    const coords = points.map((point, index) => ({
+        x: step * index,
+        y: HEIGHT - ((point.amount - min) / span) * HEIGHT,
+    }));
+    let dash = DASH_SLACK;
+    for (const [i, c] of coords.slice(1).entries()) {
+        dash += Math.hypot(c.x - coords[i].x, c.y - coords[i].y);
+    }
+    return {
+        coords,
+        d: coords.map((c, i) => `${i === 0 ? "M" : "L"}${c.x} ${c.y}`).join(" "),
+        dash,
+    };
+}
+
 export function LogSparkline({ points, positive, range, byMonth, code, measure }: LogSparklineProps) {
     const colors = useColors();
     const t = useTranslation();
@@ -50,50 +74,12 @@ export function LogSparkline({ points, positive, range, byMonth, code, measure }
 
     const color = positive ? colors.income : colors.danger;
 
-    const geometry = useMemo(() => {
-        if (points.length < 2 || width <= 0) {
-            return null;
-        }
-        const amounts = points.map((point) => point.amount);
-        const max = Math.max(...amounts);
-        const min = Math.min(...amounts);
-        const span = max - min || 1;
-        const step = width / (points.length - 1);
-        const coords = points.map((point, index) => ({
-            x: step * index,
-            y: HEIGHT - ((point.amount - min) / span) * HEIGHT,
-        }));
-        let dash = DASH_SLACK;
-        for (const [i, c] of coords.slice(1).entries()) {
-            dash += Math.hypot(c.x - coords[i].x, c.y - coords[i].y);
-        }
-        return {
-            coords,
-            d: coords.map((c, i) => `${i === 0 ? "M" : "L"}${c.x} ${c.y}`).join(" "),
-            dash,
-        };
-    }, [points, width]);
+    const geometry = sparklineGeometry(points, width);
 
     const dash = geometry?.dash ?? 0;
+    const tip = geometry?.coords.at(-1);
     const lineProps = useAnimatedProps(() => ({ strokeDashoffset: dash * (1 - draw.get()) }));
     const dotProps = useAnimatedProps(() => ({ opacity: draw.get() }));
-
-    const labelKey = useMemo(
-        () =>
-            sparklineLabelKey(
-                measure,
-                points.map((point) => point.amount),
-                byMonth
-            ),
-        [measure, points, byMonth]
-    );
-
-    const boundary = useMemo(() => {
-        if (points.length < 2) {
-            return 1;
-        }
-        return Math.min(1, Math.max(0, 1 - (range - 1) / (points.length - 1)));
-    }, [points.length, range]);
 
     // Only numbers cross into the worklet: Reanimated cannot serialize `Date`s.
     const count = points.length;
@@ -117,6 +103,12 @@ export function LogSparkline({ points, positive, range, byMonth, code, measure }
         return null;
     }
 
+    const labelKey = sparklineLabelKey(
+        measure,
+        points.map((point) => point.amount),
+        byMonth
+    );
+    const boundary = Math.min(1, Math.max(0, 1 - (range - 1) / (points.length - 1)));
     const scrubbed = scrubIndex == null ? null : points[scrubIndex];
     const scrubCoord = scrubIndex == null ? null : (geometry?.coords[scrubIndex] ?? null);
     // Before the period starts, the scrubber marks history.
@@ -153,8 +145,8 @@ export function LogSparkline({ points, positive, range, byMonth, code, measure }
                             />
                             <AnimatedCircle
                                 animatedProps={dotProps}
-                                cx={geometry.coords.at(-1)?.x ?? 0}
-                                cy={geometry.coords.at(-1)?.y ?? 0}
+                                cx={tip?.x ?? 0}
+                                cy={tip?.y ?? 0}
                                 fill={color}
                                 r={CHART_SCRUB.dotRadius}
                             />

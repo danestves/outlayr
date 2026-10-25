@@ -1,6 +1,5 @@
 import { DatePicker, Host, HStack, Spacer } from "@expo/ui/swift-ui";
 import { datePickerStyle, environment, frame, labelsHidden } from "@expo/ui/swift-ui/modifiers";
-import { useMemo } from "react";
 
 import { useRegionCode } from "@/hooks/use-region-code";
 import { useLanguage } from "@/i18n/context";
@@ -41,11 +40,7 @@ export function useDatePickerLocale() {
     const region = useRegionCode();
     // @expo/ui drops an id missing from `Locale.availableIdentifiers`, which has no `en_VE`. Hermes resolves
     // against that list, so `en-VE` comes back as `en` and `en-GB` as itself.
-    const id = useMemo(
-        () =>
-            new Intl.DateTimeFormat(region ? `${languageSubtag(language)}-${region}` : language).resolvedOptions()
-                .locale,
-        [language, region]
-    );
+    const id = new Intl.DateTimeFormat(region ? `${languageSubtag(language)}-${region}` : language).resolvedOptions()
+        .locale;
     return environment({ key: "locale", value: id.replace("-", "_") });
 }

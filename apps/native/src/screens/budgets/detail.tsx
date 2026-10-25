@@ -1,6 +1,6 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { useRouter } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 
 import { ScreenHeader } from "@/components/screen-header";
@@ -35,7 +35,7 @@ export function BudgetDetail({ db, id, onDone }: { db: Database; id: string; onD
     const limitSheetRef = useRef<BottomSheetModal>(null);
     const firstDayOfMonth = useSettingNumber("firstDayOfMonth");
     const firstWeekday = useSettingNumber("firstWeekday");
-    const calendar = useMemo(() => ({ firstDayOfMonth, firstWeekday }), [firstDayOfMonth, firstWeekday]);
+    const calendar = { firstDayOfMonth, firstWeekday };
 
     useEffect(() => {
         if (budget === null) {

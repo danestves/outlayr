@@ -218,15 +218,17 @@ export function Paywall() {
     const confirm = async () => {
         setBusy("confirm");
         setFailure(null);
-        try {
-            if (!(await mirrorEntitlement()) && isMounted()) {
-                setFailure("pro.syncPendingBody");
-            }
-        } finally {
-            if (isMounted()) {
-                setBusy(null);
-            }
-        }
+        await mirrorEntitlement()
+            .then((mirrored) => {
+                if (!mirrored && isMounted()) {
+                    setFailure("pro.syncPendingBody");
+                }
+            })
+            .finally(() => {
+                if (isMounted()) {
+                    setBusy(null);
+                }
+            });
     };
 
     const plan = plans?.find((candidate) => candidate.kind === selected) ?? null;
@@ -235,10 +237,11 @@ export function Paywall() {
         if (plan === null) {
             return;
         }
+        const { offer } = plan;
         setBusy("buy");
         setFailure(null);
-        try {
-            const outcome = await purchasePackage(plan.offer);
+        const purchase = async () => {
+            const outcome = await purchasePackage(offer);
             const mirrored = outcome !== "pro" || (await mirrorEntitlement());
             if (!isMounted()) {
                 return;
@@ -250,17 +253,16 @@ export function Paywall() {
             } else if (outcome === "unentitled") {
                 setFailure("pro.unentitledBody");
             }
-        } catch {
-            setFailure("pro.failedBody");
-        } finally {
-            setBusy(null);
-        }
+        };
+        await purchase()
+            .catch(() => setFailure("pro.failedBody"))
+            .finally(() => setBusy(null));
     };
 
     const restore = async () => {
         setBusy("restore");
         setFailure(null);
-        try {
+        const restoreAndMirror = async () => {
             const restored = await restorePurchases();
             const mirrored = !restored || (await mirrorEntitlement());
             if (!isMounted()) {
@@ -273,11 +275,10 @@ export function Paywall() {
             } else {
                 setFailure("pro.nothingRestoredBody");
             }
-        } catch {
-            setFailure("pro.restoreFailedBody");
-        } finally {
-            setBusy(null);
-        }
+        };
+        await restoreAndMirror()
+            .catch(() => setFailure("pro.restoreFailedBody"))
+            .finally(() => setBusy(null));
     };
 
     const empty = failed || (plans !== null && plans.length === 0);

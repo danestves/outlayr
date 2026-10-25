@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Text as RNText, View } from "react-native";
 import type { LayoutChangeEvent } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
@@ -50,6 +50,14 @@ function makePlot(values: number[]): Plot {
     return { span: Math.max(1, top), top };
 }
 
+function lastLiveIndex(buckets: readonly InsightsBucket[], nowMs: number): number {
+    let index = buckets.length - 1;
+    while (index > 0 && buckets[index].start.getTime() > nowMs) {
+        index -= 1;
+    }
+    return index;
+}
+
 function gapFor(period: InsightsPeriod): number {
     if (period === "week") {
         return 6;
@@ -92,15 +100,10 @@ export function InsightsBarChart({
 
     const gap = gapFor(period);
     const values = buckets.map((bucket) => Math.abs(bucket.value));
-    const plot = useMemo(() => makePlot(values), [values]);
+    const plot = makePlot(values);
+    const activeCount = values.filter((value) => value !== 0).length;
 
-    const lastLive = useMemo(() => {
-        let index = buckets.length - 1;
-        while (index > 0 && buckets[index].start.getTime() > nowMs) {
-            index -= 1;
-        }
-        return index;
-    }, [buckets, nowMs]);
+    const lastLive = lastLiveIndex(buckets, nowMs);
 
     const count = buckets.length;
     // Columns are `flex: 1` in a gapped row: `width / count` drifts a whole bar by day 31.
@@ -132,7 +135,6 @@ export function InsightsBarChart({
     const averageParts = amountParts(Math.abs(average), code, false, language);
     const averageLabel = withCurrencySymbol(averageParts, compactMagnitude(average, averageParts.locale.decimal));
 
-    const activeCount = values.filter((value) => value !== 0).length;
     const avgY = ((plot.top - average) / plot.span) * BAR_AREA;
     const showAverage = activeCount > 1 && avgY > BAR_AREA * 0.1 && avgY < BAR_AREA * 0.9;
     const averageTop = useChartDraw(animated, avgY - 7, avgY - 7);

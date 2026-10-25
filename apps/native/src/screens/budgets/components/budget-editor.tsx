@@ -1,5 +1,5 @@
 import { BUDGET_TYPE, periodEnd, startOfPeriod } from "@outlayr/money/budget-window";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Pressable, TextInput, View } from "react-native";
 import Animated from "react-native-reanimated";
 
@@ -90,11 +90,9 @@ export function BudgetEditor({
 
     // Capped at today: the window rolls forward from the anchor, so a future date would ignore spend until then.
     // An older anchor stays selectable so an edit elsewhere does not silently move it.
-    const anchorRange = useMemo(() => {
-        const now = new Date(nowMs);
-        const periodStart = startOfPeriod(now, type, calendar);
-        return { end: now, start: startDate.getTime() < periodStart.getTime() ? startDate : periodStart };
-    }, [nowMs, type, calendar, startDate]);
+    const today = new Date(nowMs);
+    const periodStart = startOfPeriod(today, type, calendar);
+    const anchorRange = { end: today, start: startDate.getTime() < periodStart.getTime() ? startDate : periodStart };
 
     const preview = (next: number) => {
         const start = startOfPeriod(new Date(nowMs), next, calendar);

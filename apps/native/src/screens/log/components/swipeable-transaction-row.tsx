@@ -1,5 +1,5 @@
 import type { RateTable } from "@outlayr/money/valuation";
-import { useCallback, useLayoutEffect, useRef, useSyncExternalStore } from "react";
+import { useLayoutEffect, useRef, useSyncExternalStore } from "react";
 import { Pressable, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -35,7 +35,7 @@ export function SwipeableTransactionRow({
     const t = useTranslation();
     const { id } = transaction;
     const fresh = useSyncExternalStore(freshEntries.subscribe, () => freshEntries.has(id));
-    const settle = useCallback(() => freshEntries.settle(id), [id]);
+    const settle = () => freshEntries.settle(id);
 
     useLayoutEffect(() => {
         if (swipedId.current !== null && swipedId.current !== id) {

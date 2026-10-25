@@ -2,7 +2,7 @@ import { SectionList } from "@legendapp/list/section-list";
 import { isPerson, toAccountKind } from "@outlayr/money/account-kind";
 import { Stack, useRouter } from "expo-router";
 import type { ReactNode } from "react";
-import { memo, useCallback, useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { Alert, View } from "react-native";
 
 import { HeroNumber } from "@/components/amount-text";
@@ -151,36 +151,30 @@ function DetailBody({
     const person = isPerson(account);
     const { pendingId, requestDelete } = useDeferredDelete("row");
     const moveRows = useOutsideMoveRows(db, person ? account : null, t("debts.field.outside"));
-    const liveMoves = useMemo(() => moveRows.filter((row) => row.id !== pendingId), [moveRows, pendingId]);
-    const rows = useMemo(
-        () => mergeByRecency(mergeByRecency(mergeByRecency(transactionRows, transferRows), outsideRows), liveMoves),
-        [transactionRows, transferRows, outsideRows, liveMoves]
-    );
-    const sections = useMemo(() => groupByDay(rows, account.currency, rates), [rows, account.currency, rates]);
-    const transferIds = useMemo(() => new Set(transferRows.map((transfer) => transfer.id)), [transferRows]);
+    const liveMoves = moveRows.filter((row) => row.id !== pendingId);
+    const rows = mergeByRecency(mergeByRecency(mergeByRecency(transactionRows, transferRows), outsideRows), liveMoves);
+    const sections = groupByDay(rows, account.currency, rates);
+    const transferIds = new Set(transferRows.map((transfer) => transfer.id));
     // A transfer id is not a transaction id: `/transactions/[id]` finds nothing behind it.
-    const outsidePlans = useMemo(() => new Map(outsideRows.map((row) => [row.id, row.planId])), [outsideRows]);
-    const moveById = useMemo(() => new Map(liveMoves.map((row) => [row.id, row])), [liveMoves]);
-    const openRow = useCallback(
-        (rowId: string) => {
-            const move = moveById.get(rowId);
-            if (move !== undefined) {
-                const amount = `${move.sign ?? ""}${formatAmount(move.amount, move.currency, showCents, language)}`;
-                Alert.alert(move.note, amount, [
-                    { style: "cancel", text: t("common.cancel") },
-                    { onPress: () => requestDelete(rowId), style: "destructive", text: t("common.delete") },
-                ]);
-                return;
-            }
-            const planId = outsidePlans.get(rowId);
-            if (planId === undefined) {
-                router.push(transferIds.has(rowId) ? `/transactions/transfers/${rowId}` : `/transactions/${rowId}`);
-            } else {
-                router.push({ params: { planId }, pathname: "/installments/[planId]" });
-            }
-        },
-        [router, transferIds, outsidePlans, moveById, requestDelete, t, showCents, language]
-    );
+    const outsidePlans = new Map(outsideRows.map((row) => [row.id, row.planId]));
+    const moveById = new Map(liveMoves.map((row) => [row.id, row]));
+    const openRow = (rowId: string) => {
+        const move = moveById.get(rowId);
+        if (move !== undefined) {
+            const amount = `${move.sign ?? ""}${formatAmount(move.amount, move.currency, showCents, language)}`;
+            Alert.alert(move.note, amount, [
+                { style: "cancel", text: t("common.cancel") },
+                { onPress: () => requestDelete(rowId), style: "destructive", text: t("common.delete") },
+            ]);
+            return;
+        }
+        const planId = outsidePlans.get(rowId);
+        if (planId === undefined) {
+            router.push(transferIds.has(rowId) ? `/transactions/transfers/${rowId}` : `/transactions/${rowId}`);
+        } else {
+            router.push({ params: { planId }, pathname: "/installments/[planId]" });
+        }
+    };
 
     const startedAt = t("accounts.detail.startedAt", {
         amount: formatSignedAmount(account.initialBalance, account.currency, showCents, language),
@@ -238,12 +232,7 @@ function DetailBody({
                 }
                 recycleItems={false}
                 renderItem={({ item }) => (
-                    <AccountTransactionRow
-                        currency={account.currency}
-                        onPress={openRow}
-                        rates={rates}
-                        transaction={item}
-                    />
+                    <TransactionRow currency={account.currency} onPress={openRow} rates={rates} transaction={item} />
                 )}
                 renderSectionHeader={({ section }) => (
                     <DaySectionHeader first={sections[0] === section} section={section} />
@@ -265,5 +254,3 @@ function DetailMark() {
         </View>
     );
 }
-
-const AccountTransactionRow = memo(TransactionRow);

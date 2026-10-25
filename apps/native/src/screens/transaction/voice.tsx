@@ -3,7 +3,7 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
 import { Shimmer } from "panelui-native/components/shimmer";
-import { use, useCallback, useEffect, useMemo, useState } from "react";
+import { use, useEffect, useState } from "react";
 import type React from "react";
 import { Linking, Pressable, Text, View } from "react-native";
 import Animated, {
@@ -26,11 +26,9 @@ import { ModalClose } from "@/components/modal-close";
 import { VoiceOrb } from "@/components/voice/voice-orb";
 import type { VoiceOrbState } from "@/components/voice/voice-orb";
 import { useDatabase } from "@/contexts/local-data-context";
-import { useBankAccounts } from "@/data/accounts";
 import { getAccountById, getLastUsedAccount, rememberLastUsedAccount } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { suggestedCardFee } from "@/data/card-fees-core";
-import { useCategoriesByNamespace } from "@/data/categories";
 import { getCategoryById } from "@/data/categories-core";
 import { backfillRecurring } from "@/data/recurrence-backfill";
 import { useAiConsent } from "@/data/settings";
@@ -40,7 +38,6 @@ import type { AuthGate } from "@/domain/auth-gate";
 import { formatChargeDate } from "@/domain/dates";
 import type { HapticEvent } from "@/domain/haptics";
 import { amountParts, formatAmount, symbolPrefix } from "@/domain/money";
-import { boundedPromptNames } from "@/domain/prompt-budget";
 import type { LastEntry } from "@/domain/reminder";
 import {
     draftDelta,
@@ -53,7 +50,6 @@ import {
 } from "@/domain/voice-entry";
 import type {
     AccountCandidate,
-    CategoryCandidate,
     ResolvedVoiceDraft,
     ResolvedVoiceEntry,
     ResolvedVoiceTransfer,
@@ -76,6 +72,9 @@ import { posthog } from "@/lib/posthog";
 import { syncSubscriptionReminders } from "@/lib/subscription-reminder-sync";
 import { useHaptics } from "@/lib/use-haptics";
 import { useColors } from "@/theme/use-colors";
+
+import { usePromptLedger } from "./use-prompt-ledger";
+import { useResolvedPhase } from "./use-resolved-phase";
 
 const ORB_SIZE = 180;
 const ORB_SIZE_HEARD = 120;
@@ -345,21 +344,17 @@ function StatusLine({ children, waiting = false }: { children: string; waiting?:
 }
 
 function HeardSentence({ quotes, text, under }: { quotes: readonly VoiceQuote[]; text: string; under: boolean }) {
-    const words = useMemo(
-        () =>
-            heardSegments(text, quotes).map((segment) =>
-                segment.field === null ? (
-                    segment.text
-                ) : (
-                    <Text
-                        className={`font-sans-medium ${segment.field === "amount" ? "text-tint" : "text-foreground"}`}
-                        key={segment.start}
-                    >
-                        {segment.text}
-                    </Text>
-                )
-            ),
-        [quotes, text]
+    const words = heardSegments(text, quotes).map((segment) =>
+        segment.field === null ? (
+            segment.text
+        ) : (
+            <Text
+                className={`font-sans-medium ${segment.field === "amount" ? "text-tint" : "text-foreground"}`}
+                key={segment.start}
+            >
+                {segment.text}
+            </Text>
+        )
     );
     return (
         <Animated.View className="px-4" entering={FadeIn.duration(220)}>
@@ -418,6 +413,15 @@ function latestDraft(turns: VoiceTurn[]): VoiceDraft | null {
         }
     }
     return null;
+}
+
+function earlierResolved(
+    context: Omit<Parameters<typeof resolveVoiceDraft>[0], "draft" | "now">,
+    saying: boolean,
+    turns: VoiceTurn[]
+): ResolvedVoiceDraft | null {
+    const draft = saying ? latestDraft(turns) : null;
+    return draft ? resolveVoiceDraft({ ...context, draft, now: new Date() }) : null;
 }
 
 function DraftLine({ accounts, draft }: { accounts: readonly AccountCandidate[]; draft: ResolvedVoiceDraft }) {
@@ -588,6 +592,10 @@ function voiceEntry(db: CreateArgs[0], draft: ResolvedVoiceEntry, categoryId: st
     };
 }
 
+function openSettings() {
+    Linking.openSettings().catch(() => undefined);
+}
+
 function VoiceThreadScreen() {
     const router = useRouter();
     const db = useDatabase();
@@ -595,246 +603,173 @@ function VoiceThreadScreen() {
     const haptics = useHaptics();
     const { language } = useLanguage();
     const currency = useGlobalCurrency(db);
-    const accounts = useBankAccounts(db);
-    const expenseCategories = useCategoriesByNamespace(db, false);
-    const incomeCategories = useCategoriesByNamespace(db, true);
+    const { accounts, bounded, context, live } = usePromptLedger(db, currency);
     const [saving, setSaving] = useState(false);
     const isMounted = useIsMounted();
 
-    const categoryTree = useMemo(
-        () =>
-            [...expenseCategories, ...incomeCategories]
-                .filter((parent) => parent.name != null)
-                .map((parent) => ({
-                    children: parent.children.map((child) => child.name).filter((name) => name != null),
-                    // SAFETY: filtered to a non-null name just above.
-                    name: parent.name as string,
-                })),
-        [expenseCategories, incomeCategories]
-    );
-    const candidates = useMemo<CategoryCandidate[]>(
-        () =>
-            [...expenseCategories, ...incomeCategories].flatMap((parent) => [
-                { id: parent.id, income: parent.income, name: parent.name },
-                ...parent.children.map((child) => ({ id: child.id, income: child.income, name: child.name })),
-            ]),
-        [expenseCategories, incomeCategories]
-    );
-    const bounded = useMemo(
-        () => boundedPromptNames({ accounts: accounts.map((account) => account.name), categoryTree }),
-        [accounts, categoryTree]
-    );
-    const request = useMemo(
-        () => ({
-            accounts: bounded.accounts,
-            categoryTree: bounded.categoryTree,
-            currency,
-            language,
-        }),
-        [bounded, currency, language]
-    );
-
-    // The ledger the model saw, not the one sync may have left by the time it answers.
-    const context = useMemo(
-        () => ({
-            accounts: accounts.map((account) => ({
-                currency: account.currency,
-                id: account.id,
-                name: account.name,
-            })),
-            accountsOmitted: bounded.accountsOmitted,
-            categories: candidates,
-            categoriesOmitted: bounded.categoriesOmitted,
-            currency,
-        }),
-        [accounts, bounded.accountsOmitted, bounded.categoriesOmitted, candidates, currency]
-    );
+    const request = {
+        accounts: bounded.accounts,
+        categoryTree: bounded.categoryTree,
+        currency,
+        language,
+    };
 
     const { cancel, finish, heard, level, listenAgain, phase, spoke, turns } = useVoiceEntry({ context, request });
     const hint = useVoiceHint();
     const refusal = phase.kind === "failed" && isLimitRefusal(phase.reason) ? phase.reason : null;
     const limit = useLimitNotice("voiceEntry", refusal);
 
-    const resolved = useMemo(
-        () =>
-            phase.kind === "review"
-                ? resolveVoiceDraft({ ...phase.context, draft: phase.draft, now: new Date() })
-                : null,
-        [phase]
+    const resolved = useResolvedPhase(phase, (next) =>
+        next.kind === "review" ? resolveVoiceDraft({ ...next.context, draft: next.draft, now: new Date() }) : null
     );
     const entry = resolved?.kind === "entry" ? resolved : null;
     const transfer = resolved?.kind === "transfer" ? resolved : null;
     const saying = SAYING.has(phase.kind);
-    const earlier = useMemo(() => {
-        const draft = saying ? latestDraft(turns) : null;
-        return draft ? resolveVoiceDraft({ ...context, draft, now: new Date() }) : null;
-    }, [context, saying, turns]);
+    const earlier = earlierResolved(context, saying, turns);
     const shown = resolved ?? earlier;
     useHandoffHaptics(phase.kind);
-    const live = useMemo(
-        () => ({
-            accountIds: new Set(accounts.map((account) => account.id)),
-            categoryIds: new Set(candidates.map((candidate) => candidate.id)),
-        }),
-        [accounts, candidates]
-    );
     const savableCategoryId = entry && stillCurrent(entry, live) ? (savableEntry(entry)?.categoryId ?? null) : null;
 
-    const close = useCallback(() => {
+    const close = () => {
         cancel();
         router.back();
-    }, [cancel, router]);
+    };
 
-    const openForm = useCallback(
-        (draft: ResolvedVoiceEntry) => {
-            // An account sync removed is a question for the form, not a seed to swap for the last used.
-            const accountLive = draft.accountId === null || live.accountIds.has(draft.accountId);
-            const params = {
-                accountId: accountLive ? (draft.accountId ?? undefined) : undefined,
-                accountUnresolved: draft.accountUnresolved || !accountLive ? "1" : undefined,
-                amount: String(draft.amount),
-                categoryId: draft.categoryId ?? undefined,
-                currency: draft.currency,
-                date: String(draft.date.getTime()),
-                details: draft.details ?? undefined,
-                income: draft.income ? "1" : "0",
-                note: draft.merchant,
-                recurringCoefficient: draft.recurrence ? String(draft.recurrence.coefficient) : undefined,
-                recurringType: draft.recurrence ? String(draft.recurrence.type) : undefined,
-            };
-            router.replace({ params, pathname: "/transactions/create" });
-        },
-        [live, router]
-    );
+    const openForm = (draft: ResolvedVoiceEntry) => {
+        // An account sync removed is a question for the form, not a seed to swap for the last used.
+        const accountLive = draft.accountId === null || live.accountIds.has(draft.accountId);
+        const params = {
+            accountId: accountLive ? (draft.accountId ?? undefined) : undefined,
+            accountUnresolved: draft.accountUnresolved || !accountLive ? "1" : undefined,
+            amount: String(draft.amount),
+            categoryId: draft.categoryId ?? undefined,
+            currency: draft.currency,
+            date: String(draft.date.getTime()),
+            details: draft.details ?? undefined,
+            income: draft.income ? "1" : "0",
+            note: draft.merchant,
+            recurringCoefficient: draft.recurrence ? String(draft.recurrence.coefficient) : undefined,
+            recurringType: draft.recurrence ? String(draft.recurrence.type) : undefined,
+        };
+        router.replace({ params, pathname: "/transactions/create" });
+    };
 
-    const openTransferForm = useCallback(
-        (draft: ResolvedVoiceTransfer) => {
-            // A leg sync removed is a question for the editor, not a seed to swap for another account.
-            const leg = (account: { id: string } | null, unresolved: boolean) => {
-                const current = account !== null && live.accountIds.has(account.id);
-                return {
-                    id: current ? account.id : undefined,
-                    unresolved: unresolved || (account !== null && !current),
-                };
-            };
-            const from = leg(draft.fromAccount, draft.fromUnresolved);
-            const to = leg(draft.toAccount, draft.toUnresolved);
-            const params = {
-                amount: String(draft.amount),
-                currency: draft.currency,
-                date: String(draft.date.getTime()),
-                fromAccountId: from.id,
-                fromUnresolved: from.unresolved ? "1" : undefined,
-                note: draft.details ?? undefined,
-                toAccountId: to.id,
-                toUnresolved: to.unresolved ? "1" : undefined,
-            };
-            router.replace({ params, pathname: "/transactions/transfers/create" });
-        },
-        [live, router]
-    );
+    // A leg sync removed is a question for the editor, not a seed to swap for another account.
+    const leg = (account: { id: string } | null, unresolved: boolean) => {
+        const current = account !== null && live.accountIds.has(account.id);
+        return {
+            id: current ? account.id : undefined,
+            unresolved: unresolved || (account !== null && !current),
+        };
+    };
 
-    const save = useCallback(
-        (draft: ResolvedVoiceEntry, categoryId: string) => {
-            setSaving(true);
-            const write = async () => {
-                let id: string;
-                try {
-                    id = await transactionsRepo.create(db, voiceEntry(db, draft, categoryId));
-                } catch {
-                    // The row did not land; the form has the failure strip this screen lacks.
-                    setSaving(false);
-                    if (isMounted()) {
-                        openForm(draft);
-                    }
-                    return;
-                }
-                freshEntries.mark(id);
-                posthog?.capture("transaction_saved", {
-                    has_split: false,
-                    is_subscription: draft.recurrence !== null,
-                    mode: "create",
-                    source: "voice",
-                    transaction_type: draft.income ? "income" : "expense",
-                });
-                // The row is committed: nothing below may reopen a form that would write it twice.
-                if (draft.recurrence) {
-                    try {
-                        // As the form does after its own save: past charges land now.
-                        await backfillRecurring(db, id);
-                    } catch (error) {
-                        console.error("Failed to back-fill the spoken subscription", error);
-                    }
-                    // Scheduled now: the next resume may come after the due date.
-                    syncSubscriptionReminders(db).catch((error) => {
-                        console.error("Failed to sync subscription reminders", error);
-                    });
-                }
-                if (draft.accountId) {
-                    await rememberLastUsedAccount(db, draft.accountId).catch(() => null);
-                }
-                haptics("success");
-                // A modal gesture can dismiss this mid-write; popping again would take the screen beneath.
+    const openTransferForm = (draft: ResolvedVoiceTransfer) => {
+        const from = leg(draft.fromAccount, draft.fromUnresolved);
+        const to = leg(draft.toAccount, draft.toUnresolved);
+        const params = {
+            amount: String(draft.amount),
+            currency: draft.currency,
+            date: String(draft.date.getTime()),
+            fromAccountId: from.id,
+            fromUnresolved: from.unresolved ? "1" : undefined,
+            note: draft.details ?? undefined,
+            toAccountId: to.id,
+            toUnresolved: to.unresolved ? "1" : undefined,
+        };
+        router.replace({ params, pathname: "/transactions/transfers/create" });
+    };
+
+    const save = (draft: ResolvedVoiceEntry, categoryId: string) => {
+        setSaving(true);
+        const write = async () => {
+            let id: string;
+            try {
+                id = await transactionsRepo.create(db, voiceEntry(db, draft, categoryId));
+            } catch {
+                // The row did not land; the form has the failure strip this screen lacks.
+                setSaving(false);
                 if (isMounted()) {
-                    router.back();
+                    openForm(draft);
                 }
-            };
-            void write();
-        },
-        [db, haptics, isMounted, openForm, router]
-    );
+                return;
+            }
+            freshEntries.mark(id);
+            posthog?.capture("transaction_saved", {
+                has_split: false,
+                is_subscription: draft.recurrence !== null,
+                mode: "create",
+                source: "voice",
+                transaction_type: draft.income ? "income" : "expense",
+            });
+            // The row is committed: nothing below may reopen a form that would write it twice.
+            if (draft.recurrence) {
+                try {
+                    // As the form does after its own save: past charges land now.
+                    await backfillRecurring(db, id);
+                } catch (error) {
+                    console.error("Failed to back-fill the spoken subscription", error);
+                }
+                // Scheduled now: the next resume may come after the due date.
+                syncSubscriptionReminders(db).catch((error) => {
+                    console.error("Failed to sync subscription reminders", error);
+                });
+            }
+            if (draft.accountId) {
+                await rememberLastUsedAccount(db, draft.accountId).catch(() => null);
+            }
+            haptics("success");
+            // A modal gesture can dismiss this mid-write; popping again would take the screen beneath.
+            if (isMounted()) {
+                router.back();
+            }
+        };
+        void write();
+    };
 
     /** Same-currency legs only (`savableTransfer`): rate 1, no fee. */
-    const saveTransfer = useCallback(
-        (draft: ResolvedVoiceTransfer, from: { id: string }, to: { id: string }) => {
-            setSaving(true);
-            const note = draft.details ?? "";
-            const write = async () => {
-                try {
-                    const transferId = await transfersRepo.create(db, {
-                        date: draft.date,
-                        exchangeRate: 1,
-                        exchangeRateType: null,
-                        fromAccountId: from.id,
-                        fromAmount: draft.amount,
-                        fromCurrency: draft.currency,
-                        note,
-                        toAccountId: to.id,
-                        toAmount: draft.amount,
-                        toCurrency: draft.currency,
-                    });
-                    freshEntries.mark(transferId);
-                } catch {
-                    setSaving(false);
-                    if (isMounted()) {
-                        openTransferForm(draft);
-                    }
-                    return;
-                }
-                posthog?.capture("transfer_saved", {
-                    cross_currency: false,
-                    has_fee: false,
-                    mode: "create",
-                    source: "voice",
+    const saveTransfer = (draft: ResolvedVoiceTransfer, from: { id: string }, to: { id: string }) => {
+        setSaving(true);
+        const note = draft.details ?? "";
+        const write = async () => {
+            try {
+                const transferId = await transfersRepo.create(db, {
+                    date: draft.date,
+                    exchangeRate: 1,
+                    exchangeRateType: null,
+                    fromAccountId: from.id,
+                    fromAmount: draft.amount,
+                    fromCurrency: draft.currency,
+                    note,
+                    toAccountId: to.id,
+                    toAmount: draft.amount,
+                    toCurrency: draft.currency,
                 });
-                haptics("success");
-                // A modal gesture can dismiss this mid-write; popping again would take the screen beneath.
+                freshEntries.mark(transferId);
+            } catch {
+                setSaving(false);
                 if (isMounted()) {
-                    router.back();
+                    openTransferForm(draft);
                 }
-            };
-            void write();
-        },
-        [db, haptics, isMounted, openTransferForm, router]
-    );
+                return;
+            }
+            posthog?.capture("transfer_saved", {
+                cross_currency: false,
+                has_fee: false,
+                mode: "create",
+                source: "voice",
+            });
+            haptics("success");
+            // A modal gesture can dismiss this mid-write; popping again would take the screen beneath.
+            if (isMounted()) {
+                router.back();
+            }
+        };
+        void write();
+    };
 
-    const openSettings = useCallback(() => {
-        Linking.openSettings().catch(() => undefined);
-    }, []);
-
-    const seePro = useCallback(() => {
+    const seePro = () => {
         router.push("/paywall");
-    }, [router]);
+    };
 
     const entitled = useProEntitled();
 

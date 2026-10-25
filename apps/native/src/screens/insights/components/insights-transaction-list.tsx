@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { View } from "react-native";
 
 import { DaySectionHeader } from "@/components/day-section-header";
@@ -48,15 +48,9 @@ export function InsightsTransactionList({
     const nowMs = useNow();
     const openRowActions = useTransactionRowActions(nowMs, onRequestDelete);
     const [showAll, setShowAll] = useState(false);
-    const rows = useMemo(
-        () => transactions.filter((transaction) => !goesWithPendingDelete(transaction, pendingDeleteId ?? null)),
-        [transactions, pendingDeleteId]
-    );
+    const rows = transactions.filter((transaction) => !goesWithPendingDelete(transaction, pendingDeleteId ?? null));
     const cut = showAll ? rows.length : capAtDayEnd(rows, LIST_CAP);
-    const sections = useMemo(
-        () => (grouped ? groupByDay(rows.slice(0, cut), currency, rates) : []),
-        [grouped, rows, cut, currency, rates]
-    );
+    const sections = grouped ? groupByDay(rows.slice(0, cut), currency, rates) : [];
 
     if (rows.length === 0) {
         return <InsightsNoResults />;

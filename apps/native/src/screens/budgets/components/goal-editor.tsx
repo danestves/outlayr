@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Pressable, TextInput, View } from "react-native";
 import Animated from "react-native-reanimated";
 
@@ -59,10 +59,8 @@ export function GoalEditor({
 
     // Keyed on the shared clock: a screen left open across midnight would otherwise let a same-day deadline through.
     const nowMs = useNow();
-    const range = useMemo(() => {
-        const start = tomorrowLocal(nowMs);
-        return { start: start < targetDate ? start : targetDate };
-    }, [targetDate, nowMs]);
+    const tomorrow = tomorrowLocal(nowMs);
+    const range = { start: tomorrow < targetDate ? tomorrow : targetDate };
 
     const commitName = (next: string) => {
         setNaming(false);

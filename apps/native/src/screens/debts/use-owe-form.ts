@@ -4,10 +4,12 @@ import { useEffect, useRef, useState } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
 import { usePeople } from "@/data/accounts";
+import type { Account } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
 import type { Category } from "@/data/categories-core";
 import { createPerson, recordBoughtOnCredit } from "@/data/debts-core";
 import { useNow } from "@/data/use-now";
+import type { Database } from "@/db/client";
 import { payDays } from "@/domain/local-day";
 import type { PayDays } from "@/domain/local-day";
 import { roundToMinorUnits } from "@/domain/money";
@@ -24,6 +26,22 @@ import { resolvePerson, writePayoffPlan } from "./new-debt-form";
 export type OweSlot = "amount" | "category" | "what" | "when" | "who";
 
 export type PayBy = keyof PayDays | "none";
+
+interface OweDraft {
+    amount: number;
+    categoryId: string;
+    currency: string;
+    newName: string;
+    note: string | undefined;
+    person: Account | null;
+}
+
+async function writeOwe(db: Database, draft: OweDraft): Promise<string> {
+    const { amount, categoryId, currency, note } = draft;
+    const owed = draft.person ?? { currency, id: await createPerson(db, { currency, name: draft.newName }) };
+    await recordBoughtOnCredit(db, { amount, categoryId, date: new Date(), note, person: owed });
+    return owed.id;
+}
 
 export interface OweProps {
     onDirtyChange: (dirty: boolean) => void;
@@ -79,17 +97,17 @@ export function useOweForm({ onDirtyChange, onDone }: OweProps) {
         setBusy(true);
         setFailure(null);
         const note = what.trim();
+        const owe: OweDraft = {
+            amount,
+            categoryId: category.id,
+            currency,
+            newName,
+            note: note === "" ? undefined : note,
+            person,
+        };
         let personId: string;
         try {
-            const owed = person ?? { currency, id: await createPerson(db, { currency, name: newName }) };
-            await recordBoughtOnCredit(db, {
-                amount,
-                categoryId: category.id,
-                date: new Date(),
-                note: note === "" ? undefined : note,
-                person: owed,
-            });
-            personId = owed.id;
+            personId = await writeOwe(db, owe);
         } catch (error) {
             console.error("Failed to save what you owe", error);
             haptics("error");

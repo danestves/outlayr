@@ -1,7 +1,7 @@
 import Image01Icon from "@hugeicons-pro/core-stroke-rounded/Image01Icon";
 import { useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
-import { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { Text } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 
@@ -78,10 +78,7 @@ function ScanFlow({ account, photo }: { account: Account; photo: ScanPhoto | nul
 
     const plan = phase.kind === "review" ? phase.draft : null;
     const foreign = plan?.currency != null && plan.currency !== account.currency ? plan.currency : null;
-    const order = useMemo(
-        () => (plan === null || foreign !== null ? null : scannedOrder(plan, account.currency)),
-        [account.currency, foreign, plan]
-    );
+    const order = plan === null || foreign !== null ? null : scannedOrder(plan, account.currency);
 
     useLayoutEffect(() => {
         if (photo !== null) {

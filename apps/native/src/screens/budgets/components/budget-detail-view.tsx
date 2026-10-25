@@ -1,5 +1,4 @@
 import { SectionList } from "@legendapp/list/section-list";
-import { useMemo } from "react";
 import type { ReactNode } from "react";
 import { View } from "react-native";
 import Svg, { Path } from "react-native-svg";
@@ -74,15 +73,9 @@ export function BudgetDetailView({
     const { pendingId, requestDelete } = useDeferredDelete("row");
     const pendingCuotas = usePendingCuotas(db, pendingId);
     const openRowActions = useTransactionRowActions(nowMs, requestDelete);
-    const rows = useMemo(
-        () => transactions.filter((row) => !goesWithPendingDelete(row, pendingId, pendingCuotas)),
-        [transactions, pendingId, pendingCuotas]
-    );
-    const sections = useMemo(() => groupByDay(rows, currency, rates), [rows, currency, rates]);
-    const note = useMemo(
-        () => coverageNote(coverageOf(transactions, displayCurrency, rates), t),
-        [transactions, displayCurrency, rates, t]
-    );
+    const rows = transactions.filter((row) => !goesWithPendingDelete(row, pendingId, pendingCuotas));
+    const sections = groupByDay(rows, currency, rates);
+    const note = coverageNote(coverageOf(transactions, displayCurrency, rates), t);
 
     return (
         <InlineEditorKeyboard>

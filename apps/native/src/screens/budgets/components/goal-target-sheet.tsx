@@ -1,5 +1,5 @@
 import { BottomSheetModal, BottomSheetView } from "@expo/ui/community/bottom-sheet";
-import { use, useMemo, useRef, useState } from "react";
+import { use, useRef, useState } from "react";
 import type { Ref } from "react";
 import { Pressable, View } from "react-native";
 import Animated from "react-native-reanimated";
@@ -129,11 +129,11 @@ function GoalTargetBody({
     const hasMinorUnits = minorUnits > 0 && Math.round(amount * scale) % scale !== 0;
     const typed = (value: number) => formatAmount(value, target.currency, hasMinorUnits, language);
 
-    const range = useMemo(() => {
-        const start = tomorrowLocal(nowMs);
-        // A past existing date stays selectable, so re-setting the amount does not move an untouched deadline.
-        return { start: target.existing && target.existing.targetDate < start ? target.existing.targetDate : start };
-    }, [target.existing, nowMs]);
+    const tomorrow = tomorrowLocal(nowMs);
+    // A past existing date stays selectable, so re-setting the amount does not move an untouched deadline.
+    const range = {
+        start: target.existing && target.existing.targetDate < tomorrow ? target.existing.targetDate : tomorrow,
+    };
 
     const inFlight = useRef(false);
 

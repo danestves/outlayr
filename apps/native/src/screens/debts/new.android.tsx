@@ -3,7 +3,6 @@ import { fillMaxWidth } from "@expo/ui/jetpack-compose/modifiers";
 import Cancel01Icon from "@hugeicons-pro/core-stroke-rounded/Cancel01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import { Stack } from "expo-router";
-import { memo } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -39,15 +38,15 @@ function selectValue(value: string) {
     );
 }
 
-/** Memoized: a keystroke must not rebuild the bar. */
-const SaveAction = memo(({ disabled, label, onPress }: { disabled: boolean; label: string; onPress: () => void }) => (
-    <Stack.Toolbar placement="right">
-        <Stack.Toolbar.View>
-            <SheetHeaderTextButton disabled={disabled} label={label} onPress={onPress} />
-        </Stack.Toolbar.View>
-    </Stack.Toolbar>
-));
-SaveAction.displayName = "SaveAction";
+function SaveAction({ disabled, label, onPress }: { disabled: boolean; label: string; onPress: () => void }) {
+    return (
+        <Stack.Toolbar placement="right">
+            <Stack.Toolbar.View>
+                <SheetHeaderTextButton disabled={disabled} label={label} onPress={onPress} />
+            </Stack.Toolbar.View>
+        </Stack.Toolbar>
+    );
+}
 
 export function NewDebt(props: NewDebtProps) {
     const t = useTranslation();

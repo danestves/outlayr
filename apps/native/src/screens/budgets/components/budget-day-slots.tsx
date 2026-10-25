@@ -1,6 +1,5 @@
 import type { ExpenseContribution } from "@outlayr/money/budget-spent";
 import type { BudgetWindow } from "@outlayr/money/budget-window";
-import { useMemo } from "react";
 import { View } from "react-native";
 
 import { Text } from "@/components/text";
@@ -44,16 +43,12 @@ export function BudgetDaySlots({
     const { showCents } = useDisplaySettings().state;
     const t = useTranslation();
     const { language } = useLanguage();
-    const slots = useMemo(
-        () =>
-            buildDaySlots(contributions, {
-                categoryId,
-                limit,
-                now: new Date(nowMs),
-                window,
-            }),
-        [contributions, limit, window, nowMs, categoryId]
-    );
+    const slots = buildDaySlots(contributions, {
+        categoryId,
+        limit,
+        now: new Date(nowMs),
+        window,
+    });
 
     if (!drawsDaySlots(slots)) {
         return null;

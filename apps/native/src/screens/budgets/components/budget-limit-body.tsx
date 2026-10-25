@@ -2,7 +2,7 @@ import type { ExpenseContribution } from "@outlayr/money/budget-spent";
 import { lastMsBefore, spentForCategory, spentForMain } from "@outlayr/money/budget-spent";
 import { BUDGET_TYPE, periodEnd, startOfPeriod } from "@outlayr/money/budget-window";
 import type { BudgetWindow } from "@outlayr/money/budget-window";
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Pressable, View } from "react-native";
 import Animated from "react-native-reanimated";
 
@@ -83,50 +83,33 @@ export function BudgetLimitBody({
     const [typing, setTyping] = useState(false);
     const minorUnits = minorUnitsFor(currency);
 
-    const window = useMemo(() => {
-        if (type === target.type && target.window) {
-            return target.window;
-        }
-        const start = startOfPeriod(new Date(nowMs), type, calendar);
-        return { end: periodEnd(start, type), start };
-    }, [type, target.type, target.window, nowMs, calendar]);
+    const periodStart = startOfPeriod(new Date(nowMs), type, calendar);
+    const window =
+        type === target.type && target.window
+            ? target.window
+            : { end: periodEnd(periodStart, type), start: periodStart };
 
-    const spentIn = useMemo(() => {
-        const { categoryId } = target;
-        return categoryId
-            ? (start: Date, end: Date) => spentForCategory(contributions, categoryId, start, lastMsBefore(end))
-            : (start: Date, end: Date) => spentForMain(contributions, start, lastMsBefore(end));
-    }, [contributions, target]);
+    const { categoryId } = target;
+    const spentIn = categoryId
+        ? (start: Date, end: Date) => spentForCategory(contributions, categoryId, start, lastMsBefore(end))
+        : (start: Date, end: Date) => spentForMain(contributions, start, lastMsBefore(end));
 
-    const since = useMemo(() => earliestDate(contributions), [contributions]);
-    const evidence = useMemo(
-        () => typicalSpend({ current: window, since, spentIn, type }),
-        [window, since, spentIn, type]
-    );
+    const since = earliestDate(contributions);
+    const evidence = typicalSpend({ current: window, since, spentIn, type });
 
-    const burndown = useMemo(
-        () =>
-            buildBurndown(contributions, {
-                categoryId: target.categoryId,
-                limit: 0,
-                now: new Date(nowMs),
-                window,
-            }),
-        [contributions, target.categoryId, nowMs, window]
-    );
+    const burndown = buildBurndown(contributions, {
+        categoryId: target.categoryId,
+        limit: 0,
+        now: new Date(nowMs),
+        window,
+    });
 
-    const sampleSize = useMemo(
-        () =>
-            contributions.filter(
-                (row) =>
-                    row.date.getTime() >= window.start.getTime() &&
-                    row.date.getTime() <= nowMs &&
-                    (target.categoryId === null ||
-                        row.categoryId === target.categoryId ||
-                        row.parentId === target.categoryId)
-            ).length,
-        [contributions, window, nowMs, target.categoryId]
-    );
+    const sampleSize = contributions.filter(
+        (row) =>
+            row.date.getTime() >= window.start.getTime() &&
+            row.date.getTime() <= nowMs &&
+            (target.categoryId === null || row.categoryId === target.categoryId || row.parentId === target.categoryId)
+    ).length;
 
     const [opening] = useState(
         () => target.limit ?? evidence.typical ?? suggestedLimit(burndown.points.at(-1)?.spent ?? 0)

@@ -2,7 +2,7 @@ import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { currencyDisplayFor } from "@outlayr/money/currency";
 import { useForm, useSelector } from "@tanstack/react-form";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, View } from "react-native";
 import Animated, {
     Easing,
@@ -79,19 +79,14 @@ function CurrencyGlyph({ symbol }: { symbol: string }) {
 /** Continue pushes over this screen, so going back finds it mounted with the CTA still on "Saving…". */
 function useHoldUntilRefocused(): () => Promise<void> {
     const release = useRef<(() => void) | null>(null);
-    useFocusEffect(
-        useCallback(() => {
-            release.current?.();
-            release.current = null;
-        }, [])
-    );
-    return useCallback(
-        () =>
-            new Promise<void>((resolve) => {
-                release.current = resolve;
-            }),
-        []
-    );
+    useFocusEffect(() => {
+        release.current?.();
+        release.current = null;
+    });
+    return () =>
+        new Promise<void>((resolve) => {
+            release.current = resolve;
+        });
 }
 
 export function OnboardingCurrency() {

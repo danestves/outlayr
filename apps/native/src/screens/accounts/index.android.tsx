@@ -4,7 +4,7 @@ import { HugeiconsIcon } from "@hugeicons/react-native";
 import { toAccountKind } from "@outlayr/money/account-kind";
 import { isMultiCurrency } from "@outlayr/money/account-overview";
 import { Stack, useRouter } from "expo-router";
-import { memo, useCallback, useMemo, useRef } from "react";
+import { useRef } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -49,39 +49,30 @@ export function Accounts() {
     const all = useBankAccounts(db);
     const insets = useSafeAreaInsets();
     const { pendingId, requestDelete } = useDeferredDelete("account");
-    const rows = useMemo(() => all.filter((account) => account.id !== pendingId), [all, pendingId]);
-    const assets = useMemo(() => rows.filter((account) => toAccountKind(account.kind) === "asset"), [rows]);
     const currency = useGlobalCurrency(db);
     const debts = useDebtsOverview(db, useNow());
     const addMenu = useAddMenu();
+    const rows = all.filter((account) => account.id !== pendingId);
+    const assets = rows.filter((account) => toAccountKind(account.kind) === "asset");
     const empty = rows.length + debts.owedToYou.length + debts.youOwe.length + debts.settled.length === 0;
 
-    const openDetail = useCallback(
-        (id: string) => {
-            router.push({
-                params: { accountId: id },
-                pathname: "/accounts/[accountId]",
-            });
-        },
-        [router]
-    );
+    const openDetail = (id: string) => {
+        router.push({
+            params: { accountId: id },
+            pathname: "/accounts/[accountId]",
+        });
+    };
 
-    const openEditor = useCallback(
-        (id: string) => {
-            router.push({
-                params: { accountId: id },
-                pathname: "/accounts/[accountId]/edit",
-            });
-        },
-        [router]
-    );
+    const openEditor = (id: string) => {
+        router.push({
+            params: { accountId: id },
+            pathname: "/accounts/[accountId]/edit",
+        });
+    };
 
-    const deleteAccount = useCallback(
-        (account: Account) => {
-            requestDelete(account.id, t("accounts.undo.body"));
-        },
-        [requestDelete, t]
-    );
+    const deleteAccount = (account: Account) => {
+        requestDelete(account.id, t("accounts.undo.body"));
+    };
 
     return (
         <View className="bg-m3-surface flex-1">
@@ -168,7 +159,7 @@ interface AccountRowProps {
     onOpen: (id: string) => void;
 }
 
-const AccountRow = memo(({ account, colors, db, onDelete, onEdit, onOpen }: AccountRowProps) => {
+function AccountRow({ account, colors, db, onDelete, onEdit, onOpen }: AccountRowProps) {
     const t = useTranslation();
     const { language } = useLanguage();
     const { showCents } = useDisplaySettings().state;
@@ -242,5 +233,4 @@ const AccountRow = memo(({ account, colors, db, onDelete, onEdit, onOpen }: Acco
             </Pressable>
         </SwipeToDelete>
     );
-});
-AccountRow.displayName = "AccountRow";
+}

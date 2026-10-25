@@ -2,7 +2,7 @@ import { SectionList } from "@legendapp/list/section-list";
 import { addDays, addMonths, startOfDay } from "@outlayr/money/calendar";
 import type { RateTable } from "@outlayr/money/valuation";
 import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ScrollView } from "react-native";
 
 import { AmountsHiddenContext } from "@/components/amount-text";
@@ -31,6 +31,7 @@ import { useValuationIn } from "@/data/use-valuation";
 import { useValuedCurrencies } from "@/data/valued-currencies";
 import type { Database } from "@/db/client";
 import { groupByDay, groupByDayAsItGrows, joinDaySections } from "@/domain/day-sections";
+import type { DayGroupable } from "@/domain/day-sections";
 import { logCurrencyOptions } from "@/domain/log-currency-options";
 import type { LogFilter } from "@/domain/log-filter";
 import { filterDetail, filterPeriodUnit } from "@/domain/log-filter";
@@ -41,6 +42,7 @@ import type { CursorUnit } from "@/domain/log-period-cursor";
 import { scopeHasFigures, scopeTotals } from "@/domain/log-scope-figures";
 import { sparklineIsPositive, sparklineRange, sparklineSeries } from "@/domain/log-sparkline";
 import { mergeByRecency } from "@/domain/transfer-log-rows";
+import type { TransferLogRow } from "@/domain/transfer-log-rows";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { useDayCardShare } from "@/lib/use-day-card-share";
 import { useTransactionRowActions } from "@/lib/use-transaction-row-actions";
@@ -81,19 +83,50 @@ function useSparkline(
         rates
     );
 
-    return useMemo(() => {
-        if (!enabled || period === "all") {
-            return null;
-        }
-        const now = new Date(nowMs);
-        const points = sparklineSeries(rows, measure, period, now);
-        return {
-            byMonth: period === "year",
-            points,
-            positive: sparklineIsPositive(measure, points),
-            range: sparklineRange(period, now, firstWeekday),
-        };
-    }, [rows, measure, period, firstWeekday, enabled, nowMs]);
+    if (!enabled || period === "all") {
+        return null;
+    }
+    const now = new Date(nowMs);
+    const points = sparklineSeries(rows, measure, period, now);
+    return {
+        byMonth: period === "year",
+        points,
+        positive: sparklineIsPositive(measure, points),
+        range: sparklineRange(period, now, firstWeekday),
+    };
+}
+
+function headListRows(
+    filter: LogFilter,
+    head: readonly TransactionWithCategory[],
+    filteredRows: readonly TransactionWithCategory[],
+    transferRows: readonly TransferLogRow[],
+    splitMs: number
+) {
+    if (filter === "transfers") {
+        return transferRows;
+    }
+    if (filter === "all") {
+        return mergeByRecency(
+            head,
+            transferRows.filter((transfer) => transfer.day.getTime() >= splitMs)
+        );
+    }
+    return mergeByRecency(filteredRows, transferRows);
+}
+
+function useTailGrouping<T extends DayGroupable>(currency: string, rates: RateTable) {
+    const [grouping, setGrouping] = useState(() => ({
+        currency,
+        group: groupByDayAsItGrows<T>(currency, rates),
+        rates,
+    }));
+    if (grouping.currency === currency && grouping.rates === rates) {
+        return grouping.group;
+    }
+    const next = { currency, group: groupByDayAsItGrows<T>(currency, rates), rates };
+    setGrouping(next);
+    return next.group;
 }
 
 export function Log() {
@@ -146,26 +179,24 @@ export function Log() {
     const readingHead = filter === "all";
 
     const categoryMeta = useCategoryMeta(db);
-    const filterableCategories = useMemo(
-        () => [...categoryMeta].filter(([, meta]) => meta.parentId == null).map(([id, meta]) => ({ id, meta })),
-        [categoryMeta]
-    );
+    const filterableCategories = [...categoryMeta]
+        .filter(([, meta]) => meta.parentId == null)
+        .map(([id, meta]) => ({ id, meta }));
     const activeCategoryId = categoryId ?? filterableCategories[0]?.id ?? null;
 
     const cursorUnit: CursorUnit = filter === "week" || filter === "month" ? filter : "day";
     const cursor = cursors[cursorUnit];
+    const detail = filterPeriodUnit(filter)
+        ? filterDetail(filter, { cursor, firstWeekday, income })
+        : filterScopeLabel(t, filter, activeCategoryId ? categoryMeta.get(activeCategoryId)?.name : null, income);
 
     const { head, reachedEnd, splitMs, tail } = useLoggedTransactions(db, nowMs, days, readingHead);
-    const transferBounds = useMemo(
-        () =>
-            logTransferBounds({
-                cursor,
-                filter,
-                firstWeekday,
-                page: { floor: (tail.at(-1) ?? head.at(-1))?.day ?? null, reachedEnd },
-            }),
-        [cursor, filter, firstWeekday, head, tail, reachedEnd]
-    );
+    const transferBounds = logTransferBounds({
+        cursor,
+        filter,
+        firstWeekday,
+        page: { floor: (tail.at(-1) ?? head.at(-1))?.day ?? null, reachedEnd },
+    });
     const transferRows = useLogTransfers(db, nowMs, transferBounds);
     const filteredRows = useFilteredTransactions(db, nowMs, {
         categoryId: activeCategoryId,
@@ -178,70 +209,52 @@ export function Log() {
     const showUpcomingSection = filter === "upcoming" || (filter === "all" && showUpcoming);
     const upcoming = useUpcomingTransactions(db, nowMs, showUpcomingSoon, showUpcomingSection);
     const insights = useLogInsights(db, nowMs, period, firstWeekday, currency, rates);
-    const currencyOptions = useMemo(
-        () =>
-            logCurrencyOptions({
-                // `rates` holds only the on-screen currency (#237); USD passes via the frozen `amountUsd`.
-                convertible: (code) => code === "USD" || valued.has(code),
-                favourites: favouriteCurrencies,
-                global: globalCurrency,
-                produced: insights.perCurrency.map((figures) => figures.currencyCode),
-            }),
-        [globalCurrency, favouriteCurrencies, insights, valued]
-    );
+    const currencyOptions = logCurrencyOptions({
+        // `rates` holds only the on-screen currency (#237); USD passes via the frozen `amountUsd`.
+        convertible: (code) => code === "USD" || valued.has(code),
+        favourites: favouriteCurrencies,
+        global: globalCurrency,
+        produced: insights.perCurrency.map((figures) => figures.currencyCode),
+    });
     const sparkline = useSparkline(db, nowMs, logViewLineGraph, measure, period, firstWeekday, currency, rates);
-    const transferIds = useMemo(() => new Set(transferRows.map((transfer) => transfer.id)), [transferRows]);
+    const transferIds = new Set(transferRows.map((transfer) => transfer.id));
     const { pendingId, requestDelete } = useDeferredDelete("row");
     const pendingCuotas = usePendingCuotas(db, pendingId);
-
-    const tailTransfers = useMemo(
-        () => transferRows.filter((transfer) => transfer.day.getTime() < splitMs),
-        [transferRows, splitMs]
-    );
-    const listRows = useMemo(() => {
-        if (filter === "transfers") {
-            return transferRows;
-        }
-        if (filter === "all") {
-            return mergeByRecency(
-                head,
-                transferRows.filter((transfer) => transfer.day.getTime() >= splitMs)
-            );
-        }
-        return mergeByRecency(filteredRows, transferRows);
-    }, [filter, head, splitMs, filteredRows, transferRows]);
-    const tailRows = useMemo(
-        () => (filter === "all" ? mergeByRecency(tail, tailTransfers) : []),
-        [filter, tail, tailTransfers]
-    );
-    const visibleRows = useMemo(
-        () => listRows.filter((row) => !goesWithPendingDelete(row, pendingId, pendingCuotas)),
-        [listRows, pendingId, pendingCuotas]
-    );
-    const visibleTail = useMemo(() => {
-        const kept = tailRows.filter((row) => !goesWithPendingDelete(row, pendingId, pendingCuotas));
-        return kept.length === tailRows.length ? tailRows : kept;
-    }, [tailRows, pendingId, pendingCuotas]);
-    const headSections = useMemo(() => groupByDay(visibleRows, currency, rates), [visibleRows, currency, rates]);
-    const groupTail = useMemo(
-        () => groupByDayAsItGrows<(typeof visibleTail)[number]>(currency, rates),
-        [currency, rates]
-    );
-    const tailSections = useMemo(() => groupTail(visibleTail), [groupTail, visibleTail]);
-    const sections = useMemo(
-        () =>
-            joinDaySections(headSections, tailSections, () =>
-                groupByDay([...visibleRows, ...visibleTail], currency, rates)
-            ),
-        [headSections, tailSections, visibleRows, visibleTail, currency, rates]
-    );
-    // Over the unwindowed filtered read and the sections' own rows, so the day subtotals agree to the cent.
-    const scopeFigures = useMemo(
-        () => (filter === "all" || !scopeHasFigures(visibleRows) ? null : scopeTotals(visibleRows, currency, rates)),
-        [filter, visibleRows, currency, rates]
-    );
-
     const openRowActions = useTransactionRowActions(nowMs, requestDelete);
+    const cardOptions = { currency, showCents, swapTimeLabel, use24Hour };
+    const shareDay = useDayCardShare(cardOptions);
+    const groupTail = useTailGrouping<TransactionWithCategory | TransferLogRow>(currency, rates);
+    // Filtered like the day sections, or a deleted future row lingers under the undo toast.
+    const upcomingRows = showUpcomingSection
+        ? upcoming.rows.filter((row) => !goesWithPendingDelete(row, pendingId))
+        : [];
+    const upcomingSchedules = upcoming.schedules.filter((row) => row.id !== pendingId);
+    const today = startOfDay(new Date(nowMs)).getTime();
+    const view = { ...cardOptions, language };
+
+    const tailTransfers = transferRows.filter((transfer) => transfer.day.getTime() < splitMs);
+    const listRows = headListRows(filter, head, filteredRows, transferRows, splitMs);
+    const tailRows = filter === "all" ? mergeByRecency(tail, tailTransfers) : [];
+    const visibleRows = listRows.filter((row) => !goesWithPendingDelete(row, pendingId, pendingCuotas));
+    const keptTail = tailRows.filter((row) => !goesWithPendingDelete(row, pendingId, pendingCuotas));
+    const visibleTail = keptTail.length === tailRows.length ? tailRows : keptTail;
+    const headSections = groupByDay(visibleRows, currency, rates);
+    const tailSections = groupTail(visibleTail);
+    const sections = joinDaySections(headSections, tailSections, () =>
+        groupByDay([...visibleRows, ...visibleTail], currency, rates)
+    );
+    // LegendList's SectionList keeps `extraData` to itself, so what rows read rides on each section.
+    const listSections = sections.map((section, index) => ({
+        ...section,
+        first: index === 0 && upcomingRows.length === 0,
+        today,
+        view,
+    }));
+    const emptyResult = sections.length === 0 && (filter !== "upcoming" || upcomingRows.length === 0);
+    // Over the unwindowed filtered read and the sections' own rows, so the day subtotals agree to the cent.
+    const scopeFigures =
+        filter === "all" || !scopeHasFigures(visibleRows) ? null : scopeTotals(visibleRows, currency, rates);
+
     const openAccount = (accountId: string) =>
         router.push({ params: { accountId }, pathname: "/accounts/[accountId]" });
     // Transfer ids route to their own screen; `transactions/[id]` would open empty.
@@ -249,37 +262,6 @@ export function Log() {
         router.push(transferIds.has(rowId) ? `/transactions/transfers/${rowId}` : `/transactions/${rowId}`);
     const rowMenu = (transaction: TransactionWithCategory, scheduled: boolean) =>
         transferIds.has(transaction.id) ? [] : openRowActions(transaction, scheduled);
-    const cardOptions = useMemo(
-        () => ({ currency, showCents, swapTimeLabel, use24Hour }),
-        [currency, showCents, swapTimeLabel, use24Hour]
-    );
-    const shareDay = useDayCardShare(cardOptions);
-
-    const detail = filterPeriodUnit(filter)
-        ? filterDetail(filter, { cursor, firstWeekday, income })
-        : filterScopeLabel(t, filter, activeCategoryId ? categoryMeta.get(activeCategoryId)?.name : null, income);
-
-    // Filtered like the day sections, or a deleted future row lingers under the undo toast.
-    const upcomingRows = useMemo(
-        () => (showUpcomingSection ? upcoming.rows.filter((row) => !goesWithPendingDelete(row, pendingId)) : []),
-        [showUpcomingSection, upcoming.rows, pendingId]
-    );
-    const upcomingSchedules = useMemo(
-        () => upcoming.schedules.filter((row) => row.id !== pendingId),
-        [upcoming.schedules, pendingId]
-    );
-    const emptyResult = sections.length === 0 && (filter !== "upcoming" || upcomingRows.length === 0);
-    // LegendList's SectionList keeps `extraData` to itself, so what rows read rides on each section.
-    const today = startOfDay(new Date(nowMs)).getTime();
-    const listSections = useMemo(() => {
-        const view = { ...cardOptions, language };
-        return sections.map((section, index) => ({
-            ...section,
-            first: index === 0 && upcomingRows.length === 0,
-            today,
-            view,
-        }));
-    }, [sections, upcomingRows.length, cardOptions, language, today]);
 
     // One setting behind both headers, so a filter never changes the promoted figure.
     const onMeasure = (next: LogMeasure) => {

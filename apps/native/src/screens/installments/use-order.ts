@@ -1,6 +1,6 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { Alert } from "react-native";
 
 import { useDatabase } from "@/contexts/local-data-context";
@@ -21,18 +21,19 @@ export function useInstallmentEntry(planId: string) {
     const entry = useInstallmentPlans(db, nowMs).find(({ plan }) => plan.id === planId) ?? null;
     const left = useRef(false);
 
-    const leave = useCallback(() => {
+    const leave = () => {
         if (!left.current) {
             left.current = true;
             router.back();
         }
-    }, [router]);
+    };
 
+    const leaveGone = useEffectEvent(leave);
     useEffect(() => {
         if (entry == null) {
-            leave();
+            leaveGone();
         }
-    }, [entry, leave]);
+    }, [entry]);
 
     return { entry, leave, nowMs };
 }

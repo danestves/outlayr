@@ -3,7 +3,7 @@ import PlusSignCircleIcon from "@hugeicons-pro/core-solid-rounded/PlusSignCircle
 import PlusSignIcon from "@hugeicons-pro/core-stroke-rounded/PlusSignIcon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import { Stack, useRouter } from "expo-router";
-import { useMemo, useRef } from "react";
+import { useRef } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
 import type { ActionMenuItem } from "@/components/action-menu";
@@ -42,21 +42,19 @@ const CONNECTOR_ALPHA = 0.6;
 const NO_EXTRAS: readonly ActionMenuItem[] = [];
 
 /** A deleted parent's children are re-parented to the top level, so promote them here. */
-function usePendingRemoved(parents: CategoryWithChildren[], pendingId: string | null): CategoryWithChildren[] {
-    return useMemo(() => {
-        if (pendingId === null) {
-            return parents;
+function pendingRemoved(parents: CategoryWithChildren[], pendingId: string | null): CategoryWithChildren[] {
+    if (pendingId === null) {
+        return parents;
+    }
+    return parents.flatMap((parent) => {
+        if (parent.id === pendingId) {
+            return parent.children.map((child) => ({ ...child, children: [] }));
         }
-        return parents.flatMap((parent) => {
-            if (parent.id === pendingId) {
-                return parent.children.map((child) => ({ ...child, children: [] }));
-            }
-            if (!parent.children.some((child) => child.id === pendingId)) {
-                return [parent];
-            }
-            return [{ ...parent, children: parent.children.filter((child) => child.id !== pendingId) }];
-        });
-    }, [parents, pendingId]);
+        if (!parent.children.some((child) => child.id === pendingId)) {
+            return [parent];
+        }
+        return [{ ...parent, children: parent.children.filter((child) => child.id !== pendingId) }];
+    });
 }
 
 export function Categories({ income }: { income: boolean }) {
@@ -68,17 +66,13 @@ export function Categories({ income }: { income: boolean }) {
     const showSuggestions = useAppSettings().state.bool("categorySuggestions");
     const namespace = useCategoriesByNamespace(db, income);
     const { pendingId, requestDelete } = useDeferredDelete("category");
-    const parents = usePendingRemoved(namespace, pendingId);
+    const parents = pendingRemoved(namespace, pendingId);
     const totals = useCategoryTotals(db);
     const fabClearance = useFabClearance();
 
-    const suggestions = useMemo(
-        () =>
-            presetsNotAdded(
-                income,
-                namespace.flatMap((parent) => [parent, ...parent.children])
-            ),
-        [income, namespace]
+    const suggestions = presetsNotAdded(
+        income,
+        namespace.flatMap((parent) => [parent, ...parent.children])
     );
 
     const goToNewChild = (parent: CategoryWithChildren) => {

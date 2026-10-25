@@ -1,7 +1,6 @@
 import { addDays, startOfDay } from "@outlayr/money/calendar";
 import { buildHeatmapCalendar, HeatmapChart } from "panelui-native/components/heatmap-chart";
 import type { HeatmapCell } from "panelui-native/components/heatmap-chart";
-import { useMemo } from "react";
 import { View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 
@@ -105,29 +104,19 @@ export function SpendingCalendar({ entries, currency, firstWeekday, showCents, n
     const animated = useSettingBool("animatedCharts") && !reduceMotion;
     const weekStartDay = firstWeekday - 1;
     const clock = useNow();
-    const at = useMemo(() => now ?? new Date(clock), [now, clock]);
+    const at = now ?? new Date(clock);
     const end = startOfDay(at);
     const start = spendingCalendarStart(at);
 
-    const chartEntries = useMemo(
-        () => entries.map((entry) => ({ count: entry.value, date: dateFromKey(entry.date) })),
-        [entries]
-    );
-    const data = useMemo(
-        () => buildHeatmapCalendar(chartEntries, { end, start, weekStartDay }),
-        [chartEntries, end, start, weekStartDay]
-    );
-    const days = useMemo(() => calendarDays(entries, start, end), [entries, start, end]);
-    const dayColumns = useMemo(() => accessibilityColumns(days, weekStartDay), [days, weekStartDay]);
-    const weekdayLabels = useMemo(
-        () =>
-            Array.from({ length: 7 }, (_unused, offset) =>
-                weekdayInitial(addDays(new Date(2026, 0, 4), weekStartDay + offset), language)
-            ),
-        [language, weekStartDay]
+    const chartEntries = entries.map((entry) => ({ count: entry.value, date: dateFromKey(entry.date) }));
+    const data = buildHeatmapCalendar(chartEntries, { end, start, weekStartDay });
+    const days = calendarDays(entries, start, end);
+    const dayColumns = accessibilityColumns(days, weekStartDay);
+    const weekdayLabels = Array.from({ length: 7 }, (_unused, offset) =>
+        weekdayInitial(addDays(new Date(2026, 0, 4), weekStartDay + offset), language)
     );
 
-    const entryByDate = useMemo(() => new Map(entries.map((entry) => [entry.date, entry])), [entries]);
+    const entryByDate = new Map(entries.map((entry) => [entry.date, entry]));
     const dayLabel = (date: Date, value: number, exact = true): string =>
         t(exact ? "insights.calendar.day" : "insights.calendar.dayApproximate", {
             amount: formatAmount(value, currency, showCents, language),
