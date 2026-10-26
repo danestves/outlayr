@@ -85,7 +85,20 @@ Store notes cover the same changes in every app language, as plain text with a l
   done
   ```
 
-An iOS build also gets TestFlight's What to Test, in `notes/testflight.txt`. It's for testers, so it's English and plain: one line per change saying where to go and what to try, "Settings > Accounts: give a bank its own transfer fee, then log a transfer from it". Include fixes worth rechecking, and skip the store notes' personality. At most 4,000 characters.
+An iOS build also gets TestFlight's What to Test, in `notes/testflight.txt`. It's for testers, so it's English and plain, with fixes worth rechecking and none of the store notes' personality. TestFlight shows plain text, so line breaks and `•` are the only formatting:
+
+- Group changes by app area. Each group is its name on a line ("Transfers", "Budgets"), then one `•` line per thing to try, saying where to go and what to check: "• Settings > Accounts: give a bank its own transfer fee, then log a transfer from it".
+- A blank line between groups. Keep each step to one sentence.
+- No semicolons or em dashes. At most 4,000 characters.
+
+```text
+Transfers
+• Log a transfer between two banks that both take a fee, and give each bank its own fee
+• Delete one fee and check the other stays
+
+Budgets
+• Go over a budget: the day sentence names the category
+```
 
 ## 4. Dispatch and wait
 
