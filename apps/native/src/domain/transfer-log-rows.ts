@@ -3,7 +3,7 @@ import { roundMoney } from "@outlayr/money/round";
 import type { Account } from "@/data/accounts-core";
 
 import { minorUnitsFor } from "./money";
-import { savedRate, transferGap } from "./transfer-reconcile";
+import { NO_FEES, savedRate, transferGap } from "./transfer-reconcile";
 
 export interface TransferLogSource {
     date: Date;
@@ -31,7 +31,7 @@ export type TransferEnd = Pick<Account, "customColor" | "emoji" | "icon" | "imag
 export interface TransferMove {
     arrived: number;
     arrivedCurrency: string;
-    fee: { amount: number; currency: string } | null;
+    fees: { amount: number; currency: string }[];
     outside: { amount: number; currency: string } | null;
     sent: number;
 }
@@ -72,30 +72,28 @@ export interface TransferLogRow {
 
 const UNKNOWN_ACCOUNT = "—";
 
-function transferMove(transfer: TransferLogSource, fee: TransferLogFee | undefined): TransferMove {
-    const atDestination = fee !== undefined && fee.accountId === transfer.toAccountId;
-    const currency = atDestination ? transfer.toCurrency : transfer.fromCurrency;
-    const decimals = minorUnitsFor(currency);
-    const charged = fee?.amount ?? 0;
-    const arrived = atDestination ? roundMoney(transfer.toAmount - charged, decimals) : transfer.toAmount;
-    const sent = atDestination ? transfer.fromAmount : roundMoney(transfer.fromAmount + charged, decimals);
+function transferMove(transfer: TransferLogSource, fees: readonly TransferLogFee[] = []): TransferMove {
+    const fromDecimals = minorUnitsFor(transfer.fromCurrency);
+    const toDecimals = minorUnitsFor(transfer.toCurrency);
+    const charged = { ...NO_FEES };
+    const shown = fees.map((fee) => {
+        const atDestination = fee.accountId === transfer.toAccountId;
+        const side = atDestination ? "destination" : "source";
+        charged[side] = roundMoney(charged[side] + fee.amount, atDestination ? toDecimals : fromDecimals);
+        return { amount: fee.amount, currency: atDestination ? transfer.toCurrency : transfer.fromCurrency };
+    });
+    const arrived = roundMoney(transfer.toAmount - charged.destination, toDecimals);
+    const sent = roundMoney(transfer.fromAmount + charged.source, fromDecimals);
     const rate =
         transfer.fromCurrency === transfer.toCurrency
             ? null
             : savedRate(transfer.fromAmount, transfer.toAmount, transfer.exchangeRate);
-    const gap =
-        rate === null
-            ? 0
-            : transferGap(
-                  { arrived, fee: charged, feeSide: atDestination ? "destination" : "source", rate, sent },
-                  decimals,
-                  minorUnitsFor(transfer.toCurrency)
-              );
+    const gap = rate === null ? 0 : transferGap({ arrived, fees: charged, rate, sent }, fromDecimals, toDecimals);
     return {
         arrived,
         arrivedCurrency: transfer.toCurrency,
-        fee: fee === undefined ? null : { amount: fee.amount, currency },
-        outside: gap < 0 ? { amount: -gap, currency } : null,
+        fees: shown,
+        outside: gap < 0 ? { amount: -gap, currency: transfer.fromCurrency } : null,
         sent,
     };
 }
@@ -103,7 +101,7 @@ function transferMove(transfer: TransferLogSource, fee: TransferLogFee | undefin
 export function toTransferLogRow(
     transfer: TransferLogSource,
     accounts: ReadonlyMap<string, TransferEnd>,
-    fees?: ReadonlyMap<string, TransferLogFee>
+    fees?: ReadonlyMap<string, readonly TransferLogFee[]>
 ): TransferLogRow {
     const from = accounts.get(transfer.fromAccountId);
     const to = accounts.get(transfer.toAccountId);
@@ -146,7 +144,7 @@ export function toAccountTransferRow(
     transfer: TransferLogSource,
     accountId: string,
     accounts: ReadonlyMap<string, TransferEnd>,
-    fees: ReadonlyMap<string, TransferLogFee>
+    fees: ReadonlyMap<string, readonly TransferLogFee[]>
 ): TransferLogRow {
     const row = { ...toTransferLogRow(transfer, accounts, fees), excludedFromTotals: false };
     if (transfer.toAccountId !== accountId) {
@@ -159,7 +157,7 @@ export function toAccountTransferRow(
         amountUsd: transfer.toAmountUsd,
         currency: transfer.toCurrency,
         income: true,
-        moved: { arrived, arrivedCurrency: transfer.toCurrency, fee: null, outside: null, sent: arrived },
+        moved: { arrived, arrivedCurrency: transfer.toCurrency, fees: [], outside: null, sent: arrived },
         sign: "+",
     };
 }

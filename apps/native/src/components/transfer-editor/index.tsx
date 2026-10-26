@@ -39,11 +39,13 @@ import {
     rateEntryText,
 } from "@/domain/transaction-entry-rate";
 import { quotedByBcv, rateNameKey, rateSourceWordKey, transactionWhenLabel } from "@/domain/transaction-form-labels";
+import type { FeeSide } from "@/domain/transfer-reconcile";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useAccountCreateRoute } from "@/hooks/use-pro-gate";
 import type { SheetRest } from "@/hooks/use-resting-sheet";
 import { useSheetSurface } from "@/hooks/use-sheet-surface";
 import { useLanguage, useTranslation } from "@/i18n/context";
+import type { Language } from "@/i18n/languages";
 import { freshEntries } from "@/lib/fresh-entries";
 import { notifySaved } from "@/lib/notify";
 import { posthog } from "@/lib/posthog";
@@ -56,7 +58,9 @@ import type { TransferSentenceSlot } from "./transfer-sentence";
 import { useTransferDraft } from "./use-transfer-draft";
 import type { TransferDraftSnapshot, TransferSeed } from "./use-transfer-draft";
 
-type Step = Exclude<TransferSentenceSlot, "feeSide" | "outside"> | "date";
+type Step = Exclude<TransferSentenceSlot, "arrivalFee" | "arrivalFeeSide" | "feeSide" | "outside"> | "date";
+
+const FEE_SIDES = ["source", "destination"] as const satisfies readonly FeeSide[];
 
 export interface TransferEditorDraft {
     draft: TransferDraftSnapshot;
@@ -104,39 +108,30 @@ function TransferNote({ filled, initial, onChange, rest }: TransferNoteProps) {
 
 interface TransferGapProps {
     blocked: boolean;
-    crossCurrency: boolean;
     gap: ReturnType<typeof blockPrompt> | ReturnType<typeof gapPrompt>;
     onResolve: (resolve: () => void, hidesArrival: boolean) => () => void;
     resting: boolean;
 }
 
-function TransferGap({ blocked, crossCurrency, gap, onResolve, resting }: TransferGapProps) {
+function TransferGap({ blocked, gap, onResolve, resting }: TransferGapProps) {
     if (!gap) {
         return null;
     }
     return (
         <View className="gap-2">
             <MetaLine statement={gap.message} tone={blocked ? "danger" : "warning"} />
-            {resting ? null : (
+            {resting || gap.actions.length === 0 ? null : (
                 <View className="flex-row flex-wrap gap-x-5 gap-y-2">
-                    {(
-                        [
-                            [gap.feeLabel, gap.onFee, false],
-                            [gap.outsideLabel, gap.onOutside, false],
-                            [gap.topLabel, gap.onTop, !crossCurrency],
-                        ] as const
-                    ).map(([label, resolve, hidesArrival]) =>
-                        label && resolve ? (
-                            <Pressable
-                                accessibilityRole="button"
-                                hitSlop={10}
-                                key={label}
-                                onPress={onResolve(resolve, hidesArrival)}
-                            >
-                                <Text className="text-subtitle text-tint font-sans-semibold">{label}</Text>
-                            </Pressable>
-                        ) : null
-                    )}
+                    {gap.actions.map(({ hidesArrival, label, onPress }) => (
+                        <Pressable
+                            accessibilityRole="button"
+                            hitSlop={10}
+                            key={label}
+                            onPress={onResolve(onPress, hidesArrival)}
+                        >
+                            <Text className="text-subtitle text-tint font-sans-semibold">{label}</Text>
+                        </Pressable>
+                    ))}
                 </View>
             )}
         </View>
@@ -201,6 +196,27 @@ function useInlineStageScroll(scrollRef: RefObject<ScrollViewInstance | null>) {
     };
 }
 
+function stepSlot(step: Step, editsArrivalFee: boolean): TransferSentenceSlot {
+    if (step === "date") {
+        return "when";
+    }
+    return step === "fee" && editsArrivalFee ? "arrivalFee" : step;
+}
+
+function feeSides(draft: ReturnType<typeof useTransferDraft>, language: Language) {
+    const charging = FEE_SIDES.filter((side) => draft.fees[side] > 0);
+    const currencyOf = (side: FeeSide) => (side === "destination" ? draft.toCurrency : draft.fromCurrency);
+    return {
+        accountOf: (side: FeeSide) => (side === "destination" ? draft.to : draft.from),
+        charging,
+        currencyOf,
+        feeLabel: (side: FeeSide) =>
+            draft.fees[side] > 0 ? formatAmount(draft.fees[side], currencyOf(side), true, language) : null,
+        // The sentence's first fee: the sender's when both charge, else whichever side does.
+        shownSide: charging.length === 2 ? "source" : (charging[0] ?? draft.feeSide),
+    } as const;
+}
+
 export default function TransferEditor({
     draftRef,
     onDelete,
@@ -232,6 +248,7 @@ export default function TransferEditor({
     const [flagged, setFlagged] = useState<TransferSentenceSlot | null>(null);
 
     const gap = blockPrompt(draft, t, language) ?? gapPrompt(draft, t, language);
+    const { accountOf, charging, currencyOf, feeLabel, shownSide } = feeSides(draft, language);
     const ledger = [
         { account: draft.from, after: draft.fromBalanceAfter, before: draft.fromBalance },
         { account: draft.to, after: draft.toBalanceAfter, before: draft.toBalance },
@@ -296,7 +313,7 @@ export default function TransferEditor({
         };
 
     const save = async () => {
-        const { from, to, legs, quotedRate, fee, feeSide, crossCurrency, rateType, date } = draft;
+        const { from, to, legs, quotedRate, fees, crossCurrency, rateType, date } = draft;
         if (!(draft.canSave && from && to && legs && quotedRate) || savingRef.current) {
             return;
         }
@@ -309,14 +326,12 @@ export default function TransferEditor({
             date,
             exchangeRate: quotedRate,
             exchangeRateType: crossCurrency ? storedRateType : null,
-            fee:
-                fee > 0
-                    ? {
-                          amount: fee,
-                          note: t("transfers.fee.note", { from: from.name, to: to.name }),
-                          side: feeSide,
-                      }
-                    : undefined,
+            fees: Object.fromEntries(
+                FEE_SIDES.filter((side) => fees[side] > 0).map((side) => [
+                    side,
+                    { amount: fees[side], note: t("transfers.fee.note", { from: from.name, to: to.name }) },
+                ])
+            ),
             fromAccountId: from.id,
             fromAmount: legs.fromAmount,
             fromCurrency: draft.fromCurrency,
@@ -345,7 +360,7 @@ export default function TransferEditor({
             }
             posthog?.capture("transfer_saved", {
                 cross_currency: crossCurrency,
-                has_fee: fee > 0,
+                has_fee: fees.source > 0 || fees.destination > 0,
                 mode: saved ? "edit" : "create",
                 source: "form",
             });
@@ -383,6 +398,9 @@ export default function TransferEditor({
         AccessibilityInfo.announceForAccessibility(
             refusal ?? t("transfers.a11y.missing", { field: t(`transfers.field.${field}`) })
         );
+        if (draft.block?.kind === "fee") {
+            draft.selectFeeSide(draft.block.side);
+        }
         enter(next);
     };
 
@@ -400,16 +418,21 @@ export default function TransferEditor({
             rest.onWake();
             return;
         }
-        if (slot === "feeSide") {
+        if (slot === "feeSide" && charging.length < 2) {
             touch();
-            draft.toggleFeeSide();
+            draft.moveFee(shownSide);
+            return;
+        }
+        if (slot === "fee" || slot === "feeSide" || slot === "arrivalFee" || slot === "arrivalFeeSide") {
+            draft.selectFeeSide(slot === "fee" || slot === "feeSide" ? shownSide : "destination");
+            enter("fee");
             return;
         }
         if (slot === "outside") {
             touch();
             draft.setOutside(false);
             AccessibilityInfo.announceForAccessibility(
-                t("transfers.gap.more", { amount: formatAmount(draft.outside, draft.feeCurrency, true, language) })
+                t("transfers.gap.more", { amount: formatAmount(draft.outside, draft.fromCurrency, true, language) })
             );
             return;
         }
@@ -425,7 +448,6 @@ export default function TransferEditor({
         ? draft.customRatePadText.replace(".", numberLocale(language).decimal) || null
         : formatRate(draft, draft.quotedRate, language);
     const rateLabel = rateFigure === null ? null : `${rateFigure} ${rateUnit}`;
-    const feeSideAccount = draft.feeSide === "destination" ? draft.to : draft.from;
     const footer = {
         label: saves ? t("transfers.save") : t("common.next"),
         onPress: onFooter,
@@ -537,27 +559,20 @@ export default function TransferEditor({
                 );
             }
             if (step === "fee") {
+                const otherCharges = draft.fees[draft.feeSide === "source" ? "destination" : "source"] > 0;
+                const editedBank = otherCharges ? accountOf(draft.feeSide)?.name : undefined;
                 return (
                     <StepFee
                         field={{
                             comesTo: null,
-                            label: t("transfers.field.fee"),
+                            label:
+                                editedBank === undefined
+                                    ? t("transfers.field.fee")
+                                    : t("transfers.field.feeAt", { account: editedBank }),
                             placeholder: draft.feeText === "",
                             unit: draft.feeCurrency,
                             value:
                                 draft.feeText === "" ? "0" : draft.feeText.replace(".", numberLocale(language).decimal),
-                        }}
-                        labels={{
-                            loggedAs: t("transfers.fee.chargedTo"),
-                            total:
-                                feeSideAccount === null
-                                    ? t("transaction.fee.total")
-                                    : t("transaction.fee.pays", { account: feeSideAccount.name }),
-                        }}
-                        loggedAs={feeSideAccount?.name ?? t("transfers.sentence.blank.account")}
-                        onLoggedAsPress={() => {
-                            touch();
-                            draft.toggleFeeSide();
                         }}
                         onSelect={(mode) => {
                             touch();
@@ -569,14 +584,15 @@ export default function TransferEditor({
                         options={[
                             { id: "none", label: t("transaction.fee.none") },
                             { id: "included", label: t("transfers.fee.included") },
-                            { id: "onTop", label: t("transfers.fee.onTop") },
+                            ...(otherCharges ? [] : [{ id: "onTop", label: t("transfers.fee.onTop") } as const]),
                         ]}
-                        selectedId={draft.feeMode}
-                        total={
-                            draft.feeSide === "source" && draft.sent > 0
-                                ? formatAmount(draft.paid, draft.fromCurrency, true, language)
-                                : null
-                        }
+                        selectedId={draft.fee === 0 && otherCharges ? "none" : draft.feeMode}
+                        sides={FEE_SIDES.map((side) => ({
+                            amount: formatAmount(draft.fees[side], currencyOf(side), true, language),
+                            label: accountOf(side)?.name ?? t("transfers.sentence.blank.account"),
+                            onPress: () => draft.selectFeeSide(side),
+                            selected: side === draft.feeSide,
+                        }))}
                     >
                         <AmountNumpad
                             code={draft.feeCurrency}
@@ -729,7 +745,7 @@ export default function TransferEditor({
     };
 
     const resting = rest !== undefined;
-    const activeSlot = step === "date" ? "when" : step;
+    const activeSlot = stepSlot(step, charging.length === 2 && draft.feeSide === "destination");
 
     return (
         <View
@@ -771,11 +787,13 @@ export default function TransferEditor({
                             amount: { amount: draft.sent, code: draft.fromCurrency },
                             arrives:
                                 draft.arrived === null ? undefined : { amount: draft.arrived, code: draft.toCurrency },
-                            fee: { amount: draft.fee, code: draft.feeCurrency },
-                            outside: { amount: draft.outside, code: draft.feeCurrency },
+                            arrivalFee: { amount: draft.fees.destination, code: draft.toCurrency },
+                            fee: { amount: draft.fees[shownSide], code: currencyOf(shownSide) },
+                            outside: { amount: draft.outside, code: draft.fromCurrency },
                         }}
                         flaggedSlot={flagged}
-                        hasFee={draft.fee > 0}
+                        bothFees={charging.length === 2}
+                        hasFee={charging.length > 0}
                         onSlotPress={onSlotPress}
                         onTop={draft.feeMode === "onTop"}
                         outside={draft.outside > 0}
@@ -786,12 +804,14 @@ export default function TransferEditor({
                                 draft.arrived !== null && draft.arrived > 0
                                     ? formatAmount(draft.arrived, draft.toCurrency, true, language)
                                     : null,
-                            fee: draft.fee > 0 ? formatAmount(draft.fee, draft.feeCurrency, true, language) : null,
-                            feeSide: feeSideAccount?.name ?? null,
+                            arrivalFee: feeLabel("destination"),
+                            arrivalFeeSide: draft.to?.name ?? null,
+                            fee: feeLabel(shownSide),
+                            feeSide: accountOf(shownSide)?.name ?? null,
                             from: draft.from?.name ?? null,
                             outside:
                                 draft.outside > 0
-                                    ? formatAmount(draft.outside, draft.feeCurrency, true, language)
+                                    ? formatAmount(draft.outside, draft.fromCurrency, true, language)
                                     : null,
                             rate: rateLabel,
                             rateType: t(
@@ -807,13 +827,7 @@ export default function TransferEditor({
                         }}
                     />
 
-                    <TransferGap
-                        blocked={draft.block !== null}
-                        crossCurrency={draft.crossCurrency}
-                        gap={gap}
-                        onResolve={resolveGap}
-                        resting={resting}
-                    />
+                    <TransferGap blocked={draft.block !== null} gap={gap} onResolve={resolveGap} resting={resting} />
 
                     {resting ? null : (
                         <View className="border-separator border-t">

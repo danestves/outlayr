@@ -309,6 +309,13 @@ const log = {
             pt: "Chegaram {arrived} após uma tarifa de {fee}",
             "pt-PT": "Chegaram {arrived} após uma comissão de {fee}",
         }),
+        "log.row.arrivedAfterFees": t({
+            en: "{arrived} arrived after fees of {fee} and {otherFee}",
+            es: "Llegaron {arrived} tras comisiones de {fee} y {otherFee}",
+            fr: "Reçu : {arrived} après {fee} et {otherFee} de frais",
+            pt: "Chegaram {arrived} após tarifas de {fee} e {otherFee}",
+            "pt-PT": "Chegaram {arrived} após comissões de {fee} e {otherFee}",
+        }),
         "log.row.delete": t({
             en: "Delete",
             es: "Eliminar",

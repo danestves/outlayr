@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@jest/globals";
 import { roundMoney } from "@outlayr/money/round";
 
-import { savedRate, solveTransfer, transferGap, transferLegs } from "./transfer-reconcile";
+import { NO_FEES, savedRate, solveTransfer, transferGap, transferLegs } from "./transfer-reconcile";
 import type { TransferValues } from "./transfer-reconcile";
 
 const VES_DECIMALS = 2;
@@ -9,11 +9,11 @@ const USD_DECIMALS = 2;
 const RATE_DECIMALS = 4;
 
 function sourceFeeCase(overrides: Partial<TransferValues> = {}): TransferValues {
-    return { arrived: 5400.15, fee: 2.7, feeSide: "source", rate: 55.5, sent: 100, ...overrides };
+    return { arrived: 5400.15, fees: { destination: 0, source: 2.7 }, rate: 55.5, sent: 100, ...overrides };
 }
 
 function destFeeCase(overrides: Partial<TransferValues> = {}): TransferValues {
-    return { arrived: 5400, fee: 150, feeSide: "destination", rate: 55.5, sent: 100, ...overrides };
+    return { arrived: 5400, fees: { destination: 150, source: 0 }, rate: 55.5, sent: 100, ...overrides };
 }
 
 describe("solveTransfer with a source-side fee", () => {
@@ -26,7 +26,7 @@ describe("solveTransfer with a source-side fee", () => {
     });
 
     it("solves the fee from the shortfall against the rate", () => {
-        expect(solveTransfer(sourceFeeCase(), "fee", USD_DECIMALS)).toBe(2.7);
+        expect(solveTransfer(sourceFeeCase(), "source", USD_DECIMALS)).toBe(2.7);
     });
 
     it("solves the rate from the converted portion, not the total debited", () => {
@@ -44,7 +44,7 @@ describe("solveTransfer with a destination-side fee", () => {
     });
 
     it("solves the fee in the destination currency", () => {
-        expect(solveTransfer(destFeeCase(), "fee", VES_DECIMALS)).toBe(150);
+        expect(solveTransfer(destFeeCase(), "destination", VES_DECIMALS)).toBe(150);
     });
 
     it("solves the rate from the pre-fee arrival", () => {
@@ -53,14 +53,14 @@ describe("solveTransfer with a destination-side fee", () => {
 });
 
 describe("solveTransfer rounds a rate to the decimals it was asked for", () => {
-    const repeating: TransferValues = { arrived: 33_333.33, fee: 0, feeSide: "source", rate: 0, sent: 1000 };
+    const repeating: TransferValues = { arrived: 33_333.33, fees: NO_FEES, rate: 0, sent: 1000 };
 
     it("keeps four decimals of a repeating rate", () => {
         expect(solveTransfer(repeating, "rate", RATE_DECIMALS)).toBe(33.3333);
     });
 
     it("refuses a rate too small to survive the rounding it was asked for", () => {
-        const tiny: TransferValues = { arrived: 1, fee: 0, feeSide: "source", rate: 0, sent: 1_000_000 };
+        const tiny: TransferValues = { arrived: 1, fees: NO_FEES, rate: 0, sent: 1_000_000 };
         expect(solveTransfer(tiny, "rate", RATE_DECIMALS)).toBeNull();
     });
 });
@@ -71,11 +71,15 @@ describe("solveTransfer refuses the unanswerable", () => {
     });
 
     it("returns null when the fee consumes everything sent, leaving no rate to derive", () => {
-        expect(solveTransfer(sourceFeeCase({ fee: 100, sent: 100 }), "rate", USD_DECIMALS)).toBeNull();
+        expect(
+            solveTransfer(sourceFeeCase({ fees: { destination: 0, source: 100 }, sent: 100 }), "rate", USD_DECIMALS)
+        ).toBeNull();
     });
 
     it("returns null when a source fee exceeds what was sent", () => {
-        expect(solveTransfer(sourceFeeCase({ fee: 150, sent: 100 }), "arrived", VES_DECIMALS)).toBeNull();
+        expect(
+            solveTransfer(sourceFeeCase({ fees: { destination: 0, source: 150 }, sent: 100 }), "arrived", VES_DECIMALS)
+        ).toBeNull();
     });
 
     it("returns null rather than a non-finite figure", () => {
@@ -99,7 +103,13 @@ describe("transferLegs stores movement and leaves the fee outside", () => {
     });
 
     it("refuses a transfer whose source fee is the whole amount", () => {
-        expect(transferLegs(sourceFeeCase({ fee: 100, sent: 100 }), USD_DECIMALS, VES_DECIMALS)).toBeNull();
+        expect(
+            transferLegs(
+                sourceFeeCase({ fees: { destination: 0, source: 100 }, sent: 100 }),
+                USD_DECIMALS,
+                VES_DECIMALS
+            )
+        ).toBeNull();
     });
 });
 
@@ -114,14 +124,15 @@ describe("savedRate", () => {
 });
 
 describe("transferGap surfaces the unexplained difference", () => {
-    const shortfall: TransferValues = { arrived: 5400, fee: 0, feeSide: "source", rate: 55.5, sent: 100 };
+    const shortfall: TransferValues = { arrived: 5400, fees: NO_FEES, rate: 55.5, sent: 100 };
 
     it("reports the shortfall in the sender's currency while the sender carries the fee", () => {
         expect(transferGap(shortfall, USD_DECIMALS, VES_DECIMALS)).toBe(2.7);
     });
 
-    it("reports it in the receiver's currency once the fee sits there", () => {
-        expect(transferGap({ ...shortfall, feeSide: "destination" }, VES_DECIMALS, VES_DECIMALS)).toBe(150);
+    it("keeps reporting it in the sender's currency once the receiver charges a fee", () => {
+        const fees = { destination: 55.5, source: 0 };
+        expect(transferGap({ ...shortfall, fees }, USD_DECIMALS, VES_DECIMALS)).toBe(1.7);
     });
 
     it("reports nothing when the numbers already reconcile", () => {
@@ -133,15 +144,15 @@ describe("transferGap surfaces the unexplained difference", () => {
     });
 
     it("reports nothing when the difference is only the arrival rounded to its own cents", () => {
-        const bolivares: TransferValues = { arrived: 27.68, fee: 0, feeSide: "source", rate: 1 / 36.1234, sent: 1000 };
+        const bolivares: TransferValues = { arrived: 27.68, fees: NO_FEES, rate: 1 / 36.1234, sent: 1000 };
         expect(transferGap(bolivares, VES_DECIMALS, USD_DECIMALS)).toBe(0);
     });
 
     it("reports nothing on its own arrival when that arrival sits on a half cent", () => {
         for (const entered of [
-            { fee: 0, feeSide: "source", rate: 1 / 1031.52, sent: 128.94 },
-            { fee: 0, feeSide: "destination", rate: 36.5, sent: 1.05 },
-        ] as const) {
+            { fees: NO_FEES, rate: 1 / 1031.52, sent: 128.94 },
+            { fees: NO_FEES, rate: 36.5, sent: 1.05 },
+        ]) {
             const arrived = solveTransfer({ ...entered, arrived: 0 }, "arrived", USD_DECIMALS) ?? 0;
             expect(transferGap({ ...entered, arrived }, USD_DECIMALS, USD_DECIMALS)).toBe(0);
         }
@@ -149,20 +160,21 @@ describe("transferGap surfaces the unexplained difference", () => {
 
     it("leaves only the rate to explain more arriving than was ever converted", () => {
         const values: TransferValues = { ...shortfall, arrived: 5600 };
-        expect(solveTransfer({ ...values, feeSide: "destination" }, "fee", VES_DECIMALS)).toBeNull();
+        expect(solveTransfer(values, "destination", VES_DECIMALS)).toBeNull();
         expect(solveTransfer(values, "rate", RATE_DECIMALS)).toBe(56);
     });
 });
 
 describe("resolving a gap as a fee", () => {
     it("takes the dollars lost between Payoneer and a bolívar arrival from the sender", () => {
-        const values: TransferValues = { arrived: 157_471.66, fee: 0, feeSide: "source", rate: 1031.52, sent: 160 };
-        const fee = solveTransfer(values, "fee", USD_DECIMALS) ?? 0;
+        const values: TransferValues = { arrived: 157_471.66, fees: NO_FEES, rate: 1031.52, sent: 160 };
+        const source = solveTransfer(values, "source", USD_DECIMALS) ?? 0;
+        const fees = { destination: 0, source };
 
         expect(transferGap(values, USD_DECIMALS, VES_DECIMALS)).toBe(7.34);
-        expect(fee).toBe(7.34);
-        expect(transferGap({ ...values, fee }, USD_DECIMALS, VES_DECIMALS)).toBe(0);
-        expect(transferLegs({ ...values, fee }, USD_DECIMALS, VES_DECIMALS)).toMatchObject({
+        expect(source).toBe(7.34);
+        expect(transferGap({ ...values, fees }, USD_DECIMALS, VES_DECIMALS)).toBe(0);
+        expect(transferLegs({ ...values, fees }, USD_DECIMALS, VES_DECIMALS)).toMatchObject({
             fromAmount: 152.66,
             toAmount: 157_471.66,
         });
@@ -183,11 +195,12 @@ describe("resolving a gap as a fee", () => {
                     if (sent > 0 && arrived > 0) {
                         for (const feeSide of ["source", "destination"] as const) {
                             const feeDecimals = feeSide === "source" ? fromDecimals : toDecimals;
-                            const values: TransferValues = { arrived, fee: 0, feeSide, rate, sent };
-                            const fee = solveTransfer(values, "fee", feeDecimals) ?? 0;
-                            const legs = transferLegs({ ...values, fee }, fromDecimals, toDecimals);
+                            const values: TransferValues = { arrived, fees: NO_FEES, rate, sent };
+                            const fee = solveTransfer(values, feeSide, feeDecimals) ?? 0;
+                            const fees = { ...NO_FEES, [feeSide]: fee };
+                            const legs = transferLegs({ ...values, fees }, fromDecimals, toDecimals);
 
-                            expect(transferGap({ ...values, fee }, feeDecimals, toDecimals)).toBe(0);
+                            expect(transferGap({ ...values, fees }, fromDecimals, toDecimals)).toBe(0);
                             expect(legs?.toAmount).toBe(
                                 feeSide === "source" ? arrived : roundMoney(arrived + fee, toDecimals)
                             );
@@ -201,5 +214,42 @@ describe("resolving a gap as a fee", () => {
                 }
             }
         }
+    });
+});
+
+describe("a fee on each side", () => {
+    // Payoneer took $15 sending, Mercantil took $16.05 receiving, $83.95 landed.
+    const payoneer: TransferValues = { arrived: 83.95, fees: { destination: 0, source: 15 }, rate: 1, sent: 115 };
+
+    it("names the receiver's charge as the gap left after the sender's fee", () => {
+        expect(transferGap(payoneer, USD_DECIMALS, USD_DECIMALS)).toBe(16.05);
+        expect(solveTransfer(payoneer, "destination", USD_DECIMALS)).toBe(16.05);
+    });
+
+    it("adds the gap to a fee the sender already charged", () => {
+        expect(solveTransfer(payoneer, "source", USD_DECIMALS)).toBe(31.05);
+    });
+
+    it("moves what neither bank kept", () => {
+        const fees = { destination: 16.05, source: 15 };
+
+        expect(transferGap({ ...payoneer, fees }, USD_DECIMALS, USD_DECIMALS)).toBe(0);
+        expect(transferLegs({ ...payoneer, fees }, USD_DECIMALS, USD_DECIMALS)).toStrictEqual({
+            fromAmount: 100,
+            toAmount: 100,
+        });
+    });
+
+    it("closes a gap measured in dollars with a fee charged in bolívares", () => {
+        const bolivares: TransferValues = {
+            arrived: 140_000,
+            fees: { destination: 0, source: 5 },
+            rate: 957.1,
+            sent: 160,
+        };
+        const destination = solveTransfer(bolivares, "destination", VES_DECIMALS) ?? 0;
+
+        expect(destination).toBe(8350.5);
+        expect(transferGap({ ...bolivares, fees: { destination, source: 5 } }, USD_DECIMALS, VES_DECIMALS)).toBe(0);
     });
 });

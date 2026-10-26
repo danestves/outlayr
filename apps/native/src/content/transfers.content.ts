@@ -91,6 +91,13 @@ const transfers = {
             pt: "Tarifa",
             "pt-PT": "Comissão",
         }),
+        "transfers.field.feeAt": t({
+            en: "{account} fee",
+            es: "Comisión de {account}",
+            fr: "Frais de {account}",
+            pt: "Tarifa de {account}",
+            "pt-PT": "Comissão de {account}",
+        }),
         "transfers.field.feeSide": t({
             en: "Fee charged to",
             es: "Comisión cobrada a",
@@ -143,12 +150,11 @@ const transfers = {
             fr: "Vers",
             pt: "Para",
         }),
-        "transfers.gap.itsAFee": t({
-            en: "It's a fee",
-            es: "Es una comisión",
-            fr: "Ce sont des frais",
-            pt: "É uma tarifa",
-            "pt-PT": "É uma comissão",
+        "transfers.gap.chargedBy": t({
+            en: "{account} charged it",
+            es: "Lo cobró {account}",
+            fr: "Prélevé par {account}",
+            pt: "Cobrado por {account}",
         }),
         "transfers.gap.itsOnTop": t({
             en: "It's on top",
@@ -252,21 +258,36 @@ const transfers = {
         }),
         "transfers.sentence.fee": t({
             en: "A {fee} fee from {feeSide}.",
-            es: "Comisión de {fee} desde {feeSide}.",
+            es: "Comisión de {fee} en {feeSide}.",
             fr: "Frais de {fee} prélevés sur {feeSide}.",
             pt: "Tarifa de {fee} cobrada em {feeSide}.",
             "pt-PT": "Comissão de {fee} cobrada em {feeSide}.",
         }),
         "transfers.sentence.feeArrives": t({
             en: "After a {fee} fee from {feeSide}, {arrives} arrives.",
-            es: "Tras una comisión de {fee} desde {feeSide}, llegan {arrives}.",
+            es: "Tras una comisión de {fee} en {feeSide}, llegan {arrives}.",
             fr: "Après {fee} de frais prélevés sur {feeSide}, il reste {arrives}.",
             pt: "Após uma tarifa de {fee} cobrada em {feeSide}, chegam {arrives}.",
             "pt-PT": "Após uma comissão de {fee} cobrada em {feeSide}, chegam {arrives}.",
         }),
+        "transfers.sentence.fees": t({
+            en: "Fees of {fee} from {feeSide} and {arrivalFee} from {arrivalFeeSide}.",
+            es: "Comisiones de {fee} en {feeSide} y {arrivalFee} en {arrivalFeeSide}.",
+            fr: "Frais de {fee} prélevés sur {feeSide} et de {arrivalFee} sur {arrivalFeeSide}.",
+            pt: "Tarifas de {fee} cobradas em {feeSide} e {arrivalFee} em {arrivalFeeSide}.",
+            "pt-PT": "Comissões de {fee} cobradas em {feeSide} e {arrivalFee} em {arrivalFeeSide}.",
+        }),
+        "transfers.sentence.feesArrive": t({
+            en: "After fees of {fee} from {feeSide} and {arrivalFee} from {arrivalFeeSide}, {arrives} arrives.",
+            es: "Tras comisiones de {fee} en {feeSide} y {arrivalFee} en {arrivalFeeSide}, llegan {arrives}.",
+            fr: "Après {fee} de frais prélevés sur {feeSide} et {arrivalFee} sur {arrivalFeeSide}, il reste {arrives}.",
+            pt: "Após tarifas de {fee} cobradas em {feeSide} e {arrivalFee} em {arrivalFeeSide}, chegam {arrives}.",
+            "pt-PT":
+                "Após comissões de {fee} cobradas em {feeSide} e {arrivalFee} em {arrivalFeeSide}, chegam {arrives}.",
+        }),
         "transfers.sentence.feeOnTop": t({
             en: "Plus a {fee} fee from {feeSide}.",
-            es: "Más una comisión de {fee} desde {feeSide}.",
+            es: "Más una comisión de {fee} en {feeSide}.",
             fr: "Plus {fee} de frais prélevés sur {feeSide}.",
             pt: "Mais uma tarifa de {fee} cobrada em {feeSide}.",
             "pt-PT": "Mais uma comissão de {fee} cobrada em {feeSide}.",

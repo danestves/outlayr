@@ -137,7 +137,7 @@ export function useOutsidePaymentRows(
                       moved: {
                           arrived: row.amount,
                           arrivedCurrency: account.currency,
-                          fee: null,
+                          fees: [],
                           outside: null,
                           sent: row.amount,
                       },

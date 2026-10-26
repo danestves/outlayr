@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import type BetterSqlite3 from "better-sqlite3";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 
 import type { Database } from "@/db/client";
 import { accounts, exchangeRates, outbox, transactions, transfers } from "@/db/schema";
@@ -701,7 +701,7 @@ describe("the fee on a transfer the user deleted", () => {
             date: WHEN,
             exchangeRate: null,
             exchangeRateType: null,
-            fee: { amount: 3, note: "Wire fee", side: "source" },
+            fees: { destination: { amount: 2, note: "Wire fee" }, source: { amount: 3, note: "Wire fee" } },
             fromAccountId: "acc-checking",
             fromAmount: 500,
             fromCurrency: "USD",
@@ -712,7 +712,7 @@ describe("the fee on a transfer the user deleted", () => {
         const [fee] = await db
             .select({ id: transactions.id })
             .from(transactions)
-            .where(eq(transactions.transferId, transferId));
+            .where(and(eq(transactions.transferId, transferId), eq(transactions.accountId, "acc-checking")));
         return { db, feeId: fee.id, transferId };
     }
 
@@ -725,7 +725,12 @@ describe("the fee on a transfer the user deleted", () => {
             .select({ deletedAt: transfers.deletedAt })
             .from(transfers)
             .where(eq(transfers.id, transferId));
+        const liveFees = await db
+            .select({ id: transactions.id })
+            .from(transactions)
+            .where(and(eq(transactions.transferId, transferId), isNull(transactions.deletedAt)));
         expect(transfer?.deletedAt).not.toBeNull();
+        expect(liveFees).toStrictEqual([]);
         expect((await deletedTransactionsQuery(db)).map((row) => row.id)).toStrictEqual([]);
     });
 

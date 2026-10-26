@@ -31,12 +31,13 @@ describe("a transfer sits in the day's list without touching its total", () => {
         expect(section.data).toHaveLength(1);
     });
 
-    it("folds a fee under its transfer instead of listing it as its own row", () => {
+    it("folds the fee each side charged under its transfer instead of listing them as rows", () => {
         const transfer = row(100, false, { excludedFromTotals: true, id: "t1", transferId: "t1" });
-        const fee = row(2.7, false, { id: "fee", transferId: "t1" });
-        const [section] = groupByDay([transfer, fee], "USD");
+        const sent = row(15, false, { id: "sent", transferId: "t1" });
+        const received = row(16.05, false, { id: "received", transferId: "t1" });
+        const [section] = groupByDay([transfer, sent, received], "USD");
 
-        expect(section.data).toStrictEqual([{ ...transfer, fee }]);
-        expect(section.total).toBe(-2.7);
+        expect(section.data).toStrictEqual([{ ...transfer, fees: [sent, received] }]);
+        expect(section.total).toBeCloseTo(-31.05);
     });
 });

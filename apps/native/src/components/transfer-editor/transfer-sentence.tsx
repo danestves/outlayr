@@ -6,6 +6,8 @@ import { useTranslation } from "@/i18n/context";
 
 export const TRANSFER_SENTENCE_SLOTS = [
     "amount",
+    "arrivalFee",
+    "arrivalFeeSide",
     "arrives",
     "fee",
     "feeSide",
@@ -22,7 +24,7 @@ export type TransferSentenceSlot = (typeof TRANSFER_SENTENCE_SLOTS)[number];
 export const TRANSFER_SENTENCE_KEYS = [
     "transfers.sentence.move",
     "transfers.sentence.rate",
-    "transfers.sentence.fee",
+    "transfers.sentence.fees",
     "transfers.sentence.noFee",
     "transfers.sentence.outside",
 ] as const;
@@ -33,10 +35,14 @@ export const TRANSFER_FEE_ARRIVAL_KEY = "transfers.sentence.feeArrives";
 
 export const TRANSFER_FEE_ON_TOP_KEY = "transfers.sentence.feeOnTop";
 
+export const TRANSFER_FEES_ARRIVAL_KEY = "transfers.sentence.feesArrive";
+
 export type TransferSentenceValues = Readonly<Record<TransferSentenceSlot, string | null>>;
 
 interface TransferSentenceProps {
     activeSlot: TransferSentenceSlot | null;
+    /** Both sides charge: the sender's fee reads first, the receiver's as `arrivalFee`. */
+    bothFees: boolean;
     crossCurrency: boolean;
     customRate: boolean;
     figures: Partial<Record<TransferSentenceSlot, SentenceFigure>>;
@@ -50,6 +56,7 @@ interface TransferSentenceProps {
 
 export function TransferSentence({
     activeSlot,
+    bothFees,
     crossCurrency,
     customRate,
     figures,
@@ -62,10 +69,15 @@ export function TransferSentence({
 }: TransferSentenceProps) {
     const t = useTranslation();
 
+    // Two fees would both read "Fee" to VoiceOver; naming the bank tells them apart.
+    const feeOf = (account: string | null) =>
+        bothFees && account !== null ? t("transfers.field.feeAt", { account }) : t("transfers.field.fee");
     const labels = {
         amount: t("transfers.field.sent"),
+        arrivalFee: feeOf(values.arrivalFeeSide),
+        arrivalFeeSide: t("transfers.field.feeSide"),
         arrives: t("transfers.field.arrives"),
-        fee: t("transfers.field.fee"),
+        fee: feeOf(values.feeSide),
         feeSide: t("transfers.field.feeSide"),
         from: t("transfers.field.from"),
         outside: t("transfers.field.outside"),
@@ -77,6 +89,8 @@ export function TransferSentence({
 
     const blanks = {
         amount: t("transfers.sentence.blank.amount"),
+        arrivalFee: t("transfers.sentence.blank.amount"),
+        arrivalFeeSide: t("transfers.sentence.blank.account"),
         arrives: t("transfers.sentence.blank.amount"),
         fee: t("transfers.sentence.blank.noFee"),
         feeSide: t("transfers.sentence.blank.account"),
@@ -110,8 +124,10 @@ export function TransferSentence({
     };
 
     const rateClause = customRate ? t(TRANSFER_CUSTOM_RATE_KEY) : t("transfers.sentence.rate");
-    const includedClause = crossCurrency ? t("transfers.sentence.fee") : t(TRANSFER_FEE_ARRIVAL_KEY);
-    const feeClause = onTop ? t(TRANSFER_FEE_ON_TOP_KEY) : includedClause;
+    const singleClause = crossCurrency ? t("transfers.sentence.fee") : t(TRANSFER_FEE_ARRIVAL_KEY);
+    const bothClause = crossCurrency ? t("transfers.sentence.fees") : t(TRANSFER_FEES_ARRIVAL_KEY);
+    const included = bothFees ? bothClause : singleClause;
+    const feeClause = onTop && !bothFees ? t(TRANSFER_FEE_ON_TOP_KEY) : included;
     const template = [
         t("transfers.sentence.move"),
         crossCurrency ? rateClause : null,
@@ -125,6 +141,8 @@ export function TransferSentence({
         <Sentence
             slots={{
                 amount: part("amount"),
+                arrivalFee: part("arrivalFee"),
+                arrivalFeeSide: part("arrivalFeeSide"),
                 arrives: part("arrives"),
                 fee: part("fee"),
                 feeSide: part("feeSide"),

@@ -19,17 +19,33 @@ import { pairQuotedInverse, quotePairRate, rateEntryText } from "@/domain/transa
 import { marketRateFor, transferRateOptions } from "@/domain/transfer-rate-options";
 import type { TransferRateChoice } from "@/domain/transfer-rate-options";
 import { solveTransfer, transferGap, transferLegs } from "@/domain/transfer-reconcile";
-import type { FeeSide, TransferLegs, TransferValues } from "@/domain/transfer-reconcile";
+import type { FeeSide, TransferFees, TransferLegs, TransferValues } from "@/domain/transfer-reconcile";
 
-/** `shortfall` is signed, in the fee's own currency: how far the fee overruns its side. */
-type TransferBlock = { kind: "fee"; shortfall: number } | { kind: "rate" };
+/** `shortfall` is signed, in `side`'s own currency: how far that side's fee overruns what reaches it. */
+type TransferBlock = { kind: "fee"; shortfall: number; side: FeeSide } | { kind: "rate" };
 
 type EnteredTransfer = Omit<TransferValues, "arrived">;
 
 interface Units {
-    fee: number;
     from: number;
     to: number;
+}
+
+interface TopUp {
+    amount: number;
+    side: FeeSide;
+}
+
+const FEE_SIDES = ["source", "destination"] as const satisfies readonly FeeSide[];
+
+const NO_GAP_FEES: Record<FeeSide, number | null> = { destination: null, source: null };
+
+function otherSide(side: FeeSide): FeeSide {
+    return side === "source" ? "destination" : "source";
+}
+
+function sideDecimals(side: FeeSide, units: Units): number {
+    return side === "source" ? units.from : units.to;
 }
 
 export type FeeMode = "none" | "included" | "onTop";
@@ -38,7 +54,8 @@ interface DraftMath {
     arrived: number | null;
     block: TransferBlock | null;
     gap: number;
-    gapFee: number | null;
+    /** The whole fee each side would charge to close the gap, null where that side cannot close it. */
+    gapFees: Record<FeeSide, number | null>;
     legs: TransferLegs | null;
     net: number | null;
     outside: number;
@@ -91,8 +108,9 @@ function rateChoices(
 function transferBlock(
     entered: EnteredTransfer | null,
     arrived: number | null,
-    feeDecimals: number,
-    reached: number | null
+    units: Units,
+    reached: number | null,
+    side: FeeSide
 ): TransferBlock | null {
     if (entered === null) {
         return { kind: "rate" };
@@ -100,10 +118,21 @@ function transferBlock(
     if (arrived !== null && arrived > 0) {
         return null;
     }
-    const affordable = reached ?? solveTransfer({ ...entered, arrived: 0 }, "fee", feeDecimals);
+    const decimals = sideDecimals(side, units);
+    const affordable = reached ?? solveTransfer({ ...entered, arrived: 0 }, side, decimals);
     return affordable === null
         ? { kind: "rate" }
-        : { kind: "fee", shortfall: roundMoney(affordable - entered.fee, feeDecimals) };
+        : { kind: "fee", shortfall: roundMoney(affordable - entered.fees[side], decimals), side };
+}
+
+function closingFee(values: TransferValues, side: FeeSide, units: Units): number | null {
+    const fee = solveTransfer(values, side, sideDecimals(side, units));
+    if (fee === null || fee <= 0) {
+        return null;
+    }
+    return transferLegs({ ...values, fees: { ...values.fees, [side]: fee } }, units.from, units.to) === null
+        ? null
+        : fee;
 }
 
 // A null or zero arrival means the fee takes everything reaching its side. Both refuse, or the legs would credit a
@@ -113,12 +142,13 @@ function settle(
     pinned: number | null,
     units: Units,
     crossCurrency: boolean,
-    topUp: number,
-    outsideConfirmed: boolean
+    topUp: TopUp | null,
+    outsideConfirmed: boolean,
+    blockSide: FeeSide
 ): DraftMath {
-    const arrivalTopUp = typed?.feeSide === "destination" ? topUp : 0;
-    const entered =
-        typed === null ? null : { ...typed, sent: roundMoney(typed.sent + topUp - arrivalTopUp, units.from) };
+    const arrivalTopUp = topUp?.side === "destination" ? topUp.amount : 0;
+    const sourceTopUp = topUp?.side === "source" ? topUp.amount : 0;
+    const entered = typed === null ? null : { ...typed, sent: roundMoney(typed.sent + sourceTopUp, units.from) };
     const solved = entered === null ? null : solveTransfer({ ...entered, arrived: 0 }, "arrived", units.to);
     const net = pinned === null ? solved : roundMoney(pinned - arrivalTopUp, units.to);
     const arrived = pinned ?? (net === null ? null : roundMoney(net + arrivalTopUp, units.to));
@@ -130,24 +160,21 @@ function settle(
             block:
                 typed !== null && typed.sent <= 0
                     ? null
-                    : transferBlock(entered, net, units.fee, arrivalTopUp > 0 ? pinned : null),
+                    : transferBlock(entered, net, units, arrivalTopUp > 0 ? pinned : null, blockSide),
             gap: 0,
-            gapFee: null,
+            gapFees: NO_GAP_FEES,
             legs: null,
             net,
             outside: 0,
         };
     }
-    const gap = pinned === null ? 0 : transferGap(values, units.fee, units.to);
+    const gap = pinned === null ? 0 : transferGap(values, units.from, units.to);
     const outside = crossCurrency && outsideConfirmed && gap < 0 ? -gap : 0;
-    const gapFee = solveTransfer(values, "fee", units.fee);
-    const feeCloses =
-        gapFee !== null && gapFee > 0 && transferLegs({ ...values, fee: gapFee }, units.from, units.to) !== null;
     return {
         arrived,
         block: null,
         gap,
-        gapFee: feeCloses ? gapFee : null,
+        gapFees: { destination: closingFee(values, "destination", units), source: closingFee(values, "source", units) },
         legs:
             gap === 0 || (crossCurrency && gap > 0) || outside > 0 ? transferLegs(values, units.from, units.to) : null,
         net,
@@ -155,26 +182,33 @@ function settle(
     };
 }
 
+// "On top" reads only as a single fee: with a fee on each side both are included in the figures typed.
 function reconcile(
     typed: Omit<EnteredTransfer, "rate"> & { rate: number | null },
     pinned: number | null,
     units: Units,
     crossCurrency: boolean,
     feeMode: FeeMode,
-    outside: boolean
-): DraftMath & { gapOnTop: boolean; paid: number } {
+    outside: boolean,
+    activeSide: FeeSide
+): DraftMath & { gapOnTop: boolean; onTopSide: FeeSide | null; paid: number } {
     const { rate } = typed;
     const entered = rate === null ? null : { ...typed, rate };
-    const topUp = feeMode === "onTop" ? typed.fee : 0;
-    const math = settle(entered, pinned, units, crossCurrency, topUp, outside);
+    const charged = FEE_SIDES.filter((side) => typed.fees[side] > 0);
+    const single = charged.length === 1 ? charged[0] : null;
+    const blockSide = single === null || typed.fees[activeSide] > 0 ? activeSide : single;
+    const asTopUp = single === null ? null : { amount: typed.fees[single], side: single };
+    const topUp = feeMode === "onTop" ? asTopUp : null;
+    const math = settle(entered, pinned, units, crossCurrency, topUp, outside, blockSide);
     const onTop =
-        feeMode === "included" && math.gap !== 0
-            ? settle(entered, pinned, units, crossCurrency, typed.fee, outside)
+        feeMode === "included" && asTopUp !== null && math.gap !== 0
+            ? settle(entered, pinned, units, crossCurrency, asTopUp, outside, blockSide)
             : null;
     return {
         ...math,
         gapOnTop: onTop?.gap === 0 && onTop.legs !== null,
-        paid: roundMoney(typed.sent + (typed.feeSide === "source" ? topUp : 0), units.from),
+        onTopSide: topUp?.side ?? null,
+        paid: roundMoney(typed.sent + (topUp?.side === "source" ? topUp.amount : 0), units.from),
     };
 }
 
@@ -190,10 +224,12 @@ export interface TransferDraft {
     crossCurrency: boolean;
     customRatePadText: string;
     date: Date;
+    /** The fee on `feeSide`, the side the fee step edits. */
     fee: number;
     feeCurrency: string;
     feeDecimals: number;
     feeMode: FeeMode;
+    fees: TransferFees;
     feeSide: FeeSide;
     feeText: string;
     from: Account | null;
@@ -202,10 +238,12 @@ export interface TransferDraft {
     fromCurrency: string;
     fromDecimals: number;
     gapAmount: number;
-    gapFee: number | null;
+    gapFees: Record<FeeSide, number | null>;
     gapOnTop: boolean;
     legs: TransferLegs | null;
     marketRates: Record<TransferRateChoice, number | null>;
+    /** Hands `side`'s fee to the other side, through the rate; only while the other side charges nothing. */
+    moveFee: (side: FeeSide) => void;
     outside: number;
     paid: number;
     prefillArrival: () => void;
@@ -216,8 +254,9 @@ export interface TransferDraft {
     rateOptions: TransferRateChoice[];
     rateSources: Record<TransferRateChoice, RateSource | null>;
     rateType: TransferRateChoice;
-    resolveAsFee: () => void;
+    resolveAsFee: (side: FeeSide) => void;
     resolveAsOnTop: () => void;
+    selectFeeSide: (side: FeeSide) => void;
     sent: number;
     sentText: string;
     setArrived: (text: string) => void;
@@ -233,7 +272,6 @@ export interface TransferDraft {
     toBalanceAfter: number;
     toCurrency: string;
     toDecimals: number;
-    toggleFeeSide: () => void;
 }
 
 export interface TransferSeed {
@@ -255,7 +293,7 @@ interface Opening {
     customRates: Record<string, CustomRate>;
     date: Date;
     feeSide: FeeSide;
-    feeText: string;
+    feeTexts: Record<FeeSide, string>;
     fromId: string | null;
     outside: boolean;
     rateType: TransferRateChoice | null;
@@ -306,13 +344,17 @@ function openingState(
         customRates: {},
         date: seed?.date ?? new Date(),
         feeSide: "source",
-        feeText: "",
+        feeTexts: { destination: "", source: "" },
         fromId,
         outside: false,
         rateType: null,
         sentText: onSent ? numberToNumpad(amount, minorUnitsFor(from.currency)) : "",
         toId,
     };
+}
+
+function feeText(fee: number, currency: string): string {
+    return fee > 0 ? numberToNumpad(fee, minorUnitsFor(currency)) : "";
 }
 
 function savedState(accounts: readonly Account[], saved: SavedTransfer): Opening {
@@ -333,7 +375,7 @@ function savedState(accounts: readonly Account[], saved: SavedTransfer): Opening
     }
     const rateType = saved.rateType ?? "official";
     const inverse = pairQuotedInverse(saved.fromCurrency, saved.toCurrency, saved.rate);
-    const feeDecimals = minorUnitsFor(saved.feeSide === "destination" ? toCurrency : fromCurrency);
+    const { fees } = saved;
     return {
         arrivalPinned: fromCurrency !== toCurrency,
         arrivedText: numberToNumpad(saved.arrived, minorUnitsFor(toCurrency)),
@@ -349,15 +391,15 @@ function savedState(accounts: readonly Account[], saved: SavedTransfer): Opening
                   }
                 : {},
         date: saved.date,
-        feeSide: saved.feeSide,
-        feeText: numberToNumpad(saved.fee, feeDecimals),
+        feeSide: fees.source <= 0 && fees.destination > 0 ? "destination" : "source",
+        feeTexts: { destination: feeText(fees.destination, toCurrency), source: feeText(fees.source, fromCurrency) },
         fromId: saved.fromAccountId,
         outside:
             fromCurrency !== toCurrency &&
             saved.rate !== null &&
             transferGap(
-                { arrived: saved.arrived, fee: saved.fee, feeSide: saved.feeSide, rate: saved.rate, sent: saved.sent },
-                feeDecimals,
+                { arrived: saved.arrived, fees, rate: saved.rate, sent: saved.sent },
+                minorUnitsFor(fromCurrency),
                 minorUnitsFor(toCurrency)
             ) < 0,
         rateType,
@@ -426,7 +468,7 @@ function startingDraft(
     const opening = saved ? savedState(accounts, saved) : openingState(accounts, seed, lastTransfer(db));
     return {
         ...opening,
-        feeMode: opening.feeText === "" ? "none" : "included",
+        feeMode: opening.feeTexts.source === "" && opening.feeTexts.destination === "" ? "none" : "included",
         marketType: opening.rateType === "custom" ? "official" : opening.rateType,
         shownPair: null,
     };
@@ -451,7 +493,7 @@ export function useTransferDraft(
     const [chosenRate, setChosenRate] = useState<TransferRateChoice | null>(opening.rateType);
     const [marketType, setMarketType] = useState(opening.marketType);
     const [customRates, setCustomRates] = useState<Record<string, CustomRate>>(opening.customRates);
-    const [feeText, setFeeText] = useState(opening.feeText);
+    const [feeTexts, setFeeTexts] = useState(opening.feeTexts);
     const [feeMode, setFeeMode] = useState(opening.feeMode);
     const [feeSide, setFeeSide] = useState<FeeSide>(opening.feeSide);
     const [date, setDate] = useState(opening.date);
@@ -521,25 +563,40 @@ export function useTransferDraft(
 
     const fromDecimals = minorUnitsFor(fromCurrency);
     const toDecimals = minorUnitsFor(toCurrency);
-    const feeDecimals = feeSide === "destination" ? toDecimals : fromDecimals;
+    const units = { from: fromDecimals, to: toDecimals };
+    const feeDecimals = sideDecimals(feeSide, units);
     const feeCurrency = feeSide === "destination" ? toCurrency : fromCurrency;
 
-    // Re-derived per render at the fee side's units, so moving the fee re-quantizes it instead of solving against a
-    // figure the slip no longer shows.
-    const fee = roundMoney(numpadToNumber(feeText), feeDecimals);
+    // Re-derived per render at each side's units, so a fee whose side changes currency is re-quantized instead of
+    // solved against a figure the slip no longer shows.
+    const fees: TransferFees = {
+        destination: roundMoney(numpadToNumber(feeTexts.destination), toDecimals),
+        source: roundMoney(numpadToNumber(feeTexts.source), fromDecimals),
+    };
+    const fee = fees[feeSide];
     const sent = roundMoney(numpadToNumber(sentText), fromDecimals);
     const math = reconcile(
-        { fee, feeSide, rate, sent },
+        { fees, rate, sent },
         arrivalPinned ? numpadToNumber(arrivedText) : null,
-        {
-            fee: feeDecimals,
-            from: fromDecimals,
-            to: toDecimals,
-        },
+        units,
         crossCurrency,
         feeMode,
-        outside
+        outside,
+        feeSide
     );
+
+    const setFeeText = (side: FeeSide, text: string) => setFeeTexts((current) => ({ ...current, [side]: text }));
+
+    // Keeps every figure while an on-top fee becomes an included one, so a second fee can join it.
+    const includeOnTop = () => {
+        if (math.onTopSide === "source") {
+            setSentText(numberToNumpad(math.paid, fromDecimals));
+        }
+        if (math.onTopSide === "destination" && math.net !== null) {
+            setArrivedText(numberToNumpad(math.net, toDecimals));
+        }
+        setFeeMode("included");
+    };
 
     // A pinned arrival is in the destination's currency, so it survives a new source and drops only when the
     // destination changes (a swap included).
@@ -591,18 +648,38 @@ export function useTransferDraft(
         feeCurrency,
         feeDecimals,
         feeMode,
+        fees,
         feeSide,
-        feeText,
+        feeText: feeTexts[feeSide],
         from,
         fromBalance: roundMoney(fromBalance.total, fromDecimals),
         fromBalanceAfter: roundMoney(fromBalance.total + fromRestored - math.paid, fromDecimals),
         fromCurrency,
         fromDecimals,
         gapAmount: math.gap,
-        gapFee: math.gapFee,
+        gapFees: math.gapFees,
         gapOnTop: math.gapOnTop,
         legs: math.legs,
         marketRates: marketRatesOf(quoteType, tableRates, ownQuote),
+        moveFee: (side) => {
+            const target = otherSide(side);
+            if (fees[target] > 0) {
+                return;
+            }
+            const amount = fees[side];
+            const text =
+                crossCurrency && rate !== null && amount > 0
+                    ? numberToNumpad(
+                          roundMoney(
+                              target === "destination" ? amount * rate : amount / rate,
+                              sideDecimals(target, units)
+                          ),
+                          sideDecimals(target, units)
+                      )
+                    : feeTexts[side];
+            setFeeTexts(side === "source" ? { destination: text, source: "" } : { destination: "", source: text });
+            setFeeSide(target);
+        },
         outside: math.outside,
         paid: math.paid,
         prefillArrival: () => {
@@ -620,19 +697,16 @@ export function useTransferDraft(
             official: pairRateSource(fromCurrency, toCurrency, date, rateTables.official),
         },
         rateType: shownRateType,
-        resolveAsFee: () => {
-            if (math.gapFee !== null && math.net !== null) {
-                setFeeText(numberToNumpad(math.gapFee, feeDecimals));
-                setFeeMode("included");
-                if (feeMode === "onTop" && feeSide === "source") {
-                    setSentText(numberToNumpad(math.paid, fromDecimals));
-                }
-                if (feeMode === "onTop" && feeSide === "destination") {
-                    setArrivedText(numberToNumpad(math.net, toDecimals));
-                }
+        resolveAsFee: (side) => {
+            const closing = math.gapFees[side];
+            if (closing !== null && math.net !== null) {
+                includeOnTop();
+                setFeeText(side, numberToNumpad(closing, sideDecimals(side, units)));
+                setFeeSide(side);
             }
         },
         resolveAsOnTop: () => setFeeMode("onTop"),
+        selectFeeSide: setFeeSide,
         snapshot: () => ({
             arrivalPinned,
             arrivedText,
@@ -641,7 +715,7 @@ export function useTransferDraft(
             date,
             feeMode,
             feeSide,
-            feeText,
+            feeTexts,
             fromId,
             marketType,
             outside,
@@ -666,15 +740,19 @@ export function useTransferDraft(
             setDate(next);
         },
         setFee: (text) => {
-            setFeeText(text);
-            if (feeMode === "none" && numpadToNumber(text) > 0) {
+            const charging = numpadToNumber(text) > 0;
+            if (charging && math.onTopSide === otherSide(feeSide)) {
+                includeOnTop();
+            }
+            setFeeText(feeSide, text);
+            if (feeMode === "none" && charging) {
                 setFeeMode("included");
             }
         },
         setFeeMode: (mode) => {
-            setFeeMode(mode);
+            setFeeMode(mode === "none" && fees[otherSide(feeSide)] > 0 ? "included" : mode);
             if (mode === "none") {
-                setFeeText("");
+                setFeeText(feeSide, "");
             }
         },
         setOutside,
@@ -694,14 +772,5 @@ export function useTransferDraft(
         toBalanceAfter: roundMoney(toBalance.total + toRestored + (math.net ?? 0), toDecimals),
         toCurrency,
         toDecimals,
-        toggleFeeSide: () => {
-            const toDestination = feeSide === "source";
-            if (crossCurrency && rate !== null && fee > 0) {
-                const decimals = toDestination ? toDecimals : fromDecimals;
-                const converted = roundMoney(toDestination ? fee * rate : fee / rate, decimals);
-                setFeeText(numberToNumpad(converted, decimals));
-            }
-            setFeeSide(toDestination ? "destination" : "source");
-        },
     };
 }

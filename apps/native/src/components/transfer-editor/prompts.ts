@@ -1,19 +1,22 @@
 import { formatAmount } from "@/domain/money";
 import { formatRateFigure, quotePairRate } from "@/domain/transaction-entry-rate";
 import { quotedByBcv, rateDeltaLine } from "@/domain/transaction-form-labels";
+import type { FeeSide } from "@/domain/transfer-reconcile";
 import type { useTranslation } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
 
 import type { useTransferDraft } from "./use-transfer-draft";
 
+export interface TransferGapAction {
+    /** Set when resolving leaves the arrival pad showing a figure the sentence no longer asks for. */
+    hidesArrival: boolean;
+    label: string;
+    onPress: () => void;
+}
+
 export interface TransferGapPrompt {
-    feeLabel: string | null;
+    actions: TransferGapAction[];
     message: string;
-    onFee: (() => void) | null;
-    onOutside: (() => void) | null;
-    onTop: (() => void) | null;
-    outsideLabel: string | null;
-    topLabel: string | null;
 }
 
 type Draft = ReturnType<typeof useTransferDraft>;
@@ -29,7 +32,7 @@ export function rateDeltaNote(draft: Draft, t: Translate, language: Language): s
     if (rate === null || official === null) {
         return null;
     }
-    const moved = draft.paid - (draft.feeSide === "source" ? draft.fee : 0);
+    const moved = draft.paid - draft.fees.source;
     return rateDeltaLine(t, {
         bcv: quotedByBcv(draft.fromCurrency, draft.toCurrency),
         code: draft.toCurrency,
@@ -43,9 +46,10 @@ export function blockMessage(draft: Draft, t: Translate, language: Language): st
     if (draft.block === null || draft.block.kind === "rate") {
         return t("transfers.rate.unavailable");
     }
+    const currency = draft.block.side === "destination" ? draft.toCurrency : draft.fromCurrency;
     return draft.block.shortfall > 0
         ? t("transfers.block.feeOverArrival", {
-              amount: formatAmount(draft.block.shortfall, draft.feeCurrency, true, language),
+              amount: formatAmount(draft.block.shortfall, currency, true, language),
           })
         : t("transfers.block.nothingArrives");
 }
@@ -55,15 +59,7 @@ export function blockPrompt(draft: Draft, t: Translate, language: Language): Tra
     if (draft.block === null) {
         return null;
     }
-    return {
-        feeLabel: null,
-        message: blockMessage(draft, t, language),
-        onFee: null,
-        onOutside: null,
-        onTop: null,
-        outsideLabel: null,
-        topLabel: null,
-    };
+    return { actions: [], message: blockMessage(draft, t, language) };
 }
 
 export function gapPrompt(draft: Draft, t: Translate, language: Language): TransferGapPrompt | null {
@@ -71,17 +67,34 @@ export function gapPrompt(draft: Draft, t: Translate, language: Language): Trans
     if (gap === 0 || draft.outside > 0) {
         return null;
     }
-    const offersFee = gap > 0 && draft.gapFee !== null;
-    const offersOutside = gap < 0 && draft.crossCurrency;
+    const ends = { destination: draft.to, source: draft.from };
+    // The side still charging nothing leads: a second bank's cut is likelier than the first one charging twice.
+    const order: FeeSide[] =
+        draft.fees.source > 0 && draft.fees.destination <= 0 ? ["destination", "source"] : ["source", "destination"];
+    const fees = order.flatMap((side) =>
+        gap > 0 && draft.gapFees[side] !== null
+            ? [
+                  {
+                      hidesArrival: false,
+                      label: t("transfers.gap.chargedBy", {
+                          account: ends[side]?.name ?? t("transfers.sentence.blank.account"),
+                      }),
+                      onPress: () => draft.resolveAsFee(side),
+                  },
+              ]
+            : []
+    );
+    const outside =
+        gap < 0 && draft.crossCurrency
+            ? [{ hidesArrival: false, label: t("transfers.gap.outside"), onPress: () => draft.setOutside(true) }]
+            : [];
+    const onTop = draft.gapOnTop
+        ? [{ hidesArrival: !draft.crossCurrency, label: t("transfers.gap.itsOnTop"), onPress: draft.resolveAsOnTop }]
+        : [];
     return {
-        feeLabel: offersFee ? t("transfers.gap.itsAFee") : null,
+        actions: [...fees, ...outside, ...onTop],
         message: t(gap < 0 ? "transfers.gap.more" : "transfers.gap.less", {
-            amount: formatAmount(Math.abs(gap), draft.feeCurrency, true, language),
+            amount: formatAmount(Math.abs(gap), draft.fromCurrency, true, language),
         }),
-        onFee: offersFee ? draft.resolveAsFee : null,
-        onOutside: offersOutside ? () => draft.setOutside(true) : null,
-        onTop: draft.gapOnTop ? draft.resolveAsOnTop : null,
-        outsideLabel: offersOutside ? t("transfers.gap.outside") : null,
-        topLabel: draft.gapOnTop ? t("transfers.gap.itsOnTop") : null,
     };
 }
