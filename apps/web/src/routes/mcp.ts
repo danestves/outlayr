@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { handleMcp } from "@/lib/mcp";
+import { server } from "@/lib/mcp";
 
 export const Route = createFileRoute("/mcp")({
     server: {
         handlers: {
-            GET: () => new Response(null, { headers: { allow: "POST" }, status: 405 }),
-            POST: ({ request }) => handleMcp(request),
+            DELETE: ({ request }) => server.fetch(request),
+            GET: ({ request }) => server.fetch(request),
+            POST: ({ request }) => server.fetch(request),
         },
     },
 });
