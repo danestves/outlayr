@@ -102,9 +102,11 @@ export const make = Effect.gen(function* make() {
             )
         ).pipe(Stream.debounce(SYNC_DEBOUNCE), Stream.filter(Boolean));
 
-        const behindWatermark = Stream.merge(Stream.succeed(undefined), tableChanges(["appMeta"])).pipe(
+        const gate = Stream.merge(Stream.succeed(undefined), tableChanges(["appMeta"])).pipe(
             Stream.filterMapEffect(() => store.enabled(db).pipe(Effect.tapError(warn), Effect.result)),
-            Stream.changes,
+            Stream.changes
+        );
+        const behindWatermark = gate.pipe(
             // Open only while the gate is on: a signed-out install must not hold a live subscription to the backend.
             Stream.switchMap((enabled) => (enabled ? listen(watchWatermark) : Stream.empty)),
             // Read at wake-up: this device's own push moves the watermark too, so a stale cursor would double round
@@ -122,6 +124,7 @@ export const make = Effect.gen(function* make() {
             appStates.pipe(Stream.filter((state) => state === "active")),
             settledWrites,
             behindWatermark,
+            gate.pipe(Stream.drop(1), Stream.filter(Boolean)),
         ];
         yield* Stream.mergeAll(triggers, { concurrency: "unbounded" }).pipe(
             Stream.buffer({ capacity: 1, strategy: "sliding" }),
