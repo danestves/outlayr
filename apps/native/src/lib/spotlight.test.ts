@@ -1,21 +1,25 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
-import { transactions } from "@/db/schema";
+import { budgets, transactions } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
 
 const mockIndexItems = jest.fn<(items: { keywords: string[]; uniqueIdentifier: string }[]) => Promise<void>>();
+const mockRemoveDomain = jest.fn<(domain: string) => Promise<void>>();
 jest.mock("expo-core-spotlight", () => ({
     __esModule: true,
     default: {
         indexItems: (items: { keywords: string[]; uniqueIdentifier: string }[]) => mockIndexItems(items),
         isAvailable: () => Promise.resolve(true),
         removeAllItems: () => Promise.resolve(),
-        removeAllItemsFromDomain: () => Promise.resolve(),
+        removeAllItemsFromDomain: (domain: string) => mockRemoveDomain(domain),
     },
 }));
 
-import { indexSpotlight } from "./spotlight";
+import { indexSpotlight as index } from "./spotlight";
+
+const indexSpotlight = (db: Database, now: Date) => Effect.runPromise(index(db, now));
 
 const NOW = new Date("2026-03-04T10:00:00.000Z");
 
@@ -46,6 +50,8 @@ describe("spotlight transaction keywords", () => {
     beforeEach(() => {
         mockIndexItems.mockReset();
         mockIndexItems.mockResolvedValue();
+        mockRemoveDomain.mockReset();
+        mockRemoveDomain.mockResolvedValue();
     });
 
     it("indexes the amount the way the Log prints it, padded to the currency's minor units", async () => {
@@ -81,5 +87,36 @@ describe("spotlight transaction keywords", () => {
                 expect(keywords()).toContain("Expense");
                 expect(keywords()).not.toContain("Gasto");
             });
+    });
+
+    it("swallows a failed index, so it never takes down the write that triggered it", async () => {
+        const db = migratedDatabase({ foreignKeys: false });
+        await seed(db, 5, "USD");
+        mockIndexItems.mockRejectedValue(new Error("index unavailable"));
+
+        await expect(indexSpotlight(db, NOW)).resolves.toBeUndefined();
+    });
+
+    it("lets the budgets half finish when the transactions half fails", async () => {
+        const db = migratedDatabase({ foreignKeys: false });
+        await seed(db, 5, "USD");
+        await db.insert(budgets).values({ amount: 100, id: "budget-1", type: 0, updatedAt: NOW });
+        mockRemoveDomain.mockImplementation((domain) =>
+            domain === "budgets"
+                ? new Promise<void>((resolve) => {
+                      setTimeout(resolve, 0);
+                  })
+                : Promise.resolve()
+        );
+        mockIndexItems.mockImplementation((items) =>
+            items.some((item) => item.uniqueIdentifier.includes("tx-"))
+                ? Promise.reject(new Error("index unavailable"))
+                : Promise.resolve()
+        );
+
+        await indexSpotlight(db, NOW);
+
+        const indexed = mockIndexItems.mock.calls.flatMap(([batch]) => batch.map((item) => item.uniqueIdentifier));
+        expect(indexed.some((id) => id.includes("budget-1"))).toBe(true);
     });
 });

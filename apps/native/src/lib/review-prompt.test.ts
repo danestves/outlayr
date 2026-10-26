@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { startOfDay } from "@outlayr/money/calendar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Effect from "effect/Effect";
 import * as StoreReview from "expo-store-review";
 import { AppState } from "react-native";
 
@@ -9,7 +10,9 @@ import { transactions } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
 
 import { APP_VERSION } from "./app-version";
-import { askForReview } from "./review-prompt";
+import { askForReview as ask } from "./review-prompt";
+
+const askForReview = (db: Database) => Effect.runPromise(ask(db));
 
 jest.mock<Partial<typeof import("@react-native-async-storage/async-storage")>>(
     "@react-native-async-storage/async-storage",

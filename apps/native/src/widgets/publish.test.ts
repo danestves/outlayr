@@ -1,9 +1,13 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import * as Effect from "effect/Effect";
 
+import type { Database } from "@/db/client";
 import { unusedDatabase as mockUnusedDatabase } from "@/db/test-database";
 
 import type { WidgetProps } from "./props";
-import { publishWidgets } from "./publish";
+import { publishWidgets as publish } from "./publish";
+
+const publishWidgets = (db: Database) => Effect.runPromise(publish(db));
 
 /** Catches a widget whose import and update call were removed together, leaving its tile stale. */
 jest.mock("./budget", () => ({ __esModule: true, default: { updateTimeline: jest.fn() } }));
@@ -11,10 +15,9 @@ jest.mock("./insights", () => ({ __esModule: true, default: { updateSnapshot: je
 jest.mock("./ledger", () => ({ __esModule: true, default: { updateSnapshot: jest.fn() } }));
 jest.mock("./log", () => ({ __esModule: true, default: { updateSnapshot: jest.fn() } }));
 jest.mock("@/lib/widget-bridge", () => ({ publishIntentSnapshot: jest.fn(), publishWalletPush: jest.fn() }));
-jest.mock("@/data/wallet-push", () => ({ buildWalletPush: () => Promise.resolve({}) }));
-jest.mock("@/state/lifecycle-commands", () => ({
-    appliedWriteIdsCommand: {},
-    runLifecycleCommand: () => Promise.resolve(["watch-write"]),
+jest.mock("@/data/wallet-push", () => ({ buildWalletPush: () => require("effect/Effect").succeed({}) }));
+jest.mock("@/data/pending-writes-core", () => ({
+    appliedWriteIds: () => require("effect/Effect").succeed(["watch-write"]),
 }));
 jest.mock("@/lib/watch-link", () => ({ publishWatchSnapshot: jest.fn() }));
 
@@ -42,7 +45,9 @@ const mockProps: WidgetProps = {
     week: { average: "$0", days: [] },
     zeroSpent: "$0.00",
 };
-jest.mock("./props", () => ({ buildWidgetProps: () => Promise.resolve(mockProps) }));
+jest.mock("./props", () => ({
+    buildWidgetProps: jest.fn(() => require("effect/Effect").succeed(mockProps)),
+}));
 
 beforeEach(() => {
     for (const update of Object.values(updates)) {
@@ -78,5 +83,13 @@ describe("publishWidgets", () => {
         expect(snapshot?.applied.ids).toStrictEqual(["watch-write"]);
         expect(snapshot?.applied.since).toBeLessThan(snapshot?.publishedAt ?? 0);
         expect(snapshot?.week).toBe(mockProps.week);
+    });
+
+    it("leaves a stale tile rather than throwing when the build fails", async () => {
+        const buildWidgetProps = jest.mocked(jest.requireMock<typeof import("./props")>("./props").buildWidgetProps);
+        buildWidgetProps.mockReturnValueOnce(Effect.die(new Error("build failed")));
+
+        await expect(publishWidgets(mockUnusedDatabase())).resolves.toBeUndefined();
+        expect(updates.Log).not.toHaveBeenCalled();
     });
 });

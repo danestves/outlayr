@@ -40,7 +40,7 @@ export class DailyReminderError extends Schema.TaggedError<DailyReminderError>()
 
 export class DailyReminderSteps extends Context.Service<
     DailyReminderSteps,
-    Record<typeof DailyReminderStep.Type, (db: Database) => Promise<void>>
+    Record<typeof DailyReminderStep.Type, (db: Database) => Effect.Effect<void, Error>>
 >()("outlayr/lib/DailyReminderSync/DailyReminderSteps") {}
 
 export class DailyReminderSync extends Context.Service<
@@ -56,10 +56,13 @@ export const make = Effect.gen(function* make() {
     const run = Effect.fn("DailyReminderSync.run")(function* run(db: Database) {
         const steps = yield* DailyReminderSteps;
         const attempt = (step: typeof DailyReminderStep.Type) =>
-            Effect.tryPromise({
-                catch: (cause) => new DailyReminderError({ cause, message: FAILED[step], step }),
-                try: () => steps[step](db),
-            }).pipe(Effect.catchTags({ DailyReminderError: (error) => Effect.logError(error.message, error.cause) }));
+            steps[step](db).pipe(
+                Effect.mapError((cause) => new DailyReminderError({ cause, message: FAILED[step], step })),
+                Effect.catchDefect((defect) =>
+                    Effect.fail(new DailyReminderError({ cause: defect, message: FAILED[step], step }))
+                ),
+                Effect.catchTags({ DailyReminderError: (error) => Effect.logError(error.message, error.cause) })
+            );
         const sync = attempt("sync").pipe(Effect.uninterruptible, inFlight.withPermits(1));
 
         const resyncs = Stream.merge(

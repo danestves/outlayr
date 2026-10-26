@@ -1,11 +1,14 @@
 import { describe, expect, it } from "@jest/globals";
 import BetterSqlite3 from "better-sqlite3";
+import * as Effect from "effect/Effect";
 
 import type { SpendDb } from "@/data/budget-spent";
 import { appMeta, budgets, categories, mainBudget, transactions } from "@/db/schema";
 import { testSpendDb } from "@/db/test-database";
 
-import { buildWidgetProps } from "./props";
+import { buildWidgetProps as buildProps } from "./props";
+
+const buildWidgetProps = (db: SpendDb, now: Date) => Effect.runPromise(buildProps(db, now));
 
 function makeDb(): SpendDb {
     const sqlite = new BetterSqlite3(":memory:");

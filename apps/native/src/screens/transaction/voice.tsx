@@ -68,7 +68,6 @@ import { useAuthSession } from "@/lib/auth-session";
 import type { VoiceDraft, VoiceQuote } from "@/lib/convex";
 import { freshEntries } from "@/lib/fresh-entries";
 import { posthog } from "@/lib/posthog";
-import { syncSubscriptionReminders } from "@/lib/subscription-reminder-sync";
 import { useHaptics } from "@/lib/use-haptics";
 import { createTransferCommand, rememberLastUsedAccountCommand } from "@/state/accounts-commands";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
@@ -78,6 +77,7 @@ import {
     lastLoggedEntryCommand,
     runLedgerCommand,
 } from "@/state/ledger-commands";
+import { syncSubscriptionRemindersCommand } from "@/state/surfaces-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
@@ -616,6 +616,7 @@ function VoiceThreadScreen() {
     const isMounted = useIsMounted();
     const createTransaction = useAtomCommand(createTransactionCommand, SILENT);
     const backfillRecurring = useAtomCommand(backfillRecurringCommand, SILENT);
+    const syncSubscriptionReminders = useAtomCommand(syncSubscriptionRemindersCommand, SILENT);
 
     const request = {
         accounts: bounded.accounts,
@@ -720,9 +721,11 @@ function VoiceThreadScreen() {
                     console.error("Failed to back-fill the spoken subscription", error);
                 }
                 // Scheduled now: the next resume may come after the due date.
-                syncSubscriptionReminders(db).catch((error) => {
-                    console.error("Failed to sync subscription reminders", error);
-                });
+                syncSubscriptionReminders(db)
+                    .then(unwrapAtomCommand)
+                    .catch((error) => {
+                        console.error("Failed to sync subscription reminders", error);
+                    });
             }
             if (draft.accountId) {
                 await rememberLastUsed({ db, id: draft.accountId });

@@ -2,8 +2,9 @@ import { useIsFocused } from "expo-router";
 import { useEffect, useState } from "react";
 
 import { useSentenceShake } from "@/components/sentence/use-sentence-shake";
-import { claimOverBudgetMoment, overBudgetMomentKey } from "@/lib/over-budget-moment";
+import { overBudgetMomentKey } from "@/lib/over-budget-moment";
 import { useHaptics } from "@/lib/use-haptics";
+import { claimOverBudgetMomentCommand, runSurfacesCommand } from "@/state/surfaces-commands";
 
 export function useOverBudgetMoment(budgetId: string, overBudget: boolean, windowStart: Date) {
     const haptics = useHaptics();
@@ -16,7 +17,7 @@ export function useOverBudgetMoment(budgetId: string, overBudget: boolean, windo
             return;
         }
         let alive = true;
-        claimOverBudgetMoment(key)
+        runSurfacesCommand(claimOverBudgetMomentCommand, key)
             .then((first) => {
                 if (first && alive) {
                     setCrossed(true);

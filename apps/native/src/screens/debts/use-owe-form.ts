@@ -13,13 +13,12 @@ import { roundToMinorUnits } from "@/domain/money";
 import { numpadToNumber } from "@/domain/numpad";
 import { usePayoffPlanGate, usePeopleCapped } from "@/hooks/use-pro-gate";
 import { useTranslation } from "@/i18n/context";
-import { askForInstallmentReminders } from "@/lib/due-reminders";
-import { rearmInstallmentReminders } from "@/lib/installment-reminder-sync";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
 import { writeOweCommand, writePayoffPlanCommand } from "@/state/planning-commands";
 import type { OweDraft } from "@/state/planning-commands";
+import { askForInstallmentReminders, rearmInstallmentReminders } from "@/state/surfaces-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 
 import { resolvePerson } from "./new-debt-form";

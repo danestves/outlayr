@@ -8,16 +8,24 @@ import type { Database } from "@/db/client";
 import { migratedDatabase } from "@/db/test-database";
 import type { ReminderPermission } from "@/domain/reminder";
 
-import { armChosenReminder } from "./chosen-reminder";
-import { reminderPermission, requestReminderPermission } from "./reminders";
+import { armChosenReminder as arm } from "./chosen-reminder";
+import { Reminders } from "./reminders";
 
-jest.mock("./reminders", () => ({
-    reminderPermission: jest.fn(),
-    requestReminderPermission: jest.fn(),
-}));
+const mockPermission = jest.fn<() => Promise<ReminderPermission>>();
+const mockRequest = jest.fn<() => Promise<ReminderPermission>>();
 
-const mockPermission = jest.mocked(reminderPermission);
-const mockRequest = jest.mocked(requestReminderPermission);
+const armChosenReminder = (db: Database) =>
+    Effect.runPromise(
+        arm(db).pipe(
+            Effect.provideService(Reminders, {
+                cancel: () => Effect.void,
+                pendingIds: () => Effect.succeed([]),
+                permission: () => Effect.promise(() => mockPermission()),
+                request: () => Effect.promise(() => mockRequest()),
+                schedule: () => Effect.void,
+            })
+        )
+    );
 
 describe("armChosenReminder", () => {
     let db: Database;

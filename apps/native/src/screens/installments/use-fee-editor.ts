@@ -7,11 +7,11 @@ import type { InstallmentRow } from "@/data/installments-core";
 import { minorUnitsFor } from "@/domain/money";
 import { numberToNumpad, numpadToNumber } from "@/domain/numpad";
 import { useTranslation } from "@/i18n/context";
-import { rearmInstallmentReminders } from "@/lib/installment-reminder-sync";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
 import { addInstallmentFeeCommand, removeInstallmentFeeCommand } from "@/state/planning-commands";
+import { rearmInstallmentReminders } from "@/state/surfaces-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 
 export function useFeeEditor({

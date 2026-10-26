@@ -107,9 +107,7 @@ import { freshEntries } from "@/lib/fresh-entries";
 import { fetchMerchantImage } from "@/lib/logo-fetch";
 import { notifyFailure, notifySaved } from "@/lib/notify";
 import { posthog } from "@/lib/posthog";
-import { openNotificationSettings, reminderPermission, requestReminderPermission } from "@/lib/reminders";
-import { askForReview } from "@/lib/review-prompt";
-import { syncSubscriptionReminders } from "@/lib/subscription-reminder-sync";
+import { openNotificationSettings } from "@/lib/reminders";
 import { useHaptics } from "@/lib/use-haptics";
 import { rememberLastUsedAccountCommand } from "@/state/accounts-commands";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
@@ -123,6 +121,12 @@ import {
     rememberFeeCategoryCommand,
 } from "@/state/ledger-commands";
 import { setBoolSettingCommand } from "@/state/settings-commands";
+import {
+    askForReviewCommand,
+    reminderPermissionCommand,
+    requestReminderPermissionCommand,
+    syncSubscriptionRemindersCommand,
+} from "@/state/surfaces-commands";
 import { PendingCategoryError, saveTransactionCommand } from "@/state/transaction-save-command";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { glowFromEmoji, glowFromImage } from "@/theme/glow";
@@ -502,6 +506,10 @@ export function TransactionForm({
     const colors = useColors();
     const haptics = useHaptics();
     const setBoolSetting = useAtomCommand(setBoolSettingCommand, SILENT);
+    const readReminderPermission = useAtomCommand(reminderPermissionCommand, SILENT);
+    const requestReminderPermission = useAtomCommand(requestReminderPermissionCommand, SILENT);
+    const syncSubscriptionReminders = useAtomCommand(syncSubscriptionRemindersCommand, SILENT);
+    const askForReview = useAtomCommand(askForReviewCommand, SILENT);
     const rememberLastUsed = useAtomCommand(rememberLastUsedAccountCommand, SILENT);
     const t = useTranslation();
     const { language } = useLanguage();
@@ -686,9 +694,11 @@ export function TransactionForm({
             }
             // After the backfill, which moves the chain's next landing. Not awaited: a notification the queue refused
             // must not send this down the catch and re-enable the CTA.
-            syncSubscriptionReminders(db).catch((error) => {
-                console.error("Subscription reminder sync failed", error);
-            });
+            syncSubscriptionReminders(db)
+                .then(unwrapAtomCommand)
+                .catch((error) => {
+                    console.error("Subscription reminder sync failed", error);
+                });
             if (scheduleFailed) {
                 haptics("error");
                 // Raised before the dismissal: the root toast outlives this route, while an alert's presenter is gone
@@ -706,9 +716,11 @@ export function TransactionForm({
             }
             onDone();
             if (mode === "create" && !installmentOrder.afterDone()) {
-                askForReview(db).catch((error) => {
-                    console.error("Failed to ask for a review", error);
-                });
+                askForReview(db)
+                    .then(unwrapAtomCommand)
+                    .catch((error) => {
+                        console.error("Failed to ask for a review", error);
+                    });
             }
             return await holdSubmitting();
         },
@@ -1632,7 +1644,7 @@ export function TransactionForm({
     };
 
     const confirmRemindersAllowed = async () => {
-        const existing = await reminderPermission();
+        const existing = unwrapAtomCommand(await readReminderPermission());
         if (enableReminderStep(existing) === "open-settings") {
             Alert.alert(t("settings.notifications.deniedTitle"), t("settings.notifications.deniedBody"), [
                 { style: "cancel", text: t("settings.notifications.notNow") },
@@ -1648,7 +1660,7 @@ export function TransactionForm({
             await armSubscriptionReminders();
             return;
         }
-        if ((await requestReminderPermission()) === "granted") {
+        if (unwrapAtomCommand(await requestReminderPermission()) === "granted") {
             await armSubscriptionReminders();
             return;
         }

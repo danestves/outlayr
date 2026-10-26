@@ -40,8 +40,8 @@ describe("daily reminder sync", () => {
     let registry: AtomRegistry.AtomRegistry;
     const appState = watchable<AppStateStatus>();
     const tableWrites = watchable<string>();
-    const arms = jest.fn<() => Promise<void>>();
-    const syncs = jest.fn<() => Promise<void>>();
+    const arms = jest.fn<() => void>();
+    const syncs = jest.fn<() => void>();
 
     const start = () => {
         const layer = Layer.mergeAll(
@@ -60,7 +60,10 @@ describe("daily reminder sync", () => {
             appRuntime.atom(
                 DailyReminderSync.pipe(
                     Effect.flatMap((sync) => sync.run(db)),
-                    Effect.provideService(DailyReminderSteps, { arm: () => arms(), sync: () => syncs() })
+                    Effect.provideService(DailyReminderSteps, {
+                        arm: () => Effect.sync(arms),
+                        sync: () => Effect.sync(syncs),
+                    })
                 )
             )
         );
@@ -83,9 +86,7 @@ describe("daily reminder sync", () => {
         jest.useFakeTimers();
         db = migratedDatabase();
         arms.mockReset();
-        arms.mockResolvedValue(undefined);
         syncs.mockReset();
-        syncs.mockResolvedValue(undefined);
     });
 
     afterEach(() => {
@@ -137,6 +138,20 @@ describe("daily reminder sync", () => {
             listener({ rowId: 9999, tableName: "appMeta" });
         }
         await jest.advanceTimersByTimeAsync(PUBLISH_DEBOUNCE_MS);
+
+        expect(syncs).toHaveBeenCalledTimes(2);
+    });
+
+    it("keeps reconciling after a pass throws", async () => {
+        syncs.mockImplementationOnce(() => {
+            throw new Error("notification queue unavailable");
+        });
+        await start();
+
+        appState.emit("background");
+        await flush();
+        appState.emit("active");
+        await flush();
 
         expect(syncs).toHaveBeenCalledTimes(2);
     });
