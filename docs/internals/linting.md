@@ -210,14 +210,38 @@ Both presets claim `**/*.{test,spec}.*`, so extending both reports every asserti
 | `prefer-catch-tags` | Every file: `Effect.catchTags({ Tag: handler })` rather than `Effect.catchTag`, even for one tag. |
 | `no-inline-schema-compile` | Every file: no `Schema.decodeUnknownSync(S)(input)` and friends inside a function, which compiles the decoder on every call. Hoist the compiled function to module scope. |
 | `require-suppression-reason` | Every file: an `oxlint-disable`, `eslint-disable`, `@ts-expect-error`, `@ts-ignore` or `@effect-diagnostics` directive ends with `-- reason` or sits under a comment that gives one. |
+| `react-effect-budget` | `apps/native/src`, `apps/web/src`, `packages/*/src`, tests skipped: a file holds at most as many `useEffect`, `useLayoutEffect` and `useInsertionEffect` calls as `scripts/effect-budget.json` gives it, and a file without an entry gets none. See "React effect budget". |
+| `no-em-dash-copy` | The same paths: no em dash in a string, template or JSX text. Comments are `no-slop-comments`' job. A "no value" placeholder is an en dash. |
+| `no-test-in-loop` | Test files: no `it` or `describe` declared inside a `for` loop; write `it.each(cases)(name, fn)`. A loop inside a test body is fine. |
+| `no-polling-loop-in-tests` | Test files: no `while` or `for` loop that spins on `setTimeout`, `setImmediate`, `Promise.resolve()` or `Effect.sleep` until a predicate holds. Await the event, or use `expect.poll`. A fixed-count flush (`i < 3`) is not polling. |
 
 The rows from `no-manual-memo` down are ported under the MIT License; the upstream license sits beside them and each file's first line links its source. Ported and skipped:
 
+- `no-manual-effect-runtime-in-tests`, `no-wall-clock-in-tests` and `no-real-time-wait-in-tests` assume `@effect/vitest` and its `TestClock`. This repo does not use it, and `apps/native` runs jest with fake timers. Revisit with `@effect/vitest`.
 - `no-manual-effect-runtime-in-tests` bans `Effect.runPromise` in tests in favour of `@effect/vitest`, which this repo does not use, and `apps/native` runs jest. Revisit with `@effect/vitest`.
 - `no-manual-memo` is not on in `apps/web`: without the compiler there, nothing replaces the memoization it would remove. The site has no `useMemo`, `useCallback` or `memo` today.
 - The rest of that plugin duplicates `no-low-value-comments` and `no-test-timeout-or-retry`, or polices another product's components, RPC layer, browser tests and styling.
 
-The reason for each lives in the plugin, as a comment above the rule or in its message. To prove a rule still fires, break the invariant in a shipped file and run `vp check`; every rule was verified that way when it landed.
+The budget, em dash, `no-test-in-loop` and `no-polling-loop-in-tests` rules have tests in `packages/config/oxlint/rules.test.ts`, which lint a fixture through the real oxlint binary: `vp test run` in `packages/config`. The reason for each lives in the plugin, as a comment above the rule or in its message. To prove a rule still fires, break the invariant in a shipped file and run `vp check`; every rule was verified that way when it landed.
+
+### React effect budget
+
+An effect is for synchronizing with something outside React. A file's count of `useEffect`, `useLayoutEffect` and `useInsertionEffect` calls may only go down, so `scripts/effect-budget.json` (repo-relative path to count, sorted, a missing file allows none) is a ratchet: a new effect in a file with no spare budget fails lint, and the message asks whether render or the handler that causes the change can own it.
+
+- **Justify an effect** that is honestly synchronization with an outside system (a native subscription, a worker, a DOM listener) with the reason on the line above it:
+
+  ```ts
+  // oxlint-disable-next-line outlayr/react-effect-budget -- subscribes to the keyboard for the screen's lifetime
+  useEffect(() => { ... }, []);
+  ```
+
+  A justified effect is not counted. The rule still reports it once, so the directive is used and `reportUnusedDisableDirectives` stays satisfied.
+- **Lower a budget** after removing effects: run `node scripts/effect-budget.mjs`, which prints every file whose real count is below its budget, then `node scripts/effect-budget.mjs --write` to rewrite the file with the real counts. Never raise one by hand.
+- Replacements, in order: derive in render, the handler that causes the change, a `key` remount, `useSyncExternalStore` through a shared helper, `useAtomMount` on an atom family, a module service, Reanimated `useDerivedValue` or `useAnimatedReaction`, a ref callback.
+
+### Unused directives
+
+`options.reportUnusedDisableDirectives` is `"error"`. A directive that suppresses nothing is a lint error, so a reason cannot outlive the code it excused. Delete the directive when it reports; do not move it to a rule that is off.
 
 ## Effect diagnostics
 

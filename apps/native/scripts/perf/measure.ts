@@ -202,7 +202,6 @@ async function startOn(port: number) {
     let attached = false;
     for (let launch = 0; launch < LAUNCHES && !attached; launch += 1) {
         adb("shell", "am", "force-stop", APP);
-        // oxlint-disable-next-line no-await-in-loop -- the stopped app must leave Metro's list before the next launch
         await waitForNoDebugTarget(port);
         adb(
             "shell",
@@ -214,7 +213,6 @@ async function startOn(port: number) {
             `exp+outlayr://expo-development-client/?url=${url}`,
             APP
         );
-        // oxlint-disable-next-line no-await-in-loop -- each launch waits for the previous one to attach
         attached = await debugTargetAttached(port, LAUNCH_POLLS);
     }
     if (!attached) {
@@ -237,7 +235,6 @@ async function startOn(port: number) {
 
 async function waitForQuietHost() {
     for (let check = 0; check < 30 && (loadavg()[0] ?? 0) > availableParallelism() * 1.5; check += 1) {
-        // oxlint-disable-next-line no-await-in-loop -- polling
         await sleep(10_000);
     }
     if ((loadavg()[0] ?? 0) > availableParallelism() * 1.5) {
@@ -311,7 +308,6 @@ async function measure(side: Side): Promise<Run> {
 async function measureWithRetries(side: Side): Promise<Run> {
     for (let attempt = 1; ; attempt += 1) {
         try {
-            // oxlint-disable-next-line no-await-in-loop -- attempts share one emulator
             return await measure(side);
         } catch (error) {
             if (attempt === MAX_ATTEMPTS) {
@@ -342,7 +338,6 @@ async function main() {
     for (let round = 0; round < runCount; round += 1) {
         const order: Side[] = round % 2 === 0 ? ["base", "pr"] : ["pr", "base"];
         for (const side of order) {
-            // oxlint-disable-next-line no-await-in-loop -- runs share one emulator, so they must not overlap
             const run = await measureWithRetries(side);
             runs.push(run);
             const { causes: _causes, ...summary } = run;

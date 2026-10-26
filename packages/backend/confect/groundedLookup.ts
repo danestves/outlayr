@@ -1,5 +1,3 @@
-// oxlint-disable unicorn/filename-case -- the Convex module name is the function path: this file is addressed as internal.groundedLookup.run by callers and by jobs already queued in _scheduled_functions
-
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { generateText, isStepCount } from "ai";
 import type { LanguageModel, ToolSet } from "ai";

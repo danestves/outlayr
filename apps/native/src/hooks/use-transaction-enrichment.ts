@@ -403,7 +403,6 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         if (force) {
             rememberedRef.current = { categoryId: null, key };
         } else {
-            // oxlint-disable-next-line no-void -- not awaited: the curated tier below must stay synchronous.
             void recallFromLedger(key);
         }
         const match = resolveMerchant(key);

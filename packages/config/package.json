@@ -1,5 +1,8 @@
 {
     "name": "@outlayr/config",
     "version": "0.0.0",
-    "private": true
+    "private": true,
+    "scripts": {
+        "test": "vp test run"
+    }
 }

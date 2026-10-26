@@ -1,5 +1,3 @@
-// oxlint-disable unicorn/filename-case -- the Convex module name is the function path: clients call this action as api.receiptScan.scan
-
 import { HOUR, isRateLimitError, RateLimiter } from "@convex-dev/rate-limiter";
 import { generateText, Output } from "ai";
 import type { LanguageModel } from "ai";

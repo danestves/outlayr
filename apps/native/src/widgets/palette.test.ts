@@ -38,12 +38,10 @@ function declaredValue(block: string, variable: string): string | null {
 }
 
 describe("widget palette", () => {
-    for (const variant of ["light", "dark"] as const) {
-        it(`matches every ${variant} token declared in global.css`, () => {
-            const block = variantBlock(variant);
-            for (const [name, variable] of Object.entries(PALETTE_VARIABLES)) {
-                expect(WIDGET_PALETTE[variant][name as keyof WidgetPalette]).toBe(declaredValue(block, variable));
-            }
-        });
-    }
+    it.each(["light", "dark"] as const)("matches every %s token declared in global.css", (variant) => {
+        const block = variantBlock(variant);
+        for (const [name, variable] of Object.entries(PALETTE_VARIABLES)) {
+            expect(WIDGET_PALETTE[variant][name as keyof WidgetPalette]).toBe(declaredValue(block, variable));
+        }
+    });
 });

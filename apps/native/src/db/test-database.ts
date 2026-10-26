@@ -7,10 +7,8 @@ import { drizzle } from "drizzle-orm/better-sqlite3";
 import type { SpendDb } from "@/data/budget-spent";
 import type { Database } from "@/db/client";
 
-// oxlint-disable-next-line anti-slop/no-chained-type-assertions -- the two drizzle drivers share no declared members, so there is no intermediate type to step through
 export const testDatabase = (sqlite: BetterSqlite3.Database): Database => drizzle(sqlite) as unknown as Database;
 
-// oxlint-disable-next-line anti-slop/no-chained-type-assertions -- as above: better-sqlite3's database type and the schema-bound SpendDb overlap in no declared member
 export const testSpendDb = (sqlite: BetterSqlite3.Database): SpendDb => drizzle(sqlite) as unknown as SpendDb;
 
 /**

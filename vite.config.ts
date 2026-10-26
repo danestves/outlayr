@@ -53,6 +53,8 @@ const MANUAL_MEMO_FILES = [
     "apps/native/src/lib/ledger-adoption.tsx",
     "apps/native/src/lib/use-day-card-share.ts",
 ];
+const SHIPPED_SOURCE = ["apps/native/src/**", "apps/web/src/**", "packages/*/src/**"];
+const TEST_FILES = ["**/*.test.{ts,tsx,mts,cts,js,jsx,mjs,cjs}", "**/*.spec.{ts,tsx,mts,cts,js,jsx,mjs,cjs}"];
 const NODE_SIDE_FILES = [
     "**/*.test.{ts,tsx}",
     "**/*.spec.{ts,tsx}",
@@ -322,6 +324,21 @@ export default defineConfig({
                 },
             },
             {
+                files: TEST_FILES,
+                rules: {
+                    "outlayr/no-polling-loop-in-tests": "error",
+                    "outlayr/no-test-in-loop": "error",
+                },
+            },
+            {
+                files: SHIPPED_SOURCE,
+                excludeFiles: TEST_FILES,
+                rules: {
+                    "outlayr/no-em-dash-copy": "error",
+                    "outlayr/react-effect-budget": "error",
+                },
+            },
+            {
                 files: ["**/*.live.test.ts"],
                 rules: {
                     "outlayr/no-test-timeout-or-retry": "off",
@@ -340,6 +357,9 @@ export default defineConfig({
                 },
             },
         ],
+        options: {
+            reportUnusedDisableDirectives: "error",
+        },
         rules: {
             complexity: ["error", { max: 35 }],
             eqeqeq: ["error", "always", { null: "ignore" }],

@@ -78,7 +78,6 @@ export function AppLockGate({ children }: { children: ReactNode }) {
     // One automatic prompt per shut gate: re-prompting would reopen a sheet the user just dismissed.
     const prompted = useRef(false);
     const promptUnlock = useEffectEvent(() => {
-        // oxlint-disable-next-line no-void -- the prompt is deliberately not awaited, and requestUnlock (lib/app-lock.ts:21-31) resolves a result object for every failure, so there is no rejection a .catch could handle
         void attempt();
     });
     useEffect(() => {
@@ -101,7 +100,6 @@ export function AppLockGate({ children }: { children: ReactNode }) {
                     busy={checking}
                     message={failure ? t(failure) : null}
                     onUnlock={() => {
-                        // oxlint-disable-next-line no-void -- the prompt is deliberately not awaited, and requestUnlock (lib/app-lock.ts:21-31) resolves a result object for every failure, so there is no rejection a .catch could handle
                         void attempt();
                     }}
                 />

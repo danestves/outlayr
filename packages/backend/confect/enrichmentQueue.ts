@@ -1,5 +1,3 @@
-// oxlint-disable unicorn/filename-case -- the Convex module name is the function path: clients address these as enrichmentQueue:enqueue, enrichmentQueue:results and enrichmentQueue:ack
-
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { vOnCompleteValidator, Workpool } from "@convex-dev/workpool";
 import { v } from "convex/values";

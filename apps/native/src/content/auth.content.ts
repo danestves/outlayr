@@ -4,7 +4,7 @@ import type { Dictionary } from "intlayer";
 const auth = {
     content: {
         "auth.adopt.body": t({
-            en: "Choose what to keep. Only the first option keeps everything — the other two delete entries permanently.",
+            en: "Choose what to keep. Only the first option keeps everything; the other two delete entries permanently.",
             es: "Elige qué quieres conservar. Solo la primera opción conserva todo; las otras dos borran entradas para siempre.",
             fr: "Choisissez ce que vous gardez. Seule la première option garde tout. Les deux autres suppriment des opérations définitivement.",
             pt: "Escolha o que manter. Só a primeira opção mantém tudo; as outras duas apagam lançamentos para sempre.",
@@ -57,7 +57,7 @@ const auth = {
             pt: "Dois históricos",
         }),
         "auth.adopt.failed": t({
-            en: "That could not be applied. Nothing was changed on either side — try again.",
+            en: "That could not be applied. Nothing was changed on either side. Try again.",
             es: "No se pudo aplicar. No cambió nada en ningún lado. Inténtalo de nuevo.",
             fr: "Impossible d'appliquer ce choix. Rien n'a changé, d'un côté comme de l'autre. Réessayez.",
             pt: "Não foi possível aplicar. Nada mudou em nenhum dos lados. Tente de novo.",
@@ -364,7 +364,7 @@ const auth = {
             pt: "Mantido em {currency}.",
         }),
         "auth.signIn.notNow": t({
-            en: "Not now — open my ledger",
+            en: "Not now, open my ledger",
             es: "Ahora no, abrir mi registro",
             fr: "Pas maintenant, ouvrir mon journal",
             pt: "Agora não, abrir meus lançamentos",

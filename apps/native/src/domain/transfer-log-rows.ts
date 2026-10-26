@@ -70,7 +70,7 @@ export interface TransferLogRow {
     transferId: string;
 }
 
-const UNKNOWN_ACCOUNT = "—";
+const UNKNOWN_ACCOUNT = "–";
 
 function transferMove(transfer: TransferLogSource, fees: readonly TransferLogFee[] = []): TransferMove {
     const fromDecimals = minorUnitsFor(transfer.fromCurrency);

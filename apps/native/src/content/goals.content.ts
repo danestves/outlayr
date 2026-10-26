@@ -278,7 +278,7 @@ const goals = {
             "pt-PT": "Precisa de {amount} por mês durante {months} meses",
         }),
         "goals.sheet.demandsNow": t({
-            en: "That date is here — the whole {amount} is due now",
+            en: "That date is here: the whole {amount} is due now",
             es: "Esa fecha ya llegó: necesitas los {amount} completos ahora",
             fr: "Cette date est arrivée : la totalité ({amount}) est due maintenant",
             pt: "Essa data já chegou: você precisa do total de {amount} agora",

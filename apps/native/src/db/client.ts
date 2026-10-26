@@ -22,7 +22,7 @@ export function openDatabase() {
         sqlite.execSync("PRAGMA foreign_keys = ON");
     } else {
         console.warn(
-            `[db] ${orphans.length} orphaned row(s) found — leaving foreign_keys off. ` +
+            `[db] ${orphans.length} orphaned row(s) found, leaving foreign_keys off. ` +
                 "The declared cascades stay inert until these are cleaned up."
         );
     }

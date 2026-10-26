@@ -21,7 +21,6 @@ async function writeSet(set: IconSet): Promise<number> {
         const strokeWidth = weight === "solid" ? undefined : (entry.stroke ?? set.stroke);
 
         const base = join(outDir, entry.slug);
-        // oxlint-disable-next-line no-await-in-loop -- each entry prints its progress line under its own set header
         writeFileSync(`${base}.svg`, toSvg(await loadIcon(weight, entry.icon), strokeWidth, entry.ink));
         written += 1;
 
@@ -47,7 +46,6 @@ async function main() {
     let total = 0;
     for (const set of sets) {
         console.log(`\n${set.dir}`);
-        // oxlint-disable-next-line no-await-in-loop -- writeSet empties its output directory first, so concurrent sets would interleave their progress lines under the wrong header
         total += await writeSet(set);
     }
 

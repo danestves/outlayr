@@ -111,7 +111,6 @@ export function ListItemText({
                         "text-caption leading-5",
                         attention && index === 0 ? "text-m3-error" : "text-m3-on-surface-variant"
                     )}
-                    // oxlint-disable-next-line react/no-array-index-key -- the lines are positional
                     key={index}
                 >
                     {line}

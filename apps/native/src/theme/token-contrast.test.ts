@@ -202,21 +202,19 @@ describe("the token layer", () => {
 });
 
 describe("wCAG AA for text on every ground its theme paints", () => {
-    for (const theme of THEMES) {
-        it(`holds ${AA_TEXT_CONTRAST}:1 in ${theme}`, () => {
-            const failures: string[] = [];
-            for (const token of TEXT_TOKENS) {
-                for (const ground of GROUNDS) {
-                    const key = pairKey(theme, token, ground);
-                    const ratio = contrastRatio(tokenValue(theme, token), tokenValue(theme, ground));
-                    if (ratio < AA_TEXT_CONTRAST) {
-                        failures.push(`${key} = ${ratio.toFixed(2)}:1`);
-                    }
+    it.each(THEMES)(`holds ${AA_TEXT_CONTRAST}:1 in %s`, (theme) => {
+        const failures: string[] = [];
+        for (const token of TEXT_TOKENS) {
+            for (const ground of GROUNDS) {
+                const key = pairKey(theme, token, ground);
+                const ratio = contrastRatio(tokenValue(theme, token), tokenValue(theme, ground));
+                if (ratio < AA_TEXT_CONTRAST) {
+                    failures.push(`${key} = ${ratio.toFixed(2)}:1`);
                 }
             }
-            expect(failures).toStrictEqual([]);
-        });
-    }
+        }
+        expect(failures).toStrictEqual([]);
+    });
 
     it("holds the floor for the first-run palette on the grounds it is written over", () => {
         const failures: string[] = [];
@@ -274,19 +272,17 @@ describe("verdict badge text over its own wash", () => {
             .join("")}`;
     };
 
-    for (const theme of THEMES) {
-        it(`holds ${AA_TEXT_CONTRAST}:1 in ${theme}`, () => {
-            const failures: string[] = [];
-            for (const [text, tone] of Object.entries(ON_WASH)) {
-                const wash = over(tokenValue(theme, tone), tokenValue(theme, "background"));
-                const ratio = contrastRatio(tokenValue(theme, text), wash);
-                if (ratio < AA_TEXT_CONTRAST) {
-                    failures.push(`${theme}: --${text} on its wash = ${ratio.toFixed(2)}:1`);
-                }
+    it.each(THEMES)(`holds ${AA_TEXT_CONTRAST}:1 in %s`, (theme) => {
+        const failures: string[] = [];
+        for (const [text, tone] of Object.entries(ON_WASH)) {
+            const wash = over(tokenValue(theme, tone), tokenValue(theme, "background"));
+            const ratio = contrastRatio(tokenValue(theme, text), wash);
+            if (ratio < AA_TEXT_CONTRAST) {
+                failures.push(`${theme}: --${text} on its wash = ${ratio.toFixed(2)}:1`);
             }
-            expect(failures).toStrictEqual([]);
-        });
-    }
+        }
+        expect(failures).toStrictEqual([]);
+    });
 });
 
 describe("fills that carry literal white text", () => {
@@ -325,20 +321,18 @@ describe("tokens classified as fills", () => {
 });
 
 describe("every accent a user can pick", () => {
-    for (const theme of THEMES) {
-        it(`holds ${AA_TEXT_CONTRAST}:1 on every ${theme} ground`, () => {
-            const failures: string[] = [];
-            for (const accent of ACCENTS) {
-                for (const ground of GROUNDS) {
-                    const ratio = contrastRatio(accent[theme], tokenValue(theme, ground));
-                    if (ratio < AA_TEXT_CONTRAST) {
-                        failures.push(`${theme}: ${accent.key} on --${ground} = ${ratio.toFixed(2)}:1`);
-                    }
+    it.each(THEMES)(`holds ${AA_TEXT_CONTRAST}:1 on every %s ground`, (theme) => {
+        const failures: string[] = [];
+        for (const accent of ACCENTS) {
+            for (const ground of GROUNDS) {
+                const ratio = contrastRatio(accent[theme], tokenValue(theme, ground));
+                if (ratio < AA_TEXT_CONTRAST) {
+                    failures.push(`${theme}: ${accent.key} on --${ground} = ${ratio.toFixed(2)}:1`);
                 }
             }
-            expect(failures).toStrictEqual([]);
-        });
-    }
+        }
+        expect(failures).toStrictEqual([]);
+    });
 
     it("leads with the value the stylesheet declares", () => {
         for (const theme of THEMES) {

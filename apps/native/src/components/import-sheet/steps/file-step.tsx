@@ -132,7 +132,7 @@ export function FileStep({ onChoose, busy = false }: FileStepProps) {
                             label: t("import.fileColumnsLabel"),
                         },
                         {
-                            figure: dateFormat ?? "—",
+                            figure: dateFormat ?? "–",
                             key: "dates",
                             label: t("import.fileDatesLabel"),
                         },
@@ -175,9 +175,9 @@ export function FileStep({ onChoose, busy = false }: FileStepProps) {
 
             <MeasureStrip
                 cells={[
-                    { figure: "—", key: "rows", label: t("import.fileRowsLabel") },
-                    { figure: "—", key: "columns", label: t("import.fileColumnsLabel") },
-                    { figure: "—", key: "dates", label: t("import.fileDatesLabel") },
+                    { figure: "–", key: "rows", label: t("import.fileRowsLabel") },
+                    { figure: "–", key: "columns", label: t("import.fileColumnsLabel") },
+                    { figure: "–", key: "dates", label: t("import.fileDatesLabel") },
                 ]}
             />
 

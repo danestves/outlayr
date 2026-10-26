@@ -133,7 +133,7 @@ const importSheet = {
             "pt-PT": "Nenhum ficheiro escolhido",
         }),
         "import.fileNoCategoryColumn": t({
-            en: "No category column — we'll read the Description column instead.",
+            en: "No category column, so we'll read the Description column instead.",
             es: "No hay columna de categoría, así que vamos a leer la columna Descripción.",
             fr: "Pas de colonne de catégorie : nous lirons plutôt la colonne Description.",
             pt: "Sem coluna de categoria, então vamos ler a coluna Descrição.",
@@ -233,7 +233,7 @@ const importSheet = {
             pt: "{count} nomes de estabelecimentos enviados",
         }),
         "import.resolveFootnote": t({
-            en: "Only unmatched merchant names and your category names are sent — never your amounts, dates, or the file itself.",
+            en: "Only unmatched merchant names and your category names are sent. Never your amounts, dates, or the file itself.",
             es: "Solo se envían los nombres de comercios sin coincidencia y los de tus categorías. Nunca tus montos, fechas ni el archivo.",
             "es-ES":
                 "Solo se envían los nombres de comercios sin coincidencia y los de tus categorías. Nunca tus importes, fechas ni el archivo.",

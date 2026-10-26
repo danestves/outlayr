@@ -451,7 +451,7 @@ const budgets = {
             "pt-PT": "Limite de {amount} {period}. Arraste para cima ou para baixo para alterar.",
         }),
         "budgets.picker.held": t({
-            en: "{window} would have held — {amount} to spare.",
+            en: "{window} would have held, with {amount} to spare.",
             es: "{window} te habría alcanzado, con {amount} de sobra.",
             fr: "{window} : le budget aurait tenu, avec {amount} de marge.",
             pt: "Em {window}, teria sobrado {amount}.",
@@ -476,13 +476,13 @@ const budgets = {
             pt: "Teria acabado em {date}, no último dia.",
         }),
         "budgets.picker.sparseDays": t({
-            en: "Only {days} into {window} — too early to say how it would have gone.",
+            en: "Only {days} into {window}. Too early to say how it would have gone.",
             es: "Apenas van {days} de {window}. Es muy pronto para saber cómo habría ido.",
             fr: "{window} : seulement {days} pour l'instant, trop tôt pour savoir ce que cela aurait donné.",
             pt: "Só {days} de {window}. É cedo demais para saber como teria sido.",
         }),
         "budgets.picker.sparseExpenses": t({
-            en: "Only {expenses} so far — too little to say how {window} would have gone.",
+            en: "Only {expenses} so far. Too little to say how {window} would have gone.",
             es: "Apenas {expenses} hasta ahora. Es muy poco para saber cómo habría ido {window}.",
             fr: "Seulement {expenses} pour l'instant : trop peu pour savoir ce qu'aurait donné {window}.",
             pt: "Só {expenses} até agora. É pouco para saber como teria sido {window}.",

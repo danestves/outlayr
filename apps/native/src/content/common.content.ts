@@ -201,7 +201,7 @@ const common = {
             pt: "Ontem",
         }),
         "error.boundary.body": t({
-            en: "Outlayr hit an unexpected error. Your data is untouched — try again.",
+            en: "Outlayr hit an unexpected error. Your data is untouched. Try again.",
             es: "Outlayr tuvo un error inesperado. Tus datos están intactos. Inténtalo de nuevo.",
             fr: "Outlayr a rencontré une erreur inattendue. Vos données sont intactes. Réessayez.",
             pt: "O Outlayr encontrou um erro inesperado. Seus dados estão intactos. Tente de novo.",

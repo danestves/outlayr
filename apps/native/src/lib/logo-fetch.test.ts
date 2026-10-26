@@ -140,7 +140,6 @@ describe("what a miss remembers", () => {
 
     it("does not remember a miss for an auth, timeout, rate-limit or server status", async () => {
         for (const status of [401, 403, 408, 429, 503]) {
-            // oxlint-disable-next-line no-await-in-loop -- each status is its own request
             await fetchMerchantImage({ domain: "zinli.com", name: "Zinli" }, (async () =>
                 imageResponse(status, new Uint8Array(0))) as unknown as typeof fetch);
         }
