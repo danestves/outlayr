@@ -1,6 +1,7 @@
 import contentCollections from "@content-collections/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import { varlockVitePlugin } from "@varlock/vite-integration";
 import viteReact from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
 import { intlayer } from "vite-intlayer";
@@ -24,6 +25,7 @@ const A_DAY = { headers: { "cache-control": "public, max-age=86400" } };
 
 export default defineConfig({
     plugins: [
+        varlockVitePlugin({ ssrInjectMode: "auto-load" }),
         contentCollections(),
         tailwindcss(),
         intlayer(),

@@ -11,6 +11,7 @@ Start with the [README](../README.md). Internal notes keep decisions, constraint
 - [Linting and formatting](./internals/linting.md)
 - [Effect services](./internals/effect-services.md)
 - [Library traps](./internals/library-traps.md)
+- [Environment variables](./internals/env.md)
 - [What EAS Build uploads](./internals/eas-upload.md)
 - [App icon bundles pinned to the Xcode 26 schema](./internals/app-icon.md)
 - [Identity fly-up and Apple Zoom](./internals/identity-fly-up.md)

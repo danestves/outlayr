@@ -1,6 +1,5 @@
 import { expoClient } from "@better-auth/expo/client";
 import { convexClient } from "@convex-dev/better-auth/client/plugins";
-import { cloudConfiguration, env } from "@outlayr/env/native";
 import type { BetterAuthClientPlugin } from "better-auth/client";
 import type { emailOTP } from "better-auth/plugins/email-otp";
 import { createAuthClient } from "better-auth/react";
@@ -8,6 +7,7 @@ import { ConvexReactClient } from "convex/react";
 import Constants from "expo-constants";
 import { AFTER_FIRST_UNLOCK, getItem, setItem } from "expo-secure-store";
 
+import { CONVEX_SITE_URL, CONVEX_URL, cloudConfiguration } from "./cloud-configuration";
 import { retryTokenFetch } from "./token-fetch";
 
 const keychain = { keychainAccessible: AFTER_FIRST_UNLOCK };
@@ -33,8 +33,8 @@ function createCloudRuntime() {
         return null;
     }
 
-    const convexUrl = env.EXPO_PUBLIC_CONVEX_URL;
-    const siteUrl = env.EXPO_PUBLIC_CONVEX_SITE_URL;
+    const convexUrl = CONVEX_URL;
+    const siteUrl = CONVEX_SITE_URL;
     if (!(convexUrl && siteUrl)) {
         return null;
     }

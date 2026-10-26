@@ -1,15 +1,15 @@
-import { env } from "@outlayr/env/native";
 import * as Schema from "effect/Schema";
 import { Platform } from "react-native";
 import Purchases, { INTRO_ELIGIBILITY_STATUS, LOG_LEVEL } from "react-native-purchases";
 import type { CustomerInfo, PurchasesPackage } from "react-native-purchases";
 
+import { ENV } from "@/env";
 import { duringHandoff } from "@/lib/app-handoff";
 import type { AccountProfile } from "@/lib/auth-session";
 
 const API_KEY = Platform.select({
-    android: env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY,
-    ios: env.EXPO_PUBLIC_REVENUECAT_IOS_KEY,
+    android: ENV.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY,
+    ios: ENV.EXPO_PUBLIC_REVENUECAT_IOS_KEY,
 });
 export const PRO_ENTITLEMENT_ID = "pro";
 

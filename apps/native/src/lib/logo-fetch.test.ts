@@ -10,8 +10,8 @@ jest.mock("@/lib/logo-cache", () => ({
     writeCachedLogo: (...args: unknown[]) => mockWriteCachedLogo(...args),
 }));
 
-jest.mock<Partial<typeof import("@outlayr/env/native")>>("@outlayr/env/native", () => ({
-    env: { EXPO_PUBLIC_LOGO_DEV_TOKEN: "pk_test" },
+jest.mock<Partial<typeof import("@/env")>>("@/env", () => ({
+    ENV: { EXPO_PUBLIC_LOGO_DEV_TOKEN: "pk_test" },
 }));
 
 function png(length = 1024): Uint8Array {
@@ -74,8 +74,8 @@ describe("fetchMerchantImage", () => {
 
     it("skips straight to the favicon when no logo.dev token is configured", async () => {
         jest.resetModules();
-        jest.doMock<Partial<typeof import("@outlayr/env/native")>>("@outlayr/env/native", () => ({
-            env: { EXPO_PUBLIC_LOGO_DEV_TOKEN: undefined },
+        jest.doMock<Partial<typeof import("@/env")>>("@/env", () => ({
+            ENV: { EXPO_PUBLIC_LOGO_DEV_TOKEN: undefined },
         }));
         const { fetchMerchantImage: fetchWithNoToken } = require("./logo-fetch") as typeof import("./logo-fetch");
 
@@ -91,7 +91,7 @@ describe("fetchMerchantImage", () => {
         expect(result).toStrictEqual({ bytes: favicon, kind: "logo" });
         expect(calls).toHaveLength(1);
         expect(calls[0]).toContain("s2/favicons");
-        jest.dontMock("@outlayr/env/native");
+        jest.dontMock("@/env");
     });
 
     it("does not remember a miss for a request that queried nothing", async () => {

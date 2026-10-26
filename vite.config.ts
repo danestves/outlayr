@@ -37,12 +37,7 @@ const projectIgnores = [
 const formatOnlyIgnores = ["**/*.html", "**/*.md"];
 
 const NATIVE_SOURCE = "apps/native/src/**";
-const HERMES_SOURCE = [
-    NATIVE_SOURCE,
-    "packages/backend/confect/lib/syncTables.ts",
-    "packages/env/src/**",
-    "packages/money/src/**",
-];
+const HERMES_SOURCE = [NATIVE_SOURCE, "packages/backend/confect/lib/syncTables.ts", "packages/money/src/**"];
 const MANUAL_MEMO_FILES = [
     "apps/native/src/data/budgets.ts",
     "apps/native/src/data/categories.ts",

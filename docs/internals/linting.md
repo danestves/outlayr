@@ -205,7 +205,7 @@ Both presets claim `**/*.{test,spec}.*`, so extending both reports every asserti
 | `no-test-timeout-or-retry` | On in test files instead, both runners: no timeout argument on a test or hook, no `{ timeout }` or `{ retry }` options, no `jest.setTimeout`, `jest.retryTimes` or `vi.setConfig` override. A test that needs more time is waiting on something it should await. `*.live.test.ts` model probes are exempt. |
 | `no-manual-memo` | `apps/native/src`: no `useMemo`, `useCallback`, `memo` or memo directive (`"use memo"`, `"use no memo"`, `"use no forget"`). The compiler memoizes, and a directive hides a bailout from the coverage test. Ratcheted by `MANUAL_MEMO_FILES`, see "Rules we scoped". |
 | `no-hookless-use-function` | `apps/native/src`: a `use*` function must call a hook. The compiler only compiles functions that do, so a hookless one rebuilds what it returns on every render. Rename it, as `unconfiguredSession` in `lib/auth-client.ts` was. |
-| `no-hermes-unsupported-apis` | `apps/native/src`, and what it imports at runtime from `packages/money/src`, `packages/env/src` and `confect/lib/syncTables.ts`: no `Array#toSorted` and no `Intl.Segmenter`. Neither name is in the shipped Hermes (260318099.0.4) VM, while `toReversed`, `toSpliced` and `with` are, so those stay allowed. Tests run on node and are exempt. |
+| `no-hermes-unsupported-apis` | `apps/native/src`, and what it imports at runtime from `packages/money/src` and `confect/lib/syncTables.ts`: no `Array#toSorted` and no `Intl.Segmenter`. Neither name is in the shipped Hermes (260318099.0.4) VM, while `toReversed`, `toSpliced` and `with` are, so those stay allowed. Tests run on node and are exempt. |
 | `prefer-effect-fn` | Every file outside the node-side scope: a function that only returns `Effect.gen(...)` is written `Effect.fn("Module.operation")(...)`, which names its span. |
 | `prefer-catch-tags` | Every file: `Effect.catchTags({ Tag: handler })` rather than `Effect.catchTag`, even for one tag. |
 | `no-inline-schema-compile` | Every file: no `Schema.decodeUnknownSync(S)(input)` and friends inside a function, which compiles the decoder on every call. Hoist the compiled function to module scope. |
@@ -245,7 +245,7 @@ An effect is for synchronizing with something outside React. A file's count of `
 
 ## Effect diagnostics
 
-`@effect/language-service` is a TypeScript plugin in `packages/config/tsconfig.base.json`, which reaches `packages/money`, `packages/env` and `apps/web`. `apps/native/tsconfig.json` and `packages/backend/tsconfig.json` extend Expo's and Convex's bases instead, so each repeats the same plugin block. `tsc` ignores plugins, so these diagnostics show in the editor and from the CLI, not in `check-types`:
+`@effect/language-service` is a TypeScript plugin in `packages/config/tsconfig.base.json`, which reaches `packages/money` and `apps/web`. `apps/native/tsconfig.json` and `packages/backend/tsconfig.json` extend Expo's and Convex's bases instead, so each repeats the same plugin block. `tsc` ignores plugins, so these diagnostics show in the editor and from the CLI, not in `check-types`:
 
 ```bash
 vp exec effect-language-service diagnostics --project packages/money/tsconfig.json --strict

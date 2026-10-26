@@ -13,7 +13,9 @@
         "dev": "vp run -r --parallel dev",
         "dev:server": "vp run --filter @outlayr/backend dev",
         "dev:setup": "vp run --filter @outlayr/backend dev:setup",
+        "env:generate": "varlock codegen --path ./apps/web/ && varlock codegen --path ./apps/native/",
         "fix": "vp check --fix",
+        "postinstall": "varlock codegen --path ./apps/web/ && varlock codegen --path ./apps/native/",
         "prepare": "[ -n \"$CI$EAS_BUILD\" ] || vp config --no-agent",
         "test": "vp run -r --cache test"
     },
@@ -25,6 +27,7 @@
         "oxlint-tailwindcss": "^1.9.0",
         "typescript": "catalog:",
         "ultracite": "7.12.2",
+        "varlock": "catalog:",
         "vite-plus": "catalog:"
     },
     "packageManager": "pnpm@11.20.0"

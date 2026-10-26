@@ -38,3 +38,5 @@ credentials/
 /targets/*/Assets.xcassets
 
 assets/nanoicons
+
+/src/env.ts

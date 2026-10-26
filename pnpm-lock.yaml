@@ -51,6 +51,9 @@ catalogs:
     typescript:
       specifier: ~6.0.3
       version: 6.0.3
+    varlock:
+      specifier: 1.23.0
+      version: 1.23.0
     vite:
       specifier: npm:@voidzero-dev/vite-plus-core@1.0.0
       version: 1.0.0
@@ -103,6 +106,9 @@ importers:
       ultracite:
         specifier: 7.12.2
         version: 7.12.2(oxfmt@0.70.0(vite-plus@1.0.0(@edge-runtime/vm@5.0.0)(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(@vitest/ui@5.0.1(vitest@5.0.1))(esbuild@0.28.2)(jiti@2.7.0)(jsdom@26.1.0(supports-color@8.1.1))(terser@5.49.0)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)))(oxlint@1.85.0(oxlint-tsgolint@7.0.2003)(vite-plus@1.0.0(@edge-runtime/vm@5.0.0)(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(@vitest/ui@5.0.1(vitest@5.0.1))(esbuild@0.28.2)(jiti@2.7.0)(jsdom@26.1.0(supports-color@8.1.1))(terser@5.49.0)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)))(prettier@3.9.6)
+      varlock:
+        specifier: 'catalog:'
+        version: 1.23.0
       vite-plus:
         specifier: 'catalog:'
         version: 1.0.0(@edge-runtime/vm@5.0.0)(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(@vitest/ui@5.0.1(vitest@5.0.1))(esbuild@0.28.2)(jiti@2.7.0)(jsdom@26.1.0(supports-color@8.1.1))(terser@5.49.0)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
@@ -179,9 +185,6 @@ importers:
       '@noble/hashes':
         specifier: ^2.4.0
         version: 2.4.0
-      '@outlayr/env':
-        specifier: workspace:*
-        version: link:../../packages/env
       '@outlayr/money':
         specifier: workspace:*
         version: link:../../packages/money
@@ -194,6 +197,9 @@ importers:
       '@tanstack/react-form':
         specifier: 1.33.5
         version: 1.33.5(@tanstack/react-start@1.168.57(@types/react@19.3.0)(@voidzero-dev/vite-plus-core@1.0.0(@types/node@26.1.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(crossws@0.4.12(srvx@1.0.5))(esbuild@0.28.2)(react-dom@19.2.3(react@19.3.0))(react@19.3.0)(rolldown@1.2.10)(supports-color@8.1.1)(webpack@5.105.0(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.29)))(react-dom@19.2.3(react@19.3.0))(react@19.3.0)
+      '@varlock/expo-integration':
+        specifier: 1.2.2
+        version: 1.2.2(@babel/core@7.29.7(supports-color@8.1.1))(varlock@1.23.0)
       better-auth:
         specifier: 'catalog:'
         version: 1.6.15(a203c20bb64b87a548b6fb75d857ddb5)
@@ -389,6 +395,9 @@ importers:
       uniwind:
         specifier: ^1.13.0
         version: 1.13.0(@expo/metro-config@58.0.16(expo@58.0.17)(supports-color@8.1.1)(typescript@6.0.3))(metro-cache@0.87.1(supports-color@8.1.1))(metro-transform-worker@0.87.1(supports-color@8.1.1))(metro@0.87.1(supports-color@8.1.1))(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(tailwindcss@4.3.3)
+      varlock:
+        specifier: 'catalog:'
+        version: 1.23.0
       zod:
         specifier: 'catalog:'
         version: 4.6.5
@@ -623,6 +632,9 @@ importers:
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3
+      varlock:
+        specifier: 'catalog:'
+        version: 1.23.0
     devDependencies:
       '@content-collections/cli':
         specifier: ^0.1.9
@@ -642,6 +654,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.7
         version: 19.3.0(@types/react@19.3.0)
+      '@varlock/vite-integration':
+        specifier: 1.5.4
+        version: 1.5.4(@voidzero-dev/vite-plus-core@1.0.0(@types/node@26.1.2)(esbuild@0.25.12)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(varlock@1.23.0)
       '@vitejs/plugin-react':
         specifier: ^6.1.1
         version: 6.1.1(@voidzero-dev/vite-plus-core@1.0.0(@types/node@26.1.2)(esbuild@0.25.12)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(babel-plugin-react-compiler@1.0.0)
@@ -753,28 +768,6 @@ importers:
         version: '@voidzero-dev/vite-plus-core@1.0.0(@types/node@26.1.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)'
 
   packages/config: {}
-
-  packages/env:
-    dependencies:
-      '@t3-oss/env-core':
-        specifier: ^0.13.11
-        version: 0.13.11(typescript@6.0.3)(zod@4.6.5)
-      effect:
-        specifier: 'catalog:'
-        version: 4.0.6
-      zod:
-        specifier: 'catalog:'
-        version: 4.6.5
-    devDependencies:
-      '@outlayr/config':
-        specifier: workspace:*
-        version: link:../config
-      '@types/node':
-        specifier: ^26.1.2
-        version: 26.1.2
-      typescript:
-        specifier: 'catalog:'
-        version: 6.0.3
 
   packages/money:
     dependencies:
@@ -5137,23 +5130,6 @@ packages:
   '@swc/helpers@0.5.23':
     resolution: {integrity: sha512-5lSsMOTXURePglDfvuAQUqkGek9Hg2kksOYay2m0+XR++b2NWYL/4sWyuvVBIs8oKnJaxkdi9whaL/sqN13afw==}
 
-  '@t3-oss/env-core@0.13.11':
-    resolution: {integrity: sha512-sM7GYY+KL7H/Hl0BE0inWfk3nRHZOLhmVn7sHGxaZt9FAR6KqREXAE+6TqKfiavfXmpRxO/OZ2QgKRd+oiBYRQ==}
-    peerDependencies:
-      arktype: ^2.1.0
-      typescript: '>=5.0.0'
-      valibot: ^1.0.0-beta.7 || ^1.0.0
-      zod: ^3.24.0 || ^4.0.0
-    peerDependenciesMeta:
-      arktype:
-        optional: true
-      typescript:
-        optional: true
-      valibot:
-        optional: true
-      zod:
-        optional: true
-
   '@tailwindcss/node@4.3.3':
     resolution: {integrity: sha512-/T8IKEsf9VTU6tLjgC7+sv2mOPtQxzE2jMw7u4Tt40Tx+QSZxpzh95/H6cMKoja9XuW7iMdLJYBB0o9G1CaAgg==}
 
@@ -5736,6 +5712,38 @@ packages:
 
   '@uttr/tint@0.1.3':
     resolution: {integrity: sha512-nQlAxBriuQ7NPxvMlxCXdw0n4alhEAIzsjFNNyU4CR7AitUwMFp1A5e/47JYQ7NMcooaI06OEQKylYhNhbpuIA==}
+
+  '@varlock/expo-integration@1.2.2':
+    resolution: {integrity: sha512-MhmDPgZqKJK88OW7i0RYRtyrBxaauAdWQgrfZJsfNDs4RS9fod0wlw1Drc0xpJVD7H5ry6Xjd6Jo03aQe4fzTg==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      '@babel/core': '>=7'
+      varlock: ^1.23.0
+
+  '@varlock/native-helper-darwin@1.23.0':
+    resolution: {integrity: sha512-BdDfoQvsfDOiMMneU8NjIsPA0d6vfkSXl9F1qHtiL0Cht1Qn5u4EWKhK5atDF4iYDwI/IXjaWVZ9xIKqQb1XOA==}
+    os: [darwin]
+
+  '@varlock/native-helper-linux-arm64@1.23.0':
+    resolution: {integrity: sha512-+9bDk8ql64DLA8mPejpbDP7kezk43E+RZK6/tsfQenj/LeW0pziP7XwsJZ8WhLVkrRDyZ6DJfKTjxB06vxu0jg==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@varlock/native-helper-linux-x64@1.23.0':
+    resolution: {integrity: sha512-gIWpGcXfHgo5Pci2aMRUxPN73QvkR0iwEOpBkdA+WINAl428cszkj5lt1fetjL889V29U4+S41XvC4Vk7u2ujQ==}
+    cpu: [x64]
+    os: [linux]
+
+  '@varlock/native-helper-win32-x64@1.23.0':
+    resolution: {integrity: sha512-X55fq6Q6Fj3DHwEz1R87WiMEhG6vOCqwZp5D/gy/vqPmmC0ujOWxUItkK32jhn4BspXu5vHtv3j25GfL4/toGQ==}
+    os: [win32, linux]
+
+  '@varlock/vite-integration@1.5.4':
+    resolution: {integrity: sha512-DimVk/CBJskNsTiVUnu8/4b7Nn497IkJLNC7AYH9/NfH+N37pWZP4/hDLLqo3dNC0LdyD2wgcgkHIFCvZ16ONw==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      varlock: ^1.23.0
+      vite: '>=5'
 
   '@vercel/oidc@3.2.0':
     resolution: {integrity: sha512-UycprH3T6n3jH0k44NHMa7pnFHGu/N05MjojYr+Mc6I7obkoLIJujSWwin1pCvdy/eOxrI/l3uDLQsmcrOb4ug==}
@@ -11296,6 +11304,11 @@ packages:
   validate-npm-package-name@5.0.1:
     resolution: {integrity: sha512-OljLrQ9SQdOUqTaQxqL5dEfZWrXExyyWsozYlAWFawPVNuD83igl7uJD2RTkNMbniIYgt8l81eCJGIdQF7avLQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
+
+  varlock@1.23.0:
+    resolution: {integrity: sha512-eHJ6PxWJJqBq/+Ki2Uc9HNClpRS4JDLZ9YCL6vJ1f9eGSJxrUOPeDdVpmYcrmjms+RRtEVheiDvYHJJ1WrE3kg==}
+    engines: {bun: '>=1.3.3', node: '>=22.3.0'}
+    hasBin: true
 
   vary@1.1.2:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
@@ -17392,11 +17405,6 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@t3-oss/env-core@0.13.11(typescript@6.0.3)(zod@4.6.5)':
-    optionalDependencies:
-      typescript: 6.0.3
-      zod: 4.6.5
-
   '@tailwindcss/node@4.3.3':
     dependencies:
       '@jridgewell/remapping': 2.3.5
@@ -18331,6 +18339,28 @@ snapshots:
     optional: true
 
   '@uttr/tint@0.1.3': {}
+
+  '@varlock/expo-integration@1.2.2(@babel/core@7.29.7(supports-color@8.1.1))(varlock@1.23.0)':
+    dependencies:
+      '@babel/core': 7.29.7(supports-color@8.1.1)
+      varlock: 1.23.0
+
+  '@varlock/native-helper-darwin@1.23.0':
+    optional: true
+
+  '@varlock/native-helper-linux-arm64@1.23.0':
+    optional: true
+
+  '@varlock/native-helper-linux-x64@1.23.0':
+    optional: true
+
+  '@varlock/native-helper-win32-x64@1.23.0':
+    optional: true
+
+  '@varlock/vite-integration@1.5.4(@voidzero-dev/vite-plus-core@1.0.0(@types/node@26.1.2)(esbuild@0.25.12)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(varlock@1.23.0)':
+    dependencies:
+      varlock: 1.23.0
+      vite: '@voidzero-dev/vite-plus-core@1.0.0(@types/node@26.1.2)(esbuild@0.25.12)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)'
 
   '@vercel/oidc@3.2.0': {}
 
@@ -25786,6 +25816,13 @@ snapshots:
       convert-source-map: 2.0.0
 
   validate-npm-package-name@5.0.1: {}
+
+  varlock@1.23.0:
+    optionalDependencies:
+      '@varlock/native-helper-darwin': 1.23.0
+      '@varlock/native-helper-linux-arm64': 1.23.0
+      '@varlock/native-helper-linux-x64': 1.23.0
+      '@varlock/native-helper-win32-x64': 1.23.0
 
   vary@1.1.2: {}
 
