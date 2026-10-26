@@ -329,8 +329,9 @@ jobs:
                   fi
                   echo "$EAS_ANDROID_KEYSTORE" | base64 --decode > "$RUNNER_TEMP/upload.keystore"
                   cd android
-                  ./gradlew :app:bundleRelease --no-daemon \
-                    "-Dorg.gradle.jvmargs=-Xmx8g -XX:MaxMetaspaceSize=1g" \
+                  ./gradlew :app:bundleRelease --no-daemon --max-workers=2 \
+                    "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g" \
+                    -Pkotlin.compiler.execution.strategy=in-process \
                     "-Pandroid.injected.signing.store.file=$RUNNER_TEMP/upload.keystore" \
                     "-Pandroid.injected.signing.store.password=$EAS_ANDROID_STORE_PASSWORD" \
                     "-Pandroid.injected.signing.key.alias=$EAS_ANDROID_KEY_ALIAS" \
