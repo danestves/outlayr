@@ -41,7 +41,7 @@ Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr
 
 ## Connect Outlayr to your AI assistant
 
-- Outlayr has an MCP server for AI assistants. Once you sign in with the Google or Apple account you use in the app and approve the assistant, it can list your recent entries and sum up a month's spending by category.
+- Outlayr has an MCP server for AI assistants. Once you sign in with the account you use in the app and approve the assistant, it can list your recent entries, sum up a month's spending by category, and add entries.
 - It reads what your devices have synced, and syncing is part of Outlayr Pro.
 - Setup for MCP clients, with the server URL: https://tryoutlayr.com/auth.md
 

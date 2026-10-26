@@ -1,6 +1,6 @@
 ---
 title: "Privacy Policy"
-description: "What Outlayr stores on your device, what reaches our servers, AI providers, and analytics, how long it is kept, and how to delete it. Effective 17 October 2026."
+description: "What Outlayr stores on your device, what reaches our servers, AI providers, and analytics, how long it is kept, and how to delete it. Effective 26 October 2026."
 intro: "This policy explains what Outlayr collects, where it goes, how long it stays, and what you can do about it."
 ---
 
@@ -47,7 +47,6 @@ Every kind of data Outlayr handles, in one place. The sections below explain eac
 | Pages, clicks, scrolling, errors, page speed, visit recordings | Website visits | PostHog | PostHog’s policy |
 | Entries, balances, budgets, upcoming charges | AI assistant you approve | The assistant’s company | Their policies |
 | Assistant name and address, your approval, access keys | AI assistant you approve | Our servers | Until account deletion |
-| Which assistant tool ran, and when | AI assistant use | Our servers | 30 days |
 | Your emails | You write | Our inbox | As long as needed |
 
 ## What stays on your device
@@ -167,13 +166,13 @@ None of this is sent to us or to anyone else. The new entry is then like any oth
 
 ## AI assistants
 
-You can connect an AI assistant that supports the Model Context Protocol (MCP), such as Claude, to your Outlayr account. Nothing is connected until you add Outlayr in the assistant, sign in with Apple or Google, and approve the assistant on a screen that shows its name and the site your access goes to. We ask for that approval every time an assistant connects.
+You can connect an AI assistant that supports the Model Context Protocol (MCP), such as Claude, to your Outlayr account. Nothing is connected until you add Outlayr in the assistant, sign in to your Outlayr account on tryoutlayr.com, and approve the assistant on a screen that shows its name and the site your access goes to. If the assistant gave you a link instead, that screen shows a code to compare with the one your assistant shows. We ask for that approval every time an assistant connects.
 
 Once approved, the assistant can read what your devices last synced: entries, categories, accounts and their balances, budgets, and upcoming charges. With Outlayr Pro it can also add an expense or income, which reaches your devices through sync like any other entry. Without sync, there is nothing on our servers for it to read.
 
 What the assistant reads, and what you tell it, goes to the company that runs it and is handled under that company's privacy policy. We don't send it anywhere else.
 
-To keep the connection working, we store the assistant's name and web address, your approval, and its access keys. Access keys last one hour, and the assistant renews them while you stay connected. A key that goes unused for seven days expires. We also keep a log of which tool an assistant ran and when, for 30 days, without what the entry said. If you remove Outlayr from the assistant, its access expires within seven days. Deleting your account removes it at once, and you can write to [support@tryoutlayr.com](mailto:support@tryoutlayr.com) to have it removed sooner.
+To keep the connection working, we store the assistant's name and web address, your approval and what it may do, when it last used its access, and its access keys, which we keep only as a one-way hash. Access keys last one hour, and the assistant renews them while you stay connected. A renewal key that goes unused for 30 days expires. An assistant connected from a link gets a one-hour key it can't renew. If you remove Outlayr from the assistant, its access expires within 30 days. Deleting your account removes it at once, and you can write to [support@tryoutlayr.com](mailto:support@tryoutlayr.com) to have it removed sooner.
 
 ## Outlayr Pro
 
@@ -223,6 +222,8 @@ We don’t sell your personal information, share it for targeted advertising, or
 
 This website uses PostHog to learn how people use it. As you browse, it sends the pages you view and the page that sent you, clicks, how far you scroll, how fast pages load, errors, and a recording of the visit (clicks, scrolling, and what was on screen, with anything you type hidden). Each event carries your browser, operating system, language, time zone, and screen size. Events reach PostHog through relay.tryoutlayr.com, and PostHog discards your IP address. They are never linked to your Outlayr account.
 
+If you sign in on this site to connect an AI assistant, it keeps your session in a cookie so you stay signed in. That cookie is needed for sign-in and isn't used for analytics.
+
 To recognize you on later visits, PostHog keeps a random ID in a cookie and your browser’s storage. If you’re in the EEA or UK, or your browser sends Global Privacy Control, the site asks before setting it and records nothing until you answer. Elsewhere it’s set on your first visit. Change your answer at any time in the footer under **Cookies**. Your answer is kept in your browser.
 
 If you decline, the site still counts your visit without a cookie. PostHog turns your IP address and browser into a code that changes every day, so it can’t recognize you on a later day, and the visit isn’t recorded.
@@ -238,7 +239,7 @@ If you’re in the European Economic Area or the United Kingdom, we rely on thes
 | Your account, sync, photo storage, voice entry, receipt scans, installment plan imports, CSV import, Pro, and AI assistant connections | Contract: we need this data to provide what you ask for. |
 | Sending voice entries, receipt photos, installment plan screenshots, CSV descriptions, and merchant names to Anthropic and ElevenLabs | Your consent, given with Allow when the app asks and withdrawn in **Settings › Send data to AI providers**. |
 | Merchant suggestions, web lookups, the shared merchant list, and logos | Legitimate interests: making entries faster to file. Suggestions and web lookups reach Anthropic only once you allow it, and turning either off in Feature lab is how you object. |
-| Sessions, usage limits, error logs, assistant tool logs, and update checks | Legitimate interests: keeping Outlayr secure, working, and free of abuse. |
+| Sessions, usage limits, error logs, and update checks | Legitimate interests: keeping Outlayr secure, working, and free of abuse. |
 | Usage analytics and crash reports | Your consent. Share analytics starts off when your device’s region is in the EEA or UK. Turning it on gives consent, and turning it off withdraws it. |
 | Website analytics | Your consent for the cookie and visit recordings, asked on your first visit. Declining withdraws it. A declined visit is still counted without a cookie, under our legitimate interest in knowing how many people visit. |
 | Camera, microphone, photos, biometric lock, notifications, and notification access | Your permission, given when your device asks and withdrawn in its settings. |
@@ -253,7 +254,7 @@ The [table above](#data-at-a-glance) lists how long each kind of data is kept. A
 - Synced data, including deletion records for entries you deleted, and backed-up photos are kept until you delete your account.
 - Voice conversations are deleted when you close the voice screen, or one hour after your last message.
 - Recordings pass through our server to ElevenLabs, and receipt photos and installment plan screenshots to Anthropic. We don’t store any of them.
-- AI assistant connections (the assistant’s name and address, your approval, and its access keys) are kept until you delete your account. Access keys stop working after an hour, or after seven days without renewal. The log of which assistant tool ran, and when, is kept for 30 days.
+- AI assistant connections (the assistant’s name and address, your approval, and its access keys) are kept until you delete your account. Access keys stop working after an hour, or after 30 days without renewal.
 - Merchant suggestion requests aren’t kept once answered. Ones queued in the background wait on our server until your device collects the answer.
 - Usage counters that enforce limits on scans, voice entries, and suggestions hold counts only, keyed to your account ID, and are deleted with your account.
 - Items in the shared merchant list aren’t linked to anyone. They’re refreshed after 30 or 90 days.

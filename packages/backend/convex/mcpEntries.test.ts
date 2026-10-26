@@ -17,7 +17,7 @@ const modules = import.meta.glob("./**/*.ts");
 
 type TestClient = TestConvex<typeof schema>;
 type PushRows = FunctionArgs<typeof api.sync.push>["rows"];
-type LogArgs = Omit<FunctionArgs<typeof internal.mcpEntries.logEntry>, "caller">;
+type LogArgs = Omit<FunctionArgs<typeof internal.mcpEntries.logEntry>, "user">;
 
 const HOUR = 3_600_000;
 const at = (iso: string) => Date.parse(iso);
@@ -88,7 +88,10 @@ async function ledger(t: TestClient): Promise<SeededIdentity> {
 }
 
 const log = (t: TestClient, who: SeededIdentity, args: LogArgs) =>
-    t.mutation(internal.mcpEntries.logEntry, { caller: { subject: who.userId }, ...args });
+    t.mutation(internal.mcpEntries.logEntry, {
+        user: { connectionId: "test", scopes: ["ledger:write"], userId: who.userId },
+        ...args,
+    });
 
 describe("log_entry", () => {
     it("lands as the next seq, with every synced field, for the owner's devices only", async () => {

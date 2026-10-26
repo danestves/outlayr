@@ -3,7 +3,7 @@
     "info": {
         "title": "Outlayr website",
         "version": "1.0.0",
-        "description": "Public, read-only resources on tryoutlayr.com. Outlayr has no public data API. With a user's approval, an AI assistant can read their synced ledger over MCP, as described at https://tryoutlayr.com/auth.md."
+        "description": "Public, read-only resources on tryoutlayr.com. Outlayr has no public data API. With a user's approval, an AI assistant can read their synced ledger and add entries to it over MCP, as described at https://tryoutlayr.com/auth.md."
     },
     "servers": [{ "url": "https://tryoutlayr.com" }],
     "paths": {

@@ -18,6 +18,7 @@ import { Route as Char123LocaleChar125RouteRouteImport } from './routes/{-$local
 import { Route as DotwellKnownAiCatalogDotjsonRouteImport } from './routes/[.]well-known.ai-catalog[.]json'
 import { Route as DotwellKnownApiCatalogRouteImport } from './routes/[.]well-known.api-catalog'
 import { Route as DotwellKnownHttpMessageSignaturesDirectoryRouteImport } from './routes/[.]well-known.http-message-signatures-directory'
+import { Route as AccountConnectRouteImport } from './routes/_account/connect'
 import { Route as AccountLoginRouteImport } from './routes/_account/login'
 import { Route as Char123LocaleChar125IndexRouteImport } from './routes/{-$locale}/index'
 import { Route as Char123LocaleChar125SplatRouteImport } from './routes/{-$locale}/$'
@@ -82,6 +83,11 @@ const DotwellKnownHttpMessageSignaturesDirectoryRoute =
     path: '/.well-known/http-message-signatures-directory',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AccountConnectRoute = AccountConnectRouteImport.update({
+  id: '/connect',
+  path: '/connect',
+  getParentRoute: () => AccountRoute,
+} as any)
 const AccountLoginRoute = AccountLoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -187,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/ai-catalog.json': typeof DotwellKnownAiCatalogDotjsonRoute
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
   '/.well-known/http-message-signatures-directory': typeof DotwellKnownHttpMessageSignaturesDirectoryRoute
+  '/connect': typeof AccountConnectRoute
   '/login': typeof AccountLoginRoute
   '/{-$locale}/$': typeof Char123LocaleChar125SplatRoute
   '/{-$locale}/about': typeof Char123LocaleChar125AboutRoute
@@ -213,6 +220,7 @@ export interface FileRoutesByTo {
   '/.well-known/ai-catalog.json': typeof DotwellKnownAiCatalogDotjsonRoute
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
   '/.well-known/http-message-signatures-directory': typeof DotwellKnownHttpMessageSignaturesDirectoryRoute
+  '/connect': typeof AccountConnectRoute
   '/login': typeof AccountLoginRoute
   '/{-$locale}/$': typeof Char123LocaleChar125SplatRoute
   '/{-$locale}/about': typeof Char123LocaleChar125AboutRoute
@@ -241,6 +249,7 @@ export interface FileRoutesById {
   '/.well-known/ai-catalog.json': typeof DotwellKnownAiCatalogDotjsonRoute
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
   '/.well-known/http-message-signatures-directory': typeof DotwellKnownHttpMessageSignaturesDirectoryRoute
+  '/_account/connect': typeof AccountConnectRoute
   '/_account/login': typeof AccountLoginRoute
   '/{-$locale}/$': typeof Char123LocaleChar125SplatRoute
   '/{-$locale}/about': typeof Char123LocaleChar125AboutRoute
@@ -270,6 +279,7 @@ export interface FileRouteTypes {
     | '/.well-known/ai-catalog.json'
     | '/.well-known/api-catalog'
     | '/.well-known/http-message-signatures-directory'
+    | '/connect'
     | '/login'
     | '/{-$locale}/$'
     | '/{-$locale}/about'
@@ -296,6 +306,7 @@ export interface FileRouteTypes {
     | '/.well-known/ai-catalog.json'
     | '/.well-known/api-catalog'
     | '/.well-known/http-message-signatures-directory'
+    | '/connect'
     | '/login'
     | '/{-$locale}/$'
     | '/{-$locale}/about'
@@ -323,6 +334,7 @@ export interface FileRouteTypes {
     | '/.well-known/ai-catalog.json'
     | '/.well-known/api-catalog'
     | '/.well-known/http-message-signatures-directory'
+    | '/_account/connect'
     | '/_account/login'
     | '/{-$locale}/$'
     | '/{-$locale}/about'
@@ -419,6 +431,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/.well-known/http-message-signatures-directory'
       preLoaderRoute: typeof DotwellKnownHttpMessageSignaturesDirectoryRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_account/connect': {
+      id: '/_account/connect'
+      path: '/connect'
+      fullPath: '/connect'
+      preLoaderRoute: typeof AccountConnectRouteImport
+      parentRoute: typeof AccountRoute
     }
     '/_account/login': {
       id: '/_account/login'
@@ -576,10 +595,12 @@ const Char123LocaleChar125RouteRouteWithChildren =
   )
 
 interface AccountRouteChildren {
+  AccountConnectRoute: typeof AccountConnectRoute
   AccountLoginRoute: typeof AccountLoginRoute
 }
 
 const AccountRouteChildren: AccountRouteChildren = {
+  AccountConnectRoute: AccountConnectRoute,
   AccountLoginRoute: AccountLoginRoute,
 }
 

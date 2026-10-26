@@ -222,11 +222,7 @@ async function forgetUsage(ctx: MutationCtx, userId: string, tokenIdentifier: st
 }
 
 /** Better Auth's user cascade is off (`auth.ts`), so these are ours; `deleteMany` takes one page per call. */
-async function deleteAuthRows(
-    ctx: MutationCtx,
-    model: "account" | "oauthAccessToken" | "oauthConsent" | "session",
-    userId: string
-): Promise<void> {
+async function deleteAuthRows(ctx: MutationCtx, model: "account" | "session", userId: string): Promise<void> {
     let cursor: string | null = null;
     let done = false;
     /* oxlint-disable no-await-in-loop -- each page's cursor is the next request's argument */
@@ -241,6 +237,18 @@ async function deleteAuthRows(
         )) as { continueCursor: string; isDone: boolean };
         done = page.isDone;
         cursor = page.continueCursor;
+    }
+    /* oxlint-enable no-await-in-loop */
+}
+
+async function revokeAgentConnections(ctx: MutationCtx, userId: string): Promise<void> {
+    let grants = await ctx.runQuery(components.mcp.grants.list, { userId });
+    /* oxlint-disable no-await-in-loop -- each page must be gone before the next read */
+    while (grants.length > 0) {
+        await Promise.all(
+            grants.map((grant) => ctx.runMutation(components.mcp.grants.revoke, { grantId: grant._id, userId }))
+        );
+        grants = await ctx.runQuery(components.mcp.grants.list, { userId });
     }
     /* oxlint-enable no-await-in-loop */
 }
@@ -278,8 +286,7 @@ export const advance = mutation({
             return publicStatus({ ...job, phase: "authDeleting" });
         }
         await forgetUsage(ctx, job.userId, job.tokenIdentifier);
-        await deleteAuthRows(ctx, "oauthAccessToken", job.userId);
-        await deleteAuthRows(ctx, "oauthConsent", job.userId);
+        await revokeAgentConnections(ctx, job.userId);
         await deleteAuthRows(ctx, "session", job.userId);
         await deleteAuthRows(ctx, "account", job.userId);
         // SAFETY: the component types its references against its own generated api, which this app does not import.

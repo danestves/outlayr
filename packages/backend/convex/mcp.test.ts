@@ -1,77 +1,111 @@
 /// <reference types="vite/client" />
 
-import { register } from "convex-mcp-gateway/test";
+import mcpTest from "@convex-dev/mcp/test";
+import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
-import { afterEach, describe, expect, it, vi } from "vite-plus/test";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { internal } from "./_generated/api";
+import { api, internal } from "./_generated/api";
+import { mcp } from "./mcp";
 import schema from "./schema";
+import { authenticatedAs, seedAuthUser, seedProUser } from "./test.helpers";
 
 const modules = import.meta.glob("./**/*.ts");
-const ORIGIN = "https://edge.tryoutlayr.com";
+
+beforeEach(() => {
+    vi.stubEnv("CONVEX_SITE_URL", "https://example.convex.site");
+});
 
 afterEach(() => {
     vi.unstubAllEnvs();
 });
 
-describe("MCP discovery metadata", () => {
-    it("adds scopes to the gateway's protected resource metadata without moving the resource", async () => {
-        const t = convexTest(schema, modules);
-        register(t);
-        await t.mutation(internal.mcp.configureOAuth, { authServerUrl: ORIGIN });
+function setup() {
+    const t = convexTest(schema, modules);
+    mcpTest.register(t);
+    revenuecatTest.register(t);
+    return t;
+}
 
-        const response = await t.fetch("/.well-known/oauth-protected-resource/mcp");
+type Client = ReturnType<typeof setup>;
 
-        expect(response.headers.get("access-control-allow-origin")).toBe("*");
-        await expect(response.json()).resolves.toMatchObject({
-            authorization_servers: [ORIGIN],
-            bearer_methods_supported: ["header"],
-            resource: expect.stringMatching(/\/mcp\/$/u),
-            resource_documentation: "https://tryoutlayr.com/auth.md",
-            scopes_supported: ["offline_access"],
-        });
-    });
-
-    it("publishes the site origin even when the proxy hands Convex plain http", async () => {
-        vi.stubEnv("CONVEX_SITE_URL", ORIGIN);
-        const t = convexTest(schema, modules);
-        register(t);
-        await t.mutation(internal.mcp.configureOAuth, { authServerUrl: ORIGIN });
-
-        const metadata = await t.fetch("/.well-known/oauth-protected-resource/mcp");
-        const challenge = await t.fetch("/mcp", {
-            body: JSON.stringify({
-                id: 1,
-                jsonrpc: "2.0",
-                method: "initialize",
-                params: { protocolVersion: "2025-06-18" },
-            }),
-            headers: { accept: "application/json, text/event-stream", "content-type": "application/json" },
+async function connect(t: Client, userId: string, scopes?: string[]) {
+    const { apiKey } = await t.action(internal.mcp.createApiKeyForUser, { scopes, userId });
+    return async (method: string, params: Record<string, unknown> = {}) => {
+        const response = await t.fetch("/mcp", {
+            body: JSON.stringify({ id: 1, jsonrpc: "2.0", method, params }),
+            headers: {
+                accept: "application/json, text/event-stream",
+                authorization: `Bearer ${apiKey}`,
+                "content-type": "application/json",
+                "mcp-protocol-version": "2025-06-18",
+            },
             method: "POST",
         });
+        return {
+            body: (await response.json()) as { result?: { content: { text: string }[]; isError?: boolean } },
+            status: response.status,
+        };
+    };
+}
 
-        await expect(metadata.json()).resolves.toMatchObject({ resource: `${ORIGIN}/mcp/` });
-        expect(challenge.status).toBe(401);
-        expect(challenge.headers.get("www-authenticate")).toContain(
-            `${ORIGIN}/.well-known/oauth-protected-resource/mcp`
-        );
+describe("the MCP server", () => {
+    it("declares scopes and annotations for every tool", () => {
+        expect(mcp.lint()).toStrictEqual([]);
     });
 
-    it("keeps better-auth's RFC 8414 fields beside the agent_auth block", async () => {
-        vi.stubEnv("SITE_URL", ORIGIN);
-        const t = convexTest(schema, modules);
-
-        const response = await t.fetch("/.well-known/oauth-authorization-server");
-
-        expect(response.headers.get("access-control-allow-origin")).toBe("*");
-        await expect(response.json()).resolves.toMatchObject({
-            agent_auth: { skill: "https://tryoutlayr.com/auth.md" },
-            authorization_endpoint: `${ORIGIN}/api/auth/mcp/authorize`,
-            code_challenge_methods_supported: ["S256"],
-            issuer: ORIGIN,
-            registration_endpoint: `${ORIGIN}/api/auth/mcp/register`,
-            scopes_supported: expect.arrayContaining(["offline_access"]),
-            token_endpoint: `${ORIGIN}/api/auth/mcp/token`,
+    it("logs and reads one user's entries over /mcp without leaking them to another user", async () => {
+        const t = setup();
+        const owner = await seedProUser(t);
+        const stranger = await seedAuthUser(t);
+        await authenticatedAs(t, owner).mutation(api.sync.push, {
+            deviceId: "phone",
+            rows: [
+                {
+                    deletedAt: null,
+                    fields: {
+                        color: null,
+                        dateCreated: null,
+                        emoji: null,
+                        icon: null,
+                        income: false,
+                        name: "Coffee",
+                        parentId: null,
+                        sortOrder: 0,
+                    },
+                    localId: "coffee",
+                    table: "categories",
+                    updatedAt: 1,
+                },
+            ],
         });
+        const ownerCall = await connect(t, owner.userId);
+        const strangerCall = await connect(t, stranger.userId);
+
+        const logged = await ownerCall("tools/call", {
+            arguments: { amount: 4.5, category: "Coffee", kind: "expense", note: "Blue Bottle" },
+            name: "log_entry",
+        });
+        const mine = await ownerCall("tools/call", { arguments: {}, name: "recent_transactions" });
+        const theirs = await strangerCall("tools/call", { arguments: {}, name: "recent_transactions" });
+
+        expect(logged.body.result?.isError).toBeUndefined();
+        expect(mine.body.result?.content[0]?.text).toContain("Blue Bottle");
+        expect(theirs.body.result?.content[0]?.text).toBe("[]");
+    });
+
+    it("keeps a read-only connection from writing", async () => {
+        const t = setup();
+        const owner = await seedProUser(t);
+        const readOnly = await connect(t, owner.userId, ["ledger:read"]);
+
+        const listed = await readOnly("tools/list");
+        const write = await readOnly("tools/call", {
+            arguments: { amount: 1, category: "Coffee", kind: "expense" },
+            name: "log_entry",
+        });
+
+        expect(JSON.stringify(listed.body)).not.toContain("log_entry");
+        expect(write.status).toBeGreaterThanOrEqual(400);
     });
 });

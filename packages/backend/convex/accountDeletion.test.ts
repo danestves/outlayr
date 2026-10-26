@@ -2,6 +2,7 @@
 
 import { createThread, getThreadMetadata } from "@convex-dev/agent";
 import agentTest from "@convex-dev/agent/test";
+import mcpTest from "@convex-dev/mcp/test";
 import { RateLimiter } from "@convex-dev/rate-limiter";
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
 import revenuecatTest from "convex-revenuecat/test";
@@ -83,6 +84,7 @@ function stubUpstream(status: number, deletionErrors: unknown[] = []) {
 async function purgedJob() {
     const t = convexTest(schema, modules);
     agentTest.register(t);
+    mcpTest.register(t);
     rateLimiterTest.register(t);
     revenuecatTest.register(t);
     const owner = await seedAuthUser(t);
@@ -252,11 +254,7 @@ interface AuthRow {
     userId?: string;
 }
 
-function authRows(
-    t: TestConvex<typeof schema>,
-    model: "account" | "oauthAccessToken" | "oauthConsent" | "session" | "user",
-    userId: string
-) {
+function authRows(t: TestConvex<typeof schema>, model: "account" | "session" | "user", userId: string) {
     return t.run(async (ctx) => {
         const page = (await ctx.runQuery(components.betterAuth.adapter.findMany, {
             model,
@@ -318,51 +316,26 @@ describe("deleting a password account", () => {
     });
 });
 
-async function grantAssistant(t: TestConvex<typeof schema>, userId: string) {
-    const now = Date.now();
-    await t.run(async (ctx) => {
-        await ctx.runMutation(components.betterAuth.adapter.create, {
-            input: {
-                data: {
-                    accessToken: "mcp-access-token",
-                    accessTokenExpiresAt: now + 3_600_000,
-                    clientId: "assistant",
-                    createdAt: now,
-                    refreshToken: "mcp-refresh-token",
-                    refreshTokenExpiresAt: now + 604_800_000,
-                    scopes: "openid offline_access",
-                    updatedAt: now,
-                    userId,
-                },
-                model: "oauthAccessToken",
-            },
-        });
-        await ctx.runMutation(components.betterAuth.adapter.create, {
-            input: {
-                data: {
-                    clientId: "assistant",
-                    consentGiven: true,
-                    createdAt: now,
-                    scopes: "openid",
-                    updatedAt: now,
-                    userId,
-                },
-                model: "oauthConsent",
-            },
-        });
-    });
+async function connectAgent(t: TestConvex<typeof schema>, userId: string) {
+    vi.stubEnv("CONVEX_SITE_URL", "https://example.convex.site");
+    await t.action(internal.mcp.createApiKeyForUser, { userId });
 }
+
+const agentConnections = (t: TestConvex<typeof schema>, userId: string) =>
+    t.run((ctx) => ctx.runQuery(components.mcp.grants.list, { userId }));
 
 describe("auth deletion", () => {
     afterEach(() => {
+        vi.unstubAllEnvs();
         vi.unstubAllGlobals();
     });
 
-    it("erases the user, its sessions and its OAuth links, then reports complete", async () => {
+    it("erases the user, its sessions, its OAuth links and its agent connections, then reports complete", async () => {
         stubUpstream(200);
         const { owner, resumeSecret, t } = await purgedJob();
         await linkAppleAccount(t, owner.userId);
-        await grantAssistant(t, owner.userId);
+        await connectAgent(t, owner.userId);
+        await expect(agentConnections(t, owner.userId)).resolves.toHaveLength(1);
         await t.action(api.accountDeletion.eraseBilling, { resumeSecret });
         await expect(t.mutation(api.accountDeletion.advance, { resumeSecret })).resolves.toMatchObject({
             phase: "authDeleting",
@@ -375,8 +348,7 @@ describe("auth deletion", () => {
         await expect(authRows(t, "user", owner.userId)).resolves.toHaveLength(0);
         await expect(authRows(t, "session", owner.userId)).resolves.toHaveLength(0);
         await expect(authRows(t, "account", owner.userId)).resolves.toHaveLength(0);
-        await expect(authRows(t, "oauthAccessToken", owner.userId)).resolves.toHaveLength(0);
-        await expect(authRows(t, "oauthConsent", owner.userId)).resolves.toHaveLength(0);
+        await expect(agentConnections(t, owner.userId)).resolves.toHaveLength(0);
         await expect(t.query(api.accountDeletion.poll, { resumeSecret })).resolves.toMatchObject({
             phase: "complete",
         });
@@ -386,6 +358,7 @@ describe("auth deletion", () => {
         stubUpstream(200);
         const t = convexTest(schema, modules);
         agentTest.register(t);
+        mcpTest.register(t);
         rateLimiterTest.register(t);
         revenuecatTest.register(t);
         const usage = new RateLimiter(components.rateLimiter);

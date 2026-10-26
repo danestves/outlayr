@@ -55,7 +55,7 @@ describe("monthWindow", () => {
 });
 
 const USER = "user-mcp";
-const caller = { subject: USER };
+const user = { connectionId: "test", scopes: ["ledger:read"], userId: USER };
 const NOW = at("2026-10-09T15:00:00Z");
 const CARACAS = -4 * HOUR;
 
@@ -258,7 +258,7 @@ describe("account_balances", () => {
             transfers: [move, { ...move, ...envelope("future"), date: at("2026-10-10T12:00:00Z") }],
         });
 
-        const result = await t.query(internal.mcpLedger.accountBalances, { caller });
+        const result = await t.query(internal.mcpLedger.accountBalances, { user });
 
         const eur = buildRateTable(RATES);
         const outbound = { amount: 100, amountUsd: 100, currency: "USD", date: new Date(move.date), income: false };
@@ -312,7 +312,7 @@ describe("account_balances", () => {
             currency: "USD",
         });
 
-        const result = await t.query(internal.mcpLedger.accountBalances, { caller });
+        const result = await t.query(internal.mcpLedger.accountBalances, { user });
 
         expect(result.accounts.map((row) => [row.name, row.kind])).toStrictEqual([
             ["checking", "asset"],
@@ -351,7 +351,7 @@ describe("account_balances", () => {
             }
         });
 
-        const result = await t.query(internal.mcpLedger.accountBalances, { caller });
+        const result = await t.query(internal.mcpLedger.accountBalances, { user });
 
         expect(result.accounts).toStrictEqual([expect.objectContaining({ balance: -40, name: "pedro" })]);
     });
@@ -440,7 +440,7 @@ describe("budget_status", () => {
             ],
         });
 
-        const result = await t.query(internal.mcpLedger.budgetStatus, { caller });
+        const result = await t.query(internal.mcpLedger.budgetStatus, { user });
 
         const now = new Date(NOW);
         const usd = buildRateTable([]);
@@ -523,7 +523,7 @@ describe("budget_status", () => {
         });
         const t = await seeded({ mainBudget: [overall], transactions: [lateSeptember, earlyOctober] });
 
-        const result = await t.query(internal.mcpLedger.budgetStatus, { caller });
+        const result = await t.query(internal.mcpLedger.budgetStatus, { user });
 
         expect(result.overall).toMatchObject({
             carryOver: overall.amount - lateSeptember.amount,
@@ -582,7 +582,7 @@ describe("upcoming_charges", () => {
             ],
         });
 
-        const result = await t.query(internal.mcpLedger.upcomingCharges, { caller });
+        const result = await t.query(internal.mcpLedger.upcomingCharges, { user });
 
         expect(result.charges.map((charge) => [charge.note, charge.nextCharge])).toStrictEqual([
             ["cancelled", "2026-10-01"],

@@ -19,6 +19,7 @@ export const env = createEnv({
         GOOGLE_CLIENT_ID_IOS: z.string().optional(),
         GOOGLE_CLIENT_ID_WEB: z.string().optional(),
         GOOGLE_CLIENT_SECRET: z.string().optional(),
+        MCP_CONSENT_URL: z.string().optional(),
         POSTHOG_PERSONAL_API_KEY: z.string().optional(),
         POSTHOG_PROJECT_ID: z.string().optional(),
         POSTHOG_PROJECT_TOKEN: z.string().optional(),
