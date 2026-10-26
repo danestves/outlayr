@@ -3,19 +3,19 @@ import { count, gt, isNotNull, isNull, or } from "drizzle-orm";
 import type { Database } from "@/db/client";
 import { accounts, budgets, categories, mainBudget, transactions, transfers } from "@/db/schema";
 import type { AdoptionActions, LocalLedger, RemoteLedger } from "@/domain/ledger-adoption";
+import {
+    enableSyncForAccountCommand,
+    enqueueAllForSyncCommand,
+    getSyncAccountSubjectCommand,
+    hasResidualSyncStateCommand,
+    isSyncEnabledCommand,
+    resetSyncForAccountSwitchCommand,
+    runSyncCommand,
+    setSyncEnabledCommand,
+} from "@/state/sync-commands";
 
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
 import { SEEDED_CATEGORY_NAMES } from "./categories-core";
-import {
-    enableSyncForAccount,
-    enqueueAllForSync,
-    getSyncAccountSubject,
-    hasResidualSyncState,
-    isSyncEnabled,
-    resetSyncForAccountSwitch,
-    setSyncEnabled,
-    runPromiseUnwrapped,
-} from "./sync-outbox-core";
 
 const SEEDED_CATEGORY_COUNT = SEEDED_CATEGORY_NAMES.expense.length + SEEDED_CATEGORY_NAMES.income.length;
 
@@ -64,15 +64,15 @@ export async function markAdopted(db: Database, accountId: string): Promise<void
 export async function prepareAccountAdoption(db: Database, accountId: string): Promise<void> {
     const [marker, syncSubject, residual] = await Promise.all([
         adoptedAccount(db),
-        runPromiseUnwrapped(getSyncAccountSubject(db)),
-        runPromiseUnwrapped(hasResidualSyncState(db)),
+        runSyncCommand(getSyncAccountSubjectCommand, db),
+        runSyncCommand(hasResidualSyncStateCommand, db),
     ]);
     const sameSubject = syncSubject === accountId;
     if ((marker === accountId && sameSubject) || (marker === null && sameSubject && !residual)) {
         return;
     }
     if (marker !== null || syncSubject !== null || residual) {
-        await runPromiseUnwrapped(resetSyncForAccountSwitch(db));
+        await runSyncCommand(resetSyncForAccountSwitchCommand, db);
     }
 }
 
@@ -97,21 +97,21 @@ export async function runAdoption(
         }
     }
 
-    const enabledForAttempt = accountId !== undefined && !(await runPromiseUnwrapped(isSyncEnabled(db)));
+    const enabledForAttempt = accountId !== undefined && !(await runSyncCommand(isSyncEnabledCommand, db));
     if (enabledForAttempt) {
-        await runPromiseUnwrapped(enableSyncForAccount(db, accountId));
+        await runSyncCommand(enableSyncForAccountCommand, { accountId, db });
     } else if (!accountId) {
-        await runPromiseUnwrapped(setSyncEnabled(db, true));
+        await runSyncCommand(setSyncEnabledCommand, { db, enabled: true });
     }
 
     try {
         if (actions.pushLocal) {
-            await runPromiseUnwrapped(enqueueAllForSync(db));
+            await runSyncCommand(enqueueAllForSyncCommand, db);
         }
         return enabledForAttempt;
     } catch (error: unknown) {
         if (enabledForAttempt) {
-            await runPromiseUnwrapped(resetSyncForAccountSwitch(db));
+            await runSyncCommand(resetSyncForAccountSwitchCommand, db);
         }
         throw error;
     }
@@ -129,7 +129,7 @@ export async function completeAdoption(
         await persistMarker(db, accountId);
     } catch (error: unknown) {
         if (enabledForAttempt) {
-            await runPromiseUnwrapped(resetSyncForAccountSwitch(db));
+            await runSyncCommand(resetSyncForAccountSwitchCommand, db);
         }
         throw error;
     }

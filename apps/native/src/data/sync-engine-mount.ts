@@ -8,7 +8,7 @@ import { appRuntime } from "@/lib/runtime";
 import { SyncEngine } from "./sync-engine";
 
 export const syncEngineAtom = Atom.family((db: Database) =>
-    appRuntime.atom(SyncEngine.pipe(Effect.flatMap((engine) => engine.run(db))))
+    appRuntime.atom(SyncEngine.pipe(Effect.flatMap((engine) => engine.run(db)))).pipe(Atom.withLabel("sync:engine"))
 );
 
 /** Unmounted while paused, so every trigger is held while the outbox keeps queueing. */

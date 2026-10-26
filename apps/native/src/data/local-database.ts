@@ -15,9 +15,12 @@ const LocalDatabaseStage = Schema.Literals(["open", "migrate", "bootstrap", "set
 
 export class LocalDatabaseError extends Schema.TaggedError<LocalDatabaseError>()("LocalDatabaseError", {
     cause: Schema.Defect(),
-    message: Schema.String,
     stage: LocalDatabaseStage,
-}) {}
+}) {
+    override get message(): string {
+        return `Local data failed to ${this.stage}`;
+    }
+}
 
 export const OpenConnection = Context.Reference<() => Database>("outlayr/data/LocalDatabase/OpenConnection", {
     defaultValue: () => openDatabase,
@@ -29,7 +32,7 @@ export class LocalDatabase extends Context.Service<
 >()("outlayr/data/LocalDatabase") {}
 
 const failedAt = (stage: typeof LocalDatabaseStage.Type) => (cause: unknown) =>
-    new LocalDatabaseError({ cause, message: `Local data failed to ${stage}`, stage });
+    new LocalDatabaseError({ cause, stage });
 
 export const make = Effect.gen(function* make() {
     const openConnection = yield* OpenConnection;

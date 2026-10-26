@@ -10,7 +10,6 @@ import { Text } from "@/components/text";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { runAdoption } from "@/data/ledger-adoption";
-import { setSyncEnabled, runPromiseUnwrapped } from "@/data/sync-outbox-core";
 import { useSyncStatus } from "@/data/use-sync-status";
 import { formatDayHeader, formatTime } from "@/domain/dates";
 import type { AdoptionActions } from "@/domain/ledger-adoption";
@@ -22,6 +21,9 @@ import { useAuthSession } from "@/lib/auth-session";
 import { cloudRuntime } from "@/lib/cloud-runtime";
 import { useLedgerAdoption } from "@/lib/ledger-adoption";
 import { notifyFailure } from "@/lib/notify";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { setSyncEnabledCommand } from "@/state/sync-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 /** Resumes through adoption: `runAdoption` opens the gate before queueing, the order `enqueueAllForSync` needs. */
 const RESUME: AdoptionActions = {
@@ -41,6 +43,7 @@ export function Sync() {
     const { enabled, pending, syncedAt } = useSyncStatus(db);
     const { use24Hour } = useDisplaySettings().state;
     const [busy, setBusy] = useState(false);
+    const setSyncEnabled = useAtomCommand(setSyncEnabledCommand, SILENT);
 
     const runnable = syncRunnable(enabled, entitled);
     const capability = effectiveCapabilityStatus({
@@ -63,7 +66,7 @@ export function Sync() {
         const work =
             next && accountId
                 ? runAdoption(db, adoptionEngine(db), RESUME, accountId)
-                : runPromiseUnwrapped(setSyncEnabled(db, false));
+                : setSyncEnabled({ db, enabled: false }).then(unwrapAtomCommand);
         work.catch((cause: unknown) => {
             console.error("Sync switch failed", cause);
             notifyFailure({ body: t("settings.sync.failedBody"), title: t("settings.sync.failedTitle") });

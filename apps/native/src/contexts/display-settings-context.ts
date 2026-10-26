@@ -36,15 +36,18 @@ const settingRowsAtom = Atom.withEquality(
             })
         );
         return selectSettings(db).all();
-    }),
+    }).pipe(Atom.withLabel("display-settings:rows")),
     sameRows
 );
 
 // Two atoms over one subscription: the display atom holds three booleans, so it stays stable across other setting
 // writes, while `settingsAtom` republishes on every write.
-const settingsAtom = Atom.make((get) => settingsSnapshot(get(settingRowsAtom)));
+const settingsAtom = Atom.make((get) => settingsSnapshot(get(settingRowsAtom))).pipe(
+    Atom.withLabel("display-settings:snapshot")
+);
 const displaySettingsAtom = Atom.make((get) => selectDisplaySettings(get(settingsAtom))).pipe(
-    Atom.withEquality(Equal.equals)
+    Atom.withEquality(Equal.equals),
+    Atom.withLabel("display-settings:display")
 );
 
 export function useDisplaySettings(): DisplaySettingsValue {

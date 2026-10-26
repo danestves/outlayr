@@ -38,15 +38,16 @@ export const EMPTY_DRAFT: IdentitySelection = {
 };
 
 // Two atoms: every picker tap replaces `draft`, and merging them would re-render the whole form per tap.
-const draftAtom = Atom.make(EMPTY_DRAFT).pipe(Atom.keepAlive);
-const pickerOpenAtom = Atom.make(false).pipe(Atom.keepAlive);
+const draftAtom = Atom.make(EMPTY_DRAFT).pipe(Atom.keepAlive, Atom.withLabel("identity-draft:draft"));
+const pickerOpenAtom = Atom.make(false).pipe(Atom.keepAlive, Atom.withLabel("identity-draft:picker-open"));
 
 const flyUpAtom = Atom.make(() => ({ floatProgress: makeMutable(0), sheetHeight: makeMutable(0) })).pipe(
-    Atom.keepAlive
+    Atom.keepAlive,
+    Atom.withLabel("identity-draft:fly-up")
 );
 
 // A JS latch, not `sheetHeight.get()`: two layouts landing before the UI thread syncs would both see the 0.
-const sheetMeasuredAtom = Atom.make(false).pipe(Atom.keepAlive);
+const sheetMeasuredAtom = Atom.make(false).pipe(Atom.keepAlive, Atom.withLabel("identity-draft:sheet-measured"));
 
 export function useIdentityDraft(): IdentityDraftValue {
     const [draft, setDraft] = useAtom(draftAtom);

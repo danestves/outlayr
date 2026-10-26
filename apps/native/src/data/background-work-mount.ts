@@ -43,34 +43,42 @@ const photoPasses = Layer.succeed(
 );
 
 export const backgroundProgramAtom = Atom.family((db: Database) =>
-    appRuntime.atom(
-        BackgroundProgram.pipe(
-            Effect.flatMap((program) => program.run(db)),
-            Effect.provide(backgroundSurfaces)
+    appRuntime
+        .atom(
+            BackgroundProgram.pipe(
+                Effect.flatMap((program) => program.run(db)),
+                Effect.provide(backgroundSurfaces)
+            )
         )
-    )
+        .pipe(Atom.withLabel("background-work:program"))
 );
 
 export const enrichmentSyncAtom = Atom.family((db: Database) =>
-    appRuntime.atom(EnrichmentSync.pipe(Effect.flatMap((enrichment) => enrichment.run(db))))
+    appRuntime
+        .atom(EnrichmentSync.pipe(Effect.flatMap((enrichment) => enrichment.run(db))))
+        .pipe(Atom.withLabel("background-work:enrichment"))
 );
 
 export const photoReconcileAtom = Atom.family((db: Database) =>
-    appRuntime.atom(
-        PhotoSync.pipe(
-            Effect.flatMap((photos) => photos.reconcile(db)),
-            Effect.provide(photoPasses)
+    appRuntime
+        .atom(
+            PhotoSync.pipe(
+                Effect.flatMap((photos) => photos.reconcile(db)),
+                Effect.provide(photoPasses)
+            )
         )
-    )
+        .pipe(Atom.withLabel("background-work:photo-reconcile"))
 );
 
 export const photoSyncAtom = Atom.family((db: Database) =>
-    appRuntime.atom(
-        PhotoSync.pipe(
-            Effect.flatMap((photos) => photos.run(db)),
-            Effect.provide(photoPasses)
+    appRuntime
+        .atom(
+            PhotoSync.pipe(
+                Effect.flatMap((photos) => photos.run(db)),
+                Effect.provide(photoPasses)
+            )
         )
-    )
+        .pipe(Atom.withLabel("background-work:photo-sync"))
 );
 
 export function BackgroundProgramMount({ db }: { db: Database }) {

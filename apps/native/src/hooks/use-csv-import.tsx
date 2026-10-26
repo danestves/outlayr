@@ -1,6 +1,7 @@
 import { useAtomSet, useAtomValue } from "@effect/atom-react/Hooks";
 import * as Effect from "effect/Effect";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as Atom from "effect/reactivity/Atom";
 
 import { useAppSettings } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
@@ -27,15 +28,17 @@ const EMPTY_DRAFT: MappingDraft = {
     type: null,
 };
 
-const csvImportStateAtom = appRuntime.subscriptionRef(CsvImport.pipe(Effect.map((csvImport) => csvImport.state)));
+const csvImportStateAtom = appRuntime
+    .subscriptionRef(CsvImport.pipe(Effect.map((csvImport) => csvImport.state)))
+    .pipe(Atom.withLabel("csv-import:state"));
 
-const runCsvImportAtom = appRuntime.fn<ResolveRequest>()((request) =>
-    CsvImport.pipe(Effect.flatMap((csvImport) => csvImport.run(request)))
-);
+const runCsvImportAtom = appRuntime
+    .fn<ResolveRequest>()((request) => CsvImport.pipe(Effect.flatMap((csvImport) => csvImport.run(request))))
+    .pipe(Atom.withLabel("csv-import:run"));
 
-const retryCsvImportAtom = appRuntime.fn<ResolveRequest>()((request) =>
-    CsvImport.pipe(Effect.flatMap((csvImport) => csvImport.retry(request)))
-);
+const retryCsvImportAtom = appRuntime
+    .fn<ResolveRequest>()((request) => CsvImport.pipe(Effect.flatMap((csvImport) => csvImport.retry(request))))
+    .pipe(Atom.withLabel("csv-import:retry"));
 
 function buildCategoryTree(meta: ReadonlyMap<string, CategoryMetaRow>) {
     const named = [...meta.entries()].filter(([, row]) => row.name != null);

@@ -1,6 +1,7 @@
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import { deleteItemAsync, getItemAsync, setItemAsync } from "expo-secure-store";
+
+import { deleteSecureItem, readSecureItem, writeSecureItem } from "@/state/secure-storage-commands";
 
 import { resumeCloudDeletion } from "./account-lifecycle";
 import type { DeletionPreparation } from "./account-lifecycle";
@@ -61,7 +62,7 @@ export async function resumeProviderRevocation(preparation: StoredDeletionPrepar
     }
     if (preparation.provider === "google") {
         await revokeGoogleProviderSubject(preparation.providerSubject);
-        await setItemAsync(
+        await writeSecureItem(
             deletionResumeSecretKey,
             JSON.stringify({ ...preparation, googleLocalReceipt: preparation.receiptChallenge })
         );
@@ -97,7 +98,7 @@ export async function resumePersistedCloudDeletion({
         }
         return false;
     }
-    const raw = await getItemAsync(deletionResumeSecretKey);
+    const raw = await readSecureItem(deletionResumeSecretKey);
     const preparation = raw === null ? null : parsePreparation(raw);
     if (preparation === null) {
         if (required) {
@@ -124,7 +125,7 @@ export async function resumePersistedCloudDeletion({
         }
     }
     if (clearOnComplete) {
-        await deleteItemAsync(deletionResumeSecretKey);
+        await deleteSecureItem(deletionResumeSecretKey);
     }
     return true;
 }

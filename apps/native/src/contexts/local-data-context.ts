@@ -22,7 +22,7 @@ export interface LocalDataContextValue {
 
 export const localDataAtom = appRuntime
     .atom(LocalDatabase.pipe(Effect.flatMap((local) => local.open())))
-    .pipe(Atom.keepAlive);
+    .pipe(Atom.keepAlive, Atom.withLabel("local-data:open"));
 
 const OPENING = { db: null, error: null, status: "opening" } as const;
 

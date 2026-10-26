@@ -8,9 +8,10 @@ import {
     dismissAllNotificationsAsync,
     setBadgeCountAsync,
 } from "expo-notifications";
-import { deleteItemAsync, getItem } from "expo-secure-store";
 import { deleteDatabaseAsync } from "expo-sqlite";
 import { Platform } from "react-native";
+
+import { deleteSecureItem, readSecureItem } from "@/state/secure-storage-commands";
 
 import { cancelLogoBackfill } from "./logo-backfill";
 import { QUEUE_DIRECTORY } from "./pending-writes-core";
@@ -75,18 +76,18 @@ function deleteDirectoryIfPresent(directory: Directory): void {
 }
 
 async function clearBetterAuthCredentials(): Promise<void> {
-    const keys = BETTER_AUTH_KEYS.flatMap((key) => {
-        const stored = getItem(key);
-        if (!stored?.startsWith(BETTER_AUTH_CHUNK_MARKER)) {
+    const stored = await Promise.all(BETTER_AUTH_KEYS.map(async (key) => [key, await readSecureItem(key)] as const));
+    const keys = stored.flatMap(([key, value]) => {
+        if (!value?.startsWith(BETTER_AUTH_CHUNK_MARKER)) {
             return [key];
         }
-        const count = Number(stored.slice(BETTER_AUTH_CHUNK_MARKER.length));
+        const count = Number(value.slice(BETTER_AUTH_CHUNK_MARKER.length));
         if (!Number.isSafeInteger(count) || count < 0) {
             throw new Error("Malformed Better Auth credential chunk marker");
         }
         return [key, ...Array.from({ length: count }, (_, index) => `${key}.${index}`)];
     });
-    await Promise.all(keys.map(async (key) => await deleteItemAsync(key)));
+    await Promise.all(keys.map(async (key) => await deleteSecureItem(key)));
 }
 
 function clearWidgetStorage(): void {

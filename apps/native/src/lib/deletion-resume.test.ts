@@ -12,6 +12,7 @@ jest.mock<Partial<typeof import("expo-secure-store")>>("expo-secure-store", () =
 }));
 jest.mock<Partial<typeof import("@/lib/auth-client")>>("@/lib/auth-client", () => ({ authClient: null }));
 jest.mock("@/lib/convex", () => ({
+    ...jest.requireActual<typeof import("@/lib/convex")>("@/lib/convex"),
     cloudAction: jest.fn<typeof import("@/lib/convex").cloudAction>(),
     cloudMutation: jest.fn<typeof import("@/lib/convex").cloudMutation>(),
     cloudQuery: jest.fn<typeof import("@/lib/convex").cloudQuery>(),
@@ -31,6 +32,8 @@ describe("resumePersistedCloudDeletion", () => {
         const { cloudMutation, cloudQuery } = cloudMocks();
         cloudQuery.mockResolvedValueOnce({ phase: "prepared" }).mockResolvedValueOnce({ phase: "complete" });
         cloudMutation.mockResolvedValueOnce({ phase: "providersRevoked" }).mockResolvedValueOnce({ phase: "complete" });
+        jest.mocked(setItemAsync).mockResolvedValue();
+        jest.mocked(deleteItemAsync).mockResolvedValue();
         jest.mocked(getItemAsync).mockResolvedValue(
             JSON.stringify({
                 provider: "google",

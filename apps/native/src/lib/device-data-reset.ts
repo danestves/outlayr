@@ -1,6 +1,7 @@
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import { deleteItemAsync, getItemAsync, setItemAsync } from "expo-secure-store";
+
+import { deleteSecureItem, readSecureItem, writeSecureItem } from "@/state/secure-storage-commands";
 
 import { createNativeDeviceDataStores, DEVICE_STORES } from "./device-data-stores";
 import type { DeviceDataStores, DeviceStore, NativeDeviceDataStoreDependencies } from "./device-data-stores";
@@ -32,15 +33,15 @@ function parseResetMarker(raw: string | null): DeviceResetMarker | null {
 }
 
 export async function readDeviceResetMarker(): Promise<DeviceResetMarker | null> {
-    return parseResetMarker(await getItemAsync(RESET_MARKER_KEY));
+    return parseResetMarker(await readSecureItem(RESET_MARKER_KEY));
 }
 
 export async function writeDeviceResetMarker(marker: DeviceResetMarker): Promise<void> {
-    await setItemAsync(RESET_MARKER_KEY, JSON.stringify(marker));
+    await writeSecureItem(RESET_MARKER_KEY, JSON.stringify(marker));
 }
 
 export async function clearDeviceResetMarker(): Promise<void> {
-    await deleteItemAsync(RESET_MARKER_KEY);
+    await deleteSecureItem(RESET_MARKER_KEY);
 }
 
 export interface DeviceResetGateDependencies extends NativeDeviceDataStoreDependencies {

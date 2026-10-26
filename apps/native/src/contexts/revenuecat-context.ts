@@ -1,11 +1,9 @@
 import { useAtomMount, useAtomValue } from "@effect/atom-react/Hooks";
 import { RegistryContext } from "@effect/atom-react/RegistryContext";
 import * as Cause from "effect/Cause";
-import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as Atom from "effect/reactivity/Atom";
-import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import * as Stream from "effect/Stream";
 import { use } from "react";
 import type { PurchasesPackage } from "react-native-purchases";
@@ -14,6 +12,8 @@ import { useAuthSession } from "@/lib/auth-session";
 import { RevenueCat } from "@/lib/revenuecat-service";
 import type { Entitlement, PurchaseOutcome as PurchaseOutcomeSchema, Session } from "@/lib/revenuecat-service";
 import { appRuntime } from "@/lib/runtime";
+import { createRuntimeCommand, runAtomCommand, SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import type { AtomCommand } from "@/state/atom-command";
 
 export type PurchaseOutcome = typeof PurchaseOutcomeSchema.Type;
 
@@ -42,28 +42,56 @@ const NOT_CONFIGURED: Entitlement = {
     isResolved: true,
 };
 
-export const entitlementAtom = appRuntime.atom(
-    Stream.unwrap(RevenueCat.pipe(Effect.map((revenueCat) => revenueCat.entitlement)))
-);
+export const entitlementAtom = appRuntime
+    .atom(Stream.unwrap(RevenueCat.pipe(Effect.map((revenueCat) => revenueCat.entitlement))))
+    .pipe(Atom.withLabel("revenuecat:entitlement"));
 
-export const revenueCatAtom = appRuntime.atom(RevenueCat.pipe(Effect.flatMap((revenueCat) => revenueCat.run())));
+export const revenueCatAtom = appRuntime
+    .atom(RevenueCat.pipe(Effect.flatMap((revenueCat) => revenueCat.run())))
+    .pipe(Atom.withLabel("revenuecat:run"));
 
 export const revenueCatSessionAtom = Atom.family((session: Session) =>
-    appRuntime.atom(RevenueCat.pipe(Effect.flatMap((revenueCat) => revenueCat.follow(session))))
+    appRuntime
+        .atom(RevenueCat.pipe(Effect.flatMap((revenueCat) => revenueCat.follow(session))))
+        .pipe(Atom.withLabel("revenuecat:session"))
 );
 
-function runRevenueCat<A, E>(
-    registry: AtomRegistry.AtomRegistry,
-    operation: (revenueCat: RevenueCat["Service"]) => Effect.Effect<A, E>
-): Promise<A> {
-    return Effect.runPromise(
-        AtomRegistry.getResult(registry, appRuntime).pipe(
-            Effect.flatMap((services) =>
-                operation(Context.get(services, RevenueCat)).pipe(Effect.provideContext(services))
-            )
-        )
-    );
-}
+const revenueCatCommand = <W, A, E>(
+    label: string,
+    execute: (revenueCat: RevenueCat["Service"], input: W) => Effect.Effect<A, E>
+) =>
+    createRuntimeCommand(appRuntime, {
+        execute: (input: W) => RevenueCat.pipe(Effect.flatMap((revenueCat) => execute(revenueCat, input))),
+        label: `revenuecat:${label}`,
+    });
+
+const eligibleForTrialCommand = revenueCatCommand(
+    "eligible-for-trial",
+    (revenueCat, input: { accountId: string | null; productIds: readonly string[] }) =>
+        revenueCat.eligibleForTrial(input.accountId, input.productIds)
+);
+
+const getPackagesCommand = revenueCatCommand("get-packages", (revenueCat, accountId: string | null) =>
+    revenueCat.getPackages(accountId)
+);
+
+const mirrorCommand = revenueCatCommand("mirror", (revenueCat, accountId: string | null) =>
+    revenueCat.mirror(accountId)
+);
+
+const purchaseCommand = revenueCatCommand(
+    "purchase",
+    (revenueCat, input: { accountId: string | null; pack: PurchasesPackage }) =>
+        revenueCat.purchase(input.accountId, input.pack)
+);
+
+const refreshCommand = revenueCatCommand("refresh", (revenueCat, accountId: string | null) =>
+    revenueCat.refresh(accountId)
+);
+
+const restoreCommand = revenueCatCommand("restore", (revenueCat, accountId: string | null) =>
+    revenueCat.restore(accountId)
+);
 
 export function RevenueCatSession() {
     const { accountId, profile } = useAuthSession();
@@ -80,14 +108,14 @@ export function useRevenueCat(): RevenueCatValue {
     const { accountId } = useAuthSession();
     const result = useAtomValue(entitlementAtom);
     const entitlement = AsyncResult.isSuccess(result) ? result.value : NOT_CONFIGURED;
-    const eligibleForTrial = (productIds: readonly string[]) =>
-        runRevenueCat(registry, (revenueCat) => revenueCat.eligibleForTrial(accountId, productIds));
-    const getPackages = () => runRevenueCat(registry, (revenueCat) => revenueCat.getPackages(accountId));
-    const mirrorEntitlement = () => runRevenueCat(registry, (revenueCat) => revenueCat.mirror(accountId));
-    const purchasePackage = (pack: PurchasesPackage) =>
-        runRevenueCat(registry, (revenueCat) => revenueCat.purchase(accountId, pack));
-    const refreshEntitlement = () => runRevenueCat(registry, (revenueCat) => revenueCat.refresh(accountId));
-    const restorePurchases = () => runRevenueCat(registry, (revenueCat) => revenueCat.restore(accountId));
+    const run = async <W, A>(command: AtomCommand<W, A, unknown>, input: W) =>
+        unwrapAtomCommand(await runAtomCommand(registry, command, input, SILENT));
+    const eligibleForTrial = (productIds: readonly string[]) => run(eligibleForTrialCommand, { accountId, productIds });
+    const getPackages = () => run(getPackagesCommand, accountId);
+    const mirrorEntitlement = () => run(mirrorCommand, accountId);
+    const purchasePackage = (pack: PurchasesPackage) => run(purchaseCommand, { accountId, pack });
+    const refreshEntitlement = () => run(refreshCommand, accountId);
+    const restorePurchases = () => run(restoreCommand, accountId);
     return {
         ...entitlement,
         eligibleForTrial,

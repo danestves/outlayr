@@ -1,5 +1,4 @@
 import { router } from "expo-router";
-import { deleteItemAsync, setItemAsync } from "expo-secure-store";
 import { useEffect, useState } from "react";
 import { Alert, View } from "react-native";
 
@@ -9,7 +8,6 @@ import { MonoLabel } from "@/components/mono-label";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { useDatabase, useLocalData } from "@/contexts/local-data-context";
-import { setSyncEnabled, runPromiseUnwrapped } from "@/data/sync-outbox-core";
 import { closeDatabase } from "@/db/client";
 import type { Database } from "@/db/client";
 import { accountLabel, signInFailureMessage } from "@/domain/account";
@@ -24,6 +22,10 @@ import { createDeviceResetGate, writeDeviceResetMarker } from "@/lib/device-data
 import { posthog } from "@/lib/posthog";
 import { providerBindingFor } from "@/lib/provider-revocation";
 import { useProviderSignIn } from "@/lib/use-provider-sign-in";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { removeSecureItemCommand, setSecureItemCommand } from "@/state/secure-storage-commands";
+import { setSyncEnabledCommand } from "@/state/sync-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 type AuthClient = NonNullable<typeof authClient>;
 export function Account() {
@@ -59,6 +61,12 @@ function AccountContent({ client, db }: { client: AuthClient; db: Database }) {
     const [busy, setBusy] = useState<"deleteAll" | "deleteCloud" | "signOut" | null>(null);
     const [error, setError] = useState<string | null>(null);
     const { busy: signingIn, error: signInError, start } = useProviderSignIn(client);
+    const setSyncEnabled = useAtomCommand(setSyncEnabledCommand, SILENT);
+    const setSecureItem = useAtomCommand(setSecureItemCommand, SILENT);
+    const removeSecureItem = useAtomCommand(removeSecureItemCommand, SILENT);
+    const quiesce = async () => {
+        unwrapAtomCommand(await setSyncEnabled({ db, enabled: false }));
+    };
 
     useEffect(() => {
         let mounted = true;
@@ -86,7 +94,7 @@ function AccountContent({ client, db }: { client: AuthClient; db: Database }) {
                 await client.deleteUser();
             },
             navigateToLedger: openLedger,
-            quiesce: () => runPromiseUnwrapped(setSyncEnabled(db, false)),
+            quiesce,
             signOut: async () => {
                 await client.signOut();
             },
@@ -121,7 +129,9 @@ function AccountContent({ client, db }: { client: AuthClient; db: Database }) {
             allowLocal: openLedger,
             beginDeviceReset:
                 action === "deleteAll" ? async () => await writeDeviceResetMarker({ phase: "cloud", v: 1 }) : undefined,
-            clearDeletionSecret: async () => await deleteItemAsync(deletionResumeSecretKey),
+            clearDeletionSecret: async () => {
+                unwrapAtomCommand(await removeSecureItem(deletionResumeSecretKey));
+            },
             deleteAccount: async () => undefined,
             eraseBilling: async (resumeSecret) => {
                 if (convex === null) {
@@ -138,8 +148,11 @@ function AccountContent({ client, db }: { client: AuthClient; db: Database }) {
                 reopenLocalData();
                 router.replace("/onboarding");
             },
-            persistDeletionSecret: async (preparation) =>
-                await setItemAsync(deletionResumeSecretKey, JSON.stringify(preparation)),
+            persistDeletionSecret: async (preparation) => {
+                unwrapAtomCommand(
+                    await setSecureItem({ key: deletionResumeSecretKey, value: JSON.stringify(preparation) })
+                );
+            },
             prepareDeletion: async () => {
                 if (convex === null) {
                     throw new Error("Cloud deletion is unavailable");
@@ -151,7 +164,7 @@ function AccountContent({ client, db }: { client: AuthClient; db: Database }) {
                 >("accountDeletion:prepare", {});
                 return { ...preparation, provider: binding.provider, providerSubject: binding.providerSubject };
             },
-            quiesce: () => runPromiseUnwrapped(setSyncEnabled(db, false)),
+            quiesce,
             resetDevice: action === "deleteAll" && resetGate ? async () => await resetGate.recover() : undefined,
             revokeProvider: async (preparation) => {
                 // SAFETY: `prepareDeletion` is the only producer and adds the pair `StoredDeletionPreparation` needs.
