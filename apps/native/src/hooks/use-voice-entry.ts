@@ -9,7 +9,7 @@ import {
 } from "expo-audio";
 import type { RecordingOptions } from "expo-audio";
 import { File } from "expo-file-system";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { useSharedValue } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
 
@@ -21,7 +21,7 @@ import {
     startSilenceWatch,
     voiceTurnsOf,
 } from "@/domain/voice-entry";
-import type { VoiceTurn } from "@/domain/voice-entry";
+import type { VoiceTurn, VoiceTurnMessage } from "@/domain/voice-entry";
 import { duringHandoff } from "@/lib/app-handoff";
 import { VOICE_TURNS_QUERY, voiceThreadTransport } from "@/lib/convex";
 import type { SpeakRequest, StartThreadResult, VoiceDraft, VoiceQuote, VoiceThreadTransport } from "@/lib/convex";
@@ -125,6 +125,54 @@ async function readAndDiscard(uri: string): Promise<ArrayBuffer> {
     return bytes;
 }
 
+function settledPhaseOf<Context>(
+    phase: VoicePhase<Context>,
+    messages: readonly VoiceTurnMessage[]
+): VoicePhase<Context> {
+    if (phase.kind !== "thinking") {
+        return phase;
+    }
+    const answer = messages.find((message) => message.role === "assistant" && message.order === phase.order);
+    if (answer === undefined) {
+        return phase;
+    }
+    const proposed = proposedDraftOf(answer);
+    if (proposed !== null) {
+        if (proposed.draft === null) {
+            const said = messages.find((message) => message.role === "user" && message.order === phase.order);
+            return { kind: "failed", reason: "unclear", transcript: said?.text ?? null };
+        }
+        return {
+            context: phase.context,
+            draft: proposed.draft,
+            kind: "review",
+            order: phase.order,
+            quotes: proposed.quotes ?? [],
+        };
+    }
+    return answer.status === "failed" ? { kind: "failed", reason: "provider", transcript: null } : phase;
+}
+
+function heardIn(phase: VoicePhase, messages: readonly VoiceTurnMessage[]): string | null {
+    const said = (matches: (order: number) => boolean) =>
+        messages.find((message) => message.role === "user" && matches(message.order))?.text ?? null;
+    switch (phase.kind) {
+        case "sending": {
+            return said((order) => order > phase.after);
+        }
+        case "thinking":
+        case "review": {
+            return said((order) => order === phase.order);
+        }
+        case "failed": {
+            return phase.transcript;
+        }
+        default: {
+            return null;
+        }
+    }
+}
+
 // Must render inside the Convex provider. The meter polls into a shared value because `useAudioRecorderState` would
 // re-render the screen twenty times a second.
 export function useVoiceEntry<Context>({
@@ -157,63 +205,60 @@ export function useVoiceEntry<Context>({
         lastOrderRef.current = messages.reduce((last, message) => Math.max(last, message.order), -1);
     }, [messages]);
 
-    const stopMeter = useCallback(() => {
+    const stopMeter = () => {
         if (meterRef.current !== null) {
             clearInterval(meterRef.current);
             meterRef.current = null;
         }
         level.set(0);
-    }, [level]);
+    };
 
-    const endTake = useCallback(
-        async (take: number, outcome: "send" | "silent" | "discard") => {
-            // Claimed before the first await: a second tap or the silence timer would race this for one recorder.
-            if (endingRef.current === take) {
-                return;
+    const endTake = async (take: number, outcome: "send" | "silent" | "discard") => {
+        // Claimed before the first await: a second tap or the silence timer would race this for one recorder.
+        if (endingRef.current === take) {
+            return;
+        }
+        endingRef.current = take;
+        stopMeter();
+        let uri: string | null = null;
+        try {
+            await recorder.stop();
+            ({ uri } = recorder);
+        } catch {
+            // Never started, or already released by unmount: no clip either way.
+        }
+        if (outcome === "discard" || take !== takeRef.current) {
+            if (uri) {
+                await readAndDiscard(uri).catch(() => null);
             }
-            endingRef.current = take;
-            stopMeter();
-            let uri: string | null = null;
-            try {
-                await recorder.stop();
-                ({ uri } = recorder);
-            } catch {
-                // Never started, or already released by unmount: no clip either way.
+            return;
+        }
+        if (outcome === "silent" || !uri) {
+            if (uri) {
+                await readAndDiscard(uri).catch(() => null);
             }
-            if (outcome === "discard" || take !== takeRef.current) {
-                if (uri) {
-                    await readAndDiscard(uri).catch(() => null);
-                }
-                return;
+            setPhase({ kind: "failed", reason: "silent", transcript: null });
+            return;
+        }
+        try {
+            const clip = await readAndDiscard(uri);
+            if (take === takeRef.current) {
+                setPhase({ after: lastOrderRef.current, clip, kind: "sending" });
             }
-            if (outcome === "silent" || !uri) {
-                if (uri) {
-                    await readAndDiscard(uri).catch(() => null);
-                }
-                setPhase({ kind: "failed", reason: "silent", transcript: null });
-                return;
+        } catch {
+            if (take === takeRef.current) {
+                setPhase({ kind: "failed", reason: "provider", transcript: null });
             }
-            try {
-                const clip = await readAndDiscard(uri);
-                if (take === takeRef.current) {
-                    setPhase({ after: lastOrderRef.current, clip, kind: "sending" });
-                }
-            } catch {
-                if (take === takeRef.current) {
-                    setPhase({ kind: "failed", reason: "provider", transcript: null });
-                }
-            }
-        },
-        [recorder, stopMeter]
-    );
+        }
+    };
 
-    const abandonTake = useCallback(() => {
+    const abandonTake = () => {
         const take = takeRef.current;
         takeRef.current += 1;
         void endTake(take, "discard");
-    }, [endTake]);
+    };
 
-    const openThread = useCallback(async () => {
+    const openThread = async () => {
         let opened: StartThreadResult;
         try {
             opened = await api.start();
@@ -240,20 +285,21 @@ export function useVoiceEntry<Context>({
                 transcript: null,
             });
         }
-    }, [abandonTake, api]);
+    };
 
-    const dropThread = useCallback(() => {
+    const dropThread = () => {
         const id = threadRef.current;
         threadRef.current = null;
         setThreadId(null);
         if (id !== null) {
             api.end(id).catch(() => null);
         }
-    }, [api]);
+    };
 
+    const openFirstThread = useEffectEvent(() => openThread());
     useEffect(() => {
         disposedRef.current = false;
-        void Promise.resolve().then(() => (disposedRef.current ? undefined : openThread()));
+        void Promise.resolve().then(() => (disposedRef.current ? undefined : openFirstThread()));
         return () => {
             disposedRef.current = true;
             const id = threadRef.current;
@@ -261,9 +307,9 @@ export function useVoiceEntry<Context>({
                 api.end(id).catch(() => null);
             }
         };
-    }, [api, openThread]);
+    }, [api]);
 
-    const startTake = useCallback(async () => {
+    const startTake = async () => {
         takeRef.current += 1;
         const take = takeRef.current;
         const current = await getRecordingPermissionsAsync();
@@ -307,19 +353,26 @@ export function useVoiceEntry<Context>({
             }
             void endTake(take, judged.verdict === "nothingSaid" ? "silent" : "send");
         }, METER_INTERVAL_MS);
-    }, [endTake, level, recorder]);
+    };
 
+    const startFirstTake = useEffectEvent(() => startTake());
+    const stopFirstTake = useEffectEvent(() => stopMeter());
     useEffect(() => {
         let disposed = false;
-        void Promise.resolve().then(() => (disposed ? undefined : startTake()));
+        void Promise.resolve().then(() => (disposed ? undefined : startFirstTake()));
         return () => {
             disposed = true;
             takeRef.current += 1;
-            stopMeter();
+            stopFirstTake();
             // Never touch the recorder here: `useAudioRecorder` already released it, and reading `isRecording` throws.
         };
-    }, [startTake, stopMeter]);
+    }, []);
 
+    const restartThread = useEffectEvent(() => {
+        dropThread();
+        void openThread();
+    });
+    const abandonThread = useEffectEvent(() => dropThread());
     useEffect(() => {
         if (phase.kind !== "sending" || threadId === null || sentRef.current === phase.clip) {
             return;
@@ -339,7 +392,7 @@ export function useVoiceEntry<Context>({
                 }
                 if (settled === "timeout") {
                     // The request may still land a draft on this thread, so a retry must not speak into it.
-                    dropThread();
+                    abandonThread();
                     setPhase({ kind: "failed", reason: "timeout", transcript: null });
                     return;
                 }
@@ -357,8 +410,7 @@ export function useVoiceEntry<Context>({
                         resentRef.current = clip;
                         sentRef.current = null;
                         setPhase({ after: -1, clip, kind: "sending" });
-                        dropThread();
-                        void openThread();
+                        restartThread();
                         return;
                     }
                 }
@@ -369,75 +421,34 @@ export function useVoiceEntry<Context>({
                 }
             }
         })();
-    }, [api, context, dropThread, openThread, phase, request, threadId]);
+    }, [api, context, phase, request, threadId]);
 
-    const settledPhase = useMemo<VoicePhase<Context>>(() => {
-        if (phase.kind !== "thinking") {
-            return phase;
-        }
-        const answer = messages.find((message) => message.role === "assistant" && message.order === phase.order);
-        if (answer === undefined) {
-            return phase;
-        }
-        const proposed = proposedDraftOf(answer);
-        if (proposed !== null) {
-            if (proposed.draft === null) {
-                const said = messages.find((message) => message.role === "user" && message.order === phase.order);
-                return { kind: "failed", reason: "unclear", transcript: said?.text ?? null };
-            }
-            return {
-                context: phase.context,
-                draft: proposed.draft,
-                kind: "review",
-                order: phase.order,
-                quotes: proposed.quotes ?? [],
-            };
-        }
-        return answer.status === "failed" ? { kind: "failed", reason: "provider", transcript: null } : phase;
-    }, [messages, phase]);
+    const settledPhase = settledPhaseOf(phase, messages);
 
-    const turns = useMemo(() => voiceTurnsOf(messages), [messages]);
+    const turns = voiceTurnsOf(messages);
 
-    const heard = useMemo(() => {
-        const said = (matches: (order: number) => boolean) =>
-            messages.find((message) => message.role === "user" && matches(message.order))?.text ?? null;
-        switch (settledPhase.kind) {
-            case "sending": {
-                return said((order) => order > settledPhase.after);
-            }
-            case "thinking":
-            case "review": {
-                return said((order) => order === settledPhase.order);
-            }
-            case "failed": {
-                return settledPhase.transcript;
-            }
-            default: {
-                return null;
-            }
-        }
-    }, [messages, settledPhase]);
+    const heard = heardIn(settledPhase, messages);
 
-    const finish = useCallback(() => {
+    const finish = () => {
         if (phase.kind === "listening") {
             void endTake(takeRef.current, "send");
         }
-    }, [endTake, phase.kind]);
+    };
 
-    const cancel = useCallback(() => {
+    const cancel = () => {
         const take = takeRef.current;
         takeRef.current += 1;
         if (phase.kind === "listening" || phase.kind === "starting") {
             void endTake(take, "discard");
         }
-    }, [endTake, phase.kind]);
+    };
 
-    const listenAgain = useCallback(() => {
+    const listenAgain = () => {
         if (threadRef.current === null) {
             void openThread();
         }
         void startTake();
-    }, [openThread, startTake]);
+    };
 
     return { cancel, finish, heard, level, listenAgain, phase: settledPhase, spoke, turns };
 }

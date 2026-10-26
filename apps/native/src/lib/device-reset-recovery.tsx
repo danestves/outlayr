@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 
@@ -42,29 +42,34 @@ async function recoverDevice(db: Database | null, retry: () => void): Promise<Er
     }
 }
 
+function recoverInto(
+    db: Database | null,
+    retry: () => void,
+    setReady: (ready: boolean) => void,
+    setError: (error: Error) => void
+) {
+    recoverDevice(db, retry).then((failure) => {
+        if (failure === null) {
+            setReady(true);
+        } else {
+            setError(failure);
+        }
+    });
+}
+
 export function DeviceResetRecovery({ children }: { children: ReactNode }) {
     const { db, retry } = useLocalData();
     const t = useTranslation();
     const [error, setError] = useState<Error | null>(null);
     const [ready, setReady] = useState(false);
 
-    const recover = useCallback(() => {
-        recoverDevice(db, retry).then((failure) => {
-            if (failure === null) {
-                setReady(true);
-            } else {
-                setError(failure);
-            }
-        });
-    }, [db, retry]);
-
     useEffect(() => {
-        recover();
-    }, [recover]);
+        recoverInto(db, retry, setReady, setError);
+    }, [db, retry]);
 
     const retryRecovery = () => {
         setError(null);
-        recover();
+        recoverInto(db, retry, setReady, setError);
     };
 
     if (error) {

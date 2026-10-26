@@ -1,5 +1,4 @@
 import { NativeTabs } from "expo-router/native-tabs";
-import { useMemo } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
 import { useOverBudgetCount } from "@/data/budgets";
@@ -19,14 +18,11 @@ export default function TabLayout() {
     const overBudget = useOverBudgetCount(db, nowMs);
 
     // The family carries the weight: Android can't pick one out of a named face.
-    const labelStyle = useMemo(
-        () => ({
-            default: { color: m3.onSurfaceVariant, fontFamily: NAV_LABEL_FONT, fontSize: NAV_LABEL_SIZE },
-            selected: { color: m3.onSurface },
-        }),
-        [m3]
-    );
-    const iconColor = useMemo(() => ({ default: m3.onSurfaceVariant, selected: m3.onSecondaryContainer }), [m3]);
+    const labelStyle = {
+        default: { color: m3.onSurfaceVariant, fontFamily: NAV_LABEL_FONT, fontSize: NAV_LABEL_SIZE },
+        selected: { color: m3.onSurface },
+    };
+    const iconColor = { default: m3.onSurfaceVariant, selected: m3.onSecondaryContainer };
 
     return (
         <NativeTabs

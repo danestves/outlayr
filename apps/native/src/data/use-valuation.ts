@@ -1,6 +1,5 @@
 import { buildRateTable } from "@outlayr/money/valuation";
 import { and, eq, inArray } from "drizzle-orm";
-import { useMemo } from "react";
 
 import type { Database } from "@/db/client";
 import { exchangeRates } from "@/db/schema";
@@ -30,7 +29,7 @@ export function useValuationIn(db: Database, code: string, also: readonly string
         [db, code, also]
     );
 
-    return useMemo(() => ({ displayCurrency: code, rates: buildRateTable(rows) }), [code, rows]);
+    return { displayCurrency: code, rates: buildRateTable(rows) };
 }
 
 export function useValuation(db: Database): Valuation {

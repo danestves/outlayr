@@ -1,5 +1,4 @@
 import { and, asc, desc, eq, getTableColumns, gte, inArray, isNull, lt, lte } from "drizzle-orm";
-import { useMemo } from "react";
 
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
@@ -31,18 +30,15 @@ export function useWindowTransactions(db: Database, query: WindowTransactionsQue
     const categoryId = query?.categoryId ?? null;
     const enabled = query != null;
 
-    const contributingIds = useMemo(() => {
-        if (!categoryId) {
-            return null;
-        }
-        const ids = [categoryId];
+    let contributingIds: string[] | null = null;
+    if (categoryId) {
+        contributingIds = [categoryId];
         for (const [id, meta] of categoryMeta) {
             if (meta.parentId === categoryId) {
-                ids.push(id);
+                contributingIds.push(id);
             }
         }
-        return ids;
-    }, [categoryId, categoryMeta]);
+    }
 
     const contributingKey = contributingIds?.join(",") ?? "";
 

@@ -1,6 +1,5 @@
 import { addDays, startOfDay } from "@outlayr/money/calendar";
 import { and, eq, gte, isNull, lte, sum } from "drizzle-orm";
-import { useMemo } from "react";
 
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
@@ -69,8 +68,5 @@ export function useSpendingCalendar(db: Database, nowMs: number): SpendingCalend
     const rows = useLiveQuery(transactions, () => spendingCalendarQuery(db, new Date(nowMs)), [nowMs], nowMs);
     const valuation = useValuation(db);
 
-    return useMemo(
-        () => spendingCalendarEntries(normalizeRows(rows), valuation, new Date(nowMs)),
-        [rows, valuation, nowMs]
-    );
+    return spendingCalendarEntries(normalizeRows(rows), valuation, new Date(nowMs));
 }

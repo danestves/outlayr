@@ -1,5 +1,3 @@
-import { useMemo } from "react";
-
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
 
@@ -17,18 +15,14 @@ export function useSearchedTransactions(db: Database, query: string, nowMs: numb
     const trimmed = query.trim();
     const needle = trimmed.toLowerCase();
 
-    const categoryIds = useMemo(() => {
-        if (needle === "") {
-            return [];
-        }
-        const ids: string[] = [];
+    const categoryIds: string[] = [];
+    if (needle !== "") {
         for (const [id, row] of meta) {
             if (row.name?.toLowerCase().includes(needle)) {
-                ids.push(id);
+                categoryIds.push(id);
             }
         }
-        return ids;
-    }, [meta, needle]);
+    }
 
     const rows = useLiveQuery(
         transactions,

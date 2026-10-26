@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useEffectEvent, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 
 import { resolveInstitutionDomain } from "@/domain/institution-map";
 import type { EnrichmentFn } from "@/lib/convex";
@@ -33,6 +33,8 @@ export interface UseAccountIdentityResult {
     pending: boolean;
 }
 
+const resolveLocal = (suggestion: EnrichmentSuggestion) => suggestion;
+
 export function useAccountIdentity(args: UseAccountIdentityArgs): UseAccountIdentityResult {
     const {
         enabled,
@@ -55,7 +57,7 @@ export function useAccountIdentity(args: UseAccountIdentityArgs): UseAccountIden
         latest.current = { canAttach, fetchImage, onClear, onLogo, persistLogo };
     });
 
-    const attach = useCallback(async (domain: string | null) => {
+    const attach = async (domain: string | null) => {
         const blocked = () => latest.current.canAttach?.() === false;
         if (blocked()) {
             return;
@@ -88,16 +90,11 @@ export function useAccountIdentity(args: UseAccountIdentityArgs): UseAccountIden
             return;
         }
         latest.current.onLogo(logo);
-    }, []);
+    };
 
-    const onSuggest = useCallback(
-        (suggestion: EnrichmentSuggestion) => {
-            attach(suggestion.domain);
-        },
-        [attach]
-    );
-
-    const resolveLocal = useCallback((suggestion: EnrichmentSuggestion) => suggestion, []);
+    const onSuggest = (suggestion: EnrichmentSuggestion) => {
+        attach(suggestion.domain);
+    };
 
     const { onNameChange: enrich, pending } = useTransactionEnrichment({
         categoryTree: [],
@@ -113,13 +110,10 @@ export function useAccountIdentity(args: UseAccountIdentityArgs): UseAccountIden
         transport,
     });
 
-    const onNameChange = useCallback(
-        (next: string) => {
-            nameRef.current = next;
-            enrich(next);
-        },
-        [enrich]
-    );
+    const onNameChange = (next: string) => {
+        nameRef.current = next;
+        enrich(next);
+    };
 
     const { initialName } = args;
     const enrichInitialName = useEffectEvent(() => {

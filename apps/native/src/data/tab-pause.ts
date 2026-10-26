@@ -1,4 +1,4 @@
-import { createContext, use, useCallback } from "react";
+import { createContext, useContext } from "react";
 
 export type StoreSubscribe = (onChange: () => void) => () => void;
 
@@ -43,9 +43,6 @@ export type TabPause = ReturnType<typeof createTabPause>;
 export const TabPauseContext = createContext<TabPause | null>(null);
 
 export function useTabPaused(subscribe: StoreSubscribe): StoreSubscribe {
-    const pause = use(TabPauseContext);
-    return useCallback(
-        (onChange: () => void) => (pause === null ? subscribe(onChange) : pause.subscribe(subscribe, onChange)),
-        [pause, subscribe]
-    );
+    const pause = useContext(TabPauseContext);
+    return (onChange: () => void) => (pause === null ? subscribe(onChange) : pause.subscribe(subscribe, onChange));
 }

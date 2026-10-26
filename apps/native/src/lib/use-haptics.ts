@@ -5,7 +5,6 @@ import {
     notificationAsync,
     selectionAsync,
 } from "expo-haptics";
-import { useCallback } from "react";
 
 import { useLocalData } from "@/contexts/local-data-context";
 import { useNumberSetting } from "@/data/settings";
@@ -38,37 +37,34 @@ function useHapticsLevel(): number | null {
 export function useHaptics(): (event: HapticEvent) => void {
     const level = useHapticsLevel();
 
-    return useCallback(
-        (event: HapticEvent) => {
-            if (level === null) {
+    return (event: HapticEvent) => {
+        if (level === null) {
+            return;
+        }
+        const play = hapticPlay(level, event);
+        if (play === null) {
+            return;
+        }
+        switch (play.kind) {
+            case "selection": {
+                // oxlint-disable-next-line no-void -- the taptic engine is fire-and-forget here; this callback is synchronous and its caller has nothing to do with the promise
+                void selectionAsync();
                 return;
             }
-            const play = hapticPlay(level, event);
-            if (play === null) {
+            case "impact": {
+                // oxlint-disable-next-line no-void -- the taptic engine is fire-and-forget here; this callback is synchronous and its caller has nothing to do with the promise
+                void impactAsync(IMPACT[play.style]);
                 return;
             }
-            switch (play.kind) {
-                case "selection": {
-                    // oxlint-disable-next-line no-void -- the taptic engine is fire-and-forget here; this callback is synchronous and its caller has nothing to do with the promise
-                    void selectionAsync();
-                    return;
-                }
-                case "impact": {
-                    // oxlint-disable-next-line no-void -- the taptic engine is fire-and-forget here; this callback is synchronous and its caller has nothing to do with the promise
-                    void impactAsync(IMPACT[play.style]);
-                    return;
-                }
-                case "notification": {
-                    // oxlint-disable-next-line no-void -- the taptic engine is fire-and-forget here; this callback is synchronous and its caller has nothing to do with the promise
-                    void notificationAsync(NOTIFICATION[play.type]);
-                    return;
-                }
-                default: {
-                    const unhandled: never = play;
-                    throw new Error(`Unhandled haptic play: ${JSON.stringify(unhandled)}`);
-                }
+            case "notification": {
+                // oxlint-disable-next-line no-void -- the taptic engine is fire-and-forget here; this callback is synchronous and its caller has nothing to do with the promise
+                void notificationAsync(NOTIFICATION[play.type]);
+                return;
             }
-        },
-        [level]
-    );
+            default: {
+                const unhandled: never = play;
+                throw new Error(`Unhandled haptic play: ${JSON.stringify(unhandled)}`);
+            }
+        }
+    };
 }

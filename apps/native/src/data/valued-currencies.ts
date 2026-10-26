@@ -1,5 +1,4 @@
 import { eq } from "drizzle-orm";
-import { useMemo } from "react";
 
 import type { Database } from "@/db/client";
 import { exchangeRates } from "@/db/schema";
@@ -22,5 +21,5 @@ export function useValuedCurrencies(db: Database): ReadonlySet<string> {
         [db]
     );
 
-    return useMemo(() => new Set(rows.map((row) => row.quote)), [rows]);
+    return new Set(rows.map((row) => row.quote));
 }

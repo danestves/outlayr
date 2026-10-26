@@ -13,7 +13,7 @@ import { hideAsync, preventAutoHideAsync } from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { PanelUIProvider } from "panelui-native/provider";
 import { useTheme } from "panelui-native/theme";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Pressable, useWindowDimensions, View } from "react-native";
 import { SafeAreaListener, SafeAreaProvider } from "react-native-safe-area-context";
@@ -147,10 +147,10 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
         "--color-tint",
     ]) as string[];
 
-    const hideSplash = useCallback(() => {
+    const hideSplash = () => {
         hideAsync();
         setSplashHidden(true);
-    }, []);
+    };
 
     // An error surface beats an indefinite splash, but it is in the owner's language, so it waits on the catalog.
     const failed = fontsLoaded && status === "error";

@@ -121,10 +121,7 @@ export function useExpenseContributions(
     const categoryMeta = useCategoryMeta(db);
     const valuation = useValuation(db);
 
-    return useMemo(
-        () => expenseContributionsFrom(data, categoryMeta, valuation.displayCurrency, valuation.rates),
-        [data, categoryMeta, valuation]
-    );
+    return expenseContributionsFrom(data, categoryMeta, valuation.displayCurrency, valuation.rates);
 }
 
 // Null means no budget is set, never "not read yet": the read runs in render. Only the current window is written
@@ -151,43 +148,41 @@ export function useMainBudget(
         }
     }, [db, row, nowMs]);
 
-    return useMemo(() => {
-        if (!row) {
-            return null;
-        }
-        const now = new Date(nowMs);
-        const current = advanceBudgetWindow(row.startDate ?? now, row.type, now);
-        const window = shiftWindow(current.start, row.type, periodOffset);
-        const spent = spentForMain(contributions, window.start, new Date(windowEndMs(window, nowMs)));
-        const limit = limitIn(row, window.start, displayCurrency, rates);
-        // Anchored on the viewed window, so stepping back to March shows what March inherited.
-        const carry = row.rollover
-            ? rolloverCarryFrom(contributions, null, {
-                  anchor: row.dateCreated ?? window.start,
-                  current: window,
-                  limit,
-                  type: row.type,
-              }).credit
-            : 0;
-        const amount = effectiveLimit(limit, carry);
-        return {
-            amount,
-            anchor: row.startDate ?? window.start,
-            carry,
-            currency: row.currency,
-            customName: row.name?.trim() ? row.name.trim() : null,
-            id: row.id,
-            leftover: amount - spent,
-            limit,
-            name: row.name?.trim() ? row.name.trim() : translateNow("budgets.scope.everything"),
-            overBudget: spent > amount,
-            periodsBack: periodsBackTo(current.start, row.type, earliestDate(contributions)),
-            rollover: row.rollover,
-            spent,
-            type: row.type,
-            window,
-        };
-    }, [row, contributions, nowMs, periodOffset, displayCurrency, rates]);
+    if (!row) {
+        return null;
+    }
+    const now = new Date(nowMs);
+    const current = advanceBudgetWindow(row.startDate ?? now, row.type, now);
+    const window = shiftWindow(current.start, row.type, periodOffset);
+    const spent = spentForMain(contributions, window.start, new Date(windowEndMs(window, nowMs)));
+    const limit = limitIn(row, window.start, displayCurrency, rates);
+    // Anchored on the viewed window, so stepping back to March shows what March inherited.
+    const carry = row.rollover
+        ? rolloverCarryFrom(contributions, null, {
+              anchor: row.dateCreated ?? window.start,
+              current: window,
+              limit,
+              type: row.type,
+          }).credit
+        : 0;
+    const amount = effectiveLimit(limit, carry);
+    return {
+        amount,
+        anchor: row.startDate ?? window.start,
+        carry,
+        currency: row.currency,
+        customName: row.name?.trim() ? row.name.trim() : null,
+        id: row.id,
+        leftover: amount - spent,
+        limit,
+        name: row.name?.trim() ? row.name.trim() : translateNow("budgets.scope.everything"),
+        overBudget: spent > amount,
+        periodsBack: periodsBackTo(current.start, row.type, earliestDate(contributions)),
+        rollover: row.rollover,
+        spent,
+        type: row.type,
+        window,
+    };
 }
 
 export function useBurndown(
@@ -260,39 +255,37 @@ export function usePerCategoryBudgets(
         }
     }, [db, rows, nowMs]);
 
-    return useMemo(() => {
-        const now = new Date(nowMs);
-        return rows.map((row) => {
-            const { amount, carry, limit, spent, window } = categoryBudgetFigures(
-                row,
-                contributions,
-                now,
-                displayCurrency,
-                rates
-            );
-            const meta = row.categoryId ? categoryMeta.get(row.categoryId) : undefined;
-            return {
-                amount,
-                anchor: row.startDate ?? window.start,
-                carry,
-                categoryId: row.categoryId,
-                color: meta?.color ?? "#767676",
-                currency: row.currency,
-                customName: row.name?.trim() ? row.name.trim() : null,
-                emoji: meta?.emoji ?? null,
-                icon: meta?.icon ?? null,
-                id: row.id,
-                leftover: amount - spent,
-                limit,
-                name: row.name?.trim() ? row.name.trim() : (meta?.name ?? "Budget"),
-                overBudget: spent > amount,
-                rollover: row.rollover,
-                spent,
-                type: row.type,
-                window,
-            };
-        });
-    }, [rows, contributions, categoryMeta, nowMs, displayCurrency, rates]);
+    const now = new Date(nowMs);
+    return rows.map((row) => {
+        const { amount, carry, limit, spent, window } = categoryBudgetFigures(
+            row,
+            contributions,
+            now,
+            displayCurrency,
+            rates
+        );
+        const meta = row.categoryId ? categoryMeta.get(row.categoryId) : undefined;
+        return {
+            amount,
+            anchor: row.startDate ?? window.start,
+            carry,
+            categoryId: row.categoryId,
+            color: meta?.color ?? "#767676",
+            currency: row.currency,
+            customName: row.name?.trim() ? row.name.trim() : null,
+            emoji: meta?.emoji ?? null,
+            icon: meta?.icon ?? null,
+            id: row.id,
+            leftover: amount - spent,
+            limit,
+            name: row.name?.trim() ? row.name.trim() : (meta?.name ?? "Budget"),
+            overBudget: spent > amount,
+            rollover: row.rollover,
+            spent,
+            type: row.type,
+            window,
+        };
+    });
 }
 
 /** Reads no row before {@link overBudgetReadStart}. */
@@ -368,43 +361,31 @@ export function useCategoryBudget(db: Database, id: string, nowMs: number, perio
     const categoryMeta = useCategoryMeta(db);
     const { displayCurrency, rates } = useValuation(db);
 
-    const current = useMemo(() => {
-        if (!row) {
-            return null;
-        }
-        const now = new Date(nowMs);
-        return advanceBudgetWindow(row.startDate ?? now, row.type, now);
-    }, [row, nowMs]);
-
-    const window = useMemo(
-        () => (current && row ? shiftWindow(current.start, row.type, periodOffset) : null),
-        [current, row, periodOffset]
-    );
+    const windows = viewedWindows(row, nowMs, periodOffset);
 
     useEffect(() => {
-        if (!(row?.startDate && current)) {
+        if (!(row?.startDate && windows.current)) {
             return;
         }
-        if (current.start.getTime() !== row.startDate.getTime()) {
-            budgetsRepo.advanceBudgetStart(db, row.id, current.start);
+        if (windows.current.start.getTime() !== row.startDate.getTime()) {
+            budgetsRepo.advanceBudgetStart(db, row.id, windows.current.start);
         }
-    }, [db, row, current]);
+    }, [db, row, windows]);
 
+    const { current, window, windowEnd } = windows;
     const windowTransactions = useBudgetContributions(
         db,
         row?.categoryId ?? null,
         window ? window.start : null,
-        window ? windowEndMs(window, nowMs) : nowMs
+        windowEnd
     );
 
     const earliest = useEarliestContribution(db, row?.categoryId ?? null);
     // The same read the list uses, so the list and its detail can't disagree on what a window inherited.
     const contributions = useExpenseContributions(db, nowMs);
 
-    const budget = useMemo(() => {
-        if (!(row && window)) {
-            return null;
-        }
+    let budget: CategoryBudgetView | null = null;
+    if (row && window) {
         const spent = sumValuedIn(windowTransactions, displayCurrency, rates);
         const meta = row.categoryId ? categoryMeta.get(row.categoryId) : undefined;
         const limit = limitIn(row, window.start, displayCurrency, rates);
@@ -418,7 +399,7 @@ export function useCategoryBudget(db: Database, id: string, nowMs: number, perio
                   }).credit
                 : 0;
         const amount = effectiveLimit(limit, carry);
-        return {
+        budget = {
             amount,
             anchor: row.startDate ?? window.start,
             carry,
@@ -438,21 +419,25 @@ export function useCategoryBudget(db: Database, id: string, nowMs: number, perio
             type: row.type,
             window,
         };
-    }, [row, window, windowTransactions, categoryMeta, displayCurrency, rates, contributions]);
+    }
 
     const periodsBack = current && row ? periodsBackTo(current.start, row.type, earliest) : 0;
 
     return { budget, contributions, periodsBack, transactions: windowTransactions };
 }
 
+function viewedWindows(row: Budget | null, nowMs: number, periodOffset: number) {
+    const now = new Date(nowMs);
+    const current = row ? advanceBudgetWindow(row.startDate ?? now, row.type, now) : null;
+    const window = current && row ? shiftWindow(current.start, row.type, periodOffset) : null;
+    return { current, window, windowEnd: window ? windowEndMs(window, nowMs) : nowMs };
+}
+
 // A sorted fetch's first row, not `min()`: the aggregate comes back as a raw column the driver doesn't map to a Date.
 function useEarliestContribution(db: Database, categoryId: string | null): Date | null {
     const categoryMeta = useCategoryMeta(db);
 
-    const contributingIds = useMemo(
-        () => contributingCategoryIds(categoryId, categoryMeta),
-        [categoryId, categoryMeta]
-    );
+    const contributingIds = contributingCategoryIds(categoryId, categoryMeta);
     const contributingKey = contributingIds?.join(",") ?? "";
 
     const rows = useLiveQuery(
@@ -503,10 +488,7 @@ export function useBudgetContributions(
     const startMs = start ? start.getTime() : endMs + 1;
     const categoryMeta = useCategoryMeta(db);
 
-    const contributingIds = useMemo(
-        () => contributingCategoryIds(categoryId, categoryMeta),
-        [categoryId, categoryMeta]
-    );
+    const contributingIds = contributingCategoryIds(categoryId, categoryMeta);
 
     const contributingKey = contributingIds?.join(",") ?? "";
 
@@ -560,36 +542,34 @@ export function useUnbudgetedScopes(
     const firstDayOfMonth = useSettingNumber("firstDayOfMonth");
     const firstWeekday = useSettingNumber("firstWeekday");
 
-    return useMemo(() => {
-        const now = new Date(nowMs);
-        const start = startOfPeriod(now, BUDGET_TYPE.month, { firstDayOfMonth, firstWeekday });
-        const window = { end: periodEnd(start, BUDGET_TYPE.month), start };
-        const totals = spendPerWindow(
-            contributions,
-            closedWindowsBefore({ current: window, since: earliestDate(contributions), type: BUDGET_TYPE.month })
-        );
-        const budgeted = new Set(rows.map((row) => row.categoryId));
+    const now = new Date(nowMs);
+    const start = startOfPeriod(now, BUDGET_TYPE.month, { firstDayOfMonth, firstWeekday });
+    const window = { end: periodEnd(start, BUDGET_TYPE.month), start };
+    const totals = spendPerWindow(
+        contributions,
+        closedWindowsBefore({ current: window, since: earliestDate(contributions), type: BUDGET_TYPE.month })
+    );
+    const budgeted = new Set(rows.map((row) => row.categoryId));
 
-        const scopes: UnbudgetedScope[] = [];
-        for (const [categoryId, meta] of categoryMeta) {
-            if (meta.parentId || budgeted.has(categoryId)) {
-                continue;
-            }
-            const typical = typicalOf(totals.get(categoryId) ?? []);
-            if (typical === null) {
-                continue;
-            }
-            scopes.push({
-                categoryId,
-                color: meta.color ?? "#767676",
-                emoji: meta.emoji,
-                icon: meta.icon,
-                name: meta.name ?? translateNow("budgets.name.default"),
-                typical,
-            });
+    const scopes: UnbudgetedScope[] = [];
+    for (const [categoryId, meta] of categoryMeta) {
+        if (meta.parentId || budgeted.has(categoryId)) {
+            continue;
         }
-        scopes.sort((left, right) => right.typical - left.typical);
+        const typical = typicalOf(totals.get(categoryId) ?? []);
+        if (typical === null) {
+            continue;
+        }
+        scopes.push({
+            categoryId,
+            color: meta.color ?? "#767676",
+            emoji: meta.emoji,
+            icon: meta.icon,
+            name: meta.name ?? translateNow("budgets.name.default"),
+            typical,
+        });
+    }
+    scopes.sort((left, right) => right.typical - left.typical);
 
-        return { everything: typicalOf(totals.get(EVERY_SCOPE) ?? []), scopes, window };
-    }, [rows, categoryMeta, contributions, nowMs, firstDayOfMonth, firstWeekday]);
+    return { everything: typicalOf(totals.get(EVERY_SCOPE) ?? []), scopes, window };
 }

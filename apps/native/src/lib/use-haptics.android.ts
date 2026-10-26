@@ -1,5 +1,4 @@
 import { AndroidHaptics, performAndroidHapticsAsync } from "expo-haptics";
-import { useCallback } from "react";
 import { Platform } from "react-native";
 
 import { useLocalData } from "@/contexts/local-data-context";
@@ -54,17 +53,14 @@ function useHapticsLevel(): number | null {
 export const useHaptics: typeof iosUseHaptics = () => {
     const level = useHapticsLevel();
 
-    return useCallback(
-        (event: HapticEvent) => {
-            if (level === null) {
-                return;
-            }
-            const play = hapticPlay(level, event);
-            if (play === null) {
-                return;
-            }
-            performAndroidHapticsAsync(androidHapticFor(play, event, Number(Platform.Version))).catch(() => undefined);
-        },
-        [level]
-    );
+    return (event: HapticEvent) => {
+        if (level === null) {
+            return;
+        }
+        const play = hapticPlay(level, event);
+        if (play === null) {
+            return;
+        }
+        performAndroidHapticsAsync(androidHapticFor(play, event, Number(Platform.Version))).catch(() => undefined);
+    };
 };

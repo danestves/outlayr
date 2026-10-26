@@ -1,6 +1,6 @@
 import { getAppIconName, setAlternateAppIcon, supportsAlternateIcons } from "expo-alternate-app-icons";
 import { useFocusEffect } from "expo-router";
-import { useCallback, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { appIconTransition } from "@/domain/app-icons";
 import type { AppIconEvent, AppIconState } from "@/domain/app-icons";
@@ -32,52 +32,44 @@ export function useAppIcon(): AppIconControl {
     /** A ref because `choose` must read the in-flight request synchronously, which a queued updater cannot report. */
     const latest = useRef(state);
 
-    const commit = useCallback((next: AppIconState) => {
+    const commit = (next: AppIconState) => {
         latest.current = next;
         setState(next);
-    }, []);
+    };
 
-    const apply = useCallback(
-        (event: AppIconEvent): boolean => {
-            const next = appIconTransition(latest.current, event);
-            if (next === latest.current) {
-                return false;
-            }
-            commit(next);
-            return true;
-        },
-        [commit]
-    );
+    const apply = (event: AppIconEvent): boolean => {
+        const next = appIconTransition(latest.current, event);
+        if (next === latest.current) {
+            return false;
+        }
+        commit(next);
+        return true;
+    };
 
-    useFocusEffect(
-        useCallback(() => {
-            // Re-reading mid-flight would undo the optimistic tap for a frame.
-            if (latest.current.pending === null) {
-                commit({ active: readAppIconName(), pending: null });
-            }
-        }, [commit])
-    );
+    useFocusEffect(() => {
+        // Re-reading mid-flight would undo the optimistic tap for a frame.
+        if (latest.current.pending === null) {
+            commit({ active: readAppIconName(), pending: null });
+        }
+    });
 
-    const choose = useCallback(
-        (name: string | null) => {
-            if (!apply({ kind: "tap", name })) {
-                return;
-            }
-            setAlternateAppIcon(name)
-                .then(() => {
-                    apply({ kind: "resolved", name });
-                })
-                .catch((cause: unknown) => {
-                    console.error("App icon change failed", cause);
-                    apply({ kind: "rejected", reported: readAppIconName() });
-                    notifyFailure({
-                        body: translateNow("settings.appIcon.failedBody"),
-                        title: translateNow("settings.appIcon.failedTitle"),
-                    });
+    const choose = (name: string | null) => {
+        if (!apply({ kind: "tap", name })) {
+            return;
+        }
+        setAlternateAppIcon(name)
+            .then(() => {
+                apply({ kind: "resolved", name });
+            })
+            .catch((cause: unknown) => {
+                console.error("App icon change failed", cause);
+                apply({ kind: "rejected", reported: readAppIconName() });
+                notifyFailure({
+                    body: translateNow("settings.appIcon.failedBody"),
+                    title: translateNow("settings.appIcon.failedTitle"),
                 });
-        },
-        [apply]
-    );
+            });
+    };
 
     return { active: state.active, choose };
 }

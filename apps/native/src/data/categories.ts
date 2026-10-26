@@ -56,18 +56,16 @@ export function useCategoryTotals(db: Database): Map<string, number> {
     // grouping because each part converts at its own day's rate.
     const rows = useLiveQuery(transactions, () => categoryCellQuery(db));
     const { displayCurrency, rates } = useValuation(db);
-    return useMemo(() => {
-        const totals = new Map<string, number>();
-        for (const row of rows) {
-            if (row.categoryId == null) {
-                continue;
-            }
-            const cell = toCurrencyCell(row);
-            const previous = totals.get(row.categoryId) ?? 0;
-            totals.set(row.categoryId, previous + valueCell(cell, displayCurrency, rates));
+    const totals = new Map<string, number>();
+    for (const row of rows) {
+        if (row.categoryId == null) {
+            continue;
         }
-        return totals;
-    }, [rows, displayCurrency, rates]);
+        const cell = toCurrencyCell(row);
+        const previous = totals.get(row.categoryId) ?? 0;
+        totals.set(row.categoryId, previous + valueCell(cell, displayCurrency, rates));
+    }
+    return totals;
 }
 
 export function useCategoriesByNamespace(db: Database, income: boolean): CategoryWithChildren[] {
@@ -82,20 +80,18 @@ export function useCategoriesByNamespace(db: Database, income: boolean): Categor
                 .orderBy(asc(categories.sortOrder)),
         [income]
     ) as Category[];
-    // Memoized for stable identities: the picker's rows are `memo`'d, so fresh parents re-render every keystroke.
-    return useMemo(() => {
-        const parents = rows.filter((row) => row.parentId == null);
-        const childrenByParent = new Map<string, Category[]>();
-        for (const row of rows) {
-            if (row.parentId != null) {
-                const bucket = childrenByParent.get(row.parentId) ?? [];
-                bucket.push(row);
-                childrenByParent.set(row.parentId, bucket);
-            }
+    // Stable identities: the picker's rows are `memo`'d, so fresh parents re-render every keystroke.
+    const parents = rows.filter((row) => row.parentId == null);
+    const childrenByParent = new Map<string, Category[]>();
+    for (const row of rows) {
+        if (row.parentId != null) {
+            const bucket = childrenByParent.get(row.parentId) ?? [];
+            bucket.push(row);
+            childrenByParent.set(row.parentId, bucket);
         }
-        return parents.map((parent) => ({
-            ...parent,
-            children: childrenByParent.get(parent.id) ?? [],
-        }));
-    }, [rows]);
+    }
+    return parents.map((parent) => ({
+        ...parent,
+        children: childrenByParent.get(parent.id) ?? [],
+    }));
 }
