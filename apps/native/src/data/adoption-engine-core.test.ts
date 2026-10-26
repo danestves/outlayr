@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import { eq } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
@@ -179,9 +180,9 @@ describe("discardAccountLedger", () => {
 
         expect(server.rows.get("transactions shared")?.deletedAt).toBeNull();
 
-        await setSyncEnabled(db, true);
-        await enqueueAllForSync(db);
-        await drainOutbox(db, server.push);
+        await Effect.runPromise(setSyncEnabled(db, true));
+        await Effect.runPromise(enqueueAllForSync(db));
+        await Effect.runPromise(drainOutbox(db, server.push));
 
         const survivor = server.rows.get("transactions shared");
         expect(survivor?.deletedAt).toBeNull();
@@ -194,9 +195,9 @@ describe("discardAccountLedger", () => {
         await addTransaction(db, "restored", new Date(1000));
 
         await discardAccountLedger(db, server.transport);
-        await setSyncEnabled(db, true);
-        await enqueueAllForSync(db);
-        await drainOutbox(db, server.push);
+        await Effect.runPromise(setSyncEnabled(db, true));
+        await Effect.runPromise(enqueueAllForSync(db));
+        await Effect.runPromise(drainOutbox(db, server.push));
 
         expect(server.rows.get("transactions restored")?.fields.note).toBe("restored");
     });
@@ -255,9 +256,9 @@ describe("a tombstoned account row does not come back to bite", () => {
         await addTransaction(db, "mine", new Date(100));
 
         await discardAccountLedger(db, server.transport);
-        await setSyncEnabled(db, true);
-        await enqueueAllForSync(db);
-        await runSync(db, server.transport);
+        await Effect.runPromise(setSyncEnabled(db, true));
+        await Effect.runPromise(enqueueAllForSync(db));
+        await Effect.runPromise(runSync(db, server.transport));
 
         const live = (await db.select().from(transactions))
             .filter((row) => row.deletedAt === null)

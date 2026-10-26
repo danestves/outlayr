@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import { eq } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { accounts, budgets, categories, mainBudget, outbox, transactions } from "@/db/schema";
@@ -130,16 +131,16 @@ describe("adoption marker", () => {
     it("account-switch-clears-metadata-before-enable", async () => {
         await markAdopted(db, "account-a");
         await runAdoption(db, null, { pushLocal: false, wipeAccount: false, wipeLocal: false });
-        await setSyncCursor(db, 23);
-        await setSyncedAt(db, new Date(1_700_000_000_000));
+        await Effect.runPromise(setSyncCursor(db, 23));
+        await Effect.runPromise(setSyncedAt(db, new Date(1_700_000_000_000)));
         await addTransaction(db, "queued-for-account-a");
 
         await prepareAccountAdoption(db, "account-b");
 
-        await expect(isSyncEnabled(db)).resolves.toBe(false);
-        await expect(getSyncCursor(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(false);
+        await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(0);
         await expect(getMeta(db, META_KEYS.syncedAt)).resolves.toBeNull();
-        await expect(outboxPendingCount(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
         await expect(adoptedAccount(db)).resolves.toBe("account-a");
     });
 
@@ -166,17 +167,17 @@ describe("adoption marker", () => {
     });
 
     it("unmarked-residual-sync-state-is-cleared-before-new-account-adoption", async () => {
-        await setSyncEnabled(db, true);
-        await setSyncCursor(db, 23);
-        await setSyncedAt(db, new Date(1_700_000_000_000));
+        await Effect.runPromise(setSyncEnabled(db, true));
+        await Effect.runPromise(setSyncCursor(db, 23));
+        await Effect.runPromise(setSyncedAt(db, new Date(1_700_000_000_000)));
         await addTransaction(db, "queued-without-marker");
 
         await prepareAccountAdoption(db, "account-b");
 
-        await expect(isSyncEnabled(db)).resolves.toBe(false);
-        await expect(getSyncCursor(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(false);
+        await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(0);
         await expect(getMeta(db, META_KEYS.syncedAt)).resolves.toBeNull();
-        await expect(outboxPendingCount(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
     });
 
     it("unmarked-bound-subject-preserves-explicit-sync-off", async () => {
@@ -184,20 +185,20 @@ describe("adoption marker", () => {
 
         await prepareAccountAdoption(db, "account-a");
 
-        await expect(isSyncEnabled(db)).resolves.toBe(false);
+        await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(false);
         await expect(getMeta(db, META_KEYS.syncAccountSubject)).resolves.toBe("account-a");
     });
 
     it("mismatched-marker-and-metadata-cannot-preserve-queued-writes", async () => {
         await markAdopted(db, "account-a");
         await setMeta(db, META_KEYS.syncAccountSubject, "account-b");
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
         await addTransaction(db, "queued-for-mismatched-subject");
 
         await prepareAccountAdoption(db, "account-b");
 
-        await expect(isSyncEnabled(db)).resolves.toBe(false);
-        await expect(outboxPendingCount(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(false);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
         await expect(getMeta(db, META_KEYS.syncAccountSubject)).resolves.toBeNull();
     });
 });
@@ -222,9 +223,9 @@ function recordingEngine(): AdoptionEngine & { calls: string[] } {
 describe("running an adoption", () => {
     it("opens the sync gate without queueing when there is nothing to push", async () => {
         await runAdoption(db, null, { pushLocal: false, wipeAccount: false, wipeLocal: false }, "account-a");
-        await expect(isSyncEnabled(db)).resolves.toBe(true);
+        await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(true);
         await expect(getMeta(db, META_KEYS.syncAccountSubject)).resolves.toBe("account-a");
-        await expect(outboxPendingCount(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
     });
 
     it("queues every local row when adopting", async () => {
@@ -234,13 +235,13 @@ describe("running an adoption", () => {
             wipeAccount: false,
             wipeLocal: false,
         });
-        await expect(isSyncEnabled(db)).resolves.toBe(true);
+        await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(true);
         await expect(queuedIds(db, "transactions")).resolves.toStrictEqual(["t1"]);
     });
 
     it("rolls back tentative account sync when enqueue fails", async () => {
-        await setSyncCursor(db, 23);
-        await setSyncedAt(db, new Date(1_700_000_000_000));
+        await Effect.runPromise(setSyncCursor(db, 23));
+        await Effect.runPromise(setSyncedAt(db, new Date(1_700_000_000_000)));
         await addTransaction(db, "t1");
         (db.$client as unknown as { exec: (sql: string) => void }).exec(`
 			CREATE TRIGGER fail_outbox_enqueue BEFORE INSERT ON outbox
@@ -260,10 +261,10 @@ describe("running an adoption", () => {
             )
         ).rejects.toThrow("queue unavailable");
 
-        await expect(isSyncEnabled(db)).resolves.toBe(false);
+        await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(false);
         await expect(getMeta(db, META_KEYS.syncAccountSubject)).resolves.toBeNull();
-        await expect(outboxPendingCount(db)).resolves.toBe(0);
-        await expect(getSyncCursor(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
+        await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(0);
         await expect(getMeta(db, META_KEYS.syncedAt)).resolves.toBeNull();
         await expect(adoptedAccount(db)).resolves.toBeNull();
     });
@@ -288,7 +289,7 @@ describe("running an adoption", () => {
             )
         ).rejects.toThrow("queue unavailable");
 
-        await expect(isSyncEnabled(db)).resolves.toBe(true);
+        await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(true);
         await expect(getMeta(db, META_KEYS.syncAccountSubject)).resolves.toBe("account-a");
     });
 
@@ -305,10 +306,10 @@ describe("running an adoption", () => {
             )
         ).rejects.toThrow("marker unavailable");
 
-        await expect(isSyncEnabled(db)).resolves.toBe(false);
+        await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(false);
         await expect(getMeta(db, META_KEYS.syncAccountSubject)).resolves.toBeNull();
-        await expect(outboxPendingCount(db)).resolves.toBe(0);
-        await expect(getSyncCursor(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
+        await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(0);
         await expect(getMeta(db, META_KEYS.syncedAt)).resolves.toBeNull();
         await expect(adoptedAccount(db)).resolves.toBeNull();
     });
@@ -328,8 +329,8 @@ describe("running an adoption", () => {
                 wipeLocal: false,
             })
         ).rejects.toThrow();
-        await expect(isSyncEnabled(db)).resolves.toBe(false);
-        await expect(outboxPendingCount(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(false);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
     });
 
     it("refills from the account before the gate opens, so the wipe queues nothing", async () => {
@@ -337,7 +338,7 @@ describe("running an adoption", () => {
         const engine = recordingEngine();
         engine.replaceFromAccount = async () => {
             engine.calls.push("replaceFromAccount");
-            await expect(isSyncEnabled(db)).resolves.toBe(false);
+            await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(false);
         };
         await runAdoption(db, engine, {
             pushLocal: false,
@@ -345,8 +346,8 @@ describe("running an adoption", () => {
             wipeLocal: true,
         });
         expect(engine.calls).toStrictEqual(["replaceFromAccount"]);
-        await expect(isSyncEnabled(db)).resolves.toBe(true);
-        await expect(outboxPendingCount(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(true);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
     });
 
     it("discards the account's ledger before queueing this device's", async () => {
@@ -374,7 +375,7 @@ describe("running an adoption", () => {
                 wipeLocal: false,
             })
         ).rejects.toThrow();
-        await expect(isSyncEnabled(db)).resolves.toBe(false);
-        await expect(outboxPendingCount(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(false);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
     });
 });

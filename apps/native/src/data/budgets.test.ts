@@ -3,6 +3,7 @@ import { BUDGET_TYPE, startOfPeriod } from "@outlayr/money/budget-window";
 import { firstOfMonth, startOfDay } from "@outlayr/money/calendar";
 import { buildRateTable, limitIn } from "@outlayr/money/valuation";
 import { and, eq, getTableColumns, isNull } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { appMeta, budgets, categories, exchangeRates, mainBudget, outbox, transactions } from "@/db/schema";
@@ -456,7 +457,7 @@ describe("budgetsRepo.deleteBudget", () => {
             name: "Coffee",
             updatedAt: BACKDATE,
         });
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
     });
 
     function add(categoryId: string): Promise<string> {
@@ -542,7 +543,7 @@ describe("budgetsRepo.deleteMainBudget", () => {
 
     beforeEach(async () => {
         db = migratedDatabase();
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
     });
 
     function add(): Promise<string> {

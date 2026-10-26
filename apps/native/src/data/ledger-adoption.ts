@@ -14,6 +14,7 @@ import {
     isSyncEnabled,
     resetSyncForAccountSwitch,
     setSyncEnabled,
+    runPromiseUnwrapped,
 } from "./sync-outbox-core";
 
 const SEEDED_CATEGORY_COUNT = SEEDED_CATEGORY_NAMES.expense.length + SEEDED_CATEGORY_NAMES.income.length;
@@ -63,15 +64,15 @@ export async function markAdopted(db: Database, accountId: string): Promise<void
 export async function prepareAccountAdoption(db: Database, accountId: string): Promise<void> {
     const [marker, syncSubject, residual] = await Promise.all([
         adoptedAccount(db),
-        getSyncAccountSubject(db),
-        hasResidualSyncState(db),
+        runPromiseUnwrapped(getSyncAccountSubject(db)),
+        runPromiseUnwrapped(hasResidualSyncState(db)),
     ]);
     const sameSubject = syncSubject === accountId;
     if ((marker === accountId && sameSubject) || (marker === null && sameSubject && !residual)) {
         return;
     }
     if (marker !== null || syncSubject !== null || residual) {
-        await resetSyncForAccountSwitch(db);
+        await runPromiseUnwrapped(resetSyncForAccountSwitch(db));
     }
 }
 
@@ -96,21 +97,21 @@ export async function runAdoption(
         }
     }
 
-    const enabledForAttempt = accountId !== undefined && !(await isSyncEnabled(db));
+    const enabledForAttempt = accountId !== undefined && !(await runPromiseUnwrapped(isSyncEnabled(db)));
     if (enabledForAttempt) {
-        await enableSyncForAccount(db, accountId);
+        await runPromiseUnwrapped(enableSyncForAccount(db, accountId));
     } else if (!accountId) {
-        await setSyncEnabled(db, true);
+        await runPromiseUnwrapped(setSyncEnabled(db, true));
     }
 
     try {
         if (actions.pushLocal) {
-            await enqueueAllForSync(db);
+            await runPromiseUnwrapped(enqueueAllForSync(db));
         }
         return enabledForAttempt;
     } catch (error: unknown) {
         if (enabledForAttempt) {
-            await resetSyncForAccountSwitch(db);
+            await runPromiseUnwrapped(resetSyncForAccountSwitch(db));
         }
         throw error;
     }
@@ -128,7 +129,7 @@ export async function completeAdoption(
         await persistMarker(db, accountId);
     } catch (error: unknown) {
         if (enabledForAttempt) {
-            await resetSyncForAccountSwitch(db);
+            await runPromiseUnwrapped(resetSyncForAccountSwitch(db));
         }
         throw error;
     }

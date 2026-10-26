@@ -10,7 +10,7 @@ import { Text } from "@/components/text";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { runAdoption } from "@/data/ledger-adoption";
-import { setSyncEnabled } from "@/data/sync-outbox-core";
+import { setSyncEnabled, runPromiseUnwrapped } from "@/data/sync-outbox-core";
 import { useSyncStatus } from "@/data/use-sync-status";
 import { formatDayHeader, formatTime } from "@/domain/dates";
 import type { AdoptionActions } from "@/domain/ledger-adoption";
@@ -61,7 +61,9 @@ export function Sync() {
         }
         setBusy(true);
         const work =
-            next && accountId ? runAdoption(db, adoptionEngine(db), RESUME, accountId) : setSyncEnabled(db, false);
+            next && accountId
+                ? runAdoption(db, adoptionEngine(db), RESUME, accountId)
+                : runPromiseUnwrapped(setSyncEnabled(db, false));
         work.catch((cause: unknown) => {
             console.error("Sync switch failed", cause);
             notifyFailure({ body: t("settings.sync.failedBody"), title: t("settings.sync.failedTitle") });

@@ -1,3 +1,6 @@
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+
 import type { Database } from "./client";
 
 /**
@@ -39,3 +42,38 @@ async function runTransaction(db: Database, task: () => Promise<void>): Promise<
 
     await client.withTransactionAsync(task);
 }
+
+class BodyFailedError extends Error {
+    override name = "BodyFailedError";
+}
+
+export const transaction = <A, E, R, E2>(
+    db: Database,
+    body: Effect.Effect<A, E, R>,
+    toError: (cause: unknown) => E2
+): Effect.Effect<A, E | E2, R> =>
+    Effect.uninterruptible(
+        Effect.gen(function* runInTransaction() {
+            const run = Effect.runPromiseExitWith(yield* Effect.context<R>());
+            let exit: Exit.Exit<A, E> | undefined;
+            const committed = yield* Effect.exit(
+                Effect.tryPromise({
+                    catch: toError,
+                    try: () =>
+                        withTransaction(db, async () => {
+                            exit = await run(body);
+                            if (Exit.isFailure(exit)) {
+                                throw new BodyFailedError();
+                            }
+                        }),
+                })
+            );
+            if (exit !== undefined && Exit.isFailure(exit)) {
+                return yield* Effect.failCause(exit.cause);
+            }
+            if (Exit.isFailure(committed)) {
+                return yield* Effect.failCause(committed.cause);
+            }
+            return yield* exit ?? Effect.die(new Error("A committed transaction never ran its body"));
+        })
+    );

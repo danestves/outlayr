@@ -216,7 +216,7 @@ describe("sync engine", () => {
         await flush();
         expect(passes).toHaveBeenCalledTimes(2);
 
-        await setSyncCursor(db, 5);
+        await Effect.runPromise(setSyncCursor(db, 5));
         watermark.emit(6);
         await flush();
         expect(passes).toHaveBeenCalledTimes(2);

@@ -10,7 +10,7 @@ import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { buildArchive } from "@/data/archive-core";
 import { downloadEveryPhoto } from "@/data/photo-sync-core";
-import { isSyncEnabled } from "@/data/sync-outbox-core";
+import { isSyncEnabled, runPromiseUnwrapped } from "@/data/sync-outbox-core";
 import { useTransactionCount } from "@/data/transactions";
 import { exportFileName, exportTransactionsCsv } from "@/data/transfer-core";
 import { archiveFileName, serializeArchive } from "@/domain/archive";
@@ -64,7 +64,7 @@ export function ExportData() {
         runExport(
             "archive",
             async () => {
-                if (await isSyncEnabled(db)) {
+                if (await runPromiseUnwrapped(isSyncEnabled(db))) {
                     await downloadEveryPhoto(db, photoFiles, photoTransport()).catch((cause: unknown) => {
                         console.warn("[outlayr] fetching missing photos before export failed", cause);
                     });

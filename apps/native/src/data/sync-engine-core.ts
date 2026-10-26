@@ -1,6 +1,7 @@
 import { and, asc, eq, getTableColumns, inArray, isNull, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import type { SQLiteColumn, SQLiteTable } from "drizzle-orm/sqlite-core";
+import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
@@ -24,7 +25,7 @@ import {
     transactionTags,
     transfers,
 } from "@/db/schema";
-import { withTransaction } from "@/db/transaction";
+import { transaction } from "@/db/transaction";
 import { chunkRows } from "@/lib/chunk";
 
 import { getMeta, META_KEYS } from "./app-meta-core";
@@ -38,6 +39,20 @@ import {
 } from "./sync-outbox-core";
 
 export type SyncedTable = (typeof SYNCED_TABLES)[number];
+
+const SyncCoreStage = Schema.Literals(["read", "write", "push", "pull", "foreignKeys", "transaction"]);
+
+export class SyncCoreError extends Schema.TaggedError<SyncCoreError>()("SyncCoreError", {
+    cause: Schema.Defect(),
+    message: Schema.String,
+    stage: SyncCoreStage,
+}) {}
+
+const failedAt = (stage: typeof SyncCoreStage.Type) => (cause: unknown) =>
+    new SyncCoreError({ cause, message: `Sync ${stage} failed`, stage });
+
+const query = <A>(stage: typeof SyncCoreStage.Type, run: () => PromiseLike<A>) =>
+    Effect.tryPromise({ catch: failedAt(stage), try: run });
 
 /** Mirrors `PUSH_BATCH_LIMIT` in `packages/backend/confect/sync.ts`. */
 export const PUSH_BATCH_LIMIT = 500;
@@ -349,15 +364,22 @@ function toLocalFields(spec: TableSpec, fields: WireFields): Row {
     );
 }
 
-async function rowsById(db: Database, table: SyncedTable, ids: readonly string[]): Promise<Map<string, Row>> {
+const rowsById = Effect.fn("SyncCore.rowsById")(function* rowsById(
+    db: Database,
+    table: SyncedTable,
+    ids: readonly string[]
+) {
     const spec = SPECS[table];
-    const batches = await Promise.all(
+    const batches = yield* Effect.all(
         chunkRows(ids, ID_CHUNK).map((chunk) =>
-            anyWriter(db)
-                .select()
-                .from(spec.table)
-                .where(inArray(spec.id, [...chunk]))
-        )
+            query("read", () =>
+                anyWriter(db)
+                    .select()
+                    .from(spec.table)
+                    .where(inArray(spec.id, [...chunk]))
+            )
+        ),
+        { concurrency: "unbounded" }
     );
     const found = new Map<string, Row>();
     for (const rows of batches) {
@@ -366,7 +388,7 @@ async function rowsById(db: Database, table: SyncedTable, ids: readonly string[]
         }
     }
     return found;
-}
+});
 
 function groupByTable<T extends { tableName: string; localId: string }>(entries: readonly T[]): Map<SyncedTable, T[]> {
     const grouped = new Map<SyncedTable, T[]>();
@@ -387,53 +409,57 @@ function groupByTable<T extends { tableName: string; localId: string }>(entries:
  * Only rows of the pulled page can ask whether this device still owes them a push, so their queue entries are read
  * back through the `(tableName, localId)` index instead of copying the whole outbox inside every page's batch.
  */
-async function outboxPending(db: Database, grouped: ReadonlyMap<SyncedTable, PulledRow[]>): Promise<Set<string>> {
-    const batches = await Promise.all(
+const outboxPending = Effect.fn("SyncCore.outboxPending")(function* outboxPending(
+    db: Database,
+    grouped: ReadonlyMap<SyncedTable, PulledRow[]>
+) {
+    const batches = yield* Effect.all(
         [...grouped].flatMap(([table, rows]) =>
-            chunkRows([...new Set(rows.map((row) => row.localId))], ID_CHUNK).map(async (chunk) => {
-                const entries = await db
-                    .select({ localId: outbox.localId })
-                    .from(outbox)
-                    .where(and(eq(outbox.tableName, table), inArray(outbox.localId, chunk)));
-                return entries.map((entry) => `${table}\0${entry.localId}`);
-            })
-        )
+            chunkRows([...new Set(rows.map((row) => row.localId))], ID_CHUNK).map((chunk) =>
+                query("read", () =>
+                    db
+                        .select({ localId: outbox.localId })
+                        .from(outbox)
+                        .where(and(eq(outbox.tableName, table), inArray(outbox.localId, chunk)))
+                ).pipe(Effect.map((entries) => entries.map((entry) => `${table}\0${entry.localId}`)))
+            )
+        ),
+        { concurrency: "unbounded" }
     );
     return new Set(batches.flat());
-}
+});
 
 /**
  * Clears queue entries by `seq`, never by `(table, localId)`: an edit that lands mid-push re-queues the row
  * under a new seq, and deleting by identity would drop it.
  */
-export async function drainOutbox(db: Database, push: PushFn): Promise<number> {
-    if (!(await isSyncEnabled(db))) {
+export const drainOutbox = Effect.fn("SyncCore.drainOutbox")(function* drainOutbox(db: Database, push: PushFn) {
+    if (!(yield* isSyncEnabled(db))) {
         return 0;
     }
-    const deviceId = await getOrCreateDeviceId(db);
+    const deviceId = yield* getOrCreateDeviceId(db);
     let pushed = 0;
 
-    /* oxlint-disable no-await-in-loop -- each pass reads the outbox left behind by the previous pass's push and delete, so the batches cannot overlap */
+    // Each pass reads the outbox left behind by the previous pass's push and delete, so the batches cannot overlap.
     for (;;) {
-        const queued = await db.select().from(outbox).orderBy(asc(outbox.seq)).limit(PUSH_BATCH_LIMIT);
+        const queued = yield* query("read", () =>
+            db.select().from(outbox).orderBy(asc(outbox.seq)).limit(PUSH_BATCH_LIMIT)
+        );
         if (queued.length === 0) {
             return pushed;
         }
 
         const grouped = groupByTable(queued);
         const loaded = new Map<SyncedTable, Map<string, Row>>(
-            await Promise.all(
-                [...grouped].map(
-                    async ([table, entries]) =>
-                        [
-                            table,
-                            await rowsById(
-                                db,
-                                table,
-                                entries.map((entry) => entry.localId)
-                            ),
-                        ] as const
-                )
+            yield* Effect.all(
+                [...grouped].map(([table, entries]) =>
+                    rowsById(
+                        db,
+                        table,
+                        entries.map((entry) => entry.localId)
+                    ).pipe(Effect.map((found) => [table, found] as const))
+                ),
+                { concurrency: "unbounded" }
             )
         );
 
@@ -458,25 +484,24 @@ export async function drainOutbox(db: Database, push: PushFn): Promise<number> {
         }
 
         if (rows.length > 0) {
-            await push({ deviceId, rows });
+            yield* query("push", () => push({ deviceId, rows }));
             pushed += rows.length;
         }
 
-        /* oxlint-disable no-await-in-loop -- chunking only exists to stay under SQLite's bound-parameter limit, and one connection serialises writers anyway, so overlapping these deletes buys contention rather than parallelism */
+        // Chunking only exists to stay under SQLite's bound-parameter limit, and one connection serialises writers
+        // anyway, so overlapping these deletes buys contention rather than parallelism.
         for (const chunk of chunkRows(
             queued.map((entry) => entry.seq),
             ID_CHUNK
         )) {
-            await db.delete(outbox).where(inArray(outbox.seq, chunk));
+            yield* query("write", () => db.delete(outbox).where(inArray(outbox.seq, chunk)));
         }
-        /* oxlint-enable no-await-in-loop */
 
         if (queued.length < PUSH_BATCH_LIMIT) {
             return pushed;
         }
     }
-    /* oxlint-enable no-await-in-loop */
-}
+});
 
 interface LocalVersion {
     deletedAt: number | null;
@@ -542,6 +567,8 @@ export interface ApplyResult {
     tables: SyncedTable[];
 }
 
+const nothingApplied = (): ApplyResult => ({ applied: 0, tables: [] });
+
 /** A meta key this build no longer syncs is not applied, or a peer could reverse this device's choice. */
 function isReplicated(row: PulledRow): boolean {
     if (!(row.table in SPECS)) {
@@ -550,124 +577,133 @@ function isReplicated(row: PulledRow): boolean {
     return row.table !== "appMeta" || SYNCED_META_KEYS.some((key) => key === row.localId);
 }
 
-async function applyInTransaction(
+const applyInTransaction = Effect.fn("SyncCore.applyInTransaction")(function* applyInTransaction(
     db: Database,
     page: { rows: readonly PulledRow[]; cursor: number },
     now: Date,
     keepCursor: boolean
-): Promise<ApplyResult> {
+) {
     const touched = new Set<SyncedTable>();
     let applied = 0;
 
-    await withTransaction(db, async () => {
-        const byTable = new Map<SyncedTable, PulledRow[]>();
-        for (const row of page.rows) {
-            if (!isReplicated(row)) {
-                continue;
+    yield* transaction(
+        db,
+        Effect.gen(function* write() {
+            const byTable = new Map<SyncedTable, PulledRow[]>();
+            for (const row of page.rows) {
+                if (!isReplicated(row)) {
+                    continue;
+                }
+                const bucket = byTable.get(row.table) ?? [];
+                bucket.push(row);
+                byTable.set(row.table, bucket);
             }
-            const bucket = byTable.get(row.table) ?? [];
-            bucket.push(row);
-            byTable.set(row.table, bucket);
-        }
-        const pending = await outboxPending(db, byTable);
+            const pending = yield* outboxPending(db, byTable);
 
-        const existing = new Map<SyncedTable, Map<string, Row>>(
-            await Promise.all(
-                [...byTable].map(
-                    async ([table, rows]) =>
-                        [
+            const existing = new Map<SyncedTable, Map<string, Row>>(
+                yield* Effect.all(
+                    [...byTable].map(([table, rows]) =>
+                        rowsById(
+                            db,
                             table,
-                            await rowsById(
-                                db,
-                                table,
-                                rows.map((row) => row.localId)
-                            ),
-                        ] as const
+                            rows.map((row) => row.localId)
+                        ).pipe(Effect.map((found) => [table, found] as const))
+                    ),
+                    { concurrency: "unbounded" }
                 )
-            )
-        );
+            );
 
-        const winners: PulledRow[] = [];
-        for (const row of page.rows) {
-            if (!isReplicated(row)) {
-                continue;
+            const winners: PulledRow[] = [];
+            for (const row of page.rows) {
+                if (!isReplicated(row)) {
+                    continue;
+                }
+                const local = existing.get(row.table)?.get(row.localId);
+                const localVersion =
+                    local === undefined
+                        ? null
+                        : {
+                              deletedAt: row.table === "appMeta" ? null : toEpoch(local.deletedAt),
+                              restoredAt: toEpoch(local.restoredAt),
+                              updatedAt: row.table === "appMeta" ? null : (toEpoch(local.updatedAt) ?? 0),
+                          };
+                const isPending = pending.has(`${row.table}\0${row.localId}`);
+                if (incomingWinsLocally(row, localVersion, isPending)) {
+                    winners.push(row);
+                }
             }
-            const local = existing.get(row.table)?.get(row.localId);
-            const localVersion =
-                local === undefined
-                    ? null
-                    : {
-                          deletedAt: row.table === "appMeta" ? null : toEpoch(local.deletedAt),
-                          restoredAt: toEpoch(local.restoredAt),
-                          updatedAt: row.table === "appMeta" ? null : (toEpoch(local.updatedAt) ?? 0),
-                      };
-            const isPending = pending.has(`${row.table}\0${row.localId}`);
-            if (incomingWinsLocally(row, localVersion, isPending)) {
-                winners.push(row);
-            }
-        }
 
-        const replicatedVerbatim: PulledRow[] = [];
-        /* oxlint-disable no-await-in-loop -- R3 resolution inside writeRow reads the budgets an earlier winner left live, so the winners must be written one at a time */
-        for (const row of winners) {
-            const outcome = await writeRow(db, row, existing.get(row.table)?.get(row.localId), now);
-            if (outcome === "unchanged") {
-                continue;
+            const replicatedVerbatim: PulledRow[] = [];
+            // R3 resolution inside writeRow reads the budgets an earlier winner left live, so the winners must be
+            // written one at a time.
+            for (const row of winners) {
+                const outcome = yield* writeRow(db, row, existing.get(row.table)?.get(row.localId), now);
+                if (outcome === "unchanged") {
+                    continue;
+                }
+                // An R3 rewrite is not what the server holds, so it stays queued and pushes the correction.
+                if (outcome === "verbatim") {
+                    replicatedVerbatim.push(row);
+                }
+                touched.add(row.table);
             }
-            // An R3 rewrite is not what the server holds, so it stays queued and pushes the correction.
-            if (outcome === "verbatim") {
-                replicatedVerbatim.push(row);
+
+            // Cleared in the same transaction, so a pulled row is never queued to echo back to the server.
+            const cleared = groupByTable(
+                replicatedVerbatim.map((row) => ({
+                    localId: row.localId,
+                    tableName: row.table,
+                }))
+            );
+            for (const [table, entries] of cleared) {
+                // These deletes run inside one SQLite transaction, which admits a single writer, so they cannot
+                // overlap.
+                for (const chunk of chunkRows(
+                    entries.map((entry) => entry.localId),
+                    ID_CHUNK
+                )) {
+                    yield* query("write", () =>
+                        db.delete(outbox).where(and(eq(outbox.tableName, table), inArray(outbox.localId, chunk)))
+                    );
+                }
             }
-            touched.add(row.table);
-        }
-        /* oxlint-enable no-await-in-loop */
 
-        // Cleared in the same transaction, so a pulled row is never queued to echo back to the server.
-        const cleared = groupByTable(
-            replicatedVerbatim.map((row) => ({
-                localId: row.localId,
-                tableName: row.table,
-            }))
-        );
-        for (const [table, entries] of cleared) {
-            /* oxlint-disable no-await-in-loop -- these deletes run inside one SQLite transaction, which admits a single writer, so they cannot overlap */
-            for (const chunk of chunkRows(
-                entries.map((entry) => entry.localId),
-                ID_CHUNK
-            )) {
-                await db.delete(outbox).where(and(eq(outbox.tableName, table), inArray(outbox.localId, chunk)));
+            // After the outbox clear, so these tombstones stay queued and reach the other device.
+            if (yield* reconcileMainBudget(db, now)) {
+                touched.add("mainBudget");
             }
-            /* oxlint-enable no-await-in-loop */
-        }
 
-        // After the outbox clear, so these tombstones stay queued and reach the other device.
-        if (await reconcileMainBudget(db, now)) {
-            touched.add("mainBudget");
-        }
-
-        applied = winners.length;
-        if (!keepCursor) {
-            await setSyncCursor(db, page.cursor);
-        }
-    });
+            applied = winners.length;
+            if (!keepCursor) {
+                yield* setSyncCursor(db, page.cursor);
+            }
+        }),
+        failedAt("transaction")
+    );
 
     return { applied, tables: [...touched] };
-}
+});
 
 /**
  * `budgets.categoryId` is UNIQUE locally but not on the server, so R3 resolves at the write: both devices
  * tombstone the same loser, and R1 converges the account on one live budget per category.
  */
-async function resolveBudgetCategory(db: Database, row: PulledRow, now: Date): Promise<boolean> {
+const resolveBudgetCategory = Effect.fn("SyncCore.resolveBudgetCategory")(function* resolveBudgetCategory(
+    db: Database,
+    row: PulledRow,
+    now: Date
+) {
     const { categoryId } = row.fields;
     if (row.deletedAt !== null || !isWireId(categoryId)) {
         return false;
     }
 
-    const rivals = await db
-        .select({ id: budgets.id, updatedAt: budgets.updatedAt })
-        .from(budgets)
-        .where(and(eq(budgets.categoryId, categoryId), isNull(budgets.deletedAt)));
+    const rivals = yield* query("read", () =>
+        db
+            .select({ id: budgets.id, updatedAt: budgets.updatedAt })
+            .from(budgets)
+            .where(and(eq(budgets.categoryId, categoryId), isNull(budgets.deletedAt)))
+    );
 
     let incomingLoses = false;
     for (const rival of rivals) {
@@ -675,34 +711,43 @@ async function resolveBudgetCategory(db: Database, row: PulledRow, now: Date): P
             continue;
         }
         if (keepsTheSlot(row, { id: rival.id, updatedAt: rival.updatedAt.getTime() })) {
-            // oxlint-disable-next-line no-await-in-loop -- this runs inside the apply transaction, which admits a single writer, so the rival tombstones cannot overlap
-            await db
-                .update(budgets)
-                .set({ categoryId: null, deletedAt: now, updatedAt: now })
-                .where(eq(budgets.id, rival.id));
+            // This runs inside the apply transaction, which admits a single writer, so the rival tombstones cannot
+            // overlap.
+            yield* query("write", () =>
+                db
+                    .update(budgets)
+                    .set({ categoryId: null, deletedAt: now, updatedAt: now })
+                    .where(eq(budgets.id, rival.id))
+            );
         } else {
             incomingLoses = true;
         }
     }
     return incomingLoses;
-}
+});
 
-async function resolveTagLink(db: Database, row: PulledRow, now: Date): Promise<boolean> {
+const resolveTagLink = Effect.fn("SyncCore.resolveTagLink")(function* resolveTagLink(
+    db: Database,
+    row: PulledRow,
+    now: Date
+) {
     const { tagId, transactionId } = row.fields;
     if (row.deletedAt !== null || !(isWireId(tagId) && isWireId(transactionId))) {
         return false;
     }
 
-    const rivals = await db
-        .select({ id: transactionTags.id, updatedAt: transactionTags.updatedAt })
-        .from(transactionTags)
-        .where(
-            and(
-                eq(transactionTags.transactionId, transactionId),
-                eq(transactionTags.tagId, tagId),
-                isNull(transactionTags.deletedAt)
+    const rivals = yield* query("read", () =>
+        db
+            .select({ id: transactionTags.id, updatedAt: transactionTags.updatedAt })
+            .from(transactionTags)
+            .where(
+                and(
+                    eq(transactionTags.transactionId, transactionId),
+                    eq(transactionTags.tagId, tagId),
+                    isNull(transactionTags.deletedAt)
+                )
             )
-        );
+    );
 
     let incomingLoses = false;
     for (const rival of rivals) {
@@ -710,17 +755,20 @@ async function resolveTagLink(db: Database, row: PulledRow, now: Date): Promise<
             continue;
         }
         if (keepsTheSlot(row, { id: rival.id, updatedAt: rival.updatedAt.getTime() })) {
-            // oxlint-disable-next-line no-await-in-loop -- this runs inside the apply transaction, which admits a single writer, so the rival tombstones cannot overlap
-            await db
-                .update(transactionTags)
-                .set({ deletedAt: now, updatedAt: now })
-                .where(eq(transactionTags.id, rival.id));
+            // This runs inside the apply transaction, which admits a single writer, so the rival tombstones cannot
+            // overlap.
+            yield* query("write", () =>
+                db
+                    .update(transactionTags)
+                    .set({ deletedAt: now, updatedAt: now })
+                    .where(eq(transactionTags.id, rival.id))
+            );
         } else {
             incomingLoses = true;
         }
     }
     return incomingLoses;
-}
+});
 
 function retiresSchedule(values: Row): boolean {
     return values.deletedAt != null || values.recurringType === 0;
@@ -733,12 +781,12 @@ function changesNothing(local: Row | undefined, values: Row): boolean {
     );
 }
 
-async function writeRow(
+const writeRow = Effect.fn("SyncCore.writeRow")(function* writeRow(
     db: Database,
     row: PulledRow,
     local: Row | undefined,
     now: Date
-): Promise<"verbatim" | "rewritten" | "unchanged"> {
+) {
     const spec = SPECS[row.table];
 
     if (row.table === "appMeta") {
@@ -746,19 +794,21 @@ async function writeRow(
         // SAFETY: `syncTables.ts` declares `appMeta.value` as a nullable string.
         const value = (row.fields.value ?? null) as string | null;
         if (changesNothing(local, { key: row.localId, value })) {
-            return "unchanged";
+            return "unchanged" as const;
         }
-        await db
-            .insert(appMeta)
-            .values({ key: row.localId, value })
-            .onConflictDoUpdate({ set: { value }, target: appMeta.key });
-        return "verbatim";
+        yield* query("write", () =>
+            db
+                .insert(appMeta)
+                .values({ key: row.localId, value })
+                .onConflictDoUpdate({ set: { value }, target: appMeta.key })
+        );
+        return "verbatim" as const;
     }
 
-    const lostCategory = row.table === "budgets" && (await resolveBudgetCategory(db, row, now));
+    const lostCategory = row.table === "budgets" && (yield* resolveBudgetCategory(db, row, now));
     // A NOT NULL `targetDate` an older peer cleared is written as a queued tombstone, converging both on deleted.
     const datelessGoal = row.table === "savingsGoals" && row.deletedAt === null && row.fields.targetDate == null;
-    const lostTagPair = row.table === "transactionTags" && (await resolveTagLink(db, row, now));
+    const lostTagPair = row.table === "transactionTags" && (yield* resolveTagLink(db, row, now));
     const rewritten = lostCategory || datelessGoal || lostTagPair;
 
     const values = {
@@ -777,19 +827,26 @@ async function writeRow(
         values.reminderLeadDays = null;
     }
     if (!rewritten && changesNothing(local, values)) {
-        return "unchanged";
+        return "unchanged" as const;
     }
 
-    await anyWriter(db).insert(spec.table).values(values).onConflictDoUpdate({ set: values, target: spec.id });
-    return rewritten ? "rewritten" : "verbatim";
-}
+    yield* query("write", () =>
+        anyWriter(db).insert(spec.table).values(values).onConflictDoUpdate({ set: values, target: spec.id })
+    );
+    return rewritten ? ("rewritten" as const) : ("verbatim" as const);
+});
 
 /** A singleton by convention, not constraint, so unlike `budgets` it can hold two live rows. */
-async function reconcileMainBudget(db: Database, now: Date): Promise<boolean> {
-    const live = await db
-        .select({ id: mainBudget.id, updatedAt: mainBudget.updatedAt })
-        .from(mainBudget)
-        .where(isNull(mainBudget.deletedAt));
+const reconcileMainBudget = Effect.fn("SyncCore.reconcileMainBudget")(function* reconcileMainBudget(
+    db: Database,
+    now: Date
+) {
+    const live = yield* query("read", () =>
+        db
+            .select({ id: mainBudget.id, updatedAt: mainBudget.updatedAt })
+            .from(mainBudget)
+            .where(isNull(mainBudget.deletedAt))
+    );
     if (live.length < 2) {
         return false;
     }
@@ -803,67 +860,84 @@ async function reconcileMainBudget(db: Database, now: Date): Promise<boolean> {
             : best
     );
 
-    /* oxlint-disable no-await-in-loop -- this runs inside the apply transaction, which admits a single writer, so the tombstones cannot overlap */
+    // This runs inside the apply transaction, which admits a single writer, so the tombstones cannot overlap.
     for (const row of live) {
         if (row.id === survivor.id) {
             continue;
         }
-        await db.update(mainBudget).set({ deletedAt: now, updatedAt: now }).where(eq(mainBudget.id, row.id));
+        yield* query("write", () =>
+            db.update(mainBudget).set({ deletedAt: now, updatedAt: now }).where(eq(mainBudget.id, row.id))
+        );
     }
-    /* oxlint-enable no-await-in-loop */
     return true;
-}
+});
 
 /**
  * Foreign keys go off for the batch: `seq` is last-modified order, so no page ordering resolves every reference.
  * Enforcement returns only if it was on, since `db/client.ts` leaves it off for a store holding orphans.
  */
-export async function applyPulledRows(
+export const applyPulledRows = Effect.fn("SyncCore.applyPulledRows")(function* applyPulledRows(
     db: Database,
     page: { rows: readonly PulledRow[]; cursor: number },
     now: Date = new Date(),
     { keepCursor = false }: { keepCursor?: boolean } = {}
-): Promise<ApplyResult> {
+) {
     if (page.rows.length === 0) {
-        return { applied: 0, tables: [] };
+        return nothingApplied();
     }
 
-    const before = await db.all<{ foreign_keys: number }>(sql`PRAGMA foreign_keys`);
-    const wasOn = before[0]?.foreign_keys === 1;
+    return yield* Effect.uninterruptible(
+        Effect.gen(function* guarded() {
+            const before = yield* Effect.try({
+                catch: failedAt("foreignKeys"),
+                try: () => db.all<{ foreign_keys: number }>(sql`PRAGMA foreign_keys`),
+            });
+            const wasOn = before[0]?.foreign_keys === 1;
 
-    // A no-op inside a transaction, which is why it is issued out here.
-    if (wasOn) {
-        await db.run(sql`PRAGMA foreign_keys = OFF`);
-    }
-    try {
-        return await applyInTransaction(db, page, now, keepCursor);
-    } finally {
-        if (wasOn) {
-            await db.run(sql`PRAGMA foreign_keys = ON`);
-        }
-    }
-}
+            // A no-op inside a transaction, which is why it is issued out here.
+            if (wasOn) {
+                yield* Effect.try({
+                    catch: failedAt("foreignKeys"),
+                    try: () => db.run(sql`PRAGMA foreign_keys = OFF`),
+                });
+            }
+            const applying = yield* Effect.exit(applyInTransaction(db, page, now, keepCursor));
+            if (wasOn) {
+                yield* Effect.try({ catch: failedAt("foreignKeys"), try: () => db.run(sql`PRAGMA foreign_keys = ON`) });
+            }
+            return yield* applying;
+        })
+    );
+});
 
 /** The cursor check stops a page that returns rows without advancing the watermark from replaying forever. */
-async function walkLog(db: Database, pull: PullFn, from: number, now: Date, scope?: RereadScope): Promise<ApplyResult> {
+const walkLog = Effect.fn("SyncCore.walkLog")(function* walkLog(
+    db: Database,
+    pull: PullFn,
+    from: number,
+    now: Date,
+    scope?: RereadScope
+) {
     const tables = scope?.tables;
     let cursor = from;
     let applied = 0;
     const touched = new Set<SyncedTable>();
+    const fetchPage = (after: number) =>
+        query("pull", () => pull({ cursor: after, limit: PULL_PAGE_LIMIT, ...(tables && { tables }) }));
 
-    /* oxlint-disable no-await-in-loop -- each page is fetched from the cursor the previous page returned, so the walk is inherently sequential */
+    // Each page is fetched from the cursor the previous page returned, so the walk is inherently sequential.
     for (;;) {
-        const page = await pull({ cursor, limit: PULL_PAGE_LIMIT, ...(tables && { tables }) });
+        const page = yield* fetchPage(cursor);
         if (page.rows.length === 0) {
             break;
         }
         if (scope?.repair) {
-            for (const table of await repairUnsyncedRestores(db, page.rows)) {
+            for (const table of yield* repairUnsyncedRestores(db, page.rows)) {
                 touched.add(table);
             }
         }
         const rows = page.rows.filter((row) => !scope?.markersOnly.has(row.table) || row.restoredAt != null);
-        const result = await applyPulledRows(db, { ...page, rows }, now, { keepCursor: tables !== undefined });
+        const result = yield* applyPulledRows(db, { ...page, rows }, now, { keepCursor: tables !== undefined });
         applied += result.applied;
         for (const table of result.tables) {
             touched.add(table);
@@ -876,9 +950,8 @@ async function walkLog(db: Database, pull: PullFn, from: number, now: Date, scop
             break;
         }
     }
-    /* oxlint-enable no-await-in-loop */
     return { applied, tables: [...touched] };
-}
+});
 
 interface RereadScope {
     markersOnly: ReadonlySet<SyncedTable>;
@@ -893,13 +966,17 @@ const LEGACY_RESTORABLE = ["transactions", "transactionTags"] as const satisfies
  * Walks the log from this device's cursor, then any one-time re-read the migrations asked for. Never a cursor
  * reset: a full re-read would serve the server's tombstone for every row restored here before restores synced.
  */
-export async function pullAndApply(db: Database, pull: PullFn, now: Date = new Date()): Promise<ApplyResult> {
-    if (!(await isSyncEnabled(db))) {
-        return { applied: 0, tables: [] };
+export const pullAndApply = Effect.fn("SyncCore.pullAndApply")(function* pullAndApply(
+    db: Database,
+    pull: PullFn,
+    now: Date = new Date()
+) {
+    if (!(yield* isSyncEnabled(db))) {
+        return nothingApplied();
     }
-    const main = await walkLog(db, pull, await getSyncCursor(db), now);
-    const reread = await getMeta(db, META_KEYS.syncReread);
-    const restores = (await getMeta(db, META_KEYS.syncRestoresReread)) !== null;
+    const main = yield* walkLog(db, pull, yield* getSyncCursor(db), now);
+    const reread = yield* query("read", () => getMeta(db, META_KEYS.syncReread));
+    const restores = (yield* query("read", () => getMeta(db, META_KEYS.syncRestoresReread))) !== null;
     if (reread === null && !restores) {
         return main;
     }
@@ -909,11 +986,13 @@ export async function pullAndApply(db: Database, pull: PullFn, now: Date = new D
     const tables = [...whole, ...markersOnly];
     const extra =
         tables.length === 0
-            ? { applied: 0, tables: [] }
-            : await walkLog(db, pull, 0, now, { markersOnly: new Set(markersOnly), repair: restores, tables });
-    await db.delete(appMeta).where(inArray(appMeta.key, [META_KEYS.syncReread, META_KEYS.syncRestoresReread]));
+            ? nothingApplied()
+            : yield* walkLog(db, pull, 0, now, { markersOnly: new Set(markersOnly), repair: restores, tables });
+    yield* query("write", () =>
+        db.delete(appMeta).where(inArray(appMeta.key, [META_KEYS.syncReread, META_KEYS.syncRestoresReread]))
+    );
     return { applied: main.applied + extra.applied, tables: [...new Set([...main.tables, ...extra.tables])] };
-}
+});
 
 const RESTORABLE = { installmentPlans, installments, outsidePayments, transactionTags, transactions } as const;
 
@@ -921,53 +1000,64 @@ const RESTORABLE = { installmentPlans, installments, outsidePayments, transactio
  * Stamps restores made here before restores synced (live here, tombstoned on the server) so the next push carries
  * them. A row whose `updatedAt` never passed the delete came back via archive restore and is left alone.
  */
-async function repairUnsyncedRestores(db: Database, read: readonly PulledRow[]): Promise<SyncedTable[]> {
+const repairUnsyncedRestores = Effect.fn("SyncCore.repairUnsyncedRestores")(function* repairUnsyncedRestores(
+    db: Database,
+    read: readonly PulledRow[]
+) {
     const repaired: SyncedTable[] = [];
-    await withTransaction(db, async () => {
-        /* oxlint-disable no-await-in-loop -- one SQLite transaction admits a single writer, so these reads and updates cannot overlap */
-        for (const [name, table] of Object.entries(RESTORABLE)) {
-            // SAFETY: `RESTORABLE` is keyed by the synced table names it holds.
-            const tableName = name as keyof typeof RESTORABLE;
-            const tombstones = new Map(
-                read.filter((row) => row.table === tableName && row.deletedAt !== null).map((row) => [row.localId, row])
-            );
-            if (tombstones.size === 0) {
-                continue;
-            }
-            const locals = await rowsById(db, tableName, [...tombstones.keys()]);
-            for (const [id, served] of tombstones) {
-                const local = locals.get(id);
-                const updatedAt = toEpoch(local?.updatedAt);
-                if (
-                    local === undefined ||
-                    local.deletedAt != null ||
-                    updatedAt === null ||
-                    served.deletedAt === null ||
-                    updatedAt <= served.deletedAt ||
-                    era({ deletedAt: null, restoredAt: toEpoch(local.restoredAt) }) > era(served)
-                ) {
+    yield* transaction(
+        db,
+        Effect.gen(function* write() {
+            // One SQLite transaction admits a single writer, so these reads and updates cannot overlap.
+            for (const [name, table] of Object.entries(RESTORABLE)) {
+                // SAFETY: `RESTORABLE` is keyed by the synced table names it holds.
+                const tableName = name as keyof typeof RESTORABLE;
+                const tombstones = new Map(
+                    read
+                        .filter((row) => row.table === tableName && row.deletedAt !== null)
+                        .map((row) => [row.localId, row])
+                );
+                if (tombstones.size === 0) {
                     continue;
                 }
-                const stamp = restoreStamp(
-                    { deletedAt: toLocalDate(served.deletedAt), restoredAt: toLocalDate(served.restoredAt ?? null) },
-                    new Date(updatedAt)
-                );
-                await db.update(table).set({ restoredAt: stamp }).where(eq(table.id, id));
-                repaired.push(tableName);
+                const locals = yield* rowsById(db, tableName, [...tombstones.keys()]);
+                for (const [id, served] of tombstones) {
+                    const local = locals.get(id);
+                    const updatedAt = toEpoch(local?.updatedAt);
+                    if (
+                        local === undefined ||
+                        local.deletedAt != null ||
+                        updatedAt === null ||
+                        served.deletedAt === null ||
+                        updatedAt <= served.deletedAt ||
+                        era({ deletedAt: null, restoredAt: toEpoch(local.restoredAt) }) > era(served)
+                    ) {
+                        continue;
+                    }
+                    const stamp = restoreStamp(
+                        {
+                            deletedAt: toLocalDate(served.deletedAt),
+                            restoredAt: toLocalDate(served.restoredAt ?? null),
+                        },
+                        new Date(updatedAt)
+                    );
+                    yield* query("write", () => db.update(table).set({ restoredAt: stamp }).where(eq(table.id, id)));
+                    repaired.push(tableName);
+                }
             }
-        }
-        /* oxlint-enable no-await-in-loop */
-    });
+        }),
+        failedAt("transaction")
+    );
     return repaired;
-}
+});
 
 /** Push first, so a local edit reaches the server before the pull can hand back a peer's version of the row. */
-export async function runSync(
+export const runSync = Effect.fn("SyncCore.runSync")(function* runSync(
     db: Database,
     transport: { push: PushFn; pull: PullFn },
     now: Date = new Date()
-): Promise<{ pushed: number; applied: number; tables: SyncedTable[] }> {
-    const pushed = await drainOutbox(db, transport.push);
-    const { applied, tables } = await pullAndApply(db, transport.pull, now);
+) {
+    const pushed = yield* drainOutbox(db, transport.push);
+    const { applied, tables } = yield* pullAndApply(db, transport.pull, now);
     return { applied, pushed, tables };
-}
+});
