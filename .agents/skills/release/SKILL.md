@@ -71,17 +71,18 @@ The in-app What's new sheet shows `message` verbatim, split on `\n`:
 - No bullet marks, semicolons, or em dashes. English only.
 - Leave out chores, tests, refactors, backend-only work, and changes only the other platform shows.
 
-Store notes cover the same changes, once in English and once in Spanish, as plain text with a little personality:
+Store notes cover the same changes in every app language, as plain text with a little personality. Write them to a `notes/` folder as `en.txt`, `es.txt`, `es-ES.txt`, `fr.txt`, `pt.txt` and `pt-PT.txt`. Each is written for its market, not translated word for word: `es-ES` says "ticket" and "importe", `pt-PT` says "talão" and "registo", matching the app.
 
 - One short line on what the release is about, a blank line, then one `•` line per change.
 - Lead with what the person gets, or the question they'd ask: "Owe the plumber for today's job? Log it and pick when you'll pay".
 - No emoji, semicolons, or em dashes.
 - Play: a production Android build, at most 500 characters each. `play.ts notes` replaces them while the release is in review.
-- App Store: the version's What's New, for en-US and es-MX, set before that version goes to review. Apple refuses it on a first version. The App Store version has to carry the build's version: create it with `asc versions create` when a build starts a new one.
+- App Store: the version's What's New, for every locale the listing has, set before that version goes to review. Apple refuses it on a first version. The App Store version has to carry the build's version: create it with `asc versions create` when a build starts a new one.
 
   ```sh
-  asc apps info edit --app 6801652978 --version <version> --platform IOS --locale en-US --whats-new "$(cat notes-en.txt)"
-  asc apps info edit --app 6801652978 --version <version> --platform IOS --locale es-MX --whats-new "$(cat notes-es.txt)"
+  for pair in en-US:en en-GB:en en-AU:en es-MX:es es-ES:es-ES fr-FR:fr pt-BR:pt pt-PT:pt-PT; do
+    asc apps info edit --app 6801652978 --version <version> --platform IOS --locale "${pair%%:*}" --whats-new "$(cat "notes/${pair#*:}.txt")"
+  done
   ```
 
 ## 4. Dispatch and wait
@@ -107,8 +108,8 @@ rnd can't submit to Play, so Android uploads with `play.ts`. Preview lands on th
 
 ```sh
 node ../../.agents/skills/release/play.ts upload build/<name>.aab preview
-node ../../.agents/skills/release/play.ts upload build/<name>.aab production "$(cat notes-en.txt)" "$(cat notes-es.txt)"
-node ../../.agents/skills/release/play.ts notes "$(cat notes-en.txt)" "$(cat notes-es.txt)"   # replace them later
+node ../../.agents/skills/release/play.ts upload build/<name>.aab production notes
+node ../../.agents/skills/release/play.ts notes notes   # replace them later
 ```
 
 Rough durations: backend about 3 minutes, OTA about 5, a store build about 35 including the backend. If a run fails, read `gh run view <runId> --log-failed`, and on iOS the `xcode-logs` artifact. Report the failing step and don't retry blindly.
@@ -149,3 +150,7 @@ Before a `FIRST BUILD`, confirm each of these exists and name any that don't:
 - The file lists skip what only the other platform builds from: `.android.` siblings on iOS, `app-intents/` and `targets/` on Android. The fingerprint doesn't, so an App Intents change can make Android's fingerprint differ with nothing to ship.
 - The runtime can change with no native edit: `apps/native/package.json` scripts are hashed, and adding any workspace package can re-hash pnpm peer directories. The fingerprint catches both, the file list doesn't.
 - `app.config.ts` reads environment variables, so they're part of the fingerprint. `decide.sh` loads the channel's GitHub variables and skips the local `.env`, which holds development values.
+
+## Store listings
+
+The listing text lives in `apps/native/store`: `app-info/` and `version/<version>/` for the App Store (`asc metadata`'s layout), `play/<language>.json` for Play. `play.ts listing <images dir>` pushes every Play language in one edit, and replaces the screenshots and feature graphic of each language that has a folder under `<images dir>`.
