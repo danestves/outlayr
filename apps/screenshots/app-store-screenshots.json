@@ -6,9 +6,13 @@
   "connectedCanvas": true,
   "locales": [
     "en",
-    "es"
+    "es",
+    "es-ES",
+    "fr",
+    "pt-BR",
+    "pt-PT"
   ],
-  "locale": "en",
+  "locale": "pt-BR",
   "device": "iphone",
   "orientation": "portrait",
   "appIcon": "/app-icon.png",
@@ -19,11 +23,19 @@
         "layout": "hero",
         "label": {
           "en": "OUTLAYR",
-          "es": "OUTLAYR"
+          "es": "OUTLAYR",
+          "es-ES": "OUTLAYR",
+          "fr": "OUTLAYR",
+          "pt-BR": "OUTLAYR",
+          "pt-PT": "OUTLAYR"
         },
         "headline": {
           "en": "Every account.\nOne page.",
-          "es": "Tus cuentas.\nUna sola vista."
+          "es": "Tus cuentas.\nUna sola vista.",
+          "es-ES": "Todas tus cuentas.\nEn una sola vista.",
+          "fr": "Tous vos comptes.\nUne seule page.",
+          "pt-BR": "Todas as contas.\nNuma tela só.",
+          "pt-PT": "Todas as contas.\nNum só ecrã."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/01.png",
         "transforms": {
@@ -40,11 +52,19 @@
         "layout": "hero",
         "label": {
           "en": "SUBSCRIPTIONS",
-          "es": "SUSCRIPCIONES"
+          "es": "SUSCRIPCIONES",
+          "es-ES": "SUSCRIPCIONES",
+          "fr": "ABONNEMENTS",
+          "pt-BR": "ASSINATURAS",
+          "pt-PT": "SUBSCRIÇÕES"
         },
         "headline": {
           "en": "Each subscription.\nOne monthly total.",
-          "es": "Tus suscripciones.\nUn total al mes."
+          "es": "Tus suscripciones.\nUn total al mes.",
+          "es-ES": "Tus suscripciones.\nUn total al mes.",
+          "fr": "Vos abonnements.\nUn total par mois.",
+          "pt-BR": "Cada assinatura.\nUm total por mês.",
+          "pt-PT": "Cada subscrição.\nUm total por mês."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/10.png",
         "transforms": {
@@ -61,11 +81,19 @@
         "layout": "device-bottom",
         "label": {
           "en": "THE ENTRY",
-          "es": "EL REGISTRO"
+          "es": "EL REGISTRO",
+          "es-ES": "EL REGISTRO",
+          "fr": "LA SAISIE",
+          "pt-BR": "O LANÇAMENTO",
+          "pt-PT": "O REGISTO"
         },
         "headline": {
           "en": "Log it in\none sentence.",
-          "es": "Anótalo en\nuna frase."
+          "es": "Anótalo en\nuna frase.",
+          "es-ES": "Apúntalo en\nuna frase.",
+          "fr": "Notez-le en\nune phrase.",
+          "pt-BR": "Anote em\numa frase.",
+          "pt-PT": "Registe-o\nnuma frase."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/02.png"
       },
@@ -74,11 +102,19 @@
         "layout": "hero",
         "label": {
           "en": "PACE",
-          "es": "RITMO"
+          "es": "RITMO",
+          "es-ES": "RITMO",
+          "fr": "RYTHME",
+          "pt-BR": "RITMO",
+          "pt-PT": "RITMO"
         },
         "headline": {
           "en": "You'll end the\nmonth $319 short.",
-          "es": "Este mes te\nvan a faltar $319."
+          "es": "Este mes te\nvan a faltar $319.",
+          "es-ES": "Este mes te\nvan a faltar €319.",
+          "fr": "Il vous manquera\n€319 ce mois-ci.",
+          "pt-BR": "Vai faltar R$1.596\nno fim do mês.",
+          "pt-PT": "Vão faltar €319\neste mês."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/04.png",
         "transforms": {
@@ -95,11 +131,19 @@
         "layout": "device-bottom",
         "label": {
           "en": "WIDGETS",
-          "es": "WIDGETS"
+          "es": "WIDGETS",
+          "es-ES": "WIDGETS",
+          "fr": "WIDGETS",
+          "pt-BR": "WIDGETS",
+          "pt-PT": "WIDGETS"
         },
         "headline": {
           "en": "Without opening\nthe app.",
-          "es": "Sin siquiera\nabrir la app."
+          "es": "Sin siquiera\nabrir la app.",
+          "es-ES": "Sin abrir\nsiquiera la app.",
+          "fr": "Sans même\nouvrir l'app.",
+          "pt-BR": "Sem nem\nabrir o app.",
+          "pt-PT": "Sem sequer\nabrir a app."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/09.png"
       },
@@ -108,11 +152,19 @@
         "layout": "device-top",
         "label": {
           "en": "INSIGHTS",
-          "es": "ANÁLISIS"
+          "es": "ANÁLISIS",
+          "es-ES": "ESTADÍSTICAS",
+          "fr": "STATISTIQUES",
+          "pt-BR": "ESTATÍSTICAS",
+          "pt-PT": "ESTATÍSTICAS"
         },
         "headline": {
           "en": "Where the week\nactually went.",
-          "es": "A dónde se fue\ntu semana."
+          "es": "A dónde se fue\ntu semana.",
+          "es-ES": "En qué se te ha\nido la semana.",
+          "fr": "Où est passée\nvotre semaine.",
+          "pt-BR": "Para onde foi\nsua semana.",
+          "pt-PT": "Para onde foi\na sua semana."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/05.png",
         "transforms": {
@@ -135,11 +187,19 @@
         "layout": "device-bottom",
         "label": {
           "en": "ACCOUNTS",
-          "es": "CUENTAS"
+          "es": "CUENTAS",
+          "es-ES": "CUENTAS",
+          "fr": "COMPTES",
+          "pt-BR": "CONTAS",
+          "pt-PT": "CONTAS"
         },
         "headline": {
           "en": "Two currencies.\nOne ledger.",
-          "es": "Dos monedas.\nUn solo registro."
+          "es": "Dos monedas.\nUn solo registro.",
+          "es-ES": "Dos monedas.\nUn solo registro.",
+          "fr": "Deux devises.\nUn seul registre.",
+          "pt-BR": "Duas moedas.\nUm só controle.",
+          "pt-PT": "Duas moedas.\nUm só registo."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/06.png"
       },
@@ -148,11 +208,19 @@
         "layout": "hero",
         "label": {
           "en": "GOALS",
-          "es": "METAS"
+          "es": "METAS",
+          "es-ES": "METAS",
+          "fr": "OBJECTIFS",
+          "pt-BR": "METAS",
+          "pt-PT": "OBJETIVOS"
         },
         "headline": {
           "en": "Japan in April.\nYou're on pace.",
-          "es": "Japón en abril.\nVas a buen ritmo."
+          "es": "Japón en abril.\nVas a buen ritmo.",
+          "es-ES": "Japón en abril.\nVas a buen ritmo.",
+          "fr": "Japon en avril.\nDans les temps.",
+          "pt-BR": "Japão em abril.\nNo ritmo certo.",
+          "pt-PT": "Japão em abril.\nEstá no ritmo."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/08.png",
         "transforms": {
@@ -169,11 +237,19 @@
         "layout": "device-top",
         "label": {
           "en": "FIVE WAYS IN",
-          "es": "CINCO MANERAS"
+          "es": "CINCO MANERAS",
+          "es-ES": "CINCO FORMAS",
+          "fr": "CINQ FAÇONS",
+          "pt-BR": "CINCO JEITOS",
+          "pt-PT": "CINCO FORMAS"
         },
         "headline": {
           "en": "Type it, say it,\nor snap it.",
-          "es": "Escríbelo, dilo\no tómale una foto."
+          "es": "Escríbelo, dilo\no tómale una foto.",
+          "es-ES": "Escríbelo, dilo\no hazle una foto.",
+          "fr": "Tapez, dictez\nou photographiez.",
+          "pt-BR": "Digite, fale\nou tire uma foto.",
+          "pt-PT": "Escreva, diga\nou tire uma foto."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/03.png",
         "transforms": {
@@ -196,11 +272,19 @@
         "layout": "device-top",
         "label": {
           "en": "REMINDERS",
-          "es": "AVISOS"
+          "es": "AVISOS",
+          "es-ES": "AVISOS",
+          "fr": "RAPPELS",
+          "pt-BR": "LEMBRETES",
+          "pt-PT": "LEMBRETES"
         },
         "headline": {
           "en": "A reminder before\neach charge.",
-          "es": "Un aviso antes\nde cada cobro."
+          "es": "Un aviso antes\nde cada cobro.",
+          "es-ES": "Un aviso antes\nde cada cargo.",
+          "fr": "Un rappel avant\nchaque paiement.",
+          "pt-BR": "Um aviso antes\nde cada cobrança.",
+          "pt-PT": "Um aviso antes\nde cada cobrança."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/11.png",
         "transforms": {
