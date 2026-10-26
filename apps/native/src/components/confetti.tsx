@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useWindowDimensions, View } from "react-native";
 import Animated, {
     Easing,
@@ -39,8 +39,8 @@ export function CelebrationConfetti() {
 
 export function Confetti({ width, height, seed }: ConfettiProps) {
     const colors = useColors();
-    const palette = useMemo(() => [colors.income, colors.tint, colors.warning, colors.foreground], [colors]);
-    const pieces = useMemo(() => confettiBurst(PIECE_COUNT, palette.length, seed), [palette.length, seed]);
+    const palette = [colors.income, colors.tint, colors.warning, colors.foreground];
+    const pieces = confettiBurst(PIECE_COUNT, palette.length, seed);
 
     return (
         <View

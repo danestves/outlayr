@@ -2,13 +2,14 @@ import { useRouter, useSegments } from "expo-router";
 import { BottomSheet } from "panelui-native/components/bottom-sheet";
 import { Button } from "panelui-native/components/button";
 import { cn } from "panelui-native/utils/cn";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ScrollView, View } from "react-native";
 import { SafeAreaInsetsContext, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAppLockOpen } from "@/components/app-lock-gate";
 import { useAuthCovered } from "@/components/auth-cover";
 import { Text } from "@/components/text";
+import { useSheetInsets } from "@/components/use-sheet-insets";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useAiConsent } from "@/data/settings";
 import { saveAiConsent } from "@/data/settings-core";
@@ -120,8 +121,7 @@ export function AiConsentSheet() {
 function AiConsentSheetBody({ consent }: { consent: AiConsent }) {
     const db = useDatabase();
     const colors = useColors();
-    const insets = useSafeAreaInsets();
-    const sheetInsets = useMemo(() => ({ ...insets, bottom: 0 }), [insets]);
+    const sheetInsets = useSheetInsets();
     const { gate } = useAuthSession();
     const onTabs = useSegments()[0] === "(tabs)";
     const lockOpen = useAppLockOpen();

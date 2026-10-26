@@ -1,4 +1,4 @@
-import { createContext, use, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, use, useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 import { Keyboard, ScrollView, StyleSheet, TextInput, View } from "react-native";
 import type { ScrollViewInstance, ViewInstance } from "react-native";
@@ -72,18 +72,15 @@ export const FormScroll: typeof FormScrollBase = ({ bottomInset, children, failu
     const overlap = useKeyboardOverlap(frame, scroll, offset);
     const [failureHeight, setFailureHeight] = useState(0);
 
-    const control = useMemo<FormScrollControl>(
-        () => ({
-            reveal: (y, height) => {
-                const hidden = y + height + KEYBOARD_GAP - (offset.current + visibleHeight.current);
-                if (hidden > 0) {
-                    scroll.current?.scrollTo({ animated: true, y: offset.current + hidden });
-                }
-            },
-            stageTo: (y) => scroll.current?.scrollTo({ animated: false, y }),
-        }),
-        []
-    );
+    const [control] = useState<FormScrollControl>(() => ({
+        reveal: (y, height) => {
+            const hidden = y + height + KEYBOARD_GAP - (offset.current + visibleHeight.current);
+            if (hidden > 0) {
+                scroll.current?.scrollTo({ animated: true, y: offset.current + hidden });
+            }
+        },
+        stageTo: (y) => scroll.current?.scrollTo({ animated: false, y }),
+    }));
 
     return (
         <FormScrollContext value={control}>

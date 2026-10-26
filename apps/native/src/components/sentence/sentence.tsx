@@ -1,4 +1,4 @@
-import { createContext, useMemo, use } from "react";
+import { createContext, use } from "react";
 import type { ReactNode } from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
@@ -13,14 +13,14 @@ interface SentenceStyle {
     textClassName: string;
 }
 
-const SentenceContext = createContext<SentenceStyle | null>(null);
+const SentenceContext = createContext<string | null>(null);
 
 export function useSentenceStyle(): SentenceStyle {
-    const value = use(SentenceContext);
-    if (value === null) {
+    const textClassName = use(SentenceContext);
+    if (textClassName === null) {
         throw new Error("A sentence part must render inside a <Sentence>");
     }
-    return value;
+    return { textClassName };
 }
 
 interface SentenceProps<TSlot extends string> {
@@ -40,12 +40,11 @@ export function Sentence<TSlot extends string>({
     template,
     textClassName = DEFAULT_TEXT,
 }: SentenceProps<TSlot>) {
-    const style = useMemo(() => ({ textClassName }), [textClassName]);
-    const clusters = useMemo(() => parseSentence(template), [template]);
-    const fills = useMemo(() => new Map<string, ReactNode>(Object.entries(slots)), [slots]);
+    const clusters = parseSentence(template);
+    const fills = new Map<string, ReactNode>(Object.entries(slots));
 
     return (
-        <SentenceContext value={style}>
+        <SentenceContext value={textClassName}>
             <View className={cn("flex-row flex-wrap items-baseline", gapClassName)}>
                 {clusters.map((cluster, index) => (
                     <Animated.View

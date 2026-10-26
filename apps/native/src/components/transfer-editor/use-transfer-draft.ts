@@ -3,7 +3,7 @@ import { MARKET_RATE_TYPES } from "@outlayr/money/rates";
 import type { MarketRateType } from "@outlayr/money/rates";
 import { roundMoney } from "@outlayr/money/round";
 import type { RateTable } from "@outlayr/money/valuation";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { useAccountBalance, useAccounts, useBankAccounts } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
@@ -474,6 +474,18 @@ function startingDraft(
     };
 }
 
+function useQuotedRateTables(
+    db: Database,
+    fromCurrency: string,
+    toCurrency: string,
+    chosenQuote: ReturnType<typeof quoteOf>
+) {
+    const quotedTypes = MARKET_RATE_TYPES.filter(
+        (type) => type === chosenQuote || transferRateOptions(fromCurrency, toCurrency).includes(type)
+    );
+    return useTransferRates(db, [fromCurrency, toCurrency], quotedTypes);
+}
+
 export function useTransferDraft(
     db: Database,
     seed?: TransferSeed,
@@ -530,18 +542,8 @@ export function useTransferDraft(
     );
 
     const chosenQuote = quoteOf(chosenRate, marketType, carriedRate);
-    const quotedTypes = useMemo(
-        () =>
-            MARKET_RATE_TYPES.filter(
-                (type) => type === chosenQuote || transferRateOptions(fromCurrency, toCurrency).includes(type)
-            ),
-        [chosenQuote, fromCurrency, toCurrency]
-    );
-    const rateTables = useTransferRates(db, [fromCurrency, toCurrency], quotedTypes);
-    const tableRates = useMemo(
-        () => tableRatesFor(fromCurrency, toCurrency, date, rateTables),
-        [fromCurrency, toCurrency, date, rateTables]
-    );
+    const rateTables = useQuotedRateTables(db, fromCurrency, toCurrency, chosenQuote);
+    const tableRates = tableRatesFor(fromCurrency, toCurrency, date, rateTables);
     const { quoteType, rateType } = rateChoices(chosenRate, marketType, carriedRate, tableRates.binance);
     const tableRate = tableRates[quoteType];
     const priorCustomRate = usePriorCustomRate(db, fromCurrency, toCurrency, date);

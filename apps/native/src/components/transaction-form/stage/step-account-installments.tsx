@@ -90,7 +90,10 @@ export function StepAccountInstallments({ accounts, onPick, searchable }: StepAc
             // Fetched before the account exists, since the entry holds the account as picked. Named by its domain, as
             // the mark is, so both read the same cache entry.
             const outcome = await fetchMerchantImage({ domain: app.domain, name: app.domain });
-            const logo = outcome.kind === "logo" ? await persistLogo(outcome.bytes) : null;
+            let logo: Awaited<ReturnType<typeof persistLogo>> | null = null;
+            if (outcome.kind === "logo") {
+                logo = await persistLogo(outcome.bytes);
+            }
             const id = await accountsRepo.create(db, {
                 currency: app.currency,
                 kind: "liability",
@@ -104,9 +107,8 @@ export function StepAccountInstallments({ accounts, onPick, searchable }: StepAc
         } catch (error) {
             console.error("Failed to add the installment app", error);
             notifyFailure({ body: t("installments.failedBody"), title: t("installments.failedTitle") });
-        } finally {
-            setAdding(null);
         }
+        setAdding(null);
     };
 
     const other = () => {

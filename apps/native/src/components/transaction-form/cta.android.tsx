@@ -1,7 +1,7 @@
 import Delete02Icon from "@hugeicons-pro/core-stroke-rounded/Delete02Icon";
 import Search01Icon from "@hugeicons-pro/core-stroke-rounded/Search01Icon";
 import { Stack } from "expo-router";
-import { memo, useCallback, useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { Pressable } from "react-native";
 
 import { SheetHeader, SheetHeaderIconButton, SheetHeaderTextButton } from "@/components/sheet-header";
@@ -23,7 +23,7 @@ interface CtaHandlers {
     onSave?: () => void;
 }
 
-/** Primitives only: `memo` must see an unchanged bar as unchanged. */
+/** Primitives only, so an unchanged bar compares as unchanged. */
 type CtaBarProps = Pick<TransactionFormCtaProps, "deleteLabel" | "lookupBusy" | "lookupLabel"> &
     CtaHandlers & { inSheet: boolean; saveBusy: boolean; saveReady: boolean; sheetTitle?: string };
 
@@ -50,7 +50,7 @@ function DialogSave({ busy, onPress, ready }: { busy: boolean; onPress: () => vo
     );
 }
 
-function CtaBarBody({
+function CtaBar({
     deleteLabel,
     lookupBusy,
     lookupLabel,
@@ -100,8 +100,6 @@ function CtaBarBody({
     );
 }
 
-const CtaBar = memo(CtaBarBody);
-
 // A sheet (edit) has no app bar, so its actions go in the `SheetHeader` it draws first: render this before the
 // form's scroller so that header lands on top.
 export const TransactionFormCta: typeof TransactionFormCtaBase = (props) => {
@@ -109,9 +107,9 @@ export const TransactionFormCta: typeof TransactionFormCtaBase = (props) => {
     useLayoutEffect(() => {
         handlers.current = props;
     });
-    const remove = useCallback(() => handlers.current.onDelete?.(), []);
-    const lookup = useCallback(() => handlers.current.onLookup?.(), []);
-    const press = useCallback(() => handlers.current.save?.onPress(), []);
+    const remove = () => handlers.current.onDelete?.();
+    const lookup = () => handlers.current.onLookup?.();
+    const press = () => handlers.current.save?.onPress();
     return (
         <CtaBar
             deleteLabel={props.deleteLabel}

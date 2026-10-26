@@ -1,7 +1,7 @@
 import { Canvas, createPicture, PaintStyle, Picture, Skia } from "@shopify/react-native-skia";
 import type { SkPicture } from "@shopify/react-native-skia";
 import { useTheme } from "panelui-native/theme";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
 import { useReducedMotion, useSharedValue } from "react-native-reanimated";
 import { MODE_FRAMES, resolvePreset } from "thinking-orbs/engine";
@@ -34,10 +34,10 @@ export function ThinkingOrb({ size = 20, state }: { size?: OrbSize; state: OrbSt
     const dark = useTheme().theme === "dark";
     const reduced = useReducedMotion();
     const active = useAppActive();
-    const empty = useMemo(() => createPicture(noop), []);
+    const [empty] = useState(() => createPicture(noop));
     const picture = useSharedValue<SkPicture>(empty);
-    const ink = useMemo(() => makeInk(), []);
-    const { mode, speed, opts } = useMemo(() => resolvePreset(state, size), [state, size]);
+    const [ink] = useState(makeInk);
+    const { mode, speed, opts } = resolvePreset(state, size);
 
     useEffect(() => {
         const build = MODE_FRAMES[mode];

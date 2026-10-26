@@ -10,7 +10,7 @@ import { router, useFocusEffect } from "expo-router";
 import type { Href } from "expo-router";
 import { Fab } from "panelui-native/components/fab";
 import { useGlassMaterial } from "panelui-native/primitives/glass";
-import { useCallback, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScopedVariables, useCSSVariable } from "uniwind";
@@ -148,17 +148,15 @@ export function FloatingAddButton() {
 
     const navigating = useRef(false);
 
-    useFocusEffect(
-        useCallback(() => {
-            navigating.current = false;
-            return () => {
-                setOpen(false);
-            };
-        }, [])
-    );
+    useFocusEffect(() => {
+        navigating.current = false;
+        return () => {
+            setOpen(false);
+        };
+    });
     const { fontScale, height: windowHeight, width: windowWidth } = useWindowDimensions();
     const importSheetRef = useRef<ImportSheetHandle>(null);
-    const select = useCallback(({ href }: AddAction) => {
+    const select = ({ href }: AddAction) => {
         if (href === null) {
             importDraftStore.setStep(importDraftStore.getResumeStep());
             importSheetRef.current?.present();
@@ -169,7 +167,7 @@ export function FloatingAddButton() {
         }
         navigating.current = true;
         router.push(href);
-    }, []);
+    };
     const canTransfer = useBankAccounts(useDatabase()).length >= 2;
 
     const room = windowHeight - insets.top - NAV_BAR_HEIGHT - insets.bottom - DIAL_BOTTOM_INSET;
@@ -199,13 +197,10 @@ export function FloatingAddButton() {
     const { kept, lines } = fitDial(ranked.length, room, fontScale, width);
     const actions = ranked.slice(0, kept).reverse();
 
-    const toggleDial = useCallback(
-        (next: boolean) => {
-            setOpen(next);
-            haptics("selection");
-        },
-        [haptics]
-    );
+    const toggleDial = (next: boolean) => {
+        setOpen(next);
+        haptics("selection");
+    };
 
     return (
         <>

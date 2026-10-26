@@ -1,5 +1,5 @@
 import { BottomSheetFlatList, BottomSheetModal, BottomSheetTextInput } from "@expo/ui/community/bottom-sheet";
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { Ref } from "react";
 import { Pressable, View } from "react-native";
 
@@ -63,24 +63,14 @@ export function TagPickerSheet({
     const [query, setQuery] = useState("");
 
     const trimmed = normalizeTagName(query);
-    const results = useMemo(() => {
-        if (trimmed === "") {
-            return tags;
-        }
-        const needle = trimmed.toLocaleLowerCase();
-        return tags.filter((tag) => tag.name.toLocaleLowerCase().includes(needle));
-    }, [tags, trimmed]);
+    const needle = trimmed.toLocaleLowerCase();
+    const results = trimmed === "" ? tags : tags.filter((tag) => tag.name.toLocaleLowerCase().includes(needle));
 
     // Only when nothing answers to the name, so the row cannot mint a near-duplicate of a tag one line below.
     const canCreate = isUsableTagName(query) && findTagByName(tags, trimmed) === null;
 
-    const pendingToOffer = useMemo(
-        () =>
-            pendingTagNames.filter(
-                (name) =>
-                    isUsableTagName(name) && normalizeTagName(name) !== trimmed && findTagByName(tags, name) === null
-            ),
-        [pendingTagNames, tags, trimmed]
+    const pendingToOffer = pendingTagNames.filter(
+        (name) => isUsableTagName(name) && normalizeTagName(name) !== trimmed && findTagByName(tags, name) === null
     );
 
     // `canCreate` only changes once the insert commits, so without this a second tap reruns `ensureTag`'s

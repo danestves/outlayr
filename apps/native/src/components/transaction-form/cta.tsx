@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { memo, useCallback, useLayoutEffect, useMemo, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 
 import { toolbarIcon } from "@/components/toolbar-icons";
 
@@ -27,7 +27,7 @@ export interface TransactionFormCtaProps {
     sheet?: { title?: string };
 }
 
-function CtaToolbarBody(props: TransactionFormCtaProps) {
+function CtaToolbar(props: TransactionFormCtaProps) {
     const actions = transactionFormCtaActions(props);
     if (actions.length === 0) {
         return null;
@@ -50,26 +50,21 @@ function CtaToolbarBody(props: TransactionFormCtaProps) {
     );
 }
 
-const CtaToolbar = memo(CtaToolbarBody);
-
 export function TransactionFormCta(props: TransactionFormCtaProps) {
     const handlers = useRef(props);
     useLayoutEffect(() => {
         handlers.current = props;
     });
-    const remove = useCallback(() => handlers.current.onDelete?.(), []);
-    const lookup = useCallback(() => handlers.current.onLookup?.(), []);
-    const press = useCallback(() => handlers.current.save?.onPress(), []);
+    const remove = () => handlers.current.onDelete?.();
+    const lookup = () => handlers.current.onLookup?.();
+    const press = () => handlers.current.save?.onPress();
     const keyboardShown = useKeyboardShown();
     const lookable = props.onLookup !== undefined;
     const { blockedTint, busy, label, ready } = props.save ?? {};
-    const save = useMemo(
-        () =>
-            keyboardShown && label !== undefined
-                ? { blockedTint, busy: busy === true, label, onPress: press, ready: ready === true }
-                : undefined,
-        [blockedTint, busy, keyboardShown, label, press, ready]
-    );
+    const save =
+        keyboardShown && label !== undefined
+            ? { blockedTint, busy: busy === true, label, onPress: press, ready: ready === true }
+            : undefined;
     return (
         <CtaToolbar
             deleteLabel={props.deleteLabel}

@@ -3,14 +3,15 @@ import { checkForUpdateAsync, fetchUpdateAsync, isEnabled, reloadAsync, useUpdat
 import { BottomSheet } from "panelui-native/components/bottom-sheet";
 import { Button } from "panelui-native/components/button";
 import { cn } from "panelui-native/utils/cn";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
-import { SafeAreaInsetsContext, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
 import { useAppLockOpen } from "@/components/app-lock-gate";
 import { useAuthCovered } from "@/components/auth-cover";
 import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
+import { useSheetInsets } from "@/components/use-sheet-insets";
 import { useFlushDeferredDeletes } from "@/data/use-deferred-delete";
 import { describeUpdate } from "@/domain/app-update";
 import { formatChargeDate } from "@/domain/dates";
@@ -26,8 +27,7 @@ export function UpdateSheet() {
     const t = useTranslation();
     const { language } = useLanguage();
     const colors = useColors();
-    const insets = useSafeAreaInsets();
-    const sheetInsets = useMemo(() => ({ ...insets, bottom: 0 }), [insets]);
+    const sheetInsets = useSheetInsets();
     const { availableUpdate, downloadedUpdate } = useUpdates();
     const update = describeUpdate(availableUpdate);
     const onTabs = useSegments()[0] === "(tabs)";

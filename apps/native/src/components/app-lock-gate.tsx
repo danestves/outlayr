@@ -1,6 +1,6 @@
 import SquareLock02Icon from "@hugeicons-pro/core-solid-rounded/SquareLock02Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
-import { createContext, use, useCallback, useEffect, useRef, useState } from "react";
+import { createContext, use, useEffect, useEffectEvent, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { AppState, Pressable, View } from "react-native";
 
@@ -55,10 +55,9 @@ export function AppLockGate({ children }: { children: ReactNode }) {
         };
     }, [enabled]);
 
-    const relock = useCallback(() => setUnlocked(false), []);
-    useRelock(relock);
+    useRelock(() => setUnlocked(false));
 
-    const attempt = useCallback(async () => {
+    const attempt = async () => {
         setChecking(true);
         const result = await requestUnlock(t("transaction.lock.prompt"));
         setChecking(false);
@@ -72,12 +71,16 @@ export function AppLockGate({ children }: { children: ReactNode }) {
             return;
         }
         setFailure(lockFailureMessage(result.error));
-    }, [t]);
+    };
 
     const gate = lockGate(enabled, unlocked, enforceable);
 
     // One automatic prompt per shut gate: re-prompting would reopen a sheet the user just dismissed.
     const prompted = useRef(false);
+    const promptUnlock = useEffectEvent(() => {
+        // oxlint-disable-next-line no-void -- the prompt is deliberately not awaited, and requestUnlock (lib/app-lock.ts:21-31) resolves a result object for every failure, so there is no rejection a .catch could handle
+        void attempt();
+    });
     useEffect(() => {
         if (gate === "open") {
             prompted.current = false;
@@ -87,9 +90,8 @@ export function AppLockGate({ children }: { children: ReactNode }) {
             return;
         }
         prompted.current = true;
-        // oxlint-disable-next-line no-void -- the prompt is deliberately not awaited, and requestUnlock (lib/app-lock.ts:21-31) resolves a result object for every failure, so there is no rejection a .catch could handle
-        void attempt();
-    }, [gate, enforceable, attempt]);
+        promptUnlock();
+    }, [gate, enforceable]);
 
     return (
         <View className="flex-1">

@@ -75,7 +75,7 @@ export function useInstallmentOrder({
         !isSubscription;
     // The purchase stays in its own currency; the plan is in the account's.
     const planCurrency = account?.currency ?? currency;
-    const planPriceOf = (price: number, rate = entryRate.rate) =>
+    const planPriceOf = (price: number, rate: number | null) =>
         planPrice({ amount: price, currency, date, rateType: entryRate.type }, planCurrency, {
             entryRate: rate,
             planPerUsd: currency === planCurrency ? null : paymentRate(db, "USD", planCurrency, date),
@@ -118,7 +118,7 @@ export function useInstallmentOrder({
         if (!offered) {
             return [];
         }
-        const plan = planPriceOf(price);
+        const plan = planPriceOf(price, entryRate.rate);
         const first =
             draft === null || plan === null
                 ? null
@@ -158,7 +158,7 @@ export function useInstallmentOrder({
         if (!offered || draft === null) {
             return null;
         }
-        const plan = planPriceOf(price);
+        const plan = planPriceOf(price, entryRate.rate);
         let reason: string | null = null;
         if (plan === null) {
             reason = t("installments.noRate");
@@ -177,9 +177,10 @@ export function useInstallmentOrder({
         const cuotas = liveInstallmentsQuery(db)
             .all()
             .filter((row) => row.planId === orderPlanId);
+        const fees = seeded?.fees ?? [];
         try {
             await Promise.all(
-                (seeded?.fees ?? []).map(async (fee) => {
+                fees.map(async (fee) => {
                     const cuota = cuotas.find((row) => row.sequence === fee.sequence);
                     if (cuota === undefined) {
                         return;
@@ -239,7 +240,7 @@ export function useInstallmentOrder({
         if (!offered || draft === null) {
             return null;
         }
-        const plan = planPriceOf(price);
+        const plan = planPriceOf(price, entryRate.rate);
         return (
             <InstallmentsSheet
                 accounts={sources}
