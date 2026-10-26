@@ -34,7 +34,8 @@ export interface DaySection<T> {
     totals: CurrencyBucket[];
 }
 
-export type WithFee<T> = T & { fee?: T };
+/** A purchase carries one card fee; a transfer can carry one per side. */
+export type WithFee<T> = T & { fees?: readonly T[] };
 
 export type Valued<T> = T & Pick<DayGroupable, "valued">;
 
@@ -49,20 +50,25 @@ function feeParent(row: DayGroupable): string | null {
 
 export function foldFees<T extends DayGroupable>(rows: readonly T[]): WithFee<T>[] {
     const ids = new Set(rows.map((row) => row.id));
-    const fees = new Map<string, T>();
+    const fees = new Map<string, T[]>();
     for (const row of rows) {
         const parent = feeParent(row);
         if (parent !== null && ids.has(parent)) {
-            fees.set(parent, row);
+            const folded = fees.get(parent);
+            if (folded) {
+                folded.push(row);
+            } else {
+                fees.set(parent, [row]);
+            }
         }
     }
     return rows.flatMap((row) => {
         const parent = feeParent(row);
-        if (parent !== null && fees.get(parent) === row) {
+        if (parent !== null && fees.get(parent)?.includes(row)) {
             return [];
         }
-        const fee = row.id === undefined ? undefined : fees.get(row.id);
-        return fee === undefined ? [row] : [{ ...row, fee }];
+        const folded = row.id === undefined ? undefined : fees.get(row.id);
+        return folded === undefined ? [row] : [{ ...row, fees: folded }];
     });
 }
 

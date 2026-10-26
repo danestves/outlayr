@@ -66,7 +66,7 @@ describe("groupByDay", () => {
         const fee = { ...row("2026-07-24", 0.44), feeForId: "glovo", id: "fee" };
         const orphan = { ...row("2026-07-24", 0.1), feeForId: "elsewhere", id: "orphan" };
         const [section] = groupByDay([purchase, fee, orphan]);
-        expect(section.data).toStrictEqual([{ ...purchase, fee }, orphan]);
+        expect(section.data).toStrictEqual([{ ...purchase, fees: [fee] }, orphan]);
         expect(section.total).toBeCloseTo(-10.54);
     });
 });

@@ -143,12 +143,11 @@ const transfers = {
             fr: "Vers",
             pt: "Para",
         }),
-        "transfers.gap.itsAFee": t({
-            en: "It's a fee",
-            es: "Es una comisión",
-            fr: "Ce sont des frais",
-            pt: "É uma tarifa",
-            "pt-PT": "É uma comissão",
+        "transfers.gap.chargedBy": t({
+            en: "{account} charged it",
+            es: "Lo cobró {account}",
+            fr: "Prélevé par {account}",
+            pt: "Cobrado por {account}",
         }),
         "transfers.gap.itsOnTop": t({
             en: "It's on top",
@@ -263,6 +262,21 @@ const transfers = {
             fr: "Après {fee} de frais prélevés sur {feeSide}, il reste {arrives}.",
             pt: "Após uma tarifa de {fee} cobrada em {feeSide}, chegam {arrives}.",
             "pt-PT": "Após uma comissão de {fee} cobrada em {feeSide}, chegam {arrives}.",
+        }),
+        "transfers.sentence.fees": t({
+            en: "Fees of {fee} from {feeSide} and {arrivalFee} from {arrivalFeeSide}.",
+            es: "Comisiones de {fee} en {feeSide} y {arrivalFee} en {arrivalFeeSide}.",
+            fr: "Frais de {fee} prélevés sur {feeSide} et de {arrivalFee} sur {arrivalFeeSide}.",
+            pt: "Tarifas de {fee} cobradas em {feeSide} e {arrivalFee} em {arrivalFeeSide}.",
+            "pt-PT": "Comissões de {fee} cobradas em {feeSide} e {arrivalFee} em {arrivalFeeSide}.",
+        }),
+        "transfers.sentence.feesArrive": t({
+            en: "After fees of {fee} from {feeSide} and {arrivalFee} from {arrivalFeeSide}, {arrives} arrives.",
+            es: "Tras comisiones de {fee} en {feeSide} y {arrivalFee} en {arrivalFeeSide}, llegan {arrives}.",
+            fr: "Après {fee} de frais prélevés sur {feeSide} et {arrivalFee} sur {arrivalFeeSide}, il reste {arrives}.",
+            pt: "Após tarifas de {fee} cobradas em {feeSide} e {arrivalFee} em {arrivalFeeSide}, chegam {arrives}.",
+            "pt-PT":
+                "Após comissões de {fee} cobradas em {feeSide} e {arrivalFee} em {arrivalFeeSide}, chegam {arrives}.",
         }),
         "transfers.sentence.feeOnTop": t({
             en: "Plus a {fee} fee from {feeSide}.",

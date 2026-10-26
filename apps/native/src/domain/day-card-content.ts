@@ -9,7 +9,7 @@ interface CardableTransaction {
     categoryName: string | null;
     currency: string | null;
     date: Date;
-    fee?: CardableTransaction;
+    fees?: readonly CardableTransaction[];
     income: boolean;
     note: string;
 }
@@ -45,7 +45,7 @@ export function dayCardContent(
     return {
         dayLabel: formatDayHeader(section.day, now),
         rows: section.data
-            .flatMap((row) => (row.fee ? [row, row.fee] : [row]))
+            .flatMap((row) => [row, ...(row.fees ?? [])])
             .map((row) => {
                 const code = row.currency ?? options.currency;
                 const magnitude = figure(row.amount, code, options.showCents);

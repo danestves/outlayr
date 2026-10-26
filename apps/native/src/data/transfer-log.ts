@@ -71,7 +71,19 @@ export function useTransferFees(db: Database, enabled = true) {
                 : NO_READ,
         [enabled]
     );
-    return useMemo(() => new Map(feeRows.map((fee) => [fee.transferId ?? "", fee])), [feeRows]);
+    return useMemo(() => {
+        const byTransfer = new Map<string, (typeof feeRows)[number][]>();
+        for (const fee of feeRows) {
+            const key = fee.transferId ?? "";
+            const charged = byTransfer.get(key);
+            if (charged) {
+                charged.push(fee);
+            } else {
+                byTransfer.set(key, [fee]);
+            }
+        }
+        return byTransfer;
+    }, [feeRows]);
 }
 
 /** Null bounds admit no transfer at all, as a query matching nothing: a hook cannot be skipped. */

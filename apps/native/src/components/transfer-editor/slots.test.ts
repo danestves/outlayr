@@ -7,6 +7,7 @@ import { SUPPORTED_LANGUAGES } from "@/i18n/languages";
 import {
     TRANSFER_CUSTOM_RATE_KEY,
     TRANSFER_FEE_ARRIVAL_KEY,
+    TRANSFER_FEES_ARRIVAL_KEY,
     TRANSFER_FEE_ON_TOP_KEY,
     TRANSFER_SENTENCE_KEYS,
     TRANSFER_SENTENCE_SLOTS,
@@ -30,6 +31,16 @@ describe("transfer sentence templates", () => {
         it(`adds the arrival to the fee's facts when no rate clause states it in ${language}`, () => {
             expect([...sentenceSlotNames(CATALOGS[language][TRANSFER_FEE_ARRIVAL_KEY] ?? "")].sort()).toStrictEqual(
                 [...sentenceSlotNames(CATALOGS[language]["transfers.sentence.fee"] ?? ""), "arrives"].sort()
+            );
+        });
+
+        it(`states the receiver's fee on top of the sender's when both charge in ${language}`, () => {
+            const single = sentenceSlotNames(CATALOGS[language]["transfers.sentence.fee"] ?? "");
+            expect([...sentenceSlotNames(CATALOGS[language]["transfers.sentence.fees"] ?? "")].sort()).toStrictEqual(
+                [...single, "arrivalFee", "arrivalFeeSide"].sort()
+            );
+            expect([...sentenceSlotNames(CATALOGS[language][TRANSFER_FEES_ARRIVAL_KEY] ?? "")].sort()).toStrictEqual(
+                [...single, "arrivalFee", "arrivalFeeSide", "arrives"].sort()
             );
         });
 

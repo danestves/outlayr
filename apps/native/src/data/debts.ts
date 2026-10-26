@@ -231,7 +231,7 @@ export function useOutsideMoveRows(
                 imageUri: null,
                 income: into,
                 installmentId: null,
-                moved: { arrived: amount, arrivedCurrency: person.currency, fee: null, outside: null, sent: amount },
+                moved: { arrived: amount, arrivedCurrency: person.currency, fees: [], outside: null, sent: amount },
                 note: row.note === "" ? route : row.note,
                 recurringAnchorDay: null,
                 recurringCoefficient: 1,

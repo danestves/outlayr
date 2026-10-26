@@ -102,7 +102,7 @@ async function feeEatsArrivalDraft(): Promise<{ current: TransferDraft }> {
         result.current.setSent("10");
     });
     await act(async () => {
-        result.current.toggleFeeSide();
+        result.current.selectFeeSide("destination");
     });
     await act(async () => {
         result.current.setFee("555");
@@ -117,7 +117,7 @@ async function feeOverArrivalDraft(): Promise<{ current: TransferDraft }> {
         result.current.setSent("10");
     });
     await act(async () => {
-        result.current.toggleFeeSide();
+        result.current.selectFeeSide("destination");
     });
     await act(async () => {
         result.current.setFee("600");
@@ -145,7 +145,7 @@ describe("an arrival above everything the typed rate converts", () => {
         expect(result.current).toMatchObject({
             canSave: false,
             gapAmount: -111.11,
-            gapFee: null,
+            gapFees: { destination: null, source: null },
             legs: null,
             outside: 0,
         });
@@ -195,7 +195,7 @@ describe("a fee larger than what reaches the other side", () => {
     it("claims no arrival and names what the fee overshoots by", async () => {
         const result = await feeOverArrivalDraft();
         expect(result.current.arrived).toBeNull();
-        expect(result.current.block).toStrictEqual({ kind: "fee", shortfall: -45 });
+        expect(result.current.block).toStrictEqual({ kind: "fee", shortfall: -45, side: "destination" });
     });
 
     it("keeps the official rate it was quoted at instead of one the fee implies", async () => {
@@ -212,7 +212,7 @@ describe("a fee larger than what reaches the other side", () => {
             result.current.setFee("600");
         });
         expect(result.current.feeCurrency).toBe("USD");
-        expect(result.current.block).toStrictEqual({ kind: "fee", shortfall: -590 });
+        expect(result.current.block).toStrictEqual({ kind: "fee", shortfall: -590, side: "source" });
     });
 
     it("saves again once the fee fits inside the arrival", async () => {
@@ -245,7 +245,7 @@ describe("a fee that outruns what arrives", () => {
 
         expect(result.current.legs).toBeNull();
         expect(result.current.canSave).toBe(false);
-        expect(result.current.block).toStrictEqual({ kind: "fee", shortfall: -45 });
+        expect(result.current.block).toStrictEqual({ kind: "fee", shortfall: -45, side: "destination" });
     });
 });
 
@@ -274,7 +274,7 @@ describe("moving a fee to the other side", () => {
             result.current.setFee("2");
         });
         await act(async () => {
-            result.current.toggleFeeSide();
+            result.current.moveFee("source");
         });
         expect(result.current.feeCurrency).toBe("VES");
         expect(result.current.fee).toBe(2 * OFFICIAL_VES_PER_USD);
@@ -330,7 +330,7 @@ describe("a draft taken off one editor", () => {
             before.current.setFee("2");
         });
         await act(async () => {
-            before.current.toggleFeeSide();
+            before.current.moveFee("source");
         });
         const snapshot = before.current.snapshot();
 
@@ -487,8 +487,7 @@ describe("a new transfer after the last one", () => {
     const last: SavedTransfer = {
         arrived: 157_471.66,
         date: new Date(Date.UTC(2026, 8, 22)),
-        fee: 7.34,
-        feeSide: "destination",
+        fees: { destination: 7.34, source: 0 },
         fromAccountId: "usd-2",
         fromCurrency: "USD",
         id: "last",
@@ -584,8 +583,7 @@ describe("a transfer from bolívares into dollars", () => {
             useTransferDraft({} as Database, undefined, {
                 arrived: 20,
                 date: new Date(Date.UTC(2026, 7, 9)),
-                fee: 0,
-                feeSide: "source",
+                fees: { destination: 0, source: 0 },
                 fromAccountId: "ves",
                 fromCurrency: "VES",
                 id: "transfer",
@@ -606,8 +604,7 @@ describe("reopening a saved transfer", () => {
     const saved: SavedTransfer = {
         arrived: 5550,
         date: new Date(Date.UTC(2026, 7, 9)),
-        fee: 2.7,
-        feeSide: "source",
+        fees: { destination: 0, source: 2.7 },
         fromAccountId: "usd",
         fromCurrency: "USD",
         id: "transfer",
@@ -642,8 +639,7 @@ describe("reopening a saved transfer", () => {
         const result = await reopened({
             ...saved,
             arrived: 5850,
-            fee: 150,
-            feeSide: "destination",
+            fees: { destination: 150, source: 0 },
             rate: 60,
             rateType: "custom",
             sent: 100,
@@ -674,7 +670,7 @@ describe("reopening a saved transfer", () => {
         const result = await reopened({
             ...saved,
             arrived: 95,
-            fee: 5,
+            fees: { destination: 0, source: 5 },
             rate: null,
             rateType: null,
             sent: 100,
@@ -782,13 +778,17 @@ describe("dollars from Payoneer that arrive as bolívares through Binance", () =
 
     it("names the dollars lost on the way, in dollars", async () => {
         const result = await pinnedDraft("160", "157471.66");
-        expect(result.current).toMatchObject({ feeCurrency: "USD", gapAmount: 7.34, gapFee: 7.34 });
+        expect(result.current).toMatchObject({
+            feeCurrency: "USD",
+            gapAmount: 7.34,
+            gapFees: { destination: 7571.54, source: 7.34 },
+        });
     });
 
     it("books the loss as a fee on the sender and leaves nothing unexplained", async () => {
         const result = await pinnedDraft("160", "157471.66");
         await act(async () => {
-            result.current.resolveAsFee();
+            result.current.resolveAsFee("source");
         });
         expect(result.current).toMatchObject({
             fee: 7.34,
@@ -818,7 +818,12 @@ describe("dollars from Payoneer that arrive as bolívares through Binance", () =
 
     it("reads USDT already in Binance as a surplus no fee explains", async () => {
         const result = await binanceP2p();
-        expect(result.current).toMatchObject({ canSave: false, gapAmount: -4.53, gapFee: null, quotedRate: 957.1 });
+        expect(result.current).toMatchObject({
+            canSave: false,
+            gapAmount: -4.53,
+            gapFees: { destination: null, source: null },
+            quotedRate: 957.1,
+        });
     });
 
     it("grows what came from Binance as the fee Payoneer took is typed", async () => {
@@ -843,8 +848,7 @@ describe("dollars from Payoneer that arrive as bolívares through Binance", () =
             useTransferDraft({} as Database, undefined, {
                 arrived: 157_471.66,
                 date: new Date(Date.UTC(2026, 8, 30)),
-                fee: 7.34,
-                feeSide: "source",
+                fees: { destination: 0, source: 7.34 },
                 fromAccountId: "usd",
                 fromCurrency: "USD",
                 id: "transfer",
@@ -864,9 +868,9 @@ describe("dollars from Payoneer that arrive as bolívares through Binance", () =
         });
     });
 
-    it("offers no fee that would swallow everything sent", async () => {
+    it("offers no sender's fee that would swallow everything sent", async () => {
         const result = await pinnedDraft("160", "1");
-        expect(result.current).toMatchObject({ gapAmount: 160, gapFee: null });
+        expect(result.current).toMatchObject({ gapAmount: 160, gapFees: { destination: 165_042.2, source: null } });
     });
 
     it("reopens a transfer saved at the official rate on the official rate", async () => {
@@ -874,8 +878,7 @@ describe("dollars from Payoneer that arrive as bolívares through Binance", () =
             useTransferDraft({} as Database, undefined, {
                 arrived: 5840,
                 date: new Date(Date.UTC(2026, 8, 29)),
-                fee: 0,
-                feeSide: "source",
+                fees: { destination: 0, source: 0 },
                 fromAccountId: "usd",
                 fromCurrency: "USD",
                 id: "transfer",
@@ -903,8 +906,7 @@ describe("dollars from Payoneer that arrive as bolívares through Binance", () =
             useTransferDraft({} as Database, undefined, {
                 arrived: 157_471.66,
                 date: new Date(Date.UTC(2026, 8, 29)),
-                fee: 7.34,
-                feeSide: "source",
+                fees: { destination: 0, source: 7.34 },
                 fromAccountId: "usd",
                 fromCurrency: "USD",
                 id: "transfer",
@@ -925,12 +927,12 @@ describe("dollars from Payoneer that arrive as bolívares through Binance", () =
     });
 });
 
-describe("a gap measured on the side that carries the fee", () => {
-    it("keeps a fee moved to the receiver there, in bolívares", async () => {
+describe("a gap measured in the sender's money", () => {
+    it("closes on the receiver in bolívares once the receiver is the side being edited", async () => {
         mockRates.set("VES", OFFICIAL_VES_PER_USD);
         const result = await draft();
         await act(async () => {
-            result.current.toggleFeeSide();
+            result.current.selectFeeSide("destination");
         });
         await act(async () => {
             result.current.setSent("100");
@@ -938,9 +940,9 @@ describe("a gap measured on the side that carries the fee", () => {
         await act(async () => {
             result.current.setArrived("5400");
         });
-        expect(result.current).toMatchObject({ feeCurrency: "VES", gapAmount: 150 });
+        expect(result.current).toMatchObject({ feeCurrency: "VES", gapAmount: 2.7 });
         await act(async () => {
-            result.current.resolveAsFee();
+            result.current.resolveAsFee("destination");
         });
         expect(result.current).toMatchObject({
             fee: 150,
@@ -963,7 +965,7 @@ describe("a gap measured on the side that carries the fee", () => {
         });
         expect(result.current).toMatchObject({ feeCurrency: "JPY", gapAmount: 1443 });
         await act(async () => {
-            result.current.resolveAsFee();
+            result.current.resolveAsFee("source");
         });
         expect(result.current).toMatchObject({ fee: 1443, gapAmount: 0, legs: { fromAmount: 23_557, toAmount: 160 } });
     });
@@ -974,7 +976,7 @@ describe("a gap measured on the side that carries the fee", () => {
             useTransferDraft({} as Database, { fromAccountId: "usd", toAccountId: "kwd" })
         );
         await act(async () => {
-            result.current.toggleFeeSide();
+            result.current.selectFeeSide("destination");
         });
         await act(async () => {
             result.current.setSent("1000");
@@ -982,9 +984,9 @@ describe("a gap measured on the side that carries the fee", () => {
         await act(async () => {
             result.current.setArrived("300.123");
         });
-        expect(result.current).toMatchObject({ feeCurrency: "KWD", gapAmount: 6.977 });
+        expect(result.current).toMatchObject({ feeCurrency: "KWD", gapAmount: 22.72 });
         await act(async () => {
-            result.current.resolveAsFee();
+            result.current.resolveAsFee("destination");
         });
         expect(result.current).toMatchObject({ fee: 6.977, gapAmount: 0, legs: { toAmount: 307.1 } });
     });
@@ -1005,7 +1007,7 @@ describe("a gap measured on the side that carries the fee", () => {
         await act(async () => {
             result.current.setArrived("30698.5");
         });
-        expect(result.current).toMatchObject({ gapAmount: 4.89, gapFee: 4.89 });
+        expect(result.current).toMatchObject({ gapAmount: 4.89, gapFees: { destination: 1.5, source: 4.89 } });
     });
 
     it("reopens bolívares to dollars at the official rate without a rounding gap", async () => {
@@ -1014,8 +1016,7 @@ describe("a gap measured on the side that carries the fee", () => {
             useTransferDraft({} as Database, undefined, {
                 arrived: 27.68,
                 date: new Date(Date.UTC(2026, 8, 29)),
-                fee: 0,
-                feeSide: "source",
+                fees: { destination: 0, source: 0 },
                 fromAccountId: "ves",
                 fromCurrency: "VES",
                 id: "transfer",
@@ -1121,7 +1122,7 @@ describe("an arrival seen for another pair", () => {
 });
 
 describe("a fee charged on top", () => {
-    const stored: Omit<SavedTransfer, "arrived" | "fee" | "feeSide" | "sent"> = {
+    const stored: Omit<SavedTransfer, "arrived" | "fees" | "sent"> = {
         date: new Date(Date.UTC(2026, 8, 30)),
         fromAccountId: "usd",
         fromCurrency: "USD",
@@ -1141,7 +1142,7 @@ describe("a fee charged on top", () => {
         });
         if (toDestination) {
             await act(async () => {
-                result.current.toggleFeeSide();
+                result.current.selectFeeSide("destination");
             });
         }
         await act(async () => {
@@ -1169,8 +1170,7 @@ describe("a fee charged on top", () => {
             useTransferDraft({} as Database, undefined, {
                 ...stored,
                 arrived: 500,
-                fee: 25,
-                feeSide: "source",
+                fees: { destination: 0, source: 25 },
                 sent: 525,
             })
         );
@@ -1199,8 +1199,7 @@ describe("a fee charged on top", () => {
             useTransferDraft({} as Database, undefined, {
                 ...stored,
                 arrived: 5400,
-                fee: 150,
-                feeSide: "destination",
+                fees: { destination: 150, source: 0 },
                 rate: OFFICIAL_VES_PER_USD,
                 rateType: "official",
                 sent: 100,
@@ -1225,7 +1224,7 @@ describe("a fee charged on top", () => {
         expect(result.current).toMatchObject({ fromBalanceAfter: 1785, gapAmount: 20 });
 
         await act(async () => {
-            result.current.resolveAsFee();
+            result.current.resolveAsFee("source");
         });
 
         expect(result.current).toMatchObject({
@@ -1244,10 +1243,10 @@ describe("a fee charged on top", () => {
         await act(async () => {
             result.current.setArrived("5000");
         });
-        expect(result.current).toMatchObject({ gapAmount: 550, toBalanceAfter: 4850 });
+        expect(result.current).toMatchObject({ gapAmount: 9.91, toBalanceAfter: 4850 });
 
         await act(async () => {
-            result.current.resolveAsFee();
+            result.current.resolveAsFee("destination");
         });
 
         expect(result.current).toMatchObject({
@@ -1267,7 +1266,7 @@ describe("a fee charged on top", () => {
             result.current.setSent("500");
         });
         await act(async () => {
-            result.current.toggleFeeSide();
+            result.current.selectFeeSide("destination");
         });
         await act(async () => {
             result.current.setFee("25");
@@ -1279,7 +1278,7 @@ describe("a fee charged on top", () => {
             result.current.setFeeMode("onTop");
         });
 
-        expect(result.current.block).toStrictEqual({ kind: "fee", shortfall: -5 });
+        expect(result.current.block).toStrictEqual({ kind: "fee", shortfall: -5, side: "destination" });
     });
 
     it("blocks nothing while a fee on top waits for an amount", async () => {
@@ -1303,5 +1302,86 @@ describe("a fee charged on top", () => {
         });
 
         expect(result.current.feeMode).toBe("none");
+    });
+});
+
+describe("a fee charged by each bank", () => {
+    // Payoneer took $15 sending, Mercantil took $16.05 receiving, $83.95 landed.
+    async function payoneerToMercantil(): Promise<{ current: TransferDraft }> {
+        const { result } = await renderHook(() =>
+            useTransferDraft({} as Database, { fromAccountId: "usd", toAccountId: "usd-2" })
+        );
+        await act(async () => {
+            result.current.setSent("115");
+        });
+        await act(async () => {
+            result.current.setFee("15");
+        });
+        await act(async () => {
+            result.current.setArrived("83.95");
+        });
+        return result;
+    }
+
+    it("books what the receiver kept as its own fee, beside the sender's", async () => {
+        mockBalances.set("usd-2", 100);
+        const result = await payoneerToMercantil();
+        expect(result.current.gapAmount).toBe(16.05);
+
+        await act(async () => {
+            result.current.resolveAsFee("destination");
+        });
+
+        expect(result.current).toMatchObject({
+            canSave: true,
+            fees: { destination: 16.05, source: 15 },
+            feeSide: "destination",
+            gapAmount: 0,
+            legs: { fromAmount: 100, toAmount: 100 },
+            paid: 115,
+            toBalanceAfter: 183.95,
+        });
+    });
+
+    it("adds the loss to the sender's fee instead of replacing it", async () => {
+        const result = await payoneerToMercantil();
+        await act(async () => {
+            result.current.resolveAsFee("source");
+        });
+
+        expect(result.current).toMatchObject({
+            fees: { destination: 0, source: 31.05 },
+            gapAmount: 0,
+            legs: { fromAmount: 83.95, toAmount: 83.95 },
+        });
+    });
+
+    it("keeps what left when a second fee joins one charged on top", async () => {
+        const { result } = await renderHook(() =>
+            useTransferDraft({} as Database, { fromAccountId: "usd", toAccountId: "usd-2" })
+        );
+        await act(async () => {
+            result.current.setSent("500");
+        });
+        await act(async () => {
+            result.current.setFeeMode("onTop");
+        });
+        await act(async () => {
+            result.current.setFee("25");
+        });
+        await act(async () => {
+            result.current.selectFeeSide("destination");
+        });
+        await act(async () => {
+            result.current.setFee("5");
+        });
+
+        expect(result.current).toMatchObject({
+            arrived: 495,
+            feeMode: "included",
+            fees: { destination: 5, source: 25 },
+            legs: { fromAmount: 500, toAmount: 500 },
+            paid: 525,
+        });
     });
 });

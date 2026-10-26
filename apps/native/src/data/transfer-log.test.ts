@@ -106,7 +106,7 @@ describe("useLogTransfers", () => {
         );
 
         expect(result.current.map((row) => row.moved)).toStrictEqual([
-            { arrived: 98, arrivedCurrency: "USD", fee: { amount: 2, currency: "USD" }, outside: null, sent: 100 },
+            { arrived: 98, arrivedCurrency: "USD", fees: [{ amount: 2, currency: "USD" }], outside: null, sent: 100 },
         ]);
     });
 });

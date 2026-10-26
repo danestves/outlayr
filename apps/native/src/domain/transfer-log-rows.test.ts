@@ -52,29 +52,53 @@ describe("toTransferLogRow", () => {
 
     it("states what left with a source fee in it, and what arrived with a destination fee out of it", () => {
         const sameCurrency = { ...TRANSFER, exchangeRate: 1, fromAmount: 98, toAmount: 98, toCurrency: "USD" };
-        const atSource = toTransferLogRow(sameCurrency, ACCOUNTS, new Map([["t1", { accountId: "a", amount: 2 }]]));
-        const atDestination = toTransferLogRow(TRANSFER, ACCOUNTS, new Map([["t1", { accountId: "b", amount: 50 }]]));
+        const atSource = toTransferLogRow(sameCurrency, ACCOUNTS, new Map([["t1", [{ accountId: "a", amount: 2 }]]]));
+        const atDestination = toTransferLogRow(TRANSFER, ACCOUNTS, new Map([["t1", [{ accountId: "b", amount: 50 }]]]));
 
         expect(atSource.moved).toStrictEqual({
             arrived: 98,
             arrivedCurrency: "USD",
-            fee: { amount: 2, currency: "USD" },
+            fees: [{ amount: 2, currency: "USD" }],
             outside: null,
             sent: 100,
         });
         expect(atDestination.moved).toStrictEqual({
             arrived: 5500,
             arrivedCurrency: "VES",
-            fee: { amount: 50, currency: "VES" },
+            fees: [{ amount: 50, currency: "VES" }],
             outside: null,
             sent: 100,
         });
         expect(atSource.amount).toBe(98);
-        expect(toTransferLogRow(TRANSFER, ACCOUNTS, new Map()).moved?.fee).toBeNull();
+        expect(toTransferLogRow(TRANSFER, ACCOUNTS, new Map()).moved?.fees).toStrictEqual([]);
         expect(toTransferLogRow(TRANSFER, ACCOUNTS).moved).toBeUndefined();
     });
 
-    it("names what arrived beyond the saved rate as money from another account, in the fee's currency", () => {
+    it("takes a fee on each side out of what left and what arrived", () => {
+        const payoneer = { ...TRANSFER, exchangeRate: 1, fromAmount: 100, toAmount: 100, toCurrency: "USD" };
+        const both = new Map([
+            [
+                "t1",
+                [
+                    { accountId: "a", amount: 15 },
+                    { accountId: "b", amount: 16.05 },
+                ],
+            ],
+        ]);
+
+        expect(toTransferLogRow(payoneer, ACCOUNTS, both).moved).toStrictEqual({
+            arrived: 83.95,
+            arrivedCurrency: "USD",
+            fees: [
+                { amount: 15, currency: "USD" },
+                { amount: 16.05, currency: "USD" },
+            ],
+            outside: null,
+            sent: 115,
+        });
+    });
+
+    it("names what arrived beyond the saved rate as money from another account, in the sender's currency", () => {
         const binance = {
             ...TRANSFER,
             exchangeRate: 957.1,
@@ -83,7 +107,7 @@ describe("toTransferLogRow", () => {
         };
 
         expect(
-            toTransferLogRow(binance, ACCOUNTS, new Map([["t1", { accountId: "a", amount: 7.34 }]])).moved?.outside
+            toTransferLogRow(binance, ACCOUNTS, new Map([["t1", [{ accountId: "a", amount: 7.34 }]]])).moved?.outside
         ).toStrictEqual({
             amount: 11.87,
             currency: "USD",
@@ -119,7 +143,7 @@ describe("toTransferLogRow", () => {
 
 describe("toAccountTransferRow", () => {
     it("signs each account's own leg, net of a fee charged on that side", () => {
-        const atSource = new Map([["t1", { accountId: "a", amount: 2 }]]);
+        const atSource = new Map([["t1", [{ accountId: "a", amount: 2 }]]]);
         expect(toAccountTransferRow(TRANSFER, "a", ACCOUNTS, atSource)).toMatchObject({
             currency: "USD",
             moved: { sent: 102 },
@@ -128,14 +152,14 @@ describe("toAccountTransferRow", () => {
         expect(toAccountTransferRow(TRANSFER, "b", ACCOUNTS, atSource)).toMatchObject({
             amount: 5550,
             currency: "VES",
-            moved: { fee: null, outside: null, sent: 5550 },
+            moved: { fees: [], outside: null, sent: 5550 },
             sign: "+",
         });
 
-        const atDestination = new Map([["t1", { accountId: "b", amount: 2 }]]);
+        const atDestination = new Map([["t1", [{ accountId: "b", amount: 2 }]]]);
         expect(toAccountTransferRow(TRANSFER, "b", ACCOUNTS, atDestination)).toMatchObject({
             amount: 5550,
-            moved: { fee: null, sent: 5548 },
+            moved: { fees: [], sent: 5548 },
             sign: "+",
         });
     });
@@ -155,7 +179,7 @@ describe("an account page's day total", () => {
     });
 
     function dayTotals(accountId: string, currency: string, fee: TransferLogFee, own: ReturnType<typeof expense>[]) {
-        const transfer = toAccountTransferRow(TRANSFER, accountId, ACCOUNTS, new Map([["t1", fee]]));
+        const transfer = toAccountTransferRow(TRANSFER, accountId, ACCOUNTS, new Map([["t1", [fee]]]));
         const [section] = groupByDay([transfer, ...own], currency);
         return section.totals.map((bucket) => [bucket.currencyCode, bucket.amount]);
     }

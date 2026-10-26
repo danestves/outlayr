@@ -420,6 +420,10 @@ export const transactionsRepo = {
                     .update(transfers)
                     .set({ deletedAt: now, updatedAt: now })
                     .where(eq(transfers.id, row.transferId));
+                await db
+                    .update(transactions)
+                    .set({ deletedAt: now, updatedAt: now })
+                    .where(and(eq(transactions.transferId, row.transferId), isNull(transactions.deletedAt)));
             }
             await db
                 .update(transactions)

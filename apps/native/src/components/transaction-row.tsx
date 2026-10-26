@@ -64,6 +64,20 @@ interface UnderAmountProps {
     showCents: boolean;
 }
 
+function arrivedLabel(
+    t: ReturnType<typeof useTranslation>,
+    arrived: string,
+    fee: string | undefined,
+    otherFee: string | undefined
+): string {
+    if (fee === undefined) {
+        return t("log.row.arrived", { arrived });
+    }
+    return otherFee === undefined
+        ? t("log.row.arrivedAfterFee", { arrived, fee })
+        : t("log.row.arrivedAfterFees", { arrived, fee, otherFee });
+}
+
 function UnderAmount({ fee, future, moved, original, sentCurrency, showCents }: UnderAmountProps) {
     const t = useTranslation();
     const { language } = useLanguage();
@@ -87,21 +101,17 @@ function UnderAmount({ fee, future, moved, original, sentCurrency, showCents }: 
             </>
         );
     }
-    if (moved.fee === null && moved.arrivedCurrency === sentCurrency) {
+    if (moved.fees.length === 0 && moved.arrivedCurrency === sentCurrency) {
         return null;
     }
     const arrived = formatAmount(moved.arrived, moved.arrivedCurrency, showCents, language);
+    const [firstFee, secondFee] = moved.fees.map((charged) =>
+        formatAmount(charged.amount, charged.currency, showCents, language)
+    );
     return (
         <>
             <Text
-                accessibilityLabel={
-                    moved.fee === null
-                        ? t("log.row.arrived", { arrived })
-                        : t("log.row.arrivedAfterFee", {
-                              arrived,
-                              fee: formatAmount(moved.fee.amount, moved.fee.currency, showCents, language),
-                          })
-                }
+                accessibilityLabel={arrivedLabel(t, arrived, firstFee, secondFee)}
                 className={className}
                 numberOfLines={1}
             >
@@ -201,7 +211,8 @@ interface RowFigure extends Figure {
 }
 
 function rowFigure(transaction: TransactionRowProps["transaction"], currency: string, isTransfer: boolean): RowFigure {
-    const fee = transaction.fee && inListCurrency(transaction.fee, currency);
+    const [charged] = transaction.fees ?? [];
+    const fee = charged && inListCurrency(charged, currency);
     if (isTransfer) {
         const sent = transaction.moved?.sent ?? transaction.amount;
         return { amount: sent, apart: fee, currency: transaction.currency ?? currency, feeIn: false, total: sent };
@@ -229,7 +240,7 @@ interface TransactionRowProps {
     transaction: TransactionWithCategory & {
         details?: string | null;
         ends?: TransferLogRow["ends"];
-        fee?: { amount: number; currency: string | null; valued?: number | null };
+        fees?: readonly { amount: number; currency: string | null; valued?: number | null }[];
         moved?: TransferMove;
         sign?: TransferLogRow["sign"];
         valued?: number | null;
@@ -363,7 +374,7 @@ export function TransactionRow({
                 <RowMeta
                     currency={currency}
                     details={transaction.details}
-                    fee={shown.feeIn || transaction.moved?.fee != null}
+                    fee={shown.feeIn || (transaction.moved?.fees.length ?? 0) > 0}
                     foreignCode={foreignCode}
                     future={future}
                     rateNeeded={rateNeeded}

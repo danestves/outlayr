@@ -2,29 +2,30 @@ import { firstOfMonth, startOfDay } from "@outlayr/money/calendar";
 import { ENTRY_RATE_TYPES } from "@outlayr/money/rates";
 import type { EntryRateType } from "@outlayr/money/rates";
 import { roundMoney } from "@outlayr/money/round";
-import { and, count, desc, eq, inArray, isNull, ne, or } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNull, notInArray, or } from "drizzle-orm";
 
 import type { Database } from "@/db/client";
 import { transactions, transfers } from "@/db/schema";
 import { withTransaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
 import { minorUnitsFor } from "@/domain/money";
-import { savedRate } from "@/domain/transfer-reconcile";
-import type { FeeSide } from "@/domain/transfer-reconcile";
+import { NO_FEES, savedRate } from "@/domain/transfer-reconcile";
+import type { FeeSide, TransferFees } from "@/domain/transfer-reconcile";
 
 import { frozenUsdAmount } from "./frozen-usd";
 
 interface TransferFeeInput {
     amount: number;
     note?: string;
-    side: FeeSide;
 }
+
+const FEE_SIDES = ["source", "destination"] as const satisfies readonly FeeSide[];
 
 export interface TransferInput {
     date: Date;
     exchangeRate: number | null;
     exchangeRateType: string | null;
-    fee?: TransferFeeInput;
+    fees?: Partial<Record<FeeSide, TransferFeeInput>>;
     fromAccountId: string;
     fromAmount: number;
     fromCurrency: string;
@@ -41,8 +42,7 @@ export type Transfer = typeof transfers.$inferSelect;
 export interface SavedTransfer {
     arrived: number;
     date: Date;
-    fee: number;
-    feeSide: FeeSide;
+    fees: TransferFees;
     fromAccountId: string;
     fromCurrency: string;
     id: string;
@@ -63,8 +63,25 @@ function assertMovable(input: TransferInput): void {
     }
 }
 
-function feeCurrency(input: TransferInput): string {
-    return input.fee?.side === "destination" ? input.toCurrency : input.fromCurrency;
+function feeCurrency(input: TransferInput, side: FeeSide): string {
+    return side === "destination" ? input.toCurrency : input.fromCurrency;
+}
+
+function chargedFees(input: TransferInput) {
+    return FEE_SIDES.flatMap((side) => {
+        const fee = input.fees?.[side];
+        return fee === undefined ? [] : [{ fee, side }];
+    });
+}
+
+async function frozenFeesUsd(db: Database, input: TransferInput) {
+    const frozen = await Promise.all(
+        chargedFees(input).map(
+            async ({ fee, side }) =>
+                [side, await frozenUsdAmount(db, fee.amount, feeCurrency(input, side), input.date)] as const
+        )
+    );
+    return new Map(frozen);
 }
 
 function legColumns(input: TransferInput, fromAmountUsd: number | null, toAmountUsd: number | null, now: Date) {
@@ -88,12 +105,12 @@ function legColumns(input: TransferInput, fromAmountUsd: number | null, toAmount
     };
 }
 
-function feeColumns(input: TransferInput, fee: TransferFeeInput, amountUsd: number | null, now: Date) {
+function feeColumns(input: TransferInput, side: FeeSide, fee: TransferFeeInput, amountUsd: number | null, now: Date) {
     return {
-        accountId: fee.side === "destination" ? input.toAccountId : input.fromAccountId,
+        accountId: side === "destination" ? input.toAccountId : input.fromAccountId,
         amount: fee.amount,
         amountUsd,
-        currency: feeCurrency(input),
+        currency: feeCurrency(input, side),
         date: input.date,
         day: startOfDay(input.date),
         month: firstOfMonth(input.date),
@@ -115,13 +132,14 @@ function liveTransfer(db: Database, id: string): Transfer | null {
 async function insertFee(
     db: Database,
     input: TransferInput,
+    side: FeeSide,
     fee: TransferFeeInput,
     amountUsd: number | null,
     now: Date,
     transferId: string
 ): Promise<void> {
     await db.insert(transactions).values({
-        ...feeColumns(input, fee, amountUsd, now),
+        ...feeColumns(input, side, fee, amountUsd, now),
         categoryId: null,
         id: newId(),
         income: false,
@@ -129,14 +147,16 @@ async function insertFee(
     });
 }
 
-function liveFee(db: Database, transferId: string) {
-    const [row] = db
+function liveFees(db: Database, transferId: string) {
+    return db
         .select()
         .from(transactions)
         .where(and(eq(transactions.transferId, transferId), isNull(transactions.deletedAt)))
-        .limit(1)
         .all();
-    return row ?? null;
+}
+
+function feeSideOf(transfer: Pick<Transfer, "toAccountId">, fee: { accountId: string | null }): FeeSide {
+    return fee.accountId === transfer.toAccountId ? "destination" : "source";
 }
 
 const USD_DECIMALS = 6;
@@ -166,27 +186,24 @@ export function savedTransfer(db: Database, id: string): SavedTransfer | null {
     if (!transfer) {
         return null;
     }
-    const fee = liveFee(db, id);
-    const feeSide: FeeSide = fee?.accountId === transfer.toAccountId ? "destination" : "source";
-    const feeAmount = fee?.amount ?? 0;
+    const fromDecimals = minorUnitsFor(transfer.fromCurrency);
+    const toDecimals = minorUnitsFor(transfer.toCurrency);
+    const fees = { ...NO_FEES };
+    for (const fee of liveFees(db, id)) {
+        const side = feeSideOf(transfer, fee);
+        fees[side] = roundMoney(fees[side] + fee.amount, side === "source" ? fromDecimals : toDecimals);
+    }
     return {
-        arrived:
-            feeSide === "destination"
-                ? roundMoney(transfer.toAmount - feeAmount, minorUnitsFor(transfer.toCurrency))
-                : transfer.toAmount,
+        arrived: roundMoney(transfer.toAmount - fees.destination, toDecimals),
         date: transfer.date,
-        fee: feeAmount,
-        feeSide,
+        fees,
         fromAccountId: transfer.fromAccountId,
         fromCurrency: transfer.fromCurrency,
         id,
         note: transfer.note,
         rate: savedRate(transfer.fromAmount, transfer.toAmount, transfer.exchangeRate),
         rateType: ENTRY_RATE_TYPES.find((type) => type === transfer.exchangeRateType) ?? null,
-        sent:
-            feeSide === "source"
-                ? roundMoney(transfer.fromAmount + feeAmount, minorUnitsFor(transfer.fromCurrency))
-                : transfer.fromAmount,
+        sent: roundMoney(transfer.fromAmount + fees.source, fromDecimals),
         toAccountId: transfer.toAccountId,
         toCurrency: transfer.toCurrency,
     };
@@ -198,8 +215,8 @@ export function sameSavedTransfer(a: SavedTransfer, b: SavedTransfer): boolean {
         a.date.getTime() === b.date.getTime() &&
         a.sent === b.sent &&
         a.arrived === b.arrived &&
-        a.fee === b.fee &&
-        a.feeSide === b.feeSide &&
+        a.fees.source === b.fees.source &&
+        a.fees.destination === b.fees.destination &&
         a.fromAccountId === b.fromAccountId &&
         a.fromCurrency === b.fromCurrency &&
         a.toAccountId === b.toAccountId &&
@@ -249,10 +266,10 @@ export async function stageTransfer(
     assertMovable(input);
     const now = new Date();
     const id = newId();
-    const [fromAmountUsd, toAmountUsd, feeUsd] = await Promise.all([
+    const [fromAmountUsd, toAmountUsd, feesUsd] = await Promise.all([
         frozenUsdAmount(db, input.fromAmount, input.fromCurrency, input.date),
         frozenUsdAmount(db, input.toAmount, input.toCurrency, input.date),
-        input.fee ? frozenUsdAmount(db, input.fee.amount, feeCurrency(input), input.date) : Promise.resolve(null),
+        frozenFeesUsd(db, input),
     ]);
     const write = async () => {
         await db.insert(transfers).values({
@@ -261,9 +278,11 @@ export async function stageTransfer(
             deletedAt: null,
             id,
         });
-        if (input.fee) {
-            await insertFee(db, input, input.fee, feeUsd, now, id);
-        }
+        await Promise.all(
+            chargedFees(input).map(({ fee, side }) =>
+                insertFee(db, input, side, fee, feesUsd.get(side) ?? null, now, id)
+            )
+        );
     };
     return { id, write };
 }
@@ -310,10 +329,10 @@ export const transfersRepo = {
             throw new Error("The transfer no longer exists");
         }
         const now = new Date();
-        const [freshFromUsd, freshToUsd, freshFeeUsd] = await Promise.all([
+        const [freshFromUsd, freshToUsd, freshFeesUsd] = await Promise.all([
             frozenUsdAmount(db, input.fromAmount, input.fromCurrency, input.date),
             frozenUsdAmount(db, input.toAmount, input.toCurrency, input.date),
-            input.fee ? frozenUsdAmount(db, input.fee.amount, feeCurrency(input), input.date) : Promise.resolve(null),
+            frozenFeesUsd(db, input),
         ]);
 
         await withTransaction(db, async () => {
@@ -348,7 +367,24 @@ export const transfersRepo = {
                 .set(legColumns(input, fromUsd ?? freshFromUsd, toUsd ?? freshToUsd, now))
                 .where(and(eq(transfers.id, id), isNull(transfers.deletedAt)));
 
-            const kept = input.fee ? liveFee(db, id) : null;
+            // One live fee per side survives, rewritten in place: a side's own row first, else a row whose side
+            // stopped charging, so a fee moved across keeps its id and the frozen USD that comes with it.
+            const existing = liveFees(db, id);
+            const charged = chargedFees(input);
+            const kept = new Map<FeeSide, (typeof existing)[number]>();
+            for (const { side } of charged) {
+                const own = existing.find((fee) => feeSideOf(previous, fee) === side);
+                if (own) {
+                    kept.set(side, own);
+                }
+            }
+            for (const { side } of charged) {
+                const spare = existing.find((fee) => ![...kept.values()].includes(fee));
+                if (!kept.has(side) && spare) {
+                    kept.set(side, spare);
+                }
+            }
+            const keptIds = [...kept.values()].map((row) => row.id);
             await db
                 .update(transactions)
                 .set({ deletedAt: now, updatedAt: now })
@@ -356,19 +392,24 @@ export const transfersRepo = {
                     and(
                         eq(transactions.transferId, id),
                         isNull(transactions.deletedAt),
-                        kept ? ne(transactions.id, kept.id) : undefined
+                        keptIds.length > 0 ? notInArray(transactions.id, keptIds) : undefined
                     )
                 );
-            if (!input.fee) {
-                return;
-            }
-            const feeUsd = carriedUsd(kept, input.fee.amount, feeCurrency(input), input.date) ?? freshFeeUsd;
-            await (kept
-                ? db
-                      .update(transactions)
-                      .set(feeColumns(input, input.fee, feeUsd, now))
-                      .where(eq(transactions.id, kept.id))
-                : insertFee(db, input, input.fee, feeUsd, now, id));
+            await Promise.all(
+                charged.map(async ({ fee, side }) => {
+                    const row = kept.get(side) ?? null;
+                    const feeUsd =
+                        carriedUsd(row, fee.amount, feeCurrency(input, side), input.date) ??
+                        freshFeesUsd.get(side) ??
+                        null;
+                    await (row
+                        ? db
+                              .update(transactions)
+                              .set(feeColumns(input, side, fee, feeUsd, now))
+                              .where(eq(transactions.id, row.id))
+                        : insertFee(db, input, side, fee, feeUsd, now, id));
+                })
+            );
         });
     },
 };

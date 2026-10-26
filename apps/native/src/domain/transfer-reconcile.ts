@@ -1,12 +1,14 @@
 import { roundMoney } from "@outlayr/money/round";
 
 export type FeeSide = "source" | "destination";
-export type TransferField = "arrived" | "fee" | "rate" | "sent";
+export type TransferField = "arrived" | "rate" | "sent" | FeeSide;
+
+/** A fee per side, each in its own account's currency and zero when that side charged nothing. */
+export type TransferFees = Readonly<Record<FeeSide, number>>;
 
 export interface TransferValues {
     arrived: number;
-    fee: number;
-    feeSide: FeeSide;
+    fees: TransferFees;
     rate: number;
     sent: number;
 }
@@ -30,17 +32,18 @@ function money(value: number, decimals: number): number | null {
     return roundMoney(value, decimals);
 }
 
+export const NO_FEES: TransferFees = { destination: 0, source: 0 };
+
 function convertedPortion(values: TransferValues): number {
-    return values.feeSide === "source" ? values.sent - values.fee : values.sent;
+    return values.sent - values.fees.source;
 }
 
 function preFeeArrival(values: TransferValues): number {
-    return values.feeSide === "source" ? values.arrived : values.arrived + values.fee;
+    return values.arrived + values.fees.destination;
 }
 
 function expectedArrival(values: TransferValues): number {
-    const gross = convertedPortion(values) * values.rate;
-    return values.feeSide === "source" ? gross : gross - values.fee;
+    return convertedPortion(values) * values.rate - values.fees.destination;
 }
 
 function solveArrived(values: TransferValues, decimals: number): number | null {
@@ -51,21 +54,21 @@ function solveSent(values: TransferValues, decimals: number): number | null {
     if (!finitePositive(values.rate)) {
         return null;
     }
-    const converted = preFeeArrival(values) / values.rate;
-    return money(values.feeSide === "source" ? converted + values.fee : converted, decimals);
+    return money(preFeeArrival(values) / values.rate + values.fees.source, decimals);
 }
 
-function neededFee(values: TransferValues): number | null {
+/** The whole fee `side` would need to charge, the other side's fee held, for the arrival to reconcile. */
+function neededFee(values: TransferValues, side: FeeSide): number | null {
     if (!finitePositive(values.rate)) {
         return null;
     }
-    return values.feeSide === "source"
-        ? values.sent - values.arrived / values.rate
-        : values.sent * values.rate - values.arrived;
+    return side === "source"
+        ? values.sent - preFeeArrival(values) / values.rate
+        : convertedPortion(values) * values.rate - values.arrived;
 }
 
-function solveFee(values: TransferValues, decimals: number): number | null {
-    const fee = neededFee(values);
+function solveFee(values: TransferValues, side: FeeSide, decimals: number): number | null {
+    const fee = neededFee(values, side);
     return fee === null ? null : money(fee, decimals);
 }
 
@@ -90,8 +93,9 @@ export function solveTransfer(values: TransferValues, solveFor: TransferField, d
         case "sent": {
             return solveSent(values, decimals);
         }
-        case "fee": {
-            return solveFee(values, decimals);
+        case "source":
+        case "destination": {
+            return solveFee(values, solveFor, decimals);
         }
         default: {
             return solveRate(values, decimals);
@@ -120,10 +124,11 @@ export function savedRate(fromAmount: number, toAmount: number, stored: number |
     return roundMoney(blended, NOISE_DECIMALS) === stored ? blended : stored;
 }
 
-export function transferGap(values: TransferValues, feeDecimals: number, arrivalDecimals: number): number {
-    const needed = neededFee(values);
+/** Always in the sender's currency: a loss is read in the money that left, whichever side ends up charging it. */
+export function transferGap(values: TransferValues, sourceDecimals: number, arrivalDecimals: number): number {
+    const needed = neededFee(values, "source");
     if (needed === null || solveArrived(values, arrivalDecimals) === values.arrived) {
         return 0;
     }
-    return roundMoney(roundMoney(needed, feeDecimals) - values.fee, feeDecimals) || 0;
+    return roundMoney(roundMoney(needed, sourceDecimals) - values.fees.source, sourceDecimals) || 0;
 }
