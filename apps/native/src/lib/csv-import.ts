@@ -227,10 +227,10 @@ function linkSuggestions(
 }
 
 const ask = (call: CsvImportFn, request: Parameters<CsvImportFn>[0]) =>
-    Effect.tryPromise({
-        catch: (cause) => new CsvImportError({ cause, message: "The CSV import model call failed" }),
-        try: () => call(request),
-    }).pipe(Effect.timeout(CLIENT_TIMEOUT_MS));
+    call(request).pipe(
+        Effect.mapError((cause) => new CsvImportError({ cause, message: "The CSV import model call failed" })),
+        Effect.timeout(CLIENT_TIMEOUT_MS)
+    );
 
 const resolveImport = Effect.fn("CsvImport.resolve")(function* resolveImport(
     request: ResolveRequest,

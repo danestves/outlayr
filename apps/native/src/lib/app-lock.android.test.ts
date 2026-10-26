@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import * as Effect from "effect/Effect";
 import type { LocalAuthenticationResult } from "expo-local-authentication";
 import { AppState } from "react-native";
 import type { AppStateStatus } from "react-native";
@@ -51,7 +52,7 @@ describe("requestUnlock on Android", () => {
     it("asks only once Outlayr is back in front", async () => {
         startIn("background");
 
-        const unlock = requestUnlock("Unlock Outlayr");
+        const unlock = Effect.runPromise(requestUnlock("Unlock Outlayr"));
         await jest.advanceTimersByTimeAsync(5000);
         expect(mockAuthenticate).not.toHaveBeenCalled();
 
@@ -65,10 +66,11 @@ describe("requestUnlock on Android", () => {
     it("frees a request still unanswered after Outlayr comes back", async () => {
         startIn("active");
 
-        const unlock = requestUnlock("Unlock Outlayr");
+        const unlock = Effect.runPromise(requestUnlock("Unlock Outlayr"));
         await jest.advanceTimersByTimeAsync(0);
         changeTo("background");
         changeTo("active");
+        await jest.advanceTimersByTimeAsync(1);
         await jest.advanceTimersByTimeAsync(1000);
 
         expect(mockCancel).toHaveBeenCalledTimes(1);
@@ -78,7 +80,7 @@ describe("requestUnlock on Android", () => {
     it("keeps an answer that lands just after the return", async () => {
         startIn("active");
 
-        const unlock = requestUnlock("Unlock Outlayr");
+        const unlock = Effect.runPromise(requestUnlock("Unlock Outlayr"));
         await jest.advanceTimersByTimeAsync(0);
         changeTo("background");
         changeTo("active");

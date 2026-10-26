@@ -2,6 +2,8 @@ import { and, eq, isNotNull, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
+import type { CloudError } from "@/lib/cloud-error";
+
 import type { SpendDb } from "./budget-spent";
 import { PHOTO_TABLES, photoFileName, photoUriFor } from "./photo-store-core";
 import type { PhotoFiles, PhotoTable } from "./photo-store-core";
@@ -10,14 +12,14 @@ import type { PhotoFiles, PhotoTable } from "./photo-store-core";
 // with no key are reused next pass. The key lands BEFORE the local path, which is device-local and derived from it.
 export interface PhotoTransport {
     /** `storageId` is what Convex file storage's PUT returns; R2 addresses by key and returns none. */
-    confirmUpload: (key: string, storageId: string | null) => Promise<void>;
+    confirmUpload: (key: string, storageId: string | null) => Effect.Effect<void, CloudError>;
     /** Null for a missing object: a 404 is a delete racing this fetch, not a failure. */
-    get: (url: string) => Promise<Uint8Array | null>;
-    put: (url: string, bytes: Uint8Array) => Promise<string | null>;
+    get: (url: string) => Effect.Effect<Uint8Array | null, CloudError>;
+    put: (url: string, bytes: Uint8Array) => Effect.Effect<string | null, CloudError>;
     /** A key the account does not own is not returned. */
-    readUrls: (keys: readonly string[]) => Promise<{ key: string; url: string }[]>;
-    release: (key: string) => Promise<void>;
-    requestUpload: (name: string) => Promise<{ key: string; url: string }>;
+    readUrls: (keys: readonly string[]) => Effect.Effect<{ key: string; url: string }[], CloudError>;
+    release: (key: string) => Effect.Effect<void, CloudError>;
+    requestUpload: (name: string) => Effect.Effect<{ key: string; url: string }, CloudError>;
 }
 
 const PhotoTransferOperation = Schema.Literals(["download", "release", "rows", "upload"]);
@@ -33,6 +35,9 @@ export class PhotoTransferError extends Schema.TaggedError<PhotoTransferError>()
 
 const transfer = <A>(operation: typeof PhotoTransferOperation.Type, run: () => PromiseLike<A>) =>
     Effect.tryPromise({ catch: (cause) => new PhotoTransferError({ cause, operation }), try: run });
+
+const remote = <A>(operation: typeof PhotoTransferOperation.Type, effect: Effect.Effect<A, CloudError>) =>
+    Effect.mapError(effect, (cause) => new PhotoTransferError({ cause, operation }));
 
 const files = <A>(operation: typeof PhotoTransferOperation.Type, run: () => A) =>
     Effect.try({ catch: (cause) => new PhotoTransferError({ cause, operation }), try: run });
@@ -117,9 +122,9 @@ export const uploadPhotos = Effect.fn("PhotoSync.uploadPhotos")(function* upload
             }
 
             const superseded = row.imageKey;
-            const { key, url } = yield* transfer("upload", () => transport.requestUpload(name));
-            const storageId = yield* transfer("upload", () => transport.put(url, bytes));
-            yield* transfer("upload", () => transport.confirmUpload(key, storageId));
+            const { key, url } = yield* remote("upload", transport.requestUpload(name));
+            const storageId = yield* remote("upload", transport.put(url, bytes));
+            yield* remote("upload", transport.confirmUpload(key, storageId));
 
             yield* transfer("upload", () =>
                 db
@@ -131,7 +136,7 @@ export const uploadPhotos = Effect.fn("PhotoSync.uploadPhotos")(function* upload
             uploaded += 1;
 
             if (superseded !== null && superseded !== key) {
-                const didRelease = yield* transfer("release", () => transport.release(superseded)).pipe(
+                const didRelease = yield* remote("release", transport.release(superseded)).pipe(
                     Effect.as(true),
                     // Leaked, not lost. A later server-side sweep reclaims it.
                     Effect.catchTags({ PhotoTransferError: () => Effect.succeed(false) })
@@ -192,8 +197,8 @@ export const downloadPhotos = Effect.fn("PhotoSync.downloadPhotos")(function* do
 
     // `get` holds a whole photo's bytes in memory until they are written out, so fetching the batch together would
     // hold PHOTO_SYNC_BATCH photos at once on a handset.
-    for (const { key, url } of yield* transfer("download", () => transport.readUrls(keys))) {
-        const bytes = yield* transfer("download", () => transport.get(url));
+    for (const { key, url } of yield* remote("download", transport.readUrls(keys))) {
+        const bytes = yield* remote("download", transport.get(url));
         if (bytes === null) {
             continue;
         }

@@ -6,6 +6,7 @@ import * as Schema from "effect/Schema";
 import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
 import { merchantKey } from "@/domain/merchant-resolver";
+import type { CloudError } from "@/lib/cloud-error";
 import type { LogoOutcome, MerchantImageRequest } from "@/lib/logo-fetch";
 
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
@@ -41,7 +42,7 @@ export interface EnrichmentJobRequest {
 }
 
 export interface SendDeps {
-    enqueue: (request: EnrichmentJobRequest) => Promise<boolean>;
+    enqueue: (request: EnrichmentJobRequest) => Effect.Effect<boolean, CloudError>;
     groundedLookup: boolean;
     locale?: string;
     regionCode?: string;
@@ -142,8 +143,8 @@ export const sendQueuedEnrichment = Effect.fn("EnrichmentQueue.sendQueuedEnrichm
         }
         const sent = yield* categoryTree(db, row.income).pipe(
             Effect.flatMap((tree) =>
-                attempt("send", () =>
-                    deps.enqueue({
+                deps
+                    .enqueue({
                         categoryTree: tree,
                         currency: row.currency ?? undefined,
                         groundedLookup: deps.groundedLookup,
@@ -153,7 +154,7 @@ export const sendQueuedEnrichment = Effect.fn("EnrichmentQueue.sendQueuedEnrichm
                         name: row.note.trim(),
                         regionCode: deps.regionCode,
                     })
-                )
+                    .pipe(Effect.mapError((cause) => new EnrichmentQueueError({ cause, operation: "send" })))
             ),
             Effect.as(true),
             Effect.catchTags({ EnrichmentQueueError: () => Effect.succeed(false) })

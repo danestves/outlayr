@@ -9,8 +9,10 @@ import { useSettingBool } from "@/contexts/display-settings-context";
 import { lockFailureMessage, lockGate, lockIsUnenforceable } from "@/domain/app-lock";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
-import { lockIsEnforceable, requestUnlock } from "@/lib/app-lock";
 import { useRelock } from "@/lib/use-relock";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { lockIsEnforceableCommand, requestUnlockCommand, runCloudCommand } from "@/state/cloud-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
 const LockOpenContext = createContext(true);
@@ -27,6 +29,7 @@ export function AppLockGate({ children }: { children: ReactNode }) {
     const [enforceable, setEnforceable] = useState<boolean | null>(null);
     const [failure, setFailure] = useState<TranslationKey | null>(null);
     const [checking, setChecking] = useState(false);
+    const unlock = useAtomCommand(requestUnlockCommand, SILENT);
 
     // Seeded from the mount-time setting, so a launch with the lock on is not mistaken for turning it on.
     const [armed, setArmed] = useState(enabled);
@@ -45,7 +48,7 @@ export function AppLockGate({ children }: { children: ReactNode }) {
             return;
         }
         let cancelled = false;
-        lockIsEnforceable().then((ok) => {
+        runCloudCommand(lockIsEnforceableCommand, undefined).then((ok) => {
             if (!cancelled) {
                 setEnforceable(ok);
             }
@@ -59,7 +62,7 @@ export function AppLockGate({ children }: { children: ReactNode }) {
 
     const attempt = async () => {
         setChecking(true);
-        const result = await requestUnlock(t("transaction.lock.prompt"));
+        const result = unwrapAtomCommand(await unlock(t("transaction.lock.prompt")));
         setChecking(false);
         if (result.success) {
             setFailure(null);

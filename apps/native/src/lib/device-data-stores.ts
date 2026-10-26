@@ -1,4 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
+import * as Schema from "effect/Schema";
 import { setAlternateAppIcon, supportsAlternateIcons } from "expo-alternate-app-icons";
 import Constants from "expo-constants";
 import Spotlight from "expo-core-spotlight";
@@ -11,12 +14,11 @@ import {
 import { deleteDatabaseAsync } from "expo-sqlite";
 import { Platform } from "react-native";
 
-import { deleteSecureItem, readSecureItem } from "@/state/secure-storage-commands";
-
 import { cancelLogoBackfill } from "./logo-backfill";
 import { QUEUE_DIRECTORY } from "./pending-writes-core";
 import { clearStoredPhotos } from "./photo-storage";
 import { PROVIDER_BINDING_KEY } from "./provider-revocation";
+import { SecureStorage } from "./secure-storage";
 import { sharedStore } from "./shared-store";
 import { INTENT_SNAPSHOT_KEY, PENDING_WRITES_KEY, PUSHED_PURCHASES_KEY, WALLET_PUSH_KEY } from "./widget-bridge";
 
@@ -49,25 +51,38 @@ export const DEVICE_STORES = [
 ] as const;
 
 export type DeviceStore = (typeof DEVICE_STORES)[number];
+
+export class DeviceStoreError extends Schema.TaggedError<DeviceStoreError>()("DeviceStoreError", {
+    cause: Schema.Defect(),
+    store: Schema.Literals(DEVICE_STORES),
+}) {
+    override get message(): string {
+        return `Device store ${this.store} could not be cleared`;
+    }
+}
+
 /**
  * One clear per store, named. `DEVICE_STORES` above is the erase order and this the
  * contract; a store added to one without the other stops compiling.
  */
-export interface DeviceDataStores {
-    alternateIcon: () => Promise<void>;
-    asyncStorage: () => Promise<void>;
-    cache: () => Promise<void>;
-    credentials: () => Promise<void>;
-    notifications: () => Promise<void>;
-    photos: () => Promise<void>;
-    spotlight: () => Promise<void>;
-    sqlite: () => Promise<void>;
-    widget: () => Promise<void>;
+export interface DeviceDataStores<R = never> {
+    alternateIcon: () => Effect.Effect<void, DeviceStoreError, R>;
+    asyncStorage: () => Effect.Effect<void, DeviceStoreError, R>;
+    cache: () => Effect.Effect<void, DeviceStoreError, R>;
+    credentials: () => Effect.Effect<void, DeviceStoreError, R>;
+    notifications: () => Effect.Effect<void, DeviceStoreError, R>;
+    photos: () => Effect.Effect<void, DeviceStoreError, R>;
+    spotlight: () => Effect.Effect<void, DeviceStoreError, R>;
+    sqlite: () => Effect.Effect<void, DeviceStoreError, R>;
+    widget: () => Effect.Effect<void, DeviceStoreError, R>;
 }
 
 export interface NativeDeviceDataStoreDependencies {
-    closeDatabase: () => Promise<void>;
+    closeDatabase: Effect.Effect<void, unknown>;
 }
+
+const attempt = <A>(store: DeviceStore, run: () => A | PromiseLike<A>) =>
+    Effect.tryPromise({ catch: (cause) => new DeviceStoreError({ cause, store }), try: async () => run() });
 
 function deleteDirectoryIfPresent(directory: Directory): void {
     if (directory.exists) {
@@ -75,9 +90,8 @@ function deleteDirectoryIfPresent(directory: Directory): void {
     }
 }
 
-async function clearBetterAuthCredentials(): Promise<void> {
-    const stored = await Promise.all(BETTER_AUTH_KEYS.map(async (key) => [key, await readSecureItem(key)] as const));
-    const keys = stored.flatMap(([key, value]) => {
+const chunkKeys = (stored: readonly (readonly [string, string | null])[]) =>
+    stored.flatMap(([key, value]) => {
         if (!value?.startsWith(BETTER_AUTH_CHUNK_MARKER)) {
             return [key];
         }
@@ -87,8 +101,23 @@ async function clearBetterAuthCredentials(): Promise<void> {
         }
         return [key, ...Array.from({ length: count }, (_, index) => `${key}.${index}`)];
     });
-    await Promise.all(keys.map(async (key) => await deleteSecureItem(key)));
-}
+
+const clearBetterAuthCredentials = Effect.fn("DeviceStores.clearCredentials")(function* clearCredentials() {
+    const storage = yield* SecureStorage;
+    const stored = yield* Effect.all(
+        BETTER_AUTH_KEYS.map((key) => storage.get(key).pipe(Effect.map((value) => [key, value] as const))),
+        { concurrency: "unbounded" }
+    );
+    const keys = yield* Effect.try(() => chunkKeys(stored));
+    const removals = yield* Effect.all(
+        keys.map((key) => Effect.result(storage.remove(key))),
+        { concurrency: "unbounded" }
+    );
+    const failed = removals.find(Result.isFailure);
+    if (failed) {
+        return yield* Effect.fail(failed.failure);
+    }
+});
 
 function clearWidgetStorage(): void {
     if (Platform.OS !== "ios" || !APP_GROUP) {
@@ -115,8 +144,7 @@ async function clearSpotlight(): Promise<void> {
     }
 }
 
-async function clearSqlite(closeDatabase: () => Promise<void>): Promise<void> {
-    await closeDatabase();
+async function clearSqliteFiles(): Promise<void> {
     await deleteDatabaseAsync(DATABASE_NAME);
     const sqliteDirectory = new Directory(Paths.document, "SQLite");
     for (const filename of [`${DATABASE_NAME}-wal`, `${DATABASE_NAME}-shm`]) {
@@ -132,31 +160,42 @@ function clearCache(): void {
     Paths.cache.create({ idempotent: true, intermediates: true });
 }
 
-export function createNativeDeviceDataStores({ closeDatabase }: NativeDeviceDataStoreDependencies): DeviceDataStores {
+async function clearNotifications(): Promise<void> {
+    await cancelAllScheduledNotificationsAsync();
+    await dismissAllNotificationsAsync();
+    if (!(await setBadgeCountAsync(0))) {
+        throw new Error("Unable to clear the application badge");
+    }
+}
+
+export function createNativeDeviceDataStores({
+    closeDatabase,
+}: NativeDeviceDataStoreDependencies): DeviceDataStores<SecureStorage> {
     return {
-        alternateIcon: async () => {
-            if (supportsAlternateIcons) {
-                await setAlternateAppIcon(null);
-            }
-        },
-        asyncStorage: async () => await AsyncStorage.clear(),
-        cache: () => Promise.resolve(clearCache()),
-        credentials: clearBetterAuthCredentials,
-        notifications: async () => {
-            await cancelAllScheduledNotificationsAsync();
-            await dismissAllNotificationsAsync();
-            if (!(await setBadgeCountAsync(0))) {
-                throw new Error("Unable to clear the application badge");
-            }
-        },
-        photos: async () => clearStoredPhotos(),
-        spotlight: clearSpotlight,
+        alternateIcon: () =>
+            attempt("alternateIcon", async () => {
+                if (supportsAlternateIcons) {
+                    await setAlternateAppIcon(null);
+                }
+            }),
+        asyncStorage: () => attempt("asyncStorage", async () => await AsyncStorage.clear()),
+        cache: () => attempt("cache", clearCache),
+        credentials: () =>
+            clearBetterAuthCredentials().pipe(
+                Effect.mapError((cause) => new DeviceStoreError({ cause, store: "credentials" }))
+            ),
+        notifications: () => attempt("notifications", clearNotifications),
+        photos: () => attempt("photos", clearStoredPhotos),
+        spotlight: () => attempt("spotlight", clearSpotlight),
         // The logo pass is stopped first: still awaiting the model or an image,
         // it would otherwise write into a photo directory this erase empties.
-        sqlite: async () => {
-            await cancelLogoBackfill();
-            await clearSqlite(closeDatabase);
-        },
-        widget: async () => clearWidgetStorage(),
+        sqlite: () =>
+            attempt("sqlite", cancelLogoBackfill).pipe(
+                Effect.andThen(
+                    closeDatabase.pipe(Effect.mapError((cause) => new DeviceStoreError({ cause, store: "sqlite" })))
+                ),
+                Effect.andThen(attempt("sqlite", clearSqliteFiles))
+            ),
+        widget: () => attempt("widget", clearWidgetStorage),
     };
 }

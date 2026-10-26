@@ -5,6 +5,7 @@ import * as Effect from "effect/Effect";
 import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
+import { asCloudCall } from "@/lib/fake-cloud";
 
 import { getMeta, META_KEYS } from "./app-meta-core";
 import { categoriesRepo } from "./categories-core";
@@ -71,10 +72,10 @@ describe("sendQueuedEnrichment", () => {
 
         await Effect.runPromise(
             sendQueuedEnrichment(db, {
-                enqueue: async (request) => {
+                enqueue: asCloudCall(async (request: EnrichmentJobRequest) => {
                     sent.push(request);
                     return true;
-                },
+                }),
                 groundedLookup: true,
                 regionCode: "VE",
             })
@@ -94,9 +95,11 @@ describe("sendQueuedEnrichment", () => {
         await seedRow(db, "tx-2", "NYX*VenetisABEET");
         await Effect.runPromise(queueEnrichment(db, "tx-1"));
         await Effect.runPromise(queueEnrichment(db, "tx-2"));
-        const enqueue = jest.fn(async () => {
-            throw new Error("offline");
-        });
+        const enqueue = jest.fn(
+            asCloudCall(async (_request: EnrichmentJobRequest): Promise<boolean> => {
+                throw new Error("offline");
+            })
+        );
 
         await Effect.runPromise(sendQueuedEnrichment(db, { enqueue, groundedLookup: true }));
 

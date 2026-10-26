@@ -10,6 +10,7 @@ import type { Database } from "@/db/client";
 import { appMeta, exchangeRates } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { chunkRows } from "@/lib/chunk";
+import type { CloudError } from "@/lib/cloud-error";
 
 export const RATES_THROTTLE_MS = 43_200_000;
 
@@ -33,7 +34,7 @@ export interface PullRatesPage {
     windowStart: string;
 }
 
-export type PullRatesFn = (args?: { cursor?: number }) => Promise<PullRatesPage>;
+export type PullRatesFn = (args?: { cursor?: number }) => Effect.Effect<PullRatesPage, CloudError>;
 
 const RatesOperation = Schema.Literals(["fetch", "replace", "apply"]);
 
@@ -75,7 +76,9 @@ function toRateRow({ date, fetchedAt, quote, rate, rateType, source }: RateWireR
 }
 
 const fetchPage = (pull: PullRatesFn, cursor: number | undefined) =>
-    attempt("fetch", () => pull(cursor === undefined ? undefined : { cursor }));
+    pull(cursor === undefined ? undefined : { cursor }).pipe(
+        Effect.mapError((cause) => new RatesError({ cause, operation: "fetch" }))
+    );
 
 const fetchAllRates = Effect.fn("Rates.fetchAllRates")(function* fetchAllRates(pull: PullRatesFn) {
     const all: RateWireRow[] = [];

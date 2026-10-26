@@ -26,7 +26,10 @@ export class AdoptionEngineError extends Schema.TaggedError<AdoptionEngineError>
 const attempt = <A>(operation: typeof AdoptionEngineOperation.Type, run: () => PromiseLike<A>) =>
     Effect.tryPromise({ catch: (cause) => new AdoptionEngineError({ cause, operation }), try: run });
 
-const pullPage = (pull: PullFn, cursor: number) => attempt("pull", () => pull({ cursor, limit: PULL_PAGE_LIMIT }));
+const pullPage = (pull: PullFn, cursor: number) =>
+    pull({ cursor, limit: PULL_PAGE_LIMIT }).pipe(
+        Effect.mapError((cause) => new AdoptionEngineError({ cause, operation: "pull" }))
+    );
 
 type Row = Record<string, LocalValue>;
 
@@ -224,11 +227,11 @@ export const discardAccountLedger = Effect.fn("AdoptionEngine.discardAccountLedg
     // The backend hands out `seq` one per accepted row in arrival order (`packages/backend/confect/sync.ts`), so
     // overlapping batches would interleave the account's change log.
     for (let i = 0; i < tombstones.length; i += PUSH_BATCH_LIMIT) {
-        yield* attempt("push", () =>
-            transport.push({
+        yield* transport
+            .push({
                 deviceId,
                 rows: tombstones.slice(i, i + PUSH_BATCH_LIMIT),
             })
-        );
+            .pipe(Effect.mapError((cause) => new AdoptionEngineError({ cause, operation: "push" })));
     }
 });

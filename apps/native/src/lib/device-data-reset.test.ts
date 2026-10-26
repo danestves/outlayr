@@ -31,6 +31,7 @@ jest.mock<Partial<typeof import("./widget-bridge")>>("./widget-bridge", () => ({
     WALLET_PUSH_KEY: "walletPush",
 }));
 
+import * as Effect from "effect/Effect";
 import { deleteItemAsync, getItemAsync, setItemAsync } from "expo-secure-store";
 
 import {
@@ -42,16 +43,18 @@ import {
     retryDeviceReset,
     writeDeviceResetMarker,
 } from "./device-data-reset";
-import { DEVICE_STORES } from "./device-data-stores";
+import { createNativeDeviceDataStores, DEVICE_STORES, DeviceStoreError } from "./device-data-stores";
 import type { DeviceDataStores, DeviceStore } from "./device-data-stores";
+import { layer } from "./secure-storage";
 
 function storesWith(calls: string[], failing: readonly string[] = []): DeviceDataStores {
-    const recorded = (store: DeviceStore) => async () => {
-        calls.push(store);
-        if (failing.includes(store)) {
-            throw new Error(`${store} unavailable`);
-        }
-    };
+    const recorded = (store: DeviceStore) => () =>
+        Effect.suspend(() => {
+            calls.push(store);
+            return failing.includes(store)
+                ? Effect.fail(new DeviceStoreError({ cause: new Error(`${store} unavailable`), store }))
+                : Effect.void;
+        });
     // Written out rather than built from `DEVICE_STORES`, so a store added to the
     // contract fails here instead of silently going untested.
     return {
@@ -67,22 +70,45 @@ function storesWith(calls: string[], failing: readonly string[] = []): DeviceDat
     };
 }
 
+type Marker = { phase: "cloud" | "device"; v: 1 } | null;
+
+function markerWith(calls: string[], initial: Marker) {
+    const state = { marker: initial };
+    return {
+        clearMarker: () =>
+            Effect.sync(() => {
+                calls.push("clear-marker");
+                state.marker = null;
+            }),
+        readMarker: () => Effect.sync(() => state.marker),
+        state,
+        writeMarker: (next: NonNullable<Marker>) =>
+            Effect.sync(() => {
+                calls.push(`marker-${next.phase}`);
+                state.marker = next;
+            }),
+    };
+}
+
 describe("resetAllDeviceData", () => {
     it("partial-device-cleanup-discloses-failures-and-retries", async () => {
         const calls: string[] = [];
-        const first = await resetAllDeviceData(storesWith(calls, ["credentials"]));
+        const first = await Effect.runPromise(resetAllDeviceData(storesWith(calls, ["credentials"])));
 
         expect(first.failures).toStrictEqual(["credentials"]);
         expect(calls).toStrictEqual(DEVICE_STORES);
 
-        const second = await retryDeviceReset(
-            {
-                clearMarker: async () => {
-                    calls.push("clear-marker");
+        const second = await Effect.runPromise(
+            retryDeviceReset(
+                {
+                    clearMarker: () =>
+                        Effect.sync(() => {
+                            calls.push("clear-marker");
+                        }),
+                    stores: storesWith(calls),
                 },
-                stores: storesWith(calls),
-            },
-            first.failures
+                first.failures
+            )
         );
         expect(second.failures).toStrictEqual([]);
         expect(calls).toStrictEqual([...DEVICE_STORES, "credentials", "clear-marker"]);
@@ -91,74 +117,57 @@ describe("resetAllDeviceData", () => {
 
 test("reset-marker-resumes-after-crash and clears the marker last", async () => {
     const calls: string[] = [];
-    let marker: { phase: "cloud" | "device"; v: 1 } | null = { phase: "cloud", v: 1 };
+    const store = markerWith(calls, { phase: "cloud", v: 1 });
 
-    await recoverDeviceReset({
-        clearMarker: async () => {
-            calls.push("clear-marker");
-            marker = null;
-        },
-        completeCloudDeletion: async () => {
-            calls.push("cloud");
-        },
-        readMarker: async () => marker,
-        stores: storesWith(calls),
-        writeMarker: async (next) => {
-            calls.push(`marker-${next.phase}`);
-            marker = next;
-        },
-    });
+    await Effect.runPromise(
+        recoverDeviceReset({
+            ...store,
+            completeCloudDeletion: Effect.sync(() => {
+                calls.push("cloud");
+            }),
+            stores: storesWith(calls),
+        })
+    );
 
     expect(calls).toStrictEqual(["cloud", "marker-device", ...DEVICE_STORES, "clear-marker"]);
-    expect(marker).toBeNull();
+    expect(store.state.marker).toBeNull();
 });
 
 test("persists the marker before cloud cleanup and never clears it when a store fails", async () => {
     const calls: string[] = [];
-    let marker: { phase: "cloud" | "device"; v: 1 } | null = null;
+    const store = markerWith(calls, null);
 
-    const result = await beginDeviceReset({
-        clearMarker: async () => {
-            calls.push("clear-marker");
-            marker = null;
-        },
-        completeCloudDeletion: async () => {
-            calls.push("cloud");
-        },
-        readMarker: async () => marker,
-        stores: storesWith(calls, ["credentials"]),
-        writeMarker: async (next) => {
-            calls.push(`marker-${next.phase}`);
-            marker = next;
-        },
-    });
+    const result = await Effect.runPromise(
+        beginDeviceReset({
+            ...store,
+            completeCloudDeletion: Effect.sync(() => {
+                calls.push("cloud");
+            }),
+            stores: storesWith(calls, ["credentials"]),
+        })
+    );
 
     expect(result.failures).toStrictEqual(["credentials"]);
     expect(calls).toStrictEqual(["marker-cloud", "cloud", "marker-device", ...DEVICE_STORES]);
-    expect(marker).toStrictEqual({ phase: "device", v: 1 });
+    expect(store.state.marker).toStrictEqual({ phase: "device", v: 1 });
 });
 
 test("does not clean device stores when cloud completion fails", async () => {
     const calls: string[] = [];
-    let marker: { phase: "cloud" | "device"; v: 1 } | null = { phase: "cloud", v: 1 };
-    await expect(
+    const store = markerWith(calls, { phase: "cloud", v: 1 });
+    const failure = await Effect.runPromise(
         recoverDeviceReset({
-            clearMarker: async () => {
-                calls.push("clear-marker");
-            },
-            completeCloudDeletion: async () => {
+            ...store,
+            completeCloudDeletion: Effect.suspend(() => {
                 calls.push("cloud");
-                throw new Error("cloud unavailable");
-            },
-            readMarker: async () => marker,
+                return Effect.fail(new Error("cloud unavailable"));
+            }),
             stores: storesWith(calls),
-            writeMarker: async (next) => {
-                marker = next;
-            },
-        })
-    ).rejects.toThrow("cloud unavailable");
+        }).pipe(Effect.flip)
+    );
+    expect(failure.message).toBe("cloud unavailable");
     expect(calls).toStrictEqual(["cloud"]);
-    expect(marker).toStrictEqual({ phase: "cloud", v: 1 });
+    expect(store.state.marker).toStrictEqual({ phase: "cloud", v: 1 });
 });
 
 test("persists and validates the SecureStore reset marker", async () => {
@@ -169,10 +178,29 @@ test("persists and validates the SecureStore reset marker", async () => {
     writeMarker.mockResolvedValue();
     eraseMarker.mockResolvedValue();
 
-    await expect(readDeviceResetMarker()).resolves.toStrictEqual({ phase: "device", v: 1 });
-    await writeDeviceResetMarker({ phase: "cloud", v: 1 });
-    await clearDeviceResetMarker();
+    await expect(Effect.runPromise(readDeviceResetMarker().pipe(Effect.provide(layer)))).resolves.toStrictEqual({
+        phase: "device",
+        v: 1,
+    });
+    await Effect.runPromise(writeDeviceResetMarker({ phase: "cloud", v: 1 }).pipe(Effect.provide(layer)));
+    await Effect.runPromise(clearDeviceResetMarker().pipe(Effect.provide(layer)));
 
     expect(writeMarker).toHaveBeenCalledWith("outlayr.device-reset", JSON.stringify({ phase: "cloud", v: 1 }));
     expect(eraseMarker).toHaveBeenCalledWith("outlayr.device-reset");
+});
+
+test("still deletes every credential key when one delete fails, and reports the store as failed", async () => {
+    jest.mocked(getItemAsync).mockResolvedValue(null);
+    const eraseKey = jest.mocked(deleteItemAsync);
+    eraseKey.mockReset();
+    eraseKey.mockRejectedValueOnce(new Error("keychain locked")).mockResolvedValue();
+
+    const failure = await Effect.runPromise(
+        createNativeDeviceDataStores({ closeDatabase: Effect.void })
+            .credentials()
+            .pipe(Effect.provide(layer), Effect.flip)
+    );
+
+    expect(failure).toMatchObject({ _tag: "DeviceStoreError", store: "credentials" });
+    expect(eraseKey).toHaveBeenCalledTimes(5);
 });

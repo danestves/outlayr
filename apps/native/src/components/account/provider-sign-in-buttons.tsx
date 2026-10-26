@@ -6,7 +6,8 @@ import { EmailSignInButton } from "@/components/account/email-sign-in-button";
 import { GoogleSignInButton } from "@/components/account/google-sign-in-button";
 import { appleCredential } from "@/lib/apple-sign-in";
 import { googleIdToken, isGoogleSignInAvailable } from "@/lib/google-sign-in";
-import type { ProviderSignIn, SignInProvider } from "@/lib/use-provider-sign-in";
+import type { SignInProvider } from "@/lib/provider-sign-in";
+import type { ProviderSignIn } from "@/lib/use-provider-sign-in";
 
 /** Each root stack group declares its own copy of the email flow, so the caller names the one it can reach. */
 export type EmailSignInRoute = "/auth/email" | "/settings/email";

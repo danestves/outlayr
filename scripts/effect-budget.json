@@ -60,7 +60,6 @@
     "apps/native/src/hooks/use-voice-entry.ts": 4,
     "apps/native/src/i18n/device-language.ts": 1,
     "apps/native/src/lib/auth-session.tsx": 1,
-    "apps/native/src/lib/device-reset-recovery.tsx": 1,
     "apps/native/src/lib/ledger-adoption.tsx": 1,
     "apps/native/src/lib/posthog-consent.ts": 1,
     "apps/native/src/lib/posthog-identity.ts": 1,

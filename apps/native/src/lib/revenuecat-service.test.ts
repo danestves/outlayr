@@ -42,7 +42,7 @@ const sdk = {
     getPackages: jest.fn<() => Promise<PurchasesPackage[]>>(),
     identifyUser: jest.fn<(accountId: string) => Promise<boolean>>(),
     logOutUser: jest.fn<() => Promise<boolean>>(),
-    mirrorEntitlement: jest.fn<() => Promise<boolean>>(),
+    mirrorEntitlement: jest.fn<() => Effect.Effect<boolean>>(),
     purchaseAndCheckPro: jest.fn<(pack: PurchasesPackage) => Promise<boolean>>(),
     refreshProEntitlement: jest.fn<() => Promise<boolean>>(),
     restoreAndCheckPro: jest.fn<() => Promise<boolean>>(),
@@ -126,7 +126,7 @@ describe("revenueCat", () => {
         sdk.getPackages.mockResolvedValue([]);
         sdk.identifyUser.mockResolvedValue(false);
         sdk.logOutUser.mockResolvedValue(false);
-        sdk.mirrorEntitlement.mockResolvedValue(true);
+        sdk.mirrorEntitlement.mockReturnValue(Effect.succeed(true));
         sdk.purchaseAndCheckPro.mockResolvedValue(false);
         sdk.refreshProEntitlement.mockResolvedValue(false);
         sdk.restoreAndCheckPro.mockResolvedValue(false);
@@ -318,7 +318,7 @@ describe("revenueCat", () => {
 
     it("is pending from the first read until the mirror answers for a Pro customer", async () => {
         const mirror = held<boolean>();
-        sdk.mirrorEntitlement.mockReturnValueOnce(mirror.promise);
+        sdk.mirrorEntitlement.mockReturnValueOnce(Effect.promise(() => mirror.promise));
         sdk.identifyUser.mockResolvedValueOnce(true);
 
         const started = start("user-12");
@@ -332,7 +332,7 @@ describe("revenueCat", () => {
     });
 
     it("stops pending when the mirror refuses, rather than waiting on an answer that came", async () => {
-        sdk.mirrorEntitlement.mockResolvedValueOnce(false);
+        sdk.mirrorEntitlement.mockReturnValueOnce(Effect.succeed(false));
         sdk.identifyUser.mockResolvedValueOnce(true);
 
         await start("user-13");
@@ -341,7 +341,7 @@ describe("revenueCat", () => {
     });
 
     it("stops pending for a Free account that replaces one whose mirror never landed", async () => {
-        sdk.mirrorEntitlement.mockReturnValueOnce(held<boolean>().promise);
+        sdk.mirrorEntitlement.mockReturnValueOnce(Effect.promise(() => held<boolean>().promise));
         sdk.identifyUser.mockResolvedValueOnce(true);
         await start("user-14");
         expect(entitlement().isPending).toBe(true);

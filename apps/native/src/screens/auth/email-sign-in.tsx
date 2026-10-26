@@ -16,7 +16,7 @@ import { cn } from "@/components/tw";
 import { signInFailureDetail, signInFailureMessage } from "@/domain/account";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { authClient } from "@/lib/auth-client";
-import { persistProviderBinding } from "@/lib/provider-revocation";
+import { persistProviderBindingCommand, runCloudCommand } from "@/state/cloud-commands";
 
 type AuthClient = NonNullable<typeof authClient>;
 
@@ -89,7 +89,11 @@ function unwrap<T>({ data, error }: { data: T | null; error: { message?: string 
 }
 
 async function bindPassword(user: { email: string; id: string }) {
-    await persistProviderBinding({ betterAuthUserId: user.id, provider: "password", providerSubject: user.email });
+    await runCloudCommand(persistProviderBindingCommand, {
+        betterAuthUserId: user.id,
+        provider: "password",
+        providerSubject: user.email,
+    });
 }
 
 function SignInStep({ client, email: givenEmail, route }: Flow) {

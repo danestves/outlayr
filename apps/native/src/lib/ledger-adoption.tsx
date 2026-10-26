@@ -4,7 +4,6 @@ import * as Cause from "effect/Cause";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { createContext, use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { AppState } from "react-native";
 
 import { useDatabase } from "@/contexts/local-data-context";
 import { createSingleAdoptionRetry } from "@/data/adoption-retry";
@@ -14,6 +13,7 @@ import { appMeta } from "@/db/schema";
 import { choiceActions } from "@/domain/ledger-adoption";
 import type { AdoptionChoice } from "@/domain/ledger-adoption";
 import { useProLocked, useProPending } from "@/hooks/use-pro-locked";
+import { subscribeAppState } from "@/lib/app-state";
 import { useAuthSession } from "@/lib/auth-session";
 import { SILENT, runAtomCommand } from "@/state/atom-command";
 import { completeAdoptionCommand, reconcileAdoptionCommand, runLifecycleCommand } from "@/state/lifecycle-commands";
@@ -135,7 +135,7 @@ export function LedgerAdoptionProvider({ children }: { children: ReactNode }) {
         };
 
         reconcile();
-        const subscription = AppState.addEventListener("change", (state) => {
+        const unsubscribe = subscribeAppState((state) => {
             if (state === "active") {
                 retry.run(reconcile);
             }
@@ -143,7 +143,7 @@ export function LedgerAdoptionProvider({ children }: { children: ReactNode }) {
 
         return () => {
             cancelled = true;
-            subscription.remove();
+            unsubscribe();
         };
     }, [db, reconcilingFor]);
 
