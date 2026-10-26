@@ -21,9 +21,13 @@ export class RecurrenceSweepError extends Schema.TaggedError<RecurrenceSweepErro
     step: SweepStep,
 }) {}
 
+type WalkFailure =
+    | Effect.Error<ReturnType<typeof backfillAllRecurring>>
+    | Effect.Error<ReturnType<typeof repairOrphanedRecurrence>>;
+
 export const RecurrenceWalk = Context.Reference<{
-    readonly backfill: (db: Database) => Promise<void>;
-    readonly repair: (db: Database) => Promise<number>;
+    readonly backfill: (db: Database) => Effect.Effect<void, WalkFailure>;
+    readonly repair: (db: Database) => Effect.Effect<number, WalkFailure>;
 }>("outlayr/data/RecurrenceSweep/RecurrenceWalk", {
     defaultValue: () => ({
         backfill: (db) => backfillAllRecurring(db),
@@ -41,11 +45,10 @@ export class RecurrenceSweep extends Context.Service<
     { readonly run: <R>(db: Database, onSwept: Effect.Effect<void, never, R>) => Effect.Effect<void, never, R> }
 >()("outlayr/data/RecurrenceSweep") {}
 
-const attempt = <A>(step: typeof SweepStep.Type, task: () => Promise<A>) =>
-    Effect.tryPromise({
-        catch: (cause) => new RecurrenceSweepError({ cause, message: "Recurrence sweep failed", step }),
-        try: task,
-    });
+const attempt = <A>(step: typeof SweepStep.Type, task: Effect.Effect<A, WalkFailure>) =>
+    task.pipe(
+        Effect.mapError((cause) => new RecurrenceSweepError({ cause, message: "Recurrence sweep failed", step }))
+    );
 
 export const make = Effect.gen(function* make() {
     const walk = yield* RecurrenceWalk;
@@ -64,8 +67,8 @@ export const make = Effect.gen(function* make() {
             }
             yield* Ref.set(lastSweepAt, startedAt);
             // Repair first so a chain reinstated on this launch is swept on it too.
-            yield* attempt("repair", () => walk.repair(db));
-            yield* attempt("backfill", () => walk.backfill(db));
+            yield* attempt("repair", walk.repair(db));
+            yield* attempt("backfill", walk.backfill(db));
         }).pipe(
             Effect.catchTags({
                 RecurrenceSweepError: (error) =>

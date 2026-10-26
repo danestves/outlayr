@@ -1,4 +1,5 @@
 import { expect, test } from "@jest/globals";
+import * as Effect from "effect/Effect";
 
 import { accounts, transactions } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
@@ -56,11 +57,13 @@ test("re-stores a logo only where the row's name and the photo's pixels both mat
         Netflix: [{ bytes: new Uint8Array([2]), signature: NETFLIX }],
     };
 
-    await replateStoredLogos(db, {
-        originalsFor: async (name) => originals[name] ?? [],
-        persist: async (bytes) => `file:///p/plated-${bytes[0]}.jpg`,
-        signature: async (uri) => stored[uri] ?? null,
-    });
+    await Effect.runPromise(
+        replateStoredLogos(db, {
+            originalsFor: async (name) => originals[name] ?? [],
+            persist: async (bytes) => `file:///p/plated-${bytes[0]}.jpg`,
+            signature: async (uri) => stored[uri] ?? null,
+        })
+    );
 
     const rows = Object.fromEntries(
         (await db.select({ id: transactions.id, imageUri: transactions.imageUri }).from(transactions)).map((r) => [

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { accounts, categories, transactions } from "@/db/schema";
@@ -57,7 +58,7 @@ function account(id: string, kind: "asset" | "person"): void {
 }
 
 function remembered(name: string, income = false): Promise<string | null> {
-    return rememberedCategoryFor(db, merchantKey(name), income);
+    return Effect.runPromise(rememberedCategoryFor(db, merchantKey(name), income));
 }
 
 beforeEach(() => {

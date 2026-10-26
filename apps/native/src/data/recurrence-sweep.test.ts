@@ -17,7 +17,7 @@ const flush = () => jest.advanceTimersByTimeAsync(0);
 describe("recurrence sweep", () => {
     let registry: AtomRegistry.AtomRegistry;
     const appState = watchable<AppStateStatus>();
-    const backfills = jest.fn(async () => undefined);
+    const backfills = jest.fn();
     const onSwept = jest.fn();
 
     beforeEach(() => {
@@ -28,7 +28,13 @@ describe("recurrence sweep", () => {
             recurrenceSweepLayer.pipe(
                 Layer.provide(
                     Layer.mergeAll(
-                        Layer.succeed(RecurrenceWalk, { backfill: backfills, repair: async () => 0 }),
+                        Layer.succeed(RecurrenceWalk, {
+                            backfill: () =>
+                                Effect.sync(() => {
+                                    backfills();
+                                }),
+                            repair: () => Effect.succeed(0),
+                        }),
                         Layer.succeed(WatchAppState, appState.watch)
                     )
                 )

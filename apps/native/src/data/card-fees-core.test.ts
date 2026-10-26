@@ -1,5 +1,6 @@
 import { describe, expect, it, test } from "@jest/globals";
 import { eq } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { exchangeRates, transactions } from "@/db/schema";
@@ -42,7 +43,7 @@ const rowsFor = (db: Database, purchaseId: string) =>
 describe("a card fee on a purchase", () => {
     it("is saved as its own expense on the purchase's account and day", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, { ...GLOVO, fee: FEE });
+        const id = await Effect.runPromise(transactionsRepo.create(db, { ...GLOVO, fee: FEE }));
 
         expect(cardFeeFor(db, id)).toMatchObject({
             accountId: "card",
@@ -59,70 +60,74 @@ describe("a card fee on a purchase", () => {
 
     it("is rewritten in place, left alone when the edit never mentions it, and tombstoned when removed", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, { ...GLOVO, fee: FEE });
+        const id = await Effect.runPromise(transactionsRepo.create(db, { ...GLOVO, fee: FEE }));
         const feeId = cardFeeFor(db, id)?.id;
 
-        await transactionsRepo.update(db, id, { ...GLOVO, fee: { ...FEE, rate: 0.01 } });
+        await Effect.runPromise(transactionsRepo.update(db, id, { ...GLOVO, fee: { ...FEE, rate: 0.01 } }));
         expect(cardFeeFor(db, id)).toMatchObject({ amount: 0.13, feeRate: 0.01, id: feeId });
 
-        await transactionsRepo.update(db, id, { ...GLOVO, note: "Glovo Express" });
+        await Effect.runPromise(transactionsRepo.update(db, id, { ...GLOVO, note: "Glovo Express" }));
         expect(cardFeeFor(db, id)?.amount).toBe(0.13);
 
-        await transactionsRepo.update(db, id, { ...GLOVO, fee: null });
+        await Effect.runPromise(transactionsRepo.update(db, id, { ...GLOVO, fee: null }));
         expect(cardFeeFor(db, id)).toBeNull();
         expect(rowsFor(db, id)).toHaveLength(1);
     });
 
     it("goes and comes back with its purchase, and never shows in Recently Deleted", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, { ...GLOVO, fee: FEE });
+        const id = await Effect.runPromise(transactionsRepo.create(db, { ...GLOVO, fee: FEE }));
 
-        await transactionsRepo.remove(db, id);
+        await Effect.runPromise(transactionsRepo.remove(db, id));
         expect(cardFeeFor(db, id)).toBeNull();
         expect((await deletedTransactionsQuery(db)).map((row) => row.note)).toStrictEqual(["Glovo"]);
 
-        await transactionsRepo.restore(db, id);
+        await Effect.runPromise(transactionsRepo.restore(db, id));
         expect(cardFeeFor(db, id)?.amount).toBe(0.44);
     });
 
     it("comes back from Recently Deleted when it was deleted on its own", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, { ...GLOVO, fee: FEE });
+        const id = await Effect.runPromise(transactionsRepo.create(db, { ...GLOVO, fee: FEE }));
         const feeId = cardFeeFor(db, id)?.id ?? "";
 
-        await transactionsRepo.remove(db, feeId);
+        await Effect.runPromise(transactionsRepo.remove(db, feeId));
         expect((await deletedTransactionsQuery(db)).map((row) => row.note)).toStrictEqual(["Fee · Glovo"]);
 
-        await transactionsRepo.restore(db, feeId);
+        await Effect.runPromise(transactionsRepo.restore(db, feeId));
         expect(cardFeeFor(db, id)?.id).toBe(feeId);
     });
 
     it("is not restored next to a fee the purchase already has", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, { ...GLOVO, fee: FEE });
+        const id = await Effect.runPromise(transactionsRepo.create(db, { ...GLOVO, fee: FEE }));
         const feeId = cardFeeFor(db, id)?.id ?? "";
 
-        await transactionsRepo.remove(db, feeId);
-        await transactionsRepo.update(db, id, { ...GLOVO, fee: { ...FEE, rate: 0.01 } });
-        await transactionsRepo.restore(db, feeId);
+        await Effect.runPromise(transactionsRepo.remove(db, feeId));
+        await Effect.runPromise(transactionsRepo.update(db, id, { ...GLOVO, fee: { ...FEE, rate: 0.01 } }));
+        await Effect.runPromise(transactionsRepo.restore(db, feeId));
 
         expect(rowsFor(db, id).filter((row) => row.deletedAt === null)).toHaveLength(1);
     });
 
     it("is not written for a purchase a peer has deleted", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, { ...GLOVO, fee: FEE });
-        await transactionsRepo.remove(db, id);
+        const id = await Effect.runPromise(transactionsRepo.create(db, { ...GLOVO, fee: FEE }));
+        await Effect.runPromise(transactionsRepo.remove(db, id));
 
-        await transactionsRepo.update(db, id, { ...GLOVO, fee: FEE });
+        await Effect.runPromise(transactionsRepo.update(db, id, { ...GLOVO, fee: FEE }));
 
         expect(cardFeeFor(db, id)).toBeNull();
     });
 
     it("waits for a rate it cannot work out yet, and settles once the rate lands", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, { ...GLOVO, exchangeRate: null, exchangeRateType: "official" });
-        await transactionsRepo.update(db, id, { ...GLOVO, exchangeRate: null, exchangeRateType: "official", fee: FEE });
+        const id = await Effect.runPromise(
+            transactionsRepo.create(db, { ...GLOVO, exchangeRate: null, exchangeRateType: "official" })
+        );
+        await Effect.runPromise(
+            transactionsRepo.update(db, id, { ...GLOVO, exchangeRate: null, exchangeRateType: "official", fee: FEE })
+        );
         expect(cardFeeFor(db, id)).toMatchObject({ amount: 0, feeRate: 0.035 });
 
         await db.insert(exchangeRates).values({
@@ -133,8 +138,8 @@ describe("a card fee on a purchase", () => {
             rateType: "official",
             source: "frankfurter",
         });
-        await backfillCanonicalUsd(db);
-        await settlePendingFees(db);
+        await Effect.runPromise(backfillCanonicalUsd(db));
+        await Effect.runPromise(settlePendingFees(db));
 
         expect(cardFeeFor(db, id)).toMatchObject({ amount: 0.44, amountUsd: 0.44 });
     });
@@ -152,13 +157,15 @@ describe("a card fee on a purchase", () => {
         await db.insert(exchangeRates).values([rate("GBP", 0.75), rate("EUR", 0.85)]);
         const purchase = { ...GLOVO, currency: "GBP", exchangeRate: null, exchangeRateType: "official" as const };
         const fee: CardFeeInput = { ...FEE, currency: "EUR" };
-        const id = await transactionsRepo.create(db, { ...purchase, fee });
+        const id = await Effect.runPromise(transactionsRepo.create(db, { ...purchase, fee }));
         const priced = cardFeeFor(db, id)?.amount;
 
         const frozen = db.select().from(transactions).where(eq(transactions.id, id)).all()[0]?.exchangeRate;
 
         await db.delete(exchangeRates);
-        await transactionsRepo.update(db, id, { ...purchase, exchangeRate: frozen, fee, note: "Glovo Express" });
+        await Effect.runPromise(
+            transactionsRepo.update(db, id, { ...purchase, exchangeRate: frozen, fee, note: "Glovo Express" })
+        );
 
         expect(priced).toBeGreaterThan(0);
         expect(cardFeeFor(db, id)?.amount).toBe(priced);
@@ -166,20 +173,20 @@ describe("a card fee on a purchase", () => {
 
     it("is priced again when only the purchase's rate changes", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, { ...GLOVO, fee: FEE });
+        const id = await Effect.runPromise(transactionsRepo.create(db, { ...GLOVO, fee: FEE }));
 
-        await transactionsRepo.update(db, id, { ...GLOVO, exchangeRate: 1 / 1.2, fee: FEE });
+        await Effect.runPromise(transactionsRepo.update(db, id, { ...GLOVO, exchangeRate: 1 / 1.2, fee: FEE }));
 
         expect(cardFeeFor(db, id)?.amount).toBe(0.46);
     });
 
     it("stays deleted while its purchase is", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, { ...GLOVO, fee: FEE });
+        const id = await Effect.runPromise(transactionsRepo.create(db, { ...GLOVO, fee: FEE }));
         const feeId = cardFeeFor(db, id)?.id ?? "";
 
-        await transactionsRepo.remove(db, id);
-        await transactionsRepo.restore(db, feeId);
+        await Effect.runPromise(transactionsRepo.remove(db, id));
+        await Effect.runPromise(transactionsRepo.restore(db, feeId));
 
         expect(cardFeeFor(db, id)).toBeNull();
     });
@@ -188,14 +195,16 @@ describe("a card fee on a purchase", () => {
 describe("the fee a card is known to charge", () => {
     it("is the rate on the card's last foreign-currency purchase", async () => {
         const db = makeDb();
-        await transactionsRepo.create(db, { ...GLOVO, fee: FEE });
-        await transactionsRepo.create(db, {
-            ...GLOVO,
-            currency: "USD",
-            date: new Date(Date.UTC(2026, 8, 23)),
-            fee: { ...FEE, rate: 0.01 },
-            note: "Grok",
-        });
+        await Effect.runPromise(transactionsRepo.create(db, { ...GLOVO, fee: FEE }));
+        await Effect.runPromise(
+            transactionsRepo.create(db, {
+                ...GLOVO,
+                currency: "USD",
+                date: new Date(Date.UTC(2026, 8, 23)),
+                fee: { ...FEE, rate: 0.01 },
+                note: "Grok",
+            })
+        );
 
         expect(lastForeignFeeRate(db, "card", "USD")).toBe(0.035);
         expect(feeRatesOn(db, "card")).toStrictEqual([0.01, 0.035]);
@@ -203,8 +212,10 @@ describe("the fee a card is known to charge", () => {
 
     it("is nothing when that purchase carried no fee", async () => {
         const db = makeDb();
-        await transactionsRepo.create(db, { ...GLOVO, fee: FEE });
-        await transactionsRepo.create(db, { ...GLOVO, date: new Date(Date.UTC(2026, 8, 23)), note: "Airbnb" });
+        await Effect.runPromise(transactionsRepo.create(db, { ...GLOVO, fee: FEE }));
+        await Effect.runPromise(
+            transactionsRepo.create(db, { ...GLOVO, date: new Date(Date.UTC(2026, 8, 23)), note: "Airbnb" })
+        );
 
         expect(lastForeignFeeRate(db, "card", "USD")).toBeNull();
     });
@@ -230,20 +241,22 @@ test("hides a fee with the purchase or transfer waiting on its undo, and nothing
 
 test("rides every charge a subscription generates", async () => {
     const db = makeDb();
-    const id = await transactionsRepo.create(db, {
-        ...GLOVO,
-        amount: 10,
-        currency: "USD",
-        date: new Date(Date.UTC(2026, 6, 23, 12)),
-        exchangeRate: null,
-        exchangeRateType: null,
-        fee: { ...FEE, rate: 0.01 },
-        note: "Grok",
-        onceRecurring: true,
-        recurringType: 3,
-    });
+    const id = await Effect.runPromise(
+        transactionsRepo.create(db, {
+            ...GLOVO,
+            amount: 10,
+            currency: "USD",
+            date: new Date(Date.UTC(2026, 6, 23, 12)),
+            exchangeRate: null,
+            exchangeRateType: null,
+            fee: { ...FEE, rate: 0.01 },
+            note: "Grok",
+            onceRecurring: true,
+            recurringType: 3,
+        })
+    );
 
-    await backfillRecurring(db, id, new Date(Date.UTC(2026, 8, 23, 18)));
+    await Effect.runPromise(backfillRecurring(db, id, new Date(Date.UTC(2026, 8, 23, 18))));
 
     const fees = db
         .select()
@@ -255,7 +268,7 @@ test("rides every charge a subscription generates", async () => {
 
 test("offers the card's usual fee on a foreign charge, and none on a local one", async () => {
     const db = makeDb();
-    await transactionsRepo.create(db, { ...GLOVO, fee: FEE });
+    await Effect.runPromise(transactionsRepo.create(db, { ...GLOVO, fee: FEE }));
     const card = { currency: "USD", id: "card" };
 
     expect(

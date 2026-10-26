@@ -31,7 +31,7 @@ export class EnrichmentSyncError extends Schema.TaggedError<EnrichmentSyncError>
 
 export const EnrichmentResults = Context.Reference<{
     readonly ack: (localIds: string[]) => Promise<null>;
-    readonly apply: (db: Database, job: AnsweredJob) => Promise<void>;
+    readonly apply: (db: Database, job: AnsweredJob) => Effect.Effect<void, { readonly cause: unknown }>;
     readonly watch: Watch<AnsweredJob[]>;
 }>("outlayr/lib/EnrichmentSync/EnrichmentResults", {
     defaultValue: () => ({
@@ -51,11 +51,13 @@ export class EnrichmentSync extends Context.Service<
     { readonly run: (db: Database) => Effect.Effect<void> }
 >()("outlayr/lib/EnrichmentSync") {}
 
+const failedAt = (step: typeof EnrichmentStep.Type) => (cause: unknown) =>
+    new EnrichmentSyncError({ cause, message: FAILED[step], step });
+
+const warn = (error: EnrichmentSyncError) => Effect.logWarning(error.message, error.cause);
+
 const attempt = <A>(step: typeof EnrichmentStep.Type, task: () => Promise<A>) =>
-    Effect.tryPromise({
-        catch: (cause) => new EnrichmentSyncError({ cause, message: FAILED[step], step }),
-        try: task,
-    }).pipe(Effect.catchTags({ EnrichmentSyncError: (error) => Effect.logWarning(error.message, error.cause) }));
+    Effect.tryPromise({ catch: failedAt(step), try: task }).pipe(Effect.catchTags({ EnrichmentSyncError: warn }));
 
 export const make = Effect.gen(function* make() {
     const results = yield* EnrichmentResults;
@@ -66,7 +68,11 @@ export const make = Effect.gen(function* make() {
             // Answers for one merchant may create the same category or tag, and `ensure*` only dedupes when they land
             // one at a time.
             Effect.all(
-                jobs.map((job) => attempt("apply", () => results.apply(db, job))),
+                jobs.map((job) =>
+                    results
+                        .apply(db, job)
+                        .pipe(Effect.mapError(failedAt("apply")), Effect.catchTags({ EnrichmentSyncError: warn }))
+                ),
                 { discard: true }
             ).pipe(
                 Effect.andThen(attempt("settle", () => results.ack(jobs.map((job) => job.localId)))),

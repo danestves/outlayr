@@ -1,5 +1,4 @@
 import { readBoolSetting, readNumberSetting, setBoolSetting } from "@/data/settings-core";
-import { lastLoggedEntry } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 import {
     clampTimeOfDay,
@@ -9,6 +8,7 @@ import {
     reminderTime,
 } from "@/domain/reminder";
 import type { TimeOfDay } from "@/domain/reminder";
+import { lastLoggedEntryCommand, runLedgerCommand } from "@/state/ledger-commands";
 
 import { cancelReminders, pendingReminderIds, reminderPermission, scheduleDatedReminder } from "./reminders";
 
@@ -36,7 +36,7 @@ export async function reconcileDailyReminder(db: Database): Promise<void> {
         decision === "schedule"
             ? dailyReminderNotices({
                   hideAmounts,
-                  last: await lastLoggedEntry(db, now),
+                  last: await runLedgerCommand(lastLoggedEntryCommand, { db, now }),
                   now,
                   time: await readReminderTime(db),
               })

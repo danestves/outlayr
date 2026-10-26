@@ -12,9 +12,9 @@ import type { Href } from "expo-router";
 import { useEffect } from "react";
 
 import { readPlans } from "@/data/installments-core";
-import { backfillRecurring } from "@/data/recurrence-backfill";
 import { getTransactionById } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
+import { backfillRecurringCommand, runLedgerCommand } from "@/state/ledger-commands";
 
 const SubscriptionTap = Schema.Struct({ charge: Schema.String, subscription: Schema.String });
 const decodeReminderTap = Schema.decodeUnknownOption(
@@ -65,7 +65,7 @@ export function useSubscriptionReminderTaps(db: Database, ready: boolean): void 
             const tap = `${response.notification.request.identifier}@${response.notification.date}`;
             let target: Href | null = "/";
             if ("subscription" in parsed.value) {
-                await backfillRecurring(db, parsed.value.subscription);
+                await runLedgerCommand(backfillRecurringCommand, { db, id: parsed.value.subscription });
                 const id = announcedRowId(db, parsed.value);
                 target = id === null ? null : `/transactions/${id}`;
             } else if (parsed.value.open === "installment") {

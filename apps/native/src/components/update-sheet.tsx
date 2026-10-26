@@ -12,7 +12,7 @@ import { useAuthCovered } from "@/components/auth-cover";
 import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { useSheetInsets } from "@/components/use-sheet-insets";
-import { useFlushDeferredDeletes } from "@/data/use-deferred-delete";
+import { flushDeferredDeletes } from "@/data/use-deferred-delete";
 import { describeUpdate } from "@/domain/app-update";
 import { formatChargeDate } from "@/domain/dates";
 import { useLanguage, useTranslation } from "@/i18n/context";
@@ -33,7 +33,6 @@ export function UpdateSheet() {
     const onTabs = useSegments()[0] === "(tabs)";
     const lockOpen = useAppLockOpen();
     const covered = useAuthCovered();
-    const flushDeletes = useFlushDeferredDeletes();
     const [dismissedId, setDismissedId] = useState<string | null>(null);
     const [state, setState] = useState<"idle" | "busy" | "failed">("idle");
     const busy = state === "busy";
@@ -79,7 +78,7 @@ export function UpdateSheet() {
             if (!downloaded) {
                 await fetchUpdateAsync();
             }
-            await flushDeletes();
+            await flushDeferredDeletes();
             await reloadAsync();
         } catch (error) {
             console.warn("[outlayr] update failed", error);

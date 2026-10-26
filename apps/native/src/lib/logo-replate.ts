@@ -1,8 +1,8 @@
 import { File } from "expo-file-system";
 
-import { replateStoredLogos } from "@/data/logo-replate-core";
 import type { CachedOriginal } from "@/data/logo-replate-core";
 import type { Database } from "@/db/client";
+import { replateLogosCommand, runLedgerCommand } from "@/state/ledger-commands";
 
 import { listCachedLogos, logoCacheKey } from "./logo-cache";
 import { blackBakedSignature, decodeImage, platePlan } from "./logo-plating";
@@ -31,27 +31,31 @@ export function replateLogos(db: Database): Promise<number> {
         return hit;
     };
 
-    return replateStoredLogos(db, {
-        // A key is the folded name then the folded domain, so the shortest key under a name was fetched for that name.
-        originalsFor: async (name) => {
-            const prefix = logoCacheKey(name.trim(), null);
-            if (prefix.length === 0) {
-                return [];
-            }
-            const named = files
-                .filter((file) => file.name.startsWith(prefix))
-                .sort((a, b) => a.name.length - b.name.length);
-            const loaded = await Promise.all(named.map(read));
-            return loaded.filter((original): original is CachedOriginal => original != null);
-        },
-        persist: persistLogoBytes,
-        signature: async (uri) => {
-            try {
-                const image = decodeImage(await new File(uri).bytes());
-                return image == null ? null : blackBakedSignature(image);
-            } catch {
-                return null;
-            }
+    return runLedgerCommand(replateLogosCommand, {
+        db,
+        deps: {
+            // A key is the folded name then the folded domain, so the shortest key under a name was fetched for that
+            // name.
+            originalsFor: async (name) => {
+                const prefix = logoCacheKey(name.trim(), null);
+                if (prefix.length === 0) {
+                    return [];
+                }
+                const named = files
+                    .filter((file) => file.name.startsWith(prefix))
+                    .sort((a, b) => a.name.length - b.name.length);
+                const loaded = await Promise.all(named.map(read));
+                return loaded.filter((original): original is CachedOriginal => original != null);
+            },
+            persist: persistLogoBytes,
+            signature: async (uri) => {
+                try {
+                    const image = decodeImage(await new File(uri).bytes());
+                    return image == null ? null : blackBakedSignature(image);
+                } catch {
+                    return null;
+                }
+            },
         },
     });
 }

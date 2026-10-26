@@ -1,5 +1,6 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
@@ -54,36 +55,52 @@ export interface ApplyDeps {
 
 export const MIN_KEY_LENGTH = 3;
 const MAX_OUTBOX = 100;
-const decodeOutbox = Schema.decodeUnknownSync(
-    Schema.mutable(Schema.Array(Schema.String)).pipe(Schema.catchDecoding(() => Effect.succeedSome([])))
-);
+const decodeOutbox = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.mutable(Schema.Array(Schema.String))));
 
-async function readOutbox(db: Database): Promise<string[]> {
-    const raw = await getMeta(db, META_KEYS.enrichmentOutbox);
-    try {
-        return decodeOutbox(JSON.parse(raw ?? "[]"));
-    } catch {
-        return [];
+const EnrichmentQueueOperation = Schema.Literals(["apply", "queue", "send"]);
+
+export class EnrichmentQueueError extends Schema.TaggedError<EnrichmentQueueError>()("EnrichmentQueueError", {
+    cause: Schema.Defect(),
+    operation: EnrichmentQueueOperation,
+}) {
+    override get message(): string {
+        return `Enrichment ${this.operation} failed`;
     }
 }
 
-async function writeOutbox(db: Database, ids: readonly string[]): Promise<void> {
-    await setMeta(db, META_KEYS.enrichmentOutbox, JSON.stringify(ids.slice(-MAX_OUTBOX)));
-}
+const attempt = <A>(operation: typeof EnrichmentQueueOperation.Type, run: () => PromiseLike<A>) =>
+    Effect.tryPromise({ catch: (cause) => new EnrichmentQueueError({ cause, operation }), try: run });
 
-export async function queueEnrichment(db: Database, id: string): Promise<void> {
-    const queued = await readOutbox(db);
+const readOutbox = Effect.fn("EnrichmentQueue.readOutbox")(function* readOutbox(
+    db: Database,
+    operation: typeof EnrichmentQueueOperation.Type
+) {
+    const raw = yield* attempt(operation, () => getMeta(db, META_KEYS.enrichmentOutbox));
+    const ids: string[] = Option.getOrElse(decodeOutbox(raw ?? "[]"), () => []);
+    return ids;
+});
+
+const writeOutbox = (db: Database, operation: typeof EnrichmentQueueOperation.Type, ids: readonly string[]) =>
+    attempt(operation, () => setMeta(db, META_KEYS.enrichmentOutbox, JSON.stringify(ids.slice(-MAX_OUTBOX))));
+
+export const queueEnrichment = Effect.fn("EnrichmentQueue.queueEnrichment")(function* queueEnrichment(
+    db: Database,
+    id: string
+) {
+    const queued = yield* readOutbox(db, "queue");
     if (!queued.includes(id)) {
-        await writeOutbox(db, [...queued, id]);
+        yield* writeOutbox(db, "queue", [...queued, id]);
     }
-}
+});
 
-async function categoryTree(db: Database, income: boolean): Promise<EnrichmentJobRequest["categoryTree"]> {
-    const rows = await db
-        .select({ id: categories.id, name: categories.name, parentId: categories.parentId })
-        .from(categories)
-        .where(and(eq(categories.income, income), isNull(categories.deletedAt)));
-    return rows.flatMap((parent) =>
+const categoryTree = Effect.fn("EnrichmentQueue.categoryTree")(function* categoryTree(db: Database, income: boolean) {
+    const rows = yield* attempt("send", () =>
+        db
+            .select({ id: categories.id, name: categories.name, parentId: categories.parentId })
+            .from(categories)
+            .where(and(eq(categories.income, income), isNull(categories.deletedAt)))
+    );
+    const tree: EnrichmentJobRequest["categoryTree"] = rows.flatMap((parent) =>
         parent.parentId == null && parent.name != null
             ? [
                   {
@@ -95,55 +112,68 @@ async function categoryTree(db: Database, income: boolean): Promise<EnrichmentJo
               ]
             : []
     );
-}
+    return tree;
+});
 
-export async function sendQueuedEnrichment(db: Database, deps: SendDeps): Promise<number> {
-    const queued = await readOutbox(db);
+export const sendQueuedEnrichment = Effect.fn("EnrichmentQueue.sendQueuedEnrichment")(function* sendQueuedEnrichment(
+    db: Database,
+    deps: SendDeps
+) {
+    const queued = yield* readOutbox(db, "send");
     if (queued.length === 0) {
         return 0;
     }
-    const rows = await db
-        .select({
-            currency: transactions.currency,
-            deletedAt: transactions.deletedAt,
-            id: transactions.id,
-            income: transactions.income,
-            note: transactions.note,
-        })
-        .from(transactions)
-        .where(inArray(transactions.id, queued));
+    const rows = yield* attempt("send", () =>
+        db
+            .select({
+                currency: transactions.currency,
+                deletedAt: transactions.deletedAt,
+                id: transactions.id,
+                income: transactions.income,
+                note: transactions.note,
+            })
+            .from(transactions)
+            .where(inArray(transactions.id, queued))
+    );
     const settled = new Set<string>();
-    /* oxlint-disable no-await-in-loop -- a failed send means the device is offline or signed out, and every later send would fail the same way */
+    // A failed send means the device is offline or signed out, and every later send would fail the same way.
     for (const id of queued) {
         const row = rows.find((candidate) => candidate.id === id);
         if (row == null || row.deletedAt != null || merchantKey(row.note).length < MIN_KEY_LENGTH) {
             settled.add(id);
             continue;
         }
-        try {
-            await deps.enqueue({
-                categoryTree: await categoryTree(db, row.income),
-                currency: row.currency ?? undefined,
-                groundedLookup: deps.groundedLookup,
-                income: row.income,
-                localId: row.id,
-                locale: deps.locale,
-                name: row.note.trim(),
-                regionCode: deps.regionCode,
-            });
-        } catch {
+        const sent = yield* categoryTree(db, row.income).pipe(
+            Effect.flatMap((tree) =>
+                attempt("send", () =>
+                    deps.enqueue({
+                        categoryTree: tree,
+                        currency: row.currency ?? undefined,
+                        groundedLookup: deps.groundedLookup,
+                        income: row.income,
+                        localId: row.id,
+                        locale: deps.locale,
+                        name: row.note.trim(),
+                        regionCode: deps.regionCode,
+                    })
+                )
+            ),
+            Effect.as(true),
+            Effect.catchTags({ EnrichmentQueueError: () => Effect.succeed(false) })
+        );
+        if (!sent) {
             break;
         }
         settled.add(id);
     }
-    /* oxlint-enable no-await-in-loop */
-    const current = await readOutbox(db);
-    await writeOutbox(
+    const current = yield* readOutbox(db, "send");
+    yield* writeOutbox(
         db,
+        "send",
         current.filter((id) => !settled.has(id))
     );
     return settled.size;
-}
+});
 
 function bare(row: typeof transactions.$inferSelect): boolean {
     return (
@@ -151,70 +181,93 @@ function bare(row: typeof transactions.$inferSelect): boolean {
     );
 }
 
-async function readRow(db: Database, id: string) {
-    const [row] = await db
-        .select()
-        .from(transactions)
-        .where(and(eq(transactions.id, id), isNull(transactions.deletedAt)))
-        .limit(1);
+const readRow = Effect.fn("EnrichmentQueue.readRow")(function* readRow(db: Database, id: string) {
+    const [row] = yield* attempt("apply", () =>
+        db
+            .select()
+            .from(transactions)
+            .where(and(eq(transactions.id, id), isNull(transactions.deletedAt)))
+            .limit(1)
+    );
     return row ?? null;
-}
+});
 
-async function parentIdFor(db: Database, income: boolean, name: string | null): Promise<string | null> {
+const parentIdFor = Effect.fn("EnrichmentQueue.parentIdFor")(function* parentIdFor(
+    db: Database,
+    income: boolean,
+    name: string | null
+) {
     if (name == null) {
         return null;
     }
-    const [parent] = await db
-        .select({ id: categories.id })
-        .from(categories)
-        .where(
-            and(
-                eq(categories.income, income),
-                eq(categories.name, name),
-                isNull(categories.parentId),
-                isNull(categories.deletedAt)
+    const [parent] = yield* attempt("apply", () =>
+        db
+            .select({ id: categories.id })
+            .from(categories)
+            .where(
+                and(
+                    eq(categories.income, income),
+                    eq(categories.name, name),
+                    isNull(categories.parentId),
+                    isNull(categories.deletedAt)
+                )
             )
-        )
-        .limit(1);
+            .limit(1)
+    );
     return parent?.id ?? null;
-}
+});
 
-async function fetchLogo(
+const fetchLogo = Effect.fn("EnrichmentQueue.fetchLogo")(function* fetchLogo(
     deps: ApplyDeps,
     domain: string | null,
     name: string
-): Promise<{ imageColor: string | null; imageUri: string } | null> {
+) {
     if (domain == null) {
         return null;
     }
-    const outcome = await deps.fetchImage({ domain, name });
-    return outcome.kind === "logo" ? await deps.persist(outcome.bytes) : null;
-}
+    const outcome = yield* attempt("apply", () => deps.fetchImage({ domain, name }));
+    if (outcome.kind !== "logo") {
+        return null;
+    }
+    return yield* attempt("apply", () => deps.persist(outcome.bytes));
+});
 
-export async function applyEnrichmentAnswer(db: Database, job: AnsweredJob, deps: ApplyDeps): Promise<void> {
+export const applyEnrichmentAnswer = Effect.fn("EnrichmentQueue.applyEnrichmentAnswer")(function* applyEnrichmentAnswer(
+    db: Database,
+    job: AnsweredJob,
+    deps: ApplyDeps
+) {
     const answer = job.result;
-    const before = answer == null ? null : await readRow(db, job.localId);
+    const before = answer == null ? null : yield* readRow(db, job.localId);
     if (answer == null || before == null) {
         return;
     }
-    await rememberMerchant(db, job.name, before.currency, { ...answer, emoji: answer.emoji, tags: [...answer.tags] });
+    yield* rememberMerchant(db, job.name, before.currency, {
+        ...answer,
+        emoji: answer.emoji,
+        tags: [...answer.tags],
+    });
     const renamed =
         before.note === job.name &&
         answer.merchantName != null &&
         merchantKey(answer.merchantName) !== merchantKey(before.note)
             ? answer.merchantName
             : null;
-    const logo = bare(before) ? await fetchLogo(deps, answer.domain, renamed ?? before.note) : null;
+    const logo = bare(before) ? yield* fetchLogo(deps, answer.domain, renamed ?? before.note) : null;
     let categoryId: string | null = null;
     if (before.categoryId == null && answer.categoryName != null) {
-        const style = presetForName(answer.categoryName);
-        categoryId = await ensureCategoryByName(db, answer.categoryName, before.income, style.icon, style.color, {
-            emoji: answer.emoji,
-            parentId: await parentIdFor(db, before.income, answer.parentCategoryName),
-        });
+        const { categoryName } = answer;
+        const style = presetForName(categoryName);
+        const parentId = yield* parentIdFor(db, before.income, answer.parentCategoryName);
+        categoryId = yield* attempt("apply", () =>
+            ensureCategoryByName(db, categoryName, before.income, style.icon, style.color, {
+                emoji: answer.emoji,
+                parentId,
+            })
+        );
     }
 
-    const row = await readRow(db, job.localId);
+    const row = yield* readRow(db, job.localId);
     const patch: Partial<typeof transactions.$inferInsert> = {};
     if (row != null && renamed != null && row.note === job.name) {
         patch.note = renamed;
@@ -232,21 +285,24 @@ export async function applyEnrichmentAnswer(db: Database, job: AnsweredJob, deps
         deps.discard(logo.imageUri);
     }
     if (row != null && Object.keys(patch).length > 0) {
-        await db
-            .update(transactions)
-            .set({ ...patch, updatedAt: new Date(Math.max(Date.now(), row.updatedAt.getTime() + 1)) })
-            .where(eq(transactions.id, row.id));
+        yield* attempt("apply", () =>
+            db
+                .update(transactions)
+                .set({ ...patch, updatedAt: new Date(Math.max(Date.now(), row.updatedAt.getTime() + 1)) })
+                .where(eq(transactions.id, row.id))
+        );
     }
-    const tagged = row == null ? [] : await tagIdsForQuery(db, row.id);
+    const tagged = row == null ? [] : yield* attempt("apply", () => tagIdsForQuery(db, row.id));
     if (row != null && answer.tags.length > 0 && tagged.length === 0) {
         const tagIds: string[] = [];
+        // `ensureTag` matches before inserting with no unique constraint behind it, so two names that normalize to
+        // the same tag would each insert a row if these ran concurrently.
         for (const name of answer.tags) {
-            // oxlint-disable-next-line no-await-in-loop -- `ensureTag` matches before inserting with no unique constraint behind it, so two names that normalize to the same tag would each insert a row if these ran concurrently.
-            const tagId = await tagsRepo.ensureTag(db, name);
+            const tagId = yield* tagsRepo.ensureTag(db, name);
             if (tagId != null && !tagIds.includes(tagId)) {
                 tagIds.push(tagId);
             }
         }
-        await tagsRepo.setTagsFor(db, row.id, tagIds);
+        yield* tagsRepo.setTagsFor(db, row.id, tagIds);
     }
-}
+});

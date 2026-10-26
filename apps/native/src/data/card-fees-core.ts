@@ -1,5 +1,7 @@
 import { utcDateString } from "@outlayr/money/dates";
 import { and, desc, eq, gte, isNotNull, isNull, max, ne } from "drizzle-orm";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
@@ -30,6 +32,23 @@ interface FeePurchase {
     day: Date;
     month: Date;
 }
+
+const CardFeesOperation = Schema.Literals(["occurrences", "rememberCategory", "settle", "values"]);
+
+export class CardFeesError extends Schema.TaggedError<CardFeesError>()("CardFeesError", {
+    cause: Schema.Defect(),
+    operation: CardFeesOperation,
+}) {
+    override get message(): string {
+        return `Card fee ${this.operation} failed`;
+    }
+}
+
+const attempt = <A>(operation: typeof CardFeesOperation.Type, run: () => PromiseLike<A>) =>
+    Effect.tryPromise({ catch: (cause) => new CardFeesError({ cause, operation }), try: run });
+
+const attemptSync = <A>(operation: typeof CardFeesOperation.Type, run: () => A) =>
+    Effect.try({ catch: (cause) => new CardFeesError({ cause, operation }), try: run });
 
 const FEE_RATE_CHOICES = 3;
 
@@ -116,9 +135,12 @@ export function lastFeeCategoryId(db: Database): string | null {
     return getMetaSync(db, META_KEYS.lastTransferFeeCategory);
 }
 
-export async function rememberFeeCategory(db: Database, categoryId: string): Promise<void> {
-    await setMeta(db, META_KEYS.lastTransferFeeCategory, categoryId);
-}
+export const rememberFeeCategory = Effect.fn("CardFees.rememberFeeCategory")(function* rememberFeeCategory(
+    db: Database,
+    categoryId: string
+) {
+    yield* attempt("rememberCategory", () => setMeta(db, META_KEYS.lastTransferFeeCategory, categoryId));
+});
 
 export function feeCategoryFor(db: Database, purchaseCategoryId: string | null): string | null {
     const remembered = lastFeeCategoryId(db);
@@ -154,23 +176,38 @@ export function suggestedCardFee(
           };
 }
 
-async function percentFee(db: Database, purchase: FeePurchase, rate: number, currency: string) {
+const percentFee = Effect.fn("CardFees.percentFee")(function* percentFee(
+    db: Database,
+    purchase: FeePurchase,
+    rate: number,
+    currency: string
+) {
     const entry = purchase.currency ?? currency;
     const quote =
         currency === "USD" || currency === entry
             ? null
-            : await localRateLookup(db)(currency, "official", utcDateString(purchase.date.getTime()));
+            : yield* attempt("values", () =>
+                  localRateLookup(db)(currency, "official", utcDateString(purchase.date.getTime()))
+              );
     const cardRate = quote?.rate ?? null;
     const base = cardFeeBase(purchase.amount, { card: currency, entry }, () => purchase.amountUsd ?? null, cardRate);
     return base === null ? null : cardFeeAmount({ kind: "percent", rate }, base, currency);
-}
+});
 
-export async function cardFeeValues(db: Database, purchaseId: string, purchase: FeePurchase, fee: CardFeeInput) {
-    const charged = fee.rate === null ? fee.amount : await percentFee(db, purchase, fee.rate, fee.currency);
+export const cardFeeValues = Effect.fn("CardFees.cardFeeValues")(function* cardFeeValues(
+    db: Database,
+    purchaseId: string,
+    purchase: FeePurchase,
+    fee: CardFeeInput
+) {
+    const charged = fee.rate === null ? fee.amount : yield* percentFee(db, purchase, fee.rate, fee.currency);
     return {
         accountId: purchase.accountId ?? null,
         amount: charged ?? 0,
-        amountUsd: charged === null ? null : await frozenUsdAmount(db, charged, fee.currency, purchase.date),
+        amountUsd:
+            charged === null
+                ? null
+                : yield* attempt("values", () => frozenUsdAmount(db, charged, fee.currency, purchase.date)),
         categoryId: fee.categoryId,
         currency: fee.currency,
         date: purchase.date,
@@ -182,16 +219,16 @@ export async function cardFeeValues(db: Database, purchaseId: string, purchase: 
         month: purchase.month,
         note: fee.note,
     };
-}
+});
 
-export async function occurrenceFees(
+export const occurrenceFees = Effect.fn("CardFees.occurrenceFees")(function* occurrenceFees(
     db: Database,
     carrierId: string,
     occurrences: readonly Insert[],
     feeId: (occurrenceId: string) => string,
     now: Date
-): Promise<Insert[]> {
-    const fee = cardFeeFor(db, carrierId);
+) {
+    const fee = yield* attemptSync("occurrences", () => cardFeeFor(db, carrierId));
     if (fee === null || fee.currency === null) {
         return [];
     }
@@ -200,40 +237,49 @@ export async function occurrenceFees(
         fee.feeRate === null
             ? { ...shared, amount: fee.amount, rate: null }
             : { ...shared, amount: null, rate: fee.feeRate };
-    return await Promise.all(
-        occurrences.map(async (occurrence) => ({
-            ...(await cardFeeValues(db, occurrence.id, occurrence, input)),
-            id: feeId(occurrence.id),
-            updatedAt: now,
-        }))
-    );
-}
-
-export async function settlePendingFees(db: Database, now: Date = new Date()): Promise<number> {
-    const pending = db
-        .select()
-        .from(transactions)
-        .where(
-            and(
-                isNotNull(transactions.feeForId),
-                isNotNull(transactions.feeRate),
-                eq(transactions.amount, 0),
-                isNull(transactions.deletedAt),
-                gte(transactions.date, new Date(now.getTime() - SETTLE_WINDOW_MS))
+    return yield* Effect.all(
+        occurrences.map((occurrence) =>
+            cardFeeValues(db, occurrence.id, occurrence, input).pipe(
+                Effect.map((values) => ({ ...values, id: feeId(occurrence.id), updatedAt: now }))
             )
-        )
-        .all();
+        ),
+        { concurrency: "unbounded" }
+    );
+});
+
+export const settlePendingFees = Effect.fn("CardFees.settlePendingFees")(function* settlePendingFees(
+    db: Database,
+    now: Date = new Date()
+) {
+    const pending = yield* attemptSync("settle", () =>
+        db
+            .select()
+            .from(transactions)
+            .where(
+                and(
+                    isNotNull(transactions.feeForId),
+                    isNotNull(transactions.feeRate),
+                    eq(transactions.amount, 0),
+                    isNull(transactions.deletedAt),
+                    gte(transactions.date, new Date(now.getTime() - SETTLE_WINDOW_MS))
+                )
+            )
+            .all()
+    );
     let settled = 0;
-    /* oxlint-disable no-await-in-loop -- each fee reads its own purchase and rates; the list is the handful still waiting on a rate */
+    // Each fee reads its own purchase and rates; the list is the handful still waiting on a rate.
     for (const fee of pending) {
+        const { feeForId } = fee;
         const [purchase] =
-            fee.feeForId === null
+            feeForId === null
                 ? []
-                : db.select().from(transactions).where(eq(transactions.id, fee.feeForId)).limit(1).all();
+                : yield* attemptSync("settle", () =>
+                      db.select().from(transactions).where(eq(transactions.id, feeForId)).limit(1).all()
+                  );
         if (purchase === undefined || purchase.deletedAt !== null || fee.feeRate === null || fee.currency === null) {
             continue;
         }
-        const values = await cardFeeValues(db, purchase.id, purchase, {
+        const values = yield* cardFeeValues(db, purchase.id, purchase, {
             amount: null,
             categoryId: fee.categoryId,
             currency: fee.currency,
@@ -243,12 +289,13 @@ export async function settlePendingFees(db: Database, now: Date = new Date()): P
         if (values.amount === 0) {
             continue;
         }
-        await db
-            .update(transactions)
-            .set({ amount: values.amount, amountUsd: values.amountUsd, updatedAt: now })
-            .where(and(eq(transactions.id, fee.id), eq(transactions.updatedAt, fee.updatedAt)));
+        yield* attempt("settle", () =>
+            db
+                .update(transactions)
+                .set({ amount: values.amount, amountUsd: values.amountUsd, updatedAt: now })
+                .where(and(eq(transactions.id, fee.id), eq(transactions.updatedAt, fee.updatedAt)))
+        );
         settled += 1;
     }
-    /* oxlint-enable no-await-in-loop */
     return settled;
-}
+});

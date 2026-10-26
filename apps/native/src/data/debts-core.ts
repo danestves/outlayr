@@ -1,5 +1,6 @@
 import type { EntryRateType } from "@outlayr/money/rates";
 import { and, eq, isNull } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { outsideMoves } from "@/db/schema";
@@ -111,35 +112,39 @@ export interface OnCreditInput {
 
 // An income entry on the person's account: income once, and they owe you. Being paid back later is a transfer.
 export async function recordSoldOnCredit(db: Database, input: OnCreditInput): Promise<string> {
-    return await transactionsRepo.create(
-        db,
-        {
-            accountId: input.person.id,
-            amount: input.amount,
-            categoryId: input.categoryId,
-            currency: input.person.currency,
-            date: input.date,
-            details: null,
-            income: true,
-            note: input.note ?? translateNow("debts.sale.title"),
-        },
-        { logoCandidate: false }
+    return await Effect.runPromise(
+        transactionsRepo.create(
+            db,
+            {
+                accountId: input.person.id,
+                amount: input.amount,
+                categoryId: input.categoryId,
+                currency: input.person.currency,
+                date: input.date,
+                details: null,
+                income: true,
+                note: input.note ?? translateNow("debts.sale.title"),
+            },
+            { logoCandidate: false }
+        )
     );
 }
 
 export async function recordBoughtOnCredit(db: Database, input: OnCreditInput): Promise<string> {
-    return await transactionsRepo.create(
-        db,
-        {
-            accountId: input.person.id,
-            amount: input.amount,
-            categoryId: input.categoryId,
-            currency: input.person.currency,
-            date: input.date,
-            details: null,
-            income: false,
-            note: input.note ?? translateNow("debts.purchase.title"),
-        },
-        { logoCandidate: false }
+    return await Effect.runPromise(
+        transactionsRepo.create(
+            db,
+            {
+                accountId: input.person.id,
+                amount: input.amount,
+                categoryId: input.categoryId,
+                currency: input.person.currency,
+                date: input.date,
+                details: null,
+                income: false,
+                note: input.note ?? translateNow("debts.purchase.title"),
+            },
+            { logoCandidate: false }
+        )
     );
 }

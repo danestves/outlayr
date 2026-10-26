@@ -1,4 +1,6 @@
 import { eq } from "drizzle-orm";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { mainBudget, outsideMoves } from "@/db/schema";
@@ -18,11 +20,25 @@ import { transfersRepo } from "./transfers-core";
 
 export const UNDO_WINDOW_MS = 10_000;
 
+const DeferredDeleteKinds = Schema.Literals(["account", "budget", "category", "goal", "recurring", "row"]);
+
 // `recurring` ends a schedule rather than deleting, but it is irreversible once written and wants the same window.
-export type DeferredDeleteKind = "account" | "budget" | "category" | "goal" | "recurring" | "row";
+export type DeferredDeleteKind = typeof DeferredDeleteKinds.Type;
+
+export class DeferredDeleteError extends Schema.TaggedError<DeferredDeleteError>()("DeferredDeleteError", {
+    cause: Schema.Defect(),
+    kind: DeferredDeleteKinds,
+}) {
+    override get message(): string {
+        return `Deferred ${this.kind} delete failed`;
+    }
+}
+
+const commitWith = <A>(kind: DeferredDeleteKind, run: () => PromiseLike<A>) =>
+    Effect.tryPromise({ catch: (cause) => new DeferredDeleteError({ cause, kind }), try: run });
 
 interface KindSpec {
-    commit: (db: Database, id: string) => Promise<void>;
+    commit: (db: Database, id: string) => Effect.Effect<void, unknown>;
     failedBody: TranslatableKey;
     failedTitle: TranslatableKey;
     undoTitle: TranslatableKey;
@@ -30,23 +46,29 @@ interface KindSpec {
 
 // The table is read at commit time, not passed in: a caller's list filtered inside the window gets it wrong, and
 // removing a transfer as a transaction updates zero rows and rejects nothing.
-async function commitRow(db: Database, id: string): Promise<void> {
-    if (await transfersRepo.getById(db, id)) {
-        await transfersRepo.softDelete(db, id);
+const commitRow = Effect.fn("DeferredDelete.commitRow")(function* commitRow(db: Database, id: string) {
+    if (yield* commitWith("row", () => transfersRepo.getById(db, id))) {
+        yield* commitWith("row", () => transfersRepo.softDelete(db, id));
         return;
     }
-    const [move] = await db.select({ id: outsideMoves.id }).from(outsideMoves).where(eq(outsideMoves.id, id));
-    await (move ? deleteOutsideMove(db, id) : transactionsRepo.remove(db, id));
-}
+    const [move] = yield* commitWith("row", () =>
+        db.select({ id: outsideMoves.id }).from(outsideMoves).where(eq(outsideMoves.id, id))
+    );
+    yield* move ? commitWith("row", () => deleteOutsideMove(db, id)) : transactionsRepo.remove(db, id);
+});
 
-async function commitBudget(db: Database, id: string): Promise<void> {
-    const [overall] = await db.select({ id: mainBudget.id }).from(mainBudget).where(eq(mainBudget.id, id));
-    await (overall ? budgetsRepo.deleteMainBudget(db, id) : budgetsRepo.deleteBudget(db, id));
-}
+const commitBudget = Effect.fn("DeferredDelete.commitBudget")(function* commitBudget(db: Database, id: string) {
+    const [overall] = yield* commitWith("budget", () =>
+        db.select({ id: mainBudget.id }).from(mainBudget).where(eq(mainBudget.id, id))
+    );
+    yield* commitWith("budget", () =>
+        overall ? budgetsRepo.deleteMainBudget(db, id) : budgetsRepo.deleteBudget(db, id)
+    );
+});
 
 const SPECS = {
     account: {
-        commit: (db, id) => accountsRepo.softDelete(db, id),
+        commit: (db, id) => commitWith("account", () => accountsRepo.softDelete(db, id)),
         failedBody: "accounts.error.generic",
         failedTitle: "accounts.error.deleteTitle",
         undoTitle: "accounts.undo.deleted",
@@ -58,13 +80,13 @@ const SPECS = {
         undoTitle: "budgets.undo.deleted",
     },
     category: {
-        commit: (db, id) => categoriesRepo.remove(db, id),
+        commit: (db, id) => commitWith("category", () => categoriesRepo.remove(db, id)),
         failedBody: "categories.error.generic",
         failedTitle: "categories.error.deleteTitle",
         undoTitle: "categories.undo.deleted",
     },
     goal: {
-        commit: (db, id) => savingsGoalsRepo.remove(db, id),
+        commit: (db, id) => commitWith("goal", () => savingsGoalsRepo.remove(db, id)),
         failedBody: "goals.failedBody",
         failedTitle: "goals.failedTitle",
         undoTitle: "goals.undo.deleted",
@@ -83,8 +105,15 @@ const SPECS = {
     },
 } satisfies Record<DeferredDeleteKind, KindSpec>;
 
+export const commitDeferredDelete = Effect.fn("DeferredDelete.commit")(function* commitDeferredDelete(
+    kind: DeferredDeleteKind,
+    db: Database,
+    id: string
+) {
+    yield* SPECS[kind].commit(db, id);
+});
+
 export interface DeferredDeleteRegistry {
-    attachDatabase: (db: Database | null) => void;
     flushAll: () => Promise<void>;
     pendingId: (kind: DeferredDeleteKind) => string | null;
     requestDelete: (kind: DeferredDeleteKind, id: string, body?: string) => void;
@@ -97,12 +126,16 @@ interface Slot {
     setBody: (next: string | undefined) => void;
 }
 
+export interface DeferredDeleteSources {
+    commit: (kind: DeferredDeleteKind, db: Database, id: string) => Promise<void>;
+    /** Read when the window closes, not captured per request: a delete lands in the database the app is on then. */
+    database: () => Database | null;
+}
+
 // Not React on purpose: the window outlives the screen that opened it (a detail screen navigates straight back), and
 // a screen-owned controller would flush on the way out.
-export function createDeferredDeleteRegistry(): DeferredDeleteRegistry {
+export function createDeferredDeleteRegistry({ commit, database }: DeferredDeleteSources): DeferredDeleteRegistry {
     const slots = new Map<DeferredDeleteKind, Slot>();
-    // Held, not captured per request: a delete lands in the database the app is on when its window closes.
-    let database: Database | null = null;
 
     function build(kind: DeferredDeleteKind): Slot {
         const spec = SPECS[kind];
@@ -113,11 +146,11 @@ export function createDeferredDeleteRegistry(): DeferredDeleteRegistry {
 
         const controller = createDeferredDelete({
             commit: async (id) => {
-                const db = database;
+                const db = database();
                 if (db === null) {
                     throw new Error("The local database went away before the delete could be written");
                 }
-                await spec.commit(db, id);
+                await commit(kind, db, id);
             },
             onChange: (next) => {
                 // Keyed on the id, not null-ness: a second delete replaces the first, and reusing its toast would
@@ -179,9 +212,6 @@ export function createDeferredDeleteRegistry(): DeferredDeleteRegistry {
     }
 
     return {
-        attachDatabase: (db) => {
-            database = db;
-        },
         flushAll: async () => {
             await Promise.all(Array.from(slots.values(), (slot) => slot.controller.flush()));
         },

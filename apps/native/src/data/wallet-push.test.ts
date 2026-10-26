@@ -1,5 +1,6 @@
 import { expect, test } from "@jest/globals";
 import { eq } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import { accounts, categories, transactions } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
@@ -39,17 +40,19 @@ test("says where the next tap lands, the way the drain will file it", async () =
         ])
     );
     const entry = (note: string, categoryId: string, date: string, income = false) =>
-        transactionsRepo.create(db, {
-            accountId: null,
-            amount: 5,
-            categoryId,
-            currency: "EUR",
-            date: new Date(date),
-            details: null,
-            fee: null,
-            income,
-            note,
-        });
+        Effect.runPromise(
+            transactionsRepo.create(db, {
+                accountId: null,
+                amount: 5,
+                categoryId,
+                currency: "EUR",
+                date: new Date(date),
+                details: null,
+                fee: null,
+                income,
+                note,
+            })
+        );
     await entry("vietnam house", "cat-coffee", "2026-02-01T12:00:00Z");
     await entry("Vietnam House", "cat-food", "2026-03-01T12:00:00Z");
     await entry("VIETNAM HOUSE", "cat-coffee", "2026-01-01T12:00:00Z");
@@ -84,17 +87,19 @@ test("keeps the newest category when two spellings of a place normalize together
         { id: "cat-coffee", income: false, name: "Coffee", sortOrder: 1, updatedAt: NOW },
     ]);
     const entry = (note: string, categoryId: string, date: string) =>
-        transactionsRepo.create(db, {
-            accountId: null,
-            amount: 5,
-            categoryId,
-            currency: "EUR",
-            date: new Date(date),
-            details: null,
-            fee: null,
-            income: false,
-            note,
-        });
+        Effect.runPromise(
+            transactionsRepo.create(db, {
+                accountId: null,
+                amount: 5,
+                categoryId,
+                currency: "EUR",
+                date: new Date(date),
+                details: null,
+                fee: null,
+                income: false,
+                note,
+            })
+        );
     await entry("Café", "cat-coffee", "2026-02-01T12:00:00Z");
     await entry("Cafe\u0301", "cat-food", "2026-03-01T12:00:00Z");
 

@@ -4,10 +4,12 @@ import { utcDateString } from "@outlayr/money/dates";
 import type { EntryRateType } from "@outlayr/money/rates";
 import { RECURRING_TYPE, anchorDayOf, nextDate, nextLanding } from "@outlayr/money/recurrence";
 import { and, eq, gt, isNotNull, isNull } from "drizzle-orm";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
-import { withTransaction } from "@/db/transaction";
+import { transaction } from "@/db/transaction";
 import { DEFAULT_CURRENCY } from "@/domain/money";
 import { uuidV5 } from "@/domain/uuid5";
 
@@ -25,6 +27,23 @@ import { localRateLookup } from "./rates";
 type TransactionRow = typeof transactions.$inferSelect;
 type TransactionInsert = typeof transactions.$inferInsert;
 
+const RecurrenceBackfillOperation = Schema.Literals(["backfill", "insert", "repair", "successor"]);
+
+export class RecurrenceBackfillError extends Schema.TaggedError<RecurrenceBackfillError>()("RecurrenceBackfillError", {
+    cause: Schema.Defect(),
+    operation: RecurrenceBackfillOperation,
+}) {
+    override get message(): string {
+        return `Recurrence ${this.operation} failed`;
+    }
+}
+
+const failedAt = (operation: typeof RecurrenceBackfillOperation.Type) => (cause: unknown) =>
+    new RecurrenceBackfillError({ cause, operation });
+
+const query = <A>(operation: typeof RecurrenceBackfillOperation.Type, run: () => PromiseLike<A>) =>
+    Effect.tryPromise({ catch: failedAt(operation), try: run });
+
 export function recurrenceRateType(rateType: string | null | undefined): EntryRateType {
     if (rateType === "custom") {
         return "custom";
@@ -35,10 +54,10 @@ export function recurrenceRateType(rateType: string | null | undefined): EntryRa
     return "official";
 }
 
-async function loadSource(db: Database, id: string): Promise<TransactionRow | null> {
-    const rows = await db.select().from(transactions).where(eq(transactions.id, id)).limit(1);
+const loadSource = Effect.fn("RecurrenceBackfill.loadSource")(function* loadSource(db: Database, id: string) {
+    const rows = yield* query("backfill", () => db.select().from(transactions).where(eq(transactions.id, id)).limit(1));
     return rows[0] ?? null;
-}
+});
 
 // Never change: a different namespace gives upgraded devices different ids for occurrences the others already hold.
 const OCCURRENCE_NAMESPACE = "0f2b9f1e-6d3a-4c58-9a71-2c8f5d6e4b31";
@@ -49,39 +68,39 @@ export function occurrenceId(parentLocalId: string, holding: Date): string {
     return uuidV5(`${parentLocalId}:${utcDateString(holding.getTime())}`, OCCURRENCE_NAMESPACE);
 }
 
-async function liveLogo(db: Database, carrierId: string) {
-    const [row] = await db
-        .select({ imageColor: transactions.imageColor, imageUri: transactions.imageUri })
-        .from(transactions)
-        .where(eq(transactions.id, carrierId));
+const liveLogo = Effect.fn("RecurrenceBackfill.liveLogo")(function* liveLogo(db: Database, carrierId: string) {
+    const [row] = yield* query("insert", () =>
+        db
+            .select({ imageColor: transactions.imageColor, imageUri: transactions.imageUri })
+            .from(transactions)
+            .where(eq(transactions.id, carrierId))
+    );
     return row?.imageUri == null ? null : { imageColor: row.imageColor, imageUri: row.imageUri };
-}
+});
 
 // Occurrences bypass `transactionsRepo.create`, so this registers logo candidates itself, inherited from the live
 // carrier and never recomputed from a bare-looking copy. Conflicts are ignored: an existing id is the same charge from
 // another device and may carry an edit or deletion, so only the ids the insert returns register.
-export async function insertOccurrences(
+export const insertOccurrences = Effect.fn("RecurrenceBackfill.insertOccurrences")(function* insertOccurrences(
     db: Database,
     carrierId: string,
     rows: readonly TransactionInsert[],
     now: Date
-): Promise<void> {
+) {
     if (rows.length === 0) {
         return;
     }
     // Read before anything moves the carrier; a logo the backfill painted on it meanwhile is ours, and rows take it.
-    const inherit = await isLiveLogoCandidate(db, carrierId);
-    const live = await liveLogo(db, carrierId);
+    const inherit = yield* isLiveLogoCandidate(db, carrierId);
+    const live = yield* liveLogo(db, carrierId);
     const written = rows.map((row) =>
         live !== null && isLogoCandidate(row) ? { ...row, imageColor: live.imageColor, imageUri: live.imageUri } : row
     );
-    const inserted = await db
-        .insert(transactions)
-        .values(written)
-        .onConflictDoNothing()
-        .returning({ id: transactions.id });
+    const inserted = yield* query("insert", () =>
+        db.insert(transactions).values(written).onConflictDoNothing().returning({ id: transactions.id })
+    );
     const created = new Set(inserted.map((row) => row.id));
-    const fees = await occurrenceFees(
+    const fees = yield* occurrenceFees(
         db,
         carrierId,
         rows.filter((row) => created.has(row.id)),
@@ -89,7 +108,7 @@ export async function insertOccurrences(
         now
     );
     if (fees.length > 0) {
-        await db.insert(transactions).values(fees).onConflictDoNothing();
+        yield* query("insert", () => db.insert(transactions).values(fees).onConflictDoNothing());
     }
     if (!inherit) {
         return;
@@ -97,9 +116,9 @@ export async function insertOccurrences(
     const ids = rows.filter((row) => created.has(row.id) && isLogoCandidate(row)).map((row) => row.id);
     if (ids.length > 0) {
         // Occurrences are written with `updatedAt: now`, the stamp the backfill matches against.
-        await rememberLogoCandidates(db, ids, now.getTime(), LOGO_CANDIDATE_KEEP_MS);
+        yield* rememberLogoCandidates(db, ids, now.getTime(), LOGO_CANDIDATE_KEEP_MS);
     }
-}
+});
 
 function occurrenceRow(source: TransactionRow, holding: Date, carriesSchedule: boolean, now: Date): TransactionInsert {
     return {
@@ -132,10 +151,12 @@ function occurrenceRow(source: TransactionRow, holding: Date, carriesSchedule: b
     };
 }
 
-// Walks the schedule to today, one plain row per occurrence, and retires the source. Exactly one row in a chain
-// carries `recurringType > 0`: the schedule migrates onto the newest generated row.
-export async function backfillRecurring(db: Database, id: string, now: Date = new Date()): Promise<void> {
-    const source = await loadSource(db, id);
+export const backfillRecurring = Effect.fn("RecurrenceBackfill.backfillRecurring")(function* backfillRecurring(
+    db: Database,
+    id: string,
+    now: Date = new Date()
+) {
+    const source = yield* loadSource(db, id);
     if (source == null || !source.onceRecurring || source.recurringType === RECURRING_TYPE.none) {
         return;
     }
@@ -186,72 +207,88 @@ export async function backfillRecurring(db: Database, id: string, now: Date = ne
     // Each occurrence is canonicalized at ITS OWN date, or January's payment is priced at December's rate. Built
     // outside the write transaction because the rate lookup reads.
     const lookup = localRateLookup(db);
-    const display = (await getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
-    const canonicalized = await Promise.all(
-        pending.map(async (row) => ({
-            ...row,
-            ...(await canonicalUsd(lookup, {
-                amount: row.amount,
-                currency: row.currency ?? null,
-                date: row.date,
-                displayCurrency: display,
-                exchangeRate: null,
-                exchangeRateType: recurrenceRateType(row.exchangeRateType),
-            })),
-        }))
+    const display = (yield* query("backfill", () => getMeta(db, META_KEYS.currency))) ?? DEFAULT_CURRENCY;
+    const canonicalized = yield* Effect.all(
+        pending.map((row) =>
+            query("backfill", () =>
+                canonicalUsd(lookup, {
+                    amount: row.amount,
+                    currency: row.currency ?? null,
+                    date: row.date,
+                    displayCurrency: display,
+                    exchangeRate: null,
+                    exchangeRateType: recurrenceRateType(row.exchangeRateType),
+                })
+            ).pipe(Effect.map((canonical) => ({ ...row, ...canonical })))
+        ),
+        { concurrency: "unbounded" }
     );
 
     // Atomic: dying between insert and retire leaves the source recurring, so the next launch rewrites every charge.
-    await withTransaction(db, async () => {
-        await insertOccurrences(db, source.id, canonicalized, now);
-        await refreshLogoCandidate(db, source.id, now.getTime());
-        await db
-            .update(transactions)
-            .set({
-                recurringType: RECURRING_TYPE.none,
-                reminderLeadDays: null,
-                updatedAt: now,
-            })
-            .where(eq(transactions.id, source.id));
-    });
-}
+    yield* transaction(
+        db,
+        Effect.gen(function* write() {
+            yield* insertOccurrences(db, source.id, canonicalized, now);
+            yield* refreshLogoCandidate(db, source.id, now.getTime());
+            yield* query("backfill", () =>
+                db
+                    .update(transactions)
+                    .set({
+                        recurringType: RECURRING_TYPE.none,
+                        reminderLeadDays: null,
+                        updatedAt: now,
+                    })
+                    .where(eq(transactions.id, source.id))
+            );
+        }),
+        failedAt("backfill")
+    );
+});
 
 // Ids are resolved up front: each backfill hands the schedule to a new future-dated row a re-read would pick up.
-export async function backfillAllRecurring(db: Database, now: Date = new Date()): Promise<void> {
-    const live = await db
-        .select({ id: transactions.id })
-        .from(transactions)
-        .where(and(gt(transactions.recurringType, RECURRING_TYPE.none), isNull(transactions.deletedAt)));
+export const backfillAllRecurring = Effect.fn("RecurrenceBackfill.backfillAllRecurring")(function* backfillAllRecurring(
+    db: Database,
+    now: Date = new Date()
+) {
+    const live = yield* query("backfill", () =>
+        db
+            .select({ id: transactions.id })
+            .from(transactions)
+            .where(and(gt(transactions.recurringType, RECURRING_TYPE.none), isNull(transactions.deletedAt)))
+    );
 
-    /* oxlint-disable no-await-in-loop -- every iteration writes through the one SQLite connection these rows share, so the sweep has to advance one chain at a time. */
+    // Every iteration writes through the one SQLite connection these rows share, so the sweep advances one chain at a
+    // time.
     for (const row of live) {
-        await backfillRecurring(db, row.id, now);
+        yield* backfillRecurring(db, row.id, now);
     }
-    /* oxlint-enable no-await-in-loop */
-}
+});
 
-async function withCanonicalUsd(db: Database, row: TransactionInsert): Promise<TransactionInsert> {
-    const display = (await getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
-    return {
-        ...row,
-        ...(await canonicalUsd(localRateLookup(db), {
+const withCanonicalUsd = Effect.fn("RecurrenceBackfill.withCanonicalUsd")(function* withCanonicalUsd(
+    db: Database,
+    row: TransactionInsert
+) {
+    const display = (yield* query("successor", () => getMeta(db, META_KEYS.currency))) ?? DEFAULT_CURRENCY;
+    const canonical = yield* query("successor", () =>
+        canonicalUsd(localRateLookup(db), {
             amount: row.amount,
             currency: row.currency ?? null,
             date: row.date,
             displayCurrency: display,
             exchangeRate: null,
             exchangeRateType: recurrenceRateType(row.exchangeRateType),
-        })),
-    };
-}
+        })
+    );
+    return { ...row, ...canonical };
+});
 
 // Anchored at the next occurrence after today, so a stale carrier resumes forward instead of back-charging. A
 // future-dated carrier is the pending charge itself, so removing it means stop: no successor.
-export async function scheduleSuccessor(
+export const scheduleSuccessor = Effect.fn("RecurrenceBackfill.scheduleSuccessor")(function* scheduleSuccessor(
     db: Database,
     carrier: TransactionRow,
     now: Date
-): Promise<TransactionInsert | null> {
+) {
     if (!carrier.onceRecurring || carrier.recurringType === RECURRING_TYPE.none) {
         return null;
     }
@@ -269,50 +306,60 @@ export async function scheduleSuccessor(
     if (landing == null) {
         return null;
     }
-    return await withCanonicalUsd(db, occurrenceRow(carrier, landing, true, now));
-}
+    return yield* withCanonicalUsd(db, occurrenceRow(carrier, landing, true, now));
+});
 
 // One-shot repair for carriers soft-deleted before the delete handover existed; the tombstone still holds the
 // schedule. Other orphaned chains are unrecoverable: no column links a chain's rows.
-export async function repairOrphanedRecurrence(db: Database, now: Date = new Date()): Promise<number> {
-    if ((await getMeta(db, META_KEYS.recurrenceRepaired)) === "true") {
-        return 0;
-    }
+export const repairOrphanedRecurrence = Effect.fn("RecurrenceBackfill.repairOrphanedRecurrence")(
+    function* repairOrphanedRecurrence(db: Database, now: Date = new Date()) {
+        if ((yield* query("repair", () => getMeta(db, META_KEYS.recurrenceRepaired))) === "true") {
+            return 0;
+        }
 
-    const orphaned = await db
-        .select()
-        .from(transactions)
-        .where(
-            and(
-                isNotNull(transactions.deletedAt),
-                eq(transactions.onceRecurring, true),
-                gt(transactions.recurringType, RECURRING_TYPE.none)
-            )
+        const orphaned = yield* query("repair", () =>
+            db
+                .select()
+                .from(transactions)
+                .where(
+                    and(
+                        isNotNull(transactions.deletedAt),
+                        eq(transactions.onceRecurring, true),
+                        gt(transactions.recurringType, RECURRING_TYPE.none)
+                    )
+                )
         );
 
-    let reinstated = 0;
-    /* oxlint-disable no-await-in-loop -- each carrier is reinstated inside its own write transaction on the one SQLite connection, and overlapping transactions on it would interleave. */
-    for (const carrier of orphaned) {
-        const successor = await scheduleSuccessor(db, carrier, now);
-        await withTransaction(db, async () => {
+        let reinstated = 0;
+        // Each carrier is reinstated inside its own write transaction on the one SQLite connection, and overlapping
+        // transactions on it would interleave.
+        for (const carrier of orphaned) {
+            const successor = yield* scheduleSuccessor(db, carrier, now);
+            yield* transaction(
+                db,
+                Effect.gen(function* write() {
+                    if (successor != null) {
+                        yield* insertOccurrences(db, carrier.id, [successor], now);
+                    }
+                    yield* query("repair", () =>
+                        db
+                            .update(transactions)
+                            .set({
+                                recurringType: RECURRING_TYPE.none,
+                                reminderLeadDays: null,
+                                updatedAt: now,
+                            })
+                            .where(eq(transactions.id, carrier.id))
+                    );
+                }),
+                failedAt("repair")
+            );
             if (successor != null) {
-                await insertOccurrences(db, carrier.id, [successor], now);
+                reinstated += 1;
             }
-            await db
-                .update(transactions)
-                .set({
-                    recurringType: RECURRING_TYPE.none,
-                    reminderLeadDays: null,
-                    updatedAt: now,
-                })
-                .where(eq(transactions.id, carrier.id));
-        });
-        if (successor != null) {
-            reinstated += 1;
         }
-    }
-    /* oxlint-enable no-await-in-loop */
 
-    await setMeta(db, META_KEYS.recurrenceRepaired, "true");
-    return reinstated;
-}
+        yield* query("repair", () => setMeta(db, META_KEYS.recurrenceRepaired, "true"));
+        return reinstated;
+    }
+);

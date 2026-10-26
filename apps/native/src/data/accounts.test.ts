@@ -3,6 +3,7 @@ import { accountBalance } from "@outlayr/money/account-balance";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { buildRateTable } from "@outlayr/money/valuation";
 import { renderHook } from "@testing-library/react-native";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { accounts, transactions, transfers } from "@/db/schema";
@@ -338,22 +339,24 @@ describe("a row dated after now", () => {
     });
 
     it("leaves a subscription charging tomorrow out of the balance until it charges", async () => {
-        const id = await transactionsRepo.create(db, {
-            accountId: "a1",
-            amount: 7.06,
-            categoryId: null,
-            currency: "USD",
-            date: JUNE_2,
-            details: null,
-            income: false,
-            note: "Prime Video",
-            onceRecurring: true,
-            recurringCoefficient: 1,
-            recurringEndDate: null,
-            recurringType: RECURRING_TYPE.monthly,
-            reminderLeadDays: null,
-        });
-        await backfillRecurring(db, id, JUNE_1);
+        const id = await Effect.runPromise(
+            transactionsRepo.create(db, {
+                accountId: "a1",
+                amount: 7.06,
+                categoryId: null,
+                currency: "USD",
+                date: JUNE_2,
+                details: null,
+                income: false,
+                note: "Prime Video",
+                onceRecurring: true,
+                recurringCoefficient: 1,
+                recurringEndDate: null,
+                recurringType: RECURRING_TYPE.monthly,
+                reminderLeadDays: null,
+            })
+        );
+        await Effect.runPromise(backfillRecurring(db, id, JUNE_1));
 
         await expect(balanceBeforeAndOn(checking)).resolves.toStrictEqual([90, 82.94]);
     });

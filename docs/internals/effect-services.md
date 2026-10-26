@@ -42,6 +42,20 @@ A reusable operation is `Effect.fn("LocalDatabase.open")(function* open() { ... 
 - **Predicates** are exported directly, `export const isFoo = Schema.is(Foo)`, not a function wrapping a private `Schema.is`.
 - Recover with `Effect.catchTags({ LocalDatabaseError: ... })`, even for one tag; lint enforces it. `Effect.catch` handles the whole channel; `catchIf` is for structural checks such as a platform error code.
 
+## Data modules
+
+`apps/native/src/data/*-core.ts` modules run in jest on better-sqlite3, so they take no service and import neither `src/state/` nor `src/lib/runtime.ts`.
+
+- **An operation** is `Effect.fn("Transactions.create")(function* create(db: Database, ...) { ... })`. `db` stays a parameter because `LocalDatabase` reopens the connection on reset and retry. An exported object of operations (`transactionsRepo`, `tagsRepo`) keeps its members, each an `Effect.fn`.
+- **One error per module**, `<Module>Error`, with `operation: Schema.Literals([...])` (left out when the module has one) and `cause: Schema.Defect()`. A private helper wraps a drizzle query in `Effect.tryPromise({ catch, try })`; a query builder is a thenable, so `() => db.update(...)` is the `try`. A synchronous read used inside an operation goes through `Effect.try` with the same error, since a bare throw in a generator is a defect.
+- **Composition.** An operation that calls another module's operation `yield*`s it and that module's error passes through. A dependency still on promises (`getMeta`, `ensureCategoryByName`, an Expo or Convex call) goes through `Effect.tryPromise` with this module's error.
+- **Transactions** use `transaction(db, body, toError)` from `db/transaction.ts`, which keeps the per-database queue. A callback that runs inside one is `(id: string) => Effect.Effect<void, E>` (`CreateOptions.inSameTransaction`), so the caller's writes join it and its error passes through unchanged.
+- **Validation** that drives copy or control flow is its own tagged error (`UnbalancedSplitError`, `PendingCategoryError`), not a message a caller parses.
+- **Stays plain:** synchronous reads (`getTransactionById`, `cardFeeFor`), query builders handed to `useLiveQuery`, and pure helpers.
+- **Callers.** An Effect caller `yield*`s the operation. A component runs a write through a command (`state/ledger-commands.ts`, `state/transaction-save-command.ts`) and a promise module uses `runLedgerCommand`. The form's save is one command, so the category, tags, splits, attachments and card fee commit or fail together.
+- **Bookkeeping that must not fail a save** (the logo candidate after `create`) is caught with `Effect.catchTags` where it is called and logged at the level it always was.
+- **Tests** run the effect, `await Effect.runPromise(transactionsRepo.create(db, input))`, and read a failure with `Effect.flip`.
+
 ## Runtime boundaries
 
 - **One runtime, one registry.** `appRuntime = Atom.runtime(layer)` in `apps/native/src/lib/runtime.ts` and `appAtomRegistry` in `src/state/atom-registry.ts`, provided once as the outermost element of `src/app/_layout.tsx` with `<RegistryContext value={appAtomRegistry}>`. A new service merges its layer into `appRuntime`'s; nothing else makes a runtime or a registry.

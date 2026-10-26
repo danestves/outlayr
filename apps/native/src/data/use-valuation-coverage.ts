@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 
 import type { Database } from "@/db/client";
 import type { ValuationCoverage } from "@/domain/valuation-coverage";
-
-import { valuationCoverage } from "./canonicalize-backfill";
+import { runLedgerCommand, valuationCoverageCommand } from "@/state/ledger-commands";
 
 const NOTHING: ValuationCoverage = {
     beyondRateHistory: 0,
@@ -20,7 +19,7 @@ export function useValuationCoverage(db: Database): ValuationCoverage {
 
     useEffect(() => {
         let cancelled = false;
-        valuationCoverage(db).then((next) => {
+        runLedgerCommand(valuationCoverageCommand, db).then((next) => {
             if (!cancelled) {
                 // oxlint-disable-next-line promise/no-callback-in-promise -- an effect body cannot be async, so the setState has nowhere else to be sequenced from
                 setCoverage(next);

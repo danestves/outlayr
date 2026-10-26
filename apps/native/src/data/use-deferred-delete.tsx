@@ -1,39 +1,40 @@
+import { useAtomMount } from "@effect/atom-react/Hooks";
+import * as Effect from "effect/Effect";
+import * as Atom from "effect/reactivity/Atom";
+import * as Stream from "effect/Stream";
 import type { ReactNode } from "react";
-import { createContext, use, useEffect, useState, useSyncExternalStore } from "react";
-import { AppState } from "react-native";
+import { useSyncExternalStore } from "react";
 
-import { useLocalData } from "@/contexts/local-data-context";
+import { localDataAtom, localDataState } from "@/contexts/local-data-context";
+import { listen, WatchAppState } from "@/lib/app-events";
+import { appRuntime } from "@/lib/runtime";
+import { appAtomRegistry } from "@/state/atom-registry";
+import { commitDeferredDeleteCommand, runLedgerCommand } from "@/state/ledger-commands";
 
 import { createDeferredDeleteRegistry } from "./deferred-delete-registry";
-import type { DeferredDeleteKind, DeferredDeleteRegistry } from "./deferred-delete-registry";
+import type { DeferredDeleteKind } from "./deferred-delete-registry";
 
-const DeferredDeleteContext = createContext<DeferredDeleteRegistry | null>(null);
+// At module scope because a held delete outlives its screen; the database is read when its window closes.
+const registry = createDeferredDeleteRegistry({
+    commit: (kind, db, id) => runLedgerCommand(commitDeferredDeleteCommand, { db, id, kind }),
+    database: () => localDataState(appAtomRegistry.get(localDataAtom)).db,
+});
 
-/**
- * At the root because a held delete outlives its screen. The handle is passed down, not captured, so the write
- * lands in the database the app is on when the window closes.
- */
+// A backgrounded app can be killed, losing an open window's write, so leaving the foreground flushes early.
+const flushOnLeaveAtom = appRuntime
+    .atom(
+        Effect.gen(function* flushOnLeave() {
+            const watchAppState = yield* WatchAppState;
+            yield* listen(watchAppState, (phase) => phase !== "active").pipe(
+                Stream.runForEach(() => Effect.promise(() => registry.flushAll()))
+            );
+        })
+    )
+    .pipe(Atom.withLabel("deferred-delete:flush-on-leave"));
+
 export function DeferredDeleteProvider({ children }: { children: ReactNode }) {
-    const { db } = useLocalData();
-
-    // A lazy initializer: building the registry during render is a side effect the compiler cannot follow.
-    const [registry] = useState(createDeferredDeleteRegistry);
-
-    useEffect(() => {
-        registry.attachDatabase(db);
-    }, [registry, db]);
-
-    // A backgrounded app can be killed, losing an open window's write, so leaving the foreground flushes early.
-    useEffect(() => {
-        const subscription = AppState.addEventListener("change", (phase) => {
-            if (phase !== "active") {
-                registry.flushAll();
-            }
-        });
-        return () => subscription.remove();
-    }, [registry]);
-
-    return <DeferredDeleteContext.Provider value={registry}>{children}</DeferredDeleteContext.Provider>;
+    useAtomMount(flushOnLeaveAtom);
+    return children;
 }
 
 export interface DeferredDelete {
@@ -44,8 +45,6 @@ export interface DeferredDelete {
 
 /** The caller filters on `pendingId`; a second delete of the same kind flushes the first. */
 export function useDeferredDelete(kind: DeferredDeleteKind): DeferredDelete {
-    const registry = useRegistry();
-
     const pendingId = useSyncExternalStore(
         (listener: () => void) => registry.subscribe(kind, listener),
         () => registry.pendingId(kind)
@@ -59,14 +58,4 @@ export function useDeferredDelete(kind: DeferredDeleteKind): DeferredDelete {
 }
 
 /** For a JS reload, which tears the runtime down without the AppState change that flushes. */
-export function useFlushDeferredDeletes(): () => Promise<void> {
-    return useRegistry().flushAll;
-}
-
-function useRegistry(): DeferredDeleteRegistry {
-    const registry = use(DeferredDeleteContext);
-    if (registry === null) {
-        throw new Error("Deferred deletes must be used within DeferredDeleteProvider");
-    }
-    return registry;
-}
+export const flushDeferredDeletes = registry.flushAll;

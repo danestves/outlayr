@@ -13,8 +13,8 @@ import type { Database } from "@/db/client";
 import { appStates, launchAndForegrounds, listen, WatchAppState, WatchTableWrites } from "@/lib/app-events";
 
 import { PHOTO_TABLES } from "./photo-store-core";
-import type { PhotoReconciliation } from "./photo-store-core";
-import type { PhotoSyncResult } from "./photo-sync-core";
+import type { PhotoReconciliation, PhotoStoreError } from "./photo-store-core";
+import type { PhotoSyncResult, PhotoTransferError } from "./photo-sync-core";
 import { isSyncEnabled } from "./sync-outbox-core";
 import { invalidateAll } from "./table-invalidation";
 
@@ -38,9 +38,9 @@ export class PhotoSyncError extends Schema.TaggedError<PhotoSyncError>()("PhotoS
 export class PhotoPasses extends Context.Service<
     PhotoPasses,
     {
-        readonly reconcile: (db: Database, nowMs: number) => Promise<PhotoReconciliation>;
+        readonly reconcile: (db: Database, nowMs: number) => Effect.Effect<PhotoReconciliation, PhotoStoreError>;
         readonly replateLogos: (db: Database) => Promise<number>;
-        readonly sync: (db: Database) => Promise<PhotoSyncResult>;
+        readonly sync: (db: Database) => Effect.Effect<PhotoSyncResult, PhotoTransferError>;
     }
 >()("outlayr/data/PhotoSync/PhotoPasses") {}
 
@@ -81,11 +81,14 @@ export const make = Effect.gen(function* make() {
         const passes = yield* PhotoPasses;
         const nowMs = yield* Clock.currentTimeMillis;
         // The logo repair matches rows by photo path, so it waits for the reconcile to repoint stale ones.
-        yield* attempt("reconcile", () => passes.reconcile(db, nowMs)).pipe(
-            Effect.andThen(attempt("reconcile", () => passes.replateLogos(db))),
-            Effect.catchTags({ PhotoSyncError: (error) => Effect.logError(error.message, error.cause) }),
-            Effect.uninterruptible
-        );
+        yield* passes
+            .reconcile(db, nowMs)
+            .pipe(
+                Effect.mapError(failedAt("reconcile")),
+                Effect.andThen(attempt("reconcile", () => passes.replateLogos(db))),
+                Effect.catchTags({ PhotoSyncError: (error) => Effect.logError(error.message, error.cause) }),
+                Effect.uninterruptible
+            );
         yield* reconciled(db).open;
     });
 
@@ -98,7 +101,7 @@ export const make = Effect.gen(function* make() {
             if (!(yield* isSyncEnabled(db).pipe(Effect.mapError((error) => failedAt("sync")(error.cause))))) {
                 return;
             }
-            const { downloaded } = yield* attempt("sync", () => passes.sync(db));
+            const { downloaded } = yield* passes.sync(db).pipe(Effect.mapError(failedAt("sync")));
             if (downloaded > 0) {
                 // Only a download changes what a screen can draw.
                 yield* Effect.try({ catch: failedAt("sync"), try: () => invalidateAll(PHOTO_TABLE_NAMES) });

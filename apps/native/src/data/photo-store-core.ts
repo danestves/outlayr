@@ -1,11 +1,30 @@
 import { eq, isNotNull } from "drizzle-orm";
 import type { AnySQLiteColumn, SQLiteTable } from "drizzle-orm/sqlite-core";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import { accounts, transactionAttachments, transactions } from "@/db/schema";
 
 import type { SpendDb } from "./budget-spent";
 
 export const PHOTO_DIRECTORY = "transaction-photos";
+
+const PhotoStoreOperation = Schema.Literals(["files", "repoint", "rows"]);
+
+export class PhotoStoreError extends Schema.TaggedError<PhotoStoreError>()("PhotoStoreError", {
+    cause: Schema.Defect(),
+    operation: PhotoStoreOperation,
+}) {
+    override get message(): string {
+        return `Photo store ${this.operation} failed`;
+    }
+}
+
+const query = <A>(operation: typeof PhotoStoreOperation.Type, run: () => PromiseLike<A>) =>
+    Effect.tryPromise({ catch: (cause) => new PhotoStoreError({ cause, operation }), try: run });
+
+const files = <A>(run: () => A) =>
+    Effect.try({ catch: (cause) => new PhotoStoreError({ cause, operation: "files" }), try: run });
 
 export interface PhotoTable {
     readonly id: AnySQLiteColumn;
@@ -88,9 +107,13 @@ export interface PhotoReconciliation {
 
 // Matches on file name, not path: old rows point into a picker cache iOS may reclaim, and the container UUID in the
 // absolute path changes on app update. Tombstones count as references: the undo window can restore one.
-export async function reconcilePhotos(db: SpendDb, files: PhotoFiles, nowMs: number): Promise<PhotoReconciliation> {
-    const { directoryUri } = files;
-    const stored = new Map(files.list().map((photo) => [photo.name, photo.modifiedAt]));
+export const reconcilePhotos = Effect.fn("PhotoStore.reconcilePhotos")(function* reconcilePhotos(
+    db: SpendDb,
+    photoFiles: PhotoFiles,
+    nowMs: number
+) {
+    const { directoryUri } = photoFiles;
+    const stored = new Map((yield* files(() => photoFiles.list())).map((photo) => [photo.name, photo.modifiedAt]));
 
     const result: PhotoReconciliation = {
         cleared: 0,
@@ -100,19 +123,22 @@ export async function reconcilePhotos(db: SpendDb, files: PhotoFiles, nowMs: num
     };
     const referenced = new Set<string>();
 
-    /* oxlint-disable no-await-in-loop -- every table reconciles against the `stored` and `referenced` maps the previous table already mutated, so a table's rows cannot be read before the one before it has finished adopting files */
+    // Every table reconciles against the `stored` and `referenced` maps the previous table already mutated, so a
+    // table's rows cannot be read before the one before it has finished adopting files.
     for (const photoTable of PHOTO_TABLES) {
         // SAFETY: a runtime table choice erases the column map; the two columns selected exist on every table.
-        const rows = (await db
-            .select({ id: photoTable.id, imageUri: photoTable.imageUri })
-            .from(photoTable.table)
-            .where(isNotNull(photoTable.imageUri))) as {
+        const rows = (yield* query("rows", () =>
+            db
+                .select({ id: photoTable.id, imageUri: photoTable.imageUri })
+                .from(photoTable.table)
+                .where(isNotNull(photoTable.imageUri))
+        )) as {
             id: string;
             imageUri: string | null;
         }[];
 
-        const repoint = async (id: string, uri: string | null) =>
-            await db.update(photoTable.table).set({ imageUri: uri }).where(eq(photoTable.id, id));
+        const repoint = (id: string, uri: string | null) =>
+            query("repoint", () => db.update(photoTable.table).set({ imageUri: uri }).where(eq(photoTable.id, id)));
 
         for (const row of rows) {
             const uri = row.imageUri;
@@ -125,35 +151,35 @@ export async function reconcilePhotos(db: SpendDb, files: PhotoFiles, nowMs: num
                 referenced.add(name);
                 const current = photoUriFor(directoryUri, name);
                 if (uri !== current) {
-                    // oxlint-disable-next-line no-await-in-loop -- two rows can name one file, so a row's `stored`/`referenced` bookkeeping and its adopt must land before the next row asks whether that file exists
-                    await repoint(row.id, current);
+                    // Two rows can name one file, so a row's `stored`/`referenced` bookkeeping and its adopt must land
+                    // before the next row asks whether that file exists.
+                    yield* repoint(row.id, current);
                     result.repointed += 1;
                 }
                 continue;
             }
 
             const adopted = `${row.id}${photoExtension(name)}`;
-            if (files.adopt(uri, adopted)) {
+            if (yield* files(() => photoFiles.adopt(uri, adopted))) {
                 stored.set(adopted, nowMs);
                 referenced.add(adopted);
-                await repoint(row.id, photoUriFor(directoryUri, adopted));
+                yield* repoint(row.id, photoUriFor(directoryUri, adopted));
                 result.rescued += 1;
                 continue;
             }
 
-            await repoint(row.id, null);
+            yield* repoint(row.id, null);
             result.cleared += 1;
         }
     }
-    /* oxlint-enable no-await-in-loop */
 
     for (const [name, modifiedAt] of stored) {
         if (referenced.has(name) || nowMs - modifiedAt < PHOTO_PURGE_GRACE_MS) {
             continue;
         }
-        files.remove(name);
+        yield* files(() => photoFiles.remove(name));
         result.purged += 1;
     }
 
     return result;
-}
+});

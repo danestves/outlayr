@@ -1,5 +1,6 @@
 import { describe, expect, it, jest } from "@jest/globals";
 import { eq } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
@@ -63,17 +64,19 @@ describe("sendQueuedEnrichment", () => {
         const db = await migratedDatabase();
         await categoriesRepo.create(db, { color: "#000000", icon: "Airplane01", income: false, name: "Trips" });
         await seedRow(db, "tx-1", "CARE4BAG AE");
-        await queueEnrichment(db, "tx-1");
+        await Effect.runPromise(queueEnrichment(db, "tx-1"));
         const sent: EnrichmentJobRequest[] = [];
 
-        await sendQueuedEnrichment(db, {
-            enqueue: async (request) => {
-                sent.push(request);
-                return true;
-            },
-            groundedLookup: true,
-            regionCode: "VE",
-        });
+        await Effect.runPromise(
+            sendQueuedEnrichment(db, {
+                enqueue: async (request) => {
+                    sent.push(request);
+                    return true;
+                },
+                groundedLookup: true,
+                regionCode: "VE",
+            })
+        );
 
         expect(sent).toHaveLength(1);
         expect(sent[0]).toMatchObject({ currency: "EUR", localId: "tx-1", name: "CARE4BAG AE", regionCode: "VE" });
@@ -85,13 +88,13 @@ describe("sendQueuedEnrichment", () => {
         const db = await migratedDatabase();
         await seedRow(db, "tx-1", "CARE4BAG AE");
         await seedRow(db, "tx-2", "NYX*VenetisABEET");
-        await queueEnrichment(db, "tx-1");
-        await queueEnrichment(db, "tx-2");
+        await Effect.runPromise(queueEnrichment(db, "tx-1"));
+        await Effect.runPromise(queueEnrichment(db, "tx-2"));
         const enqueue = jest.fn(async () => {
             throw new Error("offline");
         });
 
-        await sendQueuedEnrichment(db, { enqueue, groundedLookup: true });
+        await Effect.runPromise(sendQueuedEnrichment(db, { enqueue, groundedLookup: true }));
 
         expect(enqueue).toHaveBeenCalledTimes(1);
         expect(JSON.parse((await getMeta(db, META_KEYS.enrichmentOutbox)) ?? "null")).toStrictEqual(["tx-1", "tx-2"]);
@@ -103,7 +106,9 @@ describe("applyEnrichmentAnswer", () => {
         const db = await migratedDatabase();
         await seedRow(db, "tx-1", "CARE4BAG AE");
 
-        await applyEnrichmentAnswer(db, { localId: "tx-1", name: "CARE4BAG AE", result: ANSWER }, applyDeps());
+        await Effect.runPromise(
+            applyEnrichmentAnswer(db, { localId: "tx-1", name: "CARE4BAG AE", result: ANSWER }, applyDeps())
+        );
 
         const row = await readRow(db, "tx-1");
         expect(row).toMatchObject({
@@ -118,7 +123,9 @@ describe("applyEnrichmentAnswer", () => {
             .where(eq(categories.id, row?.categoryId ?? ""));
         expect(category?.name).toBe("Travel");
         await expect(tagIdsForQuery(db, "tx-1")).resolves.toHaveLength(2);
-        await expect(recallMerchant(db, "CARE4BAG AE", "EUR")).resolves.toMatchObject({ domain: "care4bag.gr" });
+        await expect(Effect.runPromise(recallMerchant(db, "CARE4BAG AE", "EUR"))).resolves.toMatchObject({
+            domain: "care4bag.gr",
+        });
     });
 
     it("leaves what the owner already chose, without fetching a logo it has nowhere to put", async () => {
@@ -133,10 +140,8 @@ describe("applyEnrichmentAnswer", () => {
         const deps = applyDeps();
         const fetchImage = jest.fn(deps.fetchImage);
 
-        await applyEnrichmentAnswer(
-            db,
-            { localId: "tx-1", name: "CARE4BAG AE", result: ANSWER },
-            { ...deps, fetchImage }
+        await Effect.runPromise(
+            applyEnrichmentAnswer(db, { localId: "tx-1", name: "CARE4BAG AE", result: ANSWER }, { ...deps, fetchImage })
         );
 
         await expect(readRow(db, "tx-1")).resolves.toMatchObject({

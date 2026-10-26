@@ -5,10 +5,12 @@ import type { EntryRateType } from "@outlayr/money/rates";
 import { isTransactionRateNeeded } from "@outlayr/money/rates";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { and, asc, count, desc, eq, gt, gte, inArray, isNotNull, isNull, lt, lte, sql } from "drizzle-orm";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { accounts, categories, installments, transactions, transfers } from "@/db/schema";
-import { withTransaction } from "@/db/transaction";
+import { transaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
 import { merchantKey } from "@/domain/merchant-resolver";
 import { DEFAULT_CURRENCY } from "@/domain/money";
@@ -177,7 +179,36 @@ export interface TransactionInput {
     reminderLeadDays?: number | null;
 }
 
-type FeeValues = Awaited<ReturnType<typeof cardFeeValues>>;
+const TransactionsOperation = Schema.Literals([
+    "attachAccount",
+    "create",
+    "lastEntry",
+    "remove",
+    "restore",
+    "row",
+    "stopRecurring",
+    "update",
+]);
+
+export class TransactionsError extends Schema.TaggedError<TransactionsError>()("TransactionsError", {
+    cause: Schema.Defect(),
+    operation: TransactionsOperation,
+}) {
+    override get message(): string {
+        return `Transaction ${this.operation} failed`;
+    }
+}
+
+const failedAt = (operation: typeof TransactionsOperation.Type) => (cause: unknown) =>
+    new TransactionsError({ cause, operation });
+
+const query = <A>(operation: typeof TransactionsOperation.Type, run: () => PromiseLike<A>) =>
+    Effect.tryPromise({ catch: failedAt(operation), try: run });
+
+const read = <A>(operation: typeof TransactionsOperation.Type, run: () => A) =>
+    Effect.try({ catch: failedAt(operation), try: run });
+
+type FeeValues = Effect.Success<ReturnType<typeof cardFeeValues>>;
 
 function keptFeeValue(existing: Transaction, values: FeeValues, moneyKept: boolean) {
     const sameFee =
@@ -187,46 +218,59 @@ function keptFeeValue(existing: Transaction, values: FeeValues, moneyKept: boole
     return sameFee && moneyKept ? { amount: existing.amount, amountUsd: existing.amountUsd } : {};
 }
 
-async function writeFee(
+const writeFee = Effect.fn("Transactions.writeFee")(function* writeFee(
     db: Database,
     purchaseId: string,
     values: FeeValues | null,
     now: Date,
+    operation: typeof TransactionsOperation.Type,
     moneyKept = false
-): Promise<void> {
-    const existing = cardFeeFor(db, purchaseId);
+) {
+    const existing = yield* read(operation, () => cardFeeFor(db, purchaseId));
     if (values === null) {
         if (existing !== null) {
-            await db
-                .update(transactions)
-                .set({ deletedAt: now, updatedAt: now })
-                .where(eq(transactions.id, existing.id));
+            yield* query(operation, () =>
+                db.update(transactions).set({ deletedAt: now, updatedAt: now }).where(eq(transactions.id, existing.id))
+            );
         }
         return;
     }
     if (existing === null) {
-        await db.insert(transactions).values({ ...values, id: newId(), updatedAt: now });
+        yield* query(operation, () => db.insert(transactions).values({ ...values, id: newId(), updatedAt: now }));
         return;
     }
-    await db
-        .update(transactions)
-        .set({ ...values, ...keptFeeValue(existing, values, moneyKept), updatedAt: now })
-        .where(eq(transactions.id, existing.id));
-}
+    yield* query(operation, () =>
+        db
+            .update(transactions)
+            .set({ ...values, ...keptFeeValue(existing, values, moneyKept), updatedAt: now })
+            .where(eq(transactions.id, existing.id))
+    );
+});
 
-async function toRow(db: Database, id: string, input: TransactionInput): Promise<typeof transactions.$inferInsert> {
+const toRow = Effect.fn("Transactions.toRow")(function* toRow(db: Database, id: string, input: TransactionInput) {
     const trimmedNote = input.note.trim();
     let note = trimmedNote;
     if (note === "" && input.categoryId != null) {
-        const category = await getCategoryById(db, input.categoryId);
+        const { categoryId } = input;
+        const category = yield* read("row", () => getCategoryById(db, categoryId));
         note = category?.name ?? "";
     }
     const details = input.details?.trim() ? input.details.trim() : null;
     const recurring = input.onceRecurring ?? false;
     const now = new Date();
     // Stamped even when unpicked: a null currency would follow the setting and restate a $18.50 lunch as €18.50.
-    const currency = input.currency ?? (await displayCurrency(db));
-    return {
+    const currency = input.currency ?? (yield* displayCurrency(db));
+    const canonical = yield* query("row", () =>
+        canonicalUsd(localRateLookup(db), {
+            amount: Math.abs(input.amount),
+            currency,
+            date: input.date,
+            displayCurrency: currency,
+            exchangeRate: input.exchangeRate,
+            exchangeRateType: input.exchangeRateType,
+        })
+    );
+    const row: typeof transactions.$inferInsert = {
         accountId: input.accountId ?? null,
         amount: Math.abs(input.amount),
         categoryId: input.categoryId,
@@ -252,22 +296,16 @@ async function toRow(db: Database, id: string, input: TransactionInput): Promise
         recurringType: recurring ? (input.recurringType ?? 0) : 0,
         reminderLeadDays: recurring ? normalizeLead(input.reminderLeadDays ?? null) : null,
         // Frozen at write; converting at read time would change last month's spending every morning.
-        ...(await canonicalUsd(localRateLookup(db), {
-            amount: Math.abs(input.amount),
-            currency,
-            date: input.date,
-            displayCurrency: currency,
-            exchangeRate: input.exchangeRate,
-            exchangeRateType: input.exchangeRateType,
-        })),
+        ...canonical,
         deletedAt: null,
         updatedAt: now,
     };
-}
+    return row;
+});
 
-async function displayCurrency(db: Database): Promise<string> {
-    return (await getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
-}
+const displayCurrency = Effect.fn("Transactions.displayCurrency")(function* displayCurrency(db: Database) {
+    return (yield* query("row", () => getMeta(db, META_KEYS.currency))) ?? DEFAULT_CURRENCY;
+});
 
 /**
  * Keeps the frozen value unless amount, currency or date moved: re-freezing is unsafe, since the rate feed serves
@@ -357,234 +395,298 @@ export function accountTransactionsQuery(db: SpendDb, accountId: string) {
         .orderBy(desc(transactions.date), asc(transactions.feeForId));
 }
 
-export interface CreateOptions {
+export interface CreateOptions<E = never> {
     /**
      * Whether a named entry saved with its category tile becomes the logo backfill's to finish. The CSV import
      * passes false: its rows stay on the device, and one candidate write per row would make a big import quadratic.
      */
     logoCandidate?: boolean;
-    inSameTransaction?: (id: string) => Promise<void>;
+    inSameTransaction?: (id: string) => Effect.Effect<void, E>;
 }
 
 export const transactionsRepo = {
-    async create(db: Database, input: TransactionInput, options: CreateOptions = {}): Promise<string> {
+    create: Effect.fn("Transactions.create")(function* create<E = never>(
+        db: Database,
+        input: TransactionInput,
+        options: CreateOptions<E> = {}
+    ) {
         const id = newId();
-        const row = await toRow(db, id, input);
-        const fee = input.fee == null ? null : await cardFeeValues(db, id, row, input.fee);
+        const row = yield* toRow(db, id, input);
+        const fee = input.fee == null ? null : yield* cardFeeValues(db, id, row, input.fee);
         const { inSameTransaction } = options;
-        const write = async () => {
-            await db
-                .insert(transactions)
-                .values(fee === null ? [row] : [row, { ...fee, id: newId(), updatedAt: row.updatedAt }]);
-            await inSameTransaction?.(id);
-        };
-        await (inSameTransaction ? withTransaction(db, write) : write());
+        const write = Effect.gen(function* write() {
+            yield* query("create", () =>
+                db
+                    .insert(transactions)
+                    .values(fee === null ? [row] : [row, { ...fee, id: newId(), updatedAt: row.updatedAt }])
+            );
+            if (inSameTransaction) {
+                yield* inSameTransaction(id);
+            }
+        });
+        yield* inSameTransaction ? transaction(db, write, failedAt("create")) : write;
         // Bookkeeping, so it cannot fail the save: a caller told otherwise would retry and write the row twice.
         // Judged on the caller's merchant, not `row.note`, which falls back to the category name.
         if (options.logoCandidate !== false && isLogoCandidate({ ...row, note: input.note })) {
-            try {
-                await rememberLogoCandidate(db, id, row.updatedAt.getTime(), LOGO_CANDIDATE_KEEP_MS);
-            } catch (error) {
-                console.warn("[outlayr] logo candidate not recorded", error);
-            }
+            yield* rememberLogoCandidate(db, id, row.updatedAt.getTime(), LOGO_CANDIDATE_KEEP_MS).pipe(
+                Effect.catchTags({
+                    LogoBackfillStateError: (error) =>
+                        Effect.logWarning("[outlayr] logo candidate not recorded", error),
+                })
+            );
         }
         return id;
-    },
+    }),
 
     /**
      * Re-anchors the schedule on a successor first, since the newest occurrence holds it. The tombstone retires to
      * `none`, which is how deleting the pending charge stops a subscription.
      */
-    async remove(db: Database, id: string, now: Date = new Date()): Promise<void> {
-        const row = getTransactionById(db, id);
-        const successor = row == null || row.deletedAt != null ? null : await scheduleSuccessor(db, row, now);
+    remove: Effect.fn("Transactions.remove")(function* remove(db: Database, id: string, now: Date = new Date()) {
+        const row = yield* read("remove", () => getTransactionById(db, id));
+        const successor = row == null || row.deletedAt != null ? null : yield* scheduleSuccessor(db, row, now);
 
-        await withTransaction(db, async () => {
-            if (successor != null) {
-                // The successor's id derives from its schedule, so a peer that anchored it already holds this row.
-                await insertOccurrences(db, id, [successor], now);
-            }
-            await refreshLogoCandidate(db, id, now.getTime());
-            await db
-                .update(transactions)
-                .set({
-                    deletedAt: now,
-                    recurringType: RECURRING_TYPE.none,
-                    reminderLeadDays: null,
-                    updatedAt: now,
-                })
-                .where(eq(transactions.id, id));
-            // A fee outliving its transfer would keep charging for a movement the ledger no longer holds.
-            if (row?.transferId != null) {
-                await db
-                    .update(transfers)
-                    .set({ deletedAt: now, updatedAt: now })
-                    .where(eq(transfers.id, row.transferId));
-                await db
-                    .update(transactions)
-                    .set({ deletedAt: now, updatedAt: now })
-                    .where(and(eq(transactions.transferId, row.transferId), isNull(transactions.deletedAt)));
-            }
-            await db
-                .update(transactions)
-                .set({ deletedAt: now, updatedAt: now })
-                .where(and(eq(transactions.feeForId, id), isNull(transactions.deletedAt)));
-            await tombstonePlansForTransaction(db, id, now);
-        });
-    },
+        yield* transaction(
+            db,
+            Effect.gen(function* write() {
+                if (successor != null) {
+                    // The successor's id derives from its schedule, so a peer that anchored it already holds this row.
+                    yield* insertOccurrences(db, id, [successor], now);
+                }
+                yield* refreshLogoCandidate(db, id, now.getTime());
+                yield* query("remove", () =>
+                    db
+                        .update(transactions)
+                        .set({
+                            deletedAt: now,
+                            recurringType: RECURRING_TYPE.none,
+                            reminderLeadDays: null,
+                            updatedAt: now,
+                        })
+                        .where(eq(transactions.id, id))
+                );
+                // A fee outliving its transfer would keep charging for a movement the ledger no longer holds.
+                if (row?.transferId != null) {
+                    const { transferId } = row;
+                    yield* query("remove", () =>
+                        db.update(transfers).set({ deletedAt: now, updatedAt: now }).where(eq(transfers.id, transferId))
+                    );
+                    yield* query("remove", () =>
+                        db
+                            .update(transactions)
+                            .set({ deletedAt: now, updatedAt: now })
+                            .where(and(eq(transactions.transferId, transferId), isNull(transactions.deletedAt)))
+                    );
+                }
+                yield* query("remove", () =>
+                    db
+                        .update(transactions)
+                        .set({ deletedAt: now, updatedAt: now })
+                        .where(and(eq(transactions.feeForId, id), isNull(transactions.deletedAt)))
+                );
+                yield* tombstonePlansForTransaction(db, id, now);
+            }),
+            failedAt("remove")
+        );
+    }),
 
     /**
      * `restoredAt` lets the restore beat the tombstone everywhere (R1). `recurringType` stays retired, since deleting
      * the pending charge ends a subscription. Fees and entries on deleted accounts stay out, as in the deleted list.
      */
-    async restore(db: Database, id: string, now: Date = new Date()): Promise<void> {
-        await withTransaction(db, async () => {
-            const previous = getTransactionById(db, id);
-            const purchaseId = previous?.feeForId ?? null;
-            const purchase = purchaseId === null ? null : getTransactionById(db, purchaseId);
-            const onDeletedAccount =
-                previous?.accountId != null &&
-                db
-                    .select({ id: accounts.id })
-                    .from(accounts)
-                    .where(and(eq(accounts.id, previous.accountId), isNotNull(accounts.deletedAt)))
-                    .all().length > 0;
-            if (
-                previous == null ||
-                previous.deletedAt == null ||
-                previous.transferId != null ||
-                onDeletedAccount ||
-                purchase?.deletedAt != null ||
-                (purchaseId !== null && cardFeeFor(db, purchaseId) !== null)
-            ) {
-                return;
-            }
-            await refreshLogoCandidate(db, id, now.getTime());
-            const lifted = { deletedAt: null, restoredAt: restoreStamp(previous, now), updatedAt: now };
-            await db.update(transactions).set(lifted).where(eq(transactions.id, id));
-            await db
-                .update(transactions)
-                .set(lifted)
-                .where(and(eq(transactions.feeForId, id), eq(transactions.deletedAt, previous.deletedAt)));
-            await restorePlansForTransaction(db, id, previous.deletedAt, now, lifted.restoredAt);
-        });
-    },
+    restore: Effect.fn("Transactions.restore")(function* restore(db: Database, id: string, now: Date = new Date()) {
+        yield* transaction(
+            db,
+            Effect.gen(function* write() {
+                const previous = yield* read("restore", () => getTransactionById(db, id));
+                const purchaseId = previous?.feeForId ?? null;
+                const purchase = yield* read("restore", () =>
+                    purchaseId === null ? null : getTransactionById(db, purchaseId)
+                );
+                const onDeletedAccount = yield* read(
+                    "restore",
+                    () =>
+                        previous?.accountId != null &&
+                        db
+                            .select({ id: accounts.id })
+                            .from(accounts)
+                            .where(and(eq(accounts.id, previous.accountId), isNotNull(accounts.deletedAt)))
+                            .all().length > 0
+                );
+                const feeTaken = yield* read(
+                    "restore",
+                    () => purchaseId !== null && cardFeeFor(db, purchaseId) !== null
+                );
+                if (
+                    previous == null ||
+                    previous.deletedAt == null ||
+                    previous.transferId != null ||
+                    onDeletedAccount ||
+                    purchase?.deletedAt != null ||
+                    feeTaken
+                ) {
+                    return;
+                }
+                yield* refreshLogoCandidate(db, id, now.getTime());
+                const { deletedAt } = previous;
+                const lifted = { deletedAt: null, restoredAt: restoreStamp(previous, now), updatedAt: now };
+                yield* query("restore", () => db.update(transactions).set(lifted).where(eq(transactions.id, id)));
+                yield* query("restore", () =>
+                    db
+                        .update(transactions)
+                        .set(lifted)
+                        .where(and(eq(transactions.feeForId, id), eq(transactions.deletedAt, deletedAt)))
+                );
+                yield* restorePlansForTransaction(db, id, deletedAt, now, lifted.restoredAt);
+            }),
+            failedAt("restore")
+        );
+    }),
 
     /**
      * Ends the schedule and keeps the charge: no successor is anchored, and `onceRecurring` stays set for the
      * Recurring filter. Tombstones are skipped: their schedule is all `repairOrphanedRecurrence` can rebuild from.
      */
-    async stopRecurring(db: Database, id: string, now: Date = new Date()): Promise<void> {
-        await withTransaction(db, async () => {
-            const previous = getTransactionById(db, id);
-            if (previous == null || previous.deletedAt != null) {
-                return;
-            }
-            await refreshLogoCandidate(db, id, now.getTime());
-            await db
-                .update(transactions)
-                .set({
-                    recurringType: RECURRING_TYPE.none,
-                    reminderLeadDays: null,
-                    updatedAt: now,
-                })
-                .where(eq(transactions.id, id));
-        });
-    },
+    stopRecurring: Effect.fn("Transactions.stopRecurring")(function* stopRecurring(
+        db: Database,
+        id: string,
+        now: Date = new Date()
+    ) {
+        yield* transaction(
+            db,
+            Effect.gen(function* write() {
+                const previous = yield* read("stopRecurring", () => getTransactionById(db, id));
+                if (previous == null || previous.deletedAt != null) {
+                    return;
+                }
+                yield* refreshLogoCandidate(db, id, now.getTime());
+                yield* query("stopRecurring", () =>
+                    db
+                        .update(transactions)
+                        .set({
+                            recurringType: RECURRING_TYPE.none,
+                            reminderLeadDays: null,
+                            updatedAt: now,
+                        })
+                        .where(eq(transactions.id, id))
+                );
+            }),
+            failedAt("stopRecurring")
+        );
+    }),
 
-    async attachAccount(
+    attachAccount: Effect.fn("Transactions.attachAccount")(function* attachAccount(
         db: Database,
         id: string,
         account: { currency: string; id: string; initialBalanceDate: Date },
         now: Date = new Date()
-    ): Promise<boolean> {
-        let settled = true;
-        await withTransaction(db, async () => {
-            const previous = getTransactionById(db, id);
-            if (previous?.deletedAt != null) {
-                settled = false;
-                return;
-            }
-            if (
-                previous == null ||
-                previous.accountId != null ||
-                previous.date.getTime() < account.initialBalanceDate.getTime()
-            ) {
-                return;
-            }
-            const typed = cardFeeFor(db, id);
-            const fee =
-                previous.income || typed !== null
-                    ? null
-                    : suggestedCardFee(db, {
-                          account,
-                          categoryId: previous.categoryId,
-                          currency: previous.currency,
-                          merchant: previous.note,
-                      });
-            await refreshLogoCandidate(db, id, now.getTime());
-            await db
-                .update(transactions)
-                .set({ accountId: account.id, updatedAt: now })
-                .where(inArray(transactions.id, typed === null ? [id] : [id, typed.id]));
-            if (fee !== null) {
-                await writeFee(db, id, await cardFeeValues(db, id, { ...previous, accountId: account.id }, fee), now);
-            }
-        });
-        return settled;
-    },
+    ) {
+        return yield* transaction(
+            db,
+            Effect.gen(function* write() {
+                const previous = yield* read("attachAccount", () => getTransactionById(db, id));
+                if (previous?.deletedAt != null) {
+                    return false;
+                }
+                if (
+                    previous == null ||
+                    previous.accountId != null ||
+                    previous.date.getTime() < account.initialBalanceDate.getTime()
+                ) {
+                    return true;
+                }
+                const typed = yield* read("attachAccount", () => cardFeeFor(db, id));
+                const fee = yield* read("attachAccount", () =>
+                    previous.income || typed !== null
+                        ? null
+                        : suggestedCardFee(db, {
+                              account,
+                              categoryId: previous.categoryId,
+                              currency: previous.currency,
+                              merchant: previous.note,
+                          })
+                );
+                yield* refreshLogoCandidate(db, id, now.getTime());
+                yield* query("attachAccount", () =>
+                    db
+                        .update(transactions)
+                        .set({ accountId: account.id, updatedAt: now })
+                        .where(inArray(transactions.id, typed === null ? [id] : [id, typed.id]))
+                );
+                if (fee !== null) {
+                    const values = yield* cardFeeValues(db, id, { ...previous, accountId: account.id }, fee);
+                    yield* writeFee(db, id, values, now, "attachAccount");
+                }
+                return true;
+            }),
+            failedAt("attachAccount")
+        );
+    }),
 
-    async update(
+    update: Effect.fn("Transactions.update")(function* update<E = never>(
         db: Database,
         id: string,
         input: TransactionInput,
-        { inSameTransaction }: Pick<CreateOptions, "inSameTransaction"> = {}
-    ): Promise<void> {
-        const previous = getTransactionById(db, id);
-        const row = await toRow(db, id, input);
+        { inSameTransaction }: Pick<CreateOptions<E>, "inSameTransaction"> = {}
+    ) {
+        const previous = yield* read("update", () => getTransactionById(db, id));
+        const row = yield* toRow(db, id, input);
         const { id: _omit, ...rest } = row;
         const kept = keptCanonical(row, previous, input);
         const accountId = keptAccount(previous, input);
-        const fee = input.fee == null ? null : await cardFeeValues(db, id, { ...row, ...kept, accountId }, input.fee);
+        const fee = input.fee == null ? null : yield* cardFeeValues(db, id, { ...row, ...kept, accountId }, input.fee);
         // One transaction: a stamp moved for an UPDATE that then failed would never match the row again.
-        await withTransaction(db, async () => {
-            // Before the row goes bare: the painter reads the dismissal list in its own UPDATE.
-            if (clearsIdentity(previous, row)) {
-                await rememberLogoDismissal(db, id);
-            }
-            // An edit here keeps a bare row the backfill's (a peer's synced edit would not). A row becomes a candidate
-            // only when this edit names a new merchant. Before the write: the refresh matches the current stamp.
-            if (previous != null && isLogoCandidate({ ...row, note: input.note }) && !clearsIdentity(previous, row)) {
-                if (merchantKey(previous.note) === merchantKey(row.note ?? "")) {
-                    await refreshLogoCandidate(db, id, row.updatedAt.getTime());
-                } else {
-                    await forgetLogoDismissal(db, id);
-                    await rememberLogoCandidate(db, id, row.updatedAt.getTime(), LOGO_CANDIDATE_KEEP_MS);
+        yield* transaction(
+            db,
+            Effect.gen(function* write() {
+                // Before the row goes bare: the painter reads the dismissal list in its own UPDATE.
+                if (clearsIdentity(previous, row)) {
+                    yield* rememberLogoDismissal(db, id);
                 }
-            }
-            // The backfill may have painted the row while `toRow` awaited. Read synchronously right before the write,
-            // so the form's stale nulls cannot orphan a file that landed in between.
-            const landed = landedLogo(previous, getTransactionById(db, id), row);
-            await db
-                .update(transactions)
-                .set({
-                    ...rest,
-                    ...kept,
-                    ...landed,
-                    accountId,
-                    // Deletion is `remove`/`restore`'s call: `toRow` builds a live row, and spreading it would revive a
-                    // peer's delete that arrived while the sheet was open.
-                    deletedAt: previous?.deletedAt ?? null,
-                    imageKey: removesPhoto(previous, row) ? null : rest.imageKey,
-                    reminderLeadDays: keptLead(row, previous, input),
-                })
-                .where(eq(transactions.id, id));
-            if (input.fee !== undefined && previous != null && previous.deletedAt == null) {
-                await writeFee(db, id, fee, row.updatedAt, kept !== null);
-            }
-            await inSameTransaction?.(id);
-        });
-    },
+                // An edit here keeps a bare row the backfill's (a peer's synced edit would not). A row becomes a
+                // candidate only when this edit names a new merchant. Before the write: the refresh matches the current
+                // stamp.
+                if (
+                    previous != null &&
+                    isLogoCandidate({ ...row, note: input.note }) &&
+                    !clearsIdentity(previous, row)
+                ) {
+                    if (merchantKey(previous.note) === merchantKey(row.note ?? "")) {
+                        yield* refreshLogoCandidate(db, id, row.updatedAt.getTime());
+                    } else {
+                        yield* forgetLogoDismissal(db, id);
+                        yield* rememberLogoCandidate(db, id, row.updatedAt.getTime(), LOGO_CANDIDATE_KEEP_MS);
+                    }
+                }
+                // The backfill may have painted the row while `toRow` awaited. Read synchronously right before the
+                // write, so the form's stale nulls cannot orphan a file that landed in between.
+                const landed = yield* read("update", () => landedLogo(previous, getTransactionById(db, id), row));
+                yield* query("update", () =>
+                    db
+                        .update(transactions)
+                        .set({
+                            ...rest,
+                            ...kept,
+                            ...landed,
+                            accountId,
+                            // Deletion is `remove`/`restore`'s call: `toRow` builds a live row, and spreading it would
+                            // revive a peer's delete that arrived while the sheet was open.
+                            deletedAt: previous?.deletedAt ?? null,
+                            imageKey: removesPhoto(previous, row) ? null : rest.imageKey,
+                            reminderLeadDays: keptLead(row, previous, input),
+                        })
+                        .where(eq(transactions.id, id))
+                );
+                if (input.fee !== undefined && previous != null && previous.deletedAt == null) {
+                    yield* writeFee(db, id, fee, row.updatedAt, "update", kept !== null);
+                }
+                if (inSameTransaction) {
+                    yield* inSameTransaction(id);
+                }
+            }),
+            failedAt("update")
+        );
+    }),
 };
 
 /** The identity a backfill painted between the edit's read and its write, when the edit carries none. */
@@ -614,23 +716,33 @@ export function getTransactionById(db: Database, id: string): Transaction | null
     return rows[0] ?? null;
 }
 
-export async function lastLoggedEntry(db: Database, now: Date): Promise<LastEntry | null> {
-    const [row] = await db
-        .select({
-            amount: transactions.amount,
-            category: categories.name,
-            currency: transactions.currency,
-            date: transactions.date,
-            income: transactions.income,
-            note: transactions.note,
-        })
-        .from(transactions)
-        .leftJoin(categories, eq(categories.id, transactions.categoryId))
-        .where(visibleAt(now.getTime()))
-        .orderBy(desc(transactions.date))
-        .limit(1);
+export const lastLoggedEntry = Effect.fn("Transactions.lastLoggedEntry")(function* lastLoggedEntry(
+    db: Database,
+    now: Date
+) {
+    const [row] = yield* query("lastEntry", () =>
+        db
+            .select({
+                amount: transactions.amount,
+                category: categories.name,
+                currency: transactions.currency,
+                date: transactions.date,
+                income: transactions.income,
+                note: transactions.note,
+            })
+            .from(transactions)
+            .leftJoin(categories, eq(categories.id, transactions.categoryId))
+            .where(visibleAt(now.getTime()))
+            .orderBy(desc(transactions.date))
+            .limit(1)
+    );
     if (row === undefined) {
         return null;
     }
-    return { ...row, currency: row.currency ?? (await getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY };
-}
+    const entry: LastEntry = {
+        ...row,
+        currency:
+            row.currency ?? (yield* query("lastEntry", () => getMeta(db, META_KEYS.currency))) ?? DEFAULT_CURRENCY,
+    };
+    return entry;
+});

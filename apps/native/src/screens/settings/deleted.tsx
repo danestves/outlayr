@@ -1,3 +1,5 @@
+import * as Cause from "effect/Cause";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Pressable, View } from "react-native";
 
 import { RowAmount } from "@/components/amount-text";
@@ -10,12 +12,15 @@ import { useDisplaySettings } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { useLiveQuery } from "@/data/live-query";
-import { deletedTransactionsQuery, transactionsRepo } from "@/data/transactions-core";
+import { deletedTransactionsQuery } from "@/data/transactions-core";
 import type { DeletedTransaction } from "@/data/transactions-core";
 import { transactions } from "@/db/schema";
 import { formatDayHeader } from "@/domain/dates";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
+import { SILENT } from "@/state/atom-command";
+import { restoreTransactionCommand } from "@/state/ledger-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 export function RecentlyDeleted() {
     const db = useDatabase();
@@ -23,11 +28,14 @@ export function RecentlyDeleted() {
     const currency = useGlobalCurrency(db);
     const rows = useLiveQuery(transactions, () => deletedTransactionsQuery(db));
 
-    const restore = (id: string) => {
-        transactionsRepo.restore(db, id).catch((cause: unknown) => {
-            console.error("Restore failed", cause);
+    const restoreTransaction = useAtomCommand(restoreTransactionCommand, SILENT);
+
+    const restore = async (id: string) => {
+        const result = await restoreTransaction({ db, id });
+        if (AsyncResult.isFailure(result)) {
+            console.error("Restore failed", Cause.squash(result.cause));
             notifyFailure({ body: t("settings.deleted.failedBody"), title: t("settings.deleted.failedTitle") });
-        });
+        }
     };
 
     return (
