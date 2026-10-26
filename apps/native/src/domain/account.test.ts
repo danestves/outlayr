@@ -71,6 +71,12 @@ describe("sign-in failure message", () => {
         expect(signInFailureMessage({ code: "TOO_MANY_ATTEMPTS_FOR_THIS_EMAIL", status: 429 }, t)).toMatch(
             /Wait a bit/
         );
+        expect(
+            signInFailureMessage(
+                { code: "VALIDATION_ERROR", message: "[body.email] Invalid email address", status: 400 },
+                t
+            )
+        ).toBe("Enter a valid email.");
     });
 
     it("never shows the provider's own wording, which is developer-facing", () => {
