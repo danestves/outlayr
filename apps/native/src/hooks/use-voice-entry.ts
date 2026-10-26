@@ -1,4 +1,7 @@
 import { useUIMessages } from "@convex-dev/agent/react";
+import type * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import {
     AudioQuality,
     getRecordingPermissionsAsync,
@@ -25,7 +28,9 @@ import type { VoiceTurn, VoiceTurnMessage } from "@/domain/voice-entry";
 import { duringHandoff } from "@/lib/app-handoff";
 import { VOICE_TURNS_QUERY, voiceThreadTransport } from "@/lib/convex";
 import type { SpeakRequest, StartThreadResult, VoiceDraft, VoiceQuote, VoiceThreadTransport } from "@/lib/convex";
-import { withTimeout } from "@/lib/with-timeout";
+import { createCommand, SILENT } from "@/state/atom-command";
+import { timedCaptureCommand, VOICE_SPEAK_TIMEOUT } from "@/state/capture-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 // ~6KB/s against the server's 900KB cap and 45s recording cap.
 // `isMeteringEnabled` is what makes `getStatus().metering` exist at all.
@@ -47,8 +52,22 @@ const RECORDING_OPTIONS: RecordingOptions = {
 };
 
 const METER_INTERVAL_MS = 50;
-const REQUEST_TIMEOUT_MS = 25_000;
 const TURNS_PAGE = 40;
+
+const speakCommand = timedCaptureCommand<Effect.Success<ReturnType<VoiceThreadTransport["speak"]>>>({
+    operation: "speak",
+    timeout: VOICE_SPEAK_TIMEOUT,
+});
+
+const startThreadCommand = createCommand({
+    execute: (api: VoiceThreadTransport) => api.start(),
+    label: "capture:voice-start-thread",
+});
+
+const endThreadCommand = createCommand({
+    execute: (input: { api: VoiceThreadTransport; threadId: string }) => input.api.end(input.threadId),
+    label: "capture:voice-end-thread",
+});
 
 export type VoiceFailure =
     | "denied"
@@ -194,6 +213,11 @@ export function useVoiceEntry<Context>({
     const resentRef = useRef<ArrayBuffer | null>(null);
     const disposedRef = useRef(false);
     const lastOrderRef = useRef(-1);
+    const speakAbortRef = useRef<AbortController | null>(null);
+    const speakCommandRun = useAtomCommand(speakCommand, SILENT);
+    const speak = useEffectEvent((input: Parameters<typeof speakCommandRun>[0]) => speakCommandRun(input));
+    const startThread = useAtomCommand(startThreadCommand, SILENT);
+    const endThread = useAtomCommand(endThreadCommand, SILENT);
     const [api] = useState(() => transport ?? voiceThreadTransport());
 
     const { results: messages } = useUIMessages(VOICE_TURNS_QUERY, threadId === null ? "skip" : { threadId }, {
@@ -204,6 +228,12 @@ export function useVoiceEntry<Context>({
     useEffect(() => {
         lastOrderRef.current = messages.reduce((last, message) => Math.max(last, message.order), -1);
     }, [messages]);
+
+    const supersedeTake = () => {
+        takeRef.current += 1;
+        speakAbortRef.current?.abort();
+        speakAbortRef.current = null;
+    };
 
     const stopMeter = () => {
         if (meterRef.current !== null) {
@@ -254,24 +284,23 @@ export function useVoiceEntry<Context>({
 
     const abandonTake = () => {
         const take = takeRef.current;
-        takeRef.current += 1;
+        supersedeTake();
         void endTake(take, "discard");
     };
 
     const openThread = async () => {
-        let opened: StartThreadResult;
-        try {
-            opened = await api.start();
-        } catch {
+        const started = await startThread(api);
+        if (AsyncResult.isFailure(started)) {
             if (!disposedRef.current) {
                 abandonTake();
                 setPhase({ kind: "failed", reason: "offline", transcript: null });
             }
             return;
         }
+        const opened: StartThreadResult = started.value;
         if (disposedRef.current) {
             if (opened.threadId !== null) {
-                await api.end(opened.threadId).catch(() => null);
+                await endThread({ api, threadId: opened.threadId });
             }
             return;
         }
@@ -292,11 +321,14 @@ export function useVoiceEntry<Context>({
         threadRef.current = null;
         setThreadId(null);
         if (id !== null) {
-            api.end(id).catch(() => null);
+            void endThread({ api, threadId: id });
         }
     };
 
     const openFirstThread = useEffectEvent(() => openThread());
+    const endThreadOnUnmount = useEffectEvent((id: string) => {
+        void endThread({ api, threadId: id });
+    });
     useEffect(() => {
         disposedRef.current = false;
         void Promise.resolve().then(() => (disposedRef.current ? undefined : openFirstThread()));
@@ -304,13 +336,13 @@ export function useVoiceEntry<Context>({
             disposedRef.current = true;
             const id = threadRef.current;
             if (id !== null) {
-                api.end(id).catch(() => null);
+                endThreadOnUnmount(id);
             }
         };
-    }, [api]);
+    }, []);
 
     const startTake = async () => {
-        takeRef.current += 1;
+        supersedeTake();
         const take = takeRef.current;
         const current = await getRecordingPermissionsAsync();
         const permission = current.granted ? current : await duringHandoff(requestRecordingPermissionsAsync);
@@ -356,14 +388,16 @@ export function useVoiceEntry<Context>({
     };
 
     const startFirstTake = useEffectEvent(() => startTake());
-    const stopFirstTake = useEffectEvent(() => stopMeter());
+    const endFirstTake = useEffectEvent(() => {
+        supersedeTake();
+        stopMeter();
+    });
     useEffect(() => {
         let disposed = false;
         void Promise.resolve().then(() => (disposed ? undefined : startFirstTake()));
         return () => {
             disposed = true;
-            takeRef.current += 1;
-            stopFirstTake();
+            endFirstTake();
             // Never touch the recorder here: `useAudioRecorder` already released it, and reading `isRecording` throws.
         };
     }, []);
@@ -380,46 +414,46 @@ export function useVoiceEntry<Context>({
         sentRef.current = phase.clip;
         const take = takeRef.current;
         const { clip } = phase;
+        const controller = new AbortController();
+        speakAbortRef.current = controller;
         void (async () => {
-            try {
-                const settled = await withTimeout(
-                    api.speak({ ...request, audio: clip, threadId, today: localIsoDate(new Date()) }),
-                    REQUEST_TIMEOUT_MS,
-                    "timeout" as const
-                );
-                if (take !== takeRef.current) {
+            const result = await speak({
+                call: api.speak({ ...request, audio: clip, threadId, today: localIsoDate(new Date()) }),
+                signal: controller.signal,
+            });
+            if (take !== takeRef.current) {
+                return;
+            }
+            if (AsyncResult.isFailure(result)) {
+                setPhase({ kind: "failed", reason: "offline", transcript: null });
+                return;
+            }
+            const settled = Option.getOrNull(result.value);
+            if (settled === null) {
+                // The request may still land a draft on this thread, so a retry must not speak into it.
+                abandonThread();
+                setPhase({ kind: "failed", reason: "timeout", transcript: null });
+                return;
+            }
+            if (settled.status === "ok") {
+                const { order } = settled;
+                if (order !== null) {
+                    setPhase({ context, kind: "thinking", order });
                     return;
-                }
-                if (settled === "timeout") {
-                    // The request may still land a draft on this thread, so a retry must not speak into it.
-                    abandonThread();
-                    setPhase({ kind: "failed", reason: "timeout", transcript: null });
-                    return;
-                }
-                if (settled.status === "ok") {
-                    const { order } = settled;
-                    if (order !== null) {
-                        setPhase({ context, kind: "thinking", order });
-                        return;
-                    }
-                }
-                if (settled.status === "invalid") {
-                    const resent = resentRef.current === clip;
-                    if (!resent) {
-                        // The server sweeps threads idle for an hour: resend this clip once on a fresh thread.
-                        resentRef.current = clip;
-                        sentRef.current = null;
-                        setPhase({ after: -1, clip, kind: "sending" });
-                        restartThread();
-                        return;
-                    }
-                }
-                setPhase({ kind: "failed", reason: failureFor(settled.status), transcript: settled.transcript });
-            } catch {
-                if (take === takeRef.current) {
-                    setPhase({ kind: "failed", reason: "offline", transcript: null });
                 }
             }
+            if (settled.status === "invalid") {
+                const resent = resentRef.current === clip;
+                if (!resent) {
+                    // The server sweeps threads idle for an hour: resend this clip once on a fresh thread.
+                    resentRef.current = clip;
+                    sentRef.current = null;
+                    setPhase({ after: -1, clip, kind: "sending" });
+                    restartThread();
+                    return;
+                }
+            }
+            setPhase({ kind: "failed", reason: failureFor(settled.status), transcript: settled.transcript });
         })();
     }, [api, context, phase, request, threadId]);
 
@@ -437,7 +471,7 @@ export function useVoiceEntry<Context>({
 
     const cancel = () => {
         const take = takeRef.current;
-        takeRef.current += 1;
+        supersedeTake();
         if (phase.kind === "listening" || phase.kind === "starting") {
             void endTake(take, "discard");
         }

@@ -50,7 +50,7 @@ export interface SendDeps {
 
 export interface ApplyDeps {
     discard: (imageUri: string) => void;
-    fetchImage: (request: MerchantImageRequest) => Promise<LogoOutcome>;
+    fetchImage: (request: MerchantImageRequest) => Effect.Effect<LogoOutcome>;
     persist: (bytes: Uint8Array) => Promise<{ imageColor: string | null; imageUri: string }>;
 }
 
@@ -222,7 +222,7 @@ const fetchLogo = Effect.fn("EnrichmentQueue.fetchLogo")(function* fetchLogo(
     if (domain == null) {
         return null;
     }
-    const outcome = yield* attempt("apply", () => deps.fetchImage({ domain, name }));
+    const outcome = yield* deps.fetchImage({ domain, name });
     if (outcome.kind !== "logo") {
         return null;
     }

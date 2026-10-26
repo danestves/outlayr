@@ -1,17 +1,21 @@
 import * as Effect from "effect/Effect";
+import * as HttpClient from "effect/http/HttpClient";
 import { File } from "expo-file-system";
 
 import type { LogoBackfillDeps } from "@/data/logo-backfill-core";
 import { attachMissingLogos } from "@/data/logo-backfill-core";
 import { readRemoteEnrichment } from "@/data/settings-core";
 import type { Database } from "@/db/client";
+import type { RemoteEnrichmentResult } from "@/domain/enrichment-cache";
 import { firstLocale } from "@/i18n/device-language";
 import { persistLogo } from "@/lib/persist-logo";
 import { createCommand, runAtomCommand, SILENT, unwrapAtomCommand } from "@/state/atom-command";
 import { appAtomRegistry } from "@/state/atom-registry";
 import { readBoolSettingCommand, readRemoteEnrichmentCommand, runSettingsCommand } from "@/state/settings-commands";
 
+import type { CloudError } from "./cloud-error";
 import { enrichmentTransport } from "./convex";
+import { outboundHttp } from "./http";
 import { fetchMerchantImage } from "./logo-fetch";
 
 /**
@@ -63,6 +67,7 @@ const backfillPass = Effect.fn("LogoBackfill.backfillPass")(function* backfillPa
     db: Database,
     cancelled: () => boolean
 ) {
+    const http = yield* HttpClient.HttpClient;
     const remoteEnabled = yield* readRemoteEnrichment(db);
     const device = firstLocale();
     const locale = device?.languageTag?.trim() || undefined;
@@ -83,26 +88,39 @@ const backfillPass = Effect.fn("LogoBackfill.backfillPass")(function* backfillPa
                       if (!remoteEnrichment || cancelled()) {
                           return null;
                       }
-                      const result = await transport({
-                          background: true,
-                          categoryTree: [],
-                          currency: args.currency ?? undefined,
-                          groundedLookup,
-                          income: args.income,
-                          locale,
-                          name: args.name,
-                          regionCode,
-                      });
+                      const result = unwrapAtomCommand(
+                          await runAtomCommand(
+                              appAtomRegistry,
+                              enrichCommand,
+                              transport({
+                                  background: true,
+                                  categoryTree: [],
+                                  currency: args.currency ?? undefined,
+                                  groundedLookup,
+                                  income: args.income,
+                                  locale,
+                                  name: args.name,
+                                  regionCode,
+                              }),
+                              SILENT
+                          )
+                      );
                       return { groundedLookup, result };
                   },
-        fetchImage: fetchMerchantImage,
+        fetchImage: (request) => fetchMerchantImage(request).pipe(Effect.provideService(HttpClient.HttpClient, http)),
         persist: persistLogo,
     };
     return yield* attachMissingLogos(db, deps);
 });
 
+const enrichCommand = createCommand({
+    execute: (call: Effect.Effect<RemoteEnrichmentResult, CloudError>) => call,
+    label: "ledger:logo-backfill-enrich",
+});
+
 const backfillCommand = createCommand({
-    execute: (input: { cancelled: () => boolean; db: Database }) => backfillPass(input.db, input.cancelled),
+    execute: (input: { cancelled: () => boolean; db: Database }) =>
+        backfillPass(input.db, input.cancelled).pipe(Effect.provide(outboundHttp)),
     label: "ledger:logo-backfill",
 });
 

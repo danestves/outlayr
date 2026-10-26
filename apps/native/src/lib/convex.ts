@@ -17,9 +17,6 @@ import type { PullFn, PushFn } from "@/data/sync-engine-core";
 import { AI_CONSENT_VERSION } from "@/domain/ai-consent";
 import type { RemoteEnrichmentResult } from "@/domain/enrichment-cache";
 import type { UsageLimits } from "@/domain/usage-limits";
-import { createCommand, runAtomCommand, SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import type { AtomCommand } from "@/state/atom-command";
-import { appAtomRegistry } from "@/state/atom-registry";
 
 import { CloudError } from "./cloud-error";
 import { cloudRuntime } from "./cloud-runtime";
@@ -88,10 +85,6 @@ export function cloudMutation<Args, Result>(path: string, args: Args): Effect.Ef
 export function cloudAction<Args, Result>(path: string, args: Args): Effect.Effect<Result, CloudError> {
     // SAFETY: as in `cloudQuery`.
     return callCloud("action", path, (client) => client.action(path as never, args as never) as Promise<Result>);
-}
-
-async function runCloud<W, A>(command: AtomCommand<W, A, CloudError>, input: W): Promise<A> {
-    return unwrapAtomCommand(await runAtomCommand(appAtomRegistry, command, input, SILENT));
 }
 
 /** Rounded to the UTC day so identical args let Convex answer every page and device from its query cache. */
@@ -189,20 +182,15 @@ export interface EnrichmentRequest {
     regionCode?: string;
 }
 
-export type EnrichmentFn = (args: EnrichmentRequest) => Promise<RemoteEnrichmentResult>;
-
-const enrichmentCommand = createCommand({
-    execute: (args: EnrichmentRequest) =>
-        cloudAction<unknown, RemoteEnrichmentResult>("enrichment:suggest", { ...args, aiConsent: AI_CONSENT_VERSION }),
-    label: "cloud:enrichment-suggest",
-});
+export type EnrichmentFn = (args: EnrichmentRequest) => Effect.Effect<RemoteEnrichmentResult, CloudError>;
 
 /** Names only: `packages/backend/confect/enrichment.test.ts` asserts the action's validator against this field set. */
 export function enrichmentTransport(): EnrichmentFn | null {
     if (!authenticated) {
         return null;
     }
-    return (args) => runCloud(enrichmentCommand, args);
+    return (args) =>
+        cloudAction<unknown, RemoteEnrichmentResult>("enrichment:suggest", { ...args, aiConsent: AI_CONSENT_VERSION });
 }
 
 const decodeAnsweredJobs = Schema.decodeUnknownOption(
@@ -386,32 +374,17 @@ export interface StartThreadResult {
 }
 
 export interface VoiceThreadTransport {
-    end: (threadId: string) => Promise<null>;
-    speak: (args: SpeakRequest) => Promise<SpeakResult>;
-    start: () => Promise<StartThreadResult>;
+    end: (threadId: string) => Effect.Effect<null, CloudError>;
+    speak: (args: SpeakRequest) => Effect.Effect<SpeakResult, CloudError>;
+    start: () => Effect.Effect<StartThreadResult, CloudError>;
 }
-
-const endThreadCommand = createCommand({
-    execute: (threadId: string) => cloudMutation<unknown, null>("voiceEntry:endThread", { threadId }),
-    label: "cloud:voice-end-thread",
-});
-
-const speakCommand = createCommand({
-    execute: (args: SpeakRequest) =>
-        cloudAction<unknown, SpeakResult>("voiceEntry:speak", { ...args, aiConsent: AI_CONSENT_VERSION }),
-    label: "cloud:voice-speak",
-});
-
-const startThreadCommand = createCommand({
-    execute: () => cloudMutation<unknown, StartThreadResult>("voiceEntry:startThread", {}),
-    label: "cloud:voice-start-thread",
-});
 
 export function voiceThreadTransport(): VoiceThreadTransport {
     return {
-        end: (threadId) => runCloud(endThreadCommand, threadId),
-        speak: (args) => runCloud(speakCommand, args),
-        start: () => runCloud(startThreadCommand, undefined),
+        end: (threadId) => cloudMutation<unknown, null>("voiceEntry:endThread", { threadId }),
+        speak: (args) =>
+            cloudAction<unknown, SpeakResult>("voiceEntry:speak", { ...args, aiConsent: AI_CONSENT_VERSION }),
+        start: () => cloudMutation<unknown, StartThreadResult>("voiceEntry:startThread", {}),
     };
 }
 
@@ -526,16 +499,10 @@ export interface ScanRequest {
     today: string;
 }
 
-export type ReceiptScanFn = (args: ScanRequest) => Promise<ScanResult>;
-
-const receiptScanCommand = createCommand({
-    execute: (args: ScanRequest) =>
-        cloudAction<unknown, ScanResult>("receiptScan:scan", { ...args, aiConsent: AI_CONSENT_VERSION }),
-    label: "cloud:receipt-scan",
-});
+export type ReceiptScanFn = (args: ScanRequest) => Effect.Effect<ScanResult, CloudError>;
 
 export function receiptScanTransport(): ReceiptScanFn {
-    return (args) => runCloud(receiptScanCommand, args);
+    return (args) => cloudAction<unknown, ScanResult>("receiptScan:scan", { ...args, aiConsent: AI_CONSENT_VERSION });
 }
 
 export interface InstallmentPlanRow {
@@ -560,14 +527,9 @@ interface InstallmentScanResult {
 
 export type InstallmentScanRequest = Omit<ScanRequest, "categoryTree">;
 
-export type InstallmentScanFn = (args: InstallmentScanRequest) => Promise<InstallmentScanResult>;
-
-const installmentScanCommand = createCommand({
-    execute: (args: InstallmentScanRequest) =>
-        cloudAction<unknown, InstallmentScanResult>("installmentScan:scan", { ...args, aiConsent: AI_CONSENT_VERSION }),
-    label: "cloud:installment-scan",
-});
+export type InstallmentScanFn = (args: InstallmentScanRequest) => Effect.Effect<InstallmentScanResult, CloudError>;
 
 export function installmentScanTransport(): InstallmentScanFn {
-    return (args) => runCloud(installmentScanCommand, args);
+    return (args) =>
+        cloudAction<unknown, InstallmentScanResult>("installmentScan:scan", { ...args, aiConsent: AI_CONSENT_VERSION });
 }

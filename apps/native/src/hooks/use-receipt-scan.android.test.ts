@@ -23,7 +23,8 @@ jest.mock<Partial<typeof import("@/lib/receipt-image")>>("@/lib/receipt-image", 
         }),
 }));
 jest.mock<Partial<typeof import("@/lib/convex")>>("@/lib/convex", () => ({
-    receiptScanTransport: () => async () => ({ receipt: null, status: "ok" }),
+    receiptScanTransport: () => () =>
+        jest.requireActual<typeof import("effect/Effect")>("effect/Effect").succeed({ receipt: null, status: "ok" }),
 }));
 
 describe("useReceiptScan on Android", () => {

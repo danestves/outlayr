@@ -60,10 +60,11 @@ function makeDeps(overrides: Partial<LogoBackfillDeps> = {}): LogoBackfillDeps &
             return { groundedLookup: true, result: REMOTE };
         },
         enrichCalls,
-        fetchImage: async ({ domain }) => {
-            fetched.push(domain ?? "");
-            return { bytes: LOGO, kind: "logo" };
-        },
+        fetchImage: ({ domain }) =>
+            Effect.sync(() => {
+                fetched.push(domain ?? "");
+                return { bytes: LOGO, kind: "logo" } as const;
+            }),
         fetched,
         now: NOW.getTime(),
         persist: async () => ({ imageColor: "#ff0000", imageUri: "file:///photos/logo.jpg" }),
@@ -532,7 +533,7 @@ describe("attachMissingLogos", () => {
 
     it("retries a domain whose image tiers had nothing after a short wait, without painting", async () => {
         await seedRow(db, "a", "Intermarche");
-        const fetchImage = jest.fn<LogoBackfillDeps["fetchImage"]>(async () => ({ kind: "none" }));
+        const fetchImage = jest.fn<LogoBackfillDeps["fetchImage"]>(() => Effect.succeed({ kind: "none" }));
         const deps = makeDeps({ fetchImage });
 
         await Effect.runPromise(attachMissingLogos(db, deps));

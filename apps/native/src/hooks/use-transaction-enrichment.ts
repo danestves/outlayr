@@ -1,3 +1,6 @@
+import type * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { findCategoryPreset, presetForName } from "@/data/categories-core";
@@ -6,11 +9,24 @@ import type { RemoteEnrichmentResult } from "@/domain/enrichment-cache";
 import { merchantKey, resolveMerchant } from "@/domain/merchant-resolver";
 import type { MerchantMatch } from "@/domain/merchant-resolver";
 import { translateNow } from "@/i18n/runtime";
+import type { CloudError } from "@/lib/cloud-error";
 import { enrichmentTransport } from "@/lib/convex";
 import type { CategoryBranch, EnrichmentFn } from "@/lib/convex";
-import { withTimeout } from "@/lib/with-timeout";
+import { createCommand, SILENT } from "@/state/atom-command";
+import { ENRICHMENT_TIMEOUT, timedCaptureCommand } from "@/state/capture-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 const noop = () => undefined;
+
+const followUpCommand = createCommand({
+    execute: (call: Effect.Effect<RemoteEnrichmentResult, CloudError>) => call,
+    label: "capture:enrich-follow-up",
+});
+
+const enrichCommand = timedCaptureCommand<RemoteEnrichmentResult | null>({
+    operation: "enrich",
+    timeout: ENRICHMENT_TIMEOUT,
+});
 
 export interface PendingCategory {
     color: string;
@@ -76,7 +92,6 @@ const GROUNDED_IDLE_MS = 1800;
 const GROUNDED_RECHECK_MS = 8000;
 const GROUNDED_RECHECK_RETRY_MS = 12_000;
 const MIN_KEY_LENGTH = 3;
-export const REMOTE_TIMEOUT_MS = 9000;
 
 function toCuratedSuggestion(match: MerchantMatch): EnrichmentSuggestion {
     const preset = findCategoryPreset(match.categoryName);
@@ -157,6 +172,18 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         }
     };
     const requestIdRef = useRef(0);
+    const remoteAbortRef = useRef<AbortController | null>(null);
+    const enrich = useAtomCommand(enrichCommand, SILENT);
+    const followUp = useAtomCommand(followUpCommand, SILENT);
+    const settledResult = async (call: Effect.Effect<RemoteEnrichmentResult, CloudError>) => {
+        const outcome = await followUp(call);
+        return AsyncResult.isSuccess(outcome) ? outcome.value : null;
+    };
+    const supersedeRequest = () => {
+        requestIdRef.current += 1;
+        remoteAbortRef.current?.abort();
+        remoteAbortRef.current = null;
+    };
     // Ticketed, not a bare set: a superseded request still settles and must not delete an entry a LATER request owns.
     const inFlightRef = useRef<Map<string, number>>(new Map());
     const lastRemoteOutcomeRef = useRef<{
@@ -287,17 +314,15 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         if (call == null) {
             return;
         }
-        requestIdRef.current += 1;
+        supersedeRequest();
         const id = requestIdRef.current;
+        const controller = new AbortController();
+        remoteAbortRef.current = controller;
         inFlightRef.current.set(key, id);
         setPending(true);
         const request = buildRequest(false);
-        let result: RemoteEnrichmentResult | null = null;
-        try {
-            result = await withTimeout(call(request), REMOTE_TIMEOUT_MS, null);
-        } catch {
-            result = null;
-        }
+        const outcome = await enrich({ call: call(request), signal: controller.signal });
+        const result = AsyncResult.isSuccess(outcome) ? Option.getOrNull(outcome.value) : null;
         if (inFlightRef.current.get(key) === id) {
             inFlightRef.current.delete(key);
         }
@@ -344,12 +369,7 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
             ticket !== requestIdRef.current ||
             merchantKey(nameRef.current) !== key ||
             latest.current.currency !== request.currency;
-        let result: RemoteEnrichmentResult | null = null;
-        try {
-            result = await call(request);
-        } catch {
-            result = null;
-        }
+        const result = await settledResult(call(request));
         if (stale()) {
             return;
         }
@@ -358,16 +378,13 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         }
         const scheduleRecheck = (delay: number, retriesLeft: number) => {
             recheckTimerRef.current = setTimeout(async () => {
-                let rechecked: RemoteEnrichmentResult | null = null;
-                try {
-                    rechecked = await call({
+                const rechecked = await settledResult(
+                    call({
                         ...request,
                         groundedLookup: false,
                         knowledgeOnly: true,
-                    });
-                } catch {
-                    rechecked = null;
-                }
+                    })
+                );
                 if (stale() || emitDomainResult(key, rechecked, request.currency)) {
                     return;
                 }
@@ -382,7 +399,7 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
     // Every final answer `run` reaches without the model must supersede older requests, or one settling late emits
     // the PREVIOUS name's suggestion (in the account editor, the last merchant's logo).
     const supersedeInFlight = () => {
-        requestIdRef.current += 1;
+        supersedeRequest();
         // Cleared with the ticket, or `run` refuses to restart a name whose abandoned call is still out. `runRemote`
         // bumps the ticket as it starts, so this never drops a live request.
         inFlightRef.current.clear();
@@ -491,7 +508,7 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
 
     const cancel = useEffectEvent(() => {
         clearTimers();
-        requestIdRef.current += 1;
+        supersedeRequest();
         inFlightRef.current.clear();
     });
 

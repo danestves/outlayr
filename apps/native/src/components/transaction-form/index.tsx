@@ -104,13 +104,13 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import { celebration } from "@/lib/celebration";
 import { sendEnrichmentQueue } from "@/lib/enrichment-queue";
 import { freshEntries } from "@/lib/fresh-entries";
-import { fetchMerchantImage } from "@/lib/logo-fetch";
 import { notifyFailure, notifySaved } from "@/lib/notify";
 import { posthog } from "@/lib/posthog";
 import { openNotificationSettings } from "@/lib/reminders";
 import { useHaptics } from "@/lib/use-haptics";
 import { rememberLastUsedAccountCommand } from "@/state/accounts-commands";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { fetchMerchantLogo } from "@/state/capture-commands";
 import {
     backfillRecurringCommand,
     carryMerchantLookupCommand,
@@ -1371,7 +1371,7 @@ export function TransactionForm({
             dropSuggested();
             return false;
         }
-        const outcome = await fetchMerchantImage({
+        const outcome = await fetchMerchantLogo({
             domain,
             name: form.store.state.values.merchant,
             refresh: forcedLookupRef.current,
@@ -1541,7 +1541,7 @@ export function TransactionForm({
             domain == null
                 ? null
                 : async () => {
-                      const outcome = await fetchMerchantImage({ domain, name: merchant });
+                      const outcome = await fetchMerchantLogo({ domain, name: merchant });
                       if (outcome.kind !== "logo") {
                           throw new Error("No logo to carry");
                       }

@@ -12,7 +12,7 @@ import type { LogoOutcome, MerchantImageRequest } from "@/lib/logo-fetch";
 import { META_KEYS } from "./app-meta-core";
 import { candidateLogoIds, dismissedLogoIds, readRetryDeadlines, writeRetryDeadlines } from "./logo-backfill-state";
 
-const LogoBackfillOperation = Schema.Literals(["fetch", "paint", "pending", "persist", "resolve"]);
+const LogoBackfillOperation = Schema.Literals(["paint", "pending", "persist", "resolve"]);
 
 export class LogoBackfillError extends Schema.TaggedError<LogoBackfillError>()("LogoBackfillError", {
     cause: Schema.Defect(),
@@ -48,7 +48,7 @@ export interface LogoBackfillDeps {
         | null;
     cancelled?: () => boolean;
     discard?: (imageUri: string) => void;
-    fetchImage: (request: MerchantImageRequest) => Promise<LogoOutcome>;
+    fetchImage: (request: MerchantImageRequest) => Effect.Effect<LogoOutcome>;
     now?: number;
     persist: (bytes: Uint8Array) => Promise<{ imageColor: string | null; imageUri: string }>;
 }
@@ -310,7 +310,7 @@ export const attachMissingLogos = Effect.fn("LogoBackfill.attachMissingLogos")(f
         }
         fetchesLeft -= 1;
         const { domain } = answer;
-        const outcome = yield* attempt("fetch", () => deps.fetchImage({ domain, name: group.note.trim() }));
+        const outcome = yield* deps.fetchImage({ domain, name: group.note.trim() });
         if (outcome.kind !== "logo") {
             // "none" also covers timeouts and offline; the logo cache remembers real misses, so retrying is cheap.
             retryAfter.set(group.id, now + RETRY_INDETERMINATE_MS);

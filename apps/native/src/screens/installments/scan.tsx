@@ -1,4 +1,5 @@
 import Image01Icon from "@hugeicons-pro/core-stroke-rounded/Image01Icon";
+import * as Effect from "effect/Effect";
 import { useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
 import { useEffect, useLayoutEffect, useState } from "react";
@@ -58,17 +59,15 @@ function ScanFlow({ account, photo }: { account: Account; photo: ScanPhoto | nul
     const { chooseFromLibrary, phase, reset, retry, scan } = useImageScan<null, InstallmentPlanDraft>({
         context: null,
         owner: "installment-scan",
-        send: async (image, today) => {
-            const { plan, status } = await api({
+        send: (image, today) =>
+            api({
                 accounts: [account.name],
                 currency: account.currency,
                 image,
                 language: localeTag,
                 regionCode,
                 today,
-            });
-            return { draft: plan, status };
-        },
+            }).pipe(Effect.map(({ plan, status }) => ({ draft: plan, status }))),
     });
     const limit = useLimitNotice(
         "receiptScan",

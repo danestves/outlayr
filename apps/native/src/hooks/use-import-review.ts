@@ -209,12 +209,10 @@ export function useImportReview(): ImportReviewResult {
         const entries = plan.entries.filter((_, index) => !flow.excluded.has(index));
         const outAmount = entries.reduce((sum, entry) => (entry.income ? sum : sum + entry.amount), 0);
         const duplicatesSkipped = [...flow.duplicates].filter((index) => flow.excluded.has(index)).length;
-        attachImportLogos(entries)
-            .catch(() => entries)
-            .then(async (decorated) =>
-                unwrapAtomCommand(await applyImport({ db, plan: { ...plan, entries: decorated } }))
-            )
-            .then((count) => {
+        void (async () => {
+            try {
+                const decorated = await attachImportLogos(entries).catch(() => entries);
+                const count = unwrapAtomCommand(await applyImport({ db, plan: { ...plan, entries: decorated } }));
                 haptics("success");
                 // The draft is NOT cleared here: the done step still reads the
                 // committed counts. Dismissing the sheet after a success clears.
@@ -225,14 +223,14 @@ export function useImportReview(): ImportReviewResult {
                     type: "commitSucceeded",
                 });
                 importDraftStore.setStep("done");
-            })
-            .catch((cause: unknown) => {
+            } catch (cause: unknown) {
                 const reason = cause instanceof CsvTransferError ? cause.cause : cause;
                 importDraftStore.dispatch({
                     detail: reason instanceof Error ? reason.message : null,
                     type: "commitFailed",
                 });
-            });
+            }
+        })();
     };
 
     return {
