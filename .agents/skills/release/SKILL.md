@@ -85,6 +85,8 @@ Store notes cover the same changes in every app language, as plain text with a l
   done
   ```
 
+An iOS build also gets TestFlight's What to Test, in `notes/testflight.txt`. It's for testers, so it's English and plain: one line per change saying where to go and what to try, "Settings > Accounts: give a bank its own transfer fee, then log a transfer from it". Include fixes worth rechecking, and skip the store notes' personality. At most 4,000 characters.
+
 ## 4. Dispatch and wait
 
 From `apps/native`, run the command the verdict printed (with the message filled in for an OTA) in a background shell. Every verdict dispatches a GitHub run, which `gh workflow run` prints the URL of; watch it to the end:
@@ -99,9 +101,9 @@ A `BUILD` dispatches `.github/workflows/eas-build.yml` on `main`, which deploys 
 ```sh
 gh run download <run id> -n application-archive -D build   # the .ipa or .aab
 rnd() { npx -y -p @react-native-feel/deploy@0.3.0 rnd "$@"; }
-# iOS only: upload to App Store Connect and add it to TestFlight's Internal group.
+# iOS only: upload to App Store Connect and add it to TestFlight's Internal group with its What to Test.
 # The submit profile carries only App Store Connect details, so it serves both channels.
-rnd submit -p ios --profile production --path build/<name>.ipa --groups Internal
+rnd submit -p ios --profile production --path build/<name>.ipa --groups Internal --what-to-test "$(cat notes/testflight.txt)"
 ```
 
 rnd can't submit to Play, so Android uploads with `play.ts`. Preview lands on the internal track, rolled out to testers. Production goes to Google's review and then to every user:
