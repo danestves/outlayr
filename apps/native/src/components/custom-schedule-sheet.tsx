@@ -9,7 +9,7 @@ import { BottomSheet } from "panelui-native/components/bottom-sheet";
 import { Button } from "panelui-native/components/button";
 import { Tabs } from "panelui-native/components/tabs";
 import { cn } from "panelui-native/utils/cn";
-import { useEffect, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 import { Pressable, View } from "react-native";
 import Animated, { Easing, FadeIn, FadeOut, useAnimatedStyle, withTiming } from "react-native-reanimated";
@@ -109,18 +109,16 @@ function useRippledCharges(charges: readonly ScheduledCharge[], ready: boolean) 
         setNoteVisible(charges.some((charge) => charge.clamped));
     }
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- runs the staggered swap timers for the preview rows, and stops them when the sheet is not ready
     useEffect(() => {
-        if (ready) {
+        if (!ready) {
+            for (const timer of timers.current) {
+                clearTimeout(timer);
+            }
+            timers.current = [];
             return;
         }
-        for (const timer of timers.current) {
-            clearTimeout(timer);
-        }
-        timers.current = [];
-    }, [ready]);
-
-    useEffect(() => {
-        if (!ready || next === current) {
+        if (next === current) {
             return;
         }
         for (const timer of timers.current) {
@@ -147,6 +145,7 @@ function useRippledCharges(charges: readonly ScheduledCharge[], ready: boolean) 
         );
     }, [next, current, charges, ready]);
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- clears the pending swap timers when the sheet unmounts
     useEffect(
         () => () => {
             for (const timer of timers.current) {
@@ -189,25 +188,13 @@ export function CustomScheduleSheet({
     const [type, setType] = useState(seeded.type);
     const [coefficient, setCoefficient] = useState(seeded.coefficient);
     const [wasOpen, setWasOpen] = useState(open);
-    // Armed a tick after the sheet is up: rippling the open-edge re-seed would play under the platform presentation.
-    const [rippleReady, setRippleReady] = useState(false);
-
-    useEffect(() => {
-        if (!open) {
-            return;
-        }
-        const armed = setTimeout(() => {
-            setRippleReady(true);
-        }, 0);
-        return () => clearTimeout(armed);
-    }, [open]);
+    const rippleReady = useDeferredValue(open);
 
     // Re-seeded during render on the closed-to-open edge: the sheet stays mounted, so a form edit made while closed
     // must land, and an effect would draw the previous schedule for a frame. Re-seeding on every prop change would
     // fight the user mid-edit.
     if (open !== wasOpen) {
         setWasOpen(open);
-        setRippleReady(false);
         if (open) {
             const next = normalizeSchedule(recurringType, recurringCoefficient);
             setType(next.type);
@@ -372,6 +359,7 @@ function StepButton({ icon, onStep, disabled, accessibilityLabel }: StepButtonPr
 
     const release = () => releaseHold(held);
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- clears the stepper's hold timers when it unmounts
     useEffect(() => () => releaseHold(held), []);
 
     return (

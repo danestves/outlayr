@@ -11,10 +11,10 @@ export interface SwipeDiscardRecovery<Draft> {
 }
 
 // `leave` goes once: a second call returns false, or it would go back again from the screen underneath.
-export function useDiscardGuard<Draft>(_recovery?: SwipeDiscardRecovery<Draft>) {
+export function useDiscardGuard<Draft>(_recovery?: SwipeDiscardRecovery<Draft>, startDirty = false) {
     const router = useRouter();
     const t = useTranslation();
-    const [dirty, setDirty] = useState(false);
+    const [dirty, setDirty] = useState(startDirty);
     const leaving = useRef(false);
 
     const disablePrevention = usePreventRemove(dirty, ({ repeat }) => {

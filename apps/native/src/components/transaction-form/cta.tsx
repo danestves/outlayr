@@ -52,6 +52,7 @@ function CtaToolbar(props: TransactionFormCtaProps) {
 
 export function TransactionFormCta(props: TransactionFormCtaProps) {
     const handlers = useRef(props);
+    // oxlint-disable-next-line outlayr/react-effect-budget -- keeps the callbacks registered with the native header pointing at the latest form handlers
     useLayoutEffect(() => {
         handlers.current = props;
     });

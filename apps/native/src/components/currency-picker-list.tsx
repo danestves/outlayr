@@ -93,7 +93,7 @@ export function CurrencyPickerList({
         wrapper.measureInWindow((wrapperLeft, wrapperTop) => {
             container.measureInWindow((left, top, width, height) => {
                 travelled.value = 0;
-                setTravel({
+                const departing: Travel = {
                     code,
                     departed: rows,
                     height,
@@ -102,19 +102,14 @@ export function CurrencyPickerList({
                     top: top - wrapperTop,
                     width,
                     wrapperTop,
-                });
+                };
+                setTravel(departing);
+                setTimeout(() => setTravel((current) => (current === departing ? null : current)), TRAVEL_ABANDON_MS);
             });
         });
     };
 
-    useEffect(() => {
-        if (travel === null) {
-            return;
-        }
-        const abandon = setTimeout(() => setTravel(null), TRAVEL_ABANDON_MS);
-        return () => clearTimeout(abandon);
-    }, [travel]);
-
+    // oxlint-disable-next-line outlayr/react-effect-budget -- measures the landed row in the native list a frame after the favourites commit
     useEffect(() => {
         if (travel === null || rows === travel.departed) {
             return;

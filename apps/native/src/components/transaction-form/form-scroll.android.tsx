@@ -1,9 +1,10 @@
-import { createContext, use, useEffect, useRef, useState } from "react";
+import { createContext, use, useRef, useState } from "react";
 import type { RefObject } from "react";
-import { Keyboard, ScrollView, StyleSheet, TextInput, View } from "react-native";
+import { ScrollView, StyleSheet, TextInput, View } from "react-native";
 import type { ScrollViewInstance, ViewInstance } from "react-native";
 
 import { InlineFailure } from "@/components/form/inline-failure";
+import { useKeyboardEvent } from "@/hooks/use-keyboard-height";
 import { useSheetSurface } from "@/hooks/use-sheet-surface";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
@@ -30,31 +31,25 @@ function useKeyboardOverlap(
 ) {
     const [overlap, setOverlap] = useState(0);
 
-    useEffect(() => {
-        const show = Keyboard.addListener("keyboardDidShow", (event) => {
-            frame.current?.measureInWindow((_x, y, _width, height) => {
-                const covered = Math.max(0, y + height - event.endCoordinates.screenY);
-                setOverlap(covered);
-                const input = TextInput.State.currentlyFocusedInput();
-                const content = scroll.current?.getInnerViewRef();
-                if (input == null || content == null || covered === 0) {
-                    return;
+    useKeyboardEvent("keyboardDidShow", (event) => {
+        frame.current?.measureInWindow((_x, y, _width, height) => {
+            const covered = Math.max(0, y + height - event.endCoordinates.screenY);
+            setOverlap(covered);
+            const input = TextInput.State.currentlyFocusedInput();
+            const content = scroll.current?.getInnerViewRef();
+            if (input == null || content == null || covered === 0) {
+                return;
+            }
+            input.measureLayout(content, (_left, top, _inputWidth, inputHeight) => {
+                const visibleBottom = offset.current + height - covered;
+                const fieldBottom = top + inputHeight + KEYBOARD_GAP;
+                if (fieldBottom > visibleBottom) {
+                    scroll.current?.scrollTo({ animated: true, y: offset.current + fieldBottom - visibleBottom });
                 }
-                input.measureLayout(content, (_left, top, _inputWidth, inputHeight) => {
-                    const visibleBottom = offset.current + height - covered;
-                    const fieldBottom = top + inputHeight + KEYBOARD_GAP;
-                    if (fieldBottom > visibleBottom) {
-                        scroll.current?.scrollTo({ animated: true, y: offset.current + fieldBottom - visibleBottom });
-                    }
-                });
             });
         });
-        const hide = Keyboard.addListener("keyboardDidHide", () => setOverlap(0));
-        return () => {
-            show.remove();
-            hide.remove();
-        };
-    }, [frame, offset, scroll]);
+    });
+    useKeyboardEvent("keyboardDidHide", () => setOverlap(0));
 
     return overlap;
 }

@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
+import { NO_READ, useLiveQuery } from "@/data/live-query";
 import { splitsForQuery } from "@/data/splits-core";
 import type { Transaction } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
+import { transactionSplits } from "@/db/schema";
 import type { Allocation } from "@/domain/split";
 import { openDraft } from "@/domain/split-draft";
 
@@ -19,31 +21,19 @@ export function useSplitDraft(
     initial: Transaction | undefined,
     restored?: Allocation[]
 ): SplitDraft {
-    const [allocations, setAllocations] = useState<Allocation[]>(restored ?? []);
-    const [fromDraft] = useState(restored !== undefined);
+    const [edited, setAllocations] = useState<Allocation[] | null>(restored ?? null);
 
-    // Without this an edit's sheet opens empty and saving silently clears a split the user never touched.
-    useEffect(() => {
-        if (mode !== "edit" || initial == null || fromDraft) {
-            return;
-        }
-        let cancelled = false;
-        splitsForQuery(db, initial.id)
-            .then((rows) => {
-                if (!cancelled && rows.length > 0) {
-                    setAllocations(rows.map((row) => ({ amount: row.amount, categoryId: row.categoryId })));
-                }
-            })
-            .catch((error) => {
-                console.error("Failed to read the split", error);
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, [db, fromDraft, mode, initial]);
+    const stored = useLiveQuery(
+        transactionSplits,
+        () => (mode === "edit" && initial != null && edited === null ? splitsForQuery(db, initial.id) : NO_READ),
+        [db, mode, initial?.id, edited === null]
+    );
+    const allocations = edited ?? stored.map((row) => ({ amount: row.amount, categoryId: row.categoryId }));
 
     const openSplit = (total: number, categoryId: string | null, decimals: number) => {
-        setAllocations((current) => (current.length === 0 ? openDraft(total, categoryId, decimals) : current));
+        if (allocations.length === 0) {
+            setAllocations(openDraft(total, categoryId, decimals));
+        }
     };
 
     return { allocations, openSplit, setAllocations };

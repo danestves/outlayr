@@ -26,7 +26,13 @@ import { shallowEqual } from "@/components/form/shallow-equal";
 import { holdSubmitting, pressSubmit } from "@/components/form/submit-guard";
 import { SubscribeFields } from "@/components/form/subscribe-fields";
 import { useAppSettings, useDisplaySettings, useSettingBool } from "@/contexts/display-settings-context";
-import { EMPTY_DRAFT, useIdentityDraft, useIdentityFlyUp } from "@/contexts/identity-draft-context";
+import {
+    EMPTY_DRAFT,
+    useIdentitySeed,
+    useIdentityDraft,
+    useIdentityFlyUp,
+    useIdentityReads,
+} from "@/contexts/identity-draft-context";
 import { useBankAccounts, usePeople } from "@/data/accounts";
 import { getAccountById, getLastUsedAccount } from "@/data/accounts-core";
 import type { Account } from "@/data/accounts-core";
@@ -527,8 +533,14 @@ export function TransactionForm({
     const notesRef = useRef(notesSeed);
 
     const { draft: identity, setDraft: setIdentity } = useIdentityDraft();
-    const [identitySource, setIdentitySource] = useState<FieldSource>(restore?.identitySource ?? "initial");
+    const [identitySource, setIdentitySourceState] = useState<FieldSource>(restore?.identitySource ?? "initial");
+    const identitySourceRef = useRef(identitySource);
+    const setIdentitySource = (next: FieldSource) => {
+        identitySourceRef.current = next;
+        setIdentitySourceState(next);
+    };
     const { pickerOpen, setPickerOpen } = useIdentityFlyUp();
+    const identityReads = useIdentityReads();
     const [saveFailure, setSaveFailure] = useState<string | null>(null);
     const saveTransaction = useAtomCommand(saveTransactionCommand, SILENT);
     const backfillRecurring = useAtomCommand(backfillRecurringCommand, SILENT);
@@ -620,7 +632,7 @@ export function TransactionForm({
                         ? null
                         : {
                               income: value.income,
-                              siblings: latest.current.categories,
+                              siblings: categoriesForNamespace,
                               value: value.pendingCategory,
                           },
                 splits: isRealSplit(splitAllocations) ? splitAllocations : [],
@@ -1187,12 +1199,14 @@ export function TransactionForm({
         date,
         db,
         entryRate: { rate: rateInForce, type: rateSelection.exchangeRateType },
+        hasPrice: hasAmount,
         income,
         initial,
         intent: seed?.installments === true,
         isSubscription,
         mode,
         seeded: seed?.installmentDraft,
+        turn: stageTurn,
     });
     const saveRefusal = (amount: number, entryCurrency: string): string | null => {
         if (isRealSplit(splitAllocations) && !isBalanced(amount, splitAllocations, minorUnitsFor(entryCurrency))) {
@@ -1204,10 +1218,6 @@ export function TransactionForm({
     const installmentPrice = useSelector(form.store, (s) =>
         installmentOrder.drafting ? numpadToNumber(s.values.amount) : 0
     );
-    const promptInstallments = useEffectEvent((_turn: number) => installmentOrder.prompt(hasAmount));
-    useEffect(() => {
-        promptInstallments(stageTurn);
-    }, [stageTurn]);
     const [accountDeclined, setAccountDeclined] = useState(
         restore?.accountDeclined ?? (initial != null && initial.accountId == null)
     );
@@ -1258,29 +1268,10 @@ export function TransactionForm({
         unwrapAtomCommand(await recallBookMerchantCommand({ currency: forCurrency, db, name }));
 
     const logoRequestRef = useRef(0);
-    // Read at write time, not closed over: the seeding effect can fill the well while a request is out. Mirrored in an
-    // effect, since a render-time write is a side effect the compiler cannot follow.
-    const latest = useRef({
-        allTags,
-        categories: categoriesForNamespace,
-        hasIdentity: false,
-        identitySource,
-        pickerOpen,
-    });
-    useEffect(() => {
-        latest.current = {
-            allTags,
-            categories: categoriesForNamespace,
-            hasIdentity: Boolean(identity.emoji || identity.icon || identity.photoUri),
-            identitySource,
-            pickerOpen,
-        };
-    });
-
     const resolveLocal = (suggestion: EnrichmentSuggestion): EnrichmentSuggestion => {
         let { categoryId, pendingCategory: suggestedCategory } = suggestion;
         if (categoryId == null && suggestedCategory != null) {
-            const matchedCategory = latest.current.categories.find(
+            const matchedCategory = categoriesForNamespace.find(
                 (candidate) => candidate.name === suggestedCategory?.name
             );
             if (matchedCategory != null) {
@@ -1291,7 +1282,7 @@ export function TransactionForm({
         const resolvedTagIds: string[] = [...suggestion.tagIds];
         const pendingTagNames: string[] = [];
         for (const tagName of suggestion.pendingTagNames) {
-            const matchedTag = findTagByName(latest.current.allTags, tagName);
+            const matchedTag = findTagByName(allTags, tagName);
             if (matchedTag == null) {
                 pendingTagNames.push(tagName);
             } else {
@@ -1335,14 +1326,18 @@ export function TransactionForm({
 
     // A suggested logo stays replaceable so it follows the name; only a user choice or an open picker stops it. A run
     // that settles after a newer one started is dropped.
+    const hasIdentityNow = () => {
+        const current = identityReads.draft();
+        return Boolean(current.emoji || current.icon || current.photoUri);
+    };
     const attachLogo = async (domain: string | null): Promise<boolean> => {
         const blocked = () =>
-            latest.current.pickerOpen ||
+            identityReads.pickerOpen() ||
             // A requested lookup outranks what the well holds; only an open picker outranks it.
             ((!forcedLookupRef.current || touchedSinceLookupRef.current.has("identity")) &&
-                (latest.current.identitySource === "user" ||
+                (identitySourceRef.current === "user" ||
                     // An emoji or photo from `initial`/`copyOf` is a choice already made.
-                    (latest.current.identitySource === "initial" && latest.current.hasIdentity)));
+                    (identitySourceRef.current === "initial" && hasIdentityNow())));
         if (blocked()) {
             return false;
         }
@@ -1356,7 +1351,7 @@ export function TransactionForm({
             merchantKey(form.store.state.values.merchant) !== askedFor ||
             blocked();
         const dropSuggested = () => {
-            if (latest.current.identitySource === "suggested") {
+            if (identitySourceRef.current === "suggested") {
                 setIdentitySource("initial");
                 setIdentity((previous) => ({
                     ...previous,
@@ -1414,6 +1409,7 @@ export function TransactionForm({
         }));
         return true;
     };
+    // oxlint-disable-next-line outlayr/react-effect-budget -- stops an in-flight logo fetch and file write from landing after the form unmounts
     useEffect(
         () => () => {
             logoRequestRef.current += 1;
@@ -1508,6 +1504,7 @@ export function TransactionForm({
     // The hook re-asks on a currency or side change; that ask is the form's, not the user's, so the override ends here.
     const seenLookupScopeRef = useRef({ currency, income });
     const endForcedLookup = useEffectEvent(() => setForcedLookup(false));
+    // oxlint-disable-next-line outlayr/react-effect-budget -- ends the merchant lookup override when the enrichment lookup is re-asked for a new currency or side
     useEffect(() => {
         const seen = seenLookupScopeRef.current;
         if (seen.currency === currency && seen.income === income) {
@@ -1572,6 +1569,7 @@ export function TransactionForm({
         );
     };
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- clears the pending shake timers when the form unmounts
     useEffect(
         () => () => {
             if (shakeTimer.current != null) {
@@ -1590,37 +1588,21 @@ export function TransactionForm({
     const [restoredIdentity] = useState(() =>
         restore !== undefined && restore.identitySource !== "initial" ? restore.identity : null
     );
-    useEffect(() => {
-        if (restoredIdentity !== null) {
-            setIdentity(restoredIdentity);
-        }
-    }, [restoredIdentity, setIdentity]);
+    useIdentitySeed(restoredIdentity);
 
-    useEffect(() => {
-        // Skipped once identity is touched or suggested: these deps change on any `initial`/`copyOf` re-render, and
-        // re-seeding would wipe an in-progress choice or a logo still correct for the name.
-        if (identitySource !== "initial") {
-            return;
-        }
-        setIdentity({
-            color: initial?.customColor ?? copyOf?.customColor ?? null,
-            emoji: initial?.emoji ?? copyOf?.emoji ?? null,
-            icon: initial?.icon ?? copyOf?.icon ?? null,
-            photoColor: initial?.imageColor ?? null,
-            photoUri: initial?.imageUri ?? null,
-        });
-    }, [
-        identitySource,
-        initial?.imageUri,
-        initial?.emoji,
-        setIdentity,
-        initial?.imageColor,
-        initial?.icon,
-        initial?.customColor,
-        copyOf?.emoji,
-        copyOf?.icon,
-        copyOf?.customColor,
-    ]);
+    // Skipped once identity is touched or suggested: re-seeding would wipe an in-progress choice or a logo still
+    // correct for the name.
+    useIdentitySeed(
+        identitySource === "initial"
+            ? {
+                  color: initial?.customColor ?? copyOf?.customColor ?? null,
+                  emoji: initial?.emoji ?? copyOf?.emoji ?? null,
+                  icon: initial?.icon ?? copyOf?.icon ?? null,
+                  photoColor: initial?.imageColor ?? null,
+                  photoUri: initial?.imageUri ?? null,
+              }
+            : null
+    );
 
     const handleKindChange = (next: "once" | "subscription") => {
         const sub = next === "subscription";
@@ -1761,6 +1743,7 @@ export function TransactionForm({
     });
     const { attachments } = attachmentDraft;
     const dirty = formDirty || edited || identitySource === "user";
+    // oxlint-disable-next-line outlayr/react-effect-budget -- reports the form's dirtiness to the screen's navigation guard that blocks leaving with edits
     useEffect(() => {
         onDirtyChange?.(dirty);
     }, [dirty, onDirtyChange]);
@@ -1769,6 +1752,7 @@ export function TransactionForm({
     const [noteAsked, setNoteAsked] = useState(false);
     const [noteSummary, setNoteSummary] = useState(notesSeed);
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- hands the draft reader to the sheet's swipe-dismiss listener while mounted, and clears it on unmount
     useLayoutEffect(() => {
         if (draftRef === undefined) {
             return;

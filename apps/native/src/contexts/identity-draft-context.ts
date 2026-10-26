@@ -1,7 +1,8 @@
-import { useAtom, useAtomValue } from "@effect/atom-react/Hooks";
+import { useAtom, useAtomMount, useAtomValue } from "@effect/atom-react/Hooks";
 import { RegistryContext } from "@effect/atom-react/RegistryContext";
 import * as Atom from "effect/reactivity/Atom";
-import { use } from "react";
+import * as Schema from "effect/Schema";
+import { use, useId } from "react";
 import { makeMutable, withSpring } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
 
@@ -49,9 +50,52 @@ const flyUpAtom = Atom.make(() => ({ floatProgress: makeMutable(0), sheetHeight:
 // A JS latch, not `sheetHeight.get()`: two layouts landing before the UI thread syncs would both see the 0.
 const sheetMeasuredAtom = Atom.make(false).pipe(Atom.keepAlive, Atom.withLabel("identity-draft:sheet-measured"));
 
+const IdentitySeedJson = Schema.fromJsonString(
+    Schema.Struct({
+        color: Schema.NullOr(Schema.String),
+        emoji: Schema.NullOr(Schema.String),
+        icon: Schema.NullOr(Schema.String),
+        photoColor: Schema.NullOr(Schema.String),
+        photoUri: Schema.NullOr(Schema.String),
+    })
+);
+const encodeIdentitySeed = Schema.encodeSync(IdentitySeedJson);
+const decodeIdentitySeed = Schema.decodeSync(IdentitySeedJson);
+
+const SEED_SEPARATOR = "|";
+
+const identitySeedFamily = Atom.family((key: string) =>
+    Atom.make((get) => {
+        const seed = key.slice(key.indexOf(SEED_SEPARATOR) + 1);
+        if (seed !== "") {
+            get.set(draftAtom, decodeIdentitySeed(seed));
+        }
+    }).pipe(Atom.withLabel("identity-draft:seed"))
+);
+
+export function useIdentitySeed(seed: IdentitySelection | null): void {
+    const instance = useId();
+    useAtomMount(identitySeedFamily(`${instance}${SEED_SEPARATOR}${seed === null ? "" : encodeIdentitySeed(seed)}`));
+}
+
+export const identityPickerResetAtom = Atom.make((get) => {
+    if (get.once(pickerOpenAtom)) {
+        get.set(pickerOpenAtom, false);
+        get.once(flyUpAtom).floatProgress.set(withSpring(0, RETURN_SPRING));
+    }
+}).pipe(Atom.withLabel("identity-draft:picker-reset"));
+
 export function useIdentityDraft(): IdentityDraftValue {
     const [draft, setDraft] = useAtom(draftAtom);
     return { draft, setDraft };
+}
+
+export function useIdentityReads() {
+    const registry = use(RegistryContext);
+    return {
+        draft: () => registry.get(draftAtom),
+        pickerOpen: () => registry.get(pickerOpenAtom),
+    };
 }
 
 export function useIdentityFlyUp(): IdentityFlyUpValue {

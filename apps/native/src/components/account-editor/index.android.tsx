@@ -1,10 +1,11 @@
+import { useAtomMount } from "@effect/atom-react/Hooks";
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import Delete02Icon from "@hugeicons-pro/core-stroke-rounded/Delete02Icon";
 import { isPerson, toAccountKind } from "@outlayr/money/account-kind";
 import type { AccountKind } from "@outlayr/money/account-kind";
 import { useForm, useSelector } from "@tanstack/react-form";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Keyboard, ScrollView, View } from "react-native";
 import type { TextInputInstance } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -16,7 +17,12 @@ import { holdSubmitting, pressSubmit } from "@/components/form/submit-guard";
 import { IdentityHero } from "@/components/identity-hero";
 import { SheetHeader, SheetHeaderIconButton, SheetHeaderTextButton } from "@/components/sheet-header";
 import { useAppSettings } from "@/contexts/display-settings-context";
-import { EMPTY_DRAFT, useIdentityDraft, useIdentityFlyUp } from "@/contexts/identity-draft-context";
+import {
+    useIdentitySeed,
+    identityPickerResetAtom,
+    useIdentityDraft,
+    useIdentityFlyUp,
+} from "@/contexts/identity-draft-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useAccountBalance } from "@/data/accounts";
 import { getAccountById } from "@/data/accounts-core";
@@ -40,6 +46,7 @@ import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
 import { AccountDetailsFields } from "./details-fields";
+import { accountIdentitySeed, draftHasIdentity, logoMayReplaceIdentity } from "./identity-seed";
 import type { AccountEditorProps } from "./index";
 
 type IdentitySource = "initial" | "suggested" | "user";
@@ -204,58 +211,22 @@ function AccountEditorReady(props: AccountEditorProps & { db: Database }) {
     const isSubmitting = useSelector(form.store, (s) => s.isSubmitting);
 
     const [identitySource, setIdentitySource] = useState<IdentitySource>("initial");
-    // The logo lookup is debounced and settles long after the render that started it, so its callbacks read here.
-    const latest = useRef({ hasIdentity: false, identitySource, pickerOpen });
-    useEffect(() => {
-        latest.current = {
-            hasIdentity: Boolean(draft.emoji || draft.icon || draft.photoUri),
-            identitySource,
-            pickerOpen,
-        };
-    });
+    const hasIdentity = draftHasIdentity(draft);
 
-    // `pickerOpen` lives in the app-level provider, so a path that left it set would disable this sheet's actions.
-    useEffect(() => {
-        setPickerOpen(false);
-    }, [setPickerOpen]);
+    useAtomMount(identityPickerResetAtom);
 
-    // The draft is shared context, so this editor may mount onto another screen's leftovers.
-    useEffect(() => {
-        if (mode !== "create") {
-            return;
-        }
-        setDraft(EMPTY_DRAFT);
-    }, [mode, setDraft]);
-
-    useEffect(() => {
-        if (mode !== "edit") {
-            return;
-        }
-        setDraft(
-            loaded
-                ? {
-                      color: loaded.customColor ?? null,
-                      emoji: loaded.emoji ?? null,
-                      icon: loaded.icon ?? null,
-                      photoColor: loaded.imageColor ?? null,
-                      photoUri: loaded.imageUri ?? null,
-                  }
-                : EMPTY_DRAFT
-        );
-    }, [mode, loaded, setDraft]);
+    const [seed] = useState(() => accountIdentitySeed(mode, loaded));
+    useIdentitySeed(seed);
 
     const identity = useAccountIdentity({
-        canAttach: () =>
-            latest.current.identitySource !== "user" &&
-            !latest.current.pickerOpen &&
-            !(latest.current.identitySource === "initial" && latest.current.hasIdentity),
+        canAttach: () => logoMayReplaceIdentity(identitySource, pickerOpen, hasIdentity),
         // A stored identity is a choice already made. An account saved without one is looked up on open and on retype.
         enabled: !person && (mode === "create" || !hasStoredIdentity),
         groundedLookup,
         initialName: initialValues.name,
         locale,
         onClear: () => {
-            if (latest.current.identitySource !== "suggested") {
+            if (identitySource !== "suggested") {
                 return;
             }
             setIdentitySource("initial");

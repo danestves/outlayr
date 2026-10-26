@@ -33,12 +33,14 @@ interface InstallmentOrderArgs {
     db: Database;
     /** Prices a plan in dollars. */
     entryRate: { rate: number | null; type: EntryRateType };
+    hasPrice: boolean;
     income: boolean;
     initial: Transaction | undefined;
     intent: boolean;
     isSubscription: boolean;
     mode: "create" | "edit";
     seeded: InstallmentSeed | undefined;
+    turn: number;
 }
 
 type SeededFee = InstallmentSeed["fees"][number];
@@ -107,16 +109,19 @@ export function useInstallmentOrder({
     income,
     initial,
     intent,
+    hasPrice: priced,
     isSubscription,
     mode,
     seeded,
+    turn,
 }: InstallmentOrderArgs) {
     const router = useRouter();
     const t = useTranslation();
     const { language } = useLanguage();
     const sheetRef = useRef<BottomSheetModal>(null);
     const ordered = useRef(false);
-    const prompted = useRef(!intent);
+    const [prompted, setPrompted] = useState(!intent);
+    const [seenTurn, setSeenTurn] = useState<number | null>(null);
     const [draft, setDraft] = useState<InstallmentDraft | null>(null);
     // Presented from an effect: the sheet mounts with the draft, a render after the tap that makes it.
     const [presented, setPresented] = useState(0);
@@ -137,6 +142,7 @@ export function useInstallmentOrder({
             planPerUsd: currency === planCurrency ? null : paymentRate(db, "USD", planCurrency, date),
         });
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- presents the native installments sheet once it has mounted with the draft
     useEffect(() => {
         if (presented > 0) {
             sheetRef.current?.present();
@@ -144,7 +150,7 @@ export function useInstallmentOrder({
     }, [presented]);
 
     const open = () => {
-        prompted.current = true;
+        setPrompted(true);
         setDraft(
             (current) =>
                 current ??
@@ -154,11 +160,12 @@ export function useInstallmentOrder({
         setPresented((count) => count + 1);
     };
 
-    const prompt = (hasPrice: boolean) => {
-        if (!prompted.current && offered && hasPrice) {
+    if (turn !== seenTurn) {
+        setSeenTurn(turn);
+        if (!prompted && offered && priced) {
             open();
         }
-    };
+    }
 
     const verbs = (hasPrice: boolean, price: number): SentenceVerb[] => {
         if (planId !== null) {
@@ -293,5 +300,5 @@ export function useInstallmentOrder({
         );
     };
 
-    return { afterDone, drafting: draft !== null, problem, prompt, save, sheet, verbs };
+    return { afterDone, drafting: draft !== null, problem, save, sheet, verbs };
 }

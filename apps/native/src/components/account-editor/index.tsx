@@ -6,8 +6,8 @@ import { animation, blur, opacity, overlay, padding, scrollDismissesKeyboard } f
 import { isPerson, toAccountKind } from "@outlayr/money/account-kind";
 import type { AccountKind } from "@outlayr/money/account-kind";
 import { useForm, useSelector } from "@tanstack/react-form";
-import { Stack, useNavigation, useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { Stack, useRouter } from "expo-router";
+import { useRef, useState } from "react";
 import { Keyboard, View } from "react-native";
 import Animated, { useAnimatedStyle, useDerivedValue, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -33,7 +33,7 @@ import { IdentityCurtain } from "@/components/identity-curtain";
 import { HERO_RING, IdentityFlyUpLayer } from "@/components/identity-fly-up";
 import { toolbarIcon } from "@/components/toolbar-icons";
 import { useAppSettings } from "@/contexts/display-settings-context";
-import { EMPTY_DRAFT, useIdentityDraft, useIdentityFlyUp } from "@/contexts/identity-draft-context";
+import { useIdentitySeed, useIdentityDraft, useIdentityFlyUp } from "@/contexts/identity-draft-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useAccountBalance } from "@/data/accounts";
 import { getAccountById } from "@/data/accounts-core";
@@ -44,6 +44,7 @@ import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { formatAmount, minorUnitsFor, roundToMinorUnits } from "@/domain/money";
 import { numberToNumpad, numpadToNumber } from "@/domain/numpad";
 import { useAccountIdentity } from "@/hooks/use-account-identity";
+import { useKeyboardEvent } from "@/hooks/use-keyboard-height";
 import { useLocaleTag } from "@/hooks/use-locale-tag";
 import { useAccountSaveCapped, useCurrencyBlocked } from "@/hooks/use-pro-gate";
 import { useRegionCode } from "@/hooks/use-region-code";
@@ -60,6 +61,7 @@ import { withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";
 
 import { AccountEditorDetailsSection } from "./details-section";
+import { accountIdentitySeed, draftHasIdentity, logoMayReplaceIdentity } from "./identity-seed";
 
 export type AccountEditorProps = { mode: "create"; liability?: boolean } | { mode: "edit"; id: string };
 
@@ -100,7 +102,6 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
     const router = useRouter();
     const currencyBlocked = useCurrencyBlocked(editId);
     const accountCapped = useAccountSaveCapped();
-    const navigation = useNavigation();
     const t = useTranslation();
     const { language } = useLanguage();
     const colors = useColors();
@@ -235,82 +236,36 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
     );
 
     const [identitySource, setIdentitySource] = useState<IdentitySource>("initial");
-    // The logo lookup settles long after the render that started it, so its callbacks read here. Mirrored in an
-    // effect: a write during render is a side effect the compiler cannot follow.
-    const latest = useRef({ hasIdentity: false, identitySource, pickerOpen });
-    useEffect(() => {
-        latest.current = {
-            hasIdentity: Boolean(draft.emoji || draft.icon || draft.photoUri),
-            identitySource,
-            pickerOpen,
-        };
-    });
+    const hasIdentity = draftHasIdentity(draft);
 
-    // The draft is shared context, so this editor may mount onto another screen's leftovers.
-    useEffect(() => {
-        if (mode !== "create") {
-            return;
-        }
-        setDraft(EMPTY_DRAFT);
-    }, [mode, setDraft]);
-
-    useEffect(() => {
-        if (mode !== "edit") {
-            return;
-        }
-        setDraft(
-            loaded
-                ? {
-                      color: loaded.customColor ?? null,
-                      emoji: loaded.emoji ?? null,
-                      icon: loaded.icon ?? null,
-                      photoColor: loaded.imageColor ?? null,
-                      photoUri: loaded.imageUri ?? null,
-                  }
-                : EMPTY_DRAFT
-        );
-    }, [mode, loaded, setDraft]);
-
-    useEffect(() => {
-        navigation.setOptions({
-            sheetAllowedDetents: pickerOpen ? LARGE_ONLY : [ACCOUNT_DETENT, 1],
-        });
-    }, [navigation, pickerOpen]);
+    const [seed] = useState(() => accountIdentitySeed(mode, loaded));
+    useIdentitySeed(seed);
 
     // The balance field's decimal pad has no return key, and the CTA is pinned to the bottom: unreachable without this.
     const keyboardLift = useSharedValue(0);
-    useEffect(() => {
-        const show = Keyboard.addListener("keyboardWillShow", (event) => {
-            keyboardLift.set(
-                withTiming(Math.max(0, event.endCoordinates.height - insets.bottom), {
-                    duration: event.duration,
-                })
-            );
-        });
-        const hide = Keyboard.addListener("keyboardWillHide", (event) => {
-            keyboardLift.set(withTiming(0, { duration: event.duration }));
-        });
-        return () => {
-            show.remove();
-            hide.remove();
-        };
-    }, [insets.bottom, keyboardLift]);
+    useKeyboardEvent("keyboardWillShow", (event) => {
+        keyboardLift.set(
+            withTiming(Math.max(0, event.endCoordinates.height - insets.bottom), {
+                duration: event.duration,
+            })
+        );
+    });
+    useKeyboardEvent("keyboardWillHide", (event) => {
+        keyboardLift.set(withTiming(0, { duration: event.duration }));
+    });
     const ctaStyle = useAnimatedStyle(() => ({
         transform: [{ translateY: -keyboardLift.get() }],
     }));
 
     const identity = useAccountIdentity({
-        canAttach: () =>
-            latest.current.identitySource !== "user" &&
-            !latest.current.pickerOpen &&
-            !(latest.current.identitySource === "initial" && latest.current.hasIdentity),
+        canAttach: () => logoMayReplaceIdentity(identitySource, pickerOpen, hasIdentity),
         // A stored identity is a choice already made. An account saved without one is looked up on open and on retype.
         enabled: !person && (mode === "create" || !hasStoredIdentity),
         groundedLookup,
         initialName: initialValues.name,
         locale,
         onClear: () => {
-            if (latest.current.identitySource !== "suggested") {
+            if (identitySource !== "suggested") {
                 return;
             }
             setIdentitySource("initial");
@@ -375,6 +330,7 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
             }}
             style={{ backgroundColor: colors.groupedBackground, flex: 1 }}
         >
+            <Stack.Screen options={{ sheetAllowedDetents: pickerOpen ? LARGE_ONLY : [ACCOUNT_DETENT, 1] }} />
             {loaded == null ? null : (
                 <AccountDeleteToolbar
                     account={loaded}

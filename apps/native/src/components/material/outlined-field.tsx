@@ -41,6 +41,7 @@ function FieldFrame({
     const accent = error ? m3.error : m3.primary;
     // An error may land under a field the cursor is not on, so TalkBack is told.
     const errorText = error ? supportingText : null;
+    // oxlint-disable-next-line outlayr/react-effect-budget -- announces the field error to TalkBack when it appears
     useEffect(() => {
         if (errorText) {
             AccessibilityInfo.announceForAccessibility(errorText);

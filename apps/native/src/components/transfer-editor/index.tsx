@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { HeaderHeightContext } from "expo-router/react-navigation";
-import { use, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { use, useLayoutEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 import { AccessibilityInfo, Keyboard, Pressable, ScrollView, TextInput, View } from "react-native";
 import type { LayoutChangeEvent, ScrollViewInstance } from "react-native";
@@ -155,18 +155,8 @@ function openingNote(restore?: TransferEditorDraft, saved?: SavedTransfer, seed?
     return restore?.note ?? saved?.note ?? seed?.note ?? "";
 }
 
-function useDraftHandoff(
-    draftRef: TransferEditorProps["draftRef"],
-    read: () => TransferEditorDraft,
-    restore: TransferEditorDraft | undefined,
-    onDirtyChange: TransferEditorProps["onDirtyChange"]
-) {
-    const [restored] = useState(restore !== undefined);
-    useEffect(() => {
-        if (restored) {
-            onDirtyChange?.(true);
-        }
-    }, [onDirtyChange, restored]);
+function useDraftHandoff(draftRef: TransferEditorProps["draftRef"], read: () => TransferEditorDraft) {
+    // oxlint-disable-next-line outlayr/react-effect-budget -- hands the draft reader to the sheet's swipe-dismiss listener while mounted, and clears it on unmount
     useLayoutEffect(() => {
         if (draftRef === undefined) {
             return;
@@ -303,7 +293,7 @@ export default function TransferEditor({
     };
 
     const touch = () => onDirtyChange?.(true);
-    useDraftHandoff(draftRef, () => ({ draft: draft.snapshot(), note: noteRef.current }), restore, onDirtyChange);
+    useDraftHandoff(draftRef, () => ({ draft: draft.snapshot(), note: noteRef.current }));
 
     const typed =
         (pad: { minorUnits: number; mode?: NumpadMode; onChange: (text: string) => void; value: string }) =>
