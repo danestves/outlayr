@@ -15,7 +15,7 @@ import type { MerchantSiblingsInput } from "@/data/merchant-siblings-core";
 import { backfillRecurring } from "@/data/recurrence-backfill";
 import { pendingReminderPlan } from "@/data/subscription-reminders-core";
 import { tagsRepo } from "@/data/tags-core";
-import { lastLoggedEntry, transactionsRepo } from "@/data/transactions-core";
+import { transactionsRepo } from "@/data/transactions-core";
 import type { TransactionInput } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 import type { TimeOfDay } from "@/domain/reminder";
@@ -51,10 +51,6 @@ export const createTransactionCommand = ledgerCommand(
 
 export const restoreTransactionCommand = ledgerCommand("restore-transaction", (input: { db: Database; id: string }) =>
     transactionsRepo.restore(input.db, input.id)
-);
-
-export const lastLoggedEntryCommand = ledgerCommand("last-logged-entry", (input: { db: Database; now: Date }) =>
-    lastLoggedEntry(input.db, input.now)
 );
 
 export const backfillRecurringCommand = ledgerCommand("backfill-recurring", (input: { db: Database; id: string }) =>

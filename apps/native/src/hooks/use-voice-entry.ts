@@ -28,6 +28,7 @@ import type { VoiceTurn, VoiceTurnMessage } from "@/domain/voice-entry";
 import { duringHandoff } from "@/lib/app-handoff";
 import { VOICE_TURNS_QUERY, voiceThreadTransport } from "@/lib/convex";
 import type { SpeakRequest, StartThreadResult, VoiceDraft, VoiceQuote, VoiceThreadTransport } from "@/lib/convex";
+import { useLatest } from "@/lib/use-latest";
 import { createCommand, SILENT } from "@/state/atom-command";
 import { timedCaptureCommand, VOICE_SPEAK_TIMEOUT } from "@/state/capture-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
@@ -172,6 +173,10 @@ function settledPhaseOf<Context>(
     return answer.status === "failed" ? { kind: "failed", reason: "provider", transcript: null } : phase;
 }
 
+function lastOrderOf(messages: readonly VoiceTurnMessage[]): number {
+    return messages.reduce((last, message) => Math.max(last, message.order), -1);
+}
+
 function heardIn(phase: VoicePhase, messages: readonly VoiceTurnMessage[]): string | null {
     const said = (matches: (order: number) => boolean) =>
         messages.find((message) => message.role === "user" && matches(message.order))?.text ?? null;
@@ -208,14 +213,12 @@ export function useVoiceEntry<Context>({
     const takeRef = useRef(0);
     const meterRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const endingRef = useRef<number | null>(null);
-    const sentRef = useRef<ArrayBuffer | null>(null);
+    const queuedClipRef = useRef<ArrayBuffer | null>(null);
     const threadRef = useRef<string | null>(null);
     const resentRef = useRef<ArrayBuffer | null>(null);
     const disposedRef = useRef(false);
-    const lastOrderRef = useRef(-1);
     const speakAbortRef = useRef<AbortController | null>(null);
-    const speakCommandRun = useAtomCommand(speakCommand, SILENT);
-    const speak = useEffectEvent((input: Parameters<typeof speakCommandRun>[0]) => speakCommandRun(input));
+    const speak = useAtomCommand(speakCommand, SILENT);
     const startThread = useAtomCommand(startThreadCommand, SILENT);
     const endThread = useAtomCommand(endThreadCommand, SILENT);
     const [api] = useState(() => transport ?? voiceThreadTransport());
@@ -225,12 +228,11 @@ export function useVoiceEntry<Context>({
         stream: true,
     });
 
-    useEffect(() => {
-        lastOrderRef.current = messages.reduce((last, message) => Math.max(last, message.order), -1);
-    }, [messages]);
+    const latest = useLatest({ context, messages, request });
 
     const supersedeTake = () => {
         takeRef.current += 1;
+        queuedClipRef.current = null;
         speakAbortRef.current?.abort();
         speakAbortRef.current = null;
     };
@@ -243,7 +245,11 @@ export function useVoiceEntry<Context>({
         level.set(0);
     };
 
-    const endTake = async (take: number, outcome: "send" | "silent" | "discard") => {
+    const endTake = async (
+        take: number,
+        outcome: "send" | "silent" | "discard",
+        onClip?: (clip: ArrayBuffer) => void
+    ) => {
         // Claimed before the first await: a second tap or the silence timer would race this for one recorder.
         if (endingRef.current === take) {
             return;
@@ -273,7 +279,10 @@ export function useVoiceEntry<Context>({
         try {
             const clip = await readAndDiscard(uri);
             if (take === takeRef.current) {
-                setPhase({ after: lastOrderRef.current, clip, kind: "sending" });
+                setPhase({ after: lastOrderOf(latest.current.messages), clip, kind: "sending" });
+                if (onClip !== undefined) {
+                    onClip(clip);
+                }
             }
         } catch {
             if (take === takeRef.current) {
@@ -288,21 +297,30 @@ export function useVoiceEntry<Context>({
         void endTake(take, "discard");
     };
 
-    const openThread = async () => {
+    const dropThread = () => {
+        const id = threadRef.current;
+        threadRef.current = null;
+        setThreadId(null);
+        if (id !== null) {
+            void endThread({ api, threadId: id });
+        }
+    };
+
+    const openThread = async (): Promise<string | null> => {
         const started = await startThread(api);
         if (AsyncResult.isFailure(started)) {
             if (!disposedRef.current) {
                 abandonTake();
                 setPhase({ kind: "failed", reason: "offline", transcript: null });
             }
-            return;
+            return null;
         }
         const opened: StartThreadResult = started.value;
         if (disposedRef.current) {
             if (opened.threadId !== null) {
                 await endThread({ api, threadId: opened.threadId });
             }
-            return;
+            return null;
         }
         threadRef.current = opened.threadId;
         setThreadId(opened.threadId);
@@ -314,32 +332,73 @@ export function useVoiceEntry<Context>({
                 transcript: null,
             });
         }
+        return opened.threadId;
     };
 
-    const dropThread = () => {
+    const sendClip = async (clip: ArrayBuffer, id: string) => {
+        const take = takeRef.current;
+        const { context: sentContext, request: sentRequest } = latest.current;
+        const controller = new AbortController();
+        speakAbortRef.current = controller;
+        const result = await speak({
+            call: api.speak({ ...sentRequest, audio: clip, threadId: id, today: localIsoDate(new Date()) }),
+            signal: controller.signal,
+        });
+        if (take !== takeRef.current) {
+            return;
+        }
+        if (AsyncResult.isFailure(result)) {
+            setPhase({ kind: "failed", reason: "offline", transcript: null });
+            return;
+        }
+        const settled = Option.getOrNull(result.value);
+        if (settled === null) {
+            // The request may still land a draft on this thread, so a retry must not speak into it.
+            dropThread();
+            setPhase({ kind: "failed", reason: "timeout", transcript: null });
+            return;
+        }
+        if (settled.status === "ok") {
+            const { order } = settled;
+            if (order !== null) {
+                setPhase({ context: sentContext, kind: "thinking", order });
+                return;
+            }
+        }
+        if (settled.status === "invalid") {
+            const resent = resentRef.current === clip;
+            if (!resent) {
+                // The server sweeps threads idle for an hour: resend this clip once on a fresh thread.
+                resentRef.current = clip;
+                setPhase({ after: -1, clip, kind: "sending" });
+                dropThread();
+                const reopened = await openThread();
+                if (reopened !== null && take === takeRef.current) {
+                    await sendClip(clip, reopened);
+                }
+                return;
+            }
+        }
+        setPhase({ kind: "failed", reason: failureFor(settled.status), transcript: settled.transcript });
+    };
+
+    const dispatchClip = (clip: ArrayBuffer) => {
         const id = threadRef.current;
-        threadRef.current = null;
-        setThreadId(null);
-        if (id !== null) {
-            void endThread({ api, threadId: id });
+        if (id === null) {
+            queuedClipRef.current = clip;
+            return;
+        }
+        void sendClip(clip, id);
+    };
+
+    const openAndSend = async () => {
+        const id = await openThread();
+        const queued = queuedClipRef.current;
+        if (id !== null && queued !== null) {
+            queuedClipRef.current = null;
+            void sendClip(queued, id);
         }
     };
-
-    const openFirstThread = useEffectEvent(() => openThread());
-    const endThreadOnUnmount = useEffectEvent((id: string) => {
-        void endThread({ api, threadId: id });
-    });
-    useEffect(() => {
-        disposedRef.current = false;
-        void Promise.resolve().then(() => (disposedRef.current ? undefined : openFirstThread()));
-        return () => {
-            disposedRef.current = true;
-            const id = threadRef.current;
-            if (id !== null) {
-                endThreadOnUnmount(id);
-            }
-        };
-    }, []);
 
     const startTake = async () => {
         supersedeTake();
@@ -383,79 +442,36 @@ export function useVoiceEntry<Context>({
             if (judged.verdict === "keep") {
                 return;
             }
-            void endTake(take, judged.verdict === "nothingSaid" ? "silent" : "send");
+            void endTake(take, judged.verdict === "nothingSaid" ? "silent" : "send", dispatchClip);
         }, METER_INTERVAL_MS);
     };
 
+    const openFirstThread = useEffectEvent(() => openAndSend());
+    const endThreadOnUnmount = useEffectEvent((id: string) => {
+        void endThread({ api, threadId: id });
+    });
     const startFirstTake = useEffectEvent(() => startTake());
     const endFirstTake = useEffectEvent(() => {
         supersedeTake();
         stopMeter();
     });
+    // oxlint-disable-next-line outlayr/react-effect-budget -- opens the Convex voice thread and starts the recorder while the screen is mounted; the cleanup ends the thread and stops the meter
     useEffect(() => {
         let disposed = false;
+        disposedRef.current = false;
+        void Promise.resolve().then(() => (disposedRef.current ? undefined : openFirstThread()));
         void Promise.resolve().then(() => (disposed ? undefined : startFirstTake()));
         return () => {
+            disposedRef.current = true;
+            const id = threadRef.current;
+            if (id !== null) {
+                endThreadOnUnmount(id);
+            }
             disposed = true;
             endFirstTake();
             // Never touch the recorder here: `useAudioRecorder` already released it, and reading `isRecording` throws.
         };
     }, []);
-
-    const restartThread = useEffectEvent(() => {
-        dropThread();
-        void openThread();
-    });
-    const abandonThread = useEffectEvent(() => dropThread());
-    useEffect(() => {
-        if (phase.kind !== "sending" || threadId === null || sentRef.current === phase.clip) {
-            return;
-        }
-        sentRef.current = phase.clip;
-        const take = takeRef.current;
-        const { clip } = phase;
-        const controller = new AbortController();
-        speakAbortRef.current = controller;
-        void (async () => {
-            const result = await speak({
-                call: api.speak({ ...request, audio: clip, threadId, today: localIsoDate(new Date()) }),
-                signal: controller.signal,
-            });
-            if (take !== takeRef.current) {
-                return;
-            }
-            if (AsyncResult.isFailure(result)) {
-                setPhase({ kind: "failed", reason: "offline", transcript: null });
-                return;
-            }
-            const settled = Option.getOrNull(result.value);
-            if (settled === null) {
-                // The request may still land a draft on this thread, so a retry must not speak into it.
-                abandonThread();
-                setPhase({ kind: "failed", reason: "timeout", transcript: null });
-                return;
-            }
-            if (settled.status === "ok") {
-                const { order } = settled;
-                if (order !== null) {
-                    setPhase({ context, kind: "thinking", order });
-                    return;
-                }
-            }
-            if (settled.status === "invalid") {
-                const resent = resentRef.current === clip;
-                if (!resent) {
-                    // The server sweeps threads idle for an hour: resend this clip once on a fresh thread.
-                    resentRef.current = clip;
-                    sentRef.current = null;
-                    setPhase({ after: -1, clip, kind: "sending" });
-                    restartThread();
-                    return;
-                }
-            }
-            setPhase({ kind: "failed", reason: failureFor(settled.status), transcript: settled.transcript });
-        })();
-    }, [api, context, phase, request, threadId]);
 
     const settledPhase = settledPhaseOf(phase, messages);
 
@@ -465,7 +481,7 @@ export function useVoiceEntry<Context>({
 
     const finish = () => {
         if (phase.kind === "listening") {
-            void endTake(takeRef.current, "send");
+            void endTake(takeRef.current, "send", dispatchClip);
         }
     };
 
@@ -479,7 +495,7 @@ export function useVoiceEntry<Context>({
 
     const listenAgain = () => {
         if (threadRef.current === null) {
-            void openThread();
+            void openAndSend();
         }
         void startTake();
     };

@@ -1,8 +1,7 @@
 import { BlurMask, Canvas, Group, LinearGradient, Rect, vec } from "@shopify/react-native-skia";
-import { useEffect } from "react";
 import {
-    cancelAnimation,
     Easing,
+    useAnimatedReaction,
     useDerivedValue,
     useReducedMotion,
     useSharedValue,
@@ -32,16 +31,16 @@ export function ScanSweep({ color, height, width }: ScanSweepProps) {
     const bandHeight = Math.max(24, height * BAND_RATIO);
     const travel = Math.max(0, height - bandHeight);
 
-    useEffect(() => {
-        if (reducedMotion) {
-            progress.set(0.33);
-            return;
+    useAnimatedReaction(
+        () => reducedMotion,
+        (reduced) => {
+            if (reduced) {
+                progress.set(0.33);
+                return;
+            }
+            progress.set(withRepeat(withTiming(1, { duration: SWEEP_MS, easing: Easing.inOut(Easing.sin) }), -1, true));
         }
-        progress.set(withRepeat(withTiming(1, { duration: SWEEP_MS, easing: Easing.inOut(Easing.sin) }), -1, true));
-        return () => {
-            cancelAnimation(progress);
-        };
-    }, [progress, reducedMotion]);
+    );
 
     const transform = useDerivedValue(() => [{ translateY: progress.get() * travel }]);
     const lineY = (bandHeight - LINE_HEIGHT) / 2;

@@ -185,6 +185,7 @@ export function useImportReview(): ImportReviewResult {
     const duplicates = flagDuplicates(plan.entries, fingerprintsOf(existingRows));
 
     const settled = flow.commit.phase === "writing" || flow.commit.phase === "success";
+    // oxlint-disable-next-line outlayr/react-effect-budget -- writes the ledger-derived duplicate set into the module-level import draft store that the sheet's other steps read
     useEffect(() => {
         // After the write, every committed row exists on the ledger and would
         // re-flag as its own duplicate; the flagged set is frozen from here.

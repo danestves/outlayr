@@ -1,8 +1,7 @@
 import { Canvas, DashPathEffect, Path, RoundedRect, Skia } from "@shopify/react-native-skia";
-import { useEffect } from "react";
 import Animated, {
-    cancelAnimation,
     Easing,
+    useAnimatedReaction,
     useAnimatedStyle,
     useReducedMotion,
     useSharedValue,
@@ -80,16 +79,16 @@ export function ReceiptFrame({ height, ink, paper, tint, width }: ReceiptFramePr
     const reducedMotion = useReducedMotion();
     const breath = useSharedValue(0);
 
-    useEffect(() => {
-        if (reducedMotion) {
-            breath.set(0);
-            return;
+    useAnimatedReaction(
+        () => reducedMotion,
+        (reduced) => {
+            if (reduced) {
+                breath.set(0);
+                return;
+            }
+            breath.set(withRepeat(withTiming(1, { duration: BREATH_MS, easing: Easing.inOut(Easing.sin) }), -1, true));
         }
-        breath.set(withRepeat(withTiming(1, { duration: BREATH_MS, easing: Easing.inOut(Easing.sin) }), -1, true));
-        return () => {
-            cancelAnimation(breath);
-        };
-    }, [breath, reducedMotion]);
+    );
 
     const bracketStyle = useAnimatedStyle(() => ({
         transform: [{ scale: 1 + (BREATH_SCALE - 1) * breath.get() }],

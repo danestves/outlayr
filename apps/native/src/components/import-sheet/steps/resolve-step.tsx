@@ -107,6 +107,7 @@ export function ResolveStep({ review, onOpenFeatureLab, onSeePro }: ResolveStepP
     const { flow } = useImportDraft();
     const { running, stage, outcome, reason, totalLabels, tier1Matched, tier2Sent, run, retry } = useCsvImport();
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- starts the CSV resolution run on the import service when the step opens
     useEffect(() => {
         if (!running && outcome == null) {
             run();
@@ -115,6 +116,7 @@ export function ResolveStep({ review, onOpenFeatureLab, onSeePro }: ResolveStepP
 
     const entryCount = review.plan.entries.length;
     const advancedRef = useRef(false);
+    // oxlint-disable-next-line outlayr/react-effect-budget -- advances the module-level import draft store to review once the import service reports its outcome applied
     useEffect(() => {
         if (outcome === "applied" && entryCount > 0 && !advancedRef.current) {
             advancedRef.current = true;

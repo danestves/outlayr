@@ -86,25 +86,22 @@ export function IdentityFlyUpLayer({
     // tile. Keyed on `floatProgress`, not `pickerOpen`, so it stays on the UI thread and outlives the state flip.
     const restLaunchTop = useSharedValue(Number.NaN);
     useAnimatedReaction(
-        () => (floatProgress.value === 0 ? restTop.get() : null),
-        (resting) => {
-            if (resting !== null) {
-                restLaunchTop.set(resting);
+        () => ({ resting: floatProgress.value === 0, top: restTop.get() }),
+        (reading) => {
+            const unlatched = Number.isNaN(restLaunchTop.get()) && !Number.isNaN(reading.top);
+            if (reading.resting || unlatched) {
+                restLaunchTop.set(reading.top);
             }
         }
     );
-    // The reaction only fires once the prepared value changes, so the first reading is taken here.
-    useEffect(() => {
-        if (Number.isNaN(restLaunchTop.get())) {
-            restLaunchTop.set(restTop.get());
-        }
-    }, [restLaunchTop, restTop]);
 
     const restCenterY = useDerivedValue(() => restLaunchTop.get() + HERO_RING / 2);
     const floatOffsetY = useFloatOffset({ containerHeight, restCenterY });
 
     // `pickerOpen` lives in the app-level provider and outlives every screen: left true, it strands an invisible
     // scrim on the next screen that swallows every tap.
+
+    // oxlint-disable-next-line outlayr/react-effect-budget -- closes the app-level picker flag a previous screen may have left open
     useEffect(() => {
         setPickerOpen(false);
     }, [setPickerOpen]);
@@ -186,6 +183,7 @@ export function IdentityFlyUpSheetHost({ children }: { children: ReactNode }) {
     const navigation = useNavigation<DismissalNavigation>();
     const { setPickerOpen, setSheetHeight } = useIdentityFlyUp();
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- subscribes to the sheet's transitionStart events and closes the picker flag when the sheet unmounts
     useEffect(() => {
         setPickerOpen(true);
         const unsubscribe = listen(navigation, "transitionStart", (event) => {

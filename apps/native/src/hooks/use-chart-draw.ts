@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Easing, useDerivedValue, useSharedValue, withTiming } from "react-native-reanimated";
+import { Easing, useAnimatedReaction, useDerivedValue, useSharedValue, withTiming } from "react-native-reanimated";
 
 import { CHART_DRAW } from "@/theme/chart";
 
@@ -15,13 +15,14 @@ interface Morph {
 
 export function useChartDraw(animated: boolean, value = 1, from = 0, pointCount?: number) {
     const draw = useSharedValue(animated ? from : value);
-    const drawnPointCount = useRef(pointCount);
 
-    useEffect(() => {
-        const recounted = drawnPointCount.current !== pointCount;
-        drawnPointCount.current = pointCount;
-        draw.set(animated && !recounted ? withTiming(value, TIMING) : value);
-    }, [animated, draw, pointCount, value]);
+    useAnimatedReaction(
+        () => ({ animated, pointCount, value }),
+        (next, previous) => {
+            const recounted = previous !== null && previous.pointCount !== next.pointCount;
+            draw.set(next.animated && !recounted ? withTiming(next.value, TIMING) : next.value);
+        }
+    );
 
     return draw;
 }
@@ -60,6 +61,7 @@ export function useChartPath(path: string, animated: boolean, pointCount?: numbe
     const handed = useRef(path);
     const handedPointCount = useRef(pointCount);
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- hands a new path to the Reanimated progress value, which reads the path being shown at that moment
     useEffect(() => {
         const recounted = handedPointCount.current !== pointCount;
         handedPointCount.current = pointCount;

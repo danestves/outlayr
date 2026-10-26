@@ -1,6 +1,6 @@
 import { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { router } from "expo-router";
-import { useEffect, useImperativeHandle, useRef, useState } from "react";
+import { useImperativeHandle, useRef, useState } from "react";
 import type { Ref } from "react";
 import { Platform, View } from "react-native";
 import Animated, { FadeInLeft, FadeInRight, ReduceMotion } from "react-native-reanimated";
@@ -117,12 +117,6 @@ export function ImportSheet({ ref }: ImportSheetProps) {
     const draft = useImportDraft();
     const step = resolveLegalStep(draft.flow, draft.ui.step);
 
-    useEffect(() => {
-        if (presented) {
-            sheetRef.current?.snapToIndex(0);
-        }
-    }, [presented]);
-
     // Held in state rather than a ref written during render, a side effect the compiler cannot follow.
     const [previousStep, setPreviousStep] = useState(step);
     const [forward, setForward] = useState(true);
@@ -164,7 +158,14 @@ export function ImportSheet({ ref }: ImportSheetProps) {
         >
             <View className="flex-1" testID="import-sheet-root">
                 {presented ? (
-                    <View className="gap-4">
+                    <View
+                        className="gap-4"
+                        ref={(node) => {
+                            if (node !== null) {
+                                sheetRef.current?.snapToIndex(0);
+                            }
+                        }}
+                    >
                         <SheetHeader forward={forward} onBack={onBack} onClose={dismiss} title={t(STEP_TITLE[step])} />
 
                         {draft.ui.resumed ? <ResumeNotice onStartOver={() => importDraftStore.clear()} /> : null}

@@ -2,9 +2,10 @@ import Cancel01Icon from "@hugeicons-pro/core-stroke-rounded/Cancel01Icon";
 import PlusSignIcon from "@hugeicons-pro/core-stroke-rounded/PlusSignIcon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import { Image } from "expo-image";
-import { useEffect, useEffectEvent, useId, useRef } from "react";
+import { useId } from "react";
 import { Pressable, View } from "react-native";
 import Animated, {
+    useAnimatedReaction,
     useAnimatedStyle,
     useSharedValue,
     withSequence,
@@ -123,28 +124,31 @@ export function IdentityHero({
     const contentOpacity = useSharedValue(1);
     const float = floatProgress;
 
-    const wasEmpty = useRef(isEmpty);
+    const wasEmpty = useSharedValue(isEmpty);
     const identity = `${emoji}|${icon}|${photoUri}|${color}`;
     // `pickerOpen` gates the pop because both forms seed the draft in a mount effect, which looks like a pick.
-    // Reads `isEmpty` and `pickerOpen` at change time; depending on them would re-pop when the picker toggles.
-    const onIdentityChange = useEffectEvent((_identity: string) => {
-        const becameEmpty = isEmpty && !wasEmpty.current;
-        wasEmpty.current = isEmpty;
-        if (becameEmpty) {
+    // Reads `isEmpty` and `pickerOpen` at change time; a re-registration for either alone returns on the same identity.
+    useAnimatedReaction(
+        () => identity,
+        (current, previous) => {
+            if (current === previous) {
+                return;
+            }
+            const becameEmpty = isEmpty && !wasEmpty.get();
+            wasEmpty.set(isEmpty);
+            if (becameEmpty) {
+                contentOpacity.set(0);
+                contentOpacity.set(withSpring(1, LAUNCH_SPRING));
+                return;
+            }
+            if (isEmpty || !pickerOpen) {
+                return;
+            }
+            popScale.set(withSequence(withSpring(POP_SCALE, PRESS_SPRING), withSpring(1, PRESS_SPRING)));
             contentOpacity.set(0);
-            contentOpacity.set(withSpring(1, LAUNCH_SPRING));
-            return;
+            contentOpacity.set(withTiming(1, { duration: POP_FADE_MS }));
         }
-        if (isEmpty || !pickerOpen) {
-            return;
-        }
-        popScale.set(withSequence(withSpring(POP_SCALE, PRESS_SPRING), withSpring(1, PRESS_SPRING)));
-        contentOpacity.set(0);
-        contentOpacity.set(withTiming(1, { duration: POP_FADE_MS }));
-    });
-    useEffect(() => {
-        onIdentityChange(identity);
-    }, [identity]);
+    );
 
     const rootStyle = useAnimatedStyle(() => {
         const floated = (float?.value ?? 0) > SWAP_EPS;

@@ -2,10 +2,12 @@ import { Canvas, createPicture, PaintStyle, Picture, Skia } from "@shopify/react
 import type { SkPicture } from "@shopify/react-native-skia";
 import { useTheme } from "panelui-native/theme";
 import { useEffect, useState } from "react";
-import { AppState, View } from "react-native";
+import { View } from "react-native";
 import { useReducedMotion, useSharedValue } from "react-native-reanimated";
 import { MODE_FRAMES, resolvePreset } from "thinking-orbs/engine";
 import type { OrbSize, OrbState } from "thinking-orbs/engine";
+
+import { useAppForeground } from "@/lib/app-state";
 
 const REDUCED_MOTION_T = 0.6;
 const FRAME_MS = 1000 / 30;
@@ -21,24 +23,16 @@ function makeInk() {
     return { fill, rgba: new Float32Array(4), stroke };
 }
 
-function useAppActive(): boolean {
-    const [active, setActive] = useState(AppState.currentState !== "background");
-    useEffect(() => {
-        const subscription = AppState.addEventListener("change", (next) => setActive(next !== "background"));
-        return () => subscription.remove();
-    }, []);
-    return active;
-}
-
 export function ThinkingOrb({ size = 20, state }: { size?: OrbSize; state: OrbState }) {
     const dark = useTheme().theme === "dark";
     const reduced = useReducedMotion();
-    const active = useAppActive();
+    const active = useAppForeground();
     const [empty] = useState(() => createPicture(noop));
     const picture = useSharedValue<SkPicture>(empty);
     const [ink] = useState(makeInk);
     const { mode, speed, opts } = resolvePreset(state, size);
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- drives a requestAnimationFrame loop that records Skia pictures while the orb is mounted and the app is in the foreground
     useEffect(() => {
         const build = MODE_FRAMES[mode];
         const setInk = (paint: typeof ink.fill, white: number, alpha: number) => {

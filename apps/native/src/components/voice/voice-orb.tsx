@@ -1,7 +1,13 @@
 import { Canvas, Fill, Shader, Skia } from "@shopify/react-native-skia";
 import { useEffect } from "react";
 import { View } from "react-native";
-import { useDerivedValue, useFrameCallback, useReducedMotion, useSharedValue } from "react-native-reanimated";
+import {
+    useAnimatedReaction,
+    useDerivedValue,
+    useFrameCallback,
+    useReducedMotion,
+    useSharedValue,
+} from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
 
 import { blendProfile, SHARED_UNIFORMS } from "./orb-profile";
@@ -50,11 +56,7 @@ export function VoiceOrb({ level, size, state }: VoiceOrbProps) {
     const reducedMotion = useReducedMotion();
     const phase = useSharedValue(STILL_PHASE);
     const activation = useSharedValue(0);
-    const stateValue = useSharedValue<VoiceOrbState>(state);
-
-    useEffect(() => {
-        stateValue.set(state);
-    }, [state, stateValue]);
+    const stateValue = useDerivedValue(() => state);
 
     const frame = useFrameCallback((info) => {
         "worklet";
@@ -68,17 +70,20 @@ export function VoiceOrb({ level, size, state }: VoiceOrbProps) {
     }, false);
 
     const { setActive } = frame;
+    // oxlint-disable-next-line outlayr/react-effect-budget -- starts the Reanimated frame callback only while motion is allowed and stops it on unmount
     useEffect(() => {
         setActive(!reducedMotion);
         return () => setActive(false);
     }, [reducedMotion, setActive]);
 
-    useEffect(() => {
-        if (!reducedMotion) {
-            return;
+    useAnimatedReaction(
+        () => (reducedMotion ? targetActivation(state, 0.5, STILL_PHASE) : null),
+        (still) => {
+            if (still !== null) {
+                activation.set(still);
+            }
         }
-        activation.set(targetActivation(state, 0.5, STILL_PHASE));
-    }, [reducedMotion, state, activation]);
+    );
 
     const uniforms = useDerivedValue(() => {
         const profile = blendProfile(activation.get());

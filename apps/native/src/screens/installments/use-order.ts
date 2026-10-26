@@ -31,6 +31,7 @@ export function useInstallmentEntry(planId: string) {
     };
 
     const leaveGone = useEffectEvent(leave);
+    // oxlint-disable-next-line outlayr/react-effect-budget -- leaves the screen when the live ledger query reports the plan removed, whether here or by a sync
     useEffect(() => {
         if (entry == null) {
             leaveGone();
@@ -49,11 +50,10 @@ export function useOrderActions({ plan, standing }: PlanWithStanding, leave: () 
     const cuotaSheetRef = useRef<BottomSheetModal>(null);
     const [editing, setEditing] = useState<InstallmentRow | null>(null);
 
-    useEffect(() => {
-        if (editing) {
-            cuotaSheetRef.current?.present();
-        }
-    }, [editing]);
+    const edit = (row: InstallmentRow) => {
+        setEditing(row);
+        cuotaSheetRef.current?.present();
+    };
 
     const pay = (all: boolean) =>
         router.push({ params: { all: all ? "1" : "0", planId: plan.id }, pathname: "/installments/pay" });
@@ -80,5 +80,5 @@ export function useOrderActions({ plan, standing }: PlanWithStanding, leave: () 
 
     const live = editing && (standing.rows.find(({ row }) => row.id === editing.id)?.row ?? editing);
 
-    return { cuotaSheetRef, deletePending, editing: live, pay, setEditing };
+    return { cuotaSheetRef, deletePending, edit, editing: live, pay, setEditing };
 }

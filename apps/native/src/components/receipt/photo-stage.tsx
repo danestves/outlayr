@@ -1,9 +1,10 @@
 import { Image } from "expo-image";
-import { useEffect } from "react";
 import { View } from "react-native";
 import Animated, {
     FadeIn,
+    useAnimatedReaction,
     useAnimatedStyle,
+    useDerivedValue,
     useReducedMotion,
     useSharedValue,
     withSpring,
@@ -34,22 +35,25 @@ interface PhotoStageProps {
 export function PhotoStage({ box, dimmed = false, scanning, tint, uri }: PhotoStageProps) {
     const reducedMotion = useReducedMotion();
     const compact = !scanning && box.height < 160;
-    const width = useSharedValue(box.width);
-    const height = useSharedValue(box.height);
-    const radius = useSharedValue(compact ? THUMB_RADIUS : STAGE_RADIUS);
+    const { height: boxHeight, width: boxWidth } = box;
+    const radiusTarget = compact ? THUMB_RADIUS : STAGE_RADIUS;
+    const width = useDerivedValue(() =>
+        reducedMotion ? withTiming(boxWidth, { duration: 180 }) : withSpring(boxWidth, STAGE_SPRING)
+    );
+    const height = useDerivedValue(() =>
+        reducedMotion ? withTiming(boxHeight, { duration: 180 }) : withSpring(boxHeight, STAGE_SPRING)
+    );
+    const radius = useDerivedValue(() =>
+        reducedMotion ? withTiming(radiusTarget, { duration: 180 }) : withSpring(radiusTarget, STAGE_SPRING)
+    );
     const opacity = useSharedValue(1);
 
-    useEffect(() => {
-        const animate = (target: number) =>
-            reducedMotion ? withTiming(target, { duration: 180 }) : withSpring(target, STAGE_SPRING);
-        width.set(animate(box.width));
-        height.set(animate(box.height));
-        radius.set(animate(compact ? THUMB_RADIUS : STAGE_RADIUS));
-    }, [box.height, box.width, compact, height, radius, reducedMotion, width]);
-
-    useEffect(() => {
-        opacity.set(withTiming(dimmed ? DIMMED_OPACITY : 1, { duration: 220 }));
-    }, [dimmed, opacity]);
+    useAnimatedReaction(
+        () => dimmed,
+        (isDimmed) => {
+            opacity.set(withTiming(isDimmed ? DIMMED_OPACITY : 1, { duration: 220 }));
+        }
+    );
 
     const frame = useAnimatedStyle(() => ({
         borderRadius: radius.get(),

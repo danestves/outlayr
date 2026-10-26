@@ -1,6 +1,5 @@
 import { MeshGradientView } from "expo-mesh-gradient";
-import { useEffect } from "react";
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, { Easing, useAnimatedStyle, useDerivedValue, withTiming } from "react-native-reanimated";
 
 import { curtainShade, withAlpha } from "@/theme/shade";
 import { useIsDark } from "@/theme/use-is-dark";
@@ -74,16 +73,12 @@ interface IdentityCurtainProps {
 export function IdentityCurtain({ hues }: IdentityCurtainProps) {
     const isDark = useIsDark();
     const revealed = hues != null && hues.length > 0 ? 1 : 0;
-    const progress = useSharedValue(revealed);
-
-    useEffect(() => {
-        progress.set(
-            withTiming(revealed, {
-                duration: 450,
-                easing: Easing.inOut(Easing.ease),
-            })
-        );
-    }, [revealed, progress]);
+    const progress = useDerivedValue(() =>
+        withTiming(revealed, {
+            duration: 450,
+            easing: Easing.inOut(Easing.ease),
+        })
+    );
 
     const animatedStyle = useAnimatedStyle(() => ({
         opacity: progress.get(),
