@@ -9,7 +9,7 @@ import { Text } from "@/components/text";
 import { toolbarIcon } from "@/components/toolbar-icons";
 import { useSettingNumber } from "@/contexts/display-settings-context";
 import { useGlobalCurrency } from "@/data/app-meta";
-import { budgetsRepo, useBudgetContributions, useExpenseContributions, useMainBudget } from "@/data/budgets";
+import { useBudgetContributions, useExpenseContributions, useMainBudget } from "@/data/budgets";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useNow } from "@/data/use-now";
 import type { Database } from "@/db/client";
@@ -23,6 +23,9 @@ import type { BudgetEdit } from "@/screens/budgets/components/budget-editor";
 import type { LimitCommit } from "@/screens/budgets/components/budget-limit-body";
 import { BudgetLimitSheet } from "@/screens/budgets/components/budget-limit-sheet";
 import { BudgetPeriodStepper } from "@/screens/budgets/components/budget-period-stepper";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { patchMainBudgetCommand } from "@/state/planning-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
 /** Under `/budgets/[id]` with the reserved id `overall`: a static sibling of a dynamic segment never resolved. */
@@ -32,6 +35,7 @@ export function OverallBudgetDetail({ db, onDone }: { db: Database; onDone: () =
     const haptics = useHaptics();
     const colors = useColors();
     const currency = useGlobalCurrency(db);
+    const patchMainBudget = useAtomCommand(patchMainBudgetCommand, SILENT);
     const nowMs = useNow();
     const [periodOffset, setPeriodOffset] = useState(0);
     const { requestDelete } = useDeferredDelete("budget");
@@ -66,7 +70,7 @@ export function OverallBudgetDetail({ db, onDone }: { db: Database; onDone: () =
     // Patched by field: `createMainBudget` overwrites every column it is passed.
     const write = async (edit: BudgetEdit) => {
         try {
-            await budgetsRepo.patchMainBudget(db, budget.id, edit);
+            unwrapAtomCommand(await patchMainBudget({ db, id: budget.id, patch: edit }));
             return true;
         } catch (error) {
             console.error("Failed to change the overall budget", error);

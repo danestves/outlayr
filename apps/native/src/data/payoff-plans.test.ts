@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 import { buildRateTable } from "@outlayr/money/valuation";
+import * as Effect from "effect/Effect";
 
 import { migratedDatabase } from "@/db/test-database";
 import type { PlottedCell } from "@/domain/goal-balance-series";
@@ -134,9 +135,11 @@ describe("setting payoff plans", () => {
         // Plans are stamped with the real clock, so every movement comes after it.
         const start = Date.now();
         const at = (days: number) => new Date(start + days * DAY_MS);
-        const zinli = await accountsRepo.create(db, { currency: "USD", initialBalance: 0, name: "Zinli" });
-        const pedro = await createPerson(db, { currency: "USD", name: "Pedro", openingBalance: 80 });
-        const ana = await createPerson(db, { currency: "USD", name: "Ana", openingBalance: -30 });
+        const zinli = await Effect.runPromise(
+            accountsRepo.create(db, { currency: "USD", initialBalance: 0, name: "Zinli" })
+        );
+        const pedro = await Effect.runPromise(createPerson(db, { currency: "USD", name: "Pedro", openingBalance: 80 }));
+        const ana = await Effect.runPromise(createPerson(db, { currency: "USD", name: "Ana", openingBalance: -30 }));
         const person = (id: string) => {
             const account = getAccountById(db, id);
             if (account == null) {
@@ -145,26 +148,28 @@ describe("setting payoff plans", () => {
             return account;
         };
         const move = (verb: "gotPaidBack" | "lent", amount: number, day: number) =>
-            recordDebtMovement(db, {
-                account: { accountId: zinli, amount, currency: "USD" },
-                date: at(day),
-                person: { accountId: pedro, amount, currency: "USD" },
-                rateType: null,
-                verb,
-            });
+            Effect.runPromise(
+                recordDebtMovement(db, {
+                    account: { accountId: zinli, amount, currency: "USD" },
+                    date: at(day),
+                    person: { accountId: pedro, amount, currency: "USD" },
+                    rateType: null,
+                    verb,
+                })
+            );
 
-        await setPayoffPlan(db, person(pedro), at(30));
-        await setPayoffPlan(db, person(ana), at(30));
-        await expect(livePayoffPlanCount(db, null, at(1))).resolves.toBe(2);
-        await expect(livePayoffPlanCount(db, ana, at(1))).resolves.toBe(1);
+        await Effect.runPromise(setPayoffPlan(db, person(pedro), at(30)));
+        await Effect.runPromise(setPayoffPlan(db, person(ana), at(30)));
+        await expect(Effect.runPromise(livePayoffPlanCount(db, null, at(1)))).resolves.toBe(2);
+        await expect(Effect.runPromise(livePayoffPlanCount(db, ana, at(1)))).resolves.toBe(1);
 
         await move("gotPaidBack", 80, 2);
         await move("lent", 20, 3);
-        await expect(livePayoffPlanCount(db, null, at(4))).resolves.toBe(1);
-        await accountsRepo.softDelete(db, ana);
-        await expect(livePayoffPlanCount(db, null, at(4))).resolves.toBe(0);
+        await expect(Effect.runPromise(livePayoffPlanCount(db, null, at(4)))).resolves.toBe(1);
+        await Effect.runPromise(accountsRepo.softDelete(db, ana));
+        await expect(Effect.runPromise(livePayoffPlanCount(db, null, at(4)))).resolves.toBe(0);
 
-        await setPayoffPlan(db, person(pedro), at(40), at(4));
+        await Effect.runPromise(setPayoffPlan(db, person(pedro), at(40), at(4)));
         const plans = (await savingsGoalsQuery(db)).filter((goal) => goal.accountId === pedro);
         expect(plans).toHaveLength(1);
         expect(plans[0]).toMatchObject({ startAmount: 20, targetDate: at(40) });
@@ -172,12 +177,14 @@ describe("setting payoff plans", () => {
 
     it("sets no plan on a settled person", async () => {
         const db = migratedDatabase({ foreignKeys: false });
-        const luis = await createPerson(db, { currency: "USD", name: "Luis" });
+        const luis = await Effect.runPromise(createPerson(db, { currency: "USD", name: "Luis" }));
         const account = getAccountById(db, luis);
         if (account == null) {
             throw new Error("No Luis");
         }
-        await expect(setPayoffPlan(db, account, new Date(Date.now() + 30 * DAY_MS))).resolves.toBeNull();
+        await expect(
+            Effect.runPromise(setPayoffPlan(db, account, new Date(Date.now() + 30 * DAY_MS)))
+        ).resolves.toBeNull();
         await expect(savingsGoalsQuery(db)).resolves.toHaveLength(0);
     });
 });

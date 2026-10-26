@@ -8,6 +8,7 @@ import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 
 import { getMeta, META_KEYS, setMeta } from "@/data/app-meta-core";
+import type { AppMetaError } from "@/data/app-meta-core";
 import {
     backfillBudgetUsd,
     backfillCanonicalUsd,
@@ -18,7 +19,7 @@ import { settlePendingFees } from "@/data/card-fees-core";
 import { subscribeToSettingChanges } from "@/data/database-changes";
 import { drainPendingWrites, fileWaitingPurchases, takeRepriced } from "@/data/pending-writes-core";
 import { applyRecentRates, pullRatesIfDue } from "@/data/rates";
-import type { PullRatesFn, RateWireRow } from "@/data/rates";
+import type { PullRatesFn, RateWireRow, RatesError } from "@/data/rates";
 import type { Database } from "@/db/client";
 import { formatAmount } from "@/domain/money";
 import { translateNow } from "@/i18n/runtime";
@@ -41,11 +42,9 @@ const SystemStep = Schema.Literals([
     "currency",
     "drain",
     "index",
-    "live-rates",
     "logos",
     "publish",
     "purchases",
-    "rates",
     "repriced",
     "wallet",
 ]);
@@ -55,11 +54,9 @@ const FAILED: Record<typeof SystemStep.Type, string> = {
     currency: "Currency stamp failed",
     drain: "Pending writes failed to apply",
     index: "Spotlight index failed",
-    "live-rates": "Live rates failed to apply",
     logos: "Logo backfill failed",
     publish: "Widget publish failed",
     purchases: "Waiting purchases failed to file",
-    rates: "Rate refresh failed",
     repriced: "Repriced subscriptions failed to announce",
     wallet: "Wallet run stamp failed",
 };
@@ -110,6 +107,14 @@ const failedStep =
 
 const attempt = <A>(step: typeof SystemStep.Type, task: () => Promise<A>) =>
     Effect.tryPromise({ catch: failedAt(step), try: task });
+
+const warnRatesFailed =
+    (message: string) =>
+    <R>(effect: Effect.Effect<boolean, AppMetaError | RatesError, R>) =>
+        effect.pipe(
+            Effect.catch((error) => Effect.logWarning(message, error.cause).pipe(Effect.as(false))),
+            Effect.catchDefect((defect) => Effect.logWarning(message, defect).pipe(Effect.as(false)))
+        );
 
 const attemptOr = <A>(step: typeof SystemStep.Type, task: () => Promise<A>, fallback: A) =>
     attempt(step, task).pipe(Effect.catchTags({ SystemSyncError: (error) => warn(error).pipe(Effect.as(fallback)) }));
@@ -223,11 +228,11 @@ export const make = Effect.gen(function* make() {
         // Republished explicitly: a refresh's unqualified `DELETE FROM exchangeRates` hits SQLite's truncate
         // optimization, which skips the update hook the listener relies on (expo-sqlite `sqlite3.h:7090-7095`).
         const refreshRates = Effect.gen(function* refreshRates() {
-            const pulled = yield* attemptOr("rates", () => pullRatesIfDue(db, sources.pullRates), false);
+            const pulled = yield* pullRatesIfDue(db, sources.pullRates).pipe(warnRatesFailed("Rate refresh failed"));
             yield* publishIf((yield* revalueLedger(db)) || pulled);
         }).pipe(Effect.uninterruptible);
         const applyLiveRates = Effect.fn("SystemSync.applyLiveRates")(function* applyLiveRates(rows: RateWireRow[]) {
-            const applied = yield* attemptOr("live-rates", () => applyRecentRates(db, rows), false);
+            const applied = yield* applyRecentRates(db, rows).pipe(warnRatesFailed("Live rates failed to apply"));
             yield* publishIf((yield* revalueLedger(db)) || applied);
         });
 

@@ -10,10 +10,11 @@ import { resolveImportMapping } from "@/domain/import-mapping";
 import { CSV_HEADER, parseCsvDate } from "@/domain/transaction-csv";
 
 import { candidateLogoIds } from "./logo-backfill-state";
-import { transactionsRepo } from "./transactions-core";
+import { TransactionsError, transactionsRepo } from "./transactions-core";
 import {
     applyImport,
     buildImportPlan,
+    CsvTransferError,
     exportFileName,
     exportTransactionsCsv,
     guessMapping,
@@ -154,19 +155,19 @@ describe("exportTransactionsCsv", () => {
     });
 
     it("writes one row per live transaction under the header", async () => {
-        const rows = parseCsv(await exportTransactionsCsv(db));
+        const rows = parseCsv(await Effect.runPromise(exportTransactionsCsv(db)));
         expect(rows).toHaveLength(3);
     });
 
     it("orders newest first", async () => {
-        const rows = parseCsv(await exportTransactionsCsv(db));
+        const rows = parseCsv(await Effect.runPromise(exportTransactionsCsv(db)));
         const first = parseCsvDate(rows[1]?.[0] ?? "", "ISO");
         const second = parseCsvDate(rows[2]?.[0] ?? "", "ISO");
         expect(first && second && first > second).toBeTruthy();
     });
 
     it("substitutes the ledger currency for a row that stated none", async () => {
-        const rows = parseCsv(await exportTransactionsCsv(db));
+        const rows = parseCsv(await Effect.runPromise(exportTransactionsCsv(db)));
         expect(rows[2]?.[3]).toBe("USD");
     });
 });
@@ -447,20 +448,20 @@ describe("applyImport", () => {
 
     it("writes every planned entry", async () => {
         const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income);
-        const written = await applyImport(db, plan);
+        const written = await Effect.runPromise(applyImport(db, plan));
         expect(written).toBe(2);
         await expect(db.select().from(transactions)).resolves.toHaveLength(2);
     });
 
     it("never hands an imported row to the background logo lookup", async () => {
         const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income);
-        await applyImport(db, plan);
+        await Effect.runPromise(applyImport(db, plan));
         await expect(Effect.runPromise(candidateLogoIds(db))).resolves.toStrictEqual(new Map());
     });
 
     it("buckets each row into its own day and month", async () => {
         const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income);
-        await applyImport(db, plan);
+        await Effect.runPromise(applyImport(db, plan));
         const rowsOut = await db.select().from(transactions);
         const first = rowsOut.find((row) => row.note === "Bakery");
         expect(first?.day).toStrictEqual(new Date(2026, 6, 28));
@@ -475,10 +476,15 @@ describe("applyImport", () => {
         let calls = 0;
         const spy = jest.spyOn(transactionsRepo, "create").mockImplementation((targetDb, input) => {
             calls += 1;
-            return calls === 2 ? Effect.die(new Error("disk full")) : originalCreate(targetDb, input);
+            return calls === 2
+                ? Effect.fail(new TransactionsError({ cause: new Error("disk full"), operation: "create" }))
+                : originalCreate(targetDb, input);
         });
 
-        await expect(applyImport(transactionalDb, plan)).rejects.toThrow("disk full");
+        const failure = await Effect.runPromise(Effect.flip(applyImport(transactionalDb, plan)));
+        expect(failure).toBeInstanceOf(CsvTransferError);
+        expect(failure.operation).toBe("import");
+        expect(String(failure.cause)).toContain("disk full");
         await expect(transactionalDb.select().from(transactions)).resolves.toHaveLength(0);
 
         spy.mockRestore();
@@ -487,14 +493,14 @@ describe("applyImport", () => {
     it("names a blank-note row after its category", async () => {
         const blank = [["Food", "  ", "2026-07-28", "12.50"]];
         const plan = buildImportPlan(blank, MAPPING, "yyyy-MM-dd", ".", links, income);
-        await applyImport(db, plan);
+        await Effect.runPromise(applyImport(db, plan));
         const rowsOut = await db.select().from(transactions);
         expect(rowsOut[0]?.note).toBe("Groceries");
     });
 
     it("stamps the ledger currency on rows that named none", async () => {
         const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income);
-        await applyImport(db, plan);
+        await Effect.runPromise(applyImport(db, plan));
         const rowsOut = await db.select().from(transactions);
         expect(rowsOut.every((row) => row.currency === "USD")).toBeTruthy();
     });
@@ -508,7 +514,7 @@ describe("applyImport", () => {
             links,
             income
         );
-        await applyImport(db, plan);
+        await Effect.runPromise(applyImport(db, plan));
 
         expect((await db.select().from(transactions))[0]).toMatchObject({
             amountUsd: 2,
@@ -519,7 +525,7 @@ describe("applyImport", () => {
 
     it("round-trips an export back to the same figures", async () => {
         await seedTransactions(db);
-        const csv = await exportTransactionsCsv(db);
+        const csv = await Effect.runPromise(exportTransactionsCsv(db));
         const parsed = parseCsv(csv).slice(1);
         const plan = buildImportPlan(
             parsed,
@@ -614,7 +620,7 @@ describe("applyImport", () => {
             source: "provider",
         });
 
-        const parsed = parseCsv(await exportTransactionsCsv(source));
+        const parsed = parseCsv(await Effect.runPromise(exportTransactionsCsv(source)));
         const mapping = resolveImportMapping(guessMapping(parsed[0] ?? []));
         expect(mapping.ok).toBe(true);
         if (!mapping.ok) {
@@ -628,7 +634,7 @@ describe("applyImport", () => {
             new Map([["groceries", "cat-food"]]),
             income
         );
-        await applyImport(db, plan);
+        await Effect.runPromise(applyImport(db, plan));
 
         const imported = await db.select().from(transactions);
         expect(imported.find((row) => row.note === "Custom source")).toMatchObject({

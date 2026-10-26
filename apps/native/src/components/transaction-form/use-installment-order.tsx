@@ -1,13 +1,15 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { toAccountKind } from "@outlayr/money/account-kind";
 import type { EntryRateType } from "@outlayr/money/rates";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 
 import type { Account } from "@/data/accounts-core";
 import { paymentRate, planIdForPurchase } from "@/data/installment-reads";
 import { installmentsRepo, liveInstallmentsQuery } from "@/data/installments-core";
-import type { PaymentSource } from "@/data/installments-core";
+import type { InstallmentOrderInput, PaymentSource } from "@/data/installments-core";
 import type { Transaction, TransactionInput } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 import { draftSchedule, newInstallmentDraft, paidBeforeCount, planPrice, upfrontOf } from "@/domain/installment-draft";
@@ -39,6 +41,61 @@ interface InstallmentOrderArgs {
     mode: "create" | "edit";
     seeded: InstallmentSeed | undefined;
 }
+
+type SeededFee = InstallmentSeed["fees"][number];
+
+const addSeededFees = Effect.fn("InstallmentOrder.addSeededFees")(function* addSeededFees(
+    db: Database,
+    fees: readonly SeededFee[],
+    orderPlanId: string,
+    paidOutside: number,
+    onFailed: () => void
+) {
+    const cuotas = liveInstallmentsQuery(db)
+        .all()
+        .filter((row) => row.planId === orderPlanId);
+    yield* Effect.all(
+        fees.map((fee) =>
+            Effect.gen(function* addFee() {
+                const cuota = cuotas.find((row) => row.sequence === fee.sequence);
+                if (cuota === undefined) {
+                    return;
+                }
+                const charged = new Date(Math.min(cuota.dueDate.getTime(), Date.now()));
+                yield* installmentsRepo.addFee(db, { amount: fee.amount, date: charged, installmentId: cuota.id });
+                if (fee.sequence <= paidOutside) {
+                    yield* installmentsRepo.recordPayment(db, {
+                        amount: fee.amount,
+                        date: charged,
+                        planId: orderPlanId,
+                        source: null,
+                    });
+                }
+            }).pipe(Effect.uninterruptible)
+        ),
+        { concurrency: "unbounded" }
+    ).pipe(
+        Effect.catchCause((cause) =>
+            Effect.sync(() => {
+                console.error("Failed to save a scanned late fee", Cause.squash(cause));
+                onFailed();
+            })
+        )
+    );
+});
+
+const placeOrder = Effect.fn("InstallmentOrder.placeOrder")(function* placeOrder<E>(
+    db: Database,
+    order: InstallmentOrderInput<E>,
+    fees: readonly SeededFee[],
+    callbacks: { onFeesFailed: () => void; onOrdered: () => void }
+) {
+    const { planId, transactionId } = yield* installmentsRepo.createOrder(db, order);
+    callbacks.onOrdered();
+    yield* addSeededFees(db, fees, planId, order.installmentsPaidOutside ?? 0, callbacks.onFeesFailed);
+    rearmInstallmentReminders(db);
+    return transactionId;
+});
 
 // Editing an entry that has an order opens the order instead: its rows are edited there, never regenerated here.
 export function useInstallmentOrder({
@@ -173,42 +230,12 @@ export function useInstallmentOrder({
         return reason;
     };
 
-    const addSeededFees = async (orderPlanId: string, paidOutside: number) => {
-        const cuotas = liveInstallmentsQuery(db)
-            .all()
-            .filter((row) => row.planId === orderPlanId);
-        const fees = seeded?.fees ?? [];
-        try {
-            await Promise.all(
-                fees.map(async (fee) => {
-                    const cuota = cuotas.find((row) => row.sequence === fee.sequence);
-                    if (cuota === undefined) {
-                        return;
-                    }
-                    const charged = new Date(Math.min(cuota.dueDate.getTime(), Date.now()));
-                    await installmentsRepo.addFee(db, { amount: fee.amount, date: charged, installmentId: cuota.id });
-                    if (fee.sequence <= paidOutside) {
-                        await installmentsRepo.recordPayment(db, {
-                            amount: fee.amount,
-                            date: charged,
-                            planId: orderPlanId,
-                            source: null,
-                        });
-                    }
-                })
-            );
-        } catch (error) {
-            console.error("Failed to save a scanned late fee", error);
-            notifyFailure({ body: t("installments.failedBody"), title: t("installments.failedTitle") });
-        }
-    };
-
     /** Null when installments are off. */
-    const save = (
+    const save = <E,>(
         input: TransactionInput,
         price: number,
-        inSameTransaction: (id: string) => Promise<void>
-    ): Promise<string> | null => {
+        inSameTransaction: (id: string) => Effect.Effect<void, E>
+    ) => {
         const plan = planPriceOf(price, input.exchangeRate ?? entryRate.rate);
         const schedule =
             offered && draft !== null && plan !== null ? draftSchedule(draft, plan, date, planCurrency) : null;
@@ -217,20 +244,25 @@ export function useInstallmentOrder({
         }
         const hasUpfront = schedule.some((row) => row.sequence === 0);
         const paidOutside = paidBeforeCount(draft, schedule, new Date());
-        return installmentsRepo
-            .createOrder(db, {
+        return placeOrder(
+            db,
+            {
                 inSameTransaction,
                 installmentsPaidOutside: paidOutside,
                 purchase: { ...input, accountId: account.id },
                 schedule,
                 upfront: hasUpfront ? upfrontSource(plan) : undefined,
-            })
-            .then(async ({ planId: orderPlanId, transactionId }) => {
-                ordered.current = true;
-                await addSeededFees(orderPlanId, paidOutside);
-                rearmInstallmentReminders(db);
-                return transactionId;
-            });
+            },
+            seeded?.fees ?? [],
+            {
+                onFeesFailed: () => {
+                    notifyFailure({ body: t("installments.failedBody"), title: t("installments.failedTitle") });
+                },
+                onOrdered: () => {
+                    ordered.current = true;
+                },
+            }
+        );
     };
 
     /** Fire after the form's `onDone`; true when it asks about cuota notices. */

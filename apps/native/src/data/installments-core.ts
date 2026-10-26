@@ -3,10 +3,11 @@ import { firstOfMonth, startOfDay } from "@outlayr/money/calendar";
 import { canonicalUsd } from "@outlayr/money/canonical-usd";
 import { and, asc, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { accounts, installmentPlans, installments, outsidePayments, transactions, transfers } from "@/db/schema";
-import { withTransaction } from "@/db/transaction";
+import { transaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
 import { orderName, planStanding } from "@/domain/installments";
 import type { InstallmentStanding, PlanStanding, ScheduledInstallment } from "@/domain/installments";
@@ -35,8 +36,8 @@ export interface PaymentSource {
     note?: string;
 }
 
-export interface InstallmentOrderInput {
-    inSameTransaction?: (transactionId: string) => Promise<void>;
+export interface InstallmentOrderInput<E = never> {
+    inSameTransaction?: (transactionId: string) => Effect.Effect<void, E>;
     /** Installments 1..k paid before the order was recorded, each on its due date (today at the latest). */
     installmentsPaidOutside?: number;
     purchase: TransactionInput & { accountId: string };
@@ -60,42 +61,117 @@ export interface InstallmentPaymentInput {
     source: PaymentSource | null;
 }
 
-function liabilityAccount(db: Database, accountId: string) {
-    const account = getAccountById(db, accountId);
+const InstallmentsOperation = Schema.Literals([
+    "add-fee",
+    "create-order",
+    "delete-installment",
+    "delete-outside-payment",
+    "delete-plan",
+    "remove-fee",
+    "record-payment",
+    "update-installment",
+]);
+
+const InstallmentRejection = Schema.Literals([
+    "bad-paid-outside",
+    "empty-schedule",
+    "fee-not-positive",
+    "installment-missing",
+    "installment-not-positive",
+    "missing-upfront-source",
+    "no-outside-row",
+    "not-expense",
+    "not-liability",
+    "payment-not-positive",
+    "plan-missing",
+]);
+
+const REJECTION_TEXT: Record<typeof InstallmentRejection.Type, string> = {
+    "bad-paid-outside": "Installments paid outside must be a whole number within the schedule",
+    "empty-schedule": "An installment order needs positive installments",
+    "fee-not-positive": "A late fee must be positive",
+    "installment-missing": "The installment no longer exists",
+    "installment-not-positive": "An installment must be positive",
+    "missing-upfront-source": "An upfront payment needs the account it was paid from, or null when paid outside",
+    "no-outside-row": "No outside payment to record",
+    "not-expense": "An installment purchase is an expense",
+    "not-liability": "Installments are only allowed on liability accounts",
+    "payment-not-positive": "A payment must be positive",
+    "plan-missing": "The installment order no longer exists",
+};
+
+export class InstallmentsError extends Schema.TaggedError<InstallmentsError>()("InstallmentsError", {
+    cause: Schema.optional(Schema.Defect()),
+    operation: InstallmentsOperation,
+    reason: Schema.optional(InstallmentRejection),
+}) {
+    override get message(): string {
+        return this.reason === undefined ? `Installments ${this.operation} failed` : REJECTION_TEXT[this.reason];
+    }
+}
+
+const query = <A>(operation: typeof InstallmentsOperation.Type, run: () => PromiseLike<A>) =>
+    Effect.tryPromise({ catch: (cause) => new InstallmentsError({ cause, operation }), try: run });
+
+const read = <A>(operation: typeof InstallmentsOperation.Type, run: () => A) =>
+    Effect.try({ catch: (cause) => new InstallmentsError({ cause, operation }), try: run });
+
+const liabilityAccount = Effect.fn("Installments.liabilityAccount")(function* liabilityAccount(
+    operation: typeof InstallmentsOperation.Type,
+    db: Database,
+    accountId: string
+) {
+    const account = yield* read(operation, () => getAccountById(db, accountId));
     if (!account || toAccountKind(account.kind) !== "liability") {
-        throw new Error("Installments are only allowed on liability accounts");
+        return yield* new InstallmentsError({ operation, reason: "not-liability" });
     }
     return account;
-}
+});
 
-function livePlan(db: Database, planId: string): InstallmentPlan {
-    const [plan] = db
-        .select()
-        .from(installmentPlans)
-        .where(and(eq(installmentPlans.id, planId), isNull(installmentPlans.deletedAt)))
-        .limit(1)
-        .all();
+const livePlan = Effect.fn("Installments.livePlan")(function* livePlan(
+    operation: typeof InstallmentsOperation.Type,
+    db: Database,
+    planId: string
+) {
+    const [plan] = yield* read(operation, () =>
+        db
+            .select()
+            .from(installmentPlans)
+            .where(and(eq(installmentPlans.id, planId), isNull(installmentPlans.deletedAt)))
+            .limit(1)
+            .all()
+    );
     if (!plan) {
-        throw new Error("The installment order no longer exists");
+        return yield* new InstallmentsError({ operation, reason: "plan-missing" });
     }
     return plan;
-}
+});
 
-function liveInstallment(db: Database, installmentId: string) {
-    const [found] = db
-        .select({ plan: installmentPlans })
-        .from(installments)
-        .innerJoin(installmentPlans, eq(installmentPlans.id, installments.planId))
-        .where(
-            and(eq(installments.id, installmentId), isNull(installments.deletedAt), isNull(installmentPlans.deletedAt))
-        )
-        .limit(1)
-        .all();
+const liveInstallment = Effect.fn("Installments.liveInstallment")(function* liveInstallment(
+    operation: typeof InstallmentsOperation.Type,
+    db: Database,
+    installmentId: string
+) {
+    const [found] = yield* read(operation, () =>
+        db
+            .select({ plan: installmentPlans })
+            .from(installments)
+            .innerJoin(installmentPlans, eq(installmentPlans.id, installments.planId))
+            .where(
+                and(
+                    eq(installments.id, installmentId),
+                    isNull(installments.deletedAt),
+                    isNull(installmentPlans.deletedAt)
+                )
+            )
+            .limit(1)
+            .all()
+    );
     if (!found) {
-        throw new Error("The installment no longer exists");
+        return yield* new InstallmentsError({ operation, reason: "installment-missing" });
     }
     return found.plan;
-}
+});
 
 function liveFees(db: Database, installmentId: string) {
     return db
@@ -106,14 +182,21 @@ function liveFees(db: Database, installmentId: string) {
         .all();
 }
 
-async function tombstoneFees(db: Database, ids: readonly string[], now: Date): Promise<void> {
+const tombstoneFees = Effect.fn("Installments.tombstoneFees")(function* tombstoneFees(
+    operation: typeof InstallmentsOperation.Type,
+    db: Database,
+    ids: readonly string[],
+    now: Date
+) {
     if (ids.length > 0) {
-        await db
-            .update(transactions)
-            .set({ deletedAt: now, updatedAt: now })
-            .where(and(inArray(transactions.id, [...ids]), isNull(transactions.deletedAt)));
+        yield* query(operation, () =>
+            db
+                .update(transactions)
+                .set({ deletedAt: now, updatedAt: now })
+                .where(and(inArray(transactions.id, [...ids]), isNull(transactions.deletedAt)))
+        );
     }
-}
+});
 
 function paymentTransfer(
     planId: string,
@@ -141,42 +224,82 @@ function paymentTransfer(
 }
 
 // Valued before any transaction opens, as `stageTransfer` does.
-function outsideRows(
+const outsideRows = (
     db: Database,
     planId: string,
     currency: string,
     payments: readonly { amount: number; date: Date }[],
     now: Date
-) {
-    return Promise.all(
-        payments.map(async ({ amount, date }) => ({
-            amount,
-            amountUsd: await frozenUsdAmount(db, amount, currency, date),
-            date,
-            id: newId(),
-            planId,
-            updatedAt: now,
-        }))
+) =>
+    Effect.all(
+        payments.map(({ amount, date }) =>
+            frozenUsdAmount(db, amount, currency, date).pipe(
+                Effect.map((amountUsd) => ({
+                    amount,
+                    amountUsd,
+                    date,
+                    id: newId(),
+                    planId,
+                    updatedAt: now,
+                }))
+            )
+        ),
+        { concurrency: "unbounded" }
     );
-}
+
+const deleteInstallment = Effect.fn("Installments.deleteInstallment")(function* deleteInstallment(
+    db: Database,
+    id: string,
+    now: Date = new Date()
+) {
+    yield* query("delete-installment", () =>
+        db
+            .update(installments)
+            .set({ deletedAt: now, updatedAt: now })
+            .where(and(eq(installments.id, id), isNull(installments.deletedAt)))
+    );
+});
+
+const updateInstallment = Effect.fn("Installments.updateInstallment")(function* updateInstallment(
+    db: Database,
+    id: string,
+    patch: { amount?: number; dueDate?: Date },
+    now: Date = new Date()
+) {
+    if (patch.amount !== undefined && !(patch.amount > 0)) {
+        return yield* new InstallmentsError({ operation: "update-installment", reason: "installment-not-positive" });
+    }
+    yield* query("update-installment", () =>
+        db
+            .update(installments)
+            .set({
+                ...(patch.amount !== undefined && { amount: patch.amount }),
+                ...(patch.dueDate !== undefined && { dueDate: startOfDay(patch.dueDate) }),
+                updatedAt: now,
+            })
+            .where(and(eq(installments.id, id), isNull(installments.deletedAt)))
+    );
+});
 
 export const installmentsRepo = {
-    async addFee(db: Database, input: InstallmentFeeInput): Promise<string> {
+    addFee: Effect.fn("Installments.addFee")(function* addFee(db: Database, input: InstallmentFeeInput) {
         if (!(input.amount > 0)) {
-            throw new Error("A late fee must be positive");
+            return yield* new InstallmentsError({ operation: "add-fee", reason: "fee-not-positive" });
         }
-        const plan = liveInstallment(db, input.installmentId);
-        const account = liabilityAccount(db, plan.accountId);
-        const [current, ...extra] = liveFees(db, input.installmentId);
+        const plan = yield* liveInstallment("add-fee", db, input.installmentId);
+        const account = yield* liabilityAccount("add-fee", db, plan.accountId);
+        const [current, ...extra] = yield* read("add-fee", () => liveFees(db, input.installmentId));
         const date = input.date ?? current?.date ?? new Date();
         const now = new Date();
         const values = {
-            ...(await canonicalUsd(localRateLookup(db), {
-                amount: input.amount,
-                currency: account.currency,
-                date,
-                displayCurrency: account.currency,
-            })),
+            ...(yield* query("add-fee", () =>
+                canonicalUsd(localRateLookup(db), {
+                    amount: input.amount,
+                    currency: account.currency,
+                    date,
+                    displayCurrency: account.currency,
+                })
+            )),
             accountId: account.id,
             amount: input.amount,
             currency: account.currency,
@@ -187,41 +310,58 @@ export const installmentsRepo = {
             updatedAt: now,
         };
         const id = current?.id ?? newId();
-        await withTransaction(db, async () => {
-            if (current) {
-                await db.update(transactions).set(values).where(eq(transactions.id, current.id));
-            } else {
-                const [purchase] = db
-                    .select({ categoryId: transactions.categoryId, note: transactions.note })
-                    .from(transactions)
-                    .where(eq(transactions.id, plan.transactionId))
-                    .limit(1)
-                    .all();
-                await db.insert(transactions).values({
-                    ...values,
-                    categoryId: feeCategoryFor(db, purchase?.categoryId ?? null),
-                    id,
-                    income: false,
-                    note: translateNow("installments.fee.note", { order: orderName(translateNow, purchase ?? null) }),
-                });
-            }
-            await tombstoneFees(
-                db,
-                extra.map((fee) => fee.id),
-                now
-            );
-        });
+        yield* transaction(
+            db,
+            Effect.gen(function* write() {
+                if (current) {
+                    yield* query("add-fee", () =>
+                        db.update(transactions).set(values).where(eq(transactions.id, current.id))
+                    );
+                } else {
+                    const [purchase] = yield* read("add-fee", () =>
+                        db
+                            .select({ categoryId: transactions.categoryId, note: transactions.note })
+                            .from(transactions)
+                            .where(eq(transactions.id, plan.transactionId))
+                            .limit(1)
+                            .all()
+                    );
+                    const categoryId = yield* read("add-fee", () => feeCategoryFor(db, purchase?.categoryId ?? null));
+                    yield* query("add-fee", () =>
+                        db.insert(transactions).values({
+                            ...values,
+                            categoryId,
+                            id,
+                            income: false,
+                            note: translateNow("installments.fee.note", {
+                                order: orderName(translateNow, purchase ?? null),
+                            }),
+                        })
+                    );
+                }
+                yield* tombstoneFees(
+                    "add-fee",
+                    db,
+                    extra.map((fee) => fee.id),
+                    now
+                );
+            }),
+            (cause) => new InstallmentsError({ cause, operation: "add-fee" })
+        );
         return id;
-    },
+    }),
 
-    async createOrder(db: Database, input: InstallmentOrderInput): Promise<{ planId: string; transactionId: string }> {
+    createOrder: Effect.fn("Installments.createOrder")(function* createOrder<E = never>(
+        db: Database,
+        input: InstallmentOrderInput<E>
+    ) {
         const { purchase, schedule } = input;
-        const account = liabilityAccount(db, purchase.accountId);
+        const account = yield* liabilityAccount("create-order", db, purchase.accountId);
         if (purchase.income) {
-            throw new Error("An installment purchase is an expense");
+            return yield* new InstallmentsError({ operation: "create-order", reason: "not-expense" });
         }
         if (schedule.length === 0 || schedule.some((row) => !(row.amount > 0))) {
-            throw new Error("An installment order needs positive installments");
+            return yield* new InstallmentsError({ operation: "create-order", reason: "empty-schedule" });
         }
         const planId = newId();
         const now = new Date();
@@ -229,12 +369,12 @@ export const installmentsRepo = {
         const paidOutside = input.installmentsPaidOutside ?? 0;
         const cuotas = schedule.filter((row) => row.sequence > 0).sort((a, b) => a.sequence - b.sequence);
         if (!(Number.isInteger(paidOutside) && paidOutside >= 0 && paidOutside <= cuotas.length)) {
-            throw new Error("Installments paid outside must be a whole number within the schedule");
+            return yield* new InstallmentsError({ operation: "create-order", reason: "bad-paid-outside" });
         }
         if (upfrontRow && input.upfront === undefined) {
-            throw new Error("An upfront payment needs the account it was paid from, or null when paid outside");
+            return yield* new InstallmentsError({ operation: "create-order", reason: "missing-upfront-source" });
         }
-        const outside = await outsideRows(
+        const outside = yield* outsideRows(
             db,
             planId,
             account.currency,
@@ -247,149 +387,162 @@ export const installmentsRepo = {
             ],
             now
         );
-        let upfront: Awaited<ReturnType<typeof stageTransfer>> | null = null;
-        if (upfrontRow && input.upfront) {
-            upfront = await stageTransfer(
-                db,
-                paymentTransfer(planId, account.id, account.currency, {
-                    amount: upfrontRow.amount,
-                    date: purchase.date,
-                    source: input.upfront,
-                })
-            );
-        }
+        const upfront =
+            upfrontRow && input.upfront
+                ? yield* stageTransfer(
+                      db,
+                      paymentTransfer(planId, account.id, account.currency, {
+                          amount: upfrontRow.amount,
+                          date: purchase.date,
+                          source: input.upfront,
+                      })
+                  )
+                : null;
 
-        const purchaseId = await Effect.runPromise(
-            transactionsRepo.create(db, purchase, {
-                inSameTransaction: (transactionId) =>
-                    Effect.tryPromise(async () => {
-                        await db.insert(installmentPlans).values({
-                            accountId: account.id,
-                            dateCreated: now,
-                            id: planId,
-                            transactionId,
+        const purchaseId = yield* transactionsRepo.create(db, purchase, {
+            inSameTransaction: Effect.fn("Installments.createOrderRows")(function* createOrderRows(transactionId) {
+                yield* query("create-order", () =>
+                    db.insert(installmentPlans).values({
+                        accountId: account.id,
+                        dateCreated: now,
+                        id: planId,
+                        transactionId,
+                        updatedAt: now,
+                    })
+                );
+                yield* query("create-order", () =>
+                    db.insert(installments).values(
+                        schedule.map((row) => ({
+                            amount: row.amount,
+                            dueDate: startOfDay(row.dueDate),
+                            id: newId(),
+                            planId,
+                            sequence: row.sequence,
                             updatedAt: now,
-                        });
-                        await db.insert(installments).values(
-                            schedule.map((row) => ({
-                                amount: row.amount,
-                                dueDate: startOfDay(row.dueDate),
-                                id: newId(),
-                                planId,
-                                sequence: row.sequence,
-                                updatedAt: now,
-                            }))
-                        );
-                        if (outside.length > 0) {
-                            await db.insert(outsidePayments).values(outside);
-                        }
-                        await upfront?.write();
-                        await input.inSameTransaction?.(transactionId);
-                    }),
-            })
-        );
+                        }))
+                    )
+                );
+                if (outside.length > 0) {
+                    yield* query("create-order", () => db.insert(outsidePayments).values(outside));
+                }
+                if (upfront) {
+                    yield* upfront.write;
+                }
+                if (input.inSameTransaction) {
+                    yield* input.inSameTransaction(transactionId);
+                }
+            }),
+        });
         return { planId, transactionId: purchaseId };
-    },
+    }),
 
-    async deleteInstallment(db: Database, id: string, now: Date = new Date()): Promise<void> {
-        await db
-            .update(installments)
-            .set({ deletedAt: now, updatedAt: now })
-            .where(and(eq(installments.id, id), isNull(installments.deletedAt)));
-    },
+    deleteInstallment,
 
-    async deleteOutsidePayment(db: Database, id: string, now: Date = new Date()): Promise<void> {
-        await db
-            .update(outsidePayments)
-            .set({ deletedAt: now, updatedAt: now })
-            .where(and(eq(outsidePayments.id, id), isNull(outsidePayments.deletedAt)));
-    },
+    deleteOutsidePayment: Effect.fn("Installments.deleteOutsidePayment")(function* deleteOutsidePayment(
+        db: Database,
+        id: string,
+        now: Date = new Date()
+    ) {
+        yield* query("delete-outside-payment", () =>
+            db
+                .update(outsidePayments)
+                .set({ deletedAt: now, updatedAt: now })
+                .where(and(eq(outsidePayments.id, id), isNull(outsidePayments.deletedAt)))
+        );
+    }),
 
     // Rows its payments cover stay and a partly paid one is trimmed, so the liability's balance doesn't move. An order
     // with nothing paid goes entirely, its transfers left as plain ones.
-    async deletePlan(db: Database, planId: string, now: Date = new Date()): Promise<void> {
-        await withTransaction(db, async () => {
-            const entry = readPlans(db, now).find(({ plan }) => plan.id === planId);
-            if (!entry) {
-                return;
-            }
-            if (entry.standing.paid === 0) {
-                await Effect.runPromise(tombstonePlans(db, eq(installmentPlans.id, planId), now, true));
-                return;
-            }
-            await Promise.all(
-                entry.standing.rows.map(async ({ covered, row, status }) => {
-                    if (status === "unpaid") {
-                        await installmentsRepo.deleteInstallment(db, row.id, now);
-                        return;
-                    }
-                    if (status !== "partial") {
-                        return;
-                    }
-                    if (covered > row.fee) {
-                        const amount = roundToMinorUnits(covered - row.fee, entry.plan.currency);
-                        await installmentsRepo.updateInstallment(db, row.id, { amount }, now);
-                        return;
-                    }
-                    await db
-                        .update(transactions)
-                        .set({ installmentId: null, updatedAt: now })
-                        .where(and(eq(transactions.installmentId, row.id), isNull(transactions.deletedAt)));
-                    await installmentsRepo.updateInstallment(db, row.id, { amount: covered }, now);
-                })
-            );
-        });
-    },
-
-    async removeFee(db: Database, installmentId: string, now: Date = new Date()): Promise<void> {
-        await tombstoneFees(
+    deletePlan: Effect.fn("Installments.deletePlan")(function* deletePlan(
+        db: Database,
+        planId: string,
+        now: Date = new Date()
+    ) {
+        yield* transaction(
             db,
-            liveFees(db, installmentId).map((fee) => fee.id),
+            Effect.gen(function* write() {
+                const entry = (yield* read("delete-plan", () => readPlans(db, now))).find(
+                    ({ plan }) => plan.id === planId
+                );
+                if (!entry) {
+                    return;
+                }
+                if (entry.standing.paid === 0) {
+                    yield* tombstonePlans(db, eq(installmentPlans.id, planId), now, true);
+                    return;
+                }
+                yield* Effect.all(
+                    entry.standing.rows.map(({ covered, row, status }) =>
+                        Effect.gen(function* trim() {
+                            if (status === "unpaid") {
+                                yield* deleteInstallment(db, row.id, now);
+                                return;
+                            }
+                            if (status !== "partial") {
+                                return;
+                            }
+                            if (covered > row.fee) {
+                                const amount = roundToMinorUnits(covered - row.fee, entry.plan.currency);
+                                yield* updateInstallment(db, row.id, { amount }, now);
+                                return;
+                            }
+                            yield* query("delete-plan", () =>
+                                db
+                                    .update(transactions)
+                                    .set({ installmentId: null, updatedAt: now })
+                                    .where(and(eq(transactions.installmentId, row.id), isNull(transactions.deletedAt)))
+                            );
+                            yield* updateInstallment(db, row.id, { amount: covered }, now);
+                        })
+                    ),
+                    { concurrency: "unbounded", discard: true }
+                );
+            }),
+            (cause) => new InstallmentsError({ cause, operation: "delete-plan" })
+        );
+    }),
+
+    removeFee: Effect.fn("Installments.removeFee")(function* removeFee(
+        db: Database,
+        installmentId: string,
+        now: Date = new Date()
+    ) {
+        const fees = yield* read("remove-fee", () => liveFees(db, installmentId));
+        yield* tombstoneFees(
+            "remove-fee",
+            db,
+            fees.map((fee) => fee.id),
             now
         );
-    },
+    }),
 
-    async recordPayment(db: Database, input: InstallmentPaymentInput): Promise<string> {
-        const plan = livePlan(db, input.planId);
-        const account = liabilityAccount(db, plan.accountId);
+    recordPayment: Effect.fn("Installments.recordPayment")(function* recordPayment(
+        db: Database,
+        input: InstallmentPaymentInput
+    ) {
+        const plan = yield* livePlan("record-payment", db, input.planId);
+        const account = yield* liabilityAccount("record-payment", db, plan.accountId);
         const { source } = input;
         if (source === null) {
             if (!(input.amount > 0)) {
-                throw new Error("A payment must be positive");
+                return yield* new InstallmentsError({ operation: "record-payment", reason: "payment-not-positive" });
             }
-            const [row] = await outsideRows(db, plan.id, account.currency, [input], new Date());
+            const [row] = yield* outsideRows(db, plan.id, account.currency, [input], new Date());
             if (!row) {
-                throw new Error("No outside payment to record");
+                return yield* new InstallmentsError({ operation: "record-payment", reason: "no-outside-row" });
             }
-            await db.insert(outsidePayments).values(row);
+            yield* query("record-payment", () => db.insert(outsidePayments).values(row));
             return row.id;
         }
-        const { id, write } = await stageTransfer(
+        const { id, write } = yield* stageTransfer(
             db,
             paymentTransfer(plan.id, account.id, account.currency, { ...input, source })
         );
-        await withTransaction(db, write);
+        yield* transaction(db, write, (cause) => new InstallmentsError({ cause, operation: "record-payment" }));
         return id;
-    },
+    }),
 
-    async updateInstallment(
-        db: Database,
-        id: string,
-        patch: { amount?: number; dueDate?: Date },
-        now: Date = new Date()
-    ): Promise<void> {
-        if (patch.amount !== undefined && !(patch.amount > 0)) {
-            throw new Error("An installment must be positive");
-        }
-        await db
-            .update(installments)
-            .set({
-                ...(patch.amount !== undefined && { amount: patch.amount }),
-                ...(patch.dueDate !== undefined && { dueDate: startOfDay(patch.dueDate) }),
-                updatedAt: now,
-            })
-            .where(and(eq(installments.id, id), isNull(installments.deletedAt)));
-    },
+    updateInstallment,
 };
 
 export function livePlansQuery(db: Database, accountId?: string) {

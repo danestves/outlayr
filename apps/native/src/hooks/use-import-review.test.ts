@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { act, renderHook, waitFor } from "@testing-library/react-native";
+import * as Effect from "effect/Effect";
 import { Alert } from "react-native";
 
 import { testLocalData as mockTestLocalData } from "@/contexts/test-local-data";
@@ -274,7 +275,11 @@ describe("useImportReview", () => {
     it("onCommit failure keeps the sheet's selections intact and reports the failure, without navigating", async () => {
         await seedCategories(dbHolder.current as Database);
         withReview();
-        const applySpy = jest.spyOn(transferCore, "applyImport").mockRejectedValueOnce(new Error("disk full"));
+        const applySpy = jest
+            .spyOn(transferCore, "applyImport")
+            .mockReturnValueOnce(
+                Effect.fail(new transferCore.CsvTransferError({ cause: new Error("disk full"), operation: "import" }))
+            );
 
         const { result } = await renderHook(() => useImportReview());
         await waitFor(() => expect(result.current.plan.entries).toHaveLength(2));

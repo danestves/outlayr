@@ -6,7 +6,8 @@ import { ScreenHeader } from "@/components/screen-header";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { useSavingsGoal } from "@/data/savings-goals";
-import { GoalValuationError, savingsGoalsRepo } from "@/data/savings-goals-core";
+import type { SavingsGoalPatch } from "@/data/savings-goals-core";
+import { GoalValuationError } from "@/data/savings-goals-core";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useNow } from "@/data/use-now";
 import { useTranslation } from "@/i18n/context";
@@ -17,11 +18,15 @@ import { GoalEditor } from "@/screens/budgets/components/goal-editor";
 import type { GoalEdit } from "@/screens/budgets/components/goal-editor";
 import { GoalTargetSheet } from "@/screens/budgets/components/goal-target-sheet";
 import type { GoalCommit, GoalTarget } from "@/screens/budgets/components/goal-target-sheet";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { updateSavingsGoalCommand } from "@/state/planning-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 export default function GoalScreen() {
     const router = useRouter();
     const t = useTranslation();
     const db = useDatabase();
+    const updateGoal = useAtomCommand(updateSavingsGoalCommand, SILENT);
     const haptics = useHaptics();
     const nowMs = useNow();
     const currency = useGlobalCurrency(db);
@@ -46,9 +51,9 @@ export default function GoalScreen() {
 
     const { goal } = entry;
 
-    const write = async (patch: Parameters<typeof savingsGoalsRepo.update>[2]) => {
+    const write = async (patch: SavingsGoalPatch) => {
         try {
-            await savingsGoalsRepo.update(db, goal.id, patch);
+            unwrapAtomCommand(await updateGoal({ db, id: goal.id, patch }));
             haptics("success");
         } catch (error) {
             console.error("Failed to save the goal", error);

@@ -24,16 +24,7 @@ export class PendingCategoryError extends Schema.TaggedError<PendingCategoryErro
     }
 }
 
-const InstallmentOrderStage = Schema.Literals(["save", "start"]);
-
-export class InstallmentOrderError extends Schema.TaggedError<InstallmentOrderError>()("InstallmentOrderError", {
-    cause: Schema.Defect(),
-    stage: InstallmentOrderStage,
-}) {
-    override get message(): string {
-        return `The installment order failed to ${this.stage}`;
-    }
-}
+type ExtrasWrite = ReturnType<typeof writeExtras>;
 
 export interface TransactionSaveInput {
     attachments: readonly AttachmentDraft[];
@@ -43,7 +34,7 @@ export interface TransactionSaveInput {
     decimals: number;
     initial: Transaction | undefined;
     installments:
-        | ((entry: TransactionInput, writeExtras: (id: string) => Promise<void>) => Promise<string> | null)
+        | ((entry: TransactionInput, writeExtras: (id: string) => ExtrasWrite) => Effect.Effect<string, unknown> | null)
         | null;
     mode: "create" | "edit";
     pendingCategory: {
@@ -109,15 +100,9 @@ const saveTransaction = Effect.fn("TransactionSave.save")(function* saveTransact
     const entry = input.buildEntry(categoryId);
     const inSameTransaction = (id: string) => writeExtras(input, id);
 
-    const ordering = yield* Effect.try({
-        catch: (cause) => new InstallmentOrderError({ cause, stage: "start" }),
-        try: () => input.installments?.(entry, (id) => Effect.runPromise(inSameTransaction(id))) ?? null,
-    });
+    const ordering = input.installments?.(entry, inSameTransaction) ?? null;
     if (ordering !== null) {
-        return yield* Effect.tryPromise({
-            catch: (cause) => new InstallmentOrderError({ cause, stage: "save" }),
-            try: () => ordering,
-        });
+        return yield* ordering;
     }
     if (input.mode === "edit" && initial) {
         yield* transactionsRepo.update(db, initial.id, entry, { inSameTransaction });

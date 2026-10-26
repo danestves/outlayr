@@ -1,8 +1,8 @@
 import { AndroidImportance, setNotificationChannelAsync } from "expo-notifications";
 
-import { buildWalletPush } from "@/data/wallet-push";
 import { translateNow } from "@/i18n/runtime";
 import { purchaseListener } from "@/lib/purchase-listener";
+import { buildWalletPushCommand, runAccountsCommand } from "@/state/accounts-commands";
 import type { publishWidgets as iosPublishWidgets } from "@/widgets/publish";
 
 const PUSH_CHANNEL = "purchases";
@@ -13,7 +13,7 @@ export const publishWidgets: typeof iosPublishWidgets = async (db) => {
         return;
     }
     try {
-        purchaseListener.setSnapshot(JSON.stringify(await buildWalletPush(db)));
+        purchaseListener.setSnapshot(JSON.stringify(await runAccountsCommand(buildWalletPushCommand, db)));
         await setNotificationChannelAsync(PUSH_CHANNEL, {
             importance: AndroidImportance.DEFAULT,
             name: translateNow("settings.wallet.pushChannel"),

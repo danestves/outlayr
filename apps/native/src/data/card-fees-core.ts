@@ -204,10 +204,7 @@ export const cardFeeValues = Effect.fn("CardFees.cardFeeValues")(function* cardF
     return {
         accountId: purchase.accountId ?? null,
         amount: charged ?? 0,
-        amountUsd:
-            charged === null
-                ? null
-                : yield* attempt("values", () => frozenUsdAmount(db, charged, fee.currency, purchase.date)),
+        amountUsd: charged === null ? null : yield* frozenUsdAmount(db, charged, fee.currency, purchase.date),
         categoryId: fee.categoryId,
         currency: fee.currency,
         date: purchase.date,

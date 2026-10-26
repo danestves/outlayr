@@ -5,9 +5,11 @@ import type { OverviewRow } from "@outlayr/money/account-overview";
 import { valueCell } from "@outlayr/money/currency-totals";
 import { utcDateString } from "@outlayr/money/dates";
 import type { RateTable } from "@outlayr/money/valuation";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
-import { withTransaction } from "@/db/transaction";
+import { transaction } from "@/db/transaction";
 import type { PlottedCell } from "@/domain/goal-balance-series";
 import { localDayKey } from "@/domain/local-day";
 import { minorUnitsFor, roundToMinorUnits } from "@/domain/money";
@@ -75,16 +77,30 @@ export function payoffEndedOn(
     return null;
 }
 
-async function plansOn(db: Database, account: Account, now: Date) {
-    const [goals, cells, { rates }] = await Promise.all([
-        savingsGoalsQuery(db),
-        settledCellsAt(db, account.id, now),
-        loadValuationIn(db, account.currency),
-    ]);
+export class PayoffPlansError extends Schema.TaggedError<PayoffPlansError>()("PayoffPlansError", {
+    cause: Schema.Defect(),
+    operation: Schema.Literals(["read-goals", "write-plan"]),
+}) {
+    override get message(): string {
+        return `Payoff plan ${this.operation} failed`;
+    }
+}
+
+const readGoals = (db: Database) =>
+    Effect.tryPromise({
+        catch: (cause) => new PayoffPlansError({ cause, operation: "read-goals" }),
+        try: () => savingsGoalsQuery(db),
+    });
+
+const plansOn = Effect.fn("PayoffPlans.plansOn")(function* plansOn(db: Database, account: Account, now: Date) {
+    const [goals, cells, { rates }] = yield* Effect.all(
+        [readGoals(db), settledCellsAt(db, account.id, now), loadValuationIn(db, account.currency)],
+        { concurrency: "unbounded" }
+    );
     return goals
         .filter((goal) => goal.accountId === account.id && isPayoffPlan(goal))
         .map((goal) => ({ endedOn: payoffEndedOn(goal, account, cells, rates), goal }));
-}
+});
 
 export interface OwedPlan {
     account: Account;
@@ -93,83 +109,100 @@ export interface OwedPlan {
     targetDate: Date;
 }
 
-export async function owedPayoffPlans(db: Database, now: Date = new Date()): Promise<OwedPlan[]> {
-    const [goals, rows] = await Promise.all([savingsGoalsQuery(db), accountsRepo.listActive(db)]);
+export const owedPayoffPlans = Effect.fn("PayoffPlans.owedPayoffPlans")(function* owedPayoffPlans(
+    db: Database,
+    now: Date = new Date()
+) {
+    const [goals, rows] = yield* Effect.all([readGoals(db), accountsRepo.listActive(db)], {
+        concurrency: "unbounded",
+    });
     const planned = new Set(goals.filter(isPayoffPlan).map((goal) => goal.accountId));
-    const owed = await Promise.all(
+    const owed = yield* Effect.all(
         rows
             .filter((row) => isPerson(row) && planned.has(row.id))
-            .map(async (row) => {
-                const plans = await plansOn(db, row, now);
-                const live = plans.find((plan) => plan.endedOn === null);
-                if (live === undefined) {
-                    return null;
-                }
-                const balance = await settledBalanceAt(db, row, await loadValuationIn(db, row.currency), now);
-                return balance.exact && balance.value < 0
-                    ? { account: row, goalId: live.goal.id, owed: -balance.value, targetDate: live.goal.targetDate }
-                    : null;
-            })
+            .map((row) =>
+                Effect.gen(function* owedBy() {
+                    const plans = yield* plansOn(db, row, now);
+                    const live = plans.find((plan) => plan.endedOn === null);
+                    if (live === undefined) {
+                        return null;
+                    }
+                    const balance = yield* settledBalanceAt(db, row, yield* loadValuationIn(db, row.currency), now);
+                    return balance.exact && balance.value < 0
+                        ? { account: row, goalId: live.goal.id, owed: -balance.value, targetDate: live.goal.targetDate }
+                        : null;
+                })
+            ),
+        { concurrency: "unbounded" }
     );
     return owed.filter((plan) => plan !== null);
-}
+});
 
 // A new plan anchors on the balance now, in the account's own currency, so the share paid doesn't move with the rate.
-// Null with nothing written when the balance isn't a debt; throws {@link GoalValuationError} when it can't be valued.
-export async function setPayoffPlan(
+// Null with nothing written when the balance isn't a debt; fails with {@link GoalValuationError} when unvalued.
+export const setPayoffPlan = Effect.fn("PayoffPlans.setPayoffPlan")(function* setPayoffPlan(
     db: Database,
     account: Account,
     targetDate: Date,
     now: Date = new Date()
-): Promise<string | null> {
-    const plans = await plansOn(db, account, now);
+) {
+    const plans = yield* plansOn(db, account, now);
     const live = plans.find((plan) => plan.endedOn === null);
     if (live !== undefined) {
-        await savingsGoalsRepo.update(db, live.goal.id, { targetDate });
+        yield* savingsGoalsRepo.update(db, live.goal.id, { targetDate });
         return live.goal.id;
     }
-    const balance = await settledBalanceAt(db, account, await loadValuationIn(db, account.currency), now);
+    const balance = yield* settledBalanceAt(db, account, yield* loadValuationIn(db, account.currency), now);
     if (!balance.exact) {
-        throw new GoalValuationError();
+        return yield* new GoalValuationError();
     }
     if (!takesPayoffPlan(account, balance.value)) {
         return null;
     }
     let id = "";
-    await withTransaction(db, async () => {
-        await Promise.all(plans.map(({ goal }) => savingsGoalsRepo.remove(db, goal.id, now)));
-        id = await savingsGoalsRepo.create(db, {
-            accountId: account.id,
-            currency: account.currency,
-            name: account.name,
-            startAmount: balance.value,
-            targetAmount: 0,
-            targetDate,
-        });
-    });
+    yield* transaction(
+        db,
+        Effect.gen(function* write() {
+            yield* Effect.all(
+                plans.map(({ goal }) => savingsGoalsRepo.remove(db, goal.id, now)),
+                { concurrency: "unbounded", discard: true }
+            );
+            id = yield* savingsGoalsRepo.create(db, {
+                accountId: account.id,
+                currency: account.currency,
+                name: account.name,
+                startAmount: balance.value,
+                targetAmount: 0,
+                targetDate,
+            });
+        }),
+        (cause) => new PayoffPlansError({ cause, operation: "write-plan" })
+    );
     return id;
-}
+});
 
 // What the free cap counts. Read on demand, not subscribed: only each account's history says whether its plan ended.
-export async function livePayoffPlanCount(
+export const livePayoffPlanCount = Effect.fn("PayoffPlans.livePayoffPlanCount")(function* livePayoffPlanCount(
     db: Database,
     exceptAccountId: string | null,
     now: Date = new Date()
-): Promise<number> {
-    const [goals, rows] = await Promise.all([savingsGoalsQuery(db), accountsRepo.listActive(db)]);
+) {
+    const [goals, rows] = yield* Effect.all([readGoals(db), accountsRepo.listActive(db)], {
+        concurrency: "unbounded",
+    });
     const planned = new Set(
         goals.filter((goal) => isPayoffPlan(goal) && goal.accountId !== exceptAccountId).map((goal) => goal.accountId)
     );
-    const live = await Promise.all(
+    const live = yield* Effect.all(
         rows
             .filter((row) => planned.has(row.id))
-            .map(async (row) => {
-                const plans = await plansOn(db, row, now);
-                return plans.filter((plan) => plan.endedOn === null).length;
-            })
+            .map((row) =>
+                plansOn(db, row, now).pipe(Effect.map((plans) => plans.filter((plan) => plan.endedOn === null).length))
+            ),
+        { concurrency: "unbounded" }
     );
     return live.reduce((sum, count) => sum + count, 0);
-}
+});
 
 // The first live plan per account, else the first ended one. The start is restated at today's rate like `rows`, not
 // through its frozen USD, so a debt in a moving currency reads paid only when it was.

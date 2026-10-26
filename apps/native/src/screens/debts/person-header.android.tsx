@@ -6,6 +6,7 @@ import {
     useNativeState,
 } from "@expo/ui/jetpack-compose";
 import { fillMaxWidth } from "@expo/ui/jetpack-compose/modifiers";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
 import type { ReactNode } from "react";
@@ -17,7 +18,6 @@ import { MaterialHost } from "@/components/material-host";
 import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { toolbarIcon } from "@/components/toolbar-icons";
-import { accountsRepo } from "@/data/accounts-core";
 import type { Account } from "@/data/accounts-core";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import type { Database } from "@/db/client";
@@ -26,6 +26,9 @@ import type { DebtStanding } from "@/domain/debt-choices";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
+import { updateAccountCommand } from "@/state/accounts-commands";
+import { SILENT } from "@/state/atom-command";
+import { useAtomCommand } from "@/state/use-atom-command";
 import { withAlpha } from "@/theme/shade";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
@@ -91,15 +94,17 @@ export function PersonHero({ account, balance, plan, showCents }: PersonHeroProp
 export function PersonToolbar({ account, db, plan }: { account: Account; db: Database; plan: PayoffPlanControls }) {
     const t = useTranslation();
     const { requestDelete } = useDeferredDelete("account");
+    const updateAccount = useAtomCommand(updateAccountCommand, SILENT);
     const [renaming, setRenaming] = useState(false);
 
-    const rename = (next: string) => {
+    const rename = async (next: string) => {
         setRenaming(false);
         const name = next.trim();
         if (name !== "" && name !== account.name) {
-            accountsRepo.update(db, account.id, { name }).catch(() => {
+            const result = await updateAccount({ db, id: account.id, patch: { name } });
+            if (AsyncResult.isFailure(result)) {
                 notifyFailure({ title: t("accounts.error.saveFailed") });
-            });
+            }
         }
     };
 

@@ -247,9 +247,7 @@ export const backfillOpeningUsd = Effect.fn("CanonicalizeBackfill.backfillOpenin
     // The rate lookup and the UPDATE are both synchronous on this driver (see CANONICALIZE_BATCH above), so issuing the
     // rows together overlaps no I/O.
     for (const row of pending) {
-        const initialBalanceUsd = yield* query("openingBalances", () =>
-            frozenUsdAmount(db, row.initialBalance, row.currency, row.initialBalanceDate)
-        );
+        const initialBalanceUsd = yield* frozenUsdAmount(db, row.initialBalance, row.currency, row.initialBalanceDate);
         if (initialBalanceUsd === null) {
             continue;
         }

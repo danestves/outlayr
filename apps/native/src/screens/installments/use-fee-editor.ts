@@ -2,7 +2,7 @@ import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { useRef, useState } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
-import { installmentsRepo, lastFeeAmount } from "@/data/installments-core";
+import { lastFeeAmount } from "@/data/installments-core";
 import type { InstallmentRow } from "@/data/installments-core";
 import { minorUnitsFor } from "@/domain/money";
 import { numberToNumpad, numpadToNumber } from "@/domain/numpad";
@@ -10,6 +10,9 @@ import { useTranslation } from "@/i18n/context";
 import { rearmInstallmentReminders } from "@/lib/installment-reminder-sync";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { addInstallmentFeeCommand, removeInstallmentFeeCommand } from "@/state/planning-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 export function useFeeEditor({
     accountId,
@@ -21,6 +24,8 @@ export function useFeeEditor({
     row: InstallmentRow;
 }) {
     const db = useDatabase();
+    const addFee = useAtomCommand(addInstallmentFeeCommand, SILENT);
+    const removeFee = useAtomCommand(removeInstallmentFeeCommand, SILENT);
     const t = useTranslation();
     const haptics = useHaptics();
     const minorUnits = minorUnitsFor(currency);
@@ -28,10 +33,11 @@ export function useFeeEditor({
     const [padText, setPadText] = useState("");
 
     const write = async (next: number) => {
-        const saving =
+        const save = async () =>
             next > 0
-                ? installmentsRepo.addFee(db, { amount: next, installmentId: row.id })
-                : installmentsRepo.removeFee(db, row.id);
+                ? unwrapAtomCommand(await addFee({ db, fee: { amount: next, installmentId: row.id } }))
+                : unwrapAtomCommand(await removeFee({ db, installmentId: row.id }));
+        const saving = save();
         const feedback = next > 0 ? "success" : "warning";
         try {
             await saving;

@@ -2,7 +2,6 @@ import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { useRef, useState } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
-import { installmentsRepo } from "@/data/installments-core";
 import type { InstallmentRow } from "@/data/installments-core";
 import { minorUnitsFor } from "@/domain/money";
 import { numberToNumpad, numpadToNumber } from "@/domain/numpad";
@@ -10,6 +9,9 @@ import { useTranslation } from "@/i18n/context";
 import { rearmInstallmentReminders } from "@/lib/installment-reminder-sync";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { deleteInstallmentCommand, updateInstallmentCommand } from "@/state/planning-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 /** Edits touch one row; payments are re-allocated by date on the next read. */
 export function useCuotaEditor({
@@ -22,6 +24,8 @@ export function useCuotaEditor({
     row: InstallmentRow;
 }) {
     const db = useDatabase();
+    const updateInstallment = useAtomCommand(updateInstallmentCommand, SILENT);
+    const deleteInstallment = useAtomCommand(deleteInstallmentCommand, SILENT);
     const t = useTranslation();
     const haptics = useHaptics();
     const minorUnits = minorUnitsFor(currency);
@@ -32,7 +36,7 @@ export function useCuotaEditor({
 
     const write = async (patch: { amount?: number; dueDate?: Date }) => {
         try {
-            await installmentsRepo.updateInstallment(db, row.id, patch);
+            unwrapAtomCommand(await updateInstallment({ db, id: row.id, patch }));
             rearmInstallmentReminders(db);
             haptics("success");
         } catch (error) {
@@ -57,7 +61,7 @@ export function useCuotaEditor({
 
     const remove = async () => {
         try {
-            await installmentsRepo.deleteInstallment(db, row.id);
+            unwrapAtomCommand(await deleteInstallment({ db, id: row.id }));
             rearmInstallmentReminders(db);
             haptics("warning");
             onClose();

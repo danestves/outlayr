@@ -1,5 +1,6 @@
 import { and, eq, isNull, ne, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
@@ -11,20 +12,34 @@ import { accountsRepo } from "./accounts-core";
 import { getMeta, META_KEYS } from "./app-meta-core";
 import { cardStatus, filedNote, parseWalletCards } from "./pending-writes-core";
 
-export async function buildWalletPush(db: Database): Promise<WalletPushSnapshot> {
-    const live = await accountsRepo.listBanks(db);
-    const walletCards = parseWalletCards(await Effect.runPromise(getMeta(db, META_KEYS.walletCards)));
-    const filed = await db
-        .select({
-            category: categories.name,
-            income: transactions.income,
-            latest: sql<number>`max(${transactions.date})`,
-            note: filedNote,
-        })
-        .from(transactions)
-        .leftJoin(categories, eq(categories.id, transactions.categoryId))
-        .where(and(isNull(transactions.deletedAt), ne(transactions.note, "")))
-        .groupBy(filedNote, transactions.income);
+export class WalletPushError extends Schema.TaggedError<WalletPushError>()("WalletPushError", {
+    cause: Schema.Defect(),
+    operation: Schema.Literal("filed"),
+}) {
+    override get message(): string {
+        return `Reading the wallet push ${this.operation} failed`;
+    }
+}
+
+const attempt = <A>(operation: typeof WalletPushError.Type.operation, run: () => PromiseLike<A>) =>
+    Effect.tryPromise({ catch: (cause) => new WalletPushError({ cause, operation }), try: run });
+
+export const buildWalletPush = Effect.fn("WalletPush.buildWalletPush")(function* buildWalletPush(db: Database) {
+    const live = yield* accountsRepo.listBanks(db);
+    const walletCards = parseWalletCards(yield* getMeta(db, META_KEYS.walletCards));
+    const filed = yield* attempt("filed", () =>
+        db
+            .select({
+                category: categories.name,
+                income: transactions.income,
+                latest: sql<number>`max(${transactions.date})`,
+                note: filedNote,
+            })
+            .from(transactions)
+            .leftJoin(categories, eq(categories.id, transactions.categoryId))
+            .where(and(isNull(transactions.deletedAt), ne(transactions.note, "")))
+            .groupBy(filedNote, transactions.income)
+    );
 
     const cards: WalletPushSnapshot["cards"] = {};
     for (const card of walletCards) {
@@ -59,5 +74,10 @@ export async function buildWalletPush(db: Database): Promise<WalletPushSnapshot>
     const patterns = Object.fromEntries(
         Object.entries(NOTIFICATION_PATTERNS).map(([name, { ignoreCase, source }]) => [name, { ignoreCase, source }])
     );
-    return { cards, newPlace: translateNow("settings.wallet.pushNewPlace"), patterns, places };
-}
+    return {
+        cards,
+        newPlace: translateNow("settings.wallet.pushNewPlace"),
+        patterns,
+        places,
+    } satisfies WalletPushSnapshot;
+});

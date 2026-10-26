@@ -7,10 +7,9 @@ import { and, asc, desc, isNull, lte } from "drizzle-orm";
 import { META_KEYS } from "@/data/app-meta-core";
 import type { SpendDb } from "@/data/budget-spent";
 import { OVERALL_BUDGET_ID } from "@/data/budgets-core";
-import { aggregateInsightsWindows, loadContributions, windowLabel } from "@/data/insights";
-import type { InsightsCalendar, InsightsPeriod, WindowTotals } from "@/data/insights";
+import { aggregateInsightsWindows, windowLabel } from "@/data/insights";
+import type { InsightsCalendar, InsightsContribution, InsightsPeriod, WindowTotals } from "@/data/insights";
 import { parseBoolSetting, parseIntSetting } from "@/data/settings-core";
-import { loadValuation } from "@/data/valuation-source";
 import type { Valuation } from "@/data/valuation-source";
 import {
     budgets as budgetsTable,
@@ -25,6 +24,7 @@ import { DEFAULT_CURRENCY, formatAmount } from "@/domain/money";
 import type { TranslationKey } from "@/i18n/catalog";
 import { translateNow } from "@/i18n/runtime";
 import { DEEP_LINKS } from "@/lib/deep-links";
+import { loadContributionsCommand, loadValuationCommand, runAccountsCommand } from "@/state/accounts-commands";
 import { runLifecycleCommand, writeIdsByTransactionCommand } from "@/state/lifecycle-commands";
 import { getMetaCommand, runSettingsCommand } from "@/state/settings-commands";
 
@@ -218,7 +218,7 @@ function clamp01(value: number): number {
     return Math.min(1, value);
 }
 
-type Contribution = Awaited<ReturnType<typeof loadContributions>>[number];
+type Contribution = InsightsContribution & { id: string };
 interface CategoryRow {
     color: string | null;
     emoji: string | null;
@@ -251,8 +251,8 @@ export async function buildWidgetProps(db: SpendDb, now: Date = new Date()): Pro
     const whole = (value: number) => formatAmount(value, currency, false);
     const entryMoney = (value: number, code: string | null) => formatAmount(value, code ?? currency, showCents);
 
-    const valuation = await loadValuation(db);
-    const contributions = await loadContributions(db, now, valuation);
+    const valuation = await runAccountsCommand(loadValuationCommand, db);
+    const contributions = await runAccountsCommand(loadContributionsCommand, { db, now, valuation });
     const categoryRows = await db
         .select({
             color: categoriesTable.color,

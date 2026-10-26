@@ -47,28 +47,26 @@ interface KindSpec {
 // The table is read at commit time, not passed in: a caller's list filtered inside the window gets it wrong, and
 // removing a transfer as a transaction updates zero rows and rejects nothing.
 const commitRow = Effect.fn("DeferredDelete.commitRow")(function* commitRow(db: Database, id: string) {
-    if (yield* commitWith("row", () => transfersRepo.getById(db, id))) {
-        yield* commitWith("row", () => transfersRepo.softDelete(db, id));
+    if (yield* transfersRepo.getById(db, id)) {
+        yield* transfersRepo.softDelete(db, id);
         return;
     }
     const [move] = yield* commitWith("row", () =>
         db.select({ id: outsideMoves.id }).from(outsideMoves).where(eq(outsideMoves.id, id))
     );
-    yield* move ? commitWith("row", () => deleteOutsideMove(db, id)) : transactionsRepo.remove(db, id);
+    yield* move ? deleteOutsideMove(db, id) : transactionsRepo.remove(db, id);
 });
 
 const commitBudget = Effect.fn("DeferredDelete.commitBudget")(function* commitBudget(db: Database, id: string) {
     const [overall] = yield* commitWith("budget", () =>
         db.select({ id: mainBudget.id }).from(mainBudget).where(eq(mainBudget.id, id))
     );
-    yield* commitWith("budget", () =>
-        overall ? budgetsRepo.deleteMainBudget(db, id) : budgetsRepo.deleteBudget(db, id)
-    );
+    yield* overall ? budgetsRepo.deleteMainBudget(db, id) : budgetsRepo.deleteBudget(db, id);
 });
 
 const SPECS = {
     account: {
-        commit: (db, id) => commitWith("account", () => accountsRepo.softDelete(db, id)),
+        commit: (db, id) => accountsRepo.softDelete(db, id),
         failedBody: "accounts.error.generic",
         failedTitle: "accounts.error.deleteTitle",
         undoTitle: "accounts.undo.deleted",
@@ -86,7 +84,7 @@ const SPECS = {
         undoTitle: "categories.undo.deleted",
     },
     goal: {
-        commit: (db, id) => commitWith("goal", () => savingsGoalsRepo.remove(db, id)),
+        commit: (db, id) => savingsGoalsRepo.remove(db, id),
         failedBody: "goals.failedBody",
         failedTitle: "goals.failedTitle",
         undoTitle: "goals.undo.deleted",

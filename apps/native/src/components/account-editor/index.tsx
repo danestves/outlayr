@@ -35,8 +35,8 @@ import { toolbarIcon } from "@/components/toolbar-icons";
 import { useAppSettings } from "@/contexts/display-settings-context";
 import { EMPTY_DRAFT, useIdentityDraft, useIdentityFlyUp } from "@/contexts/identity-draft-context";
 import { useDatabase } from "@/contexts/local-data-context";
-import { openingForBalance, useAccountBalance } from "@/data/accounts";
-import { accountsRepo, getAccountById } from "@/data/accounts-core";
+import { useAccountBalance } from "@/data/accounts";
+import { getAccountById } from "@/data/accounts-core";
 import type { Account } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { remoteEnrichmentOn } from "@/data/settings-core";
@@ -52,6 +52,9 @@ import type { TranslateFn } from "@/i18n/context";
 import { posthog } from "@/lib/posthog";
 import { ACCOUNT_DETENT, LARGE_ONLY } from "@/lib/sheet-detents";
 import { useHaptics } from "@/lib/use-haptics";
+import { createAccountCommand, openingForBalanceCommand, updateAccountCommand } from "@/state/accounts-commands";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { useAtomCommand } from "@/state/use-atom-command";
 import { glowFromEmoji } from "@/theme/glow";
 import { withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";
@@ -90,6 +93,9 @@ function kindToggle(loaded: Account | null, toggle: (next: boolean) => void) {
 
 function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/client").Database }) {
     const { db, mode } = props;
+    const createAccount = useAtomCommand(createAccountCommand, SILENT);
+    const updateAccount = useAtomCommand(updateAccountCommand, SILENT);
+    const openingFor = useAtomCommand(openingForBalanceCommand, SILENT);
     const editId = props.mode === "edit" ? props.id : null;
     const router = useRouter();
     const currencyBlocked = useCurrencyBlocked(editId);
@@ -181,17 +187,31 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
             }
             const persist = async () => {
                 if (mode === "create") {
-                    await accountsRepo.create(db, { ...input, initialBalance: balance });
+                    unwrapAtomCommand(await createAccount({ db, input: { ...input, initialBalance: balance } }));
                 } else {
                     if (loaded == null) {
                         return;
                     }
-                    await accountsRepo.update(db, loaded.id, {
-                        ...input,
-                        initialBalance: balanceChanged
-                            ? await openingForBalance(db, loaded.id, balance, value.currency, new Date(balanceAt))
-                            : loaded.initialBalance,
-                    });
+                    unwrapAtomCommand(
+                        await updateAccount({
+                            db,
+                            id: loaded.id,
+                            patch: {
+                                ...input,
+                                initialBalance: balanceChanged
+                                    ? unwrapAtomCommand(
+                                          await openingFor({
+                                              accountId: loaded.id,
+                                              balance,
+                                              currency: value.currency,
+                                              db,
+                                              now: new Date(balanceAt),
+                                          })
+                                      )
+                                    : loaded.initialBalance,
+                            },
+                        })
+                    );
                 }
                 posthog?.capture("account_saved", { account_kind: input.kind, mode });
                 haptics("success");

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import { eq } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { accounts, exchangeRates, savingsGoals } from "@/db/schema";
@@ -39,15 +40,17 @@ beforeEach(() => {
 });
 
 function goal(overrides: Partial<Parameters<typeof savingsGoalsRepo.create>[1]> = {}) {
-    return savingsGoalsRepo.create(db, {
-        accountId: "savings",
-        currency: "USD",
-        name: "Emergency fund",
-        startAmount: 0,
-        targetAmount: 5000,
-        targetDate: DUE,
-        ...overrides,
-    });
+    return Effect.runPromise(
+        savingsGoalsRepo.create(db, {
+            accountId: "savings",
+            currency: "USD",
+            name: "Emergency fund",
+            startAmount: 0,
+            targetAmount: 5000,
+            targetDate: DUE,
+            ...overrides,
+        })
+    );
 }
 
 describe("savings goals", () => {
@@ -60,7 +63,7 @@ describe("savings goals", () => {
 
     it("keeps a deleted goal out of every read", async () => {
         const id = await goal();
-        await savingsGoalsRepo.remove(db, id);
+        await Effect.runPromise(savingsGoalsRepo.remove(db, id));
         await expect(savingsGoalsQuery(db)).resolves.toStrictEqual([]);
     });
 
@@ -69,7 +72,7 @@ describe("savings goals", () => {
         const [opened] = await savingsGoalsQuery(db);
         expect(opened.startAmount).toBe(1200);
 
-        await savingsGoalsRepo.update(db, id, { targetAmount: 6000 });
+        await Effect.runPromise(savingsGoalsRepo.update(db, id, { targetAmount: 6000 }));
         const [raised] = await savingsGoalsQuery(db);
         expect(raised.startAmount).toBe(1200);
         expect(raised.startAmountUsd).toBe(opened.startAmountUsd);
@@ -80,7 +83,7 @@ describe("savings goals", () => {
         const id = await goal({ currency: "EUR", targetAmount: 1000 });
         const [before] = await savingsGoalsQuery(db);
 
-        await savingsGoalsRepo.update(db, id, { targetDate: new Date("2027-09-04T10:00:00.000Z") });
+        await Effect.runPromise(savingsGoalsRepo.update(db, id, { targetDate: new Date("2027-09-04T10:00:00.000Z") }));
 
         const [after] = await savingsGoalsQuery(db);
         expect(after.targetAmount).toBe(1000);
@@ -93,7 +96,7 @@ describe("savings goals", () => {
         await withRate("EUR", 0.9);
         const id = await goal({ currency: "EUR", startAmount: 500, targetAmount: 1000 });
 
-        await savingsGoalsRepo.update(db, id, { targetAmount: 1200 });
+        await Effect.runPromise(savingsGoalsRepo.update(db, id, { targetAmount: 1200 }));
 
         const [after] = await savingsGoalsQuery(db);
         expect(after.targetAmount).toBe(1200);
@@ -118,7 +121,7 @@ describe("savings goals", () => {
 
         await db.delete(exchangeRates).run?.();
         await withRate("EUR", 0.5);
-        await savingsGoalsRepo.update(db, id, { targetAmount: 2000 });
+        await Effect.runPromise(savingsGoalsRepo.update(db, id, { targetAmount: 2000 }));
 
         const [after] = await savingsGoalsQuery(db);
         expect(after.targetAmount / (after.targetAmountUsd ?? 1)).toBeCloseTo(rate, 8);
@@ -146,13 +149,15 @@ describe("savings goals", () => {
         // A different rate is all that survives by the time the target is re-typed.
         await db.delete(exchangeRates).run?.();
         await withRate("EUR", 0.5);
-        await savingsGoalsRepo.update(db, id, { targetAmount: 2000 });
+        await Effect.runPromise(savingsGoalsRepo.update(db, id, { targetAmount: 2000 }));
 
         const [after] = await savingsGoalsQuery(db);
         expect(after.targetAmount / (after.targetAmountUsd ?? 1)).toBeCloseTo(rate, 8);
     });
 
     it("refuses to update a goal that is not there", async () => {
-        await expect(savingsGoalsRepo.update(db, "missing", { name: "x" })).rejects.toThrow("not found");
+        await expect(Effect.runPromise(savingsGoalsRepo.update(db, "missing", { name: "x" }))).rejects.toThrow(
+            "not found"
+        );
     });
 });

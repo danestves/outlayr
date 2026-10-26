@@ -4,12 +4,9 @@ import { useEffect, useRef, useState } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
 import { usePeople } from "@/data/accounts";
-import type { Account } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
 import type { Category } from "@/data/categories-core";
-import { createPerson, recordBoughtOnCredit } from "@/data/debts-core";
 import { useNow } from "@/data/use-now";
-import type { Database } from "@/db/client";
 import { payDays } from "@/domain/local-day";
 import type { PayDays } from "@/domain/local-day";
 import { roundToMinorUnits } from "@/domain/money";
@@ -20,28 +17,16 @@ import { askForInstallmentReminders } from "@/lib/due-reminders";
 import { rearmInstallmentReminders } from "@/lib/installment-reminder-sync";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { writeOweCommand, writePayoffPlanCommand } from "@/state/planning-commands";
+import type { OweDraft } from "@/state/planning-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
-import { resolvePerson, writePayoffPlan } from "./new-debt-form";
+import { resolvePerson } from "./new-debt-form";
 
 export type OweSlot = "amount" | "category" | "what" | "when" | "who";
 
 export type PayBy = keyof PayDays | "none";
-
-interface OweDraft {
-    amount: number;
-    categoryId: string;
-    currency: string;
-    newName: string;
-    note: string | undefined;
-    person: Account | null;
-}
-
-async function writeOwe(db: Database, draft: OweDraft): Promise<string> {
-    const { amount, categoryId, currency, note } = draft;
-    const owed = draft.person ?? { currency, id: await createPerson(db, { currency, name: draft.newName }) };
-    await recordBoughtOnCredit(db, { amount, categoryId, date: new Date(), note, person: owed });
-    return owed.id;
-}
 
 export interface OweProps {
     onDirtyChange: (dirty: boolean) => void;
@@ -50,6 +35,8 @@ export interface OweProps {
 
 export function useOweForm({ onDirtyChange, onDone }: OweProps) {
     const db = useDatabase();
+    const writeOwe = useAtomCommand(writeOweCommand, SILENT);
+    const writePayoffPlan = useAtomCommand(writePayoffPlanCommand, SILENT);
     const router = useRouter();
     const t = useTranslation();
     const haptics = useHaptics();
@@ -107,7 +94,7 @@ export function useOweForm({ onDirtyChange, onDone }: OweProps) {
         };
         let personId: string;
         try {
-            personId = await writeOwe(db, owe);
+            personId = unwrapAtomCommand(await writeOwe({ db, draft: owe }));
         } catch (error) {
             console.error("Failed to save what you owe", error);
             haptics("error");
@@ -117,7 +104,7 @@ export function useOweForm({ onDirtyChange, onDone }: OweProps) {
         }
         if (targetDate !== null) {
             try {
-                await writePayoffPlan(db, personId, targetDate);
+                unwrapAtomCommand(await writePayoffPlan({ db, personId, targetDate }));
                 rearmInstallmentReminders(db);
             } catch (error) {
                 console.error("Failed to save the payoff plan", error);

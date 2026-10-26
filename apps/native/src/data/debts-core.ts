@@ -1,6 +1,7 @@
 import type { EntryRateType } from "@outlayr/money/rates";
 import { and, eq, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { outsideMoves } from "@/db/schema";
@@ -17,6 +18,17 @@ import { transactionsRepo } from "./transactions-core";
 import { transfersRepo } from "./transfers-core";
 import type { TransferInput } from "./transfers-core";
 
+const DebtsOperation = Schema.Literals(["record-outside-move", "delete-outside-move"]);
+
+export class DebtsError extends Schema.TaggedError<DebtsError>()("DebtsError", {
+    cause: Schema.Defect(),
+    operation: DebtsOperation,
+}) {
+    override get message(): string {
+        return `Debts ${this.operation} failed`;
+    }
+}
+
 export interface PersonInput {
     currency: string;
     name: string;
@@ -24,14 +36,14 @@ export interface PersonInput {
     openingBalance?: number;
 }
 
-export async function createPerson(db: Database, input: PersonInput): Promise<string> {
-    return await accountsRepo.create(db, {
+export const createPerson = Effect.fn("Debts.createPerson")(function* createPerson(db: Database, input: PersonInput) {
+    return yield* accountsRepo.create(db, {
         currency: input.currency,
         initialBalance: roundToMinorUnits(input.openingBalance ?? 0, input.currency),
         kind: "person",
         name: input.name.trim(),
     });
-}
+});
 
 /** In that account's own currency. */
 export interface DebtLeg {
@@ -67,9 +79,12 @@ export function debtTransferInput(input: DebtMovementInput): TransferInput {
     };
 }
 
-export async function recordDebtMovement(db: Database, input: DebtMovementInput): Promise<string> {
-    return await transfersRepo.create(db, debtTransferInput(input));
-}
+export const recordDebtMovement = Effect.fn("Debts.recordDebtMovement")(function* recordDebtMovement(
+    db: Database,
+    input: DebtMovementInput
+) {
+    return yield* transfersRepo.create(db, debtTransferInput(input));
+});
 
 export interface OutsideMoveInput {
     amount: number;
@@ -79,28 +94,44 @@ export interface OutsideMoveInput {
     verb: DebtVerb;
 }
 
-export async function recordOutsideMove(db: Database, input: OutsideMoveInput): Promise<string> {
+export const recordOutsideMove = Effect.fn("Debts.recordOutsideMove")(function* recordOutsideMove(
+    db: Database,
+    input: OutsideMoveInput
+) {
     const { date, person } = input;
     const amount = comesFromPerson(input.verb) ? -input.amount : input.amount;
     const id = newId();
-    await db.insert(outsideMoves).values({
-        accountId: person.id,
-        amount,
-        amountUsd: await frozenUsdAmount(db, amount, person.currency, date),
-        date,
-        id,
-        note: input.note ?? "",
-        updatedAt: new Date(),
+    const amountUsd = yield* frozenUsdAmount(db, amount, person.currency, date);
+    yield* Effect.tryPromise({
+        catch: (cause) => new DebtsError({ cause, operation: "record-outside-move" }),
+        try: () =>
+            db.insert(outsideMoves).values({
+                accountId: person.id,
+                amount,
+                amountUsd,
+                date,
+                id,
+                note: input.note ?? "",
+                updatedAt: new Date(),
+            }),
     });
     return id;
-}
+});
 
-export async function deleteOutsideMove(db: Database, id: string, now: Date = new Date()): Promise<void> {
-    await db
-        .update(outsideMoves)
-        .set({ deletedAt: now, updatedAt: now })
-        .where(and(eq(outsideMoves.id, id), isNull(outsideMoves.deletedAt)));
-}
+export const deleteOutsideMove = Effect.fn("Debts.deleteOutsideMove")(function* deleteOutsideMove(
+    db: Database,
+    id: string,
+    now: Date = new Date()
+) {
+    yield* Effect.tryPromise({
+        catch: (cause) => new DebtsError({ cause, operation: "delete-outside-move" }),
+        try: () =>
+            db
+                .update(outsideMoves)
+                .set({ deletedAt: now, updatedAt: now })
+                .where(and(eq(outsideMoves.id, id), isNull(outsideMoves.deletedAt))),
+    });
+});
 
 export interface OnCreditInput {
     amount: number;
@@ -110,41 +141,33 @@ export interface OnCreditInput {
     person: { currency: string; id: string };
 }
 
-// An income entry on the person's account: income once, and they owe you. Being paid back later is a transfer.
-export async function recordSoldOnCredit(db: Database, input: OnCreditInput): Promise<string> {
-    return await Effect.runPromise(
-        transactionsRepo.create(
-            db,
-            {
-                accountId: input.person.id,
-                amount: input.amount,
-                categoryId: input.categoryId,
-                currency: input.person.currency,
-                date: input.date,
-                details: null,
-                income: true,
-                note: input.note ?? translateNow("debts.sale.title"),
-            },
-            { logoCandidate: false }
-        )
+const recordOnCredit = (db: Database, input: OnCreditInput, income: boolean, note: string) =>
+    transactionsRepo.create(
+        db,
+        {
+            accountId: input.person.id,
+            amount: input.amount,
+            categoryId: input.categoryId,
+            currency: input.person.currency,
+            date: input.date,
+            details: null,
+            income,
+            note,
+        },
+        { logoCandidate: false }
     );
-}
 
-export async function recordBoughtOnCredit(db: Database, input: OnCreditInput): Promise<string> {
-    return await Effect.runPromise(
-        transactionsRepo.create(
-            db,
-            {
-                accountId: input.person.id,
-                amount: input.amount,
-                categoryId: input.categoryId,
-                currency: input.person.currency,
-                date: input.date,
-                details: null,
-                income: false,
-                note: input.note ?? translateNow("debts.purchase.title"),
-            },
-            { logoCandidate: false }
-        )
-    );
-}
+// An income entry on the person's account: income once, and they owe you. Being paid back later is a transfer.
+export const recordSoldOnCredit = Effect.fn("Debts.recordSoldOnCredit")(function* recordSoldOnCredit(
+    db: Database,
+    input: OnCreditInput
+) {
+    return yield* recordOnCredit(db, input, true, input.note ?? translateNow("debts.sale.title"));
+});
+
+export const recordBoughtOnCredit = Effect.fn("Debts.recordBoughtOnCredit")(function* recordBoughtOnCredit(
+    db: Database,
+    input: OnCreditInput
+) {
+    return yield* recordOnCredit(db, input, false, input.note ?? translateNow("debts.purchase.title"));
+});

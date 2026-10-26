@@ -2,7 +2,6 @@ import type * as Effect from "effect/Effect";
 
 import { attachmentsRepo } from "@/data/attachments-core";
 import type { AttachmentDraft } from "@/data/attachments-core";
-import { valuationCoverage } from "@/data/canonicalize-backfill";
 import { rememberFeeCategory } from "@/data/card-fees-core";
 import { commitDeferredDelete } from "@/data/deferred-delete-registry";
 import type { DeferredDeleteKind } from "@/data/deferred-delete-registry";
@@ -99,5 +98,3 @@ export const pendingReminderPlanCommand = ledgerCommand(
     "pending-reminder-plan",
     (input: { db: Database; now: Date; time: TimeOfDay }) => pendingReminderPlan(input.db, input.now, input.time)
 );
-
-export const valuationCoverageCommand = ledgerCommand("valuation-coverage", (db: Database) => valuationCoverage(db));

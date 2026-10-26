@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 import BetterSqlite3 from "better-sqlite3";
+import * as Effect from "effect/Effect";
 
 import { appMeta, exchangeRates } from "@/db/schema";
 import { testSpendDb } from "@/db/test-database";
@@ -108,7 +109,7 @@ describe("loadValuationIn", () => {
         const db = makeDb();
         await seed(db);
 
-        const { displayCurrency, rates } = await loadValuationIn(db, "JPY");
+        const { displayCurrency, rates } = await Effect.runPromise(loadValuationIn(db, "JPY"));
 
         expect(displayCurrency).toBe("JPY");
         expect(rates.get("JPY", DAY)).toBe(157.1);
@@ -119,7 +120,7 @@ describe("loadValuationIn", () => {
         const db = makeDb();
         await seed(db);
 
-        const { rates } = await loadValuationIn(db, "VES");
+        const { rates } = await Effect.runPromise(loadValuationIn(db, "VES"));
 
         expect(rates.get("VES", LATER_DAY)).toBe(OFFICIAL_VES);
         expect(rates.earliest("VES")).toBe(DAY);
@@ -132,8 +133,8 @@ describe("loadValuation", () => {
         await seed(db);
         await db.insert(appMeta).values({ key: "currency", value: "EUR" });
 
-        const stored = await loadValuation(db);
-        const explicit = await loadValuationIn(db, "EUR");
+        const stored = await Effect.runPromise(loadValuation(db));
+        const explicit = await Effect.runPromise(loadValuationIn(db, "EUR"));
 
         expect(stored.displayCurrency).toBe(explicit.displayCurrency);
         expect(stored.rates.get("EUR", DAY)).toBe(explicit.rates.get("EUR", DAY));
@@ -145,7 +146,7 @@ describe("loadValuation", () => {
         const db = makeDb();
         await seed(db);
 
-        const { displayCurrency, rates } = await loadValuation(db);
+        const { displayCurrency, rates } = await Effect.runPromise(loadValuation(db));
 
         expect(displayCurrency).toBe("USD");
         expect(rates.earliest("USD")).toBeNull();

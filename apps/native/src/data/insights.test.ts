@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from "@jest/globals";
 import { buildRateTable } from "@outlayr/money/valuation";
 import BetterSqlite3 from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
+import * as Effect from "effect/Effect";
 
 import { categories, transactions } from "@/db/schema";
 import * as schema from "@/db/schema";
@@ -176,7 +177,7 @@ const windows = (period: InsightsPeriod, measure: InsightsMeasure, offset = 0) =
 beforeAll(async () => {
     const db = makeDb();
     await seed(db);
-    contributions = await loadContributions(db, NOW);
+    contributions = await Effect.runPromise(loadContributions(db, NOW));
     const rows = await db.select().from(categories);
     categoriesById = new Map(
         rows.map((c) => [
@@ -229,10 +230,12 @@ describe("loadContributions", () => {
             updatedAt: NOW,
         });
 
-        const rows = await loadContributions(db, NOW, {
-            displayCurrency: "EUR",
-            rates: buildRateTable([]),
-        });
+        const rows = await Effect.runPromise(
+            loadContributions(db, NOW, {
+                displayCurrency: "EUR",
+                rates: buildRateTable([]),
+            })
+        );
 
         expect(rows.find((row) => row.date.getTime() === pendingDate.getTime())?.amount).toBe(0);
         expect(periodTotal(aggregateInsightsWindows(rows, new Map(), "month", "spent", NOW).buckets)).toBe(165);

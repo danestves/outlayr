@@ -9,7 +9,7 @@ import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useTransactionCount } from "@/data/transactions";
-import { exportFileName, exportTransactionsCsv } from "@/data/transfer-core";
+import { exportFileName } from "@/data/transfer-core";
 import { archiveFileName, serializeArchive } from "@/domain/archive";
 import { CSV_HEADER } from "@/domain/transaction-csv";
 import type { TranslationKey } from "@/i18n/catalog";
@@ -18,6 +18,7 @@ import { photoTransport } from "@/lib/convex";
 import { shareFile, TransferError } from "@/lib/data-transfer";
 import { notifyFailure } from "@/lib/notify";
 import { photoFiles, storedPhotosBase64 } from "@/lib/photo-storage";
+import { exportTransactionsCsvCommand } from "@/state/accounts-commands";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
 import { exportArchiveCommand } from "@/state/lifecycle-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
@@ -33,6 +34,7 @@ const OMITTED = [
 
 export function ExportData() {
     const db = useDatabase();
+    const exportCsv = useAtomCommand(exportTransactionsCsvCommand, SILENT);
     const colors = useColors();
     const t = useTranslation();
     const count = useTransactionCount(db);
@@ -84,7 +86,7 @@ export function ExportData() {
     const run = () =>
         runExport(
             "csv",
-            () => exportTransactionsCsv(db),
+            async () => unwrapAtomCommand(await exportCsv(db)),
             exportFileName(new Date()),
             "text/csv",
             "settings.export.shareTitle"

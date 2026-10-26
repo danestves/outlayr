@@ -21,7 +21,7 @@ import type { StageBox } from "@/components/receipt/photo-stage";
 import { ReceiptFrame } from "@/components/receipt/receipt-frame";
 import { ThinkingOrb } from "@/components/thinking-orb/thinking-orb";
 import { useDatabase } from "@/contexts/local-data-context";
-import { getAccountById, rememberLastUsedAccount } from "@/data/accounts-core";
+import { getAccountById } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { suggestedCardFee } from "@/data/card-fees-core";
 import { getCategoryById } from "@/data/categories-core";
@@ -54,6 +54,7 @@ import { freshEntries } from "@/lib/fresh-entries";
 import { persistAttachmentBytes } from "@/lib/photo-storage";
 import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
+import { rememberLastUsedAccountCommand } from "@/state/accounts-commands";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
 import { createTransactionCommand } from "@/state/ledger-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
@@ -597,6 +598,7 @@ function ScanFlowScreen() {
     const router = useRouter();
     const entitled = useProEntitled();
     const db = useDatabase();
+    const rememberLastUsed = useAtomCommand(rememberLastUsedAccountCommand, SILENT);
     const t = useTranslation();
     const colors = useColors();
     const haptics = useHaptics();
@@ -688,7 +690,7 @@ function ScanFlowScreen() {
                 return;
             }
             if (draft.accountId) {
-                await rememberLastUsedAccount(db, draft.accountId).catch(() => null);
+                await rememberLastUsed({ db, id: draft.accountId });
             }
             posthog?.capture("transaction_saved", {
                 has_split: false,

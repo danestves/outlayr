@@ -12,7 +12,6 @@ import { useAccountBalance, useAccounts, useBankAccounts } from "@/data/accounts
 import type { Account } from "@/data/accounts-core";
 import { getLastUsedAccount } from "@/data/accounts-core";
 import { usePaymentRate } from "@/data/installment-reads";
-import { installmentsRepo } from "@/data/installments-core";
 import type { PlanWithStanding } from "@/data/installments-core";
 import { useNow } from "@/data/use-now";
 import { paymentSource, paymentSources } from "@/domain/installment-payment";
@@ -26,6 +25,9 @@ import type { TranslateFn } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
 import { rearmInstallmentReminders } from "@/lib/installment-reminder-sync";
 import { useHaptics } from "@/lib/use-haptics";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { recordInstallmentPaymentCommand } from "@/state/planning-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
 import { useInstallmentEntry } from "./use-order";
@@ -59,6 +61,7 @@ export function usePayEntry(planId: string, all: boolean): PayFormProps | null {
 
 export function usePayForm({ account, amount: owed, entry, forNext, sources }: PayFormProps) {
     const db = useDatabase();
+    const recordPayment = useAtomCommand(recordInstallmentPaymentCommand, SILENT);
     const router = useRouter();
     const t = useTranslation();
     const haptics = useHaptics();
@@ -112,7 +115,7 @@ export function usePayForm({ account, amount: owed, entry, forNext, sources }: P
         setBusy(true);
         setFailure(null);
         try {
-            await installmentsRepo.recordPayment(db, { amount, date, planId: plan.id, source });
+            unwrapAtomCommand(await recordPayment({ db, payment: { amount, date, planId: plan.id, source } }));
             rearmInstallmentReminders(db);
             haptics("success");
             router.back();

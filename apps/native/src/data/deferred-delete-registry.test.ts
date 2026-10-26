@@ -98,19 +98,21 @@ describe("createDeferredDeleteRegistry", () => {
 
     it("takes a transfer out through the transfers repo without being told it is one", async () => {
         const db = migratedDatabase();
-        const from = await accountsRepo.create(db, { currency: "USD", name: "Zinli" });
-        const to = await accountsRepo.create(db, { currency: "USD", name: "Banesco" });
-        const id = await transfersRepo.create(db, {
-            date: DAY,
-            exchangeRate: null,
-            exchangeRateType: null,
-            fromAccountId: from,
-            fromAmount: 100,
-            fromCurrency: "USD",
-            toAccountId: to,
-            toAmount: 100,
-            toCurrency: "USD",
-        });
+        const from = await Effect.runPromise(accountsRepo.create(db, { currency: "USD", name: "Zinli" }));
+        const to = await Effect.runPromise(accountsRepo.create(db, { currency: "USD", name: "Banesco" }));
+        const id = await Effect.runPromise(
+            transfersRepo.create(db, {
+                date: DAY,
+                exchangeRate: null,
+                exchangeRateType: null,
+                fromAccountId: from,
+                fromAmount: 100,
+                fromCurrency: "USD",
+                toAccountId: to,
+                toAmount: 100,
+                toCurrency: "USD",
+            })
+        );
         const registry = registryFor(db);
 
         registry.requestDelete("row", id);
@@ -130,12 +132,16 @@ describe("createDeferredDeleteRegistry", () => {
             name: "Food",
             updatedAt: DAY,
         });
-        const overall = await budgetsRepo.createMainBudget(db, { amount: 500, type: BUDGET_TYPE.month });
-        const perCategory = await budgetsRepo.createBudget(db, {
-            amount: 100,
-            categoryId: "cat-1",
-            type: BUDGET_TYPE.month,
-        });
+        const overall = await Effect.runPromise(
+            budgetsRepo.createMainBudget(db, { amount: 500, type: BUDGET_TYPE.month })
+        );
+        const perCategory = await Effect.runPromise(
+            budgetsRepo.createBudget(db, {
+                amount: 100,
+                categoryId: "cat-1",
+                type: BUDGET_TYPE.month,
+            })
+        );
         const registry = registryFor(db);
 
         registry.requestDelete("budget", overall);
@@ -154,7 +160,7 @@ describe("createDeferredDeleteRegistry", () => {
     it("keeps each kind's window to itself", async () => {
         const db = migratedDatabase();
         await logRow(db, "tx-1");
-        const account = await accountsRepo.create(db, { currency: "USD", name: "Cash" });
+        const account = await Effect.runPromise(accountsRepo.create(db, { currency: "USD", name: "Cash" }));
         const registry = registryFor(db);
 
         registry.requestDelete("row", "tx-1");

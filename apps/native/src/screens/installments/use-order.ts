@@ -5,13 +5,15 @@ import { Alert } from "react-native";
 
 import { useDatabase } from "@/contexts/local-data-context";
 import { useInstallmentPlans } from "@/data/installments";
-import { installmentsRepo } from "@/data/installments-core";
 import type { InstallmentRow, PlanWithStanding } from "@/data/installments-core";
 import { useNow } from "@/data/use-now";
 import { useTranslation } from "@/i18n/context";
 import { rearmInstallmentReminders } from "@/lib/installment-reminder-sync";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { deleteInstallmentPlanCommand } from "@/state/planning-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 /** `leave` goes back once, however often it is asked. */
 export function useInstallmentEntry(planId: string) {
@@ -40,6 +42,7 @@ export function useInstallmentEntry(planId: string) {
 
 export function useOrderActions({ plan, standing }: PlanWithStanding, leave: () => void) {
     const db = useDatabase();
+    const deletePlan = useAtomCommand(deleteInstallmentPlanCommand, SILENT);
     const router = useRouter();
     const t = useTranslation();
     const haptics = useHaptics();
@@ -61,7 +64,7 @@ export function useOrderActions({ plan, standing }: PlanWithStanding, leave: () 
             {
                 onPress: async () => {
                     try {
-                        await installmentsRepo.deletePlan(db, plan.id);
+                        unwrapAtomCommand(await deletePlan({ db, planId: plan.id }));
                         rearmInstallmentReminders(db);
                         haptics("warning");
                         leave();

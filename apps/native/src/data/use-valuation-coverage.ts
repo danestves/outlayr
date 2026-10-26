@@ -1,8 +1,12 @@
-import { useEffect, useState } from "react";
+import { useAtomValue } from "@effect/atom-react/Hooks";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as Atom from "effect/reactivity/Atom";
 
 import type { Database } from "@/db/client";
 import type { ValuationCoverage } from "@/domain/valuation-coverage";
-import { runLedgerCommand, valuationCoverageCommand } from "@/state/ledger-commands";
+import { appRuntime } from "@/lib/runtime";
+
+import { valuationCoverage } from "./canonicalize-backfill";
 
 const NOTHING: ValuationCoverage = {
     beyondRateHistory: 0,
@@ -10,25 +14,14 @@ const NOTHING: ValuationCoverage = {
     pending: 0,
 };
 
+const valuationCoverageAtom = Atom.family((db: Database) =>
+    appRuntime.atom(valuationCoverage(db)).pipe(Atom.withLabel("valuation-coverage:read"))
+);
+
 /**
  * Read once per mount, not live: coverage only moves when a foreground rate pull or canonicalization lands, and
  * the scan is not worth a listener every transaction write would fire.
  */
 export function useValuationCoverage(db: Database): ValuationCoverage {
-    const [coverage, setCoverage] = useState<ValuationCoverage>(NOTHING);
-
-    useEffect(() => {
-        let cancelled = false;
-        runLedgerCommand(valuationCoverageCommand, db).then((next) => {
-            if (!cancelled) {
-                // oxlint-disable-next-line promise/no-callback-in-promise -- an effect body cannot be async, so the setState has nowhere else to be sequenced from
-                setCoverage(next);
-            }
-        });
-        return () => {
-            cancelled = true;
-        };
-    }, [db]);
-
-    return coverage;
+    return AsyncResult.getOrElse(useAtomValue(valuationCoverageAtom(db)), () => NOTHING);
 }

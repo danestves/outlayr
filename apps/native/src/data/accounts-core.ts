@@ -3,10 +3,11 @@ import type { AccountKind } from "@outlayr/money/account-kind";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { and, eq, isNull, max } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { accounts, outsideMoves, savingsGoals, transactions } from "@/db/schema";
-import { withTransaction } from "@/db/transaction";
+import { transaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
 
 import { getMetaSync, META_KEYS, setMeta } from "./app-meta-core";
@@ -49,123 +50,179 @@ export function getLastUsedAccount(db: Database): Account | null {
     return account && !isPerson(account) ? account : null;
 }
 
-export async function rememberLastUsedAccount(db: Database, id: string): Promise<void> {
-    await Effect.runPromise(setMeta(db, META_KEYS.lastTransactionAccount, id));
+const AccountsOperation = Schema.Literals(["remember-last-used", "create", "list", "reorder", "delete", "update"]);
+
+export class AccountsError extends Schema.TaggedError<AccountsError>()("AccountsError", {
+    cause: Schema.optional(Schema.Defect()),
+    operation: AccountsOperation,
+    reason: Schema.optional(Schema.Literals(["missing"])),
+}) {
+    override get message(): string {
+        return this.reason === "missing" ? "Account not found." : `Account ${this.operation} failed`;
+    }
 }
 
-async function nextSortOrder(db: Database): Promise<number> {
-    const [row] = await db
-        .select({ highest: max(accounts.sortOrder) })
-        .from(accounts)
-        .where(isNull(accounts.deletedAt));
+const query = <A>(operation: typeof AccountsOperation.Type, run: () => PromiseLike<A>) =>
+    Effect.tryPromise({ catch: (cause) => new AccountsError({ cause, operation }), try: run });
+
+const read = <A>(operation: typeof AccountsOperation.Type, run: () => A) =>
+    Effect.try({ catch: (cause) => new AccountsError({ cause, operation }), try: run });
+
+export const rememberLastUsedAccount = Effect.fn("Accounts.rememberLastUsedAccount")(function* rememberLastUsedAccount(
+    db: Database,
+    id: string
+) {
+    yield* setMeta(db, META_KEYS.lastTransactionAccount, id);
+});
+
+const nextSortOrder = Effect.fn("Accounts.nextSortOrder")(function* nextSortOrder(db: Database) {
+    const [row] = yield* query("create", () =>
+        db
+            .select({ highest: max(accounts.sortOrder) })
+            .from(accounts)
+            .where(isNull(accounts.deletedAt))
+    );
     return (row?.highest ?? -1) + 1;
-}
+});
+
+const listActive = Effect.fn("Accounts.listActive")(function* listActive(db: Database) {
+    return yield* query("list", () =>
+        db.select().from(accounts).where(isNull(accounts.deletedAt)).orderBy(accounts.sortOrder)
+    );
+});
 
 export const accountsRepo = {
-    async create(db: Database, input: AccountInput): Promise<string> {
+    create: Effect.fn("Accounts.create")(function* create(db: Database, input: AccountInput) {
         const now = new Date();
         const id = newId();
         const initialBalance = input.initialBalance ?? 0;
         const initialBalanceDate = input.initialBalanceDate ?? now;
-        await db.insert(accounts).values({
-            currency: input.currency,
-            customColor: input.customColor ?? null,
-            dateCreated: now,
-            deletedAt: null,
-            emoji: input.emoji ?? null,
-            icon: input.icon ?? null,
-            id,
-            imageColor: input.imageColor ?? null,
-            imageKey: input.imageKey ?? null,
-            imageUri: input.imageUri ?? null,
-            initialBalance,
-            initialBalanceDate,
-            initialBalanceUsd: await frozenUsdAmount(db, initialBalance, input.currency, initialBalanceDate),
-            kind: input.kind ?? DEFAULT_ACCOUNT_KIND,
-            name: input.name,
-            sortOrder: await nextSortOrder(db),
-            updatedAt: now,
-        });
+        const initialBalanceUsd = yield* frozenUsdAmount(db, initialBalance, input.currency, initialBalanceDate);
+        const sortOrder = yield* nextSortOrder(db);
+        yield* query("create", () =>
+            db.insert(accounts).values({
+                currency: input.currency,
+                customColor: input.customColor ?? null,
+                dateCreated: now,
+                deletedAt: null,
+                emoji: input.emoji ?? null,
+                icon: input.icon ?? null,
+                id,
+                imageColor: input.imageColor ?? null,
+                imageKey: input.imageKey ?? null,
+                imageUri: input.imageUri ?? null,
+                initialBalance,
+                initialBalanceDate,
+                initialBalanceUsd,
+                kind: input.kind ?? DEFAULT_ACCOUNT_KIND,
+                name: input.name,
+                sortOrder,
+                updatedAt: now,
+            })
+        );
         return id;
-    },
+    }),
 
-    async listActive(db: Database): Promise<Account[]> {
-        return await db.select().from(accounts).where(isNull(accounts.deletedAt)).orderBy(accounts.sortOrder);
-    },
+    listActive,
 
-    async listBanks(db: Database): Promise<Account[]> {
-        const live = await accountsRepo.listActive(db);
+    listBanks: Effect.fn("Accounts.listBanks")(function* listBanks(db: Database) {
+        const live = yield* listActive(db);
         return live.filter((account) => !isPerson(account));
-    },
+    }),
 
     /** Takes every live account it lists, already ordered; people keep their own relative order. */
-    async reorder(db: Database, orderedIds: string[]): Promise<void> {
+    reorder: Effect.fn("Accounts.reorder")(function* reorder(db: Database, orderedIds: string[]) {
         const now = new Date();
-        await withTransaction(db, async () => {
-            for (let index = 0; index < orderedIds.length; index += 1) {
-                // oxlint-disable-next-line no-await-in-loop -- one expo-sqlite connection backs the surrounding withTransaction, so concurrent statements would interleave inside the same transaction
-                await db
-                    .update(accounts)
-                    .set({ sortOrder: index, updatedAt: now })
-                    .where(eq(accounts.id, orderedIds[index]));
-            }
-        });
-    },
+        yield* transaction(
+            db,
+            Effect.gen(function* write() {
+                // One expo-sqlite connection backs the surrounding transaction, so concurrent statements interleave.
+                for (const [index, id] of orderedIds.entries()) {
+                    yield* query("reorder", () =>
+                        db.update(accounts).set({ sortOrder: index, updatedAt: now }).where(eq(accounts.id, id))
+                    );
+                }
+            }),
+            (cause) => new AccountsError({ cause, operation: "reorder" })
+        );
+    }),
 
     /**
      * `onDelete: "set null"` never fires for a tombstone, so entries are detached here. A person's entries are the debt
      * itself, so they go with them (no schedule left for the orphan repair to revive), and so do the account's goals.
      */
-    async softDelete(db: Database, id: string, now: Date = new Date()): Promise<void> {
+    softDelete: Effect.fn("Accounts.softDelete")(function* softDelete(
+        db: Database,
+        id: string,
+        now: Date = new Date()
+    ) {
         // Read past the tombstone: a peer's delete may have landed first.
-        const [account] = db.select({ kind: accounts.kind }).from(accounts).where(eq(accounts.id, id)).limit(1).all();
+        const [account] = yield* read("delete", () =>
+            db.select({ kind: accounts.kind }).from(accounts).where(eq(accounts.id, id)).limit(1).all()
+        );
         const person = isPerson(account ?? {});
-        await withTransaction(db, async () => {
-            await tombstoneTransfersTouchingAccount(db, id, now);
-            await Effect.runPromise(tombstonePlansOnAccount(db, id, now));
-            await db
-                .update(outsideMoves)
-                .set({ deletedAt: now, updatedAt: now })
-                .where(and(eq(outsideMoves.accountId, id), isNull(outsideMoves.deletedAt)));
-            await db
-                .update(savingsGoals)
-                .set({ deletedAt: now, updatedAt: now })
-                .where(and(eq(savingsGoals.accountId, id), isNull(savingsGoals.deletedAt)));
-            await db
-                .update(accounts)
-                .set({ deletedAt: now, updatedAt: now })
-                .where(and(eq(accounts.id, id), isNull(accounts.deletedAt)));
-            // Detaching moves `updatedAt` on live rows, so a logo candidate must follow or the backfill reads it as a
-            // peer's edit. Before the write: only a stamp matching the row as it is now is moved.
-            const attached = await db
-                .select({ id: transactions.id })
-                .from(transactions)
-                .where(eq(transactions.accountId, id));
-            await Effect.runPromise(
-                refreshLogoCandidates(
+        yield* transaction(
+            db,
+            Effect.gen(function* write() {
+                yield* tombstoneTransfersTouchingAccount(db, id, now);
+                yield* tombstonePlansOnAccount(db, id, now);
+                yield* query("delete", () =>
+                    db
+                        .update(outsideMoves)
+                        .set({ deletedAt: now, updatedAt: now })
+                        .where(and(eq(outsideMoves.accountId, id), isNull(outsideMoves.deletedAt)))
+                );
+                yield* query("delete", () =>
+                    db
+                        .update(savingsGoals)
+                        .set({ deletedAt: now, updatedAt: now })
+                        .where(and(eq(savingsGoals.accountId, id), isNull(savingsGoals.deletedAt)))
+                );
+                yield* query("delete", () =>
+                    db
+                        .update(accounts)
+                        .set({ deletedAt: now, updatedAt: now })
+                        .where(and(eq(accounts.id, id), isNull(accounts.deletedAt)))
+                );
+                // Detaching moves `updatedAt` on live rows, so a logo candidate must follow or the backfill reads
+                // it as a peer's edit. Before the write: only a stamp matching the row as it is now is moved.
+                const attached = yield* query("delete", () =>
+                    db.select({ id: transactions.id }).from(transactions).where(eq(transactions.accountId, id))
+                );
+                yield* refreshLogoCandidates(
                     db,
                     attached.map((row) => row.id),
                     now.getTime()
-                )
-            );
-            if (!person) {
-                await db
-                    .update(transactions)
-                    .set({ accountId: null, updatedAt: now })
-                    .where(eq(transactions.accountId, id));
-                return;
-            }
-            await db
-                .update(transactions)
-                .set({ deletedAt: now, recurringType: RECURRING_TYPE.none, reminderLeadDays: null, updatedAt: now })
-                .where(and(eq(transactions.accountId, id), isNull(transactions.deletedAt)));
-        });
-    },
+                );
+                if (!person) {
+                    yield* query("delete", () =>
+                        db
+                            .update(transactions)
+                            .set({ accountId: null, updatedAt: now })
+                            .where(eq(transactions.accountId, id))
+                    );
+                    return;
+                }
+                yield* query("delete", () =>
+                    db
+                        .update(transactions)
+                        .set({
+                            deletedAt: now,
+                            recurringType: RECURRING_TYPE.none,
+                            reminderLeadDays: null,
+                            updatedAt: now,
+                        })
+                        .where(and(eq(transactions.accountId, id), isNull(transactions.deletedAt)))
+                );
+            }),
+            (cause) => new AccountsError({ cause, operation: "delete" })
+        );
+    }),
 
-    async update(db: Database, id: string, patch: Partial<AccountInput>): Promise<void> {
-        const existing = getAccountById(db, id);
+    update: Effect.fn("Accounts.update")(function* update(db: Database, id: string, patch: Partial<AccountInput>) {
+        const existing = yield* read("update", () => getAccountById(db, id));
         if (existing == null) {
-            throw new Error("Account not found.");
+            return yield* new AccountsError({ operation: "update", reason: "missing" });
         }
 
         const initialBalance = patch.initialBalance ?? existing.initialBalance;
@@ -180,19 +237,22 @@ export const accountsRepo = {
         // against the previous path may clear the key.
         const removesLogo = existing.imageUri != null && "imageUri" in patch && patch.imageUri == null;
 
-        await db
-            .update(accounts)
-            .set({
-                ...patch,
-                currency,
-                imageKey: removesLogo ? null : patch.imageKey,
-                initialBalance,
-                initialBalanceDate,
-                initialBalanceUsd: moneyMoved
-                    ? await frozenUsdAmount(db, initialBalance, currency, initialBalanceDate)
-                    : existing.initialBalanceUsd,
-                updatedAt: new Date(),
-            })
-            .where(eq(accounts.id, id));
-    },
+        const initialBalanceUsd = moneyMoved
+            ? yield* frozenUsdAmount(db, initialBalance, currency, initialBalanceDate)
+            : existing.initialBalanceUsd;
+        yield* query("update", () =>
+            db
+                .update(accounts)
+                .set({
+                    ...patch,
+                    currency,
+                    imageKey: removesLogo ? null : patch.imageKey,
+                    initialBalance,
+                    initialBalanceDate,
+                    initialBalanceUsd,
+                    updatedAt: new Date(),
+                })
+                .where(eq(accounts.id, id))
+        );
+    }),
 };

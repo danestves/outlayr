@@ -7,7 +7,7 @@ import { ScreenHeader } from "@/components/screen-header";
 import { Text } from "@/components/text";
 import { useSettingNumber } from "@/contexts/display-settings-context";
 import { useGlobalCurrency } from "@/data/app-meta";
-import { budgetsRepo, useCategoryBudget } from "@/data/budgets";
+import { useCategoryBudget } from "@/data/budgets";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useNow } from "@/data/use-now";
 import type { Database } from "@/db/client";
@@ -22,12 +22,16 @@ import type { BudgetEdit } from "@/screens/budgets/components/budget-editor";
 import type { LimitCommit } from "@/screens/budgets/components/budget-limit-body";
 import { BudgetLimitSheet } from "@/screens/budgets/components/budget-limit-sheet";
 import { BudgetPeriodStepper } from "@/screens/budgets/components/budget-period-stepper";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { patchBudgetCommand } from "@/state/planning-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 export function BudgetDetail({ db, id, onDone }: { db: Database; id: string; onDone: () => void }) {
     const router = useRouter();
     const t = useTranslation();
     const haptics = useHaptics();
     const currency = useGlobalCurrency(db);
+    const patchBudget = useAtomCommand(patchBudgetCommand, SILENT);
     const nowMs = useNow();
     const [periodOffset, setPeriodOffset] = useState(0);
     const { budget, transactions, periodsBack, contributions } = useCategoryBudget(db, id, nowMs, periodOffset);
@@ -54,7 +58,7 @@ export function BudgetDetail({ db, id, onDone }: { db: Database; id: string; onD
 
     const write = async (edit: BudgetEdit) => {
         try {
-            await budgetsRepo.patchBudget(db, budget.id, edit);
+            unwrapAtomCommand(await patchBudget({ db, id: budget.id, patch: edit }));
             return true;
         } catch (error) {
             console.error("Failed to change the budget", error);
