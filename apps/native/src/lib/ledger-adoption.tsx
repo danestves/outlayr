@@ -93,6 +93,7 @@ export function LedgerAdoptionProvider({ children }: { children: ReactNode }) {
         retry: ReturnType<typeof createSingleAdoptionRetry>;
     } | null>(null);
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- runs the account's ledger reconciliation and its one foreground retry on AppState, cancelled when the account or database changes
     useEffect(() => {
         if (reconcilingFor === null) {
             return;

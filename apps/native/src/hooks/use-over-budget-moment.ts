@@ -12,6 +12,7 @@ export function useOverBudgetMoment(budgetId: string, overBudget: boolean, windo
     const [crossed, setCrossed] = useState(false);
     const key = overBudget ? overBudgetMomentKey(budgetId, windowStart) : null;
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- claims the over-budget moment in the local database while the budget is on screen, then plays the warning haptic
     useEffect(() => {
         if (key === null || !focused) {
             return;

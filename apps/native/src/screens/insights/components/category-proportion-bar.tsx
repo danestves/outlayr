@@ -1,7 +1,13 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Pressable, View } from "react-native";
 import type { LayoutChangeEvent } from "react-native";
-import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, {
+    useAnimatedReaction,
+    useAnimatedStyle,
+    useReducedMotion,
+    useSharedValue,
+    withTiming,
+} from "react-native-reanimated";
 
 import { useSettingBool } from "@/contexts/display-settings-context";
 import type { CategoryBreakdownEntry } from "@/data/insights";
@@ -31,9 +37,12 @@ export function CategoryProportionBar({ entries, selectedId, onSelect }: Categor
     const shown = entries.filter((e) => e.fraction >= MIN_SHARE);
     const shownTotal = shown.reduce((sum, e) => sum + e.fraction, 0) || 1;
 
-    useEffect(() => {
-        progress.set(animated ? withTiming(1, { duration: 550 }) : 1);
-    }, [animated, progress]);
+    useAnimatedReaction(
+        () => animated,
+        (reveal) => {
+            progress.set(reveal ? withTiming(1, { duration: 550 }) : 1);
+        }
+    );
 
     const revealStyle = useAnimatedStyle(() => ({
         width: width * progress.get(),

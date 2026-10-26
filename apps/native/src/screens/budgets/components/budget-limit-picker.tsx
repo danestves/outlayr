@@ -8,11 +8,11 @@ import {
     Path as SkPath,
     vec,
 } from "@shopify/react-native-skia";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useWindowDimensions, View } from "react-native";
 import type { LayoutChangeEvent } from "react-native";
 import { GestureDetector, usePanGesture } from "react-native-gesture-handler";
-import { useDerivedValue, useSharedValue } from "react-native-reanimated";
+import { useAnimatedReaction, useDerivedValue, useSharedValue } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 
 import { MonoLabel } from "@/components/mono-label";
@@ -143,15 +143,20 @@ export function BudgetLimitPicker({
     // Shared, not a ref: a ref written from the gesture closure made the compiler bail on the whole component.
     const lastCrossing = useSharedValue<number | null>(null);
 
-    useEffect(() => {
-        lastCrossing.set(crossingDay(cumulative, limit));
-        // Mid-drag the finger owns the line; writing back a trailing render would jolt it.
-        if (dragging.get()) {
-            return;
+    const restingY = yForLimit(Math.min(limit, maxLimit), axisTop);
+    const restingCrossing = crossingDay(cumulative, limit);
+    useAnimatedReaction(
+        () => limit,
+        (next) => {
+            lastCrossing.set(restingCrossing);
+            // Mid-drag the finger owns the line; writing back a trailing render would jolt it.
+            if (dragging.get()) {
+                return;
+            }
+            limitY.set(restingY);
+            snapped.set(next);
         }
-        limitY.set(yForLimit(Math.min(limit, maxLimit), axisTop));
-        snapped.set(limit);
-    }, [limit, axisTop, maxLimit, cumulative, limitY, snapped, dragging, lastCrossing]);
+    );
 
     const applyLimit = (next: number) => {
         if (sparse) {

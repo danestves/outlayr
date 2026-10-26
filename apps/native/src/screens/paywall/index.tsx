@@ -1,12 +1,13 @@
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useAtomValue } from "@effect/atom-react/Hooks";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+import { useNavigation, useRouter } from "expo-router";
+import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
 import { BusyText } from "@/components/busy-text";
 import { MONO_LABEL_CLASS, MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { useRevenueCat } from "@/contexts/revenuecat-context";
-import type { RevenueCatValue } from "@/contexts/revenuecat-context";
 import { APP_ICONS } from "@/domain/app-icons";
 import {
     FREE_ACCOUNTS,
@@ -15,10 +16,8 @@ import {
     FREE_INSTALLMENT_APPS,
     FREE_PAYOFF_PLANS,
 } from "@/domain/pro-limits";
-import { readPlans } from "@/domain/pro-plans";
 import type { Plan, PlanKind } from "@/domain/pro-plans";
 import { LARGEST_STANDARD_FONT_SCALE, useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
-import { useIsMounted } from "@/hooks/use-is-mounted";
 import { useLongWait } from "@/hooks/use-long-wait";
 import { proSellable } from "@/hooks/use-pro-locked";
 import type { TranslationKey } from "@/i18n/catalog";
@@ -28,6 +27,7 @@ import { openInAppBrowser } from "@/lib/app-handoff";
 import { alternateIconsSupported } from "@/lib/app-icon";
 import { useAuthSession } from "@/lib/auth-session";
 import { legalUrl } from "@/lib/legal-url";
+import { paywallPlansAtom } from "@/lib/paywall-plans";
 import { useColors } from "@/theme/use-colors";
 
 import { PaywallCta } from "./paywall-cta";
@@ -118,17 +118,6 @@ function ctaLabel(plan: Plan | null, t: TranslateFn): string {
     return t("pro.cta.start", { days: plan.trialDays });
 }
 
-async function loadPlans(
-    getPackages: RevenueCatValue["getPackages"],
-    eligibleForTrial: RevenueCatValue["eligibleForTrial"]
-): Promise<Plan[]> {
-    const packages = await getPackages();
-    const eligible = await eligibleForTrial(packages.map((offer) => offer.product.identifier)).catch(
-        () => new Set<string>()
-    );
-    return readPlans(packages, eligible);
-}
-
 function PlanPicker({
     plans,
     selected,
@@ -170,46 +159,37 @@ function PlanPicker({
     return <PlanList onSelect={onSelect} plans={plans} selected={selected} />;
 }
 
+interface PlanPick {
+    kind: PlanKind;
+    plans: readonly Plan[];
+}
+
+function selectedKind(pick: PlanPick | null, plans: readonly Plan[] | null): PlanKind | null {
+    if (pick !== null && pick.plans === plans) {
+        return pick.kind;
+    }
+    return plans?.find((candidate) => candidate.kind === "annual")?.kind ?? plans?.[0]?.kind ?? null;
+}
+
 export function Paywall() {
     const t = useTranslation();
     const { language } = useLanguage();
     const colors = useColors();
     const router = useRouter();
-    const { eligibleForTrial, getPackages, isMirrored, isPro, mirrorEntitlement, purchasePackage, restorePurchases } =
-        useRevenueCat();
-    const isMounted = useIsMounted();
+    const navigation = useNavigation();
+    const { isMirrored, isPro, mirrorEntitlement, purchasePackage, restorePurchases } = useRevenueCat();
     const largeText = useAccessibilityTextSize();
     const { accountId } = useAuthSession();
-    const [plans, setPlans] = useState<readonly Plan[] | null>(null);
-    const [selected, setSelected] = useState<PlanKind | null>(null);
     const [busy, setBusy] = useState<"buy" | "confirm" | "restore" | null>(null);
     const [attempt, setAttempt] = useState(0);
-    const [failedAttempt, setFailedAttempt] = useState<number | null>(null);
-    const failed = failedAttempt === attempt;
+    const loaded = useAtomValue(paywallPlansAtom({ accountId, attempt }));
+    const plans = AsyncResult.isSuccess(loaded) ? loaded.value : null;
+    const failed = AsyncResult.isFailure(loaded);
+    const [pick, setPick] = useState<PlanPick | null>(null);
+    const selected = selectedKind(pick, plans);
     const [failure, setFailure] = useState<TranslationKey | null>(null);
 
-    useEffect(() => {
-        let cancelled = false;
-        loadPlans(getPackages, eligibleForTrial)
-            .then((next) => {
-                if (!cancelled) {
-                    // oxlint-disable-next-line promise/no-callback-in-promise -- an effect body cannot be async, so the setState has nowhere else to be sequenced from
-                    setPlans(next);
-                    setSelected(next.find((plan) => plan.kind === "annual")?.kind ?? next[0]?.kind ?? null);
-                }
-            })
-            .catch(() => {
-                if (!cancelled) {
-                    setFailedAttempt(attempt);
-                }
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, [attempt, eligibleForTrial, getPackages]);
-
     const retry = () => {
-        setPlans(null);
         setAttempt((count) => count + 1);
     };
 
@@ -219,14 +199,12 @@ export function Paywall() {
         setFailure(null);
         await mirrorEntitlement()
             .then((mirrored) => {
-                if (!mirrored && isMounted()) {
+                if (!mirrored) {
                     setFailure("pro.syncPendingBody");
                 }
             })
             .finally(() => {
-                if (isMounted()) {
-                    setBusy(null);
-                }
+                setBusy(null);
             });
     };
 
@@ -242,13 +220,12 @@ export function Paywall() {
         const purchase = async () => {
             const outcome = await purchasePackage(offer);
             const mirrored = outcome !== "pro" || (await mirrorEntitlement());
-            if (!isMounted()) {
-                return;
-            }
             if (!mirrored) {
                 setFailure("pro.syncPendingBody");
             } else if (outcome === "pro") {
-                router.back();
+                if (navigation.isFocused()) {
+                    router.back();
+                }
             } else if (outcome === "unentitled") {
                 setFailure("pro.unentitledBody");
             }
@@ -264,13 +241,12 @@ export function Paywall() {
         const restoreAndMirror = async () => {
             const restored = await restorePurchases();
             const mirrored = !restored || (await mirrorEntitlement());
-            if (!isMounted()) {
-                return;
-            }
             if (!mirrored) {
                 setFailure("pro.restorePendingBody");
             } else if (restored) {
-                router.back();
+                if (navigation.isFocused()) {
+                    router.back();
+                }
             } else {
                 setFailure("pro.nothingRestoredBody");
             }
@@ -305,7 +281,11 @@ export function Paywall() {
                     <PlanPicker
                         empty={empty}
                         onRetry={retry}
-                        onSelect={setSelected}
+                        onSelect={(kind) => {
+                            if (plans !== null) {
+                                setPick({ kind, plans });
+                            }
+                        }}
                         plans={plans}
                         selected={selected}
                     />

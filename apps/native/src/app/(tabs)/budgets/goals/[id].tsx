@@ -1,6 +1,6 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { ScreenHeader } from "@/components/screen-header";
 import { useDatabase } from "@/contexts/local-data-context";
@@ -36,14 +36,6 @@ export default function GoalScreen() {
 
     const targetSheetRef = useRef<BottomSheetModal>(null);
     const [retarget, setRetarget] = useState<GoalTarget | null>(null);
-
-    // Presented from an effect, not the row's handler: the editor is built during render, so the compiler reads
-    // `targetSheetRef.current` in that closure as a ref read in render. Setting state is not.
-    useEffect(() => {
-        if (retarget) {
-            targetSheetRef.current?.present();
-        }
-    }, [retarget]);
 
     if (entry == null) {
         return null;
@@ -88,7 +80,7 @@ export default function GoalScreen() {
                         foreignCurrency={goal.currency === currency ? null : goal.currency}
                         name={goal.name}
                         onChange={(edit: GoalEdit) => write(edit)}
-                        onChangeTarget={() =>
+                        onChangeTarget={() => {
                             setRetarget({
                                 accountId: goal.accountId,
                                 // `saved` is valued into the display currency: the goal's figure only while they agree.
@@ -96,8 +88,9 @@ export default function GoalScreen() {
                                 currency: goal.currency,
                                 existing: { targetAmount: goal.targetAmount, targetDate: goal.targetDate },
                                 name: entry.accountName,
-                            })
-                        }
+                            });
+                            targetSheetRef.current?.present();
+                        }}
                         onDelete={() => {
                             requestDelete(goal.id);
                             router.back();

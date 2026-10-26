@@ -16,6 +16,7 @@ import { flushDeferredDeletes } from "@/data/use-deferred-delete";
 import { describeUpdate } from "@/domain/app-update";
 import { formatChargeDate } from "@/domain/dates";
 import { useLanguage, useTranslation } from "@/i18n/context";
+import { subscribeAppState } from "@/lib/app-state";
 import { APP_VERSION } from "@/lib/app-version";
 import { useColors } from "@/theme/use-colors";
 
@@ -42,12 +43,13 @@ export function UpdateSheet() {
         setShown(update);
     }
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- checks expo-updates each time the app returns from the background
     useEffect(() => {
         if (!CHECKS_UPDATES) {
             return;
         }
         let phase = AppState.currentState;
-        const subscription = AppState.addEventListener("change", (next) => {
+        return subscribeAppState((next) => {
             const returned = phase === "background" && next === "active";
             phase = next;
             if (!returned) {
@@ -59,7 +61,6 @@ export function UpdateSheet() {
                 console.warn("[outlayr] update check failed", error);
             });
         });
-        return () => subscription.remove();
     }, []);
 
     if (!shown) {

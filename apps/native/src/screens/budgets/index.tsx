@@ -112,17 +112,12 @@ export function Budgets() {
     const categoryPickerRef = useRef<CategoryPickerSheetRef>(null);
     const [goalTarget, setGoalTarget] = useState<GoalTarget | null>(null);
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- presents the native limit sheet once its target has rendered, after the category picker has dismissed
     useEffect(() => {
         if (limitTarget) {
             limitSheetRef.current?.present();
         }
     }, [limitTarget]);
-
-    useEffect(() => {
-        if (goalTarget) {
-            goalSheetRef.current?.present();
-        }
-    }, [goalTarget]);
 
     const heroTimeLeft = main ? budgetTimeLeftLabel(main.window, main.type, new Date(nowMs), t) : null;
 
@@ -135,7 +130,6 @@ export function Budgets() {
     // Undo-window rows and goals count, so the takeover never hides them.
     const isEmpty = mainRow === null && allBudgets.length === 0 && allGoals.length === 0;
 
-    // Presented from an effect: `menuItems` runs in render, where a ref read trips the compiler.
     const openLimit = (target: LimitTarget) => {
         if (blocksNewBudget(target.categoryId, budgetedCategoryIds, budgetsCapped)) {
             router.push("/paywall");
@@ -302,6 +296,7 @@ export function Budgets() {
                         currency,
                         name: picked.name,
                     });
+                    goalSheetRef.current?.present();
                 }}
                 ref={accountSheetRef}
                 selectedId={null}

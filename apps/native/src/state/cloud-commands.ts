@@ -5,7 +5,7 @@ import type { Database } from "@/db/client";
 import { closeDatabase } from "@/db/client";
 import { runAccountLifecycle } from "@/lib/account-lifecycle";
 import type { AccountLifecycleAction } from "@/lib/account-lifecycle";
-import { lockIsEnforceable, requestUnlock } from "@/lib/app-lock";
+import { requestUnlock } from "@/lib/app-lock";
 import type { authClient } from "@/lib/auth-client";
 import { cloudAction, cloudMutation, convex } from "@/lib/convex";
 import {
@@ -33,11 +33,6 @@ interface DeletionStatus {
 
 export const requestUnlockCommand = createCommand({ execute: requestUnlock, label: "app-lock:request-unlock" });
 
-export const lockIsEnforceableCommand = createCommand({
-    execute: () => lockIsEnforceable(),
-    label: "app-lock:enforceable",
-});
-
 export const providerSignInCommand = createRuntimeCommand(appRuntime, {
     execute: signInWithProvider,
     label: "cloud:provider-sign-in",
@@ -46,11 +41,6 @@ export const providerSignInCommand = createRuntimeCommand(appRuntime, {
 export const persistProviderBindingCommand = createRuntimeCommand(appRuntime, {
     execute: persistProviderBinding,
     label: "cloud:persist-provider-binding",
-});
-
-export const resumeCloudDeletionCommand = createRuntimeCommand(appRuntime, {
-    execute: () => resumePersistedCloudDeletion(),
-    label: "cloud:resume-deletion",
 });
 
 const cloudConfigured = Effect.suspend(() =>

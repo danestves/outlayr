@@ -23,6 +23,7 @@ export const posthog =
 
 export function useScreenTracking() {
     const screen = useSegments().join("/");
+    // oxlint-disable-next-line outlayr/react-effect-budget -- reports the current screen to the PostHog client
     useEffect(() => {
         if (screen) {
             posthog?.screen(screen);

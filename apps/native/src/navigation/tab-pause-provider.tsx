@@ -15,6 +15,7 @@ export function TabPauseProvider({ children }: { children: ReactNode }) {
     const [pause] = useState(createTabPause);
 
     // Layout rather than passive, so the replay renders in the same task as the commit that selected the tab.
+    // oxlint-disable-next-line outlayr/react-effect-budget -- mirrors tab selection into the pause store
     useLayoutEffect(() => {
         pause.setSelected(selected);
     }, [pause, selected]);

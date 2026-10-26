@@ -1,16 +1,6 @@
-import { readFileSync } from "node:fs";
-
 import { describe, expect, it } from "vite-plus/test";
 
 import { lint } from "./test-harness";
-
-const budgets: Record<string, number> = JSON.parse(
-    readFileSync(new URL("../../../scripts/effect-budget.json", import.meta.url), "utf-8")
-);
-const [budgeted, allowed] = Object.entries(budgets).find(([file]) => /^[\w./-]+$/u.test(file)) ?? [];
-if (budgeted === undefined || allowed === undefined) {
-    throw new Error("scripts/effect-budget.json has no budgeted file with a plain path");
-}
 
 const component = (effects: number) => `import React, { useEffect } from "react";
 export function Panel() {
@@ -23,17 +13,6 @@ const budget = (filename: string, source: string) => lint("react-effect-budget",
 const messages = (diagnostics: { message: string }[]) => diagnostics.map(({ message }) => message);
 
 describe("react-effect-budget", () => {
-    it("passes a file at its budget", () => {
-        expect(budget(budgeted, component(allowed))).toStrictEqual([]);
-    });
-
-    it("reports only the calls past the budget", () => {
-        const reported = messages(budget(budgeted, component(allowed + 2)));
-        expect(reported).toHaveLength(2);
-        expect(reported[0]).toContain(`has ${allowed + 2} React effects against a budget of ${allowed}`);
-        expect(reported[0]).toContain("outlayr/react-effect-budget");
-    });
-
     it("gives a file without an entry a budget of 0 and counts member calls", () => {
         const reported = messages(
             budget(

@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { AppState } from "react-native";
+import { useState } from "react";
 
+import { useAppActive } from "@/lib/app-state";
 import { purchaseListener } from "@/lib/purchase-listener";
 import type { PurchaseSender } from "@/lib/purchase-listener";
 
@@ -20,15 +20,15 @@ function readListener(): ListenerState {
 
 export function usePurchaseListener(): [ListenerState, () => void] {
     const [listener, setListener] = useState(readListener);
+    const active = useAppActive();
+    const [wasActive, setWasActive] = useState(active);
 
-    useEffect(() => {
-        const subscription = AppState.addEventListener("change", (state) => {
-            if (state === "active") {
-                setListener(readListener());
-            }
-        });
-        return () => subscription.remove();
-    }, []);
+    if (active !== wasActive) {
+        setWasActive(active);
+        if (active) {
+            setListener(readListener());
+        }
+    }
 
     return [listener, () => setListener(readListener())];
 }

@@ -2,7 +2,7 @@ import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import type { AccountBalance } from "@outlayr/money/account-balance";
 import { isPerson } from "@outlayr/money/account-kind";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import type { Account } from "@/data/accounts-core";
 import { takesPayoffPlan } from "@/data/payoff-plans";
@@ -35,14 +35,7 @@ export function usePayoffPlan(db: Database, account: Account, balance: AccountBa
     const [target, setTarget] = useState<GoalTarget | null>(null);
     const live = line !== null && line.endedOn === null ? line : null;
 
-    // Presented from an effect: a handler reading the ref counts as a render read to the compiler.
-    useEffect(() => {
-        if (target) {
-            ref.current?.present();
-        }
-    }, [target]);
-
-    const present = () =>
+    const present = () => {
         setTarget({
             accountId: account.id,
             balance: balance.exact ? balance.total : null,
@@ -51,6 +44,8 @@ export function usePayoffPlan(db: Database, account: Account, balance: AccountBa
             name: account.name,
             payoff: t(statedKey(account, balance.total)),
         });
+        ref.current?.present();
+    };
 
     const onCommit = async ({ dateChanged, targetDate }: GoalCommit) => {
         ref.current?.dismiss();

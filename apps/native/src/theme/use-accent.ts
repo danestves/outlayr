@@ -12,6 +12,7 @@ import type { Accent } from "@/domain/accent";
 export function useAccent(): Accent {
     const accent = accentForValue(useSettingNumber("accentColor"));
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- writes the accent variables into Uniwind before the first paint
     useLayoutEffect(() => {
         // A fresh literal: an interface has no implicit index signature for `CSSVariables`.
         Uniwind.updateCSSVariables("light", { ...accentVariables(accent, "light") });

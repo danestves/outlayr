@@ -2,10 +2,11 @@ import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { currencyDisplayFor } from "@outlayr/money/currency";
 import { useForm, useSelector } from "@tanstack/react-form";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Pressable, View } from "react-native";
 import Animated, {
     Easing,
+    useAnimatedReaction,
     useAnimatedStyle,
     useReducedMotion,
     useSharedValue,
@@ -39,27 +40,30 @@ const EASE_OUT = Easing.bezier(0.19, 1, 0.22, 1);
 function CurrencyGlyph({ symbol }: { symbol: string }) {
     const reduced = useReducedMotion();
     const [spun, setSpun] = useState(symbol);
-    // Derived, not set from the effect: reduced motion has no edge to swap the glyph at.
+    // Derived, not set from the reaction: reduced motion has no edge to swap the glyph at.
     const shown = reduced ? symbol : spun;
     const spin = useSharedValue(0);
 
-    useEffect(() => {
-        if (reduced || symbol === shown) {
-            return;
+    const commit = (next: string) => {
+        setSpun(next);
+        spin.set(-90);
+        spin.set(withTiming(0, { duration: 320, easing: EASE_OUT }));
+    };
+    useAnimatedReaction(
+        () => (reduced || symbol === shown ? null : symbol),
+        (next) => {
+            if (next === null) {
+                return;
+            }
+            spin.set(
+                withTiming(90, { duration: 160, easing: Easing.in(Easing.ease) }, (finished) => {
+                    if (finished) {
+                        scheduleOnRN(commit, next);
+                    }
+                })
+            );
         }
-        const commit = (next: string) => {
-            setSpun(next);
-            spin.set(-90);
-            spin.set(withTiming(0, { duration: 320, easing: EASE_OUT }));
-        };
-        spin.set(
-            withTiming(90, { duration: 160, easing: Easing.in(Easing.ease) }, (finished) => {
-                if (finished) {
-                    scheduleOnRN(commit, symbol);
-                }
-            })
-        );
-    }, [symbol, shown, reduced, spin]);
+    );
 
     const style = useAnimatedStyle(() => ({
         transform: [{ perspective: 600 }, { rotateY: `${spin.get()}deg` }],

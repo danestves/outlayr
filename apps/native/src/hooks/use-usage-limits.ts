@@ -1,11 +1,12 @@
 import { useQuery } from "convex/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { projectLimit } from "@/domain/usage-limits";
 import type { LimitBucket, UsageLimits } from "@/domain/usage-limits";
 import { USAGE_LIMITS_QUERY } from "@/lib/convex";
+import { readSecondClock, subscribeSecondClock } from "@/lib/second-clock";
 
-const TICK_MS = 1000;
+const subscribeNever = () => () => undefined;
 const LAST_NOTICE_MS = 6000;
 
 export type CaptureFeature = "receiptScan" | "voiceEntry";
@@ -31,20 +32,9 @@ export function useUsageLimits() {
 }
 
 export function useTickingNow(active: boolean): number {
-    const [now, setNow] = useState(Date.now);
-    useEffect(() => {
-        if (!active) {
-            return;
-        }
-        const tick = () => setNow(Date.now());
-        const first = setTimeout(tick, 0);
-        const timer = setInterval(tick, TICK_MS);
-        return () => {
-            clearTimeout(first);
-            clearInterval(timer);
-        };
-    }, [active]);
-    return now;
+    const [mountedAt] = useState(Date.now);
+    const ticked = useSyncExternalStore(active ? subscribeSecondClock : subscribeNever, readSecondClock);
+    return active ? Math.max(ticked, mountedAt) : mountedAt;
 }
 
 export function isLimitRefusal(reason: string): reason is LimitRefusal {
@@ -82,6 +72,7 @@ export function useLimitNotice(feature: CaptureFeature, refusal: LimitRefusal | 
         }
     }
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- arms the timer that retires the last-capture notice after its display window
     useEffect(() => {
         if (last === null) {
             return;

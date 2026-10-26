@@ -4,7 +4,7 @@ import * as Effect from "effect/Effect";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as Atom from "effect/reactivity/Atom";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
 import { Shimmer } from "panelui-native/components/shimmer";
 import { use, useEffect, useState } from "react";
@@ -61,7 +61,6 @@ import type {
     VoiceDraftField,
     VoiceTurn,
 } from "@/domain/voice-entry";
-import { useIsMounted } from "@/hooks/use-is-mounted";
 import { useMerchantMark } from "@/hooks/use-merchant-mark";
 import { useProEntitled } from "@/hooks/use-pro-locked";
 import { isLimitRefusal, useLimitNotice } from "@/hooks/use-usage-limits";
@@ -611,7 +610,7 @@ function VoiceThreadScreen() {
     const currency = useGlobalCurrency(db);
     const { accounts, bounded, context, live } = usePromptLedger(db, currency);
     const [saving, setSaving] = useState(false);
-    const isMounted = useIsMounted();
+    const navigation = useNavigation();
     const createTransaction = useAtomCommand(createTransactionCommand, SILENT);
     const backfillRecurring = useAtomCommand(backfillRecurringCommand, SILENT);
     const syncSubscriptionReminders = useAtomCommand(syncSubscriptionRemindersCommand, SILENT);
@@ -697,7 +696,7 @@ function VoiceThreadScreen() {
             } catch {
                 // The row did not land; the form has the failure strip this screen lacks.
                 setSaving(false);
-                if (isMounted()) {
+                if (navigation.isFocused()) {
                     openForm(draft);
                 }
                 return;
@@ -730,7 +729,7 @@ function VoiceThreadScreen() {
             }
             haptics("success");
             // A modal gesture can dismiss this mid-write; popping again would take the screen beneath.
-            if (isMounted()) {
+            if (navigation.isFocused()) {
                 router.back();
             }
         };
@@ -763,7 +762,7 @@ function VoiceThreadScreen() {
                 freshEntries.mark(transferId);
             } catch {
                 setSaving(false);
-                if (isMounted()) {
+                if (navigation.isFocused()) {
                     openTransferForm(draft);
                 }
                 return;
@@ -776,7 +775,7 @@ function VoiceThreadScreen() {
             });
             haptics("success");
             // A modal gesture can dismiss this mid-write; popping again would take the screen beneath.
-            if (isMounted()) {
+            if (navigation.isFocused()) {
                 router.back();
             }
         };
