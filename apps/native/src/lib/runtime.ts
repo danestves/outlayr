@@ -8,6 +8,7 @@ import * as PhotoSync from "@/data/photo-sync";
 import * as RecurrenceSweep from "@/data/recurrence-sweep";
 import * as SyncEngine from "@/data/sync-engine";
 import * as SyncStore from "@/data/sync-store";
+import * as CsvImport from "@/lib/csv-import";
 import * as DailyReminderSync from "@/lib/daily-reminder-sync";
 import * as DueReminderSync from "@/lib/due-reminder-sync";
 import * as EnrichmentSync from "@/lib/enrichment-sync";
@@ -24,6 +25,7 @@ export const appRuntime = Atom.runtime(
             )
         ),
         EnrichmentSync.layer,
+        CsvImport.layer,
         PhotoSync.layer,
         RevenueCat.layer,
         Logger.layer([Logger.withLeveledConsole(Logger.formatSimple)])

@@ -4,7 +4,7 @@ import { HugeiconsIcon } from "@hugeicons/react-native";
 import { SectionList } from "@legendapp/list/section-list";
 import { currencyTotals } from "@outlayr/money/currency-totals";
 import type { CurrencyBucket, CurrencyEntry } from "@outlayr/money/currency-totals";
-import { memo, useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 import { Pressable, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -17,7 +17,7 @@ import { useDisplaySettings } from "@/contexts/display-settings-context";
 import type { ImportEntry, SkipReason } from "@/data/transfer-core";
 import { formatDayHeader, formatSentenceDate } from "@/domain/dates";
 import { FALLBACK_IDENTITY_COLOR } from "@/domain/transaction-identity";
-import type { ImportReviewResult, ReviewCategoryTile } from "@/hooks/use-import-review";
+import type { ImportReviewResult, ReviewCategoryTile, ReviewRow } from "@/hooks/use-import-review";
 import { useReviewEnrichment } from "@/hooks/use-review-enrichment";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useLanguage, useTranslation } from "@/i18n/context";
@@ -52,6 +52,7 @@ interface ReviewEntryListRow {
 interface ReviewDaySection {
     data: ReviewEntryListRow[];
     day: Date;
+    first: boolean;
     key: string;
 }
 
@@ -72,93 +73,92 @@ interface EntryRowProps {
     tile: ReviewCategoryTile | undefined;
 }
 
-export const EntryRow = memo(
-    ({
-        index,
-        entry,
-        duplicate,
-        checked,
-        categoryName,
-        tile,
-        displayName,
-        logoUri,
-        currency,
-        onToggle,
-    }: EntryRowProps) => {
-        const t = useTranslation();
-        const { language } = useLanguage();
-        const colors = useColors();
-        const { showCents } = useDisplaySettings().state;
-        const onPress = useCallback(() => onToggle(index), [onToggle, index]);
-        const tileColor = tile === undefined ? FALLBACK_IDENTITY_COLOR : tile.color;
-        const categoryCaption =
-            categoryName == null ? null : (
-                <Text className="font-sans-medium text-muted text-subtitle" numberOfLines={1}>
-                    {categoryName}
-                </Text>
-            );
-        const caption = duplicate ? (
-            <Text className="text-danger text-footnote" numberOfLines={1}>
-                {t("import.reviewDuplicateCaption")}
+export function EntryRow({
+    index,
+    entry,
+    duplicate,
+    checked,
+    categoryName,
+    tile,
+    displayName,
+    logoUri,
+    currency,
+    onToggle,
+}: EntryRowProps) {
+    const t = useTranslation();
+    const { language } = useLanguage();
+    const colors = useColors();
+    const { showCents } = useDisplaySettings().state;
+    const onPress = () => {
+        onToggle(index);
+    };
+    const tileColor = tile === undefined ? FALLBACK_IDENTITY_COLOR : tile.color;
+    const categoryCaption =
+        categoryName == null ? null : (
+            <Text className="font-sans-medium text-muted text-subtitle" numberOfLines={1}>
+                {categoryName}
             </Text>
-        ) : (
-            categoryCaption
         );
+    const caption = duplicate ? (
+        <Text className="text-danger text-footnote" numberOfLines={1}>
+            {t("import.reviewDuplicateCaption")}
+        </Text>
+    ) : (
+        categoryCaption
+    );
 
-        return (
-            <Pressable
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked }}
-                className={cn("flex-row items-center gap-3 py-2 active:opacity-70", !checked && "opacity-40")}
-                onPress={onPress}
-                testID={`review-row-${index}`}
-            >
-                <View testID={`review-row-checkbox-${index}`}>
-                    <HugeiconsIcon
-                        color={checked ? colors.foreground : colors.subtle}
-                        icon={checked ? CheckSolid : CircleIcon}
-                        size={22}
-                        strokeWidth={1.6}
-                    />
-                </View>
-                <CategoryIconTile
-                    color={tileColor}
-                    emoji={tile?.emoji}
-                    icon={tile?.icon}
-                    imageUri={logoUri}
-                    radius={TILE_RADIUS}
-                    size={TILE_SIZE}
-                    type="solid"
+    return (
+        <Pressable
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked }}
+            className={cn("flex-row items-center gap-3 py-2 active:opacity-70", !checked && "opacity-40")}
+            onPress={onPress}
+            testID={`review-row-${index}`}
+        >
+            <View testID={`review-row-checkbox-${index}`}>
+                <HugeiconsIcon
+                    color={checked ? colors.foreground : colors.subtle}
+                    icon={checked ? CheckSolid : CircleIcon}
+                    size={22}
+                    strokeWidth={1.6}
                 />
-                <View className="flex-1 gap-0.5">
-                    <Text
-                        className={cn("font-sans-medium text-callout text-foreground", !checked && "line-through")}
-                        numberOfLines={1}
-                    >
-                        {displayName}
-                    </Text>
-                    {caption}
-                </View>
-                <View className="items-end gap-0.5">
-                    <RowAmount
-                        amount={entry.amount}
-                        code={entry.currency ?? currency}
-                        income={entry.income}
-                        isFuture={false}
-                        showCents={showCents}
-                        struck={!checked}
-                    />
-                    <Text className="text-footnote text-subtle" numberOfLines={1}>
-                        {formatSentenceDate(entry.date, language)}
-                    </Text>
-                </View>
-            </Pressable>
-        );
-    }
-);
-EntryRow.displayName = "EntryRow";
+            </View>
+            <CategoryIconTile
+                color={tileColor}
+                emoji={tile?.emoji}
+                icon={tile?.icon}
+                imageUri={logoUri}
+                radius={TILE_RADIUS}
+                size={TILE_SIZE}
+                type="solid"
+            />
+            <View className="flex-1 gap-0.5">
+                <Text
+                    className={cn("font-sans-medium text-callout text-foreground", !checked && "line-through")}
+                    numberOfLines={1}
+                >
+                    {displayName}
+                </Text>
+                {caption}
+            </View>
+            <View className="items-end gap-0.5">
+                <RowAmount
+                    amount={entry.amount}
+                    code={entry.currency ?? currency}
+                    income={entry.income}
+                    isFuture={false}
+                    showCents={showCents}
+                    struck={!checked}
+                />
+                <Text className="text-footnote text-subtle" numberOfLines={1}>
+                    {formatSentenceDate(entry.date, language)}
+                </Text>
+            </View>
+        </Pressable>
+    );
+}
 
-const DayHeader = memo(({ day, totals, first }: { day: Date; first: boolean; totals: readonly CurrencyBucket[] }) => {
+function DayHeader({ day, totals, first }: { day: Date; first: boolean; totals: readonly CurrencyBucket[] }) {
     const { showCents } = useDisplaySettings().state;
     const { language } = useLanguage();
     return (
@@ -171,8 +171,66 @@ const DayHeader = memo(({ day, totals, first }: { day: Date; first: boolean; tot
             <View className="bg-border" style={{ borderRadius: 0.65, height: 1.3 }} />
         </View>
     );
-});
-DayHeader.displayName = "DayHeader";
+}
+
+type EntryReviewRow = Extract<ReviewRow, { kind: "entry" }>;
+type SkippedReviewRow = Extract<ReviewRow, { kind: "skipped" }>;
+
+function buildDaySections(entryRows: readonly EntryReviewRow[]): ReviewDaySection[] {
+    const sorted = [...entryRows].sort((a, b) => b.entry.date.getTime() - a.entry.date.getTime());
+    const byDay = new Map<string, ReviewDaySection>();
+    for (const row of sorted) {
+        const key = dayKeyOf(row.entry.date);
+        let section = byDay.get(key);
+        if (section == null) {
+            section = { data: [], day: row.entry.date, first: byDay.size === 0, key: `day-${key}` };
+            byDay.set(key, section);
+        }
+        section.data.push({
+            duplicate: row.duplicate,
+            entry: row.entry,
+            index: row.index,
+            key: row.key,
+        });
+    }
+    return [...byDay.values()];
+}
+
+// Bucketed per currency, never summed across them: a CSV row may carry its own currency, and
+// `amount-text` forbids adding two currencies into one figure.
+function selectionTotals(entryRows: readonly EntryReviewRow[], excluded: ReadonlySet<number>, ledgerCurrency: string) {
+    const perDay = new Map<string, CurrencyEntry[]>();
+    const out: CurrencyEntry[] = [];
+    for (const row of entryRows) {
+        if (excluded.has(row.index)) {
+            continue;
+        }
+        const cell: CurrencyEntry = {
+            amount: row.entry.amount,
+            amountUsd: null,
+            currency: row.entry.currency ?? ledgerCurrency,
+            income: row.entry.income,
+        };
+        if (!row.entry.income) {
+            out.push(cell);
+        }
+        const key = dayKeyOf(row.entry.date);
+        const bucket = perDay.get(key);
+        if (bucket) {
+            bucket.push(cell);
+        } else {
+            perDay.set(key, [cell]);
+        }
+    }
+    return {
+        dayTotals: new Map([...perDay].map(([key, cells]) => [key, currencyTotals(cells, ledgerCurrency)] as const)),
+        // Zero is zero in any currency, so an empty selection still shows the ledger's figure.
+        outTotals:
+            out.length === 0
+                ? [{ amount: 0, currencyCode: ledgerCurrency, transactionCount: 0 }]
+                : currencyTotals(out, ledgerCurrency),
+    };
+}
 
 interface ReviewStepProps {
     review: ImportReviewResult;
@@ -180,103 +238,55 @@ interface ReviewStepProps {
 
 export function ReviewStep({ review }: ReviewStepProps) {
     const t = useTranslation();
+    if (review.rows.length === 0) {
+        return (
+            <View className="items-center pt-10">
+                <Text className="text-muted text-subtitle">{t("import.reviewEmptyTitle")}</Text>
+            </View>
+        );
+    }
+    const entryRows = review.rows.filter((row) => row.kind === "entry");
+    const skippedRows = review.rows.filter((row) => row.kind === "skipped");
+    const sections = buildDaySections(entryRows);
+    return <ReviewList entryRows={entryRows} review={review} sections={sections} skippedRows={skippedRows} />;
+}
+
+interface ReviewListProps extends ReviewStepProps {
+    entryRows: readonly EntryReviewRow[];
+    sections: readonly ReviewDaySection[];
+    skippedRows: readonly SkippedReviewRow[];
+}
+
+function ReviewList({ entryRows, review, sections, skippedRows }: ReviewListProps) {
+    const t = useTranslation();
     const { height: windowHeight } = useWindowDimensions();
     const insets = useSafeAreaInsets();
     const { showCents } = useDisplaySettings().state;
     const enrichment = useReviewEnrichment(review.plan.entries);
     const [showSkipped, setShowSkipped] = useState(false);
-    const onToggleSkipped = useCallback(() => {
+    const onToggleSkipped = () => {
         setShowSkipped((current) => !current);
-    }, []);
+    };
 
-    const entryRows = useMemo(() => review.rows.filter((row) => row.kind === "entry"), [review.rows]);
-    const skippedRows = useMemo(() => review.rows.filter((row) => row.kind === "skipped"), [review.rows]);
+    const { outTotals, dayTotals } = selectionTotals(entryRows, review.excluded, review.currency);
 
-    const sections = useMemo<ReviewDaySection[]>(() => {
-        const sorted = [...entryRows].sort((a, b) => b.entry.date.getTime() - a.entry.date.getTime());
-        const byDay = new Map<string, ReviewDaySection>();
-        for (const row of sorted) {
-            const key = dayKeyOf(row.entry.date);
-            let section = byDay.get(key);
-            if (section == null) {
-                section = { data: [], day: row.entry.date, key: `day-${key}` };
-                byDay.set(key, section);
-            }
-            section.data.push({
-                duplicate: row.duplicate,
-                entry: row.entry,
-                index: row.index,
-                key: row.key,
-            });
-        }
-        return [...byDay.values()];
-    }, [entryRows]);
-
-    // Bucketed per currency, never summed across them: a CSV row may carry its own currency, and
-    // `amount-text` forbids adding two currencies into one figure.
-    const { outTotals, dayTotals } = useMemo(() => {
-        const perDay = new Map<string, CurrencyEntry[]>();
-        const out: CurrencyEntry[] = [];
-        for (const row of entryRows) {
-            if (review.excluded.has(row.index)) {
-                continue;
-            }
-            const cell: CurrencyEntry = {
-                amount: row.entry.amount,
-                amountUsd: null,
-                currency: row.entry.currency ?? review.currency,
-                income: row.entry.income,
-            };
-            if (!row.entry.income) {
-                out.push(cell);
-            }
-            const key = dayKeyOf(row.entry.date);
-            const bucket = perDay.get(key);
-            if (bucket) {
-                bucket.push(cell);
-            } else {
-                perDay.set(key, [cell]);
-            }
-        }
-        return {
-            dayTotals: new Map(
-                [...perDay].map(([key, cells]) => [key, currencyTotals(cells, review.currency)] as const)
-            ),
-            // Zero is zero in any currency, so an empty selection still shows the ledger's figure.
-            outTotals:
-                out.length === 0
-                    ? [{ amount: 0, currencyCode: review.currency, transactionCount: 0 }]
-                    : currencyTotals(out, review.currency),
-        };
-    }, [entryRows, review.excluded, review.currency]);
-
-    const renderItem = useCallback(
-        ({ item }: { item: ReviewEntryListRow }) => (
-            <EntryRow
-                categoryName={review.categoryName.get(item.entry.categoryId)}
-                checked={!review.excluded.has(item.index)}
-                currency={review.currency}
-                displayName={enrichment.get(item.index)?.displayName ?? item.entry.note}
-                duplicate={item.duplicate}
-                entry={item.entry}
-                index={item.index}
-                logoUri={enrichment.get(item.index)?.logoUri ?? null}
-                onToggle={review.onToggle}
-                tile={review.categoryTile.get(item.entry.categoryId)}
-            />
-        ),
-        [review.currency, review.categoryName, review.categoryTile, review.excluded, review.onToggle, enrichment]
+    const renderItem = ({ item }: { item: ReviewEntryListRow }) => (
+        <EntryRow
+            categoryName={review.categoryName.get(item.entry.categoryId)}
+            checked={!review.excluded.has(item.index)}
+            currency={review.currency}
+            displayName={enrichment.get(item.index)?.displayName ?? item.entry.note}
+            duplicate={item.duplicate}
+            entry={item.entry}
+            index={item.index}
+            logoUri={enrichment.get(item.index)?.logoUri ?? null}
+            onToggle={review.onToggle}
+            tile={review.categoryTile.get(item.entry.categoryId)}
+        />
     );
 
-    const renderSectionHeader = useCallback(
-        ({ section }: { section: ReviewDaySection }) => (
-            <DayHeader
-                day={section.day}
-                first={sections[0] === section}
-                totals={dayTotals.get(dayKeyOf(section.day)) ?? []}
-            />
-        ),
-        [sections, dayTotals]
+    const renderSectionHeader = ({ section }: { section: ReviewDaySection }) => (
+        <DayHeader day={section.day} first={section.first} totals={dayTotals.get(dayKeyOf(section.day)) ?? []} />
     );
 
     const skippedFooter =
@@ -309,14 +319,6 @@ export function ReviewStep({ review }: ReviewStepProps) {
                     : null}
             </View>
         );
-
-    if (review.rows.length === 0) {
-        return (
-            <View className="items-center pt-10">
-                <Text className="text-muted text-subtitle">{t("import.reviewEmptyTitle")}</Text>
-            </View>
-        );
-    }
 
     const writing = review.commit.phase === "writing";
     const failed = review.commit.phase === "failed";
