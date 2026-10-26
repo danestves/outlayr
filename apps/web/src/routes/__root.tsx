@@ -1,5 +1,5 @@
 import geist from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
-import { HeadContent, Scripts, createRootRoute, useParams } from "@tanstack/react-router";
+import { HeadContent, Scripts, createRootRoute, useMatches, useParams } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { defaultLocale, getIntlayer, getPathWithoutLocale, locales } from "intlayer";
@@ -173,6 +173,7 @@ export const Route = createRootRoute({
 function RootDocument({ children }: { children: ReactNode }) {
     const locale = localeFromParam(useParams({ strict: false }).locale);
     const country = Route.useLoaderData();
+    const inAccount = useMatches({ select: (matches) => matches.some((match) => match.routeId === "/_account") });
     useEffect(() => {
         startAnalytics(country).catch(() => undefined);
     }, [country]);
@@ -185,9 +186,9 @@ function RootDocument({ children }: { children: ReactNode }) {
             </head>
             <body className="flex min-h-dvh flex-col">
                 <IntlayerProvider locale={locale}>
-                    <SiteHeader />
+                    {inAccount ? null : <SiteHeader />}
                     <div className="flex-1">{children}</div>
-                    <SiteFooter />
+                    {inAccount ? null : <SiteFooter />}
                     <ConsentBanner />
                 </IntlayerProvider>
                 <Scripts />

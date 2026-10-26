@@ -30,6 +30,11 @@ function resolveSiteUrl() {
     return process.env.SITE_URL || process.env.CONVEX_SITE_URL || "http://localhost:3000";
 }
 
+function allowedHosts(siteUrl: string) {
+    const convexSiteUrl = process.env.CONVEX_SITE_URL;
+    return [...new Set([siteUrl, ...(convexSiteUrl ? [convexSiteUrl] : [])].map((url) => new URL(url).host))];
+}
+
 function resolveNativeAppUrl() {
     return process.env.NATIVE_APP_URL || "outlayr://";
 }
@@ -98,7 +103,8 @@ function createAuth(ctx: GenericCtx<DataModel>) {
 
     return betterAuth({
         account: { encryptOAuthTokens: true, updateAccountOnSignIn: false },
-        baseURL: siteUrl,
+        advanced: { trustedProxyHeaders: true },
+        baseURL: { allowedHosts: allowedHosts(siteUrl), fallback: siteUrl },
         database: authComponent.adapter(ctx),
         // The app uses neither: codes only confirm an address or reset a password.
         disabledPaths: ["/forget-password/email-otp", "/send-verification-email", "/sign-in/email-otp"],
