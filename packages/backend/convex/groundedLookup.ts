@@ -20,6 +20,7 @@ import {
     sanitizeMerchantName,
     sanitizeTags,
 } from "./enrichment";
+import { traced } from "./lib/aiTracing";
 import { describeTree } from "./lib/ledgerPrompt";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { knowledgeKeys } from "./lib/merchantKey";
@@ -229,7 +230,7 @@ export async function groundedAnswer(
         const anthropic = createAnthropic({ apiKey });
         modelId = process.env.CLAUDE_GROUNDED_MODEL_ID || CLAUDE_FAST_MODEL_ID;
         deps = {
-            grounding: anthropic(modelId),
+            grounding: traced(anthropic(modelId), "grounded_lookup"),
             groundingTools: { web_search: anthropic.tools.webSearch_20250305({ maxUses: WORST_CASE_SEARCH_CALLS }) },
         };
     }

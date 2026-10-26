@@ -20,6 +20,7 @@ import {
 } from "./enrichment";
 import { groundedAnswer } from "./groundedLookup";
 import type { GroundedCallDeps } from "./groundedLookup";
+import { traced } from "./lib/aiTracing";
 import { optionalUserId, requireUserId } from "./lib/auth";
 import { knowledgeKey, knowledgeKeys } from "./lib/merchantKey";
 import { CANONICAL_CATEGORY_NAMES, KEY_PATTERN } from "./lib/merchantTrust";
@@ -184,7 +185,7 @@ export async function resolveJob(
         if (!apiKey) {
             return null;
         }
-        model = createAnthropic({ apiKey })(fastModelId);
+        model = traced(createAnthropic({ apiKey })(fastModelId), "background_suggest");
     }
     const { grounding: _grounding, ...fast } = await runSuggest(model, {
         categoryTree: row.categoryTree,

@@ -12,6 +12,7 @@ import { z } from "zod";
 import { components, internal } from "./_generated/api";
 import { action, internalMutation } from "./_generated/server";
 import type { ActionCtx } from "./_generated/server";
+import { traced } from "./lib/aiTracing";
 import { admitCapture } from "./lib/captures";
 import { PICKABLE_CURRENCY_CODES } from "./lib/currencies";
 import {
@@ -373,7 +374,7 @@ export const scan = action({
         }
 
         const modelId = process.env.CLAUDE_FAST_MODEL_ID || CLAUDE_FAST_MODEL_ID;
-        return readReceipt(createAnthropic({ apiKey })(modelId), args.image, {
+        return readReceipt(traced(createAnthropic({ apiKey })(modelId), "receipt_scan"), args.image, {
             accounts: args.accounts,
             categoryTree: args.categoryTree,
             currency: args.currency,
