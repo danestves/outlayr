@@ -560,11 +560,15 @@ export default function TransferEditor({
             }
             if (step === "fee") {
                 const otherCharges = draft.fees[draft.feeSide === "source" ? "destination" : "source"] > 0;
+                const editedBank = otherCharges ? accountOf(draft.feeSide)?.name : undefined;
                 return (
                     <StepFee
                         field={{
                             comesTo: null,
-                            label: t("transfers.field.fee"),
+                            label:
+                                editedBank === undefined
+                                    ? t("transfers.field.fee")
+                                    : t("transfers.field.feeAt", { account: editedBank }),
                             placeholder: draft.feeText === "",
                             unit: draft.feeCurrency,
                             value:

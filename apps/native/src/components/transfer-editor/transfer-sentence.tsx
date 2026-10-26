@@ -69,12 +69,15 @@ export function TransferSentence({
 }: TransferSentenceProps) {
     const t = useTranslation();
 
+    // Two fees would both read "Fee" to VoiceOver; naming the bank tells them apart.
+    const feeOf = (account: string | null) =>
+        bothFees && account !== null ? t("transfers.field.feeAt", { account }) : t("transfers.field.fee");
     const labels = {
         amount: t("transfers.field.sent"),
-        arrivalFee: t("transfers.field.fee"),
+        arrivalFee: feeOf(values.arrivalFeeSide),
         arrivalFeeSide: t("transfers.field.feeSide"),
         arrives: t("transfers.field.arrives"),
-        fee: t("transfers.field.fee"),
+        fee: feeOf(values.feeSide),
         feeSide: t("transfers.field.feeSide"),
         from: t("transfers.field.from"),
         outside: t("transfers.field.outside"),
