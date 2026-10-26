@@ -8,6 +8,8 @@ import { ConvexReactClient } from "convex/react";
 import Constants from "expo-constants";
 import { AFTER_FIRST_UNLOCK, getItem, setItem } from "expo-secure-store";
 
+import { retryTokenFetch } from "./token-fetch";
+
 const keychain = { keychainAccessible: AFTER_FIRST_UNLOCK };
 
 /** Rebuilt because better-auth only exports `emailOTPClient` from a barrel Metro would ship whole. */
@@ -46,6 +48,7 @@ function createCloudRuntime() {
     return {
         authClient: createAuthClient({
             baseURL: siteUrl,
+            fetchOptions: { customFetchImpl: retryTokenFetch(fetch) },
             // Every app switch would otherwise fetch the session; launch restores it, token refresh catches a revoke.
             sessionOptions: { refetchOnWindowFocus: false },
             plugins: [
