@@ -116,7 +116,11 @@ export function SentenceValue({
                         <Text className={cn(textClassName, tone())}>{value}</Text>
                     )}
                 </Animated.View>
-                <SentenceRule bottom={ruleBottom} color={flagged ? colors.danger : colors.tint} key={identity} />
+                <SentenceRule
+                    bottom={ruleBottom}
+                    color={flagged ? colors.danger : colors.tint}
+                    key={`rule:${identity}`}
+                />
             </Pressable>
         </Animated.View>
     );
