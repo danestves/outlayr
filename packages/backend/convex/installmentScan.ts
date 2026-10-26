@@ -6,6 +6,7 @@ import type { Infer } from "convex/values";
 import { z } from "zod";
 
 import { action } from "./_generated/server";
+import { traced } from "./lib/aiTracing";
 import {
     CURRENCY_PATTERN,
     DATE_PATTERN,
@@ -249,7 +250,7 @@ export const scan = action({
         }
 
         const modelId = process.env.CLAUDE_MODEL_ID || CLAUDE_MODEL_ID;
-        return readInstallmentPlan(createAnthropic({ apiKey })(modelId), args.image, {
+        return readInstallmentPlan(traced(createAnthropic({ apiKey })(modelId), "installment_scan"), args.image, {
             accounts: args.accounts,
             currency: args.currency,
             language: args.language,

@@ -21,6 +21,7 @@ export const env = createEnv({
         GOOGLE_CLIENT_SECRET: z.string().optional(),
         POSTHOG_PERSONAL_API_KEY: z.string().optional(),
         POSTHOG_PROJECT_ID: z.string().optional(),
+        POSTHOG_PROJECT_TOKEN: z.string().optional(),
         REVENUECAT_SECRET_KEY: z.string().optional(),
         REVENUECAT_WEBHOOK_AUTH: z.string().min(32).optional(),
     },

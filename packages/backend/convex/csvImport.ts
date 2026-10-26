@@ -12,6 +12,7 @@ import { components, internal } from "./_generated/api";
 import { action } from "./_generated/server";
 import { maybeScheduleGrounded, sanitizeRegionCode } from "./enrichment";
 import type { GroundedScheduleCtx } from "./enrichment";
+import { traced } from "./lib/aiTracing";
 import { describeTree } from "./lib/ledgerPrompt";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { perUserBurst } from "./lib/limits";
@@ -258,7 +259,7 @@ export const csvImport = action({
         }
 
         const modelId = process.env.CLAUDE_FAST_MODEL_ID || CLAUDE_FAST_MODEL_ID;
-        const classified = await classify(createAnthropic({ apiKey })(modelId), {
+        const classified = await classify(traced(createAnthropic({ apiKey })(modelId), "csv_import"), {
             categoryTree: args.categoryTree,
             labels: remaining,
         });

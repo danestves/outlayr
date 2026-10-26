@@ -24,6 +24,7 @@ import { z } from "zod";
 import { components, internal } from "./_generated/api";
 import { action, internalMutation, mutation, query } from "./_generated/server";
 import type { ActionCtx, MutationCtx, QueryCtx } from "./_generated/server";
+import { traced } from "./lib/aiTracing";
 import { admitCapture } from "./lib/captures";
 import {
     clampDate,
@@ -508,7 +509,7 @@ export const speak = action({
             today: args.today,
         };
         const modelId = process.env.CLAUDE_MODEL_ID || CLAUDE_MODEL_ID;
-        const agent = voiceAgent(createAnthropic({ apiKey })(modelId), context, heard.text);
+        const agent = voiceAgent(traced(createAnthropic({ apiKey })(modelId), "voice_entry"), context, heard.text);
         const { message, messageId } = await saveMessage(ctx, components.agent, {
             prompt: heard.text,
             threadId: args.threadId,

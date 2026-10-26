@@ -8,6 +8,7 @@ import { z } from "zod";
 import { components, internal } from "./_generated/api";
 import { action, internalQuery } from "./_generated/server";
 import type { ActionCtx } from "./_generated/server";
+import { traced } from "./lib/aiTracing";
 import { optionalUserId } from "./lib/auth";
 import { PICKABLE_CURRENCY_CODES } from "./lib/currencies";
 import { describeTree } from "./lib/ledgerPrompt";
@@ -448,7 +449,7 @@ export const suggest = action({
 
         try {
             const modelId = process.env.CLAUDE_FAST_MODEL_ID || CLAUDE_FAST_MODEL_ID;
-            const result = await runSuggest(createAnthropic({ apiKey })(modelId), {
+            const result = await runSuggest(traced(createAnthropic({ apiKey })(modelId), "category_suggest"), {
                 categoryTree: args.categoryTree,
                 currency,
                 income: args.income,
