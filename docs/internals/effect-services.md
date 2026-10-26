@@ -38,6 +38,7 @@ A reusable operation is `Effect.fn("LocalDatabase.open")(function* open() { ... 
 - Attributes and log annotations stay bounded: a category, an id, a key, a count. Raw payloads, URLs with credentials, tokens and arbitrary defect text live only in `cause`.
 - **Translation.** Construct the error where the failure happens, and map it to another error only at a boundary. A boundary passes through errors already in the target channel and wraps only unknown or lower-level failures. Map each failure where its context is known; don't wrap a whole pipeline in one generic error.
 - **Discriminators.** Don't say one thing twice, as a specific tag and a single-value `stage` or `operation` literal. Split classes when the distinction drives control flow or the copy a user sees; a field that only helps diagnosis stays a field. A message that reaches the UI or a log a person reads is behavior, so a refactor keeps it.
+- **Validation codes.** A rejected save is its own tagged error carrying the code (`CategoryValidationError.code`); the screen reads the field and maps it to copy, never the message text.
 - **Mappers.** No helper that only does `(...args) => new SomeError({ ...args })`. Keep one when it normalizes, passes a domain error through, or adds context. A mapper that belongs to the error is a static factory on its class.
 - **Predicates** are exported directly, `export const isFoo = Schema.is(Foo)`, not a function wrapping a private `Schema.is`.
 - Recover with `Effect.catchTags({ LocalDatabaseError: ... })`, even for one tag; lint enforces it. `Effect.catch` handles the whole channel; `catchIf` is for structural checks such as a platform error code.
@@ -48,7 +49,7 @@ A reusable operation is `Effect.fn("LocalDatabase.open")(function* open() { ... 
 
 - **An operation** is `Effect.fn("Transactions.create")(function* create(db: Database, ...) { ... })`. `db` stays a parameter because `LocalDatabase` reopens the connection on reset and retry. An exported object of operations (`transactionsRepo`, `tagsRepo`) keeps its members, each an `Effect.fn`.
 - **One error per module**, `<Module>Error`, with `operation: Schema.Literals([...])` (left out when the module has one) and `cause: Schema.Defect()`. A private helper wraps a drizzle query in `Effect.tryPromise({ catch, try })`; a query builder is a thenable, so `() => db.update(...)` is the `try`. A synchronous read used inside an operation goes through `Effect.try` with the same error, since a bare throw in a generator is a defect.
-- **Composition.** An operation that calls another module's operation `yield*`s it and that module's error passes through. A dependency still on promises (`getMeta`, `ensureCategoryByName`, an Expo or Convex call) goes through `Effect.tryPromise` with this module's error.
+- **Composition.** An operation that calls another module's operation `yield*`s it and that module's error passes through. A dependency still on promises (an Expo or Convex call, `lib/` promise code) goes through `Effect.tryPromise` with this module's error.
 - **Transactions** use `transaction(db, body, toError)` from `db/transaction.ts`, which keeps the per-database queue. A callback that runs inside one is `(id: string) => Effect.Effect<void, E>` (`CreateOptions.inSameTransaction`), so the caller's writes join it and its error passes through unchanged.
 - **Validation** that drives copy or control flow is its own tagged error (`UnbalancedSplitError`, `PendingCategoryError`), not a message a caller parses.
 - **Stays plain:** synchronous reads (`getTransactionById`, `cardFeeFor`), query builders handed to `useLiveQuery`, and pure helpers.
@@ -93,6 +94,8 @@ const purchaseCommand = createRuntimeCommand(appRuntime, {
 - One reporter handles the result. It ignores interrupts, logs a defect with `console.error` and a typed failure with `console.warn`, which is a red or a yellow LogBox entry in dev and an error or warn native log in release, as `Effect.logWarning` is under `appRuntime`'s logger. `reportDefect` and `reportFailure` switch each off per call.
 - **A component handles a settled failure in the handler.** It awaits the result, branches on `AsyncResult.isFailure`, and sets its own state or shows its own copy. Pass `SILENT` when that branch is the report, so one failure is not logged twice. Busy state is the component's own `useState` set around the `await`, not the atom's `waiting`.
 - **Code behind a promise contract** (`runAccountLifecycle`'s callbacks, the `RevenueCatValue` functions the paywall awaits) passes `SILENT` and returns `unwrapAtomCommand(result)`, which throws the squashed cause, so the caller's `catch` keeps seeing what it saw before.
+- A command for an effect that needs no service is `createCommand`, and module code the runtime itself imports (`lib/enrichment-queue.ts`, `lib/logo-backfill.ts`) may only use those: a command made with `createRuntimeCommand` imports `appRuntime`, which is a cycle there and leaves the command with an undefined runtime. `settings-commands.ts` holds the shared ones; those two modules define their own pass as a `createCommand` beside the code.
+- Module promise code with no registry runs a command through `runSettingsCommand`, `runLedgerCommand` or `runLifecycleCommand`, which settle under `SILENT` and throw the squashed cause.
 - A command whose calls must not overlap needs a scheduler, which does not exist yet. Add one with the first caller that needs it.
 
 ## Long-running services
@@ -109,6 +112,11 @@ const purchaseCommand = createRuntimeCommand(appRuntime, {
 - A value that lives in React (the signed-in account) reaches a service by mounting `Atom.family(value)` atoms whose effect registers the value until it is interrupted. The registry removes a node on a scheduled task, so a value that comes back before then keeps its old node and nothing re-runs: treat the live mounts as a stack whose newest entry wins, never a mount as an event. `RevenueCat.follow` is the reference.
 - A fiber forked while the layer builds reads the construction context, which lacks the app's logger. Start loops in `run`, which runs from an atom with the runtime's context.
 - Log with `Effect.logWarning`, not `console.warn`. Effect's default logger writes every level with `console.log`, so `appRuntime` swaps in `Logger.withLeveledConsole(Logger.formatSimple)`: a warning is a LogBox warning in dev and a warn-level native log in release, as `console.warn` was.
+
+## Overlapping callers
+
+- Calls that must run one at a time take a module-level `Semaphore.makeUnsafe(1)` and `withPermits(1)`; a failed call releases its permit (`toggleFavouriteCurrency`).
+- Calls that must share one run, so a second caller gets the first's result instead of repeating it, keep the in-flight `Deferred` in a module variable, complete it from `Effect.onExit` and clear the variable there; the body is uninterruptible so a waiter never inherits an interrupt (`drainPendingWrites`).
 
 ## Testing a service under jest
 

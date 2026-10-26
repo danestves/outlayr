@@ -2,9 +2,11 @@ import { ChoiceRow, PickerRow, SettingsSection } from "@/components/list/list-ro
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { useAppSettings, useDisplaySettings } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
-import { ordinalDay, setBoolSetting, setNumberSetting } from "@/data/settings-core";
+import { ordinalDay } from "@/data/settings-core";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useLanguage, useTranslation } from "@/i18n/context";
+import { setBoolSettingCommand, setNumberSettingCommand } from "@/state/settings-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 const WEEKDAY_OPTIONS: readonly { label: TranslationKey; value: number }[] = [
     { label: "settings.time.sunday", value: 1 },
@@ -20,6 +22,8 @@ const MONTH_DAYS = Array.from({ length: 28 }, (_, index) => index + 1);
 
 export function TimeFrames() {
     const db = useDatabase();
+    const setBoolSetting = useAtomCommand(setBoolSettingCommand);
+    const setNumberSetting = useAtomCommand(setNumberSettingCommand);
     const t = useTranslation();
     const { language } = useLanguage();
     const { state: settings } = useAppSettings();
@@ -34,7 +38,7 @@ export function TimeFrames() {
                 <PickerRow
                     icon="CalendarClock"
                     onChange={(next) => {
-                        setBoolSetting(db, "use24HourClock", next);
+                        setBoolSetting({ db, key: "use24HourClock", value: next });
                     }}
                     options={CLOCK_OPTIONS.map((option) => ({
                         label: t(option.label),
@@ -46,7 +50,7 @@ export function TimeFrames() {
                 <PickerRow
                     icon="Calendar01"
                     onChange={(next) => {
-                        setNumberSetting(db, "firstWeekday", next);
+                        setNumberSetting({ db, key: "firstWeekday", value: next });
                     }}
                     options={WEEKDAY_OPTIONS.map((option) => ({
                         label: t(option.label),
@@ -65,7 +69,7 @@ export function TimeFrames() {
                             day: ordinalDay(day, language),
                         })}
                         onPress={() => {
-                            setNumberSetting(db, "firstDayOfMonth", day);
+                            setNumberSetting({ db, key: "firstDayOfMonth", value: day });
                         }}
                         selected={firstDayOfMonth === day}
                     />

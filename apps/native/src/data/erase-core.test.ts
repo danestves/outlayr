@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import { getTableColumns, isNull } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import {
@@ -94,7 +95,7 @@ describe("eraseLedger", () => {
     });
 
     it("leaves no readable transaction but keeps a replicable tombstone", async () => {
-        await eraseLedger(db, "transactions");
+        await Effect.runPromise(eraseLedger(db, "transactions"));
 
         const readable = await db.select().from(transactions).where(isNull(transactions.deletedAt));
         expect(readable).toHaveLength(0);
@@ -119,7 +120,7 @@ describe("eraseLedger", () => {
             updatedAt: removed,
         });
 
-        await eraseLedger(db, "transactions");
+        await Effect.runPromise(eraseLedger(db, "transactions"));
 
         expect((await deletedTransactionsQuery(db)).map((row) => row.id)).toStrictEqual(["tx-2"]);
     });
@@ -132,7 +133,7 @@ describe("eraseLedger", () => {
     });
 
     it("strips everything personal off a transaction tombstone", async () => {
-        await eraseLedger(db, "transactions");
+        await Effect.runPromise(eraseLedger(db, "transactions"));
 
         const [row] = await db.select().from(transactions);
         expect(row.amount).toBe(0);
@@ -189,7 +190,7 @@ describe("eraseLedger", () => {
             updatedAt: AUTHORED,
         });
 
-        await eraseLedger(db, "transactions");
+        await Effect.runPromise(eraseLedger(db, "transactions"));
 
         await expect(
             db.select().from(installmentPlans).where(isNull(installmentPlans.deletedAt))
@@ -212,14 +213,14 @@ describe("eraseLedger", () => {
             updatedAt: AUTHORED,
         });
 
-        await eraseLedger(db, "transactions");
+        await Effect.runPromise(eraseLedger(db, "transactions"));
 
         const [row] = await db.select().from(transactionAttachments);
         expect(row).toMatchObject({ deletedAt: expect.any(Date), imageKey: null, imageUri: null, name: null });
     });
 
     it("keeps budgets live under the transactions scope", async () => {
-        await eraseLedger(db, "transactions");
+        await Effect.runPromise(eraseLedger(db, "transactions"));
 
         const liveBudgets = await db.select().from(budgets).where(isNull(budgets.deletedAt));
         expect(liveBudgets).toHaveLength(1);
@@ -228,7 +229,7 @@ describe("eraseLedger", () => {
     });
 
     it("strips everything personal off budget tombstones", async () => {
-        await eraseLedger(db, "everything");
+        await Effect.runPromise(eraseLedger(db, "everything"));
 
         const [budget] = await db.select().from(budgets);
         expect(budget.deletedAt).not.toBeNull();
@@ -255,7 +256,7 @@ describe("eraseLedger", () => {
     });
 
     it("frees the category so a new budget can be attached to it", async () => {
-        await eraseLedger(db, "everything");
+        await Effect.runPromise(eraseLedger(db, "everything"));
 
         const now = new Date();
         await db.insert(budgets).values({
@@ -272,7 +273,7 @@ describe("eraseLedger", () => {
     });
 
     it("keeps categories untouched under either scope", async () => {
-        await eraseLedger(db, "everything");
+        await Effect.runPromise(eraseLedger(db, "everything"));
 
         const live = await db.select().from(categories).where(isNull(categories.deletedAt));
         expect(live).toHaveLength(1);
@@ -281,11 +282,11 @@ describe("eraseLedger", () => {
     });
 
     it("does not re-stamp a tombstone it already wrote", async () => {
-        await eraseLedger(db, "everything");
+        await Effect.runPromise(eraseLedger(db, "everything"));
         const first = await db.select().from(transactions);
         const firstBudget = await db.select().from(budgets);
 
-        await eraseLedger(db, "everything");
+        await Effect.runPromise(eraseLedger(db, "everything"));
 
         const second = await db.select().from(transactions);
         expect(second).toHaveLength(1);

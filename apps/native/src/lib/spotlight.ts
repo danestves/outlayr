@@ -4,7 +4,6 @@ import { and, asc, desc, isNull, lte } from "drizzle-orm";
 import Spotlight from "expo-core-spotlight";
 import { Platform } from "react-native";
 
-import { getMeta } from "@/data/app-meta-core";
 import type { SpendDb } from "@/data/budget-spent";
 import { parseBoolSetting } from "@/data/settings-core";
 import { loadValuation } from "@/data/valuation-source";
@@ -13,6 +12,7 @@ import { budgets as budgetsTable, categories as categoriesTable, transactions as
 import { formatDayHeader } from "@/domain/dates";
 import { formatAmount, minorUnitsFor } from "@/domain/money";
 import { translateNow } from "@/i18n/runtime";
+import { getMetaCommand, runSettingsCommand } from "@/state/settings-commands";
 
 import { budgetLink, transactionLink } from "./deep-links";
 
@@ -37,7 +37,7 @@ export async function indexSpotlight(db: SpendDb, now = new Date()) {
         }
 
         const valuation = await loadValuation(db);
-        const showCents = parseBoolSetting(await getMeta(db, "showCents"), true);
+        const showCents = parseBoolSetting(await runSettingsCommand(getMetaCommand, { db, key: "showCents" }), true);
         const money = (value: number, code: string) => formatAmount(value, code, showCents);
 
         const categoryRows = await db

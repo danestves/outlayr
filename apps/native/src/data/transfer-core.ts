@@ -31,7 +31,7 @@ export async function exportTransactionsCsv(db: Database): Promise<string> {
         .where(isNull(transactions.deletedAt))
         .orderBy(desc(transactions.date));
 
-    const ledgerCurrency = (await getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
+    const ledgerCurrency = (await Effect.runPromise(getMeta(db, META_KEYS.currency))) ?? DEFAULT_CURRENCY;
     return transactionsToCsv(rows, ledgerCurrency);
 }
 

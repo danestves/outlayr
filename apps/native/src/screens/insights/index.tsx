@@ -1,4 +1,6 @@
 import type { MenuAction } from "@expo/ui/community/menu";
+import * as Cause from "effect/Cause";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useRouter } from "expo-router";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { useState } from "react";
@@ -32,7 +34,6 @@ import type {
     InsightsPeriod,
 } from "@/data/insights";
 import { useWindowTransactions } from "@/data/insights-transactions";
-import { setNumberSetting } from "@/data/settings-core";
 import { useSpendingCalendar } from "@/data/spending-calendar";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useInsights } from "@/data/use-insights";
@@ -54,6 +55,9 @@ import { insightsVerdict } from "@/domain/insights-verdict";
 import { formatAmount } from "@/domain/money";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
+import { SILENT } from "@/state/atom-command";
+import { setNumberSettingCommand } from "@/state/settings-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 import { withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";
 
@@ -205,6 +209,7 @@ function balanceAt(running: readonly number[], index: number | null, isNet: bool
 
 export function Insights() {
     const db = useDatabase();
+    const setNumberSetting = useAtomCommand(setNumberSettingCommand, SILENT);
     const t = useTranslation();
     const router = useRouter();
     const currency = useGlobalCurrency(db);
@@ -251,14 +256,18 @@ export function Insights() {
 
     const selectPeriod = (value: number) => {
         setOffset(0);
-        setNumberSetting(db, "insightsTimeFrame", value).catch((cause: unknown) => {
-            console.error("Saving the insights period failed", cause);
+        setNumberSetting({ db, key: "insightsTimeFrame", value }).then((settled) => {
+            if (AsyncResult.isFailure(settled)) {
+                console.error("Saving the insights period failed", Cause.squash(settled.cause));
+            }
         });
     };
 
     const promote = (next: typeof measure) => {
-        setNumberSetting(db, "insightsMeasure", storedInsightsMeasure(next)).catch((cause: unknown) => {
-            console.error("Saving the insights measure failed", cause);
+        setNumberSetting({ db, key: "insightsMeasure", value: storedInsightsMeasure(next) }).then((settled) => {
+            if (AsyncResult.isFailure(settled)) {
+                console.error("Saving the insights measure failed", Cause.squash(settled.cause));
+            }
         });
     };
 

@@ -9,19 +9,18 @@ import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
-import { runAdoption } from "@/data/ledger-adoption";
 import { useSyncStatus } from "@/data/use-sync-status";
 import { formatDayHeader, formatTime } from "@/domain/dates";
 import type { AdoptionActions } from "@/domain/ledger-adoption";
 import { effectiveCapabilityStatus, ownsSyncSwitch, syncPresentation, syncRunnable } from "@/domain/sync-status";
 import { useProEntitled } from "@/hooks/use-pro-locked";
 import { useLanguage, useTranslation } from "@/i18n/context";
-import { adoptionEngine } from "@/lib/adoption-engine";
 import { useAuthSession } from "@/lib/auth-session";
 import { cloudRuntime } from "@/lib/cloud-runtime";
 import { useLedgerAdoption } from "@/lib/ledger-adoption";
 import { notifyFailure } from "@/lib/notify";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { runAdoptionCommand } from "@/state/lifecycle-commands";
 import { setSyncEnabledCommand } from "@/state/sync-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 
@@ -44,6 +43,7 @@ export function Sync() {
     const { use24Hour } = useDisplaySettings().state;
     const [busy, setBusy] = useState(false);
     const setSyncEnabled = useAtomCommand(setSyncEnabledCommand, SILENT);
+    const runAdoption = useAtomCommand(runAdoptionCommand, SILENT);
 
     const runnable = syncRunnable(enabled, entitled);
     const capability = effectiveCapabilityStatus({
@@ -65,7 +65,7 @@ export function Sync() {
         setBusy(true);
         const work =
             next && accountId
-                ? runAdoption(db, adoptionEngine(db), RESUME, accountId)
+                ? runAdoption({ accountId, actions: RESUME, db }).then(unwrapAtomCommand)
                 : setSyncEnabled({ db, enabled: false }).then(unwrapAtomCommand);
         work.catch((cause: unknown) => {
             console.error("Sync switch failed", cause);

@@ -12,7 +12,7 @@ import type { SpendDb } from "./budget-spent";
 
 const DISMISSAL_LIMIT = 200;
 
-const LogoBackfillStateArea = Schema.Literals(["candidates", "dismissals", "retries"]);
+const LogoBackfillStateArea = Schema.Literals(["candidates"]);
 
 export class LogoBackfillStateError extends Schema.TaggedError<LogoBackfillStateError>()("LogoBackfillStateError", {
     area: LogoBackfillStateArea,
@@ -33,7 +33,7 @@ const exclusive = Semaphore.makeUnsafe(1);
 const decodeIdList = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.mutable(Schema.Array(Schema.String))));
 
 const readIds = Effect.fn("LogoBackfillState.readIds")(function* readIds(db: SpendDb, key: string) {
-    const raw = yield* query("dismissals", () => getMeta(db, key));
+    const raw = yield* getMeta(db, key);
     return raw ? Option.getOrElse(decodeIdList(raw), () => []) : [];
 });
 
@@ -53,7 +53,7 @@ export const forgetLogoDismissal = Effect.fn("LogoBackfillState.forgetLogoDismis
         Effect.gen(function* forget() {
             const ids = yield* dismissedLogoIds(db);
             if (ids.delete(id)) {
-                yield* query("dismissals", () => setMeta(db, META_KEYS.logoDismissals, JSON.stringify([...ids])));
+                yield* setMeta(db, META_KEYS.logoDismissals, JSON.stringify([...ids]));
             }
         })
     );
@@ -66,7 +66,7 @@ export const rememberLogoDismissal = Effect.fn("LogoBackfillState.rememberLogoDi
                 const ids = yield* dismissedLogoIds(db);
                 ids.delete(id);
                 const kept = [...ids, id].slice(-DISMISSAL_LIMIT);
-                yield* query("dismissals", () => setMeta(db, META_KEYS.logoDismissals, JSON.stringify(kept)));
+                yield* setMeta(db, META_KEYS.logoDismissals, JSON.stringify(kept));
             })
         );
     }
@@ -74,12 +74,8 @@ export const rememberLogoDismissal = Effect.fn("LogoBackfillState.rememberLogoDi
 
 const decodeStampedIds = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Record(Schema.String, Schema.Finite)));
 
-const readStamped = Effect.fn("LogoBackfillState.readStamped")(function* readStamped(
-    db: SpendDb,
-    area: "candidates" | "retries",
-    key: string
-) {
-    const raw = yield* query(area, () => getMeta(db, key));
+const readStamped = Effect.fn("LogoBackfillState.readStamped")(function* readStamped(db: SpendDb, key: string) {
+    const raw = yield* getMeta(db, key);
     const stamped: Record<string, number> = raw ? Option.getOrElse(decodeStampedIds(raw), () => ({})) : {};
     return stamped;
 });
@@ -89,11 +85,11 @@ const readStamped = Effect.fn("LogoBackfillState.readStamped")(function* readSta
 export const candidateLogoIds = Effect.fn("LogoBackfillState.candidateLogoIds")(function* candidateLogoIds(
     db: SpendDb
 ) {
-    return new Map(Object.entries(yield* readStamped(db, "candidates", META_KEYS.logoCandidates)));
+    return new Map(Object.entries(yield* readStamped(db, META_KEYS.logoCandidates)));
 });
 
 const writeCandidates = (db: SpendDb, candidates: Map<string, number>) =>
-    query("candidates", () => setMeta(db, META_KEYS.logoCandidates, JSON.stringify(Object.fromEntries(candidates))));
+    setMeta(db, META_KEYS.logoCandidates, JSON.stringify(Object.fromEntries(candidates)));
 
 export const rememberLogoCandidates = Effect.fn("LogoBackfillState.rememberLogoCandidates")(
     function* rememberLogoCandidates(db: SpendDb, ids: readonly string[], at: number, keepMs: number) {
@@ -199,7 +195,7 @@ export const readRetryDeadlines = Effect.fn("LogoBackfillState.readRetryDeadline
     db: SpendDb,
     now: number
 ) {
-    const stamped = yield* readStamped(db, "retries", META_KEYS.logoBackfillRetries);
+    const stamped = yield* readStamped(db, META_KEYS.logoBackfillRetries);
     return new Map(Object.entries(stamped).filter(([, until]) => now - until < RETRY_DEADLINE_KEEP_MS));
 });
 
@@ -208,8 +204,6 @@ export const writeRetryDeadlines = Effect.fn("LogoBackfillState.writeRetryDeadli
     deadlines: Map<string, number>
 ) {
     yield* exclusive.withPermits(1)(
-        query("retries", () =>
-            setMeta(db, META_KEYS.logoBackfillRetries, JSON.stringify(Object.fromEntries(deadlines)))
-        )
+        setMeta(db, META_KEYS.logoBackfillRetries, JSON.stringify(Object.fromEntries(deadlines)))
     );
 });

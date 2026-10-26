@@ -33,7 +33,7 @@ interface FeePurchase {
     month: Date;
 }
 
-const CardFeesOperation = Schema.Literals(["occurrences", "rememberCategory", "settle", "values"]);
+const CardFeesOperation = Schema.Literals(["occurrences", "settle", "values"]);
 
 export class CardFeesError extends Schema.TaggedError<CardFeesError>()("CardFeesError", {
     cause: Schema.Defect(),
@@ -139,7 +139,7 @@ export const rememberFeeCategory = Effect.fn("CardFees.rememberFeeCategory")(fun
     db: Database,
     categoryId: string
 ) {
-    yield* attempt("rememberCategory", () => setMeta(db, META_KEYS.lastTransferFeeCategory, categoryId));
+    yield* setMeta(db, META_KEYS.lastTransferFeeCategory, categoryId);
 });
 
 export function feeCategoryFor(db: Database, purchaseCategoryId: string | null): string | null {

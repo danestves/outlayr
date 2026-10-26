@@ -57,7 +57,7 @@ export const MIN_KEY_LENGTH = 3;
 const MAX_OUTBOX = 100;
 const decodeOutbox = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.mutable(Schema.Array(Schema.String))));
 
-const EnrichmentQueueOperation = Schema.Literals(["apply", "queue", "send"]);
+const EnrichmentQueueOperation = Schema.Literals(["apply", "send"]);
 
 export class EnrichmentQueueError extends Schema.TaggedError<EnrichmentQueueError>()("EnrichmentQueueError", {
     cause: Schema.Defect(),
@@ -71,25 +71,22 @@ export class EnrichmentQueueError extends Schema.TaggedError<EnrichmentQueueErro
 const attempt = <A>(operation: typeof EnrichmentQueueOperation.Type, run: () => PromiseLike<A>) =>
     Effect.tryPromise({ catch: (cause) => new EnrichmentQueueError({ cause, operation }), try: run });
 
-const readOutbox = Effect.fn("EnrichmentQueue.readOutbox")(function* readOutbox(
-    db: Database,
-    operation: typeof EnrichmentQueueOperation.Type
-) {
-    const raw = yield* attempt(operation, () => getMeta(db, META_KEYS.enrichmentOutbox));
+const readOutbox = Effect.fn("EnrichmentQueue.readOutbox")(function* readOutbox(db: Database) {
+    const raw = yield* getMeta(db, META_KEYS.enrichmentOutbox);
     const ids: string[] = Option.getOrElse(decodeOutbox(raw ?? "[]"), () => []);
     return ids;
 });
 
-const writeOutbox = (db: Database, operation: typeof EnrichmentQueueOperation.Type, ids: readonly string[]) =>
-    attempt(operation, () => setMeta(db, META_KEYS.enrichmentOutbox, JSON.stringify(ids.slice(-MAX_OUTBOX))));
+const writeOutbox = (db: Database, ids: readonly string[]) =>
+    setMeta(db, META_KEYS.enrichmentOutbox, JSON.stringify(ids.slice(-MAX_OUTBOX)));
 
 export const queueEnrichment = Effect.fn("EnrichmentQueue.queueEnrichment")(function* queueEnrichment(
     db: Database,
     id: string
 ) {
-    const queued = yield* readOutbox(db, "queue");
+    const queued = yield* readOutbox(db);
     if (!queued.includes(id)) {
-        yield* writeOutbox(db, "queue", [...queued, id]);
+        yield* writeOutbox(db, [...queued, id]);
     }
 });
 
@@ -119,7 +116,7 @@ export const sendQueuedEnrichment = Effect.fn("EnrichmentQueue.sendQueuedEnrichm
     db: Database,
     deps: SendDeps
 ) {
-    const queued = yield* readOutbox(db, "send");
+    const queued = yield* readOutbox(db);
     if (queued.length === 0) {
         return 0;
     }
@@ -166,10 +163,9 @@ export const sendQueuedEnrichment = Effect.fn("EnrichmentQueue.sendQueuedEnrichm
         }
         settled.add(id);
     }
-    const current = yield* readOutbox(db, "send");
+    const current = yield* readOutbox(db);
     yield* writeOutbox(
         db,
-        "send",
         current.filter((id) => !settled.has(id))
     );
     return settled.size;
@@ -259,12 +255,10 @@ export const applyEnrichmentAnswer = Effect.fn("EnrichmentQueue.applyEnrichmentA
         const { categoryName } = answer;
         const style = presetForName(categoryName);
         const parentId = yield* parentIdFor(db, before.income, answer.parentCategoryName);
-        categoryId = yield* attempt("apply", () =>
-            ensureCategoryByName(db, categoryName, before.income, style.icon, style.color, {
-                emoji: answer.emoji,
-                parentId,
-            })
-        );
+        categoryId = yield* ensureCategoryByName(db, categoryName, before.income, style.icon, style.color, {
+            emoji: answer.emoji,
+            parentId,
+        });
     }
 
     const row = yield* readRow(db, job.localId);

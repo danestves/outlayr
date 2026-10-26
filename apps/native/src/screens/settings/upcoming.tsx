@@ -9,13 +9,14 @@ import { useAppSettings } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { goesWithPendingDelete } from "@/data/card-fees-core";
 import { useUpcomingTransactions } from "@/data/log-filtered";
-import { setBoolSetting } from "@/data/settings-core";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useNow } from "@/data/use-now";
 import { useValuation } from "@/data/use-valuation";
 import { useTranslation } from "@/i18n/context";
 import { useTransactionRowActions } from "@/lib/use-transaction-row-actions";
 import { LogUpcoming } from "@/screens/log/components/log-upcoming";
+import { setBoolSettingCommand } from "@/state/settings-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 import { MARK_CEILING } from "@/theme/empty-state-ink";
 import { useColors } from "@/theme/use-colors";
 
@@ -46,6 +47,7 @@ function TimelineStops() {
 
 export function Upcoming() {
     const db = useDatabase();
+    const setBoolSetting = useAtomCommand(setBoolSettingCommand);
     const router = useRouter();
     const t = useTranslation();
     const { state: settings } = useAppSettings();
@@ -67,9 +69,9 @@ export function Upcoming() {
                 <ToggleRow
                     icon="Sunrise"
                     onValueChange={(next) => {
-                        setBoolSetting(db, "showUpcoming", next);
+                        setBoolSetting({ db, key: "showUpcoming", value: next });
                         if (!next) {
-                            setBoolSetting(db, "showUpcomingSoon", false);
+                            setBoolSetting({ db, key: "showUpcomingSoon", value: false });
                         }
                     }}
                     title={t("settings.upcoming.displayOnLog")}
@@ -78,7 +80,7 @@ export function Upcoming() {
                 <ToggleRow
                     icon="CalendarClock"
                     onValueChange={(next) => {
-                        setBoolSetting(db, "showUpcomingSoon", next);
+                        setBoolSetting({ db, key: "showUpcomingSoon", value: next });
                     }}
                     title={t("settings.upcoming.limitToSoon")}
                     value={showSoon}

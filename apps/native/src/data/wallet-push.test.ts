@@ -29,15 +29,17 @@ test("says where the next tap lands, the way the drain will file it", async () =
         { id: "cat-coffee", income: false, name: "Coffee", sortOrder: 1, updatedAt: NOW },
         { id: "cat-salary", income: true, name: "Salary", sortOrder: 0, updatedAt: NOW },
     ]);
-    await setMeta(
-        db,
-        META_KEYS.walletCards,
-        JSON.stringify([
-            { lastAt: 1, text: "Chase Sapphire Visa" },
-            { accountId: "acc-n26", lastAt: 1, text: "Work card" },
-            { lastAt: 1, text: "Revolut" },
-            { accountId: null, lastAt: 1, text: "Amex" },
-        ])
+    await Effect.runPromise(
+        setMeta(
+            db,
+            META_KEYS.walletCards,
+            JSON.stringify([
+                { lastAt: 1, text: "Chase Sapphire Visa" },
+                { accountId: "acc-n26", lastAt: 1, text: "Work card" },
+                { lastAt: 1, text: "Revolut" },
+                { accountId: null, lastAt: 1, text: "Amex" },
+            ])
+        )
     );
     const entry = (note: string, categoryId: string, date: string, income = false) =>
         Effect.runPromise(
@@ -75,7 +77,7 @@ test("says where the next tap lands, the way the drain will file it", async () =
 
 test("never asks which account while the ledger has none", async () => {
     const db = migratedDatabase();
-    await setMeta(db, META_KEYS.walletCards, JSON.stringify([{ lastAt: 1, text: "Visa" }]));
+    await Effect.runPromise(setMeta(db, META_KEYS.walletCards, JSON.stringify([{ lastAt: 1, text: "Visa" }])));
 
     await expect(buildWalletPush(db)).resolves.toMatchObject({ cards: { Visa: { label: null, pick: false } } });
 });

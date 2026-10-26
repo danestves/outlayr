@@ -1,6 +1,7 @@
 import { startOfPeriod } from "@outlayr/money/budget-window";
 import { canonicalUsd } from "@outlayr/money/canonical-usd";
 import { and, eq, isNull } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import { getMeta, META_KEYS } from "@/data/app-meta-core";
 import { localRateLookup } from "@/data/rates";
@@ -19,7 +20,7 @@ async function budgetLimit(
     storedCurrency?: string | null
 ): Promise<{ amount: number; currency: string; amountUsd: number | null }> {
     const magnitude = Math.abs(amount);
-    const currency = storedCurrency ?? (await getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
+    const currency = storedCurrency ?? (await Effect.runPromise(getMeta(db, META_KEYS.currency))) ?? DEFAULT_CURRENCY;
     const { amountUsd } = await canonicalUsd(localRateLookup(db), {
         amount: magnitude,
         currency,
@@ -69,8 +70,8 @@ async function anchorFor(db: Database, startDate: Date | null | undefined, type:
         return startDate;
     }
     const [firstWeekday, firstDayOfMonth] = await Promise.all([
-        readNumberSetting(db, "firstWeekday"),
-        readNumberSetting(db, "firstDayOfMonth"),
+        Effect.runPromise(readNumberSetting(db, "firstWeekday")),
+        Effect.runPromise(readNumberSetting(db, "firstDayOfMonth")),
     ]);
     return startOfPeriod(now, type, { firstDayOfMonth, firstWeekday });
 }

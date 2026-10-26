@@ -96,7 +96,7 @@ describe("sync engine", () => {
     };
 
     const setGate = async (enabled: boolean) => {
-        await setMeta(db, META_KEYS.syncEnabled, enabled ? "1" : "0");
+        await Effect.runPromise(setMeta(db, META_KEYS.syncEnabled, enabled ? "1" : "0"));
         invalidateAll(["appMeta"]);
         await flush();
     };
@@ -179,13 +179,13 @@ describe("sync engine", () => {
     it("stamps syncedAt only after a clean pass", async () => {
         passes.mockReturnValueOnce(Effect.fail(failure("pass")));
         await start();
-        await expect(getMeta(db, META_KEYS.syncedAt)).resolves.toBeNull();
+        await expect(Effect.runPromise(getMeta(db, META_KEYS.syncedAt))).resolves.toBeNull();
 
         appState.emit("active");
         await flush();
 
         expect(passes).toHaveBeenCalledTimes(2);
-        await expect(getMeta(db, META_KEYS.syncedAt)).resolves.not.toBeNull();
+        await expect(Effect.runPromise(getMeta(db, META_KEYS.syncedAt))).resolves.not.toBeNull();
     });
 
     it("syncs on foreground and drops a write sync that was pending when the app went to the background", async () => {
@@ -249,7 +249,7 @@ describe("sync engine", () => {
         await flush();
         acknowledge();
         await flush();
-        await expect(getMeta(db, META_KEYS.syncedAt)).resolves.not.toBeNull();
+        await expect(Effect.runPromise(getMeta(db, META_KEYS.syncedAt))).resolves.not.toBeNull();
 
         expect(watermark.listeners.size).toBe(0);
         expect(appState.listeners.size).toBe(0);

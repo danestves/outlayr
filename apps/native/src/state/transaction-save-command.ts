@@ -66,11 +66,10 @@ const createPendingCategory = Effect.fn("TransactionSave.createPendingCategory")
             ? null
             : (siblings.find((candidate) => candidate.parentId == null && candidate.name === value.parentName)?.id ??
               null);
-    return yield* Effect.tryPromise({
-        catch: (cause) => new PendingCategoryError({ cause, income }),
-        try: () =>
-            ensureCategoryByName(db, value.name, income, value.icon, value.color, { emoji: value.emoji, parentId }),
-    });
+    return yield* ensureCategoryByName(db, value.name, income, value.icon, value.color, {
+        emoji: value.emoji,
+        parentId,
+    }).pipe(Effect.mapError((cause) => new PendingCategoryError({ cause, income })));
 });
 
 const materializeTagIds = Effect.fn("TransactionSave.materializeTagIds")(function* materializeTagIds(

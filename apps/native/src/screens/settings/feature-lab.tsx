@@ -2,11 +2,13 @@ import { SettingsSection, ToggleRow } from "@/components/list/list-row";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { useAppSettings, useDisplaySettings } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
-import { setBoolSetting } from "@/data/settings-core";
 import { useTranslation } from "@/i18n/context";
+import { setBoolSettingCommand } from "@/state/settings-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 export function FeatureLab() {
     const db = useDatabase();
+    const setBoolSetting = useAtomCommand(setBoolSettingCommand);
     const t = useTranslation();
     const { state: settings } = useAppSettings();
     const { swapTimeLabel } = useDisplaySettings().state;
@@ -25,7 +27,7 @@ export function FeatureLab() {
                 <ToggleRow
                     icon="Sparkles"
                     onValueChange={(next) => {
-                        setBoolSetting(db, "aiEnrichment", next);
+                        setBoolSetting({ db, key: "aiEnrichment", value: next });
                     }}
                     title={t("settings.featureLab.aiEnrichment")}
                     value={aiEnrichment}
@@ -33,7 +35,7 @@ export function FeatureLab() {
                 <ToggleRow
                     icon="Sparkles"
                     onValueChange={(next) => {
-                        setBoolSetting(db, "groundedLookup", next);
+                        setBoolSetting({ db, key: "groundedLookup", value: next });
                     }}
                     title={t("settings.featureLab.groundedLookup")}
                     value={groundedLookup}
@@ -47,7 +49,7 @@ export function FeatureLab() {
                 <ToggleRow
                     icon="Sparkles"
                     onValueChange={(next) => {
-                        setBoolSetting(db, "confetti", next);
+                        setBoolSetting({ db, key: "confetti", value: next });
                     }}
                     title={t("settings.featureLab.confetti")}
                     value={confetti}
@@ -58,7 +60,7 @@ export function FeatureLab() {
                 <ToggleRow
                     icon="ChartLineData01"
                     onValueChange={(next) => {
-                        setBoolSetting(db, "logViewLineGraph", next);
+                        setBoolSetting({ db, key: "logViewLineGraph", value: next });
                     }}
                     title={t("settings.featureLab.lineGraph")}
                     value={lineGraph}
@@ -72,7 +74,7 @@ export function FeatureLab() {
                 <ToggleRow
                     icon="LayoutTable01"
                     onValueChange={(next) => {
-                        setBoolSetting(db, "budgetViewStyle", next);
+                        setBoolSetting({ db, key: "budgetViewStyle", value: next });
                     }}
                     title={t("settings.featureLab.budgetRows")}
                     value={budgetRows}
@@ -86,7 +88,7 @@ export function FeatureLab() {
                 <ToggleRow
                     icon="TextFont"
                     onValueChange={(next) => {
-                        setBoolSetting(db, "swapTimeLabel", next);
+                        setBoolSetting({ db, key: "swapTimeLabel", value: next });
                     }}
                     title={t("settings.featureLab.swapTime")}
                     value={swapTimeLabel}

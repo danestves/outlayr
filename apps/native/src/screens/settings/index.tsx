@@ -15,18 +15,9 @@ import { useAppSettings, useDisplaySettings } from "@/contexts/display-settings-
 import { useDatabase } from "@/contexts/local-data-context";
 import { useRevenueCat } from "@/contexts/revenuecat-context";
 import { useGlobalCurrency } from "@/data/app-meta";
-import {
-    HAPTICS_OPTIONS,
-    NUMBER_ENTRY_OPTIONS,
-    onOffLabel,
-    saveAiConsent,
-    setBoolSetting,
-    setNumberSetting,
-    shownHiddenLabel,
-} from "@/data/settings-core";
+import { HAPTICS_OPTIONS, NUMBER_ENTRY_OPTIONS, onOffLabel, shownHiddenLabel } from "@/data/settings-core";
 import { useSyncStatus } from "@/data/use-sync-status";
 import { useValuationCoverage } from "@/data/use-valuation-coverage";
-import type { Database } from "@/db/client";
 import { ACCENT_OPTIONS, DEFAULT_ACCENT_VALUE } from "@/domain/accent-options";
 import { appIconLabel } from "@/domain/app-icons";
 import { lockFailureMessage } from "@/domain/app-lock";
@@ -49,6 +40,9 @@ import { legalUrl } from "@/lib/legal-url";
 import { notifyFailure } from "@/lib/notify";
 import { supportMailto } from "@/lib/support-mailto";
 import type { SupportDiagnostics } from "@/lib/support-mailto";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { saveAiConsentCommand, setBoolSettingCommand, setNumberSettingCommand } from "@/state/settings-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 import { THEME_OPTIONS } from "@/theme/theme-preference";
 import { useIsDark } from "@/theme/use-is-dark";
 
@@ -63,10 +57,10 @@ const DATA_LINKS = [
     { destructive: true, href: "/settings/erase", icon: "Delete02", title: "settings.row.erase" },
 ] satisfies readonly { destructive?: boolean; href: Href; icon: SettingsIconName; title: TranslationKey }[];
 
-async function toggleAppLock(db: Database, next: boolean): Promise<void> {
+async function toggleAppLock(saveBiometricLock: (value: boolean) => Promise<void>, next: boolean): Promise<void> {
     const result = await requestUnlock(translateNow(next ? "settings.lock.promptOn" : "settings.lock.promptOff"));
     if (result.success) {
-        await setBoolSetting(db, "biometricLock", next);
+        await saveBiometricLock(next);
         return;
     }
     const messageKey = lockFailureMessage(result.error);
@@ -80,6 +74,10 @@ async function toggleAppLock(db: Database, next: boolean): Promise<void> {
 
 export function Settings() {
     const db = useDatabase();
+    const setBool = useAtomCommand(setBoolSettingCommand);
+    const setBoolSilently = useAtomCommand(setBoolSettingCommand, SILENT);
+    const setNumber = useAtomCommand(setNumberSettingCommand);
+    const saveAiConsent = useAtomCommand(saveAiConsentCommand);
     const router = useRouter();
     const t = useTranslation();
     const { isPro } = useRevenueCat();
@@ -107,6 +105,9 @@ export function Settings() {
     const accentColor = settings.number("accentColor");
     const colorScheme = settings.number("colorScheme");
     const scheme = useIsDark() ? "dark" : "light";
+
+    const saveBiometricLock = async (value: boolean) =>
+        unwrapAtomCommand(await setBoolSilently({ db, key: "biometricLock", value }));
 
     const diagnostics = supportDiagnostics(APP_VERSION, APP_BUILD);
 
@@ -162,7 +163,7 @@ export function Settings() {
                 <PickerRow
                     icon="Calculator01"
                     onChange={(next) => {
-                        setNumberSetting(db, "numberEntryType", next);
+                        setNumber({ db, key: "numberEntryType", value: next });
                     }}
                     options={NUMBER_ENTRY_OPTIONS.map((option) => ({
                         label: t(option.label),
@@ -174,7 +175,7 @@ export function Settings() {
                 <ToggleRow
                     icon="MoneyAdd01"
                     onValueChange={(next) => {
-                        setBoolSetting(db, "incomeTracking", next);
+                        setBool({ db, key: "incomeTracking", value: next });
                     }}
                     title={t("settings.row.incomeTracking")}
                     value={incomeTracking}
@@ -182,7 +183,7 @@ export function Settings() {
                 <ToggleRow
                     icon="BadgeCent"
                     onValueChange={(next) => {
-                        setBoolSetting(db, "showCents", next);
+                        setBool({ db, key: "showCents", value: next });
                     }}
                     testID="toggle-display-cents"
                     title={t("settings.row.displayCents")}
@@ -194,7 +195,7 @@ export function Settings() {
                 <PickerRow
                     icon="DarkMode"
                     onChange={(next) => {
-                        setNumberSetting(db, "colorScheme", next);
+                        setNumber({ db, key: "colorScheme", value: next });
                     }}
                     options={THEME_OPTIONS.map((option) => ({
                         label: t(option.label),
@@ -206,7 +207,7 @@ export function Settings() {
                 <PickerRow
                     icon="Swatch"
                     onChange={(next) => {
-                        setNumberSetting(db, "accentColor", next);
+                        setNumber({ db, key: "accentColor", value: next });
                     }}
                     options={ACCENT_OPTIONS.map((accent) => ({
                         label: t(accent.label),
@@ -231,7 +232,7 @@ export function Settings() {
                 <ToggleRow
                     icon="Analytics01"
                     onValueChange={(next) => {
-                        setBoolSetting(db, "animatedCharts", next);
+                        setBool({ db, key: "animatedCharts", value: next });
                     }}
                     title={t("settings.row.animatedCharts")}
                     value={animatedCharts}
@@ -269,7 +270,7 @@ export function Settings() {
                     icon="BiometricAccess"
                     onValueChange={async (next) => {
                         setLockPending(next);
-                        await toggleAppLock(db, next).finally(() => setLockPending(null));
+                        await toggleAppLock(saveBiometricLock, next).finally(() => setLockPending(null));
                     }}
                     title={t("settings.row.authentication")}
                     value={lockPending ?? biometricLock}
@@ -277,7 +278,7 @@ export function Settings() {
                 <ToggleRow
                     icon="ChartBarLine"
                     onValueChange={(next) => {
-                        setBoolSetting(db, "shareAnalytics", next);
+                        setBool({ db, key: "shareAnalytics", value: next });
                     }}
                     title={t("settings.row.shareAnalytics")}
                     value={shareAnalytics}
@@ -286,9 +287,9 @@ export function Settings() {
                     icon="Sparkles"
                     onValueChange={(next) => {
                         if (next) {
-                            setBoolSetting(db, "aiConsentV2", true);
+                            setBool({ db, key: "aiConsentV2", value: true });
                         } else {
-                            saveAiConsent(db, false);
+                            saveAiConsent({ allowed: false, db });
                         }
                     }}
                     title={t("settings.row.sendToAi")}
@@ -297,7 +298,7 @@ export function Settings() {
                 <PickerRow
                     icon="Tap01"
                     onChange={(next) => {
-                        setNumberSetting(db, "haptics", next);
+                        setNumber({ db, key: "haptics", value: next });
                     }}
                     options={HAPTICS_OPTIONS.map((option) => ({
                         label: t(option.label),

@@ -20,11 +20,13 @@ import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useGlobalCurrency } from "@/data/app-meta";
-import { finishOnboarding } from "@/data/onboarding-core";
-import { setCurrency } from "@/data/settings-core";
 import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
 import { posthog } from "@/lib/posthog";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { finishOnboardingCommand } from "@/state/lifecycle-commands";
+import { setCurrencyCommand } from "@/state/settings-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 type CommitKind = "continue" | "finish";
 
@@ -96,6 +98,8 @@ export function OnboardingCurrency() {
     const sheet = useRef<BottomSheetModal>(null);
     const t = useTranslation();
     const untilRefocused = useHoldUntilRefocused();
+    const setCurrency = useAtomCommand(setCurrencyCommand, SILENT);
+    const finishOnboarding = useAtomCommand(finishOnboardingCommand, SILENT);
 
     const [initialValues] = useState<{ picked: string | null }>(() => ({ picked: null }));
     const form = useForm({
@@ -103,13 +107,13 @@ export function OnboardingCurrency() {
         onSubmit: async ({ value, meta }) => {
             const code = value.picked ?? stored;
             try {
-                await setCurrency(db, code);
+                unwrapAtomCommand(await setCurrency({ code, db }));
                 if (meta === "continue") {
                     // The root guard does not swap on this write: the AI consent question is next.
                     router.push("/onboarding/smart-features");
                 } else {
                     // `finishOnboarding` settles the root guard, which swaps the stack; pushing too would race it.
-                    await finishOnboarding(db);
+                    unwrapAtomCommand(await finishOnboarding(db));
                 }
                 if (posthog) {
                     posthog.capture("onboarding_currency_saved", { onboarding_path: meta });

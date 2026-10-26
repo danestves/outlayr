@@ -31,15 +31,18 @@ import { Text } from "@/components/text";
 import { EMPTY_DRAFT, useIdentityDraft, useIdentityFlyUp } from "@/contexts/identity-draft-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useCategoriesByNamespace } from "@/data/categories";
-import { CATEGORY_PALETTE, categoriesRepo, getCategoryById } from "@/data/categories-core";
+import { CATEGORY_PALETTE, getCategoryById, isCategoryValidationError } from "@/data/categories-core";
 import type { Category } from "@/data/categories-core";
 import { firstAvailableColor } from "@/domain/category-color";
-import { CATEGORY_ERROR_KEYS, categoryErrorCode } from "@/domain/category-error";
+import { CATEGORY_ERROR_KEYS } from "@/domain/category-error";
 import { useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
 import { posthog } from "@/lib/posthog";
 import { CATEGORY_DETENT, LARGE_ONLY, SUBCATEGORY_DETENT } from "@/lib/sheet-detents";
 import { useHaptics } from "@/lib/use-haptics";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { createCategoryCommand, updateCategoryCommand } from "@/state/categories-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 import { glowFromEmoji } from "@/theme/glow";
 import { withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";
@@ -114,6 +117,8 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
     const t = useTranslation();
     const colors = useColors();
     const haptics = useHaptics();
+    const createCategory = useAtomCommand(createCategoryCommand, SILENT);
+    const updateCategory = useAtomCommand(updateCategoryCommand, SILENT);
     const insets = useSafeAreaInsets();
     const [ctaHeight, setCtaHeight] = useState(CTA_HEIGHT);
 
@@ -147,12 +152,18 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
                 if (loaded == null) {
                     return;
                 }
-                await categoriesRepo.update(db, loaded.id, {
-                    color: loaded.income ? undefined : (draft.color ?? CATEGORY_PALETTE[0]),
-                    emoji: draft.emoji ?? null,
-                    icon: draft.icon ?? null,
-                    name: value.name,
-                });
+                unwrapAtomCommand(
+                    await updateCategory({
+                        db,
+                        id: loaded.id,
+                        patch: {
+                            color: loaded.income ? undefined : (draft.color ?? CATEGORY_PALETTE[0]),
+                            emoji: draft.emoji ?? null,
+                            icon: draft.icon ?? null,
+                            name: value.name,
+                        },
+                    })
+                );
                 posthog?.capture("category_saved", {
                     category_type: loaded.income ? "income" : "expense",
                     is_subcategory: isSubcategory,
@@ -329,14 +340,19 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
     const addCategory = async (value: { income: boolean; name: string }) => {
         const pickedColor = draft.color ?? CATEGORY_PALETTE[0];
         const expenseColor = isSubcategory ? (parent?.color ?? pickedColor) : pickedColor;
-        await categoriesRepo.create(db, {
-            color: value.income ? colors.income : expenseColor,
-            emoji: draft.emoji ?? null,
-            icon: draft.icon ?? undefined,
-            income: value.income,
-            name: value.name,
-            parentId,
-        });
+        unwrapAtomCommand(
+            await createCategory({
+                category: {
+                    color: value.income ? colors.income : expenseColor,
+                    emoji: draft.emoji ?? null,
+                    icon: draft.icon ?? undefined,
+                    income: value.income,
+                    name: value.name,
+                    parentId,
+                },
+                db,
+            })
+        );
         posthog?.capture("category_saved", {
             category_type: value.income ? "income" : "expense",
             is_subcategory: isSubcategory,
@@ -358,7 +374,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
 
     const reportSaveFailure = (cause: unknown) => {
         haptics("error");
-        const code = cause instanceof Error ? categoryErrorCode(cause.message) : null;
+        const code = isCategoryValidationError(cause) ? cause.code : null;
         setFailure(code ? t(CATEGORY_ERROR_KEYS[code]) : t("categories.error.generic"));
         if (code === "missingName" || code === "duplicateName") {
             nameRef.current?.focus();

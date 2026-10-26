@@ -1,4 +1,6 @@
 import { eq } from "drizzle-orm";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { appMeta } from "@/db/schema";
@@ -55,11 +57,28 @@ export function getMetaSync(db: Database, key: string): string | null {
     return rows[0]?.value ?? null;
 }
 
-export async function getMeta(db: SpendDb, key: string): Promise<string | null> {
-    const rows = await db.select().from(appMeta).where(eq(appMeta.key, key)).limit(1);
-    return rows[0]?.value ?? null;
+const AppMetaOperation = Schema.Literals(["get", "set"]);
+
+export class AppMetaError extends Schema.TaggedError<AppMetaError>()("AppMetaError", {
+    cause: Schema.Defect(),
+    key: Schema.String,
+    operation: AppMetaOperation,
+}) {
+    override get message(): string {
+        return `App meta ${this.operation} failed for ${this.key}`;
+    }
 }
 
-export async function setMeta(db: SpendDb, key: string, value: string): Promise<void> {
-    await db.insert(appMeta).values({ key, value }).onConflictDoUpdate({ set: { value }, target: appMeta.key });
-}
+const query = <A>(operation: typeof AppMetaOperation.Type, key: string, run: () => PromiseLike<A>) =>
+    Effect.tryPromise({ catch: (cause) => new AppMetaError({ cause, key, operation }), try: run });
+
+export const getMeta = Effect.fn("AppMeta.getMeta")(function* getMeta(db: SpendDb, key: string) {
+    const rows = yield* query("get", key, () => db.select().from(appMeta).where(eq(appMeta.key, key)).limit(1));
+    return rows[0]?.value ?? null;
+});
+
+export const setMeta = Effect.fn("AppMeta.setMeta")(function* setMeta(db: SpendDb, key: string, value: string) {
+    yield* query("set", key, () =>
+        db.insert(appMeta).values({ key, value }).onConflictDoUpdate({ set: { value }, target: appMeta.key })
+    );
+});

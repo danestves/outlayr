@@ -53,7 +53,7 @@ describe("photo sync", () => {
     beforeEach(async () => {
         jest.useFakeTimers();
         db = migratedDatabase();
-        await setMeta(db, META_KEYS.syncEnabled, "1");
+        await Effect.runPromise(setMeta(db, META_KEYS.syncEnabled, "1"));
         reconciles.mockReset();
         reconciles.mockResolvedValue(NOTHING_REPAIRED);
         cycles.mockReset();

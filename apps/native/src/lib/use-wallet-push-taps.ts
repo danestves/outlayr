@@ -10,9 +10,15 @@ import { useRouter } from "expo-router";
 import type { Href } from "expo-router";
 import { useEffect } from "react";
 
-import { cardStillAsks, drainPendingWrites, fileWaitingPurchases, pendingWriteTxId } from "@/data/pending-writes-core";
 import { getTransactionById } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
+import {
+    cardStillAsksCommand,
+    drainPendingWritesCommand,
+    fileWaitingPurchasesCommand,
+    pendingWriteTxIdCommand,
+    runLifecycleCommand,
+} from "@/state/lifecycle-commands";
 
 import { claimPendingWrites, releasePendingWrites } from "./widget-bridge";
 
@@ -41,18 +47,25 @@ export function useWalletPushTaps(db: Database, ready: boolean): void {
                 return;
             }
             const settle = async () => {
-                await drainPendingWrites(db, claimPendingWrites, releasePendingWrites).catch((error) => {
+                await runLifecycleCommand(drainPendingWritesCommand, {
+                    claim: claimPendingWrites,
+                    db,
+                    release: releasePendingWrites,
+                }).catch((error) => {
                     console.warn("[outlayr] pending writes failed to apply", error);
                 });
-                await fileWaitingPurchases(db).catch((error) => {
+                await runLifecycleCommand(fileWaitingPurchasesCommand, db).catch((error) => {
                     console.warn("[outlayr] waiting purchases failed to file", error);
                 });
-                return pendingWriteTxId(db, parsed.value.walletWrite);
+                return runLifecycleCommand(pendingWriteTxIdCommand, { db, id: parsed.value.walletWrite });
             };
             const txId = (await settle()) ?? (await settle());
             const { card, pickCard } = parsed.value;
             const unattached = txId !== null && getTransactionById(db, txId)?.accountId == null;
-            const asks = pickCard === true && unattached && (card === undefined || (await cardStillAsks(db, card)));
+            const asks =
+                pickCard === true &&
+                unattached &&
+                (card === undefined || (await runLifecycleCommand(cardStillAsksCommand, { db, text: card })));
             let target: Href | null = null;
             if (asks) {
                 target = "/settings/integrations";

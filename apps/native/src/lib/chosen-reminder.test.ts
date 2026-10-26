@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import * as Effect from "effect/Effect";
 
 import { getMeta, META_KEYS } from "@/data/app-meta-core";
 import { markReminderChosen } from "@/data/onboarding-core";
@@ -25,25 +26,25 @@ describe("armChosenReminder", () => {
         db = migratedDatabase();
         mockPermission.mockReset().mockResolvedValue("undetermined");
         mockRequest.mockReset().mockResolvedValue("granted");
-        await markReminderChosen(db);
+        await Effect.runPromise(markReminderChosen(db));
     });
 
     it("asks after the first saved entry and turns the reminder on", async () => {
         await armChosenReminder(db);
 
         expect(mockRequest).toHaveBeenCalledTimes(1);
-        await expect(readBoolSetting(db, "showNotifications")).resolves.toBe(true);
+        await expect(Effect.runPromise(readBoolSetting(db, "showNotifications"))).resolves.toBe(true);
     });
 
     it("leaves a reminder the user switched off alone, even with permission granted", async () => {
         mockPermission.mockResolvedValue("granted");
-        await setBoolSetting(db, "showNotifications", false);
+        await Effect.runPromise(setBoolSetting(db, "showNotifications", false));
 
         await armChosenReminder(db);
 
         expect(mockRequest).not.toHaveBeenCalled();
-        await expect(readBoolSetting(db, "showNotifications")).resolves.toBe(false);
-        await expect(getMeta(db, META_KEYS.reminderAsked)).resolves.toBe("true");
+        await expect(Effect.runPromise(readBoolSetting(db, "showNotifications"))).resolves.toBe(false);
+        await expect(Effect.runPromise(getMeta(db, META_KEYS.reminderAsked))).resolves.toBe("true");
     });
 
     it("keeps the ask for the next save when the permission read fails", async () => {
@@ -52,7 +53,7 @@ describe("armChosenReminder", () => {
         await armChosenReminder(db);
 
         expect(mockRequest).not.toHaveBeenCalled();
-        await expect(getMeta(db, META_KEYS.reminderAsked)).resolves.toBeNull();
+        await expect(Effect.runPromise(getMeta(db, META_KEYS.reminderAsked))).resolves.toBeNull();
 
         await armChosenReminder(db);
 
@@ -66,7 +67,7 @@ describe("armChosenReminder", () => {
         await armChosenReminder(db);
 
         expect(mockRequest).toHaveBeenCalledTimes(1);
-        await expect(readBoolSetting(db, "showNotifications")).resolves.toBe(false);
+        await expect(Effect.runPromise(readBoolSetting(db, "showNotifications"))).resolves.toBe(false);
     });
 
     it("asks once when a second save lands while the prompt is up", async () => {
@@ -82,7 +83,7 @@ describe("armChosenReminder", () => {
         await both;
 
         expect(mockRequest).toHaveBeenCalledTimes(1);
-        await expect(readBoolSetting(db, "showNotifications")).resolves.toBe(true);
+        await expect(Effect.runPromise(readBoolSetting(db, "showNotifications"))).resolves.toBe(true);
     });
 
     it("leaves a skipped offer alone", async () => {
@@ -91,6 +92,6 @@ describe("armChosenReminder", () => {
         await armChosenReminder(skipped);
 
         expect(mockPermission).not.toHaveBeenCalled();
-        await expect(readBoolSetting(skipped, "showNotifications")).resolves.toBe(false);
+        await expect(Effect.runPromise(readBoolSetting(skipped, "showNotifications"))).resolves.toBe(false);
     });
 });

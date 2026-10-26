@@ -1,6 +1,8 @@
+import { useAtomMount } from "@effect/atom-react/Hooks";
 import { eq, inArray } from "drizzle-orm";
+import * as Effect from "effect/Effect";
+import * as Atom from "effect/reactivity/Atom";
 import { useCalendars } from "expo-localization";
-import { useEffect } from "react";
 
 import type { Database } from "@/db/client";
 import { appMeta } from "@/db/schema";
@@ -51,17 +53,17 @@ export function useAiConsent(db: Database | null, key: AiConsentKey = "aiConsent
     );
 }
 
+const seedClockAtom = Atom.family((input: { db: Database; deviceUses24Hour: boolean | null }) =>
+    Atom.make(
+        input.deviceUses24Hour == null ? Effect.void : seedClockPreference(input.db, input.deviceUses24Hour)
+    ).pipe(Atom.withLabel("settings:seed-clock"))
+);
+
 /** Mounted at the root, not on Time & Frames, which a user in a 24-hour locale has no reason to open. */
 export function useSeededClockPreference(db: Database): void {
     // Null means the device reports no preference, which is not the same as 12-hour.
     const deviceUses24Hour = useCalendars()[0].uses24hourClock;
-
-    useEffect(() => {
-        if (deviceUses24Hour == null) {
-            return;
-        }
-        seedClockPreference(db, deviceUses24Hour);
-    }, [db, deviceUses24Hour]);
+    useAtomMount(seedClockAtom({ db, deviceUses24Hour }));
 }
 
 export function useNumberSetting(db: Database | null, key: NumberSettingKey): number {

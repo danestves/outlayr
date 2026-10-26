@@ -59,7 +59,7 @@ export const replateStoredLogos = Effect.fn("LogoReplate.replateStoredLogos")(fu
     db: SpendDb,
     deps: LogoReplateDeps
 ) {
-    if ((yield* attempt("rows", () => getMeta(db, META_KEYS.logoPlates))) != null) {
+    if ((yield* getMeta(db, META_KEYS.logoPlates)) != null) {
         return 0;
     }
 
@@ -98,6 +98,6 @@ export const replateStoredLogos = Effect.fn("LogoReplate.replateStoredLogos")(fu
         }
     }
 
-    yield* attempt("rows", () => setMeta(db, META_KEYS.logoPlates, "1"));
+    yield* setMeta(db, META_KEYS.logoPlates, "1");
     return replaced.size;
 });

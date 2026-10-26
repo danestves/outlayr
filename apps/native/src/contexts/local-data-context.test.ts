@@ -67,7 +67,7 @@ describe("local data", () => {
 
         expect(state.status).toBe("ready");
         expect(state.db).toBe(fresh);
-        await expect(getMeta(fresh, META_KEYS.firstLaunch)).resolves.toBe("true");
-        await expect(getMeta(fresh, META_KEYS.onboardingGateMigrated)).resolves.toBe("true");
+        await expect(Effect.runPromise(getMeta(fresh, META_KEYS.firstLaunch))).resolves.toBe("true");
+        await expect(Effect.runPromise(getMeta(fresh, META_KEYS.onboardingGateMigrated))).resolves.toBe("true");
     });
 });

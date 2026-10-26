@@ -41,7 +41,7 @@ describe("sync device identity", () => {
 
         expect(first).toMatch(/^[0-9a-f-]{36}$/);
         await expect(Effect.runPromise(getOrCreateDeviceId(db))).resolves.toBe(first);
-        await expect(getMeta(db, META_KEYS.syncDeviceId)).resolves.toBe(first);
+        await expect(Effect.runPromise(getMeta(db, META_KEYS.syncDeviceId))).resolves.toBe(first);
     });
 
     it("never queues the device id for replication", async () => {
@@ -60,7 +60,7 @@ describe("sync cursor", () => {
     });
 
     it("falls back to zero rather than replaying from a corrupt cursor", async () => {
-        await setMeta(db, META_KEYS.syncCursor, "not-a-number");
+        await Effect.runPromise(setMeta(db, META_KEYS.syncCursor, "not-a-number"));
 
         await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(0);
     });
@@ -163,7 +163,7 @@ describe("enqueueAllForSync", () => {
     it("queues only account-scoped meta keys", async () => {
         // Both registries: the synced presentation settings use bare names that META_KEYS does not hold.
         for (const key of [...Object.values(META_KEYS), ...SYNCED_META_KEYS]) {
-            await setMeta(db, key, "x");
+            await Effect.runPromise(setMeta(db, key, "x"));
         }
 
         await Effect.runPromise(enqueueAllForSync(db));

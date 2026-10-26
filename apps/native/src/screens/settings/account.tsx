@@ -8,7 +8,6 @@ import { MonoLabel } from "@/components/mono-label";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { useDatabase, useLocalData } from "@/contexts/local-data-context";
-import { closeDatabase } from "@/db/client";
 import type { Database } from "@/db/client";
 import { accountLabel, signInFailureMessage } from "@/domain/account";
 import { useTranslation } from "@/i18n/context";
@@ -23,6 +22,7 @@ import { posthog } from "@/lib/posthog";
 import { providerBindingFor } from "@/lib/provider-revocation";
 import { useProviderSignIn } from "@/lib/use-provider-sign-in";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { closeDatabaseCommand } from "@/state/lifecycle-commands";
 import { removeSecureItemCommand, setSecureItemCommand } from "@/state/secure-storage-commands";
 import { setSyncEnabledCommand } from "@/state/sync-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
@@ -62,6 +62,7 @@ function AccountContent({ client, db }: { client: AuthClient; db: Database }) {
     const [error, setError] = useState<string | null>(null);
     const { busy: signingIn, error: signInError, start } = useProviderSignIn(client);
     const setSyncEnabled = useAtomCommand(setSyncEnabledCommand, SILENT);
+    const closeDb = useAtomCommand(closeDatabaseCommand, SILENT);
     const setSecureItem = useAtomCommand(setSecureItemCommand, SILENT);
     const removeSecureItem = useAtomCommand(removeSecureItemCommand, SILENT);
     const quiesce = async () => {
@@ -113,7 +114,9 @@ function AccountContent({ client, db }: { client: AuthClient; db: Database }) {
         const resetGate =
             action === "deleteAll"
                 ? createDeviceResetGate({
-                      closeDatabase: async () => await closeDatabase(db),
+                      closeDatabase: async () => {
+                          unwrapAtomCommand(await closeDb(db));
+                      },
                       completeCloudDeletion: async () => {
                           await resumePersistedCloudDeletion({ clearOnComplete: false, required: true });
                       },

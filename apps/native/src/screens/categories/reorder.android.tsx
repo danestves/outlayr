@@ -7,9 +7,11 @@ import { ReorderList } from "@/components/reorder-list";
 import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useCategoriesByNamespace } from "@/data/categories";
-import { categoriesRepo } from "@/data/categories-core";
 import type { Category, CategoryWithChildren } from "@/data/categories-core";
 import { useTranslation } from "@/i18n/context";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { reorderCategoriesCommand } from "@/state/categories-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
 /** Within its own list only: the write cannot re-parent. */
@@ -20,7 +22,10 @@ export function CategoryReorder({ income }: { income: boolean }) {
     const parents = useCategoriesByNamespace(db, income);
     const accent = (parent: CategoryWithChildren) => (income ? colors.income : (parent.color ?? colors.foreground));
 
-    const reorder = (ids: string[]) => categoriesRepo.reorder(db, ids);
+    const reorderCategories = useAtomCommand(reorderCategoriesCommand, SILENT);
+    const reorder = async (ids: string[]) => {
+        unwrapAtomCommand(await reorderCategories({ db, orderedIds: ids }));
+    };
 
     return (
         <ScrollView className="bg-m3-surface flex-1" contentContainerStyle={{ paddingBottom: 24 }}>

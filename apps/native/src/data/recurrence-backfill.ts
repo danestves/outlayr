@@ -207,7 +207,7 @@ export const backfillRecurring = Effect.fn("RecurrenceBackfill.backfillRecurring
     // Each occurrence is canonicalized at ITS OWN date, or January's payment is priced at December's rate. Built
     // outside the write transaction because the rate lookup reads.
     const lookup = localRateLookup(db);
-    const display = (yield* query("backfill", () => getMeta(db, META_KEYS.currency))) ?? DEFAULT_CURRENCY;
+    const display = (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
     const canonicalized = yield* Effect.all(
         pending.map((row) =>
             query("backfill", () =>
@@ -268,7 +268,7 @@ const withCanonicalUsd = Effect.fn("RecurrenceBackfill.withCanonicalUsd")(functi
     db: Database,
     row: TransactionInsert
 ) {
-    const display = (yield* query("successor", () => getMeta(db, META_KEYS.currency))) ?? DEFAULT_CURRENCY;
+    const display = (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
     const canonical = yield* query("successor", () =>
         canonicalUsd(localRateLookup(db), {
             amount: row.amount,
@@ -313,7 +313,7 @@ export const scheduleSuccessor = Effect.fn("RecurrenceBackfill.scheduleSuccessor
 // schedule. Other orphaned chains are unrecoverable: no column links a chain's rows.
 export const repairOrphanedRecurrence = Effect.fn("RecurrenceBackfill.repairOrphanedRecurrence")(
     function* repairOrphanedRecurrence(db: Database, now: Date = new Date()) {
-        if ((yield* query("repair", () => getMeta(db, META_KEYS.recurrenceRepaired))) === "true") {
+        if ((yield* getMeta(db, META_KEYS.recurrenceRepaired)) === "true") {
             return 0;
         }
 
@@ -359,7 +359,7 @@ export const repairOrphanedRecurrence = Effect.fn("RecurrenceBackfill.repairOrph
             }
         }
 
-        yield* query("repair", () => setMeta(db, META_KEYS.recurrenceRepaired, "true"));
+        yield* setMeta(db, META_KEYS.recurrenceRepaired, "true");
         return reinstated;
     }
 );

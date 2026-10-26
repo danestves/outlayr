@@ -1,28 +1,49 @@
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 import { getLocales } from "expo-localization";
 
 import type { Database } from "@/db/client";
-import { withTransaction } from "@/db/transaction";
+import { transaction } from "@/db/transaction";
 import { seedFavourites, serialiseFavourites } from "@/domain/favourite-currencies";
 import { DEFAULT_CURRENCY } from "@/domain/money";
 
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
 import { seedCategories } from "./categories-core";
 
-// Awaited by `LocalDatabase.open` before `ready`, so the first screen sees its categories. The locale seeds only the
+const BootstrapOperation = Schema.Literals(["locale", "seed"]);
+
+export class BootstrapError extends Schema.TaggedError<BootstrapError>()("BootstrapError", {
+    cause: Schema.Defect(),
+    operation: BootstrapOperation,
+}) {
+    override get message(): string {
+        return `Bootstrap ${this.operation} failed`;
+    }
+}
+
+// Run by `LocalDatabase.open` before `ready`, so the first screen sees its categories. The locale seeds only the
 // favourites: onboarding asks for the ledger's own currency.
-export async function bootstrapLocalData(db: Database): Promise<void> {
-    const done = await getMeta(db, META_KEYS.firstLaunch);
+export const bootstrapLocalData = Effect.fn("Bootstrap.bootstrapLocalData")(function* bootstrapLocalData(db: Database) {
+    const done = yield* getMeta(db, META_KEYS.firstLaunch);
     if (done === "true") {
         return;
     }
     // Behind the guard, so a user who clears the cluster keeps it cleared.
-    const favourites = seedFavourites(getLocales()[0]?.currencyCode ?? null);
+    const currencyCode = yield* Effect.try({
+        catch: (cause) => new BootstrapError({ cause, operation: "locale" }),
+        try: () => getLocales()[0]?.currencyCode ?? null,
+    });
+    const favourites = seedFavourites(currencyCode);
 
     // Atomic: the `firstLaunch` marker is written last, and first launch is the most kill-prone moment.
-    await withTransaction(db, async () => {
-        await setMeta(db, META_KEYS.currency, DEFAULT_CURRENCY);
-        await setMeta(db, META_KEYS.favouriteCurrencies, serialiseFavourites(favourites));
-        await seedCategories(db);
-        await setMeta(db, META_KEYS.firstLaunch, "true");
-    });
-}
+    yield* transaction(
+        db,
+        Effect.gen(function* write() {
+            yield* setMeta(db, META_KEYS.currency, DEFAULT_CURRENCY);
+            yield* setMeta(db, META_KEYS.favouriteCurrencies, serialiseFavourites(favourites));
+            yield* seedCategories(db);
+            yield* setMeta(db, META_KEYS.firstLaunch, "true");
+        }),
+        (cause) => new BootstrapError({ cause, operation: "seed" })
+    );
+});

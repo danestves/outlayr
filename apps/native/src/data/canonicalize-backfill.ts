@@ -47,14 +47,14 @@ const UI_YIELD = Duration.millis(1);
 // `bootstrap` seeds the default unconditionally, so a stored default proves nothing without the chosen marker; any
 // other code can only have come from the picker.
 const statedCurrency = Effect.fn("CanonicalizeBackfill.statedCurrency")(function* statedCurrency(db: SpendDb) {
-    const stored = yield* query("stampCurrency", () => getMeta(db, META_KEYS.currency));
+    const stored = yield* getMeta(db, META_KEYS.currency);
     if (stored === null) {
         return null;
     }
     if (stored !== DEFAULT_CURRENCY) {
         return stored;
     }
-    const chosen = yield* query("stampCurrency", () => getMeta(db, META_KEYS.currencyChosen));
+    const chosen = yield* getMeta(db, META_KEYS.currencyChosen);
     return chosen === "true" ? stored : null;
 });
 

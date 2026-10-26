@@ -13,10 +13,6 @@ import { recallMerchant } from "@/data/merchant-book-core";
 import { rememberedCategoryFor } from "@/data/merchant-history-core";
 import { applyMerchantToSiblings } from "@/data/merchant-siblings-core";
 import type { MerchantSiblingsInput } from "@/data/merchant-siblings-core";
-import { reconcilePhotos } from "@/data/photo-store-core";
-import type { PhotoFiles } from "@/data/photo-store-core";
-import { downloadEveryPhoto } from "@/data/photo-sync-core";
-import type { PhotoTransport } from "@/data/photo-sync-core";
 import { backfillRecurring } from "@/data/recurrence-backfill";
 import { pendingReminderPlan } from "@/data/subscription-reminders-core";
 import { tagsRepo } from "@/data/tags-core";
@@ -105,14 +101,3 @@ export const pendingReminderPlanCommand = ledgerCommand(
 );
 
 export const valuationCoverageCommand = ledgerCommand("valuation-coverage", (db: Database) => valuationCoverage(db));
-
-export const reconcilePhotosCommand = ledgerCommand(
-    "reconcile-photos",
-    (input: { db: Database; files: PhotoFiles; nowMs: number }) => reconcilePhotos(input.db, input.files, input.nowMs)
-);
-
-export const downloadEveryPhotoCommand = ledgerCommand(
-    "download-every-photo",
-    (input: { db: Database; files: PhotoFiles; transport: PhotoTransport }) =>
-        downloadEveryPhoto(input.db, input.files, input.transport)
-);

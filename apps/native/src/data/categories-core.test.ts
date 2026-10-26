@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import { and, eq, isNull } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { categories } from "@/db/schema";
@@ -28,7 +29,7 @@ describe("ensureCategoryByName", () => {
     });
 
     it("creates a category when nothing in the namespace answers to the name", async () => {
-        const id = await ensureCategoryByName(db, "Entertainment", false, "FilmRoll01", "#AF52DE");
+        const id = await Effect.runPromise(ensureCategoryByName(db, "Entertainment", false, "FilmRoll01", "#AF52DE"));
         const rows = await liveCategories(db, false);
         expect(rows).toHaveLength(1);
         expect(rows[0].id).toBe(id);
@@ -37,22 +38,24 @@ describe("ensureCategoryByName", () => {
     });
 
     it("resolves to the existing category on a same-namespace name collision instead of duplicating it", async () => {
-        const first = await categoriesRepo.create(db, {
-            color: "#AF52DE",
-            icon: "FilmRoll01",
-            income: false,
-            name: "Entertainment",
-        });
+        const first = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#AF52DE",
+                icon: "FilmRoll01",
+                income: false,
+                name: "Entertainment",
+            })
+        );
 
-        const second = await ensureCategoryByName(db, "entertainment", false, "Tv01", "#000000");
+        const second = await Effect.runPromise(ensureCategoryByName(db, "entertainment", false, "Tv01", "#000000"));
 
         expect(second).toBe(first);
         await expect(liveCategories(db, false)).resolves.toHaveLength(1);
     });
 
     it("treats expense and income as separate namespaces", async () => {
-        const expenseId = await ensureCategoryByName(db, "Gifts", false, "Gift", "#FF375F");
-        const incomeId = await ensureCategoryByName(db, "Gifts", true, "GiftCard", "#E5484D");
+        const expenseId = await Effect.runPromise(ensureCategoryByName(db, "Gifts", false, "Gift", "#FF375F"));
+        const incomeId = await Effect.runPromise(ensureCategoryByName(db, "Gifts", true, "GiftCard", "#E5484D"));
 
         expect(expenseId).not.toBe(incomeId);
         await expect(liveCategories(db, false)).resolves.toHaveLength(1);

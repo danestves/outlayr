@@ -6,7 +6,7 @@ import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as Atom from "effect/reactivity/Atom";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 
-import { createRuntimeCommand, runAtomCommand } from "./atom-command";
+import { createCommand, createRuntimeCommand, runAtomCommand } from "./atom-command";
 
 const runtime = Atom.runtime(Layer.empty);
 
@@ -91,6 +91,20 @@ describe("atom command", () => {
         await runAtomCommand(registry, failure, undefined, { reportFailure: false }, spy);
 
         expect(spy.warn).not.toHaveBeenCalled();
+        registry.dispose();
+    });
+
+    it("settles a runtime-free command as a success or a typed failure", async () => {
+        const registry = AtomRegistry.make();
+        const command = createCommand({
+            execute: (input: string) => (input === "ok" ? Effect.succeed(input) : Effect.fail(`bad ${input}`)),
+            label: "test:plain",
+        });
+
+        await expect(command.run(registry, "ok")).resolves.toMatchObject({ _tag: "Success", value: "ok" });
+        const failed = await command.run(registry, "x");
+
+        expect(AsyncResult.isFailure(failed) && Cause.squash(failed.cause)).toBe("bad x");
         registry.dispose();
     });
 });

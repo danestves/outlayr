@@ -11,7 +11,7 @@ import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
-import { META_KEYS, setMeta } from "@/data/app-meta-core";
+import { META_KEYS } from "@/data/app-meta-core";
 import type { LastWalletEntry } from "@/data/pending-writes-core";
 import { onOffLabel } from "@/data/settings-core";
 import { useWalletMeta } from "@/data/use-wallet-meta";
@@ -25,6 +25,9 @@ import {
     TRIGGERS_IN_SHORTCUTS,
     WALLET_SHORTCUT_URL,
 } from "@/lib/wallet-shortcut";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { setMetaCommand } from "@/state/settings-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 import { CheckRow, FrameStrip, LastEntry, ProofBlock } from "./wallet-parts";
 import type { Step } from "./wallet-parts";
@@ -58,6 +61,7 @@ const HAS_SHARED_SHORTCUT = WALLET_SHORTCUT_URL != null && TRIGGERS_IN_SHORTCUTS
 export function Wallet() {
     const db = useDatabase();
     const t = useTranslation();
+    const setMeta = useAtomCommand(setMetaCommand, SILENT);
     const { added, applePayOn: working, lastEntry, lastRunAt } = useWalletMeta(db);
     const [stepsShown, setStepsShown] = useState(false);
     // `added` is only set by the shared link, so an older inline setup stays inline.
@@ -69,7 +73,7 @@ export function Wallet() {
     const getShortcut = async () => {
         try {
             await openWalletShortcut();
-            await setMeta(db, META_KEYS.walletShortcutAdded, "1");
+            unwrapAtomCommand(await setMeta({ db, key: META_KEYS.walletShortcutAdded, value: "1" }));
         } catch (cause) {
             console.error("Opening the Wallet shortcut failed", cause);
             notifyFailure({ title: t("settings.wallet.get") });

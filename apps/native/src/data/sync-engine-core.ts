@@ -975,8 +975,9 @@ export const pullAndApply = Effect.fn("SyncCore.pullAndApply")(function* pullAnd
         return nothingApplied();
     }
     const main = yield* walkLog(db, pull, yield* getSyncCursor(db), now);
-    const reread = yield* query("read", () => getMeta(db, META_KEYS.syncReread));
-    const restores = (yield* query("read", () => getMeta(db, META_KEYS.syncRestoresReread))) !== null;
+    const reread = yield* getMeta(db, META_KEYS.syncReread).pipe(Effect.mapError(failedAt("read")));
+    const restores =
+        (yield* getMeta(db, META_KEYS.syncRestoresReread).pipe(Effect.mapError(failedAt("read")))) !== null;
     if (reread === null && !restores) {
         return main;
     }

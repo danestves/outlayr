@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { act, renderHook } from "@testing-library/react-native";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { migratedDatabase } from "@/db/test-database";
@@ -37,7 +38,7 @@ describe("useGlobalCurrency", () => {
     beforeEach(async () => {
         mockListeners.clear();
         db = migratedDatabase({ foreignKeys: false });
-        await setMeta(db, META_KEYS.currency, "EUR");
+        await Effect.runPromise(setMeta(db, META_KEYS.currency, "EUR"));
     });
 
     it("does not re-render its callers when an unrelated setting is written", async () => {
@@ -48,7 +49,7 @@ describe("useGlobalCurrency", () => {
         });
         const before = renders;
 
-        await setMeta(db, META_KEYS.syncedAt, "1700000000000");
+        await Effect.runPromise(setMeta(db, META_KEYS.syncedAt, "1700000000000"));
         await act(async () => {
             await announceMetaWrite();
         });
@@ -60,7 +61,7 @@ describe("useGlobalCurrency", () => {
     it("still follows its own key", async () => {
         const { result } = await renderHook(() => useGlobalCurrency(db));
 
-        await setMeta(db, META_KEYS.currency, "JPY");
+        await Effect.runPromise(setMeta(db, META_KEYS.currency, "JPY"));
         await act(async () => {
             await announceMetaWrite();
         });

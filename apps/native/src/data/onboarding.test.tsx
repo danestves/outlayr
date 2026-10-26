@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { renderHook } from "@testing-library/react-native";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { migratedDatabase } from "@/db/test-database";
@@ -36,7 +37,7 @@ describe("useOnboardingSettled", () => {
     });
 
     it("does not let a chosen currency out of the flow on its own", async () => {
-        await setMeta(db, META_KEYS.currencyChosen, "true");
+        await Effect.runPromise(setMeta(db, META_KEYS.currencyChosen, "true"));
 
         const { result } = await renderHook(() => useOnboardingSettled(db));
 
@@ -44,7 +45,7 @@ describe("useOnboardingSettled", () => {
     });
 
     it("lets a finished run through", async () => {
-        await setMeta(db, META_KEYS.onboardingComplete, "true");
+        await Effect.runPromise(setMeta(db, META_KEYS.onboardingComplete, "true"));
 
         const { result } = await renderHook(() => useOnboardingSettled(db));
 

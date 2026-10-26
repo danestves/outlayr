@@ -1,3 +1,5 @@
+import * as Cause from "effect/Cause";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useRouter, useSegments } from "expo-router";
 import { BottomSheet } from "panelui-native/components/bottom-sheet";
 import { Button } from "panelui-native/components/button";
@@ -12,7 +14,6 @@ import { Text } from "@/components/text";
 import { useSheetInsets } from "@/components/use-sheet-insets";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useAiConsent } from "@/data/settings";
-import { saveAiConsent } from "@/data/settings-core";
 import type { AiConsent } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import type { TranslationKey } from "@/i18n/catalog";
@@ -20,6 +21,9 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import { openInAppBrowser } from "@/lib/app-handoff";
 import { useAuthSession } from "@/lib/auth-session";
 import { legalUrl } from "@/lib/legal-url";
+import { SILENT } from "@/state/atom-command";
+import { saveAiConsentCommand } from "@/state/settings-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
 const FEATURES = [
@@ -30,10 +34,15 @@ const FEATURES = [
     { sends: "aiConsent.lookupSends", title: "aiConsent.lookup" },
 ] as const satisfies readonly { sends: TranslationKey; title: TranslationKey }[];
 
-export function recordAiConsent(db: Database, allowed: boolean): void {
-    saveAiConsent(db, allowed).catch((cause: unknown) => {
-        console.error("Saving the AI consent failed", cause);
-    });
+export function useRecordAiConsent() {
+    const saveAiConsent = useAtomCommand(saveAiConsentCommand, SILENT);
+    return (db: Database, allowed: boolean): void => {
+        saveAiConsent({ allowed, db }).then((result) => {
+            if (AsyncResult.isFailure(result)) {
+                console.error("Saving the AI consent failed", Cause.squash(result.cause));
+            }
+        });
+    };
 }
 
 export function AiConsentDetails() {
@@ -89,6 +98,7 @@ export function AiConsentGate() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const consent = useAiConsent(db);
+    const recordAiConsent = useRecordAiConsent();
     const answer = (allowed: boolean) => {
         if (allowed || consent !== "allowed") {
             recordAiConsent(db, allowed);
@@ -126,6 +136,7 @@ function AiConsentSheetBody({ consent }: { consent: AiConsent }) {
     const onTabs = useSegments()[0] === "(tabs)";
     const lockOpen = useAppLockOpen();
     const covered = useAuthCovered();
+    const recordAiConsent = useRecordAiConsent();
 
     const open = gate === "signed-in" && consent === "unanswered" && onTabs && lockOpen && !covered;
 

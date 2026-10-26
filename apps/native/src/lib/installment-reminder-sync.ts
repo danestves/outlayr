@@ -1,6 +1,5 @@
 import { readPlans } from "@/data/installments-core";
 import { owedPayoffPlans } from "@/data/payoff-plans";
-import { readBoolSetting, setBoolSetting } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import { accounts } from "@/db/schema";
 import {
@@ -15,6 +14,7 @@ import { orderName } from "@/domain/installments";
 import type { TimeOfDay } from "@/domain/reminder";
 import { reminderReconcile } from "@/domain/reminder";
 import { translateNow } from "@/i18n/runtime";
+import { readBoolSettingCommand, runSettingsCommand, setBoolSettingCommand } from "@/state/settings-commands";
 
 import { readReminderTime } from "./reminder-sync";
 import { cancelReminders, pendingReminderIds, reminderPermission, scheduleDatedReminder } from "./reminders";
@@ -40,9 +40,9 @@ let queue: Promise<unknown> = Promise.resolve();
 
 async function reconcileInstallmentReminders(db: Database): Promise<void> {
     const [enabled, permission, hideAmounts] = await Promise.all([
-        readBoolSetting(db, "installmentReminders"),
+        runSettingsCommand(readBoolSettingCommand, { db, key: "installmentReminders" }),
         reminderPermission(),
-        readBoolSetting(db, "hideAmounts"),
+        runSettingsCommand(readBoolSettingCommand, { db, key: "hideAmounts" }),
     ]);
     if (enabled && permission === "unknown") {
         return;
@@ -66,7 +66,7 @@ async function reconcileInstallmentReminders(db: Database): Promise<void> {
     }
 
     if (decision === "disable") {
-        await setBoolSetting(db, "installmentReminders", false);
+        await runSettingsCommand(setBoolSettingCommand, { db, key: "installmentReminders", value: false });
     }
 }
 

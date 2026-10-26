@@ -1,9 +1,9 @@
-import { readBoolSetting, setBoolSetting } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import { reminderReconcile } from "@/domain/reminder";
 import { orphanedReminderIds } from "@/domain/subscription-reminder";
 import { reminderNotices } from "@/domain/subscription-reminder-copy";
 import { pendingReminderPlanCommand, runLedgerCommand } from "@/state/ledger-commands";
+import { readBoolSettingCommand, runSettingsCommand, setBoolSettingCommand } from "@/state/settings-commands";
 
 import { readReminderTime } from "./reminder-sync";
 import { cancelReminders, pendingReminderIds, reminderPermission, scheduleDatedReminder } from "./reminders";
@@ -25,9 +25,9 @@ let queue: Promise<unknown> = Promise.resolve();
 
 async function reconcileSubscriptionReminders(db: Database): Promise<void> {
     const [enabled, permission, hideAmounts] = await Promise.all([
-        readBoolSetting(db, "subscriptionReminders"),
+        runSettingsCommand(readBoolSettingCommand, { db, key: "subscriptionReminders" }),
         reminderPermission(),
-        readBoolSetting(db, "hideAmounts"),
+        runSettingsCommand(readBoolSettingCommand, { db, key: "hideAmounts" }),
     ]);
     if (enabled && permission === "unknown") {
         return;
@@ -58,6 +58,6 @@ async function reconcileSubscriptionReminders(db: Database): Promise<void> {
     }
 
     if (decision === "disable") {
-        await setBoolSetting(db, "subscriptionReminders", false);
+        await runSettingsCommand(setBoolSettingCommand, { db, key: "subscriptionReminders", value: false });
     }
 }

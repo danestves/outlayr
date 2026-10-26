@@ -1,11 +1,11 @@
 import { Alert } from "react-native";
 
 import { getMetaSync } from "@/data/app-meta-core";
-import { setBoolSetting } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import { enableReminderStep } from "@/domain/reminder";
 import type { TranslatableKey } from "@/i18n/catalog";
 import { translateNow } from "@/i18n/runtime";
+import { runSettingsCommand, setBoolSettingCommand } from "@/state/settings-commands";
 
 import { openNotificationSettings, reminderPermission, requestReminderPermission } from "./reminders";
 
@@ -45,7 +45,7 @@ export async function setDueReminders(
             return false;
         }
     }
-    await setBoolSetting(db, key, next);
+    await runSettingsCommand(setBoolSettingCommand, { db, key, value: next });
     return true;
 }
 
@@ -66,7 +66,7 @@ export function askForInstallmentReminders(
 
 async function turnOn(db: Database): Promise<void> {
     if (!(await setDueReminders(db, "installmentReminders", true))) {
-        await setBoolSetting(db, "installmentReminders", false);
+        await runSettingsCommand(setBoolSettingCommand, { db, key: "installmentReminders", value: false });
     }
 }
 
@@ -74,9 +74,11 @@ function ask(db: Database, question: TranslatableKey): void {
     Alert.alert(translateNow(question), undefined, [
         {
             onPress: () => {
-                setBoolSetting(db, "installmentReminders", false).catch((error) => {
-                    console.error("Declining installment reminders failed", error);
-                });
+                runSettingsCommand(setBoolSettingCommand, { db, key: "installmentReminders", value: false }).catch(
+                    (error) => {
+                        console.error("Declining installment reminders failed", error);
+                    }
+                );
             },
             style: "cancel",
             text: translateNow("settings.notifications.notNow"),

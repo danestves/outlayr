@@ -20,7 +20,6 @@ import { usePendingCuotas } from "@/data/installment-reads";
 import { useFilteredTransactions, useUpcomingTransactions } from "@/data/log-filtered";
 import { logPeriodFromStored, storedLogPeriod, useLogInsights, useSparklineRows } from "@/data/log-totals";
 import type { LogPeriod } from "@/data/log-totals";
-import { setNumberSetting } from "@/data/settings-core";
 import { useLoggedTransactions } from "@/data/transactions";
 import type { TransactionWithCategory } from "@/data/transactions";
 import { LOG_PAGE_DAYS } from "@/data/transactions-core";
@@ -46,6 +45,8 @@ import type { TransferLogRow } from "@/domain/transfer-log-rows";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { useDayCardShare } from "@/lib/use-day-card-share";
 import { useTransactionRowActions } from "@/lib/use-transaction-row-actions";
+import { setNumberSettingCommand } from "@/state/settings-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 import { AccountsBlock } from "./components/accounts-block";
 import { AmountsEyeButton } from "./components/amounts-eye-button";
@@ -131,6 +132,7 @@ function useTailGrouping<T extends DayGroupable>(currency: string, rates: RateTa
 
 export function Log() {
     const db = useDatabase();
+    const setNumberSetting = useAtomCommand(setNumberSettingCommand);
     const router = useRouter();
     const t = useTranslation();
     const { language } = useLanguage();
@@ -265,7 +267,7 @@ export function Log() {
 
     // One setting behind both headers, so a filter never changes the promoted figure.
     const onMeasure = (next: LogMeasure) => {
-        setNumberSetting(db, "logInsightsType", storedLogMeasure(next));
+        setNumberSetting({ db, key: "logInsightsType", value: storedLogMeasure(next) });
     };
 
     const accountsProps = {
@@ -283,7 +285,7 @@ export function Log() {
         <LogToolbar
             period={period}
             onPeriod={(next) => {
-                setNumberSetting(db, "logInsightsTimeFrame", storedLogPeriod(next));
+                setNumberSetting({ db, key: "logInsightsTimeFrame", value: storedLogPeriod(next) });
             }}
             filter={filter}
             onFilter={setFilter}

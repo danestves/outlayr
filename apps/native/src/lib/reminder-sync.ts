@@ -1,4 +1,3 @@
-import { readBoolSetting, readNumberSetting, setBoolSetting } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import {
     clampTimeOfDay,
@@ -9,23 +8,29 @@ import {
 } from "@/domain/reminder";
 import type { TimeOfDay } from "@/domain/reminder";
 import { lastLoggedEntryCommand, runLedgerCommand } from "@/state/ledger-commands";
+import {
+    readBoolSettingCommand,
+    readNumberSettingCommand,
+    runSettingsCommand,
+    setBoolSettingCommand,
+} from "@/state/settings-commands";
 
 import { cancelReminders, pendingReminderIds, reminderPermission, scheduleDatedReminder } from "./reminders";
 
 export async function readReminderTime(db: Database): Promise<TimeOfDay> {
     const [option, hour, minute] = await Promise.all([
-        readNumberSetting(db, "notificationOption"),
-        readNumberSetting(db, "notificationHour"),
-        readNumberSetting(db, "notificationMinute"),
+        runSettingsCommand(readNumberSettingCommand, { db, key: "notificationOption" }),
+        runSettingsCommand(readNumberSettingCommand, { db, key: "notificationHour" }),
+        runSettingsCommand(readNumberSettingCommand, { db, key: "notificationMinute" }),
     ]);
     return reminderTime(option, clampTimeOfDay(hour, minute));
 }
 
 export async function reconcileDailyReminder(db: Database): Promise<void> {
     const [enabled, permission, hideAmounts] = await Promise.all([
-        readBoolSetting(db, "showNotifications"),
+        runSettingsCommand(readBoolSettingCommand, { db, key: "showNotifications" }),
         reminderPermission(),
-        readBoolSetting(db, "hideAmounts"),
+        runSettingsCommand(readBoolSettingCommand, { db, key: "hideAmounts" }),
     ]);
     if (enabled && permission === "unknown") {
         return;
@@ -51,6 +56,6 @@ export async function reconcileDailyReminder(db: Database): Promise<void> {
     }
 
     if (decision === "disable") {
-        await setBoolSetting(db, "showNotifications", false);
+        await runSettingsCommand(setBoolSettingCommand, { db, key: "showNotifications", value: false });
     }
 }

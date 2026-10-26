@@ -1,14 +1,52 @@
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { and, eq, isNull, max } from "drizzle-orm";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import { TOMBSTONED_BUDGET } from "@/data/budgets-core";
 import type { Database } from "@/db/client";
 import { budgets, categories, transactions } from "@/db/schema";
-import { withTransaction } from "@/db/transaction";
+import { transaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
 import { uuidV5 } from "@/domain/uuid5";
 
 export type Category = typeof categories.$inferSelect;
+
+const CategoriesOperation = Schema.Literals([
+    "seed",
+    "validate",
+    "suggest",
+    "addSuggested",
+    "create",
+    "remove",
+    "reorder",
+    "setParent",
+    "update",
+    "ensure",
+]);
+
+export class CategoriesError extends Schema.TaggedError<CategoriesError>()("CategoriesError", {
+    cause: Schema.Defect(),
+    operation: CategoriesOperation,
+}) {
+    override get message(): string {
+        return `Category ${this.operation} failed`;
+    }
+}
+
+export class CategoryNotFoundError extends Schema.TaggedError<CategoryNotFoundError>()("CategoryNotFoundError", {
+    id: Schema.String,
+}) {
+    override get message(): string {
+        return `Category ${this.id} not found.`;
+    }
+}
+
+const query = <A>(operation: typeof CategoriesOperation.Type, run: () => PromiseLike<A>) =>
+    Effect.tryPromise({ catch: (cause) => new CategoriesError({ cause, operation }), try: run });
+
+const findCategory = (operation: typeof CategoriesOperation.Type, db: Database, id: string) =>
+    Effect.try({ catch: (cause) => new CategoriesError({ cause, operation }), try: () => getCategoryById(db, id) });
 
 const WHITESPACE_RUN = /\s+/;
 
@@ -68,8 +106,8 @@ export function seededCategoryId(name: string, income: boolean): string {
 
 // Inspects the table, not the `firstLaunch` marker: `bootstrap.ts` writes that after this returns, so a crash between
 // them would seed a second full set.
-export async function seedCategories(db: Database): Promise<void> {
-    const seeded = await db.select({ id: categories.id }).from(categories).limit(1);
+export const seedCategories = Effect.fn("Categories.seedCategories")(function* seedCategories(db: Database) {
+    const seeded = yield* query("seed", () => db.select({ id: categories.id }).from(categories).limit(1));
     if (seeded.length > 0) {
         return;
     }
@@ -99,8 +137,8 @@ export async function seedCategories(db: Database): Promise<void> {
             };
         });
     });
-    await db.insert(categories).values(rows);
-}
+    yield* query("seed", () => db.insert(categories).values(rows));
+});
 
 export interface CategoryWithChildren extends Category {
     children: Category[];
@@ -127,29 +165,39 @@ export interface CategoryInput {
     parentId?: string | null;
 }
 
-async function nextSortOrder(db: Database, income: boolean, parentId: string | null): Promise<number> {
-    const [row] = await db
-        .select({ highest: max(categories.sortOrder) })
-        .from(categories)
-        .where(
-            and(
-                eq(categories.income, income),
-                isNull(categories.deletedAt),
-                parentId == null ? isNull(categories.parentId) : eq(categories.parentId, parentId)
+const nextSortOrder = Effect.fn("Categories.nextSortOrder")(function* nextSortOrder(
+    operation: typeof CategoriesOperation.Type,
+    db: Database,
+    income: boolean,
+    parentId: string | null
+) {
+    const [row] = yield* query(operation, () =>
+        db
+            .select({ highest: max(categories.sortOrder) })
+            .from(categories)
+            .where(
+                and(
+                    eq(categories.income, income),
+                    isNull(categories.deletedAt),
+                    parentId == null ? isNull(categories.parentId) : eq(categories.parentId, parentId)
+                )
             )
-        );
+    );
     return (row?.highest ?? -1) + 1;
-}
+});
 
 // In the precedence order the checks apply.
-export type CategoryError =
-    | "incomplete"
-    | "missingIcon"
-    | "missingName"
-    | "duplicate"
-    | "duplicateIcon"
-    | "duplicateEmoji"
-    | "duplicateName";
+export const CategoryCode = Schema.Literals([
+    "incomplete",
+    "missingIcon",
+    "missingName",
+    "duplicate",
+    "duplicateIcon",
+    "duplicateEmoji",
+    "duplicateName",
+]);
+
+export type CategoryError = typeof CategoryCode.Type;
 
 /** Kept verbatim in sync with the Swift copy. */
 export const CATEGORY_ERROR_MESSAGES = {
@@ -161,6 +209,16 @@ export const CATEGORY_ERROR_MESSAGES = {
     missingIcon: "Please choose an icon or emoji for the category.",
     missingName: "Please enter a name for this category.",
 } satisfies Record<CategoryError, string>;
+
+export class CategoryValidationError extends Schema.TaggedError<CategoryValidationError>()("CategoryValidationError", {
+    code: CategoryCode,
+}) {
+    override get message(): string {
+        return CATEGORY_ERROR_MESSAGES[this.code];
+    }
+}
+
+export const isCategoryValidationError = Schema.is(CategoryValidationError);
 
 export interface CategoryValidationResult {
     error: CategoryError | null;
@@ -183,13 +241,20 @@ function emojiComparisonKey(emoji: string): string {
 }
 
 // Icons and emoji collide namespace-wide, not per-parent, matching Swift.
-async function namespaceSiblings(db: Database, income: boolean, excludeId?: string): Promise<Category[]> {
-    const rows = await db
-        .select()
-        .from(categories)
-        .where(and(eq(categories.income, income), isNull(categories.deletedAt)));
+const namespaceSiblings = Effect.fn("Categories.namespaceSiblings")(function* namespaceSiblings(
+    operation: typeof CategoriesOperation.Type,
+    db: Database,
+    income: boolean,
+    excludeId?: string
+) {
+    const rows = yield* query(operation, () =>
+        db
+            .select()
+            .from(categories)
+            .where(and(eq(categories.income, income), isNull(categories.deletedAt)))
+    );
     return excludeId == null ? rows : rows.filter((row) => row.id !== excludeId);
-}
+});
 
 /** `name` must be title-cased already; icon and emoji are the raw candidates ("" when absent). */
 function detectCollision(
@@ -242,7 +307,7 @@ export function pickFreeCategoryIcon(siblings: readonly Category[], preferred: s
     return fallback?.icon ?? preferred;
 }
 
-export async function validateCategoryCreate(
+export const validateCategoryCreate = Effect.fn("Categories.validateCategoryCreate")(function* validateCategoryCreate(
     db: Database,
     input: {
         name: string;
@@ -251,36 +316,36 @@ export async function validateCategoryCreate(
         income: boolean;
         parentId?: string | null;
     }
-): Promise<CategoryValidationResult> {
+) {
     const name = capitalizeCategoryName(input.name);
     const icon = input.icon ?? "";
     const emoji = input.emoji ?? "";
     const symbolMissing = icon === "" && emoji === "";
-    const order = await nextSortOrder(db, input.income, input.parentId ?? null);
+    const order = yield* nextSortOrder("validate", db, input.income, input.parentId ?? null);
 
     if (name === "" && symbolMissing) {
-        return { error: "incomplete", order };
+        return { error: "incomplete", order } satisfies CategoryValidationResult;
     }
     if (name === "") {
-        return { error: "missingName", order };
+        return { error: "missingName", order } satisfies CategoryValidationResult;
     }
     if (symbolMissing) {
-        return { error: "missingIcon", order };
+        return { error: "missingIcon", order } satisfies CategoryValidationResult;
     }
 
-    const siblings = await namespaceSiblings(db, input.income);
-    return { error: detectCollision({ emoji, icon, name }, siblings), order };
-}
+    const siblings = yield* namespaceSiblings("validate", db, input.income);
+    return { error: detectCollision({ emoji, icon, name }, siblings), order } satisfies CategoryValidationResult;
+});
 
 // Missing-symbol checks fire only when the row already had one, so a symbol-less legacy category stays renamable.
-export async function validateCategoryEdit(
+export const validateCategoryEdit = Effect.fn("Categories.validateCategoryEdit")(function* validateCategoryEdit(
     db: Database,
     id: string,
     input: { name: string; icon?: string | null; emoji?: string | null }
-): Promise<CategoryValidationResult> {
-    const existing = await getCategoryById(db, id);
+) {
+    const existing = yield* findCategory("validate", db, id);
     if (existing == null) {
-        throw new Error("Category not found.");
+        return yield* new CategoryNotFoundError({ id });
     }
 
     const name = capitalizeCategoryName(input.name);
@@ -289,21 +354,21 @@ export async function validateCategoryEdit(
     const symbolMissing = icon === "" && emoji === "";
     const symbolRequired =
         (existing.icon != null && existing.icon !== "") || (existing.emoji != null && existing.emoji !== "");
-    const order = await nextSortOrder(db, existing.income, existing.parentId);
+    const order = yield* nextSortOrder("validate", db, existing.income, existing.parentId);
 
     if (name === "" && symbolMissing && symbolRequired) {
-        return { error: "incomplete", order };
+        return { error: "incomplete", order } satisfies CategoryValidationResult;
     }
     if (name === "") {
-        return { error: "missingName", order };
+        return { error: "missingName", order } satisfies CategoryValidationResult;
     }
     if (symbolMissing && symbolRequired) {
-        return { error: "missingIcon", order };
+        return { error: "missingIcon", order } satisfies CategoryValidationResult;
     }
 
-    const siblings = await namespaceSiblings(db, existing.income, id);
-    return { error: detectCollision({ emoji, icon, name }, siblings), order };
-}
+    const siblings = yield* namespaceSiblings("validate", db, existing.income, id);
+    return { error: detectCollision({ emoji, icon, name }, siblings), order } satisfies CategoryValidationResult;
+});
 
 export interface SuggestedCategoryPreset {
     color: string;
@@ -375,17 +440,19 @@ export function presetsNotAdded(
     return pool.filter((preset) => !(usedNames.has(capitalizeCategoryName(preset.name)) || usedIcons.has(preset.icon)));
 }
 
-export async function suggestedCategoriesNotAdded(db: Database, income: boolean): Promise<SuggestedCategoryPreset[]> {
-    return presetsNotAdded(income, await namespaceSiblings(db, income));
-}
+export const suggestedCategoriesNotAdded = Effect.fn("Categories.suggestedCategoriesNotAdded")(
+    function* suggestedCategoriesNotAdded(db: Database, income: boolean) {
+        return presetsNotAdded(income, yield* namespaceSiblings("suggest", db, income));
+    }
+);
 
 export const categoriesRepo = {
     /** A preset that would collide is skipped silently, returning null. */
-    async addSuggested(
+    addSuggested: Effect.fn("Categories.addSuggested")(function* addSuggested(
         db: Database,
         input: { name: string; icon: string; color: string; income: boolean }
-    ): Promise<string | null> {
-        const { error, order } = await validateCategoryCreate(db, {
+    ) {
+        const { error, order } = yield* validateCategoryCreate(db, {
             emoji: null,
             icon: input.icon,
             income: input.income,
@@ -396,23 +463,25 @@ export const categoriesRepo = {
         }
         const now = new Date();
         const id = newId();
-        await db.insert(categories).values({
-            color: input.color,
-            dateCreated: now,
-            deletedAt: null,
-            emoji: null,
-            icon: input.icon,
-            id,
-            income: input.income,
-            name: capitalizeCategoryName(input.name),
-            parentId: null,
-            sortOrder: order,
-            updatedAt: now,
-        });
+        yield* query("addSuggested", () =>
+            db.insert(categories).values({
+                color: input.color,
+                dateCreated: now,
+                deletedAt: null,
+                emoji: null,
+                icon: input.icon,
+                id,
+                income: input.income,
+                name: capitalizeCategoryName(input.name),
+                parentId: null,
+                sortOrder: order,
+                updatedAt: now,
+            })
+        );
         return id;
-    },
-    async create(db: Database, input: CategoryInput): Promise<string> {
-        const { error, order } = await validateCategoryCreate(db, {
+    }),
+    create: Effect.fn("Categories.create")(function* create(db: Database, input: CategoryInput) {
+        const { error, order } = yield* validateCategoryCreate(db, {
             emoji: input.emoji ?? null,
             icon: input.icon ?? "",
             income: input.income,
@@ -420,107 +489,127 @@ export const categoriesRepo = {
             parentId: input.parentId ?? null,
         });
         if (error != null) {
-            throw new Error(CATEGORY_ERROR_MESSAGES[error]);
+            return yield* new CategoryValidationError({ code: error });
         }
         const parentId = input.parentId ?? null;
         const now = new Date();
         const id = newId();
-        await db.insert(categories).values({
-            color: input.color,
-            dateCreated: now,
-            deletedAt: null,
-            emoji: input.emoji || null,
-            icon: input.icon || null,
-            id,
-            income: input.income,
-            name: capitalizeCategoryName(input.name),
-            parentId,
-            sortOrder: order,
-            updatedAt: now,
-        });
+        yield* query("create", () =>
+            db.insert(categories).values({
+                color: input.color,
+                dateCreated: now,
+                deletedAt: null,
+                emoji: input.emoji || null,
+                icon: input.icon || null,
+                id,
+                income: input.income,
+                name: capitalizeCategoryName(input.name),
+                parentId,
+                sortOrder: order,
+                updatedAt: now,
+            })
+        );
         return id;
-    },
+    }),
 
     // Cascaded by hand: `foreign_keys` isn't enabled on the connection, so the schema's `ON DELETE` never fires. The
     // budget takes the full tombstone since `budgets.categoryId` is UNIQUE even when deleted. Schedules retire so
     // `repairOrphanedRecurrence` mints no successor, and photos drop so `reconcilePhotos` collects them.
-    async remove(db: Database, id: string): Promise<void> {
+    remove: Effect.fn("Categories.remove")(function* remove(db: Database, id: string) {
         const now = new Date();
-        await withTransaction(db, async () => {
-            await db
-                .update(transactions)
-                .set({
-                    deletedAt: now,
-                    imageKey: null,
-                    imageUri: null,
-                    recurringType: RECURRING_TYPE.none,
-                    updatedAt: now,
-                })
-                .where(and(eq(transactions.categoryId, id), isNull(transactions.deletedAt)));
-            await db
-                .update(budgets)
-                .set({ ...TOMBSTONED_BUDGET, deletedAt: now, updatedAt: now })
-                .where(and(eq(budgets.categoryId, id), isNull(budgets.deletedAt)));
-            await db
-                .update(categories)
-                .set({ parentId: null, updatedAt: now })
-                .where(and(eq(categories.parentId, id), isNull(categories.deletedAt)));
-            await db
-                .update(categories)
-                .set({ deletedAt: now, updatedAt: now })
-                .where(and(eq(categories.id, id), isNull(categories.deletedAt)));
-        });
-    },
+        yield* transaction(
+            db,
+            Effect.gen(function* write() {
+                yield* query("remove", () =>
+                    db
+                        .update(transactions)
+                        .set({
+                            deletedAt: now,
+                            imageKey: null,
+                            imageUri: null,
+                            recurringType: RECURRING_TYPE.none,
+                            updatedAt: now,
+                        })
+                        .where(and(eq(transactions.categoryId, id), isNull(transactions.deletedAt)))
+                );
+                yield* query("remove", () =>
+                    db
+                        .update(budgets)
+                        .set({ ...TOMBSTONED_BUDGET, deletedAt: now, updatedAt: now })
+                        .where(and(eq(budgets.categoryId, id), isNull(budgets.deletedAt)))
+                );
+                yield* query("remove", () =>
+                    db
+                        .update(categories)
+                        .set({ parentId: null, updatedAt: now })
+                        .where(and(eq(categories.parentId, id), isNull(categories.deletedAt)))
+                );
+                yield* query("remove", () =>
+                    db
+                        .update(categories)
+                        .set({ deletedAt: now, updatedAt: now })
+                        .where(and(eq(categories.id, id), isNull(categories.deletedAt)))
+                );
+            }),
+            (cause) => new CategoriesError({ cause, operation: "remove" })
+        );
+    }),
 
     /** One namespace/parent scope, already ordered: each id takes its index as `sortOrder`. */
-    async reorder(db: Database, orderedIds: string[]): Promise<void> {
+    reorder: Effect.fn("Categories.reorder")(function* reorder(db: Database, orderedIds: string[]) {
         const now = new Date();
-        await withTransaction(db, async () => {
-            for (let index = 0; index < orderedIds.length; index += 1) {
-                // oxlint-disable-next-line no-await-in-loop -- one expo-sqlite connection backs the surrounding withTransaction, so concurrent statements would interleave inside the same transaction
-                await db
-                    .update(categories)
-                    .set({ sortOrder: index, updatedAt: now })
-                    .where(eq(categories.id, orderedIds[index]));
-            }
-        });
-    },
+        yield* transaction(
+            db,
+            // One expo-sqlite connection backs the surrounding transaction, so concurrent statements would
+            // interleave inside it.
+            Effect.all(
+                orderedIds.map((orderedId, index) =>
+                    query("reorder", () =>
+                        db
+                            .update(categories)
+                            .set({ sortOrder: index, updatedAt: now })
+                            .where(eq(categories.id, orderedId))
+                    )
+                ),
+                { concurrency: 1, discard: true }
+            ),
+            (cause) => new CategoriesError({ cause, operation: "reorder" })
+        );
+    }),
 
     /** A reparented category inherits its new parent's income namespace. */
-    async setParent(db: Database, id: string, parentId: string | null): Promise<void> {
-        const existing = await getCategoryById(db, id);
+    setParent: Effect.fn("Categories.setParent")(function* setParent(
+        db: Database,
+        id: string,
+        parentId: string | null
+    ) {
+        const existing = yield* findCategory("setParent", db, id);
         if (existing == null) {
-            throw new Error("Category not found.");
+            return yield* new CategoryNotFoundError({ id });
         }
         const now = new Date();
         if (parentId == null) {
-            await db
-                .update(categories)
-                .set({
-                    parentId: null,
-                    sortOrder: await nextSortOrder(db, existing.income, null),
-                    updatedAt: now,
-                })
-                .where(eq(categories.id, id));
+            const sortOrder = yield* nextSortOrder("setParent", db, existing.income, null);
+            yield* query("setParent", () =>
+                db.update(categories).set({ parentId: null, sortOrder, updatedAt: now }).where(eq(categories.id, id))
+            );
             return;
         }
-        const parent = await getCategoryById(db, parentId);
+        const parent = yield* findCategory("setParent", db, parentId);
         if (parent == null) {
-            throw new Error("Category not found.");
+            return yield* new CategoryNotFoundError({ id: parentId });
         }
-        await db
-            .update(categories)
-            .set({
-                income: parent.income,
-                parentId,
-                sortOrder: await nextSortOrder(db, parent.income, parentId),
-                updatedAt: now,
-            })
-            .where(eq(categories.id, id));
-    },
+        const sortOrder = yield* nextSortOrder("setParent", db, parent.income, parentId);
+        yield* query("setParent", () =>
+            db
+                .update(categories)
+                .set({ income: parent.income, parentId, sortOrder, updatedAt: now })
+                .where(eq(categories.id, id))
+        );
+    }),
 
     /** The income namespace is fixed at creation and cannot change here. */
-    async update(
+    update: Effect.fn("Categories.update")(function* update(
         db: Database,
         id: string,
         patch: {
@@ -529,17 +618,17 @@ export const categoriesRepo = {
             emoji?: string | null;
             color?: string;
         }
-    ): Promise<void> {
-        const existing = await getCategoryById(db, id);
+    ) {
+        const existing = yield* findCategory("update", db, id);
         if (existing == null) {
-            throw new Error("Category not found.");
+            return yield* new CategoryNotFoundError({ id });
         }
         const name = patch.name ?? existing.name ?? "";
         const icon = patch.icon ?? existing.icon ?? "";
         const emoji = patch.emoji ?? existing.emoji ?? "";
-        const { error } = await validateCategoryEdit(db, id, { emoji, icon, name });
+        const { error } = yield* validateCategoryEdit(db, id, { emoji, icon, name });
         if (error != null) {
-            throw new Error(CATEGORY_ERROR_MESSAGES[error]);
+            return yield* new CategoryValidationError({ code: error });
         }
 
         const updates: Partial<typeof categories.$inferInsert> = {
@@ -557,8 +646,8 @@ export const categoriesRepo = {
         if (patch.color !== undefined) {
             updates.color = patch.color;
         }
-        await db.update(categories).set(updates).where(eq(categories.id, id));
-    },
+        yield* query("update", () => db.update(categories).set(updates).where(eq(categories.id, id)));
+    }),
 };
 
 const ALL_CATEGORY_PRESETS: readonly SuggestedCategoryPreset[] = [
@@ -585,16 +674,16 @@ export function presetForName(categoryName: string): SuggestedCategoryPreset {
 }
 
 // The icon is picked free BEFORE `create`, which rejects an icon collision namespace-wide.
-export async function ensureCategoryByName(
+export const ensureCategoryByName = Effect.fn("Categories.ensureCategoryByName")(function* ensureCategoryByName(
     db: Database,
     name: string,
     income: boolean,
     icon: string,
     color: string,
     nested?: { emoji?: string | null; parentId?: string | null }
-): Promise<string> {
+) {
     const cleanName = capitalizeCategoryName(name);
-    const siblings = await namespaceSiblings(db, income);
+    const siblings = yield* namespaceSiblings("ensure", db, income);
     const existing = siblings.find((row) => row.name != null && capitalizeCategoryName(row.name) === cleanName);
     if (existing != null) {
         return existing.id;
@@ -602,7 +691,7 @@ export async function ensureCategoryByName(
     // An emoji and an icon are alternatives, not a pair: sending both trips the
     // duplicate-symbol check that `validateCategoryCreate` runs namespace-wide.
     const emoji = nested?.emoji ?? null;
-    return categoriesRepo.create(db, {
+    return yield* categoriesRepo.create(db, {
         color,
         emoji,
         icon: emoji == null ? pickFreeCategoryIcon(siblings, icon) : undefined,
@@ -610,4 +699,4 @@ export async function ensureCategoryByName(
         name: cleanName,
         parentId: nested?.parentId ?? null,
     });
-}
+});

@@ -6,8 +6,9 @@ import { Pressable, View } from "react-native";
 
 import { AmountsHiddenContext } from "@/components/amount-text";
 import { useDatabase } from "@/contexts/local-data-context";
-import { setBoolSetting } from "@/data/settings-core";
 import { useTranslation } from "@/i18n/context";
+import { setBoolSettingCommand } from "@/state/settings-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 import { withAlpha } from "@/theme/shade";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
@@ -22,6 +23,7 @@ const PRESSED_ALPHA = 0.1;
 /** 40dp inside a 48dp touch frame, given back as negative margin. */
 export const AmountsEyeButton: typeof AmountsEyeButtonBase = () => {
     const db = useDatabase();
+    const setBoolSetting = useAtomCommand(setBoolSettingCommand);
     const t = useTranslation();
     const m3 = useMaterialColors();
     const hidden = use(AmountsHiddenContext);
@@ -32,7 +34,7 @@ export const AmountsEyeButton: typeof AmountsEyeButtonBase = () => {
             android_ripple={{ borderless: true, color: withAlpha(m3.onSecondaryContainer, PRESSED_ALPHA), radius: 20 }}
             className="-m-1 size-12 items-center justify-center"
             onPress={() => {
-                setBoolSetting(db, "hideAmounts", !hidden);
+                setBoolSetting({ db, key: "hideAmounts", value: !hidden });
             }}
         >
             <View className="bg-m3-secondary-container size-10 items-center justify-center rounded-full">

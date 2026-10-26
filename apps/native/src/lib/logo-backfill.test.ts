@@ -6,8 +6,12 @@ jest.mock("@/data/logo-backfill-core", () => ({
     attachMissingLogos: jest.fn(() => require("effect/Effect").succeed(1)),
 }));
 jest.mock("@/data/settings-core", () => ({
-    readBoolSetting: jest.fn(async () => false),
-    readRemoteEnrichment: jest.fn(async () => false),
+    readRemoteEnrichment: jest.fn(() => require("effect/Effect").succeed(false)),
+}));
+jest.mock("@/state/settings-commands", () => ({
+    readBoolSettingCommand: {},
+    readRemoteEnrichmentCommand: {},
+    runSettingsCommand: jest.fn(async () => false),
 }));
 jest.mock("./convex", () => ({ convex: null, enrichmentTransport: () => null }));
 jest.mock("./logo-fetch", () => ({ fetchMerchantImage: jest.fn() }));

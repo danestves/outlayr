@@ -1,4 +1,5 @@
 import { and, eq, isNull, ne, sql } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
@@ -12,7 +13,7 @@ import { cardStatus, filedNote, parseWalletCards } from "./pending-writes-core";
 
 export async function buildWalletPush(db: Database): Promise<WalletPushSnapshot> {
     const live = await accountsRepo.listBanks(db);
-    const walletCards = parseWalletCards(await getMeta(db, META_KEYS.walletCards));
+    const walletCards = parseWalletCards(await Effect.runPromise(getMeta(db, META_KEYS.walletCards)));
     const filed = await db
         .select({
             category: categories.name,

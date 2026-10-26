@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import BetterSqlite3 from "better-sqlite3";
 import { isNull } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
@@ -160,7 +161,7 @@ describe("eraseData", () => {
     it("tombstones the ledger, clears the photos, then clears Spotlight", async () => {
         const { calls, residue } = spyResidue();
 
-        await eraseData(db, "transactions", residue);
+        await Effect.runPromise(eraseData(db, "transactions", residue));
 
         expect(calls).toStrictEqual(["photos", "spotlight"]);
         await expect(liveTransactions(db)).resolves.toHaveLength(0);
@@ -172,7 +173,10 @@ describe("eraseData", () => {
         const busy = new Error("directory busy");
         const { calls, residue } = spyResidue({ photos: busy });
 
-        await expect(eraseData(db, "transactions", residue)).rejects.toBe(busy);
+        await expect(Effect.runPromise(Effect.flip(eraseData(db, "transactions", residue)))).resolves.toMatchObject({
+            cause: busy,
+            residue: "photos",
+        });
 
         expect(calls).toStrictEqual(["photos", "spotlight"]);
     });
@@ -182,7 +186,7 @@ describe("eraseData", () => {
     it("leaves the ledger erased after the photo step failed", async () => {
         const { residue } = spyResidue({ photos: new Error("directory busy") });
 
-        await expect(eraseData(db, "transactions", residue)).rejects.toThrow();
+        await expect(Effect.runPromise(eraseData(db, "transactions", residue))).rejects.toThrow();
 
         await expect(liveTransactions(db)).resolves.toHaveLength(0);
         const [tombstone] = await db.select().from(transactions);
@@ -194,17 +198,9 @@ describe("eraseData", () => {
     it("reports a photo step that threw a value of its own", async () => {
         const { calls, residue } = spyResidue({ photos: undefined });
 
-        let rejected = false;
-        let cause: unknown = "never thrown";
-        try {
-            await eraseData(db, "transactions", residue);
-        } catch (error) {
-            rejected = true;
-            cause = error;
-        }
+        const failure = await Effect.runPromise(Effect.flip(eraseData(db, "transactions", residue)));
 
-        expect(rejected).toBe(true);
-        expect(cause).toBeUndefined();
+        expect(failure).toMatchObject({ _tag: "EraseResidueError", cause: undefined, residue: "photos" });
         expect(calls).toStrictEqual(["photos", "spotlight"]);
     });
 
@@ -212,7 +208,10 @@ describe("eraseData", () => {
         const denied = new Error("index unavailable");
         const { calls, residue } = spyResidue({ spotlight: denied });
 
-        await expect(eraseData(db, "transactions", residue)).rejects.toBe(denied);
+        await expect(Effect.runPromise(Effect.flip(eraseData(db, "transactions", residue)))).resolves.toMatchObject({
+            cause: denied,
+            residue: "spotlight",
+        });
 
         expect(calls).toStrictEqual(["photos", "spotlight"]);
     });
@@ -226,7 +225,7 @@ describe("eraseData", () => {
 
         // `toMatchObject`, not `.rejects.toThrow()`: the rejection is a native-addon `SqliteError` from
         // another Jest realm, so `instanceof Error` fails and `toThrow()` reports "did not throw".
-        await expect(eraseData(unwritable, "transactions", residue)).rejects.toMatchObject({
+        await expect(Effect.runPromise(eraseData(unwritable, "transactions", residue))).rejects.toMatchObject({
             message: expect.any(String),
         });
 

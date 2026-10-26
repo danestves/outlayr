@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { startOfDay } from "@outlayr/money/calendar";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
+import * as Effect from "effect/Effect";
 
 import { setBoolSetting } from "@/data/settings-core";
 import type { Database } from "@/db/client";
@@ -25,7 +26,7 @@ describe("syncSubscriptionReminders", () => {
     beforeEach(async () => {
         db = migratedDatabase();
         mockReminders.cancelReminders.mockClear();
-        await setBoolSetting(db, "subscriptionReminders", true);
+        await Effect.runPromise(setBoolSetting(db, "subscriptionReminders", true));
     });
 
     it("leaves the armed queue alone when the permission could not be read", async () => {
@@ -37,7 +38,7 @@ describe("syncSubscriptionReminders", () => {
     });
 
     it("still silences the queue when the switch is off, whatever the permission", async () => {
-        await setBoolSetting(db, "subscriptionReminders", false);
+        await Effect.runPromise(setBoolSetting(db, "subscriptionReminders", false));
         mockReminders.reminderPermission.mockResolvedValue("unknown");
 
         await syncSubscriptionReminders(db);

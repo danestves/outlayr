@@ -40,9 +40,9 @@ export const make = Effect.gen(function* make() {
     const open = Effect.fn("LocalDatabase.open")(function* open() {
         const db = yield* Effect.try({ catch: failedAt("open"), try: openConnection });
         yield* Effect.tryPromise({ catch: failedAt("migrate"), try: () => migrate(db, migrationsBundle) });
-        yield* Effect.tryPromise({ catch: failedAt("bootstrap"), try: () => bootstrapLocalData(db) });
+        yield* bootstrapLocalData(db).pipe(Effect.mapError((error) => failedAt("bootstrap")(error.cause)));
         // Ahead of `ready`, so the onboarding guard's first read already sees post-backfill appMeta.
-        yield* Effect.tryPromise({ catch: failedAt("settle"), try: () => settleLegacyOnboarding(db) });
+        yield* settleLegacyOnboarding(db).pipe(Effect.mapError((error) => failedAt("settle")(error.cause)));
         return db;
     });
 

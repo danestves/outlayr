@@ -3,10 +3,13 @@ import { File } from "expo-file-system";
 
 import type { LogoBackfillDeps } from "@/data/logo-backfill-core";
 import { attachMissingLogos } from "@/data/logo-backfill-core";
-import { readBoolSetting, readRemoteEnrichment } from "@/data/settings-core";
+import { readRemoteEnrichment } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import { firstLocale } from "@/i18n/device-language";
 import { persistLogo } from "@/lib/persist-logo";
+import { createCommand, runAtomCommand, SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { appAtomRegistry } from "@/state/atom-registry";
+import { readBoolSettingCommand, readRemoteEnrichmentCommand, runSettingsCommand } from "@/state/settings-commands";
 
 import { enrichmentTransport } from "./convex";
 import { fetchMerchantImage } from "./logo-fetch";
@@ -56,8 +59,11 @@ export function discardLogo(imageUri: string): void {
     }
 }
 
-async function runBackfill(db: Database, cancelled: () => boolean): Promise<number> {
-    const remoteEnabled = await readRemoteEnrichment(db);
+const backfillPass = Effect.fn("LogoBackfill.backfillPass")(function* backfillPass(
+    db: Database,
+    cancelled: () => boolean
+) {
+    const remoteEnabled = yield* readRemoteEnrichment(db);
     const device = firstLocale();
     const locale = device?.languageTag?.trim() || undefined;
     const regionCode = device?.regionCode?.trim() || undefined;
@@ -71,8 +77,8 @@ async function runBackfill(db: Database, cancelled: () => boolean): Promise<numb
                 : async (args) => {
                       // Read at send time: the pass outlives the settings screen and must not send after consent went.
                       const [remoteEnrichment, groundedLookup] = await Promise.all([
-                          readRemoteEnrichment(db),
-                          readBoolSetting(db, "groundedLookup"),
+                          runSettingsCommand(readRemoteEnrichmentCommand, db),
+                          runSettingsCommand(readBoolSettingCommand, { db, key: "groundedLookup" }),
                       ]);
                       if (!remoteEnrichment || cancelled()) {
                           return null;
@@ -92,5 +98,14 @@ async function runBackfill(db: Database, cancelled: () => boolean): Promise<numb
         fetchImage: fetchMerchantImage,
         persist: persistLogo,
     };
-    return Effect.runPromise(attachMissingLogos(db, deps));
+    return yield* attachMissingLogos(db, deps);
+});
+
+const backfillCommand = createCommand({
+    execute: (input: { cancelled: () => boolean; db: Database }) => backfillPass(input.db, input.cancelled),
+    label: "ledger:logo-backfill",
+});
+
+async function runBackfill(db: Database, cancelled: () => boolean): Promise<number> {
+    return unwrapAtomCommand(await runAtomCommand(appAtomRegistry, backfillCommand, { cancelled, db }, SILENT));
 }
