@@ -5,13 +5,13 @@ import { Pressable, View } from "react-native";
 
 import { Text } from "@/components/text";
 import { ThinkingOrb } from "@/components/thinking-orb/thinking-orb";
-import { useCsvImportContext } from "@/contexts/csv-import-context";
 import type { UnavailableReason } from "@/domain/import-flow";
-import type { CsvImportStage } from "@/hooks/use-csv-import";
+import { useCsvImport } from "@/hooks/use-csv-import";
 import type { ImportReviewResult } from "@/hooks/use-import-review";
 import { useProEntitled } from "@/hooks/use-pro-locked";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
+import type { CsvImportStage } from "@/lib/csv-import";
 import { importDraftStore, useImportDraft } from "@/lib/import-draft-store";
 
 import { StepCta } from "../step-cta";
@@ -105,7 +105,7 @@ interface ResolveStepProps {
 export function ResolveStep({ review, onOpenFeatureLab, onSeePro }: ResolveStepProps) {
     const t = useTranslation();
     const { flow } = useImportDraft();
-    const { running, stage, outcome, reason, totalLabels, tier1Matched, tier2Sent, run } = useCsvImportContext();
+    const { running, stage, outcome, reason, totalLabels, tier1Matched, tier2Sent, run, retry } = useCsvImport();
 
     useEffect(() => {
         if (!running && outcome == null) {
@@ -150,7 +150,7 @@ export function ResolveStep({ review, onOpenFeatureLab, onSeePro }: ResolveStepP
                         <Text className="font-sans-medium text-body text-tint">{t("import.openFeatureLab")}</Text>
                     </Pressable>
                 ) : (
-                    <UnavailableAction onRetry={run} onSeePro={onSeePro} reason={reason} />
+                    <UnavailableAction onRetry={retry} onSeePro={onSeePro} reason={reason} />
                 )}
                 {reviewCta}
             </View>

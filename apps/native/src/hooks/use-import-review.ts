@@ -1,5 +1,5 @@
 import { and, eq, gte, isNull, lte } from "drizzle-orm";
-import { useCallback, useEffect, useMemo } from "react";
+import { useEffect } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
 import { useGlobalCurrency } from "@/data/app-meta";
@@ -8,7 +8,7 @@ import { applyImport, buildImportPlan } from "@/data/transfer-core";
 import type { ImportEntry, ImportPlan, SkipReason } from "@/data/transfer-core";
 import { categories, transactions } from "@/db/schema";
 import { fingerprintsOf, flagDuplicates } from "@/domain/import-dedup";
-import type { ImportCommitState } from "@/domain/import-flow";
+import type { ImportCommitState, ImportFlowState } from "@/domain/import-flow";
 import { deduceDateFormat, detectDecimalSeparator } from "@/domain/transaction-csv";
 import { FALLBACK_IDENTITY_COLOR } from "@/domain/transaction-identity";
 import { importDraftStore, useImportDraft } from "@/lib/import-draft-store";
@@ -63,6 +63,22 @@ const EMPTY_PLAN: ImportPlan = {
     skipped: [],
 };
 
+function buildPlan(
+    parsed: ImportFlowState["parsed"],
+    resolved: ImportFlowState["resolved"],
+    resolution: ImportFlowState["resolution"],
+    categoryIncome: ReadonlyMap<string, boolean>
+): ImportPlan {
+    if (parsed == null || resolved == null) {
+        return EMPTY_PLAN;
+    }
+    const { mapping } = resolved;
+    const { rows } = parsed;
+    const dateFormat = deduceDateFormat(rows.map((row) => row[mapping.date] ?? "")) ?? "";
+    const decimal = detectDecimalSeparator(rows.map((row) => row[mapping.amount] ?? ""));
+    return buildImportPlan(rows, mapping, dateFormat, decimal, resolution?.links ?? new Map(), categoryIncome);
+}
+
 export interface ReviewCategoryTile {
     color: string;
     emoji: string | null;
@@ -83,10 +99,42 @@ export interface ImportReviewResult {
     selectedCount: number;
 }
 
+function indexCategories(
+    rows: readonly {
+        color: string | null;
+        emoji: string | null;
+        icon: string | null;
+        id: string;
+        income: boolean;
+        name: string | null;
+    }[]
+) {
+    const categoryIncome = new Map<string, boolean>();
+    const categoryName = new Map<string, string>();
+    const categoryTile = new Map<string, ReviewCategoryTile>();
+    for (const row of rows) {
+        categoryIncome.set(row.id, row.income);
+        if (row.name != null) {
+            categoryName.set(row.id, row.name);
+        }
+        categoryTile.set(row.id, {
+            color: row.color ?? FALLBACK_IDENTITY_COLOR,
+            emoji: row.emoji ?? null,
+            icon: row.icon ?? null,
+        });
+    }
+    return { categoryIncome, categoryName, categoryTile };
+}
+
+function onToggle(index: number) {
+    importDraftStore.dispatch({ index, type: "rowToggled" });
+}
+
 export function useImportReview(): ImportReviewResult {
     const haptics = useHaptics();
     const db = useDatabase();
     const { flow } = useImportDraft();
+    const { parsed, resolved, resolution } = flow;
 
     const currency = useGlobalCurrency(db);
 
@@ -103,34 +151,9 @@ export function useImportReview(): ImportReviewResult {
             .from(categories)
             .where(isNull(categories.deletedAt))
     );
-    const { categoryIncome, categoryName, categoryTile } = useMemo(() => {
-        const income = new Map<string, boolean>();
-        const name = new Map<string, string>();
-        const tile = new Map<string, ReviewCategoryTile>();
-        for (const row of categoryRows) {
-            income.set(row.id, row.income);
-            if (row.name != null) {
-                name.set(row.id, row.name);
-            }
-            tile.set(row.id, {
-                color: row.color ?? FALLBACK_IDENTITY_COLOR,
-                emoji: row.emoji ?? null,
-                icon: row.icon ?? null,
-            });
-        }
-        return { categoryIncome: income, categoryName: name, categoryTile: tile };
-    }, [categoryRows]);
+    const { categoryIncome, categoryName, categoryTile } = indexCategories(categoryRows);
 
-    const plan = useMemo(() => {
-        if (flow.parsed == null || flow.resolved == null) {
-            return EMPTY_PLAN;
-        }
-        const { mapping } = flow.resolved;
-        const { rows } = flow.parsed;
-        const dateFormat = deduceDateFormat(rows.map((row) => row[mapping.date] ?? "")) ?? "";
-        const decimal = detectDecimalSeparator(rows.map((row) => row[mapping.amount] ?? ""));
-        return buildImportPlan(rows, mapping, dateFormat, decimal, flow.resolution?.links ?? new Map(), categoryIncome);
-    }, [flow.parsed, flow.resolved, flow.resolution, categoryIncome]);
+    const plan = buildPlan(parsed, resolved, resolution, categoryIncome);
 
     const existingRows = useLiveQuery(
         transactions,
@@ -155,10 +178,7 @@ export function useImportReview(): ImportReviewResult {
         [plan.earliest, plan.latest]
     );
 
-    const duplicates = useMemo(
-        () => flagDuplicates(plan.entries, fingerprintsOf(existingRows)),
-        [plan.entries, existingRows]
-    );
+    const duplicates = flagDuplicates(plan.entries, fingerprintsOf(existingRows));
 
     const settled = flow.commit.phase === "writing" || flow.commit.phase === "success";
     useEffect(() => {
@@ -173,15 +193,11 @@ export function useImportReview(): ImportReviewResult {
         });
     }, [duplicates, flow.duplicates, settled]);
 
-    const rows = useMemo(() => buildReviewRows(plan, flow.duplicates), [plan, flow.duplicates]);
+    const rows = buildReviewRows(plan, flow.duplicates);
 
     const selectedCount = plan.entries.filter((_, index) => !flow.excluded.has(index)).length;
 
-    const onToggle = useCallback((index: number) => {
-        importDraftStore.dispatch({ index, type: "rowToggled" });
-    }, []);
-
-    const onCommit = useCallback(() => {
+    const onCommit = () => {
         if (importDraftStore.getSnapshot().flow.commit.phase === "writing") {
             return;
         }
@@ -210,7 +226,7 @@ export function useImportReview(): ImportReviewResult {
                     type: "commitFailed",
                 });
             });
-    }, [db, plan, flow.excluded, flow.duplicates, haptics]);
+    };
 
     return {
         categoryName,

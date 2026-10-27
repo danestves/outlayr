@@ -1,7 +1,6 @@
 import File02Icon from "@hugeicons-pro/core-stroke-rounded/File02Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import { Button } from "panelui-native/components/button";
-import { useMemo } from "react";
 import { View } from "react-native";
 
 import { Text } from "@/components/text";
@@ -58,13 +57,11 @@ export function FileStep({ onChoose, busy = false }: FileStepProps) {
     const { flow: state, ui } = useImportDraft();
     const error = ui.fileError;
 
-    const dateFormat = useMemo(() => {
-        if (state.parsed == null || state.resolved == null) {
-            return null;
-        }
-        const { mapping } = state.resolved;
-        return deduceDateFormat(state.parsed.rows.map((row) => row[mapping.date] ?? ""));
-    }, [state.parsed, state.resolved]);
+    const { parsed, resolved } = state;
+    const dateFormat =
+        parsed == null || resolved == null
+            ? null
+            : deduceDateFormat(parsed.rows.map((row) => row[resolved.mapping.date] ?? ""));
 
     if (error == null && state.parsed != null && state.mappingGaps.length > 0) {
         return (
