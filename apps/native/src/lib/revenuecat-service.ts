@@ -105,9 +105,12 @@ export interface Session {
 
 export interface Entitlement {
     readonly isConfigured: boolean;
+    /** Whether the account carries the entitlement the SERVER gates on. */
     readonly isMirrored: boolean;
+    /** Bounded by the requests themselves, so a gate can hold on it without risking a hold that never ends. */
     readonly isPending: boolean;
     readonly isPro: boolean;
+    /** False until the first identity sync answers, so no gate reads a guess. */
     readonly isResolved: boolean;
 }
 
