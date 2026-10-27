@@ -44,6 +44,7 @@ const EMAIL_FAILURES = new Map<string, TranslationKey>([
 ]);
 
 const TOO_MANY_REQUESTS = 429;
+const INVALID_EMAIL_FIELD = "[body.email]";
 
 export function signInFailureMessage(cause: unknown, t: TranslateFn): string {
     const code = errorField(cause, "code");
@@ -52,6 +53,9 @@ export function signInFailureMessage(cause: unknown, t: TranslateFn): string {
     }
     if (Option.getOrUndefined(decodeProviderFailure(cause))?.status === TOO_MANY_REQUESTS) {
         return t("auth.email.error.rateLimited");
+    }
+    if (code === "VALIDATION_ERROR" && errorField(cause, "message")?.startsWith(INVALID_EMAIL_FIELD)) {
+        return t("auth.email.error.email");
     }
     return t((code === null ? undefined : EMAIL_FAILURES.get(code)) ?? "settings.account.genericFailure");
 }
