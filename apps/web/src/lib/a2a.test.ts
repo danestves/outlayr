@@ -1,15 +1,20 @@
+import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vite-plus/test";
 
 import { answerA2a } from "./a2a";
 
-const call = (body: string, version: string | null = "1.0") =>
-    answerA2a(
-        new Request("https://tryoutlayr.com/a2a", {
-            body,
-            headers: version === null ? {} : { "a2a-version": version },
-            method: "POST",
-        })
-    ).then((response) => response.json());
+const call = async (body: string, version: string | null = "1.0") => {
+    const response = await Effect.runPromise(
+        answerA2a(
+            new Request("https://tryoutlayr.com/a2a", {
+                body,
+                headers: version === null ? {} : { "a2a-version": version },
+                method: "POST",
+            })
+        )
+    );
+    return response.json();
+};
 
 const send = (params: unknown) => JSON.stringify({ id: 7, jsonrpc: "2.0", method: "SendMessage", params });
 const question = { message: { messageId: "m1", parts: [{ text: "What is Outlayr?" }], role: "ROLE_USER" } };

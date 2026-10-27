@@ -1,7 +1,9 @@
+import * as Effect from "effect/Effect";
 import { useState } from "react";
 import type { FormEvent } from "react";
 
-import { AuthFailureError, failureMessage, unwrap } from "@/lib/account";
+import { authRequest, failureMessage } from "@/lib/account";
+import type { AuthFailure } from "@/lib/account";
 import { authClient } from "@/lib/auth-client";
 
 import { LocalizedLink } from "../localized-link";
@@ -29,75 +31,90 @@ export function SignInFlow({ onDone, target }: { onDone: () => void; target: str
         setStep(next);
     };
 
-    const run = async (work: () => Promise<void>) => {
+    const run = (program: Effect.Effect<void, AuthFailure>) => {
         setError(null);
         setBusy(true);
-        try {
-            await work();
-        } catch (cause) {
-            setError(failureMessage(cause instanceof AuthFailureError ? cause.error : undefined));
-        } finally {
-            setBusy(false);
-        }
+        Effect.runFork(
+            program.pipe(
+                Effect.catchTags({ AuthFailure: (failure) => Effect.sync(() => setError(failureMessage(failure))) }),
+                Effect.ensuring(Effect.sync(() => setBusy(false)))
+            )
+        );
     };
 
     const social = (provider: "apple" | "google") =>
-        run(async () => unwrap(await authClient.signIn.social({ callbackURL: target, provider })));
+        run(authRequest(() => authClient.signIn.social({ callbackURL: target, provider })));
 
     const signIn = (event: FormEvent) => {
         event.preventDefault();
-        return run(async () => {
-            const result = await authClient.signIn.email({ email, password });
-            if (result.error?.code === "EMAIL_NOT_VERIFIED") {
-                go("verify");
-                return;
-            }
-            unwrap(result);
-            onDone();
-        });
+        run(
+            Effect.gen(function* signInProgram() {
+                yield* authRequest(() => authClient.signIn.email({ email, password }));
+                onDone();
+            }).pipe(
+                Effect.catchIf(
+                    (failure) => failure.code === "EMAIL_NOT_VERIFIED",
+                    () => Effect.sync(() => go("verify"))
+                )
+            )
+        );
     };
 
     const create = (event: FormEvent) => {
         event.preventDefault();
-        return run(async () => {
-            unwrap(await authClient.signUp.email({ email, name: "", password }));
-            go("verify");
-        });
+        run(
+            Effect.gen(function* createProgram() {
+                yield* authRequest(() => authClient.signUp.email({ email, name: "", password }));
+                go("verify");
+            })
+        );
     };
 
     const verify = (otp: string) =>
-        run(async () => {
-            unwrap(await authClient.emailOtp.verifyEmail({ email, otp }));
-            onDone();
-        });
+        run(
+            Effect.gen(function* verifyProgram() {
+                yield* authRequest(() => authClient.emailOtp.verifyEmail({ email, otp }));
+                onDone();
+            })
+        );
 
     const resendVerification = () =>
-        run(async () => {
-            unwrap(await authClient.emailOtp.sendVerificationOtp({ email, type: "email-verification" }));
-            setResent(true);
-        });
+        run(
+            Effect.gen(function* resendVerificationProgram() {
+                yield* authRequest(() =>
+                    authClient.emailOtp.sendVerificationOtp({ email, type: "email-verification" })
+                );
+                setResent(true);
+            })
+        );
 
     const requestReset = (event: FormEvent) => {
         event.preventDefault();
-        return run(async () => {
-            unwrap(await authClient.emailOtp.requestPasswordReset({ email }));
-            go("reset");
-        });
+        run(
+            Effect.gen(function* requestResetProgram() {
+                yield* authRequest(() => authClient.emailOtp.requestPasswordReset({ email }));
+                go("reset");
+            })
+        );
     };
 
     const resendReset = () =>
-        run(async () => {
-            unwrap(await authClient.emailOtp.requestPasswordReset({ email }));
-            setResent(true);
-        });
+        run(
+            Effect.gen(function* resendResetProgram() {
+                yield* authRequest(() => authClient.emailOtp.requestPasswordReset({ email }));
+                setResent(true);
+            })
+        );
 
     const reset = (event: FormEvent) => {
         event.preventDefault();
-        return run(async () => {
-            unwrap(await authClient.emailOtp.resetPassword({ email, otp: code, password }));
-            unwrap(await authClient.signIn.email({ email, password }));
-            onDone();
-        });
+        run(
+            Effect.gen(function* resetProgram() {
+                yield* authRequest(() => authClient.emailOtp.resetPassword({ email, otp: code, password }));
+                yield* authRequest(() => authClient.signIn.email({ email, password }));
+                onDone();
+            })
+        );
     };
 
     const newPasswordReady = password.length >= MIN_PASSWORD_LENGTH;

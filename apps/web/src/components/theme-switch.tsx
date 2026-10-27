@@ -1,20 +1,13 @@
-import { useEffect, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { THEMES, chooseTheme, paintTheme, readTheme, subscribeTheme, watchSystemTheme } from "@/lib/theme";
+import { THEMES, chooseTheme, readTheme, subscribeTheme } from "@/lib/theme";
 
 import { SELECT } from "./select";
 
 export function ThemeSwitch() {
     const { theme: labels } = useIntlayer("site");
     const theme = useSyncExternalStore(subscribeTheme, readTheme, () => "system");
-
-    useEffect(() => {
-        if (theme !== "system") {
-            return;
-        }
-        return watchSystemTheme(() => paintTheme("system"));
-    }, [theme]);
 
     return (
         <label className="relative">

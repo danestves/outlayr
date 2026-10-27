@@ -1,6 +1,17 @@
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 import type { PostHog, Properties } from "posthog-js";
 
 export type Consent = "denied" | "granted" | "pending";
+
+export class AnalyticsLoadError extends Schema.TaggedError<AnalyticsLoadError>()("AnalyticsLoadError", {
+    cause: Schema.Defect(),
+    client: Schema.Literal("posthog-js"),
+}) {
+    override get message(): string {
+        return `The ${this.client} analytics client failed to load.`;
+    }
+}
 
 const TOKEN = import.meta.env.PROD ? import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN : undefined;
 
@@ -71,12 +82,15 @@ function recordOnFirstInteraction(client: PostHog) {
     }
 }
 
-export async function startAnalytics(country: string | null) {
+export const startAnalytics = Effect.fn("Analytics.start")(function* startAnalytics(country: string | null) {
     if (!TOKEN || starting) {
         return;
     }
     starting = true;
-    const { posthog: client } = await import("posthog-js");
+    const { posthog: client } = yield* Effect.tryPromise({
+        catch: (cause) => new AnalyticsLoadError({ cause, client: "posthog-js" }),
+        try: () => import("posthog-js"),
+    });
     client.init(TOKEN, {
         advanced_disable_feature_flags: true,
         api_host: "https://relay.tryoutlayr.com",
@@ -97,7 +111,7 @@ export async function startAnalytics(country: string | null) {
     }
     posthog = client;
     notify();
-}
+});
 
 /** Dropped until analytics has started, as posthog itself drops events before `init`. */
 export function capture(event: string, properties?: Properties) {

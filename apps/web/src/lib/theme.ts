@@ -23,8 +23,14 @@ const listeners = new Set<() => void>();
 
 export function subscribeTheme(listener: () => void) {
     listeners.add(listener);
+    const stopWatching = watchSystemTheme(() => {
+        if (readTheme() === "system") {
+            paintTheme("system");
+        }
+    });
     return () => {
         listeners.delete(listener);
+        stopWatching();
     };
 }
 
@@ -57,7 +63,7 @@ export function paintTheme(theme: Theme) {
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", THEME_COLOR[resolved]);
 }
 
-export function watchSystemTheme(onChange: () => void) {
+function watchSystemTheme(onChange: () => void) {
     const query = matchMedia(DARK_QUERY);
     query.addEventListener("change", onChange);
     return () => query.removeEventListener("change", onChange);

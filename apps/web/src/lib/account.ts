@@ -1,3 +1,6 @@
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
+
 export function safeRedirect(target: string | undefined): string {
     return target?.startsWith("/") && !target.startsWith("//") && !target.startsWith("/\\") ? target : "/";
 }
@@ -11,28 +14,21 @@ const FAILURES = new Map([
     ["TOO_MANY_ATTEMPTS", "Too many tries with that code. Send a new one."],
 ]);
 
-export interface AuthError {
-    code?: string;
-    status?: number;
-}
+export class AuthFailure extends Schema.TaggedError<AuthFailure>()("AuthFailure", {
+    code: Schema.optional(Schema.String),
+    status: Schema.optional(Schema.Number),
+}) {}
 
-export class AuthFailureError extends Error {
-    readonly error: AuthError;
-
-    constructor(error: AuthError) {
-        super(error.code ?? "Auth request failed");
-        this.name = "AuthFailureError";
-        this.error = error;
+export const authRequest = Effect.fn("Account.request")(function* authRequest(
+    call: () => Promise<{ error: { code?: string; status?: number } | null }>
+) {
+    const { error } = yield* Effect.tryPromise({ catch: () => new AuthFailure(), try: call });
+    if (error) {
+        return yield* new AuthFailure({ code: error.code, status: error.status });
     }
-}
+});
 
-export function unwrap(result: { error: AuthError | null }) {
-    if (result.error) {
-        throw new AuthFailureError(result.error);
-    }
-}
-
-export function failureMessage(error: AuthError = {}): string {
+export function failureMessage(error: Pick<AuthFailure, "code" | "status"> = {}): string {
     if (error.status === RATE_LIMITED) {
         return "Too many tries. Wait a bit and try again.";
     }

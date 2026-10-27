@@ -1,9 +1,11 @@
-import { useEffect, useEffectEvent, useId, useReducer, useRef, useState } from "react";
+import { useId, useReducer, useRef, useState } from "react";
 import type { FocusEvent, KeyboardEvent, ReactNode } from "react";
+import { flushSync } from "react-dom";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { capture } from "@/lib/analytics";
 import type { Locale } from "@/lib/i18n";
+import { useTimeout } from "@/lib/timeout";
 
 import { formatMoney, signedMoney } from "./money";
 import type { Currency } from "./money";
@@ -22,7 +24,7 @@ import {
     isWhole,
     reduce,
 } from "./sentence-model";
-import type { Draft, FocusIntent, Step, Target, Visit } from "./sentence-model";
+import type { Draft, Step, Target, Visit } from "./sentence-model";
 import { useAutoplay } from "./use-autoplay";
 import { useNames } from "./use-names";
 
@@ -37,11 +39,9 @@ export function SentenceForm() {
 function Demo({ locale }: { locale: Locale }) {
     const { added, blank, cta, kind, lead, log, sentence, sizer, steps } = useIntlayer("demo");
     const nameOf = useNames();
-    const root = useRef<HTMLDivElement>(null);
     const stage = useRef<HTMLDivElement>(null);
-    const pendingFocus = useRef<FocusIntent>(null);
     const stageId = useId();
-    const { running } = useAutoplay(root);
+    const { ref: root, running } = useAutoplay<HTMLDivElement>();
     const [state, dispatch] = useReducer(reduce, locale, initialState);
     const [edited, setEdited] = useState(false);
     const [touches, setTouches] = useState<number | null>(null);
@@ -49,35 +49,17 @@ function Demo({ locale }: { locale: Locale }) {
     const [announcement, setAnnouncement] = useState<ReactNode>(null);
 
     const live = running && touches === null && !edited && !focusWithin;
-    const tick = useEffectEvent(() => dispatch({ type: "auto" }));
+    const resumes = touches !== null && !edited && !focusWithin && running;
 
-    useEffect(() => {
-        if (!live) {
-            return;
-        }
-        const timer = window.setTimeout(tick, delayOf(state));
-        return () => window.clearTimeout(timer);
-    }, [live, state]);
-
-    useEffect(() => {
-        if (touches === null || edited || focusWithin || !running) {
-            return;
-        }
-        const timer = window.setTimeout(() => {
+    useTimeout(() => dispatch({ type: "auto" }), live ? delayOf(state) : null, state);
+    useTimeout(
+        () => {
             setTouches(null);
             dispatch({ type: "restart" });
-        }, RESUME_MS);
-        return () => window.clearTimeout(timer);
-    }, [edited, focusWithin, running, touches]);
-
-    useEffect(() => {
-        const want = pendingFocus.current;
-        pendingFocus.current = null;
-        const lost = document.activeElement === null || document.activeElement === document.body;
-        if (want === "stage" || (want === "lost" && lost)) {
-            stage.current?.focus({ preventScroll: true });
-        }
-    });
+        },
+        resumes ? RESUME_MS : null,
+        touches
+    );
 
     const visit: Visit = (action, focus = "lost") => {
         const edits = action.type !== "open" && !(action.type === "footer" && !isWhole(state.draft));
@@ -87,11 +69,16 @@ function Demo({ locale }: { locale: Locale }) {
             setAnnouncement(added({ merchant, money }));
             capture("demo_entry_added", { currency: state.draft.currency, kind: state.draft.kind });
         }
-        pendingFocus.current = focus;
-        dispatch(action);
-        setTouches((count) => (count ?? 0) + 1);
-        if (edits) {
-            setEdited(true);
+        flushSync(() => {
+            dispatch(action);
+            setTouches((count) => (count ?? 0) + 1);
+            if (edits) {
+                setEdited(true);
+            }
+        });
+        const lost = document.activeElement === null || document.activeElement === document.body;
+        if (focus === "stage" || (focus === "lost" && lost)) {
+            stage.current?.focus({ preventScroll: true });
         }
     };
 

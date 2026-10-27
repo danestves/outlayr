@@ -1,7 +1,9 @@
+import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import facts from "../../public/llms.txt?raw";
+import { readJsonBody } from "./request-body";
 
 const RpcCall = Schema.Struct({
     id: Schema.optionalKey(Schema.NullOr(Schema.Union([Schema.String, Schema.Finite]))),
@@ -34,14 +36,12 @@ function reply(id: string | number | null, outcome: RpcOutcome): Response {
     return Response.json({ id, jsonrpc: "2.0", ...outcome });
 }
 
-export async function answerA2a(request: Request): Promise<Response> {
-    let body: unknown;
-    try {
-        body = await request.json();
-    } catch {
+export const answerA2a = Effect.fn("A2a.answer")(function* answerA2a(request: Request) {
+    const parsed = yield* Effect.option(readJsonBody(request));
+    if (Option.isNone(parsed)) {
         return reply(null, { error: { code: -32_700, message: "Parse error" } });
     }
-    const call = decodeRpcCall(body);
+    const call = decodeRpcCall(parsed.value);
     if (Option.isNone(call)) {
         return reply(null, { error: { code: -32_600, message: "Invalid Request" } });
     }
@@ -67,4 +67,4 @@ export async function answerA2a(request: Request): Promise<Response> {
             },
         },
     });
-}
+});
