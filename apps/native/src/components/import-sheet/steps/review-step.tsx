@@ -8,7 +8,7 @@ import { useState } from "react";
 import { Pressable, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { DayTotal, MeasureCellAmount, RowAmount } from "@/components/amount-text";
+import { DayTotal, RowAmount } from "@/components/amount-text";
 import { CategoryIconTile } from "@/components/category-icon-tile";
 import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
@@ -16,6 +16,7 @@ import { cn } from "@/components/tw";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
 import type { ImportEntry, SkipReason } from "@/data/transfer-core";
 import { formatDayHeader, formatSentenceDate } from "@/domain/dates";
+import { importCurrencyEntry, importOutTotals } from "@/domain/import-totals";
 import { FALLBACK_IDENTITY_COLOR } from "@/domain/transaction-identity";
 import type { ImportReviewResult, ReviewCategoryTile, ReviewRow } from "@/hooks/use-import-review";
 import { useReviewEnrichment } from "@/hooks/use-review-enrichment";
@@ -25,6 +26,7 @@ import { LARGE_SHEET_TOP_INSET } from "@/lib/sheet-detents";
 import { useColors } from "@/theme/use-colors";
 
 import { MeasureStrip } from "../measure-strip";
+import { OutTotalCell } from "../out-total-cell";
 import { StepCta } from "../step-cta";
 
 const SKIP_REASON_KEY = {
@@ -200,20 +202,13 @@ function buildDaySections(entryRows: readonly EntryReviewRow[]): ReviewDaySectio
 // `amount-text` forbids adding two currencies into one figure.
 function selectionTotals(entryRows: readonly EntryReviewRow[], excluded: ReadonlySet<number>, ledgerCurrency: string) {
     const perDay = new Map<string, CurrencyEntry[]>();
-    const out: CurrencyEntry[] = [];
+    const selected: ImportEntry[] = [];
     for (const row of entryRows) {
         if (excluded.has(row.index)) {
             continue;
         }
-        const cell: CurrencyEntry = {
-            amount: row.entry.amount,
-            amountUsd: null,
-            currency: row.entry.currency ?? ledgerCurrency,
-            income: row.entry.income,
-        };
-        if (!row.entry.income) {
-            out.push(cell);
-        }
+        const cell: CurrencyEntry = importCurrencyEntry(row.entry, ledgerCurrency);
+        selected.push(row.entry);
         const key = dayKeyOf(row.entry.date);
         const bucket = perDay.get(key);
         if (bucket) {
@@ -224,11 +219,7 @@ function selectionTotals(entryRows: readonly EntryReviewRow[], excluded: Readonl
     }
     return {
         dayTotals: new Map([...perDay].map(([key, cells]) => [key, currencyTotals(cells, ledgerCurrency)] as const)),
-        // Zero is zero in any currency, so an empty selection still shows the ledger's figure.
-        outTotals:
-            out.length === 0
-                ? [{ amount: 0, currencyCode: ledgerCurrency, transactionCount: 0 }]
-                : currencyTotals(out, ledgerCurrency),
+        outTotals: importOutTotals(selected, ledgerCurrency),
     };
 }
 
@@ -358,19 +349,9 @@ function ReviewList({ entryRows, review, sections, skippedRows }: ReviewListProp
                     {
                         key: "out",
                         label: t("log.measure.out"),
-                        // Several currencies get `DayTotal` so the strip never adds a USD row to an MXN one.
-                        value:
-                            outTotals.length > 1 ? (
-                                <DayTotal showCents={showCents} sizeClass="text-body" totals={outTotals} />
-                            ) : (
-                                <MeasureCellAmount
-                                    code={outTotals[0]?.currencyCode ?? review.currency}
-                                    income={false}
-                                    magnitude={Math.abs(outTotals[0]?.amount ?? 0)}
-                                    positive={false}
-                                    showCents={showCents}
-                                />
-                            ),
+                        value: (
+                            <OutTotalCell fallbackCurrency={review.currency} showCents={showCents} totals={outTotals} />
+                        ),
                     },
                 ]}
                 className="mx-5"

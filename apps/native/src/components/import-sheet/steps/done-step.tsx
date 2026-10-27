@@ -1,6 +1,5 @@
 import { Pressable, View } from "react-native";
 
-import { MeasureCellAmount } from "@/components/amount-text";
 import { Text } from "@/components/text";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
 import { monthLongTitle } from "@/domain/dates";
@@ -9,6 +8,7 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import { useColors } from "@/theme/use-colors";
 
 import { MeasureStrip } from "../measure-strip";
+import { OutTotalCell } from "../out-total-cell";
 
 const STAMP_BORDER_WIDTH = 1.5;
 const STAMP_ROTATION = "-2deg";
@@ -27,7 +27,7 @@ export function DoneStep({ review, onDone }: DoneStepProps) {
     if (review.commit.phase !== "success") {
         return null;
     }
-    const { count, outAmount, duplicatesSkipped } = review.commit;
+    const { count, outTotals, duplicatesSkipped } = review.commit;
     // The app's language, not the device's: `toLocaleDateString` put "September" inside Spanish copy.
     const month = review.plan.latest == null ? null : monthLongTitle(review.plan.latest, language);
 
@@ -67,13 +67,7 @@ export function DoneStep({ review, onDone }: DoneStepProps) {
                         key: "out",
                         label: t("log.measure.out"),
                         value: (
-                            <MeasureCellAmount
-                                code={review.currency}
-                                income={false}
-                                magnitude={outAmount}
-                                positive={false}
-                                showCents={showCents}
-                            />
+                            <OutTotalCell fallbackCurrency={review.currency} showCents={showCents} totals={outTotals} />
                         ),
                     },
                 ]}

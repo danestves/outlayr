@@ -9,6 +9,7 @@ import type { ImportEntry, ImportPlan, SkipReason } from "@/data/transfer-core";
 import { categories, transactions } from "@/db/schema";
 import { fingerprintsOf, flagDuplicates } from "@/domain/import-dedup";
 import type { ImportCommitState, ImportFlowState } from "@/domain/import-flow";
+import { importOutTotals } from "@/domain/import-totals";
 import { deduceDateFormat, detectDecimalSeparator } from "@/domain/transaction-csv";
 import { FALLBACK_IDENTITY_COLOR } from "@/domain/transaction-identity";
 import { importDraftStore, useImportDraft } from "@/lib/import-draft-store";
@@ -208,7 +209,7 @@ export function useImportReview(): ImportReviewResult {
         }
         importDraftStore.dispatch({ type: "commitStarted" });
         const entries = plan.entries.filter((_, index) => !flow.excluded.has(index));
-        const outAmount = entries.reduce((sum, entry) => (entry.income ? sum : sum + entry.amount), 0);
+        const outTotals = importOutTotals(entries, currency);
         const duplicatesSkipped = [...flow.duplicates].filter((index) => flow.excluded.has(index)).length;
         void (async () => {
             try {
@@ -220,7 +221,7 @@ export function useImportReview(): ImportReviewResult {
                 importDraftStore.dispatch({
                     count,
                     duplicatesSkipped,
-                    outAmount,
+                    outTotals,
                     type: "commitSucceeded",
                 });
                 importDraftStore.setStep("done");
