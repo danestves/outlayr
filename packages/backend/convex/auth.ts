@@ -103,7 +103,11 @@ function createAuth(ctx: GenericCtx<DataModel>) {
     return betterAuth({
         account: { encryptOAuthTokens: true, updateAccountOnSignIn: false },
         advanced: { trustedProxyHeaders: true },
-        baseURL: { allowedHosts: allowedHosts(siteUrl), fallback: siteUrl },
+        baseURL: {
+            allowedHosts: allowedHosts(siteUrl),
+            fallback: siteUrl,
+            protocol: new URL(siteUrl).protocol === "http:" ? "http" : "https",
+        },
         database: authComponent.adapter(ctx),
         // The app uses neither: codes only confirm an address or reset a password.
         disabledPaths: ["/forget-password/email-otp", "/send-verification-email", "/sign-in/email-otp"],

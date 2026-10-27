@@ -2,6 +2,7 @@
 
 import betterAuthTest from "@convex-dev/better-auth/test";
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
+import { isDynamicBaseURLConfig, resolveDynamicBaseURL } from "better-auth";
 import { apple as appleProvider } from "better-auth/social-providers";
 import { convexTest } from "convex-test";
 import { decodeJwt, exportJWK, generateKeyPair, SignJWT } from "jose";
@@ -63,6 +64,7 @@ describe("auth base url", () => {
         expect(baseURL).toStrictEqual({
             allowedHosts: ["example-deployment.convex.site"],
             fallback: "https://example-deployment.convex.site",
+            protocol: "https",
         });
     });
 
@@ -75,7 +77,23 @@ describe("auth base url", () => {
         expect(baseURL).toStrictEqual({
             allowedHosts: ["app.tryoutlayr.com", "example-deployment.convex.site"],
             fallback: "https://app.tryoutlayr.com",
+            protocol: "https",
         });
+    });
+
+    it("builds https callbacks for a request that reached the proxy over http", async () => {
+        const baseURL = await baseUrlWith({
+            CONVEX_SITE_URL: "https://example-deployment.convex.site",
+            SITE_URL: "https://tryoutlayr.com",
+        });
+        if (!isDynamicBaseURLConfig(baseURL)) {
+            throw new Error("Expected a dynamic base url");
+        }
+        const proxied = new Request("http://tryoutlayr.com/api/auth/sign-in/social", {
+            headers: { "x-forwarded-host": "tryoutlayr.com", "x-forwarded-proto": "http" },
+        });
+
+        expect(resolveDynamicBaseURL(baseURL, proxied, "/api/auth", true)).toBe("https://tryoutlayr.com/api/auth");
     });
 });
 
