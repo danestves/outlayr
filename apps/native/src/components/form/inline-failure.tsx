@@ -11,6 +11,7 @@ import { useColors } from "@/theme/use-colors";
 export function InlineFailure({ message }: { message: string | null }) {
     const colors = useColors();
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- announces the failure to the platform screen reader when it appears
     useEffect(() => {
         if (message !== null) {
             AccessibilityInfo.announceForAccessibility(message);

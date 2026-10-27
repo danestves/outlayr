@@ -32,18 +32,21 @@ export function EditTransfer({ id }: { id: string }) {
         const held = transferDrafts.take(id);
         return held !== undefined && saved !== null && sameSavedTransfer(held.saved, saved) ? held.edits : undefined;
     });
-    const { leave, setDirty } = useDiscardGuard({
-        restore: (edits: TransferEditorDraft) => {
-            const current = savedTransfer(db, id);
-            if (saved === null || current === null || !sameSavedTransfer(saved, current)) {
-                notifyEditsNotRestored();
-                return;
-            }
-            transferDrafts.put(id, { edits, saved });
-            router.push(`/transactions/transfers/${id}`);
+    const { leave, setDirty } = useDiscardGuard(
+        {
+            restore: (edits: TransferEditorDraft) => {
+                const current = savedTransfer(db, id);
+                if (saved === null || current === null || !sameSavedTransfer(saved, current)) {
+                    notifyEditsNotRestored();
+                    return;
+                }
+                transferDrafts.put(id, { edits, saved });
+                router.push(`/transactions/transfers/${id}`);
+            },
+            snapshot: () => readDraft.current?.() ?? null,
         },
-        snapshot: () => readDraft.current?.() ?? null,
-    });
+        restore !== undefined
+    );
 
     useEffect(() => {
         if (saved === null) {

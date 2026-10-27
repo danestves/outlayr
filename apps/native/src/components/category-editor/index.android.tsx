@@ -1,3 +1,4 @@
+import { useAtomMount } from "@effect/atom-react/Hooks";
 import CheckmarkCircle02Icon from "@hugeicons-pro/core-solid-rounded/CheckmarkCircle02Icon";
 import Delete02Icon from "@hugeicons-pro/core-stroke-rounded/Delete02Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
@@ -14,7 +15,13 @@ import { holdSubmitting, pressSubmit } from "@/components/form/submit-guard";
 import { IdentityHero } from "@/components/identity-hero";
 import { SheetHeader, SheetHeaderIconButton, SheetHeaderTextButton } from "@/components/sheet-header";
 import { Text } from "@/components/text";
-import { EMPTY_DRAFT, useIdentityDraft, useIdentityFlyUp } from "@/contexts/identity-draft-context";
+import {
+    EMPTY_DRAFT,
+    useIdentitySeed,
+    identityPickerResetAtom,
+    useIdentityDraft,
+    useIdentityFlyUp,
+} from "@/contexts/identity-draft-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useCategoriesByNamespace } from "@/data/categories";
 import { CATEGORY_PALETTE, getCategoryById, isCategoryValidationError } from "@/data/categories-core";
@@ -37,6 +44,7 @@ import { useColors } from "@/theme/use-colors";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
 import { CategoryDetailsFields } from "./details-fields";
+import { categoryColorFollowsSiblings, categoryCreatesIncome, categoryIdentitySeed } from "./identity-seed";
 import type { CategoryEditorProps } from "./index";
 
 const MAX_EXPENSE_CATEGORIES = 24;
@@ -124,7 +132,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
     const { draft, setDraft } = useIdentityDraft();
     const { pickerOpen, setPickerOpen } = useIdentityFlyUp();
 
-    // Lazy `useState`, not `useMemo`: a re-read would re-fire the draft effects below and clobber the user's picks.
+    // Lazy `useState`, not `useMemo`: a re-read would re-fire the draft seed below and clobber the user's picks.
     const [loaded] = useState<Category | null>(() =>
         mode === "edit" && editId != null ? getCategoryById(db, editId) : null
     );
@@ -195,92 +203,19 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
         }
     }
 
-    // `pickerOpen` lives in the app-level provider, so a path that left it set would disable this sheet's actions.
-    useEffect(() => {
-        setPickerOpen(false);
-    }, [setPickerOpen]);
+    useAtomMount(identityPickerResetAtom);
 
-    // The draft is shared context, so a create editor may mount onto another screen's leftovers.
-    useEffect(() => {
-        if (mode !== "create") {
-            return;
-        }
-        setDraft(EMPTY_DRAFT);
-    }, [mode, setDraft]);
-
-    // Seeded with the raw icon/emoji, not the resolved fallback, so an unknown glyph is not rewritten on save.
-    useEffect(() => {
-        if (mode !== "edit") {
-            return;
-        }
-        setDraft(
-            loaded
-                ? {
-                      color: loaded.color ?? CATEGORY_PALETTE[0],
-                      emoji: loaded.emoji ?? null,
-                      icon: loaded.icon ?? null,
-                      photoColor: null,
-                      photoUri: null,
-                  }
-                : EMPTY_DRAFT
-        );
-    }, [mode, loaded, setDraft]);
-
-    useEffect(() => {
-        if (mode !== "create" || parent == null) {
-            return;
-        }
-        setDraft({
-            color: parent.color ?? CATEGORY_PALETTE[0],
-            emoji: null,
-            icon: null,
-            photoColor: null,
-            photoUri: null,
-        });
-    }, [mode, parent, setDraft]);
-
-    useEffect(
-        () => () => {
-            if (toastTimer.current !== null) {
-                clearTimeout(toastTimer.current);
-            }
-        },
-        []
-    );
+    const [seed] = useState(() => categoryIdentitySeed(mode, loaded, parent));
+    useIdentitySeed(seed);
 
     const isSubcategory = mode === "create" ? parentId != null : (loaded?.parentId ?? null) != null;
-    const income = mode === "create" ? formIncome : (loaded?.income ?? false);
     const atExpenseLimit = expenseCount >= MAX_EXPENSE_CATEGORIES;
+    const [openedAtLimit] = useState(atExpenseLimit);
+    const forcedIncome = categoryCreatesIncome(mode, parentId, openedAtLimit);
+    const income = mode === "create" ? formIncome || forcedIncome : (loaded?.income ?? false);
 
-    const nextColor = firstAvailableColor(usedColors);
-    useEffect(() => {
-        if (mode !== "create" || parentId != null || colorTouched) {
-            return;
-        }
-        if (draft.color === nextColor) {
-            return;
-        }
-        setDraft({
-            color: nextColor,
-            emoji: null,
-            icon: null,
-            photoColor: null,
-            photoUri: null,
-        });
-    }, [mode, parentId, colorTouched, nextColor, draft.color, setDraft]);
-
-    useEffect(() => {
-        if (mode !== "create" || parentId != null) {
-            return;
-        }
-        if (atExpenseLimit) {
-            form.setFieldValue("income", true);
-        }
-    }, [mode, parentId, atExpenseLimit, form]);
-
-    // Keyed on the count changing, not its value: firing on mount would race the force-income effect above and close
-    // a sheet that was about to become an income one.
     const seenExpenseCount = useRef(expenseCount);
+    // oxlint-disable-next-line outlayr/react-effect-budget -- closes the sheet when the live expense count, which a sync can move, crosses the cap
     useEffect(() => {
         const changed = expenseCount !== seenExpenseCount.current;
         seenExpenseCount.current = expenseCount;
@@ -289,8 +224,12 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
         }
     }, [expenseCount, mode, parentId, income, router]);
 
+    const nextColor = firstAvailableColor(usedColors);
+    const autoColor = categoryColorFollowsSiblings(mode, parentId, colorTouched);
+    const color = autoColor ? nextColor : draft.color;
+
     const symbolEmpty = !(draft.icon || draft.emoji);
-    const tint = income ? colors.income : (draft.color ?? CATEGORY_PALETTE[0]);
+    const tint = income ? colors.income : (color ?? CATEGORY_PALETTE[0]);
     const typePickerVisible = mode === "create" && !isSubcategory && !atExpenseLimit;
 
     const canSave = categoryIsSaveable(mode, name, symbolEmpty, loaded) && !isSubmitting;
@@ -310,6 +249,9 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
         Keyboard.dismiss();
         // Freezes the auto-color so a color picked in the picker survives.
         setColorTouched(true);
+        if (autoColor) {
+            setDraft({ ...EMPTY_DRAFT, color: nextColor });
+        }
         setPickerOpen(true);
         router.push({
             params: {
@@ -321,16 +263,16 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
         });
     };
 
-    const addCategory = async (value: { income: boolean; name: string }) => {
-        const pickedColor = draft.color ?? CATEGORY_PALETTE[0];
+    const addCategory = async (value: { name: string }) => {
+        const pickedColor = color ?? CATEGORY_PALETTE[0];
         const expenseColor = isSubcategory ? (parent?.color ?? pickedColor) : pickedColor;
         unwrapAtomCommand(
             await createCategory({
                 category: {
-                    color: value.income ? colors.income : expenseColor,
+                    color: income ? colors.income : expenseColor,
                     emoji: draft.emoji ?? null,
                     icon: draft.icon ?? undefined,
-                    income: value.income,
+                    income,
                     name: value.name,
                     parentId,
                 },
@@ -338,7 +280,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
             })
         );
         posthog?.capture("category_saved", {
-            category_type: value.income ? "income" : "expense",
+            category_type: income ? "income" : "expense",
             is_subcategory: isSubcategory,
             mode: "create",
         });
@@ -348,7 +290,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
             return await holdSubmitting();
         }
         form.setFieldValue("name", "");
-        // Cleared, not advanced: with `colorTouched` released, the auto-color effect picks the first free slot after
+        // Cleared, not advanced: with `colorTouched` released, the auto color is the first free slot after
         // this insert lands, where a value chosen now would come from the pre-insert set.
         setColorTouched(false);
         setDraft(EMPTY_DRAFT);

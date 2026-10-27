@@ -62,6 +62,7 @@ export function StepAccountInstallments({ accounts, onPick, searchable }: StepAc
     // The ids the editor was opened over; the one it adds is the account to pick.
     const before = useRef<ReadonlySet<string> | null>(null);
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- picks the account the pushed editor wrote to SQLite once the live account list reports it
     useEffect(() => {
         const known = before.current;
         const made = known === null ? undefined : accounts.find((account) => !known.has(account.id));

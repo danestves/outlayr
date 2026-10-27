@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
-import { useEffect } from "react";
 import { Pressable } from "react-native";
 import Animated, {
     interpolateColor,
+    useAnimatedReaction,
     useAnimatedStyle,
     useReducedMotion,
     useSharedValue,
@@ -48,10 +48,12 @@ export function StageOption({
     const selectedFill = withAlpha(colors.tint, SELECTED_ALPHA);
     const { separator, tint } = colors;
 
-    useEffect(() => {
-        const next = selected ? 1 : 0;
-        on.set(reduced ? next : withTiming(next, SELECT));
-    }, [on, reduced, selected]);
+    useAnimatedReaction(
+        () => (selected ? 1 : 0),
+        (next, previous) => {
+            on.set(reduced || previous === null ? next : withTiming(next, SELECT));
+        }
+    );
 
     const fill = useAnimatedStyle(() => ({
         backgroundColor: interpolateColor(on.get(), [0, 1], [restFill, selectedFill]),

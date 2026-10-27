@@ -104,6 +104,7 @@ function CtaBar({
 // form's scroller so that header lands on top.
 export const TransactionFormCta: typeof TransactionFormCtaBase = (props) => {
     const handlers = useRef(props);
+    // oxlint-disable-next-line outlayr/react-effect-budget -- keeps the callbacks registered with the native header pointing at the latest form handlers
     useLayoutEffect(() => {
         handlers.current = props;
     });

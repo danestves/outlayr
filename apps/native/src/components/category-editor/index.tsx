@@ -3,7 +3,7 @@ import { ScrollView, useNativeState, VStack } from "@expo/ui/swift-ui";
 import type { TextFieldRef } from "@expo/ui/swift-ui";
 import { animation, blur, opacity, overlay, padding, scrollDismissesKeyboard } from "@expo/ui/swift-ui/modifiers";
 import { useForm, useSelector } from "@tanstack/react-form";
-import { useNavigation, useRouter } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useEffect, useRef, useState } from "react";
 import { Keyboard, View } from "react-native";
@@ -28,7 +28,7 @@ import { holdSubmitting, pressSubmit } from "@/components/form/submit-guard";
 import { IdentityCurtain } from "@/components/identity-curtain";
 import { HERO_RING, IdentityFlyUpLayer } from "@/components/identity-fly-up";
 import { Text } from "@/components/text";
-import { EMPTY_DRAFT, useIdentityDraft, useIdentityFlyUp } from "@/contexts/identity-draft-context";
+import { EMPTY_DRAFT, useIdentitySeed, useIdentityDraft, useIdentityFlyUp } from "@/contexts/identity-draft-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useCategoriesByNamespace } from "@/data/categories";
 import { CATEGORY_PALETTE, getCategoryById, isCategoryValidationError } from "@/data/categories-core";
@@ -48,6 +48,7 @@ import { withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";
 
 import { CategoryEditorDetailsSection } from "./details-section";
+import { categoryColorFollowsSiblings, categoryCreatesIncome, categoryIdentitySeed } from "./identity-seed";
 
 const MAX_EXPENSE_CATEGORIES = 24;
 
@@ -113,7 +114,6 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
     const editId = props.mode === "edit" ? props.id : null;
     const initialIncome = props.mode === "create" ? !!props.income : false;
     const router = useRouter();
-    const navigation = useNavigation();
     const t = useTranslation();
     const colors = useColors();
     const haptics = useHaptics();
@@ -125,7 +125,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
     const { draft, setDraft } = useIdentityDraft();
     const { pickerOpen, setPickerOpen, floatProgress } = useIdentityFlyUp();
 
-    // Lazy `useState`, not `useMemo`: a re-read would re-fire the draft effects below and clobber the user's picks.
+    // Lazy `useState`, not `useMemo`: a re-read would re-fire the draft seed below and clobber the user's picks.
     const [loaded] = useState<Category | null>(() =>
         mode === "edit" && editId != null ? getCategoryById(db, editId) : null
     );
@@ -202,95 +202,17 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
         }
     }
 
-    // The draft is shared context, so a create editor may mount onto another screen's leftovers.
-    useEffect(() => {
-        if (mode !== "create") {
-            return;
-        }
-        setDraft(EMPTY_DRAFT);
-    }, [mode, setDraft]);
-
-    // Seeded with the raw icon/emoji, not the resolved fallback, so an unknown glyph is not rewritten on save.
-    useEffect(() => {
-        if (mode !== "edit") {
-            return;
-        }
-        setDraft(
-            loaded
-                ? {
-                      color: loaded.color ?? CATEGORY_PALETTE[0],
-                      emoji: loaded.emoji ?? null,
-                      icon: loaded.icon ?? null,
-                      photoColor: null,
-                      photoUri: null,
-                  }
-                : EMPTY_DRAFT
-        );
-    }, [mode, loaded, setDraft]);
-
-    useEffect(() => {
-        if (mode !== "create" || parent == null) {
-            return;
-        }
-        setDraft({
-            color: parent.color ?? CATEGORY_PALETTE[0],
-            emoji: null,
-            icon: null,
-            photoColor: null,
-            photoUri: null,
-        });
-    }, [mode, parent, setDraft]);
-
-    useEffect(
-        () => () => {
-            if (toastTimer.current !== null) {
-                clearTimeout(toastTimer.current);
-            }
-        },
-        []
-    );
+    const [seed] = useState(() => categoryIdentitySeed(mode, loaded, parent));
+    useIdentitySeed(seed);
 
     const isSubcategory = mode === "create" ? parentId != null : (loaded?.parentId ?? null) != null;
-    const income = mode === "create" ? formIncome : (loaded?.income ?? false);
     const atExpenseLimit = expenseCount >= MAX_EXPENSE_CATEGORIES;
+    const [openedAtLimit] = useState(atExpenseLimit);
+    const forcedIncome = categoryCreatesIncome(mode, parentId, openedAtLimit);
+    const income = mode === "create" ? formIncome || forcedIncome : (loaded?.income ?? false);
 
-    // Grows to `.large` before the picker: over the medium detent it would cover the hero the fly-up lands on.
-    // Also where a subcategory opens shorter, since only the editor resolves the parent.
-    useEffect(() => {
-        navigation.setOptions({
-            sheetAllowedDetents: pickerOpen ? LARGE_ONLY : [isSubcategory ? SUBCATEGORY_DETENT : CATEGORY_DETENT, 1],
-        });
-    }, [navigation, pickerOpen, isSubcategory]);
-
-    const nextColor = firstAvailableColor(usedColors);
-    useEffect(() => {
-        if (mode !== "create" || parentId != null || colorTouched) {
-            return;
-        }
-        if (draft.color === nextColor) {
-            return;
-        }
-        setDraft({
-            color: nextColor,
-            emoji: null,
-            icon: null,
-            photoColor: null,
-            photoUri: null,
-        });
-    }, [mode, parentId, colorTouched, nextColor, draft.color, setDraft]);
-
-    useEffect(() => {
-        if (mode !== "create" || parentId != null) {
-            return;
-        }
-        if (atExpenseLimit) {
-            form.setFieldValue("income", true);
-        }
-    }, [mode, parentId, atExpenseLimit, form]);
-
-    // Keyed on the count changing, not its value: firing on mount would race the force-income effect above and close
-    // a sheet that was about to become an income one.
     const seenExpenseCount = useRef(expenseCount);
+    // oxlint-disable-next-line outlayr/react-effect-budget -- closes the sheet when the live expense count, which a sync can move, crosses the cap
     useEffect(() => {
         const changed = expenseCount !== seenExpenseCount.current;
         seenExpenseCount.current = expenseCount;
@@ -299,9 +221,13 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
         }
     }, [expenseCount, mode, parentId, income, router]);
 
+    const nextColor = firstAvailableColor(usedColors);
+    const autoColor = categoryColorFollowsSiblings(mode, parentId, colorTouched);
+    const color = autoColor ? nextColor : draft.color;
+
     const symbolEmpty = !(draft.icon || draft.emoji);
     const captionClearance = symbolEmpty ? CAPTION_CLEARANCE : 0;
-    const tint = income ? colors.income : (draft.color ?? CATEGORY_PALETTE[0]);
+    const tint = income ? colors.income : (color ?? CATEGORY_PALETTE[0]);
     const symbolHues = draft.emoji ? [...glowFromEmoji(draft.emoji).slice(0, 2), tint] : [tint];
     const curtainHues = symbolEmpty ? null : symbolHues;
     const typePickerVisible = mode === "create" && !isSubcategory && !atExpenseLimit;
@@ -326,6 +252,9 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
         Keyboard.dismiss();
         // Freezes the auto-color so a color picked in the picker survives.
         setColorTouched(true);
+        if (autoColor) {
+            setDraft({ ...EMPTY_DRAFT, color: nextColor });
+        }
         setPickerOpen(true);
         router.push({
             params: {
@@ -337,16 +266,16 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
         });
     };
 
-    const addCategory = async (value: { income: boolean; name: string }) => {
-        const pickedColor = draft.color ?? CATEGORY_PALETTE[0];
+    const addCategory = async (value: { name: string }) => {
+        const pickedColor = color ?? CATEGORY_PALETTE[0];
         const expenseColor = isSubcategory ? (parent?.color ?? pickedColor) : pickedColor;
         unwrapAtomCommand(
             await createCategory({
                 category: {
-                    color: value.income ? colors.income : expenseColor,
+                    color: income ? colors.income : expenseColor,
                     emoji: draft.emoji ?? null,
                     icon: draft.icon ?? undefined,
-                    income: value.income,
+                    income,
                     name: value.name,
                     parentId,
                 },
@@ -354,7 +283,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
             })
         );
         posthog?.capture("category_saved", {
-            category_type: value.income ? "income" : "expense",
+            category_type: income ? "income" : "expense",
             is_subcategory: isSubcategory,
             mode: "create",
         });
@@ -365,7 +294,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
         }
         nameState.set("");
         form.setFieldValue("name", "");
-        // Cleared, not advanced: with `colorTouched` released, the auto-color effect picks the first free slot after
+        // Cleared, not advanced: with `colorTouched` released, the auto color is the first free slot after
         // this insert lands, where a value chosen now would come from the pre-insert set.
         setColorTouched(false);
         setDraft(EMPTY_DRAFT);
@@ -400,6 +329,16 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
                 flex: 1,
             }}
         >
+            {/* Grows to `.large` before the picker: over the medium detent it would cover the hero the fly-up lands on.
+                Also where a subcategory opens shorter, since only the editor resolves the parent. */}
+            <Stack.Screen
+                options={{
+                    sheetAllowedDetents: pickerOpen
+                        ? LARGE_ONLY
+                        : [isSubcategory ? SUBCATEGORY_DETENT : CATEGORY_DETENT, 1],
+                }}
+            />
+
             {/* First, so it paints under the form, whose own background is hidden. */}
             <IdentityCurtain hues={curtainHues} />
 

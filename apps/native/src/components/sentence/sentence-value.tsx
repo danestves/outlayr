@@ -1,7 +1,12 @@
-import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { Pressable } from "react-native";
-import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, {
+    useAnimatedReaction,
+    useAnimatedStyle,
+    useReducedMotion,
+    useSharedValue,
+    withTiming,
+} from "react-native-reanimated";
 
 import { currencySymbol, symbolPrefix } from "@/domain/money";
 import { useColors } from "@/theme/use-colors";
@@ -43,14 +48,17 @@ function SentenceRule({ bottom, color }: { bottom: number; color: string }) {
     const reduced = useReducedMotion();
     const draw = useSharedValue(reduced ? 1 : 0);
 
-    useEffect(() => {
-        if (reduced) {
-            draw.set(1);
-            return;
+    useAnimatedReaction(
+        () => reduced,
+        (isReduced) => {
+            if (isReduced) {
+                draw.set(1);
+                return;
+            }
+            draw.set(0);
+            draw.set(withTiming(1, SENTENCE_DRAW));
         }
-        draw.set(0);
-        draw.set(withTiming(1, SENTENCE_DRAW));
-    }, [draw, reduced]);
+    );
 
     const ruleStyle = useAnimatedStyle(() => ({ transform: [{ scaleX: draw.get() }] }));
 

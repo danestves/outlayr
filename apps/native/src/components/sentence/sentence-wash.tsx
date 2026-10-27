@@ -1,5 +1,10 @@
-import { useEffect } from "react";
-import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, {
+    useAnimatedReaction,
+    useAnimatedStyle,
+    useReducedMotion,
+    useSharedValue,
+    withTiming,
+} from "react-native-reanimated";
 
 import { withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";
@@ -27,10 +32,12 @@ export function SentenceWash({ active }: SentenceWashProps) {
     const reduced = useReducedMotion();
     const shown = useSharedValue(active ? 1 : 0);
 
-    useEffect(() => {
-        const next = active ? 1 : 0;
-        shown.set(reduced ? next : withTiming(next, SENTENCE_WASH));
-    }, [active, reduced, shown]);
+    useAnimatedReaction(
+        () => (active ? 1 : 0),
+        (next, previous) => {
+            shown.set(reduced || previous === null ? next : withTiming(next, SENTENCE_WASH));
+        }
+    );
 
     const washStyle = useAnimatedStyle(() => ({ opacity: shown.get() }));
 
