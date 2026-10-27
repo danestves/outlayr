@@ -1,13 +1,25 @@
 import { APICallError, wrapLanguageModel } from "ai";
 import type { LanguageModel, LanguageModelMiddleware } from "ai";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
+import * as Schema from "effect/Schema";
 
 import { postHogProjectToken } from "./config";
-import { runEdgeSync } from "./runEdge";
+import { outboundHttp } from "./http";
+import { runEdge } from "./runEdge";
 
 const CAPTURE_URL = "https://us.i.posthog.com/i/v0/e/";
-const CAPTURE_TIMEOUT_MS = 3000;
+const CAPTURE_TIMEOUT = Duration.seconds(3);
+
+class AiTracingError extends Schema.TaggedError<AiTracingError>()("AiTracingError", {
+    cause: Schema.optional(Schema.Defect()),
+}) {}
+
+const transport = (cause: unknown) => new AiTracingError({ cause });
 
 interface Generation {
     usage?: {
@@ -111,20 +123,28 @@ export function traced(model: Exclude<LanguageModel, string>, feature: string) {
     return wrapLanguageModel({ middleware: tracingMiddleware(feature, capture), model });
 }
 
-async function capture(properties: GenerationProperties): Promise<void> {
-    const token = Option.match(runEdgeSync(postHogProjectToken), { onNone: () => "", onSome: Redacted.value });
-    if (!token) {
+export const captureGeneration = Effect.fn("AiTracing.capture")(function* captureGeneration(
+    properties: GenerationProperties
+) {
+    const token = yield* postHogProjectToken;
+    if (Option.isNone(token)) {
         return;
     }
-    await fetch(CAPTURE_URL, {
-        body: JSON.stringify({
-            api_key: token,
+    const request = yield* HttpClientRequest.post(CAPTURE_URL).pipe(
+        HttpClientRequest.bodyJson({
+            api_key: Redacted.value(token.value),
             distinct_id: properties.$ai_trace_id,
             event: "$ai_generation",
             properties,
         }),
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-        signal: AbortSignal.timeout(CAPTURE_TIMEOUT_MS),
-    }).catch(() => undefined);
+        Effect.catchTags({ HttpBodyError: transport })
+    );
+    yield* HttpClient.execute(request).pipe(
+        Effect.timeout(CAPTURE_TIMEOUT),
+        Effect.catchTags({ HttpClientError: transport, TimeoutError: transport })
+    );
+}, Effect.ignore);
+
+function capture(properties: GenerationProperties): Promise<void> {
+    return runEdge(captureGeneration(properties).pipe(Effect.provide(outboundHttp)));
 }
