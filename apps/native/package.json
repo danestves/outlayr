@@ -14,7 +14,6 @@
         "gen:icons": "node --import tsx scripts/generate-icons.ts",
         "i18n:test": "intlayer test",
         "ios": "expo run:ios",
-        "sim": "serve-sim",
         "start": "vp run i18n:build && expo start",
         "test": "vp run i18n:build && jest"
     },
@@ -121,7 +120,6 @@
         "jest": "~30.5.2",
         "jest-expo": "~58.0.12",
         "react-native-nano-icons": "1.0.1",
-        "serve-sim": "^0.1.48",
         "tsx": "^4.23.15",
         "typescript": "catalog:"
     },

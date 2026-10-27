@@ -19,6 +19,5 @@ Start with the [README](../README.md). Internal notes keep decisions, constraint
 
 ### Runbooks
 
-- [Driving the simulator from a URL](./operations/simulator-preview.md)
 - [Measuring render work](./operations/perf-loop.md)
 - [App Store header and search art](../apps/screenshots/app-store-header/README.md)

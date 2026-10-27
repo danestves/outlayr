@@ -451,9 +451,6 @@ importers:
       react-native-nano-icons:
         specifier: 1.0.1
         version: 1.0.1(patch_hash=a529e0478533456ced2cefefcf35fa9c93eae17e32fbc4d1a18d2505e0eee12f)(@expo/config@58.0.7(supports-color@8.1.1)(typescript@6.0.3))(expo@58.0.17)(react-native@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3)
-      serve-sim:
-        specifier: ^0.1.48
-        version: 0.1.48(react-dom@19.2.3(react@19.3.0))(react@19.3.0)(typescript@6.0.3)
       tsx:
         specifier: ^4.23.15
         version: 4.23.15
@@ -8404,12 +8401,6 @@ packages:
   inline-style-prefixer@7.0.1:
     resolution: {integrity: sha512-lhYo5qNTQp3EvSSp3sRvXMbVQTLrvGV6DycRMJ5dm2BLMiJ30wpXKdDdgX+GmJZ5uQMucwRKHamXSst3Sj/Giw==}
 
-  inspect-webkit@0.0.5:
-    resolution: {integrity: sha512-584wP/2nJO1LX74nqHP2j0tQzlK9ZTi+D0Z9qeLQjtUR/LCMXQHGX8M0vrsqBwTeGakF7q5GMFpg81nxUYlCvw==}
-    hasBin: true
-    peerDependencies:
-      typescript: ^5
-
   intlayer@9.5.2:
     resolution: {integrity: sha512-JLz3MAtvI1I0R3Prq5OrWkOAjJlDYOqGb7qUpbtuoEfpymGPqaqjolxd+8HNIvRzNhwQoVKq6oY2Fup88UszWw==}
     engines: {node: '>=14.18'}
@@ -10645,11 +10636,6 @@ packages:
     resolution: {integrity: sha512-AeDcLh0yO2SFm9W71essgnSzLV9DI8ZH0x0knXn2DMnUZj728mpLbxjlbB6IqKCmqh8JA3cEqRyGoNkt584JcQ==}
     engines: {node: '>=10'}
 
-  serve-sim@0.1.48:
-    resolution: {integrity: sha512-Kfg++zbtrRHYEOGAVk/9ftZamp40Qpz8WgP3idWaHoGaCJ01TrEZeq0UnWIsrGSaGhGgi0ytxMOsrEo3H/bFiA==}
-    engines: {node: '>=20'}
-    hasBin: true
-
   serve-static@1.16.3:
     resolution: {integrity: sha512-x0RTqQel6g5SY7Lg6ZreMmsOzncHFU7nhnRWkKgWuMTu5NN0DR5oruckMqRvacAN9d5w6ARnRBXl9xhDCgfMeA==}
     engines: {node: '>= 0.8.0'}
@@ -10744,12 +10730,6 @@ packages:
 
   sonner@1.7.4:
     resolution: {integrity: sha512-DIS8z4PfJRbIyfVFDVnK9rO3eYDtse4Omcm6bt0oEr5/jtLgysmjuBl1frJ9E/EQZrFmKx2A8m/s5s9CRXIzhw==}
-    peerDependencies:
-      react: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
-      react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
-
-  sonner@2.0.7:
-    resolution: {integrity: sha512-W6ZN4p58k8aDKA4XPcx2hpIQXBRAgyiWVkYhT7CvK6D3iAu7xjvVyhQHg2/iaKJZ1XVJ4r7XuwGL+WGEK37i9w==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
       react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
@@ -21801,10 +21781,6 @@ snapshots:
       css-in-js-utils: 3.1.0
     optional: true
 
-  inspect-webkit@0.0.5(typescript@6.0.3):
-    dependencies:
-      typescript: 6.0.3
-
   intlayer@9.5.2(react@19.2.3)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.5):
     dependencies:
       '@intlayer/cli': 9.5.2(react@19.2.3)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.5)
@@ -25121,18 +25097,6 @@ snapshots:
 
   seroval@1.6.7: {}
 
-  serve-sim@0.1.48(react-dom@19.2.3(react@19.3.0))(react@19.3.0)(typescript@6.0.3):
-    dependencies:
-      inspect-webkit: 0.0.5(typescript@6.0.3)
-      sonner: 2.0.7(react-dom@19.2.3(react@19.3.0))(react@19.3.0)
-      ws: 8.22.0
-    transitivePeerDependencies:
-      - bufferutil
-      - react
-      - react-dom
-      - typescript
-      - utf-8-validate
-
   serve-static@1.16.3(supports-color@8.1.1):
     dependencies:
       encodeurl: 2.0.0
@@ -25291,11 +25255,6 @@ snapshots:
     dependencies:
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
-
-  sonner@2.0.7(react-dom@19.2.3(react@19.3.0))(react@19.3.0):
-    dependencies:
-      react: 19.3.0
-      react-dom: 19.2.3(react@19.3.0)
 
   source-map-js@1.2.2: {}
 
