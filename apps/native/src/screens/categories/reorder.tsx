@@ -9,16 +9,18 @@ import { CHILD_NAME, LABEL, PARENT_NAME } from "@/components/category-list-swift
 import { groupedList, groupedRows } from "@/components/native/styles";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useCategoriesByNamespace } from "@/data/categories";
-import { categoriesRepo } from "@/data/categories-core";
 import type { Category, CategoryWithChildren } from "@/data/categories-core";
 import { applyMove } from "@/domain/reorder";
 import { useTranslation } from "@/i18n/context";
+import { reorderCategoriesCommand } from "@/state/categories-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
 /** `onMove` is scoped to one `List.ForEach`, so each level is its own Section. */
 export function CategoryReorder({ income }: { income: boolean }) {
     const db = useDatabase();
     const t = useTranslation();
+    const reorder = useAtomCommand(reorderCategoriesCommand);
     const colors = useColors();
     const parents = useCategoriesByNamespace(db, income);
     const rowGround = groupedRows(colors);
@@ -30,7 +32,7 @@ export function CategoryReorder({ income }: { income: boolean }) {
             source,
             destination
         );
-        categoriesRepo.reorder(db, ordered);
+        reorder({ db, orderedIds: ordered });
     };
 
     const reorderChildren = (parent: CategoryWithChildren, source: number[], destination: number) => {
@@ -39,7 +41,7 @@ export function CategoryReorder({ income }: { income: boolean }) {
             source,
             destination
         );
-        categoriesRepo.reorder(db, ordered);
+        reorder({ db, orderedIds: ordered });
     };
 
     return (

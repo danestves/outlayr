@@ -1,6 +1,8 @@
 import { useAtomValue } from "@effect/atom-react/Hooks";
 import { getTableName } from "drizzle-orm";
+import * as Cause from "effect/Cause";
 import * as Equal from "effect/Equal";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as Atom from "effect/reactivity/Atom";
 
 import { subscribeToTableChanges } from "@/data/database-changes";
@@ -9,9 +11,11 @@ import type { DisplaySettings } from "@/data/display-settings";
 import { sameRows } from "@/data/same-rows";
 import { selectSettings, settingsSnapshot, useBoolSetting, useNumberSetting } from "@/data/settings";
 import type { SettingsSnapshot } from "@/data/settings";
-import { setBoolSetting, setNumberSetting } from "@/data/settings-core";
 import type { BoolSettingKey, NumberSettingKey } from "@/data/settings-core";
 import { appMeta } from "@/db/schema";
+import { SILENT } from "@/state/atom-command";
+import { setBoolSettingCommand, setNumberSettingCommand } from "@/state/settings-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 import { localDataAtom, localDataState, useLocalData } from "./local-data-context";
 
@@ -57,22 +61,28 @@ export function useDisplaySettings(): DisplaySettingsValue {
 export function useAppSettings(): AppSettingsValue {
     const { db } = useLocalData();
     const state = useAtomValue(settingsAtom);
+    const setBoolSetting = useAtomCommand(setBoolSettingCommand, SILENT);
+    const setNumberSetting = useAtomCommand(setNumberSettingCommand, SILENT);
     return {
         actions: {
             setBool: (key, value) => {
                 if (db == null) {
                     return;
                 }
-                setBoolSetting(db, key, value).catch((cause: unknown) => {
-                    console.error(`Saving the ${key} setting failed`, cause);
+                setBoolSetting({ db, key, value }).then((result) => {
+                    if (AsyncResult.isFailure(result)) {
+                        console.error(`Saving the ${key} setting failed`, Cause.squash(result.cause));
+                    }
                 });
             },
             setNumber: (key, value) => {
                 if (db == null) {
                     return;
                 }
-                setNumberSetting(db, key, value).catch((cause: unknown) => {
-                    console.error(`Saving the ${key} setting failed`, cause);
+                setNumberSetting({ db, key, value }).then((result) => {
+                    if (AsyncResult.isFailure(result)) {
+                        console.error(`Saving the ${key} setting failed`, Cause.squash(result.cause));
+                    }
                 });
             },
         },

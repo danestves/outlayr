@@ -1,5 +1,7 @@
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { isNull } from "drizzle-orm";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import { TOMBSTONED_BUDGET, TOMBSTONED_MAIN_BUDGET } from "@/data/budgets-core";
 import type { Database } from "@/db/client";
@@ -14,9 +16,21 @@ import {
     transactions,
     transfers,
 } from "@/db/schema";
-import { withTransaction } from "@/db/transaction";
+import { transaction } from "@/db/transaction";
 
 export type EraseScope = "transactions" | "everything";
+
+export class EraseLedgerError extends Schema.TaggedError<EraseLedgerError>()("EraseLedgerError", {
+    cause: Schema.Defect(),
+    scope: Schema.Literals(["transactions", "everything"]),
+}) {
+    override get message(): string {
+        return `Erasing ${this.scope} failed`;
+    }
+}
+
+const query = <A>(scope: EraseScope, run: () => PromiseLike<A>) =>
+    Effect.tryPromise({ catch: (cause) => new EraseLedgerError({ cause, scope }), try: run });
 
 // The one mark left on a scrubbed tombstone: `deletedTransactionsQuery` reads tombstones, and this tells an erase's
 // wreckage from a single deleted entry the user may want back.
@@ -77,49 +91,71 @@ const ERASED_TRANSFER = {
 
 // Tombstoned, not dropped: a hard delete leaves nothing to replicate, so the first pull would hand the ledger back.
 // Already-tombstoned rows are skipped so a second erase doesn't re-stamp and push unchanged rows.
-export async function eraseLedger(db: Database, scope: EraseScope): Promise<void> {
+export const eraseLedger = Effect.fn("Erase.eraseLedger")(function* eraseLedger(db: Database, scope: EraseScope) {
     const now = new Date();
 
-    await withTransaction(db, async () => {
-        await db
-            .update(transactions)
-            .set({ ...ERASED_TRANSACTION, deletedAt: now, updatedAt: now })
-            .where(isNull(transactions.deletedAt));
-        await db
-            .update(transfers)
-            .set({ ...ERASED_TRANSFER, deletedAt: now, updatedAt: now })
-            .where(isNull(transfers.deletedAt));
-        await db
-            .update(installments)
-            .set({ amount: 0, deletedAt: now, dueDate: ERASED_DATE, updatedAt: now })
-            .where(isNull(installments.deletedAt));
-        await db
-            .update(outsidePayments)
-            .set({ amount: 0, amountUsd: null, date: ERASED_DATE, deletedAt: now, updatedAt: now })
-            .where(isNull(outsidePayments.deletedAt));
-        await db
-            .update(outsideMoves)
-            .set({ amount: 0, amountUsd: null, date: ERASED_DATE, deletedAt: now, note: "", updatedAt: now })
-            .where(isNull(outsideMoves.deletedAt));
-        await db
-            .update(transactionAttachments)
-            .set({ deletedAt: now, imageKey: null, imageUri: null, name: null, updatedAt: now })
-            .where(isNull(transactionAttachments.deletedAt));
-        await db
-            .update(installmentPlans)
-            .set({ dateCreated: ERASED_DATE, deletedAt: now, updatedAt: now })
-            .where(isNull(installmentPlans.deletedAt));
+    yield* transaction(
+        db,
+        Effect.gen(function* write() {
+            yield* query(scope, () =>
+                db
+                    .update(transactions)
+                    .set({ ...ERASED_TRANSACTION, deletedAt: now, updatedAt: now })
+                    .where(isNull(transactions.deletedAt))
+            );
+            yield* query(scope, () =>
+                db
+                    .update(transfers)
+                    .set({ ...ERASED_TRANSFER, deletedAt: now, updatedAt: now })
+                    .where(isNull(transfers.deletedAt))
+            );
+            yield* query(scope, () =>
+                db
+                    .update(installments)
+                    .set({ amount: 0, deletedAt: now, dueDate: ERASED_DATE, updatedAt: now })
+                    .where(isNull(installments.deletedAt))
+            );
+            yield* query(scope, () =>
+                db
+                    .update(outsidePayments)
+                    .set({ amount: 0, amountUsd: null, date: ERASED_DATE, deletedAt: now, updatedAt: now })
+                    .where(isNull(outsidePayments.deletedAt))
+            );
+            yield* query(scope, () =>
+                db
+                    .update(outsideMoves)
+                    .set({ amount: 0, amountUsd: null, date: ERASED_DATE, deletedAt: now, note: "", updatedAt: now })
+                    .where(isNull(outsideMoves.deletedAt))
+            );
+            yield* query(scope, () =>
+                db
+                    .update(transactionAttachments)
+                    .set({ deletedAt: now, imageKey: null, imageUri: null, name: null, updatedAt: now })
+                    .where(isNull(transactionAttachments.deletedAt))
+            );
+            yield* query(scope, () =>
+                db
+                    .update(installmentPlans)
+                    .set({ dateCreated: ERASED_DATE, deletedAt: now, updatedAt: now })
+                    .where(isNull(installmentPlans.deletedAt))
+            );
 
-        if (scope !== "everything") {
-            return;
-        }
-        await db
-            .update(budgets)
-            .set({ ...TOMBSTONED_BUDGET, deletedAt: now, updatedAt: now })
-            .where(isNull(budgets.deletedAt));
-        await db
-            .update(mainBudget)
-            .set({ ...TOMBSTONED_MAIN_BUDGET, deletedAt: now, updatedAt: now })
-            .where(isNull(mainBudget.deletedAt));
-    });
-}
+            if (scope !== "everything") {
+                return;
+            }
+            yield* query(scope, () =>
+                db
+                    .update(budgets)
+                    .set({ ...TOMBSTONED_BUDGET, deletedAt: now, updatedAt: now })
+                    .where(isNull(budgets.deletedAt))
+            );
+            yield* query(scope, () =>
+                db
+                    .update(mainBudget)
+                    .set({ ...TOMBSTONED_MAIN_BUDGET, deletedAt: now, updatedAt: now })
+                    .where(isNull(mainBudget.deletedAt))
+            );
+        }),
+        (cause) => new EraseLedgerError({ cause, scope })
+    );
+});

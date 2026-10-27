@@ -304,7 +304,7 @@ const toRow = Effect.fn("Transactions.toRow")(function* toRow(db: Database, id: 
 });
 
 const displayCurrency = Effect.fn("Transactions.displayCurrency")(function* displayCurrency(db: Database) {
-    return (yield* query("row", () => getMeta(db, META_KEYS.currency))) ?? DEFAULT_CURRENCY;
+    return (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
 });
 
 /**
@@ -430,8 +430,7 @@ export const transactionsRepo = {
         if (options.logoCandidate !== false && isLogoCandidate({ ...row, note: input.note })) {
             yield* rememberLogoCandidate(db, id, row.updatedAt.getTime(), LOGO_CANDIDATE_KEEP_MS).pipe(
                 Effect.catchTags({
-                    LogoBackfillStateError: (error) =>
-                        Effect.logWarning("[outlayr] logo candidate not recorded", error),
+                    AppMetaError: (error) => Effect.logWarning("[outlayr] logo candidate not recorded", error),
                 })
             );
         }
@@ -741,8 +740,7 @@ export const lastLoggedEntry = Effect.fn("Transactions.lastLoggedEntry")(functio
     }
     const entry: LastEntry = {
         ...row,
-        currency:
-            row.currency ?? (yield* query("lastEntry", () => getMeta(db, META_KEYS.currency))) ?? DEFAULT_CURRENCY,
+        currency: row.currency ?? (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY,
     };
     return entry;
 });

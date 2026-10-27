@@ -115,13 +115,13 @@ describe("accountLedgerState", () => {
             deviceId: "peer",
             rows: [{ ...serverRow("a", 100, 100) }],
         });
-        await expect(accountLedgerState(server.pull)).resolves.toBe("empty");
+        await expect(Effect.runPromise(accountLedgerState(server.pull))).resolves.toBe("empty");
     });
 
     it("reads one live row as populated", async () => {
         const server = makeServer();
         await server.push({ deviceId: "peer", rows: [serverRow("a", 100)] });
-        await expect(accountLedgerState(server.pull)).resolves.toBe("populated");
+        await expect(Effect.runPromise(accountLedgerState(server.pull))).resolves.toBe("populated");
     });
 });
 
@@ -136,7 +136,7 @@ describe("replaceLocalFromAccount", () => {
         await server.push({ deviceId: "peer", rows: [serverRow("remote", 100)] });
         await addTransaction(db, "local", new Date(50));
 
-        await replaceLocalFromAccount(db, server.pull);
+        await Effect.runPromise(replaceLocalFromAccount(db, server.pull));
 
         const rows = await db.select().from(transactions);
         expect(rows.map((row) => row.id)).toStrictEqual(["remote"]);
@@ -144,24 +144,24 @@ describe("replaceLocalFromAccount", () => {
 
     it("spends the one-time restore re-read, having just read the whole log", async () => {
         const server = makeServer();
-        await setMeta(db, META_KEYS.syncRestoresReread, "1");
+        await Effect.runPromise(setMeta(db, META_KEYS.syncRestoresReread, "1"));
 
-        await replaceLocalFromAccount(db, server.pull);
+        await Effect.runPromise(replaceLocalFromAccount(db, server.pull));
 
-        await expect(getMeta(db, META_KEYS.syncRestoresReread)).resolves.toBeNull();
+        await expect(Effect.runPromise(getMeta(db, META_KEYS.syncRestoresReread))).resolves.toBeNull();
     });
 
     it("keeps device-local meta that no pull would hand back", async () => {
         const server = makeServer();
-        await setMeta(db, META_KEYS.syncDeviceId, "this-device");
-        await setMeta(db, META_KEYS.onboardingComplete, "1");
-        await setMeta(db, META_KEYS.currency, "GBP");
+        await Effect.runPromise(setMeta(db, META_KEYS.syncDeviceId, "this-device"));
+        await Effect.runPromise(setMeta(db, META_KEYS.onboardingComplete, "1"));
+        await Effect.runPromise(setMeta(db, META_KEYS.currency, "GBP"));
 
-        await replaceLocalFromAccount(db, server.pull);
+        await Effect.runPromise(replaceLocalFromAccount(db, server.pull));
 
-        await expect(getMeta(db, META_KEYS.syncDeviceId)).resolves.toBe("this-device");
-        await expect(getMeta(db, META_KEYS.onboardingComplete)).resolves.toBe("1");
-        await expect(getMeta(db, META_KEYS.currency)).resolves.toBeNull();
+        await expect(Effect.runPromise(getMeta(db, META_KEYS.syncDeviceId))).resolves.toBe("this-device");
+        await expect(Effect.runPromise(getMeta(db, META_KEYS.onboardingComplete))).resolves.toBe("1");
+        await expect(Effect.runPromise(getMeta(db, META_KEYS.currency))).resolves.toBeNull();
     });
 });
 
@@ -176,7 +176,7 @@ describe("discardAccountLedger", () => {
         await server.push({ deviceId: "peer", rows: [serverRow("shared", 900)] });
         await addTransaction(db, "shared", new Date(100));
 
-        await discardAccountLedger(db, server.transport);
+        await Effect.runPromise(discardAccountLedger(db, server.transport));
 
         expect(server.rows.get("transactions shared")?.deletedAt).toBeNull();
 
@@ -194,7 +194,7 @@ describe("discardAccountLedger", () => {
         await server.push({ deviceId: "peer", rows: [serverRow("restored", 900, null, 900)] });
         await addTransaction(db, "restored", new Date(1000));
 
-        await discardAccountLedger(db, server.transport);
+        await Effect.runPromise(discardAccountLedger(db, server.transport));
         await Effect.runPromise(setSyncEnabled(db, true));
         await Effect.runPromise(enqueueAllForSync(db));
         await Effect.runPromise(drainOutbox(db, server.push));
@@ -208,7 +208,7 @@ describe("discardAccountLedger", () => {
         await addTransaction(db, "shared", new Date(100));
         await Effect.runPromise(rememberLogoCandidate(db, "shared", 100, Number.POSITIVE_INFINITY));
 
-        await discardAccountLedger(db, server.transport);
+        await Effect.runPromise(discardAccountLedger(db, server.transport));
 
         const [row] = await db
             .select({ updatedAt: transactions.updatedAt })
@@ -225,7 +225,7 @@ describe("discardAccountLedger", () => {
         });
         await addTransaction(db, "shared", new Date(100));
 
-        await discardAccountLedger(db, server.transport);
+        await Effect.runPromise(discardAccountLedger(db, server.transport));
 
         expect(server.rows.get("transactions theirs")?.deletedAt).not.toBeNull();
         expect(server.rows.get("transactions shared")?.deletedAt).toBeNull();
@@ -235,9 +235,9 @@ describe("discardAccountLedger", () => {
         const server = makeServer();
         await server.push({ deviceId: "peer", rows: [serverRow("theirs", 900)] });
 
-        await discardAccountLedger(db, server.transport);
+        await Effect.runPromise(discardAccountLedger(db, server.transport));
         const afterFirst = server.rows.get("transactions theirs")?.deletedAt;
-        await discardAccountLedger(db, server.transport);
+        await Effect.runPromise(discardAccountLedger(db, server.transport));
 
         expect(afterFirst).not.toBeNull();
         expect(server.rows.size).toBe(1);
@@ -255,7 +255,7 @@ describe("a tombstoned account row does not come back to bite", () => {
         await addTransaction(db, "shared", new Date(100));
         await addTransaction(db, "mine", new Date(100));
 
-        await discardAccountLedger(db, server.transport);
+        await Effect.runPromise(discardAccountLedger(db, server.transport));
         await Effect.runPromise(setSyncEnabled(db, true));
         await Effect.runPromise(enqueueAllForSync(db));
         await Effect.runPromise(runSync(db, server.transport));

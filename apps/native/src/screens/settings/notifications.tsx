@@ -5,8 +5,6 @@ import { ReminderTimeRow } from "@/components/settings/reminder-time-row";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { useAppSettings, useDisplaySettings } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
-import { setBoolSetting, setNumberSetting } from "@/data/settings-core";
-import type { Database } from "@/db/client";
 import {
     clampTimeOfDay,
     enableReminderStep,
@@ -22,6 +20,9 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import { translateNow } from "@/i18n/runtime";
 import { setDueReminders } from "@/lib/due-reminders";
 import { openNotificationSettings, reminderPermission, requestReminderPermission } from "@/lib/reminders";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { setBoolSettingCommand, setNumberSettingCommand } from "@/state/settings-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 const OPTIONS = [
     {
@@ -45,7 +46,7 @@ function reportReminderFailure(cause: unknown): void {
     console.error("Reminder update failed", cause);
 }
 
-async function enableReminders(db: Database): Promise<void> {
+async function enableReminders(setShowNotifications: (value: boolean) => Promise<void>): Promise<void> {
     const existing = await reminderPermission();
     if (enableReminderStep(existing) === "open-settings") {
         Alert.alert(
@@ -70,15 +71,17 @@ async function enableReminders(db: Database): Promise<void> {
         return;
     }
 
-    await setBoolSetting(db, "showNotifications", true);
+    await setShowNotifications(true);
 }
 
-async function disableReminders(db: Database): Promise<void> {
-    await setBoolSetting(db, "showNotifications", false);
+async function disableReminders(setShowNotifications: (value: boolean) => Promise<void>): Promise<void> {
+    await setShowNotifications(false);
 }
 
 export function Notifications() {
     const db = useDatabase();
+    const setBool = useAtomCommand(setBoolSettingCommand, SILENT);
+    const setNumber = useAtomCommand(setNumberSettingCommand, SILENT);
 
     const t = useTranslation();
     const { language } = useLanguage();
@@ -91,14 +94,17 @@ export function Notifications() {
     const custom = clampTimeOfDay(settings.number("notificationHour"), settings.number("notificationMinute"));
     const scheduled = reminderTime(option, custom);
 
+    const setShowNotifications = (value: boolean) =>
+        setBool({ db, key: "showNotifications", value }).then(unwrapAtomCommand);
+
     const chooseOption = (next: number) => {
-        setNumberSetting(db, "notificationOption", next).catch(reportReminderFailure);
+        setNumber({ db, key: "notificationOption", value: next }).then(unwrapAtomCommand).catch(reportReminderFailure);
     };
 
     const chooseTime = ({ hour, minute }: TimeOfDay) => {
         Promise.all([
-            setNumberSetting(db, "notificationHour", hour),
-            setNumberSetting(db, "notificationMinute", minute),
+            setNumber({ db, key: "notificationHour", value: hour }).then(unwrapAtomCommand),
+            setNumber({ db, key: "notificationMinute", value: minute }).then(unwrapAtomCommand),
         ]).catch(reportReminderFailure);
     };
 
@@ -108,7 +114,9 @@ export function Notifications() {
                 <ToggleRow
                     icon="Notification03"
                     onValueChange={(next) => {
-                        (next ? enableReminders(db) : disableReminders(db)).catch(reportReminderFailure);
+                        (next ? enableReminders(setShowNotifications) : disableReminders(setShowNotifications)).catch(
+                            reportReminderFailure
+                        );
                     }}
                     title={t("settings.notifications.toggle")}
                     value={enabled}

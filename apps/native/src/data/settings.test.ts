@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { migratedDatabase } from "@/db/test-database";
@@ -28,21 +29,21 @@ describe("the 12/24-hour clock", () => {
     });
 
     it("seeds the device's convention when the user has never chosen", async () => {
-        await seedClockPreference(db, true);
-        await expect(readBoolSetting(db, "use24HourClock")).resolves.toBe(true);
+        await Effect.runPromise(seedClockPreference(db, true));
+        await expect(Effect.runPromise(readBoolSetting(db, "use24HourClock"))).resolves.toBe(true);
     });
 
     it("never overrules a stored choice, not even a stored false", async () => {
-        await setBoolSetting(db, "use24HourClock", false);
-        await seedClockPreference(db, true);
-        await expect(readBoolSetting(db, "use24HourClock")).resolves.toBe(false);
+        await Effect.runPromise(setBoolSetting(db, "use24HourClock", false));
+        await Effect.runPromise(seedClockPreference(db, true));
+        await expect(Effect.runPromise(readBoolSetting(db, "use24HourClock"))).resolves.toBe(false);
     });
 
     it("does not re-seed once it has seeded", async () => {
-        await seedClockPreference(db, true);
-        await setBoolSetting(db, "use24HourClock", false);
-        await seedClockPreference(db, true);
-        await expect(readBoolSetting(db, "use24HourClock")).resolves.toBe(false);
+        await Effect.runPromise(seedClockPreference(db, true));
+        await Effect.runPromise(setBoolSetting(db, "use24HourClock", false));
+        await Effect.runPromise(seedClockPreference(db, true));
+        await expect(Effect.runPromise(readBoolSetting(db, "use24HourClock"))).resolves.toBe(false);
     });
 });
 
@@ -53,30 +54,30 @@ describe("settings read/write round-trip", () => {
     });
 
     it("upserts (a second write replaces the first)", async () => {
-        await setNumberSetting(db, "firstWeekday", 2);
-        await setNumberSetting(db, "firstWeekday", 1);
-        await expect(readNumberSetting(db, "firstWeekday")).resolves.toBe(1);
+        await Effect.runPromise(setNumberSetting(db, "firstWeekday", 2));
+        await Effect.runPromise(setNumberSetting(db, "firstWeekday", 1));
+        await expect(Effect.runPromise(readNumberSetting(db, "firstWeekday"))).resolves.toBe(1);
     });
 
     it("holds the subscription notices on a key of their own", async () => {
-        await setBoolSetting(db, "subscriptionReminders", true);
-        await setBoolSetting(db, "showNotifications", false);
-        await expect(readBoolSetting(db, "subscriptionReminders")).resolves.toBe(true);
-        await expect(readBoolSetting(db, "showNotifications")).resolves.toBe(false);
+        await Effect.runPromise(setBoolSetting(db, "subscriptionReminders", true));
+        await Effect.runPromise(setBoolSetting(db, "showNotifications", false));
+        await expect(Effect.runPromise(readBoolSetting(db, "subscriptionReminders"))).resolves.toBe(true);
+        await expect(Effect.runPromise(readBoolSetting(db, "showNotifications"))).resolves.toBe(false);
     });
 });
 
 describe("the settings read behind the app-wide snapshot", () => {
     it("is unchanged by bookkeeping writes and reads a changed setting", async () => {
         const db = makeDb();
-        await setBoolSetting(db, "showCents", true);
+        await Effect.runPromise(setBoolSetting(db, "showCents", true));
         const before = selectSettings(db).all();
 
-        await setMeta(db, META_KEYS.syncCursor, "42");
-        await setMeta(db, META_KEYS.syncedAt, "1760000000000");
+        await Effect.runPromise(setMeta(db, META_KEYS.syncCursor, "42"));
+        await Effect.runPromise(setMeta(db, META_KEYS.syncedAt, "1760000000000"));
         expect(selectSettings(db).all()).toStrictEqual(before);
 
-        await setBoolSetting(db, "showCents", false);
+        await Effect.runPromise(setBoolSetting(db, "showCents", false));
         expect(settingsSnapshot(selectSettings(db).all()).bool("showCents")).toBe(false);
     });
 });

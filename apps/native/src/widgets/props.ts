@@ -4,12 +4,11 @@ import { utcDateString } from "@outlayr/money/dates";
 import { isExact, limitIn } from "@outlayr/money/valuation";
 import { and, asc, desc, isNull, lte } from "drizzle-orm";
 
-import { getMeta, META_KEYS } from "@/data/app-meta-core";
+import { META_KEYS } from "@/data/app-meta-core";
 import type { SpendDb } from "@/data/budget-spent";
 import { OVERALL_BUDGET_ID } from "@/data/budgets-core";
 import { aggregateInsightsWindows, loadContributions, windowLabel } from "@/data/insights";
 import type { InsightsCalendar, InsightsPeriod, WindowTotals } from "@/data/insights";
-import { writeIdsByTransaction } from "@/data/pending-writes-core";
 import { parseBoolSetting, parseIntSetting } from "@/data/settings-core";
 import { loadValuation } from "@/data/valuation-source";
 import type { Valuation } from "@/data/valuation-source";
@@ -26,6 +25,8 @@ import { DEFAULT_CURRENCY, formatAmount } from "@/domain/money";
 import type { TranslationKey } from "@/i18n/catalog";
 import { translateNow } from "@/i18n/runtime";
 import { DEEP_LINKS } from "@/lib/deep-links";
+import { runLifecycleCommand, writeIdsByTransactionCommand } from "@/state/lifecycle-commands";
+import { getMetaCommand, runSettingsCommand } from "@/state/settings-commands";
 
 import { WIDGET_PALETTE } from "./palette";
 import { NO_BUDGET } from "./placeholders";
@@ -232,11 +233,11 @@ interface CategoryRow {
 /** Formatted here: the widget's `JSContext` cannot call `formatAmount`. */
 export async function buildWidgetProps(db: SpendDb, now: Date = new Date()): Promise<WidgetProps> {
     const [currencyRaw, showCentsRaw, weekdayRaw, monthDayRaw, periodRaw] = await Promise.all([
-        getMeta(db, META_KEYS.currency),
-        getMeta(db, "showCents"),
-        getMeta(db, "firstWeekday"),
-        getMeta(db, "firstDayOfMonth"),
-        getMeta(db, "insightsTimeFrame"),
+        runSettingsCommand(getMetaCommand, { db, key: META_KEYS.currency }),
+        runSettingsCommand(getMetaCommand, { db, key: "showCents" }),
+        runSettingsCommand(getMetaCommand, { db, key: "firstWeekday" }),
+        runSettingsCommand(getMetaCommand, { db, key: "firstDayOfMonth" }),
+        runSettingsCommand(getMetaCommand, { db, key: "insightsTimeFrame" }),
     ]);
 
     const currency = currencyRaw ?? DEFAULT_CURRENCY;
@@ -573,7 +574,7 @@ async function buildWatchEntries(
         .where(and(isNull(transactionsTable.deletedAt), lte(transactionsTable.date, now)))
         .orderBy(desc(transactionsTable.date))
         .limit(LEDGER_LIMIT);
-    const writeIds = await writeIdsByTransaction(db);
+    const writeIds = await runLifecycleCommand(writeIdsByTransactionCommand, db);
     const valuedById = new Map(contributions.map((row) => [row.id, row.amount]));
     const { displayCurrency, rates } = valuation;
 

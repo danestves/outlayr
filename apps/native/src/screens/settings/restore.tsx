@@ -7,7 +7,6 @@ import { SettingsAction } from "@/components/settings/settings-action";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
-import { restoreArchive } from "@/data/archive-core";
 import { archiveRowCount, parseArchive } from "@/domain/archive";
 import type { ArchiveDocument } from "@/domain/archive";
 import { useTranslation } from "@/i18n/context";
@@ -16,7 +15,7 @@ import { armLogoBackfill, cancelLogoBackfill } from "@/lib/logo-backfill";
 import { notifyFailure } from "@/lib/notify";
 import { photoFiles, writePhotosBase64 } from "@/lib/photo-storage";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import { reconcilePhotosCommand } from "@/state/ledger-commands";
+import { restoreArchiveCommand } from "@/state/lifecycle-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 
 export function RestoreData() {
@@ -24,18 +23,15 @@ export function RestoreData() {
     const router = useRouter();
     const t = useTranslation();
     const [restoring, setRestoring] = useState<number | null>(null);
-    const reconcilePhotos = useAtomCommand(reconcilePhotosCommand, SILENT);
+    const restoreArchive = useAtomCommand(restoreArchiveCommand, SILENT);
 
     // Stop the logo pass first: it could paint a row the archive replaced.
     const applyArchive = (document: ArchiveDocument) => {
         setRestoring(archiveRowCount(document));
         cancelLogoBackfill()
-            .then(() => {
-                writePhotosBase64(document.photos);
-                return restoreArchive(db, document);
-            })
             .then(async () => {
-                unwrapAtomCommand(await reconcilePhotos({ db, files: photoFiles, nowMs: Date.now() }));
+                writePhotosBase64(document.photos);
+                unwrapAtomCommand(await restoreArchive({ db, document, files: photoFiles }));
             })
             .finally(() => armLogoBackfill(db))
             .then(() => router.back())

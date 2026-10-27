@@ -100,6 +100,14 @@ const failedAt = (step: typeof SystemStep.Type) => (cause: unknown) =>
 
 const warn = (error: SystemSyncError) => Effect.logWarning(error.message, error.cause);
 
+const failedStep =
+    (step: typeof SystemStep.Type) =>
+    <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+        effect.pipe(
+            Effect.mapError(failedAt(step)),
+            Effect.catchDefect((defect) => Effect.fail(failedAt(step)(defect)))
+        );
+
 const attempt = <A>(step: typeof SystemStep.Type, task: () => Promise<A>) =>
     Effect.tryPromise({ catch: failedAt(step), try: task });
 
@@ -112,7 +120,12 @@ const anyCounted = Effect.fn("SystemSync.anyCounted")(function* anyCounted(
 ) {
     let changed = false;
     for (const count of counts) {
-        const result = yield* Effect.result(count.pipe(Effect.mapError((error) => failedAt(step)(error.cause))));
+        const result = yield* Effect.result(
+            count.pipe(
+                Effect.mapError((error) => failedAt(step)(error.cause)),
+                Effect.catchDefect((defect) => Effect.fail(failedAt(step)(defect)))
+            )
+        );
         if (Result.isFailure(result)) {
             yield* warn(result.failure);
             return changed;
@@ -135,6 +148,32 @@ const revalueLedger = Effect.fn("SystemSync.revalueLedger")(function* revalueLed
     return stamped || backfilled;
 });
 
+const mirrorWalletRun = Effect.fn("SystemSync.mirrorWalletRun")(function* mirrorWalletRun(db: Database) {
+    const at = yield* Effect.try(() => readWalletLastRun());
+    if (at == null) {
+        return;
+    }
+    const stamp = String(at);
+    if ((yield* getMeta(db, META_KEYS.walletLastRunAt)) === stamp) {
+        return;
+    }
+    yield* setMeta(db, META_KEYS.walletLastRunAt, stamp);
+});
+
+const announceRepriced = Effect.fn("SystemSync.announceRepriced")(function* announceRepriced(db: Database) {
+    for (const entry of yield* takeRepriced(db)) {
+        yield* Effect.try(() => {
+            notifyWarning({
+                body: translateNow("log.repriced.body", { from: formatAmount(entry.from, entry.currency) }),
+                title: translateNow("log.repriced.title", {
+                    name: entry.note,
+                    to: formatAmount(entry.to, entry.currency),
+                }),
+            });
+        });
+    }
+});
+
 export const make = Effect.gen(function* make() {
     const sources = yield* SystemSources;
     const watchAppState = yield* WatchAppState;
@@ -154,28 +193,32 @@ export const make = Effect.gen(function* make() {
 
         // The drain's writes trip the change listener, so it publishes itself only when nothing applied. Logos run
         // after the drain so a Wallet purchase that just landed is in the set they read.
-        const catchUp = Effect.all(
-            [
-                attemptOr("wallet", () => mirrorWalletRun(db), undefined),
-                attempt("drain", () => drainPendingWrites(db, claimPendingWrites, releasePendingWrites)).pipe(
-                    Effect.flatMap((applied) => publishIf(applied === 0)),
-                    Effect.catchTags({ SystemSyncError: (error) => warn(error).pipe(Effect.andThen(publishSoon)) }),
-                    Effect.andThen(
-                        attemptOr(
-                            "purchases",
-                            () => {
-                                sendEnrichmentQueue(db);
-                                return fileWaitingPurchases(db);
-                            },
-                            undefined
-                        )
-                    ),
-                    Effect.andThen(attemptOr("repriced", () => announceRepriced(db), undefined)),
-                    Effect.andThen(attemptOr("logos", () => backfillLogos(db), 0))
-                ),
-            ],
-            { concurrency: "unbounded", discard: true }
-        ).pipe(Effect.uninterruptible);
+        const mirrorRun = mirrorWalletRun(db).pipe(
+            failedStep("wallet"),
+            Effect.catchTags({ SystemSyncError: (error) => warn(error) })
+        );
+        const drainRun = drainPendingWrites(db, claimPendingWrites, releasePendingWrites).pipe(
+            failedStep("drain"),
+            Effect.flatMap((applied) => publishIf(applied === 0)),
+            Effect.catchTags({ SystemSyncError: (error) => warn(error).pipe(Effect.andThen(publishSoon)) }),
+            Effect.andThen(
+                Effect.try(() => sendEnrichmentQueue(db)).pipe(
+                    Effect.andThen(fileWaitingPurchases(db)),
+                    failedStep("purchases"),
+                    Effect.catchTags({ SystemSyncError: (error) => warn(error) })
+                )
+            ),
+            Effect.andThen(
+                announceRepriced(db).pipe(
+                    failedStep("repriced"),
+                    Effect.catchTags({ SystemSyncError: (error) => warn(error) })
+                )
+            ),
+            Effect.andThen(attemptOr("logos", () => backfillLogos(db), 0))
+        );
+        const catchUp = Effect.all([mirrorRun, drainRun], { concurrency: "unbounded", discard: true }).pipe(
+            Effect.uninterruptible
+        );
 
         // Republished explicitly: a refresh's unqualified `DELETE FROM exchangeRates` hits SQLite's truncate
         // optimization, which skips the update hook the listener relies on (expo-sqlite `sqlite3.h:7090-7095`).
@@ -233,24 +276,3 @@ export const make = Effect.gen(function* make() {
 });
 
 export const layer = Layer.effect(SystemSync, make);
-
-async function mirrorWalletRun(db: Database): Promise<void> {
-    const at = readWalletLastRun();
-    if (at == null) {
-        return;
-    }
-    const stamp = String(at);
-    if ((await getMeta(db, META_KEYS.walletLastRunAt)) === stamp) {
-        return;
-    }
-    await setMeta(db, META_KEYS.walletLastRunAt, stamp);
-}
-
-async function announceRepriced(db: Database): Promise<void> {
-    for (const entry of await takeRepriced(db)) {
-        notifyWarning({
-            body: translateNow("log.repriced.body", { from: formatAmount(entry.from, entry.currency) }),
-            title: translateNow("log.repriced.title", { name: entry.note, to: formatAmount(entry.to, entry.currency) }),
-        });
-    }
-}

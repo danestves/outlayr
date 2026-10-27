@@ -1,20 +1,24 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import { and, eq, isNull } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { budgets, categories, transactions } from "@/db/schema";
 import { migratedDatabase, transactionalDatabase } from "@/db/test-database";
 
 import {
-    CATEGORY_ERROR_MESSAGES,
     capitalizeCategoryName,
     categoriesRepo,
     getCategoryById,
+    isCategoryValidationError,
     SEEDED_CATEGORY_NAMES,
     SUGGESTED_CATEGORY_PRESETS,
     seedCategories,
     suggestedCategoriesNotAdded,
 } from "./categories-core";
+
+const failureCode = (effect: Effect.Effect<unknown, unknown>) =>
+    Effect.runPromise(Effect.flip(effect)).then((error) => (isCategoryValidationError(error) ? error.code : null));
 
 const makeDb = migratedDatabase;
 
@@ -55,56 +59,66 @@ describe("categoriesRepo.create validation", () => {
 
     it("reports incomplete when both name and symbol are missing", async () => {
         await expect(
-            categoriesRepo.create(db, {
-                color: "#279AF4",
-                icon: "",
-                income: false,
-                name: "  ",
-            })
-        ).rejects.toThrow(new Error(CATEGORY_ERROR_MESSAGES.incomplete));
+            failureCode(
+                categoriesRepo.create(db, {
+                    color: "#279AF4",
+                    icon: "",
+                    income: false,
+                    name: "  ",
+                })
+            )
+        ).resolves.toBe("incomplete");
     });
 
     it("reports missingName when only the name is blank", async () => {
         await expect(
-            categoriesRepo.create(db, {
-                color: "#279AF4",
-                icon: "Coffee02",
-                income: false,
-                name: "  ",
-            })
-        ).rejects.toThrow(new Error(CATEGORY_ERROR_MESSAGES.missingName));
+            failureCode(
+                categoriesRepo.create(db, {
+                    color: "#279AF4",
+                    icon: "Coffee02",
+                    income: false,
+                    name: "  ",
+                })
+            )
+        ).resolves.toBe("missingName");
     });
 
     it("reports missingIcon when the name is set but no symbol", async () => {
         await expect(
-            categoriesRepo.create(db, {
-                color: "#279AF4",
-                icon: "",
-                income: false,
-                name: "Coffee",
-            })
-        ).rejects.toThrow(new Error(CATEGORY_ERROR_MESSAGES.missingIcon));
+            failureCode(
+                categoriesRepo.create(db, {
+                    color: "#279AF4",
+                    icon: "",
+                    income: false,
+                    name: "Coffee",
+                })
+            )
+        ).resolves.toBe("missingIcon");
     });
 
     it("accepts an emoji as the symbol (no icon)", async () => {
-        const id = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            emoji: "☕",
-            income: false,
-            name: "Coffee",
-        });
+        const id = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                emoji: "☕",
+                income: false,
+                name: "Coffee",
+            })
+        );
         const row = await getCategoryById(db, id);
         expect(row?.emoji).toBe("☕");
         expect(row?.icon).toBeNull();
     });
 
     it("title-cases and trims the stored name", async () => {
-        const id = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Coffee02",
-            income: false,
-            name: "  coffee shop  ",
-        });
+        const id = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Coffee02",
+                income: false,
+                name: "  coffee shop  ",
+            })
+        );
         const row = await getCategoryById(db, id);
         expect(row?.name).toBe("Coffee Shop");
         expect(row?.icon).toBe("Coffee02");
@@ -120,105 +134,129 @@ describe("categoriesRepo.create collisions", () => {
     });
 
     it("rejects a duplicate icon in the same namespace", async () => {
-        await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Coffee02",
-            income: false,
-            name: "Coffee",
-        });
-        await expect(
-            categoriesRepo.create(db, {
-                color: "#279AF4",
-                icon: "Coffee02",
-                income: false,
-                name: "Tea",
-            })
-        ).rejects.toThrow(new Error(CATEGORY_ERROR_MESSAGES.duplicateIcon));
-    });
-
-    it("rejects a duplicate emoji, normalizing variation selectors", async () => {
-        const heart = String.fromCodePoint(0x27_64);
-        const heartVs = heart + String.fromCodePoint(0xfe_0f);
-        await categoriesRepo.create(db, {
-            color: "#279AF4",
-            emoji: heart,
-            income: false,
-            name: "Love",
-        });
-        await expect(
-            categoriesRepo.create(db, {
-                color: "#279AF4",
-                emoji: heartVs,
-                income: false,
-                name: "Adore",
-            })
-        ).rejects.toThrow(new Error(CATEGORY_ERROR_MESSAGES.duplicateEmoji));
-    });
-
-    it("rejects a duplicate name (case-insensitive) with a distinct icon", async () => {
-        await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Coffee02",
-            income: false,
-            name: "Coffee",
-        });
-        await expect(
-            categoriesRepo.create(db, {
-                color: "#279AF4",
-                icon: "Restaurant02",
-                income: false,
-                name: "coffee",
-            })
-        ).rejects.toThrow(new Error(CATEGORY_ERROR_MESSAGES.duplicateName));
-    });
-
-    it("reports the combined duplicate when both symbol and name match", async () => {
-        await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Coffee02",
-            income: false,
-            name: "Coffee",
-        });
-        await expect(
+        await Effect.runPromise(
             categoriesRepo.create(db, {
                 color: "#279AF4",
                 icon: "Coffee02",
                 income: false,
                 name: "Coffee",
             })
-        ).rejects.toThrow(new Error(CATEGORY_ERROR_MESSAGES.duplicate));
+        );
+        await expect(
+            failureCode(
+                categoriesRepo.create(db, {
+                    color: "#279AF4",
+                    icon: "Coffee02",
+                    income: false,
+                    name: "Tea",
+                })
+            )
+        ).resolves.toBe("duplicateIcon");
+    });
+
+    it("rejects a duplicate emoji, normalizing variation selectors", async () => {
+        const heart = String.fromCodePoint(0x27_64);
+        const heartVs = heart + String.fromCodePoint(0xfe_0f);
+        await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                emoji: heart,
+                income: false,
+                name: "Love",
+            })
+        );
+        await expect(
+            failureCode(
+                categoriesRepo.create(db, {
+                    color: "#279AF4",
+                    emoji: heartVs,
+                    income: false,
+                    name: "Adore",
+                })
+            )
+        ).resolves.toBe("duplicateEmoji");
+    });
+
+    it("rejects a duplicate name (case-insensitive) with a distinct icon", async () => {
+        await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Coffee02",
+                income: false,
+                name: "Coffee",
+            })
+        );
+        await expect(
+            failureCode(
+                categoriesRepo.create(db, {
+                    color: "#279AF4",
+                    icon: "Restaurant02",
+                    income: false,
+                    name: "coffee",
+                })
+            )
+        ).resolves.toBe("duplicateName");
+    });
+
+    it("reports the combined duplicate when both symbol and name match", async () => {
+        await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Coffee02",
+                income: false,
+                name: "Coffee",
+            })
+        );
+        await expect(
+            failureCode(
+                categoriesRepo.create(db, {
+                    color: "#279AF4",
+                    icon: "Coffee02",
+                    income: false,
+                    name: "Coffee",
+                })
+            )
+        ).resolves.toBe("duplicate");
     });
 
     it("allows the same symbol and name in the other namespace", async () => {
-        await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Coffee02",
-            income: false,
-            name: "Coffee",
-        });
-        const id = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Coffee02",
-            income: true,
-            name: "Coffee",
-        });
+        await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Coffee02",
+                income: false,
+                name: "Coffee",
+            })
+        );
+        const id = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Coffee02",
+                income: true,
+                name: "Coffee",
+            })
+        );
         expect(getCategoryById(db, id)).not.toBeNull();
     });
 
     it("ignores a soft-deleted sibling when checking collisions", async () => {
-        const id = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Coffee02",
-            income: false,
-            name: "Coffee",
-        });
+        const id = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Coffee02",
+                income: false,
+                name: "Coffee",
+            })
+        );
         await db.update(categories).set({ deletedAt: new Date() }).where(eq(categories.id, id));
-        const reused = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Coffee02",
-            income: false,
-            name: "Coffee",
-        });
+        const reused = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Coffee02",
+                income: false,
+                name: "Coffee",
+            })
+        );
         expect(getCategoryById(db, reused)).not.toBeNull();
     });
 });
@@ -230,13 +268,15 @@ describe("categoriesRepo.create sortOrder", () => {
     });
 
     const make = (name: string, income: boolean, parentId?: string) =>
-        categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: name,
-            income,
-            name,
-            parentId,
-        });
+        Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: name,
+                income,
+                name,
+                parentId,
+            })
+        );
 
     it("starts at 0 and increments within a namespace", async () => {
         const first = await getCategoryById(db, await make("A", false));
@@ -268,16 +308,20 @@ describe("categoriesRepo.update", () => {
     });
 
     it("renames, recolors, and title-cases without touching other fields", async () => {
-        const id = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Coffee02",
-            income: false,
-            name: "Coffee",
-        });
-        await categoriesRepo.update(db, id, {
-            color: "#EC7A58",
-            name: "morning coffee",
-        });
+        const id = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Coffee02",
+                income: false,
+                name: "Coffee",
+            })
+        );
+        await Effect.runPromise(
+            categoriesRepo.update(db, id, {
+                color: "#EC7A58",
+                name: "morning coffee",
+            })
+        );
         const row = await getCategoryById(db, id);
         expect(row?.name).toBe("Morning Coffee");
         expect(row?.color).toBe("#EC7A58");
@@ -286,75 +330,83 @@ describe("categoriesRepo.update", () => {
     });
 
     it("excludes the edited row from its own collision check", async () => {
-        const id = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Coffee02",
-            income: false,
-            name: "Coffee",
-        });
-        await categoriesRepo.update(db, id, { icon: "Coffee02", name: "Coffee" });
+        const id = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Coffee02",
+                income: false,
+                name: "Coffee",
+            })
+        );
+        await Effect.runPromise(categoriesRepo.update(db, id, { icon: "Coffee02", name: "Coffee" }));
         const row = await getCategoryById(db, id);
         expect(row?.name).toBe("Coffee");
     });
 
     it("rejects renaming onto a sibling's name", async () => {
-        await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Coffee02",
-            income: false,
-            name: "Coffee",
-        });
-        const other = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Restaurant02",
-            income: false,
-            name: "Tea",
-        });
-        await expect(categoriesRepo.update(db, other, { name: "coffee" })).rejects.toThrow(
-            new Error(CATEGORY_ERROR_MESSAGES.duplicateName)
+        await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Coffee02",
+                income: false,
+                name: "Coffee",
+            })
         );
+        const other = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Restaurant02",
+                income: false,
+                name: "Tea",
+            })
+        );
+        await expect(failureCode(categoriesRepo.update(db, other, { name: "coffee" }))).resolves.toBe("duplicateName");
     });
 
     it("rejects adopting a sibling's icon", async () => {
-        await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Coffee02",
-            income: false,
-            name: "Coffee",
-        });
-        const other = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Restaurant02",
-            income: false,
-            name: "Tea",
-        });
-        await expect(categoriesRepo.update(db, other, { icon: "Coffee02" })).rejects.toThrow(
-            new Error(CATEGORY_ERROR_MESSAGES.duplicateIcon)
+        await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Coffee02",
+                income: false,
+                name: "Coffee",
+            })
+        );
+        const other = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Restaurant02",
+                income: false,
+                name: "Tea",
+            })
+        );
+        await expect(failureCode(categoriesRepo.update(db, other, { icon: "Coffee02" }))).resolves.toBe(
+            "duplicateIcon"
         );
     });
 
     it("rejects a blank rename", async () => {
-        const id = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Coffee02",
-            income: false,
-            name: "Coffee",
-        });
-        await expect(categoriesRepo.update(db, id, { name: "   " })).rejects.toThrow(
-            new Error(CATEGORY_ERROR_MESSAGES.missingName)
+        const id = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Coffee02",
+                income: false,
+                name: "Coffee",
+            })
         );
+        await expect(failureCode(categoriesRepo.update(db, id, { name: "   " }))).resolves.toBe("missingName");
     });
 
     it("rejects clearing the only symbol of a symbol-bearing row", async () => {
-        const id = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Coffee02",
-            income: false,
-            name: "Coffee",
-        });
-        await expect(categoriesRepo.update(db, id, { icon: "" })).rejects.toThrow(
-            new Error(CATEGORY_ERROR_MESSAGES.missingIcon)
+        const id = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Coffee02",
+                income: false,
+                name: "Coffee",
+            })
         );
+        await expect(failureCode(categoriesRepo.update(db, id, { icon: "" }))).resolves.toBe("missingIcon");
     });
 
     it("allows renaming a legacy symbol-less row", async () => {
@@ -372,7 +424,7 @@ describe("categoriesRepo.update", () => {
             sortOrder: 0,
             updatedAt: now,
         });
-        await categoriesRepo.update(db, "legacy", { name: "renamed" });
+        await Effect.runPromise(categoriesRepo.update(db, "legacy", { name: "renamed" }));
         const row = await getCategoryById(db, "legacy");
         expect(row?.name).toBe("Renamed");
     });
@@ -385,26 +437,32 @@ describe("categoriesRepo.reorder", () => {
     });
 
     it("persists sortOrder as the array index", async () => {
-        const a = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "IconA",
-            income: false,
-            name: "A",
-        });
-        const b = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "IconB",
-            income: false,
-            name: "B",
-        });
-        const c = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "IconC",
-            income: false,
-            name: "C",
-        });
+        const a = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "IconA",
+                income: false,
+                name: "A",
+            })
+        );
+        const b = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "IconB",
+                income: false,
+                name: "B",
+            })
+        );
+        const c = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "IconC",
+                income: false,
+                name: "C",
+            })
+        );
 
-        await categoriesRepo.reorder(db, [c, a, b]);
+        await Effect.runPromise(categoriesRepo.reorder(db, [c, a, b]));
 
         expect((await getCategoryById(db, c))?.sortOrder).toBe(0);
         expect((await getCategoryById(db, a))?.sortOrder).toBe(1);
@@ -413,27 +471,33 @@ describe("categoriesRepo.reorder", () => {
 
     it("writes every position or none, rather than leaving two sharing one", async () => {
         const rollbackDb = transactionalDatabase();
-        const a = await categoriesRepo.create(rollbackDb, {
-            color: "#279AF4",
-            icon: "IconA",
-            income: false,
-            name: "A",
-        });
-        const b = await categoriesRepo.create(rollbackDb, {
-            color: "#279AF4",
-            icon: "IconB",
-            income: false,
-            name: "B",
-        });
-        const c = await categoriesRepo.create(rollbackDb, {
-            color: "#279AF4",
-            icon: "IconC",
-            income: false,
-            name: "C",
-        });
+        const a = await Effect.runPromise(
+            categoriesRepo.create(rollbackDb, {
+                color: "#279AF4",
+                icon: "IconA",
+                income: false,
+                name: "A",
+            })
+        );
+        const b = await Effect.runPromise(
+            categoriesRepo.create(rollbackDb, {
+                color: "#279AF4",
+                icon: "IconB",
+                income: false,
+                name: "B",
+            })
+        );
+        const c = await Effect.runPromise(
+            categoriesRepo.create(rollbackDb, {
+                color: "#279AF4",
+                icon: "IconC",
+                income: false,
+                name: "C",
+            })
+        );
 
         await expect(
-            categoriesRepo.reorder(rollbackDb, [c, a, { notAnId: true } as unknown as string])
+            Effect.runPromise(categoriesRepo.reorder(rollbackDb, [c, a, { notAnId: true } as unknown as string]))
         ).rejects.toThrow();
 
         expect((await getCategoryById(rollbackDb, c))?.sortOrder).toBe(2);
@@ -449,27 +513,33 @@ describe("categoriesRepo.setParent", () => {
     });
 
     it("nests a top-level category under a parent, appending in scope", async () => {
-        const parent = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "IconFood",
-            income: false,
-            name: "Food",
-        });
-        await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "IconCoffee",
-            income: false,
-            name: "Coffee",
-            parentId: parent,
-        });
-        const moving = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "IconSnacks",
-            income: false,
-            name: "Snacks",
-        });
+        const parent = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "IconFood",
+                income: false,
+                name: "Food",
+            })
+        );
+        await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "IconCoffee",
+                income: false,
+                name: "Coffee",
+                parentId: parent,
+            })
+        );
+        const moving = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "IconSnacks",
+                income: false,
+                name: "Snacks",
+            })
+        );
 
-        await categoriesRepo.setParent(db, moving, parent);
+        await Effect.runPromise(categoriesRepo.setParent(db, moving, parent));
 
         const row = await getCategoryById(db, moving);
         expect(row?.parentId).toBe(parent);
@@ -477,20 +547,24 @@ describe("categoriesRepo.setParent", () => {
     });
 
     it("inherits the destination parent's income namespace", async () => {
-        const incomeParent = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "IconEarnings",
-            income: true,
-            name: "Earnings",
-        });
-        const expenseChild = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "IconBonus",
-            income: false,
-            name: "Bonus",
-        });
+        const incomeParent = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "IconEarnings",
+                income: true,
+                name: "Earnings",
+            })
+        );
+        const expenseChild = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "IconBonus",
+                income: false,
+                name: "Bonus",
+            })
+        );
 
-        await categoriesRepo.setParent(db, expenseChild, incomeParent);
+        await Effect.runPromise(categoriesRepo.setParent(db, expenseChild, incomeParent));
 
         const row = await getCategoryById(db, expenseChild);
         expect(row?.income).toBe(true);
@@ -498,21 +572,25 @@ describe("categoriesRepo.setParent", () => {
     });
 
     it("promotes a subcategory back to the top level", async () => {
-        const parent = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "IconFood",
-            income: false,
-            name: "Food",
-        });
-        const child = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "IconCoffee",
-            income: false,
-            name: "Coffee",
-            parentId: parent,
-        });
+        const parent = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "IconFood",
+                income: false,
+                name: "Food",
+            })
+        );
+        const child = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "IconCoffee",
+                income: false,
+                name: "Coffee",
+                parentId: parent,
+            })
+        );
 
-        await categoriesRepo.setParent(db, child, null);
+        await Effect.runPromise(categoriesRepo.setParent(db, child, null));
 
         const row = await getCategoryById(db, child);
         expect(row?.parentId).toBeNull();
@@ -526,36 +604,42 @@ describe("suggestedCategoriesNotAdded", () => {
     });
 
     it("excludes a preset whose name is already used", async () => {
-        await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "SomeOtherIcon",
-            income: false,
-            name: "coffee",
-        });
-        const remaining = await suggestedCategoriesNotAdded(db, false);
+        await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "SomeOtherIcon",
+                income: false,
+                name: "coffee",
+            })
+        );
+        const remaining = await Effect.runPromise(suggestedCategoriesNotAdded(db, false));
         expect(!remaining.some((preset) => preset.name === "Coffee")).toBeTruthy();
         expect(remaining).toHaveLength(SUGGESTED_CATEGORY_PRESETS.expense.length - 1);
     });
 
     it("excludes a preset whose icon is already used", async () => {
-        await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Coffee02",
-            income: false,
-            name: "Java",
-        });
-        const remaining = await suggestedCategoriesNotAdded(db, false);
+        await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Coffee02",
+                income: false,
+                name: "Java",
+            })
+        );
+        const remaining = await Effect.runPromise(suggestedCategoriesNotAdded(db, false));
         expect(!remaining.some((preset) => preset.icon === "Coffee02")).toBeTruthy();
     });
 
     it("scopes the filter to the requested namespace", async () => {
-        await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Coffee02",
-            income: false,
-            name: "Coffee",
-        });
-        const income = await suggestedCategoriesNotAdded(db, true);
+        await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Coffee02",
+                income: false,
+                name: "Coffee",
+            })
+        );
+        const income = await Effect.runPromise(suggestedCategoriesNotAdded(db, true));
         expect(income).toHaveLength(SUGGESTED_CATEGORY_PRESETS.income.length);
     });
 });
@@ -568,24 +652,28 @@ describe("categoriesRepo.addSuggested", () => {
 
     it("adds a preset and skips it on a second attempt", async () => {
         const [preset] = SUGGESTED_CATEGORY_PRESETS.expense;
-        const id = await categoriesRepo.addSuggested(db, {
-            color: preset.color,
-            icon: preset.icon,
-            income: false,
-            name: preset.name,
-        });
+        const id = await Effect.runPromise(
+            categoriesRepo.addSuggested(db, {
+                color: preset.color,
+                icon: preset.icon,
+                income: false,
+                name: preset.name,
+            })
+        );
         expect(id).not.toBeNull();
         const row = await getCategoryById(db, id as string);
         expect(row?.name).toBe(capitalizeCategoryName(preset.name));
         expect(row?.icon).toBe(preset.icon);
         expect(row?.sortOrder).toBe(0);
 
-        const second = await categoriesRepo.addSuggested(db, {
-            color: preset.color,
-            icon: preset.icon,
-            income: false,
-            name: preset.name,
-        });
+        const second = await Effect.runPromise(
+            categoriesRepo.addSuggested(db, {
+                color: preset.color,
+                icon: preset.icon,
+                income: false,
+                name: preset.name,
+            })
+        );
         expect(second).toBeNull();
     });
 });
@@ -597,16 +685,18 @@ describe("categoriesRepo.remove cascade", () => {
     });
 
     it("tombstones the category and its transactions", async () => {
-        const id = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Coffee02",
-            income: false,
-            name: "Coffee",
-        });
+        const id = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Coffee02",
+                income: false,
+                name: "Coffee",
+            })
+        );
         await addTransaction(db, id);
         await addTransaction(db, id);
 
-        await categoriesRepo.remove(db, id);
+        await Effect.runPromise(categoriesRepo.remove(db, id));
 
         expect(getCategoryById(db, id)).toBeNull();
         const categoryRows = await db.select().from(categories).where(eq(categories.id, id));
@@ -626,19 +716,21 @@ describe("categoriesRepo.remove cascade", () => {
     });
 
     it("retires the schedule and releases the photo of each cascaded transaction", async () => {
-        const id = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Coffee02",
-            income: false,
-            name: "Coffee",
-        });
+        const id = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Coffee02",
+                income: false,
+                name: "Coffee",
+            })
+        );
         await addTransaction(db, id, {
             imageUri: "file:///photos/tx.jpg",
             onceRecurring: true,
             recurringType: 2,
         });
 
-        await categoriesRepo.remove(db, id);
+        await Effect.runPromise(categoriesRepo.remove(db, id));
 
         const [row] = await db.select().from(transactions).where(eq(transactions.categoryId, id));
         expect(row.imageUri).toBeNull();
@@ -648,19 +740,21 @@ describe("categoriesRepo.remove cascade", () => {
     });
 
     it("does not re-stamp what it already tombstoned", async () => {
-        const id = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Coffee02",
-            income: false,
-            name: "Coffee",
-        });
+        const id = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Coffee02",
+                income: false,
+                name: "Coffee",
+            })
+        );
         await addTransaction(db, id);
 
-        await categoriesRepo.remove(db, id);
+        await Effect.runPromise(categoriesRepo.remove(db, id));
         const first = await db.select().from(transactions);
         const firstCategory = await db.select().from(categories);
 
-        await categoriesRepo.remove(db, id);
+        await Effect.runPromise(categoriesRepo.remove(db, id));
 
         const second = await db.select().from(transactions);
         expect(second[0].deletedAt?.getTime()).toBe(first[0].deletedAt?.getTime());
@@ -671,21 +765,25 @@ describe("categoriesRepo.remove cascade", () => {
     });
 
     it("promotes subcategories to the top level", async () => {
-        const parentId = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "IconFood",
-            income: false,
-            name: "Food",
-        });
-        const childId = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "IconCoffee",
-            income: false,
-            name: "Coffee",
-            parentId,
-        });
+        const parentId = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "IconFood",
+                income: false,
+                name: "Food",
+            })
+        );
+        const childId = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "IconCoffee",
+                income: false,
+                name: "Coffee",
+                parentId,
+            })
+        );
 
-        await categoriesRepo.remove(db, parentId);
+        await Effect.runPromise(categoriesRepo.remove(db, parentId));
 
         const child = await getCategoryById(db, childId);
         expect(child).not.toBeNull();
@@ -693,12 +791,14 @@ describe("categoriesRepo.remove cascade", () => {
     });
 
     it("tombstones a budget attached to the category", async () => {
-        const id = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Coffee02",
-            income: false,
-            name: "Coffee",
-        });
+        const id = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Coffee02",
+                income: false,
+                name: "Coffee",
+            })
+        );
         const now = new Date();
         await db.insert(budgets).values({
             amount: 100,
@@ -709,7 +809,7 @@ describe("categoriesRepo.remove cascade", () => {
             updatedAt: now,
         });
 
-        await categoriesRepo.remove(db, id);
+        await Effect.runPromise(categoriesRepo.remove(db, id));
 
         const readable = await db
             .select()
@@ -722,12 +822,14 @@ describe("categoriesRepo.remove cascade", () => {
     });
 
     it("lets the category hold a budget again after the cascade", async () => {
-        const id = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Coffee02",
-            income: false,
-            name: "Coffee",
-        });
+        const id = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Coffee02",
+                income: false,
+                name: "Coffee",
+            })
+        );
         const now = new Date();
         await db.insert(budgets).values({
             amount: 100,
@@ -737,7 +839,7 @@ describe("categoriesRepo.remove cascade", () => {
             updatedAt: now,
         });
 
-        await categoriesRepo.remove(db, id);
+        await Effect.runPromise(categoriesRepo.remove(db, id));
 
         // What a pull does with a peer's budget for the same category: the
         // tombstone must not still be holding `budgets_categoryId_unique`, or the
@@ -765,7 +867,7 @@ describe("seedCategories idempotency", () => {
     });
 
     it("seeds one full set on a fresh store", async () => {
-        await seedCategories(db);
+        await Effect.runPromise(seedCategories(db));
 
         const rows = await db.select().from(categories);
         expect(rows.length > 0).toBeTruthy();
@@ -773,10 +875,10 @@ describe("seedCategories idempotency", () => {
     });
 
     it("does not seed a second set when run again", async () => {
-        await seedCategories(db);
+        await Effect.runPromise(seedCategories(db));
         const first = await db.select().from(categories);
 
-        await seedCategories(db);
+        await Effect.runPromise(seedCategories(db));
         const second = await db.select().from(categories);
 
         // bootstrap writes the firstLaunch marker only after seeding returns, so a
@@ -786,14 +888,16 @@ describe("seedCategories idempotency", () => {
     });
 
     it("leaves a store that already has categories untouched", async () => {
-        const id = await categoriesRepo.create(db, {
-            color: "#279AF4",
-            icon: "Coffee02",
-            income: false,
-            name: "Coffee",
-        });
+        const id = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#279AF4",
+                icon: "Coffee02",
+                income: false,
+                name: "Coffee",
+            })
+        );
 
-        await seedCategories(db);
+        await Effect.runPromise(seedCategories(db));
 
         const rows = await db.select().from(categories);
         expect(rows).toHaveLength(1);
@@ -802,8 +906,8 @@ describe("seedCategories idempotency", () => {
 
     it("mints the same ids on two independent installs", async () => {
         const other = makeDb();
-        await seedCategories(db);
-        await seedCategories(other);
+        await Effect.runPromise(seedCategories(db));
+        await Effect.runPromise(seedCategories(other));
 
         const identify = async (target: Database) => {
             const rows = await target.select().from(categories);

@@ -13,20 +13,17 @@ jest.mock("@/hooks/use-pro-locked", () => ({
     useProLocked: () => mockPro.locked,
     useProPending: () => mockPro.pending,
 }));
-jest.mock("@/lib/adoption-engine", () => ({
-    adoptionEngine: () => ({ accountLedger: async () => "populated" }),
-}));
 let mockRelease: () => void = () => undefined;
-const mockCompleteAdoption = jest.fn(
+const mockReconcile = jest.fn(
     () =>
-        new Promise<void>((resolve) => {
-            mockRelease = resolve;
+        new Promise<string>((resolve) => {
+            mockRelease = () => resolve("settled");
         })
 );
-jest.mock("@/data/ledger-adoption", () => ({
-    completeAdoption: () => mockCompleteAdoption(),
-    localLedgerState: async () => "empty",
-    prepareAccountAdoption: async () => undefined,
+jest.mock("@/state/lifecycle-commands", () => ({
+    completeAdoptionCommand: {},
+    reconcileAdoptionCommand: {},
+    runLifecycleCommand: () => mockReconcile(),
 }));
 
 import { LedgerAdoptionProvider, useLedgerAdoption } from "./ledger-adoption";
@@ -37,7 +34,7 @@ function Status() {
 
 describe("ledgerAdoptionProvider", () => {
     beforeEach(() => {
-        mockCompleteAdoption.mockClear();
+        mockReconcile.mockClear();
         mockPro.pending = false;
     });
 
@@ -48,7 +45,7 @@ describe("ledgerAdoptionProvider", () => {
             </LedgerAdoptionProvider>
         );
         await act(async () => undefined);
-        expect(mockCompleteAdoption).toHaveBeenCalledTimes(1);
+        expect(mockReconcile).toHaveBeenCalledTimes(1);
 
         mockPro.pending = true;
         await rerender(
@@ -64,7 +61,7 @@ describe("ledgerAdoptionProvider", () => {
         );
         await act(async () => undefined);
 
-        expect(mockCompleteAdoption).toHaveBeenCalledTimes(1);
+        expect(mockReconcile).toHaveBeenCalledTimes(1);
         expect(getByText("resolving")).toBeTruthy();
 
         await act(async () => {

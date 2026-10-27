@@ -3,9 +3,9 @@ import type { ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 
 import { useLocalData } from "@/contexts/local-data-context";
-import { closeDatabase } from "@/db/client";
 import type { Database } from "@/db/client";
 import { useTranslation } from "@/i18n/context";
+import { closeDatabaseCommand, runLifecycleCommand } from "@/state/lifecycle-commands";
 
 import { resumePersistedCloudDeletion } from "./deletion-resume";
 import { createDeviceResetGate } from "./device-data-reset";
@@ -24,7 +24,7 @@ async function recoverDevice(db: Database | null, retry: () => void): Promise<Er
             // locked file or a ledger is re-seeded mid-erase. `settings/account` closes the same way.
             closeDatabase: async () => {
                 closed = true;
-                await closeDatabase(database);
+                await runLifecycleCommand(closeDatabaseCommand, database);
             },
             completeCloudDeletion: async () => {
                 await resumePersistedCloudDeletion({ clearOnComplete: false, required: true });

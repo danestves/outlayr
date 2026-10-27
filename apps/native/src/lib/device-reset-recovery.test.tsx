@@ -16,7 +16,10 @@ const mockRetry = jest.fn();
 jest.mock("@/contexts/local-data-context", () => ({
     useLocalData: () => mockTestLocalData({ db: mockDatabase, retry: mockRetry }),
 }));
-jest.mock("@/db/client", () => ({ closeDatabase: jest.fn() }));
+jest.mock("@/state/lifecycle-commands", () => ({
+    closeDatabaseCommand: {},
+    runLifecycleCommand: async () => undefined,
+}));
 jest.mock("./deletion-resume", () => ({
     resumePersistedCloudDeletion: (...args: Parameters<typeof mockResumePersistedCloudDeletion>) =>
         mockResumePersistedCloudDeletion(...args),

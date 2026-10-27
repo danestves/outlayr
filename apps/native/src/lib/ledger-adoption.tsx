@@ -1,4 +1,7 @@
+import { RegistryContext } from "@effect/atom-react/RegistryContext";
 import { eq } from "drizzle-orm";
+import * as Cause from "effect/Cause";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { createContext, use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { AppState } from "react-native";
@@ -6,14 +9,14 @@ import { AppState } from "react-native";
 import { useDatabase } from "@/contexts/local-data-context";
 import { createSingleAdoptionRetry } from "@/data/adoption-retry";
 import { META_KEYS } from "@/data/app-meta-core";
-import { completeAdoption, localLedgerState, prepareAccountAdoption } from "@/data/ledger-adoption";
 import { useLiveValue } from "@/data/live-query";
 import { appMeta } from "@/db/schema";
-import { adoptionActions, adoptionPlan, choiceActions } from "@/domain/ledger-adoption";
+import { choiceActions } from "@/domain/ledger-adoption";
 import type { AdoptionChoice } from "@/domain/ledger-adoption";
 import { useProLocked, useProPending } from "@/hooks/use-pro-locked";
-import { adoptionEngine } from "@/lib/adoption-engine";
 import { useAuthSession } from "@/lib/auth-session";
+import { SILENT, runAtomCommand } from "@/state/atom-command";
+import { completeAdoptionCommand, reconcileAdoptionCommand, runLifecycleCommand } from "@/state/lifecycle-commands";
 
 export type AdoptionStatus = "resolving" | "settled" | "ask" | "working";
 
@@ -37,10 +40,6 @@ export function useLedgerAdoption(): LedgerAdoption {
     return use(LedgerAdoptionContext);
 }
 
-async function remoteLedger(engine: ReturnType<typeof adoptionEngine>) {
-    return engine ? await engine.accountLedger() : "unknown";
-}
-
 function shownStatus(holding: boolean, skipping: boolean, reconciled: AdoptionStatus): AdoptionStatus {
     if (holding) {
         return "resolving";
@@ -57,6 +56,7 @@ function shownStatus(holding: boolean, skipping: boolean, reconciled: AdoptionSt
  */
 export function LedgerAdoptionProvider({ children }: { children: ReactNode }) {
     const db = useDatabase();
+    const registry = use(RegistryContext);
     const { accountId } = useAuthSession();
     // Read during render rather than awaited, so a reconciled device never shows a frame of the cover.
     const adoptedAccount = useLiveValue(
@@ -107,20 +107,12 @@ export function LedgerAdoptionProvider({ children }: { children: ReactNode }) {
 
         const runReconcile = async (): Promise<AdoptionStatus> => {
             try {
-                await prepareAccountAdoption(db, account);
-                const engine = adoptionEngine(db);
-                const remote = await remoteLedger(engine);
-                const plan = adoptionPlan(await localLedgerState(db), remote);
-                if (plan === "ask") {
+                const outcome = await runLifecycleCommand(reconcileAdoptionCommand, { accountId: account, db });
+                if (outcome === "ask") {
                     return "ask";
                 }
-                if (plan === "defer") {
+                if (outcome === "defer") {
                     retry.schedule();
-                    return "settled";
-                }
-                const actions = adoptionActions(plan);
-                if (actions) {
-                    await completeAdoption(db, engine, actions, account);
                 }
                 return "settled";
             } catch (error: unknown) {
@@ -162,18 +154,22 @@ export function LedgerAdoptionProvider({ children }: { children: ReactNode }) {
             }
             setReconciled("working");
             setFailed(false);
-            const adopt = async () => {
-                await completeAdoption(db, adoptionEngine(db), choiceActions(choice), accountId);
+            runAtomCommand(
+                registry,
+                completeAdoptionCommand,
+                { accountId, actions: choiceActions(choice), db },
+                SILENT
+            ).then((result) => {
+                if (AsyncResult.isFailure(result)) {
+                    console.warn("[outlayr] ledger adoption failed", Cause.squash(result.cause));
+                    setFailed(true);
+                    setReconciled("ask");
+                    return;
+                }
                 setReconciled("settled");
-            };
-
-            adopt().catch((cause: unknown) => {
-                console.warn("[outlayr] ledger adoption failed", cause);
-                setFailed(true);
-                setReconciled("ask");
             });
         },
-        [db, accountId]
+        [db, accountId, registry]
     );
 
     const value = useMemo(() => ({ choose, failed, status }), [status, failed, choose]);

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { migratedDatabase } from "@/db/test-database";
@@ -20,8 +21,8 @@ describe("finishOnboarding", () => {
     });
 
     it("settles the gate it writes", async () => {
-        await finishOnboarding(db);
-        expect(isOnboardingSettled(await getMeta(db, META_KEYS.onboardingComplete))).toBe(true);
+        await Effect.runPromise(finishOnboarding(db));
+        expect(isOnboardingSettled(await Effect.runPromise(getMeta(db, META_KEYS.onboardingComplete)))).toBe(true);
     });
 });
 
@@ -46,18 +47,18 @@ describe("settleLegacyOnboarding", () => {
     });
 
     it("backfills onboardingComplete for a pre-flow ledger and stamps the marker", async () => {
-        await setMeta(db, META_KEYS.currencyChosen, "true");
+        await Effect.runPromise(setMeta(db, META_KEYS.currencyChosen, "true"));
 
-        await settleLegacyOnboarding(db);
+        await Effect.runPromise(settleLegacyOnboarding(db));
 
-        await expect(getMeta(db, META_KEYS.onboardingComplete)).resolves.toBe("true");
-        await expect(getMeta(db, META_KEYS.onboardingGateMigrated)).resolves.toBe("true");
+        await expect(Effect.runPromise(getMeta(db, META_KEYS.onboardingComplete))).resolves.toBe("true");
+        await expect(Effect.runPromise(getMeta(db, META_KEYS.onboardingGateMigrated))).resolves.toBe("true");
     });
 
     it("stamps the marker even when there is nothing to backfill", async () => {
-        await settleLegacyOnboarding(db);
+        await Effect.runPromise(settleLegacyOnboarding(db));
 
-        await expect(getMeta(db, META_KEYS.onboardingComplete)).resolves.toBeNull();
-        await expect(getMeta(db, META_KEYS.onboardingGateMigrated)).resolves.toBe("true");
+        await expect(Effect.runPromise(getMeta(db, META_KEYS.onboardingComplete))).resolves.toBeNull();
+        await expect(Effect.runPromise(getMeta(db, META_KEYS.onboardingGateMigrated))).resolves.toBe("true");
     });
 });

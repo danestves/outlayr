@@ -155,7 +155,7 @@ describe("reminderCandidates", () => {
     });
 
     it("stamps a row that stored no currency with the ledger's", async () => {
-        await setMeta(db, "currency", "MXN");
+        await Effect.runPromise(setMeta(db, "currency", "MXN"));
         await seedCarrier(db, {
             currency: null,
             date: at(2025, 3, 15),

@@ -24,6 +24,23 @@ export interface AtomCommand<W, A, E> {
     readonly run: (registry: AtomRegistry.AtomRegistry, input: W) => Promise<AtomCommandResult<A, E>>;
 }
 
+function settledCommand<W, A, E>(
+    label: string,
+    build: (input: W, registry: AtomRegistry.AtomRegistry) => Atom.Atom<AsyncResult.AsyncResult<A, E>>
+): AtomCommand<W, A, E> {
+    const settle = (registry: AtomRegistry.AtomRegistry, input: W) =>
+        Effect.suspend(() => {
+            const atom = build(input, registry).pipe(Atom.withLabel(label));
+            return AtomRegistry.mount(registry, atom).pipe(
+                Effect.andThen(AtomRegistry.getResult(registry, atom, { suspendOnWaiting: true }))
+            );
+        }).pipe(Effect.scoped, Effect.exit, Effect.map(AsyncResult.fromExit));
+    return {
+        label,
+        run: (registry, input) => Effect.runPromise(settle(registry, input)),
+    };
+}
+
 export function createRuntimeCommand<R, ER, W, A, E>(
     runtime: Atom.AtomRuntime<R, ER>,
     options: {
@@ -31,17 +48,14 @@ export function createRuntimeCommand<R, ER, W, A, E>(
         readonly label: string;
     }
 ): AtomCommand<W, A, E | ER> {
-    const settle = (registry: AtomRegistry.AtomRegistry, input: W) =>
-        Effect.suspend(() => {
-            const atom = runtime.atom(options.execute(input, registry)).pipe(Atom.withLabel(options.label));
-            return AtomRegistry.mount(registry, atom).pipe(
-                Effect.andThen(AtomRegistry.getResult(registry, atom, { suspendOnWaiting: true }))
-            );
-        }).pipe(Effect.scoped, Effect.exit, Effect.map(AsyncResult.fromExit));
-    return {
-        label: options.label,
-        run: (registry, input) => Effect.runPromise(settle(registry, input)),
-    };
+    return settledCommand(options.label, (input, registry) => runtime.atom(options.execute(input, registry)));
+}
+
+export function createCommand<W, A, E>(options: {
+    readonly execute: (input: W, registry: AtomRegistry.AtomRegistry) => Effect.Effect<A, E>;
+    readonly label: string;
+}): AtomCommand<W, A, E> {
+    return settledCommand(options.label, (input, registry) => Atom.make(options.execute(input, registry)));
 }
 
 function reportAtomCommandResult(

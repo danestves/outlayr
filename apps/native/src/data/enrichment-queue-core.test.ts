@@ -62,7 +62,9 @@ function applyDeps(): ApplyDeps {
 describe("sendQueuedEnrichment", () => {
     it("sends each queued row with its side's categories, and forgets the ones it sent", async () => {
         const db = await migratedDatabase();
-        await categoriesRepo.create(db, { color: "#000000", icon: "Airplane01", income: false, name: "Trips" });
+        await Effect.runPromise(
+            categoriesRepo.create(db, { color: "#000000", icon: "Airplane01", income: false, name: "Trips" })
+        );
         await seedRow(db, "tx-1", "CARE4BAG AE");
         await Effect.runPromise(queueEnrichment(db, "tx-1"));
         const sent: EnrichmentJobRequest[] = [];
@@ -81,7 +83,9 @@ describe("sendQueuedEnrichment", () => {
         expect(sent).toHaveLength(1);
         expect(sent[0]).toMatchObject({ currency: "EUR", localId: "tx-1", name: "CARE4BAG AE", regionCode: "VE" });
         expect(sent[0]?.categoryTree).toContainEqual({ children: [], name: "Trips" });
-        expect(JSON.parse((await getMeta(db, META_KEYS.enrichmentOutbox)) ?? "null")).toStrictEqual([]);
+        expect(JSON.parse((await Effect.runPromise(getMeta(db, META_KEYS.enrichmentOutbox))) ?? "null")).toStrictEqual(
+            []
+        );
     });
 
     it("keeps what it could not send for the next pass", async () => {
@@ -97,7 +101,10 @@ describe("sendQueuedEnrichment", () => {
         await Effect.runPromise(sendQueuedEnrichment(db, { enqueue, groundedLookup: true }));
 
         expect(enqueue).toHaveBeenCalledTimes(1);
-        expect(JSON.parse((await getMeta(db, META_KEYS.enrichmentOutbox)) ?? "null")).toStrictEqual(["tx-1", "tx-2"]);
+        expect(JSON.parse((await Effect.runPromise(getMeta(db, META_KEYS.enrichmentOutbox))) ?? "null")).toStrictEqual([
+            "tx-1",
+            "tx-2",
+        ]);
     });
 });
 
@@ -130,12 +137,14 @@ describe("applyEnrichmentAnswer", () => {
 
     it("leaves what the owner already chose, without fetching a logo it has nowhere to put", async () => {
         const db = await migratedDatabase();
-        const mine = await categoriesRepo.create(db, {
-            color: "#000000",
-            icon: "Briefcase01",
-            income: false,
-            name: "Work",
-        });
+        const mine = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#000000",
+                icon: "Briefcase01",
+                income: false,
+                name: "Work",
+            })
+        );
         await seedRow(db, "tx-1", "Care4Bag at the airport", { categoryId: mine, emoji: "🧳" });
         const deps = applyDeps();
         const fetchImage = jest.fn(deps.fetchImage);

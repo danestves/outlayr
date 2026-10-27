@@ -43,7 +43,6 @@
     "apps/native/src/components/update-sheet.tsx": 1,
     "apps/native/src/components/voice/voice-orb.tsx": 3,
     "apps/native/src/data/budgets.ts": 3,
-    "apps/native/src/data/settings.ts": 1,
     "apps/native/src/data/use-valuation-coverage.ts": 1,
     "apps/native/src/hooks/use-account-identity.ts": 3,
     "apps/native/src/hooks/use-chart-draw.ts": 2,

@@ -1,6 +1,5 @@
 import { Platform } from "react-native";
 
-import { appliedWriteIds } from "@/data/pending-writes-core";
 import { buildWalletPush } from "@/data/wallet-push";
 import type { Database } from "@/db/client";
 import { formatUpcomingDate } from "@/domain/dates";
@@ -8,6 +7,7 @@ import { amountParts } from "@/domain/money";
 import { translateNow } from "@/i18n/runtime";
 import { publishWatchSnapshot } from "@/lib/watch-link";
 import { publishIntentSnapshot, publishWalletPush } from "@/lib/widget-bridge";
+import { appliedWriteIdsCommand, runLifecycleCommand } from "@/state/lifecycle-commands";
 
 import BudgetWidget from "./budget";
 import InsightsWidget from "./insights";
@@ -25,7 +25,7 @@ export async function publishWidgets(db: Database): Promise<void> {
     try {
         const now = new Date();
         const appliedSince = now.getTime() - APPLIED_WINDOW_MS;
-        const applied = await appliedWriteIds(db, appliedSince);
+        const applied = await runLifecycleCommand(appliedWriteIdsCommand, { db, since: appliedSince });
         const props = await buildWidgetProps(db, now);
 
         // Past-dated entries are dropped; the earliest end wins, or a tile on another view stays stale a whole period.

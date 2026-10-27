@@ -1,5 +1,7 @@
 import { drizzle } from "drizzle-orm/expo-sqlite";
+import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import * as Schema from "effect/Schema";
 import { openDatabaseSync } from "expo-sqlite";
 
 import * as schema from "./schema";
@@ -32,6 +34,18 @@ export function openDatabase() {
 
 export type Database = ReturnType<typeof openDatabase>;
 
-export async function closeDatabase(database: Database): Promise<void> {
-    await database.$client.closeAsync();
+export class CloseDatabaseError extends Schema.TaggedError<CloseDatabaseError>()("CloseDatabaseError", {
+    cause: Schema.Defect(),
+}) {
+    // oxlint-disable-next-line class-methods-use-this -- one cause, no attribute: the message has nothing on the instance to read
+    override get message(): string {
+        return "Closing the local database failed";
+    }
 }
+
+export const closeDatabase = Effect.fn("Database.closeDatabase")(function* closeDatabase(database: Database) {
+    yield* Effect.tryPromise({
+        catch: (cause) => new CloseDatabaseError({ cause }),
+        try: () => database.$client.closeAsync(),
+    });
+});

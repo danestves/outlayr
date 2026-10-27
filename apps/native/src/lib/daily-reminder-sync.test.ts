@@ -68,7 +68,7 @@ describe("daily reminder sync", () => {
     };
 
     const writeSetting = async (key: string) => {
-        await setMeta(db, key, "true");
+        await Effect.runPromise(setMeta(db, key, "true"));
         const [row] = await db
             .select({ rowId: sql<number>`rowid` })
             .from(appMeta)

@@ -326,7 +326,7 @@ describe("transactionsRepo.update and the replicated photo key", () => {
         const db = makeDb();
         const id = await Effect.runPromise(transactionsRepo.create(db, DRAFT));
         // A null currency makes the edit await between its read and write; EUR keeps the merchant details unchanged.
-        await setMeta(db, META_KEYS.currency, "EUR");
+        await Effect.runPromise(setMeta(db, META_KEYS.currency, "EUR"));
 
         const editing = Effect.runPromise(transactionsRepo.update(db, id, { ...DRAFT, amount: 5, currency: null }));
         await Promise.resolve();

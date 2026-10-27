@@ -31,20 +31,6 @@ type Book = typeof Book.Type;
 
 const decodeBook = Schema.decodeUnknownOption(Schema.fromJsonString(Book));
 
-const MerchantBookOperation = Schema.Literals(["recall", "remember"]);
-
-export class MerchantBookError extends Schema.TaggedError<MerchantBookError>()("MerchantBookError", {
-    cause: Schema.Defect(),
-    operation: MerchantBookOperation,
-}) {
-    override get message(): string {
-        return `Merchant book ${this.operation} failed`;
-    }
-}
-
-const query = <A>(operation: typeof MerchantBookOperation.Type, run: () => PromiseLike<A>) =>
-    Effect.tryPromise({ catch: (cause) => new MerchantBookError({ cause, operation }), try: run });
-
 export interface RememberedAnswer extends RemoteEnrichmentResult {
     readonly merchantName: string | null;
 }
@@ -57,11 +43,8 @@ function bookKeys(name: string, currency: string | null | undefined, merchantNam
     return [...new Set(keys)];
 }
 
-const readBook = Effect.fn("MerchantBook.readBook")(function* readBook(
-    db: Database,
-    operation: typeof MerchantBookOperation.Type
-) {
-    const raw = yield* query(operation, () => getMeta(db, META_KEYS.merchantBook));
+const readBook = Effect.fn("MerchantBook.readBook")(function* readBook(db: Database) {
+    const raw = yield* getMeta(db, META_KEYS.merchantBook);
     const book: Book = Option.getOrElse(decodeBook(raw ?? "{}"), () => ({}));
     return book;
 });
@@ -77,7 +60,7 @@ export const rememberMerchant = Effect.fn("MerchantBook.rememberMerchant")(funct
     if (keys.length === 0 || (answer.categoryName == null && answer.domain == null && answer.merchantName == null)) {
         return;
     }
-    const book = yield* readBook(db, "remember");
+    const book = yield* readBook(db);
     const entry: Book[string] = {
         answer: {
             categoryName: answer.categoryName,
@@ -95,7 +78,7 @@ export const rememberMerchant = Effect.fn("MerchantBook.rememberMerchant")(funct
     ]
         .filter(([, kept]) => kept.expiresAt > now)
         .slice(-MAX_BOOK_ENTRIES);
-    yield* query("remember", () => setMeta(db, META_KEYS.merchantBook, JSON.stringify(Object.fromEntries(live))));
+    yield* setMeta(db, META_KEYS.merchantBook, JSON.stringify(Object.fromEntries(live)));
 });
 
 export const recallMerchant = Effect.fn("MerchantBook.recallMerchant")(function* recallMerchant(
@@ -104,7 +87,7 @@ export const recallMerchant = Effect.fn("MerchantBook.recallMerchant")(function*
     currency: string | null | undefined,
     now: number = Date.now()
 ) {
-    const book = yield* readBook(db, "recall");
+    const book = yield* readBook(db);
     for (const key of bookKeys(name, currency)) {
         const entry = book[key];
         if (entry != null && entry.expiresAt > now) {

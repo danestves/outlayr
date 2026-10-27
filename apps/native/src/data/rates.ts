@@ -1,5 +1,6 @@
 import type { RateLookup } from "@outlayr/money/rates";
 import { and, desc, eq, inArray, lte, sql } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import { getMeta } from "@/data/app-meta-core";
 import type { SpendDb } from "@/data/budget-spent";
@@ -46,7 +47,7 @@ export function isThrottled(last: number | null, now: number): boolean {
 }
 
 async function lastPullAt(db: Database): Promise<number | null> {
-    const raw = await getMeta(db, LAST_PULL_KEY);
+    const raw = await Effect.runPromise(getMeta(db, LAST_PULL_KEY));
     if (raw === null) {
         return null;
     }

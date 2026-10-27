@@ -1,6 +1,7 @@
 import { buildRateTable } from "@outlayr/money/valuation";
 import type { RateTable } from "@outlayr/money/valuation";
 import { and, eq, inArray } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import { getMeta, META_KEYS } from "@/data/app-meta-core";
 import type { SpendDb } from "@/data/budget-spent";
@@ -50,7 +51,7 @@ export async function loadValuationIn(db: SpendDb, code: string, also: readonly 
 }
 
 export async function loadValuation(db: SpendDb): Promise<Valuation> {
-    return await loadValuationIn(db, (await getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY);
+    return await loadValuationIn(db, (await Effect.runPromise(getMeta(db, META_KEYS.currency))) ?? DEFAULT_CURRENCY);
 }
 
 export { RATE_TYPE as VALUATION_RATE_TYPE };

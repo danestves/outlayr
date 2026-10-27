@@ -50,7 +50,7 @@ export function getLastUsedAccount(db: Database): Account | null {
 }
 
 export async function rememberLastUsedAccount(db: Database, id: string): Promise<void> {
-    await setMeta(db, META_KEYS.lastTransactionAccount, id);
+    await Effect.runPromise(setMeta(db, META_KEYS.lastTransactionAccount, id));
 }
 
 async function nextSortOrder(db: Database): Promise<number> {

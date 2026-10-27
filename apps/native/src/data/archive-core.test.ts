@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import {
@@ -63,12 +64,12 @@ describe("archiving a ledger", () => {
         });
         await db.insert(transactions).values(transactionRow("t1", { accountId: "a1" }));
 
-        const parsed = parseArchive(serializeArchive(await buildArchive(db, new Date())));
+        const parsed = parseArchive(serializeArchive(await Effect.runPromise(buildArchive(db, new Date()))));
         if (!parsed) {
             throw new Error("expected the archive to parse");
         }
         const fresh = migratedDatabase();
-        await restoreArchive(fresh, parsed);
+        await Effect.runPromise(restoreArchive(fresh, parsed));
 
         const [account] = await fresh.select().from(accounts);
         expect(account.name).toBe("Checking");
@@ -121,7 +122,7 @@ describe("archiving a ledger", () => {
             updatedAt: at,
         });
 
-        const parsed = parseArchive(serializeArchive(await buildArchive(db, new Date())));
+        const parsed = parseArchive(serializeArchive(await Effect.runPromise(buildArchive(db, new Date()))));
         if (!parsed) {
             throw new Error("expected the archive to parse");
         }
@@ -132,7 +133,7 @@ describe("archiving a ledger", () => {
         await target
             .insert(transactionTags)
             .values({ id: "stale-link", tagId: "stale-tag", transactionId: "stale", updatedAt: at });
-        await restoreArchive(target, parsed);
+        await Effect.runPromise(restoreArchive(target, parsed));
 
         const [goal] = await target.select().from(savingsGoals);
         expect(goal.name).toBe("Trip");
@@ -156,13 +157,13 @@ describe("archiving a ledger", () => {
                 transactionRow("elsewhere", { imageKey: "photos/u1/b.jpg", imageUri: "file:///old/b.jpg" }),
             ]);
 
-        const document = await buildArchive(db, new Date(), { "a.jpg": "AAEC" });
+        const document = await Effect.runPromise(buildArchive(db, new Date(), { "a.jpg": "AAEC" }));
         const parsed = parseArchive(serializeArchive(document));
         if (!parsed) {
             throw new Error("expected the archive to parse");
         }
         const fresh = migratedDatabase();
-        await restoreArchive(fresh, parsed);
+        await Effect.runPromise(restoreArchive(fresh, parsed));
 
         const rows = await fresh.select({ id: transactions.id, imageKey: transactions.imageKey }).from(transactions);
         expect(Object.fromEntries(rows.map((row) => [row.id, row.imageKey]))).toStrictEqual({
@@ -176,12 +177,12 @@ describe("archiving a ledger", () => {
         await db.insert(categories).values(CATEGORY);
         await db.insert(transactions).values(transactionRow("t1", { date: when }));
 
-        const parsed = parseArchive(serializeArchive(await buildArchive(db, when)));
+        const parsed = parseArchive(serializeArchive(await Effect.runPromise(buildArchive(db, when))));
         if (!parsed) {
             throw new Error("expected the archive to parse");
         }
         const fresh = migratedDatabase();
-        await restoreArchive(fresh, parsed);
+        await Effect.runPromise(restoreArchive(fresh, parsed));
 
         const [row] = await fresh.select().from(transactions);
         expect(row.date instanceof Date).toBeTruthy();
@@ -192,12 +193,12 @@ describe("archiving a ledger", () => {
         await db.insert(categories).values(CATEGORY);
         await db.insert(transactions).values(transactionRow("t1", { deletedAt: new Date(1_700_000_000_000) }));
 
-        const parsed = parseArchive(serializeArchive(await buildArchive(db, new Date())));
+        const parsed = parseArchive(serializeArchive(await Effect.runPromise(buildArchive(db, new Date()))));
         if (!parsed) {
             throw new Error("expected the archive to parse");
         }
         const fresh = migratedDatabase();
-        await restoreArchive(fresh, parsed);
+        await Effect.runPromise(restoreArchive(fresh, parsed));
 
         const [row] = await fresh.select().from(transactions);
         expect(row.deletedAt instanceof Date).toBeTruthy();
@@ -206,7 +207,7 @@ describe("archiving a ledger", () => {
     it("replaces the ledger rather than merging into it", async () => {
         await db.insert(categories).values(CATEGORY);
         await db.insert(transactions).values(transactionRow("t1"));
-        const parsed = parseArchive(serializeArchive(await buildArchive(db, new Date())));
+        const parsed = parseArchive(serializeArchive(await Effect.runPromise(buildArchive(db, new Date()))));
         if (!parsed) {
             throw new Error("expected the archive to parse");
         }
@@ -214,7 +215,7 @@ describe("archiving a ledger", () => {
         const target = migratedDatabase();
         await target.insert(categories).values(CATEGORY);
         await target.insert(transactions).values(transactionRow("t2"));
-        await restoreArchive(target, parsed);
+        await Effect.runPromise(restoreArchive(target, parsed));
 
         const rows = await target.select().from(transactions);
         expect(rows.map((row) => row.id)).toStrictEqual(["t1"]);
@@ -226,12 +227,12 @@ describe("archiving a ledger", () => {
             await db.insert(transactions).values(transactionRow(`t${i}`));
         }
 
-        const parsed = parseArchive(serializeArchive(await buildArchive(db, new Date())));
+        const parsed = parseArchive(serializeArchive(await Effect.runPromise(buildArchive(db, new Date()))));
         if (!parsed) {
             throw new Error("expected the archive to parse");
         }
         const fresh = migratedDatabase();
-        const written = await restoreArchive(fresh, parsed);
+        const written = await Effect.runPromise(restoreArchive(fresh, parsed));
 
         expect(written).toBe(251);
         await expect(fresh.select().from(transactions)).resolves.toHaveLength(250);
@@ -241,29 +242,29 @@ describe("archiving a ledger", () => {
 describe("archive and the device's own state", () => {
     it("leaves this device's sync identity alone through a restore", async () => {
         const source = migratedDatabase();
-        await setMeta(source, META_KEYS.currency, "EUR");
-        await setMeta(source, META_KEYS.syncDeviceId, "device-from-the-iphone");
-        await setMeta(source, META_KEYS.syncCursor, "5000");
-        const document = await buildArchive(source, new Date());
+        await Effect.runPromise(setMeta(source, META_KEYS.currency, "EUR"));
+        await Effect.runPromise(setMeta(source, META_KEYS.syncDeviceId, "device-from-the-iphone"));
+        await Effect.runPromise(setMeta(source, META_KEYS.syncCursor, "5000"));
+        const document = await Effect.runPromise(buildArchive(source, new Date()));
 
         const target = migratedDatabase();
-        await setMeta(target, META_KEYS.currency, "USD");
-        await setMeta(target, META_KEYS.syncDeviceId, "device-on-the-ipad");
-        await setMeta(target, META_KEYS.syncCursor, "200");
+        await Effect.runPromise(setMeta(target, META_KEYS.currency, "USD"));
+        await Effect.runPromise(setMeta(target, META_KEYS.syncDeviceId, "device-on-the-ipad"));
+        await Effect.runPromise(setMeta(target, META_KEYS.syncCursor, "200"));
 
-        await restoreArchive(target, document);
+        await Effect.runPromise(restoreArchive(target, document));
 
-        await expect(getMeta(target, META_KEYS.currency)).resolves.toBe("EUR");
+        await expect(Effect.runPromise(getMeta(target, META_KEYS.currency))).resolves.toBe("EUR");
         // A copied device id breaks the same-millisecond tie-break; a jumped cursor skips sequences for good.
-        await expect(getMeta(target, META_KEYS.syncDeviceId)).resolves.toBe("device-on-the-ipad");
-        await expect(getMeta(target, META_KEYS.syncCursor)).resolves.toBe("200");
+        await expect(Effect.runPromise(getMeta(target, META_KEYS.syncDeviceId))).resolves.toBe("device-on-the-ipad");
+        await expect(Effect.runPromise(getMeta(target, META_KEYS.syncCursor))).resolves.toBe("200");
     });
 
     it("does not carry the device keys into the file at all", async () => {
         const db = migratedDatabase();
-        await setMeta(db, META_KEYS.syncDeviceId, "device-from-the-iphone");
+        await Effect.runPromise(setMeta(db, META_KEYS.syncDeviceId, "device-from-the-iphone"));
 
-        const document = await buildArchive(db, new Date());
+        const document = await Effect.runPromise(buildArchive(db, new Date()));
 
         expect(JSON.stringify(document.tables.appMeta)).not.toContain("device-from-the-iphone");
     });

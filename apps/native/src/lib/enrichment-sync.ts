@@ -31,7 +31,7 @@ export class EnrichmentSyncError extends Schema.TaggedError<EnrichmentSyncError>
 
 export const EnrichmentResults = Context.Reference<{
     readonly ack: (localIds: string[]) => Promise<null>;
-    readonly apply: (db: Database, job: AnsweredJob) => Effect.Effect<void, { readonly cause: unknown }>;
+    readonly apply: (db: Database, job: AnsweredJob) => Effect.Effect<void, unknown>;
     readonly watch: Watch<AnsweredJob[]>;
 }>("outlayr/lib/EnrichmentSync/EnrichmentResults", {
     defaultValue: () => ({

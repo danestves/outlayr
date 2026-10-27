@@ -1,4 +1,6 @@
 import { and, eq, isNull } from "drizzle-orm";
+import * as Cause from "effect/Cause";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Image } from "expo-image";
 import { Carousel } from "panelui-native/components/carousel";
 import { View } from "react-native";
@@ -12,13 +14,16 @@ import { useBankAccounts } from "@/data/accounts";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { META_KEYS } from "@/data/app-meta-core";
 import { useLiveQuery, useLiveValue } from "@/data/live-query";
-import { cardStatus, parseWalletCards, pickCardAccount } from "@/data/pending-writes-core";
+import { cardStatus, parseWalletCards } from "@/data/pending-writes-core";
 import type { Database } from "@/db/client";
 import { appMeta, transactions } from "@/db/schema";
 import { formatChargeDate, formatSentenceDate, formatTime } from "@/domain/dates";
 import { formatAmount } from "@/domain/money";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useLanguage, useTranslation } from "@/i18n/context";
+import { SILENT } from "@/state/atom-command";
+import { pickCardAccountCommand } from "@/state/lifecycle-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 export function LastEntry({ db, txId }: { db: Database; txId: string }) {
     const t = useTranslation();
@@ -77,6 +82,7 @@ const UNPICKED = "unpicked";
 
 export function CardsSection({ db }: { db: Database }) {
     const t = useTranslation();
+    const pickCardAccount = useAtomCommand(pickCardAccountCommand, SILENT);
     const { language } = useLanguage();
     const accounts = useBankAccounts(db);
     const raw = useLiveValue(
@@ -110,8 +116,10 @@ export function CardsSection({ db }: { db: Database }) {
                                 if (next === UNPICKED) {
                                     return;
                                 }
-                                pickCardAccount(db, card.text, next || null).catch((error) => {
-                                    console.warn("[outlayr] card pick failed", error);
+                                pickCardAccount({ accountId: next || null, db, text: card.text }).then((result) => {
+                                    if (AsyncResult.isFailure(result)) {
+                                        console.warn("[outlayr] card pick failed", Cause.squash(result.cause));
+                                    }
                                 });
                             }}
                             options={

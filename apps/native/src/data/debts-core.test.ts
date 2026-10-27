@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 import { buildRateTable } from "@outlayr/money/valuation";
+import * as Effect from "effect/Effect";
 
 import { migratedDatabase } from "@/db/test-database";
 
@@ -74,12 +75,14 @@ describe("recording a debt with a person", () => {
         const db = migratedDatabase({ foreignKeys: false });
         const zinli = await accountsRepo.create(db, { currency: "USD", initialBalance: 0, name: "Zinli" });
         const ana = await createPerson(db, { currency: "USD", name: "Ana" });
-        const sales = await categoriesRepo.create(db, {
-            color: "#2f855a",
-            icon: "Store01",
-            income: true,
-            name: "Sales",
-        });
+        const sales = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#2f855a",
+                icon: "Store01",
+                income: true,
+                name: "Sales",
+            })
+        );
 
         const sale = await recordSoldOnCredit(db, {
             amount: 35,
@@ -108,12 +111,14 @@ describe("recording a debt with a person", () => {
         const db = migratedDatabase({ foreignKeys: false });
         const zinli = await accountsRepo.create(db, { currency: "USD", initialBalance: 100, name: "Zinli" });
         const jose = await createPerson(db, { currency: "USD", name: "José" });
-        const repairs = await categoriesRepo.create(db, {
-            color: "#937f2b",
-            icon: "Wrench01",
-            income: false,
-            name: "Repairs",
-        });
+        const repairs = await Effect.runPromise(
+            categoriesRepo.create(db, {
+                color: "#937f2b",
+                icon: "Wrench01",
+                income: false,
+                name: "Repairs",
+            })
+        );
 
         const job = await recordBoughtOnCredit(db, {
             amount: 80,

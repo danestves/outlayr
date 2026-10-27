@@ -1,13 +1,15 @@
 import { firstOfMonth, startOfDay } from "@outlayr/money/calendar";
 import { anchorDayOf, nextDate, RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { and, between, desc, eq, gt, inArray, isNull, like, or, sql } from "drizzle-orm";
+import * as Cause from "effect/Cause";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
-import { withTransaction } from "@/db/transaction";
+import { transaction } from "@/db/transaction";
 import { detectCurrency } from "@/domain/detect-currency";
 import type { CardAccountCandidate } from "@/domain/match-card-account";
 import { matchCardAccount } from "@/domain/match-card-account";
@@ -24,6 +26,23 @@ import { MIN_KEY_LENGTH, queueEnrichment } from "./enrichment-queue-core";
 import { backfillRecurring, occurrenceId } from "./recurrence-backfill";
 import { readRemoteEnrichment } from "./settings-core";
 import { transactionsRepo } from "./transactions-core";
+
+const PendingWritesOperation = Schema.Literals(["read", "write", "account", "claim", "release"]);
+
+export class PendingWritesError extends Schema.TaggedError<PendingWritesError>()("PendingWritesError", {
+    cause: Schema.Defect(),
+    operation: PendingWritesOperation,
+}) {
+    override get message(): string {
+        return `Pending writes ${this.operation} failed`;
+    }
+}
+
+const attempt = <A>(operation: typeof PendingWritesOperation.Type, run: () => PromiseLike<A>) =>
+    Effect.tryPromise({ catch: (cause) => new PendingWritesError({ cause, operation }), try: run });
+
+const attemptSync = <A>(operation: typeof PendingWritesOperation.Type, run: () => A) =>
+    Effect.try({ catch: (cause) => new PendingWritesError({ cause, operation }), try: run });
 
 // One purchase can fire twice (authorize, then settle) as two intents; ten minutes covers that and a retry, and
 // `PushLedger` in `app-intents/SharedStore.swift` copies it. Not widened to next-day settlement: that would collapse
@@ -67,13 +86,13 @@ export function parseRepriced(raw: string | null | undefined): RepricedSubscript
     }
 }
 
-export async function takeRepriced(db: Database): Promise<RepricedSubscription[]> {
-    const entries = parseRepriced(await getMeta(db, META_KEYS.repricedSubscriptions));
+export const takeRepriced = Effect.fn("PendingWrites.takeRepriced")(function* takeRepriced(db: Database) {
+    const entries = parseRepriced(yield* getMeta(db, META_KEYS.repricedSubscriptions));
     if (entries.length > 0) {
-        await setMeta(db, META_KEYS.repricedSubscriptions, "[]");
+        yield* setMeta(db, META_KEYS.repricedSubscriptions, "[]");
     }
     return entries;
-}
+});
 
 const LastWalletEntry = Schema.Struct({
     /** Epoch ms of the commit, not of the purchase. */
@@ -120,15 +139,18 @@ export function parseNotificationTexts(raw: string | null | undefined): Notifica
     }
 }
 
-async function rememberNotification(db: Database, entry: NotificationText): Promise<void> {
-    const kept = parseNotificationTexts(await getMeta(db, META_KEYS.notificationTexts));
+const rememberNotification = Effect.fn("PendingWrites.rememberNotification")(function* rememberNotification(
+    db: Database,
+    entry: NotificationText
+) {
+    const kept = parseNotificationTexts(yield* getMeta(db, META_KEYS.notificationTexts));
     const last = kept.at(-1);
     if (last?.text === entry.text && Math.abs(entry.at - last.at) <= WALLET_DEDUPE_WINDOW_MS) {
         return;
     }
     const next = [...kept, entry].slice(-NOTIFICATION_TEXTS_LIMIT);
-    await setMeta(db, META_KEYS.notificationTexts, JSON.stringify(next));
-}
+    yield* setMeta(db, META_KEYS.notificationTexts, JSON.stringify(next));
+});
 
 const WalletCard = Schema.Struct({
     accountId: Schema.optional(Schema.NullOr(Schema.String)),
@@ -168,10 +190,13 @@ export function cardAccountId(
     return matchCardAccount(text, candidates);
 }
 
-async function updateWalletCards(db: Database, change: (cards: WalletCard[]) => WalletCard[]): Promise<void> {
-    const cards = parseWalletCards(await getMeta(db, META_KEYS.walletCards));
-    await setMeta(db, META_KEYS.walletCards, JSON.stringify(change(cards)));
-}
+const updateWalletCards = Effect.fn("PendingWrites.updateWalletCards")(function* updateWalletCards(
+    db: Database,
+    change: (cards: WalletCard[]) => WalletCard[]
+) {
+    const cards = parseWalletCards(yield* getMeta(db, META_KEYS.walletCards));
+    yield* setMeta(db, META_KEYS.walletCards, JSON.stringify(change(cards)));
+});
 
 export function cardStatus<Account extends CardAccountCandidate>(
     text: string,
@@ -184,52 +209,73 @@ export function cardStatus<Account extends CardAccountCandidate>(
     return { account, asks };
 }
 
-export async function cardStillAsks(db: Database, text: string): Promise<boolean> {
-    const live = await accountsRepo.listBanks(db);
-    return cardStatus(text, parseWalletCards(await getMeta(db, META_KEYS.walletCards)), live).asks;
-}
+export const cardStillAsks = Effect.fn("PendingWrites.cardStillAsks")(function* cardStillAsks(
+    db: Database,
+    text: string
+) {
+    const live = yield* attempt("account", () => accountsRepo.listBanks(db));
+    return cardStatus(text, parseWalletCards(yield* getMeta(db, META_KEYS.walletCards)), live).asks;
+});
 
-export async function pickCardAccount(db: Database, text: string, accountId: string | null): Promise<void> {
-    if (accountId !== null && getAccountById(db, accountId) === null) {
+export const pickCardAccount = Effect.fn("PendingWrites.pickCardAccount")(function* pickCardAccount(
+    db: Database,
+    text: string,
+    accountId: string | null
+) {
+    if (accountId !== null && (yield* attemptSync("account", () => getAccountById(db, accountId))) === null) {
         return;
     }
-    await withTransaction(db, () =>
-        updateWalletCards(db, (cards) => cards.map((card) => (card.text === text ? { ...card, accountId } : card)))
+    yield* transaction(
+        db,
+        updateWalletCards(db, (cards) => cards.map((card) => (card.text === text ? { ...card, accountId } : card))),
+        (cause) => new PendingWritesError({ cause, operation: "write" })
     );
-    await fileWaitingPurchases(db);
-}
+    yield* fileWaitingPurchases(db);
+});
 
-export async function fileWaitingPurchases(db: Database): Promise<void> {
-    const cards = parseWalletCards(await getMeta(db, META_KEYS.walletCards));
+export const fileWaitingPurchases = Effect.fn("PendingWrites.fileWaitingPurchases")(function* fileWaitingPurchases(
+    db: Database
+) {
+    const cards = parseWalletCards(yield* getMeta(db, META_KEYS.walletCards));
     const waitingCards = cards.filter((card) => (card.waiting?.length ?? 0) > 0);
     if (waitingCards.length === 0) {
         return;
     }
-    const live = await accountsRepo.listBanks(db);
+    const live = yield* attempt("account", () => accountsRepo.listBanks(db));
     const attempts = waitingCards.flatMap((card) => {
         const { account } = cardStatus(card.text, cards, live);
         return account
-            ? (card.waiting ?? []).map(async (txId) =>
-                  (await Effect.runPromise(transactionsRepo.attachAccount(db, txId, account))) ? txId : null
+            ? (card.waiting ?? []).map((txId) =>
+                  transactionsRepo.attachAccount(db, txId, account).pipe(
+                      Effect.map((attached) => (attached ? txId : null)),
+                      Effect.catchCause((cause) =>
+                          Cause.hasInterruptsOnly(cause) ? Effect.failCause(cause) : Effect.succeed(null)
+                      )
+                  )
               )
             : [];
     });
-    const settled = await Promise.allSettled(attempts);
-    const done = new Set(
-        settled.flatMap((result) => (result.status === "fulfilled" && result.value !== null ? [result.value] : []))
-    );
+    const settled = yield* Effect.all(attempts, { concurrency: "unbounded" });
+    const done = new Set(settled.filter((txId) => txId !== null));
     if (done.size === 0) {
         return;
     }
-    await withTransaction(db, () =>
+    yield* transaction(
+        db,
         updateWalletCards(db, (next) =>
             next.map((card) => (card.waiting ? { ...card, waiting: card.waiting.filter((id) => !done.has(id)) } : card))
-        )
+        ),
+        (cause) => new PendingWritesError({ cause, operation: "write" })
     );
-}
+});
 
-async function rememberCard(db: Database, text: string, at: number, unattached: string | null): Promise<void> {
-    await updateWalletCards(db, (cards) => {
+const rememberCard = Effect.fn("PendingWrites.rememberCard")(function* rememberCard(
+    db: Database,
+    text: string,
+    at: number,
+    unattached: string | null
+) {
+    yield* updateWalletCards(db, (cards) => {
         const known = cards.find((card) => card.text === text);
         const seen: WalletCard = known ? { ...known, lastAt: Math.max(known.lastAt, at) } : { lastAt: at, text };
         if (unattached !== null) {
@@ -237,7 +283,7 @@ async function rememberCard(db: Database, text: string, at: number, unattached: 
         }
         return known ? cards.map((card) => (card === known ? seen : card)) : [...cards, seen];
     });
-}
+});
 
 // The card is the sure sign; the key prefixes cover automations built before the card parameter existed.
 function fromAutomation(job: PendingWrite): boolean {
@@ -283,18 +329,23 @@ type LedgerEntry = typeof LedgerEntry.Type;
 // Per entry: one bad row must not discard the only record of which purchases were committed.
 const decodeLedger = Schema.decodeUnknownOption(Schema.Array(orNullOnFailure(LedgerEntry)));
 
-export async function appliedWriteIds(db: SpendDb, since: number): Promise<string[]> {
-    const ledger = await readLedger(db);
+export const appliedWriteIds = Effect.fn("PendingWrites.appliedWriteIds")(function* appliedWriteIds(
+    db: SpendDb,
+    since: number
+) {
+    const ledger = yield* readLedger(db);
     return ledger.filter((entry) => entry.at >= since).map((entry) => entry.id);
-}
+});
 
-export async function writeIdsByTransaction(db: SpendDb): Promise<Map<string, string>> {
-    const ledger = await readLedger(db);
+export const writeIdsByTransaction = Effect.fn("PendingWrites.writeIdsByTransaction")(function* writeIdsByTransaction(
+    db: SpendDb
+) {
+    const ledger = yield* readLedger(db);
     return new Map(ledger.map((entry) => [entry.txId, entry.id]));
-}
+});
 
-async function readLedger(db: SpendDb): Promise<LedgerEntry[]> {
-    const raw = await getMeta(db, META_KEYS.pendingWriteLedger);
+const readLedger = Effect.fn("PendingWrites.readLedger")(function* readLedger(db: SpendDb) {
+    const raw = yield* getMeta(db, META_KEYS.pendingWriteLedger);
     if (!raw) {
         return [];
     }
@@ -304,7 +355,7 @@ async function readLedger(db: SpendDb): Promise<LedgerEntry[]> {
     } catch {
         return [];
     }
-}
+});
 
 // Replaces, not appends: `alreadyApplied` answers with the FIRST entry, so a stale one would keep re-checking a
 // deleted transaction and re-writing it on every replay.
@@ -354,94 +405,118 @@ function settleRepeatOf(ledger: LedgerEntry[], job: PendingWrite): LedgerEntry |
 }
 
 // A tombstone must not block: re-running the automation after deleting a duplicate has to put the charge back.
-async function stillOnLedger(db: Database, txId: string): Promise<boolean> {
-    const rows = await db
-        .select({ id: transactions.id })
-        .from(transactions)
-        .where(and(eq(transactions.id, txId), isNull(transactions.deletedAt)))
-        .limit(1);
+const stillOnLedger = Effect.fn("PendingWrites.stillOnLedger")(function* stillOnLedger(db: Database, txId: string) {
+    const rows = yield* attempt("read", () =>
+        db
+            .select({ id: transactions.id })
+            .from(transactions)
+            .where(and(eq(transactions.id, txId), isNull(transactions.deletedAt)))
+            .limit(1)
+    );
     return rows[0] != null;
-}
+});
 
-export async function pendingWriteTxId(db: Database, id: string): Promise<string | null> {
-    const ledger = await readLedger(db);
+export const pendingWriteTxId = Effect.fn("PendingWrites.pendingWriteTxId")(function* pendingWriteTxId(
+    db: Database,
+    id: string
+) {
+    const ledger = yield* readLedger(db);
     const entry = ledger.find((kept) => kept.id === id);
-    return entry && (await stillOnLedger(db, entry.txId)) ? entry.txId : null;
-}
+    return entry && (yield* stillOnLedger(db, entry.txId)) ? entry.txId : null;
+});
 
 // Each job is recorded against its row in the same SQLite transaction as the insert, which collapses the queue's
 // at-least-once delivery to exactly once.
-export async function applyPendingWrites(db: Database, jobs: PendingWrite[], now: Date = new Date()): Promise<number> {
+export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(function* applyPendingWrites(
+    db: Database,
+    jobs: PendingWrite[],
+    now: Date = new Date()
+) {
     if (jobs.length === 0) {
         return 0;
     }
     const at = now.getTime();
-    let ledger = await readLedger(db);
+    let ledger = yield* readLedger(db);
     let applied = 0;
 
-    /* oxlint-disable no-await-in-loop -- exactly-once depends on this job seeing the ledger row the previous job's SQLite transaction committed, so the jobs must land one at a time */
+    // Exactly-once depends on this job seeing the ledger row the previous job's SQLite transaction committed, so the
+    // jobs must land one at a time.
     for (const queued of jobs) {
         const job = readNotification(queued);
         if (queued.text) {
-            await rememberNotification(db, { amountText: job?.amountText ?? null, at: queued.date, text: queued.text });
+            yield* rememberNotification(db, {
+                amountText: job?.amountText ?? null,
+                at: queued.date,
+                text: queued.text,
+            });
         }
         if (!job) {
             continue;
         }
         const seen = alreadyApplied(ledger, job);
         const repeat = seen ? null : settleRepeatOf(ledger, job);
-        const duplicate = repeat ?? (seen && (await stillOnLedger(db, seen.txId)) ? seen : null);
+        const duplicate = repeat ?? (seen && (yield* stillOnLedger(db, seen.txId)) ? seen : null);
         if (duplicate) {
             if (duplicate.id !== job.id) {
                 ledger = remember(ledger, { at, date: job.date, id: job.id, key: null, txId: duplicate.txId }, at);
-                await setMeta(db, META_KEYS.pendingWriteLedger, JSON.stringify(ledger));
+                yield* setMeta(db, META_KEYS.pendingWriteLedger, JSON.stringify(ledger));
             }
             continue;
         }
-        const known = await knownCategory(db, job);
+        const known = yield* knownCategory(db, job);
         const lookup =
-            known == null && merchantKey(job.note).length >= MIN_KEY_LENGTH && (await readRemoteEnrichment(db));
-        const categoryId = known ?? (lookup ? null : await firstCategory(db, job.income));
+            known == null && merchantKey(job.note).length >= MIN_KEY_LENGTH && (yield* readRemoteEnrichment(db));
+        const categoryId = known ?? (lookup ? null : yield* firstCategory(db, job.income));
         if (categoryId == null && !lookup) {
             // Dropping beats inventing a category the user never made.
-            console.warn("[outlayr] dropped a queued entry with no category");
+            yield* Effect.logWarning("[outlayr] dropped a queued entry with no category");
             continue;
         }
-        const { account, asks } = await resolveAccount(db, job);
+        const { account, asks } = yield* resolveAccount(db, job);
         const currency = resolveWriteCurrency(job, account);
-        const twin = fromAutomation(job) ? await sameCharge(db, job, account, currency, ledger) : null;
+        const twin = fromAutomation(job) ? yield* sameCharge(db, job, account, currency, ledger) : null;
         const settled =
-            fromAutomation(job) && !twin ? await settledOccurrence(db, job, account, currency, ledger, now) : null;
-        // oxlint-disable-next-line no-loop-func -- awaited in place, so nothing outlives the iteration whose `job` and `categoryId` it reads
-        await withTransaction(db, async () => {
-            if (settled && settled.date.getTime() !== job.date) {
-                const date = new Date(job.date);
-                await db
-                    .update(transactions)
-                    .set({
-                        amountUsd: null,
-                        date,
-                        day: startOfDay(date),
-                        month: firstOfMonth(date),
-                        recurringAnchorDay: anchorDayOf(settled),
-                        updatedAt: now,
-                    })
-                    .where(eq(transactions.id, settled.id));
-            }
-            if (settled && Math.abs(settled.amount - job.amount) > AMOUNT_EPSILON) {
-                await db
-                    .update(transactions)
-                    .set({ amount: job.amount, amountUsd: null, updatedAt: now })
-                    .where(eq(transactions.id, settled.id));
-                const repriced = parseRepriced(await getMeta(db, META_KEYS.repricedSubscriptions));
-                repriced.push({ currency: settled.currency, from: settled.amount, note: settled.note, to: job.amount });
-                await setMeta(db, META_KEYS.repricedSubscriptions, JSON.stringify(repriced));
-            }
-            const txId =
-                twin?.id ??
-                settled?.id ??
-                (await Effect.runPromise(
-                    transactionsRepo.create(db, {
+            fromAutomation(job) && !twin ? yield* settledOccurrence(db, job, account, currency, ledger, now) : null;
+        yield* transaction(
+            db,
+            // oxlint-disable-next-line no-loop-func -- run in place, so nothing outlives the iteration whose `job` and `categoryId` it reads
+            Effect.gen(function* write() {
+                if (settled && settled.date.getTime() !== job.date) {
+                    const date = new Date(job.date);
+                    yield* attempt("write", () =>
+                        db
+                            .update(transactions)
+                            .set({
+                                amountUsd: null,
+                                date,
+                                day: startOfDay(date),
+                                month: firstOfMonth(date),
+                                recurringAnchorDay: anchorDayOf(settled),
+                                updatedAt: now,
+                            })
+                            .where(eq(transactions.id, settled.id))
+                    );
+                }
+                if (settled && Math.abs(settled.amount - job.amount) > AMOUNT_EPSILON) {
+                    yield* attempt("write", () =>
+                        db
+                            .update(transactions)
+                            .set({ amount: job.amount, amountUsd: null, updatedAt: now })
+                            .where(eq(transactions.id, settled.id))
+                    );
+                    const repriced = parseRepriced(yield* getMeta(db, META_KEYS.repricedSubscriptions));
+                    repriced.push({
+                        currency: settled.currency,
+                        from: settled.amount,
+                        note: settled.note,
+                        to: job.amount,
+                    });
+                    yield* setMeta(db, META_KEYS.repricedSubscriptions, JSON.stringify(repriced));
+                }
+                const txId =
+                    twin?.id ??
+                    settled?.id ??
+                    (yield* transactionsRepo.create(db, {
                         accountId: account?.id ?? null,
                         amount: job.amount,
                         categoryId,
@@ -450,40 +525,45 @@ export async function applyPendingWrites(db: Database, jobs: PendingWrite[], now
                         details: null,
                         fee: job.income
                             ? null
-                            : suggestedCardFee(db, { account, categoryId, currency, merchant: job.note }),
+                            : yield* attemptSync("read", () =>
+                                  suggestedCardFee(db, { account, categoryId, currency, merchant: job.note })
+                              ),
                         income: job.income,
                         note: job.note,
-                    })
-                ));
-            if (lookup && !twin && !settled) {
-                await Effect.runPromise(queueEnrichment(db, txId));
-            }
-            const source = sourceOf(job) ?? undefined;
-            ledger = remember(
-                ledger,
-                { at, date: job.date, id: job.id, key: job.dedupeKey?.trim() || null, source, txId },
-                at
-            );
-            await setMeta(db, META_KEYS.pendingWriteLedger, JSON.stringify(ledger));
-            if (fromAutomation(job)) {
-                const entry: LastWalletEntry = job.text ? { at, push: true, txId } : { at, txId };
-                await setMeta(db, META_KEYS.lastWalletEntry, JSON.stringify(entry));
-            }
-            const card = job.card?.trim();
-            if (card) {
-                await rememberCard(db, card, job.date, asks && currency ? txId : null);
-            }
-        });
-        const opened = twin && !twin.accountId && account ? getAccountById(db, account.id) : null;
+                    }));
+                if (lookup && !twin && !settled) {
+                    yield* queueEnrichment(db, txId);
+                }
+                const source = sourceOf(job) ?? undefined;
+                ledger = remember(
+                    ledger,
+                    { at, date: job.date, id: job.id, key: job.dedupeKey?.trim() || null, source, txId },
+                    at
+                );
+                yield* setMeta(db, META_KEYS.pendingWriteLedger, JSON.stringify(ledger));
+                if (fromAutomation(job)) {
+                    const entry: LastWalletEntry = job.text ? { at, push: true, txId } : { at, txId };
+                    yield* setMeta(db, META_KEYS.lastWalletEntry, JSON.stringify(entry));
+                }
+                const card = job.card?.trim();
+                if (card) {
+                    yield* rememberCard(db, card, job.date, asks && currency ? txId : null);
+                }
+            }),
+            (cause) => new PendingWritesError({ cause, operation: "write" })
+        );
+        const opened =
+            twin && !twin.accountId && account
+                ? yield* attemptSync("account", () => getAccountById(db, account.id))
+                : null;
         if (twin && opened) {
-            await Effect.runPromise(transactionsRepo.attachAccount(db, twin.id, opened, now));
+            yield* transactionsRepo.attachAccount(db, twin.id, opened, now);
         }
         applied += 1;
     }
-    /* oxlint-enable no-await-in-loop */
 
     return applied;
-}
+});
 
 interface MatchedAccount {
     currency: string;
@@ -494,13 +574,13 @@ function merchantOf(note: string): string {
     return cleanMerchant(note)?.toLowerCase() ?? "";
 }
 
-async function sameCharge(
+const sameCharge = Effect.fn("PendingWrites.sameCharge")(function* sameCharge(
     db: Database,
     job: PendingWrite,
     account: MatchedAccount | null,
     currency: string | null,
     ledger: readonly LedgerEntry[]
-): Promise<{ accountId: string | null; id: string } | null> {
+) {
     const source = sourceOf(job);
     if (!source) {
         return null;
@@ -518,18 +598,22 @@ async function sameCharge(
     if (ids.length === 0) {
         return null;
     }
-    const code = currency ?? (await getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
-    const rows = await db
-        .select({
-            accountId: transactions.accountId,
-            amount: transactions.amount,
-            currency: transactions.currency,
-            date: transactions.date,
-            id: transactions.id,
-            note: transactions.note,
-        })
-        .from(transactions)
-        .where(and(inArray(transactions.id, ids), isNull(transactions.deletedAt), eq(transactions.income, job.income)));
+    const code = currency ?? (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
+    const rows = yield* attempt("read", () =>
+        db
+            .select({
+                accountId: transactions.accountId,
+                amount: transactions.amount,
+                currency: transactions.currency,
+                date: transactions.date,
+                id: transactions.id,
+                note: transactions.note,
+            })
+            .from(transactions)
+            .where(
+                and(inArray(transactions.id, ids), isNull(transactions.deletedAt), eq(transactions.income, job.income))
+            )
+    );
     const merchant = merchantOf(job.note);
     const [match] = rows
         .filter((row) => {
@@ -544,53 +628,48 @@ async function sameCharge(
         })
         .sort((a, b) => Math.abs(a.date.getTime() - job.date) - Math.abs(b.date.getTime() - job.date));
     return match ? { accountId: match.accountId, id: match.id } : null;
-}
+});
 
-async function settledOccurrence(
+const settledOccurrence = Effect.fn("PendingWrites.settledOccurrence")(function* settledOccurrence(
     db: Database,
     job: PendingWrite,
     account: MatchedAccount | null,
     currency: string | null,
     ledger: readonly LedgerEntry[],
     now: Date
-): Promise<{
-    amount: number;
-    currency: string;
-    date: Date;
-    id: string;
-    note: string;
-    recurringAnchorDay: number | null;
-} | null> {
-    const code = currency ?? (await getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
+) {
+    const code = currency ?? (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
     const taken = new Set(ledger.map((entry) => entry.txId));
     const lo = job.date - SUBSCRIPTION_SETTLE_WINDOW_MS;
     const hi = job.date + SUBSCRIPTION_SETTLE_WINDOW_MS;
-    const rows = await db
-        .select({
-            accountId: transactions.accountId,
-            amount: transactions.amount,
-            date: transactions.date,
-            id: transactions.id,
-            note: transactions.note,
-            recurringAnchorDay: transactions.recurringAnchorDay,
-            recurringCoefficient: transactions.recurringCoefficient,
-            recurringEndDate: transactions.recurringEndDate,
-            recurringType: transactions.recurringType,
-        })
-        .from(transactions)
-        .where(
-            and(
-                eq(transactions.onceRecurring, true),
-                isNull(transactions.deletedAt),
-                isNull(transactions.feeForId),
-                eq(transactions.income, job.income),
-                eq(transactions.currency, code),
-                or(
-                    between(transactions.date, new Date(lo), new Date(hi)),
-                    gt(transactions.recurringType, RECURRING_TYPE.none)
+    const rows = yield* attempt("read", () =>
+        db
+            .select({
+                accountId: transactions.accountId,
+                amount: transactions.amount,
+                date: transactions.date,
+                id: transactions.id,
+                note: transactions.note,
+                recurringAnchorDay: transactions.recurringAnchorDay,
+                recurringCoefficient: transactions.recurringCoefficient,
+                recurringEndDate: transactions.recurringEndDate,
+                recurringType: transactions.recurringType,
+            })
+            .from(transactions)
+            .where(
+                and(
+                    eq(transactions.onceRecurring, true),
+                    isNull(transactions.deletedAt),
+                    isNull(transactions.feeForId),
+                    eq(transactions.income, job.income),
+                    eq(transactions.currency, code),
+                    or(
+                        between(transactions.date, new Date(lo), new Date(hi)),
+                        gt(transactions.recurringType, RECURRING_TYPE.none)
+                    )
                 )
             )
-        );
+    );
     const inWindow = (at: Date) => at.getTime() >= lo && at.getTime() <= hi;
     const stored = rows.filter((row) => inWindow(row.date)).map((row) => ({ ...row, landing: null }));
     const landings = rows.flatMap((row) => {
@@ -637,33 +716,34 @@ async function settledOccurrence(
             recurringAnchorDay: match.recurringAnchorDay,
         };
     }
-    await Effect.runPromise(
-        backfillRecurring(db, match.id, new Date(Math.max(now.getTime(), match.landing.getTime())))
+    const { landing } = match;
+    yield* backfillRecurring(db, match.id, new Date(Math.max(now.getTime(), landing.getTime())));
+    const id = occurrenceId(match.id, landing);
+    const [written] = yield* attempt("read", () =>
+        db
+            .select({
+                amount: transactions.amount,
+                date: transactions.date,
+                note: transactions.note,
+                recurringAnchorDay: transactions.recurringAnchorDay,
+            })
+            .from(transactions)
+            .where(and(eq(transactions.id, id), isNull(transactions.deletedAt)))
+            .limit(1)
     );
-    const id = occurrenceId(match.id, match.landing);
-    const [written] = await db
-        .select({
-            amount: transactions.amount,
-            date: transactions.date,
-            note: transactions.note,
-            recurringAnchorDay: transactions.recurringAnchorDay,
-        })
-        .from(transactions)
-        .where(and(eq(transactions.id, id), isNull(transactions.deletedAt)))
-        .limit(1);
     return written ? { ...written, currency: code, id } : null;
-}
+});
 
-async function resolveAccount(
+const resolveAccount = Effect.fn("PendingWrites.resolveAccount")(function* resolveAccount(
     db: Database,
     job: PendingWrite
-): Promise<{ account: MatchedAccount | null; asks: boolean }> {
+) {
     const card = job.card?.trim();
     if (!card) {
         return { account: null, asks: false };
     }
-    const rows = await accountsRepo.listBanks(db);
-    const status = cardStatus(card, parseWalletCards(await getMeta(db, META_KEYS.walletCards)), rows);
+    const rows = yield* attempt("account", () => accountsRepo.listBanks(db));
+    const status = cardStatus(card, parseWalletCards(yield* getMeta(db, META_KEYS.walletCards)), rows);
     const charged = job.currency?.trim().toUpperCase() || detectCurrency(job.amountText);
     const same = charged ? rows.filter((row) => row.currency === charged) : [];
     const account =
@@ -672,7 +752,7 @@ async function resolveAccount(
         account: account ? { currency: account.currency, id: account.id } : null,
         asks: status.asks && !account,
     };
-}
+});
 
 // "$" is on 22 currencies, so an ambiguous symbol defers to the card's account currency before staying null.
 function resolveWriteCurrency(job: PendingWrite, account: MatchedAccount | null): string | null {
@@ -684,31 +764,40 @@ function resolveWriteCurrency(job: PendingWrite, account: MatchedAccount | null)
 }
 
 // The intent's category (case-insensitive: Siri picks the casing), else where this merchant was filed last time.
-async function knownCategory(db: Database, job: PendingWrite): Promise<string | null> {
+const knownCategory = Effect.fn("PendingWrites.knownCategory")(function* knownCategory(
+    db: Database,
+    job: PendingWrite
+) {
     if (job.categoryId) {
-        const byId = await db
-            .select({ id: categories.id })
-            .from(categories)
-            .where(
-                and(eq(categories.id, job.categoryId), eq(categories.income, job.income), isNull(categories.deletedAt))
-            )
-            .limit(1);
+        const { categoryId } = job;
+        const byId = yield* attempt("read", () =>
+            db
+                .select({ id: categories.id })
+                .from(categories)
+                .where(
+                    and(eq(categories.id, categoryId), eq(categories.income, job.income), isNull(categories.deletedAt))
+                )
+                .limit(1)
+        );
         if (byId[0]) {
             return byId[0].id;
         }
     }
     if (job.category) {
-        const named = await db
-            .select({ id: categories.id })
-            .from(categories)
-            .where(
-                and(
-                    like(categories.name, job.category),
-                    eq(categories.income, job.income),
-                    isNull(categories.deletedAt)
+        const { category } = job;
+        const named = yield* attempt("read", () =>
+            db
+                .select({ id: categories.id })
+                .from(categories)
+                .where(
+                    and(
+                        like(categories.name, category),
+                        eq(categories.income, job.income),
+                        isNull(categories.deletedAt)
+                    )
                 )
-            )
-            .limit(1);
+                .limit(1)
+        );
         if (named[0]) {
             return named[0].id;
         }
@@ -716,60 +805,78 @@ async function knownCategory(db: Database, job: PendingWrite): Promise<string | 
 
     const note = job.note.trim();
     if (note) {
-        const seenBefore = await db
-            .select({ categoryId: transactions.categoryId })
-            .from(transactions)
-            .where(
-                and(
-                    eq(filedNote, sql`lower(${note})`),
-                    eq(transactions.income, job.income),
-                    isNull(transactions.deletedAt)
+        const seenBefore = yield* attempt("read", () =>
+            db
+                .select({ categoryId: transactions.categoryId })
+                .from(transactions)
+                .where(
+                    and(
+                        eq(filedNote, sql`lower(${note})`),
+                        eq(transactions.income, job.income),
+                        isNull(transactions.deletedAt)
+                    )
                 )
-            )
-            .orderBy(desc(transactions.date))
-            .limit(1);
+                .orderBy(desc(transactions.date))
+                .limit(1)
+        );
         const previous = seenBefore[0]?.categoryId;
         if (previous) {
             return previous;
         }
     }
     return null;
-}
+});
 
-async function firstCategory(db: Database, income: boolean): Promise<string | null> {
-    const fallback = await db
-        .select({ id: categories.id })
-        .from(categories)
-        .where(and(eq(categories.income, income), isNull(categories.parentId), isNull(categories.deletedAt)))
-        .limit(1);
+const firstCategory = Effect.fn("PendingWrites.firstCategory")(function* firstCategory(db: Database, income: boolean) {
+    const fallback = yield* attempt("read", () =>
+        db
+            .select({ id: categories.id })
+            .from(categories)
+            .where(and(eq(categories.income, income), isNull(categories.parentId), isNull(categories.deletedAt)))
+            .limit(1)
+    );
     return fallback[0]?.id ?? null;
-}
+});
 
-let draining: Promise<number> | null = null;
+let draining: Deferred.Deferred<number, DrainFailure> | null = null;
 
 // One drain at a time: `claimPendingWrites` re-returns an unreleased claim (crash recovery), so overlapping drains
 // get the same jobs, both pass `alreadyApplied`, and insert twice. Mount and a cold launch's first "active" overlap.
-export function drainPendingWrites(
+export const drainPendingWrites = Effect.fn("PendingWrites.drainPendingWrites")(function* drainPendingWrites(
     db: Database,
     claim: () => ClaimedWrites,
     release: (claimed: ClaimedWrites) => void
-): Promise<number> {
-    draining ??= runDrain(db, claim, release).finally(() => {
-        draining = null;
-    });
-    return draining;
-}
+) {
+    if (draining !== null) {
+        return yield* Deferred.await(draining);
+    }
+    const pass = Deferred.makeUnsafe<number, DrainFailure>();
+    draining = pass;
+    return yield* runDrain(db, claim, release).pipe(
+        Effect.onExit((exit) =>
+            Effect.suspend(() => {
+                draining = null;
+                return Deferred.done(pass, exit);
+            })
+        ),
+        Effect.uninterruptible
+    );
+});
 
-async function runDrain(
+type DrainFailure = Effect.Error<ReturnType<typeof runDrain>>;
+
+const runDrain = Effect.fn("PendingWrites.runDrain")(function* runDrain(
     db: Database,
     claim: () => ClaimedWrites,
     release: (claimed: ClaimedWrites) => void
-): Promise<number> {
-    const claimed = claim();
+) {
+    const claimed = yield* attemptSync("claim", claim);
     if (claimed.names.length === 0) {
         return 0;
     }
-    const applied = await applyPendingWrites(db, claimed.jobs);
-    release(claimed);
+    const applied = yield* applyPendingWrites(db, claimed.jobs);
+    yield* attemptSync("release", () => {
+        release(claimed);
+    });
     return applied;
-}
+});

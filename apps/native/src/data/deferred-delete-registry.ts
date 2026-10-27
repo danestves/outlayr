@@ -80,7 +80,7 @@ const SPECS = {
         undoTitle: "budgets.undo.deleted",
     },
     category: {
-        commit: (db, id) => commitWith("category", () => categoriesRepo.remove(db, id)),
+        commit: (db, id) => categoriesRepo.remove(db, id),
         failedBody: "categories.error.generic",
         failedTitle: "categories.error.deleteTitle",
         undoTitle: "categories.undo.deleted",

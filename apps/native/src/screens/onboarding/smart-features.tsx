@@ -1,25 +1,30 @@
+import * as Cause from "effect/Cause";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useRouter } from "expo-router";
 import { ScrollView } from "react-native";
 
 import { AiConsentDetails } from "@/components/ai-consent";
 import { FirstRun } from "@/components/first-run";
 import { useDatabase } from "@/contexts/local-data-context";
-import { saveAiConsent } from "@/data/settings-core";
 import { useTranslation } from "@/i18n/context";
+import { SILENT } from "@/state/atom-command";
+import { saveAiConsentCommand } from "@/state/settings-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 /** Asked before an account exists, so the answer is in place before any feature could send. */
 export function OnboardingSmartFeatures() {
     const db = useDatabase();
     const router = useRouter();
     const t = useTranslation();
+    const saveAiConsent = useAtomCommand(saveAiConsentCommand, SILENT);
 
     const answer = (allowed: boolean) => {
-        saveAiConsent(db, allowed)
-            .then(() => router.push("/onboarding/rhythm"))
-            .catch((cause: unknown) => {
-                console.error("Saving the AI consent failed", cause);
-                router.push("/onboarding/rhythm");
-            });
+        saveAiConsent({ allowed, db }).then((result) => {
+            if (AsyncResult.isFailure(result)) {
+                console.error("Saving the AI consent failed", Cause.squash(result.cause));
+            }
+            router.push("/onboarding/rhythm");
+        });
     };
 
     return (

@@ -14,7 +14,7 @@ import type { ArmedReminder, ReminderCandidate } from "@/domain/subscription-rem
 import { getMeta, META_KEYS } from "./app-meta-core";
 import { occurrenceId } from "./recurrence-backfill";
 
-const SubscriptionRemindersRead = Schema.Literals(["currency", "rows"]);
+const SubscriptionRemindersRead = Schema.Literals(["rows"]);
 
 export class SubscriptionRemindersError extends Schema.TaggedError<SubscriptionRemindersError>()(
     "SubscriptionRemindersError",
@@ -85,7 +85,7 @@ export const reminderCandidates = Effect.fn("SubscriptionReminders.reminderCandi
     }
 
     // Mirrors `transactions-core`: a null `currency` means the ledger's, so a notice resolves it the same way.
-    const ledgerCurrency = (yield* query("currency", () => getMeta(db, META_KEYS.currency))) ?? DEFAULT_CURRENCY;
+    const ledgerCurrency = (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
 
     const candidates: SubscriptionReminderCandidate[] = rows.flatMap((row) => {
         const landingAfter = (day: Date) =>

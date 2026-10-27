@@ -40,7 +40,7 @@ import type { Category } from "@/data/categories-core";
 import { useFavouriteCurrencies } from "@/data/favourite-currencies";
 import { useRatesRead } from "@/data/live-query";
 import { useRecentMerchants } from "@/data/merchant-history";
-import { remoteEnrichmentOn, setBoolSetting } from "@/data/settings-core";
+import { remoteEnrichmentOn } from "@/data/settings-core";
 import { useTagIdsFor, useTags } from "@/data/tags";
 import { tagIdsForQuery } from "@/data/tags-core";
 import { transactionRateSuggestions } from "@/data/transaction-entry-rates";
@@ -121,6 +121,7 @@ import {
     rememberedCategoryCommand,
     rememberFeeCategoryCommand,
 } from "@/state/ledger-commands";
+import { setBoolSettingCommand } from "@/state/settings-commands";
 import { PendingCategoryError, saveTransactionCommand } from "@/state/transaction-save-command";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { glowFromEmoji, glowFromImage } from "@/theme/glow";
@@ -499,6 +500,7 @@ export function TransactionForm({
     const resting = rest !== undefined;
     const colors = useColors();
     const haptics = useHaptics();
+    const setBoolSetting = useAtomCommand(setBoolSettingCommand, SILENT);
     const t = useTranslation();
     const { language } = useLanguage();
     const { use24Hour } = useDisplaySettings().state;
@@ -1623,7 +1625,7 @@ export function TransactionForm({
     // Picking a lead here is the intent behind the master switch: a ledger whose owner never opened the notifications
     // screen would otherwise arm nothing.
     const armSubscriptionReminders = async () => {
-        await setBoolSetting(db, "subscriptionReminders", true);
+        unwrapAtomCommand(await setBoolSetting({ db, key: "subscriptionReminders", value: true }));
     };
 
     const confirmRemindersAllowed = async () => {

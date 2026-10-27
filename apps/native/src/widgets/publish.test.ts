@@ -12,7 +12,10 @@ jest.mock("./ledger", () => ({ __esModule: true, default: { updateSnapshot: jest
 jest.mock("./log", () => ({ __esModule: true, default: { updateSnapshot: jest.fn() } }));
 jest.mock("@/lib/widget-bridge", () => ({ publishIntentSnapshot: jest.fn(), publishWalletPush: jest.fn() }));
 jest.mock("@/data/wallet-push", () => ({ buildWalletPush: () => Promise.resolve({}) }));
-jest.mock("@/data/pending-writes-core", () => ({ appliedWriteIds: () => Promise.resolve(["watch-write"]) }));
+jest.mock("@/state/lifecycle-commands", () => ({
+    appliedWriteIdsCommand: {},
+    runLifecycleCommand: () => Promise.resolve(["watch-write"]),
+}));
 jest.mock("@/lib/watch-link", () => ({ publishWatchSnapshot: jest.fn() }));
 
 // `__esModule` on the factories, or babel's interop wraps the whole factory as `default`.

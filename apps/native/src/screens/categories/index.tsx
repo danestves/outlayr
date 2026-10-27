@@ -46,13 +46,15 @@ import { useAppSettings } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { useCategoriesByNamespace, useCategoryTotals } from "@/data/categories";
-import { categoriesRepo, presetsNotAdded } from "@/data/categories-core";
+import { presetsNotAdded } from "@/data/categories-core";
 import type { Category, CategoryWithChildren, SuggestedCategoryPreset } from "@/data/categories-core";
-import { setBoolSetting } from "@/data/settings-core";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { formatAmount } from "@/domain/money";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { hitArea, outline } from "@/lib/swift-ui-geometry";
+import { addSuggestedCategoryCommand } from "@/state/categories-commands";
+import { setBoolSettingCommand } from "@/state/settings-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 import type { ThemeColors } from "@/theme/use-colors";
 
@@ -136,6 +138,8 @@ function pendingRemoved(parents: CategoryWithChildren[], pendingId: string | nul
 
 export function Categories({ income }: { income: boolean }) {
     const db = useDatabase();
+    const addSuggestedCategory = useAtomCommand(addSuggestedCategoryCommand);
+    const setBoolSetting = useAtomCommand(setBoolSettingCommand);
     const router = useRouter();
     const t = useTranslation();
     const colors = useColors();
@@ -185,11 +189,14 @@ export function Categories({ income }: { income: boolean }) {
     };
 
     const addSuggested = (preset: SuggestedCategoryPreset) => {
-        categoriesRepo.addSuggested(db, {
-            color: preset.color,
-            icon: preset.icon,
-            income,
-            name: preset.name,
+        addSuggestedCategory({
+            db,
+            preset: {
+                color: preset.color,
+                icon: preset.icon,
+                income,
+                name: preset.name,
+            },
         });
     };
 
@@ -205,7 +212,7 @@ export function Categories({ income }: { income: boolean }) {
                         showSuggestions ? "categories.a11y.hideSuggestions" : "categories.a11y.showSuggestions"
                     )}
                     onPress={() => {
-                        setBoolSetting(db, "categorySuggestions", !showSuggestions);
+                        setBoolSetting({ db, key: "categorySuggestions", value: !showSuggestions });
                     }}
                 >
                     <Stack.Toolbar.Icon {...toolbarIcon(showSuggestions ? "suggestionsOn" : "suggestionsOff")} />
