@@ -46,6 +46,14 @@ describe("formatAmount", () => {
         expect(formatAmount(1234.56, "USD", false, "en")).toBe("$1,235");
     });
 
+    it("keeps the cents of a figure that whole units would show as zero", () => {
+        expect(formatAmount(0.5, "USD", false, "en")).toBe("$0.50");
+        expect(formatAmount(0.3, "USD", false, "en")).toBe("$0.30");
+        expect(formatAmount(1.5, "USD", false, "en")).toBe("$2");
+        expect(formatAmount(0, "USD", false, "en")).toBe("$0");
+        expect(formatAmount(0.004, "USD", false, "en")).toBe("$0");
+    });
+
     it("groups every three digits past a thousand", () => {
         expect(formatAmount(1_234_567.89, "USD", true, "en")).toBe("$1,234,567.89");
     });
