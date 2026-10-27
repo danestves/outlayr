@@ -1,6 +1,7 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import type { ExpenseContribution } from "@outlayr/money/budget-spent";
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
+import * as Cause from "effect/Cause";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { ScrollView, View } from "react-native";
@@ -41,15 +42,14 @@ import { useTranslation } from "@/i18n/context";
 import { budgetMenuItems } from "@/lib/budget-actions";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
-import { settledBalanceAtCommand } from "@/state/accounts-commands";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { SILENT } from "@/state/atom-command";
 import {
-    createBudgetCommand,
-    createMainBudgetCommand,
-    createSavingsGoalCommand,
-    patchBudgetCommand,
-} from "@/state/planning-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+    createGoalFromAccountCommand,
+    GoalAnchorUnvaluedError,
+    readGoalAnchorCommand,
+} from "@/state/budget-flow-commands";
+import { createBudgetCommand, createMainBudgetCommand, patchBudgetCommand } from "@/state/planning-commands";
+import { useAtomAction } from "@/state/use-atom-action";
 
 import { BudgetBurndownHero } from "./components/budget-burndown-hero";
 import { BudgetCard } from "./components/budget-card";
@@ -61,6 +61,7 @@ import { GoalTargetSheet } from "./components/goal-target-sheet";
 import type { GoalCommit, GoalTarget } from "./components/goal-target-sheet";
 import { SavingsGoalsSection } from "./components/savings-goals-section";
 import { UnbudgetedRail } from "./components/unbudgeted-rail";
+import { useCommitLatch } from "./components/use-commit-latch";
 import { pairs } from "./pairs";
 
 const CARD_GUTTER = 12;
@@ -70,11 +71,6 @@ const NO_BUDGETS: readonly CategoryBudgetView[] = [];
 
 export function Budgets() {
     const db = useDatabase();
-    const settledBalanceAt = useAtomCommand(settledBalanceAtCommand, SILENT);
-    const createGoal = useAtomCommand(createSavingsGoalCommand, SILENT);
-    const createMainBudget = useAtomCommand(createMainBudgetCommand, SILENT);
-    const createBudget = useAtomCommand(createBudgetCommand, SILENT);
-    const patchBudget = useAtomCommand(patchBudgetCommand, SILENT);
     const router = useRouter();
     const accountCreateRoute = useAccountCreateRoute();
     const [gridWidth, setGridWidth] = useState<number | null>(null);
@@ -112,6 +108,72 @@ export function Budgets() {
     const categoryPickerRef = useRef<CategoryPickerSheetRef>(null);
     const [goalTarget, setGoalTarget] = useState<GoalTarget | null>(null);
 
+    const goalLatch = useCommitLatch();
+    const limitLatch = useCommitLatch();
+    const everythingLatch = useCommitLatch();
+    const createGoal = useAtomAction(
+        createGoalFromAccountCommand,
+        {
+            onFailure: (cause) => {
+                const error = Cause.squash(cause);
+                const unvalued = {
+                    body: t("goals.unvalued.body", { account: goalTarget?.name ?? "" }),
+                    title: t("goals.unvalued.title"),
+                };
+                if (error instanceof GoalAnchorUnvaluedError) {
+                    notifyFailure(unvalued);
+                    return;
+                }
+                console.error("Failed to save the goal", error);
+                notifyFailure(
+                    error instanceof GoalValuationError
+                        ? unvalued
+                        : { body: t("goals.failedBody"), title: t("goals.failedTitle") }
+                );
+            },
+            onSettled: goalLatch.release,
+            onSuccess: () => haptics("success"),
+        },
+        SILENT
+    );
+    const readGoalAnchor = useAtomAction(readGoalAnchorCommand, {
+        onSuccess: ({ account, balance }) => {
+            // The anchor is frozen, so an approximate balance would leave a permanent gap.
+            if (!balance.exact) {
+                notifyFailure({
+                    body: t("goals.unvalued.body", { account: account.name }),
+                    title: t("goals.unvalued.title"),
+                });
+                return;
+            }
+            setGoalTarget({ accountId: account.id, balance: balance.value, currency, name: account.name });
+            goalSheetRef.current?.present();
+        },
+    });
+    const limitSaved = {
+        onFailure: (cause: Cause.Cause<unknown>) => {
+            console.error("Failed to save the budget", Cause.squash(cause));
+            notifyFailure({ body: t("budgets.save.failedBody"), title: t("budgets.save.failedTitle") });
+        },
+        onSettled: limitLatch.release,
+        onSuccess: () => haptics("success"),
+    };
+    const createLimitMain = useAtomAction(createMainBudgetCommand, limitSaved, SILENT);
+    const patchLimit = useAtomAction(patchBudgetCommand, limitSaved, SILENT);
+    const createLimit = useAtomAction(createBudgetCommand, limitSaved, SILENT);
+    const createEverything = useAtomAction(
+        createMainBudgetCommand,
+        {
+            onFailure: (cause) => {
+                console.error("Failed to create the overall budget", Cause.squash(cause));
+                notifyFailure({ body: t("budgets.save.failedBody"), title: t("budgets.save.failedTitle") });
+            },
+            onSettled: everythingLatch.release,
+            onSuccess: () => haptics("success"),
+        },
+        SILENT
+    );
+
     // oxlint-disable-next-line outlayr/react-effect-budget -- presents the native limit sheet once its target has rendered, after the category picker has dismissed
     useEffect(() => {
         if (limitTarget) {
@@ -138,52 +200,31 @@ export function Budgets() {
         setLimitTarget(target);
     };
 
-    const commitGoal = async ({ targetAmount, targetDate }: GoalCommit) => {
+    const commitGoal = ({ targetAmount, targetDate }: GoalCommit) => {
         const target = goalTarget;
-        if (!target) {
+        if (!target || !goalLatch.hold()) {
             return;
         }
         // A synced currency change mid-sheet would file the target under the wrong currency for good.
         if (target.currency !== currency) {
             goalSheetRef.current?.dismiss();
             notifyFailure({ body: t("goals.currencyMoved.body"), title: t("goals.currencyMoved.title") });
+            goalLatch.release();
             return;
         }
-        // Re-read now: a scheduled row can land while the sheet is open, and the anchor is frozen forever.
-        const account = accounts.find((candidate) => candidate.id === target.accountId);
-        const balance =
-            account && unwrapAtomCommand(await settledBalanceAt({ account, db, now: new Date(), valuation }));
-        if (!balance?.exact) {
-            notifyFailure({
-                body: t("goals.unvalued.body", { account: target.name }),
-                title: t("goals.unvalued.title"),
-            });
-            return;
-        }
-        goalSheetRef.current?.dismiss();
-        try {
-            unwrapAtomCommand(
-                await createGoal({
-                    db,
-                    goal: {
-                        accountId: target.accountId,
-                        currency: target.currency,
-                        name: target.name,
-                        startAmount: balance.value,
-                        targetAmount,
-                        targetDate,
-                    },
-                })
-            );
-            haptics("success");
-        } catch (error) {
-            console.error("Failed to save the goal", error);
-            notifyFailure(
-                error instanceof GoalValuationError
-                    ? { body: t("goals.unvalued.body", { account: target.name }), title: t("goals.unvalued.title") }
-                    : { body: t("goals.failedBody"), title: t("goals.failedTitle") }
-            );
-        }
+        createGoal({
+            account: accounts.find((candidate) => candidate.id === target.accountId),
+            db,
+            dismiss: () => goalSheetRef.current?.dismiss(),
+            goal: {
+                accountId: target.accountId,
+                currency: target.currency,
+                name: target.name,
+                targetAmount,
+                targetDate,
+            },
+            valuation,
+        });
     };
 
     const presentCategoryPicker = () => categoryPickerRef.current?.present();
@@ -200,49 +241,34 @@ export function Budgets() {
         categoryPickerRef.current?.dismiss();
     };
 
-    const commitEverything = async ({ limit, type }: LimitCommit) => {
-        try {
-            unwrapAtomCommand(await createMainBudget({ db, input: { amount: limit, type } }));
-            haptics("success");
-        } catch (error) {
-            console.error("Failed to create the overall budget", error);
-            notifyFailure({ body: t("budgets.save.failedBody"), title: t("budgets.save.failedTitle") });
+    const commitEverything = ({ limit, type }: LimitCommit) => {
+        if (everythingLatch.hold()) {
+            createEverything({ db, input: { amount: limit, type } });
         }
     };
 
-    const commitLimit = async ({ limit, limitChanged, type }: LimitCommit) => {
+    const commitLimit = ({ limit, limitChanged, type }: LimitCommit) => {
         const target = limitTarget;
-        if (!target) {
+        if (!target || !limitLatch.hold()) {
             return;
         }
         limitSheetRef.current?.dismiss();
-        const save = async () => {
-            if (target.categoryId === null) {
-                unwrapAtomCommand(await createMainBudget({ db, input: { amount: limit, type } }));
-                haptics("success");
-                return;
-            }
-            const existing = allBudgets.find((budget) => budget.categoryId === target.categoryId);
-            // Re-checked at write: entitlement or sync can change while the sheet is open.
-            if (!existing && blocksNewBudget(target.categoryId, budgetedCategoryIds, budgetsCapped)) {
-                router.push("/paywall");
-                return;
-            }
-            if (existing) {
-                unwrapAtomCommand(
-                    await patchBudget({ db, id: existing.id, patch: { ...(limitChanged && { amount: limit }), type } })
-                );
-            } else {
-                unwrapAtomCommand(
-                    await createBudget({ db, input: { amount: limit, categoryId: target.categoryId, type } })
-                );
-            }
-            haptics("success");
-        };
-        await save().catch((error) => {
-            console.error("Failed to save the budget", error);
-            notifyFailure({ body: t("budgets.save.failedBody"), title: t("budgets.save.failedTitle") });
-        });
+        if (target.categoryId === null) {
+            createLimitMain({ db, input: { amount: limit, type } });
+            return;
+        }
+        const existing = allBudgets.find((budget) => budget.categoryId === target.categoryId);
+        // Re-checked at write: entitlement or sync can change while the sheet is open.
+        if (!existing && blocksNewBudget(target.categoryId, budgetedCategoryIds, budgetsCapped)) {
+            router.push("/paywall");
+            limitLatch.release();
+            return;
+        }
+        if (existing) {
+            patchLimit({ db, id: existing.id, patch: { ...(limitChanged && { amount: limit }), type } });
+        } else {
+            createLimit({ db, input: { amount: limit, categoryId: target.categoryId, type } });
+        }
     };
 
     const cardWidth = gridWidth === null ? null : (gridWidth - CARD_GUTTER) / 2;
@@ -274,29 +300,11 @@ export function Budgets() {
                     accountSheetRef.current?.dismiss();
                     router.push(accountCreateRoute);
                 }}
-                onSelect={async (picked) => {
+                onSelect={(picked) => {
                     accountSheetRef.current?.dismiss();
-                    if (!picked) {
-                        return;
+                    if (picked) {
+                        readGoalAnchor({ account: picked, db, valuation });
                     }
-                    const balance = unwrapAtomCommand(
-                        await settledBalanceAt({ account: picked, db, now: new Date(), valuation })
-                    );
-                    // The anchor is frozen, so an approximate balance would leave a permanent gap.
-                    if (!balance.exact) {
-                        notifyFailure({
-                            body: t("goals.unvalued.body", { account: picked.name }),
-                            title: t("goals.unvalued.title"),
-                        });
-                        return;
-                    }
-                    setGoalTarget({
-                        accountId: picked.id,
-                        balance: balance.value,
-                        currency,
-                        name: picked.name,
-                    });
-                    goalSheetRef.current?.present();
                 }}
                 ref={accountSheetRef}
                 selectedId={null}

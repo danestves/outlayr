@@ -1,6 +1,5 @@
 import * as Cause from "effect/Cause";
 import * as Option from "effect/Option";
-import * as AsyncResult from "effect/reactivity/AsyncResult";
 import {
     addNotificationResponseReceivedListener,
     clearLastNotificationResponse,
@@ -11,9 +10,10 @@ import { useRouter } from "expo-router";
 import { useEffect } from "react";
 
 import type { Database } from "@/db/client";
-import { runAtomCommand, SILENT } from "@/state/atom-command";
+import { SILENT } from "@/state/atom-command";
 import { appAtomRegistry } from "@/state/atom-registry";
 import { resolveWalletPushTapCommand } from "@/state/surfaces-commands";
+import { fireAtomCommand } from "@/state/use-atom-action";
 
 import { decodeWalletPushTap } from "./notification-taps";
 
@@ -28,34 +28,29 @@ export function useWalletPushTaps(db: Database, ready: boolean): void {
             return;
         }
         let disposed = false;
-        const open = async (response: NotificationResponse | null) => {
+        const handle = (response: NotificationResponse | null) => {
             const parsed = decodeWalletPushTap(response?.notification.request.content.data);
             const id = response?.notification.request.identifier;
             if (Option.isNone(parsed) || id == null || id === handled) {
                 return;
             }
-            const resolved = await runAtomCommand(
+            fireAtomCommand(
                 appAtomRegistry,
                 resolveWalletPushTapCommand,
                 { db, tap: parsed.value },
+                {
+                    onFailure: (cause) => console.warn("[outlayr] wallet push tap failed", Cause.squash(cause)),
+                    onSuccess: (target) => {
+                        if (disposed || id === handled || target === null) {
+                            return;
+                        }
+                        router.navigate(target);
+                        handled = id;
+                        clearLastNotificationResponse();
+                    },
+                },
                 SILENT
             );
-            if (AsyncResult.isFailure(resolved)) {
-                console.warn("[outlayr] wallet push tap failed", Cause.squash(resolved.cause));
-                return;
-            }
-            const target = resolved.value;
-            if (disposed || id === handled || target === null) {
-                return;
-            }
-            router.navigate(target);
-            handled = id;
-            clearLastNotificationResponse();
-        };
-        const handle = (response: NotificationResponse | null) => {
-            open(response).catch((error) => {
-                console.warn("[outlayr] wallet push tap failed", error);
-            });
         };
 
         handle(getLastNotificationResponse());

@@ -1,3 +1,4 @@
+import * as Cause from "effect/Cause";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 
@@ -10,18 +11,16 @@ import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useTransactionCount } from "@/data/transactions";
 import { exportFileName } from "@/data/transfer-core";
-import { archiveFileName, serializeArchive } from "@/domain/archive";
+import { archiveFileName } from "@/domain/archive";
 import { CSV_HEADER } from "@/domain/transaction-csv";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import { TransferError } from "@/lib/data-transfer";
 import { notifyFailure } from "@/lib/notify";
 import { photoFiles, storedPhotosBase64 } from "@/lib/photo-storage";
-import { exportTransactionsCsvCommand } from "@/state/accounts-commands";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import { exportArchiveCommand } from "@/state/lifecycle-commands";
-import { runTransferCommand, shareFileCommand } from "@/state/transfer-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { SILENT } from "@/state/atom-command";
+import { exportArchiveFileCommand, exportCsvCommand } from "@/state/settings-flow-commands";
+import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
 
 /** Named so a CSV is not taken for a backup: a restore from it comes back thinner. */
@@ -34,67 +33,44 @@ const OMITTED = [
 
 export function ExportData() {
     const db = useDatabase();
-    const exportCsv = useAtomCommand(exportTransactionsCsvCommand, SILENT);
     const colors = useColors();
     const t = useTranslation();
     const count = useTransactionCount(db);
     const [busy, setBusy] = useState<"archive" | "csv" | null>(null);
-    const exportArchive = useAtomCommand(exportArchiveCommand, SILENT);
+    const handlers = {
+        onFailure: (cause: Cause.Cause<unknown>) => {
+            const failure = Cause.squash(cause);
+            notifyFailure({
+                body: failure instanceof TransferError ? t(failure.key) : t("settings.export.failedBody"),
+                title: t("settings.export.failedTitle"),
+            });
+        },
+        onSettled: () => setBusy(null),
+    };
+    const exportCsv = useAtomAction(exportCsvCommand, handlers, SILENT);
+    const exportArchive = useAtomAction(exportArchiveFileCommand, handlers, SILENT);
 
-    const runExport = (
-        kind: "archive" | "csv",
-        build: () => Promise<string>,
-        name: string,
-        mime: string,
-        shareTitle: TranslationKey
-    ) => {
-        setBusy(kind);
-        build()
-            .then((payload) => {
-                setBusy(null);
-                return runTransferCommand(shareFileCommand, {
-                    data: payload,
-                    dialogTitle: t(shareTitle),
-                    fileName: name,
-                    mimeType: mime,
-                });
-            })
-            .catch((cause: unknown) => {
-                notifyFailure({
-                    body: cause instanceof TransferError ? t(cause.key) : t("settings.export.failedBody"),
-                    title: t("settings.export.failedTitle"),
-                });
-            })
-            .finally(() => setBusy(null));
+    const shareOf = (name: string, mime: string, shareTitle: TranslationKey) => ({
+        dialogTitle: t(shareTitle),
+        fileName: name,
+        mimeType: mime,
+        onBuilt: () => setBusy(null),
+    });
+
+    const runArchive = () => {
+        setBusy("archive");
+        exportArchive({
+            db,
+            files: photoFiles,
+            photos: storedPhotosBase64,
+            ...shareOf(archiveFileName(new Date()), "application/json", "settings.export.archiveShareTitle"),
+        });
     };
 
-    const runArchive = () =>
-        runExport(
-            "archive",
-            async () =>
-                // ponytail: one in-memory string with base64 photos; stream it to a zip if ledgers outgrow 512px JPEGs
-                serializeArchive(
-                    unwrapAtomCommand(
-                        await exportArchive({
-                            db,
-                            files: photoFiles,
-                            photos: storedPhotosBase64,
-                        })
-                    )
-                ),
-            archiveFileName(new Date()),
-            "application/json",
-            "settings.export.archiveShareTitle"
-        );
-
-    const run = () =>
-        runExport(
-            "csv",
-            async () => unwrapAtomCommand(await exportCsv(db)),
-            exportFileName(new Date()),
-            "text/csv",
-            "settings.export.shareTitle"
-        );
+    const run = () => {
+        setBusy("csv");
+        exportCsv({ db, ...shareOf(exportFileName(new Date()), "text/csv", "settings.export.shareTitle") });
+    };
 
     return (
         <SettingsScreen footer={t("settings.export.footer")}>

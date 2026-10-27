@@ -1,3 +1,5 @@
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
 import { getAppIconName, setAlternateAppIcon, supportsAlternateIcons } from "expo-alternate-app-icons";
 import { useFocusEffect } from "expo-router";
 import { useRef, useState } from "react";
@@ -6,6 +8,13 @@ import { appIconTransition } from "@/domain/app-icons";
 import type { AppIconEvent, AppIconState } from "@/domain/app-icons";
 import { translateNow } from "@/i18n/runtime";
 import { notifyFailure } from "@/lib/notify";
+import { createCommand, SILENT } from "@/state/atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
+
+const setAppIconCommand = createCommand({
+    execute: (name: string | null) => Effect.tryPromise(() => setAlternateAppIcon(name)).pipe(Effect.as(name)),
+    label: "app-icon:set",
+});
 
 export const alternateIconsSupported: boolean = supportsAlternateIcons;
 
@@ -53,22 +62,28 @@ export function useAppIcon(): AppIconControl {
         }
     });
 
-    const choose = (name: string | null) => {
-        if (!apply({ kind: "tap", name })) {
-            return;
-        }
-        setAlternateAppIcon(name)
-            .then(() => {
-                apply({ kind: "resolved", name });
-            })
-            .catch((cause: unknown) => {
-                console.error("App icon change failed", cause);
+    const setIcon = useAtomAction(
+        setAppIconCommand,
+        {
+            onFailure: (cause) => {
+                console.error("App icon change failed", Cause.squash(cause));
                 apply({ kind: "rejected", reported: readAppIconName() });
                 notifyFailure({
                     body: translateNow("settings.appIcon.failedBody"),
                     title: translateNow("settings.appIcon.failedTitle"),
                 });
-            });
+            },
+            onSuccess: (name) => {
+                apply({ kind: "resolved", name });
+            },
+        },
+        SILENT
+    );
+
+    const choose = (name: string | null) => {
+        if (apply({ kind: "tap", name })) {
+            setIcon(name);
+        }
     };
 
     return { active: state.active, choose };

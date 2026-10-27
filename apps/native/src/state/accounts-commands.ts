@@ -1,4 +1,4 @@
-import type * as Effect from "effect/Effect";
+import * as Effect from "effect/Effect";
 
 import { openingForBalance, settledBalanceAt } from "@/data/accounts";
 import { accountsRepo, rememberLastUsedAccount } from "@/data/accounts-core";
@@ -15,7 +15,7 @@ import { buildWalletPush } from "@/data/wallet-push";
 import type { Database } from "@/db/client";
 import { appRuntime } from "@/lib/runtime";
 
-import { createRuntimeCommand, runAtomCommand, SILENT, unwrapAtomCommand } from "./atom-command";
+import { createRuntimeCommand, runAtomCommand, SILENT, tapFailure, unwrapAtomCommand } from "./atom-command";
 import type { AtomCommand } from "./atom-command";
 import { appAtomRegistry } from "./atom-registry";
 
@@ -30,6 +30,48 @@ export const updateAccountCommand = accountsCommand(
     "update",
     (input: { db: Database; id: string; patch: Partial<AccountInput> }) =>
         accountsRepo.update(input.db, input.id, input.patch)
+);
+
+interface AccountSave {
+    balance: number;
+    db: Database;
+    draft: Omit<AccountInput, "initialBalance">;
+    onFailure: (error: Error) => void;
+    onSaved: () => void;
+    target: { mode: "create" } | { id: string; initialBalance: number; mode: "edit"; reopenAt: Date | null };
+}
+
+export const saveAccountCommand = accountsCommand(
+    "save",
+    Effect.fn("Accounts.save")(function* saveAccount({ balance, db, draft, onFailure, onSaved, target }: AccountSave) {
+        yield* Effect.gen(function* write() {
+            if (target.mode === "create") {
+                yield* accountsRepo.create(db, { ...draft, initialBalance: balance });
+                return;
+            }
+            const initialBalance =
+                target.reopenAt == null
+                    ? target.initialBalance
+                    : yield* openingForBalance(db, target.id, balance, draft.currency, target.reopenAt);
+            yield* accountsRepo.update(db, target.id, { ...draft, initialBalance });
+        }).pipe(tapFailure(onFailure));
+        yield* Effect.sync(onSaved).pipe(tapFailure(onFailure));
+    })
+);
+
+export const saveTransferCommand = accountsCommand(
+    "save-transfer",
+    Effect.fn("Accounts.saveTransfer")(function* saveTransfer(input: {
+        db: Database;
+        id: string | null;
+        input: TransferInput;
+    }) {
+        if (input.id == null) {
+            return yield* transfersRepo.create(input.db, input.input);
+        }
+        yield* transfersRepo.update(input.db, input.id, input.input);
+        return input.id;
+    })
 );
 
 export const reorderAccountsCommand = accountsCommand("reorder", (input: { db: Database; orderedIds: string[] }) =>

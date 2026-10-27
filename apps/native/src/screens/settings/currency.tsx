@@ -1,4 +1,3 @@
-import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
@@ -10,24 +9,18 @@ import { useFavouriteCurrencies } from "@/data/favourite-currencies";
 import { useToggleFavouriteCurrency } from "@/hooks/use-toggle-favourite-currency";
 import { useTranslation } from "@/i18n/context";
 import { setCurrencyCommand } from "@/state/settings-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 
 export function Currency() {
     const db = useDatabase();
     const router = useRouter();
     const t = useTranslation();
-    const setCurrency = useAtomCommand(setCurrencyCommand);
+    const setCurrency = useAtomAction(setCurrencyCommand, { onSuccess: () => router.back() });
     const selected = useGlobalCurrency(db);
     const favourites = useFavouriteCurrencies(db);
     const [query, setQuery] = useState("");
 
-    const onSelect = (code: string) => {
-        setCurrency({ code, db }).then((result) => {
-            if (AsyncResult.isSuccess(result)) {
-                router.back();
-            }
-        });
-    };
+    const onSelect = (code: string) => setCurrency({ code, db });
 
     const onToggleFavourite = useToggleFavouriteCurrency(db);
 

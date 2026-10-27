@@ -1,6 +1,6 @@
 import { currencyDisplayFor } from "@outlayr/money/currency";
 import * as Cause from "effect/Cause";
-import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as Effect from "effect/Effect";
 import { router } from "expo-router";
 import { View } from "react-native";
 
@@ -11,6 +11,7 @@ import { useAppSettings } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { useReminderChosen } from "@/data/onboarding";
+import { deferAccount } from "@/data/onboarding-core";
 import { flyleafDate } from "@/domain/flyleaf";
 import { clampTimeOfDay, formatTimeOfDay, reminderTime } from "@/domain/reminder";
 import { useLanguage, useTranslation } from "@/i18n/context";
@@ -18,9 +19,9 @@ import { openInAppBrowser } from "@/lib/app-handoff";
 import { authClient } from "@/lib/auth-client";
 import { legalUrl } from "@/lib/legal-url";
 import { useProviderSignIn } from "@/lib/use-provider-sign-in";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { SILENT } from "@/state/atom-command";
 import { deferAccountCommand } from "@/state/lifecycle-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 
 type AuthClient = NonNullable<typeof authClient>;
 
@@ -109,12 +110,13 @@ function Agreement() {
 function SignInContent({ client }: { client: AuthClient }) {
     const db = useDatabase();
     const t = useTranslation();
-    const deferAccount = useAtomCommand(deferAccountCommand, SILENT);
+    const deferOffer = useAtomAction(
+        deferAccountCommand,
+        { onFailure: (cause) => console.error("Deferring the account offer failed", Cause.squash(cause)) },
+        SILENT
+    );
     const { busy, error, start } = useProviderSignIn(client, {
-        onAppleFailure: async () => {
-            unwrapAtomCommand(await deferAccount(db));
-            router.replace("/");
-        },
+        onAppleFailure: () => deferAccount(db).pipe(Effect.andThen(Effect.sync(() => router.replace("/")))),
     });
 
     return (
@@ -132,13 +134,7 @@ function SignInContent({ client }: { client: AuthClient }) {
             object={<FlyleafCard />}
             skip={{
                 label: t("auth.signIn.notNow"),
-                onPress: () => {
-                    deferAccount(db).then((result) => {
-                        if (AsyncResult.isFailure(result)) {
-                            console.error("Deferring the account offer failed", Cause.squash(result.cause));
-                        }
-                    });
-                },
+                onPress: () => deferOffer(db),
             }}
             title={t("auth.signIn.title")}
         >

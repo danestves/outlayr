@@ -1,4 +1,3 @@
-import { and, eq, isNull } from "drizzle-orm";
 import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
 
@@ -9,10 +8,11 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { getCategoryById } from "@/data/categories-core";
 import type { Category } from "@/data/categories-core";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
-import { categories } from "@/db/schema";
 import type { TranslatableKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import { useHaptics } from "@/lib/use-haptics";
+import { countCategoryChildrenCommand } from "@/state/categories-commands";
+import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
 
 function categoryKindKey(edited: Category | null): TranslatableKey {
@@ -39,17 +39,18 @@ export function CategoryEditScreen({ id }: { id: string }) {
 
     // No confirmation: the write is held for the undo window by a toast mounted at the app root, which outlives this
     // screen. The toast spells out the cascade, so the children are counted first.
-    const deleteCategory = async () => {
+    const countChildren = useAtomAction(countCategoryChildrenCommand, {
+        onSuccess: ({ children, id: deleted }) => {
+            haptics("warning");
+            requestDelete(deleted, t(children > 0 ? "categories.undo.bodyWithChildren" : "categories.undo.body"));
+            router.back();
+        },
+    });
+    const deleteCategory = () => {
         if (!id) {
             return;
         }
-        const children = await db
-            .select({ id: categories.id })
-            .from(categories)
-            .where(and(eq(categories.parentId, id), isNull(categories.deletedAt)));
-        haptics("warning");
-        requestDelete(id, t(children.length > 0 ? "categories.undo.bodyWithChildren" : "categories.undo.body"));
-        router.back();
+        countChildren({ db, id });
     };
 
     return (

@@ -1,5 +1,6 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { windowEndMs } from "@outlayr/money/budget-window";
+import * as Cause from "effect/Cause";
 import { Color, Stack, useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { View } from "react-native";
@@ -20,13 +21,13 @@ import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
 import { BudgetDetailView } from "@/screens/budgets/components/budget-detail-view";
 import { BudgetEditor } from "@/screens/budgets/components/budget-editor";
-import type { BudgetEdit } from "@/screens/budgets/components/budget-editor";
 import type { LimitCommit } from "@/screens/budgets/components/budget-limit-body";
 import { BudgetLimitSheet } from "@/screens/budgets/components/budget-limit-sheet";
 import { BudgetPeriodStepper } from "@/screens/budgets/components/budget-period-stepper";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { useCommitLatch } from "@/screens/budgets/components/use-commit-latch";
+import { SILENT } from "@/state/atom-command";
 import { patchMainBudgetCommand } from "@/state/planning-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
 
 /** Under `/budgets/[id]` with the reserved id `overall`: a static sibling of a dynamic segment never resolved. */
@@ -36,7 +37,18 @@ export function OverallBudgetDetail({ db, onDone }: { db: Database; onDone: () =
     const haptics = useHaptics();
     const colors = useColors();
     const currency = useGlobalCurrency(db);
-    const patchMainBudget = useAtomCommand(patchMainBudgetCommand, SILENT);
+    const latch = useCommitLatch();
+    const reportFailure = (cause: Cause.Cause<unknown>) => {
+        console.error("Failed to change the overall budget", Cause.squash(cause));
+        notifyFailure({ body: t("budgets.save.failedBody"), title: t("budgets.save.failedTitle") });
+    };
+    // Patched by field: `createMainBudget` overwrites every column it is passed.
+    const write = useAtomAction(patchMainBudgetCommand, { onFailure: reportFailure }, SILENT);
+    const commitLimitWrite = useAtomAction(
+        patchMainBudgetCommand,
+        { onFailure: reportFailure, onSettled: latch.release, onSuccess: () => haptics("success") },
+        SILENT
+    );
     const nowMs = useNow();
     const [periodOffset, setPeriodOffset] = useState(0);
     const { requestDelete } = useDeferredDelete("budget");
@@ -64,23 +76,12 @@ export function OverallBudgetDetail({ db, onDone }: { db: Database; onDone: () =
         onDone();
     };
 
-    // Patched by field: `createMainBudget` overwrites every column it is passed.
-    const write = async (edit: BudgetEdit) => {
-        try {
-            unwrapAtomCommand(await patchMainBudget({ db, id: budget.id, patch: edit }));
-            return true;
-        } catch (error) {
-            console.error("Failed to change the overall budget", error);
-            notifyFailure({ body: t("budgets.save.failedBody"), title: t("budgets.save.failedTitle") });
-            return false;
+    const commitLimit = ({ limit, limitChanged, type }: LimitCommit) => {
+        if (!latch.hold()) {
+            return;
         }
-    };
-
-    const commitLimit = async ({ limit, limitChanged, type }: LimitCommit) => {
         limitSheetRef.current?.dismiss();
-        if (await write({ ...(limitChanged && { amount: limit }), type })) {
-            haptics("success");
-        }
+        commitLimitWrite({ db, id: budget.id, patch: { ...(limitChanged && { amount: limit }), type } });
     };
 
     const { closed, behind, perDay, paceRemaining } = budgetDetailPace(budget, new Date(nowMs), periodOffset);
@@ -107,7 +108,7 @@ export function OverallBudgetDetail({ db, onDone }: { db: Database; onDone: () =
                             name={budget.customName}
                             namePlaceholder={budget.name}
                             nowMs={nowMs}
-                            onChange={write}
+                            onChange={(edit) => write({ db, id: budget.id, patch: edit })}
                             onChangeLimit={() => limitSheetRef.current?.present()}
                             rollover={budget.rollover}
                             startDate={budget.anchor}

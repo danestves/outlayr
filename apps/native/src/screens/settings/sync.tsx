@@ -1,3 +1,4 @@
+import * as Cause from "effect/Cause";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
@@ -19,10 +20,10 @@ import { useAuthSession } from "@/lib/auth-session";
 import { cloudRuntime } from "@/lib/cloud-runtime";
 import { useLedgerAdoption } from "@/lib/ledger-adoption";
 import { notifyFailure } from "@/lib/notify";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { SILENT } from "@/state/atom-command";
 import { runAdoptionCommand } from "@/state/lifecycle-commands";
 import { setSyncEnabledCommand } from "@/state/sync-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 
 /** Resumes through adoption: `runAdoption` opens the gate before queueing, the order `enqueueAllForSync` needs. */
 const RESUME: AdoptionActions = {
@@ -42,8 +43,15 @@ export function Sync() {
     const { enabled, pending, syncedAt } = useSyncStatus(db);
     const { use24Hour } = useDisplaySettings().state;
     const [busy, setBusy] = useState(false);
-    const setSyncEnabled = useAtomCommand(setSyncEnabledCommand, SILENT);
-    const runAdoption = useAtomCommand(runAdoptionCommand, SILENT);
+    const handlers = {
+        onFailure: (cause: Cause.Cause<unknown>) => {
+            console.error("Sync switch failed", Cause.squash(cause));
+            notifyFailure({ body: t("settings.sync.failedBody"), title: t("settings.sync.failedTitle") });
+        },
+        onSettled: () => setBusy(false),
+    };
+    const setSyncEnabled = useAtomAction(setSyncEnabledCommand, handlers, SILENT);
+    const runAdoption = useAtomAction(runAdoptionCommand, handlers, SILENT);
 
     const runnable = syncRunnable(enabled, entitled);
     const capability = effectiveCapabilityStatus({
@@ -63,14 +71,11 @@ export function Sync() {
             return;
         }
         setBusy(true);
-        const work =
-            next && accountId
-                ? runAdoption({ accountId, actions: RESUME, db }).then(unwrapAtomCommand)
-                : setSyncEnabled({ db, enabled: false }).then(unwrapAtomCommand);
-        work.catch((cause: unknown) => {
-            console.error("Sync switch failed", cause);
-            notifyFailure({ body: t("settings.sync.failedBody"), title: t("settings.sync.failedTitle") });
-        }).finally(() => setBusy(false));
+        if (next && accountId) {
+            runAdoption({ accountId, actions: RESUME, db });
+        } else {
+            setSyncEnabled({ db, enabled: false });
+        }
     };
 
     return (

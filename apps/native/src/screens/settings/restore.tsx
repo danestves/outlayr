@@ -1,3 +1,4 @@
+import * as Cause from "effect/Cause";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, View } from "react-native";
@@ -11,41 +12,47 @@ import { archiveRowCount, parseArchive } from "@/domain/archive";
 import type { ArchiveDocument } from "@/domain/archive";
 import { useTranslation } from "@/i18n/context";
 import { TransferError } from "@/lib/data-transfer";
-import { armLogoBackfill } from "@/lib/logo-backfill";
 import { notifyFailure } from "@/lib/notify";
 import { photoFiles, writePhotosBase64 } from "@/lib/photo-storage";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import { cancelLogoBackfillCommand, restoreArchiveCommand, runLifecycleCommand } from "@/state/lifecycle-commands";
-import { pickArchiveFileCommand, runTransferCommand } from "@/state/transfer-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { SILENT } from "@/state/atom-command";
+import { restoreFromArchiveCommand } from "@/state/settings-flow-commands";
+import { pickArchiveFileCommand } from "@/state/transfer-commands";
+import { useAtomAction } from "@/state/use-atom-action";
 
 export function RestoreData() {
     const db = useDatabase();
     const router = useRouter();
     const t = useTranslation();
     const [restoring, setRestoring] = useState<number | null>(null);
-    const restoreArchive = useAtomCommand(restoreArchiveCommand, SILENT);
+    const restoreArchive = useAtomAction(
+        restoreFromArchiveCommand,
+        {
+            onFailure: () => {
+                notifyFailure({ body: t("settings.restore.failedBody"), title: t("settings.restore.failedTitle") });
+            },
+            onSettled: () => setRestoring(null),
+            onSuccess: () => router.back(),
+        },
+        SILENT
+    );
 
-    // Stop the logo pass first: it could paint a row the archive replaced.
     const applyArchive = (document: ArchiveDocument) => {
         setRestoring(archiveRowCount(document));
-        runLifecycleCommand(cancelLogoBackfillCommand, undefined)
-            .then(async () => {
-                writePhotosBase64(document.photos);
-                unwrapAtomCommand(await restoreArchive({ db, document, files: photoFiles }));
-            })
-            .finally(() => armLogoBackfill(db))
-            .then(() => router.back())
-            .catch(() => {
-                notifyFailure({ body: t("settings.restore.failedBody"), title: t("settings.restore.failedTitle") });
-            })
-            .finally(() => setRestoring(null));
+        restoreArchive({ db, document, files: photoFiles, writePhotos: () => writePhotosBase64(document.photos) });
     };
 
     // A restore replaces the ledger, so it is confirmed against a recognisable row count.
-    const restore = () => {
-        runTransferCommand(pickArchiveFileCommand, undefined)
-            .then((picked) => {
+    const restore = useAtomAction(
+        pickArchiveFileCommand,
+        {
+            onFailure: (cause) => {
+                const failure = Cause.squash(cause);
+                notifyFailure({
+                    body: failure instanceof TransferError ? t(failure.key) : t("settings.restore.failedBody"),
+                    title: t("settings.restore.failedTitle"),
+                });
+            },
+            onSuccess: (picked) => {
                 if (picked == null) {
                     return;
                 }
@@ -71,14 +78,10 @@ export function RestoreData() {
                         },
                     ]
                 );
-            })
-            .catch((cause: unknown) => {
-                notifyFailure({
-                    body: cause instanceof TransferError ? t(cause.key) : t("settings.restore.failedBody"),
-                    title: t("settings.restore.failedTitle"),
-                });
-            });
-    };
+            },
+        },
+        SILENT
+    );
 
     return (
         <SettingsScreen footer={t("settings.restore.footer")}>
@@ -93,7 +96,7 @@ export function RestoreData() {
                     busyLabel={t("settings.restore.restoring", { count: restoring ?? 0 })}
                     disabled={restoring !== null}
                     label={t("settings.restore.action")}
-                    onPress={restore}
+                    onPress={() => restore(undefined)}
                 />
             </View>
         </SettingsScreen>

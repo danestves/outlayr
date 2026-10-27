@@ -82,7 +82,7 @@ describe("apple-credential-captures-code", () => {
             signOut: jest.fn(async () => ({ error: null })),
         };
         const activation = { activate: jest.fn(), begin: jest.fn(), reject: jest.fn() };
-        const restoreLocal = jest.fn(async () => undefined);
+        const restoreLocal = jest.fn(() => Effect.void);
 
         const failure = await Effect.runPromise(
             completeAppleSignIn(

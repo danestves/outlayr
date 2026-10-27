@@ -1,8 +1,10 @@
+import { RegistryContext } from "@effect/atom-react/RegistryContext";
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { currencyDisplayFor } from "@outlayr/money/currency";
 import { useForm, useSelector } from "@tanstack/react-form";
+import * as Effect from "effect/Effect";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { use, useRef, useState } from "react";
 import { Pressable, View } from "react-native";
 import Animated, {
     Easing,
@@ -16,7 +18,7 @@ import { scheduleOnRN } from "react-native-worklets";
 
 import { CurrencyPickerSheet } from "@/components/currency-picker-sheet";
 import { FirstRun } from "@/components/first-run";
-import { holdSubmitting, pressSubmitWith } from "@/components/form/submit-guard";
+import { holdAfterSuccess, pressSubmitWith } from "@/components/form/submit-guard";
 import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
@@ -24,10 +26,8 @@ import { useGlobalCurrency } from "@/data/app-meta";
 import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
 import { posthog } from "@/lib/posthog";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import { finishOnboardingCommand } from "@/state/lifecycle-commands";
-import { setCurrencyCommand } from "@/state/settings-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { runAtomCommand, SILENT } from "@/state/atom-command";
+import { saveOnboardingCurrencyCommand } from "@/state/settings-flow-commands";
 
 type CommitKind = "continue" | "finish";
 
@@ -83,15 +83,15 @@ function CurrencyGlyph({ symbol }: { symbol: string }) {
 }
 
 /** Continue pushes over this screen, so going back finds it mounted with the CTA still on "Saving…". */
-function useHoldUntilRefocused(): () => Promise<void> {
+function useHoldUntilRefocused(): () => Effect.Effect<undefined> {
     const release = useRef<(() => void) | null>(null);
     useFocusEffect(() => {
         release.current?.();
         release.current = null;
     });
     return () =>
-        new Promise<void>((resolve) => {
-            release.current = resolve;
+        Effect.callback<undefined>((resume) => {
+            release.current = () => resume(Effect.undefined);
         });
 }
 
@@ -102,38 +102,36 @@ export function OnboardingCurrency() {
     const sheet = useRef<BottomSheetModal>(null);
     const t = useTranslation();
     const untilRefocused = useHoldUntilRefocused();
-    const setCurrency = useAtomCommand(setCurrencyCommand, SILENT);
-    const finishOnboarding = useAtomCommand(finishOnboardingCommand, SILENT);
+    const registry = use(RegistryContext);
 
     const [initialValues] = useState<{ picked: string | null }>(() => ({ picked: null }));
     const form = useForm({
         defaultValues: initialValues,
-        onSubmit: async ({ value, meta }) => {
-            const code = value.picked ?? stored;
-            try {
-                unwrapAtomCommand(await setCurrency({ code, db }));
-                if (meta === "continue") {
-                    // The root guard does not swap on this write: the AI consent question is next.
-                    router.push("/onboarding/smart-features");
-                } else {
-                    // `finishOnboarding` settles the root guard, which swaps the stack; pushing too would race it.
-                    unwrapAtomCommand(await finishOnboarding(db));
-                }
-                if (posthog) {
-                    posthog.capture("onboarding_currency_saved", { onboarding_path: meta });
-                }
-                if (meta === "continue") {
-                    return await untilRefocused();
-                }
-                return await holdSubmitting();
-            } catch (error) {
-                console.error("Failed to save the onboarding currency", error);
-                notifyFailure({
-                    body: t("onboarding.currency.saveFailed.body"),
-                    title: t("onboarding.currency.saveFailed.title"),
-                });
-            }
-        },
+        onSubmit: ({ value, meta }) =>
+            holdAfterSuccess(
+                runAtomCommand(
+                    registry,
+                    saveOnboardingCurrencyCommand,
+                    {
+                        code: value.picked ?? stored,
+                        db,
+                        hold: meta === "continue" ? untilRefocused() : Effect.void,
+                        kind: meta,
+                        // The root guard does not swap on this write: the AI consent question is next.
+                        navigate: () => router.push("/onboarding/smart-features"),
+                        onFailure: (error) => {
+                            console.error("Failed to save the onboarding currency", error);
+                            notifyFailure({
+                                body: t("onboarding.currency.saveFailed.body"),
+                                title: t("onboarding.currency.saveFailed.title"),
+                            });
+                        },
+                        track: () => posthog?.capture("onboarding_currency_saved", { onboarding_path: meta }),
+                    },
+                    SILENT
+                ),
+                meta === "finish"
+            ),
         onSubmitMeta: CONTINUE,
     });
     const { picked } = useSelector(form.store, (s) => s.values);

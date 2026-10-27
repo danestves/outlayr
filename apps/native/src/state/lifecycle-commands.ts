@@ -61,38 +61,41 @@ export const eraseDataCommand = createRuntimeCommand(appRuntime, {
     label: "lifecycle:erase-data",
 });
 
+export const exportArchive = Effect.fn("Lifecycle.exportArchive")(function* exportArchive(input: {
+    db: Database;
+    files: PhotoFiles;
+    photos: () => Record<string, string>;
+}) {
+    if (yield* isSyncEnabled(input.db)) {
+        yield* downloadEveryPhoto(input.db, input.files, yield* photoTransport()).pipe(
+            Effect.catchCause((cause) =>
+                Cause.hasInterruptsOnly(cause)
+                    ? Effect.failCause(cause)
+                    : Effect.logWarning("[outlayr] fetching missing photos before export failed", Cause.squash(cause))
+            )
+        );
+    }
+    return yield* buildArchive(input.db, new Date(), input.photos());
+});
+
 export const exportArchiveCommand = createRuntimeCommand(appRuntime, {
-    execute: Effect.fn("Lifecycle.exportArchive")(function* exportArchive(input: {
-        db: Database;
-        files: PhotoFiles;
-        photos: () => Record<string, string>;
-    }) {
-        if (yield* isSyncEnabled(input.db)) {
-            yield* downloadEveryPhoto(input.db, input.files, yield* photoTransport()).pipe(
-                Effect.catchCause((cause) =>
-                    Cause.hasInterruptsOnly(cause)
-                        ? Effect.failCause(cause)
-                        : Effect.logWarning(
-                              "[outlayr] fetching missing photos before export failed",
-                              Cause.squash(cause)
-                          )
-                )
-            );
-        }
-        return yield* buildArchive(input.db, new Date(), input.photos());
-    }),
+    execute: exportArchive,
     label: "lifecycle:export-archive",
 });
 
-export const restoreArchiveCommand = createRuntimeCommand(appRuntime, {
-    execute: Effect.fn("Lifecycle.restoreArchive")(function* restoreArchiveWithPhotos(input: {
+export const restoreArchiveWithPhotos = Effect.fn("Lifecycle.restoreArchive")(
+    function* restoreArchiveWithPhotos(input: {
         db: Database;
         document: Parameters<typeof restoreArchive>[1];
         files: PhotoFiles;
     }) {
         yield* restoreArchive(input.db, input.document);
         yield* reconcilePhotos(input.db, input.files, Date.now());
-    }),
+    }
+);
+
+export const restoreArchiveCommand = createRuntimeCommand(appRuntime, {
+    execute: restoreArchiveWithPhotos,
     label: "lifecycle:restore-archive",
 });
 
@@ -101,25 +104,30 @@ export const closeDatabaseCommand = createRuntimeCommand(appRuntime, {
     label: "lifecycle:close-database",
 });
 
+export const reconcileAdoption = Effect.fn("Adoption.reconcile")(function* reconcile(input: {
+    accountId: string;
+    db: Database;
+}) {
+    const { accountId, db } = input;
+    yield* prepareAccountAdoption(db, accountId);
+    const engine = adoptionEngine(db);
+    const remote = engine ? yield* engine.accountLedger() : "unknown";
+    const plan = adoptionPlan(yield* localLedgerState(db), remote);
+    if (plan === "ask") {
+        return "ask";
+    }
+    if (plan === "defer") {
+        return "defer";
+    }
+    const actions = adoptionActions(plan);
+    if (actions) {
+        yield* completeAdoption(db, engine, actions, accountId);
+    }
+    return "settled";
+});
+
 export const reconcileAdoptionCommand = createRuntimeCommand(appRuntime, {
-    execute: Effect.fn("Adoption.reconcile")(function* reconcile(input: { accountId: string; db: Database }) {
-        const { accountId, db } = input;
-        yield* prepareAccountAdoption(db, accountId);
-        const engine = adoptionEngine(db);
-        const remote = engine ? yield* engine.accountLedger() : "unknown";
-        const plan = adoptionPlan(yield* localLedgerState(db), remote);
-        if (plan === "ask") {
-            return "ask";
-        }
-        if (plan === "defer") {
-            return "defer";
-        }
-        const actions = adoptionActions(plan);
-        if (actions) {
-            yield* completeAdoption(db, engine, actions, accountId);
-        }
-        return "settled";
-    }),
+    execute: reconcileAdoption,
     label: "adoption:reconcile",
 });
 

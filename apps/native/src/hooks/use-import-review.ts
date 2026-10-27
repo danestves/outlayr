@@ -1,4 +1,5 @@
 import { DrizzleQueryError, and, eq, gte, isNull, lte } from "drizzle-orm";
+import * as Cause from "effect/Cause";
 import { useEffect } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
@@ -14,10 +15,9 @@ import { deduceDateFormat, detectDecimalSeparator } from "@/domain/transaction-c
 import { FALLBACK_IDENTITY_COLOR } from "@/domain/transaction-identity";
 import { importDraftStore, useImportDraft } from "@/lib/import-draft-store";
 import { useHaptics } from "@/lib/use-haptics";
-import { applyImportCommand } from "@/state/accounts-commands";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import { attachImportLogosCommand, runMediaCommand } from "@/state/media-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { SILENT } from "@/state/atom-command";
+import { importWithLogosCommand } from "@/state/ledger-commands";
+import { useAtomAction } from "@/state/use-atom-action";
 
 export type ReviewRow =
     | {
@@ -137,7 +137,6 @@ function onToggle(index: number) {
 export function useImportReview(): ImportReviewResult {
     const haptics = useHaptics();
     const db = useDatabase();
-    const applyImport = useAtomCommand(applyImportCommand, SILENT);
     const { flow } = useImportDraft();
     const { parsed, resolved, resolution } = flow;
 
@@ -201,38 +200,41 @@ export function useImportReview(): ImportReviewResult {
 
     const rows = buildReviewRows(plan, flow.duplicates);
 
-    const selectedCount = plan.entries.filter((_, index) => !flow.excluded.has(index)).length;
+    const selectedEntries = plan.entries.filter((_, index) => !flow.excluded.has(index));
+
+    const importRows = useAtomAction(
+        importWithLogosCommand,
+        {
+            onFailure: (cause) => {
+                const error = Cause.squash(cause);
+                const failure = error instanceof CsvTransferError ? error.cause : error;
+                importDraftStore.dispatch({
+                    detail: failure instanceof Error ? failureDetail(failure) : null,
+                    type: "commitFailed",
+                });
+            },
+            onSuccess: (count) => {
+                haptics("success");
+                // The draft is NOT cleared here: the done step still reads the
+                // committed counts. Dismissing the sheet after a success clears.
+                importDraftStore.dispatch({
+                    count,
+                    duplicatesSkipped: [...flow.duplicates].filter((index) => flow.excluded.has(index)).length,
+                    outTotals: importOutTotals(selectedEntries, currency),
+                    type: "commitSucceeded",
+                });
+                importDraftStore.setStep("done");
+            },
+        },
+        SILENT
+    );
 
     const onCommit = () => {
         if (importDraftStore.getSnapshot().flow.commit.phase === "writing") {
             return;
         }
         importDraftStore.dispatch({ type: "commitStarted" });
-        const entries = plan.entries.filter((_, index) => !flow.excluded.has(index));
-        const outTotals = importOutTotals(entries, currency);
-        const duplicatesSkipped = [...flow.duplicates].filter((index) => flow.excluded.has(index)).length;
-        void (async () => {
-            try {
-                const decorated = await runMediaCommand(attachImportLogosCommand, entries).catch(() => entries);
-                const count = unwrapAtomCommand(await applyImport({ db, plan: { ...plan, entries: decorated } }));
-                haptics("success");
-                // The draft is NOT cleared here: the done step still reads the
-                // committed counts. Dismissing the sheet after a success clears.
-                importDraftStore.dispatch({
-                    count,
-                    duplicatesSkipped,
-                    outTotals,
-                    type: "commitSucceeded",
-                });
-                importDraftStore.setStep("done");
-            } catch (cause: unknown) {
-                const failure = cause instanceof CsvTransferError ? cause.cause : cause;
-                importDraftStore.dispatch({
-                    detail: failure instanceof Error ? failureDetail(failure) : null,
-                    type: "commitFailed",
-                });
-            }
-        })();
+        importRows({ db, plan: { ...plan, entries: selectedEntries } });
     };
 
     return {
@@ -245,7 +247,7 @@ export function useImportReview(): ImportReviewResult {
         onToggle,
         plan,
         rows,
-        selectedCount,
+        selectedCount: selectedEntries.length,
     };
 }
 

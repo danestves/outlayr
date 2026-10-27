@@ -1,9 +1,8 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { describe, expect, it } from "@jest/globals";
 
 import { CATEGORY_PALETTE } from "@/data/categories-core";
 
 import {
-    adoptPickedPhoto,
     CATEGORY_TABS,
     initialIdentityTab,
     pickedPhotoUri,
@@ -12,16 +11,6 @@ import {
     withIcon,
 } from "./identity-picker-shared";
 import type { IdentitySelection } from "./identity-picker-shared";
-
-const mockPersist = jest.fn<(uri: string) => Promise<string>>();
-const mockGlow = jest.fn<(uri: string) => Promise<string[]>>();
-
-jest.mock<Partial<typeof import("@/lib/photo-storage")>>("@/lib/photo-storage", () => ({
-    persistPickedPhoto: (uri: string) => require("effect/Effect").promise(() => mockPersist(uri)),
-}));
-jest.mock<Partial<typeof import("@/theme/glow")>>("@/theme/glow", () => ({
-    glowFromImage: (uri: string) => require("effect/Effect").promise(() => mockGlow(uri)),
-}));
 
 const EMPTY: IdentitySelection = { color: null, emoji: null, icon: null, photoColor: null, photoUri: null };
 const PHOTO: IdentitySelection = {
@@ -64,33 +53,5 @@ describe("pickedPhotoUri", () => {
         expect(pickedPhotoUri({ assets: null, canceled: true })).toBeNull();
         expect(pickedPhotoUri({ code: "ERR", message: "denied" })).toBeNull();
         expect(pickedPhotoUri(null)).toBeNull();
-    });
-});
-
-describe("adoptPickedPhoto", () => {
-    beforeEach(() => {
-        mockPersist.mockReset();
-        mockGlow.mockReset();
-    });
-
-    it("stores the photo and takes its first hue as the glow", async () => {
-        mockPersist.mockResolvedValue("file:///stored.jpg");
-        mockGlow.mockResolvedValue(["#ff0000", "#00ff00"]);
-
-        await expect(
-            adoptPickedPhoto({ ...EMPTY, color: "#123456", icon: "wallet" }, "file:///cache.jpg")
-        ).resolves.toStrictEqual({ ...EMPTY, color: "#123456", photoColor: "#ff0000", photoUri: "file:///stored.jpg" });
-        expect(mockGlow).toHaveBeenCalledWith("file:///stored.jpg");
-    });
-
-    it("keeps the picked file when the copy fails, with no glow when unreadable", async () => {
-        jest.spyOn(console, "error").mockImplementation(() => {});
-        mockPersist.mockRejectedValue(new Error("disk full"));
-        mockGlow.mockResolvedValue([]);
-
-        await expect(adoptPickedPhoto(EMPTY, "file:///cache.jpg")).resolves.toStrictEqual({
-            ...EMPTY,
-            photoUri: "file:///cache.jpg",
-        });
     });
 });

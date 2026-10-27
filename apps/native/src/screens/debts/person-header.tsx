@@ -1,4 +1,3 @@
-import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Stack, useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
 import type { ReactNode } from "react";
@@ -17,7 +16,7 @@ import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
 import { updateAccountCommand } from "@/state/accounts-commands";
 import { SILENT } from "@/state/atom-command";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 
 import { payoffMenuActions } from "./payoff-menu-actions";
 import type { PayoffPlanControls } from "./use-payoff-plan";
@@ -74,7 +73,11 @@ export function PersonHero({ account, balance, plan, showCents }: PersonHeroProp
 export function PersonToolbar({ account, db, plan }: { account: Account; db: Database; plan: PayoffPlanControls }) {
     const t = useTranslation();
     const { requestDelete } = useDeferredDelete("account");
-    const updateAccount = useAtomCommand(updateAccountCommand, SILENT);
+    const updateAccount = useAtomAction(
+        updateAccountCommand,
+        { onFailure: () => notifyFailure({ title: t("accounts.error.saveFailed") }) },
+        SILENT
+    );
 
     const rename = () =>
         Alert.prompt(
@@ -83,13 +86,10 @@ export function PersonToolbar({ account, db, plan }: { account: Account; db: Dat
             [
                 { style: "cancel", text: t("common.cancel") },
                 {
-                    onPress: async (next?: string) => {
+                    onPress: (next?: string) => {
                         const name = next?.trim() ?? "";
                         if (name !== "" && name !== account.name) {
-                            const result = await updateAccount({ db, id: account.id, patch: { name } });
-                            if (AsyncResult.isFailure(result)) {
-                                notifyFailure({ title: t("accounts.error.saveFailed") });
-                            }
+                            updateAccount({ db, id: account.id, patch: { name } });
                         }
                     },
                     text: t("common.save"),

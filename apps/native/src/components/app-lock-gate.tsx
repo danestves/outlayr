@@ -14,9 +14,9 @@ import { useTranslation } from "@/i18n/context";
 import { lockEnforceableAtom } from "@/lib/app-lock-enforceable";
 import { subscribeAppState } from "@/lib/app-state";
 import { useRelock } from "@/lib/use-relock";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { SILENT } from "@/state/atom-command";
 import { requestUnlockCommand } from "@/state/cloud-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
 
 const LockOpenContext = createContext(true);
@@ -33,7 +33,6 @@ export function AppLockGate({ children }: { children: ReactNode }) {
     const [unenforceable, setUnenforceable] = useState(false);
     const [failure, setFailure] = useState<TranslationKey | null>(null);
     const [checking, setChecking] = useState(false);
-    const unlock = useAtomCommand(requestUnlockCommand, SILENT);
 
     // Seeded from the mount-time setting, so a launch with the lock on is not mistaken for turning it on.
     const [armed, setArmed] = useState(enabled);
@@ -53,29 +52,35 @@ export function AppLockGate({ children }: { children: ReactNode }) {
 
     useRelock(() => setUnlocked(false));
 
-    const attempt = async () => {
+    const unlock = useAtomAction(
+        requestUnlockCommand,
+        {
+            onSettled: () => setChecking(false),
+            onSuccess: (result) => {
+                if (result.success) {
+                    setFailure(null);
+                    setUnlocked(true);
+                    return;
+                }
+                if (lockIsUnenforceable(result.error)) {
+                    setUnenforceable(true);
+                    return;
+                }
+                setFailure(lockFailureMessage(result.error));
+            },
+        },
+        SILENT
+    );
+    const attempt = () => {
         setChecking(true);
-        const result = unwrapAtomCommand(await unlock(t("transaction.lock.prompt")));
-        setChecking(false);
-        if (result.success) {
-            setFailure(null);
-            setUnlocked(true);
-            return;
-        }
-        if (lockIsUnenforceable(result.error)) {
-            setUnenforceable(true);
-            return;
-        }
-        setFailure(lockFailureMessage(result.error));
+        unlock(t("transaction.lock.prompt"));
     };
 
     const gate = lockGate(enabled, unlocked, enforceable);
 
     // One automatic prompt per shut gate: re-prompting would reopen a sheet the user just dismissed.
     const prompted = useRef(false);
-    const promptUnlock = useEffectEvent(() => {
-        void attempt();
-    });
+    const promptUnlock = useEffectEvent(attempt);
     // oxlint-disable-next-line outlayr/react-effect-budget -- opens the system biometric prompt once each time the gate shuts
     useEffect(() => {
         if (gate === "open") {
@@ -93,13 +98,7 @@ export function AppLockGate({ children }: { children: ReactNode }) {
         <View className="flex-1">
             <LockOpenContext.Provider value={gate === "open"}>{children}</LockOpenContext.Provider>
             {gate === "shut" ? (
-                <AppLockScreen
-                    busy={checking}
-                    message={failure ? t(failure) : null}
-                    onUnlock={() => {
-                        void attempt();
-                    }}
-                />
+                <AppLockScreen busy={checking} message={failure ? t(failure) : null} onUnlock={attempt} />
             ) : null}
             {gate === "open" && enabled && enforceable === true ? <SwitcherShield /> : null}
         </View>

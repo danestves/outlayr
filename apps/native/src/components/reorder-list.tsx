@@ -1,5 +1,6 @@
 import DragDropVerticalIcon from "@hugeicons-pro/core-stroke-rounded/DragDropVerticalIcon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
+import * as Cause from "effect/Cause";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { View } from "react-native";
@@ -9,20 +10,25 @@ import Animated, { useAnimatedReaction, useAnimatedStyle, useSharedValue, withTi
 import type { SharedValue } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 
+import type { Database } from "@/db/client";
 import { moveItem, slotAt } from "@/domain/reorder";
 import { useTranslation } from "@/i18n/context";
 import { useHaptics } from "@/lib/use-haptics";
+import { SILENT } from "@/state/atom-command";
+import type { AtomCommand } from "@/state/atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
 const ROW_MIN_HEIGHT = 56;
 const SETTLE_MS = 180;
 
 interface ReorderListProps<T> {
+    db: Database;
     items: readonly T[];
     keyOf: (item: T) => string;
     labelOf: (item: T) => string;
-    /** Once per drop or move action; a rejection puts the rows back in the saved order. */
-    onReorder: (keys: string[]) => Promise<void>;
+    /** Run once per drop or move action; a failure puts the rows back in the saved order. */
+    reorder: AtomCommand<{ db: Database; orderedIds: string[] }, unknown, unknown>;
     /** Keep it to one line: every row takes the first row's height. */
     renderItem: (item: T) => ReactNode;
 }
@@ -37,7 +43,7 @@ interface DragState {
 
 // For Android, where `@expo/ui` has no Compose `onMove`. Rows are placed by the shared `order`, not React's, so a
 // drop reshuffles them on the UI thread and the write that follows re-renders them in the slots they hold.
-export function ReorderList<T>({ items, keyOf, labelOf, onReorder, renderItem }: ReorderListProps<T>) {
+export function ReorderList<T>({ db, items, keyOf, labelOf, reorder, renderItem }: ReorderListProps<T>) {
     const keys = items.map(keyOf);
     const [rowHeight, setRowHeight] = useState(ROW_MIN_HEIGHT);
     const drag: DragState = {
@@ -57,13 +63,20 @@ export function ReorderList<T>({ items, keyOf, labelOf, onReorder, renderItem }:
         }
     );
 
+    // The saved order never changed, so the reaction above won't put the rows back on its own.
+    const save = useAtomAction(
+        reorder,
+        {
+            onFailure: (cause) => {
+                order.set(keys);
+                console.error("Failed to save the new order", Cause.squash(cause));
+            },
+        },
+        SILENT
+    );
     const commit = (next: string[]) => {
         order.set(next);
-        // The saved order never changed, so the reaction above won't put the rows back on its own.
-        onReorder(next).catch((error) => {
-            order.set(keys);
-            console.error("Failed to save the new order", error);
-        });
+        save({ db, orderedIds: next });
     };
 
     const measure = (event: LayoutChangeEvent) => {

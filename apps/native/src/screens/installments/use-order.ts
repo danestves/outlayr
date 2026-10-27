@@ -1,4 +1,5 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
+import * as Cause from "effect/Cause";
 import { useRouter } from "expo-router";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { Alert } from "react-native";
@@ -10,10 +11,10 @@ import { useNow } from "@/data/use-now";
 import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { SILENT } from "@/state/atom-command";
 import { deleteInstallmentPlanCommand } from "@/state/planning-commands";
 import { rearmInstallmentReminders } from "@/state/surfaces-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 
 /** `leave` goes back once, however often it is asked. */
 export function useInstallmentEntry(planId: string) {
@@ -43,10 +44,24 @@ export function useInstallmentEntry(planId: string) {
 
 export function useOrderActions({ plan, standing }: PlanWithStanding, leave: () => void) {
     const db = useDatabase();
-    const deletePlan = useAtomCommand(deleteInstallmentPlanCommand, SILENT);
     const router = useRouter();
     const t = useTranslation();
     const haptics = useHaptics();
+    const deletePlan = useAtomAction(
+        deleteInstallmentPlanCommand,
+        {
+            onFailure: (cause) => {
+                console.error("Failed to delete the order", Cause.squash(cause));
+                notifyFailure({ body: t("installments.failedBody"), title: t("installments.failedTitle") });
+            },
+            onSuccess: () => {
+                rearmInstallmentReminders(db);
+                haptics("warning");
+                leave();
+            },
+        },
+        SILENT
+    );
     const cuotaSheetRef = useRef<BottomSheetModal>(null);
     const [editing, setEditing] = useState<InstallmentRow | null>(null);
 
@@ -62,17 +77,7 @@ export function useOrderActions({ plan, standing }: PlanWithStanding, leave: () 
         Alert.alert(t("installments.deletePending"), t("installments.deletePending.body"), [
             { style: "cancel", text: t("common.cancel") },
             {
-                onPress: async () => {
-                    try {
-                        unwrapAtomCommand(await deletePlan({ db, planId: plan.id }));
-                        rearmInstallmentReminders(db);
-                        haptics("warning");
-                        leave();
-                    } catch (error) {
-                        console.error("Failed to delete the order", error);
-                        notifyFailure({ body: t("installments.failedBody"), title: t("installments.failedTitle") });
-                    }
-                },
+                onPress: () => deletePlan({ db, planId: plan.id }),
                 style: "destructive",
                 text: t("common.delete"),
             },

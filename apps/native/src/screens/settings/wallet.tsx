@@ -1,3 +1,4 @@
+import * as Cause from "effect/Cause";
 import { Button } from "panelui-native/components/button";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
@@ -11,7 +12,6 @@ import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
-import { META_KEYS } from "@/data/app-meta-core";
 import type { LastWalletEntry } from "@/data/pending-writes-core";
 import { onOffLabel } from "@/data/settings-core";
 import { useWalletMeta } from "@/data/use-wallet-meta";
@@ -20,10 +20,11 @@ import { formatChargeDate, formatTime } from "@/domain/dates";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
 import { TRIGGERS_IN_SHORTCUTS, WALLET_SHORTCUT_URL } from "@/lib/wallet-shortcut";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import { openShortcutsAutomationsCommand, openWalletShortcutCommand, runLinkCommand } from "@/state/link-commands";
-import { setMetaCommand } from "@/state/settings-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { SILENT } from "@/state/atom-command";
+import { appAtomRegistry } from "@/state/atom-registry";
+import { openShortcutsAutomationsCommand } from "@/state/link-commands";
+import { getWalletShortcutCommand } from "@/state/settings-flow-commands";
+import { fireAtomCommand, useAtomAction } from "@/state/use-atom-action";
 
 import { CheckRow, FrameStrip, LastEntry, ProofBlock } from "./wallet-parts";
 import type { Step } from "./wallet-parts";
@@ -54,29 +55,29 @@ const IOS27_MANUAL_STEPS: readonly Step[] = [
 
 const HAS_SHARED_SHORTCUT = WALLET_SHORTCUT_URL != null && TRIGGERS_IN_SHORTCUTS;
 
-const openShortcutsAutomations = () => runLinkCommand(openShortcutsAutomationsCommand, undefined);
+const openShortcutsAutomations = () =>
+    fireAtomCommand(appAtomRegistry, openShortcutsAutomationsCommand, undefined, {}, SILENT);
 
 export function Wallet() {
     const db = useDatabase();
     const t = useTranslation();
-    const setMeta = useAtomCommand(setMetaCommand, SILENT);
+    const openShortcut = useAtomAction(
+        getWalletShortcutCommand,
+        {
+            onFailure: (cause) => {
+                console.error("Opening the Wallet shortcut failed", Cause.squash(cause));
+                notifyFailure({ title: t("settings.wallet.get") });
+            },
+        },
+        SILENT
+    );
+    const getShortcut = () => openShortcut(db);
     const { added, applePayOn: working, lastEntry, lastRunAt } = useWalletMeta(db);
     const [stepsShown, setStepsShown] = useState(false);
     // `added` is only set by the shared link, so an older inline setup stays inline.
     const linked = HAS_SHARED_SHORTCUT && added;
     const inline = TRIGGERS_IN_SHORTCUTS ? IOS27_MANUAL_STEPS : MANUAL_STEPS;
     const steps = linked ? IOS27_AUTOMATION_STEPS : inline;
-
-    // Records the link was taken, not that the shortcut exists: iOS reports nothing back, so the claim waits for a run.
-    const getShortcut = async () => {
-        try {
-            await runLinkCommand(openWalletShortcutCommand, undefined);
-            unwrapAtomCommand(await setMeta({ db, key: META_KEYS.walletShortcutAdded, value: "1" }));
-        } catch (cause) {
-            console.error("Opening the Wallet shortcut failed", cause);
-            notifyFailure({ title: t("settings.wallet.get") });
-        }
-    };
 
     if (working) {
         return (

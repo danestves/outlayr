@@ -1,5 +1,6 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { toAccountKind } from "@outlayr/money/account-kind";
+import * as Cause from "effect/Cause";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 
@@ -24,10 +25,10 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
 import { useHaptics } from "@/lib/use-haptics";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { SILENT } from "@/state/atom-command";
 import { recordInstallmentPaymentCommand } from "@/state/planning-commands";
 import { rearmInstallmentReminders } from "@/state/surfaces-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
 
 import { useInstallmentEntry } from "./use-order";
@@ -61,7 +62,6 @@ export function usePayEntry(planId: string, all: boolean): PayFormProps | null {
 
 export function usePayForm({ account, amount: owed, entry, forNext, sources }: PayFormProps) {
     const db = useDatabase();
-    const recordPayment = useAtomCommand(recordInstallmentPaymentCommand, SILENT);
     const router = useRouter();
     const t = useTranslation();
     const haptics = useHaptics();
@@ -108,23 +108,31 @@ export function usePayForm({ account, amount: owed, entry, forNext, sources }: P
         setPickingFrom(false);
     };
 
-    const confirm = async () => {
+    const recordPayment = useAtomAction(
+        recordInstallmentPaymentCommand,
+        {
+            onFailure: (cause) => {
+                console.error("Failed to record the installment payment", Cause.squash(cause));
+                haptics("error");
+                setFailure(t("installments.failedBody"));
+                setBusy(false);
+            },
+            onSuccess: () => {
+                rearmInstallmentReminders(db);
+                haptics("success");
+                router.back();
+            },
+        },
+        SILENT
+    );
+
+    const confirm = () => {
         if (busy || !canPay) {
             return;
         }
         setBusy(true);
         setFailure(null);
-        try {
-            unwrapAtomCommand(await recordPayment({ db, payment: { amount, date, planId: plan.id, source } }));
-            rearmInstallmentReminders(db);
-            haptics("success");
-            router.back();
-        } catch (error) {
-            console.error("Failed to record the installment payment", error);
-            haptics("error");
-            setFailure(t("installments.failedBody"));
-            setBusy(false);
-        }
+        recordPayment({ db, payment: { amount, date, planId: plan.id, source } });
     };
 
     return {

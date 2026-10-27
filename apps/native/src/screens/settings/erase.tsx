@@ -1,5 +1,4 @@
 import * as Cause from "effect/Cause";
-import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useRouter } from "expo-router";
 import { Alert, View } from "react-native";
 
@@ -17,7 +16,7 @@ import { clearStoredPhotos } from "@/lib/photo-storage";
 import { clearSpotlight } from "@/lib/spotlight";
 import { SILENT } from "@/state/atom-command";
 import { eraseDataCommand } from "@/state/lifecycle-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 
 const RESIDUE: EraseResidue = { clearSpotlight, clearStoredPhotos };
 
@@ -26,25 +25,26 @@ export function EraseData() {
     const router = useRouter();
     const t = useTranslation();
     const count = useTransactionCount(db);
-    const eraseData = useAtomCommand(eraseDataCommand, SILENT);
+    const eraseData = useAtomAction(
+        eraseDataCommand,
+        {
+            onFailure: (cause) => {
+                console.error("Erase failed", Cause.squash(cause));
+                notifyFailure({
+                    body: t("settings.erase.failedBody"),
+                    title: t("settings.erase.failedTitle"),
+                });
+            },
+            onSuccess: () => router.back(),
+        },
+        SILENT
+    );
 
     const confirm = (scope: EraseScope, title: TranslationKey, message: TranslationKey) => {
         Alert.alert(t(title), t(message), [
             { style: "cancel", text: t("common.cancel") },
             {
-                onPress: () => {
-                    eraseData({ db, residue: RESIDUE, scope }).then((result) => {
-                        if (AsyncResult.isSuccess(result)) {
-                            router.back();
-                            return;
-                        }
-                        console.error("Erase failed", Cause.squash(result.cause));
-                        notifyFailure({
-                            body: t("settings.erase.failedBody"),
-                            title: t("settings.erase.failedTitle"),
-                        });
-                    });
-                },
+                onPress: () => eraseData({ db, residue: RESIDUE, scope }),
                 style: "destructive",
                 text: t("settings.erase.action"),
             },

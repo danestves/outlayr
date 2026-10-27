@@ -12,6 +12,20 @@ export interface AtomCommandOptions {
     readonly reportFailure?: boolean;
 }
 
+function squashToError<E>(cause: Cause.Cause<E>): Error {
+    const error = Cause.squash(cause);
+    return error instanceof Error ? error : new Error("Command failed", { cause: error });
+}
+
+export const tapFailure =
+    (report: (error: Error) => void) =>
+    <A, E, R>(self: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
+        self.pipe(
+            Effect.tapCause((cause) =>
+                Cause.hasInterruptsOnly(cause) ? Effect.void : Effect.sync(() => report(squashToError(cause)))
+            )
+        );
+
 export const SILENT = { reportDefect: false, reportFailure: false } as const satisfies AtomCommandOptions;
 
 export interface AtomCommandReporter {

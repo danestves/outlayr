@@ -1,5 +1,5 @@
+import * as Cause from "effect/Cause";
 import { Button } from "panelui-native/components/button";
-import { Linking } from "react-native";
 
 import bankAddFrame from "@/assets/images/recipe/bank-add.webp";
 import bankOnFrame from "@/assets/images/recipe/bank-on.webp";
@@ -12,8 +12,10 @@ import { onOffLabel } from "@/data/settings-core";
 import { useWalletMeta } from "@/data/use-wallet-meta";
 import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
-import { BANK_SHORTCUT_URL } from "@/lib/wallet-shortcut";
-import { openShortcutsAutomationsCommand, runLinkCommand } from "@/state/link-commands";
+import { SILENT } from "@/state/atom-command";
+import { appAtomRegistry } from "@/state/atom-registry";
+import { openBankShortcutCommand, openShortcutsAutomationsCommand } from "@/state/link-commands";
+import { fireAtomCommand, useAtomAction } from "@/state/use-atom-action";
 
 import { CheckRow, FrameStrip, ProofBlock } from "./wallet-parts";
 import type { Step } from "./wallet-parts";
@@ -30,12 +32,17 @@ export function BankNotifications() {
     const db = useDatabase();
     const t = useTranslation();
     const { lastNotification } = useWalletMeta(db);
-    const getBankShortcut = () => {
-        Linking.openURL(BANK_SHORTCUT_URL).catch((cause: unknown) => {
-            console.error("Opening the bank shortcut failed", cause);
-            notifyFailure({ title: t("settings.wallet.bankGet") });
-        });
-    };
+    const openBankShortcut = useAtomAction(
+        openBankShortcutCommand,
+        {
+            onFailure: (cause) => {
+                console.error("Opening the bank shortcut failed", Cause.squash(cause));
+                notifyFailure({ title: t("settings.wallet.bankGet") });
+            },
+        },
+        SILENT
+    );
+    const getBankShortcut = () => openBankShortcut(undefined);
 
     if (!lastNotification) {
         return (
@@ -62,7 +69,9 @@ export function BankNotifications() {
             />
             <SettingsSection footer={t("settings.wallet.bankFooter")} title={t("settings.wallet.setupSection")}>
                 <LinkRow
-                    onPress={() => runLinkCommand(openShortcutsAutomationsCommand, undefined)}
+                    onPress={() =>
+                        fireAtomCommand(appAtomRegistry, openShortcutsAutomationsCommand, undefined, {}, SILENT)
+                    }
                     title={t("settings.wallet.open")}
                 />
                 <LinkRow onPress={getBankShortcut} title={t("settings.wallet.bankGet")} />

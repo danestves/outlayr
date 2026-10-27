@@ -1,5 +1,6 @@
+import * as Cause from "effect/Cause";
 import { useSegments } from "expo-router";
-import { checkForUpdateAsync, fetchUpdateAsync, isEnabled, reloadAsync, useUpdates } from "expo-updates";
+import { isEnabled, useUpdates } from "expo-updates";
 import { BottomSheet } from "panelui-native/components/bottom-sheet";
 import { Button } from "panelui-native/components/button";
 import { cn } from "panelui-native/utils/cn";
@@ -12,15 +13,22 @@ import { useAuthCovered } from "@/components/auth-cover";
 import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { useSheetInsets } from "@/components/use-sheet-insets";
-import { flushDeferredDeletes } from "@/data/use-deferred-delete";
 import { describeUpdate } from "@/domain/app-update";
 import { formatChargeDate } from "@/domain/dates";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { subscribeAppState } from "@/lib/app-state";
 import { APP_VERSION } from "@/lib/app-version";
+import { appAtomRegistry } from "@/state/atom-registry";
+import { AppUpdateError, applyUpdateCommand, checkForUpdateCommand } from "@/state/settings-flow-commands";
+import { fireAtomCommand, useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
 
 const CHECKS_UPDATES = isEnabled && !__DEV__;
+
+function updateFailure(cause: Cause.Cause<AppUpdateError>) {
+    const failure = Cause.squash(cause);
+    return failure instanceof AppUpdateError ? failure.cause : failure;
+}
 
 // Waits for the tabs with no cover up: UIKit drops a sheet asked for over a modal route, and one over the lock screen
 // blocks Unlock.
@@ -38,6 +46,12 @@ export function UpdateSheet() {
     const [state, setState] = useState<"idle" | "busy" | "failed">("idle");
     const busy = state === "busy";
 
+    const applyUpdate = useAtomAction(applyUpdateCommand, {
+        onFailure: (cause) => {
+            console.warn("[outlayr] update failed", updateFailure(cause));
+            setState("failed");
+        },
+    });
     const [shown, setShown] = useState(update);
     if (update && update.id !== shown?.id) {
         setShown(update);
@@ -57,8 +71,8 @@ export function UpdateSheet() {
             }
             setDismissedId(null);
             setState((current) => (current === "failed" ? "idle" : current));
-            checkForUpdateAsync().catch((error) => {
-                console.warn("[outlayr] update check failed", error);
+            fireAtomCommand(appAtomRegistry, checkForUpdateCommand, undefined, {
+                onFailure: (cause) => console.warn("[outlayr] update check failed", updateFailure(cause)),
             });
         });
     }, []);
@@ -72,19 +86,9 @@ export function UpdateSheet() {
         setState((current) => (current === "failed" ? "idle" : current));
     };
 
-    const apply = async () => {
-        const downloaded = downloadedUpdate?.updateId === shown.id;
+    const apply = () => {
         setState("busy");
-        try {
-            if (!downloaded) {
-                await fetchUpdateAsync();
-            }
-            await flushDeferredDeletes();
-            await reloadAsync();
-        } catch (error) {
-            console.warn("[outlayr] update failed", error);
-            setState("failed");
-        }
+        applyUpdate({ downloaded: downloadedUpdate?.updateId === shown.id });
     };
 
     const open = update !== null && update.id !== dismissedId && onTabs && lockOpen && !covered;

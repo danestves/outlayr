@@ -5,6 +5,7 @@ import type { EntryRateType } from "@outlayr/money/rates";
 import { ensureRecurringType, RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { useField, useForm, useSelector } from "@tanstack/react-form";
 import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useRouter } from "expo-router";
 import { PortalHost, PortalProvider } from "panelui-native/primitives/portal";
@@ -1539,14 +1540,14 @@ export function TransactionForm({
         const persistLogo =
             domain == null
                 ? null
-                : async () => {
+                : Effect.tryPromise(async () => {
                       const outcome = await fetchMerchantLogo({ domain, name: merchant });
                       if (outcome.kind !== "logo") {
                           throw new Error("No logo to carry");
                       }
                       const imageUri = await runMediaCommand(persistLogoBytesCommand, outcome.bytes);
                       return { imageColor: saved?.imageColor ?? null, imageUri };
-                  };
+                  });
         // SAFETY: untyped `require`, asserted to the module's own type; lazy as in `attachLogo`.
         const photoStorage = require("@/lib/photo-storage") as typeof import("@/lib/photo-storage");
         unwrapAtomCommand(

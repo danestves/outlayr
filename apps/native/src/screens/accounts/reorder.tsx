@@ -1,6 +1,7 @@
 import { Host } from "@expo/ui";
 import { HStack, List, RNHostView, Section, Spacer, Text as SwiftText } from "@expo/ui/swift-ui";
 import { deleteDisabled, environment, foregroundStyle, lineLimit } from "@expo/ui/swift-ui/modifiers";
+import * as Cause from "effect/Cause";
 import { View } from "react-native";
 
 import { CategoryIconTile } from "@/components/category-icon-tile";
@@ -13,28 +14,28 @@ import type { Account } from "@/data/accounts-core";
 import { applyMove } from "@/domain/reorder";
 import { useTranslation } from "@/i18n/context";
 import { reorderAccountsCommand } from "@/state/accounts-commands";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { SILENT } from "@/state/atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
 
 export function AccountReorder() {
     const db = useDatabase();
-    const reorderAccounts = useAtomCommand(reorderAccountsCommand, SILENT);
+    const reorderAccounts = useAtomAction(
+        reorderAccountsCommand,
+        { onFailure: (cause) => console.error("Failed to reorder the accounts", Cause.squash(cause)) },
+        SILENT
+    );
     const t = useTranslation();
     const colors = useColors();
     const rows = useBankAccounts(db);
 
-    const reorder = async (source: number[], destination: number) => {
+    const reorder = (source: number[], destination: number) => {
         const ordered = applyMove(
             rows.map((account) => account.id),
             source,
             destination
         );
-        try {
-            unwrapAtomCommand(await reorderAccounts({ db, orderedIds: ordered }));
-        } catch (error) {
-            console.error("Failed to reorder the accounts", error);
-        }
+        reorderAccounts({ db, orderedIds: ordered });
     };
 
     return (

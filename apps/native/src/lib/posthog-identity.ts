@@ -1,7 +1,16 @@
+import * as Effect from "effect/Effect";
 import { useEffect } from "react";
 
 import { useAuthSession } from "@/lib/auth-session";
 import { posthog } from "@/lib/posthog";
+import { createCommand, SILENT } from "@/state/atom-command";
+import { appAtomRegistry } from "@/state/atom-registry";
+import { fireAtomCommand } from "@/state/use-atom-action";
+
+const posthogReadyCommand = createCommand({
+    execute: (client: NonNullable<typeof posthog>) => Effect.tryPromise(() => client.ready()),
+    label: "posthog:ready",
+});
 
 export function usePostHogIdentity() {
     const { accountId, gate } = useAuthSession();
@@ -19,11 +28,19 @@ export function usePostHogIdentity() {
             return;
         }
         let live = true;
-        void client.ready().then(() => {
-            if (live && client.getDistinctId() !== client.getAnonymousId()) {
-                client.reset();
-            }
-        });
+        fireAtomCommand(
+            appAtomRegistry,
+            posthogReadyCommand,
+            client,
+            {
+                onSuccess: () => {
+                    if (live && client.getDistinctId() !== client.getAnonymousId()) {
+                        client.reset();
+                    }
+                },
+            },
+            SILENT
+        );
         return () => {
             live = false;
         };

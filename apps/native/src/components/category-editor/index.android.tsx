@@ -1,17 +1,17 @@
 import { useAtomMount } from "@effect/atom-react/Hooks";
+import { RegistryContext } from "@effect/atom-react/RegistryContext";
 import CheckmarkCircle02Icon from "@hugeicons-pro/core-solid-rounded/CheckmarkCircle02Icon";
 import Delete02Icon from "@hugeicons-pro/core-stroke-rounded/Delete02Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import { useForm, useSelector } from "@tanstack/react-form";
-import { and, eq, isNull } from "drizzle-orm";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { Keyboard, ScrollView, View } from "react-native";
 import type { TextInputInstance } from "react-native";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { holdSubmitting, pressSubmit } from "@/components/form/submit-guard";
+import { holdAfterSuccess, pressSubmit } from "@/components/form/submit-guard";
 import { IdentityHero } from "@/components/identity-hero";
 import { SheetHeader, SheetHeaderIconButton, SheetHeaderTextButton } from "@/components/sheet-header";
 import { Text } from "@/components/text";
@@ -29,7 +29,6 @@ import { CATEGORY_PALETTE, getCategoryById, isCategoryValidationError } from "@/
 import type { Category } from "@/data/categories-core";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import type { Database } from "@/db/client";
-import { categories } from "@/db/schema";
 import { firstAvailableColor } from "@/domain/category-color";
 import { CATEGORY_ERROR_KEYS } from "@/domain/category-error";
 import { useKeyboardHeight } from "@/hooks/use-keyboard-height";
@@ -38,9 +37,9 @@ import { useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
 import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import { createCategoryCommand, updateCategoryCommand } from "@/state/categories-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { runAtomCommand, SILENT } from "@/state/atom-command";
+import { countCategoryChildrenCommand, saveCategoryCommand } from "@/state/categories-commands";
+import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
@@ -124,8 +123,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
     const colors = useColors();
     const m3 = useMaterialColors();
     const haptics = useHaptics();
-    const createCategory = useAtomCommand(createCategoryCommand, SILENT);
-    const updateCategory = useAtomCommand(updateCategoryCommand, SILENT);
+    const registry = use(RegistryContext);
     const insets = useSafeAreaInsets();
     const keyboardHeight = useKeyboardHeight();
     const { requestDelete } = useDeferredDelete("category");
@@ -151,37 +149,44 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
     }));
     const form = useForm({
         defaultValues: initialValues,
-        onSubmit: async ({ value }) => {
+        onSubmit: ({ value }) => {
             setFailure(null);
-            const persist = async () => {
-                if (mode === "create") {
-                    return await addCategory(value);
-                }
-                if (loaded == null) {
-                    return;
-                }
-                unwrapAtomCommand(
-                    await updateCategory({
+            if (mode === "create") {
+                return addCategory(value);
+            }
+            if (loaded == null) {
+                return;
+            }
+            return holdAfterSuccess(
+                runAtomCommand(
+                    registry,
+                    saveCategoryCommand,
+                    {
                         db,
-                        id: loaded.id,
-                        patch: {
-                            color: loaded.income ? undefined : (draft.color ?? CATEGORY_PALETTE[0]),
-                            emoji: draft.emoji ?? null,
-                            icon: draft.icon ?? null,
-                            name: value.name,
+                        onFailure: reportSaveFailure,
+                        onSaved: () => {
+                            posthog?.capture("category_saved", {
+                                category_type: loaded.income ? "income" : "expense",
+                                is_subcategory: isSubcategory,
+                                mode: "edit",
+                            });
+                            haptics("success");
+                            router.back();
                         },
-                    })
-                );
-                posthog?.capture("category_saved", {
-                    category_type: loaded.income ? "income" : "expense",
-                    is_subcategory: isSubcategory,
-                    mode: "edit",
-                });
-                haptics("success");
-                router.back();
-                return await holdSubmitting();
-            };
-            return await persist().catch(reportSaveFailure);
+                        write: {
+                            id: loaded.id,
+                            mode: "edit",
+                            patch: {
+                                color: loaded.income ? undefined : (draft.color ?? CATEGORY_PALETTE[0]),
+                                emoji: draft.emoji ?? null,
+                                icon: draft.icon ?? null,
+                                name: value.name,
+                            },
+                        },
+                    },
+                    SILENT
+                )
+            );
         },
     });
     const { name, income: formIncome } = useSelector(form.store, (s) => s.values);
@@ -265,38 +270,50 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
         });
     };
 
-    const addCategory = async (value: { name: string }) => {
+    const addCategory = (value: { name: string }) => {
         const pickedColor = color ?? CATEGORY_PALETTE[0];
         const expenseColor = isSubcategory ? (parent?.color ?? pickedColor) : pickedColor;
-        unwrapAtomCommand(
-            await createCategory({
-                category: {
-                    color: income ? colors.income : expenseColor,
-                    emoji: draft.emoji ?? null,
-                    icon: draft.icon ?? undefined,
-                    income,
-                    name: value.name,
-                    parentId,
+        return holdAfterSuccess(
+            runAtomCommand(
+                registry,
+                saveCategoryCommand,
+                {
+                    db,
+                    onFailure: reportSaveFailure,
+                    onSaved: () => {
+                        posthog?.capture("category_saved", {
+                            category_type: income ? "income" : "expense",
+                            is_subcategory: isSubcategory,
+                            mode: "create",
+                        });
+                        haptics("success");
+                        if (isSubcategory) {
+                            router.back();
+                            return;
+                        }
+                        form.setFieldValue("name", "");
+                        // Cleared, not advanced: with `colorTouched` released, the auto color is the first free slot
+                        // after this insert lands, where a value chosen now would come from the pre-insert set.
+                        setColorTouched(false);
+                        setDraft(EMPTY_DRAFT);
+                        flashAdded();
+                    },
+                    write: {
+                        category: {
+                            color: income ? colors.income : expenseColor,
+                            emoji: draft.emoji ?? null,
+                            icon: draft.icon ?? undefined,
+                            income,
+                            name: value.name,
+                            parentId,
+                        },
+                        mode: "create",
+                    },
                 },
-                db,
-            })
+                SILENT
+            ),
+            isSubcategory
         );
-        posthog?.capture("category_saved", {
-            category_type: income ? "income" : "expense",
-            is_subcategory: isSubcategory,
-            mode: "create",
-        });
-        haptics("success");
-        if (isSubcategory) {
-            router.back();
-            return await holdSubmitting();
-        }
-        form.setFieldValue("name", "");
-        // Cleared, not advanced: with `colorTouched` released, the auto color is the first free slot after
-        // this insert lands, where a value chosen now would come from the pre-insert set.
-        setColorTouched(false);
-        setDraft(EMPTY_DRAFT);
-        flashAdded();
     };
 
     const reportSaveFailure = (cause: unknown) => {
@@ -319,18 +336,14 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
 
     // No confirmation: the write is held for the undo window by a toast mounted at the app root, which outlives this
     // sheet. The toast spells out the cascade, so the children are counted first.
-    const deleteCategory = async (category: Category) => {
-        const children = await db
-            .select({ id: categories.id })
-            .from(categories)
-            .where(and(eq(categories.parentId, category.id), isNull(categories.deletedAt)));
-        haptics("warning");
-        requestDelete(
-            category.id,
-            t(children.length > 0 ? "categories.undo.bodyWithChildren" : "categories.undo.body")
-        );
-        router.back();
-    };
+    const countChildren = useAtomAction(countCategoryChildrenCommand, {
+        onSuccess: ({ children, id: deleted }) => {
+            haptics("warning");
+            requestDelete(deleted, t(children > 0 ? "categories.undo.bodyWithChildren" : "categories.undo.body"));
+            router.back();
+        },
+    });
+    const deleteCategory = (category: Category) => countChildren({ db, id: category.id });
 
     return (
         <View className="bg-m3-surface-container-low flex-1">

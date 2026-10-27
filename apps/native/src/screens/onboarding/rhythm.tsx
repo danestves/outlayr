@@ -1,5 +1,4 @@
 import * as Cause from "effect/Cause";
-import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { View } from "react-native";
 
 import { FirstRun } from "@/components/first-run";
@@ -10,9 +9,9 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { formatTimeOfDay, REMINDER_EVENING, reminderTime } from "@/domain/reminder";
 import { useTranslation } from "@/i18n/context";
 import { SILENT } from "@/state/atom-command";
-import { finishOnboardingCommand, markReminderChosenCommand } from "@/state/lifecycle-commands";
-import { setNumberSettingCommand } from "@/state/settings-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { finishOnboardingCommand } from "@/state/lifecycle-commands";
+import { chooseFirstRunReminderCommand } from "@/state/settings-flow-commands";
+import { useAtomAction } from "@/state/use-atom-action";
 
 const EVENING = reminderTime(REMINDER_EVENING, { hour: 20, minute: 0 });
 
@@ -37,33 +36,24 @@ function MockNotification({ body, back }: { body: string; back?: boolean }) {
 export function OnboardingRhythm() {
     const db = useDatabase();
     const t = useTranslation();
-    const finishOnboarding = useAtomCommand(finishOnboardingCommand, SILENT);
-    const markReminderChosen = useAtomCommand(markReminderChosenCommand, SILENT);
-    const setNumberSetting = useAtomCommand(setNumberSettingCommand, SILENT);
+    const finishOnboarding = useAtomAction(
+        finishOnboardingCommand,
+        { onFailure: (cause) => console.error("Finishing onboarding failed", Cause.squash(cause)) },
+        SILENT
+    );
+    const chooseReminder = useAtomAction(
+        chooseFirstRunReminderCommand,
+        {
+            onFailure: (cause) => console.error("Saving the first-run reminder choice failed", Cause.squash(cause)),
+            onSettled: () => finishOnboarding(db),
+        },
+        SILENT
+    );
 
     // `finishOnboarding` settles the root guard, which swaps this stack. Nothing navigates.
-    const finish = () => {
-        finishOnboarding(db).then((result) => {
-            if (AsyncResult.isFailure(result)) {
-                console.error("Finishing onboarding failed", Cause.squash(result.cause));
-            }
-        });
-    };
+    const finish = () => finishOnboarding(db);
 
-    const remind = () => {
-        Promise.all([
-            setNumberSetting({ db, key: "notificationOption", value: REMINDER_EVENING }),
-            markReminderChosen(db),
-        ]).then((results) => {
-            for (const result of results) {
-                if (AsyncResult.isFailure(result)) {
-                    console.error("Saving the first-run reminder choice failed", Cause.squash(result.cause));
-                    break;
-                }
-            }
-            finish();
-        });
-    };
+    const remind = () => chooseReminder({ db, option: REMINDER_EVENING });
 
     return (
         <FirstRun

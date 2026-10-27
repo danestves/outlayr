@@ -2,7 +2,6 @@ import type { ImagePickerErrorResult, ImagePickerResult } from "expo-image-picke
 
 import { CATEGORY_PALETTE } from "@/data/categories-core";
 import type { TranslationKey } from "@/i18n/catalog";
-import { glowFromImageCommand, persistPickedPhotoCommand, runMediaCommand } from "@/state/media-commands";
 
 export interface IdentitySelection {
     color: string | null;
@@ -85,16 +84,4 @@ export function pickedPhotoUri(result: ImagePickerResult | ImagePickerErrorResul
         return null;
     }
     return result.assets[0]?.uri ?? null;
-}
-
-/**
- * A failed copy still shows the picture this session, and the launch reconcile adopts it while the cache
- * entry survives. `glowFromImage` resolves to `[]` rather than rejecting, so an unreadable image keeps the photo.
- */
-export async function adoptPickedPhoto(value: IdentitySelection, pickedUri: string): Promise<IdentitySelection> {
-    const uri = await runMediaCommand(persistPickedPhotoCommand, pickedUri).catch((cause: unknown) => {
-        console.error("Failed to store the picked photo", cause);
-        return pickedUri;
-    });
-    return withPhoto(value, uri, await runMediaCommand(glowFromImageCommand, uri));
 }

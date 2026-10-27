@@ -1,6 +1,7 @@
 import { openLanguageSettings } from "@/lib/language-settings";
+import { openUrl } from "@/lib/open-url";
 import { openStoreReview } from "@/lib/store-links";
-import { openShortcutsAutomations, openWalletShortcut } from "@/lib/wallet-shortcut";
+import { BANK_SHORTCUT_URL, openShortcutsAutomations, openWalletShortcut } from "@/lib/wallet-shortcut";
 
 import { createCommand, runAtomCommand, SILENT, unwrapAtomCommand } from "./atom-command";
 import type { AtomCommand } from "./atom-command";
@@ -13,6 +14,11 @@ export async function runLinkCommand<W, A, E>(command: AtomCommand<W, A, E>, inp
 export const openWalletShortcutCommand = createCommand({
     execute: (_input: undefined) => openWalletShortcut(),
     label: "links:open-wallet-shortcut",
+});
+
+export const openBankShortcutCommand = createCommand({
+    execute: (_input: undefined) => openUrl(BANK_SHORTCUT_URL),
+    label: "links:open-bank-shortcut",
 });
 
 export const openShortcutsAutomationsCommand = createCommand({

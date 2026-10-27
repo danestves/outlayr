@@ -6,7 +6,7 @@ import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as Atom from "effect/reactivity/Atom";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 
-import { createCommand, createRuntimeCommand, runAtomCommand } from "./atom-command";
+import { createCommand, createRuntimeCommand, runAtomCommand, tapFailure } from "./atom-command";
 
 const runtime = Atom.runtime(Layer.empty);
 
@@ -106,5 +106,14 @@ describe("atom command", () => {
 
         expect(AsyncResult.isFailure(failed) && Cause.squash(failed.cause)).toBe("bad x");
         registry.dispose();
+    });
+
+    it("reports a defect to a save's failure callback, but not an interrupt", async () => {
+        const report = jest.fn<(error: Error) => void>();
+
+        await Effect.runPromiseExit(Effect.die(new Error("repo threw")).pipe(tapFailure(report)));
+        await Effect.runPromiseExit(Effect.interrupt.pipe(tapFailure(report)));
+
+        expect(report.mock.calls.map(([error]) => error.message)).toStrictEqual(["repo threw"]);
     });
 });

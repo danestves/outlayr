@@ -1,4 +1,5 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
+import * as Cause from "effect/Cause";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { View } from "react-native";
@@ -19,20 +20,30 @@ import { useHaptics } from "@/lib/use-haptics";
 import { BudgetDetailToolbar } from "@/screens/budgets/components/budget-detail-toolbar";
 import { BudgetDetailView } from "@/screens/budgets/components/budget-detail-view";
 import { BudgetEditor } from "@/screens/budgets/components/budget-editor";
-import type { BudgetEdit } from "@/screens/budgets/components/budget-editor";
 import type { LimitCommit } from "@/screens/budgets/components/budget-limit-body";
 import { BudgetLimitSheet } from "@/screens/budgets/components/budget-limit-sheet";
 import { BudgetPeriodStepper } from "@/screens/budgets/components/budget-period-stepper";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { useCommitLatch } from "@/screens/budgets/components/use-commit-latch";
+import { SILENT } from "@/state/atom-command";
 import { patchBudgetCommand } from "@/state/planning-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 
 export function BudgetDetail({ db, id, onDone }: { db: Database; id: string; onDone: () => void }) {
     const router = useRouter();
     const t = useTranslation();
     const haptics = useHaptics();
     const currency = useGlobalCurrency(db);
-    const patchBudget = useAtomCommand(patchBudgetCommand, SILENT);
+    const latch = useCommitLatch();
+    const reportFailure = (cause: Cause.Cause<unknown>) => {
+        console.error("Failed to change the budget", Cause.squash(cause));
+        notifyFailure({ body: t("budgets.save.failedBody"), title: t("budgets.save.failedTitle") });
+    };
+    const write = useAtomAction(patchBudgetCommand, { onFailure: reportFailure }, SILENT);
+    const commitLimitWrite = useAtomAction(
+        patchBudgetCommand,
+        { onFailure: reportFailure, onSettled: latch.release, onSuccess: () => haptics("success") },
+        SILENT
+    );
     const nowMs = useNow();
     const [periodOffset, setPeriodOffset] = useState(0);
     const { budget, transactions, periodsBack, contributions } = useCategoryBudget(db, id, nowMs, periodOffset);
@@ -53,22 +64,12 @@ export function BudgetDetail({ db, id, onDone }: { db: Database; id: string; onD
         onDone();
     };
 
-    const write = async (edit: BudgetEdit) => {
-        try {
-            unwrapAtomCommand(await patchBudget({ db, id: budget.id, patch: edit }));
-            return true;
-        } catch (error) {
-            console.error("Failed to change the budget", error);
-            notifyFailure({ body: t("budgets.save.failedBody"), title: t("budgets.save.failedTitle") });
-            return false;
+    const commitLimit = ({ limit, limitChanged, type }: LimitCommit) => {
+        if (!latch.hold()) {
+            return;
         }
-    };
-
-    const commitLimit = async ({ limit, limitChanged, type }: LimitCommit) => {
         limitSheetRef.current?.dismiss();
-        if (await write({ ...(limitChanged && { amount: limit }), type })) {
-            haptics("success");
-        }
+        commitLimitWrite({ db, id: budget.id, patch: { ...(limitChanged && { amount: limit }), type } });
     };
 
     const { closed, behind, perDay, paceRemaining } = budgetDetailPace(budget, new Date(nowMs), periodOffset);
@@ -95,7 +96,7 @@ export function BudgetDetail({ db, id, onDone }: { db: Database; id: string; onD
                             name={budget.customName}
                             namePlaceholder={budget.name}
                             nowMs={nowMs}
-                            onChange={write}
+                            onChange={(edit) => write({ db, id: budget.id, patch: edit })}
                             onChangeLimit={() => limitSheetRef.current?.present()}
                             rollover={budget.rollover}
                             startDate={budget.anchor}

@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 import { useSentenceShake } from "@/components/sentence/use-sentence-shake";
 import { overBudgetMomentKey } from "@/lib/over-budget-moment";
 import { useHaptics } from "@/lib/use-haptics";
-import { claimOverBudgetMomentCommand, runSurfacesCommand } from "@/state/surfaces-commands";
+import { SILENT } from "@/state/atom-command";
+import { appAtomRegistry } from "@/state/atom-registry";
+import { claimOverBudgetMomentCommand } from "@/state/surfaces-commands";
+import { fireAtomCommand } from "@/state/use-atom-action";
 
 export function useOverBudgetMoment(budgetId: string, overBudget: boolean, windowStart: Date) {
     const haptics = useHaptics();
@@ -18,14 +21,20 @@ export function useOverBudgetMoment(budgetId: string, overBudget: boolean, windo
             return;
         }
         let alive = true;
-        runSurfacesCommand(claimOverBudgetMomentCommand, key)
-            .then((first) => {
-                if (first && alive) {
-                    setCrossed(true);
-                    haptics("warning");
-                }
-            })
-            .catch(() => undefined);
+        fireAtomCommand(
+            appAtomRegistry,
+            claimOverBudgetMomentCommand,
+            key,
+            {
+                onSuccess: (first) => {
+                    if (first && alive) {
+                        setCrossed(true);
+                        haptics("warning");
+                    }
+                },
+            },
+            SILENT
+        );
         return () => {
             alive = false;
         };

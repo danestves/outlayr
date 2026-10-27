@@ -4,17 +4,15 @@ import CancelCircleIcon from "@hugeicons-pro/core-solid-rounded/CancelCircleIcon
 import Image01Icon from "@hugeicons-pro/core-stroke-rounded/Image01Icon";
 import Search01Icon from "@hugeicons-pro/core-stroke-rounded/Search01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
+import * as Cause from "effect/Cause";
 import { Image } from "expo-image";
-import { launchImageLibraryAsync } from "expo-image-picker";
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { FlatList, Pressable, ScrollView, useWindowDimensions, View } from "react-native";
 
 import {
-    adoptPickedPhoto,
     IDENTITY_TAB_LABEL,
     initialIdentityTab,
-    pickedPhotoUri,
     TRANSACTION_TABS,
     withEmoji,
     withIcon,
@@ -37,7 +35,9 @@ import { CATEGORY_EMOJI_GROUPS, CATEGORY_ICON_GROUPS, iconKeysMatching } from "@
 import type { TranslateFn } from "@/i18n/context";
 import { useTranslation } from "@/i18n/context";
 import { useHaptics } from "@/lib/use-haptics";
-import { launchPickCommand, runHandoffCommand } from "@/state/handoff-commands";
+import { SILENT } from "@/state/atom-command";
+import { pickHandoffPhotoCommand } from "@/state/identity-commands";
+import { useAtomAction } from "@/state/use-atom-action";
 import { SANS_BY_WEIGHT } from "@/theme/body-fonts";
 import { withAlpha } from "@/theme/shade";
 import { useMaterialColors } from "@/theme/use-material-colors";
@@ -120,40 +120,33 @@ export function IdentityPickerHost({
         onChange(tab === "emoji" ? withEmoji(value, item) : withIcon(value, item));
     };
 
-    const pickFromLibrary = async () => {
-        const picked = pickedPhotoUri(
-            await runHandoffCommand(launchPickCommand, {
-                launch: () =>
-                    launchImageLibraryAsync({
-                        allowsEditing: true,
-                        aspect: [1, 1],
-                        mediaTypes: ["images"],
-                        quality: 0.9,
-                    }),
-                owner: "identity-picker",
-            })
-        );
-        if (picked != null) {
-            onChange(await adoptPickedPhoto(value, picked));
-        }
-    };
-
     // A rejected launch (revoked permission, host torn down) looks like a missed tap, so the prompt says so.
     const picking = useRef(false);
+    const pickFromLibrary = useAtomAction(
+        pickHandoffPhotoCommand,
+        {
+            onFailure: (cause) => {
+                console.error("Failed to pick a photo", Cause.squash(cause));
+                setPhotoFailed(true);
+            },
+            onSettled: () => {
+                picking.current = false;
+            },
+            onSuccess: (next) => {
+                if (next != null) {
+                    onChange(next);
+                }
+            },
+        },
+        SILENT
+    );
     const pickPhoto = () => {
         if (picking.current) {
             return;
         }
         picking.current = true;
         setPhotoFailed(false);
-        pickFromLibrary()
-            .catch((cause: unknown) => {
-                console.error("Failed to pick a photo", cause);
-                setPhotoFailed(true);
-            })
-            .finally(() => {
-                picking.current = false;
-            });
+        pickFromLibrary(value);
     };
 
     const rows = tab === "photo" ? [] : glyphRows(tab, query, t);

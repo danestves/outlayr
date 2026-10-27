@@ -3,9 +3,12 @@ import { useRouter } from "expo-router";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useAiConsent } from "@/data/settings";
 import { newId } from "@/domain/ids";
-import { photoFrom, pickFromLibrary } from "@/hooks/use-receipt-scan";
+import { photoFrom } from "@/hooks/use-receipt-scan";
 import type { ScanPhoto } from "@/hooks/use-receipt-scan";
 import { useAuthSession } from "@/lib/auth-session";
+import { SILENT } from "@/state/atom-command";
+import { pickInstallmentPhotoCommand } from "@/state/installment-flow-commands";
+import { useAtomAction } from "@/state/use-atom-action";
 
 let handedOff: { photo: ScanPhoto; token: string } | null = null;
 
@@ -23,18 +26,24 @@ export function useScreenshotImport(accountId: string): () => void {
     const { gate } = useAuthSession();
     const consent = useAiConsent(useDatabase(), "aiConsentPlanScan");
     const openScan = (photo?: string) => router.push({ params: { accountId, photo }, pathname: "/installments/scan" });
+    const pick = useAtomAction(
+        pickInstallmentPhotoCommand,
+        {
+            onFailure: () => openScan(),
+            onSuccess: (result) => {
+                const photo = photoFrom(result);
+                if (photo !== null) {
+                    openScan(handOff(photo));
+                }
+            },
+        },
+        SILENT
+    );
     return () => {
         if (gate !== "signed-in" || consent !== "allowed") {
             openScan();
             return;
         }
-        pickFromLibrary("installment-scan")
-            .then((result) => {
-                const photo = photoFrom(result);
-                if (photo !== null) {
-                    openScan(handOff(photo));
-                }
-            })
-            .catch(() => openScan());
+        pick(undefined);
     };
 }

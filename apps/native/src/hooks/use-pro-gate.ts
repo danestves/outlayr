@@ -1,5 +1,6 @@
-import * as AsyncResult from "effect/reactivity/AsyncResult";
+import { RegistryContext } from "@effect/atom-react/RegistryContext";
 import { useRouter } from "expo-router";
+import { use } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
 import { useBankAccounts, usePeople } from "@/data/accounts";
@@ -14,7 +15,7 @@ import {
 import { useProLocked } from "@/hooks/use-pro-locked";
 import { SILENT } from "@/state/atom-command";
 import { livePayoffPlanCountCommand } from "@/state/planning-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { fireAtomCommand } from "@/state/use-atom-action";
 
 export function useProCapped(count: number, limit: number): boolean {
     return useProLocked() && count >= limit;
@@ -52,22 +53,29 @@ export function usePayoffPlanGate(): (accountId: string | null, open: () => void
     const db = useDatabase();
     const router = useRouter();
     const locked = useProLocked();
-    const liveCount = useAtomCommand(livePayoffPlanCountCommand, SILENT);
+    const registry = use(RegistryContext);
     return (accountId, open) => {
         if (!locked) {
             open();
             return;
         }
-        const check = async () => {
-            const counted = await liveCount({ db, exceptAccountId: accountId });
-            // A count that failed is not a full cap.
-            if (AsyncResult.isSuccess(counted) && counted.value >= FREE_PAYOFF_PLANS) {
-                router.push("/paywall");
-                return;
-            }
-            open();
-        };
-        check();
+        // A count that failed is not a full cap.
+        fireAtomCommand(
+            registry,
+            livePayoffPlanCountCommand,
+            { db, exceptAccountId: accountId },
+            {
+                onFailure: open,
+                onSuccess: (count) => {
+                    if (count >= FREE_PAYOFF_PLANS) {
+                        router.push("/paywall");
+                        return;
+                    }
+                    open();
+                },
+            },
+            SILENT
+        );
     };
 }
 

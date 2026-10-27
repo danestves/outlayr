@@ -1,10 +1,8 @@
-import type * as Effect from "effect/Effect";
+import * as Effect from "effect/Effect";
 
 import { attachmentsRepo } from "@/data/attachments-core";
 import type { AttachmentDraft } from "@/data/attachments-core";
 import { rememberFeeCategory } from "@/data/card-fees-core";
-import { commitDeferredDelete } from "@/data/deferred-delete-registry";
-import type { DeferredDeleteKind } from "@/data/deferred-delete-registry";
 import { queueEnrichment } from "@/data/enrichment-queue-core";
 import { recallMerchant } from "@/data/merchant-book-core";
 import { rememberedCategoryFor } from "@/data/merchant-history-core";
@@ -15,9 +13,12 @@ import { pendingReminderPlan } from "@/data/subscription-reminders-core";
 import { tagsRepo } from "@/data/tags-core";
 import { transactionsRepo } from "@/data/transactions-core";
 import type { TransactionInput } from "@/data/transactions-core";
+import { applyImport } from "@/data/transfer-core";
+import type { ImportPlan } from "@/data/transfer-core";
 import type { Database } from "@/db/client";
 import type { TimeOfDay } from "@/domain/reminder";
 import { sendEnrichmentQueue } from "@/lib/enrichment-queue";
+import { attachImportLogos } from "@/lib/import-logo-attach";
 import { appRuntime } from "@/lib/runtime";
 
 import { createRuntimeCommand, runAtomCommand, SILENT, unwrapAtomCommand } from "./atom-command";
@@ -30,12 +31,6 @@ const ledgerCommand = <W, A, E>(label: string, execute: (input: W) => Effect.Eff
 export async function runLedgerCommand<W, A>(command: AtomCommand<W, A, unknown>, input: W): Promise<A> {
     return unwrapAtomCommand(await runAtomCommand(appAtomRegistry, command, input, SILENT));
 }
-
-export const commitDeferredDeleteCommand = ledgerCommand(
-    "commit-deferred-delete",
-    (input: { db: Database; id: string; kind: DeferredDeleteKind }) =>
-        commitDeferredDelete(input.kind, input.db, input.id)
-);
 
 export const createTransactionCommand = ledgerCommand(
     "create-transaction",
@@ -92,4 +87,11 @@ export const sendEnrichmentQueueCommand = ledgerCommand("send-enrichment-queue",
 export const pendingReminderPlanCommand = ledgerCommand(
     "pending-reminder-plan",
     (input: { db: Database; now: Date; time: TimeOfDay }) => pendingReminderPlan(input.db, input.now, input.time)
+);
+
+export const importWithLogosCommand = ledgerCommand("import-with-logos", (input: { db: Database; plan: ImportPlan }) =>
+    attachImportLogos(input.plan.entries).pipe(
+        Effect.catchCause(() => Effect.succeed(input.plan.entries)),
+        Effect.flatMap((entries) => applyImport(input.db, { ...input.plan, entries }))
+    )
 );

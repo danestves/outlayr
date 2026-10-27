@@ -6,7 +6,7 @@ import { ordinalDay } from "@/data/settings-core";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { setBoolSettingCommand, setNumberSettingCommand } from "@/state/settings-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 
 const WEEKDAY_OPTIONS: readonly { label: TranslationKey; value: number }[] = [
     { label: "settings.time.sunday", value: 1 },
@@ -22,8 +22,8 @@ const MONTH_DAYS = Array.from({ length: 28 }, (_, index) => index + 1);
 
 export function TimeFrames() {
     const db = useDatabase();
-    const setBoolSetting = useAtomCommand(setBoolSettingCommand);
-    const setNumberSetting = useAtomCommand(setNumberSettingCommand);
+    const setBoolSetting = useAtomAction(setBoolSettingCommand);
+    const setNumberSetting = useAtomAction(setNumberSettingCommand);
     const t = useTranslation();
     const { language } = useLanguage();
     const { state: settings } = useAppSettings();

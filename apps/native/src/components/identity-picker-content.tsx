@@ -29,15 +29,14 @@ import {
     textCase,
     textInputAutocapitalization,
 } from "@expo/ui/swift-ui/modifiers";
+import * as Cause from "effect/Cause";
 import { Image } from "expo-image";
-import { launchImageLibraryAsync } from "expo-image-picker";
 import { SymbolView } from "expo-symbols";
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { PlatformColor, Pressable, useWindowDimensions } from "react-native";
 
 import {
-    adoptPickedPhoto,
     IDENTITY_TAB_LABEL,
     initialIdentityTab,
     TRANSACTION_TABS,
@@ -59,6 +58,9 @@ import { CATEGORY_EMOJI_GROUPS, CATEGORY_ICON_GROUPS, iconKeysMatching } from "@
 import { useTranslation } from "@/i18n/context";
 import { outline } from "@/lib/swift-ui-geometry";
 import { useHaptics } from "@/lib/use-haptics";
+import { SILENT } from "@/state/atom-command";
+import { pickLibraryPhotoCommand } from "@/state/identity-commands";
+import { useAtomAction } from "@/state/use-atom-action";
 import { withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";
 
@@ -142,36 +144,35 @@ function IdentityPickerContent({
         onChange(withIcon(value, icon));
     };
 
-    const pickFromLibrary = async () => {
-        const result = await launchImageLibraryAsync({
-            allowsEditing: true,
-            aspect: [1, 1],
-            mediaTypes: ["images"],
-            quality: 0.9,
-        });
-        if (result.canceled || result.assets.length === 0) {
-            return;
-        }
-        onChange(await adoptPickedPhoto(value, result.assets[0].uri));
-    };
+    const picking = useRef(false);
+    const pickFromLibrary = useAtomAction(
+        pickLibraryPhotoCommand,
+        {
+            onFailure: (cause) => {
+                console.error("Failed to pick a photo", Cause.squash(cause));
+                setPhotoFailed(true);
+            },
+            onSettled: () => {
+                picking.current = false;
+            },
+            onSuccess: (next) => {
+                if (next != null) {
+                    onChange(next);
+                }
+            },
+        },
+        SILENT
+    );
 
     // A rejected launch (revoked permission, host torn down) looks like a missed tap, so it is said out loud,
     // inline under the well: the sheet covers the toast viewport, and an alert would be a second modal.
-    const picking = useRef(false);
     const pickPhoto = () => {
         if (picking.current) {
             return;
         }
         picking.current = true;
         setPhotoFailed(false);
-        pickFromLibrary()
-            .catch((cause: unknown) => {
-                console.error("Failed to pick a photo", cause);
-                setPhotoFailed(true);
-            })
-            .finally(() => {
-                picking.current = false;
-            });
+        pickFromLibrary(value);
     };
 
     let panel: ReactNode;
