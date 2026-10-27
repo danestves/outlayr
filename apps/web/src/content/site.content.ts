@@ -13,6 +13,7 @@ const site = {
                 goodbudget: "Goodbudget",
                 monarch: "Monarch",
                 monefy: "Monefy",
+                "money-lover": "Money Lover",
                 pocketguard: "PocketGuard",
                 "rocket-money": "Rocket Money",
                 spendee: "Spendee",
