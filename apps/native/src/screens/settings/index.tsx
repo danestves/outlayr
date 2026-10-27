@@ -34,13 +34,14 @@ import { alternateIconsSupported, useAppIcon } from "@/lib/app-icon";
 import { APP_BUILD, APP_VERSION } from "@/lib/app-version";
 import { useAuthSession } from "@/lib/auth-session";
 import { importDraftStore } from "@/lib/import-draft-store";
-import { hasSystemLanguageSettings, openLanguageSettings } from "@/lib/language-settings";
+import { hasSystemLanguageSettings } from "@/lib/language-settings";
 import { legalUrl } from "@/lib/legal-url";
 import { notifyFailure } from "@/lib/notify";
 import { supportMailto } from "@/lib/support-mailto";
 import type { SupportDiagnostics } from "@/lib/support-mailto";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
 import { requestUnlockCommand, runCloudCommand } from "@/state/cloud-commands";
+import { openLanguageSettingsCommand, runLinkCommand } from "@/state/link-commands";
 import { saveAiConsentCommand, setBoolSettingCommand, setNumberSettingCommand } from "@/state/settings-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { THEME_OPTIONS } from "@/theme/theme-preference";
@@ -226,7 +227,7 @@ export function Settings() {
                         icon="LanguageSkill"
                         onPress={() => {
                             expectHandoff();
-                            openLanguageSettings();
+                            runLinkCommand(openLanguageSettingsCommand, undefined);
                         }}
                         title={t("settings.row.language")}
                         value={languageLabel(language)}

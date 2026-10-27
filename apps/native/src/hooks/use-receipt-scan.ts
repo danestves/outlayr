@@ -1,6 +1,7 @@
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
+import type { PermissionResponse } from "expo";
 import {
     CameraType,
     launchCameraAsync,
@@ -12,15 +13,20 @@ import type { ImagePickerResult } from "expo-image-picker";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { localIsoDate } from "@/domain/voice-entry";
-import { duringHandoff } from "@/lib/app-handoff";
 import { receiptScanTransport } from "@/lib/convex";
 import type { ReceiptDraft, ReceiptScanFn, ScanRequest } from "@/lib/convex";
-import { launchPick, pendingPick } from "@/lib/pending-pick";
 import type { PickOwner } from "@/lib/pending-pick";
-import { prepareReceiptImage } from "@/lib/receipt-image";
+import type { PreparedReceipt } from "@/lib/receipt-image";
 import { useLatest } from "@/lib/use-latest";
 import { SILENT } from "@/state/atom-command";
 import { RECEIPT_SCAN_TIMEOUT, timedCaptureCommand } from "@/state/capture-commands";
+import {
+    handoffPermissionCommand,
+    launchPickCommand,
+    pendingPickCommand,
+    runHandoffCommand,
+} from "@/state/handoff-commands";
+import { prepareReceiptImageCommand, runMediaCommand } from "@/state/media-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 
 export type ScanFailure =
@@ -114,14 +120,16 @@ export function photoFrom(result: ImagePickerResult): ScanPhoto | null {
 }
 
 export function pickFromLibrary(owner: PickOwner): Promise<ImagePickerResult> {
-    return launchPick(owner, () =>
-        launchImageLibraryAsync({
-            allowsEditing: false,
-            mediaTypes: ["images"],
-            preferredAssetRepresentationMode: UIImagePickerPreferredAssetRepresentationMode.Compatible,
-            quality: 0.9,
-        })
-    );
+    return runHandoffCommand(launchPickCommand, {
+        launch: () =>
+            launchImageLibraryAsync({
+                allowsEditing: false,
+                mediaTypes: ["images"],
+                preferredAssetRepresentationMode: UIImagePickerPreferredAssetRepresentationMode.Compatible,
+                quality: 0.9,
+            }),
+        owner,
+    });
 }
 
 export function useReceiptScan<Context>({ context, request, transport }: UseReceiptScanArgs<Context>) {
@@ -161,9 +169,9 @@ export function useImageScan<Context, Draft>({
 
     const read = async (photo: ScanPhoto, take: number) => {
         setPhase({ kind: "scanning", photo });
-        let prepared: Awaited<ReturnType<typeof prepareReceiptImage>>;
+        let prepared: PreparedReceipt | null;
         try {
-            prepared = await prepareReceiptImage(photo.uri);
+            prepared = await runMediaCommand(prepareReceiptImageCommand, photo.uri);
         } catch {
             prepared = null;
         }
@@ -221,7 +229,7 @@ export function useImageScan<Context, Draft>({
             void read(firstPhoto, supersedeTake());
         }
         const take = takeRef.current;
-        pendingPick(owner)
+        runHandoffCommand(pendingPickCommand, owner)
             .then((result) => {
                 if (result !== null) {
                     adoptPending(result, take);
@@ -234,9 +242,9 @@ export function useImageScan<Context, Draft>({
         const take = supersedeTake();
         setPhase({ kind: "picking", source: "camera" });
         void (async () => {
-            let permission: Awaited<ReturnType<typeof requestCameraPermissionsAsync>>;
+            let permission: PermissionResponse;
             try {
-                permission = await duringHandoff(requestCameraPermissionsAsync);
+                permission = await runHandoffCommand(handoffPermissionCommand, requestCameraPermissionsAsync);
             } catch {
                 if (take === takeRef.current) {
                     setPhase({ kind: "failed", photo: null, reason: "noCamera" });
@@ -251,13 +259,15 @@ export function useImageScan<Context, Draft>({
                 return;
             }
             try {
-                const result = await launchPick(owner, () =>
-                    launchCameraAsync({
-                        cameraType: CameraType.back,
-                        mediaTypes: ["images"],
-                        quality: 0.9,
-                    })
-                );
+                const result = await runHandoffCommand(launchPickCommand, {
+                    launch: () =>
+                        launchCameraAsync({
+                            cameraType: CameraType.back,
+                            mediaTypes: ["images"],
+                            quality: 0.9,
+                        }),
+                    owner,
+                });
                 adopt(result, take);
             } catch {
                 // On iOS the launch only rejects on a device with no camera (the simulator, or a broken lens).

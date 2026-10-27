@@ -1,9 +1,8 @@
+import * as Effect from "effect/Effect";
 import { openSettings } from "expo-linking";
 
 export function hasSystemLanguageSettings(): boolean {
     return true;
 }
 
-export function openLanguageSettings(): void {
-    openSettings().catch(() => undefined);
-}
+export const openLanguageSettings = () => Effect.ignore(Effect.tryPromise(() => openSettings()));

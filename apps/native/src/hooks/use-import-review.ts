@@ -13,10 +13,10 @@ import { importOutTotals } from "@/domain/import-totals";
 import { deduceDateFormat, detectDecimalSeparator } from "@/domain/transaction-csv";
 import { FALLBACK_IDENTITY_COLOR } from "@/domain/transaction-identity";
 import { importDraftStore, useImportDraft } from "@/lib/import-draft-store";
-import { attachImportLogos } from "@/lib/import-logo-attach";
 import { useHaptics } from "@/lib/use-haptics";
 import { applyImportCommand } from "@/state/accounts-commands";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { attachImportLogosCommand, runMediaCommand } from "@/state/media-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 
 export type ReviewRow =
@@ -213,7 +213,7 @@ export function useImportReview(): ImportReviewResult {
         const duplicatesSkipped = [...flow.duplicates].filter((index) => flow.excluded.has(index)).length;
         void (async () => {
             try {
-                const decorated = await attachImportLogos(entries).catch(() => entries);
+                const decorated = await runMediaCommand(attachImportLogosCommand, entries).catch(() => entries);
                 const count = unwrapAtomCommand(await applyImport({ db, plan: { ...plan, entries: decorated } }));
                 haptics("success");
                 // The draft is NOT cleared here: the done step still reads the

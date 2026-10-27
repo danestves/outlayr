@@ -12,7 +12,8 @@ import { onOffLabel } from "@/data/settings-core";
 import { useWalletMeta } from "@/data/use-wallet-meta";
 import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
-import { BANK_SHORTCUT_URL, openShortcutsAutomations } from "@/lib/wallet-shortcut";
+import { BANK_SHORTCUT_URL } from "@/lib/wallet-shortcut";
+import { openShortcutsAutomationsCommand, runLinkCommand } from "@/state/link-commands";
 
 import { CheckRow, FrameStrip, ProofBlock } from "./wallet-parts";
 import type { Step } from "./wallet-parts";
@@ -60,7 +61,10 @@ export function BankNotifications() {
                 title={lastNotification.amountText ?? t("settings.wallet.notificationUnread")}
             />
             <SettingsSection footer={t("settings.wallet.bankFooter")} title={t("settings.wallet.setupSection")}>
-                <LinkRow onPress={openShortcutsAutomations} title={t("settings.wallet.open")} />
+                <LinkRow
+                    onPress={() => runLinkCommand(openShortcutsAutomationsCommand, undefined)}
+                    title={t("settings.wallet.open")}
+                />
                 <LinkRow onPress={getBankShortcut} title={t("settings.wallet.bankGet")} />
             </SettingsSection>
         </SettingsScreen>

@@ -15,6 +15,6 @@ export const managementUrlAtom = Atom.family((configured: boolean) =>
                 get.refreshSelf();
             })
         );
-        return Effect.tryPromise(() => managementUrl()).pipe(Effect.orElseSucceed((): string | null => null));
+        return managementUrl().pipe(Effect.orElseSucceed((): string | null => null));
     }).pipe(Atom.withLabel("revenuecat:management-url"))
 );

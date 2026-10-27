@@ -1,3 +1,5 @@
+import * as Effect from "effect/Effect";
+
 import type { ImportEntry } from "@/data/transfer-core";
 import { reviewEntryIdentity } from "@/domain/import-review-identity";
 import { logoCacheKey, readCachedLogo } from "@/lib/logo-cache";
@@ -8,7 +10,9 @@ interface Brand {
 }
 
 /** Persisted per transaction, so deleting one row can never orphan another's image. */
-export async function attachImportLogos(entries: readonly ImportEntry[]): Promise<ImportEntry[]> {
+export const attachImportLogos = Effect.fn("ImportLogoAttach.attach")(function* attachImportLogos(
+    entries: readonly ImportEntry[]
+) {
     // SAFETY: untyped `require`, asserted to that module's own type.
     const photoStorage = require("@/lib/photo-storage") as typeof import("@/lib/photo-storage");
     // SAFETY: as on the line above.
@@ -16,7 +20,8 @@ export async function attachImportLogos(entries: readonly ImportEntry[]): Promis
 
     const brands = new Map<string, Brand | null>();
     const result: ImportEntry[] = [];
-    /* oxlint-disable no-await-in-loop -- the `brands` map memoises one read per domain, and the miss must land in it before the next entry sharing that domain is reached */
+    // Sequential: the `brands` map memoises one read per domain, and the miss must land in it before the next entry
+    // sharing that domain is reached.
     for (const entry of entries) {
         const identity = reviewEntryIdentity(entry.note);
         if (identity.domain == null) {
@@ -25,7 +30,7 @@ export async function attachImportLogos(entries: readonly ImportEntry[]): Promis
         }
         let brand = brands.get(identity.domain);
         if (brand === undefined) {
-            const cached = await readCachedLogo(logoCacheKey(identity.domain, identity.domain));
+            const cached = yield* readCachedLogo(logoCacheKey(identity.domain, identity.domain));
             brand = cached.kind === "logo" ? { bytes: cached.bytes, color: null } : null;
             brands.set(identity.domain, brand);
         }
@@ -33,17 +38,15 @@ export async function attachImportLogos(entries: readonly ImportEntry[]): Promis
             result.push(entry);
             continue;
         }
-        try {
-            const imageUri = await photoStorage.persistLogoBytes(brand.bytes);
+        const attached = yield* Effect.gen(function* attach() {
+            const imageUri = yield* photoStorage.persistLogoBytes(brand.bytes);
             if (brand.color == null) {
-                const hues = await glowFromImage(imageUri);
+                const hues = yield* glowFromImage(imageUri);
                 brand.color = hues[0] ?? null;
             }
-            result.push({ ...entry, imageColor: brand.color, imageUri });
-        } catch {
-            result.push(entry);
-        }
+            return { ...entry, imageColor: brand.color, imageUri };
+        }).pipe(Effect.orElseSucceed(() => entry));
+        result.push(attached);
     }
-    /* oxlint-enable no-await-in-loop */
     return result;
-}
+});

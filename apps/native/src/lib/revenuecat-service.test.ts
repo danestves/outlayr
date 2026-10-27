@@ -13,6 +13,7 @@ import { entitlementAtom, revenueCatAtom, revenueCatSessionAtom } from "@/contex
 import { WatchAppState } from "@/lib/app-events";
 import { appRuntime } from "@/lib/runtime";
 
+import { PurchasesError } from "./revenuecat";
 import * as RevenueCat from "./revenuecat-service";
 
 function watchable<A>() {
@@ -38,15 +39,15 @@ const appState = watchable<AppStateStatus>();
 
 const sdk = {
     configureRevenueCat: () => true,
-    eligibleForTrial: jest.fn<(productIds: readonly string[]) => Promise<Set<string>>>(),
-    getPackages: jest.fn<() => Promise<PurchasesPackage[]>>(),
-    identifyUser: jest.fn<(accountId: string) => Promise<boolean>>(),
-    logOutUser: jest.fn<() => Promise<boolean>>(),
+    eligibleForTrial: jest.fn<(productIds: readonly string[]) => Effect.Effect<Set<string>, PurchasesError>>(),
+    getPackages: jest.fn<() => Effect.Effect<PurchasesPackage[], PurchasesError>>(),
+    identifyUser: jest.fn<(accountId: string) => Effect.Effect<boolean, PurchasesError>>(),
+    logOutUser: jest.fn<() => Effect.Effect<boolean, PurchasesError>>(),
     mirrorEntitlement: jest.fn<() => Effect.Effect<boolean>>(),
-    purchaseAndCheckPro: jest.fn<(pack: PurchasesPackage) => Promise<boolean>>(),
-    refreshProEntitlement: jest.fn<() => Promise<boolean>>(),
-    restoreAndCheckPro: jest.fn<() => Promise<boolean>>(),
-    setCustomerProfile: jest.fn<(profile: { email: string; name: string }) => Promise<void>>(),
+    purchaseAndCheckPro: jest.fn<(pack: PurchasesPackage) => Effect.Effect<boolean, PurchasesError>>(),
+    refreshProEntitlement: jest.fn<() => Effect.Effect<boolean, PurchasesError>>(),
+    restoreAndCheckPro: jest.fn<() => Effect.Effect<boolean, PurchasesError>>(),
+    setCustomerProfile: jest.fn<(profile: { email: string; name: string }) => Effect.Effect<void, PurchasesError>>(),
     watchEntitlement: customerInfo.watch,
 };
 
@@ -122,15 +123,15 @@ describe("revenueCat", () => {
         customerInfo.listeners.clear();
         appState.listeners.clear();
         leaveSession = undefined;
-        sdk.eligibleForTrial.mockResolvedValue(new Set());
-        sdk.getPackages.mockResolvedValue([]);
-        sdk.identifyUser.mockResolvedValue(false);
-        sdk.logOutUser.mockResolvedValue(false);
+        sdk.eligibleForTrial.mockReturnValue(Effect.succeed(new Set()));
+        sdk.getPackages.mockReturnValue(Effect.succeed([]));
+        sdk.identifyUser.mockReturnValue(Effect.succeed(false));
+        sdk.logOutUser.mockReturnValue(Effect.succeed(false));
         sdk.mirrorEntitlement.mockReturnValue(Effect.succeed(true));
-        sdk.purchaseAndCheckPro.mockResolvedValue(false);
-        sdk.refreshProEntitlement.mockResolvedValue(false);
-        sdk.restoreAndCheckPro.mockResolvedValue(false);
-        sdk.setCustomerProfile.mockResolvedValue(undefined);
+        sdk.purchaseAndCheckPro.mockReturnValue(Effect.succeed(false));
+        sdk.refreshProEntitlement.mockReturnValue(Effect.succeed(false));
+        sdk.restoreAndCheckPro.mockReturnValue(Effect.succeed(false));
+        sdk.setCustomerProfile.mockReturnValue(Effect.succeed(undefined));
     });
 
     afterEach(() => {
@@ -169,8 +170,10 @@ describe("revenueCat", () => {
     });
 
     it("ignores customer info while the sign-in has failed, and retries the sign-in on foreground", async () => {
-        sdk.identifyUser.mockRejectedValueOnce(new Error("network")).mockResolvedValueOnce(true);
-        sdk.refreshProEntitlement.mockResolvedValueOnce(true);
+        sdk.identifyUser
+            .mockReturnValueOnce(Effect.fail(new PurchasesError({ cause: new Error("network") })))
+            .mockReturnValueOnce(Effect.succeed(true));
+        sdk.refreshProEntitlement.mockReturnValueOnce(Effect.succeed(true));
         await start("user-2");
 
         customerInfo.emit(true);
@@ -186,16 +189,16 @@ describe("revenueCat", () => {
     });
 
     it("drops the previous customer's Pro at the switch and discards every late answer about it", async () => {
-        sdk.identifyUser.mockResolvedValueOnce(true);
+        sdk.identifyUser.mockReturnValueOnce(Effect.succeed(true));
         await start("user-3");
         expect(entitlement().isPro).toBe(true);
         const refresh = held<boolean>();
-        sdk.refreshProEntitlement.mockReturnValueOnce(refresh.promise);
+        sdk.refreshProEntitlement.mockReturnValueOnce(Effect.promise(() => refresh.promise));
         const read = call((revenueCat) => revenueCat.refresh("user-3"));
         await flush();
 
         const signInOther = held<boolean>();
-        sdk.identifyUser.mockReturnValueOnce(signInOther.promise);
+        sdk.identifyUser.mockReturnValueOnce(Effect.promise(() => signInOther.promise));
         signIn("user-4");
         await flush();
         expect(entitlement()).toMatchObject({ isPending: true, isPro: false, isResolved: false });
@@ -214,8 +217,8 @@ describe("revenueCat", () => {
 
     it("signs in only after a pending sign-out has finished, and keeps the newer result", async () => {
         const signOut = held<boolean>();
-        sdk.logOutUser.mockReturnValueOnce(signOut.promise);
-        sdk.identifyUser.mockResolvedValueOnce(true);
+        sdk.logOutUser.mockReturnValueOnce(Effect.promise(() => signOut.promise));
+        sdk.identifyUser.mockReturnValueOnce(Effect.succeed(true));
         await start(null);
 
         signIn("user-5");
@@ -231,8 +234,8 @@ describe("revenueCat", () => {
     it("signs an account back in when it returns while its sign-out is still pending", async () => {
         await start("user-6");
         const signOut = held<boolean>();
-        sdk.logOutUser.mockReturnValueOnce(signOut.promise);
-        sdk.identifyUser.mockResolvedValueOnce(true);
+        sdk.logOutUser.mockReturnValueOnce(Effect.promise(() => signOut.promise));
+        sdk.identifyUser.mockReturnValueOnce(Effect.succeed(true));
 
         signIn(null);
         signIn("user-6");
@@ -247,7 +250,7 @@ describe("revenueCat", () => {
     it("holds a sign-out behind a purchase in flight, and rejects the purchase it outdated", async () => {
         await start("user-7");
         const purchaseHeld = held<boolean>();
-        sdk.purchaseAndCheckPro.mockReturnValueOnce(purchaseHeld.promise);
+        sdk.purchaseAndCheckPro.mockReturnValueOnce(Effect.promise(() => purchaseHeld.promise));
         const purchase = call((revenueCat) => revenueCat.purchase("user-7", PACK));
         await flush();
         expect(sdk.purchaseAndCheckPro).toHaveBeenCalledTimes(1);
@@ -264,7 +267,7 @@ describe("revenueCat", () => {
 
     it("never starts a purchase queued for an account that signed out before it ran", async () => {
         const signInHeld = held<boolean>();
-        sdk.identifyUser.mockReturnValueOnce(signInHeld.promise);
+        sdk.identifyUser.mockReturnValueOnce(Effect.promise(() => signInHeld.promise));
         await start("user-8");
         const purchase = call((revenueCat) => revenueCat.purchase("user-8", PACK));
 
@@ -279,7 +282,7 @@ describe("revenueCat", () => {
     it("rejects a failed purchase with the store's error and keeps serving later calls", async () => {
         await start("user-9");
         const storeError = new Error("payment declined");
-        sdk.purchaseAndCheckPro.mockRejectedValueOnce(storeError);
+        sdk.purchaseAndCheckPro.mockReturnValueOnce(Effect.fail(new PurchasesError({ cause: storeError })));
 
         const purchase = call((revenueCat) => revenueCat.purchase("user-9", PACK));
         await flush();
@@ -293,8 +296,10 @@ describe("revenueCat", () => {
 
     it("counts a cancelled checkout as Pro when the store already grants it", async () => {
         await start("user-10");
-        sdk.purchaseAndCheckPro.mockRejectedValueOnce({ userCancelled: true });
-        sdk.refreshProEntitlement.mockResolvedValueOnce(true);
+        sdk.purchaseAndCheckPro.mockReturnValueOnce(
+            Effect.fail(new PurchasesError({ cause: { userCancelled: true } }))
+        );
+        sdk.refreshProEntitlement.mockReturnValueOnce(Effect.succeed(true));
 
         const purchase = call((revenueCat) => revenueCat.purchase("user-10", PACK));
         await flush();
@@ -305,7 +310,7 @@ describe("revenueCat", () => {
 
     it("sends the profile only once RevenueCat has logged in as that account", async () => {
         const signInHeld = held<boolean>();
-        sdk.identifyUser.mockReturnValueOnce(signInHeld.promise);
+        sdk.identifyUser.mockReturnValueOnce(Effect.promise(() => signInHeld.promise));
         await start("user-11");
         expect(sdk.setCustomerProfile).not.toHaveBeenCalled();
 
@@ -319,7 +324,7 @@ describe("revenueCat", () => {
     it("is pending from the first read until the mirror answers for a Pro customer", async () => {
         const mirror = held<boolean>();
         sdk.mirrorEntitlement.mockReturnValueOnce(Effect.promise(() => mirror.promise));
-        sdk.identifyUser.mockResolvedValueOnce(true);
+        sdk.identifyUser.mockReturnValueOnce(Effect.succeed(true));
 
         const started = start("user-12");
         expect(entitlement().isPending).toBe(true);
@@ -333,7 +338,7 @@ describe("revenueCat", () => {
 
     it("stops pending when the mirror refuses, rather than waiting on an answer that came", async () => {
         sdk.mirrorEntitlement.mockReturnValueOnce(Effect.succeed(false));
-        sdk.identifyUser.mockResolvedValueOnce(true);
+        sdk.identifyUser.mockReturnValueOnce(Effect.succeed(true));
 
         await start("user-13");
 
@@ -342,7 +347,7 @@ describe("revenueCat", () => {
 
     it("stops pending for a Free account that replaces one whose mirror never landed", async () => {
         sdk.mirrorEntitlement.mockReturnValueOnce(Effect.promise(() => held<boolean>().promise));
-        sdk.identifyUser.mockResolvedValueOnce(true);
+        sdk.identifyUser.mockReturnValueOnce(Effect.succeed(true));
         await start("user-14");
         expect(entitlement().isPending).toBe(true);
 

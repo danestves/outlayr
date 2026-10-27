@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import * as Effect from "effect/Effect";
 import type { CustomerInfo } from "react-native-purchases";
 
 jest.mock("react-native-purchases", () => ({
@@ -38,12 +39,12 @@ describe("logOutUser", () => {
         const loggedOut = { entitlements: { active: {} } } as unknown as CustomerInfo;
         purchases.isAnonymous.mockResolvedValue(true);
         purchases.getCustomerInfo.mockResolvedValue(anonymousPro);
-        await expect(logOutUser()).resolves.toBe(true);
+        await expect(Effect.runPromise(logOutUser())).resolves.toBe(true);
         expect(purchases.logOut).not.toHaveBeenCalled();
 
         purchases.isAnonymous.mockResolvedValue(false);
         purchases.logOut.mockResolvedValue(loggedOut);
-        await expect(logOutUser()).resolves.toBe(false);
+        await expect(Effect.runPromise(logOutUser())).resolves.toBe(false);
         expect(purchases.logOut).toHaveBeenCalledTimes(1);
     });
 });

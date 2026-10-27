@@ -1,9 +1,23 @@
 import { FontWeight, Skia } from "@shopify/react-native-skia";
 import type { SkTypeface } from "@shopify/react-native-skia";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import type { CardWeight } from "@/domain/day-card";
 
 export type CardTypefaces = Readonly<Record<CardWeight, SkTypeface>>;
+
+export class DayCardFontError extends Schema.TaggedError<DayCardFontError>()("DayCardFontError", {
+    cause: Schema.optional(Schema.Defect()),
+    reason: Schema.Literals(["noFace", "notLoaded"]),
+    weight: Schema.optional(Schema.Literals(["medium", "mono", "regular", "semibold"])),
+}) {
+    override get message(): string {
+        return this.reason === "noFace"
+            ? `No system face draws the day card's ${this.weight} text`
+            : "A day card font file did not load";
+    }
+}
 
 const WEIGHTS = {
     medium: FontWeight.Medium,
@@ -35,14 +49,18 @@ function typefaceFor(weight: CardWeight): SkTypeface {
         }
     }
     // `Skia.Font` throws without a typeface: better a failed share than a blank card.
-    throw new Error(`No system face draws the day card's ${weight} text`);
+    throw new DayCardFontError({ reason: "noFace", weight });
 }
 
-export async function loadCardTypefaces(): Promise<CardTypefaces> {
-    return {
-        medium: typefaceFor("medium"),
-        mono: typefaceFor("mono"),
-        regular: typefaceFor("regular"),
-        semibold: typefaceFor("semibold"),
-    };
-}
+export const loadCardTypefaces = Effect.fn("DayCardFonts.load")(function* loadCardTypefaces() {
+    return yield* Effect.try({
+        catch: (cause) =>
+            cause instanceof DayCardFontError ? cause : new DayCardFontError({ cause, reason: "notLoaded" }),
+        try: (): CardTypefaces => ({
+            medium: typefaceFor("medium"),
+            mono: typefaceFor("mono"),
+            regular: typefaceFor("regular"),
+            semibold: typefaceFor("semibold"),
+        }),
+    });
+});

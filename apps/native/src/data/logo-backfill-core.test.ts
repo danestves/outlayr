@@ -55,10 +55,11 @@ function makeDeps(overrides: Partial<LogoBackfillDeps> = {}): LogoBackfillDeps &
     const enrichCalls: string[] = [];
     const fetched: string[] = [];
     return {
-        enrich: async ({ name }) => {
-            enrichCalls.push(name);
-            return { groundedLookup: true, result: REMOTE };
-        },
+        enrich: ({ name }) =>
+            Effect.tryPromise(async () => {
+                enrichCalls.push(name);
+                return { groundedLookup: true, result: REMOTE };
+            }),
         enrichCalls,
         fetchImage: ({ domain }) =>
             Effect.sync(() => {
@@ -67,7 +68,7 @@ function makeDeps(overrides: Partial<LogoBackfillDeps> = {}): LogoBackfillDeps &
             }),
         fetched,
         now: NOW.getTime(),
-        persist: async () => ({ imageColor: "#ff0000", imageUri: "file:///photos/logo.jpg" }),
+        persist: () => Effect.tryPromise(async () => ({ imageColor: "#ff0000", imageUri: "file:///photos/logo.jpg" })),
         ...overrides,
     };
 }
@@ -110,10 +111,12 @@ describe("attachMissingLogos", () => {
         await seedRow(db, "a", "Lescot", { date: NOW });
         await seedRow(db, "b", "Monoprix", { date: new Date(NOW.getTime() - 1000) });
         let calls = 0;
-        const enrich = jest.fn<NonNullable<LogoBackfillDeps["enrich"]>>(async () => {
-            calls += 1;
-            return calls === 1 ? null : { groundedLookup: true, result: REMOTE };
-        });
+        const enrich = jest.fn<NonNullable<LogoBackfillDeps["enrich"]>>(() =>
+            Effect.tryPromise(async () => {
+                calls += 1;
+                return calls === 1 ? null : { groundedLookup: true, result: REMOTE };
+            })
+        );
 
         await expect(Effect.runPromise(attachMissingLogos(db, makeDeps({ enrich })))).resolves.toBe(0);
 
@@ -155,10 +158,12 @@ describe("attachMissingLogos", () => {
 
     it("keeps a retry deadline across launches", async () => {
         await seedRow(db, "a", "Iolanda");
-        const enrich = jest.fn<NonNullable<LogoBackfillDeps["enrich"]>>(async () => ({
-            groundedLookup: true,
-            result: NOTHING,
-        }));
+        const enrich = jest.fn<NonNullable<LogoBackfillDeps["enrich"]>>(() =>
+            Effect.tryPromise(async () => ({
+                groundedLookup: true,
+                result: NOTHING,
+            }))
+        );
 
         await Effect.runPromise(attachMissingLogos(db, makeDeps({ enrich })));
         // A fresh process holds nothing in memory; only the row's database survives.
@@ -173,10 +178,11 @@ describe("attachMissingLogos", () => {
         await seedRow(db, "b", "INTERMARCHÉ", { date: new Date(NOW.getTime() - 3_600_000) });
         let persisted = 0;
         const deps = makeDeps({
-            persist: async () => {
-                persisted += 1;
-                return { imageColor: "#ff0000", imageUri: `file:///photos/logo-${persisted}.jpg` };
-            },
+            persist: () =>
+                Effect.tryPromise(async () => {
+                    persisted += 1;
+                    return { imageColor: "#ff0000", imageUri: `file:///photos/logo-${persisted}.jpg` };
+                }),
         });
 
         await expect(Effect.runPromise(attachMissingLogos(db, deps))).resolves.toBe(2);
@@ -195,13 +201,14 @@ describe("attachMissingLogos", () => {
         await seedRow(db, "b", "INTERMARCHÉ", { date: new Date(NOW.getTime() - 3_600_000) });
         let persisted = 0;
         const deps = makeDeps({
-            persist: async () => {
-                persisted += 1;
-                if (persisted === 1) {
-                    throw new Error("disk full");
-                }
-                return { imageColor: null, imageUri: "file:///photos/second.jpg" };
-            },
+            persist: () =>
+                Effect.tryPromise(async () => {
+                    persisted += 1;
+                    if (persisted === 1) {
+                        throw new Error("disk full");
+                    }
+                    return { imageColor: null, imageUri: "file:///photos/second.jpg" };
+                }),
         });
 
         await expect(Effect.runPromise(attachMissingLogos(db, deps))).resolves.toBe(1);
@@ -214,7 +221,8 @@ describe("attachMissingLogos", () => {
         await seedRow(db, "a", "Sushi Way Les Ha");
         setCachedEnrichment("sushi way les ha", { ...NOTHING, domain: null }, "EUR");
         const deps = makeDeps({
-            enrich: async () => ({ groundedLookup: true, result: { ...REMOTE, domain: "sushiway.fr" } }),
+            enrich: () =>
+                Effect.tryPromise(async () => ({ groundedLookup: true, result: { ...REMOTE, domain: "sushiway.fr" } })),
         });
 
         await expect(Effect.runPromise(attachMissingLogos(db, deps))).resolves.toBe(1);
@@ -264,10 +272,11 @@ describe("attachMissingLogos", () => {
         await seedRow(db, "still", "Intermarche");
         await Effect.runPromise(rememberLogoDismissal(db, "before"));
         const deps = makeDeps({
-            persist: async () => {
-                await Effect.runPromise(rememberLogoDismissal(db, "during"));
-                return { imageColor: null, imageUri: "file:///photos/logo.jpg" };
-            },
+            persist: () =>
+                Effect.tryPromise(async () => {
+                    await Effect.runPromise(rememberLogoDismissal(db, "during"));
+                    return { imageColor: null, imageUri: "file:///photos/logo.jpg" };
+                }),
         });
 
         await expect(Effect.runPromise(attachMissingLogos(db, deps))).resolves.toBe(1);
@@ -281,13 +290,14 @@ describe("attachMissingLogos", () => {
         await seedRow(db, "a", "Sushi Way Les Ha");
         let answers = 0;
         const deps = makeDeps({
-            enrich: async () => {
-                answers += 1;
-                return {
-                    groundedLookup: true,
-                    result: answers === 1 ? { ...NOTHING, grounding: true } : { ...REMOTE, domain: "sushiway.fr" },
-                };
-            },
+            enrich: () =>
+                Effect.tryPromise(async () => {
+                    answers += 1;
+                    return {
+                        groundedLookup: true,
+                        result: answers === 1 ? { ...NOTHING, grounding: true } : { ...REMOTE, domain: "sushiway.fr" },
+                    };
+                }),
         });
 
         await Effect.runPromise(attachMissingLogos(db, deps));
@@ -318,15 +328,16 @@ describe("attachMissingLogos", () => {
         await seedRow(db, "recurrencied", "Intermarche");
         await seedRow(db, "still", "Intermarche");
         const deps = makeDeps({
-            persist: async () => {
-                await db
-                    .update(transactions)
-                    .set({ imageUri: "file:///photos/mine.jpg" })
-                    .where(eq(transactions.id, "photo"));
-                await db.update(transactions).set({ note: "Carrefour" }).where(eq(transactions.id, "renamed"));
-                await db.update(transactions).set({ currency: "VES" }).where(eq(transactions.id, "recurrencied"));
-                return { imageColor: "#ff0000", imageUri: "file:///photos/logo.jpg" };
-            },
+            persist: () =>
+                Effect.tryPromise(async () => {
+                    await db
+                        .update(transactions)
+                        .set({ imageUri: "file:///photos/mine.jpg" })
+                        .where(eq(transactions.id, "photo"));
+                    await db.update(transactions).set({ note: "Carrefour" }).where(eq(transactions.id, "renamed"));
+                    await db.update(transactions).set({ currency: "VES" }).where(eq(transactions.id, "recurrencied"));
+                    return { imageColor: "#ff0000", imageUri: "file:///photos/logo.jpg" };
+                }),
         });
 
         await expect(Effect.runPromise(attachMissingLogos(db, deps))).resolves.toBe(1);
@@ -344,7 +355,9 @@ describe("attachMissingLogos", () => {
             });
         }
         await seedRow(db, "old", "Uber Eats", { date: new Date(NOW.getTime() - 5 * 24 * 60 * 60 * 1000) });
-        const deps = makeDeps({ enrich: async () => ({ groundedLookup: true, result: NOTHING }) });
+        const deps = makeDeps({
+            enrich: () => Effect.tryPromise(async () => ({ groundedLookup: true, result: NOTHING })),
+        });
 
         await expect(Effect.runPromise(attachMissingLogos(db, deps))).resolves.toBe(1);
 
@@ -354,10 +367,12 @@ describe("attachMissingLogos", () => {
     it("looks a same-named merchant up once per currency", async () => {
         await seedRow(db, "fr", "Carrefour", { currency: "EUR" });
         await seedRow(db, "ve", "Carrefour", { currency: "VES" });
-        const enrich = jest.fn<NonNullable<LogoBackfillDeps["enrich"]>>(async ({ currency }) => ({
-            groundedLookup: true,
-            result: { ...REMOTE, domain: currency === "EUR" ? "carrefour.fr" : "carrefour.com.ve" },
-        }));
+        const enrich = jest.fn<NonNullable<LogoBackfillDeps["enrich"]>>(({ currency }) =>
+            Effect.tryPromise(async () => ({
+                groundedLookup: true,
+                result: { ...REMOTE, domain: currency === "EUR" ? "carrefour.fr" : "carrefour.com.ve" },
+            }))
+        );
         const deps = makeDeps({ enrich });
 
         await Effect.runPromise(attachMissingLogos(db, deps));
@@ -369,10 +384,12 @@ describe("attachMissingLogos", () => {
     it("neither caches an empty answer for the form nor believes it for long", async () => {
         await seedRow(db, "a", "Intermarche");
         const empty: RemoteEnrichmentResult = { categoryName: null, domain: null, isNewCategory: false, tags: [] };
-        const enrich = jest.fn<NonNullable<LogoBackfillDeps["enrich"]>>(async () => ({
-            groundedLookup: true,
-            result: empty,
-        }));
+        const enrich = jest.fn<NonNullable<LogoBackfillDeps["enrich"]>>(() =>
+            Effect.tryPromise(async () => ({
+                groundedLookup: true,
+                result: empty,
+            }))
+        );
         const deps = makeDeps({ enrich });
 
         await Effect.runPromise(attachMissingLogos(db, deps));
@@ -387,10 +404,12 @@ describe("attachMissingLogos", () => {
         for (const [index, name] of ["Lescot", "Monoprix", "Franprix", "Amorino"].entries()) {
             await seedRow(db, name, name, { date: new Date(NOW.getTime() - index * 1000) });
         }
-        const enrich = jest.fn<NonNullable<LogoBackfillDeps["enrich"]>>(async () => ({
-            groundedLookup: true,
-            result: NOTHING,
-        }));
+        const enrich = jest.fn<NonNullable<LogoBackfillDeps["enrich"]>>(() =>
+            Effect.tryPromise(async () => ({
+                groundedLookup: true,
+                result: NOTHING,
+            }))
+        );
         const deps = makeDeps({ enrich });
 
         await Effect.runPromise(attachMissingLogos(db, deps));
@@ -411,10 +430,11 @@ describe("attachMissingLogos", () => {
             discard: (uri) => {
                 discarded.push(uri);
             },
-            persist: async () => {
-                cancelled = true;
-                return { imageColor: null, imageUri: "file:///photos/late.jpg" };
-            },
+            persist: () =>
+                Effect.tryPromise(async () => {
+                    cancelled = true;
+                    return { imageColor: null, imageUri: "file:///photos/late.jpg" };
+                }),
         });
 
         await expect(Effect.runPromise(attachMissingLogos(db, deps))).resolves.toBe(0);
@@ -427,12 +447,14 @@ describe("attachMissingLogos", () => {
     it("sends nothing for a row renamed while an earlier lookup was out", async () => {
         await seedRow(db, "first", "Intermarche");
         await seedRow(db, "second", "Iolanda", { date: new Date(NOW.getTime() - 1000) });
-        const enrich = jest.fn<NonNullable<LogoBackfillDeps["enrich"]>>(async ({ name }) => {
-            if (name === "Intermarche") {
-                await db.update(transactions).set({ note: "Renamed" }).where(eq(transactions.id, "second"));
-            }
-            return { groundedLookup: true, result: REMOTE };
-        });
+        const enrich = jest.fn<NonNullable<LogoBackfillDeps["enrich"]>>(({ name }) =>
+            Effect.tryPromise(async () => {
+                if (name === "Intermarche") {
+                    await db.update(transactions).set({ note: "Renamed" }).where(eq(transactions.id, "second"));
+                }
+                return { groundedLookup: true, result: REMOTE };
+            })
+        );
 
         await Effect.runPromise(attachMissingLogos(db, makeDeps({ enrich })));
 
@@ -446,10 +468,11 @@ describe("attachMissingLogos", () => {
             discard: (uri) => {
                 discarded.push(uri);
             },
-            persist: async () => {
-                await db.run(sql`DROP TABLE transactions`);
-                return { imageColor: null, imageUri: "file:///photos/orphan.jpg" };
-            },
+            persist: () =>
+                Effect.tryPromise(async () => {
+                    await db.run(sql`DROP TABLE transactions`);
+                    return { imageColor: null, imageUri: "file:///photos/orphan.jpg" };
+                }),
         });
 
         const failure = await Effect.runPromise(Effect.flip(attachMissingLogos(db, deps)));
@@ -460,10 +483,11 @@ describe("attachMissingLogos", () => {
     it("sends no image request for a row renamed while the model was answering", async () => {
         await seedRow(db, "a", "Intermarche");
         const deps = makeDeps({
-            enrich: async () => {
-                await db.update(transactions).set({ note: "Renamed" }).where(eq(transactions.id, "a"));
-                return { groundedLookup: true, result: REMOTE };
-            },
+            enrich: () =>
+                Effect.tryPromise(async () => {
+                    await db.update(transactions).set({ note: "Renamed" }).where(eq(transactions.id, "a"));
+                    return { groundedLookup: true, result: REMOTE };
+                }),
         });
 
         await Effect.runPromise(attachMissingLogos(db, deps));
@@ -476,10 +500,11 @@ describe("attachMissingLogos", () => {
         let cancelled = false;
         const deps = makeDeps({
             cancelled: () => cancelled,
-            enrich: async () => {
-                cancelled = true;
-                return { groundedLookup: true, result: REMOTE };
-            },
+            enrich: () =>
+                Effect.tryPromise(async () => {
+                    cancelled = true;
+                    return { groundedLookup: true, result: REMOTE };
+                }),
         });
 
         await Effect.runPromise(attachMissingLogos(db, deps));
@@ -489,10 +514,12 @@ describe("attachMissingLogos", () => {
 
     it("treats a miss as provisional when the request went out without the web lookup", async () => {
         await seedRow(db, "a", "Iolanda");
-        const enrich = jest.fn<NonNullable<LogoBackfillDeps["enrich"]>>(async () => ({
-            groundedLookup: false,
-            result: NOTHING,
-        }));
+        const enrich = jest.fn<NonNullable<LogoBackfillDeps["enrich"]>>(() =>
+            Effect.tryPromise(async () => ({
+                groundedLookup: false,
+                result: NOTHING,
+            }))
+        );
         const deps = makeDeps({ enrich });
 
         await Effect.runPromise(attachMissingLogos(db, deps));
@@ -518,13 +545,14 @@ describe("attachMissingLogos", () => {
     it("does not paint a row a peer's edit reached while the lookup was out", async () => {
         await seedRow(db, "a", "Intermarche");
         const deps = makeDeps({
-            persist: async () => {
-                await db
-                    .update(transactions)
-                    .set({ updatedAt: new Date(NOW.getTime() + 1) })
-                    .where(eq(transactions.id, "a"));
-                return { imageColor: null, imageUri: "file:///photos/logo.jpg" };
-            },
+            persist: () =>
+                Effect.tryPromise(async () => {
+                    await db
+                        .update(transactions)
+                        .set({ updatedAt: new Date(NOW.getTime() + 1) })
+                        .where(eq(transactions.id, "a"));
+                    return { imageColor: null, imageUri: "file:///photos/logo.jpg" };
+                }),
         });
 
         await expect(Effect.runPromise(attachMissingLogos(db, deps))).resolves.toBe(0);

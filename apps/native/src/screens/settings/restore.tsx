@@ -10,12 +10,13 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { archiveRowCount, parseArchive } from "@/domain/archive";
 import type { ArchiveDocument } from "@/domain/archive";
 import { useTranslation } from "@/i18n/context";
-import { pickArchiveFile, TransferError } from "@/lib/data-transfer";
-import { armLogoBackfill, cancelLogoBackfill } from "@/lib/logo-backfill";
+import { TransferError } from "@/lib/data-transfer";
+import { armLogoBackfill } from "@/lib/logo-backfill";
 import { notifyFailure } from "@/lib/notify";
 import { photoFiles, writePhotosBase64 } from "@/lib/photo-storage";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import { restoreArchiveCommand } from "@/state/lifecycle-commands";
+import { cancelLogoBackfillCommand, restoreArchiveCommand, runLifecycleCommand } from "@/state/lifecycle-commands";
+import { pickArchiveFileCommand, runTransferCommand } from "@/state/transfer-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 
 export function RestoreData() {
@@ -28,7 +29,7 @@ export function RestoreData() {
     // Stop the logo pass first: it could paint a row the archive replaced.
     const applyArchive = (document: ArchiveDocument) => {
         setRestoring(archiveRowCount(document));
-        cancelLogoBackfill()
+        runLifecycleCommand(cancelLogoBackfillCommand, undefined)
             .then(async () => {
                 writePhotosBase64(document.photos);
                 unwrapAtomCommand(await restoreArchive({ db, document, files: photoFiles }));
@@ -43,7 +44,7 @@ export function RestoreData() {
 
     // A restore replaces the ledger, so it is confirmed against a recognisable row count.
     const restore = () => {
-        pickArchiveFile()
+        runTransferCommand(pickArchiveFileCommand, undefined)
             .then((picked) => {
                 if (picked == null) {
                     return;

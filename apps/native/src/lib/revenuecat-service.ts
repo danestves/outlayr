@@ -28,6 +28,7 @@ import {
     restoreAndCheckPro,
     setCustomerProfile,
 } from "@/lib/revenuecat";
+import type { PurchasesError } from "@/lib/revenuecat";
 
 const Operation = Schema.Literals([
     "configure",
@@ -252,8 +253,8 @@ export const make = Effect.gen(function* make() {
     const ref = yield* SubscriptionRef.make(initialState(isConfigured));
     const lane = yield* Queue.unbounded<Effect.Effect<unknown>>();
 
-    const call = <A>(operation: typeof Operation.Type, run: () => Promise<A>) =>
-        Effect.tryPromise({ catch: failedAt(operation), try: run });
+    const call = <A>(operation: typeof Operation.Type, run: () => Effect.Effect<A, PurchasesError>) =>
+        Effect.suspend(run).pipe(Effect.mapError((error) => failedAt(operation)(error.cause)));
 
     const enqueue = (job: Effect.Effect<unknown>) => Queue.offer(lane, job).pipe(Effect.asVoid);
 

@@ -1,3 +1,4 @@
+import * as Effect from "effect/Effect";
 import { openBrowserAsync } from "expo-web-browser";
 import type { WebBrowserResult } from "expo-web-browser";
 
@@ -22,19 +23,22 @@ export function expectHandoff(now: number = Date.now()): void {
 }
 
 /**
- * Every leave while `run` is pending counts, up to the trip cap, since a library pick leaves again for its crop
- * screen. The mark clears when `run` returns, so a trip that never left cannot excuse the next Home press.
+ * Every leave while `trip` is pending counts, up to the trip cap, since a library pick leaves again for its crop
+ * screen. The mark clears when `trip` settles, so a trip that never left cannot excuse the next Home press.
  */
-export async function duringHandoff<T>(run: () => Promise<T>): Promise<T> {
-    expectHandoff();
-    runningSince = Date.now();
-    try {
-        return await run();
-    } finally {
-        expectedAt = null;
-        runningSince = null;
-    }
-}
+export const duringHandoff = <A, E, R>(trip: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
+    Effect.acquireUseRelease(
+        Effect.sync(() => {
+            expectHandoff();
+            runningSince = Date.now();
+        }),
+        () => trip,
+        () =>
+            Effect.sync(() => {
+                expectedAt = null;
+                runningSince = null;
+            })
+    );
 
 export function takeHandoff(now: number = Date.now()): boolean {
     const announced = expectedAt !== null && now - expectedAt <= HANDOFF_WINDOW_MS;

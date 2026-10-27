@@ -44,13 +44,13 @@ export interface LogoBackfillDeps {
               currency: string | null;
               income: boolean;
               name: string;
-          }) => Promise<{ groundedLookup: boolean; result: RemoteEnrichmentResult } | null>)
+          }) => Effect.Effect<{ groundedLookup: boolean; result: RemoteEnrichmentResult } | null, unknown>)
         | null;
     cancelled?: () => boolean;
     discard?: (imageUri: string) => void;
     fetchImage: (request: MerchantImageRequest) => Effect.Effect<LogoOutcome>;
     now?: number;
-    persist: (bytes: Uint8Array) => Promise<{ imageColor: string | null; imageUri: string }>;
+    persist: (bytes: Uint8Array) => Effect.Effect<{ imageColor: string | null; imageUri: string }, unknown>;
 }
 
 interface PendingRow {
@@ -227,9 +227,8 @@ const resolveDomain = Effect.fn("LogoBackfill.resolveDomain")(function* resolveD
         const answer: DomainAnswer = { kind: "later" };
         return answer;
     }
-    const asked = yield* attempt("resolve", () =>
-        enrich({ currency: group.currency, income: group.income, name: group.note.trim() })
-    ).pipe(
+    const asked = yield* enrich({ currency: group.currency, income: group.income, name: group.note.trim() }).pipe(
+        Effect.mapError((cause) => new LogoBackfillError({ cause, operation: "resolve" })),
         Effect.map((sent) => ({ failed: false as const, sent })),
         Effect.catchTags({ LogoBackfillError: () => Effect.succeed({ failed: true as const }) })
     );
@@ -321,7 +320,8 @@ export const attachMissingLogos = Effect.fn("LogoBackfill.attachMissingLogos")(f
             if (deps.cancelled?.()) {
                 break;
             }
-            const logo = yield* attempt("persist", () => deps.persist(outcome.bytes)).pipe(
+            const logo = yield* deps.persist(outcome.bytes).pipe(
+                Effect.mapError((cause) => new LogoBackfillError({ cause, operation: "persist" })),
                 Effect.catchTags({ LogoBackfillError: () => Effect.succeed(null) })
             );
             if (logo === null) {

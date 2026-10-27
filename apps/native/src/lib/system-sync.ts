@@ -105,9 +105,6 @@ const failedStep =
             Effect.catchDefect((defect) => Effect.fail(failedAt(step)(defect)))
         );
 
-const attempt = <A>(step: typeof SystemStep.Type, task: () => Promise<A>) =>
-    Effect.tryPromise({ catch: failedAt(step), try: task });
-
 const warnRatesFailed =
     (message: string) =>
     <R>(effect: Effect.Effect<boolean, AppMetaError | RatesError, R>) =>
@@ -115,9 +112,6 @@ const warnRatesFailed =
             Effect.catch((error) => Effect.logWarning(message, error.cause).pipe(Effect.as(false))),
             Effect.catchDefect((defect) => Effect.logWarning(message, defect).pipe(Effect.as(false)))
         );
-
-const attemptOr = <A>(step: typeof SystemStep.Type, task: () => Promise<A>, fallback: A) =>
-    attempt(step, task).pipe(Effect.catchTags({ SystemSyncError: (error) => warn(error).pipe(Effect.as(fallback)) }));
 
 const surfaceStep = (step: typeof SystemStep.Type, surface: Effect.Effect<void>) =>
     surface.pipe(failedStep(step), Effect.catchTags({ SystemSyncError: warn }));
@@ -210,7 +204,7 @@ export const make = Effect.gen(function* make() {
             Effect.flatMap((applied) => publishIf(applied === 0)),
             Effect.catchTags({ SystemSyncError: (error) => warn(error).pipe(Effect.andThen(publishSoon)) }),
             Effect.andThen(
-                Effect.try(() => sendEnrichmentQueue(db)).pipe(
+                sendEnrichmentQueue(db).pipe(
                     Effect.andThen(fileWaitingPurchases(db)),
                     failedStep("purchases"),
                     Effect.catchTags({ SystemSyncError: (error) => warn(error) })
@@ -222,7 +216,12 @@ export const make = Effect.gen(function* make() {
                     Effect.catchTags({ SystemSyncError: (error) => warn(error) })
                 )
             ),
-            Effect.andThen(attemptOr("logos", () => backfillLogos(db), 0))
+            Effect.andThen(
+                backfillLogos(db).pipe(
+                    failedStep("logos"),
+                    Effect.catchTags({ SystemSyncError: (error) => warn(error).pipe(Effect.as(0)) })
+                )
+            )
         );
         const catchUp = Effect.all([mirrorRun, drainRun], { concurrency: "unbounded", discard: true }).pipe(
             Effect.uninterruptible

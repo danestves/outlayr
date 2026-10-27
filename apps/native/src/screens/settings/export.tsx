@@ -14,12 +14,13 @@ import { archiveFileName, serializeArchive } from "@/domain/archive";
 import { CSV_HEADER } from "@/domain/transaction-csv";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
-import { shareFile, TransferError } from "@/lib/data-transfer";
+import { TransferError } from "@/lib/data-transfer";
 import { notifyFailure } from "@/lib/notify";
 import { photoFiles, storedPhotosBase64 } from "@/lib/photo-storage";
 import { exportTransactionsCsvCommand } from "@/state/accounts-commands";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
 import { exportArchiveCommand } from "@/state/lifecycle-commands";
+import { runTransferCommand, shareFileCommand } from "@/state/transfer-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
@@ -51,7 +52,12 @@ export function ExportData() {
         build()
             .then((payload) => {
                 setBusy(null);
-                return shareFile(payload, name, mime, t(shareTitle));
+                return runTransferCommand(shareFileCommand, {
+                    data: payload,
+                    dialogTitle: t(shareTitle),
+                    fileName: name,
+                    mimeType: mime,
+                });
             })
             .catch((cause: unknown) => {
                 notifyFailure({

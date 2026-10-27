@@ -20,8 +20,9 @@ beforeEach(() => {
     mockSetItemAsync.mockClear();
 });
 
-const { completeAppleSignIn, completeGoogleSignIn, googleProviderSubject } =
+const { completeAppleSignIn, completeGoogleSignIn, googleProviderSubject, signInWithProvider } =
     require("./provider-sign-in") as typeof import("./provider-sign-in");
+const { isSignInCancellation } = require("@/domain/account") as typeof import("@/domain/account");
 const { layer } = require("./secure-storage") as typeof import("./secure-storage");
 
 describe("apple-credential-captures-code", () => {
@@ -140,5 +141,20 @@ describe("google provider binding", () => {
         expect(() => googleProviderSubject("header.eyJhdWQiOiJjbGllbnQifQ.signature")).toThrow(
             "Google identity token does not contain a subject"
         );
+    });
+
+    it("keeps a cancelled Google picker recognisable as a cancellation", async () => {
+        const cancelled = Object.assign(new Error("cancelled"), { code: "SIGN_IN_CANCELLED" });
+        const failure = await Effect.runPromise(
+            signInWithProvider({
+                activation: {} as never,
+                client: {} as never,
+                request: {
+                    getCredential: () => Effect.tryPromise(() => Promise.reject(cancelled)),
+                    provider: "google",
+                },
+            }).pipe(Effect.provide(layer), Effect.flip)
+        );
+        expect(isSignInCancellation(failure.cause)).toBe(true);
     });
 });

@@ -93,13 +93,7 @@ export const make = Effect.gen(function* make() {
         yield* Effect.all(
             [
                 listen(results.watch).pipe(Stream.runForEach(settle)),
-                launchAndForegrounds(watchAppState).pipe(
-                    Stream.runForEach(() =>
-                        Effect.sync(() => {
-                            sendEnrichmentQueue(db);
-                        })
-                    )
-                ),
+                launchAndForegrounds(watchAppState).pipe(Stream.runForEach(() => sendEnrichmentQueue(db))),
             ],
             { concurrency: "unbounded", discard: true }
         );

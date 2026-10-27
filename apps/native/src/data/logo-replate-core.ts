@@ -14,9 +14,9 @@ export interface CachedOriginal {
 }
 
 export interface LogoReplateDeps {
-    originalsFor: (name: string) => Promise<readonly CachedOriginal[]>;
-    persist: (bytes: Uint8Array) => Promise<string>;
-    signature: (uri: string) => Promise<Uint8Array | null>;
+    originalsFor: (name: string) => Effect.Effect<readonly CachedOriginal[], unknown>;
+    persist: (bytes: Uint8Array) => Effect.Effect<string, unknown>;
+    signature: (uri: string) => Effect.Effect<Uint8Array | null, unknown>;
 }
 
 const LogoReplateOperation = Schema.Literals(["originals", "persist", "rows", "signature"]);
@@ -32,6 +32,11 @@ export class LogoReplateError extends Schema.TaggedError<LogoReplateError>()("Lo
 
 const attempt = <A>(operation: typeof LogoReplateOperation.Type, run: () => PromiseLike<A>) =>
     Effect.tryPromise({ catch: (cause) => new LogoReplateError({ cause, operation }), try: run });
+
+const failedAt =
+    (operation: typeof LogoReplateOperation.Type) =>
+    <A>(step: Effect.Effect<A, unknown>) =>
+        step.pipe(Effect.mapError((cause) => new LogoReplateError({ cause, operation })));
 
 /** Mean per-channel difference two signatures can show and still be one image re-encoded. */
 const SIGNATURE_TOLERANCE = 6;
@@ -68,15 +73,15 @@ export const replateStoredLogos = Effect.fn("LogoReplate.replateStoredLogos")(fu
 
     const replacement = Effect.fn("LogoReplate.replacement")(function* replacement(uri: string, name: string) {
         if (!signatures.has(uri)) {
-            signatures.set(uri, yield* attempt("signature", () => deps.signature(uri)));
+            signatures.set(uri, yield* deps.signature(uri).pipe(failedAt("signature")));
         }
         const stored = signatures.get(uri);
         if (stored == null) {
             return null;
         }
-        const originals = yield* attempt("originals", () => deps.originalsFor(name));
+        const originals = yield* deps.originalsFor(name).pipe(failedAt("originals"));
         const original = originals.find((candidate) => sameImage(candidate.signature, stored));
-        return original == null ? null : yield* attempt("persist", () => deps.persist(original.bytes));
+        return original == null ? null : yield* deps.persist(original.bytes).pipe(failedAt("persist"));
     });
 
     // Rows sharing a photo must see the replacement the first of them stored, or each would store its own copy.

@@ -81,8 +81,12 @@ export interface NativeDeviceDataStoreDependencies {
     closeDatabase: Effect.Effect<void, unknown>;
 }
 
-const attempt = <A>(store: DeviceStore, run: () => A | PromiseLike<A>) =>
-    Effect.tryPromise({ catch: (cause) => new DeviceStoreError({ cause, store }), try: async () => run() });
+const failedStore = (store: DeviceStore) => (cause: unknown) => new DeviceStoreError({ cause, store });
+
+const clearSync = (store: DeviceStore, run: () => void) => Effect.try({ catch: failedStore(store), try: run });
+
+const clearAsync = <A>(store: DeviceStore, run: () => Promise<A>) =>
+    Effect.tryPromise({ catch: failedStore(store), try: run });
 
 function deleteDirectoryIfPresent(directory: Directory): void {
     if (directory.exists) {
@@ -135,67 +139,63 @@ function clearWidgetStorage(): void {
     deleteDirectoryIfPresent(new Directory(container, QUEUE_DIRECTORY));
 }
 
-async function clearSpotlight(): Promise<void> {
+const clearSpotlight = Effect.fn("DeviceStores.clearSpotlight")(function* clearSpotlight() {
     if (Platform.OS !== "ios") {
         return;
     }
-    if (await Spotlight.isAvailable()) {
-        await Spotlight.removeAllItems();
+    if (yield* clearAsync("spotlight", () => Spotlight.isAvailable())) {
+        yield* clearAsync("spotlight", () => Spotlight.removeAllItems());
     }
-}
+});
 
-async function clearSqliteFiles(): Promise<void> {
-    await deleteDatabaseAsync(DATABASE_NAME);
-    const sqliteDirectory = new Directory(Paths.document, "SQLite");
-    for (const filename of [`${DATABASE_NAME}-wal`, `${DATABASE_NAME}-shm`]) {
-        const file = new File(sqliteDirectory, filename);
-        if (file.exists) {
-            file.delete();
+const clearSqliteFiles = Effect.fn("DeviceStores.clearSqliteFiles")(function* clearSqliteFiles() {
+    yield* clearAsync("sqlite", () => deleteDatabaseAsync(DATABASE_NAME));
+    yield* clearSync("sqlite", () => {
+        const sqliteDirectory = new Directory(Paths.document, "SQLite");
+        for (const filename of [`${DATABASE_NAME}-wal`, `${DATABASE_NAME}-shm`]) {
+            const file = new File(sqliteDirectory, filename);
+            if (file.exists) {
+                file.delete();
+            }
         }
-    }
-}
+    });
+});
 
 function clearCache(): void {
     deleteDirectoryIfPresent(Paths.cache);
     Paths.cache.create({ idempotent: true, intermediates: true });
 }
 
-async function clearNotifications(): Promise<void> {
-    await cancelAllScheduledNotificationsAsync();
-    await dismissAllNotificationsAsync();
-    if (!(await setBadgeCountAsync(0))) {
-        throw new Error("Unable to clear the application badge");
+const clearNotifications = Effect.fn("DeviceStores.clearNotifications")(function* clearNotifications() {
+    yield* clearAsync("notifications", () => cancelAllScheduledNotificationsAsync());
+    yield* clearAsync("notifications", () => dismissAllNotificationsAsync());
+    if (!(yield* clearAsync("notifications", () => setBadgeCountAsync(0)))) {
+        return yield* failedStore("notifications")(new Error("Unable to clear the application badge"));
     }
-}
+});
 
 export function createNativeDeviceDataStores({
     closeDatabase,
 }: NativeDeviceDataStoreDependencies): DeviceDataStores<SecureStorage> {
     return {
         alternateIcon: () =>
-            attempt("alternateIcon", async () => {
-                if (supportsAlternateIcons) {
-                    await setAlternateAppIcon(null);
-                }
-            }),
-        asyncStorage: () => attempt("asyncStorage", async () => await AsyncStorage.clear()),
-        cache: () => attempt("cache", clearCache),
+            supportsAlternateIcons ? clearAsync("alternateIcon", () => setAlternateAppIcon(null)) : Effect.void,
+        asyncStorage: () => clearAsync("asyncStorage", () => AsyncStorage.clear()),
+        cache: () => clearSync("cache", clearCache),
         credentials: () =>
             clearBetterAuthCredentials().pipe(
                 Effect.mapError((cause) => new DeviceStoreError({ cause, store: "credentials" }))
             ),
-        notifications: () => attempt("notifications", clearNotifications),
-        photos: () => attempt("photos", clearStoredPhotos),
-        spotlight: () => attempt("spotlight", clearSpotlight),
+        notifications: clearNotifications,
+        photos: () => clearSync("photos", clearStoredPhotos),
+        spotlight: clearSpotlight,
         // The logo pass is stopped first: still awaiting the model or an image,
         // it would otherwise write into a photo directory this erase empties.
         sqlite: () =>
-            attempt("sqlite", cancelLogoBackfill).pipe(
-                Effect.andThen(
-                    closeDatabase.pipe(Effect.mapError((cause) => new DeviceStoreError({ cause, store: "sqlite" })))
-                ),
-                Effect.andThen(attempt("sqlite", clearSqliteFiles))
+            cancelLogoBackfill().pipe(
+                Effect.andThen(closeDatabase.pipe(Effect.mapError(failedStore("sqlite")))),
+                Effect.andThen(clearSqliteFiles())
             ),
-        widget: () => attempt("widget", clearWidgetStorage),
+        widget: () => clearSync("widget", clearWidgetStorage),
     };
 }

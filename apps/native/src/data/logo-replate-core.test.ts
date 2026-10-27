@@ -59,9 +59,9 @@ test("re-stores a logo only where the row's name and the photo's pixels both mat
 
     await Effect.runPromise(
         replateStoredLogos(db, {
-            originalsFor: async (name) => originals[name] ?? [],
-            persist: async (bytes) => `file:///p/plated-${bytes[0]}.jpg`,
-            signature: async (uri) => stored[uri] ?? null,
+            originalsFor: (name) => Effect.succeed(originals[name] ?? []),
+            persist: (bytes) => Effect.succeed(`file:///p/plated-${bytes[0]}.jpg`),
+            signature: (uri) => Effect.succeed(stored[uri] ?? null),
         })
     );
 

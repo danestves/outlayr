@@ -2,8 +2,7 @@ import type { ImagePickerErrorResult, ImagePickerResult } from "expo-image-picke
 
 import { CATEGORY_PALETTE } from "@/data/categories-core";
 import type { TranslationKey } from "@/i18n/catalog";
-import { persistPickedPhoto } from "@/lib/photo-storage";
-import { glowFromImage } from "@/theme/glow";
+import { glowFromImageCommand, persistPickedPhotoCommand, runMediaCommand } from "@/state/media-commands";
 
 export interface IdentitySelection {
     color: string | null;
@@ -93,9 +92,9 @@ export function pickedPhotoUri(result: ImagePickerResult | ImagePickerErrorResul
  * entry survives. `glowFromImage` resolves to `[]` rather than rejecting, so an unreadable image keeps the photo.
  */
 export async function adoptPickedPhoto(value: IdentitySelection, pickedUri: string): Promise<IdentitySelection> {
-    const uri = await persistPickedPhoto(pickedUri).catch((cause: unknown) => {
+    const uri = await runMediaCommand(persistPickedPhotoCommand, pickedUri).catch((cause: unknown) => {
         console.error("Failed to store the picked photo", cause);
         return pickedUri;
     });
-    return withPhoto(value, uri, await glowFromImage(uri));
+    return withPhoto(value, uri, await runMediaCommand(glowFromImageCommand, uri));
 }

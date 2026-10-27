@@ -1,3 +1,4 @@
+import * as Effect from "effect/Effect";
 import { AppleAuthenticationScope, signInAsync } from "expo-apple-authentication";
 import { CryptoDigestAlgorithm, digestStringAsync, getRandomBytesAsync } from "expo-crypto";
 
@@ -18,13 +19,15 @@ function base64Url(bytes: Uint8Array): string {
     return globalThis.btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replace(BASE64_PADDING, "");
 }
 
-export async function appleCredential(): Promise<AppleSignInCredential | null> {
-    const nonce = base64Url(await getRandomBytesAsync(32));
-    const hashedNonce = await digestStringAsync(CryptoDigestAlgorithm.SHA256, nonce);
-    const credential = await signInAsync({
-        nonce: hashedNonce,
-        requestedScopes: [AppleAuthenticationScope.FULL_NAME, AppleAuthenticationScope.EMAIL],
-    });
+export const appleCredential = Effect.fn("AppleSignIn.credential")(function* appleCredential() {
+    const nonce = base64Url(yield* Effect.tryPromise(() => getRandomBytesAsync(32)));
+    const hashedNonce = yield* Effect.tryPromise(() => digestStringAsync(CryptoDigestAlgorithm.SHA256, nonce));
+    const credential = yield* Effect.tryPromise(() =>
+        signInAsync({
+            nonce: hashedNonce,
+            requestedScopes: [AppleAuthenticationScope.FULL_NAME, AppleAuthenticationScope.EMAIL],
+        })
+    );
     if (!(credential.identityToken && credential.authorizationCode && credential.user)) {
         return null;
     }
@@ -33,5 +36,5 @@ export async function appleCredential(): Promise<AppleSignInCredential | null> {
         identityToken: credential.identityToken,
         nonce,
         providerSubject: credential.user,
-    };
-}
+    } satisfies AppleSignInCredential;
+});

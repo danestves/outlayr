@@ -15,10 +15,16 @@ import type { Transaction } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 import type { TranslatableKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
-import { duringHandoff } from "@/lib/app-handoff";
-import { previewFiles } from "@/lib/file-preview";
-import { persistAttachmentPdf, persistAttachmentPhoto, photoFiles } from "@/lib/photo-storage";
+import { persistAttachmentPdf, photoFiles } from "@/lib/photo-storage";
 import type { AttachmentIntake } from "@/lib/photo-storage";
+import {
+    handoffDocumentCommand,
+    handoffImageCommand,
+    handoffPermissionCommand,
+    runHandoffCommand,
+} from "@/state/handoff-commands";
+import { persistAttachmentPhotoCommand, runMediaCommand } from "@/state/media-commands";
+import { previewFilesCommand, runTransferCommand } from "@/state/transfer-commands";
 
 const DOCUMENT_TYPES = ["application/pdf", "image/jpeg", "image/png"];
 
@@ -39,16 +45,18 @@ interface Picked {
 }
 
 async function pickCamera(): Promise<Picked[] | "denied"> {
-    const permission = await duringHandoff(requestCameraPermissionsAsync);
+    const permission = await runHandoffCommand(handoffPermissionCommand, requestCameraPermissionsAsync);
     if (!permission.granted) {
         return "denied";
     }
-    const result = await duringHandoff(() => launchCameraAsync({ mediaTypes: ["images"], quality: 0.9 }));
+    const result = await runHandoffCommand(handoffImageCommand, () =>
+        launchCameraAsync({ mediaTypes: ["images"], quality: 0.9 })
+    );
     return result.canceled ? [] : result.assets.map((asset) => ({ name: null, pdf: false, uri: asset.uri }));
 }
 
 async function pickLibrary(room: number): Promise<Picked[]> {
-    const result = await duringHandoff(() =>
+    const result = await runHandoffCommand(handoffImageCommand, () =>
         launchImageLibraryAsync({
             allowsMultipleSelection: true,
             mediaTypes: ["images"],
@@ -61,7 +69,7 @@ async function pickLibrary(room: number): Promise<Picked[]> {
 }
 
 async function pickFiles(): Promise<Picked[]> {
-    const result = await duringHandoff(() =>
+    const result = await runHandoffCommand(handoffDocumentCommand, () =>
         getDocumentAsync({ copyToCacheDirectory: true, multiple: true, type: DOCUMENT_TYPES })
     );
     return result.canceled
@@ -75,7 +83,9 @@ async function pickFiles(): Promise<Picked[]> {
 
 async function intake(picked: Picked): Promise<AttachmentIntake> {
     try {
-        return picked.pdf ? persistAttachmentPdf(picked.uri, picked.name) : await persistAttachmentPhoto(picked.uri);
+        return picked.pdf
+            ? persistAttachmentPdf(picked.uri, picked.name)
+            : await runMediaCommand(persistAttachmentPhotoCommand, picked.uri);
     } catch {
         return { failure: "unreadable" };
     }
@@ -177,7 +187,7 @@ export function useAttachmentDraft({ db, initial, mode, onEdit, onFailure, resto
         if (start === -1) {
             return;
         }
-        previewFiles(local, start).catch((error) => {
+        runTransferCommand(previewFilesCommand, { files: local, index: start }).catch((error) => {
             console.error("Failed to open the attachment", error);
             fail("open");
         });

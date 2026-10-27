@@ -1,3 +1,4 @@
+import type * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -13,8 +14,8 @@ export type SignInProvider = "apple" | "google";
 
 /** Null is a dismissed sheet, which is not a failure. */
 export type SignInRequest =
-    | { getCredential: () => Promise<AppleSignInCredential | null>; provider: "apple" }
-    | { getCredential: () => Promise<string | null>; provider: "google" };
+    | { getCredential: () => Effect.Effect<AppleSignInCredential | null, Cause.UnknownError>; provider: "apple" }
+    | { getCredential: () => Effect.Effect<string | null, Cause.UnknownError>; provider: "google" };
 
 export type Activation = Pick<ReturnType<typeof useAuthSession>, "activate" | "begin" | "reject">;
 
@@ -162,19 +163,17 @@ export const signInWithProvider = Effect.fn("ProviderSignIn.start")(function* si
 }) {
     const { activation, client, onAppleFailure, request } = input;
     if (request.provider === "apple") {
-        const credential = yield* Effect.tryPromise({
-            catch: (cause) => new ProviderSignInError({ cause, operation: "credential" }),
-            try: request.getCredential,
-        });
+        const credential = yield* request
+            .getCredential()
+            .pipe(Effect.mapError((error) => new ProviderSignInError({ cause: error.cause, operation: "credential" })));
         if (credential) {
             yield* completeAppleSignIn(client, activation, credential, onAppleFailure);
         }
         return;
     }
-    const idToken = yield* Effect.tryPromise({
-        catch: (cause) => new ProviderSignInError({ cause, operation: "credential" }),
-        try: request.getCredential,
-    });
+    const idToken = yield* request
+        .getCredential()
+        .pipe(Effect.mapError((error) => new ProviderSignInError({ cause: error.cause, operation: "credential" })));
     if (idToken) {
         yield* completeGoogleSignIn(client, idToken);
     }

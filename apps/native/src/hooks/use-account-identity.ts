@@ -2,12 +2,14 @@ import { useEffect, useEffectEvent, useRef } from "react";
 
 import { resolveInstitutionDomain } from "@/domain/institution-map";
 import type { EnrichmentFn } from "@/lib/convex";
-import { persistLogo as persistLogoDefault } from "@/lib/persist-logo";
 import { useLatest } from "@/lib/use-latest";
 import { fetchMerchantLogo } from "@/state/capture-commands";
+import { persistLogoCommand, runMediaCommand } from "@/state/media-commands";
 
 import { useTransactionEnrichment } from "./use-transaction-enrichment";
 import type { EnrichmentSuggestion } from "./use-transaction-enrichment";
+
+const persistLogoDefault = (bytes: Uint8Array) => runMediaCommand(persistLogoCommand, bytes);
 
 export interface AccountLogo {
     imageColor: string | null;

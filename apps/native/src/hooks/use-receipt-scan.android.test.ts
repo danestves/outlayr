@@ -1,5 +1,6 @@
 import { describe, expect, it, jest } from "@jest/globals";
 import { renderHook, waitFor } from "@testing-library/react-native";
+import * as Effect from "effect/Effect";
 
 import { launchPick } from "@/lib/pending-pick";
 
@@ -17,10 +18,7 @@ jest.mock<Partial<typeof import("expo-image-picker")>>("expo-image-picker", () =
     }),
 }));
 jest.mock<Partial<typeof import("@/lib/receipt-image")>>("@/lib/receipt-image", () => ({
-    prepareReceiptImage: () =>
-        new Promise(() => {
-            // Never settles.
-        }),
+    prepareReceiptImage: () => jest.requireActual<typeof import("effect/Effect")>("effect/Effect").never,
 }));
 jest.mock<Partial<typeof import("@/lib/convex")>>("@/lib/convex", () => ({
     receiptScanTransport: () => () =>
@@ -33,12 +31,7 @@ describe("useReceiptScan on Android", () => {
         const started = new Promise<void>((resolve) => {
             launched = resolve;
         });
-        launchPick("receipt-scan", () => {
-            launched();
-            return new Promise(() => {
-                // Never settles.
-            });
-        }).catch(() => undefined);
+        Effect.runFork(launchPick("receipt-scan", Effect.sync(launched).pipe(Effect.andThen(Effect.never))));
         await started;
 
         const { result } = await renderHook(() =>

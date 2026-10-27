@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { renderHook } from "@testing-library/react-native";
+import * as Effect from "effect/Effect";
 import { AppState } from "react-native";
 import type { AppStateStatus } from "react-native";
 
@@ -34,11 +35,12 @@ async function relockSpy() {
 
 function openSheet() {
     let close: () => void = () => undefined;
-    const sheet = duringHandoff(
-        () =>
-            new Promise<void>((resolve) => {
-                close = resolve;
+    const sheet = Effect.runPromise(
+        duringHandoff(
+            Effect.callback<undefined>((resume) => {
+                close = () => resume(Effect.undefined);
             })
+        )
     );
     return { close: () => close(), sheet };
 }
@@ -144,7 +146,7 @@ describe("useRelock on Android", () => {
     it("relocks on Home after an awaited call came back without leaving", async () => {
         const relock = await relockSpy();
 
-        await duringHandoff(async () => "granted");
+        await Effect.runPromise(duringHandoff(Effect.succeed("granted")));
         changeTo("background");
 
         expect(relock).toHaveBeenCalledTimes(1);

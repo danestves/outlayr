@@ -1,3 +1,4 @@
+import * as Effect from "effect/Effect";
 import { Directory, File, Paths } from "expo-file-system";
 
 const CACHE_DIRECTORY = "merchant-logos";
@@ -39,23 +40,28 @@ export function logoCacheKey(name: string, domain: string | null): string {
 }
 
 /** In the cache directory: always re-fetchable, so iOS may reclaim it and it never counts against photo storage. */
-export async function readCachedLogo(key: string, now = Date.now()): Promise<CachedLogo> {
+export const readCachedLogo = Effect.fn("LogoCache.read")(function* readCachedLogo(key: string, now = Date.now()) {
+    const unknown: CachedLogo = { kind: "unknown" };
     if (key.length === 0) {
-        return { kind: "unknown" };
+        return unknown;
     }
-    try {
+    return yield* Effect.try(() => {
         if (currentMiss(directory(), key, now) != null) {
-            return { kind: "miss" };
+            return { kind: "miss" } satisfies CachedLogo;
         }
         const hit = new File(directory(), key);
-        if (hit.exists) {
-            return { bytes: await hit.bytes(), kind: "logo" };
-        }
-    } catch {
-        return { kind: "unknown" };
-    }
-    return { kind: "unknown" };
-}
+        return hit.exists ? hit : unknown;
+    }).pipe(
+        Effect.flatMap((found) =>
+            found instanceof File
+                ? Effect.tryPromise(() => found.bytes()).pipe(
+                      Effect.map((bytes): CachedLogo => ({ bytes, kind: "logo" }))
+                  )
+                : Effect.succeed(found)
+        ),
+        Effect.orElseSucceed(() => unknown)
+    );
+});
 
 export function cachedLogoUri(key: string, now = Date.now()): string | null {
     if (key.length === 0) {

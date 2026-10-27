@@ -108,7 +108,6 @@ import { useTransactionEnrichment } from "@/hooks/use-transaction-enrichment";
 import type { EnrichmentSuggestion, PendingCategory } from "@/hooks/use-transaction-enrichment";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { celebration } from "@/lib/celebration";
-import { sendEnrichmentQueue } from "@/lib/enrichment-queue";
 import { freshEntries } from "@/lib/fresh-entries";
 import { notifyFailure, notifySaved } from "@/lib/notify";
 import { posthog } from "@/lib/posthog";
@@ -122,10 +121,12 @@ import {
     carryMerchantLookupCommand,
     ensureTagCommand,
     queueEnrichmentCommand,
+    sendEnrichmentQueueCommand,
     recallMerchantCommand,
     rememberedCategoryCommand,
     rememberFeeCategoryCommand,
 } from "@/state/ledger-commands";
+import { glowFromImageCommand, persistLogoBytesCommand, runMediaCommand } from "@/state/media-commands";
 import { setBoolSettingCommand } from "@/state/settings-commands";
 import {
     askForReviewCommand,
@@ -135,7 +136,7 @@ import {
 } from "@/state/surfaces-commands";
 import { PendingCategoryError, saveTransactionCommand } from "@/state/transaction-save-command";
 import { useAtomCommand } from "@/state/use-atom-command";
-import { glowFromEmoji, glowFromImage } from "@/theme/glow";
+import { glowFromEmoji } from "@/theme/glow";
 import { useColors } from "@/theme/use-colors";
 
 import { AccountTile } from "../account-tile";
@@ -545,6 +546,7 @@ export function TransactionForm({
     const saveTransaction = useAtomCommand(saveTransactionCommand, SILENT);
     const backfillRecurring = useAtomCommand(backfillRecurringCommand, SILENT);
     const queueEnrichment = useAtomCommand(queueEnrichmentCommand, SILENT);
+    const sendQueuedEnrichment = useAtomCommand(sendEnrichmentQueueCommand, SILENT);
     const ensureTag = useAtomCommand(ensureTagCommand, SILENT);
     const rememberFeeCategory = useAtomCommand(rememberFeeCategoryCommand, SILENT);
     const rememberedCategory = useAtomCommand(rememberedCategoryCommand, SILENT);
@@ -678,7 +680,7 @@ export function TransactionForm({
                         console.error("Failed to queue the merchant lookup", Cause.squash(queued.cause));
                         return;
                     }
-                    sendEnrichmentQueue(db);
+                    sendQueuedEnrichment(db);
                 });
             }
             const answered = lookupAnsweredRef.current;
@@ -1383,11 +1385,11 @@ export function TransactionForm({
         const photoStorage = require("@/lib/photo-storage") as typeof import("@/lib/photo-storage");
         let photoUri: string;
         try {
-            photoUri = await photoStorage.persistLogoBytes(outcome.bytes);
+            photoUri = await runMediaCommand(persistLogoBytesCommand, outcome.bytes);
         } catch {
             return false;
         }
-        const hues = await glowFromImage(photoUri);
+        const hues = await runMediaCommand(glowFromImageCommand, photoUri);
         if (stale()) {
             // Nothing will name this file: the row moved on, or the form unmounted (which bumps the ticket).
             try {
@@ -1542,7 +1544,7 @@ export function TransactionForm({
                       if (outcome.kind !== "logo") {
                           throw new Error("No logo to carry");
                       }
-                      const imageUri = await photoStorage.persistLogoBytes(outcome.bytes);
+                      const imageUri = await runMediaCommand(persistLogoBytesCommand, outcome.bytes);
                       return { imageColor: saved?.imageColor ?? null, imageUri };
                   };
         // SAFETY: untyped `require`, asserted to the module's own type; lazy as in `attachLogo`.
