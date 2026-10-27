@@ -2,6 +2,7 @@ import geist from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff
 import { HeadContent, Scripts, createRootRoute, useMatches, useParams } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
+import * as Effect from "effect/Effect";
 import { defaultLocale, getIntlayer, getPathWithoutLocale, locales } from "intlayer";
 import { useEffect } from "react";
 import type { ReactNode } from "react";
@@ -15,7 +16,7 @@ import { useAgentTools } from "@/lib/agent-tools";
 import { startAnalytics } from "@/lib/analytics";
 import { LANGUAGES, localeFromParam, pageUrl } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n";
-import { useMotion } from "@/lib/motion";
+import { startMotion } from "@/lib/motion";
 import { APP_ID, FOUNDER_ID, ORGANIZATION_ID, WEBSITE_ID, ldJson, mobileApp } from "@/lib/seo";
 import { COMPANY, FOUNDER, SITE_URL, SOURCE_URL, SUPPORT_EMAIL, X_URL } from "@/lib/site";
 import { THEME_SCRIPT } from "@/lib/theme";
@@ -175,17 +176,17 @@ function RootDocument({ children }: { children: ReactNode }) {
     const locale = localeFromParam(useParams({ strict: false }).locale);
     const country = Route.useLoaderData();
     const inAccount = useMatches({ select: (matches) => matches.some((match) => match.routeId === "/_account") });
+    // oxlint-disable-next-line outlayr/react-effect-budget -- starts the analytics SDK once after hydration, with the visitor's country
     useEffect(() => {
-        startAnalytics(country).catch(() => undefined);
+        Effect.runFork(startAnalytics(country).pipe(Effect.ignoreCause));
     }, [country]);
     useAgentTools(locale);
-    useMotion();
     return (
         <html lang={LANGUAGES[locale].lang} suppressHydrationWarning>
             <head>
                 <HeadContent />
             </head>
-            <body className="flex min-h-dvh flex-col">
+            <body className="flex min-h-dvh flex-col" ref={startMotion}>
                 <IntlayerProvider locale={locale}>
                     {inAccount ? null : <SiteHeader />}
                     <div className="flex-1">{children}</div>

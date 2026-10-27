@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
@@ -12,7 +12,8 @@ import { StoreBadges } from "@/components/store-badges";
 import { hasKey } from "@/lib/has-key";
 import { LANGUAGES } from "@/lib/i18n";
 import { CONTAINER } from "@/lib/layout";
-import { useMotionScan } from "@/lib/motion";
+import { scanMotion } from "@/lib/motion";
+import { useScrollSpy } from "@/lib/scroll-spy";
 import { longDate } from "@/lib/site";
 import type { PageRef } from "@/lib/site";
 
@@ -201,27 +202,17 @@ export function CompareTable({
 function Contents({ sections }: { sections: readonly ArticleSection[] }) {
     const { labels } = useIntlayer("answers");
     const [current, setCurrent] = useState<string>();
-    const order = sections.map((section) => section.id).join(" ");
-    useEffect(() => {
-        const ids = order.split(" ");
-        const observer = new IntersectionObserver(
-            (entries) => {
-                for (const entry of entries) {
-                    const { id } = entry.target;
-                    if (entry.isIntersecting) {
-                        setCurrent(id);
-                    } else if (entry.boundingClientRect.top > 0) {
-                        setCurrent((active) => (active === id ? ids[ids.indexOf(id) - 1] : active));
-                    }
-                }
-            },
-            { rootMargin: "-30% 0px -60% 0px" }
-        );
-        for (const section of document.querySelectorAll(ids.map((id) => `[id="${id}"]`).join(","))) {
-            observer.observe(section);
+    const ids = sections.map((section) => section.id);
+    useScrollSpy(ids, "-30% 0px -60% 0px", (_, entries) => {
+        for (const entry of entries) {
+            const { id } = entry.target;
+            if (entry.isIntersecting) {
+                setCurrent(id);
+            } else if (entry.boundingClientRect.top > 0) {
+                setCurrent((active) => (active === id ? ids[ids.indexOf(id) - 1] : active));
+            }
         }
-        return () => observer.disconnect();
-    }, [order]);
+    });
     return (
         <nav aria-label={labels.contents.value} className={`${ASIDE} hidden lg:block`}>
             <p className="text-muted font-mono text-xs tracking-widest uppercase">{labels.contents}</p>
@@ -265,12 +256,11 @@ export function Article({
     sections: readonly ArticleSection[];
     title: ReactNode;
 }) {
-    useMotionScan();
     const { labels } = useIntlayer("answers");
     const { locale } = useLocale();
     const cards = useRelated(related);
     return (
-        <main className={`${CONTAINER} pt-24 pb-24`} id="main">
+        <main className={`${CONTAINER} pt-24 pb-24`} id="main" ref={scanMotion}>
             <header className="mt-16 grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
                 <div className={aside ? "lg:col-span-7" : "lg:col-span-12"}>
                     <p data-reveal>

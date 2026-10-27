@@ -97,15 +97,5 @@
     "apps/native/src/screens/transfers/edit.tsx": 1,
     "apps/native/src/theme/use-accent.android.ts": 1,
     "apps/native/src/theme/use-accent.ts": 1,
-    "apps/native/src/theme/use-theme-preference.ts": 1,
-    "apps/web/src/components/answers/article.tsx": 1,
-    "apps/web/src/components/demo/sentence-form.tsx": 3,
-    "apps/web/src/components/demo/use-autoplay.ts": 1,
-    "apps/web/src/components/home/media.tsx": 2,
-    "apps/web/src/components/legal-document.tsx": 2,
-    "apps/web/src/components/site-header.tsx": 2,
-    "apps/web/src/components/theme-switch.tsx": 1,
-    "apps/web/src/lib/agent-tools.ts": 1,
-    "apps/web/src/lib/motion.ts": 2,
-    "apps/web/src/routes/__root.tsx": 1
+    "apps/native/src/theme/use-theme-preference.ts": 1
 }

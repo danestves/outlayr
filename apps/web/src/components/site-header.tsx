@@ -3,6 +3,7 @@ import { getPathWithoutLocale } from "intlayer";
 import { useEffect, useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { useScrollSpy } from "@/lib/scroll-spy";
 import { SOURCE_URL } from "@/lib/site";
 
 import { Icon } from "./icon";
@@ -16,31 +17,17 @@ type Section = (typeof SECTIONS)[number];
 const PILL =
     "fluid block rounded-full px-3 py-2 text-sm whitespace-nowrap text-muted hover:text-foreground aria-[current=page]:bg-foreground/5 aria-[current=page]:text-foreground data-[current]:bg-foreground/5 data-[current]:text-foreground";
 
+const WATCHED = ["top", ...SECTIONS];
+
 function useCurrentSection(enabled: boolean) {
     const [current, setCurrent] = useState<Section | null>(null);
-    useEffect(() => {
-        if (!enabled) {
-            return;
-        }
-        const watcher = new IntersectionObserver(
-            (entries) => {
-                for (const entry of entries) {
-                    if (entry.isIntersecting) {
-                        const id = SECTIONS.find((section) => section === entry.target.id);
-                        setCurrent(id ?? null);
-                    }
-                }
-            },
-            { rootMargin: "-45% 0px -50% 0px" }
-        );
-        for (const id of ["top", ...SECTIONS]) {
-            const element = document.querySelector(`#${id}`);
-            if (element) {
-                watcher.observe(element);
+    useScrollSpy(enabled ? WATCHED : [], "-45% 0px -50% 0px", (_, entries) => {
+        for (const entry of entries) {
+            if (entry.isIntersecting) {
+                setCurrent(SECTIONS.find((section) => section === entry.target.id) ?? null);
             }
         }
-        return () => watcher.disconnect();
-    }, [enabled]);
+    });
     return enabled ? current : null;
 }
 
@@ -50,6 +37,7 @@ export function SiteHeader() {
     const path = getPathWithoutLocale(useLocation({ select: (location) => location.pathname }));
     const current = useCurrentSection(path === "/");
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- locks body scroll and listens for Escape on window while the menu is open
     useEffect(() => {
         if (!open) {
             return;

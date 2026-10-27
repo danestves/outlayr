@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { Icon } from "@/components/icon";
+import { useInView } from "@/lib/in-view";
 import { useReducedMotion } from "@/lib/reduced-motion";
 import { usePaintedTheme } from "@/lib/theme";
 
@@ -97,23 +98,6 @@ export function Screen({
     );
 }
 
-export function useInView<T extends Element>(threshold = 0.3) {
-    const ref = useRef<T>(null);
-    const [inView, setInView] = useState(false);
-    useEffect(() => {
-        const node = ref.current;
-        if (node === null) {
-            return;
-        }
-        const watcher = new IntersectionObserver(([entry]) => setInView(entry?.isIntersecting ?? false), {
-            threshold,
-        });
-        watcher.observe(node);
-        return () => watcher.disconnect();
-    }, [threshold]);
-    return { inView, ref };
-}
-
 export function LoopVideo({
     av1,
     className = "relative",
@@ -130,13 +114,14 @@ export function LoopVideo({
     const { pause, play } = useIntlayer("story");
     const reduced = useReducedMotion();
     const theme = usePaintedTheme();
-    const { inView, ref } = useInView<HTMLDivElement>(0.3);
+    const { inView, ref } = useInView<HTMLDivElement>();
     const video = useRef<HTMLVideoElement>(null);
     const [choice, setChoice] = useState<boolean | null>(null);
     const [paused, setPaused] = useState(true);
     const wanted = choice ?? !reduced;
     const playing = wanted && inView;
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- drives the video element's imperative play and pause from props; it has no declarative API
     useEffect(() => {
         const element = video.current;
         if (element === null || element.dataset.variant !== theme) {

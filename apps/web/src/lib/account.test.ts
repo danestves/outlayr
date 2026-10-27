@@ -1,6 +1,7 @@
+import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vite-plus/test";
 
-import { failureMessage, safeRedirect } from "./account";
+import { AuthFailure, authRequest, failureMessage, safeRedirect } from "./account";
 
 describe("safeRedirect", () => {
     it("keeps a path on this site, query included", () => {
@@ -28,5 +29,19 @@ describe("failureMessage", () => {
 
     it("falls back for unknown failures", () => {
         expect(failureMessage()).toBe("Sign-in didn't complete. Try again.");
+    });
+});
+
+describe("authRequest", () => {
+    it("fails with the code and status the auth client returned", async () => {
+        const failure = await Effect.runPromise(
+            Effect.flip(authRequest(async () => ({ error: { code: "INVALID_OTP", status: 400 } })))
+        );
+        expect(failure).toEqual(new AuthFailure({ code: "INVALID_OTP", status: 400 }));
+    });
+
+    it("turns a rejected call into a failure that gets the generic message", async () => {
+        const failure = await Effect.runPromise(Effect.flip(authRequest(() => Promise.reject(new Error("offline")))));
+        expect(failureMessage(failure)).toBe("Sign-in didn't complete. Try again.");
     });
 });

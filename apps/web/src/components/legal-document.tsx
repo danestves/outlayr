@@ -1,11 +1,12 @@
 import { MDXContent } from "@content-collections/mdx/react";
 import { Link } from "@tanstack/react-router";
 import type { Legal } from "content-collections";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import type { ComponentProps } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { LANGUAGES } from "@/lib/i18n";
+import { useScrollSpy } from "@/lib/scroll-spy";
 import { legalDate } from "@/lib/site";
 
 import { Icon } from "./icon";
@@ -27,31 +28,20 @@ const COMPONENTS = { a: MdxLink, table: MdxTable };
 
 function useCurrentClause(toc: Legal["toc"]) {
     const [current, setCurrent] = useState<string>();
-    useEffect(() => {
-        const passed = new Set<string>();
-        const observer = new IntersectionObserver(
-            (entries) => {
-                for (const entry of entries) {
-                    if (entry.isIntersecting) {
-                        passed.add(entry.target.id);
-                    } else {
-                        passed.delete(entry.target.id);
-                    }
-                }
-                setCurrent(toc.findLast((entry) => passed.has(entry.id))?.id);
-            },
-            { rootMargin: "100000px 0px -70% 0px" }
-        );
-        for (const entry of toc) {
-            const heading = document.querySelector(`#${CSS.escape(entry.id)}`);
-            if (heading) {
-                observer.observe(heading);
-            }
-        }
-        return () => observer.disconnect();
-    }, [toc]);
+    useScrollSpy(
+        toc.map((entry) => entry.id),
+        "100000px 0px -70% 0px",
+        (passed) => setCurrent(toc.findLast((entry) => passed.has(entry.id))?.id)
+    );
     return current;
 }
+
+const centerInNav = (link: HTMLElement | null) => {
+    const nav = link?.closest("nav");
+    if (link && nav) {
+        nav.scrollTo({ top: link.offsetTop - (nav.clientHeight - link.offsetHeight) / 2 });
+    }
+};
 
 function Contents({ current, toc }: { current?: string; toc: Legal["toc"] }) {
     return (
@@ -62,6 +52,7 @@ function Contents({ current, toc }: { current?: string; toc: Legal["toc"] }) {
                         aria-current={entry.id === current ? "location" : undefined}
                         className="group fluid text-muted hover:text-foreground aria-[current=location]:bg-raised aria-[current=location]:text-foreground flex gap-3 rounded-2xl px-4 py-2 text-sm"
                         href={`#${entry.id}`}
+                        ref={entry.id === current ? centerInNav : undefined}
                     >
                         <span className="tabular group-aria-[current=location]:text-tint w-5 shrink-0 pt-px font-mono text-xs leading-5">
                             {String(index + 1).padStart(2, "0")}
@@ -84,17 +75,8 @@ export function LegalDocument({
     const { legal } = useIntlayer("site");
     const { locale } = useLocale();
     const current = useCurrentClause(toc);
-    const aside = useRef<HTMLElement>(null);
     // Policies take effect on a date; the deletion how-to only says when it was last checked.
     const dated = slug === "delete-account" ? legal.updated : legal.effective;
-
-    useEffect(() => {
-        const nav = aside.current;
-        const link = current ? nav?.querySelector<HTMLElement>(`a[href="#${CSS.escape(current)}"]`) : null;
-        if (nav && link) {
-            nav.scrollTo({ top: link.offsetTop - (nav.clientHeight - link.offsetHeight) / 2 });
-        }
-    }, [current]);
 
     return (
         <Page lead={intro} meta={dated({ date: legalDate(slug, LANGUAGES[locale].date) })} title={title}>
@@ -111,7 +93,6 @@ export function LegalDocument({
                 <nav
                     aria-label={legal.contents.value}
                     className={`${ASIDE} bg-surface max-h-[calc(100dvh-8rem)] overflow-y-auto overscroll-contain rounded-3xl p-2 motion-safe:scroll-smooth max-lg:hidden print:hidden`}
-                    ref={aside}
                 >
                     <Contents current={current} toc={toc} />
                 </nav>

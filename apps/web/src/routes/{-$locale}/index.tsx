@@ -11,7 +11,7 @@ import { Pricing } from "@/components/home/pricing";
 import { Problem } from "@/components/home/problem";
 import { Closing, Questions, Tagline } from "@/components/home/questions";
 import { LANGUAGES, localeFromParam } from "@/lib/i18n";
-import { useMotionScan } from "@/lib/motion";
+import { scanMotion } from "@/lib/motion";
 import { faqPage, ldJson, pageMeta } from "@/lib/seo";
 
 const AGENT_LINKS = [
@@ -46,9 +46,8 @@ export const Route = createFileRoute("/{-$locale}/")({
 });
 
 function HomePage() {
-    useMotionScan();
     return (
-        <main id="main">
+        <main id="main" ref={scanMotion}>
             <Hero />
             <Problem />
             <Tagline />

@@ -1,5 +1,6 @@
 import { useAction, useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
+import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { useState } from "react";
@@ -12,6 +13,14 @@ import type { AuthRequest } from "@/lib/consent";
 import { ErrorLine, Field, LINE_PILL, Screen, SOLID_PILL } from "./parts";
 
 const decodeMessage = Schema.decodeUnknownOption(Schema.String);
+
+class ConnectFailure extends Schema.TaggedError<ConnectFailure>()("ConnectFailure", {
+    cause: Schema.Defect(),
+}) {}
+
+const connectRequest = Effect.fn("Connect.request")(function* connectRequest<A>(call: () => Promise<A>) {
+    return yield* Effect.tryPromise({ catch: (cause) => new ConnectFailure({ cause }), try: call });
+});
 
 function failure(cause: unknown): string {
     const message = cause instanceof ConvexError ? decodeMessage(cause.data) : Option.none();
@@ -31,22 +40,23 @@ function FindRequest() {
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const submit = async (event: FormEvent) => {
+    const submit = (event: FormEvent) => {
         event.preventDefault();
         setError(null);
         setBusy(true);
-        try {
-            const request = await find({ userCode: code });
-            if (request === null) {
-                setError("No request matches that code.");
-                return;
-            }
-            window.location.assign(`/connect?request=${encodeURIComponent(request)}`);
-        } catch (cause) {
-            setError(failure(cause));
-        } finally {
-            setBusy(false);
-        }
+        Effect.runFork(
+            Effect.gen(function* submitProgram() {
+                const request = yield* connectRequest(() => find({ userCode: code }));
+                if (request === null) {
+                    setError("No request matches that code.");
+                    return;
+                }
+                window.location.assign(`/connect?request=${encodeURIComponent(request)}`);
+            }).pipe(
+                Effect.catchTags({ ConnectFailure: (failed) => Effect.sync(() => setError(failure(failed.cause))) }),
+                Effect.ensuring(Effect.sync(() => setBusy(false)))
+            )
+        );
     };
 
     return (
@@ -123,24 +133,33 @@ function Decision({
     const device = request.kind === "device";
     const clientName = request.clientName ?? "an agent";
 
-    const answer = async (approve: boolean) => {
+    const answer = (approve: boolean) => {
         setError(null);
         setBusy(true);
-        try {
-            const { redirectUrl } = await decide({
-                approve,
-                requestId,
-                userCode: device && approve ? request.userCode : undefined,
-            });
-            if (redirectUrl === null) {
-                onDone();
-                return;
-            }
-            window.location.assign(redirectUrl);
-        } catch (cause) {
-            setError(failure(cause));
-            setBusy(false);
-        }
+        Effect.runFork(
+            Effect.gen(function* answerProgram() {
+                const { redirectUrl } = yield* connectRequest(() =>
+                    decide({
+                        approve,
+                        requestId,
+                        userCode: device && approve ? request.userCode : undefined,
+                    })
+                );
+                if (redirectUrl === null) {
+                    onDone();
+                    return;
+                }
+                window.location.assign(redirectUrl);
+            }).pipe(
+                Effect.catchTags({
+                    ConnectFailure: (failed) =>
+                        Effect.sync(() => {
+                            setError(failure(failed.cause));
+                            setBusy(false);
+                        }),
+                })
+            )
+        );
     };
 
     let intro: ReactNode;
