@@ -2,11 +2,6 @@
   "enabledPlugins": {
     "expo@claude-plugins-official": true
   },
-  "permissions": {
-    "allow": [
-      "mcp__argent"
-    ]
-  },
   "hooks": {
     "PostToolUse": [
       {
