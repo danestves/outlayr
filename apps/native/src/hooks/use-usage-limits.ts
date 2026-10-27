@@ -1,4 +1,4 @@
-import { useQuery } from "convex/react";
+import { useQueries } from "convex/react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { projectLimit } from "@/domain/usage-limits";
@@ -7,6 +7,7 @@ import { USAGE_LIMITS_QUERY } from "@/lib/convex";
 import { readSecondClock, subscribeSecondClock } from "@/lib/second-clock";
 
 const subscribeNever = () => () => undefined;
+const USAGE_LIMITS_REQUEST = { limits: { args: {}, query: USAGE_LIMITS_QUERY } };
 const LAST_NOTICE_MS = 6000;
 
 export type CaptureFeature = "receiptScan" | "voiceEntry";
@@ -27,8 +28,9 @@ export type LimitNotice =
     | (BurstNotice & { kind: "last" })
     | (BurstNotice & { kind: "paused" });
 
-export function useUsageLimits() {
-    return useQuery(USAGE_LIMITS_QUERY, {});
+export function useUsageLimits(): UsageLimits | null | undefined {
+    const result: UsageLimits | null | Error | undefined = useQueries(USAGE_LIMITS_REQUEST).limits;
+    return result instanceof Error ? undefined : result;
 }
 
 export function useTickingNow(active: boolean): number {
