@@ -1,10 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { z } from "zod";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 
 const STORAGE_KEY = "outlayr.over-budget-seen";
 const REMEMBERED = 60;
 
-const seenKeys = z.array(z.string());
+const decodeSeenKeys = Schema.decodeUnknownOption(Schema.mutable(Schema.Array(Schema.String)));
 
 const claimed = new Set<string>();
 let stored: Promise<string[]> | null = null;
@@ -12,8 +13,7 @@ let stored: Promise<string[]> | null = null;
 async function load(): Promise<string[]> {
     try {
         const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        const parsed = seenKeys.safeParse(raw ? JSON.parse(raw) : []);
-        return parsed.success ? parsed.data : [];
+        return Option.getOrElse(decodeSeenKeys(raw ? JSON.parse(raw) : []), () => []);
     } catch {
         return [];
     }

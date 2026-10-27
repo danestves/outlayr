@@ -1,5 +1,6 @@
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import { useState } from "react";
-import { z } from "zod";
 
 import { isSignInCancellation, signInFailureDetail, signInFailureMessage } from "@/domain/account";
 import { useTranslation } from "@/i18n/context";
@@ -33,19 +34,19 @@ interface SocialSignInResult {
     error?: { message?: string } | null;
 }
 
-const userIdSchema = z.string().min(1);
+const isUserId = Schema.is(Schema.NonEmptyString);
 
 function betterAuthUserId(result: SocialSignInResult): string {
-    const userId = userIdSchema.safeParse(result.data?.user?.id);
-    if (!userId.success) {
+    const userId = result.data?.user?.id;
+    if (!isUserId(userId)) {
         throw new Error("Provider sign-in did not return a Better Auth user");
     }
-    return userId.data;
+    return userId;
 }
 
-const identityClaims = z.object({ sub: z.string().min(1) });
+const decodeIdentityClaims = Schema.decodeUnknownOption(Schema.Struct({ sub: Schema.NonEmptyString }));
 
-const appleGrant = z.object({ active: z.literal(true) });
+const isAppleGrant = Schema.is(Schema.Struct({ active: Schema.Literal(true) }));
 
 export function googleProviderSubject(identityToken: string): string {
     const [, payload] = identityToken.split(".");
@@ -55,11 +56,11 @@ export function googleProviderSubject(identityToken: string): string {
     try {
         const base64 = payload.replaceAll("-", "+").replaceAll("_", "/");
         const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
-        const claims = identityClaims.safeParse(JSON.parse(globalThis.atob(padded)));
-        if (!claims.success) {
+        const claims = decodeIdentityClaims(JSON.parse(globalThis.atob(padded)));
+        if (Option.isNone(claims)) {
             throw new Error("Google identity token does not contain a subject");
         }
-        return claims.data.sub;
+        return claims.value.sub;
     } catch (cause) {
         if (cause instanceof Error && cause.message === "Google identity token does not contain a subject") {
             throw cause;
@@ -91,7 +92,7 @@ export async function completeAppleSignIn(
             body: credential,
             method: "POST",
         });
-        const active = appleGrant.safeParse(grantResult.data).success;
+        const active = isAppleGrant(grantResult.data);
         if (grantResult.error || !active) {
             throw new Error(grantResult.error?.message ?? "Apple credential activation failed");
         }

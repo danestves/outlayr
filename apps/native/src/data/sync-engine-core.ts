@@ -1,7 +1,7 @@
 import { and, asc, eq, getTableColumns, inArray, isNull, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import type { SQLiteColumn, SQLiteTable } from "drizzle-orm/sqlite-core";
-import { z } from "zod";
+import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import {
@@ -331,12 +331,11 @@ function toWireFields(spec: TableSpec, row: Row): WireFields {
     );
 }
 
-const wireEpoch = z.number();
-const wireId = z.string();
+const isWireEpoch = Schema.is(Schema.Finite);
+const isWireId = Schema.is(Schema.String);
 
 function toLocalDate(value: WireValue): Date | null {
-    const epoch = wireEpoch.safeParse(value);
-    return epoch.success ? new Date(epoch.data) : null;
+    return isWireEpoch(value) ? new Date(value) : null;
 }
 
 function toLocalFields(spec: TableSpec, fields: WireFields): Row {
@@ -660,11 +659,10 @@ async function applyInTransaction(
  * tombstone the same loser, and R1 converges the account on one live budget per category.
  */
 async function resolveBudgetCategory(db: Database, row: PulledRow, now: Date): Promise<boolean> {
-    const incoming = wireId.safeParse(row.fields.categoryId);
-    if (row.deletedAt !== null || !incoming.success) {
+    const { categoryId } = row.fields;
+    if (row.deletedAt !== null || !isWireId(categoryId)) {
         return false;
     }
-    const categoryId = incoming.data;
 
     const rivals = await db
         .select({ id: budgets.id, updatedAt: budgets.updatedAt })
@@ -690,9 +688,8 @@ async function resolveBudgetCategory(db: Database, row: PulledRow, now: Date): P
 }
 
 async function resolveTagLink(db: Database, row: PulledRow, now: Date): Promise<boolean> {
-    const tagId = wireId.safeParse(row.fields.tagId);
-    const transactionId = wireId.safeParse(row.fields.transactionId);
-    if (row.deletedAt !== null || !(tagId.success && transactionId.success)) {
+    const { tagId, transactionId } = row.fields;
+    if (row.deletedAt !== null || !(isWireId(tagId) && isWireId(transactionId))) {
         return false;
     }
 
@@ -701,8 +698,8 @@ async function resolveTagLink(db: Database, row: PulledRow, now: Date): Promise<
         .from(transactionTags)
         .where(
             and(
-                eq(transactionTags.transactionId, transactionId.data),
-                eq(transactionTags.tagId, tagId.data),
+                eq(transactionTags.transactionId, transactionId),
+                eq(transactionTags.tagId, tagId),
                 isNull(transactionTags.deletedAt)
             )
         );

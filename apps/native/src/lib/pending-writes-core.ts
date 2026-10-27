@@ -1,27 +1,32 @@
-import { z } from "zod";
+import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 
-/** Written by `app-intents/LogTransactionIntent.swift`: the field names are the wire format. */
-export interface PendingWrite {
-    amount: number;
+/** Only five fields are required: an extension build older than the app is normal. */
+const PendingWrite = Schema.Struct({
+    amount: Schema.Finite,
     /** The amount as it arrived (e.g. "€12,40"); the drain reads the currency back out of it. */
-    amountText?: string | null;
-    card?: string | null;
-    category: string | null;
-    categoryId?: string | null;
+    amountText: Schema.optional(Schema.NullOr(Schema.String)),
+    card: Schema.optional(Schema.NullOr(Schema.String)),
+    category: Schema.NullOr(Schema.String).pipe(Schema.withDecodingDefault(Effect.succeed(null))),
+    categoryId: Schema.optional(Schema.NullOr(Schema.String)),
     /** Beats `amountText` when the automation pinned one. */
-    currency?: string | null;
+    currency: Schema.optional(Schema.NullOr(Schema.String)),
     /** Epoch ms: when the intent ran, not when the app drained it. */
-    date: number;
+    date: Schema.Finite,
     /**
      * Identifies the purchase, where `id` identifies the enqueue: Wallet fires once on authorize and again on
      * settle. Carries no timestamp; the window is `WALLET_DEDUPE_WINDOW_MS` in `src/data/pending-writes-core.ts`.
      */
-    dedupeKey?: string | null;
-    id: string;
-    income: boolean;
-    note: string;
-    text?: string | null;
-}
+    dedupeKey: Schema.optional(Schema.NullOr(Schema.String)),
+    id: Schema.String,
+    income: Schema.Boolean,
+    note: Schema.String,
+    text: Schema.optional(Schema.NullOr(Schema.String)),
+});
+
+/** Written by `app-intents/LogTransactionIntent.swift`: the field names are the wire format. */
+export type PendingWrite = typeof PendingWrite.Type;
 
 export const QUEUE_DIRECTORY = "pending-writes";
 
@@ -58,29 +63,15 @@ function claimName(files: QueueFiles): string {
     return `claimed-${highest + 1}.jsonl`;
 }
 
-/** Only five fields are required: an extension build older than the app is normal. */
-const pendingWriteSchema = z.object({
-    amount: z.number().finite(),
-    amountText: z.string().nullish(),
-    card: z.string().nullish(),
-    category: z
-        .string()
-        .nullish()
-        .transform((value) => value ?? null),
-    categoryId: z.string().nullish(),
-    currency: z.string().nullish(),
-    date: z.number().finite(),
-    dedupeKey: z.string().nullish(),
-    id: z.string(),
-    income: z.boolean(),
-    note: z.string(),
-    text: z.string().nullish(),
-});
+const decodePendingWrite = Schema.decodeUnknownOption(PendingWrite);
+
+const decodeLegacyQueue = Schema.decodeUnknownOption(
+    Schema.Array(Schema.NullOr(PendingWrite).pipe(Schema.catchDecoding(() => Effect.succeedSome(null))))
+);
 
 function parsePendingWrite(line: string): PendingWrite | null {
     try {
-        const parsed = pendingWriteSchema.safeParse(JSON.parse(line));
-        return parsed.success ? parsed.data : null;
+        return Option.getOrNull(decodePendingWrite(JSON.parse(line)));
     } catch {
         return null;
     }
@@ -108,8 +99,8 @@ function toQueueText(jobs: PendingWrite[]): string {
 
 export function parseLegacyQueue(raw: string): PendingWrite[] {
     try {
-        const parsed = z.array(pendingWriteSchema.nullable().catch(null)).safeParse(JSON.parse(raw));
-        return parsed.success ? parsed.data.filter((write) => write !== null) : [];
+        const parsed = decodeLegacyQueue(JSON.parse(raw));
+        return Option.isSome(parsed) ? parsed.value.filter((write) => write !== null) : [];
     } catch {
         return [];
     }

@@ -1,4 +1,5 @@
-import { z } from "zod";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 
 import type { TranslationKey } from "@/i18n/catalog";
 import type { TranslateFn } from "@/i18n/context";
@@ -49,7 +50,7 @@ export function signInFailureMessage(cause: unknown, t: TranslateFn): string {
     if (code === "PLAY_SERVICES_NOT_AVAILABLE") {
         return t("settings.account.playServices");
     }
-    if (providerFailure.safeParse(cause).data?.status === TOO_MANY_REQUESTS) {
+    if (Option.getOrUndefined(decodeProviderFailure(cause))?.status === TOO_MANY_REQUESTS) {
         return t("auth.email.error.rateLimited");
     }
     return t((code === null ? undefined : EMAIL_FAILURES.get(code)) ?? "settings.account.genericFailure");
@@ -59,15 +60,16 @@ export function signInFailureDetail(cause: unknown): string | null {
     return firstNonBlank(errorField(cause, "message"), errorField(cause, "code"));
 }
 
-const providerFailure = z.object({
-    code: z.string().optional(),
-    message: z.string().optional(),
-    status: z.number().optional(),
-});
+const decodeProviderFailure = Schema.decodeUnknownOption(
+    Schema.Struct({
+        code: Schema.optional(Schema.String),
+        message: Schema.optional(Schema.String),
+        status: Schema.optional(Schema.Finite),
+    })
+);
 
 function errorField(cause: unknown, field: "code" | "message"): string | null {
-    const parsed = providerFailure.safeParse(cause);
-    return parsed.success ? (parsed.data[field] ?? null) : null;
+    return Option.getOrUndefined(decodeProviderFailure(cause))?.[field] ?? null;
 }
 
 function firstNonBlank(...values: (string | null | undefined)[]): string | null {

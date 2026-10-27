@@ -1,5 +1,6 @@
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import { deleteItemAsync, getItemAsync, setItemAsync } from "expo-secure-store";
-import { z } from "zod";
 
 import { resumeCloudDeletion } from "./account-lifecycle";
 import type { DeletionPreparation } from "./account-lifecycle";
@@ -30,17 +31,21 @@ function recoveryError(): Error {
  * Loose: `resumeProviderRevocation` writes the record back with a `googleLocalReceipt`, and rejecting that extra
  * field would strand the deletion the record exists to survive.
  */
-const storedPreparation = z.looseObject({
-    provider: z.enum(["apple", "google", "password"]),
-    providerSubject: z.string(),
-    receiptChallenge: z.string(),
-    resumeSecret: z.string(),
-});
+const decodeStoredPreparation = Schema.decodeUnknownOption(
+    Schema.StructWithRest(
+        Schema.Struct({
+            provider: Schema.Literals(["apple", "google", "password"]),
+            providerSubject: Schema.String,
+            receiptChallenge: Schema.String,
+            resumeSecret: Schema.String,
+        }),
+        [Schema.Record(Schema.String, Schema.Unknown)]
+    )
+);
 
 function parsePreparation(raw: string): StoredDeletionPreparation | null {
     try {
-        const parsed = storedPreparation.safeParse(JSON.parse(raw));
-        return parsed.success ? parsed.data : null;
+        return Option.getOrNull(decodeStoredPreparation(JSON.parse(raw)));
     } catch {
         return null;
     }

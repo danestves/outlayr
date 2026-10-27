@@ -1,29 +1,29 @@
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import { deleteItemAsync, getItemAsync, setItemAsync } from "expo-secure-store";
-import { z } from "zod";
 
 import { createNativeDeviceDataStores, DEVICE_STORES } from "./device-data-stores";
 import type { DeviceDataStores, DeviceStore, NativeDeviceDataStoreDependencies } from "./device-data-stores";
 
 const RESET_MARKER_KEY = "outlayr.device-reset";
 
-export interface DeviceResetMarker {
-    phase: "cloud" | "device";
-    v: 1;
-}
-
-const resetMarker = z.object({
-    phase: z.enum(["cloud", "device"]),
-    v: z.literal(1),
+const DeviceResetMarker = Schema.Struct({
+    phase: Schema.Literals(["cloud", "device"]),
+    v: Schema.Literal(1),
 });
+
+export type DeviceResetMarker = typeof DeviceResetMarker.Type;
+
+const decodeResetMarker = Schema.decodeUnknownOption(DeviceResetMarker);
 
 function parseResetMarker(raw: string | null): DeviceResetMarker | null {
     if (raw === null) {
         return null;
     }
     try {
-        const parsed = resetMarker.safeParse(JSON.parse(raw));
-        if (parsed.success) {
-            return parsed.data;
+        const parsed = decodeResetMarker(JSON.parse(raw));
+        if (Option.isSome(parsed)) {
+            return parsed.value;
         }
     } catch {
         // A malformed marker cannot safely be treated as no reset.
