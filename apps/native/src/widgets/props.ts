@@ -146,6 +146,7 @@ export interface InsightsWidgetProps {
 
 export interface LogWidgetProps {
     chrome: WidgetChrome;
+    todayCount: number;
     todayLabel: string;
     todaySpent: string;
     url: string;
@@ -329,6 +330,7 @@ export const buildWidgetProps = Effect.fn("Widgets.buildProps")(function* buildW
         },
         Log: {
             chrome: WIDGET_PALETTE,
+            todayCount: countExpenses(contributions, startOfDay(now), now),
             todayLabel: translateNow("common.today").toUpperCase(),
             todaySpent: money(sumExpenses(contributions, startOfDay(now), now, null)),
             url: DEEP_LINKS.newExpense,
@@ -385,6 +387,35 @@ const budgetFigures = Effect.fn("Widgets.budgetFigures")(function* budgetFigures
 
 type BudgetFigures = Effect.Success<ReturnType<typeof budgetFigures>>;
 
+/** The Budgets screen's own comparator: over-budget first, and the zero limit guarded (`spent / 0` is `Infinity`). */
+function worstBudget(categories: BudgetFigures["categories"]) {
+    const [worst] = [...categories].sort((a, b) =>
+        compareBudgetSeverity(
+            { amount: a.limit, overBudget: a.spent > a.limit, spent: a.spent },
+            { amount: b.limit, overBudget: b.spent > b.limit, spent: b.spent }
+        )
+    );
+    return worst;
+}
+
+export const loadWidgetFigures = Effect.fn("Widgets.loadFigures")(function* loadWidgetFigures(db: SpendDb, now: Date) {
+    const [currencyRaw, showCentsRaw] = yield* Effect.all([getMeta(db, META_KEYS.currency), getMeta(db, "showCents")], {
+        concurrency: "unbounded",
+    });
+    const valuation = yield* loadValuation(db);
+    const contributions = yield* loadContributions(db, now, valuation);
+    const budgets = yield* budgetFigures(db, now, contributions, valuation);
+    const budget = budgets.main ?? worstBudget(budgets.categories);
+    return {
+        budget: budget ? { limit: budget.limit, spent: budget.spent } : null,
+        currency: currencyRaw ?? DEFAULT_CURRENCY,
+        showCents: parseBoolSetting(showCentsRaw, true),
+        todayCount: countExpenses(contributions, startOfDay(now), now),
+        todaySpent: sumExpenses(contributions, startOfDay(now), now, null),
+        valuation,
+    };
+});
+
 function buildBudget(
     figures: BudgetFigures,
     now: Date,
@@ -413,13 +444,7 @@ function buildBudget(
     }
 
     let worst = empty;
-    // The Budgets screen's own comparator: over-budget first, and the zero limit guarded (`spent / 0` is `Infinity`).
-    const [ranked] = [...figures.categories].sort((a, b) =>
-        compareBudgetSeverity(
-            { amount: a.limit, overBudget: a.spent > a.limit, spent: a.spent },
-            { amount: b.limit, overBudget: b.spent > b.limit, spent: b.spent }
-        )
-    );
+    const ranked = worstBudget(figures.categories);
     if (ranked) {
         // Name precedence mirrors `usePerCategoryBudgets`.
         const rankedCategory = ranked.row.categoryId ? categoriesById.get(ranked.row.categoryId) : undefined;
@@ -551,6 +576,17 @@ function sumExpenses(rows: readonly Contribution[], start: Date, now: Date, cate
         }
     }
     return total;
+}
+
+function countExpenses(rows: readonly Contribution[], start: Date, now: Date): number {
+    const ids = new Set<string>();
+    for (const row of rows) {
+        const t = row.date.getTime();
+        if (!row.income && t >= start.getTime() && t <= now.getTime()) {
+            ids.add(row.id);
+        }
+    }
+    return ids.size;
 }
 
 function buildWeek(contributions: readonly Contribution[], now: Date, whole: Money): WeekProps {

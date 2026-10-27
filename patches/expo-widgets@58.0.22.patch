@@ -1,4 +1,465 @@
+diff --git a/android/build.gradle b/android/build.gradle
+index 9639055..491d72c 100644
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -1,10 +1,21 @@
+ import org.apache.tools.ant.taskdefs.condition.Os
+ 
++buildscript {
++  repositories {
++    mavenCentral()
++  }
++  dependencies {
++    classpath("org.jetbrains.kotlin.plugin.compose:org.jetbrains.kotlin.plugin.compose.gradle.plugin:${kotlinVersion}")
++  }
++}
++
+ plugins {
+   id 'com.android.library'
+   id 'expo-module-gradle-plugin'
+ }
+ 
++apply plugin: 'org.jetbrains.kotlin.plugin.compose'
++
+ group = 'expo.modules.widgets'
+ version = '58.0.22'
+ 
+@@ -64,6 +75,7 @@ android {
+ 
+   buildFeatures {
+     prefab true
++    compose true
+   }
+ 
+   packagingOptions {
+diff --git a/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.kt b/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.kt
+index 3df9e4a..aed25c2 100644
+--- a/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.kt
++++ b/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.kt
+@@ -66,6 +66,9 @@ import androidx.glance.ImageProvider
+ import androidx.glance.TintColorFilterParams
+ import androidx.glance.GlanceModifier
+ import androidx.glance.action.clickable
++import androidx.glance.appwidget.action.actionStartActivity
++import android.content.Intent
++import android.net.Uri
+ import androidx.glance.appwidget.CheckboxDefaults
+ import androidx.glance.appwidget.cornerRadius
+ import androidx.glance.appwidget.EmittableCheckBox
+@@ -102,6 +105,8 @@ import androidx.glance.text.TextDecoration
+ import androidx.glance.text.TextDefaults
+ import androidx.glance.text.TextStyle
+ import androidx.glance.unit.ColorProvider
++import androidx.glance.color.ColorProvider as DayNightColorProvider
++import androidx.compose.ui.graphics.toArgb
+ import androidx.glance.appwidget.lazy.EmittableLazyColumn
+ import androidx.glance.appwidget.lazy.EmittableLazyListItem
+ import androidx.glance.appwidget.lazy.ReservedItemIdRangeEnd
+@@ -295,8 +300,14 @@ private fun ImageContentScale.toGlanceContentScale(): ContentScale {
+ private fun ReadableMap.toPeekButton(converterContext: WidgetConverterContext, source: InteractionSource): Emittable {
+   val props = props<WidgetButtonProps>(converterContext)
+   val children = children()
+-  val action =
+-    props.target?.let { target -> WidgetInteraction(source, target).toGlanceAction(converterContext.applicationContext) }
++  val action = props.target?.let { target ->
++    if (target.contains("://")) {
++      val context = converterContext.applicationContext
++      actionStartActivity(Intent(Intent.ACTION_VIEW, Uri.parse(target)).setPackage(context.packageName))
++    } else {
++      WidgetInteraction(source, target).toGlanceAction(converterContext.applicationContext)
++    }
++  }
+   val modifier = props.buttonModifier(converterContext)
+   val contentColor = props.contentColorProvider()
+   val textContent = children.textContent(converterContext) ?: props.label
+@@ -471,7 +482,9 @@ private fun ContentPaddingRecord.toPeekModifier(): GlanceModifier {
+ }
+ 
+ private fun AndroidColor?.toGlanceColorProvider(): ColorProvider? {
+-  return colorToComposeColorOrNull(this)?.let(::ColorProvider)
++  val day = colorToComposeColorOrNull(this) ?: return null
++  val night = WidgetNightColors.night(day.toArgb()) ?: return ColorProvider(day)
++  return DayNightColorProvider(day = day, night = Color(night))
+ }
+ 
+ private fun LayoutProps.toPeekHorizontalAlignment(): Alignment.Horizontal {
+diff --git a/android/src/main/java/expo/modules/widgets/ExpoWidgetsAppWidgetProvider.kt b/android/src/main/java/expo/modules/widgets/ExpoWidgetsAppWidgetProvider.kt
+index 84c025f..af4e95b 100644
+--- a/android/src/main/java/expo/modules/widgets/ExpoWidgetsAppWidgetProvider.kt
++++ b/android/src/main/java/expo/modules/widgets/ExpoWidgetsAppWidgetProvider.kt
+@@ -1,23 +1,50 @@
+ package expo.modules.widgets
+ 
++import android.appwidget.AppWidgetManager
+ import android.content.Context
+ import android.content.Intent
+ import androidx.glance.appwidget.GlanceAppWidgetReceiver
+ import io.github.expo.peek.emittables.PeekEmittableAppWidget
++import kotlinx.coroutines.CoroutineScope
++import kotlinx.coroutines.Dispatchers
++import kotlinx.coroutines.launch
+ 
+ open class ExpoWidgetsAppWidgetProvider(
+-  widgetName: String
++  private val widgetName: String
+ ) : GlanceAppWidgetReceiver() {
+   override val glanceAppWidget: PeekEmittableAppWidget = ExpoWidgetsPeekWidget(widgetName)
+ 
+   override fun onReceive(context: Context, intent: Intent) {
+-    if (intent.action == WIDGET_INTERACTION_ACTION) {
+-      val source = intent.getStringExtra(WIDGET_INTERACTION_SOURCE_EXTRA) ?: return
+-      val target = intent.getStringExtra(WIDGET_INTERACTION_TARGET_EXTRA) ?: return
+-      WidgetsInteraction.handle(context.applicationContext, source, target)
+-      return
++    when (intent.action) {
++      WIDGET_INTERACTION_ACTION -> {
++        val source = intent.getStringExtra(WIDGET_INTERACTION_SOURCE_EXTRA) ?: return
++        val target = intent.getStringExtra(WIDGET_INTERACTION_TARGET_EXTRA) ?: return
++        val appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
++          .takeIf { it != AppWidgetManager.INVALID_APPWIDGET_ID }
++        WidgetsInteraction.handle(context.applicationContext, source, target, appWidgetId)
++      }
++
++      Intent.ACTION_LOCALE_CHANGED, Intent.ACTION_APPLICATION_LOCALE_CHANGED -> {
++        val appContext = context.applicationContext
++        val pending = goAsync()
++        CoroutineScope(Dispatchers.Default).launch {
++          try {
++            WidgetsUpdater.update(appContext, widgetName)
++            WidgetsPreviews.update(appContext, widgetName)
++          } finally {
++            pending.finish()
++          }
++        }
++      }
++
++      else -> super.onReceive(context, intent)
+     }
++  }
+ 
+-    super.onReceive(context, intent)
++  override fun onDeleted(context: Context, appWidgetIds: IntArray) {
++    appWidgetIds.forEach { appWidgetId ->
++      WidgetsStorage.remove(context, WidgetsLayoutRegistry.pressedPropsKey(widgetName, appWidgetId))
++    }
++    super.onDeleted(context, appWidgetIds)
+   }
+ }
+diff --git a/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt b/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt
+index edabde8..bd27dfc 100644
+--- a/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt
++++ b/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt
+@@ -5,11 +5,16 @@ import android.annotation.SuppressLint
+ import android.content.Context
+ import android.os.Bundle
+ import androidx.compose.ui.unit.DpSize
++import androidx.compose.ui.unit.dp
+ import androidx.glance.Emittable
+ import androidx.glance.appwidget.AppWidgetId
+ import androidx.glance.appwidget.SizeMode
++import androidx.glance.appwidget.provideContent
++import io.github.expo.peek.emittables.EmittableTree
+ import io.github.expo.peek.emittables.PeekEmittableAppWidget
+ 
++private val PREVIEW_SIZE = DpSize(320.dp, 160.dp)
++
+ internal class ExpoWidgetsPeekWidget(
+   private val widgetName: String
+ ) : PeekEmittableAppWidget() {
+@@ -21,13 +26,25 @@ internal class ExpoWidgetsPeekWidget(
+     options: Bundle,
+     size: DpSize
+   ): Emittable {
+-    val appContext = context.applicationContext
+-    val layout = WidgetsLayoutRegistry.layout(appContext, widgetName)
++    return renderRoot(context.applicationContext, id.appWidgetId, size)
++  }
++
++  override suspend fun providePreview(context: Context, widgetCategory: Int) {
++    val root = renderRoot(context.applicationContext, null, null)
++    provideContent { EmittableTree(root) }
++  }
++
++  private fun renderRoot(context: Context, appWidgetId: Int?, size: DpSize?): Emittable {
++    val layout = WidgetsLayoutRegistry.layout(context, widgetName)
+       ?: return createErrorRoot("No layout found for $widgetName")
+-    val props = WidgetsLayoutRegistry.props(appContext, widgetName)
+-    val environment = getWidgetEnvironment(appContext)
+-    val node = evaluateLayout(appContext, layout, props, environment)
++    val props = WidgetsLayoutRegistry.props(context, widgetName, appWidgetId)
++    val dimensions = size?.let {
++      mapOf("width" to it.width.value.toDouble(), "height" to it.height.value.toDouble())
++    }.orEmpty()
++    val node = evaluateLayout(context, layout, props, getWidgetEnvironment(context) + dimensions)
+ 
+-    return node.toPeekRoot(appContext, InteractionSource.Widget(widgetName), size)
++    return WidgetNightColors.using(props) {
++      node.toPeekRoot(context, InteractionSource.Widget(widgetName, appWidgetId), size ?: PREVIEW_SIZE)
++    }
+   }
+ }
+diff --git a/android/src/main/java/expo/modules/widgets/WidgetInteractionAction.kt b/android/src/main/java/expo/modules/widgets/WidgetInteractionAction.kt
+index b0b6479..aebf0cb 100644
+--- a/android/src/main/java/expo/modules/widgets/WidgetInteractionAction.kt
++++ b/android/src/main/java/expo/modules/widgets/WidgetInteractionAction.kt
+@@ -1,5 +1,6 @@
+ package expo.modules.widgets
+ 
++import android.appwidget.AppWidgetManager
+ import android.content.Context
+ import android.content.Intent
+ import android.net.Uri
+@@ -16,7 +17,7 @@ internal const val WIDGET_INTERACTION_NOTIFICATION_ID_EXTRA = "expo.modules.widg
+ internal sealed interface InteractionSource {
+   val name: String
+ 
+-  data class Widget(override val name: String) : InteractionSource
++  data class Widget(override val name: String, val appWidgetId: Int? = null) : InteractionSource
+ 
+   data class Notification(override val name: String, val notificationId: String) : InteractionSource
+ }
+@@ -46,6 +47,9 @@ internal fun WidgetInteraction.toGlanceAction(context: Context): Action {
+       )
+       .putExtra(WIDGET_INTERACTION_NOTIFICATION_ID_EXTRA, source.notificationId)
+   }
++  if (source is InteractionSource.Widget && source.appWidgetId != null) {
++    intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, source.appWidgetId)
++  }
+   intent
+     .putExtra(WIDGET_INTERACTION_SOURCE_EXTRA, source.name)
+     .putExtra(WIDGET_INTERACTION_TARGET_EXTRA, target)
+@@ -53,13 +57,16 @@ internal fun WidgetInteraction.toGlanceAction(context: Context): Action {
+ }
+ 
+ internal object WidgetsInteraction {
+-  fun handle(context: Context, source: String, target: String) {
++  fun handle(context: Context, source: String, target: String, appWidgetId: Int? = null) {
+     val layout = WidgetsLayoutRegistry.layout(context, source) ?: return
+-    val props = WidgetsLayoutRegistry.props(context, source)
++    val props = WidgetsLayoutRegistry.props(context, source, appWidgetId)
+     val environment = getWidgetEnvironment(context) + ("target" to target)
+     val updatedProps = evaluateWidgetButtonPress(context, layout, props, environment)
+ 
+-    if (updatedProps != null) {
++    if (updatedProps != null && appWidgetId != null) {
++      val key = WidgetsLayoutRegistry.pressedPropsKey(source, appWidgetId)
++      WidgetsStorage.set(context, key, WidgetsStorage.getDictionary(context, key).orEmpty() + updatedProps)
++    } else if (updatedProps != null) {
+       WidgetsStorage.set(context, "__expo_widgets_${source}_props", props.orEmpty() + updatedProps)
+     }
+ 
+diff --git a/android/src/main/java/expo/modules/widgets/WidgetNightColors.kt b/android/src/main/java/expo/modules/widgets/WidgetNightColors.kt
+new file mode 100644
+index 0000000..b26aff3
+--- /dev/null
++++ b/android/src/main/java/expo/modules/widgets/WidgetNightColors.kt
+@@ -0,0 +1,30 @@
++package expo.modules.widgets
++
++import android.graphics.Color
++
++internal object WidgetNightColors {
++  private val current = ThreadLocal<Map<Int, Int>?>()
++
++  fun <T> using(props: Map<String, Any?>?, block: () -> T): T {
++    val previous = current.get()
++    current.set(parse(props?.get("nightColors")))
++    try {
++      return block()
++    } finally {
++      current.set(previous)
++    }
++  }
++
++  fun night(day: Int): Int? = current.get()?.get(day)
++
++  private fun parse(value: Any?): Map<Int, Int>? {
++    val colors = value as? Map<*, *> ?: return null
++    return colors.entries.mapNotNull { (day, night) ->
++      val dayColor = (day as? String)?.let(::parseColor) ?: return@mapNotNull null
++      val nightColor = (night as? String)?.let(::parseColor) ?: return@mapNotNull null
++      dayColor to nightColor
++    }.toMap()
++  }
++
++  private fun parseColor(value: String): Int? = runCatching { Color.parseColor(value) }.getOrNull()
++}
+diff --git a/android/src/main/java/expo/modules/widgets/WidgetObject.kt b/android/src/main/java/expo/modules/widgets/WidgetObject.kt
+index 881ad3b..9749e28 100644
+--- a/android/src/main/java/expo/modules/widgets/WidgetObject.kt
++++ b/android/src/main/java/expo/modules/widgets/WidgetObject.kt
+@@ -25,5 +25,6 @@ internal class WidgetObject(
+   fun updateSnapshot(props: Map<String, Any?>) {
+     WidgetsStorage.set(context, "__expo_widgets_${name}_props", props)
+     reload()
++    WidgetsPreviews.refresh(context, name)
+   }
+ }
+diff --git a/android/src/main/java/expo/modules/widgets/WidgetsLayoutRegistry.kt b/android/src/main/java/expo/modules/widgets/WidgetsLayoutRegistry.kt
+index 0591e9e..3ad63cd 100644
+--- a/android/src/main/java/expo/modules/widgets/WidgetsLayoutRegistry.kt
++++ b/android/src/main/java/expo/modules/widgets/WidgetsLayoutRegistry.kt
+@@ -18,9 +18,16 @@ internal object WidgetsLayoutRegistry {
+       ?: embeddedWidget(context, name)?.layout
+   }
+ 
+-  fun props(context: Context, name: String): Map<String, Any?>? {
+-    return WidgetsStorage.getDictionary(context, storageKey(name, "props"))
++  fun props(context: Context, name: String, appWidgetId: Int? = null): Map<String, Any?>? {
++    val props = WidgetsStorage.getDictionary(context, storageKey(name, "props"))
+       ?: initialProps(context, name)
++    val pressed = appWidgetId?.let { WidgetsStorage.getDictionary(context, pressedPropsKey(name, it)) }
++      ?: return props
++    return props.orEmpty() + pressed
++  }
++
++  fun pressedPropsKey(name: String, appWidgetId: Int): String {
++    return storageKey(name, "pressed_props_$appWidgetId")
+   }
+ 
+   private fun initialProps(context: Context, name: String): Map<String, Any?>? {
+diff --git a/android/src/main/java/expo/modules/widgets/WidgetsPreviews.kt b/android/src/main/java/expo/modules/widgets/WidgetsPreviews.kt
+new file mode 100644
+index 0000000..9a0da7c
+--- /dev/null
++++ b/android/src/main/java/expo/modules/widgets/WidgetsPreviews.kt
+@@ -0,0 +1,57 @@
++package expo.modules.widgets
++
++import android.content.Context
++import android.os.Build
++import android.util.Log
++import androidx.glance.appwidget.GlanceAppWidgetManager
++import androidx.glance.appwidget.GlanceAppWidgetReceiver
++import kotlinx.coroutines.CoroutineName
++import kotlinx.coroutines.CoroutineScope
++import kotlinx.coroutines.Dispatchers
++import kotlinx.coroutines.SupervisorJob
++import kotlinx.coroutines.launch
++
++private const val PREVIEW_INTERVAL_MS = 60 * 60 * 1000L
++
++internal object WidgetsPreviews {
++  private val scope = CoroutineScope(
++    Dispatchers.Default + SupervisorJob() + CoroutineName("expo.widgets.PreviewsScope")
++  )
++
++  fun refresh(context: Context, name: String) {
++    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
++      return
++    }
++    val appContext = context.applicationContext
++    scope.launch { update(appContext, name) }
++  }
++
++  suspend fun update(context: Context, name: String) {
++    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
++      return
++    }
++    val key = "__expo_widgets_${name}_preview"
++    val locale = context.resources.configuration.locales[0].toLanguageTag()
++    val signature = "${WidgetsLayoutRegistry.layout(context, name)?.hashCode()}|$locale"
++    val stored = WidgetsStorage.getDictionary(context, key)
++    val now = System.currentTimeMillis()
++    val generatedAt = (stored?.get("at") as? Number)?.toLong() ?: 0L
++    if (stored?.get("signature") == signature && now - generatedAt < PREVIEW_INTERVAL_MS) {
++      return
++    }
++
++    val result = runCatching {
++      val receiver = Class.forName(widgetProviderComponentName(context, name).className)
++        .asSubclass(GlanceAppWidgetReceiver::class.java)
++        .kotlin
++      GlanceAppWidgetManager(context).setWidgetPreviews(receiver)
++    }.onFailure {
++      Log.w("ExpoWidgets", "Could not generate the picker preview for $name", it)
++    }.getOrNull()
++    if (result == GlanceAppWidgetManager.SET_WIDGET_PREVIEWS_RESULT_SUCCESS) {
++      WidgetsStorage.set(context, key, mapOf("signature" to signature, "at" to now))
++    } else if (result != null) {
++      Log.w("ExpoWidgets", "The picker preview for $name was not set: result $result")
++    }
++  }
++}
+diff --git a/android/src/main/java/expo/modules/widgets/WidgetsUpdater.kt b/android/src/main/java/expo/modules/widgets/WidgetsUpdater.kt
+index e1caef7..29ea288 100644
+--- a/android/src/main/java/expo/modules/widgets/WidgetsUpdater.kt
++++ b/android/src/main/java/expo/modules/widgets/WidgetsUpdater.kt
+@@ -39,6 +39,12 @@ internal object WidgetsUpdater {
+     }
+   }
+ 
++  suspend fun update(context: Context, name: String) {
++    updateMutex.withLock {
++      updateWidget(context.applicationContext, name)
++    }
++  }
++
+   private suspend fun updateWidget(context: Context, name: String) {
+     val appWidgetManager = AppWidgetManager.getInstance(context)
+     val componentName = widgetProviderComponentName(context, name)
+diff --git a/android/src/main/java/expo/modules/widgets/WidgetsUtils.kt b/android/src/main/java/expo/modules/widgets/WidgetsUtils.kt
+index 1ffad5e..ea9b5a8 100644
+--- a/android/src/main/java/expo/modules/widgets/WidgetsUtils.kt
++++ b/android/src/main/java/expo/modules/widgets/WidgetsUtils.kt
+@@ -9,6 +9,7 @@ import expo.modules.ui.colors.getMaterialColorTokens
+ internal fun getWidgetEnvironment(context: Context): Map<String, Any?> {
+   return mapOf(
+     "colorScheme" to context.colorScheme(),
++    "locale" to context.resources.configuration.locales[0].toLanguageTag(),
+     "configuration" to emptyMap<String, Any?>(),
+     // TODO(@jakex7): accessing a materialColors through environment is
+     //  a hack to fulfill expo-ui module stub with data
+diff --git a/build/Widgets.types.d.ts b/build/Widgets.types.d.ts
+index 4c474bb..042bf40 100644
+--- a/build/Widgets.types.d.ts
++++ b/build/Widgets.types.d.ts
+@@ -50,6 +50,9 @@ export type WidgetEnvironment<T extends object | undefined = undefined> = {
+      * The color scheme of the widget's environment.
+      */
+     colorScheme?: 'light' | 'dark';
++    width?: number;
++    height?: number;
++    locale?: string;
+     /**
+      * A Boolean value that indicates whether the display or environment currently requires reduced luminance.
+      *
+diff --git a/plugin/build/android/withAndroidWidgetFiles.js b/plugin/build/android/withAndroidWidgetFiles.js
+index 0fcc4a9..b8e59eb 100644
+--- a/plugin/build/android/withAndroidWidgetFiles.js
++++ b/plugin/build/android/withAndroidWidgetFiles.js
+@@ -153,7 +153,7 @@ const createWidgetInfoXml = (widget)=>{
+   android:targetCellWidth="${android.targetCellWidth}"
+   android:targetCellHeight="${android.targetCellHeight}"
+   android:updatePeriodMillis="0"
+-  android:initialLayout="@layout/expo_widgets_initial_layout"
++  android:initialLayout="@layout/expo_widgets_initial_layout"${widget.android?.previewLayout ? `\n  android:previewLayout="@layout/${widget.android.previewLayout}"` : ''}
+   android:description="@string/${(0, _resourceNames.getWidgetDescriptionResourceName)(widget)}"
+   android:resizeMode="${getWidgetResizeMode(widget)}"
+   android:widgetCategory="home_screen" />
+diff --git a/plugin/build/android/withAndroidWidgetManifest.js b/plugin/build/android/withAndroidWidgetManifest.js
+index d30d483..94e2985 100644
+--- a/plugin/build/android/withAndroidWidgetManifest.js
++++ b/plugin/build/android/withAndroidWidgetManifest.js
+@@ -37,6 +37,16 @@ const createWidgetReceiver = (widget)=>{
+                         $: {
+                             'android:name': EXPO_WIDGETS_INTERACTION_ACTION
+                         }
++                    },
++                    {
++                        $: {
++                            'android:name': 'android.intent.action.LOCALE_CHANGED'
++                        }
++                    },
++                    {
++                        $: {
++                            'android:name': 'android.intent.action.APPLICATION_LOCALE_CHANGED'
++                        }
+                     }
+                 ]
+             }
 diff --git a/plugin/build/ios/withWidgetSourceFiles.js b/plugin/build/ios/withWidgetSourceFiles.js
+index a43f48f..93ed23f 100644
 --- a/plugin/build/ios/withWidgetSourceFiles.js
 +++ b/plugin/build/ios/withWidgetSourceFiles.js
 @@ -346,6 +346,7 @@ internal import ExpoWidgets
@@ -9,7 +470,56 @@ diff --git a/plugin/build/ios/withWidgetSourceFiles.js b/plugin/build/ios/withWi
  ${configuration?.description ? `  static var description: LocalizedStringResource = ${JSON.stringify(configuration.description)}\n` : ''}
  ${Object.entries(configuration?.parameters ?? {}).map(([name, param])=>{
          return parameterDeclaration(widget.name, name, param);
+diff --git a/plugin/build/types/WidgetConfig.type.d.ts b/plugin/build/types/WidgetConfig.type.d.ts
+index d617583..bddb02b 100644
+--- a/plugin/build/types/WidgetConfig.type.d.ts
++++ b/plugin/build/types/WidgetConfig.type.d.ts
+@@ -27,6 +27,7 @@ export type WidgetConfig = {
+         targetCellHeight?: number;
+         resizeMode?: 'none' | 'horizontal' | 'vertical' | 'both';
+         initialLayout?: string;
++        previewLayout?: string;
+     } | null;
+ };
+ export type WidgetParameterString = {
+diff --git a/plugin/src/android/withAndroidWidgetFiles.ts b/plugin/src/android/withAndroidWidgetFiles.ts
+index 3b8f154..7a91711 100644
+--- a/plugin/src/android/withAndroidWidgetFiles.ts
++++ b/plugin/src/android/withAndroidWidgetFiles.ts
+@@ -105,7 +105,9 @@ const createWidgetInfoXml = (widget: WidgetConfig): string => {
+   android:targetCellWidth="${android.targetCellWidth}"
+   android:targetCellHeight="${android.targetCellHeight}"
+   android:updatePeriodMillis="0"
+-  android:initialLayout="@layout/expo_widgets_initial_layout"
++  android:initialLayout="@layout/expo_widgets_initial_layout"${
++    widget.android?.previewLayout ? `\n  android:previewLayout="@layout/${widget.android.previewLayout}"` : ''
++  }
+   android:description="@string/${getWidgetDescriptionResourceName(widget)}"
+   android:resizeMode="${getWidgetResizeMode(widget)}"
+   android:widgetCategory="home_screen" />
+diff --git a/plugin/src/android/withAndroidWidgetManifest.ts b/plugin/src/android/withAndroidWidgetManifest.ts
+index d7d8cf7..d83450f 100644
+--- a/plugin/src/android/withAndroidWidgetManifest.ts
++++ b/plugin/src/android/withAndroidWidgetManifest.ts
+@@ -53,6 +53,16 @@ const createWidgetReceiver = (widget: WidgetConfig): ManifestReceiver => {
+               'android:name': EXPO_WIDGETS_INTERACTION_ACTION,
+             },
+           },
++          {
++            $: {
++              'android:name': 'android.intent.action.LOCALE_CHANGED',
++            },
++          },
++          {
++            $: {
++              'android:name': 'android.intent.action.APPLICATION_LOCALE_CHANGED',
++            },
++          },
+         ],
+       },
+     ],
 diff --git a/plugin/src/ios/withWidgetSourceFiles.ts b/plugin/src/ios/withWidgetSourceFiles.ts
+index 33a8283..906b727 100644
 --- a/plugin/src/ios/withWidgetSourceFiles.ts
 +++ b/plugin/src/ios/withWidgetSourceFiles.ts
 @@ -374,6 +374,7 @@ internal import ExpoWidgets
@@ -20,3 +530,29 @@ diff --git a/plugin/src/ios/withWidgetSourceFiles.ts b/plugin/src/ios/withWidget
  ${configuration?.description ? `  static var description: LocalizedStringResource = ${JSON.stringify(configuration.description)}\n` : ''}
  ${Object.entries(configuration?.parameters ?? {})
    .map(([name, param]) => {
+diff --git a/plugin/src/types/WidgetConfig.type.ts b/plugin/src/types/WidgetConfig.type.ts
+index 71fc39d..4436db3 100644
+--- a/plugin/src/types/WidgetConfig.type.ts
++++ b/plugin/src/types/WidgetConfig.type.ts
+@@ -31,6 +31,7 @@ export type WidgetConfig = {
+     targetCellHeight?: number;
+     resizeMode?: 'none' | 'horizontal' | 'vertical' | 'both';
+     initialLayout?: string;
++    previewLayout?: string;
+   } | null;
+ };
+ 
+diff --git a/src/Widgets.types.ts b/src/Widgets.types.ts
+index 690d069..696bed7 100644
+--- a/src/Widgets.types.ts
++++ b/src/Widgets.types.ts
+@@ -63,6 +63,9 @@ export type WidgetEnvironment<T extends object | undefined = undefined> = {
+    * The color scheme of the widget's environment.
+    */
+   colorScheme?: 'light' | 'dark';
++  width?: number;
++  height?: number;
++  locale?: string;
+   /**
+    * A Boolean value that indicates whether the display or environment currently requires reduced luminance.
+    *

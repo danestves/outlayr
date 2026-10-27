@@ -2,6 +2,7 @@ import "dotenv/config";
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
 import type { AndroidShortcut } from "./plugins/with-android-shortcuts";
+import type { AndroidWidgetCopy } from "./plugins/with-android-widgets";
 
 const buildProfile = process.env.EAS_BUILD_PROFILE;
 const isProduction = buildProfile === "production";
@@ -27,6 +28,7 @@ const WIDGETS = [
             initialLayout: "src/widgets/log.tsx",
             supportedFamilies: ["systemSmall", "accessoryCircular", "accessoryRectangular", "accessoryInline"],
         },
+        android: null,
         name: "Log",
     },
     {
@@ -57,6 +59,7 @@ const WIDGETS = [
                 "accessoryInline",
             ],
         },
+        android: null,
         name: "Budget",
     },
     {
@@ -92,6 +95,7 @@ const WIDGETS = [
             initialLayout: "src/widgets/ledger.tsx",
             supportedFamilies: ["systemMedium", "systemLarge", "accessoryRectangular", "accessoryInline"],
         },
+        android: null,
         name: "Ledger",
     },
     {
@@ -117,9 +121,46 @@ const WIDGETS = [
             initialLayout: "src/widgets/insights.tsx",
             supportedFamilies: ["systemSmall", "systemMedium"],
         },
+        android: null,
         name: "Insights",
     },
 ];
+
+const ANDROID_WIDGETS = [
+    {
+        description: {
+            en: "Your balance, and one tap to log by amount, voice or receipt.",
+            es: "Tu saldo, y un toque para registrar por monto, voz o recibo.",
+            fr: "Votre solde, et une touche pour saisir par montant, voix ou ticket.",
+            pt: "Seu saldo, e um toque para registrar por valor, voz ou recibo.",
+        },
+        displayName: { en: "Balance", es: "Saldo", fr: "Solde", pt: "Saldo" },
+        name: "Wallet",
+        size: { minHeight: 110, minWidth: 250, targetCellHeight: 2, targetCellWidth: 4 },
+    },
+    {
+        description: {
+            en: "What you spent today, with quick ways to log.",
+            es: "Lo que gastaste hoy, con formas rápidas de registrar.",
+            fr: "Vos dépenses du jour, avec des saisies rapides.",
+            pt: "O que você gastou hoje, com formas rápidas de registrar.",
+        },
+        displayName: { en: "Spent Today", es: "Gastado hoy", fr: "Dépensé aujourd'hui", pt: "Gasto hoje" },
+        name: "Today",
+        size: { minHeight: 110, minWidth: 110, targetCellHeight: 2, targetCellWidth: 2 },
+    },
+    {
+        description: {
+            en: "Balance, today's spending and what is left in your budget.",
+            es: "Saldo, el gasto de hoy y lo que queda del presupuesto.",
+            fr: "Solde, dépenses du jour et reste du budget.",
+            pt: "Saldo, gasto de hoje e o que resta do orçamento.",
+        },
+        displayName: { en: "Overview", es: "Resumen", fr: "Aperçu", pt: "Resumo" },
+        name: "Overview",
+        size: { minHeight: 110, minWidth: 250, targetCellHeight: 2, targetCellWidth: 4 },
+    },
+] satisfies (AndroidWidgetCopy & { size: object })[];
 
 type QuickAction = AndroidShortcut & { readonly iosIcon: string };
 
@@ -257,8 +298,23 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
         [
             "expo-widgets",
             {
+                enableAndroid: true,
                 groupIdentifier: APP_GROUP,
-                widgets: WIDGETS,
+                widgets: [
+                    ...WIDGETS,
+                    ...ANDROID_WIDGETS.map(({ description, displayName, name, size }) => ({
+                        android: {
+                            ...size,
+                            initialLayout: `src/widgets/glance/${name.toLowerCase()}.tsx`,
+                            previewLayout: `widget_${name.toLowerCase()}_preview`,
+                            resizeMode: "both",
+                        },
+                        description: description.en,
+                        displayName: displayName.en,
+                        ios: null,
+                        name,
+                    })),
+                ],
             },
         ],
         "@bacons/apple-targets",
@@ -274,6 +330,7 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
             },
         ],
         ["./plugins/with-android-shortcuts.ts", { shortcuts: QUICK_ACTIONS }],
+        ["./plugins/with-android-widgets.ts", { widgets: ANDROID_WIDGETS }],
         [
             "expo-splash-screen",
             {

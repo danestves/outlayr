@@ -1,0 +1,20 @@
+{
+    "dark": {
+        "background": "#17150f",
+        "border": "#353026",
+        "income": "#3fd99b",
+        "ink": "#f2efe8",
+        "muted": "#a8a093",
+        "over": "#f17879",
+        "subtle": "#968e80"
+    },
+    "light": {
+        "background": "#f2f0ea",
+        "border": "#dcd8cc",
+        "income": "#00714a",
+        "ink": "#17150f",
+        "muted": "#6b6557",
+        "over": "#bd1c1e",
+        "subtle": "#6d6657"
+    }
+}

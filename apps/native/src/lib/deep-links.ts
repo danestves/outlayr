@@ -10,7 +10,9 @@ export const DEEP_LINKS = {
     newExpense: "outlayr://new",
     newIncome: "outlayr://new?income=1",
     overallBudget: "outlayr://budgets/overall",
+    scan: "outlayr://scan",
     search: "outlayr://search",
+    voice: "outlayr://voice",
 } as const;
 
 export function transactionLink(id: string): string {
@@ -35,8 +37,10 @@ const HOSTS = new Map<string, string>([
     ["insights", "/insights"],
     ["log", "/"],
     ["new", "/transactions/create"],
+    ["scan", "/transactions/scan"],
     ["search", "/search"],
     ["transaction", "/transactions"],
+    ["voice", "/transactions/voice"],
 ]);
 
 const ID_HOSTS = new Set(["budgets", "transaction"]);

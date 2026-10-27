@@ -20,8 +20,12 @@ export function runtimeLanguage(): Language {
  * work. It does not re-render on a language change; components use `useTranslation`.
  */
 export function translateNow(key: TranslatableKey, params?: TranslationParams): string {
+    return translateIn(current, key, params);
+}
+
+export function translateIn(language: Language, key: TranslatableKey, params?: TranslationParams): string {
     return translate(key, {
-        catalog: CATALOGS[current] ?? EN,
+        catalog: CATALOGS[language] ?? EN,
         fallback: EN,
         params,
     });
