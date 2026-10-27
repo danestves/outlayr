@@ -49,6 +49,7 @@ function siteGraph(locale: Locale) {
                     contactType: "customer support",
                     email: SUPPORT_EMAIL,
                 },
+                description: meta.description,
                 disambiguatingDescription: ORGANIZATION_NOTE,
                 email: SUPPORT_EMAIL,
                 founder: { "@id": FOUNDER_ID },

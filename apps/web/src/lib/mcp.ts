@@ -13,12 +13,29 @@ const SERVER_INFO = { name: "com.tryoutlayr/outlayr", title: "Outlayr", version:
 const READ_ONLY = { openWorldHint: false, readOnlyHint: true } as const;
 const CAPABILITIES = { resources: {}, tools: {} };
 
+const SECTIONS = new Map(
+    llms
+        .split(/^(?=## )/mu)
+        .slice(1)
+        .map((block) => [block.slice("## ".length, block.indexOf("\n")), block.trim()])
+);
+const AboutInput = z.object({
+    section: z
+        .enum([...SECTIONS.keys()])
+        .optional()
+        .describe("One section of llms.txt, such as Plans or Privacy. Omit it for the whole file."),
+});
+
 const aboutOutlayr = toolDefinition({
     description:
         "What the Outlayr expense tracker does, its free and Pro plans, how it handles data, and links to every guide and comparison on tryoutlayr.com.",
+    inputSchema: AboutInput,
     metadata: { annotations: READ_ONLY, title: "About Outlayr" },
     name: "about_outlayr",
-}).server(() => llms);
+}).server((input) => {
+    const { section } = AboutInput.parse(input);
+    return section ? (SECTIONS.get(section) ?? llms) : llms;
+});
 
 const toCents = (amount: number) => Math.round(amount * 100);
 const fromCents = (cents: number) => cents / 100;
@@ -187,6 +204,7 @@ export const LEDGER_SERVER_CARD = {
 };
 
 export const server = createMCPServer({
+    instructions: `Read-only facts about the Outlayr expense tracker and four money calculators. Call about_outlayr for features, plans, prices, and privacy; pass section to read one part. The calculators take amounts in currency units and store nothing. A user's own entries live on the ledger server, described at ${SITE_URL}/auth.md.`,
     name: SERVER_INFO.name,
     resources: [llmsResource],
     tools: [aboutOutlayr, ...CALCULATORS],

@@ -56,6 +56,7 @@ packageExtensionsChecksum: sha256-vxRN6mijkLwKmGYe9K2T5UqJGw1dzskfO0l88utc9AY=
 
 patchedDependencies:
   '@expo/fingerprint@0.21.6': b3a5cf680abe34a704357add8c2051e2098386e08e583548273ee760ef525741
+  '@tanstack/ai-mcp@1.0.0': e5fa7bd1f3aa01b044a3bf9e6201d44bd03017dbd27760ea872acee006d3c5cc
   expo-router@58.0.25: f800049d8b393f24d729a6644c92d03194cf809fe208596a8114d1c24925d2fb
   expo-widgets@58.0.22: 1b7403ea42781fb39be7082be82a826594fb0f1894fc1954c9b7b38b4426ed29
   number-flow-react-native@0.5.1: e2e9050cbc40935ff2d16d29c0d6708dace2effcbcdc7c246cae471be590177d
@@ -561,7 +562,7 @@ importers:
         version: 1.0.0(@opentelemetry/api@1.9.1)(zod@4.6.5)
       '@tanstack/ai-mcp':
         specifier: 1.0.0
-        version: 1.0.0(@opentelemetry/api@1.9.1)(zod@4.6.5)
+        version: 1.0.0(patch_hash=e5fa7bd1f3aa01b044a3bf9e6201d44bd03017dbd27760ea872acee006d3c5cc)(@opentelemetry/api@1.9.1)(zod@4.6.5)
       '@tanstack/react-router':
         specifier: ^1.170.32
         version: 1.170.38(@types/react@19.3.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -17100,7 +17101,7 @@ snapshots:
     dependencies:
       '@tanstack/devtools-event-client': 0.4.4
 
-  '@tanstack/ai-mcp@1.0.0(@opentelemetry/api@1.9.1)(zod@4.6.5)':
+  '@tanstack/ai-mcp@1.0.0(patch_hash=e5fa7bd1f3aa01b044a3bf9e6201d44bd03017dbd27760ea872acee006d3c5cc)(@opentelemetry/api@1.9.1)(zod@4.6.5)':
     dependencies:
       '@modelcontextprotocol/client': 2.4.0
       '@modelcontextprotocol/server': 2.4.0

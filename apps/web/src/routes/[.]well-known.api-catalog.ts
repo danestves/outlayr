@@ -6,8 +6,14 @@ const catalog = {
     linkset: [
         {
             anchor: `${SITE_URL}/`,
+            item: [
+                { href: `${SITE_URL}/openapi.json`, type: "application/json" },
+                { href: `${SITE_URL}/mcp`, type: "application/json" },
+                { href: `${LEDGER_MCP_ORIGIN}/mcp`, type: "application/json" },
+            ],
             "service-desc": [{ href: `${SITE_URL}/openapi.json`, type: "application/json" }],
             "service-doc": [{ href: `${SITE_URL}/llms.txt`, type: "text/plain" }],
+            "service-meta": [{ href: `${SITE_URL}/pricing.md`, type: "text/markdown" }],
         },
         {
             anchor: `${LEDGER_MCP_ORIGIN}/mcp`,
