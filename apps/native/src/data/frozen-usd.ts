@@ -31,16 +31,12 @@ export const frozenUsd = Effect.fn("FrozenUsd.frozenUsd")(function* frozenUsd(
     if (amount === 0) {
         return { amountUsd: 0, exchangeRate: null } satisfies FrozenUsd;
     }
-    const { amountUsd, exchangeRate } = yield* Effect.tryPromise({
-        catch: (cause) => new FrozenUsdError({ cause, currency }),
-        try: () =>
-            canonicalUsd(localRateLookup(db), {
-                amount: Math.abs(amount),
-                currency,
-                date,
-                displayCurrency: currency,
-            }),
-    });
+    const { amountUsd, exchangeRate } = yield* canonicalUsd(localRateLookup(db), {
+        amount: Math.abs(amount),
+        currency,
+        date,
+        displayCurrency: currency,
+    }).pipe(Effect.mapError((cause) => new FrozenUsdError({ cause, currency })));
     return {
         amountUsd: amountUsd == null ? null : Math.sign(amount) * amountUsd,
         exchangeRate: exchangeRate ?? null,

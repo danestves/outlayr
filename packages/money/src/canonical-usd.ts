@@ -1,3 +1,5 @@
+import * as Effect from "effect/Effect";
+
 import { utcDateString } from "./dates";
 import { MoneyValidationError } from "./errors";
 import { computeAmountUSD, resolveEntryRate } from "./rates";
@@ -29,7 +31,10 @@ const UNRESOLVED: CanonicalUsd = {
 const DEFAULT_RATE_TYPE: EntryRateType = "official";
 
 // A stored rate is currency PER USD, so USD is the amount divided by it, in scaled integers inside `computeAmountUSD`.
-export async function canonicalUsd(lookup: RateLookup, input: CanonicalUsdInput): Promise<CanonicalUsd> {
+export const canonicalUsd = Effect.fn("CanonicalUsd.canonicalUsd")(function* canonicalUsd<E>(
+    lookup: RateLookup<E>,
+    input: CanonicalUsdInput
+) {
     const currency = input.currency ?? input.displayCurrency;
 
     if (currency === "USD") {
@@ -49,11 +54,11 @@ export async function canonicalUsd(lookup: RateLookup, input: CanonicalUsdInput)
     }
 
     const date = utcDateString(input.date.getTime());
-    try {
+    const resolve = Effect.gen(function* resolve() {
         const suppliedRate = input.exchangeRate;
         let exchangeRate: number | null;
         if (suppliedRate == null) {
-            exchangeRate = await resolveEntryRate(lookup, currency, exchangeRateType, undefined, date);
+            exchangeRate = yield* resolveEntryRate(lookup, currency, exchangeRateType, undefined, date);
         } else if (Number.isFinite(suppliedRate) && suppliedRate > 0) {
             exchangeRate = suppliedRate;
         } else {
@@ -62,18 +67,16 @@ export async function canonicalUsd(lookup: RateLookup, input: CanonicalUsdInput)
         if (exchangeRate === null) {
             return { amountUsd: null, exchangeRate: null, exchangeRateType };
         }
-        const amountUsd = computeAmountUSD({
-            baseAmount: input.amount,
-            date,
-            exchangeRate,
-            exchangeRateType,
-        });
+        const amountUsd = yield* Effect.try({
+            catch: (error) => error,
+            try: () => computeAmountUSD({ baseAmount: input.amount, date, exchangeRate, exchangeRateType }),
+        }).pipe(
+            Effect.catch((error) => (error instanceof MoneyValidationError ? Effect.fail(error) : Effect.die(error)))
+        );
         return { amountUsd, exchangeRate, exchangeRateType };
-    } catch (error) {
-        // A validation failure is the same as having no rate, never a reason to refuse the write.
-        if (error instanceof MoneyValidationError) {
-            return { ...UNRESOLVED, exchangeRateType };
-        }
-        throw error;
-    }
-}
+    });
+    // A validation failure is the same as having no rate, never a reason to refuse the write.
+    return yield* resolve.pipe(
+        Effect.catchTags({ MoneyValidationError: () => Effect.succeed({ ...UNRESOLVED, exchangeRateType }) })
+    );
+});

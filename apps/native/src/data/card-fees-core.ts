@@ -186,8 +186,8 @@ const percentFee = Effect.fn("CardFees.percentFee")(function* percentFee(
     const quote =
         currency === "USD" || currency === entry
             ? null
-            : yield* attempt("values", () =>
-                  localRateLookup(db)(currency, "official", utcDateString(purchase.date.getTime()))
+            : yield* localRateLookup(db)(currency, "official", utcDateString(purchase.date.getTime())).pipe(
+                  Effect.mapError((cause) => new CardFeesError({ cause, operation: "values" }))
               );
     const cardRate = quote?.rate ?? null;
     const base = cardFeeBase(purchase.amount, { card: currency, entry }, () => purchase.amountUsd ?? null, cardRate);

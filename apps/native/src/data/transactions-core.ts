@@ -260,16 +260,14 @@ const toRow = Effect.fn("Transactions.toRow")(function* toRow(db: Database, id: 
     const now = new Date();
     // Stamped even when unpicked: a null currency would follow the setting and restate a $18.50 lunch as €18.50.
     const currency = input.currency ?? (yield* displayCurrency(db));
-    const canonical = yield* query("row", () =>
-        canonicalUsd(localRateLookup(db), {
-            amount: Math.abs(input.amount),
-            currency,
-            date: input.date,
-            displayCurrency: currency,
-            exchangeRate: input.exchangeRate,
-            exchangeRateType: input.exchangeRateType,
-        })
-    );
+    const canonical = yield* canonicalUsd(localRateLookup(db), {
+        amount: Math.abs(input.amount),
+        currency,
+        date: input.date,
+        displayCurrency: currency,
+        exchangeRate: input.exchangeRate,
+        exchangeRateType: input.exchangeRateType,
+    }).pipe(Effect.mapError((cause) => new TransactionsError({ cause, operation: "row" })));
     const row: typeof transactions.$inferInsert = {
         accountId: input.accountId ?? null,
         amount: Math.abs(input.amount),

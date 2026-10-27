@@ -5,6 +5,7 @@ import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import type { TestConvex } from "convex-test";
 import type { FunctionArgs } from "convex/server";
+import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vite-plus/test";
 
 import { api, internal } from "../convex/_generated/api";
@@ -188,14 +189,13 @@ describe("log_entry", () => {
                 .filter((q) => q.eq(q.field("deviceId"), "mcp"))
                 .collect()
         );
-        const expected = await canonicalUsd(
-            async (quote) => (quote === "EUR" ? { date: "2026-09-30", rate: 0.9 } : null),
-            {
+        const expected = await Effect.runPromise(
+            canonicalUsd((quote) => Effect.succeed(quote === "EUR" ? { date: "2026-09-30", rate: 0.9 } : null), {
                 amount: 100,
                 currency: "EUR",
                 date: new Date(at("2026-10-02T16:00:00Z")),
                 displayCurrency: "EUR",
-            }
+            })
         );
         expect(
             rows.map(({ amountUsd, currency, exchangeRate, exchangeRateType }) => ({

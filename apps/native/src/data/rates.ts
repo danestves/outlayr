@@ -34,7 +34,7 @@ export interface PullRatesPage {
 
 export type PullRatesFn = (args?: { cursor?: number }) => Effect.Effect<PullRatesPage, CloudError>;
 
-const RatesOperation = Schema.Literals(["fetch", "replace", "apply"]);
+const RatesOperation = Schema.Literals(["fetch", "replace", "apply", "lookup"]);
 
 export class RatesError extends Schema.TaggedError<RatesError>()("RatesError", {
     cause: Schema.Defect(),
@@ -200,17 +200,20 @@ export const applyRecentRates = Effect.fn("Rates.applyRecentRates")(function* ap
 });
 
 // "Newest row on or before this date" covers the weekend and holiday gaps in the ECB feed.
-export function localRateLookup(db: SpendDb): RateLookup {
-    return async (quote, rateType, date) => {
-        const rows = await db
-            .select({ date: exchangeRates.date, rate: exchangeRates.rate })
-            .from(exchangeRates)
-            .where(
-                and(eq(exchangeRates.quote, quote), eq(exchangeRates.rateType, rateType), lte(exchangeRates.date, date))
-            )
-            .orderBy(desc(exchangeRates.date))
-            .limit(1);
-        const [row] = rows;
-        return row ? { date: row.date, rate: row.rate } : null;
-    };
+export function localRateLookup(db: SpendDb): RateLookup<RatesError> {
+    return (quote, rateType, date) =>
+        attempt("lookup", () =>
+            db
+                .select({ date: exchangeRates.date, rate: exchangeRates.rate })
+                .from(exchangeRates)
+                .where(
+                    and(
+                        eq(exchangeRates.quote, quote),
+                        eq(exchangeRates.rateType, rateType),
+                        lte(exchangeRates.date, date)
+                    )
+                )
+                .orderBy(desc(exchangeRates.date))
+                .limit(1)
+        ).pipe(Effect.map(([row]) => (row ? { date: row.date, rate: row.rate } : null)));
 }

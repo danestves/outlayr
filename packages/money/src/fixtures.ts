@@ -1,3 +1,5 @@
+import * as Effect from "effect/Effect";
+
 import type { EntryRateType, MarketRateType, RateLookup } from "./rates";
 
 const DATE_STRING_LENGTH = 10;
@@ -22,7 +24,7 @@ export function makeRateLookup(rows: readonly RateTableRow[]): RateLookup {
         const [match] = rows
             .filter((r) => r.quote === quote && r.rateType === rateType && r.date <= date)
             .sort((a, b) => b.date.localeCompare(a.date));
-        return Promise.resolve(match ? { date: match.date, rate: match.rate } : null);
+        return Effect.succeed(match ? { date: match.date, rate: match.rate } : null);
     };
 }
 
