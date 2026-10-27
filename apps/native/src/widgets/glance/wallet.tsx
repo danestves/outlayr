@@ -1,23 +1,30 @@
 import { Box, Button, Column, Image, Row, Spacer, Text } from "@expo/ui/jetpack-compose";
-import { background, cornerRadius, fillMaxSize, paddingAll, size, width } from "@expo/ui/jetpack-compose/modifiers";
+import {
+    background,
+    cornerRadius,
+    fillMaxHeight,
+    fillMaxSize,
+    paddingAll,
+    size,
+    width,
+} from "@expo/ui/jetpack-compose/modifiers";
 import type { WidgetEnvironment } from "expo-widgets";
 import { createWidget } from "expo-widgets";
 
+import type { WalletCopy, WidgetEnvelope } from "./envelope";
 import { ANDROID_PLACEHOLDERS } from "./placeholders";
-import type { WalletWidgetProps } from "./props";
 
-/**
- * Runs in the widget's own Hermes runtime, so every helper lives inside. Glance has no `weight`, so widths come from
- * the patched `environment.width` and `height`. `target` is spread in: `expo-widgets` reads it, `ButtonProps` omits it.
- */
-const WalletWidget = (props: WalletWidgetProps, environment: WidgetEnvironment) => {
+const WalletWidget = (snapshot: WidgetEnvelope<WalletCopy>, environment: WidgetEnvironment) => {
     "widget";
 
-    const palette = props.chrome[environment.colorScheme === "dark" ? "dark" : "light"];
+    const [language = "en", region = ""] = (environment.locale ?? "en").split("-");
+    const byTag: Partial<Record<string, WalletCopy>> = snapshot.locales;
+    const props = byTag[`${language}-${region}`] ?? byTag[language] ?? snapshot.locales.en;
+    const { palette } = snapshot;
     const widgetWidth = environment.width ?? 340;
     const widgetHeight = environment.height ?? 150;
     const pad = 12;
-    const hidden = props.hidden ?? true;
+    const hidden = snapshot.hidden ?? true;
     const figure = hidden ? props.mask : props.balance;
     const sideBySide = widgetWidth >= 330;
     const column = 60;
@@ -53,6 +60,7 @@ const WalletWidget = (props: WalletWidgetProps, environment: WidgetEnvironment) 
                 >
                     <Image
                         source={{ uri: hidden ? "widget_eye_off" : "widget_eye" }}
+                        contentDescription={hidden ? props.showLabel : props.hideLabel}
                         tint={palette.muted}
                         modifiers={[size(18, 18)]}
                     />
@@ -70,11 +78,7 @@ const WalletWidget = (props: WalletWidgetProps, environment: WidgetEnvironment) 
                             contentAlignment="center"
                             modifiers={[size(circle, circle), cornerRadius(circle / 2), background(palette.ink)]}
                         >
-                            <Image
-                                source={{ uri: action.icon }}
-                                tint={palette.background}
-                                modifiers={[size(20, 20)]}
-                            />
+                            <Image source={{ uri: action.icon }} tint={palette.background} modifiers={[size(20, 20)]} />
                         </Box>
                         <Spacer modifiers={[size(1, 4)]} />
                         <Text color={palette.ink} maxLines={1} style={{ fontSize: 11 }}>
@@ -92,7 +96,7 @@ const WalletWidget = (props: WalletWidgetProps, environment: WidgetEnvironment) 
                 verticalAlignment="center"
                 modifiers={[fillMaxSize(), cornerRadius(24), background(palette.background), paddingAll(pad)]}
             >
-                <Box modifiers={[width(room), fillMaxSize()]}>
+                <Box modifiers={[width(room), fillMaxHeight()]}>
                     <Box contentAlignment="topStart" modifiers={[fillMaxSize(), paddingAll(4)]}>
                         {brand}
                     </Box>
@@ -103,7 +107,7 @@ const WalletWidget = (props: WalletWidgetProps, environment: WidgetEnvironment) 
                 <Spacer modifiers={[width(10)]} />
                 <Box
                     contentAlignment="center"
-                    modifiers={[width(panel), fillMaxSize(), cornerRadius(18), background(palette.border)]}
+                    modifiers={[width(panel), fillMaxHeight(), cornerRadius(18), background(palette.border)]}
                 >
                     {actions}
                 </Box>
@@ -123,4 +127,4 @@ const WalletWidget = (props: WalletWidgetProps, environment: WidgetEnvironment) 
     );
 };
 
-export default createWidget<WalletWidgetProps>("Wallet", WalletWidget, ANDROID_PLACEHOLDERS.Wallet);
+export default createWidget<WidgetEnvelope<WalletCopy>>("Wallet", WalletWidget, ANDROID_PLACEHOLDERS.Wallet);

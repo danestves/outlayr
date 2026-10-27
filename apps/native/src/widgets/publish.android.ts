@@ -7,14 +7,13 @@ import { purchaseListener } from "@/lib/purchase-listener";
 import { warnAndContinue } from "@/lib/warn-and-continue";
 import type { publishWidgets as iosPublishWidgets } from "@/widgets/publish";
 
-import OverviewWidget from "./android/overview";
-import { buildAndroidWidgetProps } from "./android/props";
-import TodayWidget from "./android/today";
-import WalletWidget from "./android/wallet";
+import OverviewWidget from "./glance/overview";
+import { buildAndroidWidgetProps } from "./glance/props";
+import TodayWidget from "./glance/today";
+import WalletWidget from "./glance/wallet";
 
 const PUSH_CHANNEL = "purchases";
 
-/** A sibling of `publish.ts`, so the SwiftUI layouts stay out of the Android bundle and these out of iOS. */
 export const publishWidgets: typeof iosPublishWidgets = Effect.fn("Widgets.publish")(function* publishWidgets(db) {
     yield* Effect.gen(function* publish() {
         const props = yield* buildAndroidWidgetProps(db, new Date());

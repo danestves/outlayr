@@ -126,7 +126,6 @@ const WIDGETS = [
     },
 ];
 
-/** `displayName` and `description` here are the English picker copy; the plugin writes the rest. */
 const ANDROID_WIDGETS = [
     {
         description: {
@@ -306,7 +305,8 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
                     ...ANDROID_WIDGETS.map(({ description, displayName, name, size }) => ({
                         android: {
                             ...size,
-                            initialLayout: `src/widgets/android/${name.toLowerCase()}.tsx`,
+                            initialLayout: `src/widgets/glance/${name.toLowerCase()}.tsx`,
+                            previewLayout: `widget_${name.toLowerCase()}_preview`,
                             resizeMode: "both",
                         },
                         description: description.en,

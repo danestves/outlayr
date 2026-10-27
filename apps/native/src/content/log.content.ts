@@ -477,19 +477,26 @@ const log = {
             fr: "Disponible",
             pt: "Disponível",
         }),
-        "log.widget.entries.one": t({
+        "log.widget.entries_one": t({
             en: "1 entry",
             es: "1 registro",
             fr: "1 opération",
             pt: "1 lançamento",
             "pt-PT": "1 registo",
         }),
-        "log.widget.entries.other": t({
+        "log.widget.entries_other": t({
             en: "{count} entries",
             es: "{count} registros",
             fr: "{count} opérations",
             pt: "{count} lançamentos",
             "pt-PT": "{count} registos",
+        }),
+        "log.widget.overBudget": t({
+            en: "Over budget",
+            es: "Excedido",
+            fr: "Budget dépassé",
+            pt: "Orçamento estourado",
+            "pt-PT": "Orçamento excedido",
         }),
         "log.widget.scan": t({
             en: "Scan",

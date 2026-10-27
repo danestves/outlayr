@@ -3,21 +3,25 @@ import { background, cornerRadius, fillMaxSize, paddingAll, size, width } from "
 import type { WidgetEnvironment } from "expo-widgets";
 import { createWidget } from "expo-widgets";
 
+import type { TodayCopy, WidgetEnvelope } from "./envelope";
 import { ANDROID_PLACEHOLDERS } from "./placeholders";
-import type { TodayWidgetProps } from "./props";
 
-/** Same runtime limits as `wallet.tsx`: helpers inside, widths from the patched environment. */
-const TodayWidget = (props: TodayWidgetProps, environment: WidgetEnvironment) => {
+const TodayWidget = (snapshot: WidgetEnvelope<TodayCopy>, environment: WidgetEnvironment) => {
     "widget";
 
-    const palette = props.chrome[environment.colorScheme === "dark" ? "dark" : "light"];
+    const [language = "en", region = ""] = (environment.locale ?? "en").split("-");
+    const byTag: Partial<Record<string, TodayCopy>> = snapshot.locales;
+    const props = byTag[`${language}-${region}`] ?? byTag[language] ?? snapshot.locales.en;
+    const { palette } = snapshot;
     const widgetWidth = environment.width ?? 170;
     const widgetHeight = environment.height ?? 170;
     const pad = 14;
     const inner = widgetWidth - pad * 2;
     const count = props.actions.length;
     const circle = Math.max(34, Math.min(48, Math.floor((inner - 8 * (count - 1)) / count)));
-    const gap = Math.max(4, Math.floor((inner - circle * count) / (count - 1)));
+    const wide = widgetWidth >= 300;
+    const gap = wide ? 8 : Math.max(4, Math.floor((inner - circle * count) / (count - 1)));
+    const buttonWidth = wide ? Math.floor((inner - gap * (count - 1)) / count) : circle;
     const largest = widgetHeight >= 200 ? 34 : 28;
     const fontSize = Math.max(16, Math.min(largest, Math.floor(inner / (props.spent.length * 0.62))));
 
@@ -43,14 +47,26 @@ const TodayWidget = (props: TodayWidgetProps, environment: WidgetEnvironment) =>
                             {index > 0 ? <Spacer modifiers={[width(gap)]} /> : null}
                             <Button
                                 {...{ target: action.url }}
-                                modifiers={[size(circle, circle), cornerRadius(circle / 2), background(palette.ink)]}
+                                modifiers={[
+                                    size(buttonWidth, circle),
+                                    cornerRadius(circle / 2),
+                                    background(palette.ink),
+                                ]}
                             >
-                                <Image
-                                    source={{ uri: action.icon }}
-                                    contentDescription={action.label}
-                                    tint={palette.background}
-                                    modifiers={[size(20, 20)]}
-                                />
+                                <Row verticalAlignment="center">
+                                    <Image
+                                        source={{ uri: action.icon }}
+                                        contentDescription={action.label}
+                                        tint={palette.background}
+                                        modifiers={[size(20, 20)]}
+                                    />
+                                    {wide ? <Spacer modifiers={[width(6)]} /> : null}
+                                    {wide ? (
+                                        <Text color={palette.background} maxLines={1} style={{ fontSize: 13 }}>
+                                            {action.label}
+                                        </Text>
+                                    ) : null}
+                                </Row>
                             </Button>
                         </Row>
                     ))}
@@ -60,4 +76,4 @@ const TodayWidget = (props: TodayWidgetProps, environment: WidgetEnvironment) =>
     );
 };
 
-export default createWidget<TodayWidgetProps>("Today", TodayWidget, ANDROID_PLACEHOLDERS.Today);
+export default createWidget<WidgetEnvelope<TodayCopy>>("Today", TodayWidget, ANDROID_PLACEHOLDERS.Today);
