@@ -12,6 +12,7 @@ interface Stroke {
 }
 
 const ICONS = {
+    widget_add: [{ d: "M12 4V20M20 12H4", width: 2 }],
     widget_amount: [
         {
             d: "M12 7.5H13.5C14.3284 7.5 15 8.17157 15 9M12 7.5H10.5C9.67157 7.5 9 8.17157 9 9V9.5C9 10.3284 9.67157 11 10.5 11H13.5C14.3284 11 15 11.6716 15 12.5V13C15 13.8284 14.3284 14.5 13.5 14.5H12M12 7.5V6M12 14.5H10.5C9.67157 14.5 9 13.8284 9 13M12 14.5V16",
@@ -168,7 +169,85 @@ const stat = (extra = "") => `        <LinearLayout
             ${mask(20)}${extra}
         </LinearLayout>`;
 
+const entryRow = (noteDp: number) => `        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+            <FrameLayout
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginHorizontal="5dp"
+                android:background="@drawable/widget_preview_dot" />
+            <FrameLayout
+                android:layout_width="${noteDp}dp"
+                android:layout_height="8dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/widget_preview_bar" />
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+            <FrameLayout
+                android:layout_width="40dp"
+                android:layout_height="8dp"
+                android:background="@drawable/widget_preview_bar" />
+        </LinearLayout>`;
+
+const column = (heightDp: number) => `            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="${heightDp}dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="2dp"
+                android:background="@drawable/widget_preview_column" />`;
+
 const PREVIEWS = new Map([
+    [
+        "Entries",
+        `<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_preview_card"
+    android:orientation="vertical"
+    android:padding="14dp">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            ${bar(72)}
+            ${mask(20)}
+        </LinearLayout>
+        <FrameLayout
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:background="@drawable/widget_preview_circle">
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="center"
+                android:src="@drawable/widget_add"
+                android:tint="@color/outlayr_widget_background" />
+        </FrameLayout>
+    </LinearLayout>
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="8dp"
+        android:background="@color/outlayr_widget_border" />
+${entryRow(96)}
+${entryRow(64)}
+${entryRow(80)}
+</LinearLayout>
+`,
+    ],
     [
         "Overview",
         `<LinearLayout
@@ -197,6 +276,33 @@ ${stat(`
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 ${pills}
+    </LinearLayout>
+</LinearLayout>
+`,
+    ],
+    [
+        "Trends",
+        `<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_preview_card"
+    android:orientation="vertical"
+    android:padding="14dp">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+            ${bar(56)}
+            ${mask(26)}
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:gravity="bottom"
+        android:orientation="horizontal">
+${[14, 30, 9, 44, 20, 3, 3].map(column).join("\n")}
     </LinearLayout>
 </LinearLayout>
 `,
@@ -305,6 +411,8 @@ async function writePreviews(res: string, widgets: readonly AndroidWidgetCopy[])
         writeFile(path.join(res, "drawable", "widget_preview_pill.xml"), fillDrawable(14, "outlayr_widget_border")),
         writeFile(path.join(res, "drawable", "widget_preview_bar.xml"), fillDrawable(4, "outlayr_widget_border")),
         writeFile(path.join(res, "drawable", "widget_preview_circle.xml"), fillDrawable(0, "outlayr_widget_ink", true)),
+        writeFile(path.join(res, "drawable", "widget_preview_dot.xml"), fillDrawable(0, "outlayr_widget_border", true)),
+        writeFile(path.join(res, "drawable", "widget_preview_column.xml"), fillDrawable(2, "outlayr_widget_ink")),
         ...widgets.map((widget) => {
             const layout = PREVIEWS.get(widget.name);
             if (!layout) {
