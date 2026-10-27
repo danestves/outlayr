@@ -173,7 +173,6 @@ export async function downloadPhotos(db: SpendDb, files: PhotoFiles, transport: 
         }
         /* oxlint-enable no-await-in-loop */
     }
-    /* oxlint-enable no-await-in-loop */
 
     return downloaded;
 }

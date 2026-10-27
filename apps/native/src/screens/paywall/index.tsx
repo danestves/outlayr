@@ -195,7 +195,6 @@ export function Paywall() {
                 if (!cancelled) {
                     // oxlint-disable-next-line promise/no-callback-in-promise -- an effect body cannot be async, so the setState has nowhere else to be sequenced from
                     setPlans(next);
-                    // oxlint-disable-next-line promise/no-callback-in-promise -- as above
                     setSelected(next.find((plan) => plan.kind === "annual")?.kind ?? next[0]?.kind ?? null);
                 }
             })

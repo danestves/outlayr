@@ -47,17 +47,14 @@ export function useHaptics(): (event: HapticEvent) => void {
         }
         switch (play.kind) {
             case "selection": {
-                // oxlint-disable-next-line no-void -- the taptic engine is fire-and-forget here; this callback is synchronous and its caller has nothing to do with the promise
                 void selectionAsync();
                 return;
             }
             case "impact": {
-                // oxlint-disable-next-line no-void -- the taptic engine is fire-and-forget here; this callback is synchronous and its caller has nothing to do with the promise
                 void impactAsync(IMPACT[play.style]);
                 return;
             }
             case "notification": {
-                // oxlint-disable-next-line no-void -- the taptic engine is fire-and-forget here; this callback is synchronous and its caller has nothing to do with the promise
                 void notificationAsync(NOTIFICATION[play.type]);
                 return;
             }

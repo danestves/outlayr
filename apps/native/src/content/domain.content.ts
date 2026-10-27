@@ -2,7 +2,6 @@ import { t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
 const domain = {
-    // oxlint-disable-next-line sort-keys -- the `dates.month.N` keys run in calendar order; sorting them alphabetically puts month 10 before month 9
     content: {
         "appIcon.default.detail": t({
             en: "The Outlayr mark on paper. The icon the app ships with.",
@@ -52,7 +51,7 @@ const domain = {
             pt: "Contorno",
         }),
         "appIcon.ink.detail": t({
-            en: "The mark inverted — paper on ink, for darker home screens.",
+            en: "The mark inverted: paper on ink, for darker home screens.",
             es: "La marca invertida: papel sobre tinta, para pantallas de inicio más oscuras.",
             fr: "Le logo inversé : papier sur encre, pour les écrans d'accueil plus sombres.",
             pt: "A marca invertida: papel sobre tinta, para telas de início mais escuras.",

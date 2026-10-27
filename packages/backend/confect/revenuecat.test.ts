@@ -257,7 +257,6 @@ test("stops asking the store when one account hammers the sync", async () => {
     const caller = authenticatedAs(t, identity);
 
     for (let attempt = 0; attempt < 14; attempt += 1) {
-        // oxlint-disable-next-line no-await-in-loop -- the limiter is the thing under test, so the calls have to be sequential
         await caller.action(api.revenuecat.syncFromStore, {});
     }
 

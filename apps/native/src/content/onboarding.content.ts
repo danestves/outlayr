@@ -11,7 +11,7 @@ const onboarding = {
             "pt-PT": "Um livro-caixa que preenche à mão. Cada registo é seu, neste dispositivo.",
         }),
         "onboarding.currency.body": t({
-            en: "Everything totals in this. Change it any time — old entries keep their own.",
+            en: "Everything totals in this. Change it any time; old entries keep their own.",
             es: "Todo se suma en esta moneda. Cámbiala cuando quieras; las entradas anteriores conservan la suya.",
             fr: "Tous les totaux sont dans cette devise. Modifiable à tout moment : les anciennes opérations gardent la leur.",
             pt: "Tudo é somado nesta moeda. Mude quando quiser; os lançamentos antigos mantêm a deles.",

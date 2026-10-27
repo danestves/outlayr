@@ -226,7 +226,6 @@ describe("email sign-in", () => {
         const statuses: number[] = [];
 
         for (let attempt = 0; attempt < 11; attempt += 1) {
-            // oxlint-disable-next-line no-await-in-loop -- each attempt has to spend the bucket before the next
             statuses.push((await post("/sign-in/email", credentials)).status);
         }
 

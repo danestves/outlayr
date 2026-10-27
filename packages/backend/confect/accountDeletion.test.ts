@@ -103,7 +103,6 @@ describe("preparing a deletion", () => {
         await grantPro(t, owner);
 
         for (let n = 0; n < DELETION_JOBS_PER_USER; n += 1) {
-            // oxlint-disable-next-line no-await-in-loop -- each prepare must commit before the next one counts it
             await authenticatedAs(t, owner).mutation(api.accountDeletion.prepare, {});
         }
 

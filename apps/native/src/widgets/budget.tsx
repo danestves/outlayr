@@ -66,7 +66,7 @@ const BudgetWidget = (props: BudgetWidgetProps, environment: WidgetEnvironment<B
                 modifiers={[gaugeStyle("circularCapacity"), widgetURL(view.url)]}
                 value={view.spentFraction}
             >
-                <Text>{view.present ? view.percent : "—"}</Text>
+                <Text>{view.present ? view.percent : "–"}</Text>
             </Gauge>
         );
     }

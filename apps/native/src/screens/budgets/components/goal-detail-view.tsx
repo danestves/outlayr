@@ -64,13 +64,13 @@ export function GoalDetailView({ currency, editor, entry, nowMs }: GoalDetailVie
     // `standing` is null when reached or when the span is degenerate; only the first is an achievement.
     const paceValue = (() => {
         if (!entry.exact) {
-            return "—";
+            return "–";
         }
         if (progress.reached) {
             return t("goals.reached");
         }
         if (standing == null) {
-            return "—";
+            return "–";
         }
         if (standing.onPace) {
             return t("goals.onPace");
@@ -152,11 +152,11 @@ export function GoalDetailView({ currency, editor, entry, nowMs }: GoalDetailVie
                 <View className="border-border mt-4 flex-row border-y">
                     <Measure
                         label={t("goals.detail.perMonth")}
-                        value={progress.pace == null ? "—" : display(progress.pace.perMonth)}
+                        value={progress.pace == null ? "–" : display(progress.pace.perMonth)}
                     />
                     <Measure
                         label={t("goals.detail.monthsLeft")}
-                        value={progress.pace == null ? "—" : String(progress.pace.monthsLeft)}
+                        value={progress.pace == null ? "–" : String(progress.pace.monthsLeft)}
                     />
                     <Measure label={t("goals.detail.pace")} tone={paceTone} value={paceValue} />
                 </View>

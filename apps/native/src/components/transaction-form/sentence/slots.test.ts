@@ -14,31 +14,30 @@ import {
 
 const expected = [...TRANSACTION_SENTENCE_SLOTS].sort();
 
+const languageKeys = <Key extends string>(keys: readonly Key[]) =>
+    SUPPORTED_LANGUAGES.flatMap((language) => keys.map((key) => [language, key] as const));
+
 describe("transaction sentence templates", () => {
     // `catalog.test.ts` cannot catch a slot dropped from both languages at once, which agrees with itself.
-    for (const language of SUPPORTED_LANGUAGES) {
-        for (const key of TRANSACTION_SENTENCE_KEYS) {
-            it(`states every fact once in ${language} ${key}`, () => {
-                const template = CATALOGS[language][key];
-                expect(template).toBeDefined();
-                expect([...sentenceSlotNames(template ?? "")].sort()).toStrictEqual(expected);
-            });
-        }
-    }
+    it.each(languageKeys(TRANSACTION_SENTENCE_KEYS))("states every fact once in %s %s", (language, key) => {
+        const template = CATALOGS[language][key];
+        expect(template).toBeDefined();
+        expect([...sentenceSlotNames(template ?? "")].sort()).toStrictEqual(expected);
+    });
 
-    for (const language of SUPPORTED_LANGUAGES) {
-        for (const key of TRANSACTION_RATE_SENTENCE_KEYS) {
-            it(`continues the sentence with the dollars and the source in ${language} ${key}`, () => {
-                const clause = CATALOGS[language][key] ?? "";
-                expect([...sentenceSlotNames(clause)].sort()).toStrictEqual([...TRANSACTION_RATE_SLOTS]);
-                expect(continueSentence("Spent {amount} {when}.", clause)).toBe(`Spent {amount} {when}${clause}`);
-                expect(clause.startsWith(",") && clause.endsWith(".")).toBe(true);
-            });
+    it.each(languageKeys(TRANSACTION_RATE_SENTENCE_KEYS))(
+        "continues the sentence with the dollars and the source in %s %s",
+        (language, key) => {
+            const clause = CATALOGS[language][key] ?? "";
+            expect([...sentenceSlotNames(clause)].sort()).toStrictEqual([...TRANSACTION_RATE_SLOTS]);
+            expect(continueSentence("Spent {amount} {when}.", clause)).toBe(`Spent {amount} {when}${clause}`);
+            expect(clause.startsWith(",") && clause.endsWith(".")).toBe(true);
         }
-        it(`asks for the rate alone in ${language} transaction.sentence.rate.missing`, () => {
-            expect([...sentenceSlotNames(CATALOGS[language]["transaction.sentence.rate.missing"] ?? "")]).toStrictEqual(
-                ["rate"]
-            );
-        });
-    }
+    );
+
+    it.each(SUPPORTED_LANGUAGES)("asks for the rate alone in %s transaction.sentence.rate.missing", (language) => {
+        expect([...sentenceSlotNames(CATALOGS[language]["transaction.sentence.rate.missing"] ?? "")]).toStrictEqual([
+            "rate",
+        ]);
+    });
 });

@@ -92,7 +92,7 @@ const accounts = {
             pt: "Histórico do saldo. Aproximadamente {amount} em {date}.",
         }),
         "accounts.detail.empty": t({
-            en: "Nothing attached yet — this account's transactions will gather here.",
+            en: "Nothing attached yet. This account's transactions will gather here.",
             es: "Todavía no hay nada. Aquí vas a ver las transacciones de esta cuenta.",
             fr: "Rien pour l'instant. Les opérations de ce compte s'afficheront ici.",
             pt: "Ainda não há nada. Os lançamentos desta conta vão aparecer aqui.",
@@ -257,7 +257,7 @@ const accounts = {
             "pt-PT": "Deve",
         }),
         "accounts.undo.body": t({
-            en: "Its transactions are kept — they just stop belonging to an account.",
+            en: "Its transactions are kept; they just stop belonging to an account.",
             es: "Sus transacciones se conservan; solo dejan de pertenecer a una cuenta.",
             fr: "Ses opérations sont conservées, elles ne sont simplement plus rattachées à un compte.",
             pt: "Os lançamentos são mantidos; só deixam de pertencer a uma conta.",

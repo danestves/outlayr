@@ -8,26 +8,20 @@ import { computeAmountUSD } from "./rates";
 import { convertFromUsd, roundMoney } from "./round";
 
 describe("golden vectors — computeAmountUSD", () => {
-    for (const vector of COMPUTE_USD_VECTORS) {
-        it(vector.name, () => {
-            expect(computeAmountUSD(vector.input)).toBe(vector.expectedUSD);
-        });
-    }
+    it.each(COMPUTE_USD_VECTORS)("$name", (vector) => {
+        expect(computeAmountUSD(vector.input)).toBe(vector.expectedUSD);
+    });
 
-    for (const vector of COMPUTE_USD_THROW_VECTORS) {
-        it(`rejects: ${vector.name}`, () => {
-            expect(() => computeAmountUSD(vector.input)).toThrow(MoneyValidationError);
-            expect(() => computeAmountUSD(vector.input)).toThrow(vector.messagePattern);
-        });
-    }
+    it.each(COMPUTE_USD_THROW_VECTORS)("rejects: $name", (vector) => {
+        expect(() => computeAmountUSD(vector.input)).toThrow(MoneyValidationError);
+        expect(() => computeAmountUSD(vector.input)).toThrow(vector.messagePattern);
+    });
 });
 
 describe("golden vectors — roundMoney half-even", () => {
-    for (const vector of ROUND_MONEY_VECTORS) {
-        it(vector.name, () => {
-            expect(roundMoney(vector.value, vector.decimals)).toBe(vector.expected);
-        });
-    }
+    it.each(ROUND_MONEY_VECTORS)("$name", (vector) => {
+        expect(roundMoney(vector.value, vector.decimals)).toBe(vector.expected);
+    });
 });
 
 interface ConvertVector {
@@ -93,11 +87,9 @@ const CONVERT_FROM_USD_VECTORS: ConvertVector[] = [
 ];
 
 describe("golden vectors — convertFromUsd", () => {
-    for (const vector of CONVERT_FROM_USD_VECTORS) {
-        it(vector.name, () => {
-            expect(convertFromUsd(vector.amountUsd, vector.rate, vector.code)).toBe(vector.expected);
-        });
-    }
+    it.each(CONVERT_FROM_USD_VECTORS)("$name", (vector) => {
+        expect(convertFromUsd(vector.amountUsd, vector.rate, vector.code)).toBe(vector.expected);
+    });
 
     it("rejects a non-finite amount before applying the identity shortcut", () => {
         expect(() => convertFromUsd(Number.POSITIVE_INFINITY, 1, "USD")).toThrow(MoneyValidationError);

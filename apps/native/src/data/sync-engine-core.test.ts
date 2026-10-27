@@ -161,16 +161,14 @@ describe("the replicated column set", () => {
         "accounts.imageUri",
     ]);
 
-    for (const table of SYNCED_TABLES) {
-        it(`covers every column of ${table}`, () => {
-            const spec = specFor(table);
-            const declared = Object.keys(getTableColumns(spec.table)).filter(
-                (name) => !(ENVELOPE.has(name) || DEVICE_LOCAL.has(`${table}.${name}`))
-            );
+    it.each(SYNCED_TABLES)("covers every column of %s", (table) => {
+        const spec = specFor(table);
+        const declared = Object.keys(getTableColumns(spec.table)).filter(
+            (name) => !(ENVELOPE.has(name) || DEVICE_LOCAL.has(`${table}.${name}`))
+        );
 
-            expect([...spec.fields].sort()).toStrictEqual(declared.sort());
-        });
-    }
+        expect([...spec.fields].sort()).toStrictEqual(declared.sort());
+    });
 
     it("names only real timestamp columns as dates", () => {
         for (const table of SYNCED_TABLES) {

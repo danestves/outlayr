@@ -618,7 +618,7 @@ const transaction = {
             pt: "{count} anos",
         }),
         "transaction.localData.body": t({
-            en: "Outlayr could not open your data. This is often temporary — try again first. Your ledger is still on this device.",
+            en: "Outlayr could not open your data. This is often temporary, so try again first. Your ledger is still on this device.",
             es: "Outlayr no pudo abrir tus datos. Suele ser algo temporal, así que inténtalo de nuevo. Tu registro sigue en este dispositivo.",
             fr: "Outlayr n'a pas pu ouvrir vos données. C'est souvent temporaire : réessayez d'abord. Vos opérations sont toujours sur cet appareil.",
             pt: "O Outlayr não conseguiu abrir seus dados. Isso costuma ser temporário, então tente de novo primeiro. Seus lançamentos continuam neste dispositivo.",

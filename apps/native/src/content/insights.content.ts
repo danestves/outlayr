@@ -208,7 +208,7 @@ const insights = {
             pt: "{measure} não tem nada para mostrar {period}. {sentence}",
         }),
         "insights.quiet.alternative": t({
-            en: "{measure} has {period} covered — tap it above.",
+            en: "{measure} has {period} covered. Tap it above.",
             es: "{measure} sí tiene datos {period}. Tócalo arriba.",
             fr: "Il y a des données {period} dans {measure}, juste au-dessus.",
             pt: "{measure} tem dados {period}. Toque acima.",

@@ -40,7 +40,6 @@ describe("the merchant book", () => {
         const db = await migratedDatabase();
         await rememberMerchant(db, "Oldest Shop", undefined, AIRBNB, NOW);
         for (let index = 0; index < MAX_BOOK_ENTRIES; index += 1) {
-            // oxlint-disable-next-line no-await-in-loop -- each write reads the book the previous one left
             await rememberMerchant(db, `Shop Number ${index}`, undefined, { ...AIRBNB, merchantName: null }, NOW);
         }
 

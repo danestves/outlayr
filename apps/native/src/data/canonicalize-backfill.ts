@@ -179,7 +179,6 @@ export async function backfillBudgetUsd(db: SpendDb): Promise<number> {
         }
         /* oxlint-enable no-await-in-loop */
     }
-    /* oxlint-enable no-await-in-loop */
 
     return valued;
 }

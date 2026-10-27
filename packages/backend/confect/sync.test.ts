@@ -1001,7 +1001,6 @@ describe("push during account deletion", () => {
         const t = harness();
         const owner = await seedProUser(t);
         for (let n = 0; n < DELETION_JOBS_PER_USER; n += 1) {
-            // oxlint-disable-next-line no-await-in-loop -- convex-test serialises writes; a Promise.all here interleaves them
             await seedJob(t, owner.userId, "prepared", n);
         }
         await seedJob(t, owner.userId, "providersRevoked", 0);

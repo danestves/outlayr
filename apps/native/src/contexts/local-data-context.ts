@@ -54,7 +54,7 @@ export function useLocalData(): LocalDataContextValue {
 export function useDatabase(): Database {
     const { db } = useLocalData();
     if (db == null) {
-        throw new Error("useDatabase was called outside the root splash gate — the local database is not ready yet");
+        throw new Error("useDatabase was called outside the root splash gate: the local database is not ready yet");
     }
     return db;
 }

@@ -1,12 +1,16 @@
 // Registered from the root vite.config.ts as `outlayr/*`. See docs/internals/linting.md, "outlayr".
 
+import noEmDashCopy from "./t3code/no-em-dash-copy.mjs";
 import noHermesUnsupportedApis from "./t3code/no-hermes-unsupported-apis.mjs";
 import noHooklessUseFunction from "./t3code/no-hookless-use-function.mjs";
 import noInlineSchemaCompile from "./t3code/no-inline-schema-compile.mjs";
 import noLowValueComments from "./t3code/no-low-value-comments.mjs";
 import noManualMemo from "./t3code/no-manual-memo.mjs";
+import noPollingLoopInTests from "./t3code/no-polling-loop-in-tests.mjs";
+import noTestInLoop from "./t3code/no-test-in-loop.mjs";
 import preferCatchTags from "./t3code/prefer-catch-tags.mjs";
 import preferEffectFn from "./t3code/prefer-effect-fn.mjs";
+import reactEffectBudget from "./t3code/react-effect-budget.mjs";
 import requireSuppressionReason from "./t3code/require-suppression-reason.mjs";
 
 const isIdentifier = (node, name) => node?.type === "Identifier" && node.name === name;
@@ -375,16 +379,20 @@ export default {
         "bottom-sheet-background": bottomSheetBackground,
         "editor-cta-busy": editorCtaBusy,
         "no-drizzle-transaction": noDrizzleTransaction,
+        "no-em-dash-copy": noEmDashCopy,
         "no-hermes-unsupported-apis": noHermesUnsupportedApis,
         "no-hookless-use-function": noHooklessUseFunction,
         "no-inline-schema-compile": noInlineSchemaCompile,
         "no-low-value-comments": noLowValueComments,
         "no-manual-memo": noManualMemo,
+        "no-polling-loop-in-tests": noPollingLoopInTests,
         "no-sheet-repaint": noSheetRepaint,
         "no-slop-comments": noSlopComments,
+        "no-test-in-loop": noTestInLoop,
         "no-test-timeout-or-retry": noTestTimeoutOrRetry,
         "prefer-catch-tags": preferCatchTags,
         "prefer-effect-fn": preferEffectFn,
+        "react-effect-budget": reactEffectBudget,
         "require-suppression-reason": requireSuppressionReason,
         "swiftui-list-grounds": swiftuiListGrounds,
         "widget-module-scope": widgetModuleScope,

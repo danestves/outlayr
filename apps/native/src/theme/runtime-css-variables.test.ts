@@ -42,12 +42,10 @@ describe("variables read at runtime", () => {
         expect(reads.length).toBeGreaterThan(20);
     });
 
-    for (const { file, name } of reads) {
-        it(`${name} in ${file} resolves to this app's palette`, () => {
-            if (declares(panelui, name) === 0) {
-                return;
-            }
-            expect({ name, ours: declares(stylesheet, name) }).toStrictEqual({ name, ours: 2 });
-        });
-    }
+    it.each(reads)("$name in $file resolves to this app's palette", ({ name }) => {
+        if (declares(panelui, name) === 0) {
+            return;
+        }
+        expect({ name, ours: declares(stylesheet, name) }).toStrictEqual({ name, ours: 2 });
+    });
 });

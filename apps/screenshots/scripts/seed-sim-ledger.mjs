@@ -435,7 +435,6 @@ function noteOf(entry) {
 
 for (const entry of entries) {
     const merchant = entry.m ? merchantOf(entry.m) : null;
-    // oxlint-disable-next-line no-await-in-loop -- one fetch per domain, memoised
     const brand = merchant ? await brandFor(merchant.domain) : null;
     const { imageColor, imageUri } = persistBrand(brand);
 
@@ -470,7 +469,6 @@ balanceDelta[transferTo.id] += transferToAmount;
 
 // After the rows and transfer, so `initialBalance` is solved back from each target.
 for (const account of ACCOUNTS) {
-    // oxlint-disable-next-line no-await-in-loop -- one fetch per domain, memoised
     const brand = account.brand ? await brandFor(account.brand) : null;
     const { imageColor, imageUri } = persistBrand(brand);
     const initial = scaled(account, account.target) - balanceDelta[account.id];

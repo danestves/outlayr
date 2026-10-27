@@ -1,5 +1,3 @@
-// oxlint-disable unicorn/filename-case -- the Convex module name is the function path: clients call these as api.voiceEntry.*
-
 import {
     Agent,
     createTool,

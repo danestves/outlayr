@@ -1,4 +1,3 @@
-// oxlint-disable unicorn/filename-case -- a Convex module's path is its public API: this file is addressed as internal.exchangeRates.* from the crons and from apps/native
 import { PICKABLE_CURRENCY_CODES, utcDateString } from "./lib/currencies";
 import type { MarketRateType } from "./lib/currencies";
 
