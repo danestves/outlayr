@@ -1,16 +1,261 @@
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { createElevenLabs } from "@ai-sdk/elevenlabs";
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import { createThread, getThreadMetadata, saveMessage } from "@convex-dev/agent";
+import { isRateLimitError } from "@convex-dev/rate-limiter";
+import * as Clock from "effect/Clock";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import { components } from "../convex/_generated/api";
+import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
-import { admit, endThread, expireThread, listTurns, speak, startThread } from "./voiceEntry";
+import { ActionCtx, Auth, MutationCtx, MutationRunner, Scheduler } from "./_generated/services";
+import { traced } from "./lib/aiTracing";
+import { admitCapture } from "./lib/captures";
+import { CURRENCY_PATTERN, DATE_PATTERN, LANGUAGE_PATTERN, namesWithinBudget } from "./lib/ledgerPrompt";
+import type { LedgerContext } from "./lib/ledgerPrompt";
+import { perUserBurst } from "./lib/limits";
+import { modelCallError } from "./lib/modelCall";
+import { AI_CONSENT_VERSION, CLAUDE_MODEL_ID, ELEVENLABS_TRANSCRIPTION_MODEL_ID } from "./lib/models";
+import { isPro } from "./revenuecat";
+import {
+    buildPrompt,
+    CONTEXT_TURNS,
+    failure,
+    listTurns,
+    MAX_AUDIO_BYTES,
+    ownsThread,
+    PARSE_TIMEOUT_MS,
+    rateLimiter,
+    THREAD_TTL_MS,
+    transcribeClip,
+    voiceAgent,
+} from "./voiceEntry";
 import spec from "./voiceEntry.spec";
 
+const startThread = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "startThread",
+    Effect.fn("VoiceEntry.startThread")(function* startThread() {
+        const auth = yield* Auth;
+        const identity = yield* auth.getUserIdentity.pipe(
+            Effect.catchTags({ NoUserIdentityFoundError: () => Effect.succeed(null) })
+        );
+        if (identity === null) {
+            return { status: "unauthenticated" as const, threadId: null };
+        }
+        const ctx = yield* MutationCtx;
+        const pro = yield* Effect.promise(() => isPro(ctx, identity.subject));
+        const perUser = yield* Effect.promise(() =>
+            rateLimiter.limit(ctx, "voiceThreadPerUser", {
+                config: perUserBurst("voiceThread", pro),
+                key: identity.tokenIdentifier,
+            })
+        );
+        if (!perUser.ok) {
+            return { status: "rateLimited" as const, threadId: null };
+        }
+        const global = yield* Effect.promise(() => rateLimiter.limit(ctx, "voiceThreadGlobal"));
+        if (!global.ok) {
+            return { status: "rateLimited" as const, threadId: null };
+        }
+        const threadId = yield* Effect.promise(() =>
+            createThread(ctx, components.agent, {
+                title: "Voice entry",
+                userId: identity.tokenIdentifier,
+            })
+        );
+        const scheduler = yield* Scheduler;
+        yield* scheduler.runAfter(Duration.millis(THREAD_TTL_MS), refs.internal.voiceEntry.expireThread, { threadId });
+        return { status: "ok" as const, threadId };
+    }, Effect.orDie)
+);
+
+const expireThread = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "expireThread",
+    Effect.fn("VoiceEntry.expireThread")(function* expireThread({ threadId }) {
+        const ctx = yield* MutationCtx;
+        const thread = yield* Effect.promise(() =>
+            getThreadMetadata(ctx, components.agent, { threadId }).catch(() => null)
+        );
+        if (thread === null) {
+            return null;
+        }
+        const latest = yield* Effect.promise(() =>
+            ctx.runQuery(components.agent.messages.listMessagesByThreadId, {
+                order: "desc",
+                paginationOpts: { cursor: null, numItems: 1 },
+                threadId,
+            })
+        );
+        const idleFor = (yield* Clock.currentTimeMillis) - (latest.page[0]?._creationTime ?? thread._creationTime);
+        if (idleFor < THREAD_TTL_MS) {
+            const scheduler = yield* Scheduler;
+            yield* scheduler.runAfter(Duration.millis(THREAD_TTL_MS - idleFor), refs.internal.voiceEntry.expireThread, {
+                threadId,
+            });
+            return null;
+        }
+        yield* Effect.promise(() => ctx.runMutation(components.agent.threads.deleteAllForThreadIdAsync, { threadId }));
+        return null;
+    }, Effect.orDie)
+);
+
+const endThread = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "endThread",
+    Effect.fn("VoiceEntry.endThread")(function* endThread({ threadId }) {
+        const ctx = yield* MutationCtx;
+        if ((yield* Effect.promise(() => ownsThread(ctx, threadId))) === null) {
+            return null;
+        }
+        yield* Effect.promise(() => ctx.runMutation(components.agent.threads.deleteAllForThreadIdAsync, { threadId }));
+        return null;
+    }, Effect.orDie)
+);
+
+const admit = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "admit",
+    Effect.fn("VoiceEntry.admit")(function* admit() {
+        const auth = yield* Auth;
+        const identity = yield* auth.getUserIdentity.pipe(
+            Effect.catchTags({ NoUserIdentityFoundError: () => Effect.succeed(null) })
+        );
+        if (identity === null) {
+            return "notEntitled" as const;
+        }
+        const ctx = yield* MutationCtx;
+        return yield* Effect.promise(() =>
+            admitCapture(ctx, identity, () => rateLimiter.limit(ctx, "voiceEntryGlobal"))
+        );
+    }, Effect.orDie)
+);
+
+const speak = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "speak",
+    Effect.fn("VoiceEntry.speak")(function* speak(args) {
+        const auth = yield* Auth;
+        const identity = yield* auth.getUserIdentity.pipe(
+            Effect.catchTags({ NoUserIdentityFoundError: () => Effect.succeed(null) })
+        );
+        if (identity === null) {
+            return failure("unauthenticated");
+        }
+
+        // Read per call, so clearing a key with `npx convex env set` takes effect on the next clip.
+        const apiKey = process.env.ANTHROPIC_API_KEY;
+        const transcriptionKey = process.env.ELEVENLABS_API_KEY;
+        if (!apiKey || !transcriptionKey || args.aiConsent !== AI_CONSENT_VERSION) {
+            return failure("notConfigured");
+        }
+
+        if (
+            args.audio.byteLength === 0 ||
+            args.audio.byteLength > MAX_AUDIO_BYTES ||
+            !namesWithinBudget(args.categoryTree, args.accounts) ||
+            !DATE_PATTERN.test(args.today) ||
+            !CURRENCY_PATTERN.test(args.currency) ||
+            (args.language !== undefined && !LANGUAGE_PATTERN.test(args.language))
+        ) {
+            return failure("invalid");
+        }
+
+        const ctx = yield* ActionCtx;
+        const userId = yield* Effect.promise(() => ownsThread(ctx, args.threadId));
+        if (userId === null) {
+            return failure("invalid");
+        }
+
+        const pro = yield* Effect.promise(() => isPro(ctx, identity.subject));
+        const perUser = yield* Effect.promise(() =>
+            rateLimiter.limit(ctx, "voiceEntryPerUser", {
+                config: perUserBurst("voiceEntry", pro),
+                key: identity.tokenIdentifier,
+            })
+        );
+        if (!perUser.ok) {
+            return failure("rateLimited");
+        }
+
+        const { runMutation } = yield* MutationRunner;
+        const admitted = yield* runMutation(refs.internal.voiceEntry.admit).pipe(
+            Effect.catchDefect((defect) =>
+                isRateLimitError(defect) ? Effect.succeed("rateLimited" as const) : Effect.die(defect)
+            )
+        );
+        if (admitted !== "ok") {
+            return failure(admitted);
+        }
+
+        const heard = yield* transcribeClip(
+            createElevenLabs({ apiKey: transcriptionKey }).transcription(ELEVENLABS_TRANSCRIPTION_MODEL_ID),
+            args.audio,
+            args.language
+        );
+        if ("error" in heard) {
+            return failure(heard.error === "empty" ? "unclear" : "providerError");
+        }
+
+        const context: LedgerContext = {
+            accounts: args.accounts,
+            categoryTree: args.categoryTree,
+            currency: args.currency,
+            language: args.language,
+            today: args.today,
+        };
+        const modelId = process.env.CLAUDE_MODEL_ID || CLAUDE_MODEL_ID;
+        const agent = voiceAgent(traced(createAnthropic({ apiKey })(modelId), "voice_entry"), context, heard.text);
+        const { message, messageId } = yield* Effect.promise(() =>
+            saveMessage(ctx, components.agent, {
+                prompt: heard.text,
+                threadId: args.threadId,
+                userId,
+            })
+        );
+        const parsed = yield* Effect.tryPromise({
+            catch: modelCallError,
+            try: async () => {
+                const result = await agent.streamText(
+                    ctx,
+                    { threadId: args.threadId, userId },
+                    {
+                        abortSignal: AbortSignal.timeout(PARSE_TIMEOUT_MS),
+                        maxRetries: 0,
+                        promptMessageId: messageId,
+                        reasoning: "low",
+                        system: buildPrompt(context),
+                    },
+                    {
+                        contextOptions: { recentMessages: CONTEXT_TURNS * 2 },
+                        saveStreamDeltas: true,
+                    }
+                );
+                await result.consumeStream();
+            },
+        }).pipe(Effect.as(true), Effect.catchTags({ ModelCallError: () => Effect.succeed(false) }));
+        if (!parsed) {
+            return failure("providerError", heard.text);
+        }
+        return { order: message.order, status: "ok" as const, transcript: heard.text };
+    }, Effect.orDie)
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
-    Layer.provide(FunctionImpl.make(databaseSchema, spec, "startThread", startThread)),
-    Layer.provide(FunctionImpl.make(databaseSchema, spec, "expireThread", expireThread)),
+    Layer.provide(startThread),
+    Layer.provide(expireThread),
     Layer.provide(FunctionImpl.make(databaseSchema, spec, "listTurns", listTurns)),
-    Layer.provide(FunctionImpl.make(databaseSchema, spec, "endThread", endThread)),
-    Layer.provide(FunctionImpl.make(databaseSchema, spec, "admit", admit)),
-    Layer.provide(FunctionImpl.make(databaseSchema, spec, "speak", speak)),
+    Layer.provide(endThread),
+    Layer.provide(admit),
+    Layer.provide(speak),
     GroupImpl.finalize
 );

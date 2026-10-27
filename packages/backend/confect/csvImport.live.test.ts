@@ -6,6 +6,7 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
+import * as Effect from "effect/Effect";
 import { describe, expect, it, vi } from "vite-plus/test";
 
 import { api } from "../convex/_generated/api";
@@ -33,10 +34,12 @@ const OFFERED = new Set(CATEGORY_TREE.flatMap((branch) => [branch.name, ...branc
 
 describe.skipIf(!enabled)("csvImport against the live model", () => {
     it("classify maps unfamiliar merchants into categories the caller offered", async () => {
-        const result = await classify(createAnthropic({ apiKey })(MODEL_ID), {
-            categoryTree: CATEGORY_TREE,
-            labels: LABELS,
-        });
+        const result = await Effect.runPromise(
+            classify(createAnthropic({ apiKey })(MODEL_ID), {
+                categoryTree: CATEGORY_TREE,
+                labels: LABELS,
+            })
+        );
 
         expect(result.status).toBe("ok");
         expect(result.suggestions?.length).toBeGreaterThan(0);

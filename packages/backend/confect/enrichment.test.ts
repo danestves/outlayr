@@ -4,6 +4,7 @@ import rateLimiterTest from "@convex-dev/rate-limiter/test";
 import { MockLanguageModelV4 } from "ai/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
+import * as Effect from "effect/Effect";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { api } from "../convex/_generated/api";
@@ -18,8 +19,8 @@ import {
     sanitizeDomain,
     sanitizeCurrencyCode,
     sanitizeRegionCode,
-    suggestArgs,
 } from "./enrichment";
+import { suggestArgs } from "./enrichment.spec";
 import { perUserBurst } from "./lib/limits";
 import { knowledgeKey, merchantKey } from "./lib/merchantKey";
 import { AI_CONSENT_VERSION } from "./lib/models";
@@ -359,7 +360,7 @@ describe("latency/retry regression guard (task 3.13)", () => {
             },
         });
 
-        await expect(runSuggest(throwing, BASE_ARGS)).rejects.toThrow();
+        await expect(Effect.runPromise(runSuggest(throwing, BASE_ARGS))).rejects.toThrow();
         expect(calls).toBe(1);
     });
 });
@@ -397,11 +398,13 @@ describe(maybeScheduleGrounded, () => {
         const identity = await seedAuthUser(t);
 
         await asIdentity(t, identity).run((ctx) =>
-            maybeScheduleGrounded(ctx, "token-a", {
-                groundedLookup: false,
-                income: false,
-                name: "Farmatodo",
-            })
+            Effect.runPromise(
+                maybeScheduleGrounded(ctx, "token-a", {
+                    groundedLookup: false,
+                    income: false,
+                    name: "Farmatodo",
+                })
+            )
         );
 
         await expect(scheduledGroundedRuns(t)).resolves.toHaveLength(0);
@@ -422,11 +425,13 @@ describe(maybeScheduleGrounded, () => {
         );
 
         await asIdentity(t, identity).run((ctx) =>
-            maybeScheduleGrounded(ctx, "token-b", {
-                groundedLookup: true,
-                income: false,
-                name: "Farmatodo",
-            })
+            Effect.runPromise(
+                maybeScheduleGrounded(ctx, "token-b", {
+                    groundedLookup: true,
+                    income: false,
+                    name: "Farmatodo",
+                })
+            )
         );
 
         await expect(scheduledGroundedRuns(t)).resolves.toHaveLength(0);
@@ -439,11 +444,13 @@ describe(maybeScheduleGrounded, () => {
         const identity = await seedAuthUser(t);
 
         const scheduled = await asIdentity(t, identity).run((ctx) =>
-            maybeScheduleGrounded(ctx, "token-c", {
-                groundedLookup: true,
-                income: false,
-                name: "Farmatodo",
-            })
+            Effect.runPromise(
+                maybeScheduleGrounded(ctx, "token-c", {
+                    groundedLookup: true,
+                    income: false,
+                    name: "Farmatodo",
+                })
+            )
         );
 
         expect(scheduled).toBeTruthy();
@@ -461,12 +468,14 @@ describe(maybeScheduleGrounded, () => {
         vi.setSystemTime(new Date(Date.now() + elapsedMs));
 
         const reported = await asIdentity(t, identity).run((ctx) =>
-            maybeScheduleGrounded(ctx, "token-g", {
-                currency: "USD",
-                groundedLookup: true,
-                income: false,
-                name: "Farmatodo",
-            })
+            Effect.runPromise(
+                maybeScheduleGrounded(ctx, "token-g", {
+                    currency: "USD",
+                    groundedLookup: true,
+                    income: false,
+                    name: "Farmatodo",
+                })
+            )
         );
         const perUser = await t.run((ctx) => rateLimiter.check(ctx, "groundedPerUser", { key: "token-g" }));
         const runs = await scheduledGroundedRuns(t);
@@ -496,12 +505,14 @@ describe(maybeScheduleGrounded, () => {
         const identity = await seedAuthUser(t);
 
         await asIdentity(t, identity).run((ctx) =>
-            maybeScheduleGrounded(ctx, "token-d", {
-                groundedLookup: true,
-                income: false,
-                locale: "es-VE",
-                name: "Farmatodo",
-            })
+            Effect.runPromise(
+                maybeScheduleGrounded(ctx, "token-d", {
+                    groundedLookup: true,
+                    income: false,
+                    locale: "es-VE",
+                    name: "Farmatodo",
+                })
+            )
         );
 
         const [row] = await scheduledGroundedRuns(t);
@@ -528,11 +539,13 @@ describe(maybeScheduleGrounded, () => {
 
         await expect(
             stale.run((ctx) =>
-                maybeScheduleGrounded(ctx, "token-f", {
-                    groundedLookup: true,
-                    income: false,
-                    name: "Farmatodo",
-                })
+                Effect.runPromise(
+                    maybeScheduleGrounded(ctx, "token-f", {
+                        groundedLookup: true,
+                        income: false,
+                        name: "Farmatodo",
+                    })
+                )
             )
         ).resolves.toBeFalsy();
         await expect(scheduledGroundedRuns(t)).resolves.toHaveLength(0);
@@ -545,12 +558,14 @@ describe(maybeScheduleGrounded, () => {
         const identity = await seedAuthUser(t);
 
         await asIdentity(t, identity).run((ctx) =>
-            maybeScheduleGrounded(ctx, "token-e", {
-                groundedLookup: true,
-                income: false,
-                name: "Farmatodo",
-                regionCode: "VE",
-            })
+            Effect.runPromise(
+                maybeScheduleGrounded(ctx, "token-e", {
+                    groundedLookup: true,
+                    income: false,
+                    name: "Farmatodo",
+                    regionCode: "VE",
+                })
+            )
         );
 
         const [row] = await scheduledGroundedRuns(t);
@@ -570,7 +585,7 @@ describe("runSuggest sanitisation", () => {
             tags: ["  Music  ", "Streaming"],
         });
 
-        await expect(runSuggest(model, { ...BASE_ARGS, categoryTree: [] })).resolves.toStrictEqual({
+        await expect(Effect.runPromise(runSuggest(model, { ...BASE_ARGS, categoryTree: [] }))).resolves.toStrictEqual({
             categoryName: "Streaming",
             domain: "netflix.com",
             emoji: null,
@@ -590,10 +605,12 @@ describe("runSuggest sanitisation", () => {
             tags: ["", "  ", "a".repeat(30), "second", "third", "fourth"],
         });
 
-        const result = await runSuggest(model, {
-            ...BASE_ARGS,
-            categoryTree: [],
-        });
+        const result = await Effect.runPromise(
+            runSuggest(model, {
+                ...BASE_ARGS,
+                categoryTree: [],
+            })
+        );
 
         expect(result.tags).toStrictEqual(["a".repeat(24), "second", "third"]);
     });
@@ -607,7 +624,7 @@ describe("runSuggest sanitisation", () => {
             tags: [],
         });
 
-        await expect(runSuggest(model, { ...BASE_ARGS, categoryTree: [] })).resolves.toMatchObject({
+        await expect(Effect.runPromise(runSuggest(model, { ...BASE_ARGS, categoryTree: [] }))).resolves.toMatchObject({
             categoryName: "Dining Out",
             domain: null,
         });
@@ -621,7 +638,7 @@ describe("runSuggest sanitisation", () => {
             tags: [],
         });
 
-        await expect(runSuggest(model, { ...BASE_ARGS, categoryTree: [] })).resolves.toMatchObject({
+        await expect(Effect.runPromise(runSuggest(model, { ...BASE_ARGS, categoryTree: [] }))).resolves.toMatchObject({
             categoryName: null,
         });
     });
@@ -634,7 +651,7 @@ describe("runSuggest sanitisation", () => {
             tags: [],
         });
 
-        await expect(runSuggest(model, { ...BASE_ARGS, categoryTree: [] })).resolves.toMatchObject({
+        await expect(Effect.runPromise(runSuggest(model, { ...BASE_ARGS, categoryTree: [] }))).resolves.toMatchObject({
             categoryName: null,
         });
     });
@@ -648,13 +665,15 @@ describe("runSuggest sanitisation", () => {
         });
 
         await expect(
-            runSuggest(model, {
-                ...BASE_ARGS,
-                categoryTree: [
-                    { children: [], name: "Entertainment" },
-                    { children: [], name: "Groceries" },
-                ],
-            })
+            Effect.runPromise(
+                runSuggest(model, {
+                    ...BASE_ARGS,
+                    categoryTree: [
+                        { children: [], name: "Entertainment" },
+                        { children: [], name: "Groceries" },
+                    ],
+                })
+            )
         ).resolves.toMatchObject({ categoryName: "Pets", isNewCategory: true });
     });
 
@@ -667,13 +686,15 @@ describe("runSuggest sanitisation", () => {
         });
 
         await expect(
-            runSuggest(model, {
-                ...BASE_ARGS,
-                categoryTree: [
-                    { children: [], name: "Entertainment" },
-                    { children: [], name: "Groceries" },
-                ],
-            })
+            Effect.runPromise(
+                runSuggest(model, {
+                    ...BASE_ARGS,
+                    categoryTree: [
+                        { children: [], name: "Entertainment" },
+                        { children: [], name: "Groceries" },
+                    ],
+                })
+            )
         ).resolves.toMatchObject({
             categoryName: "Entertainment",
             isNewCategory: false,
@@ -695,7 +716,7 @@ describe("runSuggest sanitisation", () => {
             tags: [],
         });
 
-        await expect(runSuggest(model, { ...BASE_ARGS, categoryTree })).resolves.toMatchObject({
+        await expect(Effect.runPromise(runSuggest(model, { ...BASE_ARGS, categoryTree }))).resolves.toMatchObject({
             categoryName: "Cat60",
             isNewCategory: true,
         });
@@ -711,7 +732,7 @@ describe("runSuggest sanitisation", () => {
             tags: [],
         });
 
-        await expect(runSuggest(model, BASE_ARGS)).resolves.toMatchObject({
+        await expect(Effect.runPromise(runSuggest(model, BASE_ARGS))).resolves.toMatchObject({
             categoryName: "Streaming",
             emoji: "📺",
             isNewCategory: true,
@@ -729,7 +750,7 @@ describe("runSuggest sanitisation", () => {
             tags: [],
         });
 
-        await expect(runSuggest(model, BASE_ARGS)).resolves.toMatchObject({
+        await expect(Effect.runPromise(runSuggest(model, BASE_ARGS))).resolves.toMatchObject({
             parentCategoryName: null,
         });
     });
@@ -744,7 +765,7 @@ describe("runSuggest sanitisation", () => {
             tags: [],
         });
 
-        await expect(runSuggest(model, BASE_ARGS)).resolves.toMatchObject({
+        await expect(Effect.runPromise(runSuggest(model, BASE_ARGS))).resolves.toMatchObject({
             isNewCategory: false,
             parentCategoryName: null,
         });
@@ -760,7 +781,7 @@ describe("runSuggest sanitisation", () => {
             tags: [],
         });
 
-        await expect(runSuggest(model, BASE_ARGS)).resolves.toMatchObject({
+        await expect(Effect.runPromise(runSuggest(model, BASE_ARGS))).resolves.toMatchObject({
             emoji: null,
         });
     });
@@ -775,11 +796,13 @@ describe("runSuggest regionCode", () => {
             tags: [],
         });
 
-        await runSuggest(model, {
-            ...BASE_ARGS,
-            categoryTree: [],
-            regionCode: "VE",
-        });
+        await Effect.runPromise(
+            runSuggest(model, {
+                ...BASE_ARGS,
+                categoryTree: [],
+                regionCode: "VE",
+            })
+        );
 
         const sent = JSON.stringify(model.doGenerateCalls[0]?.prompt);
         expect(sent).toContain("VE");
@@ -793,7 +816,7 @@ describe("runSuggest regionCode", () => {
             tags: [],
         });
 
-        await runSuggest(model, { ...BASE_ARGS, categoryTree: [], currency: "EUR" });
+        await Effect.runPromise(runSuggest(model, { ...BASE_ARGS, categoryTree: [], currency: "EUR" }));
 
         const sent = JSON.stringify(model.doGenerateCalls[0]?.prompt);
         expect(sent).toContain("charged in EUR");

@@ -1,4 +1,3 @@
-import { compileSchema } from "@confect/core/SchemaToValidator";
 import * as Schema from "effect/Schema";
 
 export const EnrichmentResult = Schema.Struct({
@@ -10,5 +9,3 @@ export const EnrichmentResult = Schema.Struct({
     parentCategoryName: Schema.NullOr(Schema.String),
     tags: Schema.Array(Schema.String),
 });
-
-export const enrichmentResult = compileSchema(EnrichmentResult);

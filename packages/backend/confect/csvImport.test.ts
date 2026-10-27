@@ -4,11 +4,13 @@ import rateLimiterTest from "@convex-dev/rate-limiter/test";
 import { MockLanguageModelV3 } from "ai/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
+import * as Effect from "effect/Effect";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { api } from "../convex/_generated/api";
 import schema from "../convex/schema";
-import { classify, csvImportArgs, GROUNDED_IMPORT_MAX, rateLimiter, scheduleImportGrounded } from "./csvImport";
+import { classify, GROUNDED_IMPORT_MAX, rateLimiter, scheduleImportGrounded } from "./csvImport";
+import { csvImportArgs } from "./csvImport.spec";
 import { perUserBurst } from "./lib/limits";
 import { merchantKey } from "./lib/merchantKey";
 import { AI_CONSENT_VERSION } from "./lib/models";
@@ -293,11 +295,13 @@ describe(scheduleImportGrounded, () => {
         const identity = await seedAuthUser(t);
 
         const scheduled = await asIdentity(t, identity).run((ctx) =>
-            scheduleImportGrounded(ctx, "token-import-a", {
-                groundedLookup: true,
-                labels: ["Corpoelec", "CORPOELEC!!", "Automercado Plaza's"],
-                regionCode: "VE",
-            })
+            Effect.runPromise(
+                scheduleImportGrounded(ctx, "token-import-a", {
+                    groundedLookup: true,
+                    labels: ["Corpoelec", "CORPOELEC!!", "Automercado Plaza's"],
+                    regionCode: "VE",
+                })
+            )
         );
 
         expect(scheduled).toBe(2);
@@ -334,10 +338,12 @@ describe(scheduleImportGrounded, () => {
             (_, i) => `Unknown Merchant ${"x".repeat(i + 1)}`
         );
         const scheduled = await asIdentity(t, identity).run((ctx) =>
-            scheduleImportGrounded(ctx, "token-import-b", {
-                groundedLookup: true,
-                labels,
-            })
+            Effect.runPromise(
+                scheduleImportGrounded(ctx, "token-import-b", {
+                    groundedLookup: true,
+                    labels,
+                })
+            )
         );
 
         expect(scheduled).toBe(GROUNDED_IMPORT_MAX);
@@ -349,10 +355,12 @@ describe(scheduleImportGrounded, () => {
         const identity = await seedAuthUser(t);
 
         const scheduled = await asIdentity(t, identity).run((ctx) =>
-            scheduleImportGrounded(ctx, "token-import-c", {
-                groundedLookup: false,
-                labels: ["Corpoelec"],
-            })
+            Effect.runPromise(
+                scheduleImportGrounded(ctx, "token-import-c", {
+                    groundedLookup: false,
+                    labels: ["Corpoelec"],
+                })
+            )
         );
 
         expect(scheduled).toBe(0);
@@ -374,10 +382,12 @@ describe(scheduleImportGrounded, () => {
         );
 
         const scheduled = await asIdentity(t, identity).run((ctx) =>
-            scheduleImportGrounded(ctx, "token-import-d", {
-                groundedLookup: true,
-                labels: ["Corpoelec"],
-            })
+            Effect.runPromise(
+                scheduleImportGrounded(ctx, "token-import-d", {
+                    groundedLookup: true,
+                    labels: ["Corpoelec"],
+                })
+            )
         );
 
         expect(scheduled).toBe(0);
@@ -397,10 +407,12 @@ describe(scheduleImportGrounded, () => {
 
         await expect(
             stale.run((ctx) =>
-                scheduleImportGrounded(ctx, "token-import-e", {
-                    groundedLookup: true,
-                    labels: ["Corpoelec"],
-                })
+                Effect.runPromise(
+                    scheduleImportGrounded(ctx, "token-import-e", {
+                        groundedLookup: true,
+                        labels: ["Corpoelec"],
+                    })
+                )
             )
         ).resolves.toBe(0);
         await expect(scheduledGroundedRuns(t)).resolves.toHaveLength(0);
@@ -541,10 +553,12 @@ describe(classify, () => {
         );
 
         await expect(
-            classify(model, {
-                categoryTree: BASE_ARGS.categoryTree,
-                labels: BASE_ARGS.labels,
-            })
+            Effect.runPromise(
+                classify(model, {
+                    categoryTree: BASE_ARGS.categoryTree,
+                    labels: BASE_ARGS.labels,
+                })
+            )
         ).resolves.toStrictEqual({
             status: "ok",
             suggestions: [
@@ -565,10 +579,12 @@ describe(classify, () => {
         );
 
         await expect(
-            classify(model, {
-                categoryTree: BASE_ARGS.categoryTree,
-                labels: BASE_ARGS.labels,
-            })
+            Effect.runPromise(
+                classify(model, {
+                    categoryTree: BASE_ARGS.categoryTree,
+                    labels: BASE_ARGS.labels,
+                })
+            )
         ).resolves.toStrictEqual({
             status: "ok",
             suggestions: [{ categoryName: "Coffee", domain: null, label: "Coffee Shop" }],
@@ -579,10 +595,12 @@ describe(classify, () => {
         const model = mockModel("this is not json at all");
 
         await expect(
-            classify(model, {
-                categoryTree: BASE_ARGS.categoryTree,
-                labels: BASE_ARGS.labels,
-            })
+            Effect.runPromise(
+                classify(model, {
+                    categoryTree: BASE_ARGS.categoryTree,
+                    labels: BASE_ARGS.labels,
+                })
+            )
         ).resolves.toStrictEqual({
             status: "invalidResponse",
             suggestions: null,
@@ -593,10 +611,12 @@ describe(classify, () => {
         const model = rejectingModel(new Error("network down"));
 
         await expect(
-            classify(model, {
-                categoryTree: BASE_ARGS.categoryTree,
-                labels: BASE_ARGS.labels,
-            })
+            Effect.runPromise(
+                classify(model, {
+                    categoryTree: BASE_ARGS.categoryTree,
+                    labels: BASE_ARGS.labels,
+                })
+            )
         ).resolves.toStrictEqual({
             status: "providerError",
             suggestions: null,

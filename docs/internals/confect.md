@@ -29,7 +29,7 @@ The tables in `confect/tables/` export the same schema the hand-written `convex/
 ## Traps
 
 - **A nested `NullOr` inside a union compiles to a nested union.** Convex then sees a different validator. Write `Schema.Union([A, B, Schema.Null])` flat (`confect/tables/accountDeletionJobs.ts`).
-- **`compileSchema` reverses object keys.** Validators built from Effect structs (`confect/sync.ts`, `confect/lib/enrichmentResult.ts`) validate the same values but print in reverse order. It also only types against a concrete struct, so call it per struct rather than through a generic helper.
+- **`compileSchema` reverses object keys.** Validators built from Effect structs (`confect/sync.ts`) validate the same values but print in reverse order. It also only types against a concrete struct, so call it per struct rather than through a generic helper.
 - **convex-test needs `_generated` in its module map.** Tests live beside their modules in `confect/`, so they glob `../convex/**/*.ts` (`../../convex/**/*.ts` from `lib/`).
 - **Vitest's default include matches `*.spec.ts`.** `vitest.config.ts` narrows it to `**/*.test.ts`; a spec is a group declaration, not a test.
 - **Native Jest does not transform `@confect`.** `apps/native` tests import `confect/lib/syncTables.ts`, so that file imports only `effect`; `compileSchema` stays in `sync.ts`.

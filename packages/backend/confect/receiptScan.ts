@@ -1,35 +1,21 @@
 // oxlint-disable unicorn/filename-case -- the Convex module name is the function path: clients call this action as api.receiptScan.scan
 
-import { createAnthropic } from "@ai-sdk/anthropic";
 import { HOUR, isRateLimitError, RateLimiter } from "@convex-dev/rate-limiter";
-import { generateText, NoObjectGeneratedError, Output, TypeValidationError } from "ai";
+import { generateText, Output } from "ai";
 import type { LanguageModel } from "ai";
 import type { UserIdentity } from "convex/server";
-import { v } from "convex/values";
-import type { Infer } from "convex/values";
-import { z } from "zod";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
-import { components, internal } from "../convex/_generated/api";
-import { action, internalMutation } from "../convex/_generated/server";
-import type { ActionCtx } from "../convex/_generated/server";
-import { traced } from "./lib/aiTracing";
-import { admitCapture } from "./lib/captures";
+import { components } from "../convex/_generated/api";
+import refs from "./_generated/refs";
+import { ActionCtx, MutationRunner } from "./_generated/services";
 import { PICKABLE_CURRENCY_CODES } from "./lib/currencies";
-import {
-    clampDate,
-    CURRENCY_PATTERN,
-    DATE_PATTERN,
-    describeTree,
-    LANGUAGE_PATTERN,
-    namesWithinBudget,
-    normalizeDomain,
-    pickKnown,
-    REGION_PATTERN,
-    trimTo,
-} from "./lib/ledgerPrompt";
+import { clampDate, describeTree, normalizeDomain, pickKnown, trimTo } from "./lib/ledgerPrompt";
 import type { LedgerContext } from "./lib/ledgerPrompt";
 import { perUserBurst } from "./lib/limits";
-import { AI_CONSENT_VERSION, CLAUDE_FAST_MODEL_ID } from "./lib/models";
+import { modelCallError, modelSchema } from "./lib/modelCall";
+import type { ReceiptDraft, ReceiptItem, ScanResult, ScanStatus } from "./receiptScan.spec";
 import { isPro } from "./revenuecat";
 
 // A Convex value tops out at 1MB and the photo travels as one; the client re-encodes to fit.
@@ -45,127 +31,38 @@ export const MAX_AMOUNT = 9_999_999_999_999;
 // Under the client's 30s abort.
 export const REQUEST_TIMEOUT_MS = 22_000;
 
-// A privacy boundary: the photo plus only what the model needs in this ledger's terms. No ids, balances or history.
-export const receiptScanArgs = {
-    accounts: v.array(v.string()),
-    aiConsent: v.optional(v.number()),
-    categoryTree: v.array(v.object({ children: v.array(v.string()), name: v.string() })),
-    currency: v.string(),
-    image: v.bytes(),
-    language: v.optional(v.string()),
-    /** ISO 3166-1 alpha-2, to break a currency symbol's tie ("$" in Mexico is pesos). */
-    regionCode: v.optional(v.string()),
-    /** `YYYY-MM-DD` in the device's local calendar. */
-    today: v.string(),
-};
-
-export const scanStatus = v.union(
-    v.literal("ok"),
-    v.literal("unauthenticated"),
-    v.literal("notConfigured"),
-    v.literal("rateLimited"),
-    v.literal("notEntitled"),
-    v.literal("quotaExceeded"),
-    v.literal("invalid"),
-    v.literal("providerError"),
-    v.literal("invalidResponse"),
-    v.literal("unclear")
-);
-
-const receiptItem = v.object({
-    name: v.string(),
-    /** The line total, quantity included. */
-    price: v.number(),
-    quantity: v.number(),
-});
-
-const receiptDraft = v.object({
-    accountName: v.union(v.string(), v.null()),
-    categoryName: v.union(v.string(), v.null()),
-    currency: v.union(v.string(), v.null()),
-    currencySource: v.union(v.literal("printed"), v.literal("inferred")),
-    currencyUnresolved: v.boolean(),
-    date: v.string(),
-    domain: v.union(v.string(), v.null()),
-    income: v.boolean(),
-    items: v.array(receiptItem),
-    merchant: v.string(),
-    paymentMethod: v.union(v.string(), v.null()),
-    subtotal: v.union(v.number(), v.null()),
-    tax: v.union(v.number(), v.null()),
-    tip: v.union(v.number(), v.null()),
-    total: v.number(),
-});
-
-const scanResult = v.object({
-    receipt: v.union(receiptDraft, v.null()),
-    status: scanStatus,
-});
-
-export type ScanStatus = Infer<typeof scanStatus>;
-
-export interface ReceiptItem {
-    name: string;
-    price: number;
-    quantity: number;
-}
-
-export interface ReceiptDraft {
-    accountName: string | null;
-    categoryName: string | null;
-    /** ISO 4217, upper case. Null means the ledger's own currency. */
-    currency: string | null;
-    currencySource: "printed" | "inferred";
-    /** A code the ledger cannot price; `currency` is then null as a stand-in, never a guess. */
-    currencyUnresolved: boolean;
-    /** `YYYY-MM-DD` in the device's local calendar. */
-    date: string;
-    domain: string | null;
-    income: boolean;
-    items: ReceiptItem[];
-    merchant: string;
-    paymentMethod: string | null;
-    subtotal: number | null;
-    tax: number | null;
-    tip: number | null;
-    total: number;
-}
-
-export interface ScanResult {
-    receipt: ReceiptDraft | null;
-    status: ScanStatus;
-}
-
-function failure(status: Exclude<ScanStatus, "ok">): ScanResult {
+export function failure(status: Exclude<typeof ScanStatus.Type, "ok">): typeof ScanResult.Type {
     return { receipt: null, status };
 }
 
 /** Only the JSON shape: the model's output stays untrusted until `normalizeDraft`. */
-export const modelOutputSchema = z.object({
-    accountName: z.string().nullable(),
-    categoryName: z.string().nullable(),
-    currency: z.string().nullable(),
-    currencyPrinted: z.boolean(),
-    date: z.string().nullable(),
-    domain: z.string().nullable(),
-    found: z.boolean(),
-    items: z.array(
-        z.object({
-            name: z.string(),
-            price: z.number().nullable(),
-            quantity: z.number().nullable(),
+export const ModelOutput = Schema.Struct({
+    accountName: Schema.NullOr(Schema.String),
+    categoryName: Schema.NullOr(Schema.String),
+    currency: Schema.NullOr(Schema.String),
+    currencyPrinted: Schema.Boolean,
+    date: Schema.NullOr(Schema.String),
+    domain: Schema.NullOr(Schema.String),
+    found: Schema.Boolean,
+    items: Schema.Array(
+        Schema.Struct({
+            name: Schema.String,
+            price: Schema.NullOr(Schema.Finite),
+            quantity: Schema.NullOr(Schema.Finite),
         })
     ),
-    kind: z.enum(["expense", "refund"]),
-    merchant: z.string().nullable(),
-    paymentMethod: z.string().nullable(),
-    subtotal: z.number().nullable(),
-    tax: z.number().nullable(),
-    tip: z.number().nullable(),
-    total: z.number().nullable(),
+    kind: Schema.Literals(["expense", "refund"]),
+    merchant: Schema.NullOr(Schema.String),
+    paymentMethod: Schema.NullOr(Schema.String),
+    subtotal: Schema.NullOr(Schema.Finite),
+    tax: Schema.NullOr(Schema.Finite),
+    tip: Schema.NullOr(Schema.Finite),
+    total: Schema.NullOr(Schema.Finite),
 });
 
-export type ModelOutput = z.infer<typeof modelOutputSchema>;
+export type ModelOutput = typeof ModelOutput.Type;
+
+const modelOutputSchema = modelSchema(ModelOutput);
 
 export const KNOWN_CURRENCIES: ReadonlySet<string> = new Set(PICKABLE_CURRENCY_CODES);
 
@@ -226,8 +123,8 @@ function nameWithoutQuantity(name: string, quantity: number): string {
     return printed === quantity && rest.length > 0 ? rest : name;
 }
 
-export function normalizeItems(items: ModelOutput["items"]): ReceiptItem[] {
-    const kept: ReceiptItem[] = [];
+export function normalizeItems(items: ModelOutput["items"]): (typeof ReceiptItem.Type)[] {
+    const kept: (typeof ReceiptItem.Type)[] = [];
     for (const item of items) {
         const quantity =
             item.quantity !== null && Number.isFinite(item.quantity) && item.quantity > 0
@@ -247,7 +144,7 @@ export function normalizeItems(items: ModelOutput["items"]): ReceiptItem[] {
     return kept;
 }
 
-export function normalizeDraft(output: ModelOutput, args: LedgerContext): ReceiptDraft | null {
+export function normalizeDraft(output: ModelOutput, args: LedgerContext): typeof ReceiptDraft.Type | null {
     const { total } = output;
     if (!(output.found && total != null && Number.isFinite(total) && total > 0 && total <= MAX_AMOUNT)) {
         return null;
@@ -278,110 +175,56 @@ export function normalizeDraft(output: ModelOutput, args: LedgerContext): Receip
     };
 }
 
-export async function readReceipt(
-    model: LanguageModel,
-    image: ArrayBuffer,
-    context: LedgerContext
-): Promise<ScanResult> {
-    try {
-        const { output } = await generateText({
-            abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-            maxRetries: 0,
-            messages: [
-                {
-                    content: [
-                        { data: new Uint8Array(image), mediaType: "image/jpeg", type: "file" },
-                        { text: "Read this receipt.", type: "text" },
+export const readReceipt = Effect.fn("ReceiptScan.readReceipt")(
+    function* readReceipt(model: LanguageModel, image: ArrayBuffer, context: LedgerContext) {
+        const { output } = yield* Effect.tryPromise({
+            catch: modelCallError,
+            try: () =>
+                generateText({
+                    abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+                    maxRetries: 0,
+                    messages: [
+                        {
+                            content: [
+                                { data: new Uint8Array(image), mediaType: "image/jpeg", type: "file" },
+                                { text: "Read this receipt.", type: "text" },
+                            ],
+                            role: "user",
+                        },
                     ],
-                    role: "user",
-                },
-            ],
-            model,
-            output: Output.object({ schema: modelOutputSchema }),
-            reasoning: "low",
-            system: buildPrompt(context),
+                    model,
+                    output: Output.object({ schema: modelOutputSchema }),
+                    reasoning: "low",
+                    system: buildPrompt(context),
+                }),
         });
         const receipt = normalizeDraft(output, context);
-        return receipt === null ? failure("unclear") : { receipt, status: "ok" };
-    } catch (error) {
-        if (NoObjectGeneratedError.isInstance(error) || TypeValidationError.isInstance(error)) {
-            return failure("invalidResponse");
-        }
-        return failure("providerError");
-    }
-}
-
-export const admit = internalMutation({
-    args: {},
-    handler: async (ctx) => {
-        const identity = await ctx.auth.getUserIdentity();
-        if (identity === null) {
-            return "notEntitled" as const;
-        }
-        return admitCapture(ctx, identity, () => rateLimiter.limit(ctx, "receiptScanGlobal"));
+        return receipt === null ? failure("unclear") : { receipt, status: "ok" as const };
     },
-});
+    Effect.catchTags({
+        ModelCallError: ({ reason }) =>
+            Effect.succeed(failure(reason === "invalidResponse" ? "invalidResponse" : "providerError")),
+    })
+);
 
-export async function admitScan(
-    ctx: ActionCtx,
-    identity: UserIdentity
-): Promise<"ok" | "rateLimited" | "notEntitled" | "quotaExceeded"> {
-    const perUser = await rateLimiter.limit(ctx, "receiptScanPerUser", {
-        config: perUserBurst("receiptScan", await isPro(ctx, identity.subject)),
-        key: identity.tokenIdentifier,
-    });
+export const admitScan = Effect.fn("ReceiptScan.admitScan")(function* admitScan(
+    identity: Pick<UserIdentity, "subject" | "tokenIdentifier">
+) {
+    const ctx = yield* ActionCtx;
+    const { runMutation } = yield* MutationRunner;
+    const pro = yield* Effect.promise(() => isPro(ctx, identity.subject));
+    const perUser = yield* Effect.promise(() =>
+        rateLimiter.limit(ctx, "receiptScanPerUser", {
+            config: perUserBurst("receiptScan", pro),
+            key: identity.tokenIdentifier,
+        })
+    );
     if (!perUser.ok) {
-        return "rateLimited";
+        return "rateLimited" as const;
     }
-    return ctx.runMutation(internal.receiptScan.admit, {}).catch((error) => {
-        if (isRateLimitError(error)) {
-            return "rateLimited" as const;
-        }
-        throw error;
-    });
-}
-
-export const scan = action({
-    args: receiptScanArgs,
-    handler: async (ctx, args): Promise<ScanResult> => {
-        const identity = await ctx.auth.getUserIdentity();
-        if (identity === null) {
-            return failure("unauthenticated");
-        }
-
-        // Read per call, so clearing the key with `npx convex env set` takes effect on the next scan.
-        const apiKey = process.env.ANTHROPIC_API_KEY;
-        if (!apiKey || args.aiConsent !== AI_CONSENT_VERSION) {
-            return failure("notConfigured");
-        }
-
-        if (
-            args.image.byteLength === 0 ||
-            args.image.byteLength > MAX_IMAGE_BYTES ||
-            !looksLikeJpeg(args.image) ||
-            !namesWithinBudget(args.categoryTree, args.accounts) ||
-            !DATE_PATTERN.test(args.today) ||
-            !CURRENCY_PATTERN.test(args.currency) ||
-            (args.language !== undefined && !LANGUAGE_PATTERN.test(args.language)) ||
-            (args.regionCode !== undefined && !REGION_PATTERN.test(args.regionCode))
-        ) {
-            return failure("invalid");
-        }
-
-        const admitted = await admitScan(ctx, identity);
-        if (admitted !== "ok") {
-            return failure(admitted);
-        }
-
-        const modelId = process.env.CLAUDE_FAST_MODEL_ID || CLAUDE_FAST_MODEL_ID;
-        return readReceipt(traced(createAnthropic({ apiKey })(modelId), "receipt_scan"), args.image, {
-            accounts: args.accounts,
-            categoryTree: args.categoryTree,
-            currency: args.currency,
-            language: args.language,
-            regionCode: args.regionCode,
-            today: args.today,
-        });
-    },
-    returns: scanResult,
+    return yield* runMutation(refs.internal.receiptScan.admit).pipe(
+        Effect.catchDefect((defect) =>
+            isRateLimitError(defect) ? Effect.succeed("rateLimited" as const) : Effect.die(defect)
+        )
+    );
 });

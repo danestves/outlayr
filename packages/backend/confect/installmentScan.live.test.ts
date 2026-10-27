@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 
 import { createAnthropic } from "@ai-sdk/anthropic";
+import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vite-plus/test";
 
 import { readInstallmentPlan } from "./installmentScan";
@@ -16,16 +17,18 @@ describe.skipIf(!live)("installment scan, live", () => {
         async (path) => {
             const bytes = await readFile(path);
             const anthropic = createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-            const result = await readInstallmentPlan(
-                anthropic(process.env.CLAUDE_MODEL_ID || CLAUDE_MODEL_ID),
-                bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
-                {
-                    accounts: ["Cashea", "Visa"],
-                    currency: "USD",
-                    language: "es-VE",
-                    regionCode: "VE",
-                    today: process.env.INSTALLMENT_PLAN_TODAY ?? "2026-10-21",
-                }
+            const result = await Effect.runPromise(
+                readInstallmentPlan(
+                    anthropic(process.env.CLAUDE_MODEL_ID || CLAUDE_MODEL_ID),
+                    bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+                    {
+                        accounts: ["Cashea", "Visa"],
+                        currency: "USD",
+                        language: "es-VE",
+                        regionCode: "VE",
+                        today: process.env.INSTALLMENT_PLAN_TODAY ?? "2026-10-21",
+                    }
+                )
             );
 
             console.info(JSON.stringify(result, null, 2));
