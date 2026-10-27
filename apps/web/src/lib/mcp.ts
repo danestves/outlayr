@@ -190,7 +190,8 @@ export const SERVER_CARD = {
 
 export const LEDGER_SERVER_CARD = {
     $schema: CARD_SCHEMA,
-    description: "An Outlayr user's own entries and monthly spending, after they sign in and approve.",
+    description:
+        "An Outlayr user's own entries and monthly spending, and adding entries, after they sign in and approve.",
     icons: ICONS,
     name: "com.tryoutlayr/ledger",
     remotes: [{ type: "streamable-http", url: `${LEDGER_MCP_ORIGIN}/mcp` }],

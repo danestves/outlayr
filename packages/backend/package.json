@@ -16,6 +16,7 @@
         "@better-auth/expo": "catalog:",
         "@convex-dev/agent": "catalog:",
         "@convex-dev/better-auth": "catalog:",
+        "@convex-dev/mcp": "0.1.0-alpha.7",
         "@convex-dev/r2": "^0.10.2",
         "@convex-dev/rate-limiter": "^0.3.2",
         "@convex-dev/workpool": "^0.4.12",
@@ -24,7 +25,6 @@
         "ai": "7.0.140",
         "better-auth": "catalog:",
         "convex": "catalog:",
-        "convex-mcp-gateway": "2.1.1",
         "convex-revenuecat": "^0.3.2",
         "jose": "^6.2.4",
         "zod": "catalog:"

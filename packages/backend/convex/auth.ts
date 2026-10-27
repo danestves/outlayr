@@ -7,7 +7,7 @@ import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
 import { env } from "@outlayr/env/backend";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { betterAuth } from "better-auth/minimal";
-import { emailOTP, mcp } from "better-auth/plugins";
+import { emailOTP } from "better-auth/plugins";
 import { importPKCS8, SignJWT } from "jose";
 import { z } from "zod";
 
@@ -99,7 +99,6 @@ async function generateAppleClientSecret(clientId: string, teamId: string, keyId
 function createAuth(ctx: GenericCtx<DataModel>) {
     const siteUrl = resolveSiteUrl();
     const nativeAppUrl = resolveNativeAppUrl();
-    const mcpLoginPage = `${siteUrl}/mcp/login`;
 
     return betterAuth({
         account: { encryptOAuthTokens: true, updateAccountOnSignIn: false },
@@ -122,9 +121,6 @@ function createAuth(ctx: GenericCtx<DataModel>) {
         },
         hooks: {
             before: createAuthMiddleware(async (endpoint) => {
-                if (endpoint.path === "/mcp/authorize") {
-                    return { context: { query: { ...endpoint.query, prompt: "consent" } } };
-                }
                 const body = emailBody.safeParse(endpoint.body);
                 if (EMAIL_LIMITED_PATHS.has(endpoint.path) && body.success) {
                     const key = await sha256Hex(body.data.email.trim().toLowerCase());
@@ -176,10 +172,6 @@ function createAuth(ctx: GenericCtx<DataModel>) {
             convex({
                 authConfig,
                 jwksRotateOnTokenGenerationError: true,
-            }),
-            mcp({
-                loginPage: mcpLoginPage,
-                oidcConfig: { consentPage: `${siteUrl}/mcp/consent`, loginPage: mcpLoginPage, requirePKCE: true },
             }),
         ],
         session: {

@@ -1,12 +1,10 @@
+import { vMcpUser } from "@convex-dev/mcp";
 import { canonicalUsd } from "@outlayr/money/canonical-usd";
 import { decimalsFor, isPickableCurrency } from "@outlayr/money/currency";
 import type { RateLookup } from "@outlayr/money/rates";
 import { roundMoney } from "@outlayr/money/round";
-import { defineMcpMutation, mcpCallerValidator } from "convex-mcp-gateway";
-import type { McpToolRegistration } from "convex-mcp-gateway";
 import { ConvexError, v } from "convex/values";
 
-import { internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
 import { internalMutation } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
@@ -20,10 +18,9 @@ export const MCP_DEVICE_ID = "mcp";
 const MEMORY_WINDOW = 500;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-const logEntryArgs = {
+export const logEntryInput = {
     account: v.optional(v.string()),
     amount: v.number(),
-    caller: mcpCallerValidator,
     category: v.optional(v.string()),
     currency: v.optional(v.string()),
     date: v.optional(v.string()),
@@ -31,6 +28,16 @@ const logEntryArgs = {
     kind: v.union(v.literal("expense"), v.literal("income")),
     note: v.optional(v.string()),
 };
+
+export const logEntryResult = v.object({
+    account: v.union(v.string(), v.null()),
+    amount: v.number(),
+    category: v.union(v.string(), v.null()),
+    currency: v.string(),
+    date: v.string(),
+    kind: v.union(v.literal("expense"), v.literal("income")),
+    note: v.string(),
+});
 
 const fold = (name: string) => name.trim().toLowerCase();
 
@@ -107,9 +114,10 @@ async function keyedLocalId(userId: string, key: string): Promise<string> {
 }
 
 export const logEntry = internalMutation({
-    args: logEntryArgs,
+    args: { ...logEntryInput, user: vMcpUser() },
+    returns: logEntryResult,
     handler: async (ctx, args) => {
-        const userId = args.caller.subject;
+        const { userId } = args.user;
         if (!(await isPro(ctx, userId))) {
             throw new ConvexError(
                 "Adding entries needs Outlayr Pro: only Pro syncs, so the user's devices would never receive it."
@@ -234,24 +242,3 @@ export const logEntry = internalMutation({
         return entry;
     },
 });
-
-export const entryTools: McpToolRegistration[] = [
-    defineMcpMutation({
-        annotations: { destructiveHint: false },
-        args: logEntryArgs,
-        description: [
-            "Adds one expense or income to the signed-in user's Outlayr ledger. Their devices receive it on the next sync, as if they had logged it in the app. Needs Outlayr Pro. Returns the entry as saved.",
-            "`amount` is positive; `kind` says which way the money moved.",
-            "`currency` is an ISO 4217 code, default the user's main currency.",
-            "`category` is one of the user's category names for that kind, any case. Omitted, Outlayr files it where the same note went last time. A wrong or missing category fails and lists the names.",
-            "`note` is the merchant or a short description.",
-            "`date` is YYYY-MM-DD in the user's time zone, default now.",
-            "`account` is an account name, optional.",
-            "`idempotencyKey` is any unique string for this entry: send the same one on a retry so it is not logged twice.",
-        ].join(" "),
-        fn: internal.mcpEntries.logEntry,
-        identityArg: "caller",
-        metadata: { auditArgs: false, auditErrorMessage: false },
-        name: "log_entry",
-    }),
-];

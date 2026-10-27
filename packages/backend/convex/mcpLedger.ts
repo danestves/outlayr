@@ -1,3 +1,4 @@
+import { vMcpUser } from "@convex-dev/mcp";
 import { accountBalance } from "@outlayr/money/account-balance";
 import { accountsOverview } from "@outlayr/money/account-overview";
 import { effectiveLimit, rolloverCarry } from "@outlayr/money/budget-rollover";
@@ -12,21 +13,30 @@ import { roundMoney } from "@outlayr/money/round";
 import { monthlySubscriptionCost } from "@outlayr/money/subscription-cost";
 import { buildRateTable, limitIn, valueDatedRowsIn } from "@outlayr/money/valuation";
 import type { RateTable } from "@outlayr/money/valuation";
-import { defineMcpQuery, mcpCallerValidator } from "convex-mcp-gateway";
-import type { McpToolRegistration } from "convex-mcp-gateway";
 import { v } from "convex/values";
 
-import { internal } from "./_generated/api";
 import { internalQuery } from "./_generated/server";
 import type { QueryCtx } from "./_generated/server";
 
 const MAX_ENTRIES = 50;
 const SCAN_WINDOW = 500;
 
+export const recentTransactionsResult = v.array(
+    v.object({
+        amount: v.number(),
+        category: v.union(v.string(), v.null()),
+        currency: v.union(v.string(), v.null()),
+        date: v.string(),
+        kind: v.union(v.literal("expense"), v.literal("income")),
+        note: v.string(),
+    })
+);
+
 export const recentTransactions = internalQuery({
-    args: { caller: mcpCallerValidator, limit: v.optional(v.number()) },
-    handler: async (ctx, { caller, limit = 20 }) => {
-        const userId = caller.subject;
+    returns: recentTransactionsResult,
+    args: { user: vMcpUser(), limit: v.optional(v.number()) },
+    handler: async (ctx, { user, limit = 20 }) => {
+        const { userId } = user;
         const rows = await ctx.db
             .query("transactions")
             .withIndex("by_user_and_seq", (q) => q.eq("userId", userId))
@@ -51,7 +61,7 @@ export const recentTransactions = internalQuery({
             category: row.categoryId ? (categoryNames.get(row.categoryId) ?? null) : null,
             currency: row.currency,
             date: new Date(row.date).toISOString().slice(0, 10),
-            kind: row.income ? "income" : "expense",
+            kind: row.income ? ("income" as const) : ("expense" as const),
             note: row.note,
         }));
     },
@@ -124,10 +134,20 @@ export async function setting(ctx: QueryCtx, userId: string, key: string): Promi
     return row?.value ?? null;
 }
 
+export const spendingSummaryResult = v.object({
+    currency: v.string(),
+    from: v.string(),
+    income: v.number(),
+    spent: v.number(),
+    spentByCategory: v.array(v.object({ amount: v.number(), category: v.string() })),
+    to: v.string(),
+});
+
 export const spendingSummary = internalQuery({
-    args: { caller: mcpCallerValidator, monthsAgo: v.optional(v.number()) },
-    handler: async (ctx, { caller, monthsAgo = 0 }) => {
-        const userId = caller.subject;
+    returns: spendingSummaryResult,
+    args: { user: vMcpUser(), monthsAgo: v.optional(v.number()) },
+    handler: async (ctx, { user, monthsAgo = 0 }) => {
+        const { userId } = user;
         const currency = (await setting(ctx, userId, "currency")) ?? "USD";
         const firstDayOfMonth = Number(await setting(ctx, userId, "firstDayOfMonth")) || 1;
         const now = Date.now();
@@ -204,10 +224,28 @@ function groupCells(entries: readonly LegEntry[], key: (entry: LegEntry) => stri
     return [...groups.values()].flatMap((group) => toCells(group));
 }
 
+export const accountBalancesResult = v.object({
+    accounts: v.array(
+        v.object({
+            balance: v.number(),
+            balanceInMainCurrency: v.number(),
+            currency: v.string(),
+            exact: v.boolean(),
+            kind: v.string(),
+            name: v.string(),
+        })
+    ),
+    currency: v.string(),
+    net: v.number(),
+    owed: v.number(),
+    owned: v.number(),
+});
+
 export const accountBalances = internalQuery({
-    args: { caller: mcpCallerValidator },
-    handler: async (ctx, { caller }) => {
-        const userId = caller.subject;
+    returns: accountBalancesResult,
+    args: { user: vMcpUser() },
+    handler: async (ctx, { user }) => {
+        const { userId } = user;
         const now = Date.now();
         const currency = (await setting(ctx, userId, "currency")) ?? "USD";
         const [accountRows, transactionRows, transferRows, planRows, outsideRows, moves, offsetMs] = await Promise.all([
@@ -405,10 +443,37 @@ function budgetStanding(
 
 const customName = (name: string | null) => (name?.trim() ? name.trim() : null);
 
+const budgetStandingFields = {
+    carryOver: v.number(),
+    effectiveLimit: v.number(),
+    from: v.string(),
+    limit: v.number(),
+    overBudget: v.boolean(),
+    period: v.union(v.string(), v.null()),
+    remaining: v.number(),
+    rollover: v.boolean(),
+    spent: v.number(),
+    to: v.string(),
+};
+
+export const budgetStatusResult = v.object({
+    categories: v.array(
+        v.object({
+            ...budgetStandingFields,
+            category: v.union(v.string(), v.null()),
+            name: v.union(v.string(), v.null()),
+            subcategories: v.array(v.string()),
+        })
+    ),
+    currency: v.string(),
+    overall: v.union(v.object({ ...budgetStandingFields, name: v.union(v.string(), v.null()) }), v.null()),
+});
+
 export const budgetStatus = internalQuery({
-    args: { caller: mcpCallerValidator },
-    handler: async (ctx, { caller }) => {
-        const userId = caller.subject;
+    returns: budgetStatusResult,
+    args: { user: vMcpUser() },
+    handler: async (ctx, { user }) => {
+        const { userId } = user;
         const now = Date.now();
         const currency = (await setting(ctx, userId, "currency")) ?? "USD";
         const [mainRows, budgetRows, transactionRows, categories, rates, offsetMs] = await Promise.all([
@@ -481,10 +546,28 @@ export const budgetStatus = internalQuery({
     },
 });
 
+export const upcomingChargesResult = v.object({
+    charges: v.array(
+        v.object({
+            amount: v.number(),
+            category: v.union(v.string(), v.null()),
+            currency: v.union(v.string(), v.null()),
+            endsOn: v.union(v.string(), v.null()),
+            kind: v.union(v.literal("expense"), v.literal("income")),
+            nextCharge: v.string(),
+            note: v.string(),
+            repeats: v.union(v.object({ cadence: v.union(v.string(), v.null()), every: v.number() }), v.null()),
+        })
+    ),
+    currency: v.string(),
+    monthlyCost: v.array(v.object({ amount: v.number(), currency: v.string(), schedules: v.number() })),
+});
+
 export const upcomingCharges = internalQuery({
-    args: { caller: mcpCallerValidator },
-    handler: async (ctx, { caller }) => {
-        const userId = caller.subject;
+    returns: upcomingChargesResult,
+    args: { user: vMcpUser() },
+    handler: async (ctx, { user }) => {
+        const { userId } = user;
         const now = Date.now();
         const currency = (await setting(ctx, userId, "currency")) ?? "USD";
         const [recurring, future, categories, rates, offsetMs] = await Promise.all([
@@ -538,7 +621,7 @@ export const upcomingCharges = internalQuery({
                     category: row.categoryId ? (categories.get(row.categoryId)?.name ?? null) : null,
                     currency: row.currency,
                     endsOn: row.recurringEndDate === null ? null : localDate(row.recurringEndDate, offsetMs),
-                    kind: row.income ? "income" : "expense",
+                    kind: row.income ? ("income" as const) : ("expense" as const),
                     nextCharge: wallDay(landsOn),
                     note: row.note,
                     repeats:
@@ -557,51 +640,3 @@ export const upcomingCharges = internalQuery({
         };
     },
 });
-
-export const ledgerTools: McpToolRegistration[] = [
-    defineMcpQuery({
-        annotations: { readOnlyHint: true },
-        args: { caller: mcpCallerValidator, limit: v.optional(v.number()) },
-        description:
-            "The signed-in user's most recent Outlayr entries, newest first: date, amount, currency, category, note, and whether each is an expense or income. Reads what the user's devices last synced. `limit` defaults to 20, at most 50.",
-        fn: internal.mcpLedger.recentTransactions,
-        identityArg: "caller",
-        name: "recent_transactions",
-    }),
-    defineMcpQuery({
-        annotations: { readOnlyHint: true },
-        args: { caller: mcpCallerValidator, monthsAgo: v.optional(v.number()) },
-        description:
-            "What the signed-in user spent and earned in one budgeting month, in their main currency, with spending by category: the same figures as Outlayr's Insights screen. A month starts on the user's payday setting. `monthsAgo` is 0 for the current month (default), 1 for the previous one, and so on. Reads what the user's devices last synced.",
-        fn: internal.mcpLedger.spendingSummary,
-        identityArg: "caller",
-        name: "spending_summary",
-    }),
-    defineMcpQuery({
-        annotations: { readOnlyHint: true },
-        args: { caller: mcpCallerValidator },
-        description:
-            "Every account's balance today, as on Outlayr's Accounts screen: in the account's own currency and in the user's main currency, with its kind and what the user owns, owes and is worth in total. A kind is `asset`, `liability`, or `person`: someone the user lent to or borrowed from, positive when they owe the user and negative when the user owes them, so it counts as owned or owed by its sign. People are listed here though the Accounts screen leaves them out. Entries and transfers dated later than now are not counted. `exact` is false when a rate was missing and part of a figure stayed at face value.",
-        fn: internal.mcpLedger.accountBalances,
-        identityArg: "caller",
-        name: "account_balances",
-    }),
-    defineMcpQuery({
-        annotations: { readOnlyHint: true },
-        args: { caller: mcpCallerValidator },
-        description:
-            "Where the user's budgets stand in the current window, as on Outlayr's Budgets screen, in their main currency: the overall budget and each category budget with its period, window dates (`from` and `to`, inclusive), limit, carry-over from earlier windows when rollover is on, the effective limit, spent, remaining and whether it is over. A category budget counts its subcategories, which are listed.",
-        fn: internal.mcpLedger.budgetStatus,
-        identityArg: "caller",
-        name: "budget_status",
-    }),
-    defineMcpQuery({
-        annotations: { readOnlyHint: true },
-        args: { caller: mcpCallerValidator },
-        description:
-            "The user's recurring and future-dated entries, soonest first, as on Outlayr's Upcoming list: the date each next lands, its amount and currency, category, note, cadence and end date. `monthlyCost` is what the recurring expenses cost per month, per currency, converted into the main currency where a rate allows.",
-        fn: internal.mcpLedger.upcomingCharges,
-        identityArg: "caller",
-        name: "upcoming_charges",
-    }),
-];

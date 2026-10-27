@@ -10,12 +10,12 @@ export const SOLID_PILL = `${PILL} bg-app-ink text-app-bg`;
 export const LINE_PILL = `${PILL} bg-app-group ring-1 ring-app-rule ring-inset`;
 export const TEXT_BUTTON = "text-app-muted hover:text-app-ink px-2 py-2 text-sm";
 
-export function Screen({ children, title }: { children: ReactNode; title: string }) {
+export function Screen({ children, title }: { children?: ReactNode; title?: ReactNode }) {
     return (
         <main className="bg-app-bg text-app-ink flex min-h-dvh flex-col items-center px-7 pt-[clamp(3rem,14dvh,7rem)] pb-10">
             <div className="flex w-full max-w-[22rem] flex-col text-center">
                 <LogoMark className="mb-5 size-7 self-center" />
-                <h1 className="mb-6 text-2xl font-semibold tracking-tight">{title}</h1>
+                {title ? <h1 className="mb-6 text-2xl font-semibold tracking-tight">{title}</h1> : null}
                 {children}
             </div>
         </main>

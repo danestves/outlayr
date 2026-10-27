@@ -13,7 +13,7 @@ Read https://tryoutlayr.com/llms.txt for features, plans, free-plan limits, and 
 
 ## Reading a user's entries
 
-With the user's approval you can read their synced entries and monthly spending through Outlayr's MCP server. https://tryoutlayr.com/auth.md has the server URL and the sign-in steps. Only entries their devices have synced are there.
+With the user's approval you can read their synced entries and monthly spending, and add entries, through Outlayr's MCP server. https://tryoutlayr.com/auth.md has the server URL and the sign-in steps. Only entries their devices have synced are there.
 
 ## Preparing a CSV for import
 
