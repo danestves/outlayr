@@ -466,7 +466,7 @@
         "name": "drizzle-orm",
         "pod": false,
         "text": "Apache-2.0",
-        "version": "0.45.4"
+        "version": "1.0.0-rc.5"
     },
     {
         "license": "MIT",

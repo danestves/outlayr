@@ -3,50 +3,27 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "@jest/globals";
 
+import bundle from "../../drizzle/migrations";
+import { LEGACY_MIGRATION_NAMES } from "./legacy-migration-names";
+
 const DRIZZLE_DIR = join(import.meta.dirname, "..", "..", "drizzle");
+const MIGRATION_FOLDER = /^\d{14}_/;
 
-function journalTags(): string[] {
-    const journal = JSON.parse(readFileSync(join(DRIZZLE_DIR, "meta", "_journal.json"), "utf-8")) as {
-        entries: { tag: string }[];
-    };
-    return journal.entries.map((entry) => entry.tag);
-}
-
-function bundleSource(): string {
-    return readFileSync(join(DRIZZLE_DIR, "migrations.js"), "utf-8");
-}
-
-function sqlFileTags(): string[] {
-    return readdirSync(DRIZZLE_DIR)
-        .filter((name) => name.endsWith(".sql"))
-        .map((name) => name.replace(/\.sql$/, ""))
+const folders = (): string[] =>
+    readdirSync(DRIZZLE_DIR)
+        .filter((name) => MIGRATION_FOLDER.test(name))
         .sort();
-}
 
 describe("drizzle/migrations.js is a tracked file, not a generated one", () => {
-    it("imports every migration the journal lists", () => {
-        const source = bundleSource();
-        const missing = journalTags().filter((tag) => !source.includes(`'./${tag}.sql'`));
-        expect(missing).toStrictEqual([]);
+    it("bundles the SQL of every migration folder under the folder's name", () => {
+        const onDisk = Object.fromEntries(
+            folders().map((name) => [name, readFileSync(join(DRIZZLE_DIR, name, "migration.sql"), "utf-8")])
+        );
+        expect(bundle.migrations).toStrictEqual(onDisk);
     });
 
-    it("exports every migration the journal lists", () => {
-        const source = bundleSource();
-        const exported = source.slice(source.indexOf("migrations: {"));
-        const missing = journalTags()
-            .map((_tag, index) => `m${String(index).padStart(4, "0")}`)
-            .filter((key) => !new RegExp(`\\b${key}\\b`).test(exported));
-        expect(missing).toStrictEqual([]);
-    });
-
-    it("has a journal entry for every migration file on disk", () => {
-        expect(sqlFileTags()).toStrictEqual([...journalTags()].sort());
-    });
-
-    it("keeps the journal in index order with no gaps", () => {
-        const journal = JSON.parse(readFileSync(join(DRIZZLE_DIR, "meta", "_journal.json"), "utf-8")) as {
-            entries: { idx: number }[];
-        };
-        expect(journal.entries.map((entry) => entry.idx)).toStrictEqual(journal.entries.map((_entry, index) => index));
+    it("sorts the migrations 0.45 shipped by name in the order they shipped", () => {
+        const shipped = folders().slice(0, LEGACY_MIGRATION_NAMES.size);
+        expect(shipped.map((name) => Number(name.slice(15, 19)))).toStrictEqual(shipped.map((_name, index) => index));
     });
 });

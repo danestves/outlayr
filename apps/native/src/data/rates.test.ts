@@ -180,6 +180,20 @@ describe("pullRatesIfDue", () => {
         await expect(lastPullAt(db)).resolves.toBeNull();
     });
 
+    it("keeps the cache when the backend sends a rate that is not finite", async () => {
+        const db = makeDb();
+        await db.insert(exchangeRates).values(wireRow("VES", "2020-01-01"));
+        const { pull } = pagedPuller([
+            [wireRow("EUR", "2026-07-28"), { ...wireRow("COP", "2026-07-28"), rate: Number.POSITIVE_INFINITY }],
+        ]);
+
+        await expect(Effect.runPromise(Effect.flip(pullRatesIfDue(db, pull, { now: NOW })))).resolves.toMatchObject({
+            operation: "fetch",
+        });
+        await expect(storedRates(db)).resolves.toStrictEqual([{ date: "2020-01-01", quote: "VES" }]);
+        await expect(lastPullAt(db)).resolves.toBeNull();
+    });
+
     it("rolls the wipe back when the replacement fails part-way", async () => {
         const db = makeDb();
         await db.insert(exchangeRates).values(wireRow("VES", "2020-01-01"));

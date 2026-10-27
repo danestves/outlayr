@@ -1,86 +1,84 @@
 // This file is required for Expo/React Native SQLite migrations - https://orm.drizzle.team/quick-sqlite/expo
 
-import journal from './meta/_journal.json';
-import m0000 from './0000_gray_unus.sql';
-import m0001 from './0001_white_sleeper.sql';
-import m0002 from './0002_tidy_ultimatum.sql';
-import m0003 from './0003_damp_the_fallen.sql';
-import m0004 from './0004_closed_swarm.sql';
-import m0005 from './0005_massive_captain_flint.sql';
-import m0006 from './0006_flat_eddie_brock.sql';
-import m0007 from './0007_subscription_reminder_lead.sql';
-import m0008 from './0008_synced_display_preferences.sql';
-import m0009 from './0009_budget_rollover.sql';
-import m0010 from './0010_tags.sql';
-import m0011 from './0011_transaction_photos.sql';
-import m0012 from './0012_transaction_splits.sql';
-import m0013 from './0013_ai_enrichment_synced.sql';
-import m0014 from './0014_grounded_lookup_synced.sql';
-import m0015 from './0015_faithful_wendell_rand.sql';
-import m0016 from './0016_recurring_anchor_day.sql';
-import m0017 from './0017_drop_display_sign.sql';
-import m0018 from './0018_transfers.sql';
-import m0019 from './0019_drop_template_transactions.sql';
-import m0020 from './0020_account_kind.sql';
-import m0021 from './0021_savings_goals.sql';
-import m0022 from './0022_accent_color_synced.sql';
-import m0023 from './0023_number_entry_device_local.sql';
-import m0024 from './0024_goal_start_and_required_date.sql';
-import m0025 from './0025_settings_requeue_under_upsert.sql';
-import m0026 from './0026_every_trigger_requeues.sql';
-import m0027 from './0027_index_the_recurring_scan.sql';
-import m0028 from './0028_queue_the_backfilled_photos.sql';
-import m0029 from './0029_tag_pair_index_partial.sql';
-import m0030 from './0030_card_fees.sql';
-import m0031 from './0031_paid_via.sql';
-import m0032 from './0032_stop_null_indexes_hijacking_the_planner.sql';
-import m0033 from './0033_installments.sql';
-import m0034 from './0034_restored_at.sql';
-import m0035 from './0035_installment_fees.sql';
-import m0036 from './0036_outside_moves.sql';
-import m0037 from './0037_transaction_attachments.sql';
+import m0000 from './20260723075318_0000_gray_unus/migration.sql';
+import m0001 from './20260726072316_0001_white_sleeper/migration.sql';
+import m0002 from './20260728234045_0002_tidy_ultimatum/migration.sql';
+import m0003 from './20260729002035_0003_damp_the_fallen/migration.sql';
+import m0004 from './20260729034114_0004_closed_swarm/migration.sql';
+import m0005 from './20260729161639_0005_massive_captain_flint/migration.sql';
+import m0006 from './20260729204458_0006_flat_eddie_brock/migration.sql';
+import m0007 from './20260730100503_0007_subscription_reminder_lead/migration.sql';
+import m0008 from './20260730100503_0008_synced_display_preferences/migration.sql';
+import m0009 from './20260730182314_0009_budget_rollover/migration.sql';
+import m0010 from './20260730183838_0010_tags/migration.sql';
+import m0011 from './20260730191859_0011_transaction_photos/migration.sql';
+import m0012 from './20260730192934_0012_transaction_splits/migration.sql';
+import m0013 from './20260803010320_0013_ai_enrichment_synced/migration.sql';
+import m0014 from './20260803010320_0014_grounded_lookup_synced/migration.sql';
+import m0015 from './20260806161619_0015_faithful_wendell_rand/migration.sql';
+import m0016 from './20260807062108_0016_recurring_anchor_day/migration.sql';
+import m0017 from './20260808221330_0017_drop_display_sign/migration.sql';
+import m0018 from './20260809221330_0018_transfers/migration.sql';
+import m0019 from './20260813045759_0019_drop_template_transactions/migration.sql';
+import m0020 from './20260813063152_0020_account_kind/migration.sql';
+import m0021 from './20260813073408_0021_savings_goals/migration.sql';
+import m0022 from './20260813073508_0022_accent_color_synced/migration.sql';
+import m0023 from './20260813073608_0023_number_entry_device_local/migration.sql';
+import m0024 from './20260820184318_0024_goal_start_and_required_date/migration.sql';
+import m0025 from './20260915001112_0025_settings_requeue_under_upsert/migration.sql';
+import m0026 from './20260915001112_0026_every_trigger_requeues/migration.sql';
+import m0027 from './20260915001112_0027_index_the_recurring_scan/migration.sql';
+import m0028 from './20260915001112_0028_queue_the_backfilled_photos/migration.sql';
+import m0029 from './20260915001112_0029_tag_pair_index_partial/migration.sql';
+import m0030 from './20260915001112_0030_card_fees/migration.sql';
+import m0031 from './20260915001112_0031_paid_via/migration.sql';
+import m0032 from './20261018013141_0032_stop_null_indexes_hijacking_the_planner/migration.sql';
+import m0033 from './20261025034640_0033_installments/migration.sql';
+import m0034 from './20261025034640_0034_restored_at/migration.sql';
+import m0035 from './20261025034640_0035_installment_fees/migration.sql';
+import m0036 from './20261025034640_0036_outside_moves/migration.sql';
+import m0037 from './20261025034640_0037_transaction_attachments/migration.sql';
 
   export default {
-    journal,
     migrations: {
-      m0000,
-m0001,
-m0002,
-m0003,
-m0004,
-m0005,
-m0006,
-m0007,
-m0008,
-m0009,
-m0010,
-m0011,
-m0012,
-m0013,
-m0014,
-m0015,
-m0016,
-m0017,
-m0018,
-m0019,
-m0020,
-m0021,
-m0022,
-m0023,
-m0024,
-m0025,
-m0026,
-m0027,
-m0028,
-m0029,
-m0030,
-m0031,
-m0032,
-m0033,
-m0034,
-m0035,
-m0036,
-m0037
-    }
+      "20260723075318_0000_gray_unus": m0000,
+      "20260726072316_0001_white_sleeper": m0001,
+      "20260728234045_0002_tidy_ultimatum": m0002,
+      "20260729002035_0003_damp_the_fallen": m0003,
+      "20260729034114_0004_closed_swarm": m0004,
+      "20260729161639_0005_massive_captain_flint": m0005,
+      "20260729204458_0006_flat_eddie_brock": m0006,
+      "20260730100503_0007_subscription_reminder_lead": m0007,
+      "20260730100503_0008_synced_display_preferences": m0008,
+      "20260730182314_0009_budget_rollover": m0009,
+      "20260730183838_0010_tags": m0010,
+      "20260730191859_0011_transaction_photos": m0011,
+      "20260730192934_0012_transaction_splits": m0012,
+      "20260803010320_0013_ai_enrichment_synced": m0013,
+      "20260803010320_0014_grounded_lookup_synced": m0014,
+      "20260806161619_0015_faithful_wendell_rand": m0015,
+      "20260807062108_0016_recurring_anchor_day": m0016,
+      "20260808221330_0017_drop_display_sign": m0017,
+      "20260809221330_0018_transfers": m0018,
+      "20260813045759_0019_drop_template_transactions": m0019,
+      "20260813063152_0020_account_kind": m0020,
+      "20260813073408_0021_savings_goals": m0021,
+      "20260813073508_0022_accent_color_synced": m0022,
+      "20260813073608_0023_number_entry_device_local": m0023,
+      "20260820184318_0024_goal_start_and_required_date": m0024,
+      "20260915001112_0025_settings_requeue_under_upsert": m0025,
+      "20260915001112_0026_every_trigger_requeues": m0026,
+      "20260915001112_0027_index_the_recurring_scan": m0027,
+      "20260915001112_0028_queue_the_backfilled_photos": m0028,
+      "20260915001112_0029_tag_pair_index_partial": m0029,
+      "20260915001112_0030_card_fees": m0030,
+      "20260915001112_0031_paid_via": m0031,
+      "20261018013141_0032_stop_null_indexes_hijacking_the_planner": m0032,
+      "20261025034640_0033_installments": m0033,
+      "20261025034640_0034_restored_at": m0034,
+      "20261025034640_0035_installment_fees": m0035,
+      "20261025034640_0036_outside_moves": m0036,
+      "20261025034640_0037_transaction_attachments": m0037
+}
   }
   

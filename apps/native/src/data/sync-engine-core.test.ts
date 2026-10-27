@@ -459,6 +459,23 @@ describe("applyPulledRows", () => {
         await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(1);
     });
 
+    it("refuses a page holding a value its column cannot take, writing none of it", async () => {
+        const transactional = transactionalDatabase();
+        await Effect.runPromise(setMeta(transactional, META_KEYS.syncEnabled, "true"));
+        const failure = await Effect.runPromise(
+            Effect.flip(
+                applyPulledRows(transactional, {
+                    cursor: 2,
+                    rows: [txRow("good", 1, 5000), txRow("bad", 2, 5000, { fields: { amount: "ten" } })],
+                })
+            )
+        );
+
+        expect(failure).toMatchObject({ stage: "write" });
+        await expect(transactional.select().from(transactions)).resolves.toStrictEqual([]);
+        await expect(Effect.runPromise(getSyncCursor(transactional))).resolves.toBe(0);
+    });
+
     it("commits the whole apply inside one real transaction", async () => {
         const transactional = transactionalDatabase();
         await Effect.runPromise(setMeta(transactional, META_KEYS.syncEnabled, "true"));

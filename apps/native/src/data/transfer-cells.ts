@@ -23,27 +23,35 @@ const LEG_IN = sql<TransferLeg>`'in'`;
  */
 const OUTBOUND_COLUMNS = {
     currency: transfers.fromCurrency,
-    dateKey: TRANSFER_UTC_DAY,
-    rows: count(),
-    total: sum(transfers.fromAmount),
-    totalUsd: sum(transfers.fromAmountUsd),
-    unconverted: sum(sql<number>`CASE WHEN ${transfers.fromAmountUsd} IS NULL THEN ${transfers.fromAmount} ELSE 0 END`),
-    unconvertedRows: sql<number>`SUM(CASE WHEN ${transfers.fromAmountUsd} IS NULL THEN 1 ELSE 0 END)`,
+    dateKey: TRANSFER_UTC_DAY.as("dateKey"),
+    rows: count().as("rows"),
+    total: sum(transfers.fromAmount).as("total"),
+    totalUsd: sum(transfers.fromAmountUsd).as("totalUsd"),
+    unconverted: sum(
+        sql<number>`CASE WHEN ${transfers.fromAmountUsd} IS NULL THEN ${transfers.fromAmount} ELSE 0 END`
+    ).as("unconverted"),
+    unconvertedRows: sql<number>`SUM(CASE WHEN ${transfers.fromAmountUsd} IS NULL THEN 1 ELSE 0 END)`.as(
+        "unconvertedRows"
+    ),
 } as const;
 
 const INBOUND_COLUMNS = {
     currency: transfers.toCurrency,
-    dateKey: TRANSFER_UTC_DAY,
-    rows: count(),
-    total: sum(transfers.toAmount),
-    totalUsd: sum(transfers.toAmountUsd),
-    unconverted: sum(sql<number>`CASE WHEN ${transfers.toAmountUsd} IS NULL THEN ${transfers.toAmount} ELSE 0 END`),
-    unconvertedRows: sql<number>`SUM(CASE WHEN ${transfers.toAmountUsd} IS NULL THEN 1 ELSE 0 END)`,
+    dateKey: TRANSFER_UTC_DAY.as("dateKey"),
+    rows: count().as("rows"),
+    total: sum(transfers.toAmount).as("total"),
+    totalUsd: sum(transfers.toAmountUsd).as("totalUsd"),
+    unconverted: sum(sql<number>`CASE WHEN ${transfers.toAmountUsd} IS NULL THEN ${transfers.toAmount} ELSE 0 END`).as(
+        "unconverted"
+    ),
+    unconvertedRows: sql<number>`SUM(CASE WHEN ${transfers.toAmountUsd} IS NULL THEN 1 ELSE 0 END)`.as(
+        "unconvertedRows"
+    ),
 } as const;
 
 export function settledTransferOutboundQuery(db: SpendDb, accountId: string, now: Date) {
     return db
-        .select({ ...OUTBOUND_COLUMNS, plotDay: TRANSFER_LOCAL_DAY })
+        .select({ ...OUTBOUND_COLUMNS, plotDay: TRANSFER_LOCAL_DAY.as("plotDay") })
         .from(transfers)
         .where(and(isNull(transfers.deletedAt), eq(transfers.fromAccountId, accountId), lte(transfers.date, now)))
         .groupBy(transfers.fromCurrency, TRANSFER_UTC_DAY, TRANSFER_LOCAL_DAY);
@@ -51,7 +59,7 @@ export function settledTransferOutboundQuery(db: SpendDb, accountId: string, now
 
 export function settledTransferInboundQuery(db: SpendDb, accountId: string, now: Date) {
     return db
-        .select({ ...INBOUND_COLUMNS, plotDay: TRANSFER_LOCAL_DAY })
+        .select({ ...INBOUND_COLUMNS, plotDay: TRANSFER_LOCAL_DAY.as("plotDay") })
         .from(transfers)
         .where(and(isNull(transfers.deletedAt), eq(transfers.toAccountId, accountId), lte(transfers.date, now)))
         .groupBy(transfers.toCurrency, TRANSFER_UTC_DAY, TRANSFER_LOCAL_DAY);
@@ -59,7 +67,7 @@ export function settledTransferInboundQuery(db: SpendDb, accountId: string, now:
 
 export function settledTransfersOutboundQuery(db: SpendDb, now: Date) {
     return db
-        .select({ accountId: transfers.fromAccountId, ...OUTBOUND_COLUMNS, plotDay: TRANSFER_LOCAL_DAY })
+        .select({ accountId: transfers.fromAccountId, ...OUTBOUND_COLUMNS, plotDay: TRANSFER_LOCAL_DAY.as("plotDay") })
         .from(transfers)
         .where(and(isNull(transfers.deletedAt), lte(transfers.date, now)))
         .groupBy(transfers.fromAccountId, transfers.fromCurrency, TRANSFER_UTC_DAY, TRANSFER_LOCAL_DAY);
@@ -67,7 +75,7 @@ export function settledTransfersOutboundQuery(db: SpendDb, now: Date) {
 
 export function settledTransfersInboundQuery(db: SpendDb, now: Date) {
     return db
-        .select({ accountId: transfers.toAccountId, ...INBOUND_COLUMNS, plotDay: TRANSFER_LOCAL_DAY })
+        .select({ accountId: transfers.toAccountId, ...INBOUND_COLUMNS, plotDay: TRANSFER_LOCAL_DAY.as("plotDay") })
         .from(transfers)
         .where(and(isNull(transfers.deletedAt), lte(transfers.date, now)))
         .groupBy(transfers.toAccountId, transfers.toCurrency, TRANSFER_UTC_DAY, TRANSFER_LOCAL_DAY);
@@ -79,17 +87,22 @@ export function settledTransfersInboundQuery(db: SpendDb, now: Date) {
  */
 export function settledTransfersQuery(db: SpendDb, now: Date) {
     return db
-        .select({ leg: LEG_OUT, accountId: transfers.fromAccountId, ...OUTBOUND_COLUMNS, plotDay: TRANSFER_LOCAL_DAY })
+        .select({
+            leg: LEG_OUT.as("leg"),
+            accountId: transfers.fromAccountId,
+            ...OUTBOUND_COLUMNS,
+            plotDay: TRANSFER_LOCAL_DAY.as("plotDay"),
+        })
         .from(transfers)
         .where(and(isNull(transfers.deletedAt), lte(transfers.date, now)))
         .groupBy(transfers.fromAccountId, transfers.fromCurrency, TRANSFER_UTC_DAY, TRANSFER_LOCAL_DAY)
         .unionAll(
             db
                 .select({
-                    leg: LEG_IN,
+                    leg: LEG_IN.as("leg"),
                     accountId: transfers.toAccountId,
                     ...INBOUND_COLUMNS,
-                    plotDay: TRANSFER_LOCAL_DAY,
+                    plotDay: TRANSFER_LOCAL_DAY.as("plotDay"),
                 })
                 .from(transfers)
                 .where(and(isNull(transfers.deletedAt), lte(transfers.date, now)))

@@ -177,7 +177,7 @@ streams into one causally-ordered log.
 
 1. **Outbox.** A local `outbox` table — `(tableName, localId, enqueuedAt)`, primary key
    `(tableName, localId)` — populated by `AFTER INSERT` / `AFTER UPDATE` SQLite triggers on
-   the replicated user tables. Added by a hand-written `drizzle/*.sql` migration (drizzle-kit does
+   the replicated user tables. Added by a hand-written `drizzle/*/migration.sql` migration (drizzle-kit does
    not generate triggers).
 
    Triggers, not repo calls, because writes already happen outside the repos:
@@ -436,7 +436,7 @@ And one hazard the applier must design around:
    transaction do not reach `addDatabaseChangeListener`, citing an instrumented pull that
    wrote 12 588 `exchangeRates` rows while the listener saw nothing. **That diagnosis is
    wrong and has been retracted.** Those writes were never in a transaction:
-   `drizzle-orm/expo-sqlite/session.js:31-42` builds the transaction in `"sync"` mode and
+   `drizzle-orm/expo-sqlite/session.js:51-62` builds the transaction in `"sync"` mode and
    never awaits an async callback, so `begin; commit;` fired empty and every statement ran
    outside the boundary. The listener stayed quiet because `exchangeRates` is not in
    `WATCHED_TABLES` and `useLiveQuery` only re-reads on writes to its own table.

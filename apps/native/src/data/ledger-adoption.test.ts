@@ -272,7 +272,7 @@ describe("running an adoption", () => {
                     )
                 )
             )
-        ).resolves.toMatchObject({ cause: { message: expect.stringContaining("queue unavailable") } });
+        ).resolves.toMatchObject({ cause: { cause: { message: expect.stringContaining("queue unavailable") } } });
 
         await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(false);
         await expect(Effect.runPromise(getMeta(db, META_KEYS.syncAccountSubject))).resolves.toBeNull();
@@ -306,7 +306,7 @@ describe("running an adoption", () => {
                     )
                 )
             )
-        ).resolves.toMatchObject({ cause: { message: expect.stringContaining("queue unavailable") } });
+        ).resolves.toMatchObject({ cause: { cause: { message: expect.stringContaining("queue unavailable") } } });
 
         await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(true);
         await expect(Effect.runPromise(getMeta(db, META_KEYS.syncAccountSubject))).resolves.toBe("account-a");

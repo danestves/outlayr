@@ -41,7 +41,7 @@ Load-bearing, and each verified against the current file:
 - `apps/native/plugins/` — config plugins
 - `apps/native/modules/` — local Expo modules, including the subscriber that routes quick actions
   as links
-- `apps/native/drizzle/` — `.sql` migrations; `metro.config.cjs` adds `sql` to `sourceExts` because
+- `apps/native/drizzle/` — one `migration.sql` per folder; `metro.config.cjs` adds `sql` to `sourceExts` because
   the generated migration bundle imports them
 - `apps/native/assets/`, `global.css`, `app.config.ts`, `metro.config.cjs`, `babel.config.js`
 - `pnpm-workspace.yaml`, `pnpm-lock.yaml`, root `package.json`, `vite.config.ts`

@@ -645,7 +645,7 @@ describe("an account delete that cannot finish", () => {
         const failure = await Effect.runPromise(Effect.flip(accountsRepo.softDelete(db, from, DAY)));
         expect(failure).toBeInstanceOf(AccountsError);
         expect(failure).toMatchObject({ operation: "delete" });
-        expect(String(failure.cause)).toContain("mid-delete");
+        expect(failure).toMatchObject({ cause: { cause: { message: expect.stringContaining("mid-delete") } } });
 
         const rows = await db.select().from(transfers);
         expect(rows).toHaveLength(3);
@@ -670,7 +670,7 @@ describe("an account delete that cannot finish", () => {
         const failure = await Effect.runPromise(Effect.flip(accountsRepo.softDelete(db, from, DAY)));
         expect(failure).toBeInstanceOf(AccountsError);
         expect(failure).toMatchObject({ operation: "delete" });
-        expect(String(failure.cause)).toContain("mid-delete");
+        expect(failure).toMatchObject({ cause: { cause: { message: expect.stringContaining("mid-delete") } } });
 
         const [fee] = await db.select().from(transactions);
         expect(fee.deletedAt).toBeNull();
