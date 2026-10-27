@@ -20,6 +20,7 @@
         "test": "vp run -r --cache test"
     },
     "devDependencies": {
+        "@coderabbitai/config": "1.1.5",
         "@effect/language-service": "^0.87.5",
         "@outlayr/config": "workspace:*",
         "@posthog/cli": "^0.18.9",
