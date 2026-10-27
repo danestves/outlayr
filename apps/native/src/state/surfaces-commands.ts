@@ -1,4 +1,5 @@
-import * as Effect from "effect/Effect";
+import * as Cause from "effect/Cause";
+import type * as Effect from "effect/Effect";
 
 import { getMetaSync } from "@/data/app-meta-core";
 import type { Database } from "@/db/client";
@@ -13,29 +14,15 @@ import { syncInstallmentReminders } from "@/lib/installment-reminder-sync";
 import { resolveReminderTap, resolveWalletPushTap } from "@/lib/notification-taps";
 import type { ReminderTap, WalletPushTap } from "@/lib/notification-taps";
 import { claimOverBudgetMoment } from "@/lib/over-budget-moment";
-import { Reminders } from "@/lib/reminders";
-import { askForReview } from "@/lib/review-prompt";
 import { appRuntime } from "@/lib/runtime";
-import { syncSubscriptionReminders } from "@/lib/subscription-reminder-sync";
 
-import { createRuntimeCommand, runAtomCommand, SILENT, unwrapAtomCommand } from "./atom-command";
+import { createRuntimeCommand, SILENT } from "./atom-command";
 import type { AtomCommand } from "./atom-command";
 import { appAtomRegistry } from "./atom-registry";
+import { fireAtomCommand } from "./use-atom-action";
 
 const surfacesCommand = <A, E, W = void>(label: string, execute: (input: W) => Effect.Effect<A, E>) =>
     createRuntimeCommand(appRuntime, { execute, label: `surfaces:${label}` });
-
-export async function runSurfacesCommand<W, A, E>(command: AtomCommand<W, A, E>, input: W): Promise<A> {
-    return unwrapAtomCommand(await runAtomCommand(appAtomRegistry, command, input, SILENT));
-}
-
-export const reminderPermissionCommand = surfacesCommand("reminder-permission", () =>
-    Reminders.pipe(Effect.flatMap((reminders) => reminders.permission()))
-);
-
-export const requestReminderPermissionCommand = surfacesCommand("request-reminder-permission", () =>
-    Reminders.pipe(Effect.flatMap((reminders) => reminders.request()))
-);
 
 export const setDueRemindersCommand = surfacesCommand(
     "set-due-reminders",
@@ -43,11 +30,7 @@ export const setDueRemindersCommand = surfacesCommand(
         setDueReminders(input.db, input.key, input.next)
 );
 
-export const syncSubscriptionRemindersCommand = surfacesCommand("sync-subscription-reminders", (db: Database) =>
-    syncSubscriptionReminders(db)
-);
-
-export const syncInstallmentRemindersCommand = surfacesCommand("sync-installment-reminders", (db: Database) =>
+const syncInstallmentRemindersCommand = surfacesCommand("sync-installment-reminders", (db: Database) =>
     syncInstallmentReminders(db)
 );
 
@@ -64,8 +47,6 @@ const showInstallmentQuestionCommand = surfacesCommand(
     (input: Parameters<typeof showInstallmentQuestion>[0]) => showInstallmentQuestion(input)
 );
 
-export const askForReviewCommand = surfacesCommand("ask-for-review", (db: Database) => askForReview(db));
-
 export const claimOverBudgetMomentCommand = surfacesCommand("claim-over-budget-moment", (key: string) =>
     claimOverBudgetMoment(key)
 );
@@ -80,11 +61,19 @@ export const resolveWalletPushTapCommand = surfacesCommand(
     (input: { db: Database; tap: WalletPushTap }) => resolveWalletPushTap(input.db, input.tap)
 );
 
+function fireLogged<W, A, E>(command: AtomCommand<W, A, E>, input: W, message: string): void {
+    fireAtomCommand(
+        appAtomRegistry,
+        command,
+        input,
+        { onFailure: (cause) => console.error(message, Cause.squash(cause)) },
+        SILENT
+    );
+}
+
 /** Re-arms now rather than on the next foreground, which may come after the notice fired. The write already landed. */
 export function rearmInstallmentReminders(db: Database): void {
-    runSurfacesCommand(syncInstallmentRemindersCommand, db).catch((error) => {
-        console.error("Installment reminder sync failed", error);
-    });
+    fireLogged(syncInstallmentRemindersCommand, db, "Installment reminder sync failed");
 }
 
 /**
@@ -98,20 +87,16 @@ export function askForInstallmentReminders(
     if (getMetaSync(db, "installmentReminders") !== null) {
         return false;
     }
-    runSurfacesCommand(showInstallmentQuestionCommand, {
-        onDecline: () => {
-            runSurfacesCommand(declineInstallmentRemindersCommand, db).catch((error) => {
-                console.error("Declining installment reminders failed", error);
-            });
+    fireLogged(
+        showInstallmentQuestionCommand,
+        {
+            onDecline: () =>
+                fireLogged(declineInstallmentRemindersCommand, db, "Declining installment reminders failed"),
+            onTurnOn: () =>
+                fireLogged(turnOnInstallmentRemindersCommand, db, "Turning on installment reminders failed"),
+            question,
         },
-        onTurnOn: () => {
-            runSurfacesCommand(turnOnInstallmentRemindersCommand, db).catch((error) => {
-                console.error("Turning on installment reminders failed", error);
-            });
-        },
-        question,
-    }).catch((error) => {
-        console.error("Asking for installment reminders failed", error);
-    });
+        "Asking for installment reminders failed"
+    );
     return true;
 }

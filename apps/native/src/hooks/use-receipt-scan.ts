@@ -19,7 +19,7 @@ import { launchPick, pendingPick } from "@/lib/pending-pick";
 import type { PickOwner } from "@/lib/pending-pick";
 import { useLatest } from "@/lib/use-latest";
 import { RECEIPT_SCAN_TIMEOUT, timedCaptureCommand } from "@/state/capture-commands";
-import { entryMedia, fromCommand, runEntryFlow, voidFlowCommand } from "@/state/entry-commands";
+import { entryMedia, fromCommand, voidFlowCommand } from "@/state/entry-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 
 export type ScanFailure =
@@ -124,10 +124,6 @@ const libraryPick = (owner: PickOwner) =>
             })
         )
     );
-
-export function pickFromLibrary(owner: PickOwner): Promise<ImagePickerResult> {
-    return runEntryFlow(libraryPick(owner));
-}
 
 interface ScanPorts<Context, Draft> {
     adopt: (result: ImagePickerResult, take: number) => void;

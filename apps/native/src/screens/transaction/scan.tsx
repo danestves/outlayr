@@ -57,7 +57,7 @@ import { freshEntries } from "@/lib/fresh-entries";
 import { persistAttachmentBytes } from "@/lib/photo-storage";
 import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
-import { openAppSettings, runEntryFlow, voidFlowCommand } from "@/state/entry-commands";
+import { openAppSettings, voidFlowCommand } from "@/state/entry-commands";
 import { logged } from "@/state/entry-save";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
@@ -628,10 +628,6 @@ const writeEntry = Effect.fn("ReceiptScan.writeEntry")(function* writeEntry(db: 
     input.onSaved();
 });
 
-function openSettings() {
-    void runEntryFlow(openAppSettings);
-}
-
 function ScanFlowScreen() {
     const router = useRouter();
     const entitled = useProEntitled();
@@ -809,7 +805,7 @@ function ScanFlowScreen() {
         } else if (phase.reason === "quotaExceeded") {
             primary = null;
         } else if (phase.reason === "denied") {
-            primary = { label: t("receipt.action.settings"), onPress: openSettings };
+            primary = { label: t("receipt.action.settings"), onPress: () => runFlow(openAppSettings) };
             secondary = libraryAction;
         } else if (phase.reason === "noCamera") {
             primary = libraryAction;

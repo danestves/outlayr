@@ -2,12 +2,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { fetchMerchantImage } from "@/lib/logo-fetch";
-import type { LogoOutcome, MerchantImageRequest } from "@/lib/logo-fetch";
-import { appRuntime } from "@/lib/runtime";
-
-import { createCommand, createRuntimeCommand, runAtomCommand, SILENT, unwrapAtomCommand } from "./atom-command";
-import { appAtomRegistry } from "./atom-registry";
+import { createCommand } from "./atom-command";
 
 const CaptureOperation = Schema.Literals(["enrich", "scan", "speak"]);
 
@@ -48,12 +43,3 @@ export const timedCaptureCommand = <A>(options: {
             ),
         label: `capture:${options.operation}`,
     });
-
-export const fetchMerchantLogoCommand = createRuntimeCommand(appRuntime, {
-    execute: (request: MerchantImageRequest) => fetchMerchantImage(request),
-    label: "capture:fetch-merchant-logo",
-});
-
-export async function fetchMerchantLogo(request: MerchantImageRequest): Promise<LogoOutcome> {
-    return unwrapAtomCommand(await runAtomCommand(appAtomRegistry, fetchMerchantLogoCommand, request, SILENT));
-}

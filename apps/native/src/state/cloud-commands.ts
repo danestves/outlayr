@@ -21,9 +21,7 @@ import { signInWithProvider } from "@/lib/provider-sign-in";
 import { appRuntime } from "@/lib/runtime";
 import { SecureStorage } from "@/lib/secure-storage";
 
-import { createCommand, createRuntimeCommand, runAtomCommand, SILENT, unwrapAtomCommand } from "./atom-command";
-import type { AtomCommand } from "./atom-command";
-import { appAtomRegistry } from "./atom-registry";
+import { createCommand, createRuntimeCommand } from "./atom-command";
 
 type AuthClient = NonNullable<typeof authClient>;
 
@@ -117,7 +115,3 @@ export const deleteAccountCommand = createRuntimeCommand(appRuntime, {
     }),
     label: "cloud:delete-account",
 });
-
-export async function runCloudCommand<W, A>(command: AtomCommand<W, A, unknown>, input: W): Promise<A> {
-    return unwrapAtomCommand(await runAtomCommand(appAtomRegistry, command, input, SILENT));
-}

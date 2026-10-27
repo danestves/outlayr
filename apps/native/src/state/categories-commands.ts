@@ -10,7 +10,7 @@ import { appRuntime } from "@/lib/runtime";
 
 import { createCommand, createRuntimeCommand, tapFailure } from "./atom-command";
 
-export class CategoryChildrenError extends Schema.TaggedError<CategoryChildrenError>()("CategoryChildrenError", {
+class CategoryChildrenError extends Schema.TaggedError<CategoryChildrenError>()("CategoryChildrenError", {
     cause: Schema.Defect(),
 }) {
     // oxlint-disable-next-line class-methods-use-this -- one cause, no attribute: the message has nothing on the instance to read
@@ -30,17 +30,6 @@ export const countCategoryChildrenCommand = createCommand({
                     .where(and(eq(categories.parentId, input.id), isNull(categories.deletedAt))),
         }).pipe(Effect.map((children) => ({ children: children.length, id: input.id }))),
     label: "categories:count-children",
-});
-
-export const createCategoryCommand = createRuntimeCommand(appRuntime, {
-    execute: (input: { category: CategoryInput; db: Database }) => categoriesRepo.create(input.db, input.category),
-    label: "categories:create",
-});
-
-export const updateCategoryCommand = createRuntimeCommand(appRuntime, {
-    execute: (input: { db: Database; id: string; patch: Parameters<typeof categoriesRepo.update>[2] }) =>
-        categoriesRepo.update(input.db, input.id, input.patch),
-    label: "categories:update",
 });
 
 interface CategorySave {
