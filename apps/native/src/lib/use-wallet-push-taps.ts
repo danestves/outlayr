@@ -1,5 +1,6 @@
+import * as Cause from "effect/Cause";
 import * as Option from "effect/Option";
-import * as Schema from "effect/Schema";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import {
     addNotificationResponseReceivedListener,
     clearLastNotificationResponse,
@@ -7,71 +8,43 @@ import {
 } from "expo-notifications";
 import type { NotificationResponse } from "expo-notifications";
 import { useRouter } from "expo-router";
-import type { Href } from "expo-router";
 import { useEffect } from "react";
 
-import { getTransactionById } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
-import {
-    cardStillAsksCommand,
-    drainPendingWritesCommand,
-    fileWaitingPurchasesCommand,
-    pendingWriteTxIdCommand,
-    runLifecycleCommand,
-} from "@/state/lifecycle-commands";
+import { runAtomCommand, SILENT } from "@/state/atom-command";
+import { appAtomRegistry } from "@/state/atom-registry";
+import { resolveWalletPushTapCommand } from "@/state/surfaces-commands";
 
-import { claimPendingWrites, releasePendingWrites } from "./widget-bridge";
-
-const decodeWalletPush = Schema.decodeUnknownOption(
-    Schema.Struct({
-        card: Schema.optional(Schema.String),
-        pickCard: Schema.optional(Schema.Boolean),
-        walletWrite: Schema.String,
-    })
-);
+import { decodeWalletPushTap } from "./notification-taps";
 
 let handled: string | null = null;
 
 export function useWalletPushTaps(db: Database, ready: boolean): void {
     const router = useRouter();
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- subscribes to Expo's notification response listener, which has no React-side source
     useEffect(() => {
         if (!ready) {
             return;
         }
         let disposed = false;
         const open = async (response: NotificationResponse | null) => {
-            const parsed = decodeWalletPush(response?.notification.request.content.data);
+            const parsed = decodeWalletPushTap(response?.notification.request.content.data);
             const id = response?.notification.request.identifier;
             if (Option.isNone(parsed) || id == null || id === handled) {
                 return;
             }
-            const settle = async () => {
-                await runLifecycleCommand(drainPendingWritesCommand, {
-                    claim: claimPendingWrites,
-                    db,
-                    release: releasePendingWrites,
-                }).catch((error) => {
-                    console.warn("[outlayr] pending writes failed to apply", error);
-                });
-                await runLifecycleCommand(fileWaitingPurchasesCommand, db).catch((error) => {
-                    console.warn("[outlayr] waiting purchases failed to file", error);
-                });
-                return runLifecycleCommand(pendingWriteTxIdCommand, { db, id: parsed.value.walletWrite });
-            };
-            const txId = (await settle()) ?? (await settle());
-            const { card, pickCard } = parsed.value;
-            const unattached = txId !== null && getTransactionById(db, txId)?.accountId == null;
-            const asks =
-                pickCard === true &&
-                unattached &&
-                (card === undefined || (await runLifecycleCommand(cardStillAsksCommand, { db, text: card })));
-            let target: Href | null = null;
-            if (asks) {
-                target = "/settings/integrations";
-            } else if (txId) {
-                target = `/transactions/${txId}`;
+            const resolved = await runAtomCommand(
+                appAtomRegistry,
+                resolveWalletPushTapCommand,
+                { db, tap: parsed.value },
+                SILENT
+            );
+            if (AsyncResult.isFailure(resolved)) {
+                console.warn("[outlayr] wallet push tap failed", Cause.squash(resolved.cause));
+                return;
             }
+            const target = resolved.value;
             if (disposed || id === handled || target === null) {
                 return;
             }

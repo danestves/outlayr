@@ -24,16 +24,18 @@ describe("due reminder sync", () => {
         const order: string[] = [];
         const held = Promise.withResolvers<undefined>();
         const passes = {
-            installment: async () => {
-                order.push("installment");
-            },
-            subscription: async () => {
-                order.push("subscription");
-                if (order.length === 1) {
-                    await held.promise;
-                    throw new Error("notification queue unavailable");
-                }
-            },
+            installment: () =>
+                Effect.sync(() => {
+                    order.push("installment");
+                }),
+            subscription: () =>
+                Effect.gen(function* subscription() {
+                    order.push("subscription");
+                    if (order.length === 1) {
+                        yield* Effect.promise(() => held.promise);
+                        return yield* Effect.fail(new Error("notification queue unavailable"));
+                    }
+                }),
         };
         const layer = Layer.mergeAll(dueReminderLayer, Logger.layer([]));
         registry = AtomRegistry.make({ initialValues: [[appRuntime.layer, layer]] });

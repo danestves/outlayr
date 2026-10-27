@@ -70,8 +70,8 @@ export class SystemSyncError extends Schema.TaggedError<SystemSyncError>()("Syst
 export class SystemSurfaces extends Context.Service<
     SystemSurfaces,
     {
-        readonly indexSpotlight: (db: Database) => Promise<void>;
-        readonly publishWidgets: (db: Database) => Promise<void>;
+        readonly indexSpotlight: (db: Database) => Effect.Effect<void>;
+        readonly publishWidgets: (db: Database) => Effect.Effect<void>;
     }
 >()("outlayr/lib/SystemSync/SystemSurfaces") {}
 
@@ -118,6 +118,9 @@ const warnRatesFailed =
 
 const attemptOr = <A>(step: typeof SystemStep.Type, task: () => Promise<A>, fallback: A) =>
     attempt(step, task).pipe(Effect.catchTags({ SystemSyncError: (error) => warn(error).pipe(Effect.as(fallback)) }));
+
+const surfaceStep = (step: typeof SystemStep.Type, surface: Effect.Effect<void>) =>
+    surface.pipe(failedStep(step), Effect.catchTags({ SystemSyncError: warn }));
 
 const anyCounted = Effect.fn("SystemSync.anyCounted")(function* anyCounted(
     step: typeof SystemStep.Type,
@@ -190,8 +193,8 @@ export const make = Effect.gen(function* make() {
             armLogoBackfill(db);
         });
 
-        const publishNow = attemptOr("publish", () => surfaces.publishWidgets(db), undefined);
-        const reindexNow = attemptOr("index", () => surfaces.indexSpotlight(db), undefined);
+        const publishNow = surfaceStep("publish", surfaces.publishWidgets(db));
+        const reindexNow = surfaceStep("index", surfaces.indexSpotlight(db));
         const publishRequests = yield* Queue.sliding<undefined>(1);
         const publishSoon = Queue.offer(publishRequests, undefined).pipe(Effect.asVoid);
         const publishIf = (changed: boolean) => (changed ? publishSoon : Effect.void);

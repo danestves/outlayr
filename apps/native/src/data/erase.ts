@@ -10,7 +10,7 @@ export type { EraseScope } from "./erase-core";
 
 // Injected so this stays free of `expo-file-system` and `expo-core-spotlight`, which can't load under node tests.
 export interface EraseResidue {
-    clearSpotlight: () => Promise<void>;
+    clearSpotlight: () => Effect.Effect<void, unknown>;
     clearStoredPhotos: () => void;
 }
 
@@ -41,10 +41,9 @@ export const eraseData = Effect.fn("Erase.eraseData")(function* eraseData(
         })
     );
 
-    yield* Effect.tryPromise({
-        catch: (cause) => new EraseResidueError({ cause, residue: "spotlight" }),
-        try: () => residue.clearSpotlight(),
-    });
+    yield* residue
+        .clearSpotlight()
+        .pipe(Effect.mapError((cause) => new EraseResidueError({ cause, residue: "spotlight" })));
 
     if (photosCleared._tag === "Failure") {
         return yield* photosCleared.failure;

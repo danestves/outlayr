@@ -40,7 +40,7 @@ export class DueReminderError extends Schema.TaggedError<DueReminderError>()("Du
 
 export class DueReminderPasses extends Context.Service<
     DueReminderPasses,
-    Record<typeof DueReminder.Type, (db: Database) => Promise<void>>
+    Record<typeof DueReminder.Type, (db: Database) => Effect.Effect<void, Error>>
 >()("outlayr/lib/DueReminderSync/DueReminderPasses") {}
 
 export class DueReminderSync extends Context.Service<
@@ -54,10 +54,12 @@ export class DueReminderSync extends Context.Service<
 const attempt = (reminder: typeof DueReminder.Type, db: Database) =>
     DueReminderPasses.pipe(
         Effect.flatMap((passes) =>
-            Effect.tryPromise({
-                catch: (cause) => new DueReminderError({ cause, message: FAILED[reminder], reminder }),
-                try: () => passes[reminder](db),
-            })
+            passes[reminder](db).pipe(
+                Effect.mapError((cause) => new DueReminderError({ cause, message: FAILED[reminder], reminder })),
+                Effect.catchDefect((defect) =>
+                    Effect.fail(new DueReminderError({ cause: defect, message: FAILED[reminder], reminder }))
+                )
+            )
         ),
         Effect.catchTags({ DueReminderError: (error) => Effect.logError(error.message, error.cause) })
     );

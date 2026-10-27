@@ -10,12 +10,12 @@ import type { PayoffLine } from "@/data/payoff-plans";
 import type { Database } from "@/db/client";
 import { usePayoffPlanGate } from "@/hooks/use-pro-gate";
 import { useTranslation } from "@/i18n/context";
-import { rearmInstallmentReminders } from "@/lib/installment-reminder-sync";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
 import type { GoalCommit, GoalTarget } from "@/screens/budgets/components/goal-target-sheet";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
 import { removeSavingsGoalCommand, setPayoffPlanCommand } from "@/state/planning-commands";
+import { rearmInstallmentReminders } from "@/state/surfaces-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 
 function statedKey(account: Account, balance: number) {

@@ -19,9 +19,8 @@ import type { InstallmentSeed } from "@/domain/installment-scan";
 import { formatAmount } from "@/domain/money";
 import { transactionRateError } from "@/domain/transaction-entry-rate";
 import { useLanguage, useTranslation } from "@/i18n/context";
-import { askForInstallmentReminders } from "@/lib/due-reminders";
-import { rearmInstallmentReminders } from "@/lib/installment-reminder-sync";
 import { notifyFailure } from "@/lib/notify";
+import { askForInstallmentReminders, rearmInstallmentReminders } from "@/state/surfaces-commands";
 
 import { InstallmentsSheet } from "./installments-sheet";
 import type { SentenceVerb } from "./sentence/fact-glyphs";

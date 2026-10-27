@@ -1,7 +1,10 @@
 import { describe, expect, it, jest } from "@jest/globals";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Effect from "effect/Effect";
 
-import { claimOverBudgetMoment, overBudgetMomentKey } from "./over-budget-moment";
+import { claimOverBudgetMoment as claim, overBudgetMomentKey } from "./over-budget-moment";
+
+const claimOverBudgetMoment = (key: string) => Effect.runPromise(claim(key));
 
 jest.mock<Partial<typeof import("@react-native-async-storage/async-storage")>>(
     "@react-native-async-storage/async-storage",
@@ -42,6 +45,6 @@ describe("claimOverBudgetMoment", () => {
         await storage.setItem("outlayr.over-budget-seen", JSON.stringify([rent]));
         const relaunched = require("./over-budget-moment") as typeof import("./over-budget-moment");
 
-        await expect(relaunched.claimOverBudgetMoment(rent)).resolves.toBe(false);
+        await expect(Effect.runPromise(relaunched.claimOverBudgetMoment(rent))).resolves.toBe(false);
     });
 });

@@ -1,3 +1,5 @@
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import {
     cancelScheduledNotificationAsync,
     getAllScheduledNotificationsAsync,
@@ -6,74 +8,78 @@ import {
     SchedulableTriggerInputTypes,
     scheduleNotificationAsync,
 } from "expo-notifications";
-import type { NotificationPermissionsStatus } from "expo-notifications";
 import { Linking } from "react-native";
 
 import type { ReminderPermission } from "@/domain/reminder";
 import { expectHandoff } from "@/lib/app-handoff";
 
-/** On iOS `canAskAgain` is true only while the prompt has never been shown. */
-function toPermission(result: NotificationPermissionsStatus): ReminderPermission {
-    if (result.granted) {
-        return "granted";
-    }
-    return result.canAskAgain ? "undetermined" : "denied";
-}
+import { attemptReminders, toPermission } from "./reminders-core";
+import type { DatedReminder, RemindersError } from "./reminders-core";
 
-export async function reminderPermission(): Promise<ReminderPermission> {
-    try {
-        return toPermission(await getPermissionsAsync());
-    } catch (error) {
-        console.warn("[outlayr] notification permission read failed", error);
-        return "unknown";
-    }
-}
+export type { DatedReminder } from "./reminders-core";
 
-export async function requestReminderPermission(): Promise<ReminderPermission> {
-    try {
-        return toPermission(
-            await requestPermissionsAsync({
-                ios: { allowAlert: true, allowBadge: true, allowSound: true },
-            })
-        );
-    } catch (error) {
-        console.warn("[outlayr] notification permission request failed", error);
-        return "unknown";
-    }
-}
+const permission = Effect.fn("Reminders.permission")(function* permission() {
+    return yield* attemptReminders("permission", getPermissionsAsync).pipe(
+        Effect.map(toPermission),
+        Effect.catchTags({
+            RemindersError: (error) =>
+                Effect.logWarning("[outlayr] notification permission read failed", error.cause).pipe(
+                    Effect.as<ReminderPermission>("unknown")
+                ),
+        })
+    );
+});
 
-export async function pendingReminderIds(): Promise<string[]> {
-    try {
-        const requests = await getAllScheduledNotificationsAsync();
-        return requests.map((request) => request.identifier);
-    } catch {
-        return [];
-    }
-}
+const request = Effect.fn("Reminders.request")(function* request() {
+    return yield* attemptReminders("request", () =>
+        requestPermissionsAsync({
+            ios: { allowAlert: true, allowBadge: true, allowSound: true },
+        })
+    ).pipe(
+        Effect.map(toPermission),
+        Effect.catchTags({
+            RemindersError: (error) =>
+                Effect.logWarning("[outlayr] notification permission request failed", error.cause).pipe(
+                    Effect.as<ReminderPermission>("unknown")
+                ),
+        })
+    );
+});
 
-export interface DatedReminder {
-    body: string;
-    data: Record<string, string>;
-    fireAt: Date;
-    id: string;
-    title: string;
-}
+const pendingIds = Effect.fn("Reminders.pendingIds")(function* pendingIds() {
+    return yield* attemptReminders("pending", getAllScheduledNotificationsAsync).pipe(
+        Effect.map((requests) => requests.map((pending) => pending.identifier)),
+        Effect.catchTags({ RemindersError: () => Effect.succeed<string[]>([]) })
+    );
+});
 
 /** One-shot DATE trigger, not a repeat: a chain's next charge is recomputed, so each sweep re-arms it by identifier. */
-export async function scheduleDatedReminder({ id, title, body, data, fireAt }: DatedReminder): Promise<void> {
-    await scheduleNotificationAsync({
-        content: { body, data, sound: "default", title },
-        identifier: id,
-        trigger: { date: fireAt, type: SchedulableTriggerInputTypes.DATE },
-    });
-}
+const schedule = Effect.fn("Reminders.schedule")(function* schedule({ id, title, body, data, fireAt }: DatedReminder) {
+    yield* attemptReminders("schedule", () =>
+        scheduleNotificationAsync({
+            content: { body, data, sound: "default", title },
+            identifier: id,
+            trigger: { date: fireAt, type: SchedulableTriggerInputTypes.DATE },
+        })
+    );
+});
 
-export async function cancelReminders(ids: readonly string[]): Promise<void> {
+// cancelScheduledNotificationAsync mutates one shared iOS notification queue, so overlapping cancels race each other.
+const cancel = Effect.fn("Reminders.cancel")(function* cancel(ids: readonly string[]) {
     for (const id of ids) {
-        // oxlint-disable-next-line no-await-in-loop -- cancelScheduledNotificationAsync mutates one shared iOS notification queue, so overlapping cancels race each other.
-        await cancelScheduledNotificationAsync(id);
+        yield* attemptReminders("cancel", () => cancelScheduledNotificationAsync(id));
     }
-}
+});
+
+export const Reminders = Context.Reference<{
+    readonly cancel: (ids: readonly string[]) => Effect.Effect<void, RemindersError>;
+    readonly pendingIds: () => Effect.Effect<string[]>;
+    readonly permission: () => Effect.Effect<ReminderPermission>;
+    readonly request: () => Effect.Effect<ReminderPermission>;
+    readonly schedule: (reminder: DatedReminder) => Effect.Effect<void, RemindersError>;
+}>("outlayr/lib/Reminders", {
+    defaultValue: () => ({ cancel, pendingIds, permission, request, schedule }),
+});
 
 export function openNotificationSettings(): void {
     expectHandoff();

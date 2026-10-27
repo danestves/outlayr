@@ -3,13 +3,17 @@ import { startOfDay } from "@outlayr/money/calendar";
 import { utcDateString } from "@outlayr/money/dates";
 import { isExact, limitIn } from "@outlayr/money/valuation";
 import { and, asc, desc, isNull, lte } from "drizzle-orm";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
-import { META_KEYS } from "@/data/app-meta-core";
+import { getMeta, META_KEYS } from "@/data/app-meta-core";
 import type { SpendDb } from "@/data/budget-spent";
 import { OVERALL_BUDGET_ID } from "@/data/budgets-core";
-import { aggregateInsightsWindows, windowLabel } from "@/data/insights";
+import { aggregateInsightsWindows, loadContributions, windowLabel } from "@/data/insights";
 import type { InsightsCalendar, InsightsContribution, InsightsPeriod, WindowTotals } from "@/data/insights";
+import { writeIdsByTransaction } from "@/data/pending-writes-core";
 import { parseBoolSetting, parseIntSetting } from "@/data/settings-core";
+import { loadValuation } from "@/data/valuation-source";
 import type { Valuation } from "@/data/valuation-source";
 import {
     budgets as budgetsTable,
@@ -24,9 +28,6 @@ import { DEFAULT_CURRENCY, formatAmount } from "@/domain/money";
 import type { TranslationKey } from "@/i18n/catalog";
 import { translateNow } from "@/i18n/runtime";
 import { DEEP_LINKS } from "@/lib/deep-links";
-import { loadContributionsCommand, loadValuationCommand, runAccountsCommand } from "@/state/accounts-commands";
-import { runLifecycleCommand, writeIdsByTransactionCommand } from "@/state/lifecycle-commands";
-import { getMetaCommand, runSettingsCommand } from "@/state/settings-commands";
 
 import { WIDGET_PALETTE } from "./palette";
 import { NO_BUDGET } from "./placeholders";
@@ -218,6 +219,18 @@ function clamp01(value: number): number {
     return Math.min(1, value);
 }
 
+export class WidgetPropsError extends Schema.TaggedError<WidgetPropsError>()("WidgetPropsError", {
+    cause: Schema.Defect(),
+    read: Schema.Literals(["budgets", "categories", "entries"]),
+}) {
+    override get message(): string {
+        return `Reading the widget ${this.read} failed`;
+    }
+}
+
+const attempt = <A>(read: typeof WidgetPropsError.Type.read, run: () => PromiseLike<A>) =>
+    Effect.tryPromise({ catch: (cause) => new WidgetPropsError({ cause, read }), try: run });
+
 type Contribution = InsightsContribution & { id: string };
 interface CategoryRow {
     color: string | null;
@@ -231,14 +244,20 @@ interface CategoryRow {
 }
 
 /** Formatted here: the widget's `JSContext` cannot call `formatAmount`. */
-export async function buildWidgetProps(db: SpendDb, now: Date = new Date()): Promise<WidgetProps> {
-    const [currencyRaw, showCentsRaw, weekdayRaw, monthDayRaw, periodRaw] = await Promise.all([
-        runSettingsCommand(getMetaCommand, { db, key: META_KEYS.currency }),
-        runSettingsCommand(getMetaCommand, { db, key: "showCents" }),
-        runSettingsCommand(getMetaCommand, { db, key: "firstWeekday" }),
-        runSettingsCommand(getMetaCommand, { db, key: "firstDayOfMonth" }),
-        runSettingsCommand(getMetaCommand, { db, key: "insightsTimeFrame" }),
-    ]);
+export const buildWidgetProps = Effect.fn("Widgets.buildProps")(function* buildWidgetProps(
+    db: SpendDb,
+    now: Date = new Date()
+) {
+    const [currencyRaw, showCentsRaw, weekdayRaw, monthDayRaw, periodRaw] = yield* Effect.all(
+        [
+            getMeta(db, META_KEYS.currency),
+            getMeta(db, "showCents"),
+            getMeta(db, "firstWeekday"),
+            getMeta(db, "firstDayOfMonth"),
+            getMeta(db, "insightsTimeFrame"),
+        ],
+        { concurrency: "unbounded" }
+    );
 
     const currency = currencyRaw ?? DEFAULT_CURRENCY;
     const showCents = parseBoolSetting(showCentsRaw, true);
@@ -251,25 +270,27 @@ export async function buildWidgetProps(db: SpendDb, now: Date = new Date()): Pro
     const whole = (value: number) => formatAmount(value, currency, false);
     const entryMoney = (value: number, code: string | null) => formatAmount(value, code ?? currency, showCents);
 
-    const valuation = await runAccountsCommand(loadValuationCommand, db);
-    const contributions = await runAccountsCommand(loadContributionsCommand, { db, now, valuation });
-    const categoryRows = await db
-        .select({
-            color: categoriesTable.color,
-            emoji: categoriesTable.emoji,
-            icon: categoriesTable.icon,
-            id: categoriesTable.id,
-            income: categoriesTable.income,
-            name: categoriesTable.name,
-            parentId: categoriesTable.parentId,
-            sortOrder: categoriesTable.sortOrder,
-        })
-        .from(categoriesTable)
-        .where(isNull(categoriesTable.deletedAt))
-        .orderBy(asc(categoriesTable.sortOrder), asc(categoriesTable.name));
+    const valuation = yield* loadValuation(db);
+    const contributions = yield* loadContributions(db, now, valuation);
+    const categoryRows = yield* attempt("categories", () =>
+        db
+            .select({
+                color: categoriesTable.color,
+                emoji: categoriesTable.emoji,
+                icon: categoriesTable.icon,
+                id: categoriesTable.id,
+                income: categoriesTable.income,
+                name: categoriesTable.name,
+                parentId: categoriesTable.parentId,
+                sortOrder: categoriesTable.sortOrder,
+            })
+            .from(categoriesTable)
+            .where(isNull(categoriesTable.deletedAt))
+            .orderBy(asc(categoriesTable.sortOrder), asc(categoriesTable.name))
+    );
     const categoriesById = new Map(categoryRows.map((row) => [row.id, row]));
-    const budgets = await budgetFigures(db, now, contributions, valuation);
-    const watchEntries = await buildWatchEntries(db, now, categoriesById, entryMoney, contributions, valuation);
+    const budgets = yield* budgetFigures(db, now, contributions, valuation);
+    const watchEntries = yield* buildWatchEntries(db, now, categoriesById, entryMoney, contributions, valuation);
 
     return {
         Budget: buildBudget(budgets, now, categoriesById, money, whole),
@@ -317,15 +338,20 @@ export async function buildWidgetProps(db: SpendDb, now: Date = new Date()): Pro
         watchEntries,
         week: buildWeek(contributions, now, whole),
         zeroSpent: money(0),
-    };
-}
+    } satisfies WidgetProps;
+});
 
 type Money = (value: number) => string;
 
 type EntryMoney = (value: number, code: string | null) => string;
 
 /** Read once for both budget builders. */
-async function budgetFigures(db: SpendDb, now: Date, contributions: readonly Contribution[], valuation: Valuation) {
+const budgetFigures = Effect.fn("Widgets.budgetFigures")(function* budgetFigures(
+    db: SpendDb,
+    now: Date,
+    contributions: readonly Contribution[],
+    valuation: Valuation
+) {
     const measure = (
         row: {
             amount: number;
@@ -344,21 +370,23 @@ async function budgetFigures(db: SpendDb, now: Date, contributions: readonly Con
         };
     };
 
-    const [main] = await db.select().from(mainBudgetTable).where(isNull(mainBudgetTable.deletedAt)).limit(1);
-    const categoryRows = await db
-        .select()
-        .from(budgetsTable)
-        .where(isNull(budgetsTable.deletedAt))
-        .orderBy(asc(budgetsTable.dateCreated));
+    const [main] = yield* attempt("budgets", () =>
+        db.select().from(mainBudgetTable).where(isNull(mainBudgetTable.deletedAt)).limit(1)
+    );
+    const categoryRows = yield* attempt("budgets", () =>
+        db.select().from(budgetsTable).where(isNull(budgetsTable.deletedAt)).orderBy(asc(budgetsTable.dateCreated))
+    );
 
     return {
         categories: categoryRows.map((row) => ({ row, ...measure(row, row.categoryId) })),
         main: main ? { row: main, ...measure(main, null) } : null,
     };
-}
+});
+
+type BudgetFigures = Effect.Success<ReturnType<typeof budgetFigures>>;
 
 function buildBudget(
-    figures: Awaited<ReturnType<typeof budgetFigures>>,
+    figures: BudgetFigures,
     now: Date,
     categoriesById: ReadonlyMap<string, CategoryRow>,
     money: Money,
@@ -446,7 +474,7 @@ function buildBudget(
 }
 
 function buildIntentBudgets(
-    figures: Awaited<ReturnType<typeof budgetFigures>>,
+    figures: BudgetFigures,
     categoriesById: ReadonlyMap<string, CategoryRow>,
     money: Money,
     whole: Money
@@ -548,37 +576,39 @@ function buildWeek(contributions: readonly Contribution[], now: Date, whole: Mon
     };
 }
 
-async function buildWatchEntries(
+const buildWatchEntries = Effect.fn("Widgets.buildWatchEntries")(function* buildWatchEntries(
     db: SpendDb,
     now: Date,
     categoriesById: ReadonlyMap<string, CategoryRow>,
     entryMoney: EntryMoney,
     contributions: readonly Contribution[],
     valuation: Valuation
-): Promise<WatchEntryProps[]> {
-    const rows = await db
-        .select({
-            amount: transactionsTable.amount,
-            amountUsd: transactionsTable.amountUsd,
-            categoryId: transactionsTable.categoryId,
-            currency: transactionsTable.currency,
-            customColor: transactionsTable.customColor,
-            date: transactionsTable.date,
-            emoji: transactionsTable.emoji,
-            id: transactionsTable.id,
-            imageColor: transactionsTable.imageColor,
-            income: transactionsTable.income,
-            note: transactionsTable.note,
-        })
-        .from(transactionsTable)
-        .where(and(isNull(transactionsTable.deletedAt), lte(transactionsTable.date, now)))
-        .orderBy(desc(transactionsTable.date))
-        .limit(LEDGER_LIMIT);
-    const writeIds = await runLifecycleCommand(writeIdsByTransactionCommand, db);
+) {
+    const rows = yield* attempt("entries", () =>
+        db
+            .select({
+                amount: transactionsTable.amount,
+                amountUsd: transactionsTable.amountUsd,
+                categoryId: transactionsTable.categoryId,
+                currency: transactionsTable.currency,
+                customColor: transactionsTable.customColor,
+                date: transactionsTable.date,
+                emoji: transactionsTable.emoji,
+                id: transactionsTable.id,
+                imageColor: transactionsTable.imageColor,
+                income: transactionsTable.income,
+                note: transactionsTable.note,
+            })
+            .from(transactionsTable)
+            .where(and(isNull(transactionsTable.deletedAt), lte(transactionsTable.date, now)))
+            .orderBy(desc(transactionsTable.date))
+            .limit(LEDGER_LIMIT)
+    );
+    const writeIds = yield* writeIdsByTransaction(db);
     const valuedById = new Map(contributions.map((row) => [row.id, row.amount]));
     const { displayCurrency, rates } = valuation;
 
-    return rows.map((row) => {
+    return rows.map((row): WatchEntryProps => {
         const category = row.categoryId ? categoriesById.get(row.categoryId) : undefined;
         // The figure the headers summed; an inexact entry keeps its own currency.
         const valued =
@@ -603,7 +633,7 @@ async function buildWatchEntries(
             writeId: writeIds.get(row.id) ?? null,
         };
     });
-}
+});
 
 /** `today` from raw contributions: `aggregateInsightsWindows` has no day window. */
 function buildLedgerHeaders(

@@ -22,12 +22,12 @@ import { minorUnitsFor, roundToMinorUnits } from "@/domain/money";
 import { numpadToNumber } from "@/domain/numpad";
 import { useAccountCreateRoute, usePayoffPlanGate, usePeopleCapped } from "@/hooks/use-pro-gate";
 import { useTranslation } from "@/i18n/context";
-import { rearmInstallmentReminders } from "@/lib/installment-reminder-sync";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
 import { writeDebtCommand, writePayoffPlanCommand } from "@/state/planning-commands";
 import type { DebtDraft } from "@/state/planning-commands";
+import { rearmInstallmentReminders } from "@/state/surfaces-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 
 const MAX_SUGGESTIONS = 4;

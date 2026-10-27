@@ -1,95 +1,84 @@
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import { Alert } from "react-native";
 
-import { getMetaSync } from "@/data/app-meta-core";
+import { setBoolSetting } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import { enableReminderStep } from "@/domain/reminder";
 import type { TranslatableKey } from "@/i18n/catalog";
 import { translateNow } from "@/i18n/runtime";
-import { runSettingsCommand, setBoolSettingCommand } from "@/state/settings-commands";
 
-import { openNotificationSettings, reminderPermission, requestReminderPermission } from "./reminders";
+import { openNotificationSettings, Reminders } from "./reminders";
 
 /**
  * Counted from the form's `onDone`, so the question lands on the screen behind the sheet, not over it. shortcut: no
  * event reaches JS when a native sheet finishes dismissing, so this is timed; listen for one if that changes.
  */
-const AFTER_SHEET_MS = 600;
+const AFTER_SHEET = Duration.millis(600);
 
 /** Resolves false when turning on ended without a grant, so nothing was written. */
-export async function setDueReminders(
+export const setDueReminders = Effect.fn("DueReminders.set")(function* setDueReminders(
     db: Database,
     key: "installmentReminders" | "subscriptionReminders",
     next: boolean
-): Promise<boolean> {
+) {
     if (next) {
-        const existing = await reminderPermission();
+        const reminders = yield* Reminders;
+        const existing = yield* reminders.permission();
         if (enableReminderStep(existing) === "open-settings") {
-            Alert.alert(
-                translateNow("settings.notifications.deniedTitle"),
-                translateNow("settings.notifications.deniedBody"),
-                [
-                    {
-                        style: "cancel",
-                        text: translateNow("settings.notifications.notNow"),
-                    },
-                    {
-                        onPress: openNotificationSettings,
-                        text: translateNow("settings.notifications.openSettings"),
-                    },
-                ]
-            );
+            yield* Effect.sync(() => {
+                Alert.alert(
+                    translateNow("settings.notifications.deniedTitle"),
+                    translateNow("settings.notifications.deniedBody"),
+                    [
+                        {
+                            style: "cancel",
+                            text: translateNow("settings.notifications.notNow"),
+                        },
+                        {
+                            onPress: openNotificationSettings,
+                            text: translateNow("settings.notifications.openSettings"),
+                        },
+                    ]
+                );
+            });
             return false;
         }
-        const granted = existing === "granted" ? existing : await requestReminderPermission();
+        const granted = existing === "granted" ? existing : yield* reminders.request();
         if (granted !== "granted") {
             return false;
         }
     }
-    await runSettingsCommand(setBoolSettingCommand, { db, key, value: next });
+    yield* setBoolSetting(db, key, next);
     return true;
-}
+});
 
-/**
- * Asks only while cuota notices were never set either way; an unanswered ask writes nothing, so the next order asks
- * again. Returns whether it asks, so other prompts can stand aside.
- */
-export function askForInstallmentReminders(
-    db: Database,
-    question: TranslatableKey = "installments.reminder.ask"
-): boolean {
-    if (getMetaSync(db, "installmentReminders") !== null) {
-        return false;
+export const turnOnInstallmentReminders = Effect.fn("DueReminders.turnOnInstallments")(
+    function* turnOnInstallmentReminders(db: Database) {
+        if (!(yield* setDueReminders(db, "installmentReminders", true))) {
+            yield* setBoolSetting(db, "installmentReminders", false);
+        }
     }
-    setTimeout(() => ask(db, question), AFTER_SHEET_MS);
-    return true;
-}
+);
 
-async function turnOn(db: Database): Promise<void> {
-    if (!(await setDueReminders(db, "installmentReminders", true))) {
-        await runSettingsCommand(setBoolSettingCommand, { db, key: "installmentReminders", value: false });
+export const declineInstallmentReminders = Effect.fn("DueReminders.declineInstallments")(
+    function* declineInstallmentReminders(db: Database) {
+        yield* setBoolSetting(db, "installmentReminders", false);
     }
-}
+);
 
-function ask(db: Database, question: TranslatableKey): void {
-    Alert.alert(translateNow(question), undefined, [
-        {
-            onPress: () => {
-                runSettingsCommand(setBoolSettingCommand, { db, key: "installmentReminders", value: false }).catch(
-                    (error) => {
-                        console.error("Declining installment reminders failed", error);
-                    }
-                );
-            },
-            style: "cancel",
-            text: translateNow("settings.notifications.notNow"),
-        },
-        {
-            onPress: () => {
-                turnOn(db).catch((error) => {
-                    console.error("Turning on installment reminders failed", error);
-                });
-            },
-            text: translateNow("installments.reminder.turnOn"),
-        },
-    ]);
-}
+export const showInstallmentQuestion = Effect.fn("DueReminders.showInstallmentQuestion")(
+    function* showInstallmentQuestion(input: {
+        onDecline: () => void;
+        onTurnOn: () => void;
+        question: TranslatableKey;
+    }) {
+        yield* Effect.sleep(AFTER_SHEET);
+        yield* Effect.sync(() => {
+            Alert.alert(translateNow(input.question), undefined, [
+                { onPress: input.onDecline, style: "cancel", text: translateNow("settings.notifications.notNow") },
+                { onPress: input.onTurnOn, text: translateNow("installments.reminder.turnOn") },
+            ]);
+        });
+    }
+);

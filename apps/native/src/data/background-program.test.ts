@@ -36,6 +36,10 @@ describe("background program", () => {
     const record = (event: string) => async () => {
         events.push(event);
     };
+    const step = (event: string) => () =>
+        Effect.sync(() => {
+            events.push(event);
+        });
 
     const start = () => {
         const services = Layer.mergeAll(
@@ -69,14 +73,14 @@ describe("background program", () => {
             ],
         });
         const surfaces = Layer.mergeAll(
-            Layer.succeed(DailyReminderSync.DailyReminderSteps, { arm: async () => undefined, sync: record("daily") }),
+            Layer.succeed(DailyReminderSync.DailyReminderSteps, { arm: () => Effect.void, sync: step("daily") }),
             Layer.succeed(DueReminderSync.DueReminderPasses, {
-                installment: record("installments"),
-                subscription: record("subscriptions"),
+                installment: step("installments"),
+                subscription: step("subscriptions"),
             }),
             Layer.succeed(SystemSync.SystemSurfaces, {
-                indexSpotlight: async () => undefined,
-                publishWidgets: record("widgets"),
+                indexSpotlight: () => Effect.void,
+                publishWidgets: step("widgets"),
             })
         );
         const unmount = registry.mount(

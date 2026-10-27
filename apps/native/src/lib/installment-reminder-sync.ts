@@ -1,4 +1,10 @@
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
+
 import { readPlans } from "@/data/installments-core";
+import { owedPayoffPlans } from "@/data/payoff-plans";
+import { readBoolSetting, setBoolSetting } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import { accounts } from "@/db/schema";
 import {
@@ -13,71 +19,64 @@ import { orderName } from "@/domain/installments";
 import type { TimeOfDay } from "@/domain/reminder";
 import { reminderReconcile } from "@/domain/reminder";
 import { translateNow } from "@/i18n/runtime";
-import { owedPayoffPlansCommand, runPlanningCommand } from "@/state/planning-commands";
-import { readBoolSettingCommand, runSettingsCommand, setBoolSettingCommand } from "@/state/settings-commands";
 
-import { readReminderTime } from "./reminder-sync";
-import { cancelReminders, pendingReminderIds, reminderPermission, scheduleDatedReminder } from "./reminders";
+import { armReminders, readReminderTime } from "./reminder-sync";
+import { Reminders } from "./reminders";
 import type { DatedReminder } from "./reminders";
 
-export function syncInstallmentReminders(db: Database): Promise<void> {
-    const run = queue.then(() => reconcileInstallmentReminders(db));
-    queue = run.catch(() => {
-        // Swallowed so one failed sync does not poison the queue.
-    });
-    return run;
-}
-
-/** Re-arms now rather than on the next foreground, which may come after the notice fired. The write already landed. */
-export function rearmInstallmentReminders(db: Database): void {
-    syncInstallmentReminders(db).catch((error) => {
-        console.error("Installment reminder sync failed", error);
-    });
-}
-
-/** One pass at a time, for the reason `subscription-reminder-sync.ts` gives. */
-let queue: Promise<unknown> = Promise.resolve();
-
-async function reconcileInstallmentReminders(db: Database): Promise<void> {
-    const [enabled, permission, hideAmounts] = await Promise.all([
-        runSettingsCommand(readBoolSettingCommand, { db, key: "installmentReminders" }),
-        reminderPermission(),
-        runSettingsCommand(readBoolSettingCommand, { db, key: "hideAmounts" }),
-    ]);
-    if (enabled && permission === "unknown") {
-        return;
-    }
-    const decision = reminderReconcile(enabled, permission);
-    const pending = await pendingReminderIds();
-    const notices =
-        decision === "schedule"
-            ? await dueNotices(db, new Date(), await readReminderTime(db), installmentReminderCap(pending), hideAmounts)
-            : [];
-
-    await cancelReminders(
-        orphanedInstallmentReminderIds(
-            notices.map((notice) => notice.id),
-            pending
-        )
-    );
-    for (const notice of notices) {
-        // oxlint-disable-next-line no-await-in-loop -- arming mutates the one shared iOS notification queue, which is why `cancelReminders` (lib/reminders.ts) walks it serially too
-        await scheduleDatedReminder(notice);
-    }
-
-    if (decision === "disable") {
-        await runSettingsCommand(setBoolSettingCommand, { db, key: "installmentReminders", value: false });
+export class InstallmentReminderError extends Schema.TaggedError<InstallmentReminderError>()(
+    "InstallmentReminderError",
+    { cause: Schema.Defect() }
+) {
+    // oxlint-disable-next-line class-methods-use-this -- one cause, no attribute: the message has nothing on the instance to read
+    override get message(): string {
+        return "Reading the cuotas to remind failed";
     }
 }
 
-async function dueNotices(
+const cuotaNotices = Effect.fn("InstallmentReminderSync.cuotaNotices")(function* cuotaNotices(
     db: Database,
     now: Date,
     time: TimeOfDay,
     cap: number,
     hideAmounts: boolean
-): Promise<DatedReminder[]> {
-    const debts = debtReminders(await runPlanningCommand(owedPayoffPlansCommand, { db, now }), now, time).map((plan) =>
+) {
+    return yield* Effect.try({
+        catch: (cause) => new InstallmentReminderError({ cause }),
+        try: () => {
+            const names = new Map(
+                db
+                    .select({ id: accounts.id, name: accounts.name })
+                    .from(accounts)
+                    .all()
+                    .map((account) => [account.id, account.name])
+            );
+            const owed = readPlans(db, now).flatMap(({ plan, purchase, standing }) =>
+                standing.rows
+                    .filter((row) => row.status !== "paid")
+                    .map((row) => ({
+                        account: names.get(plan.accountId) ?? "",
+                        amount: row.remaining,
+                        currency: plan.currency,
+                        dueDate: row.row.dueDate,
+                        installmentId: row.row.id,
+                        order: orderName(translateNow, purchase),
+                        planId: plan.id,
+                    }))
+            );
+            return cuotaReminders(owed, now, time, cap).map((cuota) => cuotaNotice(cuota, hideAmounts));
+        },
+    });
+});
+
+const dueNotices = Effect.fn("InstallmentReminderSync.dueNotices")(function* dueNotices(
+    db: Database,
+    now: Date,
+    time: TimeOfDay,
+    cap: number,
+    hideAmounts: boolean
+) {
+    const debts = debtReminders(yield* owedPayoffPlans(db, now), now, time).map((plan) =>
         debtNotice(
             {
                 accountId: plan.account.id,
@@ -90,31 +89,52 @@ async function dueNotices(
             hideAmounts
         )
     );
-    return [...cuotaNotices(db, now, time, cap, hideAmounts), ...debts]
-        .sort((a, b) => a.fireAt.getTime() - b.fireAt.getTime())
-        .slice(0, cap);
-}
+    const cuotas: DatedReminder[] = yield* cuotaNotices(db, now, time, cap, hideAmounts);
+    return [...cuotas, ...debts].sort((a, b) => a.fireAt.getTime() - b.fireAt.getTime()).slice(0, cap);
+});
 
-function cuotaNotices(db: Database, now: Date, time: TimeOfDay, cap: number, hideAmounts: boolean): DatedReminder[] {
-    const names = new Map(
-        db
-            .select({ id: accounts.id, name: accounts.name })
-            .from(accounts)
-            .all()
-            .map((account) => [account.id, account.name])
-    );
-    const owed = readPlans(db, now).flatMap(({ plan, purchase, standing }) =>
-        standing.rows
-            .filter((row) => row.status !== "paid")
-            .map((row) => ({
-                account: names.get(plan.accountId) ?? "",
-                amount: row.remaining,
-                currency: plan.currency,
-                dueDate: row.row.dueDate,
-                installmentId: row.row.id,
-                order: orderName(translateNow, purchase),
-                planId: plan.id,
-            }))
-    );
-    return cuotaReminders(owed, now, time, cap).map((cuota) => cuotaNotice(cuota, hideAmounts));
-}
+const reconcileInstallmentReminders = Effect.fn("InstallmentReminderSync.reconcile")(
+    function* reconcileInstallmentReminders(db: Database) {
+        const reminders = yield* Reminders;
+        const [enabled, permission, hideAmounts] = yield* Effect.all(
+            [readBoolSetting(db, "installmentReminders"), reminders.permission(), readBoolSetting(db, "hideAmounts")],
+            { concurrency: "unbounded" }
+        );
+        if (enabled && permission === "unknown") {
+            return;
+        }
+        const decision = reminderReconcile(enabled, permission);
+        const pending = yield* reminders.pendingIds();
+        const notices =
+            decision === "schedule"
+                ? yield* dueNotices(
+                      db,
+                      new Date(),
+                      yield* readReminderTime(db),
+                      installmentReminderCap(pending),
+                      hideAmounts
+                  )
+                : [];
+
+        yield* reminders.cancel(
+            orphanedInstallmentReminderIds(
+                notices.map((notice) => notice.id),
+                pending
+            )
+        );
+        yield* armReminders(notices);
+
+        if (decision === "disable") {
+            yield* setBoolSetting(db, "installmentReminders", false);
+        }
+    }
+);
+
+/** One pass at a time, for the reason `subscription-reminder-sync.ts` gives. */
+const inFlight = Semaphore.makeUnsafe(1);
+
+export const syncInstallmentReminders = Effect.fn("InstallmentReminderSync.sync")(function* syncInstallmentReminders(
+    db: Database
+) {
+    yield* reconcileInstallmentReminders(db).pipe(inFlight.withPermits(1));
+});

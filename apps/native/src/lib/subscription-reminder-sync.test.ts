@@ -7,55 +7,75 @@ import { setBoolSetting } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
+import type { ReminderPermission } from "@/domain/reminder";
 
-jest.mock("./reminders", () => ({
-    cancelReminders: jest.fn(async () => undefined),
-    pendingReminderIds: jest.fn(async () => ["outlayr.sub-due.a"]),
-    reminderPermission: jest.fn(),
-    scheduleDatedReminder: jest.fn(async () => undefined),
-}));
-
-import * as reminders from "./reminders";
+import { Reminders } from "./reminders";
+import type { DatedReminder } from "./reminders";
 import { syncSubscriptionReminders } from "./subscription-reminder-sync";
 
-const mockReminders = jest.mocked(reminders);
+const mockReminders = {
+    cancel: jest.fn<(ids: readonly string[]) => void>(),
+    pendingIds: jest.fn<() => string[]>(),
+    permission: jest.fn<() => ReminderPermission>(),
+    schedule: jest.fn<(reminder: DatedReminder) => void>(),
+};
+
+const sync = (db: Database, cancel = (ids: readonly string[]) => Effect.sync(() => mockReminders.cancel(ids))) =>
+    Effect.runPromise(
+        syncSubscriptionReminders(db).pipe(
+            Effect.provideService(Reminders, {
+                cancel,
+                pendingIds: () => Effect.sync(() => mockReminders.pendingIds()),
+                permission: () => Effect.sync(() => mockReminders.permission()),
+                request: () => Effect.succeed("granted"),
+                schedule: (reminder) => Effect.sync(() => mockReminders.schedule(reminder)),
+            })
+        )
+    );
+
+const settle = () =>
+    new Promise((resolve) => {
+        setTimeout(resolve, 0);
+    });
 
 describe("syncSubscriptionReminders", () => {
     let db: Database;
 
     beforeEach(async () => {
         db = migratedDatabase();
-        mockReminders.cancelReminders.mockClear();
+        mockReminders.cancel.mockClear();
+        mockReminders.schedule.mockClear();
+        mockReminders.pendingIds.mockReturnValue(["outlayr.sub-due.a"]);
         await Effect.runPromise(setBoolSetting(db, "subscriptionReminders", true));
     });
 
     it("leaves the armed queue alone when the permission could not be read", async () => {
-        mockReminders.reminderPermission.mockResolvedValue("unknown");
+        mockReminders.permission.mockReturnValue("unknown");
 
-        await syncSubscriptionReminders(db);
+        await sync(db);
 
-        expect(mockReminders.cancelReminders).not.toHaveBeenCalled();
+        expect(mockReminders.cancel).not.toHaveBeenCalled();
     });
 
     it("still silences the queue when the switch is off, whatever the permission", async () => {
         await Effect.runPromise(setBoolSetting(db, "subscriptionReminders", false));
-        mockReminders.reminderPermission.mockResolvedValue("unknown");
+        mockReminders.permission.mockReturnValue("unknown");
 
-        await syncSubscriptionReminders(db);
+        await sync(db);
 
-        expect(mockReminders.cancelReminders).toHaveBeenCalledWith(["outlayr.sub-due.a"]);
+        expect(mockReminders.cancel).toHaveBeenCalledWith(["outlayr.sub-due.a"]);
     });
 
     it("drops the orphans when the permission is granted and nothing is due", async () => {
-        mockReminders.reminderPermission.mockResolvedValue("granted");
+        mockReminders.permission.mockReturnValue("granted");
 
-        await syncSubscriptionReminders(db);
+        await sync(db);
 
-        expect(mockReminders.cancelReminders).toHaveBeenCalledWith(["outlayr.sub-due.a"]);
+        expect(mockReminders.cancel).toHaveBeenCalledWith(["outlayr.sub-due.a"]);
     });
 
     it("arms a due charge with its copy and the row a tap opens", async () => {
-        mockReminders.reminderPermission.mockResolvedValue("granted");
+        mockReminders.permission.mockReturnValue("granted");
         const today = new Date();
         await db.insert(transactions).values({
             amount: 7.06,
@@ -71,9 +91,9 @@ describe("syncSubscriptionReminders", () => {
             updatedAt: today,
         });
 
-        await syncSubscriptionReminders(db);
+        await sync(db);
 
-        expect(mockReminders.scheduleDatedReminder).toHaveBeenCalledWith(
+        expect(mockReminders.schedule).toHaveBeenCalledWith(
             expect.objectContaining({
                 data: { charge: expect.any(String), subscription: "prime" },
                 title: "$7.06 · Prime Video",
@@ -82,9 +102,9 @@ describe("syncSubscriptionReminders", () => {
     });
 
     it("swaps the armed single notices for one digest once a second charge joins their morning", async () => {
-        mockReminders.reminderPermission.mockResolvedValue("granted");
-        mockReminders.pendingReminderIds.mockResolvedValueOnce(["outlayr.sub-due.netflix", "outlayr.sub-due.prime"]);
-        mockReminders.scheduleDatedReminder.mockClear();
+        mockReminders.permission.mockReturnValue("granted");
+        mockReminders.pendingIds.mockReturnValueOnce(["outlayr.sub-due.netflix", "outlayr.sub-due.prime"]);
+        mockReminders.schedule.mockClear();
         const today = new Date();
         await db.insert(transactions).values(
             ["netflix", "prime"].map((id) => ({
@@ -102,14 +122,31 @@ describe("syncSubscriptionReminders", () => {
             }))
         );
 
-        await syncSubscriptionReminders(db);
+        await sync(db);
 
-        expect(mockReminders.cancelReminders).toHaveBeenCalledWith([
-            "outlayr.sub-due.netflix",
-            "outlayr.sub-due.prime",
-        ]);
-        expect(mockReminders.scheduleDatedReminder.mock.calls).toStrictEqual([
+        expect(mockReminders.cancel).toHaveBeenCalledWith(["outlayr.sub-due.netflix", "outlayr.sub-due.prime"]);
+        expect(mockReminders.schedule.mock.calls).toStrictEqual([
             [expect.objectContaining({ data: { open: "log" }, title: "2 charges tomorrow" })],
         ]);
+    });
+
+    it("runs overlapping passes one at a time, so one cannot cancel what the other armed", async () => {
+        mockReminders.permission.mockReturnValue("granted");
+        const gate = Promise.withResolvers<undefined>();
+        let cancels = 0;
+        const held = () =>
+            Effect.promise(async () => {
+                cancels += 1;
+                await gate.promise;
+            });
+
+        const both = Promise.all([sync(db, held), sync(db, held)]);
+        await settle();
+        await settle();
+        expect(cancels).toBe(1);
+
+        gate.resolve(undefined);
+        await both;
+        expect(cancels).toBe(2);
     });
 });

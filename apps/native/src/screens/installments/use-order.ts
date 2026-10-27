@@ -8,11 +8,11 @@ import { useInstallmentPlans } from "@/data/installments";
 import type { InstallmentRow, PlanWithStanding } from "@/data/installments-core";
 import { useNow } from "@/data/use-now";
 import { useTranslation } from "@/i18n/context";
-import { rearmInstallmentReminders } from "@/lib/installment-reminder-sync";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
 import { deleteInstallmentPlanCommand } from "@/state/planning-commands";
+import { rearmInstallmentReminders } from "@/state/surfaces-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 
 /** `leave` goes back once, however often it is asked. */

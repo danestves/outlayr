@@ -1,7 +1,13 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import * as Effect from "effect/Effect";
 import type { NotificationRequestInput } from "expo-notifications";
 
-import { requestReminderPermission, scheduleDatedReminder } from "./reminders";
+import type { DatedReminder } from "./reminders";
+import { Reminders } from "./reminders";
+
+const requestReminderPermission = () => Effect.runPromise(Reminders.pipe(Effect.flatMap((r) => r.request())));
+const scheduleDatedReminder = (reminder: DatedReminder) =>
+    Effect.runPromise(Reminders.pipe(Effect.flatMap((r) => r.schedule(reminder))));
 
 const mockCalls: string[] = [];
 const mockSchedule = jest.fn<(request: NotificationRequestInput) => Promise<string>>(async () => "id");

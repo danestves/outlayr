@@ -137,7 +137,7 @@ function spyResidue(failures: { photos?: unknown; spotlight?: unknown } = {}): {
         residue: {
             clearSpotlight() {
                 calls.push("spotlight");
-                return "spotlight" in failures ? Promise.reject(failures.spotlight) : Promise.resolve();
+                return "spotlight" in failures ? Effect.fail(failures.spotlight) : Effect.void;
             },
             clearStoredPhotos() {
                 calls.push("photos");

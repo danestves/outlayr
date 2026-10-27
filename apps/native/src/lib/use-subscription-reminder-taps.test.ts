@@ -12,6 +12,11 @@ const mockNavigate = jest.fn();
 const mockRouter = { navigate: mockNavigate };
 const mockTaps: { last: unknown; listener: ((response: unknown) => void) | null } = { last: null, listener: null };
 
+jest.mock<Partial<typeof import("@react-native-async-storage/async-storage")>>(
+    "@react-native-async-storage/async-storage",
+    () => require("@react-native-async-storage/async-storage/jest/async-storage-mock")
+);
+jest.mock("expo-core-spotlight", () => ({ __esModule: true, default: {} }));
 jest.mock("expo-router", () => ({ useRouter: () => mockRouter }));
 jest.mock("expo-notifications", () => ({
     addNotificationResponseReceivedListener: (listener: (response: unknown) => void) => {

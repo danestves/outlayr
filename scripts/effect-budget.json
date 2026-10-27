@@ -67,8 +67,6 @@
     "apps/native/src/lib/use-purchase-listener.ts": 1,
     "apps/native/src/lib/use-relock.android.ts": 1,
     "apps/native/src/lib/use-relock.ts": 1,
-    "apps/native/src/lib/use-subscription-reminder-taps.ts": 1,
-    "apps/native/src/lib/use-wallet-push-taps.ts": 1,
     "apps/native/src/navigation/tab-pause-provider.tsx": 1,
     "apps/native/src/screens/accounts/detail.tsx": 1,
     "apps/native/src/screens/budgets/components/budget-limit-picker.tsx": 1,

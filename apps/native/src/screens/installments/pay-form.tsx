@@ -23,10 +23,10 @@ import { quotedByBcv } from "@/domain/transaction-form-labels";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
-import { rearmInstallmentReminders } from "@/lib/installment-reminder-sync";
 import { useHaptics } from "@/lib/use-haptics";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
 import { recordInstallmentPaymentCommand } from "@/state/planning-commands";
+import { rearmInstallmentReminders } from "@/state/surfaces-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
