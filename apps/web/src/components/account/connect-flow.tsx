@@ -1,8 +1,9 @@
 import { useAction, useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import { useState } from "react";
 import type { FormEvent, ReactNode } from "react";
-import { z } from "zod";
 
 import { authClient } from "@/lib/auth-client";
 import { authorize, findAuthRequest, getAuthRequest, redirectHost, scopeTitle } from "@/lib/consent";
@@ -10,9 +11,11 @@ import type { AuthRequest } from "@/lib/consent";
 
 import { ErrorLine, Field, LINE_PILL, Screen, SOLID_PILL } from "./parts";
 
+const decodeMessage = Schema.decodeUnknownOption(Schema.String);
+
 function failure(cause: unknown): string {
-    const message = cause instanceof ConvexError ? z.string().safeParse(cause.data) : null;
-    return message?.success ? message.data : "Something went wrong. Try again.";
+    const message = cause instanceof ConvexError ? decodeMessage(cause.data) : Option.none();
+    return Option.getOrElse(message, () => "Something went wrong. Try again.");
 }
 
 export function ConnectFlow({ requestId }: { requestId: string | undefined }) {

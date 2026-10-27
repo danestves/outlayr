@@ -2,23 +2,28 @@ import path from "node:path";
 
 import { defineCollection, defineConfig } from "@content-collections/core";
 import { compileMDX } from "@content-collections/mdx";
+import * as Schema from "effect/Schema";
 import GithubSlugger from "github-slugger";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
-import { z } from "zod";
 
 const HEADING = /^(#{1,6})\s+(.+)$/;
+
+const decodeLocale = Schema.decodeUnknownSync(Schema.Literals(["en", "es"]));
+const decodeSlug = Schema.decodeUnknownSync(Schema.Literals(["terms", "privacy", "delete-account"]));
 
 const legal = defineCollection({
     directory: "content/legal",
     include: "**/*.mdx",
     name: "legal",
-    schema: z.object({
-        content: z.string(),
-        description: z.string(),
-        intro: z.string(),
-        title: z.string(),
-    }),
+    schema: Schema.toStandardSchemaV1(
+        Schema.Struct({
+            content: Schema.String,
+            description: Schema.String,
+            intro: Schema.String,
+            title: Schema.String,
+        })
+    ),
     transform: async (document, context) => {
         const { _meta, content, ...frontmatter } = document;
         const slugger = new GithubSlugger();
@@ -32,9 +37,9 @@ const legal = defineCollection({
         });
         return {
             ...frontmatter,
-            locale: z.enum(["en", "es"]).parse(_meta.directory),
+            locale: decodeLocale(_meta.directory),
             mdx: await compileMDX(context, document, { rehypePlugins: [rehypeSlug], remarkPlugins: [remarkGfm] }),
-            slug: z.enum(["terms", "privacy", "delete-account"]).parse(path.basename(_meta.fileName, ".mdx")),
+            slug: decodeSlug(path.basename(_meta.fileName, ".mdx")),
             toc,
         };
     },

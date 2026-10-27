@@ -1,17 +1,24 @@
-import { z } from "zod";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 
 import facts from "../../public/llms.txt?raw";
 
-const RpcCall = z.object({
-    id: z.union([z.string(), z.number()]).nullish(),
-    jsonrpc: z.literal("2.0"),
-    method: z.string(),
-    params: z.unknown(),
+const RpcCall = Schema.Struct({
+    id: Schema.optionalKey(Schema.NullOr(Schema.Union([Schema.String, Schema.Finite]))),
+    jsonrpc: Schema.Literal("2.0"),
+    method: Schema.String,
+    params: Schema.Unknown,
 });
 
-const SendMessageParams = z.object({
-    message: z.object({ contextId: z.string().optional(), parts: z.array(z.unknown()) }),
+const SendMessageParams = Schema.Struct({
+    message: Schema.Struct({
+        contextId: Schema.optionalKey(Schema.String),
+        parts: Schema.Array(Schema.Unknown),
+    }),
 });
+
+const decodeRpcCall = Schema.decodeUnknownOption(RpcCall);
+const decodeSendMessageParams = Schema.decodeUnknownOption(SendMessageParams);
 
 interface AgentMessage {
     contextId: string;
@@ -34,26 +41,26 @@ export async function answerA2a(request: Request): Promise<Response> {
     } catch {
         return reply(null, { error: { code: -32_700, message: "Parse error" } });
     }
-    const call = RpcCall.safeParse(body);
-    if (!call.success) {
+    const call = decodeRpcCall(body);
+    if (Option.isNone(call)) {
         return reply(null, { error: { code: -32_600, message: "Invalid Request" } });
     }
-    const id = call.data.id ?? null;
+    const id = call.value.id ?? null;
     const version = request.headers.get("a2a-version") ?? new URL(request.url).searchParams.get("A2A-Version") ?? "";
     if (!SUPPORTED_VERSION.test(version)) {
         return reply(id, { error: { code: -32_009, message: "Only A2A-Version 1.0 is supported" } });
     }
-    if (call.data.method !== "SendMessage") {
+    if (call.value.method !== "SendMessage") {
         return reply(id, { error: { code: -32_601, message: "Method not found" } });
     }
-    const params = SendMessageParams.safeParse(call.data.params);
-    if (!params.success) {
+    const params = decodeSendMessageParams(call.value.params);
+    if (Option.isNone(params)) {
         return reply(id, { error: { code: -32_602, message: "params.message with parts is required" } });
     }
     return reply(id, {
         result: {
             message: {
-                contextId: params.data.message.contextId ?? crypto.randomUUID(),
+                contextId: params.value.message.contextId ?? crypto.randomUUID(),
                 messageId: crypto.randomUUID(),
                 parts: [{ mediaType: "text/markdown", text: facts }],
                 role: "ROLE_AGENT",

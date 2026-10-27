@@ -24,14 +24,14 @@
         "@tanstack/react-start": "^1.168.49",
         "better-auth": "catalog:",
         "convex": "catalog:",
+        "effect": "catalog:",
         "intlayer": "catalog:",
         "nitro": "3.0.260903-beta",
         "posthog-js": "^1.435.0",
         "react": "19.2.3",
         "react-dom": "19.2.3",
         "react-intlayer": "catalog:",
-        "tailwindcss": "^4.3.3",
-        "zod": "catalog:"
+        "tailwindcss": "^4.3.3"
     },
     "devDependencies": {
         "@content-collections/cli": "^0.1.9",

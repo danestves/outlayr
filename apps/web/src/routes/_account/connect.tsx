@@ -1,7 +1,15 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { z } from "zod";
+import * as Schema from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 import { ConnectFlow } from "@/components/account/connect-flow";
+
+const RequestId = Schema.Union([Schema.String, Schema.Finite]).pipe(
+    Schema.decodeTo(
+        Schema.String,
+        SchemaTransformation.transform<string, string | number>({ decode: String, encode: (id) => id })
+    )
+);
 
 export const Route = createFileRoute("/_account/connect")({
     beforeLoad: ({ context, location }) => {
@@ -11,7 +19,7 @@ export const Route = createFileRoute("/_account/connect")({
     },
     component: Connect,
     head: () => ({ meta: [{ title: "Connect · Outlayr" }] }),
-    validateSearch: z.object({ request: z.coerce.string().optional() }),
+    validateSearch: Schema.toStandardSchemaV1(Schema.Struct({ request: Schema.optional(RequestId) })),
 });
 
 function Connect() {
