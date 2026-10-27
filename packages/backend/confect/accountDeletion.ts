@@ -1,4 +1,5 @@
 import { RateLimiter } from "@convex-dev/rate-limiter";
+import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 import { components } from "../convex/_generated/api";
@@ -80,28 +81,40 @@ export function randomSecret(): string {
         .replaceAll("=", "");
 }
 
-export async function consumeGoogleLocalReceipt(job: DeletionJob, receiptChallenge: string): Promise<DeletionJob> {
-    const receiptDigest = await sha256Hex(receiptChallenge);
-    if (job.phase === "providersRevoked" && job.provider === "googleLocalReceipt") {
-        if (receiptDigest !== job.googleReceiptDigest) {
-            throw new Error("Google local receipt does not match this deletion job");
-        }
-        return job;
+export class GoogleReceiptRejected extends Schema.TaggedError<GoogleReceiptRejected>()("GoogleReceiptRejected", {
+    reason: Schema.Literals(["mismatch", "notAccepted"]),
+}) {
+    override get message(): string {
+        return this.reason === "mismatch"
+            ? "Google local receipt does not match this deletion job"
+            : "Google local receipt cannot be accepted for this deletion job";
     }
-    if (job.phase !== "prepared" || !job.googleReceiptChallengeHash) {
-        throw new Error("Google local receipt cannot be accepted for this deletion job");
-    }
-    if (receiptDigest !== job.googleReceiptChallengeHash) {
-        throw new Error("Google local receipt does not match this deletion job");
-    }
-    return {
-        ...job,
-        googleReceiptChallengeHash: null,
-        googleReceiptDigest: receiptDigest,
-        phase: "providersRevoked",
-        provider: "googleLocalReceipt",
-    };
 }
+
+export const consumeGoogleLocalReceipt = Effect.fn("AccountDeletion.consumeGoogleLocalReceipt")(
+    function* consumeGoogleLocalReceipt(job: DeletionJob, receiptChallenge: string) {
+        const receiptDigest = yield* sha256Hex(receiptChallenge);
+        if (job.phase === "providersRevoked" && job.provider === "googleLocalReceipt") {
+            if (receiptDigest !== job.googleReceiptDigest) {
+                return yield* new GoogleReceiptRejected({ reason: "mismatch" });
+            }
+            return job;
+        }
+        if (job.phase !== "prepared" || !job.googleReceiptChallengeHash) {
+            return yield* new GoogleReceiptRejected({ reason: "notAccepted" });
+        }
+        if (receiptDigest !== job.googleReceiptChallengeHash) {
+            return yield* new GoogleReceiptRejected({ reason: "mismatch" });
+        }
+        return {
+            ...job,
+            googleReceiptChallengeHash: null,
+            googleReceiptDigest: receiptDigest,
+            phase: "providersRevoked",
+            provider: "googleLocalReceipt",
+        } satisfies DeletionJob;
+    }
+);
 
 export function publicStatus(job: Pick<DeletionJob, "errorCode" | "phase">) {
     return { errorCode: job.errorCode, phase: job.phase };

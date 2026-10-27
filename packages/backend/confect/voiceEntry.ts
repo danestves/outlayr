@@ -12,6 +12,7 @@ import { transcribe } from "ai";
 import type { LanguageModel, TranscriptionModel } from "ai";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
+import type { ObjectType } from "convex/values";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -29,6 +30,7 @@ import {
 } from "./lib/ledgerPrompt";
 import type { LedgerContext } from "./lib/ledgerPrompt";
 import { modelCallError, modelSchema } from "./lib/modelCall";
+import { runTransactionEdge } from "./lib/runEdge";
 import type { SpeakResult, SpeakStatus } from "./voiceEntry.spec";
 
 // A Convex value tops out at 1MB; a minute of AAC at the client's 48kbps mono preset is ~360KB.
@@ -289,28 +291,40 @@ export const transcribeClip = Effect.fn("VoiceEntry.transcribeClip")(
 );
 
 // Compared on `tokenIdentifier`, not the bare `subject`: two issuers can hand out the same subject.
-export async function ownsThread(ctx: QueryCtx | MutationCtx | ActionCtx, threadId: string): Promise<string | null> {
-    const identity = await ctx.auth.getUserIdentity();
+export const ownsThread = Effect.fn("VoiceEntry.ownsThread")(function* ownsThread(
+    ctx: QueryCtx | MutationCtx | ActionCtx,
+    threadId: string
+) {
+    const identity = yield* Effect.promise(() => ctx.auth.getUserIdentity());
     if (identity === null) {
         return null;
     }
-    const thread = await getThreadMetadata(ctx, components.agent, { threadId }).catch(() => null);
+    const thread = yield* Effect.promise(() => getThreadMetadata(ctx, components.agent, { threadId })).pipe(
+        Effect.catchDefect(() => Effect.succeed(null))
+    );
     return thread?.userId === identity.tokenIdentifier ? identity.tokenIdentifier : null;
-}
+});
+
+const listTurnsArgs = {
+    paginationOpts: paginationOptsValidator,
+    streamArgs: vStreamArgs,
+    threadId: v.string(),
+};
+
+const readTurns = Effect.fn("VoiceEntry.listTurns")(function* readTurns(
+    ctx: QueryCtx,
+    args: ObjectType<typeof listTurnsArgs>
+) {
+    if ((yield* ownsThread(ctx, args.threadId)) === null) {
+        return { continueCursor: "", isDone: true, page: [], streams: undefined };
+    }
+    const paginated = yield* Effect.promise(() => listUIMessages(ctx, components.agent, args));
+    const streams = yield* Effect.promise(() => syncStreams(ctx, components.agent, args));
+    return { ...paginated, streams };
+});
 
 // Another person's thread reads as empty, so a stale id after sign-out cannot leak their sentences.
 export const listTurns = query({
-    args: {
-        paginationOpts: paginationOptsValidator,
-        streamArgs: vStreamArgs,
-        threadId: v.string(),
-    },
-    handler: async (ctx, args) => {
-        if ((await ownsThread(ctx, args.threadId)) === null) {
-            return { continueCursor: "", isDone: true, page: [], streams: undefined };
-        }
-        const paginated = await listUIMessages(ctx, components.agent, args);
-        const streams = await syncStreams(ctx, components.agent, args);
-        return { ...paginated, streams };
-    },
+    args: listTurnsArgs,
+    handler: (ctx, args) => runTransactionEdge(readTurns(ctx, args)),
 });

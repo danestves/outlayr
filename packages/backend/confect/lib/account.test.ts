@@ -11,6 +11,7 @@ import schema from "../../convex/schema";
 import { authenticatedAs, seedProUser } from "../test.helpers";
 import { purgeUserBatch } from "./account";
 import { photoKeyFor } from "./photoKeys";
+import { runEdge } from "./runEdge";
 
 function harness() {
     const t = convexTest(schema, modules);
@@ -62,7 +63,7 @@ async function purgeAll(t: TestClient, userId: string): Promise<number> {
     let passes = 0;
     let done = false;
     while (!done) {
-        ({ done } = await t.run(async (ctx) => await purgeUserBatch(ctx, userId)));
+        ({ done } = await t.run((ctx) => runEdge(purgeUserBatch(ctx, userId))));
         passes += 1;
         if (passes > 50) {
             throw new Error("purgeUserBatch never reported done");
@@ -123,7 +124,7 @@ describe("purging an account", () => {
             rows: [transactionRow("a")],
         });
 
-        const first = await t.run(async (ctx) => await purgeUserBatch(ctx, owner.userId));
+        const first = await t.run((ctx) => runEdge(purgeUserBatch(ctx, owner.userId)));
         expect(first.done).toBeFalsy();
         const stateAfterFirst = await t.run(async (ctx) =>
             ctx.db

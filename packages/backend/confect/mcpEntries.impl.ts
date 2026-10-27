@@ -12,6 +12,7 @@ import type { TransactionsDoc } from "./_generated/docs";
 import databaseSchema from "./_generated/schema";
 import { DatabaseReader, DatabaseWriter, MutationCtx } from "./_generated/services";
 import { dieAsConvexError } from "./lib/convexError";
+import { refuseWhileDeleting, seqCounter } from "./lib/syncGuards";
 import {
     CategoryRequired,
     choicesOf,
@@ -32,7 +33,6 @@ import spec from "./mcpEntries.spec";
 import { utcOffsetOf } from "./mcpLedger";
 import { setting } from "./mcpLedger.impl";
 import { isPro } from "./revenuecat";
-import { refuseWhileDeleting, seqCounter } from "./sync";
 
 const filedBefore = Effect.fn("McpEntries.filedBefore")(function* filedBefore(
     userId: string,
@@ -72,10 +72,10 @@ const logEntry = FunctionImpl.make(
             const reader = yield* DatabaseReader;
             const writer = yield* DatabaseWriter;
             const { userId } = args.user;
-            if (!(yield* Effect.promise(() => isPro(ctx, userId)))) {
+            if (!(yield* isPro(ctx, userId))) {
                 return yield* new EntryNeedsPro();
             }
-            yield* Effect.promise(() => refuseWhileDeleting(ctx, userId));
+            yield* refuseWhileDeleting(userId);
 
             const income = args.kind === "income";
             const currency = args.currency?.trim().toUpperCase() || (yield* setting(userId, "currency")) || "USD";
@@ -127,9 +127,7 @@ const logEntry = FunctionImpl.make(
             const now = yield* Clock.currentTimeMillis;
             const date = yield* entryInstant(args.date, now, offsetMs);
             const { idempotencyKey } = args;
-            const localId = idempotencyKey
-                ? yield* Effect.promise(() => keyedLocalId(userId, idempotencyKey))
-                : crypto.randomUUID();
+            const localId = idempotencyKey ? yield* keyedLocalId(userId, idempotencyKey) : crypto.randomUUID();
             const entry = {
                 account: account?.name ?? null,
                 amount,
@@ -151,17 +149,15 @@ const logEntry = FunctionImpl.make(
                 return { ...entry, date: localDate(logged.date, offsetMs), note: logged.note };
             }
 
-            const lookup: RateLookup = async (quote, rateType, day) => {
-                const row = await ctx.db
+            const lookup: RateLookup = (quote, rateType, day) =>
+                ctx.db
                     .query("exchangeRates")
                     .withIndex("by_quote_and_rateType_and_date", (q) =>
                         q.eq("quote", quote).eq("rateType", rateType).lte("date", day)
                     )
                     .order("desc")
                     .first();
-                return row ? { date: row.date, rate: row.rate } : null;
-            };
-            const counter = yield* Effect.promise(() => seqCounter(ctx, userId));
+            const counter = yield* seqCounter(userId);
             const valuation = yield* Effect.promise(() =>
                 canonicalUsd(lookup, { amount, currency, date: new Date(date), displayCurrency: currency })
             );
@@ -198,10 +194,11 @@ const logEntry = FunctionImpl.make(
                 updatedAt: now,
                 userId,
             });
-            yield* Effect.promise(() => counter.advanceTo(counter.nextSeq + 1));
+            yield* counter.advanceTo(counter.nextSeq + 1);
             return entry;
         },
         Effect.catchTags({
+            AccountDeleting: dieAsConvexError,
             AmbiguousName: dieAsConvexError,
             CategoryRequired: dieAsConvexError,
             EntryNeedsPro: dieAsConvexError,

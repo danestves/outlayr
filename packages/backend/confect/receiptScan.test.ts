@@ -11,6 +11,7 @@ import { captureLimiter, FREE_CAPTURE_CONFIG } from "./lib/captures";
 import { LANGUAGE_PATTERN } from "./lib/ledgerPrompt";
 import { perUserBurst } from "./lib/limits";
 import { AI_CONSENT_VERSION } from "./lib/models";
+import { runEdge } from "./lib/runEdge";
 import {
     buildPrompt,
     looksLikeJpeg,
@@ -337,10 +338,11 @@ describe("scan guard ladder", () => {
             throw new Error("Expected an authenticated identity");
         }
 
+        const burst = await runEdge(perUserBurst("receiptScan", false));
         await t.run(async (ctx) =>
             rateLimiter.limit(ctx, "receiptScanPerUser", {
-                config: perUserBurst("receiptScan", false),
-                count: perUserBurst("receiptScan", false).capacity,
+                config: burst,
+                count: burst.capacity,
                 key: tokenIdentifier,
             })
         );

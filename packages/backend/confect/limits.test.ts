@@ -8,6 +8,7 @@ import { describe, expect, it } from "vite-plus/test";
 import { api } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import { perUserBurst } from "./lib/limits";
+import { runEdge } from "./lib/runEdge";
 import { rateLimiter } from "./receiptScan";
 import { authenticatedAs, grantPro, seedAuthUser } from "./test.helpers";
 
@@ -29,9 +30,8 @@ describe("limits.mine", () => {
         const t = harness();
         const asUser = authenticatedAs(t, await seedAuthUser(t));
         const key = await asUser.run(async (ctx) => (await ctx.auth.getUserIdentity())?.tokenIdentifier);
-        await t.run((ctx) =>
-            rateLimiter.limit(ctx, "receiptScanPerUser", { config: perUserBurst("receiptScan", false), count: 3, key })
-        );
+        const config = await runEdge(perUserBurst("receiptScan", false));
+        await t.run((ctx) => rateLimiter.limit(ctx, "receiptScanPerUser", { config, count: 3, key }));
 
         const limits = await asUser.query(api.limits.mine, {});
 

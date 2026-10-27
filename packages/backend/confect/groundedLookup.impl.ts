@@ -13,7 +13,7 @@ const run = FunctionImpl.make(
     "run",
     Effect.fn("GroundedLookup.run")(function* run(args) {
         const ctx = yield* ActionCtx;
-        yield* Effect.promise(() => runGroundedLookup(ctx, args));
+        yield* runGroundedLookup(ctx, args);
         return null;
     })
 );

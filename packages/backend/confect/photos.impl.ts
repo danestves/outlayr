@@ -56,7 +56,7 @@ const photoUrl = Effect.fn("Photos.photoUrl")(function* photoUrl(key: string) {
             Effect.catchTags({ BlobNotFoundError: () => Effect.succeed(null) })
         );
     }
-    return usingR2() ? yield* Effect.promise(() => r2.getUrl(key, { expiresIn: PHOTO_URL_TTL_SECONDS })) : null;
+    return (yield* usingR2) ? yield* Effect.promise(() => r2.getUrl(key, { expiresIn: PHOTO_URL_TTL_SECONDS })) : null;
 });
 
 // Refused before a url is minted: once a client holds a signed PUT the bytes are R2's problem. It bounds what is
@@ -103,15 +103,15 @@ const requestUpload = FunctionImpl.make(
     Effect.fn("Photos.requestUpload")(
         function* requestUpload(args) {
             const ctx = yield* MutationCtx;
-            const userId = yield* Effect.promise(() => requireUserId(ctx));
-            yield* Effect.promise(() => requirePro(ctx, userId));
+            const userId = yield* requireUserId(ctx);
+            yield* requirePro(ctx, userId);
             if (!isPhotoName(args.name)) {
                 return yield* new NotAPhotoName({ name: args.name });
             }
             yield* checkPhotoQuota(userId);
             const key = photoKeyFor(userId, args.name);
             yield* reserveUploadKey(userId, key);
-            if (usingR2()) {
+            if (yield* usingR2) {
                 return yield* Effect.promise(() => r2.generateUploadUrl(key));
             }
             const storage = yield* StorageWriter;
@@ -120,6 +120,8 @@ const requestUpload = FunctionImpl.make(
         },
         Effect.catchTags({
             NotAPhotoName: dieAsConvexError,
+            ProRequired: dieAsConvexError,
+            Unauthenticated: dieAsConvexError,
             PhotoQuotaExceeded: ({ limit, used }) =>
                 Effect.die(new ConvexError({ code: "PHOTO_QUOTA_EXCEEDED", limit, used })),
             PhotoUploadsUnconfirmed: ({ limit }) =>
@@ -133,10 +135,14 @@ const callerId = FunctionImpl.make(
     databaseSchema,
     spec,
     "callerId",
-    Effect.fn("Photos.callerId")(function* callerId() {
-        const ctx = yield* QueryCtx;
-        return yield* Effect.promise(() => requireUserId(ctx));
-    })
+    Effect.fn("Photos.callerId")(
+        function* callerId() {
+            const ctx = yield* QueryCtx;
+            return yield* requireUserId(ctx);
+        },
+        Effect.catchTags({ Unauthenticated: dieAsConvexError }),
+        Effect.orDie
+    )
 );
 
 // An action because `syncMetadata` reads the object back out of R2. A crash before this call leaves a durable photo
@@ -268,7 +274,7 @@ const readUrls = FunctionImpl.make(
     Effect.fn("Photos.readUrls")(
         function* readUrls(args) {
             const ctx = yield* MutationCtx;
-            const userId = yield* Effect.promise(() => requireUserId(ctx));
+            const userId = yield* requireUserId(ctx);
             if (args.keys.length > PHOTO_URL_BATCH_LIMIT) {
                 return yield* new PhotoReadTooLarge({ keys: args.keys.length, limit: PHOTO_URL_BATCH_LIMIT });
             }
@@ -280,7 +286,7 @@ const readUrls = FunctionImpl.make(
             );
             return minted.filter((entry): entry is { key: string; url: string } => Boolean(entry));
         },
-        Effect.catchTags({ PhotoReadTooLarge: dieAsConvexError }),
+        Effect.catchTags({ PhotoReadTooLarge: dieAsConvexError, Unauthenticated: dieAsConvexError }),
         Effect.orDie
     )
 );
@@ -313,7 +319,7 @@ const releaseUnreferenced = FunctionImpl.make(
             const reader = yield* DatabaseReader;
             const writer = yield* DatabaseWriter;
             const storage = yield* StorageWriter;
-            const userId = yield* Effect.promise(() => requireUserId(ctx));
+            const userId = yield* requireUserId(ctx);
             if (!ownsPhotoKey(userId, args.key)) {
                 return yield* new PhotoNotOwned();
             }
@@ -330,13 +336,13 @@ const releaseUnreferenced = FunctionImpl.make(
                 yield* forgetPhotoSize(args.key);
                 return { released: true };
             }
-            if (usingR2()) {
+            if (yield* usingR2) {
                 yield* Effect.promise(() => r2.deleteObject(ctx, args.key));
             }
             yield* forgetPhotoSize(args.key);
             return { released: true };
         },
-        Effect.catchTags({ PhotoNotOwned: dieAsConvexError }),
+        Effect.catchTags({ PhotoNotOwned: dieAsConvexError, Unauthenticated: dieAsConvexError }),
         Effect.orDie
     )
 );

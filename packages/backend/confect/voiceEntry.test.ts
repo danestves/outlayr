@@ -13,8 +13,9 @@ import { api, components } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import { captureLimiter, FREE_CAPTURE_CONFIG } from "./lib/captures";
 import { namesWithinBudget } from "./lib/ledgerPrompt";
-import { perUserBurst } from "./lib/limits";
+import { fixedBurst, perUserBurst } from "./lib/limits";
 import { AI_CONSENT_VERSION } from "./lib/models";
+import { runEdge } from "./lib/runEdge";
 import { authenticatedAs, seedAuthUser } from "./test.helpers";
 import {
     buildPrompt,
@@ -418,8 +419,8 @@ describe("voice thread + speak guard ladder", () => {
         }
         await t.run(async (ctx) =>
             rateLimiter.limit(ctx, "voiceThreadPerUser", {
-                config: perUserBurst("voiceThread", false),
-                count: perUserBurst("voiceThread", false).capacity,
+                config: fixedBurst("voiceThread", false),
+                count: fixedBurst("voiceThread", false).capacity,
                 key: tokenIdentifier,
             })
         );
@@ -468,10 +469,11 @@ describe("voice thread + speak guard ladder", () => {
         if (!tokenIdentifier) {
             throw new Error("Expected an authenticated identity");
         }
+        const burst = await runEdge(perUserBurst("voiceEntry", false));
         await t.run(async (ctx) =>
             rateLimiter.limit(ctx, "voiceEntryPerUser", {
-                config: perUserBurst("voiceEntry", false),
-                count: perUserBurst("voiceEntry", false).capacity,
+                config: burst,
+                count: burst.capacity,
                 key: tokenIdentifier,
             })
         );

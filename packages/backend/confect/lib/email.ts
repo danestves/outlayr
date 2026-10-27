@@ -1,4 +1,11 @@
-import { env } from "@outlayr/env/backend";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
+
+import { emailConfig } from "./config";
 
 export const EMAIL_CODE_TTL_SECONDS = 10 * 60;
 
@@ -85,22 +92,44 @@ export function accountExistsEmail(language: Language): Email {
     return ACCOUNT_EXISTS_EMAIL[language];
 }
 
-const SEND_TIMEOUT_MS = 10_000;
+const SEND_TIMEOUT = Duration.seconds(10);
 
-export const emailConfigured = Boolean(env.CLOUDFLARE_ACCOUNT_ID && env.CLOUDFLARE_EMAIL_TOKEN && env.EMAIL_FROM);
-
-export async function sendEmail(to: string, { subject, text }: Email): Promise<void> {
-    const { CLOUDFLARE_ACCOUNT_ID: account, CLOUDFLARE_EMAIL_TOKEN: token, EMAIL_FROM: from } = env;
-    if (!(account && token && from)) {
-        throw new Error("Email needs CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_EMAIL_TOKEN and EMAIL_FROM");
-    }
-    const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${account}/email/sending/send`, {
-        body: JSON.stringify({ from: { address: from, name: "Outlayr" }, subject, text, to }),
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        method: "POST",
-        signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
-    });
-    if (!response.ok) {
-        throw new Error(`Cloudflare refused the email with ${response.status}`);
+export class EmailError extends Schema.TaggedError<EmailError>()("EmailError", {
+    cause: Schema.optional(Schema.Defect()),
+    reason: Schema.Literals(["unconfigured", "transport", "status"]),
+    status: Schema.optional(Schema.Number),
+}) {
+    override get message(): string {
+        if (this.reason === "unconfigured") {
+            return "Email needs CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_EMAIL_TOKEN and EMAIL_FROM";
+        }
+        if (this.reason === "status") {
+            return `Cloudflare refused the email with ${this.status}`;
+        }
+        return "Email request failed";
     }
 }
+
+const transport = (cause: unknown) => new EmailError({ cause, reason: "transport" });
+
+export const sendEmail = Effect.fn("Email.send")(function* sendEmail(to: string, { subject, text }: Email) {
+    const config = yield* emailConfig;
+    if (Option.isNone(config)) {
+        return yield* new EmailError({ reason: "unconfigured" });
+    }
+    const { accountId, from, token } = config.value;
+    const request = yield* HttpClientRequest.post(
+        `https://api.cloudflare.com/client/v4/accounts/${accountId}/email/sending/send`
+    ).pipe(
+        HttpClientRequest.bearerToken(token),
+        HttpClientRequest.bodyJson({ from: { address: from, name: "Outlayr" }, subject, text, to }),
+        Effect.catchTags({ HttpBodyError: transport })
+    );
+    const response = yield* HttpClient.execute(request).pipe(
+        Effect.timeout(SEND_TIMEOUT),
+        Effect.catchTags({ HttpClientError: transport, TimeoutError: transport })
+    );
+    if (response.status < 200 || response.status >= 300) {
+        return yield* new EmailError({ reason: "status", status: response.status });
+    }
+});

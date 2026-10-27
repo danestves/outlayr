@@ -11,6 +11,7 @@ import { MAX_NAME_LENGTH, rateLimiter, sanitizeCurrencyCode, sanitizeRegionCode 
 import { MAX_ACK_IDS, MAX_RESULTS, MIN_NAME_LENGTH, pool, settled, work } from "./enrichmentQueue";
 import spec from "./enrichmentQueue.spec";
 import { optionalUserId, requireUserId } from "./lib/auth";
+import { dieAsConvexError } from "./lib/convexError";
 import { AI_CONSENT_VERSION } from "./lib/models";
 import { isPro } from "./revenuecat";
 
@@ -18,62 +19,70 @@ const enqueue = FunctionImpl.make(
     databaseSchema,
     spec,
     "enqueue",
-    Effect.fn("EnrichmentQueue.enqueue")(function* enqueue(args) {
-        const ctx = yield* MutationCtx;
-        const userId = yield* Effect.promise(() => requireUserId(ctx));
-        const name = args.name.trim();
-        if (args.aiConsent !== AI_CONSENT_VERSION || name.length < MIN_NAME_LENGTH || name.length > MAX_NAME_LENGTH) {
-            return false;
-        }
-        const gate = yield* Effect.promise(() => rateLimiter.limit(ctx, "enrichmentQueue", { key: userId }));
-        if (!gate.ok) {
-            return false;
-        }
-        const auth = yield* Auth;
-        const identity = yield* auth.getUserIdentity.pipe(
-            Effect.catchTags({ NoUserIdentityFoundError: () => Effect.succeed(null) })
-        );
-        const { runQuery } = yield* QueryRunner;
-        const grounded =
-            args.groundedLookup &&
-            identity !== null &&
-            (yield* runQuery(refs.internal.enrichment.groundedConsent)) &&
-            (yield* Effect.promise(() => isPro(ctx, identity.subject)));
-        const reader = yield* DatabaseReader;
-        const writer = yield* DatabaseWriter;
-        const existing = yield* reader
-            .table("enrichmentJobs")
-            .get("by_user_and_localId", userId, args.localId)
-            .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
-        if (existing !== null) {
-            yield* writer.table("enrichmentJobs").delete(existing._id);
-        }
-        const jobId = yield* writer.table("enrichmentJobs").insert({
-            categoryTree: args.categoryTree,
-            currency: sanitizeCurrencyCode(args.currency),
-            grounded,
-            income: args.income,
-            localId: args.localId,
-            locale: args.locale,
-            name,
-            regionCode: sanitizeRegionCode(args.regionCode),
-            status: "queued",
-            userId,
-        });
-        yield* Effect.promise((): Promise<WorkId> =>
-            pool.enqueueAction(
-                ctx,
-                internal.enrichmentQueue.work,
-                { jobId },
-                {
-                    context: { jobId },
-                    onComplete: internal.enrichmentQueue.settled,
-                    onCompleteExcludeKinds: ["success"],
-                }
-            )
-        );
-        return true;
-    }, Effect.orDie)
+    Effect.fn("EnrichmentQueue.enqueue")(
+        function* enqueue(args) {
+            const ctx = yield* MutationCtx;
+            const userId = yield* requireUserId(ctx);
+            const name = args.name.trim();
+            if (
+                args.aiConsent !== AI_CONSENT_VERSION ||
+                name.length < MIN_NAME_LENGTH ||
+                name.length > MAX_NAME_LENGTH
+            ) {
+                return false;
+            }
+            const gate = yield* Effect.promise(() => rateLimiter.limit(ctx, "enrichmentQueue", { key: userId }));
+            if (!gate.ok) {
+                return false;
+            }
+            const auth = yield* Auth;
+            const identity = yield* auth.getUserIdentity.pipe(
+                Effect.catchTags({ NoUserIdentityFoundError: () => Effect.succeed(null) })
+            );
+            const { runQuery } = yield* QueryRunner;
+            const grounded =
+                args.groundedLookup &&
+                identity !== null &&
+                (yield* runQuery(refs.internal.enrichment.groundedConsent)) &&
+                (yield* isPro(ctx, identity.subject));
+            const reader = yield* DatabaseReader;
+            const writer = yield* DatabaseWriter;
+            const existing = yield* reader
+                .table("enrichmentJobs")
+                .get("by_user_and_localId", userId, args.localId)
+                .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
+            if (existing !== null) {
+                yield* writer.table("enrichmentJobs").delete(existing._id);
+            }
+            const jobId = yield* writer.table("enrichmentJobs").insert({
+                categoryTree: args.categoryTree,
+                currency: sanitizeCurrencyCode(args.currency),
+                grounded,
+                income: args.income,
+                localId: args.localId,
+                locale: args.locale,
+                name,
+                regionCode: sanitizeRegionCode(args.regionCode),
+                status: "queued",
+                userId,
+            });
+            yield* Effect.promise((): Promise<WorkId> =>
+                pool.enqueueAction(
+                    ctx,
+                    internal.enrichmentQueue.work,
+                    { jobId },
+                    {
+                        context: { jobId },
+                        onComplete: internal.enrichmentQueue.settled,
+                        onCompleteExcludeKinds: ["success"],
+                    }
+                )
+            );
+            return true;
+        },
+        Effect.catchTags({ Unauthenticated: dieAsConvexError }),
+        Effect.orDie
+    )
 );
 
 const job = FunctionImpl.make(
@@ -116,7 +125,7 @@ const results = FunctionImpl.make(
     "results",
     Effect.fn("EnrichmentQueue.results")(function* results() {
         const ctx = yield* QueryCtx;
-        const userId = yield* Effect.promise(() => optionalUserId(ctx));
+        const userId = yield* optionalUserId(ctx);
         if (userId === null) {
             return [];
         }
@@ -142,22 +151,26 @@ const ack = FunctionImpl.make(
     databaseSchema,
     spec,
     "ack",
-    Effect.fn("EnrichmentQueue.ack")(function* ack(args) {
-        const ctx = yield* MutationCtx;
-        const userId = yield* Effect.promise(() => requireUserId(ctx));
-        const reader = yield* DatabaseReader;
-        const writer = yield* DatabaseWriter;
-        for (const localId of args.localIds.slice(0, MAX_ACK_IDS)) {
-            const row = yield* reader
-                .table("enrichmentJobs")
-                .get("by_user_and_localId", userId, localId)
-                .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
-            if (row !== null && row.status !== "queued") {
-                yield* writer.table("enrichmentJobs").delete(row._id);
+    Effect.fn("EnrichmentQueue.ack")(
+        function* ack(args) {
+            const ctx = yield* MutationCtx;
+            const userId = yield* requireUserId(ctx);
+            const reader = yield* DatabaseReader;
+            const writer = yield* DatabaseWriter;
+            for (const localId of args.localIds.slice(0, MAX_ACK_IDS)) {
+                const row = yield* reader
+                    .table("enrichmentJobs")
+                    .get("by_user_and_localId", userId, localId)
+                    .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
+                if (row !== null && row.status !== "queued") {
+                    yield* writer.table("enrichmentJobs").delete(row._id);
+                }
             }
-        }
-        return null;
-    }, Effect.orDie)
+            return null;
+        },
+        Effect.catchTags({ Unauthenticated: dieAsConvexError }),
+        Effect.orDie
+    )
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(

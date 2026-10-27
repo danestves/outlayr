@@ -11,7 +11,7 @@ import type { Suggestion } from "./enrichment.spec";
 import { PICKABLE_CURRENCY_CODES } from "./lib/currencies";
 import { describeTree } from "./lib/ledgerPrompt";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
-import { perUserBurst } from "./lib/limits";
+import { fixedBurst } from "./lib/limits";
 import { knowledgeKey } from "./lib/merchantKey";
 import { modelCallError, modelSchema } from "./lib/modelCall";
 import { DOMAIN_PATTERN, MAX_DOMAIN_LENGTH, MAX_TAG_LENGTH, MAX_TAGS, PICTOGRAPHIC } from "./lib/sanitizeLimits";
@@ -63,7 +63,7 @@ const modelOutputSchema = modelSchema(ModelOutput);
 
 /** Keyed by `identity.tokenIdentifier`, never a client argument; checked before the sharded global limit. */
 export const rateLimiter = new RateLimiter(components.rateLimiter, {
-    enrichmentBackground: perUserBurst("enrichmentBackground", false),
+    enrichmentBackground: fixedBurst("enrichmentBackground", false),
     // `shards: 10` is load-bearing: one unsharded counter throws OCC conflicts.
     enrichmentGlobal: {
         kind: "fixed window",
@@ -71,8 +71,8 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
         rate: 2000,
         shards: 10,
     },
-    enrichmentPerUser: perUserBurst("enrichment", false),
-    enrichmentQueue: perUserBurst("enrichmentQueue", false),
+    enrichmentPerUser: fixedBurst("enrichment", false),
+    enrichmentQueue: fixedBurst("enrichmentQueue", false),
     // Consumed in `groundedLookup.run` and `enrichmentQueue.resolveJob`; `maybeScheduleGrounded` only reads it.
     groundedPerKey: {
         capacity: 1,

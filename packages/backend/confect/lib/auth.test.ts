@@ -1,12 +1,12 @@
 /// <reference types="vite/client" />
 
 import { convexTest } from "convex-test";
-import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vite-plus/test";
 
 import schema from "../../convex/schema";
 import { authenticatedAs, seedAuthUser } from "../test.helpers";
-import { optionalUserId, requireUserId } from "./auth";
+import { optionalUserId, requireUserId, Unauthenticated } from "./auth";
+import { runEdge } from "./runEdge";
 
 const modules = import.meta.glob("../../convex/**/*.ts");
 
@@ -15,7 +15,7 @@ describe(requireUserId, () => {
         const t = convexTest(schema, modules);
         const identity = await seedAuthUser(t);
 
-        const resolved = await authenticatedAs(t, identity).run((ctx) => requireUserId(ctx));
+        const resolved = await authenticatedAs(t, identity).run((ctx) => runEdge(requireUserId(ctx)));
 
         expect(resolved).toBe(identity.userId);
     });
@@ -23,7 +23,7 @@ describe(requireUserId, () => {
     it("throws a ConvexError when there is no identity", async () => {
         const t = convexTest(schema, modules);
 
-        await expect(t.run((ctx) => requireUserId(ctx))).rejects.toThrow(ConvexError);
+        await expect(t.run((ctx) => runEdge(requireUserId(ctx)))).rejects.toThrow(Unauthenticated);
     });
 
     it("throws when the identity names a session that does not exist", async () => {
@@ -35,7 +35,7 @@ describe(requireUserId, () => {
             subject: identity.subject,
         });
 
-        await expect(stale.run((ctx) => requireUserId(ctx))).rejects.toThrow(ConvexError);
+        await expect(stale.run((ctx) => runEdge(requireUserId(ctx)))).rejects.toThrow(Unauthenticated);
     });
 });
 
@@ -44,7 +44,7 @@ describe(optionalUserId, () => {
         const t = convexTest(schema, modules);
         const identity = await seedAuthUser(t);
 
-        const resolved = await authenticatedAs(t, identity).run((ctx) => optionalUserId(ctx));
+        const resolved = await authenticatedAs(t, identity).run((ctx) => runEdge(optionalUserId(ctx)));
 
         expect(resolved).toBe(identity.userId);
     });
@@ -52,7 +52,7 @@ describe(optionalUserId, () => {
     it("returns null when there is no identity", async () => {
         const t = convexTest(schema, modules);
 
-        await expect(t.run((ctx) => optionalUserId(ctx))).resolves.toBeNull();
+        await expect(t.run((ctx) => runEdge(optionalUserId(ctx)))).resolves.toBeNull();
     });
 
     it("returns null when the identity names a session that does not exist", async () => {
@@ -64,6 +64,6 @@ describe(optionalUserId, () => {
             subject: identity.subject,
         });
 
-        await expect(stale.run((ctx) => optionalUserId(ctx))).resolves.toBeNull();
+        await expect(stale.run((ctx) => runEdge(optionalUserId(ctx)))).resolves.toBeNull();
     });
 });

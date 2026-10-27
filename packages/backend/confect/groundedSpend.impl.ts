@@ -32,7 +32,7 @@ const monthlyTotal = FunctionImpl.make(
             .index("by_at", (q) => q.gte("at", start))
             .take(MAX_MONTH_ROWS);
         const totalMicros = rows.reduce((sum, row) => sum + row.actualMicros, 0);
-        return { ceilingMicros: budgetCeilingMicros(), totalMicros };
+        return { ceilingMicros: yield* budgetCeilingMicros, totalMicros };
     }, Effect.orDie)
 );
 

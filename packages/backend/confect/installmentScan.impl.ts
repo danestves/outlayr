@@ -2,12 +2,15 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
+import * as Redacted from "effect/Redacted";
 
 import databaseSchema from "./_generated/schema";
 import { Auth } from "./_generated/services";
 import { failure, readInstallmentPlan } from "./installmentScan";
 import spec from "./installmentScan.spec";
 import { traced } from "./lib/aiTracing";
+import { anthropicApiKey, claudeModelId } from "./lib/config";
 import {
     CURRENCY_PATTERN,
     DATE_PATTERN,
@@ -15,7 +18,7 @@ import {
     namesWithinBudget,
     REGION_PATTERN,
 } from "./lib/ledgerPrompt";
-import { AI_CONSENT_VERSION, CLAUDE_MODEL_ID } from "./lib/models";
+import { AI_CONSENT_VERSION } from "./lib/models";
 import { admitScan, looksLikeJpeg, MAX_IMAGE_BYTES } from "./receiptScan";
 
 const scan = FunctionImpl.make(
@@ -31,8 +34,8 @@ const scan = FunctionImpl.make(
             return failure("unauthenticated");
         }
 
-        const apiKey = process.env.ANTHROPIC_API_KEY;
-        if (!apiKey || args.aiConsent !== AI_CONSENT_VERSION) {
+        const apiKey = yield* anthropicApiKey;
+        if (Option.isNone(apiKey) || args.aiConsent !== AI_CONSENT_VERSION) {
             return failure("notConfigured");
         }
 
@@ -53,9 +56,9 @@ const scan = FunctionImpl.make(
             return failure(admitted);
         }
 
-        const modelId = process.env.CLAUDE_MODEL_ID || CLAUDE_MODEL_ID;
+        const modelId = yield* claudeModelId;
         return yield* readInstallmentPlan(
-            traced(createAnthropic({ apiKey })(modelId), "installment_scan"),
+            traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "installment_scan"),
             args.image,
             {
                 accounts: args.accounts,

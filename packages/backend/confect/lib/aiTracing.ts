@@ -1,6 +1,10 @@
-import { env } from "@outlayr/env/backend";
 import { APICallError, wrapLanguageModel } from "ai";
 import type { LanguageModel, LanguageModelMiddleware } from "ai";
+import * as Option from "effect/Option";
+import * as Redacted from "effect/Redacted";
+
+import { postHogProjectToken } from "./config";
+import { runEdgeSync } from "./runEdge";
 
 const CAPTURE_URL = "https://us.i.posthog.com/i/v0/e/";
 const CAPTURE_TIMEOUT_MS = 3000;
@@ -108,7 +112,7 @@ export function traced(model: Exclude<LanguageModel, string>, feature: string) {
 }
 
 async function capture(properties: GenerationProperties): Promise<void> {
-    const token = env.POSTHOG_PROJECT_TOKEN;
+    const token = Option.match(runEdgeSync(postHogProjectToken), { onNone: () => "", onSome: Redacted.value });
     if (!token) {
         return;
     }

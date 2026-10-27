@@ -1,31 +1,75 @@
-import { env } from "@outlayr/env/backend";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpIncomingMessage from "effect/http/HttpIncomingMessage";
+import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-const POSTHOG_TIMEOUT_MS = 10_000;
+import { postHogConfig } from "./config";
 
-const decodeBulkDeleteResponse = Schema.decodeUnknownSync(
+const POSTHOG_TIMEOUT = Duration.seconds(10);
+
+export class PostHogError extends Schema.TaggedError<PostHogError>()("PostHogError", {
+    cause: Schema.optional(Schema.Defect()),
+    reason: Schema.Literals(["unconfigured", "transport", "status", "invalidResponse", "deletionErrors"]),
+    status: Schema.optional(Schema.Number),
+}) {
+    override get message(): string {
+        switch (this.reason) {
+            case "unconfigured": {
+                return "POSTHOG_PERSONAL_API_KEY and POSTHOG_PROJECT_ID are not set; the analytics person cannot be erased";
+            }
+            case "status": {
+                return `PostHog person erase failed with ${this.status}`;
+            }
+            case "deletionErrors": {
+                return "PostHog reported deletion errors for the person";
+            }
+            case "invalidResponse": {
+                return "PostHog person erase returned an unexpected response";
+            }
+            default: {
+                return "PostHog person erase request failed";
+            }
+        }
+    }
+}
+
+const decodeBulkDeleteResponse = HttpIncomingMessage.schemaBodyJson(
     Schema.Struct({ deletion_errors: Schema.Array(Schema.Unknown) })
 );
 
-export async function erasePostHogPerson(distinctId: string): Promise<void> {
-    if (!(env.POSTHOG_PERSONAL_API_KEY && env.POSTHOG_PROJECT_ID)) {
-        throw new Error(
-            "POSTHOG_PERSONAL_API_KEY and POSTHOG_PROJECT_ID are not set; the analytics person cannot be erased"
-        );
-    }
-    const response = await fetch(
-        `https://us.posthog.com/api/projects/${encodeURIComponent(env.POSTHOG_PROJECT_ID)}/persons/bulk_delete/`,
-        {
-            body: JSON.stringify({ delete_events: true, distinct_ids: [distinctId] }),
-            headers: { Authorization: `Bearer ${env.POSTHOG_PERSONAL_API_KEY}`, "Content-Type": "application/json" },
-            method: "POST",
-            signal: AbortSignal.timeout(POSTHOG_TIMEOUT_MS),
+const transport = (cause: unknown) => new PostHogError({ cause, reason: "transport" });
+
+export const erasePostHogPerson = Effect.fn("PostHog.erasePerson")(
+    function* erasePostHogPerson(distinctId: string) {
+        const config = yield* postHogConfig;
+        if (Option.isNone(config)) {
+            return yield* new PostHogError({ reason: "unconfigured" });
         }
-    );
-    if (!response.ok) {
-        throw new Error(`PostHog person erase failed with ${response.status}`);
-    }
-    if (decodeBulkDeleteResponse(await response.json()).deletion_errors.length > 0) {
-        throw new Error("PostHog reported deletion errors for the person");
-    }
-}
+        const { personalApiKey, projectId } = config.value;
+        const request = yield* HttpClientRequest.post(
+            `https://us.posthog.com/api/projects/${encodeURIComponent(projectId)}/persons/bulk_delete/`
+        ).pipe(
+            HttpClientRequest.bearerToken(personalApiKey),
+            HttpClientRequest.bodyJson({ delete_events: true, distinct_ids: [distinctId] }),
+            Effect.catchTags({ HttpBodyError: transport })
+        );
+        const response = yield* HttpClient.execute(request).pipe(Effect.catchTags({ HttpClientError: transport }));
+        if (response.status < 200 || response.status >= 300) {
+            return yield* new PostHogError({ reason: "status", status: response.status });
+        }
+        const { deletion_errors: deletionErrors } = yield* decodeBulkDeleteResponse(response).pipe(
+            Effect.catchTags({
+                HttpClientError: transport,
+                SchemaError: (cause) => new PostHogError({ cause, reason: "invalidResponse" }),
+            })
+        );
+        if (deletionErrors.length > 0) {
+            return yield* new PostHogError({ reason: "deletionErrors" });
+        }
+    },
+    Effect.timeout(POSTHOG_TIMEOUT),
+    Effect.catchTags({ TimeoutError: transport })
+);

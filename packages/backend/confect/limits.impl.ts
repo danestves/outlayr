@@ -6,7 +6,7 @@ import * as Layer from "effect/Layer";
 import databaseSchema from "./_generated/schema";
 import { Auth, QueryCtx } from "./_generated/services";
 import { FREE_CAPTURE_CONFIG, PRO_CAPTURE_CONFIG } from "./lib/captures";
-import { perUserBurst } from "./lib/limits";
+import { fixedBurst, perUserBurst } from "./lib/limits";
 import { reader } from "./limits";
 import spec from "./limits.spec";
 import { isPro } from "./revenuecat";
@@ -24,7 +24,7 @@ const mine = FunctionImpl.make(
         if (identity === null) {
             return null;
         }
-        const pro = yield* Effect.promise(() => isPro(ctx, identity.subject));
+        const pro = yield* isPro(ctx, identity.subject);
         const read = (name: string, config: RateLimitConfig) =>
             Effect.promise(() => reader.getValue(ctx, name, { config, key: identity.tokenIdentifier })).pipe(
                 Effect.map((state) => ({
@@ -39,15 +39,15 @@ const mine = FunctionImpl.make(
         const [captures, csvImport, enrichment, receiptScan, voiceEntry] = yield* Effect.all(
             [
                 read(pro ? "capturesPro" : "capturesFree", pro ? PRO_CAPTURE_CONFIG : FREE_CAPTURE_CONFIG),
-                read("csvImportPerUser", perUserBurst("csvImport", true)),
-                read("enrichmentPerUser", perUserBurst("enrichment", pro)),
-                read("receiptScanPerUser", perUserBurst("receiptScan", pro)),
-                read("voiceEntryPerUser", perUserBurst("voiceEntry", pro)),
+                read("csvImportPerUser", yield* perUserBurst("csvImport", true)),
+                read("enrichmentPerUser", fixedBurst("enrichment", pro)),
+                read("receiptScanPerUser", yield* perUserBurst("receiptScan", pro)),
+                read("voiceEntryPerUser", yield* perUserBurst("voiceEntry", pro)),
             ],
             { concurrency: "unbounded" }
         );
         return { captures, csvImport: pro ? csvImport : null, enrichment, pro, receiptScan, voiceEntry };
-    })
+    }, Effect.orDie)
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(Layer.provide(mine), GroupImpl.finalize);

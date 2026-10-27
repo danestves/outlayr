@@ -1,11 +1,16 @@
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpIncomingMessage from "effect/http/HttpIncomingMessage";
 import * as Option from "effect/Option";
+import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
 import type { MarketRateType } from "./lib/currencies";
 
 const COTIZAVE_URL = "https://api.cotizave.com/v1/fx/rates";
-const RATES_TIMEOUT_MS = 20_000;
+const RATES_TIMEOUT = Duration.seconds(20);
 
 const VES_QUOTE = "VES";
 
@@ -31,14 +36,44 @@ const CotizaveResponse = Schema.Struct({
     ),
 });
 
-export function requestRates(apiKey: string): Promise<Response> {
-    return fetch(COTIZAVE_URL, {
-        headers: { "X-API-Key": apiKey },
-        signal: AbortSignal.timeout(RATES_TIMEOUT_MS),
-    });
+export class CotizaveError extends Schema.TaggedError<CotizaveError>()("CotizaveError", {
+    cause: Schema.optional(Schema.Defect()),
+    reason: Schema.Literals(["transport", "status", "contract"]),
+    status: Schema.optional(Schema.Number),
+}) {
+    override get message(): string {
+        if (this.reason === "status") {
+            return `Cotizave fetch failed with HTTP ${this.status}`;
+        }
+        if (this.reason === "contract") {
+            return "Cotizave response did not match the expected USD-based VES contract";
+        }
+        return "Cotizave fetch request failed";
+    }
 }
 
-export const decodeCotizaveResponse = Schema.decodeUnknownOption(CotizaveResponse);
+const decodeCotizaveResponse = HttpIncomingMessage.schemaBodyJson(CotizaveResponse);
+
+const transport = (cause: unknown) => new CotizaveError({ cause, reason: "transport" });
+
+export const requestRates = Effect.fn("Cotizave.requestRates")(
+    function* requestRates(apiKey: Redacted.Redacted) {
+        const response = yield* HttpClient.execute(
+            HttpClientRequest.get(COTIZAVE_URL).pipe(HttpClientRequest.setHeader("X-API-Key", Redacted.value(apiKey)))
+        ).pipe(Effect.catchTags({ HttpClientError: transport }));
+        if (response.status < 200 || response.status >= 300) {
+            return yield* new CotizaveError({ reason: "status", status: response.status });
+        }
+        return yield* decodeCotizaveResponse(response).pipe(
+            Effect.catchTags({
+                HttpClientError: transport,
+                SchemaError: (cause) => new CotizaveError({ cause, reason: "contract" }),
+            })
+        );
+    },
+    Effect.timeout(RATES_TIMEOUT),
+    Effect.catchTags({ TimeoutError: transport })
+);
 
 interface CotizaveRate {
     quote: string;

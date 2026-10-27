@@ -9,14 +9,7 @@ import { components } from "../convex/_generated/api";
 export const r2 = new R2(components.r2);
 
 // Read per call, so a deployment that gains its R2 variables uses them on the next call, not the next cold start.
-export function usingR2(): boolean {
-    return (
-        !!process.env.R2_BUCKET &&
-        !!process.env.R2_ENDPOINT &&
-        !!process.env.R2_ACCESS_KEY_ID &&
-        !!process.env.R2_SECRET_ACCESS_KEY
-    );
-}
+export { r2Configured as usingR2 } from "./lib/config";
 
 // Above the 900s default so a backlog download outlives no url; far below 7 days, as the url guards a leaked link.
 export const PHOTO_URL_TTL_SECONDS = 3600;

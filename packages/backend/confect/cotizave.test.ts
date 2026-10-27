@@ -26,12 +26,9 @@ function liveRatesPayload() {
 }
 
 function stubFetch(payload: unknown, ok = true) {
-    const response = {
-        json: () => Promise.resolve(payload),
-        ok,
-        status: ok ? 200 : 500,
-    };
-    const fetchMock = vi.fn((_input: string, _init?: RequestInit) => Promise.resolve(response));
+    const fetchMock = vi.fn((_input: URL, _init?: RequestInit) =>
+        Promise.resolve(Response.json(payload, { status: ok ? 200 : 500 }))
+    );
     vi.stubGlobal("fetch", fetchMock);
     return fetchMock;
 }

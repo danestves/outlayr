@@ -11,8 +11,15 @@ import { describe, expect, it, vi } from "vite-plus/test";
 import schema from "../convex/schema";
 import { GROUNDED_REQUEST_TIMEOUT_MS, rateLimiter } from "./enrichment";
 import { runGroundedLookup, runGroundedLookupCall } from "./groundedLookup";
+import type { GroundedCallDeps, GroundedLookupCtx, GroundedRunArgs } from "./groundedLookup";
+import { runEdge } from "./lib/runEdge";
 
 const modules = import.meta.glob("../convex/**/*.ts");
+
+const callLookup = (deps: GroundedCallDeps, args: GroundedRunArgs) => runEdge(runGroundedLookupCall(deps, args));
+
+const callRun = (ctx: GroundedLookupCtx, args: GroundedRunArgs, deps: GroundedCallDeps) =>
+    runEdge(runGroundedLookup(ctx, args, deps));
 
 const fakeWebSearchTool = tool({
     description: "test double for the provider-executed web search",
@@ -72,7 +79,7 @@ describe("runGroundedLookupCall (single-call collapse, measured 2026-08-03)", ()
     it("the single call carries the injected web_search tool set", async () => {
         const grounding = mockTextModel(JSON.stringify(CONFIDENT_PAYLOAD));
 
-        await runGroundedLookupCall({ grounding, groundingTools: { web_search: fakeWebSearchTool } }, BASE_ARGS);
+        await callLookup({ grounding, groundingTools: { web_search: fakeWebSearchTool } }, BASE_ARGS);
 
         expect(grounding.doGenerateCalls[0]?.tools).toStrictEqual([expect.objectContaining({ name: "web_search" })]);
     });
@@ -88,10 +95,7 @@ describe("runGroundedLookupCall (single-call collapse, measured 2026-08-03)", ()
             sourceUrl: "https://farmatodo.com/about",
         });
 
-        const outcome = await runGroundedLookupCall(
-            { grounding, groundingTools: { web_search: fakeWebSearchTool } },
-            BASE_ARGS
-        );
+        const outcome = await callLookup({ grounding, groundingTools: { web_search: fakeWebSearchTool } }, BASE_ARGS);
 
         expect(outcome.candidate).toMatchObject({
             categoryName: "Healthcare",
@@ -105,10 +109,7 @@ describe("runGroundedLookupCall (single-call collapse, measured 2026-08-03)", ()
             sourceUrl: "https://farmatodo.com/about",
         });
 
-        const outcome = await runGroundedLookupCall(
-            { grounding, groundingTools: { web_search: fakeWebSearchTool } },
-            BASE_ARGS
-        );
+        const outcome = await callLookup({ grounding, groundingTools: { web_search: fakeWebSearchTool } }, BASE_ARGS);
 
         expect(outcome.candidate).toMatchObject({
             categoryName: "Healthcare",
@@ -119,10 +120,7 @@ describe("runGroundedLookupCall (single-call collapse, measured 2026-08-03)", ()
     it("degrades to an all-null candidate on unparseable output, without throwing", async () => {
         const grounding = mockTextModel("I was unable to confirm any details about this merchant.");
 
-        const outcome = await runGroundedLookupCall(
-            { grounding, groundingTools: { web_search: fakeWebSearchTool } },
-            BASE_ARGS
-        );
+        const outcome = await callLookup({ grounding, groundingTools: { web_search: fakeWebSearchTool } }, BASE_ARGS);
 
         expect(outcome.candidate).toMatchObject({
             categoryName: null,
@@ -142,7 +140,7 @@ describe("runGroundedLookupCall (single-call collapse, measured 2026-08-03)", ()
         });
 
         await expect(
-            runGroundedLookupCall(
+            callLookup(
                 {
                     grounding: throwing,
                     groundingTools: { web_search: fakeWebSearchTool },
@@ -161,10 +159,7 @@ describe("runGroundedLookupCall (single-call collapse, measured 2026-08-03)", ()
             sourceUrl: "https://farmatodo.com/about",
         });
 
-        const outcome = await runGroundedLookupCall(
-            { grounding, groundingTools: { web_search: fakeWebSearchTool } },
-            BASE_ARGS
-        );
+        const outcome = await callLookup({ grounding, groundingTools: { web_search: fakeWebSearchTool } }, BASE_ARGS);
 
         expect(outcome.candidate).toMatchObject({
             categoryName: "Healthcare",
@@ -182,7 +177,7 @@ describe("runGroundedLookupCall (single-call collapse, measured 2026-08-03)", ()
             sourceUrl: "https://farmatodo.com/about",
         });
 
-        await runGroundedLookupCall(
+        await callLookup(
             { grounding, groundingTools: { web_search: fakeWebSearchTool } },
             { ...BASE_ARGS, regionCode: "VE" }
         );
@@ -196,7 +191,7 @@ describe("runGroundedLookupCall (single-call collapse, measured 2026-08-03)", ()
             sourceUrl: "https://farmatodo.com/about",
         });
 
-        await runGroundedLookupCall(
+        await callLookup(
             { grounding, groundingTools: { web_search: fakeWebSearchTool } },
             { ...BASE_ARGS, currency: "EUR" }
         );
@@ -225,10 +220,7 @@ describe("runGroundedLookupCall (single-call collapse, measured 2026-08-03)", ()
             }),
         });
 
-        const outcome = await runGroundedLookupCall(
-            { grounding, groundingTools: { web_search: fakeWebSearchTool } },
-            BASE_ARGS
-        );
+        const outcome = await callLookup({ grounding, groundingTools: { web_search: fakeWebSearchTool } }, BASE_ARGS);
 
         expect(outcome.sources).toStrictEqual([]);
     });
@@ -243,7 +235,7 @@ describe("runGroundedLookup guards (ADR-11 order)", () => {
         const grounding = mockTextModel("irrelevant");
 
         await t.action(async (ctx) =>
-            runGroundedLookup(ctx, BASE_ARGS, {
+            callRun(ctx, BASE_ARGS, {
                 grounding,
                 groundingTools: { web_search: fakeWebSearchTool },
             })
@@ -264,7 +256,7 @@ describe("runGroundedLookup guards (ADR-11 order)", () => {
         const grounding = mockTextModel("irrelevant");
 
         await t.action(async (ctx) =>
-            runGroundedLookup(ctx, BASE_ARGS, {
+            callRun(ctx, BASE_ARGS, {
                 grounding,
                 groundingTools: { web_search: fakeWebSearchTool },
             })
@@ -285,7 +277,7 @@ describe("runGroundedLookup guards (ADR-11 order)", () => {
         });
 
         await t.action(async (ctx) =>
-            runGroundedLookup(ctx, BASE_ARGS, {
+            callRun(ctx, BASE_ARGS, {
                 grounding,
                 groundingTools: { web_search: fakeWebSearchTool },
             })
@@ -323,7 +315,7 @@ describe("runGroundedLookup guards (ADR-11 order)", () => {
 
         await expect(
             t.action(async (ctx) =>
-                runGroundedLookup(ctx, BASE_ARGS, {
+                callRun(ctx, BASE_ARGS, {
                     grounding: aborting,
                     groundingTools: { web_search: fakeWebSearchTool },
                 })
@@ -355,7 +347,7 @@ describe("runGroundedLookup guards (ADR-11 order)", () => {
         const grounding = mockTextModel(JSON.stringify(CONFIDENT_PAYLOAD));
 
         await t.action(async (ctx) =>
-            runGroundedLookup(ctx, BASE_ARGS, {
+            callRun(ctx, BASE_ARGS, {
                 grounding,
                 groundingTools: { web_search: fakeWebSearchTool },
             })
@@ -381,7 +373,7 @@ describe("runGroundedLookupCall domain guard (model-hallucinated denylisted doma
         async (domain, sourceUrl) => {
             const grounding = mockTextModel(JSON.stringify({ ...CONFIDENT_PAYLOAD, domain }), { sourceUrl });
 
-            const outcome = await runGroundedLookupCall(
+            const outcome = await callLookup(
                 { grounding, groundingTools: { web_search: fakeWebSearchTool } },
                 BASE_ARGS
             );
@@ -413,10 +405,7 @@ describe("runGroundedLookupCall for a queued row", () => {
             { sourceUrl: "https://www.care4bag.gr/" }
         );
 
-        const outcome = await runGroundedLookupCall(
-            { grounding, groundingTools: { web_search: fakeWebSearchTool } },
-            TREE_ARGS
-        );
+        const outcome = await callLookup({ grounding, groundingTools: { web_search: fakeWebSearchTool } }, TREE_ARGS);
 
         expect(outcome.answer).toStrictEqual({
             categoryName: "Trips",
@@ -441,10 +430,7 @@ describe("runGroundedLookupCall for a queued row", () => {
             })
         );
 
-        const outcome = await runGroundedLookupCall(
-            { grounding, groundingTools: { web_search: fakeWebSearchTool } },
-            TREE_ARGS
-        );
+        const outcome = await callLookup({ grounding, groundingTools: { web_search: fakeWebSearchTool } }, TREE_ARGS);
 
         expect(outcome.answer.domain).toBeNull();
     });

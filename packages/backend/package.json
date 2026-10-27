@@ -22,7 +22,6 @@
         "@convex-dev/r2": "^0.10.2",
         "@convex-dev/rate-limiter": "^0.3.2",
         "@convex-dev/workpool": "^0.4.12",
-        "@outlayr/env": "workspace:*",
         "@outlayr/money": "workspace:*",
         "ai": "7.0.140",
         "better-auth": "catalog:",
