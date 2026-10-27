@@ -16,7 +16,9 @@ export interface ScaledInt {
 // Reads the shortest round-trip decimal string, which is spec-defined and so identical on V8 and Hermes.
 export function toScaledInt(value: number): ScaledInt {
     if (!Number.isFinite(value)) {
-        throw new MoneyValidationError(`Cannot represent a non-finite number as a scaled integer: ${value}`);
+        throw new MoneyValidationError({
+            message: `Cannot represent a non-finite number as a scaled integer: ${value}`,
+        });
     }
     // `Number.prototype.toString` only ever emits a lowercase `e` exponent.
     const [mantissa = "0", exponentPart] = value.toString().split("e");

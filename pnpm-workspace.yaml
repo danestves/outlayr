@@ -17,6 +17,7 @@ catalog:
     better-auth: ~1.6.15
     convex: ^1.45.0
     dotenv: ^17.4.2
+    effect: ^4.0.6
     intlayer: ^9.5.2
     react-intlayer: ^9.5.2
     react-native-intlayer: ^9.5.2

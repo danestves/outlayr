@@ -28,6 +28,7 @@ Formatting is **4-space indent, 120 columns**. oxfmt also formats CSS, so `globa
 | `unicorn/no-useless-undefined` | Dropped the argument, not the value — `mockResolvedValue(undefined)` became an arity error, and `interpolate("Hello", undefined)` stopped testing the thing it exists to test. |
 | `unicorn/catch-error-name` | Renamed the caught binding to `error` *and* rewrote the shorthand property built from it, so `catch (cause) { failure = { cause } }` silently became `{ error }`. |
 | `unicorn/prefer-set-has` | Swapped the array literal for `new Set(…)` and left the `: string[]` annotation and the `.includes` call sites behind. |
+| `unicorn/throw-new-error` | Matches any call whose name ends in `Error`, not only a `throw`, so it rewrote Effect's `class X extends Schema.TaggedError<X>()("X", …)` to `extends new Schema.TaggedError…`, which throws "TaggedError is not a constructor" at import. `unicorn/new-for-builtins` still covers `Error()`, and `tsc` rejects calling a class without `new`. |
 | `vitest/prefer-describe-function-title` | Substituted the binding for the string title — `describe("crons", …)` → `describe(crons, …)`, a type error for any subject that is a value rather than a function. Four in `packages/backend` on the run that re-enabled it. |
 
 One more is suppressed at its single call site rather than disabled: `jest/prefer-mock-return-shorthand` rewrites `mockImplementation(() => v)` to `mockReturnValue(v)`, which evaluates `v` at setup — and `device-language.test.ts` passes a `fn` that throws, to exercise the failure path.
@@ -37,6 +38,8 @@ If you re-enable any of these, run `vp run -r --no-cache test` and `vp run -r --
 ## Rules we rejected
 
 **`no-eq-null` / `eqeqeq` on null.** `x == null` is the nullish check, not a lazy `===`: `undefined == null` is true, `undefined === null` is false. 63 files use the `!= null` counterpart. Relaxing `eqeqeq` alone is not enough — `no-eq-null` flags the same 462 sites on its own.
+
+**`no-redeclare`.** It does not see TypeScript's separate value and type namespaces, so it flags the Effect idiom of a schema and its type sharing one name (`const EntryRateType = Schema.Literals([...])` beside `type EntryRateType = typeof EntryRateType.Type`). `tsc` already rejects a real redeclaration of a binding.
 
 **`func-style` and `react/function-component-definition`.** Components and helpers are declared with `function` throughout and the tree relies on hoisting (`RootNavigator` references `RouteGate` above its definition). That is 2000+ declarations; converting them is an idiom change, not a toolchain migration.
 

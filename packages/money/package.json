@@ -31,7 +31,8 @@
         "test:watch": "vp test"
     },
     "dependencies": {
-        "dinero.js": "^2.0.2"
+        "dinero.js": "^2.0.2",
+        "effect": "catalog:"
     },
     "devDependencies": {
         "@outlayr/config": "workspace:*",

@@ -18,6 +18,7 @@
         "test": "vp run -r --cache test"
     },
     "devDependencies": {
+        "@effect/language-service": "^0.87.5",
         "@outlayr/config": "workspace:*",
         "@posthog/cli": "^0.18.9",
         "@types/node": "^26.1.2",
