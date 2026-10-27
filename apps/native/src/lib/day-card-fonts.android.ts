@@ -10,7 +10,7 @@ import { Image } from "react-native";
 
 import type { CardWeight } from "@/domain/day-card";
 
-import { DayCardFontError } from "./day-card-fonts";
+import { DayCardFontError } from "./day-card-font-error";
 import type { CardTypefaces, loadCardTypefaces as loadCardTypefacesBase } from "./day-card-fonts";
 
 export type { CardTypefaces } from "./day-card-fonts";

@@ -3,7 +3,7 @@ import { File } from "expo-file-system";
 
 import { duringHandoff } from "@/lib/app-handoff";
 import type { previewFiles as iosPreviewFiles } from "@/lib/file-preview";
-import { FilePreviewError } from "@/lib/file-preview";
+import { FilePreviewError } from "@/lib/file-preview-error";
 
 const FLAG_GRANT_READ_URI_PERMISSION = 1;
 

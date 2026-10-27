@@ -1,23 +1,12 @@
 import { FontWeight, Skia } from "@shopify/react-native-skia";
 import type { SkTypeface } from "@shopify/react-native-skia";
 import * as Effect from "effect/Effect";
-import * as Schema from "effect/Schema";
 
 import type { CardWeight } from "@/domain/day-card";
 
-export type CardTypefaces = Readonly<Record<CardWeight, SkTypeface>>;
+import { DayCardFontError } from "./day-card-font-error";
 
-export class DayCardFontError extends Schema.TaggedError<DayCardFontError>()("DayCardFontError", {
-    cause: Schema.optional(Schema.Defect()),
-    reason: Schema.Literals(["noFace", "notLoaded"]),
-    weight: Schema.optional(Schema.Literals(["medium", "mono", "regular", "semibold"])),
-}) {
-    override get message(): string {
-        return this.reason === "noFace"
-            ? `No system face draws the day card's ${this.weight} text`
-            : "A day card font file did not load";
-    }
-}
+export type CardTypefaces = Readonly<Record<CardWeight, SkTypeface>>;
 
 const WEIGHTS = {
     medium: FontWeight.Medium,

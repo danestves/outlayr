@@ -1,23 +1,14 @@
 import * as Effect from "effect/Effect";
-import * as Schema from "effect/Schema";
 import { requireOptionalNativeModule } from "expo";
 import { shareAsync } from "expo-sharing";
 
 import { duringHandoff } from "@/lib/app-handoff";
+import { FilePreviewError } from "@/lib/file-preview-error";
 
 export interface PreviewFile {
     title: string | null;
     uri: string;
     pdf: boolean;
-}
-
-export class FilePreviewError extends Schema.TaggedError<FilePreviewError>()("FilePreviewError", {
-    cause: Schema.Defect(),
-}) {
-    // oxlint-disable-next-line class-methods-use-this -- one cause, no attribute: the message has nothing on the instance to read
-    override get message(): string {
-        return "The attachment could not be opened";
-    }
 }
 
 interface FilePreviewModule {
