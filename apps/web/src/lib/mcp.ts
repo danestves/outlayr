@@ -22,21 +22,23 @@ const SECTIONS = new Map(
         .slice(1)
         .map((block) => [block.slice("## ".length, block.indexOf("\n")), block.trim()])
 );
-const AboutInput = z.object({
-    section: z
-        .enum([...SECTIONS.keys()])
-        .optional()
-        .describe("One section of llms.txt, such as Plans or Privacy. Omit it for the whole file."),
+const AboutInput = Schema.Struct({
+    section: Schema.optional(
+        Schema.Literals([...SECTIONS.keys()]).annotate({
+            description: "One section of llms.txt, such as Plans or Privacy. Omit it for the whole file.",
+        })
+    ),
 });
+const decodeAbout = Schema.decodeUnknownSync(AboutInput, { errors: "all" });
 
 const aboutOutlayr = toolDefinition({
     description:
         "What the Outlayr expense tracker does, its free and Pro plans, how it handles data, and links to every guide and comparison on tryoutlayr.com.",
-    inputSchema: AboutInput,
+    inputSchema: SchemaRepresentation.toJsonSchemaDocument(Schema.toRepresentation(AboutInput)).schema,
     metadata: { annotations: READ_ONLY, title: "About Outlayr" },
     name: "about_outlayr",
 }).server((input) => {
-    const { section } = AboutInput.parse(input);
+    const { section } = decodeAbout(input);
     return section ? (SECTIONS.get(section) ?? llms) : llms;
 });
 
