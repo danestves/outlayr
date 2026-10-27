@@ -7,9 +7,11 @@ import { drizzle } from "drizzle-orm/better-sqlite3";
 import type { SpendDb } from "@/data/budget-spent";
 import type { Database } from "@/db/client";
 
-export const testDatabase = (sqlite: BetterSqlite3.Database): Database => drizzle(sqlite) as unknown as Database;
+export const testDatabase = (sqlite: BetterSqlite3.Database): Database =>
+    drizzle({ client: sqlite }) as unknown as Database;
 
-export const testSpendDb = (sqlite: BetterSqlite3.Database): SpendDb => drizzle(sqlite) as unknown as SpendDb;
+export const testSpendDb = (sqlite: BetterSqlite3.Database): SpendDb =>
+    drizzle({ client: sqlite }) as unknown as SpendDb;
 
 /**
  * Inert, not throwing: jest matchers probe the handle (`asymmetricMatch`), so a throwing stub would fail the
@@ -20,13 +22,28 @@ export const unusedDatabase = (): Database => ({}) as Database;
 
 const MIGRATIONS = join(import.meta.dirname, "..", "..", "drizzle");
 
-const migrationFiles = (): string[] =>
-    readdirSync(MIGRATIONS)
-        .filter((name) => name.endsWith(".sql"))
-        .sort();
+const MIGRATION_FOLDER = /^\d{14}_(.+)$/;
+
+const migrationFolders = (): Map<string, string> =>
+    new Map(
+        readdirSync(MIGRATIONS)
+            .sort()
+            .flatMap((folder) => {
+                const tag = MIGRATION_FOLDER.exec(folder)?.[1];
+                return tag === undefined ? [] : [[`${tag}.sql`, folder] as const];
+            })
+    );
+
+const migrationFiles = (): string[] => [...migrationFolders().keys()];
 
 export function applyMigration(sqlite: BetterSqlite3.Database, file: string): void {
-    for (const statement of readFileSync(join(MIGRATIONS, file), "utf-8").split("--> statement-breakpoint")) {
+    const folder = migrationFolders().get(file);
+    if (folder === undefined) {
+        throw new Error(`No migration ${file}`);
+    }
+    for (const statement of readFileSync(join(MIGRATIONS, folder, "migration.sql"), "utf-8").split(
+        "--> statement-breakpoint"
+    )) {
         if (statement.trim()) {
             sqlite.exec(statement);
         }

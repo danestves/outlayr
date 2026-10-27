@@ -1,12 +1,10 @@
 import { and, asc, eq, gte, isNull, lte } from "drizzle-orm";
-import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
+import type { SQLiteAsyncDatabase } from "drizzle-orm/sqlite-core";
 
 import { transactions } from "@/db/schema";
-import type * as schema from "@/db/schema";
 
-// Both drivers are `"sync"`, which keeps `.all()` typed as rows so `useLiveQuery` can read in render. The schema
-// parameter is this app's own: a handle opened without it can't answer these queries.
-export type SpendDb = BaseSQLiteDatabase<"sync", unknown, typeof schema>;
+// Both drivers are `"sync"`, which keeps `.all()` typed as rows so `useLiveQuery` can read in render.
+export type SpendDb = SQLiteAsyncDatabase<"sync", unknown>;
 
 // No per-budget SQL: windows and category rules apply in JS over this one result, because `useLiveQuery` adds a
 // listener per call and per-budget queries would re-run the same full scan on every insert.

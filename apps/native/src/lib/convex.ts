@@ -12,7 +12,8 @@ import { useSyncExternalStore } from "react";
 
 import type { AnsweredJob, EnrichmentJobRequest } from "@/data/enrichment-queue-core";
 import type { PhotoTransport } from "@/data/photo-sync-core";
-import type { PullRatesFn, RateWireRow } from "@/data/rates";
+import { RateWireRow } from "@/data/rates";
+import type { PullRatesFn } from "@/data/rates";
 import type { PullFn, PushFn } from "@/data/sync-engine-core";
 import { AI_CONSENT_VERSION } from "@/domain/ai-consent";
 import type { RemoteEnrichmentResult } from "@/domain/enrichment-cache";
@@ -96,20 +97,7 @@ export function ratesPuller(): PullRatesFn {
     return (args) => cloudQuery("exchangeRates:pullRates", { ...args, at: rateWindowAt() });
 }
 
-const decodeRateWireRows = Schema.decodeUnknownOption(
-    Schema.mutable(
-        Schema.Array(
-            Schema.Struct({
-                date: Schema.String,
-                fetchedAt: Schema.Finite,
-                quote: Schema.String,
-                rate: Schema.Finite,
-                rateType: Schema.String,
-                source: Schema.String,
-            })
-        )
-    )
-);
+const decodeRateWireRows = Schema.decodeUnknownOption(Schema.mutable(Schema.Array(RateWireRow)));
 
 export function watchRecentRates(onRows: (rows: RateWireRow[]) => void): () => void {
     if (cloudRuntime === null) {

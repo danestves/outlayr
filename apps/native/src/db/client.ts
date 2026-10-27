@@ -4,8 +4,6 @@ import * as Equal from "effect/Equal";
 import * as Schema from "effect/Schema";
 import { openDatabaseSync } from "expo-sqlite";
 
-import * as schema from "./schema";
-
 const DATABASE_NAME = "outlayr.db";
 
 /** `enableChangeListener` powers `useLiveQuery`. Migrations run in `LocalDatabase.open`, not here. */
@@ -29,7 +27,7 @@ export function openDatabase() {
         );
     }
 
-    return Equal.byReferenceUnsafe(drizzle(sqlite, { schema }));
+    return Equal.byReferenceUnsafe(drizzle(sqlite));
 }
 
 export type Database = ReturnType<typeof openDatabase>;

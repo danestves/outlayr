@@ -36,6 +36,8 @@ const finalConfig = withVarlockMetroConfig(
 // The AI SDK's `zod/v4` resolves to `.cjs` while the app's `zod` gets `.js`: a second ~500 KB zod.
 const BROWSER_ONLY_MODULES = new Set(["@revenuecat/purchases-js-hybrid-mappings"]);
 const FREE_ICONS = process.env.OUTLAYR_FREE_ICONS === "1";
+const DRIZZLE_EFFECT_SCHEMA = `${path.sep}drizzle-orm${path.sep}effect-schema${path.sep}`;
+const DRIZZLE_EFFECT_ROOT = path.resolve(__dirname, "src/lib/drizzle-effect-root.ts");
 const upstreamResolveRequest = finalConfig.resolver.resolveRequest;
 finalConfig.resolver = {
     ...finalConfig.resolver,
@@ -51,6 +53,9 @@ finalConfig.resolver = {
             } catch {
                 return resolve(context, "@hugeicons/core-free-icons/CircleDashedIcon", platform);
             }
+        }
+        if (moduleName === "effect" && context.originModulePath.includes(DRIZZLE_EFFECT_SCHEMA)) {
+            return { filePath: DRIZZLE_EFFECT_ROOT, type: "sourceFile" };
         }
         const resolution = resolve(context, moduleName, platform);
         if ((moduleName === "zod" || moduleName.startsWith("zod/")) && resolution.filePath?.endsWith(".cjs")) {

@@ -8,6 +8,7 @@ import { bootstrapLocalData } from "@/data/bootstrap";
 import { settleLegacyOnboarding } from "@/data/onboarding-core";
 import { openDatabase } from "@/db/client";
 import type { Database } from "@/db/client";
+import { adoptLegacyMigrationLog } from "@/db/legacy-migration-log";
 
 import migrationsBundle from "../../drizzle/migrations";
 
@@ -39,6 +40,7 @@ export const make = Effect.gen(function* make() {
 
     const open = Effect.fn("LocalDatabase.open")(function* open() {
         const db = yield* Effect.try({ catch: failedAt("open"), try: openConnection });
+        yield* Effect.try({ catch: failedAt("migrate"), try: () => adoptLegacyMigrationLog(db) });
         yield* Effect.tryPromise({ catch: failedAt("migrate"), try: () => migrate(db, migrationsBundle) });
         yield* bootstrapLocalData(db).pipe(Effect.mapError((error) => failedAt("bootstrap")(error.cause)));
         // Ahead of `ready`, so the onboarding guard's first read already sees post-backfill appMeta.

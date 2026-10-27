@@ -3,7 +3,6 @@ import BetterSqlite3 from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 
 import { transactions } from "@/db/schema";
-import * as schema from "@/db/schema";
 
 import { logWindowDaysQuery, logWindowRowsQuery } from "./transactions-core";
 
@@ -53,7 +52,7 @@ function makeDb() {
 			deletedAt integer
 		);
 	`);
-    return drizzle(sqlite, { schema });
+    return drizzle({ client: sqlite });
 }
 
 /** Spread by the minute: past 24 rows an hourly offset rolls `date` into the next day while `day` stays put. */

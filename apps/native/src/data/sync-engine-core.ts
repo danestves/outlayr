@@ -1,5 +1,6 @@
-import { and, asc, eq, getTableColumns, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, extractExtendedColumnType, getTableColumns, inArray, isNull, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
+import { createInsertSchema } from "drizzle-orm/effect-schema";
 import type { SQLiteColumn, SQLiteTable } from "drizzle-orm/sqlite-core";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -51,6 +52,26 @@ export class SyncCoreError extends Schema.TaggedError<SyncCoreError>()("SyncCore
 
 const failedAt = (stage: typeof SyncCoreStage.Type) => (cause: unknown) =>
     new SyncCoreError({ cause, message: `Sync ${stage} failed`, stage });
+
+const rowSchemas = new Map<SyncedTable, Schema.Codec<unknown, unknown>>();
+
+const finiteNumbers = (table: SQLiteTable) =>
+    Object.fromEntries(
+        Object.entries(getTableColumns(table))
+            .filter(([, column]) => extractExtendedColumnType(column).type === "number")
+            .map(([key]) => [key, () => Schema.Finite])
+    );
+
+const rowSchemaFor = (table: SyncedTable): Schema.Codec<unknown, unknown> => {
+    const known = rowSchemas.get(table);
+    if (known) {
+        return known;
+    }
+    const synced: SQLiteTable = SPECS[table].table;
+    const built = createInsertSchema(synced, finiteNumbers(synced));
+    rowSchemas.set(table, built);
+    return built;
+};
 
 const query = <A>(stage: typeof SyncCoreStage.Type, run: () => PromiseLike<A>) =>
     Effect.tryPromise({ catch: failedAt(stage), try: run });
@@ -831,6 +852,7 @@ const writeRow = Effect.fn("SyncCore.writeRow")(function* writeRow(
         return "unchanged" as const;
     }
 
+    yield* Schema.decodeUnknownEffect(rowSchemaFor(row.table))(values).pipe(Effect.mapError(failedAt("write")));
     yield* query("write", () =>
         anyWriter(db).insert(spec.table).values(values).onConflictDoUpdate({ set: values, target: spec.id })
     );

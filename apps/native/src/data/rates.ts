@@ -1,5 +1,6 @@
 import type { RateLookup } from "@outlayr/money/rates";
 import { and, desc, eq, inArray, lte, sql } from "drizzle-orm";
+import { createSelectSchema } from "drizzle-orm/effect-schema";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -19,14 +20,11 @@ export const RATE_ROWS_PER_CHUNK = 2000;
 
 const LAST_PULL_KEY = "lastRatesPullAt";
 
-export interface RateWireRow {
-    date: string;
-    fetchedAt: number;
-    quote: string;
-    rate: number;
-    rateType: string;
-    source: string;
-}
+export const RateWireRow = createSelectSchema(exchangeRates);
+
+export type RateWireRow = typeof RateWireRow.Type;
+
+const decodeRateWireRows = Schema.decodeUnknownEffect(Schema.Array(RateWireRow));
 
 export interface PullRatesPage {
     nextCursor?: number | null;
@@ -86,7 +84,10 @@ const fetchAllRates = Effect.fn("Rates.fetchAllRates")(function* fetchAllRates(p
     for (;;) {
         // Each page's nextCursor is the only way to address the next one, so the walk cannot be parallelised.
         const page = yield* fetchPage(pull, cursor);
-        all.push(...page.rows);
+        const rows = yield* decodeRateWireRows(page.rows).pipe(
+            Effect.mapError((cause) => new RatesError({ cause, operation: "fetch" }))
+        );
+        all.push(...rows);
         const next = page.nextCursor;
         if (next === null || next === undefined) {
             return all;

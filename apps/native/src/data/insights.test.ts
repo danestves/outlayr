@@ -5,7 +5,6 @@ import { drizzle } from "drizzle-orm/better-sqlite3";
 import * as Effect from "effect/Effect";
 
 import { categories, transactions } from "@/db/schema";
-import * as schema from "@/db/schema";
 
 import {
     aggregateInsightsWindows,
@@ -84,7 +83,7 @@ function makeDb() {
 			deletedAt integer
 		);
 	`);
-    return drizzle(sqlite, { schema });
+    return drizzle({ client: sqlite });
 }
 
 async function seed(db: TestDb): Promise<void> {

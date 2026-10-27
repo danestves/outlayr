@@ -7,7 +7,6 @@ import BetterSqlite3 from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 
 import { categories, transactions } from "@/db/schema";
-import * as schema from "@/db/schema";
 
 import { expenseContributionQuery } from "./budget-spent";
 
@@ -70,7 +69,7 @@ function makeDb() {
 			deletedAt integer
 		);
 	`);
-    return drizzle(sqlite, { schema });
+    return drizzle({ client: sqlite });
 }
 
 async function seed(db: TestDb): Promise<void> {
