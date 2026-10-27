@@ -3,7 +3,6 @@ import { cellFigures } from "@outlayr/money/currency-totals";
 import { valueDatedRowsIn } from "@outlayr/money/valuation";
 import type { RateTable } from "@outlayr/money/valuation";
 import { and, asc, gte, isNull, lte } from "drizzle-orm";
-import { useMemo } from "react";
 
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
@@ -95,14 +94,12 @@ export function useSparklineRows(
         nowMs
     );
 
-    return useMemo(() => {
-        const valued = valueDatedRowsIn(rows, displayCurrency, rates);
-        return rows.map((row, index) => ({
-            amount: valued[index],
-            date: row.date,
-            income: row.income,
-        }));
-    }, [rows, displayCurrency, rates]);
+    const valued = valueDatedRowsIn(rows, displayCurrency, rates);
+    return rows.map((row, index) => ({
+        amount: valued[index],
+        date: row.date,
+        income: row.income,
+    }));
 }
 
 // Without rates (or for rows no rate reaches) each currency keeps its bucket: a cross-currency sum is never invented.
@@ -125,21 +122,19 @@ export function useLogInsights(
 
     const rows = useLiveQuery(transactions, () => logCellQuery(db, start, now), [nowMs, period, firstWeekday], nowMs);
 
-    return useMemo(() => {
-        const ordered = cellFigures(toCurrencyCells(rows), globalCurrency, rates);
+    const ordered = cellFigures(toCurrencyCells(rows), globalCurrency, rates);
 
-        const dominant = ordered[0] ?? {
-            count: 0,
-            currencyCode: globalCurrency,
-            expense: 0,
-            income: 0,
-        };
-        const others = ordered.slice(1);
+    const dominant = ordered[0] ?? {
+        count: 0,
+        currencyCode: globalCurrency,
+        expense: 0,
+        income: 0,
+    };
+    const others = ordered.slice(1);
 
-        return {
-            dominant,
-            others,
-            perCurrency: [dominant, ...others],
-        };
-    }, [rows, globalCurrency, rates]);
+    return {
+        dominant,
+        others,
+        perCurrency: [dominant, ...others],
+    };
 }

@@ -1,5 +1,4 @@
 import { and, desc, eq, isNull, or } from "drizzle-orm";
-import { useMemo } from "react";
 
 import type { SpendDb } from "@/data/budget-spent";
 import type { Database } from "@/db/client";
@@ -28,9 +27,6 @@ export function useAccountTransfers(db: Database, accountId: string): TransferLo
     const accounts = useAccounts(db);
     const rows = useLiveQuery(transfers, () => accountTransfersQuery(db, accountId), [accountId]);
     const fees = useTransferFees(db);
-    const byId = useMemo(() => new Map(accounts.map((account) => [account.id, account])), [accounts]);
-    return useMemo(
-        () => rows.map((row) => toAccountTransferRow(row, accountId, byId, fees)),
-        [rows, accountId, byId, fees]
-    );
+    const byId = new Map(accounts.map((account) => [account.id, account]));
+    return rows.map((row) => toAccountTransferRow(row, accountId, byId, fees));
 }

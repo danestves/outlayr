@@ -1,5 +1,4 @@
 import { useRouter } from "expo-router";
-import { useCallback } from "react";
 
 import type { ActionMenuItem } from "@/components/action-menu";
 import type { TransactionWithCategory } from "@/data/transactions";
@@ -21,24 +20,21 @@ export function useTransactionRowActions(
     const t = useTranslation();
     const { requestDelete: requestStopRecurring } = useDeferredDelete("recurring");
 
-    return useCallback(
-        (transaction: TransactionWithCategory, future: boolean) => {
-            const now = new Date(nowMs);
-            const date = new Date(transaction.date);
-            return transactionMenuItems({
-                actions: transactionRowActions({
-                    date,
-                    future,
-                    now,
-                    recurringType: transaction.recurringType,
-                }),
-                onDelete: () => onDelete(transaction.id),
-                onEdit: () => router.push(`/transactions/${transaction.id}`),
-                onLogAgain: () => router.push(`/transactions/create?from=${transaction.id}`),
-                onStopRecurring: () => requestStopRecurring(transaction.id),
-                t,
-            });
-        },
-        [nowMs, onDelete, requestStopRecurring, router, t]
-    );
+    return (transaction: TransactionWithCategory, future: boolean) => {
+        const now = new Date(nowMs);
+        const date = new Date(transaction.date);
+        return transactionMenuItems({
+            actions: transactionRowActions({
+                date,
+                future,
+                now,
+                recurringType: transaction.recurringType,
+            }),
+            onDelete: () => onDelete(transaction.id),
+            onEdit: () => router.push(`/transactions/${transaction.id}`),
+            onLogAgain: () => router.push(`/transactions/create?from=${transaction.id}`),
+            onStopRecurring: () => requestStopRecurring(transaction.id),
+            t,
+        });
+    };
 }

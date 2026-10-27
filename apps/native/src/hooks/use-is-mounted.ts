@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 
 // For work that outlives a modal screen: navigating from an unmounted screen pops the one underneath instead.
 export function useIsMounted(): () => boolean {
@@ -9,5 +9,5 @@ export function useIsMounted(): () => boolean {
         },
         []
     );
-    return useCallback(() => mounted.current, []);
+    return () => mounted.current;
 }

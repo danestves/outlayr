@@ -1,5 +1,3 @@
-import { useMemo } from "react";
-
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
 
@@ -10,5 +8,5 @@ const RECENT_MERCHANT_LIMIT = 6;
 
 export function useRecentMerchants(db: Database, income: boolean): string[] {
     const rows = useLiveQuery(transactions, () => recentMerchantNotesQuery(db, income), [income]);
-    return useMemo(() => recentMerchants(rows, RECENT_MERCHANT_LIMIT), [rows]);
+    return recentMerchants(rows, RECENT_MERCHANT_LIMIT);
 }

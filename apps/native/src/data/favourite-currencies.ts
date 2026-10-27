@@ -1,5 +1,4 @@
 import { eq } from "drizzle-orm";
-import { useMemo } from "react";
 
 import type { Database } from "@/db/client";
 import { appMeta } from "@/db/schema";
@@ -23,5 +22,5 @@ export function useFavouriteCurrencies(db: Database | null): string[] {
         [db]
     );
     // Keyed on the stored string so the parsed array keeps its identity, or a memoised picker rebuilds every keystroke.
-    return useMemo(() => parseFavourites(stored), [stored]);
+    return parseFavourites(stored);
 }

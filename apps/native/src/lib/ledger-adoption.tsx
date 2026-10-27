@@ -37,6 +37,10 @@ export function useLedgerAdoption(): LedgerAdoption {
     return use(LedgerAdoptionContext);
 }
 
+async function remoteLedger(engine: ReturnType<typeof adoptionEngine>) {
+    return engine ? await engine.accountLedger() : "unknown";
+}
+
 function shownStatus(holding: boolean, skipping: boolean, reconciled: AdoptionStatus): AdoptionStatus {
     if (holding) {
         return "resolving";
@@ -105,7 +109,7 @@ export function LedgerAdoptionProvider({ children }: { children: ReactNode }) {
             try {
                 await prepareAccountAdoption(db, account);
                 const engine = adoptionEngine(db);
-                const remote = engine ? await engine.accountLedger() : "unknown";
+                const remote = await remoteLedger(engine);
                 const plan = adoptionPlan(await localLedgerState(db), remote);
                 if (plan === "ask") {
                     return "ask";

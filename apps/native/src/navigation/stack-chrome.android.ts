@@ -1,5 +1,3 @@
-import { useMemo } from "react";
-
 import type { MaterialRoleColors } from "@/theme/material-roles";
 import { contrastRatio } from "@/theme/material-scheme";
 import { useMaterialColors } from "@/theme/use-material-colors";
@@ -57,5 +55,5 @@ export function stackChrome(m3: MaterialRoleColors): StackChrome {
 
 export function useStackChrome(): StackChrome {
     const m3 = useMaterialColors();
-    return useMemo(() => stackChrome(m3), [m3]);
+    return stackChrome(m3);
 }

@@ -1,6 +1,5 @@
 import { valueDatedRowsIn } from "@outlayr/money/valuation";
 import { and, gte, isNull, lte, min } from "drizzle-orm";
-import { useMemo } from "react";
 
 import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
@@ -67,17 +66,13 @@ export function useInsights(
     calendar: InsightsCalendar = DEFAULT_INSIGHTS_CALENDAR
 ): UseInsightsResult {
     const { firstWeekday, firstDayOfMonth } = calendar;
-    // Passed explicitly: the memo would freeze a `runtimeLanguage()` default on the previous language.
+    // Passed explicitly: a cached result would freeze a `runtimeLanguage()` default on the previous language.
     const { language } = useLanguage();
 
-    const queryStart = useMemo(
-        () =>
-            windowStart(period, new Date(nowMs), offset - 1, {
-                firstDayOfMonth,
-                firstWeekday,
-            }),
-        [period, nowMs, offset, firstWeekday, firstDayOfMonth]
-    );
+    const queryStart = windowStart(period, new Date(nowMs), offset - 1, {
+        firstDayOfMonth,
+        firstWeekday,
+    });
 
     const txData = useLiveQuery(
         transactions,
@@ -117,91 +112,76 @@ export function useInsights(
 
     const { displayCurrency, rates } = useValuation(db);
 
-    return useMemo(() => {
-        const cal: InsightsCalendar = { firstDayOfMonth, firstWeekday };
-        const categoriesById = new Map<string, CategoryMeta>();
-        for (const category of catData) {
-            categoriesById.set(category.id, {
-                color: category.color,
-                emoji: category.emoji,
-                icon: category.icon,
-                id: category.id,
-                income: category.income,
-                name: category.name,
-                parentId: category.parentId,
-            });
-        }
-        // parentId comes from this map, not a join: `useLiveQuery` only invalidates on its watched table, so a joined
-        // parentId would survive a re-parent and bucket spend under the old parent.
-        const valued = valueDatedRowsIn(txData, displayCurrency, rates);
-        const rows: InsightsContribution[] = txData.map((row, index) => ({
-            // `amount` is the valued amount from here down, not the row's stored one.
-            amount: valued[index],
-            categoryId: row.categoryId,
-            date: row.date,
-            income: row.income,
-            parentId: row.categoryId ? (categoriesById.get(row.categoryId)?.parentId ?? null) : null,
-        }));
-        const now = new Date(nowMs);
-        const {
-            buckets,
-            categories: composition,
-            income,
-            priorCategories: priorComposition,
-            priorIncome,
-            priorSpent,
-            spent,
-        } = aggregateInsightsWindows(rows, categoriesById, period, measure, now, offset, cal, language);
-        const total = periodTotal(buckets);
-        const net = income - spent;
-        const divisor = elapsedSlots(period, now, offset, cal);
+    const cal: InsightsCalendar = { firstDayOfMonth, firstWeekday };
+    const categoriesById = new Map<string, CategoryMeta>();
+    for (const category of catData) {
+        categoriesById.set(category.id, {
+            color: category.color,
+            emoji: category.emoji,
+            icon: category.icon,
+            id: category.id,
+            income: category.income,
+            name: category.name,
+            parentId: category.parentId,
+        });
+    }
+    // parentId comes from this map, not a join: `useLiveQuery` only invalidates on its watched table, so a joined
+    // parentId would survive a re-parent and bucket spend under the old parent.
+    const valued = valueDatedRowsIn(txData, displayCurrency, rates);
+    const rows: InsightsContribution[] = txData.map((row, index) => ({
+        // `amount` is the valued amount from here down, not the row's stored one.
+        amount: valued[index],
+        categoryId: row.categoryId,
+        date: row.date,
+        income: row.income,
+        parentId: row.categoryId ? (categoriesById.get(row.categoryId)?.parentId ?? null) : null,
+    }));
+    const now = new Date(nowMs);
+    const {
+        buckets,
+        categories: composition,
+        income,
+        priorCategories: priorComposition,
+        priorIncome,
+        priorSpent,
+        spent,
+    } = aggregateInsightsWindows(rows, categoriesById, period, measure, now, offset, cal, language);
+    const total = periodTotal(buckets);
+    const net = income - spent;
+    const divisor = elapsedSlots(period, now, offset, cal);
 
-        // SQLite returns `min()` as the stored integer (timestamp_ms), or null on an empty table.
-        const earliestRaw = earliestData[0]?.earliest ?? null;
-        const earliest = earliestRaw == null ? null : new Date(Number(earliestRaw));
-        const minOffset = earliest ? Math.min(0, offsetForDate(period, earliest, now, cal)) : 0;
+    // SQLite returns `min()` as the stored integer (timestamp_ms), or null on an empty table.
+    const earliestRaw = earliestData[0]?.earliest ?? null;
+    const earliest = earliestRaw == null ? null : new Date(Number(earliestRaw));
+    const minOffset = earliest ? Math.min(0, offsetForDate(period, earliest, now, cal)) : 0;
 
-        let compositionTotal = 0;
-        for (const item of composition) {
-            compositionTotal += item.amount;
-        }
+    let compositionTotal = 0;
+    for (const item of composition) {
+        compositionTotal += item.amount;
+    }
 
-        return {
-            atCurrent: offset >= 0,
-            atEarliest: offset <= minOffset,
-            breakdown: withCategoryDeltas(composition, priorComposition),
-            buckets,
-            categoriesById,
-            end: windowEnd(period, now, offset, cal),
-            hasHistory: earliest != null,
-            income,
-            label: windowLabel(period, offset, now, cal, language),
-            measureAverage: total / divisor,
-            movers: categoryMovers(composition, priorComposition, compositionTotal),
-            net,
-            netAverage: Math.abs(net) / divisor,
-            nextLabel: windowShortLabel(period, offset + 1, now, cal, language),
-            prevLabel: windowShortLabel(period, offset - 1, now, cal, language),
-            priorLabel: windowLabel(period, offset - 1, now, cal, language),
-            priorMeasure: measure === "income" ? priorIncome : priorSpent,
-            priorNet: priorIncome - priorSpent,
-            rows,
-            spent,
-            start: windowStart(period, now, offset, cal),
-            total,
-        };
-    }, [
-        txData,
-        catData,
-        earliestData,
-        displayCurrency,
-        rates,
-        nowMs,
-        period,
-        measure,
-        offset,
-        firstWeekday,
-        firstDayOfMonth,
-        language,
-    ]);
+    return {
+        atCurrent: offset >= 0,
+        atEarliest: offset <= minOffset,
+        breakdown: withCategoryDeltas(composition, priorComposition),
+        buckets,
+        categoriesById,
+        end: windowEnd(period, now, offset, cal),
+        hasHistory: earliest != null,
+        income,
+        label: windowLabel(period, offset, now, cal, language),
+        measureAverage: total / divisor,
+        movers: categoryMovers(composition, priorComposition, compositionTotal),
+        net,
+        netAverage: Math.abs(net) / divisor,
+        nextLabel: windowShortLabel(period, offset + 1, now, cal, language),
+        prevLabel: windowShortLabel(period, offset - 1, now, cal, language),
+        priorLabel: windowLabel(period, offset - 1, now, cal, language),
+        priorMeasure: measure === "income" ? priorIncome : priorSpent,
+        priorNet: priorIncome - priorSpent,
+        rows,
+        spent,
+        start: windowStart(period, now, offset, cal),
+        total,
+    };
 }

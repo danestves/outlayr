@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { findCategoryPreset, presetForName } from "@/data/categories-core";
 import { getCachedEnrichment, setCachedEnrichment } from "@/domain/enrichment-cache";
@@ -148,14 +148,14 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
     const groundedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const groundedFollowUpRef = useRef<() => void>(noop);
     const recheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const clearTimers = useCallback(() => {
+    const clearTimers = () => {
         for (const ref of [timerRef, groundedTimerRef, recheckTimerRef]) {
             if (ref.current != null) {
                 clearTimeout(ref.current);
                 ref.current = null;
             }
         }
-    }, []);
+    };
     const requestIdRef = useRef(0);
     // Ticketed, not a bare set: a superseded request still settles and must not delete an entry a LATER request owns.
     const inFlightRef = useRef<Map<string, number>>(new Map());
@@ -193,27 +193,24 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         latest.current = resolved;
     });
 
-    const rememberedNow = useCallback((): string | null => {
+    const rememberedNow = (): string | null => {
         const held = rememberedRef.current;
         if (held == null || held.key !== merchantKey(nameRef.current)) {
             return null;
         }
         return held.categoryId;
-    }, []);
+    };
 
-    const emit = useCallback(
-        (suggestion: EnrichmentSuggestion) => {
-            lastEmittedRef.current = { key: merchantKey(nameRef.current), suggestion };
-            latest.current.onSuggest(latest.current.resolveLocal(withRemembered(suggestion, rememberedNow())));
-        },
-        [rememberedNow]
-    );
+    const emit = (suggestion: EnrichmentSuggestion) => {
+        lastEmittedRef.current = { key: merchantKey(nameRef.current), suggestion };
+        latest.current.onSuggest(latest.current.resolveLocal(withRemembered(suggestion, rememberedNow())));
+    };
 
-    const emitNothing = useCallback(() => {
+    const emitNothing = () => {
         emit(NOTHING);
-    }, [emit]);
+    };
 
-    const recallFromLedger = useCallback(async (key: string) => {
+    const recallFromLedger = async (key: string) => {
         const resolve = latest.current.resolveHistory;
         if (resolve == null) {
             rememberedRef.current = { categoryId: null, key };
@@ -230,108 +227,98 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         const last = lastEmittedRef.current;
         const base = last != null && last.key === key ? last.suggestion : NOTHING;
         latest.current.onSuggest(latest.current.resolveLocal(withRemembered(base, categoryId)));
-    }, []);
+    };
 
-    const resolveTransport = useCallback(
-        () => (latest.current.transport === undefined ? enrichmentTransport() : latest.current.transport),
-        []
-    );
+    const resolveTransport = () =>
+        latest.current.transport === undefined ? enrichmentTransport() : latest.current.transport;
 
-    const buildRequest = useCallback(
-        (grounded: boolean) => ({
-            categoryTree: latest.current.categoryTree.map((branch) => ({
-                children: [...branch.children],
-                name: branch.name,
-            })),
-            currency: latest.current.currency,
-            groundedLookup: grounded,
-            income: latest.current.income,
-            locale: latest.current.locale,
-            name: nameRef.current.trim(),
-            regionCode: latest.current.regionCode,
-        }),
-        []
-    );
+    const buildRequest = (grounded: boolean) => ({
+        categoryTree: latest.current.categoryTree.map((branch) => ({
+            children: [...branch.children],
+            name: branch.name,
+        })),
+        currency: latest.current.currency,
+        groundedLookup: grounded,
+        income: latest.current.income,
+        locale: latest.current.locale,
+        name: nameRef.current.trim(),
+        regionCode: latest.current.regionCode,
+    });
 
     // `askedIn` is the request's currency, not the one on screen: filing under the screen's would cache the old
     // country's answer in the new partition.
-    const emitDomainResult = useCallback(
-        (key: string, result: RemoteEnrichmentResult | null, askedIn: string | undefined): boolean => {
-            if (result?.domain == null || merchantKey(nameRef.current) !== key) {
-                return false;
-            }
-            if (result.grounding !== true) {
-                setCachedEnrichment(key, result, askedIn);
-            }
-            const fallback = curatedFallbackRef.current;
-            if (fallback != null && fallback.key === key) {
-                emit({ ...fallback.suggestion, domain: result.domain });
-            } else {
-                emit(toRemoteSuggestion(result));
-            }
-            return true;
-        },
-        [emit]
-    );
-
-    const emitRemoteResult = useCallback(
-        (key: string, result: RemoteEnrichmentResult | null) => {
-            const fallback = curatedFallbackRef.current;
-            if (fallback != null && fallback.key === key) {
-                if (result?.domain != null) {
-                    emit({ ...fallback.suggestion, domain: result.domain });
-                }
-                return;
-            }
-            if (result == null) {
-                emitNothing();
-                return;
-            }
+    const emitDomainResult = (
+        key: string,
+        result: RemoteEnrichmentResult | null,
+        askedIn: string | undefined
+    ): boolean => {
+        if (result?.domain == null || merchantKey(nameRef.current) !== key) {
+            return false;
+        }
+        if (result.grounding !== true) {
+            setCachedEnrichment(key, result, askedIn);
+        }
+        const fallback = curatedFallbackRef.current;
+        if (fallback != null && fallback.key === key) {
+            emit({ ...fallback.suggestion, domain: result.domain });
+        } else {
             emit(toRemoteSuggestion(result));
-        },
-        [emit, emitNothing]
-    );
+        }
+        return true;
+    };
 
-    const runRemote = useCallback(
-        async (key: string) => {
-            const call = resolveTransport();
-            if (call == null) {
-                return;
+    const emitRemoteResult = (key: string, result: RemoteEnrichmentResult | null) => {
+        const fallback = curatedFallbackRef.current;
+        if (fallback != null && fallback.key === key) {
+            if (result?.domain != null) {
+                emit({ ...fallback.suggestion, domain: result.domain });
             }
-            requestIdRef.current += 1;
-            const id = requestIdRef.current;
-            inFlightRef.current.set(key, id);
-            setPending(true);
-            const request = buildRequest(false);
-            let result: RemoteEnrichmentResult | null = null;
-            try {
-                result = await withTimeout(call(request), REMOTE_TIMEOUT_MS, null);
-            } catch {
-                result = null;
-            }
-            if (inFlightRef.current.get(key) === id) {
-                inFlightRef.current.delete(key);
-            }
-            if (id !== requestIdRef.current) {
-                return;
-            }
-            if (result?.grounding !== true) {
-                setCachedEnrichment(key, result, request.currency);
-            }
-            if (merchantKey(nameRef.current) !== key) {
-                setPending(false);
-                return;
-            }
-            // Below the ticket check: a superseded request recording here would answer for a name the user has left,
-            // wrongly suppressing or spending the grounded follow-up.
-            lastRemoteOutcomeRef.current = { hasDomain: result?.domain != null, key };
+            return;
+        }
+        if (result == null) {
+            emitNothing();
+            return;
+        }
+        emit(toRemoteSuggestion(result));
+    };
+
+    const runRemote = async (key: string) => {
+        const call = resolveTransport();
+        if (call == null) {
+            return;
+        }
+        requestIdRef.current += 1;
+        const id = requestIdRef.current;
+        inFlightRef.current.set(key, id);
+        setPending(true);
+        const request = buildRequest(false);
+        let result: RemoteEnrichmentResult | null = null;
+        try {
+            result = await withTimeout(call(request), REMOTE_TIMEOUT_MS, null);
+        } catch {
+            result = null;
+        }
+        if (inFlightRef.current.get(key) === id) {
+            inFlightRef.current.delete(key);
+        }
+        if (id !== requestIdRef.current) {
+            return;
+        }
+        if (result?.grounding !== true) {
+            setCachedEnrichment(key, result, request.currency);
+        }
+        if (merchantKey(nameRef.current) !== key) {
             setPending(false);
-            emitRemoteResult(key, result);
-        },
-        [emitRemoteResult, resolveTransport, buildRequest]
-    );
+            return;
+        }
+        // Below the ticket check: a superseded request recording here would answer for a name the user has left,
+        // wrongly suppressing or spending the grounded follow-up.
+        lastRemoteOutcomeRef.current = { hasDomain: result?.domain != null, key };
+        setPending(false);
+        emitRemoteResult(key, result);
+    };
 
-    const runGroundedFollowUp = useCallback(async () => {
+    const runGroundedFollowUp = async () => {
         // `remoteEnabled` too: a merchant the ledger already knew records an outcome, and its name must not leave here.
         if (!latest.current.groundedLookup || !latest.current.remoteEnabled) {
             return;
@@ -390,19 +377,19 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
             }, delay);
         };
         scheduleRecheck(GROUNDED_RECHECK_MS, 1);
-    }, [resolveTransport, buildRequest, emitDomainResult]);
+    };
 
     // Every final answer `run` reaches without the model must supersede older requests, or one settling late emits
     // the PREVIOUS name's suggestion (in the account editor, the last merchant's logo).
-    const supersedeInFlight = useCallback(() => {
+    const supersedeInFlight = () => {
         requestIdRef.current += 1;
         // Cleared with the ticket, or `run` refuses to restart a name whose abandoned call is still out. `runRemote`
         // bumps the ticket as it starts, so this never drops a live request.
         inFlightRef.current.clear();
         setPending(false);
-    }, []);
+    };
 
-    const run = useCallback(async () => {
+    const run = async () => {
         // Read first: every early return below is final, and a force left standing would skip the next lookup's cache.
         const force = forceRef.current;
         forceRef.current = false;
@@ -471,26 +458,23 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
             supersedeInFlight();
         }
         await runRemote(key);
-    }, [emit, emitNothing, emitRemoteResult, recallFromLedger, runRemote, supersedeInFlight]);
+    };
 
     useEffect(() => {
         groundedFollowUpRef.current = runGroundedFollowUp;
-    }, [runGroundedFollowUp]);
+    });
 
-    const onNameChange = useCallback(
-        (next: string) => {
-            nameRef.current = next;
-            if (!latest.current.enabled) {
-                return;
-            }
-            clearTimers();
-            timerRef.current = setTimeout(run, DEBOUNCE_MS);
-            groundedTimerRef.current = setTimeout(runGroundedFollowUp, GROUNDED_IDLE_MS);
-        },
-        [clearTimers, run, runGroundedFollowUp]
-    );
+    const onNameChange = (next: string) => {
+        nameRef.current = next;
+        if (!latest.current.enabled) {
+            return;
+        }
+        clearTimers();
+        timerRef.current = setTimeout(run, DEBOUNCE_MS);
+        groundedTimerRef.current = setTimeout(runGroundedFollowUp, GROUNDED_IDLE_MS);
+    };
 
-    const lookupNow = useCallback(async () => {
+    const lookupNow = async () => {
         if (!latest.current.enabled || forcingRef.current) {
             return;
         }
@@ -504,13 +488,13 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
                 forcingRef.current = false;
                 setForcing(false);
             });
-    }, [clearTimers, run, runGroundedFollowUp]);
+    };
 
-    const cancel = useCallback(() => {
+    const cancel = useEffectEvent(() => {
         clearTimers();
         requestIdRef.current += 1;
         inFlightRef.current.clear();
-    }, [clearTimers]);
+    });
 
     if (!enabled && pending) {
         setPending(false);
@@ -520,21 +504,14 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         if (!enabled) {
             cancel();
         }
-    }, [enabled, cancel]);
+    }, [enabled]);
 
-    useEffect(() => () => cancel(), [cancel]);
+    useEffect(() => () => cancel(), []);
 
     // The same name in another currency can be another business, and the backfill treats a saved logo as final,
     // so a currency change asks again.
     const seenCurrencyRef = useRef(currency);
-    useEffect(() => {
-        if (seenCurrencyRef.current === currency) {
-            return;
-        }
-        seenCurrencyRef.current = currency;
-        if (!latest.current.enabled) {
-            return;
-        }
+    const restartForCurrency = useEffectEvent(() => {
         supersedeInFlight();
         lastRemoteOutcomeRef.current = null;
         const key = merchantKey(nameRef.current);
@@ -546,9 +523,27 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
             emit({ ...last.suggestion, domain: null });
         }
         onNameChange(nameRef.current);
-    }, [currency, emit, onNameChange, supersedeInFlight]);
+    });
+    useEffect(() => {
+        if (seenCurrencyRef.current === currency) {
+            return;
+        }
+        seenCurrencyRef.current = currency;
+        if (!latest.current.enabled) {
+            return;
+        }
+        restartForCurrency();
+    }, [currency]);
 
     const seenIncomeRef = useRef(income);
+    const restartForIncome = useEffectEvent(() => {
+        supersedeInFlight();
+        lastRemoteOutcomeRef.current = null;
+        if (merchantKey(nameRef.current).length < MIN_KEY_LENGTH) {
+            return;
+        }
+        onNameChange(nameRef.current);
+    });
     useEffect(() => {
         if (seenIncomeRef.current === income) {
             return;
@@ -557,13 +552,8 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         if (!latest.current.enabled) {
             return;
         }
-        supersedeInFlight();
-        lastRemoteOutcomeRef.current = null;
-        if (merchantKey(nameRef.current).length < MIN_KEY_LENGTH) {
-            return;
-        }
-        onNameChange(nameRef.current);
-    }, [income, onNameChange, supersedeInFlight]);
+        restartForIncome();
+    }, [income]);
 
     return { lookupNow, onNameChange, pending: pending || forcing };
 }

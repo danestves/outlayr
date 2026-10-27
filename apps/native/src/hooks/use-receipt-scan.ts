@@ -6,7 +6,7 @@ import {
     UIImagePickerPreferredAssetRepresentationMode,
 } from "expo-image-picker";
 import type { ImagePickerResult } from "expo-image-picker";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { localIsoDate } from "@/domain/voice-entry";
 import { duringHandoff } from "@/lib/app-handoff";
@@ -137,7 +137,7 @@ export function useImageScan<Context, Draft>({
         sentRef.current = { context, send };
     });
 
-    const read = useCallback(async (photo: ScanPhoto, take: number) => {
+    const read = async (photo: ScanPhoto, take: number) => {
         setPhase({ kind: "scanning", photo });
         let prepared: Awaited<ReturnType<typeof prepareReceiptImage>>;
         try {
@@ -153,59 +153,59 @@ export function useImageScan<Context, Draft>({
             return;
         }
         const { context: sentContext, send: sent } = sentRef.current;
+        let settled: Awaited<ReturnType<typeof sent>> | "timeout";
         try {
-            const settled = await withTimeout(
+            settled = await withTimeout(
                 sent(prepared.bytes, localIsoDate(new Date())),
                 REQUEST_TIMEOUT_MS,
                 "timeout" as const
             );
-            if (take !== takeRef.current) {
-                return;
-            }
-            if (settled === "timeout") {
-                setPhase({ kind: "failed", photo, reason: "timeout" });
-                return;
-            }
-            if (settled.status === "ok" && settled.draft !== null) {
-                setPhase({ context: sentContext, draft: settled.draft, image: prepared.bytes, kind: "review", photo });
-                return;
-            }
-            setPhase({ kind: "failed", photo, reason: failureFor(settled.status) });
         } catch {
             if (take === takeRef.current) {
                 setPhase({ kind: "failed", photo, reason: "offline" });
             }
+            return;
         }
-    }, []);
+        if (take !== takeRef.current) {
+            return;
+        }
+        if (settled === "timeout") {
+            setPhase({ kind: "failed", photo, reason: "timeout" });
+            return;
+        }
+        if (settled.status === "ok" && settled.draft !== null) {
+            setPhase({ context: sentContext, draft: settled.draft, image: prepared.bytes, kind: "review", photo });
+            return;
+        }
+        setPhase({ kind: "failed", photo, reason: failureFor(settled.status) });
+    };
 
-    const adopt = useCallback(
-        (result: ImagePickerResult, take: number) => {
-            if (take !== takeRef.current) {
-                return;
-            }
-            const photo = photoFrom(result);
-            if (photo === null) {
-                setPhase({ kind: "idle" });
-                return;
-            }
-            void read(photo, take);
-        },
-        [read]
-    );
+    const adopt = (result: ImagePickerResult, take: number) => {
+        if (take !== takeRef.current) {
+            return;
+        }
+        const photo = photoFrom(result);
+        if (photo === null) {
+            setPhase({ kind: "idle" });
+            return;
+        }
+        void read(photo, take);
+    };
 
     // Android can tear the app down under the picker: that launch never resolves, so its photo is picked up here.
+    const adoptPending = useEffectEvent((result: ImagePickerResult, take: number) => adopt(result, take));
     useEffect(() => {
         const take = takeRef.current;
         pendingPick(owner)
             .then((result) => {
                 if (result !== null) {
-                    adopt(result, take);
+                    adoptPending(result, take);
                 }
             })
             .catch(() => undefined);
-    }, [adopt, owner]);
+    }, [owner]);
 
-    const takePhoto = useCallback(() => {
+    const takePhoto = () => {
         takeRef.current += 1;
         const take = takeRef.current;
         setPhase({ kind: "picking", source: "camera" });
@@ -242,9 +242,9 @@ export function useImageScan<Context, Draft>({
                 }
             }
         })();
-    }, [adopt, owner]);
+    };
 
-    const chooseFromLibrary = useCallback(() => {
+    const chooseFromLibrary = () => {
         takeRef.current += 1;
         const take = takeRef.current;
         setPhase({ kind: "picking", source: "library" });
@@ -257,26 +257,23 @@ export function useImageScan<Context, Draft>({
                 }
             }
         })();
-    }, [adopt, owner]);
+    };
 
-    const scan = useCallback(
-        (photo: ScanPhoto) => {
-            takeRef.current += 1;
-            void read(photo, takeRef.current);
-        },
-        [read]
-    );
+    const scan = (photo: ScanPhoto) => {
+        takeRef.current += 1;
+        void read(photo, takeRef.current);
+    };
 
-    const retry = useCallback(() => {
+    const retry = () => {
         if (phase.kind === "failed" && phase.photo !== null) {
             scan(phase.photo);
         }
-    }, [phase, scan]);
+    };
 
-    const reset = useCallback(() => {
+    const reset = () => {
         takeRef.current += 1;
         setPhase({ kind: "idle" });
-    }, []);
+    };
 
     useEffect(
         () => () => {

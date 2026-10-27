@@ -1,5 +1,3 @@
-import { useMemo } from "react";
-
 import type { Database } from "@/db/client";
 import { installmentPlans, installments, outsidePayments, transactions, transfers } from "@/db/schema";
 import { addLocalDays } from "@/domain/local-day";
@@ -17,8 +15,8 @@ import {
 import type { PlanWithStanding, UpcomingInstallment } from "./installments-core";
 import { useLiveQuery } from "./live-query";
 
-// `nowMs` is the screen's `useNow()` reading: overdue is measured against the day, and a data-keyed memo would keep
-// yesterday's verdict past midnight.
+// `nowMs` is the screen's `useNow()` reading: overdue is measured against the day, and a result keyed on the data
+// alone would keep yesterday's verdict past midnight.
 export function useInstallmentPlans(db: Database, nowMs: number, accountId?: string): PlanWithStanding[] {
     const plans = useLiveQuery(installmentPlans, () => livePlansQuery(db, accountId), [accountId]);
     const rows = useLiveQuery(installments, () => liveInstallmentsQuery(db));
@@ -26,10 +24,7 @@ export function useInstallmentPlans(db: Database, nowMs: number, accountId?: str
     const outside = useLiveQuery(outsidePayments, () => liveOutsidePaymentsQuery(db));
     const purchases = useLiveQuery(transactions, () => planPurchasesQuery(db));
     const fees = useLiveQuery(transactions, () => planFeesQuery(db));
-    return useMemo(
-        () => assemblePlans({ fees, installments: rows, outside, payments, plans, purchases }, new Date(nowMs)),
-        [fees, nowMs, outside, payments, plans, purchases, rows]
-    );
+    return assemblePlans({ fees, installments: rows, outside, payments, plans, purchases }, new Date(nowMs));
 }
 
 // Overdue installments are included.
@@ -40,5 +35,5 @@ export function useUpcomingInstallments(
 ): UpcomingInstallment[] {
     const { accountId, days } = window;
     const plans = useInstallmentPlans(db, nowMs, accountId);
-    return useMemo(() => upcomingInstallments(plans, new Date(addLocalDays(nowMs, days))), [days, nowMs, plans]);
+    return upcomingInstallments(plans, new Date(addLocalDays(nowMs, days)));
 }

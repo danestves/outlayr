@@ -4,7 +4,6 @@ import type { MarketRateType } from "@outlayr/money/rates";
 import { buildRateTable } from "@outlayr/money/valuation";
 import type { RateTable } from "@outlayr/money/valuation";
 import { and, desc, eq, gt, inArray, isNull, lt, or } from "drizzle-orm";
-import { useMemo } from "react";
 
 import type { Database } from "@/db/client";
 import { exchangeRates, transfers } from "@/db/schema";
@@ -52,7 +51,7 @@ export function useTransferRates(
     codes: readonly string[],
     rateTypes: readonly MarketRateType[]
 ): Partial<Record<MarketRateType, TransferRateTable>> {
-    const quotes = useMemo(() => [...new Set(codes.filter((code) => code !== "USD"))].sort(), [codes]);
+    const quotes = [...new Set(codes.filter((code) => code !== "USD"))].sort();
     const rows = useRatesRead(
         () =>
             db
@@ -73,28 +72,20 @@ export function useTransferRates(
                 .all(),
         [db, quotes.join(","), rateTypes.join(",")]
     );
-    return useMemo(
-        () =>
-            Object.fromEntries(
-                rateTypes.map((type) => {
-                    const ofType = rows.filter((row) => row.rateType === type);
-                    const source = (code: string, dateKey: string) => {
-                        let newest: (typeof ofType)[number] | null = null;
-                        for (const row of ofType) {
-                            if (
-                                row.quote === code &&
-                                row.date <= dateKey &&
-                                (newest === null || row.date > newest.date)
-                            ) {
-                                newest = row;
-                            }
-                        }
-                        return newest === null ? null : { date: newest.date, fetchedAt: newest.fetchedAt };
-                    };
-                    return [type, { ...buildRateTable(ofType), source }];
-                })
-            ),
-        [rows, rateTypes]
+    return Object.fromEntries(
+        rateTypes.map((type) => {
+            const ofType = rows.filter((row) => row.rateType === type);
+            const source = (code: string, dateKey: string) => {
+                let newest: (typeof ofType)[number] | null = null;
+                for (const row of ofType) {
+                    if (row.quote === code && row.date <= dateKey && (newest === null || row.date > newest.date)) {
+                        newest = row;
+                    }
+                }
+                return newest === null ? null : { date: newest.date, fetchedAt: newest.fetchedAt };
+            };
+            return [type, { ...buildRateTable(ofType), source }];
+        })
     );
 }
 

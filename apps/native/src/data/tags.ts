@@ -1,5 +1,3 @@
-import { useMemo } from "react";
-
 import type { Database } from "@/db/client";
 import { tags, transactionTags } from "@/db/schema";
 import { sortTags } from "@/domain/tags";
@@ -10,11 +8,11 @@ import type { TagRow } from "./tags-core";
 
 export function useTags(db: Database): TagRow[] {
     const rows = useLiveQuery(tags, () => liveTagsQuery(db));
-    return useMemo(() => sortTags(rows), [rows]);
+    return sortTags(rows);
 }
 
 /** Keyed on the id, so a form opened on another entry re-reads rather than showing the last one's tags. */
 export function useTagIdsFor(db: Database, transactionId: string | null): string[] {
     const rows = useLiveQuery(transactionTags, () => tagIdsForQuery(db, transactionId ?? ""), [transactionId]);
-    return useMemo(() => (transactionId ? rows.map((row) => row.tagId) : []), [rows, transactionId]);
+    return transactionId ? rows.map((row) => row.tagId) : [];
 }

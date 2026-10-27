@@ -1,7 +1,7 @@
 import { useNavigation } from "expo-router";
 import type { NativeStackNavigationProp } from "expo-router";
 import type { ParamListBase } from "expo-router/react-navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { AccessibilityInfo, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -40,10 +40,7 @@ export function useRestingSheet(wakeAnnouncement: string) {
     }, [awake, wakeAnnouncement]);
 
     const restDetent = heightDetent(HEADER_HEIGHT + bodyHeight + REST_BOTTOM_ROOM + insets.bottom, windowHeight);
-    const sheet = useMemo(
-        () => ({ sheetAllowedDetents: awake ? LARGE_ONLY : [restDetent, 1], sheetGrabberVisible: !awake }),
-        [awake, restDetent]
-    );
+    const sheet = { sheetAllowedDetents: awake ? LARGE_ONLY : [restDetent, 1], sheetGrabberVisible: !awake };
     const rest: SheetRest | undefined = awake ? undefined : { onHeight: setBodyHeight, onWake: () => setAwake(true) };
 
     return { awake, height: undefined, rest, sheet };

@@ -1,5 +1,4 @@
 import { and, desc, gte, isNotNull, isNull, lt, lte } from "drizzle-orm";
-import { useMemo } from "react";
 
 import type { Database } from "@/db/client";
 import { transactions, transfers } from "@/db/schema";
@@ -71,19 +70,17 @@ export function useTransferFees(db: Database, enabled = true) {
                 : NO_READ,
         [enabled]
     );
-    return useMemo(() => {
-        const byTransfer = new Map<string, (typeof feeRows)[number][]>();
-        for (const fee of feeRows) {
-            const key = fee.transferId ?? "";
-            const charged = byTransfer.get(key);
-            if (charged) {
-                charged.push(fee);
-            } else {
-                byTransfer.set(key, [fee]);
-            }
+    const byTransfer = new Map<string, (typeof feeRows)[number][]>();
+    for (const fee of feeRows) {
+        const key = fee.transferId ?? "";
+        const charged = byTransfer.get(key);
+        if (charged) {
+            charged.push(fee);
+        } else {
+            byTransfer.set(key, [fee]);
         }
-        return byTransfer;
-    }, [feeRows]);
+    }
+    return byTransfer;
 }
 
 /** Null bounds admit no transfer at all, as a query matching nothing: a hook cannot be skipped. */
@@ -112,6 +109,6 @@ export function useLogTransfers(db: Database, nowMs: number, bounds: TransferBou
         nowMs
     );
     const fees = useTransferFees(db, bounds !== null);
-    const byId = useMemo(() => new Map(accounts.map((account) => [account.id, account])), [accounts]);
-    return useMemo(() => rows.map((row) => toTransferLogRow(row, byId, fees)), [rows, byId, fees]);
+    const byId = new Map(accounts.map((account) => [account.id, account]));
+    return rows.map((row) => toTransferLogRow(row, byId, fees));
 }

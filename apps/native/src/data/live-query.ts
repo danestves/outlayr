@@ -1,6 +1,6 @@
 import { getTableName } from "drizzle-orm";
 import type { SQLiteTable } from "drizzle-orm/sqlite-core";
-import { useCallback, useRef, useSyncExternalStore } from "react";
+import { useRef, useSyncExternalStore } from "react";
 
 import { subscribeToTableChanges } from "./database-changes";
 import { subscribeRatesRevision } from "./rates-revision";
@@ -61,12 +61,21 @@ export function useLiveRead<TValue>(
     clock?: number
 ): TValue {
     const tableName = getTableName(table);
-    const subscribeTable = useCallback((bump: () => void) => subscribeToTableChanges(tableName, bump), [tableName]);
+    const subscribeTable = (bump: () => void) => subscribeToTableChanges(tableName, bump);
     return useRead(subscribeTable, read, deps, equal, clock);
 }
 
 export function useRatesRead<TValue>(read: () => TValue, deps: readonly unknown[] = []): TValue {
     return useRead(subscribeRatesRevision, read, deps);
+}
+
+function runChangeCheck(flag: { current: boolean }, onStoreChange: () => void): void {
+    flag.current = true;
+    try {
+        onStoreChange();
+    } finally {
+        flag.current = false;
+    }
 }
 
 function useRead<TValue>(
@@ -81,19 +90,11 @@ function useRead<TValue>(
     const inChangeCheck = useRef(false);
     const subscribePaused = useTabPaused(subscribeChanges);
 
-    const subscribe = useCallback(
-        (onStoreChange: () => void) =>
-            subscribePaused(() => {
-                revision.current += 1;
-                inChangeCheck.current = true;
-                try {
-                    onStoreChange();
-                } finally {
-                    inChangeCheck.current = false;
-                }
-            }),
-        [subscribePaused]
-    );
+    const subscribe = (onStoreChange: () => void) =>
+        subscribePaused(() => {
+            revision.current += 1;
+            runChangeCheck(inChangeCheck, onStoreChange);
+        });
 
     // React calls this every render: return the identical value until invalidated, or re-reading here loops forever.
     const getSnapshot = (): TValue | typeof SKIPPED_READ => {

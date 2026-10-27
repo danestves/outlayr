@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { createContext, use, useCallback, useMemo } from "react";
+import { createContext, use } from "react";
 
 import { CATALOGS, EN } from "./catalog";
 import type { TranslatableKey } from "./catalog";
@@ -19,25 +19,28 @@ interface LanguageContextValue {
 
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
 
-/** The language is the device's: iOS owns it per app (Settings › Outlayr › Language), so nothing is stored here. */
-
-export function LanguageProvider({ children }: { children: ReactNode }) {
-    const language = resolveLanguage(useDeviceLanguageTag());
-    // During render, not in an effect: `runtimeLanguage()` defaults the date, budget and insights formatters,
-    // so an effect would hand children the previous language for a frame.
-    setRuntimeLanguage(language);
-
-    const t = useCallback<TranslateFn>(
-        (key, params) =>
+function languageContextValue(language: Language): LanguageContextValue {
+    return {
+        language,
+        t: (key, params) =>
             translate(key, {
                 catalog: CATALOGS[language] ?? EN,
                 fallback: EN,
                 params,
             }),
-        [language]
-    );
+    };
+}
 
-    const value = useMemo(() => ({ language, t }), [language, t]);
+/** The language is the device's: iOS owns it per app (Settings › Outlayr › Language), so nothing is stored here. */
+
+export function LanguageProvider({ children }: { children: ReactNode }) {
+    const tag = useDeviceLanguageTag();
+    const language = resolveLanguage(tag);
+    // During render, not in an effect: `runtimeLanguage()` defaults the date, budget and insights formatters,
+    // so an effect would hand children the previous language for a frame.
+    setRuntimeLanguage(language);
+
+    const value = languageContextValue(language);
 
     return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }

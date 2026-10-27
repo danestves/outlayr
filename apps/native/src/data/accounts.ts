@@ -6,7 +6,6 @@ import type { AccountCellRow, DisplayedBalance, AccountsOverview } from "@outlay
 import { utcDateString } from "@outlayr/money/dates";
 import type { RateTable } from "@outlayr/money/valuation";
 import { isNull } from "drizzle-orm";
-import { useMemo } from "react";
 
 import type { Database } from "@/db/client";
 import { accounts, outsideMoves, outsidePayments, transactions, transfers } from "@/db/schema";
@@ -46,22 +45,22 @@ export function useAccounts(db: Database): Account[] {
 // Readers that only resolve an id keep `useAccounts`: an entry or a transfer can point at a person.
 export function useBankAccounts(db: Database): Account[] {
     const all = useAccounts(db);
-    return useMemo(() => all.filter((account) => !isPerson(account)), [all]);
+    return all.filter((account) => !isPerson(account));
 }
 
 export function usePeople(db: Database): Account[] {
     const all = useAccounts(db);
-    return useMemo(() => all.filter(isPerson), [all]);
+    return all.filter(isPerson);
 }
 
 export function useBalanceRates(db: Database, code: string, accountRows: readonly Account[]): RateTable {
-    const currencies = useMemo(() => [...new Set(accountRows.map((account) => account.currency))], [accountRows]);
+    const currencies = [...new Set(accountRows.map((account) => account.currency))];
     return useValuationIn(db, code, currencies).rates;
 }
 
 export function useSettledAccountCells(db: Database, accountId: string, nowMs: number): PlottedCell[] {
     // Bounded in SQL (see `settledAccountsCellQuery`): a grouped cell keeps only its day key.
-    const settledAt = useMemo(() => new Date(nowMs), [nowMs]);
+    const settledAt = new Date(nowMs);
     const rows = useLiveQuery(
         transactions,
         () => settledAccountCellQuery(db, accountId, settledAt),
@@ -92,10 +91,7 @@ export function useSettledAccountCells(db: Database, accountId: string, nowMs: n
         [accountId, settledAt],
         nowMs
     );
-    return useMemo(
-        () => plottedCells(rows, outbound, inbound, [...outside, ...moves]),
-        [rows, outbound, inbound, outside, moves]
-    );
+    return plottedCells(rows, outbound, inbound, [...outside, ...moves]);
 }
 
 type PlottedRow = Omit<CellRow, "income"> & { plotDay: string };
@@ -125,15 +121,21 @@ export async function settledCellsAt(db: Database, accountId: string, now: Date)
     return plottedCells(rows, outbound, inbound, [...outside, ...moves]);
 }
 
+interface AccountBalanceDetails {
+    balance: AccountBalance;
+    cells: PlottedCell[];
+    rates: RateTable;
+}
+
 export function useAccountBalanceDetails(
     db: Database,
     account: Pick<Account, "id" | "currency" | "initialBalance">,
     nowMs: number
-): { balance: AccountBalance; cells: PlottedCell[]; rates: RateTable } {
+): AccountBalanceDetails {
     const cells = useSettledAccountCells(db, account.id, nowMs);
     const { rates } = useValuationIn(db, account.currency);
-    const balance = useMemo(() => accountBalance(account, cells, rates), [account, cells, rates]);
-    return useMemo(() => ({ balance, cells, rates }), [balance, cells, rates]);
+    const balance = accountBalance(account, cells, rates);
+    return { balance, cells, rates };
 }
 
 export function useAccountBalance(
@@ -148,38 +150,32 @@ function useSettledCells(db: Database, settledAt: Date): SettledCell[] {
     const clock = settledAt.getTime();
     const cellRows = useLiveQuery(transactions, () => settledAccountsCellQuery(db, settledAt), [settledAt], clock);
     const legs = useLiveQuery(transfers, () => settledTransfersQuery(db, settledAt), [settledAt], clock);
-    const outbound = useMemo(() => legs.filter((leg) => leg.leg === "out"), [legs]);
-    const inbound = useMemo(() => legs.filter((leg) => leg.leg === "in"), [legs]);
     const outside = useLiveQuery(outsidePayments, () => settledOutsidePaymentsQuery(db, settledAt), [settledAt], clock);
     const moves = useLiveQuery(outsideMoves, () => settledOutsideMovesQuery(db, settledAt), [settledAt], clock);
-    return useMemo(
-        () => [
-            ...cellRows.map(({ accountId, plotDay, ...row }) => ({ ...toCurrencyCell(row), accountId, plotDay })),
-            ...outbound.map(({ accountId, leg: _leg, plotDay, ...row }) => ({
-                ...toTransferCell(row, false),
-                accountId,
-                plotDay,
-            })),
-            ...[...inbound, ...outside, ...moves].map(({ accountId, plotDay, ...row }) => ({
-                ...toTransferCell(row, true),
-                accountId,
-                plotDay,
-            })),
-        ],
-        [cellRows, outbound, inbound, outside, moves]
-    );
+    const outbound = legs.filter((leg) => leg.leg === "out");
+    const inbound = legs.filter((leg) => leg.leg === "in");
+    return [
+        ...cellRows.map(({ accountId, plotDay, ...row }) => ({ ...toCurrencyCell(row), accountId, plotDay })),
+        ...outbound.map(({ accountId, leg: _leg, plotDay, ...row }) => ({
+            ...toTransferCell(row, false),
+            accountId,
+            plotDay,
+        })),
+        ...[...inbound, ...outside, ...moves].map(({ accountId, plotDay, ...row }) => ({
+            ...toTransferCell(row, true),
+            accountId,
+            plotDay,
+        })),
+    ];
 }
 
 export type SettledCell = AccountCellRow & PlottedCell;
 
 export function useOverviewOf(db: Database, rows: readonly Account[], displayCurrency: string, nowMs: number) {
-    const settledAt = useMemo(() => new Date(nowMs), [nowMs]);
+    const settledAt = new Date(nowMs);
     const cells = useSettledCells(db, settledAt);
     const rates = useBalanceRates(db, displayCurrency, rows);
-    const overview = useMemo(
-        () => accountsOverview(rows, cells, displayCurrency, rates, settledAt),
-        [rows, cells, displayCurrency, rates, settledAt]
-    );
+    const overview = accountsOverview(rows, cells, displayCurrency, rates, settledAt);
     return { cells, overview, rates };
 }
 
@@ -190,30 +186,25 @@ export interface NetWorth {
 
 function useNetWorthIn(db: Database, valuation: Valuation, nowMs: number): NetWorth {
     const rows = useAccounts(db);
-    const settledAt = useMemo(() => new Date(nowMs), [nowMs]);
+    const settledAt = new Date(nowMs);
     const cells = useSettledCells(db, settledAt);
     const { displayCurrency } = valuation;
     const rates = useBalanceRates(db, displayCurrency, rows);
-    const series = useMemo(() => {
-        const byAccount = new Map<string, PlottedCell[]>();
-        for (const { accountId, ...cell } of cells) {
-            if (accountId == null) {
-                continue;
-            }
-            const bucket = byAccount.get(accountId);
-            if (bucket) {
-                bucket.push(cell);
-            } else {
-                byAccount.set(accountId, [cell]);
-            }
+    const byAccount = new Map<string, PlottedCell[]>();
+    for (const { accountId, ...cell } of cells) {
+        if (accountId == null) {
+            continue;
         }
-        return netWorthSeries(rows, byAccount, rates, settledAt, displayCurrency);
-    }, [rows, cells, rates, settledAt, displayCurrency]);
-    const overview = useMemo(
-        () => accountsOverview(rows, cells, displayCurrency, rates, settledAt),
-        [rows, cells, displayCurrency, rates, settledAt]
-    );
-    return useMemo(() => ({ overview, series }), [overview, series]);
+        const bucket = byAccount.get(accountId);
+        if (bucket) {
+            bucket.push(cell);
+        } else {
+            byAccount.set(accountId, [cell]);
+        }
+    }
+    const series = netWorthSeries(rows, byAccount, rates, settledAt, displayCurrency);
+    const overview = accountsOverview(rows, cells, displayCurrency, rates, settledAt);
+    return { overview, series };
 }
 
 export function useNetWorth(db: Database, nowMs: number): NetWorth {

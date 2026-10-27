@@ -5,7 +5,6 @@ import type { AccountsOverview, OverviewRow } from "@outlayr/money/account-overv
 import { startOfDay } from "@outlayr/money/calendar";
 import type { RateTable } from "@outlayr/money/valuation";
 import { and, desc, eq, isNull } from "drizzle-orm";
-import { useMemo } from "react";
 
 import type { Database } from "@/db/client";
 import { outsideMoves, savingsGoals } from "@/db/schema";
@@ -64,26 +63,18 @@ export function useDebtsOverview(
 ): DebtsScreenOverview & { payoff: ReadonlyMap<string, PayoffLine> } {
     const all = useAccounts(db);
     const { pendingId } = useDeferredDelete("account");
-    const accounts = useMemo(() => all.filter((account) => account.id !== pendingId), [all, pendingId]);
+    const accounts = all.filter((account) => account.id !== pendingId);
     const displayCurrency = useGlobalCurrency(db);
     const { cells, overview, rates } = useOverviewOf(db, accounts, displayCurrency, nowMs);
     const plans = useInstallmentPlans(db, nowMs);
     const goals = useLiveQuery(savingsGoals, () => savingsGoalsQuery(db));
     const { pendingId: pendingGoalId } = useDeferredDelete("goal");
-    return useMemo(() => {
-        const valuation = { displayCurrency, rates };
-        const live = goals.filter((goal) => goal.id !== pendingGoalId && isPayoffPlan(goal));
-        return {
-            ...debtsIn(accounts, overview, plans, valuation, nowMs),
-            payoff: payoffLines(
-                live,
-                overview?.rows ?? [],
-                valuation,
-                nowMs,
-                payoffEndings(live, accounts, cells, rates)
-            ),
-        };
-    }, [accounts, overview, plans, goals, pendingGoalId, displayCurrency, rates, cells, nowMs]);
+    const valuation = { displayCurrency, rates };
+    const live = goals.filter((goal) => goal.id !== pendingGoalId && isPayoffPlan(goal));
+    return {
+        ...debtsIn(accounts, overview, plans, valuation, nowMs),
+        payoff: payoffLines(live, overview?.rows ?? [], valuation, nowMs, payoffEndings(live, accounts, cells, rates)),
+    };
 }
 
 function payoffEndings(
@@ -121,29 +112,25 @@ export function useAccountPayoff(
 ): PayoffLine | null {
     const goals = useLiveQuery(savingsGoals, () => savingsGoalsQuery(db));
     const { pendingId } = useDeferredDelete("goal");
-    return useMemo(() => {
-        const own = goals.filter(
-            (goal) => goal.accountId === account.id && goal.id !== pendingId && isPayoffPlan(goal)
-        );
-        if (own.length === 0) {
-            return null;
-        }
-        const row = {
-            balance: balance.total,
-            exact: balance.exact,
-            id: account.id,
-            kind: toAccountKind(account.kind),
-            multiCurrency: false,
-        };
-        const endings = payoffEndings(
-            own,
-            [account],
-            cells.map((cell) => ({ ...cell, accountId: account.id })),
-            rates
-        );
-        const valuation = { displayCurrency: account.currency, rates };
-        return payoffLines(own, [row], valuation, nowMs, endings).get(account.id) ?? null;
-    }, [goals, pendingId, account, balance, cells, rates, nowMs]);
+    const own = goals.filter((goal) => goal.accountId === account.id && goal.id !== pendingId && isPayoffPlan(goal));
+    if (own.length === 0) {
+        return null;
+    }
+    const row = {
+        balance: balance.total,
+        exact: balance.exact,
+        id: account.id,
+        kind: toAccountKind(account.kind),
+        multiCurrency: false,
+    };
+    const endings = payoffEndings(
+        own,
+        [account],
+        cells.map((cell) => ({ ...cell, accountId: account.id })),
+        rates
+    );
+    const valuation = { displayCurrency: account.currency, rates };
+    return payoffLines(own, [row], valuation, nowMs, endings).get(account.id) ?? null;
 }
 
 export interface LogOverview {
@@ -159,20 +146,14 @@ export function useLogOverviewIn(
     excludeId: string | null = null
 ): LogOverview {
     const all = useAccounts(db);
-    const rows = useMemo(
-        () => (excludeId == null ? all : all.filter((account) => account.id !== excludeId)),
-        [all, excludeId]
-    );
+    const rows = excludeId == null ? all : all.filter((account) => account.id !== excludeId);
     const { displayCurrency } = valuation;
     const { overview, rates } = useOverviewOf(db, rows, displayCurrency, nowMs);
     const plans = useInstallmentPlans(db, nowMs);
-    return useMemo(
-        () => ({
-            banks: summarizeOverview((overview?.rows ?? []).filter((row) => row.kind !== "person")),
-            debts: debtsIn(rows, overview, plans, { displayCurrency, rates }, nowMs),
-        }),
-        [rows, overview, plans, displayCurrency, rates, nowMs]
-    );
+    return {
+        banks: summarizeOverview((overview?.rows ?? []).filter((row) => row.kind !== "person")),
+        debts: debtsIn(rows, overview, plans, { displayCurrency, rates }, nowMs),
+    };
 }
 
 function personOutsideMovesQuery(db: Database, accountId: string) {
@@ -199,47 +180,45 @@ export function useOutsideMoveRows(
         () => (person === null ? { all: () => [] } : personOutsideMovesQuery(db, person.id)),
         [person?.id]
     );
-    return useMemo(() => {
-        if (person === null) {
-            return [];
-        }
-        return rows.map((row): TransferLogRow => {
-            const into = row.amount > 0;
-            const amount = Math.abs(row.amount);
-            const route = into ? `${outside} → ${person.name}` : `${person.name} → ${outside}`;
-            return {
-                amount,
-                amountUsd: row.amountUsd === null ? null : Math.abs(row.amountUsd),
-                categoryColor: null,
-                categoryEmoji: null,
-                categoryIcon: null,
-                categoryId: null,
-                categoryName: null,
-                currency: person.currency,
-                customColor: null,
-                date: row.date,
-                day: startOfDay(row.date),
-                emoji: null,
-                ends: null,
-                exchangeRate: null,
-                exchangeRateType: null,
-                excludedFromTotals: false,
-                feeForId: null,
-                icon: null,
-                id: row.id,
-                imageColor: null,
-                imageUri: null,
-                income: into,
-                installmentId: null,
-                moved: { arrived: amount, arrivedCurrency: person.currency, fees: [], outside: null, sent: amount },
-                note: row.note === "" ? route : row.note,
-                recurringAnchorDay: null,
-                recurringCoefficient: 1,
-                recurringEndDate: null,
-                recurringType: 0,
-                sign: into ? "+" : "-",
-                transferId: row.id,
-            };
-        });
-    }, [rows, person, outside]);
+    if (person === null) {
+        return [];
+    }
+    return rows.map((row): TransferLogRow => {
+        const into = row.amount > 0;
+        const amount = Math.abs(row.amount);
+        const route = into ? `${outside} → ${person.name}` : `${person.name} → ${outside}`;
+        return {
+            amount,
+            amountUsd: row.amountUsd === null ? null : Math.abs(row.amountUsd),
+            categoryColor: null,
+            categoryEmoji: null,
+            categoryIcon: null,
+            categoryId: null,
+            categoryName: null,
+            currency: person.currency,
+            customColor: null,
+            date: row.date,
+            day: startOfDay(row.date),
+            emoji: null,
+            ends: null,
+            exchangeRate: null,
+            exchangeRateType: null,
+            excludedFromTotals: false,
+            feeForId: null,
+            icon: null,
+            id: row.id,
+            imageColor: null,
+            imageUri: null,
+            income: into,
+            installmentId: null,
+            moved: { arrived: amount, arrivedCurrency: person.currency, fees: [], outside: null, sent: amount },
+            note: row.note === "" ? route : row.note,
+            recurringAnchorDay: null,
+            recurringCoefficient: 1,
+            recurringEndDate: null,
+            recurringType: 0,
+            sign: into ? "+" : "-",
+            transferId: row.id,
+        };
+    });
 }

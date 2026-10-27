@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { useCSSVariable } from "uniwind";
 
 /** `global.css` is the only declaration of these; nothing here restates a value. */
@@ -41,9 +40,6 @@ export type ThemeColors = Record<ColorName, string>;
 export function useColors(): ThemeColors {
     const values = useCSSVariable(COLOR_VARIABLE_NAMES);
 
-    return useMemo(
-        // SAFETY: `fromEntries` loses the key union; `values` is uniwind's read of the same names in the same order.
-        () => Object.fromEntries(COLOR_NAMES.map((name, index) => [name, values[index] as string])) as ThemeColors,
-        [values]
-    );
+    // SAFETY: `fromEntries` loses the key union; `values` is uniwind's read of the same names in the same order.
+    return Object.fromEntries(COLOR_NAMES.map((name, index) => [name, values[index] as string])) as ThemeColors;
 }

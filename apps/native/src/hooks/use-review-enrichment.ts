@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { ImportEntry } from "@/data/transfer-core";
 import { reviewEntryIdentity } from "@/domain/import-review-identity";
@@ -12,25 +12,27 @@ export interface ReviewEnrichment {
 
 const FETCH_BATCH = 4;
 
+function onDiskLogos(identities: readonly ReturnType<typeof reviewEntryIdentity>[]): Map<string, string | null> {
+    const map = new Map<string, string | null>();
+    for (const identity of identities) {
+        if (identity.domain == null) {
+            continue;
+        }
+        const key = logoCacheKey(identity.domain, identity.domain);
+        if (!map.has(key)) {
+            map.set(key, cachedLogoUri(key));
+        }
+    }
+    return map;
+}
+
 export function useReviewEnrichment(entries: readonly ImportEntry[]): ReadonlyMap<number, ReviewEnrichment> {
-    const identities = useMemo(() => entries.map((entry) => reviewEntryIdentity(entry.note)), [entries]);
     const [fetched, setFetched] = useState<ReadonlyMap<string, string | null>>(new Map());
+    const identities = entries.map((entry) => reviewEntryIdentity(entry.note));
 
     // Once per distinct merchant: `cachedLogoUri` makes several blocking file-system calls, and per row that is
     // O(rows x domains) syscalls on the JS thread.
-    const onDisk = useMemo(() => {
-        const map = new Map<string, string | null>();
-        for (const identity of identities) {
-            if (identity.domain == null) {
-                continue;
-            }
-            const key = logoCacheKey(identity.domain, identity.domain);
-            if (!map.has(key)) {
-                map.set(key, cachedLogoUri(key));
-            }
-        }
-        return map;
-    }, [identities]);
+    const onDisk = onDiskLogos(identities);
 
     useEffect(() => {
         const pending = new Map<string, { name: string; domain: string }>();
@@ -84,13 +86,11 @@ export function useReviewEnrichment(entries: readonly ImportEntry[]): ReadonlyMa
         };
     }, [identities, onDisk]);
 
-    return useMemo(() => {
-        const map = new Map<number, ReviewEnrichment>();
-        for (const [index, identity] of identities.entries()) {
-            const key = identity.domain == null ? null : logoCacheKey(identity.domain, identity.domain);
-            const logoUri = key == null ? null : (onDisk.get(key) ?? fetched.get(key) ?? null);
-            map.set(index, { displayName: identity.displayName, logoUri });
-        }
-        return map;
-    }, [identities, fetched, onDisk]);
+    const map = new Map<number, ReviewEnrichment>();
+    for (const [index, identity] of identities.entries()) {
+        const key = identity.domain == null ? null : logoCacheKey(identity.domain, identity.domain);
+        const logoUri = key == null ? null : (onDisk.get(key) ?? fetched.get(key) ?? null);
+        map.set(index, { displayName: identity.displayName, logoUri });
+    }
+    return map;
 }

@@ -1,5 +1,4 @@
 import type { NativeStackNavigationOptions } from "expo-router";
-import { useMemo } from "react";
 
 import type { MaterialRoleColors } from "@/theme/material-roles";
 import { useMaterialColors } from "@/theme/use-material-colors";
@@ -41,5 +40,5 @@ export function appBarTitleStyle(m3: MaterialRoleColors) {
 
 export function useAppBarOptions(): NativeStackNavigationOptions {
     const m3 = useMaterialColors();
-    return useMemo(() => appBarOptions(m3), [m3]);
+    return appBarOptions(m3);
 }

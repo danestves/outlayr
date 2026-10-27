@@ -10,7 +10,7 @@ interface CompilerEvent {
     kind: string;
 }
 
-const KNOWN_BAILOUTS = ["src/data/live-query.ts", "src/hooks/use-receipt-scan.ts", "src/lib/ledger-adoption.tsx"];
+const KNOWN_BAILOUTS: readonly string[] = [];
 
 const COVERAGE_SHARDS = 4;
 const NATIVE_ROOT = join(__dirname, "..");

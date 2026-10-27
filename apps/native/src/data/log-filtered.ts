@@ -1,7 +1,6 @@
 import { addDays, startOfDay } from "@outlayr/money/calendar";
 import { landingDate } from "@outlayr/money/recurrence";
 import { and, asc, desc, eq, gt, gte, inArray, isNull, lt, lte, or } from "drizzle-orm";
-import { useMemo } from "react";
 
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
@@ -138,16 +137,14 @@ export function useUpcomingTransactions(
 
     const decorated = useDecoratedRows(db, rows);
 
-    return useMemo(() => {
-        const at = new Date(nowMs);
-        const schedules = [...decorated].sort((a, b) => landingDate(b, at).getTime() - landingDate(a, at).getTime());
-        if (!limited) {
-            return { rows: schedules, schedules };
-        }
-        const horizon = addDays(startOfDay(at), 14);
-        return {
-            rows: schedules.filter((row) => landingDate(row, at).getTime() < horizon.getTime()),
-            schedules,
-        };
-    }, [decorated, limited, nowMs]);
+    const at = new Date(nowMs);
+    const schedules = [...decorated].sort((a, b) => landingDate(b, at).getTime() - landingDate(a, at).getTime());
+    if (!limited) {
+        return { rows: schedules, schedules };
+    }
+    const horizon = addDays(startOfDay(at), 14);
+    return {
+        rows: schedules.filter((row) => landingDate(row, at).getTime() < horizon.getTime()),
+        schedules,
+    };
 }

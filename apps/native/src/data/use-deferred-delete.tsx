@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { createContext, use, useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { createContext, use, useEffect, useState, useSyncExternalStore } from "react";
 import { AppState } from "react-native";
 
 import { useLocalData } from "@/contexts/local-data-context";
@@ -47,16 +47,13 @@ export function useDeferredDelete(kind: DeferredDeleteKind): DeferredDelete {
     const registry = useRegistry();
 
     const pendingId = useSyncExternalStore(
-        useCallback((listener: () => void) => registry.subscribe(kind, listener), [registry, kind]),
-        useCallback(() => registry.pendingId(kind), [registry, kind])
+        (listener: () => void) => registry.subscribe(kind, listener),
+        () => registry.pendingId(kind)
     );
 
-    const requestDelete = useCallback(
-        (id: string, body?: string) => {
-            registry.requestDelete(kind, id, body);
-        },
-        [registry, kind]
-    );
+    const requestDelete = (id: string, body?: string) => {
+        registry.requestDelete(kind, id, body);
+    };
 
     return { pendingId, requestDelete };
 }
