@@ -1,11 +1,11 @@
 import { eq, inArray } from "drizzle-orm";
 import { useCalendars } from "expo-localization";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 
 import type { Database } from "@/db/client";
 import { appMeta } from "@/db/schema";
 
-import { useLiveQuery, useLiveValue } from "./live-query";
+import { useLiveValue } from "./live-query";
 import type { SyncQuery } from "./live-query";
 import {
     parseAiConsent,
@@ -24,16 +24,6 @@ export interface SettingsSnapshot {
 type MetaRow = typeof appMeta.$inferSelect;
 
 const SETTING_KEYS = Object.keys(SETTING_DEFAULTS);
-
-/**
- * One subscription, but a context still re-renders every consumer on any toggle, so prefer
- * `useBoolSetting`/`useNumberSetting` wherever the render costs more than their keyed lookup.
- */
-export function useAllSettings(db: Database | null): SettingsSnapshot {
-    // Nullable: `AppSettingsProvider` renders above the splash gate while the database opens; no consumer sees it.
-    const rows = useLiveQuery(appMeta, () => selectSettings(db), [db]);
-    return useMemo(() => settingsSnapshot(rows), [rows]);
-}
 
 export function settingsSnapshot(rows: readonly MetaRow[]): SettingsSnapshot {
     const raw = new Map(rows.map((row) => [row.key, row.value]));

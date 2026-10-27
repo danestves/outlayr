@@ -1,4 +1,4 @@
-import { createContext, use, useEffect, useMemo } from "react";
+import { createContext, use, useEffect } from "react";
 
 import { useAppSettings } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
@@ -62,20 +62,15 @@ export function CsvImportProvider({ children }: { children: React.ReactNode }) {
     const regionCode = useRegionCode();
     const { flow: state } = useImportDraft();
 
-    const categoryTree = useMemo(() => buildCategoryTree(meta), [meta]);
-    const categoryIdByKey = useMemo(() => buildCategoryIdByKey(meta), [meta]);
-
-    const labels = useMemo(() => {
-        if (state.parsed == null || state.resolved == null) {
-            return [];
-        }
-        return uniqueCategoryValues(state.parsed.rows, state.resolved.mapping.category);
-    }, [state.parsed, state.resolved]);
+    const labels =
+        state.parsed == null || state.resolved == null
+            ? []
+            : uniqueCategoryValues(state.parsed.rows, state.resolved.mapping.category);
 
     const result = useCsvImport({
         aiEnrichment,
-        categoryIdByKey,
-        categoryTree,
+        categoryIdByKey: buildCategoryIdByKey(meta),
+        categoryTree: buildCategoryTree(meta),
         chars: state.file == null ? 0 : state.file.chars,
         draft: state.draft ?? EMPTY_DRAFT,
         fileKey: state.file == null ? null : `${state.file.name}:${state.file.chars}`,

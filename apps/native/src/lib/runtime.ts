@@ -11,6 +11,7 @@ import * as SyncStore from "@/data/sync-store";
 import * as DailyReminderSync from "@/lib/daily-reminder-sync";
 import * as DueReminderSync from "@/lib/due-reminder-sync";
 import * as EnrichmentSync from "@/lib/enrichment-sync";
+import * as RevenueCat from "@/lib/revenuecat-service";
 import * as SystemSync from "@/lib/system-sync";
 
 export const appRuntime = Atom.runtime(
@@ -24,6 +25,7 @@ export const appRuntime = Atom.runtime(
         ),
         EnrichmentSync.layer,
         PhotoSync.layer,
+        RevenueCat.layer,
         Logger.layer([Logger.withLeveledConsole(Logger.formatSimple)])
     )
 ).pipe(Atom.keepAlive);

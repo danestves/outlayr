@@ -43,6 +43,9 @@ A reusable operation is `Effect.fn("LocalDatabase.open")(function* open() { ... 
 - A component reads `useAtomValue(atom)` and derives its state from the `AsyncResult` in render: `Initial` or `waiting` is loading, `Success` is the value, `Failure` is `Cause.squash(result.cause)`. No `useEffect` to load and no state copy.
 - `Atom.keepAlive` for state that lives as long as the app, such as the open database. Other atoms are dropped once nothing reads them.
 - Retry is `registry.refresh(atom)`, with the registry from `use(RegistryContext)`.
+- App state that outlives any screen is a writable `Atom.make(initial).pipe(Atom.keepAlive)`; the hook returns `useAtom`'s setter, which also takes an updater that reads the latest value. Derive the rest with `Atom.make((get) => ...)`.
+- An atom compares by `Object.is`. A derived value rebuilt on every upstream change keeps its readers still with `Atom.withEquality` (`Equal.equals` is structural for plain objects). `display-settings-context.ts` reads SQLite this way: `get.addFinalizer(subscribeToTableChanges(...))` calls `get.refreshSelf()`, and `sameRows` keeps the rows when nothing changed.
+- A promise per call (a purchase from a press) runs through `AtomRegistry.getResult(registry, appRuntime)` with `Effect.provideContext(services)`, as `useRevenueCat` does. A `fn` atom in `useAtomSet` promise mode resolves with whichever write settles next, so overlapping calls can get each other's results.
 - `Service.use(...)` trips `rules-of-hooks` outside a component. Write `LocalDatabase.pipe(Effect.flatMap((local) => local.open()))`.
 
 ## Long-running services
@@ -55,6 +58,8 @@ A reusable operation is `Effect.fn("LocalDatabase.open")(function* open() { ... 
 - `listen` in `src/lib/app-events.ts` is that source for any `(listener) => unsubscribe` API. Its buffer is sliding, so it filters before buffering: filter after it and a burst of other tables or app states can push out the one event you wanted.
 - Order between services is in the code, not in mount order: a step that must follow another takes it as an effect (`RecurrenceSweep.run(db, onSwept)`), reads a `Queue` the other fills (`SystemSync.run(db, swept)`), or awaits a `Latch` the other opens (`PhotoSync.run` after `reconcile`). `data/background-program.ts` composes the ones that share a lifetime.
 - It runs from an atom (`Atom.family` keyed by its input) that a component mounts with `useAtomMount`, rendered only while the work should run. Unmounting interrupts the fiber; a step that must finish once started is `Effect.uninterruptible`.
+- A value that lives in React (the signed-in account) reaches a service by mounting `Atom.family(value)` atoms whose effect registers the value until it is interrupted. The registry removes a node on a scheduled task, so a value that comes back before then keeps its old node and nothing re-runs: treat the live mounts as a stack whose newest entry wins, never a mount as an event. `RevenueCat.follow` is the reference.
+- A fiber forked while the layer builds reads the construction context, which lacks the app's logger. Start loops in `run`, which runs from an atom with the runtime's context.
 - Log with `Effect.logWarning`, not `console.warn`. Effect's default logger writes every level with `console.log`, so `appRuntime` swaps in `Logger.withLeveledConsole(Logger.formatSimple)`: a warning is a LogBox warning in dev and a warn-level native log in release, as `console.warn` was.
 
 ## Testing a service under jest
@@ -67,3 +72,4 @@ A reusable operation is `Effect.fn("LocalDatabase.open")(function* open() { ... 
 - A fiber reads its logger from the runtime's context, so silence logs by merging `Logger.layer([])` into the test layer; inside `Layer.provide` it only reaches the layer's construction.
 - Drive time with `jest.useFakeTimers()` and `await jest.advanceTimersByTimeAsync(ms)`. Registry fibers dispatch on microtasks and Effect's clock sleeps on `setTimeout`, so one call runs the due sleeps and every fiber and promise they wake. `TestClock` does not wait for promise continuations, and a bare `Effect.runFork` dispatches on `setImmediate`, which fake timers move 1 ms per hop.
 - A fake that counts calls counts inside `Effect.suspend`: a service may build an effect once and run it many times.
+- Give the test registry a `scheduleTask` built on `setTimeout` so node removal waits for the next timer hop, as it does under React.

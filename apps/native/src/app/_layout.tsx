@@ -26,10 +26,8 @@ import { CelebrationConfetti } from "@/components/confetti";
 import { LocalDataError } from "@/components/local-data-error";
 import { Text } from "@/components/text";
 import { UpdateSheet } from "@/components/update-sheet";
-import { AppSettingsProvider } from "@/contexts/display-settings-context";
-import { IdentityDraftProvider } from "@/contexts/identity-draft-context";
 import { useDatabase, useLocalData } from "@/contexts/local-data-context";
-import { RevenueCatProvider } from "@/contexts/revenuecat-context";
+import { RevenueCatSession } from "@/contexts/revenuecat-context";
 import { BackgroundWork } from "@/data/background-work";
 import { useAccountDeferred, useOnboardingSettled } from "@/data/onboarding";
 import { useSeededClockPreference } from "@/data/settings";
@@ -91,9 +89,8 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
 function CloudRuntimeProvider({ children }: { children: ReactNode }) {
     return (
         <AuthSessionProvider>
-            <RevenueCatProvider>
-                <ActivatedCloudRuntime>{children}</ActivatedCloudRuntime>
-            </RevenueCatProvider>
+            <RevenueCatSession />
+            <ActivatedCloudRuntime>{children}</ActivatedCloudRuntime>
         </AuthSessionProvider>
     );
 }
@@ -347,11 +344,7 @@ export default function RootLayout() {
                         <LanguageProvider>
                             <CloudRuntimeProvider>
                                 <DeferredDeleteProvider>
-                                    <AppSettingsProvider>
-                                        <IdentityDraftProvider>
-                                            <RootNavigator fontsLoaded={fontsLoaded} />
-                                        </IdentityDraftProvider>
-                                    </AppSettingsProvider>
+                                    <RootNavigator fontsLoaded={fontsLoaded} />
                                 </DeferredDeleteProvider>
                             </CloudRuntimeProvider>
                         </LanguageProvider>
