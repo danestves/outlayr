@@ -4,6 +4,8 @@ import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
+import * as Redacted from "effect/Redacted";
 
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
@@ -24,8 +26,9 @@ import {
 import spec from "./enrichment.spec";
 import { traced } from "./lib/aiTracing";
 import { optionalUserId } from "./lib/auth";
+import { anthropicApiKey, claudeFastModelId } from "./lib/config";
 import { knowledgeKeys } from "./lib/merchantKey";
-import { AI_CONSENT_VERSION, CLAUDE_FAST_MODEL_ID } from "./lib/models";
+import { AI_CONSENT_VERSION } from "./lib/models";
 import { isPro } from "./revenuecat";
 
 /**
@@ -38,7 +41,7 @@ const groundedConsent = FunctionImpl.make(
     "groundedConsent",
     Effect.fn("Enrichment.groundedConsent")(function* groundedConsent() {
         const ctx = yield* QueryCtx;
-        const userId = yield* Effect.promise(() => optionalUserId(ctx));
+        const userId = yield* optionalUserId(ctx);
         if (userId === null) {
             return false;
         }
@@ -90,8 +93,8 @@ const suggest = FunctionImpl.make(
             return EMPTY;
         }
 
-        const apiKey = process.env.ANTHROPIC_API_KEY;
-        if (!apiKey || args.aiConsent !== AI_CONSENT_VERSION) {
+        const apiKey = yield* anthropicApiKey;
+        if (Option.isNone(apiKey) || args.aiConsent !== AI_CONSENT_VERSION) {
             return EMPTY;
         }
 
@@ -111,7 +114,7 @@ const suggest = FunctionImpl.make(
         }
 
         const scheduleGrounded = args.groundedLookup
-            ? Effect.promise(() => isPro(ctx, identity.subject)).pipe(
+            ? isPro(ctx, identity.subject).pipe(
                   Effect.flatMap((pro) =>
                       pro
                           ? maybeScheduleGrounded(ctx, identity.tokenIdentifier, {
@@ -127,15 +130,18 @@ const suggest = FunctionImpl.make(
               )
             : Effect.succeed(false);
 
-        const modelId = process.env.CLAUDE_FAST_MODEL_ID || CLAUDE_FAST_MODEL_ID;
-        const result = yield* runSuggest(traced(createAnthropic({ apiKey })(modelId), "category_suggest"), {
-            categoryTree: args.categoryTree,
-            currency,
-            income: args.income,
-            locale: args.locale,
-            name: trimmedName,
-            regionCode,
-        }).pipe(
+        const modelId = yield* claudeFastModelId;
+        const result = yield* runSuggest(
+            traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "category_suggest"),
+            {
+                categoryTree: args.categoryTree,
+                currency,
+                income: args.income,
+                locale: args.locale,
+                name: trimmedName,
+                regionCode,
+            }
+        ).pipe(
             Effect.catchTags({
                 ModelCallError: ({ cause }) =>
                     Console.warn(

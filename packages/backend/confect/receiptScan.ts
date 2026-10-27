@@ -210,12 +210,10 @@ export const admitScan = Effect.fn("ReceiptScan.admitScan")(function* admitScan(
 ) {
     const ctx = yield* ActionCtx;
     const { runMutation } = yield* MutationRunner;
-    const pro = yield* Effect.promise(() => isPro(ctx, identity.subject));
+    const pro = yield* isPro(ctx, identity.subject);
+    const config = yield* perUserBurst("receiptScan", pro);
     const perUser = yield* Effect.promise(() =>
-        rateLimiter.limit(ctx, "receiptScanPerUser", {
-            config: perUserBurst("receiptScan", pro),
-            key: identity.tokenIdentifier,
-        })
+        rateLimiter.limit(ctx, "receiptScanPerUser", { config, key: identity.tokenIdentifier })
     );
     if (!perUser.ok) {
         return "rateLimited" as const;

@@ -1,17 +1,22 @@
 /// <reference types="vite/client" />
 
 import { convexTest } from "convex-test";
-import { expect, test, vi } from "vite-plus/test";
+import { afterEach, expect, test, vi } from "vite-plus/test";
 
 import { api } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import { authenticatedAs, seedAuthUser } from "./test.helpers";
 
-vi.mock(import("@outlayr/env/backend"), () => ({ env: {} }));
-
 const modules = import.meta.glob("../convex/**/*.ts");
 
+afterEach(() => {
+    vi.unstubAllEnvs();
+});
+
 test("refuses to start a deletion it could not finish without the upstream erase secrets", async () => {
+    vi.stubEnv("REVENUECAT_SECRET_KEY", "");
+    vi.stubEnv("POSTHOG_PERSONAL_API_KEY", "");
+    vi.stubEnv("POSTHOG_PROJECT_ID", "");
     const t = convexTest(schema, modules);
     const owner = await seedAuthUser(t);
 

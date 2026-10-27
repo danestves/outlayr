@@ -21,7 +21,7 @@ import {
     sanitizeRegionCode,
 } from "./enrichment";
 import { suggestArgs } from "./enrichment.spec";
-import { perUserBurst } from "./lib/limits";
+import { fixedBurst } from "./lib/limits";
 import { knowledgeKey, merchantKey } from "./lib/merchantKey";
 import { AI_CONSENT_VERSION } from "./lib/models";
 import { authenticatedAs, seedAuthUser } from "./test.helpers";
@@ -162,7 +162,7 @@ describe("suggest guard ladder", () => {
 
         await t.run(async (ctx) =>
             rateLimiter.limit(ctx, "enrichmentPerUser", {
-                count: perUserBurst("enrichment", false).capacity,
+                count: fixedBurst("enrichment", false).capacity,
                 key: tokenIdentifier,
             })
         );

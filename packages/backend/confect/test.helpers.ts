@@ -2,6 +2,11 @@
 import betterAuthTest from "@convex-dev/better-auth/test";
 import type { TestConvex } from "convex-test";
 import type { GenericSchema, SchemaDefinition } from "convex/server";
+import * as Effect from "effect/Effect";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
+import * as Layer from "effect/Layer";
 
 import { components } from "../convex/_generated/api";
 import "./lib/betterAuth";
@@ -108,3 +113,29 @@ export async function grantPro(t: AnyTestConvex, identity: Pick<SeededIdentity, 
         })
     );
 }
+
+export interface RecordedRequest {
+    body: string;
+    headers: Headers;
+    method: string;
+    url: string;
+}
+
+export function stubHttp(respond: (request: RecordedRequest) => Response) {
+    const requests: RecordedRequest[] = [];
+    const client = HttpClient.make((request) =>
+        Effect.gen(function* recordRequest() {
+            const web = yield* HttpClientRequest.toWeb(request).pipe(Effect.orDie);
+            const body = yield* Effect.promise(() => web.text());
+            const recorded = { body, headers: web.headers, method: web.method, url: web.url };
+            requests.push(recorded);
+            return HttpClientResponse.fromWeb(request, respond(recorded));
+        })
+    );
+    return { layer: Layer.succeed(HttpClient.HttpClient, client), requests };
+}
+
+export const silentHttp = Layer.succeed(
+    HttpClient.HttpClient,
+    HttpClient.make(() => Effect.never)
+);

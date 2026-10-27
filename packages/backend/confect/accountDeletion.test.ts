@@ -15,7 +15,8 @@ import schema from "../convex/schema";
 import { consumeGoogleLocalReceipt, DELETION_JOBS_PER_USER } from "./accountDeletion";
 import type { DeletionJob } from "./accountDeletion";
 import { FREE_CAPTURE_CONFIG } from "./lib/captures";
-import { perUserBurst } from "./lib/limits";
+import { fixedBurst } from "./lib/limits";
+import { runEdge } from "./lib/runEdge";
 import { sha256Hex } from "./lib/sha256Hex";
 import { isPro } from "./revenuecat";
 import { authenticatedAs, grantPro, seedAuthUser } from "./test.helpers";
@@ -41,17 +42,17 @@ describe("resumable account deletion", () => {
         const receipt = "receipt-for-job-a";
         const jobA: DeletionJob = {
             ...job,
-            googleReceiptChallengeHash: await sha256Hex(receipt),
+            googleReceiptChallengeHash: await runEdge(sha256Hex(receipt)),
             phase: "prepared",
         };
         const jobB: DeletionJob = {
             ...job,
-            googleReceiptChallengeHash: await sha256Hex("receipt-for-job-b"),
+            googleReceiptChallengeHash: await runEdge(sha256Hex("receipt-for-job-b")),
             phase: "prepared",
         };
 
-        await expect(consumeGoogleLocalReceipt(jobB, receipt)).rejects.toThrow("does not match");
-        await expect(consumeGoogleLocalReceipt(jobA, receipt)).resolves.toMatchObject({
+        await expect(runEdge(consumeGoogleLocalReceipt(jobB, receipt))).rejects.toThrow("does not match");
+        await expect(runEdge(consumeGoogleLocalReceipt(jobA, receipt))).resolves.toMatchObject({
             phase: "providersRevoked",
             provider: "googleLocalReceipt",
         });
@@ -61,20 +62,20 @@ describe("resumable account deletion", () => {
         const receipt = "receipt-for-job";
         const prepared: DeletionJob = {
             ...job,
-            googleReceiptChallengeHash: await sha256Hex(receipt),
+            googleReceiptChallengeHash: await runEdge(sha256Hex(receipt)),
             phase: "prepared",
         };
-        const consumed = await consumeGoogleLocalReceipt(prepared, receipt);
+        const consumed = await runEdge(consumeGoogleLocalReceipt(prepared, receipt));
 
         expect(consumed.provider).toBe("googleLocalReceipt");
         expect(consumed.googleReceiptChallengeHash).toBeNull();
-        expect(consumed.googleReceiptDigest).toBe(await sha256Hex(receipt));
-        await expect(consumeGoogleLocalReceipt(consumed, receipt)).resolves.toBe(consumed);
+        expect(consumed.googleReceiptDigest).toBe(await runEdge(sha256Hex(receipt)));
+        await expect(runEdge(consumeGoogleLocalReceipt(consumed, receipt))).resolves.toBe(consumed);
     });
 });
 
 function stubUpstream(status: number, deletionErrors: unknown[] = []) {
-    const fetchMock = vi.fn(async (_input: string, _init?: RequestInit) =>
+    const fetchMock = vi.fn(async (_input: URL, _init?: RequestInit) =>
         Response.json({ deletion_errors: deletionErrors }, { status })
     );
     vi.stubGlobal("fetch", fetchMock);
@@ -155,24 +156,29 @@ describe("billing erasure", () => {
         const fetchMock = stubUpstream(200);
         const { owner, resumeSecret, t } = await purgedJob();
         await expect(t.mutation(api.accountDeletion.advance, { resumeSecret })).rejects.toThrow("Billing erasure");
-        await expect(t.run((ctx) => isPro(ctx, owner.userId))).resolves.toBeTruthy();
+        await expect(t.run((ctx) => runEdge(isPro(ctx, owner.userId)))).resolves.toBeTruthy();
 
         await expect(t.action(api.accountDeletion.eraseBilling, { resumeSecret })).resolves.toMatchObject({
             phase: "billingErased",
         });
 
-        expect(fetchMock).toHaveBeenCalledWith(
-            `https://api.revenuecat.com/v1/subscribers/${owner.userId}`,
-            expect.objectContaining({ method: "DELETE" })
-        );
-        expect(fetchMock).toHaveBeenCalledWith(
-            "https://us.posthog.com/api/projects/12345/persons/bulk_delete/",
+        const requests = fetchMock.mock.calls.map(([input, init]) => ({
+            body: init?.body instanceof Uint8Array ? new TextDecoder().decode(init.body) : init?.body,
+            method: init?.method,
+            url: String(input),
+        }));
+        expect(requests).toContainEqual(
             expect.objectContaining({
-                body: JSON.stringify({ delete_events: true, distinct_ids: [owner.userId] }),
-                method: "POST",
+                method: "DELETE",
+                url: `https://api.revenuecat.com/v1/subscribers/${owner.userId}`,
             })
         );
-        await expect(t.run((ctx) => isPro(ctx, owner.userId))).resolves.toBeFalsy();
+        expect(requests).toContainEqual({
+            body: JSON.stringify({ delete_events: true, distinct_ids: [owner.userId] }),
+            method: "POST",
+            url: "https://us.posthog.com/api/projects/12345/persons/bulk_delete/",
+        });
+        await expect(t.run((ctx) => runEdge(isPro(ctx, owner.userId)))).resolves.toBeFalsy();
         await expect(t.mutation(api.accountDeletion.advance, { resumeSecret })).resolves.toMatchObject({
             phase: "authDeleting",
         });
@@ -185,7 +191,7 @@ describe("billing erasure", () => {
         await expect(t.action(api.accountDeletion.eraseBilling, { resumeSecret })).rejects.toThrow("500");
 
         await expect(t.query(api.accountDeletion.poll, { resumeSecret })).resolves.toMatchObject({ phase: "purged" });
-        await expect(t.run((ctx) => isPro(ctx, owner.userId))).resolves.toBeTruthy();
+        await expect(t.run((ctx) => runEdge(isPro(ctx, owner.userId)))).resolves.toBeTruthy();
     });
 
     it("keeps the job at purged when PostHog reports a person it could not delete", async () => {
@@ -199,7 +205,7 @@ describe("billing erasure", () => {
 });
 
 async function expire(t: TestConvex<typeof schema>, resumeSecret: string) {
-    const secretHash = await sha256Hex(resumeSecret);
+    const secretHash = await runEdge(sha256Hex(resumeSecret));
     await t.run(async (ctx) => {
         const row = await ctx.db
             .query("accountDeletionJobs")
@@ -361,7 +367,7 @@ describe("auth deletion", () => {
         rateLimiterTest.register(t);
         revenuecatTest.register(t);
         const usage = new RateLimiter(components.rateLimiter);
-        const queue = perUserBurst("enrichmentQueue", false);
+        const queue = fixedBurst("enrichmentQueue", false);
         const owner = await seedAuthUser(t);
         await grantPro(t, owner);
         const asOwner = authenticatedAs(t, owner);

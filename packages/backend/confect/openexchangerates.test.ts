@@ -10,12 +10,9 @@ const modules = import.meta.glob("../convex/**/*.ts");
 const PUBLISHED_AT = Date.parse("2026-09-28T22:00:00Z") / 1000;
 
 function stubFetch(payload: unknown, ok = true) {
-    const response = {
-        json: () => Promise.resolve(payload),
-        ok,
-        status: ok ? 200 : 401,
-    };
-    const fetchMock = vi.fn((_input: string, _init?: RequestInit) => Promise.resolve(response));
+    const fetchMock = vi.fn((_input: URL, _init?: RequestInit) =>
+        Promise.resolve(Response.json(payload, { status: ok ? 200 : 401 }))
+    );
     vi.stubGlobal("fetch", fetchMock);
     return fetchMock;
 }
@@ -38,7 +35,9 @@ describe("openexchangerates.fetchRates", () => {
 
         await t.action(internal.openexchangerates.fetchRates, {});
 
-        expect(fetchMock.mock.calls[0]?.[0]).toBe("https://openexchangerates.org/api/latest.json?app_id=app-id");
+        expect(String(fetchMock.mock.calls[0]?.[0])).toBe(
+            "https://openexchangerates.org/api/latest.json?app_id=app-id"
+        );
         const rows = await t.run((ctx) => ctx.db.query("exchangeRates").collect());
         expect(rows.map((row) => row.quote)).toStrictEqual(["BTC", "EUR", "VES"]);
         expect(rows.find((row) => row.quote === "EUR")).toMatchObject({

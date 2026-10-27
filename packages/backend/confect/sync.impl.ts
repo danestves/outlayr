@@ -10,11 +10,11 @@ import databaseSchema from "./_generated/schema";
 import { DatabaseReader, DatabaseWriter, MutationCtx, QueryCtx } from "./_generated/services";
 import { requireUserId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
+import { refuseWhileDeleting, seqCounter } from "./lib/syncGuards";
 import { incomingWins, SYNCED_TABLES } from "./lib/syncTables";
 import type { SyncedTable } from "./lib/syncTables";
 import { requirePro } from "./revenuecat";
 import {
-    AccountDeleting,
     PULL_PAGE_LIMIT,
     PUSH_BATCH_LIMIT,
     PushTooLarge,
@@ -24,42 +24,6 @@ import {
 } from "./sync";
 import type { PushRow, SyncedDoc } from "./sync";
 import spec from "./sync.spec";
-
-// The session and Pro outlive `purgeUserBatch` by up to a retried RevenueCat call, and a push in that window writes
-// rows for a user id no purge path can find again. `prepared` is allowed: the owner may yet cancel.
-const refuseWhileDeleting = Effect.fn("Sync.refuseWhileDeleting")(function* refuseWhileDeleting(userId: string) {
-    const reader = yield* DatabaseReader;
-    // Every job, not a page: a page could bury the refusing job. `accountDeletion.prepare` caps the set per user.
-    const jobs = yield* reader
-        .table("accountDeletionJobs")
-        .index("by_userId", (q) => q.eq("userId", userId))
-        .collect();
-    if (jobs.some((job) => job.phase !== "prepared")) {
-        return yield* new AccountDeleting();
-    }
-});
-
-const seqCounter = Effect.fn("Sync.seqCounter")(function* seqCounter(userId: string) {
-    const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const state = yield* reader
-        .table("syncState")
-        .get("by_user", userId)
-        .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
-    // Starts at 1 so a cursor of 0 means "nothing read yet".
-    const nextSeq = state?.nextSeq ?? 1;
-    return {
-        advanceTo: Effect.fn("Sync.advanceTo")(function* advanceTo(next: number) {
-            if (next <= nextSeq) {
-                return;
-            }
-            yield* state
-                ? writer.table("syncState").patch(state._id, { nextSeq: next })
-                : writer.table("syncState").insert({ nextSeq: next, userId });
-        }),
-        nextSeq,
-    };
-});
 
 const findExisting = Effect.fn("Sync.findExisting")(function* findExisting(userId: string, row: PushRow) {
     const reader = yield* DatabaseReader;
@@ -195,8 +159,8 @@ const push = FunctionImpl.make(
         function* push(args) {
             const ctx = yield* MutationCtx;
             const writer = yield* DatabaseWriter;
-            const userId = yield* Effect.promise(() => requireUserId(ctx));
-            yield* Effect.promise(() => requirePro(ctx, userId));
+            const userId = yield* requireUserId(ctx);
+            yield* requirePro(ctx, userId);
             yield* refuseWhileDeleting(userId);
 
             if (args.rows.length > PUSH_BATCH_LIMIT) {
@@ -252,7 +216,12 @@ const push = FunctionImpl.make(
 
             return { accepted, nextSeq, skipped };
         },
-        Effect.catchTags({ AccountDeleting: dieAsConvexError, PushTooLarge: dieAsConvexError }),
+        Effect.catchTags({
+            AccountDeleting: dieAsConvexError,
+            ProRequired: dieAsConvexError,
+            PushTooLarge: dieAsConvexError,
+            Unauthenticated: dieAsConvexError,
+        }),
         Effect.orDie
     )
 );
@@ -263,53 +232,61 @@ const pullSince = FunctionImpl.make(
     databaseSchema,
     spec,
     "pullSince",
-    Effect.fn("Sync.pullSince")(function* pullSince(args) {
-        const ctx = yield* QueryCtx;
-        const reader = yield* DatabaseReader;
-        const userId = yield* Effect.promise(() => requireUserId(ctx));
-        yield* Effect.promise(() => requirePro(ctx, userId));
-        const limit = Math.min(Math.max(Math.trunc(args.limit ?? PULL_PAGE_LIMIT), 1), PULL_PAGE_LIMIT);
+    Effect.fn("Sync.pullSince")(
+        function* pullSince(args) {
+            const ctx = yield* QueryCtx;
+            const reader = yield* DatabaseReader;
+            const userId = yield* requireUserId(ctx);
+            yield* requirePro(ctx, userId);
+            const limit = Math.min(Math.max(Math.trunc(args.limit ?? PULL_PAGE_LIMIT), 1), PULL_PAGE_LIMIT);
 
-        const tables: readonly SyncedTable[] = args.tables ?? SYNCED_TABLES;
-        const pages = yield* Effect.all(
-            tables.map((table) =>
-                reader
-                    .table(table)
-                    .index("by_user_and_seq", (q) => q.eq("userId", userId).gt("seq", args.cursor))
-                    .take(limit)
-            ),
-            { concurrency: "unbounded" }
-        );
+            const tables: readonly SyncedTable[] = args.tables ?? SYNCED_TABLES;
+            const pages = yield* Effect.all(
+                tables.map((table) =>
+                    reader
+                        .table(table)
+                        .index("by_user_and_seq", (q) => q.eq("userId", userId).gt("seq", args.cursor))
+                        .take(limit)
+                ),
+                { concurrency: "unbounded" }
+            );
 
-        const merged = pages
-            .flatMap((docs, index) => docs.map((doc) => toWire(tables[index], doc)))
-            .sort((a, b) => a.seq - b.seq);
+            const merged = pages
+                .flatMap((docs, index) => docs.map((doc) => toWire(tables[index], doc)))
+                .sort((a, b) => a.seq - b.seq);
 
-        const rows = merged.slice(0, limit);
-        const last = rows[rows.length - 1];
+            const rows = merged.slice(0, limit);
+            const last = rows[rows.length - 1];
 
-        return {
-            cursor: last ? last.seq : args.cursor,
-            hasMore: merged.length >= limit,
-            rows,
-        };
-    }, Effect.orDie)
+            return {
+                cursor: last ? last.seq : args.cursor,
+                hasMore: merged.length >= limit,
+                rows,
+            };
+        },
+        Effect.catchTags({ ProRequired: dieAsConvexError, Unauthenticated: dieAsConvexError }),
+        Effect.orDie
+    )
 );
 
 const currentSeq = FunctionImpl.make(
     databaseSchema,
     spec,
     "currentSeq",
-    Effect.fn("Sync.currentSeq")(function* currentSeq() {
-        const ctx = yield* QueryCtx;
-        const reader = yield* DatabaseReader;
-        const userId = yield* Effect.promise(() => requireUserId(ctx));
-        const state = yield* reader
-            .table("syncState")
-            .get("by_user", userId)
-            .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
-        return state?.nextSeq ?? 0;
-    }, Effect.orDie)
+    Effect.fn("Sync.currentSeq")(
+        function* currentSeq() {
+            const ctx = yield* QueryCtx;
+            const reader = yield* DatabaseReader;
+            const userId = yield* requireUserId(ctx);
+            const state = yield* reader
+                .table("syncState")
+                .get("by_user", userId)
+                .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
+            return state?.nextSeq ?? 0;
+        },
+        Effect.catchTags({ Unauthenticated: dieAsConvexError }),
+        Effect.orDie
+    )
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(

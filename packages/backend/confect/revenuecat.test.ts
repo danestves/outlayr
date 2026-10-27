@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, test, vi } from "vite-plus/test";
 
 import { api } from "../convex/_generated/api";
 import schema from "../convex/schema";
+import { runEdge } from "./lib/runEdge";
 import { isPro } from "./revenuecat";
 import { authenticatedAs, grantPro, seedAuthUser } from "./test.helpers";
 
@@ -50,7 +51,7 @@ describe("webhook route", () => {
         });
 
         expect(response.status).toBe(401);
-        await expect(t.run((ctx) => isPro(ctx, identity.userId))).resolves.toBeFalsy();
+        await expect(t.run((ctx) => runEdge(isPro(ctx, identity.userId)))).resolves.toBeFalsy();
     });
 
     it("an authorised INITIAL_PURCHASE makes the user Pro", async () => {
@@ -67,8 +68,8 @@ describe("webhook route", () => {
         });
 
         expect(response.status).toBe(200);
-        await expect(t.run((ctx) => isPro(ctx, identity.userId))).resolves.toBeTruthy();
-        await expect(t.run((ctx) => isPro(ctx, other.userId))).resolves.toBeFalsy();
+        await expect(t.run((ctx) => runEdge(isPro(ctx, identity.userId)))).resolves.toBeTruthy();
+        await expect(t.run((ctx) => runEdge(isPro(ctx, other.userId)))).resolves.toBeFalsy();
     });
 });
 
@@ -101,7 +102,7 @@ describe("syncFromStore", () => {
         );
 
         await expect(authenticatedAs(t, identity).action(api.revenuecat.syncFromStore, {})).resolves.toBeTruthy();
-        await expect(t.run((ctx) => isPro(ctx, identity.userId))).resolves.toBeTruthy();
+        await expect(t.run((ctx) => runEdge(isPro(ctx, identity.userId)))).resolves.toBeTruthy();
     });
 
     it("mirrors a subscriber carrying RevenueCat's reserved $ attributes", async () => {
@@ -142,7 +143,7 @@ describe("syncFromStore", () => {
         );
 
         await expect(authenticatedAs(t, identity).action(api.revenuecat.syncFromStore, {})).resolves.toBeFalsy();
-        await expect(t.run((ctx) => isPro(ctx, identity.userId))).resolves.toBeFalsy();
+        await expect(t.run((ctx) => runEdge(isPro(ctx, identity.userId)))).resolves.toBeFalsy();
     });
 
     it("a token whose session is gone mirrors nothing, even with a valid subject", async () => {
@@ -214,7 +215,7 @@ test("lets the store remove an entitlement the mirror still holds", async () => 
     );
 
     await expect(authenticatedAs(t, identity).action(api.revenuecat.syncFromStore, {})).resolves.toBeFalsy();
-    await expect(t.run((ctx) => isPro(ctx, identity.userId))).resolves.toBeFalsy();
+    await expect(t.run((ctx) => runEdge(isPro(ctx, identity.userId)))).resolves.toBeFalsy();
     vi.unstubAllGlobals();
 });
 
@@ -242,7 +243,7 @@ test("expires an entitlement the store now reports as lapsed", async () => {
     );
 
     await expect(authenticatedAs(t, identity).action(api.revenuecat.syncFromStore, {})).resolves.toBeFalsy();
-    await expect(t.run((ctx) => isPro(ctx, identity.userId))).resolves.toBeFalsy();
+    await expect(t.run((ctx) => runEdge(isPro(ctx, identity.userId)))).resolves.toBeFalsy();
     vi.unstubAllGlobals();
 });
 

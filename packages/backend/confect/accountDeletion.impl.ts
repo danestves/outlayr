@@ -1,8 +1,9 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import { env } from "@outlayr/env/backend";
 import * as Clock from "effect/Clock";
+import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 
 import { components } from "../convex/_generated/api";
 import refs from "./_generated/refs";
@@ -27,6 +28,7 @@ import spec from "./accountDeletion.spec";
 import { purgeUserBatch } from "./lib/account";
 import { requireUserId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
+import { outboundHttp } from "./lib/http";
 import { erasePostHogPerson } from "./lib/posthog";
 import { sha256Hex } from "./lib/sha256Hex";
 import { eraseUpstreamCustomer, revenuecat } from "./revenuecat";
@@ -54,7 +56,7 @@ const requireUnexpiredPreparedJob = Effect.fn("AccountDeletion.requireUnexpiredP
 
 const jobForSecret = Effect.fn("AccountDeletion.jobForSecret")(function* jobForSecret(secret: string) {
     const reader = yield* DatabaseReader;
-    const secretHash = yield* Effect.promise(() => sha256Hex(secret));
+    const secretHash = yield* sha256Hex(secret);
     return yield* reader
         .table("accountDeletionJobs")
         .get("by_secretHash", secretHash)
@@ -67,7 +69,10 @@ const prepare = FunctionImpl.make(
     "prepare",
     Effect.fn("AccountDeletion.prepare")(
         function* prepare() {
-            const missing = UPSTREAM_ERASE_SECRETS.filter((name) => !env[name]);
+            const unset = yield* Effect.all(
+                UPSTREAM_ERASE_SECRETS.map((name) => Config.option(Config.String(name)).pipe(Effect.map(Option.isNone)))
+            );
+            const missing = UPSTREAM_ERASE_SECRETS.filter((_name, index) => unset[index]);
             if (missing.length > 0) {
                 return yield* new DeletionUnconfigured({ missing });
             }
@@ -75,7 +80,7 @@ const prepare = FunctionImpl.make(
             const auth = yield* Auth;
             const reader = yield* DatabaseReader;
             const writer = yield* DatabaseWriter;
-            const userId = yield* Effect.promise(() => requireUserId(ctx));
+            const userId = yield* requireUserId(ctx);
             const identity = yield* auth.getUserIdentity.pipe(
                 Effect.catchTags({ NoUserIdentityFoundError: () => Effect.succeed(null) })
             );
@@ -92,17 +97,21 @@ const prepare = FunctionImpl.make(
             yield* writer.table("accountDeletionJobs").insert({
                 errorCode: null,
                 expiresAt: now + DELETE_JOB_TTL_MS,
-                googleReceiptChallengeHash: yield* Effect.promise(() => sha256Hex(receiptChallenge)),
+                googleReceiptChallengeHash: yield* sha256Hex(receiptChallenge),
                 googleReceiptDigest: null,
                 phase: "prepared",
                 provider: null,
-                secretHash: yield* Effect.promise(() => sha256Hex(resumeSecret)),
+                secretHash: yield* sha256Hex(resumeSecret),
                 tokenIdentifier: identity?.tokenIdentifier,
                 userId,
             });
             return { receiptChallenge, resumeSecret };
         },
-        Effect.catchTags({ DeletionRefused: dieAsConvexError, DeletionUnconfigured: dieAsConvexError }),
+        Effect.catchTags({
+            DeletionRefused: dieAsConvexError,
+            DeletionUnconfigured: dieAsConvexError,
+            Unauthenticated: dieAsConvexError,
+        }),
         Effect.orDie
     )
 );
@@ -120,11 +129,11 @@ const submitGoogleLocalReceipt = FunctionImpl.make(
             }
             yield* requireUnexpiredDeletionJob(job);
             if (job.phase === "providersRevoked" && job.provider === "googleLocalReceipt") {
-                yield* Effect.promise(() => consumeGoogleLocalReceipt(job, args.receiptChallenge));
+                yield* consumeGoogleLocalReceipt(job, args.receiptChallenge);
                 return publicStatus(job);
             }
             yield* requireUnexpiredPreparedJob(job);
-            const consumed = yield* Effect.promise(() => consumeGoogleLocalReceipt(job, args.receiptChallenge));
+            const consumed = yield* consumeGoogleLocalReceipt(job, args.receiptChallenge);
             yield* writer.table("accountDeletionJobs").patch(job._id, {
                 googleReceiptChallengeHash: null,
                 googleReceiptDigest: consumed.googleReceiptDigest,
@@ -291,7 +300,7 @@ const advance = FunctionImpl.make(
                 return yield* new DeletionRefused({ reason: "missingUserLinkage" });
             }
             if (job.phase === "providersRevoked") {
-                const result = yield* Effect.promise(() => purgeUserBatch(ctx, userId));
+                const result = yield* purgeUserBatch(ctx, userId);
                 if (!result.done) {
                     return publicStatus(job);
                 }
@@ -388,8 +397,8 @@ const eraseBilling = FunctionImpl.make(
         const { runMutation } = yield* MutationRunner;
         const appUserId = yield* runQuery(refs.internal.accountDeletion.billingTarget, args);
         if (appUserId !== null) {
-            yield* Effect.promise(() => eraseUpstreamCustomer(appUserId));
-            yield* Effect.promise(() => erasePostHogPerson(appUserId));
+            yield* eraseUpstreamCustomer(appUserId).pipe(Effect.provide(outboundHttp));
+            yield* erasePostHogPerson(appUserId).pipe(Effect.provide(outboundHttp));
         }
         return yield* runMutation(refs.internal.accountDeletion.recordBillingErased, args);
     }, Effect.orDie)

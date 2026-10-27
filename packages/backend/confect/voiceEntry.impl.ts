@@ -7,6 +7,8 @@ import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
+import * as Redacted from "effect/Redacted";
 
 import { components } from "../convex/_generated/api";
 import refs from "./_generated/refs";
@@ -14,11 +16,12 @@ import databaseSchema from "./_generated/schema";
 import { ActionCtx, Auth, MutationCtx, MutationRunner, Scheduler } from "./_generated/services";
 import { traced } from "./lib/aiTracing";
 import { admitCapture } from "./lib/captures";
+import { anthropicApiKey, claudeModelId, elevenLabsApiKey } from "./lib/config";
 import { CURRENCY_PATTERN, DATE_PATTERN, LANGUAGE_PATTERN, namesWithinBudget } from "./lib/ledgerPrompt";
 import type { LedgerContext } from "./lib/ledgerPrompt";
-import { perUserBurst } from "./lib/limits";
+import { fixedBurst, perUserBurst } from "./lib/limits";
 import { modelCallError } from "./lib/modelCall";
-import { AI_CONSENT_VERSION, CLAUDE_MODEL_ID, ELEVENLABS_TRANSCRIPTION_MODEL_ID } from "./lib/models";
+import { AI_CONSENT_VERSION, ELEVENLABS_TRANSCRIPTION_MODEL_ID } from "./lib/models";
 import { isPro } from "./revenuecat";
 import {
     buildPrompt,
@@ -48,10 +51,10 @@ const startThread = FunctionImpl.make(
             return { status: "unauthenticated" as const, threadId: null };
         }
         const ctx = yield* MutationCtx;
-        const pro = yield* Effect.promise(() => isPro(ctx, identity.subject));
+        const pro = yield* isPro(ctx, identity.subject);
         const perUser = yield* Effect.promise(() =>
             rateLimiter.limit(ctx, "voiceThreadPerUser", {
-                config: perUserBurst("voiceThread", pro),
+                config: fixedBurst("voiceThread", pro),
                 key: identity.tokenIdentifier,
             })
         );
@@ -80,8 +83,8 @@ const expireThread = FunctionImpl.make(
     "expireThread",
     Effect.fn("VoiceEntry.expireThread")(function* expireThread({ threadId }) {
         const ctx = yield* MutationCtx;
-        const thread = yield* Effect.promise(() =>
-            getThreadMetadata(ctx, components.agent, { threadId }).catch(() => null)
+        const thread = yield* Effect.promise(() => getThreadMetadata(ctx, components.agent, { threadId })).pipe(
+            Effect.catchDefect(() => Effect.succeed(null))
         );
         if (thread === null) {
             return null;
@@ -112,7 +115,7 @@ const endThread = FunctionImpl.make(
     "endThread",
     Effect.fn("VoiceEntry.endThread")(function* endThread({ threadId }) {
         const ctx = yield* MutationCtx;
-        if ((yield* Effect.promise(() => ownsThread(ctx, threadId))) === null) {
+        if ((yield* ownsThread(ctx, threadId)) === null) {
             return null;
         }
         yield* Effect.promise(() => ctx.runMutation(components.agent.threads.deleteAllForThreadIdAsync, { threadId }));
@@ -133,8 +136,10 @@ const admit = FunctionImpl.make(
             return "notEntitled" as const;
         }
         const ctx = yield* MutationCtx;
-        return yield* Effect.promise(() =>
-            admitCapture(ctx, identity, () => rateLimiter.limit(ctx, "voiceEntryGlobal"))
+        return yield* admitCapture(
+            ctx,
+            identity,
+            Effect.promise(() => rateLimiter.limit(ctx, "voiceEntryGlobal"))
         );
     }, Effect.orDie)
 );
@@ -153,9 +158,9 @@ const speak = FunctionImpl.make(
         }
 
         // Read per call, so clearing a key with `npx convex env set` takes effect on the next clip.
-        const apiKey = process.env.ANTHROPIC_API_KEY;
-        const transcriptionKey = process.env.ELEVENLABS_API_KEY;
-        if (!apiKey || !transcriptionKey || args.aiConsent !== AI_CONSENT_VERSION) {
+        const apiKey = yield* anthropicApiKey;
+        const transcriptionKey = yield* elevenLabsApiKey;
+        if (Option.isNone(apiKey) || Option.isNone(transcriptionKey) || args.aiConsent !== AI_CONSENT_VERSION) {
             return failure("notConfigured");
         }
 
@@ -171,17 +176,15 @@ const speak = FunctionImpl.make(
         }
 
         const ctx = yield* ActionCtx;
-        const userId = yield* Effect.promise(() => ownsThread(ctx, args.threadId));
+        const userId = yield* ownsThread(ctx, args.threadId);
         if (userId === null) {
             return failure("invalid");
         }
 
-        const pro = yield* Effect.promise(() => isPro(ctx, identity.subject));
+        const pro = yield* isPro(ctx, identity.subject);
+        const burst = yield* perUserBurst("voiceEntry", pro);
         const perUser = yield* Effect.promise(() =>
-            rateLimiter.limit(ctx, "voiceEntryPerUser", {
-                config: perUserBurst("voiceEntry", pro),
-                key: identity.tokenIdentifier,
-            })
+            rateLimiter.limit(ctx, "voiceEntryPerUser", { config: burst, key: identity.tokenIdentifier })
         );
         if (!perUser.ok) {
             return failure("rateLimited");
@@ -198,7 +201,9 @@ const speak = FunctionImpl.make(
         }
 
         const heard = yield* transcribeClip(
-            createElevenLabs({ apiKey: transcriptionKey }).transcription(ELEVENLABS_TRANSCRIPTION_MODEL_ID),
+            createElevenLabs({ apiKey: Redacted.value(transcriptionKey.value) }).transcription(
+                ELEVENLABS_TRANSCRIPTION_MODEL_ID
+            ),
             args.audio,
             args.language
         );
@@ -213,8 +218,12 @@ const speak = FunctionImpl.make(
             language: args.language,
             today: args.today,
         };
-        const modelId = process.env.CLAUDE_MODEL_ID || CLAUDE_MODEL_ID;
-        const agent = voiceAgent(traced(createAnthropic({ apiKey })(modelId), "voice_entry"), context, heard.text);
+        const modelId = yield* claudeModelId;
+        const agent = voiceAgent(
+            traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "voice_entry"),
+            context,
+            heard.text
+        );
         const { message, messageId } = yield* Effect.promise(() =>
             saveMessage(ctx, components.agent, {
                 prompt: heard.text,

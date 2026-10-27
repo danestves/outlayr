@@ -3,19 +3,23 @@ import { vOnCompleteValidator, Workpool } from "@convex-dev/workpool";
 import { v } from "convex/values";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
+import * as Redacted from "effect/Redacted";
 
 import { components, internal } from "../convex/_generated/api";
 import { internalAction, internalMutation } from "../convex/_generated/server";
-import type { ActionCtx } from "../convex/_generated/server";
+import type { ActionCtx, MutationCtx } from "../convex/_generated/server";
 import type { EnrichmentJobsDoc } from "./_generated/docs";
+import type { Id } from "./_generated/id";
 import { applyToTree, BACKGROUND_REQUEST_TIMEOUT_MS, rateLimiter, runSuggest } from "./enrichment";
 import { groundedAnswer } from "./groundedLookup";
 import type { GroundedCallDeps } from "./groundedLookup";
 import { traced } from "./lib/aiTracing";
+import { anthropicApiKey, claudeFastModelId, claudeGroundedModelId } from "./lib/config";
 import type { EnrichmentResult } from "./lib/enrichmentResult";
 import { knowledgeKey, knowledgeKeys } from "./lib/merchantKey";
 import { CANONICAL_CATEGORY_NAMES, KEY_PATTERN } from "./lib/merchantTrust";
-import { CLAUDE_FAST_MODEL_ID } from "./lib/models";
+import { runEdge, runTransactionEdge } from "./lib/runEdge";
 
 export const MIN_NAME_LENGTH = 3;
 export const MAX_ACK_IDS = 100;
@@ -86,38 +90,36 @@ export const resolveJob = Effect.fn("EnrichmentQueue.resolveJob")(function* reso
     // Spent when `suggest` or an earlier job (a retry included) already searched this merchant today.
     const perKey = row.grounded ? yield* Effect.promise(() => rateLimiter.limit(ctx, "groundedPerKey", { key })) : null;
     if (perKey?.ok) {
-        const deep = yield* Effect.promise(() =>
-            groundedAnswer(
-                ctx,
-                {
-                    categoryTree: row.categoryTree,
-                    currency: row.currency,
-                    income: row.income,
-                    key,
-                    locale: row.locale,
-                    name: row.name,
-                    regionCode: row.regionCode,
-                },
-                deps.grounded
-            )
+        const deep = yield* groundedAnswer(
+            ctx,
+            {
+                categoryTree: row.categoryTree,
+                currency: row.currency,
+                income: row.income,
+                key,
+                locale: row.locale,
+                name: row.name,
+                regionCode: row.regionCode,
+            },
+            deps.grounded
         );
         if (deep !== null && (deep.categoryName !== null || deep.domain !== null || deep.merchantName !== null)) {
             return yield* share(
                 ctx,
                 row,
                 applyToTree(row.categoryTree, { ...deep, parentCategoryName: null }),
-                process.env.CLAUDE_GROUNDED_MODEL_ID || CLAUDE_FAST_MODEL_ID
+                yield* claudeGroundedModelId
             );
         }
     }
-    const fastModelId = process.env.CLAUDE_FAST_MODEL_ID || CLAUDE_FAST_MODEL_ID;
+    const fastModelId = yield* claudeFastModelId;
     let model = deps.fast;
     if (model === undefined) {
-        const apiKey = process.env.ANTHROPIC_API_KEY;
-        if (!apiKey) {
+        const apiKey = yield* anthropicApiKey;
+        if (Option.isNone(apiKey)) {
             return null;
         }
-        model = traced(createAnthropic({ apiKey })(fastModelId), "background_suggest");
+        model = traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(fastModelId), "background_suggest");
     }
     const { grounding: _grounding, ...fast } = yield* runSuggest(model, {
         categoryTree: row.categoryTree,
@@ -131,30 +133,40 @@ export const resolveJob = Effect.fn("EnrichmentQueue.resolveJob")(function* reso
     return yield* share(ctx, row, fast, fastModelId);
 });
 
-export const work = internalAction({
-    args: { jobId: v.id("enrichmentJobs") },
-    handler: async (ctx, args) => {
-        const row = await ctx.runQuery(internal.enrichmentQueue.job, { jobId: args.jobId });
+const workJob: (ctx: ActionCtx, jobId: Id<"enrichmentJobs">) => Effect.Effect<null> = Effect.fn("EnrichmentQueue.work")(
+    function* workJob(ctx: ActionCtx, jobId: Id<"enrichmentJobs">) {
+        const row = yield* Effect.promise(() => ctx.runQuery(internal.enrichmentQueue.job, { jobId }));
         if (row === null || row.status !== "queued") {
             return null;
         }
-        const result = await Effect.runPromise(
-            resolveJob(ctx, row).pipe(Effect.catchTags({ ModelCallError: ({ cause }) => Effect.die(cause) }))
+        const result = yield* resolveJob(ctx, row).pipe(
+            Effect.catchTags({ ModelCallError: ({ cause }) => Effect.die(cause) })
         );
-        await ctx.runMutation(internal.enrichmentQueue.finish, { jobId: args.jobId, result });
+        yield* Effect.promise(() => ctx.runMutation(internal.enrichmentQueue.finish, { jobId, result }));
         return null;
     },
+    Effect.orDie
+);
+
+export const work = internalAction({
+    args: { jobId: v.id("enrichmentJobs") },
+    handler: (ctx, args) => runEdge(workJob(ctx, args.jobId)),
     returns: v.null(),
+});
+
+const failUnsettled = Effect.fn("EnrichmentQueue.settled")(function* failUnsettled(
+    ctx: MutationCtx,
+    jobId: Id<"enrichmentJobs">
+) {
+    const row = yield* Effect.promise(() => ctx.db.get("enrichmentJobs", jobId));
+    if (row?.status === "queued") {
+        yield* Effect.promise(() => ctx.db.patch("enrichmentJobs", row._id, { status: "failed" }));
+    }
+    return null;
 });
 
 export const settled = internalMutation({
     args: vOnCompleteValidator(v.object({ jobId: v.id("enrichmentJobs") })),
-    handler: async (ctx, args) => {
-        const row = await ctx.db.get("enrichmentJobs", args.context.jobId);
-        if (row?.status === "queued") {
-            await ctx.db.patch("enrichmentJobs", row._id, { status: "failed" });
-        }
-        return null;
-    },
+    handler: (ctx, args) => runTransactionEdge(failUnsettled(ctx, args.context.jobId)),
     returns: v.null(),
 });

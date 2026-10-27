@@ -3,6 +3,8 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
+import * as Redacted from "effect/Redacted";
 
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
@@ -12,9 +14,10 @@ import spec from "./csvImport.spec";
 import type { LabelSuggestion } from "./csvImport.spec";
 import { sanitizeRegionCode } from "./enrichment";
 import { traced } from "./lib/aiTracing";
+import { anthropicApiKey, claudeFastModelId } from "./lib/config";
 import { perUserBurst } from "./lib/limits";
 import { knowledgeKeys } from "./lib/merchantKey";
-import { AI_CONSENT_VERSION, CLAUDE_FAST_MODEL_ID } from "./lib/models";
+import { AI_CONSENT_VERSION } from "./lib/models";
 import { isPro } from "./revenuecat";
 
 /** Read live so `npx convex env set ANTHROPIC_API_KEY=""` takes effect on the next call. */
@@ -31,8 +34,8 @@ const csvImport = FunctionImpl.make(
             return failure("unauthenticated");
         }
 
-        const apiKey = process.env.ANTHROPIC_API_KEY;
-        if (!apiKey || args.aiConsent !== AI_CONSENT_VERSION) {
+        const apiKey = yield* anthropicApiKey;
+        if (Option.isNone(apiKey) || args.aiConsent !== AI_CONSENT_VERSION) {
             return failure("notConfigured");
         }
 
@@ -41,15 +44,13 @@ const csvImport = FunctionImpl.make(
         }
 
         const ctx = yield* ActionCtx;
-        if (!(yield* Effect.promise(() => isPro(ctx, identity.subject)))) {
+        if (!(yield* isPro(ctx, identity.subject))) {
             return failure("notEntitled");
         }
 
+        const burst = yield* perUserBurst("csvImport", true);
         const perUser = yield* Effect.promise(() =>
-            rateLimiter.limit(ctx, "csvImportPerUser", {
-                config: perUserBurst("csvImport", true),
-                key: identity.tokenIdentifier,
-            })
+            rateLimiter.limit(ctx, "csvImportPerUser", { config: burst, key: identity.tokenIdentifier })
         );
         if (!perUser.ok) {
             return failure("rateLimited");
@@ -91,11 +92,14 @@ const csvImport = FunctionImpl.make(
             return { status: "ok" as const, suggestions: known };
         }
 
-        const modelId = process.env.CLAUDE_FAST_MODEL_ID || CLAUDE_FAST_MODEL_ID;
-        const classified = yield* classify(traced(createAnthropic({ apiKey })(modelId), "csv_import"), {
-            categoryTree: args.categoryTree,
-            labels: remaining,
-        });
+        const modelId = yield* claudeFastModelId;
+        const classified = yield* classify(
+            traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "csv_import"),
+            {
+                categoryTree: args.categoryTree,
+                labels: remaining,
+            }
+        );
         if (classified.status !== "ok" || classified.suggestions === null) {
             if (known.length > 0) {
                 return { degraded: true, status: "ok" as const, suggestions: known };

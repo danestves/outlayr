@@ -2,11 +2,14 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
+import * as Redacted from "effect/Redacted";
 
 import databaseSchema from "./_generated/schema";
 import { Auth, MutationCtx } from "./_generated/services";
 import { traced } from "./lib/aiTracing";
 import { admitCapture } from "./lib/captures";
+import { anthropicApiKey, claudeFastModelId } from "./lib/config";
 import {
     CURRENCY_PATTERN,
     DATE_PATTERN,
@@ -14,7 +17,7 @@ import {
     namesWithinBudget,
     REGION_PATTERN,
 } from "./lib/ledgerPrompt";
-import { AI_CONSENT_VERSION, CLAUDE_FAST_MODEL_ID } from "./lib/models";
+import { AI_CONSENT_VERSION } from "./lib/models";
 import { admitScan, failure, looksLikeJpeg, MAX_IMAGE_BYTES, rateLimiter, readReceipt } from "./receiptScan";
 import spec from "./receiptScan.spec";
 
@@ -31,8 +34,10 @@ const admit = FunctionImpl.make(
             return "notEntitled" as const;
         }
         const ctx = yield* MutationCtx;
-        return yield* Effect.promise(() =>
-            admitCapture(ctx, identity, () => rateLimiter.limit(ctx, "receiptScanGlobal"))
+        return yield* admitCapture(
+            ctx,
+            identity,
+            Effect.promise(() => rateLimiter.limit(ctx, "receiptScanGlobal"))
         );
     }, Effect.orDie)
 );
@@ -51,8 +56,8 @@ const scan = FunctionImpl.make(
         }
 
         // Read per call, so clearing the key with `npx convex env set` takes effect on the next scan.
-        const apiKey = process.env.ANTHROPIC_API_KEY;
-        if (!apiKey || args.aiConsent !== AI_CONSENT_VERSION) {
+        const apiKey = yield* anthropicApiKey;
+        if (Option.isNone(apiKey) || args.aiConsent !== AI_CONSENT_VERSION) {
             return failure("notConfigured");
         }
 
@@ -74,15 +79,19 @@ const scan = FunctionImpl.make(
             return failure(admitted);
         }
 
-        const modelId = process.env.CLAUDE_FAST_MODEL_ID || CLAUDE_FAST_MODEL_ID;
-        return yield* readReceipt(traced(createAnthropic({ apiKey })(modelId), "receipt_scan"), args.image, {
-            accounts: args.accounts,
-            categoryTree: args.categoryTree,
-            currency: args.currency,
-            language: args.language,
-            regionCode: args.regionCode,
-            today: args.today,
-        });
+        const modelId = yield* claudeFastModelId;
+        return yield* readReceipt(
+            traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "receipt_scan"),
+            args.image,
+            {
+                accounts: args.accounts,
+                categoryTree: args.categoryTree,
+                currency: args.currency,
+                language: args.language,
+                regionCode: args.regionCode,
+                today: args.today,
+            }
+        );
     }, Effect.orDie)
 );
 

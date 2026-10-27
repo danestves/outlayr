@@ -4,40 +4,28 @@ import type { GenericCtx } from "@convex-dev/better-auth";
 import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
 import { requireRunMutationCtx } from "@convex-dev/better-auth/utils";
 import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
-import { env } from "@outlayr/env/backend";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { betterAuth } from "better-auth/minimal";
 import { emailOTP } from "better-auth/plugins";
+import * as Clock from "effect/Clock";
+import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
+import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 import { importPKCS8, SignJWT } from "jose";
 
 import { components, internal } from "../../convex/_generated/api";
 import type { DataModel } from "../../convex/_generated/dataModel";
 import authConfig from "../../convex/auth.config";
-import {
-    accountExistsEmail,
-    codeEmail,
-    EMAIL_CODE_TTL_SECONDS,
-    emailConfigured,
-    emailLanguage,
-    sendEmail,
-} from "./email";
-import { appleCredentialLifecycle } from "./providerLifecycle";
+import { authSettings } from "./config";
+import { accountExistsEmail, codeEmail, EMAIL_CODE_TTL_SECONDS, emailLanguage, sendEmail } from "./email";
+import { outboundHttp } from "./http";
+import { AppleLifecycleError, appleCredentialLifecycle } from "./providerLifecycle";
+import { runEdge, runEdgeSync } from "./runEdge";
 import { sha256Hex } from "./sha256Hex";
 
-/** `CONVEX_SITE_URL` is always set when deployed; `SITE_URL` only exists with a web client. Read per call. */
-function resolveSiteUrl() {
-    return process.env.SITE_URL || process.env.CONVEX_SITE_URL || "http://localhost:3000";
-}
-
-function allowedHosts(siteUrl: string) {
-    const convexSiteUrl = process.env.CONVEX_SITE_URL;
-    return [...new Set([siteUrl, ...(convexSiteUrl ? [convexSiteUrl] : [])].map((url) => new URL(url).host))];
-}
-
-function resolveNativeAppUrl() {
-    return process.env.NATIVE_APP_URL || "outlayr://";
+function allowedHosts(siteUrl: string, convexSiteUrl: Option.Option<string>) {
+    return [...new Set([siteUrl, ...Option.toArray(convexSiteUrl)].map((url) => new URL(url).host))];
 }
 
 const LONGEST_COOKIE_MAX_AGE_SECONDS = 400 * 24 * 60 * 60;
@@ -58,54 +46,47 @@ const decodeEmailBody = Schema.decodeUnknownOption(Schema.Struct({ email: Schema
 
 export const authComponent = createClient<DataModel>(components.betterAuth);
 
-const appleConfig = (() => {
-    const clientId = env.APPLE_CLIENT_ID;
-    const teamId = env.APPLE_TEAM_ID;
-    const keyId = env.APPLE_KEY_ID;
-    const privateKey = env.APPLE_PRIVATE_KEY;
-
-    if (clientId && teamId && keyId && privateKey) {
-        return { clientId, keyId, privateKey, teamId, webClientId: env.APPLE_WEB_CLIENT_ID ?? clientId };
-    }
-
-    return null;
-})();
-
-const googleConfig = (() => {
-    const clientIdWeb = env.GOOGLE_CLIENT_ID_WEB;
-    const clientIdIos = env.GOOGLE_CLIENT_ID_IOS;
-    const clientSecret = env.GOOGLE_CLIENT_SECRET;
-
-    if (clientIdWeb && clientIdIos && clientSecret) {
-        return { clientId: [clientIdWeb, clientIdIos], clientSecret };
-    }
-
-    return null;
-})();
-
 /** Apple's client secret is an ES256 JWT valid six months at most, so it is minted per request. */
-async function generateAppleClientSecret(clientId: string, teamId: string, keyId: string, privateKey: string) {
-    const key = await importPKCS8(privateKey, "ES256");
-    const now = Math.floor(Date.now() / 1000);
-    return new SignJWT({})
-        .setProtectedHeader({ alg: "ES256", kid: keyId })
-        .setIssuer(teamId)
-        .setSubject(clientId)
-        .setAudience("https://appleid.apple.com")
-        .setIssuedAt(now)
-        .setExpirationTime(now + 180 * 24 * 60 * 60)
-        .sign(key);
-}
+const generateAppleClientSecret = Effect.fn("BetterAuth.generateAppleClientSecret")(function* generateAppleClientSecret(
+    clientId: string,
+    teamId: string,
+    keyId: string,
+    privateKey: string
+) {
+    const key = yield* Effect.tryPromise({
+        catch: (cause) => new AppleLifecycleError({ cause, reason: "clientSecretFailed" }),
+        try: () => importPKCS8(privateKey, "ES256"),
+    });
+    const now = Math.floor((yield* Clock.currentTimeMillis) / 1000);
+    return yield* Effect.tryPromise({
+        catch: (cause) => new AppleLifecycleError({ cause, reason: "clientSecretFailed" }),
+        try: () =>
+            new SignJWT({})
+                .setProtectedHeader({ alg: "ES256", kid: keyId })
+                .setIssuer(teamId)
+                .setSubject(clientId)
+                .setAudience("https://appleid.apple.com")
+                .setIssuedAt(now)
+                .setExpirationTime(now + 180 * 24 * 60 * 60)
+                .sign(key),
+    });
+});
 
 function createAuth(ctx: GenericCtx<DataModel>) {
-    const siteUrl = resolveSiteUrl();
-    const nativeAppUrl = resolveNativeAppUrl();
+    const {
+        apple: appleConfig,
+        convexSiteUrl,
+        email: emailConfig,
+        google: googleConfig,
+        nativeAppUrl,
+        siteUrl,
+    } = runEdgeSync(authSettings);
 
     return betterAuth({
         account: { encryptOAuthTokens: true, updateAccountOnSignIn: false },
         advanced: { trustedProxyHeaders: true },
         baseURL: {
-            allowedHosts: allowedHosts(siteUrl),
+            allowedHosts: allowedHosts(siteUrl, convexSiteUrl),
             fallback: siteUrl,
             protocol: new URL(siteUrl).protocol === "http:" ? "http" : "https",
         },
@@ -113,10 +94,13 @@ function createAuth(ctx: GenericCtx<DataModel>) {
         // The app uses neither: codes only confirm an address or reset a password.
         disabledPaths: ["/forget-password/email-otp", "/send-verification-email", "/sign-in/email-otp"],
         emailAndPassword: {
-            enabled: emailConfigured,
-            onExistingUserSignUp: async ({ user }, request) => {
-                await sendEmail(user.email, accountExistsEmail(emailLanguage(request?.headers)));
-            },
+            enabled: Option.isSome(emailConfig),
+            onExistingUserSignUp: ({ user }, request) =>
+                runEdge(
+                    sendEmail(user.email, accountExistsEmail(emailLanguage(request?.headers))).pipe(
+                        Effect.provide(outboundHttp)
+                    )
+                ),
             requireEmailVerification: true,
             revokeSessionsOnPasswordReset: true,
         },
@@ -125,51 +109,64 @@ function createAuth(ctx: GenericCtx<DataModel>) {
             sendOnSignIn: true,
         },
         hooks: {
-            before: createAuthMiddleware(async (endpoint) => {
-                const body = decodeEmailBody(endpoint.body);
-                if (EMAIL_LIMITED_PATHS.has(endpoint.path) && Option.isSome(body)) {
-                    const key = await sha256Hex(body.value.email.trim().toLowerCase());
-                    const { ok } = await emailLimiter.limit(requireRunMutationCtx(ctx), "emailAuth", { key });
-                    if (!ok) {
-                        throw new APIError("TOO_MANY_REQUESTS", { message: "Too many attempts for this email" });
-                    }
-                }
-            }),
+            before: createAuthMiddleware((endpoint) =>
+                runEdge(
+                    Effect.gen(function* before() {
+                        const body = decodeEmailBody(endpoint.body);
+                        if (EMAIL_LIMITED_PATHS.has(endpoint.path) && Option.isSome(body)) {
+                            const key = yield* sha256Hex(body.value.email.trim().toLowerCase());
+                            const { ok } = yield* Effect.promise(() =>
+                                emailLimiter.limit(requireRunMutationCtx(ctx), "emailAuth", { key })
+                            );
+                            if (!ok) {
+                                return yield* Effect.fail(
+                                    new APIError("TOO_MANY_REQUESTS", { message: "Too many attempts for this email" })
+                                );
+                            }
+                        }
+                    })
+                )
+            ),
         },
         plugins: [
             appleCredentialLifecycle(
-                appleConfig
+                Option.isSome(appleConfig)
                     ? {
-                          clientId: appleConfig.clientId,
-                          clientSecret: () =>
-                              generateAppleClientSecret(
-                                  appleConfig.clientId,
-                                  appleConfig.teamId,
-                                  appleConfig.keyId,
-                                  appleConfig.privateKey
-                              ),
+                          clientId: appleConfig.value.clientId,
+                          clientSecret: generateAppleClientSecret(
+                              appleConfig.value.clientId,
+                              appleConfig.value.teamId,
+                              appleConfig.value.keyId,
+                              Redacted.value(appleConfig.value.privateKey)
+                          ),
                       }
                     : null,
                 {
-                    resumeUserId: async (resumeSecret) => {
+                    resumeUserId: Effect.fn("BetterAuth.resumeUserId")(function* resumeUserId(resumeSecret: string) {
                         if (!("runQuery" in ctx)) {
-                            throw new Error("Apple credential revocation needs a query context");
+                            return yield* new AppleLifecycleError({ reason: "resumeFailed" });
                         }
-                        return await ctx.runQuery(internal.accountDeletion.resumeUserId, { resumeSecret });
-                    },
+                        return yield* Effect.tryPromise({
+                            catch: (cause) => new AppleLifecycleError({ cause, reason: "resumeFailed" }),
+                            try: () => ctx.runQuery(internal.accountDeletion.resumeUserId, { resumeSecret }),
+                        });
+                    }),
                 }
             ),
             emailOTP({
                 expiresIn: EMAIL_CODE_TTL_SECONDS,
                 overrideDefaultEmailVerification: true,
-                sendVerificationOTP: async ({ email, otp, type }, endpoint) => {
-                    if (type !== "email-verification" && type !== "forget-password") {
-                        return;
-                    }
-                    const purpose = type === "forget-password" ? "reset" : "verify";
-                    const language = emailLanguage(endpoint?.request?.headers ?? endpoint?.headers);
-                    await sendEmail(email, codeEmail(otp, purpose, language));
-                },
+                sendVerificationOTP: ({ email, otp, type }, endpoint) =>
+                    runEdge(
+                        Effect.gen(function* sendVerificationOTP() {
+                            if (type !== "email-verification" && type !== "forget-password") {
+                                return;
+                            }
+                            const purpose = type === "forget-password" ? "reset" : "verify";
+                            const language = emailLanguage(endpoint?.request?.headers ?? endpoint?.headers);
+                            yield* sendEmail(email, codeEmail(otp, purpose, language));
+                        }).pipe(Effect.provide(outboundHttp))
+                    ),
                 storeOTP: "hashed",
             }),
             expo(),
@@ -184,31 +181,34 @@ function createAuth(ctx: GenericCtx<DataModel>) {
         },
         socialProviders: {
             // Better Auth drops a provider whole on `enabled: false`, so the configured branch must never return it.
-            apple: async () => {
-                if (!appleConfig) {
-                    return {
-                        clientId: "",
-                        clientSecret: "",
-                        enabled: false,
-                    };
-                }
-
-                return {
-                    appBundleIdentifier: appleConfig.clientId,
-                    clientId: appleConfig.webClientId,
-                    clientSecret: await generateAppleClientSecret(
-                        appleConfig.webClientId,
-                        appleConfig.teamId,
-                        appleConfig.keyId,
-                        appleConfig.privateKey
-                    ),
-                    enabled: true,
-                };
-            },
-            google: googleConfig
+            apple: () =>
+                runEdge(
+                    Effect.gen(function* appleProvider() {
+                        if (Option.isNone(appleConfig)) {
+                            return {
+                                clientId: "",
+                                clientSecret: "",
+                                enabled: false,
+                            };
+                        }
+                        const apple = appleConfig.value;
+                        return {
+                            appBundleIdentifier: apple.clientId,
+                            clientId: apple.webClientId,
+                            clientSecret: yield* generateAppleClientSecret(
+                                apple.webClientId,
+                                apple.teamId,
+                                apple.keyId,
+                                Redacted.value(apple.privateKey)
+                            ),
+                            enabled: true,
+                        };
+                    })
+                ),
+            google: Option.isSome(googleConfig)
                 ? {
-                      clientId: googleConfig.clientId,
-                      clientSecret: googleConfig.clientSecret,
+                      clientId: [googleConfig.value.clientIdWeb, googleConfig.value.clientIdIos],
+                      clientSecret: Redacted.value(googleConfig.value.clientSecret),
                       prompt: "select_account consent",
                   }
                 : {

@@ -3,12 +3,14 @@
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
+import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vite-plus/test";
 
 import schema from "../../convex/schema";
 import { authenticatedAs, grantPro, seedAuthUser } from "../test.helpers";
 import type { SeededIdentity } from "../test.helpers";
 import { admitCapture, captureLimiter, FREE_CAPTURE_CONFIG, PRO_CAPTURE_CONFIG } from "./captures";
+import { runEdge } from "./runEdge";
 
 const modules = import.meta.glob("../../convex/**/*.ts");
 
@@ -33,7 +35,7 @@ function spend(t: ReturnType<typeof harness>, name: "capturesFree" | "capturesPr
     return t.run((ctx) => captureLimiter.limit(ctx, name, { count, key }));
 }
 
-const admit = async () => ({ ok: true });
+const admit = Effect.succeed({ ok: true });
 
 describe(admitCapture, () => {
     it("a free user gets the whole pool, then notEntitled", async () => {
@@ -41,8 +43,8 @@ describe(admitCapture, () => {
         const identity = await caller(t, await seedAuthUser(t));
         await spend(t, "capturesFree", identity.tokenIdentifier, FREE_CAPTURE_CONFIG.rate - 1);
 
-        await expect(t.run((ctx) => admitCapture(ctx, identity, admit))).resolves.toBe("ok");
-        await expect(t.run((ctx) => admitCapture(ctx, identity, admit))).resolves.toBe("notEntitled");
+        await expect(t.run((ctx) => runEdge(admitCapture(ctx, identity, admit)))).resolves.toBe("ok");
+        await expect(t.run((ctx) => runEdge(admitCapture(ctx, identity, admit)))).resolves.toBe("notEntitled");
     });
 
     it("a Pro user is not metered by the free pool, and its ceiling reads as quotaExceeded", async () => {
@@ -53,8 +55,8 @@ describe(admitCapture, () => {
         await spend(t, "capturesFree", identity.tokenIdentifier, FREE_CAPTURE_CONFIG.rate);
         await spend(t, "capturesPro", identity.tokenIdentifier, PRO_CAPTURE_CONFIG.rate - 1);
 
-        await expect(t.run((ctx) => admitCapture(ctx, identity, admit))).resolves.toBe("ok");
-        await expect(t.run((ctx) => admitCapture(ctx, identity, admit))).resolves.toBe("quotaExceeded");
+        await expect(t.run((ctx) => runEdge(admitCapture(ctx, identity, admit)))).resolves.toBe("ok");
+        await expect(t.run((ctx) => runEdge(admitCapture(ctx, identity, admit)))).resolves.toBe("quotaExceeded");
     });
 
     it("pools are per user", async () => {
@@ -63,7 +65,7 @@ describe(admitCapture, () => {
         const second = await caller(t, await seedAuthUser(t));
         await spend(t, "capturesFree", first.tokenIdentifier, FREE_CAPTURE_CONFIG.rate);
 
-        await expect(t.run((ctx) => admitCapture(ctx, first, admit))).resolves.toBe("notEntitled");
-        await expect(t.run((ctx) => admitCapture(ctx, second, admit))).resolves.toBe("ok");
+        await expect(t.run((ctx) => runEdge(admitCapture(ctx, first, admit)))).resolves.toBe("notEntitled");
+        await expect(t.run((ctx) => runEdge(admitCapture(ctx, second, admit)))).resolves.toBe("ok");
     });
 });

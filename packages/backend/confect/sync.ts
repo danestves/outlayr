@@ -1,8 +1,6 @@
-import { ConvexError } from "convex/values";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import type { MutationCtx, QueryCtx } from "../convex/_generated/server";
 import type { Docs, TransactionsDoc } from "./_generated/docs";
 import {
     accountFields,
@@ -175,39 +173,6 @@ export function transactionPolicyTieDecision(row: PushRow, existing: SyncedDoc |
         return null;
     }
     return incomingPendingCustom ? "incoming" : "existing";
-}
-
-// The session and Pro outlive `purgeUserBatch` by up to a retried RevenueCat call, and a push in that window writes
-// rows for a user id no purge path can find again. `prepared` is allowed: the owner may yet cancel.
-export async function refuseWhileDeleting(ctx: QueryCtx, userId: string): Promise<void> {
-    // Every job, not a page: a page could bury the refusing job. `accountDeletion.prepare` caps the set per user.
-    const jobs = await ctx.db
-        .query("accountDeletionJobs")
-        .withIndex("by_userId", (q) => q.eq("userId", userId))
-        .collect();
-    if (jobs.some((job) => job.phase !== "prepared")) {
-        throw new ConvexError(new AccountDeleting().message);
-    }
-}
-
-export async function seqCounter(ctx: MutationCtx, userId: string) {
-    const state = await ctx.db
-        .query("syncState")
-        .withIndex("by_user", (q) => q.eq("userId", userId))
-        .unique();
-    // Starts at 1 so a cursor of 0 means "nothing read yet".
-    const nextSeq = state?.nextSeq ?? 1;
-    return {
-        advanceTo: async (next: number) => {
-            if (next <= nextSeq) {
-                return;
-            }
-            await (state
-                ? ctx.db.patch("syncState", state._id, { nextSeq: next })
-                : ctx.db.insert("syncState", { nextSeq: next, userId }));
-        },
-        nextSeq,
-    };
 }
 
 type StoredDocument = Record<string, WireValue | undefined> & {

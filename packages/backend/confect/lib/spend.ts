@@ -1,5 +1,10 @@
 import type { RateLimitConfig } from "@convex-dev/rate-limiter";
 import { DAY } from "@convex-dev/rate-limiter";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
+
+import { numberOverride } from "./config";
 
 /** $10 per 1,000 Claude web searches: https://platform.claude.com/docs/en/about-claude/pricing. */
 const DEFAULT_SEARCH_PRICE_MICROS = 10_000;
@@ -14,59 +19,54 @@ export const WORST_CASE_SEARCH_CALLS = 3;
 const ESTIMATED_INPUT_TOKENS = 18_000;
 const ESTIMATED_OUTPUT_TOKENS = 420;
 
-function envNumber(name: string, fallback: number): number {
-    const raw = process.env[name];
-    if (!raw) {
-        return fallback;
-    }
-    const parsed = Number(raw);
-    return Number.isFinite(parsed) ? parsed : fallback;
-}
+const priceOverride = (name: string, fallback: number) =>
+    numberOverride(name).pipe(Config.map(Option.getOrElse(() => fallback)));
 
-export function searchPriceMicros(): number {
-    return envNumber("GROUNDED_SEARCH_PRICE_MICROS", DEFAULT_SEARCH_PRICE_MICROS);
-}
+const searchPriceMicros = priceOverride("GROUNDED_SEARCH_PRICE_MICROS", DEFAULT_SEARCH_PRICE_MICROS);
 
-export function inputPriceMicrosPerToken(): number {
-    return envNumber("GROUNDED_INPUT_PRICE_MICROS_PER_TOKEN", DEFAULT_INPUT_PRICE_MICROS_PER_TOKEN);
-}
+const inputPriceMicrosPerToken = priceOverride(
+    "GROUNDED_INPUT_PRICE_MICROS_PER_TOKEN",
+    DEFAULT_INPUT_PRICE_MICROS_PER_TOKEN
+);
 
-export function outputPriceMicrosPerToken(): number {
-    return envNumber("GROUNDED_OUTPUT_PRICE_MICROS_PER_TOKEN", DEFAULT_OUTPUT_PRICE_MICROS_PER_TOKEN);
-}
+const outputPriceMicrosPerToken = priceOverride(
+    "GROUNDED_OUTPUT_PRICE_MICROS_PER_TOKEN",
+    DEFAULT_OUTPUT_PRICE_MICROS_PER_TOKEN
+);
 
 /** Read live so `npx convex env set GROUNDED_BUDGET_MICROS=0` closes the gate without a deploy. */
-export function budgetCeilingMicros(): number {
-    return envNumber("GROUNDED_BUDGET_MICROS", DEFAULT_BUDGET_CEILING_MICROS);
-}
+export const budgetCeilingMicros = priceOverride("GROUNDED_BUDGET_MICROS", DEFAULT_BUDGET_CEILING_MICROS);
 
 // Passed inline, never registered: a registered config cannot change per call, so the env var could not move it.
-export function budgetConfig(): RateLimitConfig {
+export const budgetConfig = Effect.fn("Spend.budgetConfig")(function* budgetConfig() {
     return {
         kind: "fixed window",
         period: BUDGET_PERIOD_MS,
-        rate: budgetCeilingMicros(),
+        rate: yield* budgetCeilingMicros,
         shards: 10,
-    };
-}
+    } satisfies RateLimitConfig;
+});
 
-export function estimateMicros(): number {
+export const estimateMicros = Effect.fn("Spend.estimateMicros")(function* estimateMicros() {
     return (
-        WORST_CASE_SEARCH_CALLS * searchPriceMicros() +
-        ESTIMATED_INPUT_TOKENS * inputPriceMicrosPerToken() +
-        ESTIMATED_OUTPUT_TOKENS * outputPriceMicrosPerToken()
+        WORST_CASE_SEARCH_CALLS * (yield* searchPriceMicros) +
+        ESTIMATED_INPUT_TOKENS * (yield* inputPriceMicrosPerToken) +
+        ESTIMATED_OUTPUT_TOKENS * (yield* outputPriceMicrosPerToken)
     );
-}
+});
 
 export interface UsageLike {
     inputTokens?: number | null;
     outputTokens?: number | null;
 }
 
-export function measureMicros(usage: UsageLike, searchCalls: number): number {
+export const measureMicros = Effect.fn("Spend.measureMicros")(function* measureMicros(
+    usage: UsageLike,
+    searchCalls: number
+) {
     return (
-        searchCalls * searchPriceMicros() +
-        (usage.inputTokens ?? 0) * inputPriceMicrosPerToken() +
-        (usage.outputTokens ?? 0) * outputPriceMicrosPerToken()
+        searchCalls * (yield* searchPriceMicros) +
+        (usage.inputTokens ?? 0) * (yield* inputPriceMicrosPerToken) +
+        (usage.outputTokens ?? 0) * (yield* outputPriceMicrosPerToken)
     );
-}
+});

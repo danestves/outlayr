@@ -14,6 +14,7 @@ import { csvImportArgs } from "./csvImport.spec";
 import { perUserBurst } from "./lib/limits";
 import { merchantKey } from "./lib/merchantKey";
 import { AI_CONSENT_VERSION } from "./lib/models";
+import { runEdge } from "./lib/runEdge";
 import { authenticatedAs, grantPro, seedAuthUser } from "./test.helpers";
 
 const modules = import.meta.glob("../convex/**/*.ts");
@@ -158,10 +159,11 @@ describe("csvImport guard ladder", () => {
             throw new Error("Expected an authenticated identity");
         }
 
+        const burst = await runEdge(perUserBurst("csvImport", true));
         await t.run(async (ctx) =>
             rateLimiter.limit(ctx, "csvImportPerUser", {
-                config: perUserBurst("csvImport", true),
-                count: perUserBurst("csvImport", true).capacity,
+                config: burst,
+                count: burst.capacity,
                 key: tokenIdentifier,
             })
         );
@@ -239,16 +241,16 @@ describe("csvImport guard ladder", () => {
 });
 
 describe(perUserBurst, () => {
-    it("honours a positive integer CSV_IMPORT_CAPACITY", () => {
+    it("honours a positive integer CSV_IMPORT_CAPACITY", async () => {
         vi.stubEnv("CSV_IMPORT_CAPACITY", "25");
 
-        expect(perUserBurst("csvImport", true).capacity).toBe(25);
+        await expect(runEdge(perUserBurst("csvImport", true))).resolves.toMatchObject({ capacity: 25 });
     });
 
-    it.each(["", "0", "2.5"])("falls back to the default burst for the unusable value %j", (value) => {
+    it.each(["", "0", "2.5"])("falls back to the default burst for the unusable value %j", async (value) => {
         vi.stubEnv("CSV_IMPORT_CAPACITY", value);
 
-        expect(perUserBurst("csvImport", true).capacity).toBe(10);
+        await expect(runEdge(perUserBurst("csvImport", true))).resolves.toMatchObject({ capacity: 10 });
     });
 
     it("reaches the per-user limit on every call, not once at module load", async () => {

@@ -1,7 +1,10 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { generateText, isStepCount } from "ai";
 import type { LanguageModel, ToolSet } from "ai";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
+import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
 import { internal } from "../convex/_generated/api";
@@ -18,6 +21,7 @@ import {
     sanitizeTags,
 } from "./enrichment";
 import { traced } from "./lib/aiTracing";
+import { anthropicApiKey, claudeGroundedModelId } from "./lib/config";
 import { describeTree } from "./lib/ledgerPrompt";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { knowledgeKeys } from "./lib/merchantKey";
@@ -147,17 +151,26 @@ export interface GroundedCallOutcome {
     sources: readonly { url: string }[];
 }
 
-export async function runGroundedLookupCall(
+export class GroundedLookupError extends Schema.TaggedError<GroundedLookupError>()("GroundedLookupError", {
+    cause: Schema.Defect(),
+    message: Schema.String.pipe(Schema.withConstructorDefault(Effect.succeed("The grounded lookup model call failed"))),
+}) {}
+
+export const runGroundedLookupCall = Effect.fn("GroundedLookup.runCall")(function* runGroundedLookupCall(
     deps: GroundedCallDeps,
     args: GroundedRunArgs
-): Promise<GroundedCallOutcome> {
-    const result = await generateText({
-        abortSignal: AbortSignal.timeout(GROUNDED_REQUEST_TIMEOUT_MS),
-        maxRetries: 0,
-        model: deps.grounding,
-        prompt: buildGroundedPrompt(args),
-        stopWhen: isStepCount(4),
-        tools: deps.groundingTools,
+) {
+    const result = yield* Effect.tryPromise({
+        catch: (cause) => new GroundedLookupError({ cause }),
+        try: () =>
+            generateText({
+                abortSignal: AbortSignal.timeout(GROUNDED_REQUEST_TIMEOUT_MS),
+                maxRetries: 0,
+                model: deps.grounding,
+                prompt: buildGroundedPrompt(args),
+                stopWhen: isStepCount(4),
+                tools: deps.groundingTools,
+            }),
     });
 
     const output = parseGroundedOutput(result.text);
@@ -200,20 +213,24 @@ export async function runGroundedLookupCall(
         searchCalls: result.toolCalls.length,
         sources: urlSources,
     };
-}
+});
 
 export type GroundedLookupCtx = Pick<ActionCtx, "runQuery" | "runMutation">;
 
-export async function groundedAnswer(
+export const groundedAnswer: (
     ctx: GroundedLookupCtx,
     args: GroundedRunArgs,
     overrideDeps?: GroundedCallDeps
-): Promise<GroundedAnswer | null> {
-    const estimated = estimateMicros();
-    const budget = await rateLimiter.limit(ctx, "groundedBudgetMicros", {
-        config: budgetConfig(),
-        count: estimated,
-    });
+) => Effect.Effect<GroundedAnswer | null> = Effect.fn("GroundedLookup.groundedAnswer")(function* groundedAnswer(
+    ctx: GroundedLookupCtx,
+    args: GroundedRunArgs,
+    overrideDeps?: GroundedCallDeps
+) {
+    const estimated = yield* estimateMicros();
+    const config = yield* budgetConfig();
+    const budget = yield* Effect.promise(() =>
+        rateLimiter.limit(ctx, "groundedBudgetMicros", { config, count: estimated })
+    );
     if (!budget.ok) {
         return null;
     }
@@ -221,84 +238,100 @@ export async function groundedAnswer(
     let deps = overrideDeps;
     let modelId: string = CLAUDE_FAST_MODEL_ID;
     if (!deps) {
-        const apiKey = process.env.ANTHROPIC_API_KEY;
-        if (!apiKey) {
+        const apiKey = yield* anthropicApiKey;
+        if (Option.isNone(apiKey)) {
             return null;
         }
-        const anthropic = createAnthropic({ apiKey });
-        modelId = process.env.CLAUDE_GROUNDED_MODEL_ID || CLAUDE_FAST_MODEL_ID;
+        const anthropic = createAnthropic({ apiKey: Redacted.value(apiKey.value) });
+        modelId = yield* claudeGroundedModelId;
+        const grounding = traced(anthropic(modelId), "grounded_lookup");
         deps = {
-            grounding: traced(anthropic(modelId), "grounded_lookup"),
+            grounding,
             groundingTools: { web_search: anthropic.tools.webSearch_20250305({ maxUses: WORST_CASE_SEARCH_CALLS }) },
         };
     }
 
-    let outcome: GroundedCallOutcome;
-    try {
-        outcome = await runGroundedLookupCall(deps, args);
-    } catch (error) {
-        console.warn(
-            `[groundedLookup] call threw for "${args.key}":`,
-            error instanceof Error ? `${error.name}: ${error.message}` : String(error)
+    const called = yield* runGroundedLookupCall(deps, args).pipe(
+        Effect.map(Option.some),
+        Effect.catchTags({
+            GroundedLookupError: ({ cause }) =>
+                Console.warn(
+                    `[groundedLookup] call threw for "${args.key}":`,
+                    cause instanceof Error ? `${cause.name}: ${cause.message}` : String(cause)
+                ).pipe(Effect.as(Option.none<GroundedCallOutcome>())),
+        })
+    );
+    if (Option.isNone(called)) {
+        yield* Effect.promise(() =>
+            ctx.runMutation(internal.groundedSpend.record, {
+                actualMicros: 0,
+                at: Date.now(),
+                chargedMicros: estimated,
+                inputTokens: 0,
+                outputTokens: 0,
+                published: false,
+                searchCalls: 0,
+            })
         );
-        await ctx.runMutation(internal.groundedSpend.record, {
-            actualMicros: 0,
-            at: Date.now(),
-            chargedMicros: estimated,
-            inputTokens: 0,
-            outputTokens: 0,
-            published: false,
-            searchCalls: 0,
-        });
         return null;
     }
+    const outcome = called.value;
     const published = shouldPublish(outcome.candidate, outcome.sources);
 
-    if (published && outcome.candidate.domain !== null && outcome.candidate.categoryName !== null) {
-        await ctx.runMutation(internal.merchantKnowledge.record, {
-            categoryName: outcome.candidate.categoryName,
-            domain: outcome.candidate.domain,
-            emoji: outcome.candidate.emoji,
-            keys: [
-                outcome.candidate.key,
-                ...knowledgeKeys(args.name, args.currency, outcome.candidate.merchantName).filter((key) =>
-                    KEY_PATTERN.test(key)
-                ),
-            ],
-            merchantName: outcome.candidate.merchantName ?? undefined,
-            modelId,
-            parentCategoryName: null,
-            resolvedAt: Date.now(),
-            source: "web",
-            tags: [...outcome.candidate.tags],
-        });
+    const { candidate } = outcome;
+    const { categoryName, domain } = candidate;
+    if (published && domain !== null && categoryName !== null) {
+        yield* Effect.promise(() =>
+            ctx.runMutation(internal.merchantKnowledge.record, {
+                categoryName,
+                domain,
+                emoji: candidate.emoji,
+                keys: [
+                    candidate.key,
+                    ...knowledgeKeys(args.name, args.currency, candidate.merchantName).filter((key) =>
+                        KEY_PATTERN.test(key)
+                    ),
+                ],
+                merchantName: candidate.merchantName ?? undefined,
+                modelId,
+                parentCategoryName: null,
+                resolvedAt: Date.now(),
+                source: "web",
+                tags: [...candidate.tags],
+            })
+        );
     }
 
-    await ctx.runMutation(internal.groundedSpend.record, {
-        actualMicros: measureMicros(
-            { inputTokens: outcome.inputTokens, outputTokens: outcome.outputTokens },
-            outcome.searchCalls
-        ),
-        at: Date.now(),
-        chargedMicros: estimated,
-        inputTokens: outcome.inputTokens,
-        outputTokens: outcome.outputTokens,
-        published,
-        searchCalls: outcome.searchCalls,
-    });
+    const actualMicros = yield* measureMicros(
+        { inputTokens: outcome.inputTokens, outputTokens: outcome.outputTokens },
+        outcome.searchCalls
+    );
+    yield* Effect.promise(() =>
+        ctx.runMutation(internal.groundedSpend.record, {
+            actualMicros,
+            at: Date.now(),
+            chargedMicros: estimated,
+            inputTokens: outcome.inputTokens,
+            outputTokens: outcome.outputTokens,
+            published,
+            searchCalls: outcome.searchCalls,
+        })
+    );
     return outcome.answer;
-}
+}, Effect.orDie);
 
-export async function runGroundedLookup(
+export const runGroundedLookup: (
     ctx: GroundedLookupCtx,
     args: GroundedRunArgs,
     overrideDeps?: GroundedCallDeps
-): Promise<void> {
-    const perKey = await rateLimiter.limit(ctx, "groundedPerKey", {
-        key: args.key,
-    });
+) => Effect.Effect<void> = Effect.fn("GroundedLookup.run")(function* runGroundedLookup(
+    ctx: GroundedLookupCtx,
+    args: GroundedRunArgs,
+    overrideDeps?: GroundedCallDeps
+) {
+    const perKey = yield* Effect.promise(() => rateLimiter.limit(ctx, "groundedPerKey", { key: args.key }));
     if (!perKey.ok) {
         return;
     }
-    await groundedAnswer(ctx, args, overrideDeps);
-}
+    yield* groundedAnswer(ctx, args, overrideDeps);
+});
