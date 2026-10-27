@@ -8,8 +8,8 @@ import { appLogger } from "@/lib/app-logger";
 import { fetchMerchantImage } from "@/lib/logo-fetch";
 import { appRuntime } from "@/lib/runtime";
 
-import { createCommand, createRuntimeCommand, runAtomCommand, SILENT, unwrapAtomCommand } from "./atom-command";
-import type { AtomCommand, AtomCommandOptions } from "./atom-command";
+import { createCommand, createRuntimeCommand, runAtomCommand, SILENT } from "./atom-command";
+import type { AtomCommand } from "./atom-command";
 import { appAtomRegistry } from "./atom-registry";
 
 export type AppServices = typeof appRuntime extends Atom.AtomRuntime<infer R, infer _E> ? R : never;
@@ -29,10 +29,6 @@ const flowCommand = <A, E>() =>
 export const voidFlowCommand = flowCommand<unknown, never>();
 
 export const voidAppFlowCommand = appFlowCommand<unknown, never>();
-
-export async function runEntryFlow<A, E>(flow: Effect.Effect<A, E>, options: AtomCommandOptions = SILENT): Promise<A> {
-    return unwrapAtomCommand(await runAtomCommand(appAtomRegistry, flowCommand<A, E>(), flow, options));
-}
 
 export const fromCommand = <W, A, E>(command: AtomCommand<W, A, E>, input: W): Effect.Effect<A, E> =>
     Effect.promise(() => runAtomCommand(appAtomRegistry, command, input, SILENT)).pipe(

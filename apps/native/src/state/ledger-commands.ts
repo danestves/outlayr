@@ -1,92 +1,19 @@
 import * as Effect from "effect/Effect";
 
-import { attachmentsRepo } from "@/data/attachments-core";
-import type { AttachmentDraft } from "@/data/attachments-core";
-import { rememberFeeCategory } from "@/data/card-fees-core";
-import { queueEnrichment } from "@/data/enrichment-queue-core";
-import { recallMerchant } from "@/data/merchant-book-core";
-import { rememberedCategoryFor } from "@/data/merchant-history-core";
-import { applyMerchantToSiblings } from "@/data/merchant-siblings-core";
-import type { MerchantSiblingsInput } from "@/data/merchant-siblings-core";
-import { backfillRecurring } from "@/data/recurrence-backfill";
-import { pendingReminderPlan } from "@/data/subscription-reminders-core";
-import { tagsRepo } from "@/data/tags-core";
 import { transactionsRepo } from "@/data/transactions-core";
-import type { TransactionInput } from "@/data/transactions-core";
 import { applyImport } from "@/data/transfer-core";
 import type { ImportPlan } from "@/data/transfer-core";
 import type { Database } from "@/db/client";
-import type { TimeOfDay } from "@/domain/reminder";
-import { sendEnrichmentQueue } from "@/lib/enrichment-queue";
 import { attachImportLogos } from "@/lib/import-logo-attach";
 import { appRuntime } from "@/lib/runtime";
 
-import { createRuntimeCommand, runAtomCommand, SILENT, unwrapAtomCommand } from "./atom-command";
-import type { AtomCommand } from "./atom-command";
-import { appAtomRegistry } from "./atom-registry";
+import { createRuntimeCommand } from "./atom-command";
 
 const ledgerCommand = <W, A, E>(label: string, execute: (input: W) => Effect.Effect<A, E>) =>
     createRuntimeCommand(appRuntime, { execute, label: `ledger:${label}` });
 
-export async function runLedgerCommand<W, A>(command: AtomCommand<W, A, unknown>, input: W): Promise<A> {
-    return unwrapAtomCommand(await runAtomCommand(appAtomRegistry, command, input, SILENT));
-}
-
-export const createTransactionCommand = ledgerCommand(
-    "create-transaction",
-    (input: { attachments?: readonly AttachmentDraft[]; db: Database; entry: TransactionInput }) =>
-        transactionsRepo.create(input.db, input.entry, {
-            inSameTransaction:
-                input.attachments === undefined
-                    ? undefined
-                    : (id) => attachmentsRepo.writeFor(input.db, id, input.attachments ?? []),
-        })
-);
-
 export const restoreTransactionCommand = ledgerCommand("restore-transaction", (input: { db: Database; id: string }) =>
     transactionsRepo.restore(input.db, input.id)
-);
-
-export const backfillRecurringCommand = ledgerCommand("backfill-recurring", (input: { db: Database; id: string }) =>
-    backfillRecurring(input.db, input.id)
-);
-
-export const ensureTagCommand = ledgerCommand("ensure-tag", (input: { db: Database; name: string }) =>
-    tagsRepo.ensureTag(input.db, input.name)
-);
-
-export const rememberFeeCategoryCommand = ledgerCommand(
-    "remember-fee-category",
-    (input: { categoryId: string; db: Database }) => rememberFeeCategory(input.db, input.categoryId)
-);
-
-export const rememberedCategoryCommand = ledgerCommand(
-    "remembered-category",
-    (input: { db: Database; income: boolean; key: string }) => rememberedCategoryFor(input.db, input.key, input.income)
-);
-
-export const recallMerchantCommand = ledgerCommand(
-    "recall-merchant",
-    (input: { currency: string | undefined; db: Database; name: string }) =>
-        recallMerchant(input.db, input.name, input.currency)
-);
-
-export const carryMerchantLookupCommand = ledgerCommand(
-    "carry-merchant-lookup",
-    (input: { db: Database; siblings: MerchantSiblingsInput }) => applyMerchantToSiblings(input.db, input.siblings)
-);
-
-export const queueEnrichmentCommand = ledgerCommand("queue-enrichment", (input: { db: Database; id: string }) =>
-    queueEnrichment(input.db, input.id)
-);
-
-export const sendEnrichmentQueueCommand = ledgerCommand("send-enrichment-queue", (db: Database) =>
-    sendEnrichmentQueue(db)
-);
-
-export const pendingReminderPlanCommand = ledgerCommand(
-    "pending-reminder-plan",
-    (input: { db: Database; now: Date; time: TimeOfDay }) => pendingReminderPlan(input.db, input.now, input.time)
 );
 
 export const importWithLogosCommand = ledgerCommand("import-with-logos", (input: { db: Database; plan: ImportPlan }) =>

@@ -1,19 +1,10 @@
 import * as Effect from "effect/Effect";
-import * as Schema from "effect/Schema";
 import type { ImagePickerResult } from "expo-image-picker";
 
 import { duringHandoff } from "@/lib/app-handoff";
+import type { PendingPickError } from "@/lib/pending-pick-error";
 
 export type PickOwner = "identity-picker" | "installment-scan" | "receipt-scan";
-
-export class PendingPickError extends Schema.TaggedError<PendingPickError>()("PendingPickError", {
-    cause: Schema.Defect(),
-}) {
-    // oxlint-disable-next-line class-methods-use-this -- one cause, no attribute: the message has nothing on the instance to read
-    override get message(): string {
-        return "The pending photo pick could not be read";
-    }
-}
 
 /**
  * Every system camera and library launch goes through here: the app lock hears about the trip out, and on Android

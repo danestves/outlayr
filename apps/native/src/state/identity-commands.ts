@@ -15,7 +15,7 @@ import { glowFromImage } from "@/theme/glow";
 
 import { createCommand, createRuntimeCommand } from "./atom-command";
 
-export class PhotoPickError extends Schema.TaggedError<PhotoPickError>()("PhotoPickError", {
+class PhotoPickError extends Schema.TaggedError<PhotoPickError>()("PhotoPickError", {
     cause: Schema.Defect(),
 }) {
     // oxlint-disable-next-line class-methods-use-this -- one cause, no attribute: the message has nothing on the instance to read

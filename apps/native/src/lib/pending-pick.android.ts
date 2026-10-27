@@ -3,8 +3,8 @@ import * as Effect from "effect/Effect";
 import { getPendingResultAsync } from "expo-image-picker";
 
 import { duringHandoff } from "@/lib/app-handoff";
-import { PendingPickError } from "@/lib/pending-pick";
 import type { launchPick as iosLaunchPick, pendingPick as iosPendingPick } from "@/lib/pending-pick";
+import { PendingPickError } from "@/lib/pending-pick-error";
 
 /** On disk, since Android can kill the whole process while the camera is up. */
 const PICK_MARK_KEY = "outlayr.pending-pick";

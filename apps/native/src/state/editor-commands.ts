@@ -11,7 +11,7 @@ import type { FileStepError } from "@/lib/import-draft-store";
 
 import { createCommand } from "./atom-command";
 
-export class TagCreateError extends Schema.TaggedError<TagCreateError>()("TagCreateError", {
+class TagCreateError extends Schema.TaggedError<TagCreateError>()("TagCreateError", {
     cause: Schema.Defect(),
 }) {
     // oxlint-disable-next-line class-methods-use-this -- one cause, no attribute: the message has nothing on the instance to read

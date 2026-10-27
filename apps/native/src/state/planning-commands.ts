@@ -14,17 +14,15 @@ import {
 } from "@/data/debts-core";
 import { installmentsRepo } from "@/data/installments-core";
 import type { InstallmentFeeInput, InstallmentPaymentInput } from "@/data/installments-core";
-import { livePayoffPlanCount, owedPayoffPlans, setPayoffPlan } from "@/data/payoff-plans";
+import { livePayoffPlanCount, setPayoffPlan } from "@/data/payoff-plans";
 import { savingsGoalsRepo } from "@/data/savings-goals-core";
-import type { SavingsGoalInput, SavingsGoalPatch } from "@/data/savings-goals-core";
+import type { SavingsGoalPatch } from "@/data/savings-goals-core";
 import type { Database } from "@/db/client";
 import { comesFromPerson } from "@/domain/debt-choices";
 import type { DebtVerb } from "@/domain/debts";
 import { appRuntime } from "@/lib/runtime";
 
-import { createRuntimeCommand, runAtomCommand, SILENT, unwrapAtomCommand } from "./atom-command";
-import type { AtomCommand } from "./atom-command";
-import { appAtomRegistry } from "./atom-registry";
+import { createRuntimeCommand } from "./atom-command";
 
 const planningCommand = <W, A, E>(label: string, execute: (input: W) => Effect.Effect<A, E>) =>
     createRuntimeCommand(appRuntime, { execute, label: `planning:${label}` });
@@ -104,20 +102,6 @@ export const writePayoffPlan = Effect.fn("Planning.writePayoffPlan")(function* w
     }
 });
 
-export const writeDebtCommand = planningCommand("write-debt", (input: { db: Database; draft: DebtDraft }) =>
-    writeDebt(input.db, input.draft)
-);
-
-export const writeOweCommand = planningCommand("write-owe", (input: { db: Database; draft: OweDraft }) =>
-    writeOwe(input.db, input.draft)
-);
-
-export const writePayoffPlanCommand = planningCommand(
-    "write-payoff-plan",
-    (input: { db: Database; personId: string; targetDate: Date }) =>
-        writePayoffPlan(input.db, input.personId, input.targetDate)
-);
-
 export const setPayoffPlanCommand = planningCommand(
     "set-payoff-plan",
     (input: { account: Account; db: Database; targetDate: Date }) =>
@@ -127,15 +111,6 @@ export const setPayoffPlanCommand = planningCommand(
 export const livePayoffPlanCountCommand = planningCommand(
     "live-payoff-plan-count",
     (input: { db: Database; exceptAccountId: string | null }) => livePayoffPlanCount(input.db, input.exceptAccountId)
-);
-
-export const owedPayoffPlansCommand = planningCommand("owed-payoff-plans", (input: { db: Database; now: Date }) =>
-    owedPayoffPlans(input.db, input.now)
-);
-
-export const createSavingsGoalCommand = planningCommand(
-    "create-goal",
-    (input: { db: Database; goal: SavingsGoalInput }) => savingsGoalsRepo.create(input.db, input.goal)
 );
 
 export const updateSavingsGoalCommand = planningCommand(
@@ -200,7 +175,3 @@ export const deleteInstallmentPlanCommand = planningCommand(
     "delete-installment-plan",
     (input: { db: Database; planId: string }) => installmentsRepo.deletePlan(input.db, input.planId)
 );
-
-export async function runPlanningCommand<W, A, E>(command: AtomCommand<W, A, E>, input: W): Promise<A> {
-    return unwrapAtomCommand(await runAtomCommand(appAtomRegistry, command, input, SILENT));
-}

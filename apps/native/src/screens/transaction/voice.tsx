@@ -78,7 +78,7 @@ import { freshEntries } from "@/lib/fresh-entries";
 import { posthog } from "@/lib/posthog";
 import { syncSubscriptionReminders } from "@/lib/subscription-reminder-sync";
 import { useHaptics } from "@/lib/use-haptics";
-import { openAppSettings, runEntryFlow, voidFlowCommand } from "@/state/entry-commands";
+import { openAppSettings, voidFlowCommand } from "@/state/entry-commands";
 import { logged } from "@/state/entry-save";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
@@ -674,10 +674,6 @@ const writeTransfer = Effect.fn("VoiceThread.writeTransfer")(function* writeTran
     done.onSaved();
 });
 
-function openSettings() {
-    void runEntryFlow(openAppSettings);
-}
-
 function VoiceThreadScreen() {
     const router = useRouter();
     const db = useDatabase();
@@ -849,7 +845,12 @@ function VoiceThreadScreen() {
               }
             : { label: t("voice.action.finish"), onPress: () => openTransferForm(transfer) };
     } else if (phase.kind === "failed") {
-        ({ primary, secondary } = failedActions(phase.reason, t, { listenAgain, openSettings, seePro }, entitled));
+        ({ primary, secondary } = failedActions(
+            phase.reason,
+            t,
+            { listenAgain, openSettings: () => runFlow(openAppSettings), seePro },
+            entitled
+        ));
     }
 
     const bottom = settled ? (
