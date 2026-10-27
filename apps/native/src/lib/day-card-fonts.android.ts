@@ -3,11 +3,14 @@ import { GoogleSansFlex_400Regular } from "@expo-google-fonts/google-sans-flex/4
 import { GoogleSansFlex_500Medium } from "@expo-google-fonts/google-sans-flex/500Medium";
 import { InstrumentSerif_400Regular } from "@expo-google-fonts/instrument-serif/400Regular";
 import { Skia } from "@shopify/react-native-skia";
-import type { SkTypeface } from "@shopify/react-native-skia";
+import * as Deferred from "effect/Deferred";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import { Image } from "react-native";
 
 import type { CardWeight } from "@/domain/day-card";
 
+import { DayCardFontError } from "./day-card-fonts";
 import type { CardTypefaces, loadCardTypefaces as loadCardTypefacesBase } from "./day-card-fonts";
 
 export type { CardTypefaces } from "./day-card-fonts";
@@ -19,37 +22,53 @@ const FILES = {
     semibold: InstrumentSerif_400Regular,
 } satisfies Record<CardWeight, number>;
 
-async function typefaceFrom(file: number): Promise<SkTypeface> {
+const notLoaded = (cause?: unknown) => new DayCardFontError({ cause, reason: "notLoaded" });
+
+const typefaceFrom = Effect.fn("DayCardFonts.typefaceFrom")(function* typefaceFrom(file: number) {
     const source = Image.resolveAssetSource(file);
-    const typeface = source && Skia.Typeface.MakeFreeTypeFaceFromData(await Skia.Data.fromURI(source.uri));
+    if (!source) {
+        return yield* notLoaded();
+    }
+    const data = yield* Effect.tryPromise({ catch: notLoaded, try: () => Skia.Data.fromURI(source.uri) });
+    const typeface = yield* Effect.try({ catch: notLoaded, try: () => Skia.Typeface.MakeFreeTypeFaceFromData(data) });
     if (typeface == null) {
-        throw new Error("A day card font file did not load");
+        return yield* notLoaded();
     }
     return typeface;
-}
+});
 
-let loading: Promise<CardTypefaces> | null = null;
+let loading: Deferred.Deferred<CardTypefaces, DayCardFontError> | null = null;
 
-async function loadAll(): Promise<CardTypefaces> {
-    try {
-        const [medium, mono, regular, semibold] = await Promise.all([
-            typefaceFrom(FILES.medium),
-            typefaceFrom(FILES.mono),
-            typefaceFrom(FILES.regular),
-            typefaceFrom(FILES.semibold),
-        ]);
-        return { medium, mono, regular, semibold };
-    } catch (error) {
-        loading = null;
-        throw error;
-    }
-}
+const loadAll = Effect.all(
+    {
+        medium: typefaceFrom(FILES.medium),
+        mono: typefaceFrom(FILES.mono),
+        regular: typefaceFrom(FILES.regular),
+        semibold: typefaceFrom(FILES.semibold),
+    },
+    { concurrency: "unbounded" }
+);
 
 /**
  * Loaded from the bundled files: Android's system manager hands back blank typefaces for family names it cannot
  * match. A failure is retried on the next share rather than cached.
  */
-export const loadCardTypefaces: typeof loadCardTypefacesBase = () => {
-    loading ??= loadAll();
-    return loading;
-};
+export const loadCardTypefaces: typeof loadCardTypefacesBase = () =>
+    Effect.suspend(() => {
+        if (loading !== null) {
+            return Deferred.await(loading);
+        }
+        const pass = Deferred.makeUnsafe<CardTypefaces, DayCardFontError>();
+        loading = pass;
+        return loadAll.pipe(
+            Effect.onExit((exit) =>
+                Effect.suspend(() => {
+                    if (Exit.isFailure(exit)) {
+                        loading = null;
+                    }
+                    return Deferred.done(pass, exit);
+                })
+            ),
+            Effect.uninterruptible
+        );
+    });

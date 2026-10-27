@@ -25,11 +25,17 @@ import { adoptionActions, adoptionPlan } from "@/domain/ledger-adoption";
 import type { AdoptionActions } from "@/domain/ledger-adoption";
 import { adoptionEngine } from "@/lib/adoption-engine";
 import { photoTransport } from "@/lib/convex";
+import { cancelLogoBackfill } from "@/lib/logo-backfill";
 import { appRuntime } from "@/lib/runtime";
 
 import { createRuntimeCommand, runAtomCommand, SILENT, unwrapAtomCommand } from "./atom-command";
 import type { AtomCommand } from "./atom-command";
 import { appAtomRegistry } from "./atom-registry";
+
+export const cancelLogoBackfillCommand = createRuntimeCommand(appRuntime, {
+    execute: (_input: undefined) => cancelLogoBackfill(),
+    label: "lifecycle:cancel-logo-backfill",
+});
 
 export const finishOnboardingCommand = createRuntimeCommand(appRuntime, {
     execute: (db: Database) => finishOnboarding(db),

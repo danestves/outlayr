@@ -12,6 +12,8 @@ import * as Stream from "effect/Stream";
 import type { Database } from "@/db/client";
 import { appStates, launchAndForegrounds, listen, WatchAppState, WatchTableWrites } from "@/lib/app-events";
 
+import type { AppMetaError } from "./app-meta-core";
+import type { LogoReplateError } from "./logo-replate-core";
 import { PHOTO_TABLES } from "./photo-store-core";
 import type { PhotoReconciliation, PhotoStoreError } from "./photo-store-core";
 import type { PhotoSyncResult, PhotoTransferError } from "./photo-sync-core";
@@ -39,7 +41,7 @@ export class PhotoPasses extends Context.Service<
     PhotoPasses,
     {
         readonly reconcile: (db: Database, nowMs: number) => Effect.Effect<PhotoReconciliation, PhotoStoreError>;
-        readonly replateLogos: (db: Database) => Promise<number>;
+        readonly replateLogos: (db: Database) => Effect.Effect<number, AppMetaError | LogoReplateError>;
         readonly sync: (db: Database) => Effect.Effect<PhotoSyncResult, PhotoTransferError>;
     }
 >()("outlayr/data/PhotoSync/PhotoPasses") {}
@@ -63,9 +65,6 @@ export class PhotoSync extends Context.Service<
 const failedAt = (step: typeof PhotoStep.Type) => (cause: unknown) =>
     new PhotoSyncError({ cause, message: FAILED[step], step });
 
-const attempt = <A>(step: typeof PhotoStep.Type, task: () => Promise<A>) =>
-    Effect.tryPromise({ catch: failedAt(step), try: task });
-
 export const make = Effect.gen(function* make() {
     const watchAppState = yield* WatchAppState;
     const watchTableWrites = yield* WatchTableWrites;
@@ -85,7 +84,7 @@ export const make = Effect.gen(function* make() {
             .reconcile(db, nowMs)
             .pipe(
                 Effect.mapError(failedAt("reconcile")),
-                Effect.andThen(attempt("reconcile", () => passes.replateLogos(db))),
+                Effect.andThen(passes.replateLogos(db).pipe(Effect.mapError(failedAt("reconcile")))),
                 Effect.catchTags({ PhotoSyncError: (error) => Effect.logError(error.message, error.cause) }),
                 Effect.uninterruptible
             );

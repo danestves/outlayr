@@ -9,7 +9,7 @@ const mockFiles = new Map<string, string>();
 jest.mock("@/lib/logo-cache", () => ({
     cachedLogoUri: (key: string) => mockFiles.get(key) ?? null,
     logoCacheKey: (name: string) => name,
-    readCachedLogo: async () => ({ kind: "unknown" }),
+    readCachedLogo: () => require("effect/Effect").succeed({ kind: "unknown" }),
     writeCachedLogo: (key: string, bytes: Uint8Array | null) => {
         if (bytes !== null) {
             mockFiles.set(key, `file:///${key}`);

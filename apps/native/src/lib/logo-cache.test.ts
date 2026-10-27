@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import * as Effect from "effect/Effect";
 
 jest.mock("expo-file-system", () => {
     const existing = new Set<string>();
@@ -82,20 +83,26 @@ describe("a miss expires", () => {
     it("is still a miss inside the week", async () => {
         __existing.add("zinli.miss");
         __writtenAt.set("zinli.miss", 1000);
-        await expect(readCachedLogo("zinli", 1000 + WEEK - 1)).resolves.toStrictEqual({ kind: "miss" });
+        await expect(Effect.runPromise(readCachedLogo("zinli", 1000 + WEEK - 1))).resolves.toStrictEqual({
+            kind: "miss",
+        });
         expect(cachedLogoUri("zinli", 1000 + WEEK - 1)).toBeNull();
     });
 
     it("is forgotten, and its marker removed, once the week is up", async () => {
         __existing.add("zinli.miss");
         __writtenAt.set("zinli.miss", 1000);
-        await expect(readCachedLogo("zinli", 1000 + WEEK + 1)).resolves.toStrictEqual({ kind: "unknown" });
+        await expect(Effect.runPromise(readCachedLogo("zinli", 1000 + WEEK + 1))).resolves.toStrictEqual({
+            kind: "unknown",
+        });
         expect(__existing.has("zinli.miss")).toBe(false);
     });
 
     it("keeps a marker with no readable time, rather than guessing", async () => {
         __existing.add("zinli.miss");
-        await expect(readCachedLogo("zinli", Number.MAX_SAFE_INTEGER)).resolves.toStrictEqual({ kind: "miss" });
+        await expect(Effect.runPromise(readCachedLogo("zinli", Number.MAX_SAFE_INTEGER))).resolves.toStrictEqual({
+            kind: "miss",
+        });
     });
 });
 

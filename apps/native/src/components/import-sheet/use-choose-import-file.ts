@@ -4,12 +4,13 @@ import { guessMapping, parseImportFile } from "@/data/transfer-core";
 import type { ParsedImportFile } from "@/data/transfer-core";
 import { classifyParseFailure, HARD_PARSE_REJECT_CHARS } from "@/domain/import-diagnosis";
 import { resolveImportMapping } from "@/domain/import-mapping";
-import { pickCsvFile, TransferError } from "@/lib/data-transfer";
+import { TransferError } from "@/lib/data-transfer";
 import { importDraftStore } from "@/lib/import-draft-store";
+import { pickCsvFileCommand, runTransferCommand } from "@/state/transfer-commands";
 
 async function readChosenFile(setStatus: (status: "idle" | "loading") => void) {
     try {
-        const picked = await pickCsvFile();
+        const picked = await runTransferCommand(pickCsvFileCommand, undefined);
         if (picked == null) {
             setStatus("idle");
             return;

@@ -117,9 +117,7 @@ export const fetchMerchantImage = Effect.fn("LogoFetch.fetchMerchantImage")(func
         cache = null;
     }
     const key = cache?.logoCacheKey(request.name.trim(), request.domain) ?? "";
-    const cached = (yield* Effect.promise(async () => await cache?.readCachedLogo(key))) ?? {
-        kind: "unknown" as const,
-    };
+    const cached = cache === null ? { kind: "unknown" as const } : yield* cache.readCachedLogo(key);
     if (cached.kind === "logo") {
         return { bytes: cached.bytes, kind: "logo" } satisfies LogoOutcome;
     }

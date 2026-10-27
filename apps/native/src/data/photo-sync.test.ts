@@ -37,7 +37,7 @@ describe("photo sync", () => {
                     PhotoPasses,
                     PhotoPasses.of({
                         reconcile: () => Effect.promise(() => reconciles()),
-                        replateLogos: async () => 0,
+                        replateLogos: () => Effect.succeed(0),
                         sync: () => Effect.promise(() => cycles()),
                     })
                 )

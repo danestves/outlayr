@@ -27,10 +27,10 @@ import { useAccountCaps, useLiabilityCreateRoute } from "@/hooks/use-pro-gate";
 import { useRegionCode } from "@/hooks/use-region-code";
 import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
-import { persistLogo } from "@/lib/persist-logo";
 import { createAccountCommand } from "@/state/accounts-commands";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
 import { fetchMerchantLogo } from "@/state/capture-commands";
+import { persistLogoCommand, runMediaCommand } from "@/state/media-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
@@ -95,9 +95,9 @@ export function StepAccountInstallments({ accounts, onPick, searchable }: StepAc
             // Fetched before the account exists, since the entry holds the account as picked. Named by its domain, as
             // the mark is, so both read the same cache entry.
             const outcome = await fetchMerchantLogo({ domain: app.domain, name: app.domain });
-            let logo: Awaited<ReturnType<typeof persistLogo>> | null = null;
+            let logo: { imageColor: string | null; imageUri: string } | null = null;
             if (outcome.kind === "logo") {
-                logo = await persistLogo(outcome.bytes);
+                logo = await runMediaCommand(persistLogoCommand, outcome.bytes);
             }
             const id = unwrapAtomCommand(
                 await createAccount({

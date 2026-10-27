@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, jest } from "@jest/globals";
+import * as Effect from "effect/Effect";
 import { Linking } from "react-native";
 
 import { takeHandoff } from "./app-handoff";
@@ -15,7 +16,7 @@ describe("openStoreReview on Android", () => {
             .mockRejectedValueOnce(new Error("No Activity found to handle Intent"))
             .mockResolvedValue(undefined);
 
-        await openStoreReview();
+        await Effect.runPromise(openStoreReview());
 
         expect(openURL).toHaveBeenLastCalledWith("https://play.google.com/store/apps/details?id=com.tryoutlayr.app");
     });
@@ -23,7 +24,7 @@ describe("openStoreReview on Android", () => {
     it("announces the trip to the app lock", async () => {
         jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
 
-        await openStoreReview();
+        await Effect.runPromise(openStoreReview());
 
         expect(takeHandoff()).toBe(true);
     });

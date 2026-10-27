@@ -1,5 +1,16 @@
 import { FilterMode, ImageFormat, MipmapMode, Skia } from "@shopify/react-native-skia";
 import type { SkImage } from "@shopify/react-native-skia";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
+
+export class ReceiptImageError extends Schema.TaggedError<ReceiptImageError>()("ReceiptImageError", {
+    cause: Schema.Defect(),
+}) {
+    // oxlint-disable-next-line class-methods-use-this -- one cause, no attribute: the message has nothing on the instance to read
+    override get message(): string {
+        return "Preparing the receipt image failed";
+    }
+}
 
 /** The server accepts 900KB (`receiptScan.ts:MAX_IMAGE_BYTES`); the margin covers the value's wire overhead. */
 const MAX_UPLOAD_BYTES = 850_000;
@@ -38,17 +49,7 @@ function encodeAt(image: SkImage, longEdge: number, quality: number): Uint8Array
     return encoded.length > 0 ? encoded : null;
 }
 
-export async function prepareReceiptImage(sourceUri: string): Promise<PreparedReceipt | null> {
-    let image: SkImage | null;
-    try {
-        const data = await Skia.Data.fromURI(sourceUri);
-        image = Skia.Image.MakeImageFromEncoded(data);
-    } catch {
-        return null;
-    }
-    if (image == null) {
-        return null;
-    }
+function encodeWithinBudget(image: SkImage): PreparedReceipt | null {
     const attempts: { longEdge: number; quality: number }[] = [
         { longEdge: FIRST_LONG_EDGE, quality: FIRST_QUALITY },
         { longEdge: 1280, quality: 72 },
@@ -70,3 +71,17 @@ export async function prepareReceiptImage(sourceUri: string): Promise<PreparedRe
     }
     return null;
 }
+
+export const prepareReceiptImage = Effect.fn("ReceiptImage.prepare")(function* prepareReceiptImage(sourceUri: string) {
+    const image = yield* Effect.tryPromise(() => Skia.Data.fromURI(sourceUri)).pipe(
+        Effect.flatMap((data) => Effect.try(() => Skia.Image.MakeImageFromEncoded(data))),
+        Effect.orElseSucceed(() => null)
+    );
+    if (image == null) {
+        return null;
+    }
+    return yield* Effect.try({
+        catch: (cause) => new ReceiptImageError({ cause }),
+        try: () => encodeWithinBudget(image),
+    });
+});

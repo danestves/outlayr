@@ -51,7 +51,7 @@ export interface SendDeps {
 export interface ApplyDeps {
     discard: (imageUri: string) => void;
     fetchImage: (request: MerchantImageRequest) => Effect.Effect<LogoOutcome>;
-    persist: (bytes: Uint8Array) => Promise<{ imageColor: string | null; imageUri: string }>;
+    persist: (bytes: Uint8Array) => Effect.Effect<{ imageColor: string | null; imageUri: string }, unknown>;
 }
 
 export const MIN_KEY_LENGTH = 3;
@@ -226,7 +226,9 @@ const fetchLogo = Effect.fn("EnrichmentQueue.fetchLogo")(function* fetchLogo(
     if (outcome.kind !== "logo") {
         return null;
     }
-    return yield* attempt("apply", () => deps.persist(outcome.bytes));
+    return yield* deps
+        .persist(outcome.bytes)
+        .pipe(Effect.mapError((cause) => new EnrichmentQueueError({ cause, operation: "apply" })));
 });
 
 export const applyEnrichmentAnswer = Effect.fn("EnrichmentQueue.applyEnrichmentAnswer")(function* applyEnrichmentAnswer(

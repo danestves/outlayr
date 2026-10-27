@@ -19,13 +19,9 @@ import type { Database } from "@/db/client";
 import { formatChargeDate, formatTime } from "@/domain/dates";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
-import {
-    openShortcutsAutomations,
-    openWalletShortcut,
-    TRIGGERS_IN_SHORTCUTS,
-    WALLET_SHORTCUT_URL,
-} from "@/lib/wallet-shortcut";
+import { TRIGGERS_IN_SHORTCUTS, WALLET_SHORTCUT_URL } from "@/lib/wallet-shortcut";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { openShortcutsAutomationsCommand, openWalletShortcutCommand, runLinkCommand } from "@/state/link-commands";
 import { setMetaCommand } from "@/state/settings-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 
@@ -58,6 +54,8 @@ const IOS27_MANUAL_STEPS: readonly Step[] = [
 
 const HAS_SHARED_SHORTCUT = WALLET_SHORTCUT_URL != null && TRIGGERS_IN_SHORTCUTS;
 
+const openShortcutsAutomations = () => runLinkCommand(openShortcutsAutomationsCommand, undefined);
+
 export function Wallet() {
     const db = useDatabase();
     const t = useTranslation();
@@ -72,7 +70,7 @@ export function Wallet() {
     // Records the link was taken, not that the shortcut exists: iOS reports nothing back, so the claim waits for a run.
     const getShortcut = async () => {
         try {
-            await openWalletShortcut();
+            await runLinkCommand(openWalletShortcutCommand, undefined);
             unwrapAtomCommand(await setMeta({ db, key: META_KEYS.walletShortcutAdded, value: "1" }));
         } catch (cause) {
             console.error("Opening the Wallet shortcut failed", cause);

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { waitFor } from "@testing-library/react-native";
+import * as Effect from "effect/Effect";
 import type { startActivityAsync } from "expo-intent-launcher";
 import { Platform } from "react-native";
 
@@ -39,7 +40,7 @@ describe("system language settings on Android", () => {
     });
 
     it("opens Outlayr's own page under App languages", async () => {
-        openLanguageSettings();
+        await Effect.runPromise(openLanguageSettings());
 
         await waitFor(() => {
             expect(mockStartActivity).toHaveBeenCalledWith("android.settings.APP_LOCALE_SETTINGS", {
@@ -52,7 +53,7 @@ describe("system language settings on Android", () => {
     it("falls back to App info on a system without that page", async () => {
         mockStartActivity.mockRejectedValueOnce(new Error("No Activity found to handle Intent"));
 
-        openLanguageSettings();
+        await Effect.runPromise(openLanguageSettings());
 
         await waitFor(() => {
             expect(mockOpenSettings).toHaveBeenCalledTimes(1);
@@ -63,7 +64,7 @@ describe("system language settings on Android", () => {
         jest.resetModules();
         mockBuild.hasIntentLauncher = false;
 
-        openLanguageSettings();
+        await Effect.runPromise(openLanguageSettings());
 
         await waitFor(() => {
             expect(mockOpenSettings).toHaveBeenCalledTimes(1);

@@ -1,3 +1,4 @@
+import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import { Platform } from "react-native";
 import Purchases, { INTRO_ELIGIBILITY_STATUS, LOG_LEVEL } from "react-native-purchases";
@@ -41,56 +42,78 @@ export function onCustomerInfoUpdated(listener: CustomerInfoListener): () => voi
     };
 }
 
-export async function refreshProEntitlement(): Promise<boolean> {
-    return hasProEntitlement(await Purchases.getCustomerInfo());
+export class PurchasesError extends Schema.TaggedError<PurchasesError>()("PurchasesError", {
+    cause: Schema.Defect(),
+}) {
+    // oxlint-disable-next-line class-methods-use-this -- one cause, no attribute: the message has nothing on the instance to read
+    override get message(): string {
+        return "RevenueCat could not complete the request";
+    }
 }
+
+const sdkCall = <A>(run: () => Promise<A>) =>
+    Effect.tryPromise({ catch: (cause) => new PurchasesError({ cause }), try: run });
+
+export const refreshProEntitlement = Effect.fn("RevenueCat.refreshProEntitlement")(function* refreshProEntitlement() {
+    return hasProEntitlement(yield* sdkCall(() => Purchases.getCustomerInfo()));
+});
 
 /** Null with no active subscription, which includes the one-time lifetime purchase. */
-export async function managementUrl(): Promise<string | null> {
-    const customerInfo = await Purchases.getCustomerInfo();
+export const managementUrl = Effect.fn("RevenueCat.managementUrl")(function* managementUrl() {
+    const customerInfo = yield* sdkCall(() => Purchases.getCustomerInfo());
     return customerInfo.managementURL;
-}
+});
 
-export async function identifyUser(userId: string): Promise<boolean> {
-    const { customerInfo } = await Purchases.logIn(userId);
+export const identifyUser = Effect.fn("RevenueCat.identifyUser")(function* identifyUser(userId: string) {
+    const { customerInfo } = yield* sdkCall(() => Purchases.logIn(userId));
     return hasProEntitlement(customerInfo);
-}
+});
 
-export async function setCustomerProfile({ email, name }: AccountProfile): Promise<void> {
-    await Promise.all([Purchases.setEmail(email), Purchases.setDisplayName(name.trim() || null)]);
-}
+export const setCustomerProfile = Effect.fn("RevenueCat.setCustomerProfile")(function* setCustomerProfile({
+    email,
+    name,
+}: AccountProfile) {
+    yield* Effect.all(
+        [sdkCall(() => Purchases.setEmail(email)), sdkCall(() => Purchases.setDisplayName(name.trim() || null))],
+        { concurrency: "unbounded", discard: true }
+    );
+});
 
-export async function logOutUser(): Promise<boolean> {
-    if (await Purchases.isAnonymous()) {
-        return refreshProEntitlement();
+export const logOutUser = Effect.fn("RevenueCat.logOutUser")(function* logOutUser() {
+    if (yield* sdkCall(() => Purchases.isAnonymous())) {
+        return yield* refreshProEntitlement();
     }
-    return hasProEntitlement(await Purchases.logOut());
-}
+    return hasProEntitlement(yield* sdkCall(() => Purchases.logOut()));
+});
 
-export async function getPackages(): Promise<PurchasesPackage[]> {
-    const { current } = await Purchases.getOfferings();
+export const getPackages = Effect.fn("RevenueCat.getPackages")(function* getPackages() {
+    const { current } = yield* sdkCall(() => Purchases.getOfferings());
     return current?.availablePackages ?? [];
-}
+});
 
-export async function eligibleForTrial(productIds: readonly string[]): Promise<Set<string>> {
+export const eligibleForTrial = Effect.fn("RevenueCat.eligibleForTrial")(function* eligibleForTrial(
+    productIds: readonly string[]
+) {
     if (productIds.length === 0) {
-        return new Set();
+        return new Set<string>();
     }
-    const byProduct = await Purchases.checkTrialOrIntroductoryPriceEligibility([...productIds]);
+    const byProduct = yield* sdkCall(() => Purchases.checkTrialOrIntroductoryPriceEligibility([...productIds]));
     return new Set(
         Object.entries(byProduct)
             .filter(([, value]) => value.status === INTRO_ELIGIBILITY_STATUS.INTRO_ELIGIBILITY_STATUS_ELIGIBLE)
             .map(([productId]) => productId)
     );
-}
+});
 
-export async function purchaseAndCheckPro(pack: PurchasesPackage): Promise<boolean> {
-    const { customerInfo } = await duringHandoff(() => Purchases.purchasePackage(pack));
+export const purchaseAndCheckPro = Effect.fn("RevenueCat.purchaseAndCheckPro")(function* purchaseAndCheckPro(
+    pack: PurchasesPackage
+) {
+    const { customerInfo } = yield* duringHandoff(sdkCall(() => Purchases.purchasePackage(pack)));
     return hasProEntitlement(customerInfo);
-}
+});
 
-export async function restoreAndCheckPro(): Promise<boolean> {
-    return hasProEntitlement(await Purchases.restorePurchases());
-}
+export const restoreAndCheckPro = Effect.fn("RevenueCat.restoreAndCheckPro")(function* restoreAndCheckPro() {
+    return hasProEntitlement(yield* sdkCall(() => Purchases.restorePurchases()));
+});
 
 export const purchaseCancelled = Schema.Struct({ userCancelled: Schema.Literal(true) });

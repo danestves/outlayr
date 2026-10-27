@@ -36,8 +36,8 @@ import { CATEGORY_PALETTE } from "@/data/categories-core";
 import { CATEGORY_EMOJI_GROUPS, CATEGORY_ICON_GROUPS, iconKeysMatching } from "@/domain/category-icon-catalog";
 import type { TranslateFn } from "@/i18n/context";
 import { useTranslation } from "@/i18n/context";
-import { launchPick } from "@/lib/pending-pick";
 import { useHaptics } from "@/lib/use-haptics";
+import { launchPickCommand, runHandoffCommand } from "@/state/handoff-commands";
 import { SANS_BY_WEIGHT } from "@/theme/body-fonts";
 import { withAlpha } from "@/theme/shade";
 import { useMaterialColors } from "@/theme/use-material-colors";
@@ -122,14 +122,16 @@ export function IdentityPickerHost({
 
     const pickFromLibrary = async () => {
         const picked = pickedPhotoUri(
-            await launchPick("identity-picker", () =>
-                launchImageLibraryAsync({
-                    allowsEditing: true,
-                    aspect: [1, 1],
-                    mediaTypes: ["images"],
-                    quality: 0.9,
-                })
-            )
+            await runHandoffCommand(launchPickCommand, {
+                launch: () =>
+                    launchImageLibraryAsync({
+                        allowsEditing: true,
+                        aspect: [1, 1],
+                        mediaTypes: ["images"],
+                        quality: 0.9,
+                    }),
+                owner: "identity-picker",
+            })
         );
         if (picked != null) {
             onChange(await adoptPickedPhoto(value, picked));

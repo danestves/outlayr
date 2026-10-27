@@ -10,7 +10,7 @@ const mockWriteCachedLogo = jest.fn();
 
 jest.mock("@/lib/logo-cache", () => ({
     logoCacheKey: () => "test-key",
-    readCachedLogo: () => ({ kind: "unknown" }),
+    readCachedLogo: () => require("effect/Effect").succeed({ kind: "unknown" }),
     writeCachedLogo: (...args: unknown[]) => mockWriteCachedLogo(...args),
 }));
 

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import * as Effect from "effect/Effect";
 
 let mockDrawable = new Set<string>();
 const mockMatched: string[] = [];
@@ -33,7 +34,7 @@ describe("day card typefaces", () => {
     it("skips a family that matched nothing for the next one that draws", async () => {
         mockDrawable = new Set(["Helvetica Neue"]);
 
-        const faces = await freshFonts().loadCardTypefaces();
+        const faces = await Effect.runPromise(freshFonts().loadCardTypefaces());
 
         expect(Object.values(faces)).toStrictEqual(Array.from({ length: 4 }, () => ({ family: "Helvetica Neue" })));
         expect(mockMatched.slice(0, 2)).toStrictEqual(["System", "Helvetica Neue"]);
@@ -42,6 +43,6 @@ describe("day card typefaces", () => {
     it("rejects rather than drawing a blank card when no family draws", async () => {
         mockDrawable = new Set();
 
-        await expect(freshFonts().loadCardTypefaces()).rejects.toThrow("No system face draws");
+        await expect(Effect.runPromise(freshFonts().loadCardTypefaces())).rejects.toThrow("No system face draws");
     });
 });

@@ -1,4 +1,5 @@
 import { describe, expect, it, jest } from "@jest/globals";
+import * as Effect from "effect/Effect";
 import type { AppleAuthenticationCredential } from "expo-apple-authentication";
 import { CryptoDigestAlgorithm } from "expo-crypto";
 
@@ -31,7 +32,7 @@ describe("apple-nonce-binds-once", () => {
             } as AppleAuthenticationCredential
         );
 
-        await expect(appleCredential()).resolves.toStrictEqual({
+        await expect(Effect.runPromise(appleCredential())).resolves.toStrictEqual({
             authorizationCode: "authorization-code",
             identityToken: "identity-token",
             nonce: "AAEC",

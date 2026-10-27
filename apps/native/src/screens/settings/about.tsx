@@ -8,7 +8,7 @@ import { Text } from "@/components/text";
 import { useTranslation } from "@/i18n/context";
 import { expectHandoff, openInAppBrowser } from "@/lib/app-handoff";
 import { APP_VERSION } from "@/lib/app-version";
-import { openStoreReview } from "@/lib/store-links";
+import { openStoreReviewCommand, runLinkCommand } from "@/state/link-commands";
 
 const WEBSITE = "https://tryoutlayr.com";
 const X_PROFILE = "https://x.com/tryoutlayr";
@@ -30,7 +30,7 @@ export function About() {
                 <LinkRow
                     icon="Star"
                     onPress={() => {
-                        openStoreReview();
+                        runLinkCommand(openStoreReviewCommand, undefined);
                     }}
                     title={t("settings.row.rate")}
                 />

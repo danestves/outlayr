@@ -25,12 +25,12 @@ import {
     voiceTurnsOf,
 } from "@/domain/voice-entry";
 import type { VoiceTurn, VoiceTurnMessage } from "@/domain/voice-entry";
-import { duringHandoff } from "@/lib/app-handoff";
 import { VOICE_TURNS_QUERY, voiceThreadTransport } from "@/lib/convex";
 import type { SpeakRequest, StartThreadResult, VoiceDraft, VoiceQuote, VoiceThreadTransport } from "@/lib/convex";
 import { useLatest } from "@/lib/use-latest";
 import { createCommand, SILENT } from "@/state/atom-command";
 import { timedCaptureCommand, VOICE_SPEAK_TIMEOUT } from "@/state/capture-commands";
+import { handoffPermissionCommand, runHandoffCommand } from "@/state/handoff-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 
 // ~6KB/s against the server's 900KB cap and 45s recording cap.
@@ -404,7 +404,9 @@ export function useVoiceEntry<Context>({
         supersedeTake();
         const take = takeRef.current;
         const current = await getRecordingPermissionsAsync();
-        const permission = current.granted ? current : await duringHandoff(requestRecordingPermissionsAsync);
+        const permission = current.granted
+            ? current
+            : await runHandoffCommand(handoffPermissionCommand, requestRecordingPermissionsAsync);
         if (take !== takeRef.current) {
             return;
         }

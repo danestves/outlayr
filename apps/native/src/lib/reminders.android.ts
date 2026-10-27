@@ -57,7 +57,7 @@ const permission = Effect.fn("Reminders.permission")(function* permission() {
 const request = Effect.fn("Reminders.request")(function* request() {
     return yield* ensureReminderChannel("request").pipe(
         // The system prompt is an activity of its own.
-        Effect.andThen(attemptReminders("request", () => duringHandoff(requestPermissionsAsync))),
+        Effect.andThen(duringHandoff(attemptReminders("request", requestPermissionsAsync))),
         Effect.map(toPermission),
         Effect.catchTags({
             RemindersError: (error) =>

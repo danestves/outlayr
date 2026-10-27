@@ -17,10 +17,10 @@ const mockPersist = jest.fn<(uri: string) => Promise<string>>();
 const mockGlow = jest.fn<(uri: string) => Promise<string[]>>();
 
 jest.mock<Partial<typeof import("@/lib/photo-storage")>>("@/lib/photo-storage", () => ({
-    persistPickedPhoto: (uri: string) => mockPersist(uri),
+    persistPickedPhoto: (uri: string) => require("effect/Effect").promise(() => mockPersist(uri)),
 }));
 jest.mock<Partial<typeof import("@/theme/glow")>>("@/theme/glow", () => ({
-    glowFromImage: (uri: string) => mockGlow(uri),
+    glowFromImage: (uri: string) => require("effect/Effect").promise(() => mockGlow(uri)),
 }));
 
 const EMPTY: IdentitySelection = { color: null, emoji: null, icon: null, photoColor: null, photoUri: null };

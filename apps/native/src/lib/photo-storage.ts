@@ -1,4 +1,7 @@
 import { FilterMode, ImageFormat, MipmapMode, Skia } from "@shopify/react-native-skia";
+import type { SkData } from "@shopify/react-native-skia";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 import { Directory, File, Paths } from "expo-file-system";
 
 import { MAX_ATTACHMENT_BYTES } from "@/data/attachments-core";
@@ -7,6 +10,18 @@ import type { PhotoFiles } from "@/data/photo-store-core";
 import { newId } from "@/domain/ids";
 import { decodeImage, drawOnPlate } from "@/lib/logo-plating";
 import { prepareReceiptImage } from "@/lib/receipt-image";
+
+export class PhotoStorageError extends Schema.TaggedError<PhotoStorageError>()("PhotoStorageError", {
+    cause: Schema.Defect(),
+    operation: Schema.Literals(["photo", "logo", "attachment"]),
+}) {
+    override get message(): string {
+        return `Storing the ${this.operation} failed`;
+    }
+}
+
+const failedPhoto = (cause: unknown) => new PhotoStorageError({ cause, operation: "photo" });
+const failedLogo = (cause: unknown) => new PhotoStorageError({ cause, operation: "logo" });
 
 /** Matches Swift `TransactionImageIngestion.maxDimension`: a photo is never drawn past the 132pt identity well. */
 const MAX_DIMENSION = 512;
@@ -57,58 +72,71 @@ export const photoFiles: PhotoFiles = {
     },
 };
 
-/** Null on any Skia failure, so a photo the decoder cannot handle is stored at full size instead of lost. */
-async function downscaleToJpeg(sourceUri: string): Promise<Uint8Array | null> {
-    try {
-        const data = await Skia.Data.fromURI(sourceUri);
-        const image = Skia.Image.MakeImageFromEncoded(data);
-        if (image == null) {
-            return null;
-        }
-
-        const width = image.width();
-        const height = image.height();
-        const scale = Math.min(1, MAX_DIMENSION / Math.max(width, height));
-        const targetWidth = Math.max(1, Math.round(width * scale));
-        const targetHeight = Math.max(1, Math.round(height * scale));
-
-        const surface = Skia.Surface.MakeOffscreen(targetWidth, targetHeight);
-        if (surface == null) {
-            return null;
-        }
-        surface
-            .getCanvas()
-            .drawImageRectOptions(
-                image,
-                Skia.XYWHRect(0, 0, width, height),
-                Skia.XYWHRect(0, 0, targetWidth, targetHeight),
-                FilterMode.Linear,
-                MipmapMode.Linear
-            );
-        surface.flush();
-        const encoded = surface.makeImageSnapshot().encodeToBytes(ImageFormat.JPEG, JPEG_QUALITY);
-        return encoded.length > 0 ? encoded : null;
-    } catch {
+function encodeDownscaled(data: SkData): Uint8Array | null {
+    const image = Skia.Image.MakeImageFromEncoded(data);
+    if (image == null) {
         return null;
     }
+
+    const width = image.width();
+    const height = image.height();
+    const scale = Math.min(1, MAX_DIMENSION / Math.max(width, height));
+    const targetWidth = Math.max(1, Math.round(width * scale));
+    const targetHeight = Math.max(1, Math.round(height * scale));
+
+    const surface = Skia.Surface.MakeOffscreen(targetWidth, targetHeight);
+    if (surface == null) {
+        return null;
+    }
+    surface
+        .getCanvas()
+        .drawImageRectOptions(
+            image,
+            Skia.XYWHRect(0, 0, width, height),
+            Skia.XYWHRect(0, 0, targetWidth, targetHeight),
+            FilterMode.Linear,
+            MipmapMode.Linear
+        );
+    surface.flush();
+    const encoded = surface.makeImageSnapshot().encodeToBytes(ImageFormat.JPEG, JPEG_QUALITY);
+    return encoded.length > 0 ? encoded : null;
 }
+
+/** Null on any Skia failure, so a photo the decoder cannot handle is stored at full size instead of lost. */
+const downscaleToJpeg = (sourceUri: string) =>
+    Effect.tryPromise(() => Skia.Data.fromURI(sourceUri)).pipe(
+        Effect.flatMap((data) => Effect.try(() => encodeDownscaled(data))),
+        Effect.orElseSucceed(() => null)
+    );
 
 /** The picker's path is in a cache the system may reclaim, so only the returned uri is safe to write to a row. */
-export async function persistPickedPhoto(sourceUri: string): Promise<string> {
-    const directory = photoDirectory();
-    const encoded = await downscaleToJpeg(sourceUri);
+export const persistPickedPhoto = Effect.fn("PhotoStorage.persistPickedPhoto")(function* persistPickedPhoto(
+    sourceUri: string
+) {
+    const directory = yield* Effect.try({ catch: failedPhoto, try: photoDirectory });
+    const encoded = yield* downscaleToJpeg(sourceUri);
 
     if (encoded != null) {
-        const target = new File(directory, `${newId()}.jpg`);
-        target.create({ overwrite: true });
-        target.writeSync(encoded);
-        return target.uri;
+        return yield* Effect.try({
+            catch: failedPhoto,
+            try: () => {
+                const target = new File(directory, `${newId()}.jpg`);
+                target.create({ overwrite: true });
+                target.writeSync(encoded);
+                return target.uri;
+            },
+        });
     }
 
-    const target = new File(directory, `${newId()}${photoExtension(photoFileName(sourceUri))}`);
-    new File(sourceUri).copySync(target, { overwrite: true });
-    return target.uri;
-}
+    return yield* Effect.try({
+        catch: failedPhoto,
+        try: () => {
+            const target = new File(directory, `${newId()}${photoExtension(photoFileName(sourceUri))}`);
+            new File(sourceUri).copySync(target, { overwrite: true });
+            return target.uri;
+        },
+    });
+});
 
 function platedLogoJpeg(bytes: Uint8Array): Uint8Array | null {
     try {
@@ -125,24 +153,36 @@ function platedLogoJpeg(bytes: Uint8Array): Uint8Array | null {
  * A transparent or edge-tight logo is plated first, since JPEG would turn its see-through pixels black. Either
  * re-encode also neutralises anything hiding behind a valid image header.
  */
-export async function persistLogoBytes(bytes: Uint8Array): Promise<string> {
+export const persistLogoBytes = Effect.fn("PhotoStorage.persistLogoBytes")(function* persistLogoBytes(
+    bytes: Uint8Array
+) {
     const plated = platedLogoJpeg(bytes);
     if (plated != null) {
-        const target = new File(photoDirectory(), `${newId()}.jpg`);
-        target.create({ overwrite: true });
-        target.writeSync(plated);
-        return target.uri;
+        return yield* Effect.try({
+            catch: failedLogo,
+            try: () => {
+                const target = new File(photoDirectory(), `${newId()}.jpg`);
+                target.create({ overwrite: true });
+                target.writeSync(plated);
+                return target.uri;
+            },
+        });
     }
 
-    const temp = new File(Paths.cache, `${newId()}.img`);
-    temp.create({ overwrite: true });
-    temp.writeSync(bytes);
-    try {
-        return await persistPickedPhoto(temp.uri);
-    } finally {
-        temp.delete();
-    }
-}
+    return yield* Effect.acquireUseRelease(
+        Effect.try({
+            catch: failedLogo,
+            try: () => {
+                const temp = new File(Paths.cache, `${newId()}.img`);
+                temp.create({ overwrite: true });
+                temp.writeSync(bytes);
+                return temp;
+            },
+        }),
+        (temp) => persistPickedPhoto(temp.uri),
+        (temp) => Effect.try({ catch: failedLogo, try: () => temp.delete() }).pipe(Effect.orDie)
+    );
+});
 
 export type AttachmentIntake = { imageUri: string; name: string | null } | { failure: "tooLarge" | "unreadable" };
 
@@ -159,12 +199,23 @@ export function persistAttachmentBytes(bytes: Uint8Array): string {
     return writeAttachment(bytes, ".jpg");
 }
 
-export async function persistAttachmentPhoto(sourceUri: string): Promise<AttachmentIntake> {
-    const prepared = await prepareReceiptImage(sourceUri);
-    return prepared === null
-        ? { failure: "unreadable" }
-        : { imageUri: writeAttachment(new Uint8Array(prepared.bytes), ".jpg"), name: null };
-}
+export const persistAttachmentPhoto = Effect.fn("PhotoStorage.persistAttachmentPhoto")(function* persistAttachmentPhoto(
+    sourceUri: string
+) {
+    const prepared = yield* prepareReceiptImage(sourceUri).pipe(
+        Effect.mapError((cause) => new PhotoStorageError({ cause, operation: "attachment" }))
+    );
+    if (prepared === null) {
+        return { failure: "unreadable" } satisfies AttachmentIntake;
+    }
+    return yield* Effect.try({
+        catch: (cause) => new PhotoStorageError({ cause, operation: "attachment" }),
+        try: (): AttachmentIntake => ({
+            imageUri: writeAttachment(new Uint8Array(prepared.bytes), ".jpg"),
+            name: null,
+        }),
+    });
+});
 
 export function persistAttachmentPdf(sourceUri: string, name: string | null): AttachmentIntake {
     const source = new File(sourceUri);

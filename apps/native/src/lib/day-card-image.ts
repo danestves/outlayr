@@ -1,11 +1,12 @@
 import { ImageFormat, Skia } from "@shopify/react-native-skia";
 import type { SkCanvas } from "@shopify/react-native-skia";
+import * as Effect from "effect/Effect";
 
 import { layoutDayCard } from "@/domain/day-card";
 import type { CardTone, DayCardInput } from "@/domain/day-card";
 import { translateNow } from "@/i18n/runtime";
 
-import { shareFile, TransferError } from "./data-transfer";
+import { shareFile, TransferError, TransferFailedError } from "./data-transfer";
 import { loadCardTypefaces } from "./day-card-fonts";
 import type { CardTypefaces } from "./day-card-fonts";
 
@@ -62,10 +63,17 @@ function renderDayCard(input: DayCardInput, typefaces: CardTypefaces): Uint8Arra
     return encoded.length > 0 ? encoded : null;
 }
 
-export async function shareDayCard(input: DayCardInput, fileName: string): Promise<void> {
-    const bytes = renderDayCard(input, await loadCardTypefaces());
+export const shareDayCard = Effect.fn("DayCardImage.share")(function* shareDayCard(
+    input: DayCardInput,
+    fileName: string
+) {
+    const typefaces = yield* loadCardTypefaces();
+    const bytes = yield* Effect.try({
+        catch: (cause) => new TransferFailedError({ cause, operation: "render" }),
+        try: () => renderDayCard(input, typefaces),
+    });
     if (bytes == null) {
-        throw new TransferError("alerts.dayCard.undrawable");
+        return yield* new TransferError({ key: "alerts.dayCard.undrawable" });
     }
-    await shareFile(bytes, fileName, "image/png", translateNow("alerts.dayCard.shareTitle"));
-}
+    yield* shareFile(bytes, fileName, "image/png", translateNow("alerts.dayCard.shareTitle"));
+});

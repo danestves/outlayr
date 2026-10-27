@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Effect from "effect/Effect";
 import type { ImagePickerResult } from "expo-image-picker";
 
 import { launchPick, pendingPick } from "./pending-pick";
@@ -34,12 +35,7 @@ async function tornDownPick(owner: PickOwner) {
     const started = new Promise<void>((resolve) => {
         launched = resolve;
     });
-    launchPick(owner, () => {
-        launched();
-        return new Promise<ImagePickerResult>(() => {
-            // Never settles.
-        });
-    }).catch(() => undefined);
+    Effect.runFork(launchPick(owner, Effect.sync(launched).pipe(Effect.andThen(Effect.never))));
     await started;
     mockPicker.held = PHOTO;
 }
@@ -56,8 +52,8 @@ describe("pendingPick on Android", () => {
         async (owner, other) => {
             await tornDownPick(owner);
 
-            await expect(pendingPick(other)).resolves.toBeNull();
-            await expect(pendingPick(owner)).resolves.toStrictEqual(PHOTO);
+            await expect(Effect.runPromise(pendingPick(other))).resolves.toBeNull();
+            await expect(Effect.runPromise(pendingPick(owner))).resolves.toStrictEqual(PHOTO);
         }
     );
 
@@ -65,14 +61,14 @@ describe("pendingPick on Android", () => {
         await tornDownPick("receipt-scan");
         clock.mockReturnValue(LAUNCHED_AT + 2 * 24 * 60 * MINUTE_MS);
 
-        await expect(pendingPick("receipt-scan")).resolves.toBeNull();
+        await expect(Effect.runPromise(pendingPick("receipt-scan"))).resolves.toBeNull();
         expect(mockPicker.held).toBeNull();
     });
 
     it("recovers nothing once the launch came back on its own", async () => {
-        await launchPick("receipt-scan", async () => PHOTO);
+        await Effect.runPromise(launchPick("receipt-scan", Effect.succeed(PHOTO)));
         mockPicker.held = PHOTO;
 
-        await expect(pendingPick("receipt-scan")).resolves.toBeNull();
+        await expect(Effect.runPromise(pendingPick("receipt-scan"))).resolves.toBeNull();
     });
 });

@@ -6,8 +6,6 @@ import { rememberFeeCategory } from "@/data/card-fees-core";
 import { commitDeferredDelete } from "@/data/deferred-delete-registry";
 import type { DeferredDeleteKind } from "@/data/deferred-delete-registry";
 import { queueEnrichment } from "@/data/enrichment-queue-core";
-import { replateStoredLogos } from "@/data/logo-replate-core";
-import type { LogoReplateDeps } from "@/data/logo-replate-core";
 import { recallMerchant } from "@/data/merchant-book-core";
 import { rememberedCategoryFor } from "@/data/merchant-history-core";
 import { applyMerchantToSiblings } from "@/data/merchant-siblings-core";
@@ -19,6 +17,7 @@ import { transactionsRepo } from "@/data/transactions-core";
 import type { TransactionInput } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 import type { TimeOfDay } from "@/domain/reminder";
+import { sendEnrichmentQueue } from "@/lib/enrichment-queue";
 import { appRuntime } from "@/lib/runtime";
 
 import { createRuntimeCommand, runAtomCommand, SILENT, unwrapAtomCommand } from "./atom-command";
@@ -86,8 +85,8 @@ export const queueEnrichmentCommand = ledgerCommand("queue-enrichment", (input: 
     queueEnrichment(input.db, input.id)
 );
 
-export const replateLogosCommand = ledgerCommand("replate-logos", (input: { db: Database; deps: LogoReplateDeps }) =>
-    replateStoredLogos(input.db, input.deps)
+export const sendEnrichmentQueueCommand = ledgerCommand("send-enrichment-queue", (db: Database) =>
+    sendEnrichmentQueue(db)
 );
 
 export const pendingReminderPlanCommand = ledgerCommand(

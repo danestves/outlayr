@@ -1,5 +1,6 @@
 /** `[]` without the native module: the form then washes the mesh in the tint alone. */
 
+import * as Effect from "effect/Effect";
 import { requireNativeModule } from "expo";
 
 interface GlowNativeModule {
@@ -35,13 +36,10 @@ export function glowFromEmoji(emoji: string): string[] {
 }
 
 /** Async: call it once when a photo is picked and store the result. */
-export async function glowFromImage(uri: string): Promise<string[]> {
+export const glowFromImage = Effect.fn("Glow.fromImage")(function* glowFromImage(uri: string) {
     if (!native) {
         return [];
     }
-    try {
-        return await native.fromImage(uri);
-    } catch {
-        return [];
-    }
-}
+    const module = native;
+    return yield* Effect.tryPromise(() => module.fromImage(uri)).pipe(Effect.orElseSucceed((): string[] => []));
+});

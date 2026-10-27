@@ -1,4 +1,7 @@
-import { Linking, Platform } from "react-native";
+import * as Effect from "effect/Effect";
+import { Platform } from "react-native";
+
+import { openUrl } from "./open-url";
 
 /**
  * Re-share whenever `LogWalletTransactionIntent`'s parameters change: a shortcut snapshots the action. Inside, Currency
@@ -15,14 +18,7 @@ export const BANK_SHORTCUT_URL = "https://www.icloud.com/shortcuts/e0327cbcd7b34
 const AUTOMATIONS_URL = "shortcuts://automations";
 const SHORTCUTS_URL = "shortcuts://";
 
-export async function openWalletShortcut(): Promise<void> {
-    await Linking.openURL(WALLET_SHORTCUT_URL ?? SHORTCUTS_URL);
-}
+export const openWalletShortcut = () => openUrl(WALLET_SHORTCUT_URL ?? SHORTCUTS_URL);
 
-export async function openShortcutsAutomations(): Promise<void> {
-    try {
-        await Linking.openURL(AUTOMATIONS_URL);
-    } catch {
-        await Linking.openURL(SHORTCUTS_URL);
-    }
-}
+export const openShortcutsAutomations = () =>
+    openUrl(AUTOMATIONS_URL).pipe(Effect.catchTags({ OpenUrlError: () => openUrl(SHORTCUTS_URL) }));
