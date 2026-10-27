@@ -1,9 +1,7 @@
-import { v } from "convex/values";
-import { z } from "zod";
+import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 
-import { internal } from "../convex/_generated/api";
-import { internalAction } from "../convex/_generated/server";
-import { utcDateString } from "./lib/currencies";
 import type { MarketRateType } from "./lib/currencies";
 
 const COTIZAVE_URL = "https://api.cotizave.com/v1/fx/rates";
@@ -19,17 +17,28 @@ const MARKET_RATE_TYPES = new Map<string, MarketRateType>([
     ["reference", "official"],
 ]);
 
-const cotizaveMarket = z.object({
-    market: z.string(),
-    mid: z.number().finite().positive(),
+const CotizaveMarket = Schema.Struct({
+    market: Schema.String,
+    mid: Schema.Finite.check(Schema.isGreaterThan(0)),
 });
 
 /** Pinned to the pair we store; an unparseable market entry is dropped, not the whole feed. */
-const cotizaveResponse = z.object({
-    base: z.literal("USD"),
-    currency: z.literal(VES_QUOTE),
-    rates: z.array(cotizaveMarket.nullable().catch(null)),
+const CotizaveResponse = Schema.Struct({
+    base: Schema.Literal("USD"),
+    currency: Schema.Literal(VES_QUOTE),
+    rates: Schema.Array(
+        Schema.NullOr(CotizaveMarket).pipe(Schema.catchDecoding(() => Effect.succeed(Option.some(null))))
+    ),
 });
+
+export function requestRates(apiKey: string): Promise<Response> {
+    return fetch(COTIZAVE_URL, {
+        headers: { "X-API-Key": apiKey },
+        signal: AbortSignal.timeout(RATES_TIMEOUT_MS),
+    });
+}
+
+export const decodeCotizaveResponse = Schema.decodeUnknownOption(CotizaveResponse);
 
 interface CotizaveRate {
     quote: string;
@@ -37,7 +46,7 @@ interface CotizaveRate {
     rateType: MarketRateType;
 }
 
-function extractRates(payload: z.infer<typeof cotizaveResponse>): CotizaveRate[] {
+export function extractRates(payload: typeof CotizaveResponse.Type): CotizaveRate[] {
     const parsed: CotizaveRate[] = [];
     for (const record of payload.rates) {
         const rateType = record === null ? undefined : MARKET_RATE_TYPES.get(record.market);
@@ -48,51 +57,3 @@ function extractRates(payload: z.infer<typeof cotizaveResponse>): CotizaveRate[]
     }
     return parsed;
 }
-
-export const fetchRates = internalAction({
-    args: {},
-    handler: async (ctx) => {
-        const apiKey = process.env.COTIZAVE_API_KEY;
-        if (!apiKey) {
-            throw new Error("COTIZAVE_API_KEY is not set; cannot fetch cotizave VES rates");
-        }
-
-        let payload: unknown;
-        try {
-            const response = await fetch(COTIZAVE_URL, {
-                headers: { "X-API-Key": apiKey },
-                signal: AbortSignal.timeout(RATES_TIMEOUT_MS),
-            });
-            if (!response.ok) {
-                console.error(`Cotizave fetch failed with HTTP ${response.status}`);
-                return null;
-            }
-            payload = await response.json();
-        } catch (error) {
-            console.error("Cotizave fetch request failed", error);
-            return null;
-        }
-
-        const contract = cotizaveResponse.safeParse(payload);
-        if (!contract.success) {
-            console.error("Cotizave response did not match the expected USD-based VES contract");
-            return null;
-        }
-
-        const rates = extractRates(contract.data);
-        if (rates.length === 0) {
-            console.error("Cotizave response contained no valid target markets");
-            return null;
-        }
-
-        const fetchedAt = Date.now();
-        await ctx.runMutation(internal.exchangeRates.upsertRates, {
-            date: utcDateString(fetchedAt),
-            fetchedAt,
-            rates,
-            source: "cotizave",
-        });
-        return null;
-    },
-    returns: v.null(),
-});

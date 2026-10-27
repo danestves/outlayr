@@ -5,8 +5,8 @@ import { tool } from "ai";
 import { MockLanguageModelV3 } from "ai/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
+import * as Schema from "effect/Schema";
 import { describe, expect, it, vi } from "vite-plus/test";
-import { z } from "zod";
 
 import schema from "../convex/schema";
 import { GROUNDED_REQUEST_TIMEOUT_MS, rateLimiter } from "./enrichment";
@@ -17,7 +17,7 @@ const modules = import.meta.glob("../convex/**/*.ts");
 const fakeWebSearchTool = tool({
     description: "test double for the provider-executed web search",
     execute: async () => ({ query: "", sources: [] }),
-    inputSchema: z.object({}),
+    inputSchema: Schema.toStandardJSONSchemaV1(Schema.toStandardSchemaV1(Schema.Record(Schema.String, Schema.Never))),
 });
 
 function usageStub(inputTokens?: number, outputTokens?: number) {
