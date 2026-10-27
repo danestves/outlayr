@@ -1,6 +1,6 @@
 import { LegendList } from "@legendapp/list/react-native";
 import type { LegendListRef } from "@legendapp/list/react-native";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import type { HostInstance, StyleProp, ViewInstance, ViewStyle } from "react-native";
 import Animated, {
@@ -68,10 +68,7 @@ export function CurrencyPickerList({
     style,
     contentContainerStyle,
 }: CurrencyPickerListProps) {
-    const rows = useMemo<readonly CurrencyPickerRow[]>(
-        () => currencyPickerRows(favourites, query),
-        [favourites, query]
-    );
+    const rows: readonly CurrencyPickerRow[] = currencyPickerRows(favourites, query);
 
     const full = favourites.length >= FAVOURITE_CURRENCY_LIMIT;
 

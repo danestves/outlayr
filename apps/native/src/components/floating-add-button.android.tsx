@@ -9,7 +9,7 @@ import { HugeiconsIcon } from "@hugeicons/react-native";
 import type { IconSvgElement } from "@hugeicons/react-native";
 import { router, useFocusEffect } from "expo-router";
 import type { Href } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BackHandler, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import Animated, {
     createAnimatedComponent,
@@ -81,14 +81,12 @@ export function FloatingAddButton() {
     const importSheetRef = useRef<ImportSheetHandle>(null);
     const canTransfer = useBankAccounts(useDatabase()).length >= 2;
 
-    useFocusEffect(
-        useCallback(() => {
-            navigating.current = false;
-            return () => {
-                setOpen(false);
-            };
-        }, [])
-    );
+    useFocusEffect(() => {
+        navigating.current = false;
+        return () => {
+            setOpen(false);
+        };
+    });
 
     useEffect(() => {
         progress.set(withSpring(open ? 1 : 0, MORPH));
@@ -105,15 +103,12 @@ export function FloatingAddButton() {
         return () => subscription.remove();
     }, [open]);
 
-    const toggle = useCallback(
-        (next: boolean) => {
-            setOpen(next);
-            haptics("selection");
-        },
-        [haptics]
-    );
+    const toggle = (next: boolean) => {
+        setOpen(next);
+        haptics("selection");
+    };
 
-    const select = useCallback(({ href }: AddAction) => {
+    const select = ({ href }: AddAction) => {
         setOpen(false);
         if (href === null) {
             importDraftStore.setStep(importDraftStore.getResumeStep());
@@ -125,7 +120,7 @@ export function FloatingAddButton() {
         }
         navigating.current = true;
         router.push(href);
-    }, []);
+    };
 
     // Ranked by how often each is reached for, since the fit drops from the end.
     const ranked: AddAction[] = [

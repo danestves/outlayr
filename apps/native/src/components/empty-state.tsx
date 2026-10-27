@@ -1,4 +1,4 @@
-import { createContext, use, useMemo } from "react";
+import { createContext, use } from "react";
 import type { ReactNode } from "react";
 import { View } from "react-native";
 
@@ -15,12 +15,12 @@ const MarkInkContext = createContext<GhostInk | null>(null);
 export function useMark(): GhostInk {
     const inherited = use(MarkInkContext);
     const colors = useColors();
-    return useMemo(() => inherited ?? ghostInk(colors.foreground, "takeover"), [inherited, colors.foreground]);
+    return inherited ?? ghostInk(colors.foreground, "takeover");
 }
 
 export function MarkInk({ tier, children }: { tier: EmptyStateTier; children: ReactNode }) {
     const colors = useColors();
-    const ink = useMemo(() => ghostInk(colors.foreground, tier), [colors.foreground, tier]);
+    const ink = ghostInk(colors.foreground, tier);
     return <MarkInkContext.Provider value={ink}>{children}</MarkInkContext.Provider>;
 }
 

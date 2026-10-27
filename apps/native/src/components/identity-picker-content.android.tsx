@@ -6,7 +6,7 @@ import Search01Icon from "@hugeicons-pro/core-stroke-rounded/Search01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import { Image } from "expo-image";
 import { launchImageLibraryAsync } from "expo-image-picker";
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { FlatList, Pressable, ScrollView, useWindowDimensions, View } from "react-native";
 
@@ -154,7 +154,7 @@ export function IdentityPickerHost({
             });
     };
 
-    const rows = useMemo(() => (tab === "photo" ? [] : glyphRows(tab, query, t)), [tab, query, t]);
+    const rows = tab === "photo" ? [] : glyphRows(tab, query, t);
     // Glyph cells shrink below 48dp on narrow phones; the slop restores the target.
     const cellSlop = Math.max(0, (MIN_TARGET - cell) / 2);
 

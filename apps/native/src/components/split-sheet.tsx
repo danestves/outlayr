@@ -4,7 +4,7 @@ import PlusSignIcon from "@hugeicons-pro/core-stroke-rounded/PlusSignIcon";
 import Tick02Icon from "@hugeicons-pro/core-stroke-rounded/Tick02Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import { Button } from "panelui-native/components/button";
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { Ref } from "react";
 import { Pressable, View } from "react-native";
 
@@ -53,16 +53,13 @@ export function SplitSheet({ db, income, total, code, minorUnits, allocations, o
 
     const setRefs = useMergedRef(sheetRef, ref);
 
-    const byId = useMemo(() => {
-        const map = new Map<string, Category>();
-        for (const parent of categories) {
-            map.set(parent.id, parent);
-            for (const child of parent.children) {
-                map.set(child.id, child);
-            }
+    const byId = new Map<string, Category>();
+    for (const parent of categories) {
+        byId.set(parent.id, parent);
+        for (const child of parent.children) {
+            byId.set(child.id, child);
         }
-        return map;
-    }, [categories]);
+    }
 
     const left = unallocated(total, allocations, minorUnits);
     const balanced = isBalanced(total, allocations, minorUnits);

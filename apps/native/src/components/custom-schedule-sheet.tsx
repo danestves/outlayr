@@ -9,7 +9,8 @@ import { BottomSheet } from "panelui-native/components/bottom-sheet";
 import { Button } from "panelui-native/components/button";
 import { Tabs } from "panelui-native/components/tabs";
 import { cn } from "panelui-native/utils/cn";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { RefObject } from "react";
 import { Pressable, View } from "react-native";
 import Animated, { Easing, FadeIn, FadeOut, useAnimatedStyle, withTiming } from "react-native-reanimated";
 
@@ -216,22 +217,19 @@ export function CustomScheduleSheet({
 
     const unitWord = unitNoun(t, type, coefficient);
 
-    const charges = useMemo(
-        () => schedulePreview(firstPayment, type, coefficient, PREVIEW_COUNT),
-        [firstPayment, type, coefficient]
-    );
+    const charges = schedulePreview(firstPayment, type, coefficient, PREVIEW_COUNT);
     const { shown, swapping, noteVisible } = useRippledCharges(charges, rippleReady);
 
-    const close = useCallback(() => onOpenChange(false), [onOpenChange]);
+    const close = () => onOpenChange(false);
 
-    const done = useCallback(() => {
+    const done = () => {
         onDone(type, coefficient);
         onOpenChange(false);
-    }, [onDone, onOpenChange, type, coefficient]);
+    };
 
-    const pickType = useCallback((next: string) => setType(Number(next)), []);
-    const stepUp = useCallback(() => setCoefficient((c) => Math.min(MAX_INTERVAL, c + 1)), []);
-    const stepDown = useCallback(() => setCoefficient((c) => Math.max(1, c - 1)), []);
+    const pickType = (next: string) => setType(Number(next));
+    const stepUp = () => setCoefficient((c) => Math.min(MAX_INTERVAL, c + 1));
+    const stepDown = () => setCoefficient((c) => Math.max(1, c - 1));
 
     return (
         <BottomSheet native onOpenChange={onOpenChange} open={open}>
@@ -346,6 +344,21 @@ const STEP_ICON_SIZE = 18;
 const HOLD_DELAY_MS = 350;
 const HOLD_REPEAT_MS = 70;
 
+type HoldTimers = RefObject<{
+    delay?: ReturnType<typeof setTimeout>;
+    repeat?: ReturnType<typeof setInterval>;
+}>;
+
+function releaseHold(held: HoldTimers) {
+    if (held.current.delay) {
+        clearTimeout(held.current.delay);
+    }
+    if (held.current.repeat) {
+        clearInterval(held.current.repeat);
+    }
+    held.current = {};
+}
+
 interface StepButtonProps {
     accessibilityLabel: string;
     disabled: boolean;
@@ -355,22 +368,11 @@ interface StepButtonProps {
 
 function StepButton({ icon, onStep, disabled, accessibilityLabel }: StepButtonProps) {
     const colors = useColors();
-    const held = useRef<{
-        delay?: ReturnType<typeof setTimeout>;
-        repeat?: ReturnType<typeof setInterval>;
-    }>({});
+    const held: HoldTimers = useRef({});
 
-    const release = useCallback(() => {
-        if (held.current.delay) {
-            clearTimeout(held.current.delay);
-        }
-        if (held.current.repeat) {
-            clearInterval(held.current.repeat);
-        }
-        held.current = {};
-    }, []);
+    const release = () => releaseHold(held);
 
-    useEffect(() => release, [release]);
+    useEffect(() => () => releaseHold(held), []);
 
     return (
         <Pressable

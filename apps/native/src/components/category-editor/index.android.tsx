@@ -4,7 +4,7 @@ import { HugeiconsIcon } from "@hugeicons/react-native";
 import { useForm, useSelector } from "@tanstack/react-form";
 import { and, eq, isNull } from "drizzle-orm";
 import { useRouter } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Keyboard, ScrollView, View } from "react-native";
 import type { TextInputInstance } from "react-native";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
@@ -172,20 +172,17 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
 
     const expenseTree = useCategoriesByNamespace(db, false);
 
-    const allExpense = useMemo(() => expenseTree.flatMap((node) => [node, ...node.children]), [expenseTree]);
+    const allExpense = expenseTree.flatMap((node) => [node, ...node.children]);
     const expenseCount = allExpense.length;
-    const usedColors = useMemo(() => {
-        const set = new Set<string>();
-        for (const category of allExpense) {
-            if (category.id === editId) {
-                continue;
-            }
-            if (category.color) {
-                set.add(category.color);
-            }
+    const usedColors = new Set<string>();
+    for (const category of allExpense) {
+        if (category.id === editId) {
+            continue;
         }
-        return set;
-    }, [allExpense, editId]);
+        if (category.color) {
+            usedColors.add(category.color);
+        }
+    }
 
     // `pickerOpen` lives in the app-level provider, so a path that left it set would disable this sheet's actions.
     useEffect(() => {
@@ -244,22 +241,22 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
     const income = mode === "create" ? formIncome : (loaded?.income ?? false);
     const atExpenseLimit = expenseCount >= MAX_EXPENSE_CATEGORIES;
 
+    const nextColor = firstAvailableColor(usedColors);
     useEffect(() => {
         if (mode !== "create" || parentId != null || colorTouched) {
             return;
         }
-        const next = firstAvailableColor(usedColors);
-        if (draft.color === next) {
+        if (draft.color === nextColor) {
             return;
         }
         setDraft({
-            color: next,
+            color: nextColor,
             emoji: null,
             icon: null,
             photoColor: null,
             photoUri: null,
         });
-    }, [mode, parentId, colorTouched, usedColors, draft.color, setDraft]);
+    }, [mode, parentId, colorTouched, nextColor, draft.color, setDraft]);
 
     useEffect(() => {
         if (mode !== "create" || parentId != null) {

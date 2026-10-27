@@ -1,5 +1,5 @@
 import { BottomSheetModal, BottomSheetScrollView } from "@expo/ui/community/bottom-sheet";
-import { useCallback, useRef } from "react";
+import { useRef } from "react";
 import type { Ref } from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 
@@ -52,13 +52,10 @@ export function AccountPickerSheet({
 
     const setRefs = useMergedRef(sheetRef, ref);
 
-    const pick = useCallback(
-        (account: Account | null) => {
-            onSelect(account);
-            sheetRef.current?.dismiss();
-        },
-        [onSelect]
-    );
+    const pick = (account: Account | null) => {
+        onSelect(account);
+        sheetRef.current?.dismiss();
+    };
 
     return (
         <BottomSheetModal

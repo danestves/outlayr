@@ -10,14 +10,7 @@ interface CompilerEvent {
     kind: string;
 }
 
-const KNOWN_BAILOUTS = [
-    "src/components/transaction-form/index.tsx",
-    "src/components/transaction-form/stage/step-account-installments.tsx",
-    "src/components/transaction-form/use-installment-order.tsx",
-    "src/data/live-query.ts",
-    "src/hooks/use-receipt-scan.ts",
-    "src/lib/ledger-adoption.tsx",
-];
+const KNOWN_BAILOUTS = ["src/data/live-query.ts", "src/hooks/use-receipt-scan.ts", "src/lib/ledger-adoption.tsx"];
 
 const COVERAGE_SHARDS = 4;
 const NATIVE_ROOT = join(__dirname, "..");
@@ -88,8 +81,11 @@ export function describeCompilerCoverage(shard: number) {
             expect(compilerBailouts(file)).toEqual([]);
         });
 
-        it.each(KNOWN_BAILOUTS.filter(inShard))("still bails out on %s, or it leaves KNOWN_BAILOUTS", (file) => {
-            expect(compilerBailouts(file)).not.toEqual([]);
-        });
+        const listed = KNOWN_BAILOUTS.filter(inShard);
+        if (listed.length > 0) {
+            it.each(listed)("still bails out on %s, or it leaves KNOWN_BAILOUTS", (file) => {
+                expect(compilerBailouts(file)).not.toEqual([]);
+            });
+        }
     });
 }

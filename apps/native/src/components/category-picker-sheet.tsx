@@ -4,7 +4,7 @@ import PlusSignIcon from "@hugeicons-pro/core-stroke-rounded/PlusSignIcon";
 import Search01Icon from "@hugeicons-pro/core-stroke-rounded/Search01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import { InputGroup } from "panelui-native/components/input-group";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { ReactNode, Ref } from "react";
 import { Pressable, View } from "react-native";
 import Animated, { Easing, FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
@@ -64,20 +64,6 @@ export function CategoryPickerSheet({
     const colors = useColors();
     const sheetSurface = useSheetSurface();
     const offered = useCategoriesByNamespace(db, income);
-    const blocked = useMemo(() => new Set(excludeIds), [excludeIds]);
-    // A blocked parent stays as a container while it holds pickable children: budgets are unique per exact id.
-    const categories = useMemo(() => {
-        if (blocked.size === 0) {
-            return offered;
-        }
-        return offered
-            .map((parent) =>
-                parent.children.some((child) => blocked.has(child.id))
-                    ? { ...parent, children: parent.children.filter((child) => !blocked.has(child.id)) }
-                    : parent
-            )
-            .filter((parent) => !blocked.has(parent.id) || parent.children.length > 0);
-    }, [offered, blocked]);
     const recentIds = useRecentCategoryIds(db, income);
     const sheetRef = useRef<BottomSheetModal>(null);
     const [query, setQuery] = useState("");
@@ -86,6 +72,19 @@ export function CategoryPickerSheet({
     const setRefs = useMergedRef(sheetRef, ref);
 
     const [seededFor, setSeededFor] = useState<string | null | undefined>(undefined);
+
+    const blocked = new Set(excludeIds);
+    // A blocked parent stays as a container while it holds pickable children: budgets are unique per exact id.
+    const categories =
+        blocked.size === 0
+            ? offered
+            : offered
+                  .map((parent) =>
+                      parent.children.some((child) => blocked.has(child.id))
+                          ? { ...parent, children: parent.children.filter((child) => !blocked.has(child.id)) }
+                          : parent
+                  )
+                  .filter((parent) => !blocked.has(parent.id) || parent.children.length > 0);
     if (categories.length > 0 && seededFor !== selectedId) {
         setSeededFor(selectedId);
         const holder = expandedForSelectedCategory(categories, selectedId);
@@ -94,7 +93,7 @@ export function CategoryPickerSheet({
         }
     }
 
-    const toggle = useCallback((id: string) => {
+    const toggle = (id: string) => {
         setExpanded((prev) => {
             const next = new Set(prev);
             if (next.has(id)) {
@@ -104,42 +103,34 @@ export function CategoryPickerSheet({
             }
             return next;
         });
-    }, []);
+    };
 
-    const dismiss = useCallback(() => sheetRef.current?.dismiss(), []);
+    const dismiss = () => sheetRef.current?.dismiss();
 
     const trimmed = query.trim();
     const searching = trimmed.length > 0;
-    const matches = useMemo(
-        () => searchCategoryTree(categories, query).filter((match) => !blocked.has(match.category.id)),
-        [categories, query, blocked]
-    );
+    const matches = searchCategoryTree(categories, query).filter((match) => !blocked.has(match.category.id));
 
-    const recents = useMemo(() => {
-        if (recentIds.length === 0) {
-            return [];
+    const byId = new Map<string, Category>();
+    for (const parent of categories) {
+        byId.set(parent.id, parent);
+        for (const child of parent.children) {
+            byId.set(child.id, child);
         }
-        const byId = new Map<string, Category>();
-        for (const parent of categories) {
-            byId.set(parent.id, parent);
-            for (const child of parent.children) {
-                byId.set(child.id, child);
-            }
-        }
-        return recentIds
-            .map((id) => byId.get(id))
-            .filter((category): category is Category => category != null && !blocked.has(category.id));
-    }, [categories, recentIds, blocked]);
+    }
+    const recents = recentIds
+        .map((id) => byId.get(id))
+        .filter((category): category is Category => category != null && !blocked.has(category.id));
 
-    const create = useCallback(() => onCreate?.(trimmed), [onCreate, trimmed]);
-    const clearQuery = useCallback(() => setQuery(""), []);
+    const create = () => onCreate?.(trimmed);
+    const clearQuery = () => setQuery("");
     // The sheet outlives a dismiss, so a hand-collapsed parent would hide the selected child's checkmark on later
     // presents. Reset here, since presenting changes neither of the effect's deps.
-    const handleDismiss = useCallback(() => {
+    const handleDismiss = () => {
         clearQuery();
         setExpanded(expandedForSelectedCategory(categories, selectedId));
         onDismiss?.();
-    }, [categories, clearQuery, onDismiss, selectedId]);
+    };
 
     let searchPanel: ReactNode = null;
     if (searching && matches.length === 0) {

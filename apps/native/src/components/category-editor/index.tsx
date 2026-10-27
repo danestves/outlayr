@@ -5,7 +5,7 @@ import { animation, blur, opacity, overlay, padding, scrollDismissesKeyboard } f
 import { useForm, useSelector } from "@tanstack/react-form";
 import { useNavigation, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Keyboard, View } from "react-native";
 import Animated, { FadeInDown, FadeOutDown, useDerivedValue, useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -179,20 +179,17 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
 
     const expenseTree = useCategoriesByNamespace(db, false);
 
-    const allExpense = useMemo(() => expenseTree.flatMap((node) => [node, ...node.children]), [expenseTree]);
+    const allExpense = expenseTree.flatMap((node) => [node, ...node.children]);
     const expenseCount = allExpense.length;
-    const usedColors = useMemo(() => {
-        const set = new Set<string>();
-        for (const category of allExpense) {
-            if (category.id === editId) {
-                continue;
-            }
-            if (category.color) {
-                set.add(category.color);
-            }
+    const usedColors = new Set<string>();
+    for (const category of allExpense) {
+        if (category.id === editId) {
+            continue;
         }
-        return set;
-    }, [allExpense, editId]);
+        if (category.color) {
+            usedColors.add(category.color);
+        }
+    }
 
     // The draft is shared context, so a create editor may mount onto another screen's leftovers.
     useEffect(() => {
@@ -254,22 +251,22 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
         });
     }, [navigation, pickerOpen, isSubcategory]);
 
+    const nextColor = firstAvailableColor(usedColors);
     useEffect(() => {
         if (mode !== "create" || parentId != null || colorTouched) {
             return;
         }
-        const next = firstAvailableColor(usedColors);
-        if (draft.color === next) {
+        if (draft.color === nextColor) {
             return;
         }
         setDraft({
-            color: next,
+            color: nextColor,
             emoji: null,
             icon: null,
             photoColor: null,
             photoUri: null,
         });
-    }, [mode, parentId, colorTouched, usedColors, draft.color, setDraft]);
+    }, [mode, parentId, colorTouched, nextColor, draft.color, setDraft]);
 
     useEffect(() => {
         if (mode !== "create" || parentId != null) {

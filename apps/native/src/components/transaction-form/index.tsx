@@ -7,7 +7,7 @@ import { useField, useForm, useSelector } from "@tanstack/react-form";
 import { useRouter } from "expo-router";
 import { PortalHost, PortalProvider } from "panelui-native/primitives/portal";
 import type { ComponentProps, ReactNode, RefObject } from "react";
-import { useCallback, useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from "react";
 import {
     AccessibilityInfo,
     Alert,
@@ -31,14 +31,7 @@ import type { Account } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { attachmentsRepo } from "@/data/attachments-core";
 import type { AttachmentDraft } from "@/data/attachments-core";
-import {
-    cardFeeFor,
-    feeRatesOn,
-    lastFeeCategoryId,
-    lastForeignFeeRate,
-    recentPaidVia,
-    rememberFeeCategory,
-} from "@/data/card-fees-core";
+import { cardFeeFor, recentPaidVia, rememberFeeCategory } from "@/data/card-fees-core";
 import type { CardFeeInput } from "@/data/card-fees-core";
 import { useCategoriesByNamespace } from "@/data/categories";
 import { ensureCategoryByName, getCategoryById } from "@/data/categories-core";
@@ -163,6 +156,7 @@ import type { StepRateOption } from "./stage/step-rate";
 import { StepRepeat } from "./stage/step-repeat";
 import { StepWhen } from "./stage/step-when";
 import { useAttachmentDraft } from "./use-attachment-draft";
+import { useFeeReads } from "./use-fee-reads";
 import { useInstallmentOrder } from "./use-installment-order";
 import { useSplitDraft } from "./use-split-draft";
 
@@ -663,8 +657,11 @@ export function TransactionForm({
             };
             let savedId: string;
             try {
-                savedId = await (installmentOrder.save(input, amount, writeExtras) ??
-                    persistTransaction(db, mode, initial, input, writeExtras));
+                let saving = installmentOrder.save(input, amount, writeExtras);
+                if (saving === null) {
+                    saving = persistTransaction(db, mode, initial, input, writeExtras);
+                }
+                savedId = await saving;
                 if (mode === "create") {
                     freshEntries.mark(savedId);
                 }
@@ -864,19 +861,16 @@ export function TransactionForm({
                 : transactionRateSuggestions(db, feeCurrency, date).official,
         [db, feeCurrency, currency, date]
     );
-    const feeRates = useMemo(() => (account == null ? [] : feeRatesOn(db, account.id)), [db, account]);
-    const suggestedFeeRate = useMemo(
-        () =>
-            mode === "create" && foreignCharge && account != null
-                ? lastForeignFeeRate(db, account.id, account.currency)
-                : null,
-        [db, mode, foreignCharge, account]
-    );
+    const { feeCategory, feeRates, suggestedFeeRate } = useFeeReads({
+        account,
+        category,
+        db,
+        feeCategoryId,
+        foreignCharge,
+        mode,
+    });
     const paysBolivares = feeable && currency === "VES" && account?.currency === "VES";
-    const paidViaHistory = useMemo(
-        () => (mode === "create" && account?.currency === "VES" ? recentPaidVia(db, account.id) : null),
-        [db, mode, account]
-    );
+    const paidViaHistory = mode === "create" && account?.currency === "VES" ? recentPaidVia(db, account.id) : null;
     const suggestedPaidVia = useSelector(form.store, (s) =>
         paidViaHistory === null ? null : rememberedPaidVia(paidViaHistory, s.values.merchant)
     );
@@ -892,10 +886,6 @@ export function TransactionForm({
     const feeShown = (): boolean =>
         feeable &&
         (cardFee !== null || (feeDraft.kind === "typed" && (stageStep === "fee" || stageStep === "feeCategory")));
-    const feeCategory = useMemo(
-        () => getCategoryById(db, feeCategoryId ?? lastFeeCategoryId(db) ?? "") ?? category,
-        [db, feeCategoryId, category]
-    );
     const feeBase = (amount: number): number | null =>
         cardFeeBase(amount, { card: feeCurrency, entry: currency }, amountInUsd, cardRate);
     const feeAmountFor = (amount: number): number | null => {
@@ -1272,27 +1262,19 @@ export function TransactionForm({
 
     const categoriesForNamespace = useCategoriesByNamespace(db, income);
     // Shape only: the names and what sits under what. No figures leave here.
-    const categoryTree = useMemo(() => {
-        const named = categoriesForNamespace.filter((candidate) => candidate.name != null);
-        // SAFETY: `named` is filtered to non-null names above; the column is nullable.
-        return named
-            .filter((candidate) => candidate.parentId == null)
-            .map((parent) => ({
-                // SAFETY on both lines: `named` is filtered to non-null names above.
-                children: named.filter((child) => child.parentId === parent.id).map((child) => child.name as string),
-                name: parent.name as string,
-            }));
-    }, [categoriesForNamespace]);
+    const named = categoriesForNamespace.filter((candidate) => candidate.name != null);
+    // SAFETY: `named` is filtered to non-null names above; the column is nullable.
+    const categoryTree = named
+        .filter((candidate) => candidate.parentId == null)
+        .map((parent) => ({
+            // SAFETY on both lines: `named` is filtered to non-null names above.
+            children: named.filter((child) => child.parentId === parent.id).map((child) => child.name as string),
+            name: parent.name as string,
+        }));
 
-    const resolveHistory = useCallback(
-        (key: string, forIncome: boolean) => rememberedCategoryFor(db, key, forIncome),
-        [db]
-    );
+    const resolveHistory = (key: string, forIncome: boolean) => rememberedCategoryFor(db, key, forIncome);
 
-    const recallBookMerchant = useCallback(
-        (name: string, forCurrency: string | undefined) => recallMerchant(db, name, forCurrency),
-        [db]
-    );
+    const recallBookMerchant = (name: string, forCurrency: string | undefined) => recallMerchant(db, name, forCurrency);
 
     const logoRequestRef = useRef(0);
     // Read at write time, not closed over: the seeding effect can fill the well while a request is out. Mirrored in an
@@ -1351,26 +1333,23 @@ export function TransactionForm({
     // hand the row's old category to rows that had none.
     const lookupAnsweredRef = useRef<{ currency: string | null; key: string } | null>(null);
     // The one place this ref is set: the compiler allows a captured ref to change inside one hook's callback, not two.
-    const recordLookupAnswer = useCallback((answer: { currency: string | null; key: string } | null) => {
+    const recordLookupAnswer = (answer: { currency: string | null; key: string } | null) => {
         lookupAnsweredRef.current = answer;
-    }, []);
-    const setForcedLookup = useCallback(
-        (forced: boolean) => {
-            forcedLookupRef.current = forced;
-            if (forced) {
-                touchedSinceLookupRef.current.clear();
-                // A new ask starts unanswered, so the previous answer cannot let a save carry.
-                recordLookupAnswer(null);
-            }
-        },
-        [recordLookupAnswer]
-    );
+    };
+    const setForcedLookup = (forced: boolean) => {
+        forcedLookupRef.current = forced;
+        if (forced) {
+            touchedSinceLookupRef.current.clear();
+            // A new ask starts unanswered, so the previous answer cannot let a save carry.
+            recordLookupAnswer(null);
+        }
+    };
 
     // A late answer may replace only slots left alone since the ask: a category picked meanwhile is newer.
     const touchedSinceLookupRef = useRef<Set<"category" | "identity" | "tags">>(new Set());
-    const markTouched = useCallback((slot: "category" | "identity" | "tags") => {
+    const markTouched = (slot: "category" | "identity" | "tags") => {
         touchedSinceLookupRef.current.add(slot);
-    }, []);
+    };
     const suggestedDomainRef = useRef<string | null>(null);
 
     // A suggested logo stays replaceable so it follows the name; only a user choice or an open picker stops it. A run
@@ -1461,8 +1440,7 @@ export function TransactionForm({
         []
     );
 
-    // Not `useCallback`: it reads and sets `categorySource` and `tagsSource`, which made the compiler decline the whole
-    // form. Its only consumer reads it through a committed snapshot, so its identity may change.
+    // Its only consumer reads it through a committed snapshot, so its identity may change.
     const applySuggestion = (suggestion: EnrichmentSuggestion) => {
         // From the ref: the curated tier answers in the same tick the lookup is asked, before state commits.
         const forced = forcedLookupRef.current;
@@ -1548,14 +1526,15 @@ export function TransactionForm({
 
     // The hook re-asks on a currency or side change; that ask is the form's, not the user's, so the override ends here.
     const seenLookupScopeRef = useRef({ currency, income });
+    const endForcedLookup = useEffectEvent(() => setForcedLookup(false));
     useEffect(() => {
         const seen = seenLookupScopeRef.current;
         if (seen.currency === currency && seen.income === income) {
             return;
         }
         seenLookupScopeRef.current = { currency, income };
-        setForcedLookup(false);
-    }, [currency, income, setForcedLookup]);
+        endForcedLookup();
+    }, [currency, income]);
 
     const lookUpMerchant = () => {
         rest?.onWake();
