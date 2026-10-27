@@ -18,10 +18,11 @@ import { IdentityHero } from "@/components/identity-hero";
 import { SheetHeader, SheetHeaderIconButton, SheetHeaderTextButton } from "@/components/sheet-header";
 import { useAppSettings } from "@/contexts/display-settings-context";
 import {
-    useIdentitySeed,
     identityPickerResetAtom,
     useIdentityDraft,
+    useIdentityDraftScope,
     useIdentityFlyUp,
+    useIdentitySeed,
 } from "@/contexts/identity-draft-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useAccountBalance } from "@/data/accounts";
@@ -96,6 +97,7 @@ function AccountEditorReady(props: AccountEditorProps & { db: Database }) {
     const regionCode = useRegionCode();
     const { requestDelete } = useDeferredDelete("account");
 
+    useIdentityDraftScope();
     const { draft, setDraft } = useIdentityDraft();
     const { pickerOpen, setPickerOpen } = useIdentityFlyUp();
 

@@ -33,7 +33,12 @@ import { IdentityCurtain } from "@/components/identity-curtain";
 import { HERO_RING, IdentityFlyUpLayer } from "@/components/identity-fly-up";
 import { toolbarIcon } from "@/components/toolbar-icons";
 import { useAppSettings } from "@/contexts/display-settings-context";
-import { useIdentitySeed, useIdentityDraft, useIdentityFlyUp } from "@/contexts/identity-draft-context";
+import {
+    useIdentityDraft,
+    useIdentityDraftScope,
+    useIdentityFlyUp,
+    useIdentitySeed,
+} from "@/contexts/identity-draft-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useAccountBalance } from "@/data/accounts";
 import { getAccountById } from "@/data/accounts-core";
@@ -114,6 +119,7 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
     const locale = useLocaleTag();
     const regionCode = useRegionCode();
 
+    useIdentityDraftScope();
     const { draft, setDraft } = useIdentityDraft();
     const { pickerOpen, setPickerOpen, floatProgress } = useIdentityFlyUp();
 

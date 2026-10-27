@@ -39,7 +39,7 @@ export const EMPTY_DRAFT: IdentitySelection = {
 };
 
 // Two atoms: every picker tap replaces `draft`, and merging them would re-render the whole form per tap.
-const draftAtom = Atom.make(EMPTY_DRAFT).pipe(Atom.keepAlive, Atom.withLabel("identity-draft:draft"));
+export const draftAtom = Atom.make(EMPTY_DRAFT).pipe(Atom.keepAlive, Atom.withLabel("identity-draft:draft"));
 const pickerOpenAtom = Atom.make(false).pipe(Atom.keepAlive, Atom.withLabel("identity-draft:picker-open"));
 
 const flyUpAtom = Atom.make(() => ({ floatProgress: makeMutable(0), sheetHeight: makeMutable(0) })).pipe(
@@ -76,6 +76,18 @@ const identitySeedFamily = Atom.family((key: string) =>
 export function useIdentitySeed(seed: IdentitySelection | null): void {
     const instance = useId();
     useAtomMount(identitySeedFamily(`${instance}${SEED_SEPARATOR}${seed === null ? "" : encodeIdentitySeed(seed)}`));
+}
+
+export const identityScopeFamily = Atom.family((_instance: string) =>
+    Atom.make((get) => {
+        const outer = get.once(draftAtom);
+        get.addFinalizer(() => get.registry.set(draftAtom, outer));
+    }).pipe(Atom.withLabel("identity-draft:scope"))
+);
+
+/** Restores the shared draft on unmount, so an editor opened over a form leaves no logo behind. */
+export function useIdentityDraftScope(): void {
+    useAtomMount(identityScopeFamily(useId()));
 }
 
 export const identityPickerResetAtom = Atom.make((get) => {

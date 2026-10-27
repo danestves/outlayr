@@ -17,6 +17,7 @@ import { SheetHeader, SheetHeaderIconButton, SheetHeaderTextButton } from "@/com
 import { Text } from "@/components/text";
 import {
     EMPTY_DRAFT,
+    useIdentityDraftScope,
     useIdentitySeed,
     identityPickerResetAtom,
     useIdentityDraft,
@@ -129,6 +130,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
     const keyboardHeight = useKeyboardHeight();
     const { requestDelete } = useDeferredDelete("category");
 
+    useIdentityDraftScope();
     const { draft, setDraft } = useIdentityDraft();
     const { pickerOpen, setPickerOpen } = useIdentityFlyUp();
 
