@@ -207,22 +207,36 @@ describe("sync engine", () => {
 
         await setGate(true);
         expect(watermark.listeners.size).toBe(1);
+        passes.mockClear();
 
         watermark.emit(1);
         await flush();
-        expect(passes).toHaveBeenCalledTimes(1);
+        expect(passes).not.toHaveBeenCalled();
 
         watermark.emit(5);
         await flush();
-        expect(passes).toHaveBeenCalledTimes(2);
+        expect(passes).toHaveBeenCalledTimes(1);
 
         await Effect.runPromise(setSyncCursor(db, 5));
         watermark.emit(6);
         await flush();
-        expect(passes).toHaveBeenCalledTimes(2);
+        expect(passes).toHaveBeenCalledTimes(1);
 
         await setGate(false);
         expect(watermark.listeners.size).toBe(0);
+    });
+
+    it("sends what queued while sync was off as soon as it is turned on", async () => {
+        await start();
+        await queueWrite();
+        await jest.advanceTimersByTimeAsync(10_000);
+        passes.mockClear();
+
+        await setGate(true);
+        expect(passes).toHaveBeenCalledTimes(1);
+
+        await setGate(true);
+        expect(passes).toHaveBeenCalledTimes(1);
     });
 
     it("finishes the pass in flight and then lets go of every trigger when unmounted", async () => {
