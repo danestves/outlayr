@@ -20,7 +20,7 @@ Codegen deletes every other `.ts` file in `convex/`, so nothing hand-written can
 
 A group starts as plain functions: `<group>.ts` holds the Convex `query`/`mutation`/`action` definitions, the spec declares each one with `FunctionSpec.convexPublicQuery<typeof fn>()("name")` and friends, and the impl hands them to `FunctionImpl.make` untouched. Paths, args and returns stay what Convex sees today.
 
-Moving a group to Effect rewrites its spec (schemas for args and returns) and its impl (Effect handlers); the file names and function paths stay.
+Moving a group to Effect rewrites its spec (schemas for args and returns) and its impl (Effect handlers); the file names and function paths stay. `exchangeRates` is the first group done this way. An Effect function always has a returns validator, so a converted query that had none gains one.
 
 ## Schema equivalence
 
@@ -38,3 +38,4 @@ The tables in `confect/tables/` export the same schema the hand-written `convex/
 - **`skipLibCheck` hides a stale `convex/_generated/api.d.ts`.** An import of a removed module there type-checks fine. Regenerate it whenever a module is added or removed under `convex/`.
 - **`confect dev` and `convex dev` race at startup.** The first writes temporary `convex/.confect-artifacts-*` files that crash the second's first push. `dev` runs `convex dev --start "confect dev"` so Confect starts after the first push.
 - **Effect's clock reads 0 inside a query.** Confect gives queries a `Clock` whose unsafe accessors return 0, so logs, spans and `Effect.timed` never evict the query from the cache. Read the time with `Clock.currentTimeMillis`, which is real and evicts it like `Date.now()` does.
+- **Confect's `take` and `first` read through an unlimited stream.** Convex then fetches up to 100 rows per read into the read set and the transaction's row budget, so `first()` could read 100 documents. `patches/@confect__server@10.3.2.patch` sends `take(n)` to Convex instead; drop it once Confect does the same.
