@@ -1,4 +1,3 @@
-import { env } from "@outlayr/env/native";
 import { useSegments } from "expo-router";
 import PostHog from "posthog-react-native";
 import { useEffect } from "react";
@@ -6,10 +5,11 @@ import { Platform } from "react-native";
 
 import { SETTING_DEFAULTS } from "@/data/settings-core";
 import { scrubQueryParams } from "@/domain/exception-scrub";
+import { ENV } from "@/env";
 
 export const posthog =
-    !__DEV__ && env.EXPO_PUBLIC_POSTHOG_PROJECT_TOKEN
-        ? new PostHog(env.EXPO_PUBLIC_POSTHOG_PROJECT_TOKEN, {
+    !__DEV__ && ENV.EXPO_PUBLIC_POSTHOG_PROJECT_TOKEN
+        ? new PostHog(ENV.EXPO_PUBLIC_POSTHOG_PROJECT_TOKEN, {
               before_send: scrubQueryParams,
               customAppProperties: (properties) => ({
                   ...properties,

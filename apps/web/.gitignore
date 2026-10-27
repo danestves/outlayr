@@ -4,8 +4,9 @@
 /.tanstack
 /.nitro
 .env*
-!.env.example
+!.env.schema
 *.local
 *.tsbuildinfo
 /.intlayer
 /.content-collections
+/src/env.ts

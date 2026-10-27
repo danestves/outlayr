@@ -1,6 +1,5 @@
-import { env } from "@outlayr/env/native";
-
 import { isRealLogo } from "@/domain/logo-acceptance";
+import { ENV } from "@/env";
 
 const REQUEST_TIMEOUT_MS = 3000;
 /** A cold TLS handshake can alone exceed the budget; the retry reuses the connection. */
@@ -116,7 +115,7 @@ async function resolveMerchantImage(request: MerchantImageRequest, fetchImpl: ty
     }
 
     let definitive = true;
-    const token = env.EXPO_PUBLIC_LOGO_DEV_TOKEN;
+    const token = ENV.EXPO_PUBLIC_LOGO_DEV_TOKEN;
     if (token) {
         const branded = await fetchAccepted(logoDevUrl(domain, token), fetchImpl);
         if (branded.kind === "logo") {

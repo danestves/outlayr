@@ -31,11 +31,11 @@
         "@legendapp/list": "^3.6.0",
         "@material/material-color-utilities": "^0.4.0",
         "@noble/hashes": "^2.4.0",
-        "@outlayr/env": "workspace:*",
         "@outlayr/money": "workspace:*",
         "@react-native-async-storage/async-storage": "2.2.0",
         "@shopify/react-native-skia": "2.14.0",
         "@tanstack/react-form": "1.33.5",
+        "@varlock/expo-integration": "1.2.2",
         "better-auth": "catalog:",
         "convex": "catalog:",
         "dotenv": "catalog:",
@@ -101,6 +101,7 @@
         "tailwindcss": "^4.3.3",
         "thinking-orbs": "^0.3.2",
         "uniwind": "^1.13.0",
+        "varlock": "catalog:",
         "zod": "catalog:"
     },
     "devDependencies": {

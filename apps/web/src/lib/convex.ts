@@ -1,8 +1,10 @@
 import { ConvexReactClient } from "convex/react";
 
+import { ENV } from "@/env";
+
 export function convexUrls() {
-    const convexUrl = import.meta.env.VITE_CONVEX_URL;
-    const convexSiteUrl = import.meta.env.VITE_CONVEX_SITE_URL;
+    const convexUrl = ENV.VITE_CONVEX_URL;
+    const convexSiteUrl = ENV.VITE_CONVEX_SITE_URL;
     if (!convexUrl || !convexSiteUrl) {
         throw new Error(
             "Set VITE_CONVEX_URL and VITE_CONVEX_SITE_URL in apps/web/.env.local to use /login and /connect."

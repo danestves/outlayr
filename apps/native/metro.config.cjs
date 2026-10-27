@@ -3,6 +3,7 @@
 const { existsSync } = require("node:fs");
 const path = require("node:path");
 
+const { withVarlockMetroConfig } = require("@varlock/expo-integration/metro-config");
 const { getPostHogExpoConfig } = require("posthog-react-native/metro");
 const { configMetroIntlayerSync } = require("react-native-intlayer/metro");
 const { withUniwindConfig } = require("uniwind/metro");
@@ -20,13 +21,15 @@ if (!config.watchFolders.includes(pnpmStore)) {
 // Drizzle's migrations import `.sql`. Must precede the wrappers, which extend (never reset) the resolver.
 config.resolver.sourceExts.push("sql");
 
-// Outermost, so intlayer chains onto the `.sql` extension and both wrappers. The sync variant leaves the
+// Outermost bar varlock, so intlayer chains onto the `.sql` extension and both wrappers. The sync variant leaves the
 // dictionaries to `vp run i18n:build`.
-const finalConfig = configMetroIntlayerSync(
-    withUniwindConfig(wrapWithReanimatedMetroConfig(config), {
-        cssEntryFile: "./global.css",
-        dtsFile: "./uniwind-types.d.ts",
-    })
+const finalConfig = withVarlockMetroConfig(
+    configMetroIntlayerSync(
+        withUniwindConfig(wrapWithReanimatedMetroConfig(config), {
+            cssEntryFile: "./global.css",
+            dtsFile: "./uniwind-types.d.ts",
+        })
+    )
 );
 
 // RevenueCat's ~1 MB web SDK only runs in browser mode; native builds always carry `RNPurchases`.

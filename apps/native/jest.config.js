@@ -20,6 +20,7 @@ const projectFor = (preset) => ({
     moduleNameMapper: {
         // jest-expo only maps `@/*` to `src/*`, so assets need their own rule ahead of that one.
         "^@/assets/(.*)$": "<rootDir>/assets/$1",
+        "^@/env$": "<rootDir>/jest/env-stub.js",
         "^react-native-worklets$": "react-native-worklets/src/mock",
         "^expo-modules-core$": expoModulesCore,
         "^expo-modules-core/(.*)$": `${expoModulesCore}/$1`,
@@ -28,7 +29,6 @@ const projectFor = (preset) => ({
     setupFiles: [
         "react-native-gesture-handler/jestSetup.js",
         "<rootDir>/jest/expo-observe-stub.js",
-        "<rootDir>/jest/env-stub.js",
         "<rootDir>/jest/sqlite-change-listener-stub.js",
         "<rootDir>/jest/i18n-key-stub.js",
     ],
@@ -38,7 +38,7 @@ const projectFor = (preset) => ({
         "\\.mjs$": preset.transform["\\.[jt]sx?$"],
     },
     transformIgnorePatterns: [
-        "/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-base|standard-navigation|uniwind|@legendapp/list|@hugeicons/react-native|drizzle-orm|intlayer|react-native-intlayer|dinero.js|effect|@effect|number-flow-react-native|@t3-oss|convex|@convex-dev/better-auth|@better-auth|better-auth|@noble|jose|nanostores|panelui-native|lucide-react-native|@revenuecat|react-native-purchases|@material))",
+        "/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-base|standard-navigation|uniwind|@legendapp/list|@hugeicons/react-native|drizzle-orm|intlayer|react-native-intlayer|dinero.js|effect|@effect|number-flow-react-native|convex|@convex-dev/better-auth|@better-auth|better-auth|@noble|jose|nanostores|panelui-native|lucide-react-native|@revenuecat|react-native-purchases|@material))",
     ],
 });
 

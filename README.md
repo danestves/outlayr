@@ -54,7 +54,7 @@ vp run --filter @outlayr/native ios
 vp run --filter @outlayr/native android
 ```
 
-The app runs without a backend. To work on sync, sign-in or exchange rates, start a local Convex deployment and copy its URLs into `apps/native/.env` (see `apps/native/.env.example`):
+The app runs without a backend. To work on sync, sign-in or exchange rates, start a local Convex deployment and copy its URLs into `apps/native/.env` (`apps/native/.env.schema` lists every variable):
 
 ```bash
 vp run dev:setup

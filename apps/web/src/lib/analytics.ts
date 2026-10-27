@@ -2,6 +2,8 @@ import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import type { PostHog, Properties } from "posthog-js";
 
+import { ENV } from "@/env";
+
 export type Consent = "denied" | "granted" | "pending";
 
 export class AnalyticsLoadError extends Schema.TaggedError<AnalyticsLoadError>()("AnalyticsLoadError", {
@@ -13,7 +15,7 @@ export class AnalyticsLoadError extends Schema.TaggedError<AnalyticsLoadError>()
     }
 }
 
-const TOKEN = import.meta.env.PROD ? import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN : undefined;
+const TOKEN = import.meta.env.PROD ? ENV.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN : undefined;
 
 const ASK_FIRST = new Set([
     "AT",
