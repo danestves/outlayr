@@ -1,4 +1,6 @@
 import { eq, isNotNull } from "drizzle-orm";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import { accounts, transactions } from "@/db/schema";
 
@@ -16,6 +18,20 @@ export interface LogoReplateDeps {
     persist: (bytes: Uint8Array) => Promise<string>;
     signature: (uri: string) => Promise<Uint8Array | null>;
 }
+
+const LogoReplateOperation = Schema.Literals(["originals", "persist", "rows", "signature"]);
+
+export class LogoReplateError extends Schema.TaggedError<LogoReplateError>()("LogoReplateError", {
+    cause: Schema.Defect(),
+    operation: LogoReplateOperation,
+}) {
+    override get message(): string {
+        return `Logo replate ${this.operation} failed`;
+    }
+}
+
+const attempt = <A>(operation: typeof LogoReplateOperation.Type, run: () => PromiseLike<A>) =>
+    Effect.tryPromise({ catch: (cause) => new LogoReplateError({ cause, operation }), try: run });
 
 /** Mean per-channel difference two signatures can show and still be one image re-encoded. */
 const SIGNATURE_TOLERANCE = 6;
@@ -39,45 +55,49 @@ const TABLES = [
 // Replaced only when the row's name files a cached logo AND the photo matches it drawn over black: a receipt on a
 // Netflix row passes the first, a dark photo the second. shortcut: a renamed row or a reclaimed cache entry keeps its
 // black tile; re-resolve the merchant's domain if that turns out common.
-export async function replateStoredLogos(db: SpendDb, deps: LogoReplateDeps): Promise<number> {
-    if ((await getMeta(db, META_KEYS.logoPlates)) != null) {
+export const replateStoredLogos = Effect.fn("LogoReplate.replateStoredLogos")(function* replateStoredLogos(
+    db: SpendDb,
+    deps: LogoReplateDeps
+) {
+    if ((yield* attempt("rows", () => getMeta(db, META_KEYS.logoPlates))) != null) {
         return 0;
     }
 
     const signatures = new Map<string, Uint8Array | null>();
     const replaced = new Map<string, string>();
 
-    const replacement = async (uri: string, name: string): Promise<string | null> => {
+    const replacement = Effect.fn("LogoReplate.replacement")(function* replacement(uri: string, name: string) {
         if (!signatures.has(uri)) {
-            signatures.set(uri, await deps.signature(uri));
+            signatures.set(uri, yield* attempt("signature", () => deps.signature(uri)));
         }
         const stored = signatures.get(uri);
         if (stored == null) {
             return null;
         }
-        const originals = await deps.originalsFor(name);
+        const originals = yield* attempt("originals", () => deps.originalsFor(name));
         const original = originals.find((candidate) => sameImage(candidate.signature, stored));
-        return original == null ? null : await deps.persist(original.bytes);
-    };
+        return original == null ? null : yield* attempt("persist", () => deps.persist(original.bytes));
+    });
 
-    /* oxlint-disable no-await-in-loop -- rows sharing a photo must see the replacement the first of them stored, or each would store its own copy */
+    // Rows sharing a photo must see the replacement the first of them stored, or each would store its own copy.
     for (const { imageUri, name, table } of TABLES) {
-        const rows = await db.selectDistinct({ imageUri, name }).from(table).where(isNotNull(imageUri));
+        const rows = yield* attempt("rows", () =>
+            db.selectDistinct({ imageUri, name }).from(table).where(isNotNull(imageUri))
+        );
         for (const row of rows) {
             const uri = row.imageUri;
             if (uri == null) {
                 continue;
             }
-            const next = replaced.get(uri) ?? (await replacement(uri, row.name));
+            const next = replaced.get(uri) ?? (yield* replacement(uri, row.name));
             if (next == null) {
                 continue;
             }
             replaced.set(uri, next);
-            await db.update(table).set({ imageUri: next }).where(eq(imageUri, uri));
+            yield* attempt("rows", () => db.update(table).set({ imageUri: next }).where(eq(imageUri, uri)));
         }
     }
-    /* oxlint-enable no-await-in-loop */
 
-    await setMeta(db, META_KEYS.logoPlates, "1");
+    yield* attempt("rows", () => setMeta(db, META_KEYS.logoPlates, "1"));
     return replaced.size;
-}
+});

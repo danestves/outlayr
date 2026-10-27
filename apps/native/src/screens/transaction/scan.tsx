@@ -23,13 +23,13 @@ import { ThinkingOrb } from "@/components/thinking-orb/thinking-orb";
 import { useDatabase } from "@/contexts/local-data-context";
 import { getAccountById, rememberLastUsedAccount } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
-import { attachmentsRepo } from "@/data/attachments-core";
 import { suggestedCardFee } from "@/data/card-fees-core";
 import { getCategoryById } from "@/data/categories-core";
 import { photoFileName } from "@/data/photo-store-core";
 import { useAiConsent } from "@/data/settings";
-import { transactionsRepo } from "@/data/transactions-core";
+import type { TransactionInput } from "@/data/transactions-core";
 import { useValuationIn } from "@/data/use-valuation";
+import type { Database } from "@/db/client";
 import type { AuthGate } from "@/domain/auth-gate";
 import { formatChargeDate } from "@/domain/dates";
 import { formatAmount } from "@/domain/money";
@@ -54,6 +54,9 @@ import { freshEntries } from "@/lib/fresh-entries";
 import { persistAttachmentBytes } from "@/lib/photo-storage";
 import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { createTransactionCommand } from "@/state/ledger-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
 import { usePromptLedger } from "./use-prompt-ledger";
@@ -551,14 +554,12 @@ function pairRates(paid: RateTable, ledger: RateTable, paidCode: string): RateTa
     };
 }
 
-type CreateArgs = Parameters<typeof transactionsRepo.create>;
-
 function receiptEntry(
-    db: CreateArgs[0],
+    db: Database,
     draft: ResolvedReceipt,
     categoryId: string,
-    details: CreateArgs[1]["details"]
-): CreateArgs[1] {
+    details: TransactionInput["details"]
+): TransactionInput {
     return {
         accountId: draft.accountId,
         amount: draft.amount,
@@ -606,6 +607,7 @@ function ScanFlowScreen() {
     const { bounded, context, live } = usePromptLedger(db, currency);
     const [saving, setSaving] = useState(false);
     const isMounted = useIsMounted();
+    const createTransaction = useAtomCommand(createTransactionCommand, SILENT);
 
     const request = {
         accounts: bounded.accounts,
@@ -666,15 +668,16 @@ function ScanFlowScreen() {
         setSaving(true);
         const write = async () => {
             const attachment = keptScan(image);
+            const attachments =
+                attachment === null ? [] : [{ id: null, imageKey: null, imageUri: attachment, name: null }];
             try {
-                const id = await transactionsRepo.create(db, receiptEntry(db, draft, categoryId, detailsOf(draft)), {
-                    inSameTransaction: (created) =>
-                        attachmentsRepo.writeFor(
-                            db,
-                            created,
-                            attachment === null ? [] : [{ id: null, imageKey: null, imageUri: attachment, name: null }]
-                        ),
-                });
+                const id = unwrapAtomCommand(
+                    await createTransaction({
+                        attachments,
+                        db,
+                        entry: receiptEntry(db, draft, categoryId, detailsOf(draft)),
+                    })
+                );
                 freshEntries.mark(id);
             } catch {
                 // The row did not land; the form has the failure strip this screen lacks.

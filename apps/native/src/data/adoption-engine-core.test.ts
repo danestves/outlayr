@@ -206,7 +206,7 @@ describe("discardAccountLedger", () => {
         const server = makeServer();
         await server.push({ deviceId: "peer", rows: [serverRow("shared", 900)] });
         await addTransaction(db, "shared", new Date(100));
-        await rememberLogoCandidate(db, "shared", 100, Number.POSITIVE_INFINITY);
+        await Effect.runPromise(rememberLogoCandidate(db, "shared", 100, Number.POSITIVE_INFINITY));
 
         await discardAccountLedger(db, server.transport);
 
@@ -214,7 +214,7 @@ describe("discardAccountLedger", () => {
             .select({ updatedAt: transactions.updatedAt })
             .from(transactions)
             .where(eq(transactions.id, "shared"));
-        expect((await candidateLogoIds(db)).get("shared")).toBe(row.updatedAt.getTime());
+        expect((await Effect.runPromise(candidateLogoIds(db))).get("shared")).toBe(row.updatedAt.getTime());
     });
 
     it("tombstones only rows this device has never seen", async () => {

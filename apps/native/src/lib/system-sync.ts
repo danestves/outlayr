@@ -108,11 +108,11 @@ const attemptOr = <A>(step: typeof SystemStep.Type, task: () => Promise<A>, fall
 
 const anyCounted = Effect.fn("SystemSync.anyCounted")(function* anyCounted(
     step: typeof SystemStep.Type,
-    counts: readonly (() => Promise<number>)[]
+    counts: readonly Effect.Effect<number, { readonly cause: unknown }>[]
 ) {
     let changed = false;
     for (const count of counts) {
-        const result = yield* Effect.result(attempt(step, count));
+        const result = yield* Effect.result(count.pipe(Effect.mapError((error) => failedAt(step)(error.cause))));
         if (Result.isFailure(result)) {
             yield* warn(result.failure);
             return changed;
@@ -124,13 +124,13 @@ const anyCounted = Effect.fn("SystemSync.anyCounted")(function* anyCounted(
 
 const revalueLedger = Effect.fn("SystemSync.revalueLedger")(function* revalueLedger(db: Database) {
     // Stamp first: canonicalization skips rows that do not yet name the currency they were kept in.
-    const stamped = yield* anyCounted("currency", [() => stampLedgerCurrency(db)]);
+    const stamped = yield* anyCounted("currency", [stampLedgerCurrency(db)]);
     // Always: an offline entry can leave rows unvalued even when the rate cache was already fresh.
     const backfilled = yield* anyCounted("canonicalize", [
-        () => backfillCanonicalUsd(db),
-        () => backfillBudgetUsd(db),
-        () => backfillOpeningUsd(db),
-        () => settlePendingFees(db),
+        backfillCanonicalUsd(db),
+        backfillBudgetUsd(db),
+        backfillOpeningUsd(db),
+        settlePendingFees(db),
     ]);
     return stamped || backfilled;
 });

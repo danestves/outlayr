@@ -4,6 +4,8 @@ import { ENTRY_RATE_TYPES } from "@outlayr/money/rates";
 import type { EntryRateType } from "@outlayr/money/rates";
 import { ensureRecurringType, RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { useField, useForm, useSelector } from "@tanstack/react-form";
+import * as Cause from "effect/Cause";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useRouter } from "expo-router";
 import { PortalHost, PortalProvider } from "panelui-native/primitives/portal";
 import type { ComponentProps, ReactNode, RefObject } from "react";
@@ -29,27 +31,20 @@ import { useBankAccounts, usePeople } from "@/data/accounts";
 import { getAccountById, getLastUsedAccount, rememberLastUsedAccount } from "@/data/accounts-core";
 import type { Account } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
-import { attachmentsRepo } from "@/data/attachments-core";
 import type { AttachmentDraft } from "@/data/attachments-core";
-import { cardFeeFor, recentPaidVia, rememberFeeCategory } from "@/data/card-fees-core";
+import { cardFeeFor, recentPaidVia } from "@/data/card-fees-core";
 import type { CardFeeInput } from "@/data/card-fees-core";
 import { useCategoriesByNamespace } from "@/data/categories";
-import { ensureCategoryByName, getCategoryById } from "@/data/categories-core";
+import { getCategoryById } from "@/data/categories-core";
 import type { Category } from "@/data/categories-core";
-import { queueEnrichment } from "@/data/enrichment-queue-core";
 import { useFavouriteCurrencies } from "@/data/favourite-currencies";
 import { useRatesRead } from "@/data/live-query";
-import { recallMerchant } from "@/data/merchant-book-core";
 import { useRecentMerchants } from "@/data/merchant-history";
-import { rememberedCategoryFor } from "@/data/merchant-history-core";
-import { applyMerchantToSiblings } from "@/data/merchant-siblings-core";
-import { backfillRecurring } from "@/data/recurrence-backfill";
 import { remoteEnrichmentOn, setBoolSetting } from "@/data/settings-core";
-import { splitsRepo } from "@/data/splits-core";
 import { useTagIdsFor, useTags } from "@/data/tags";
-import { tagIdsForQuery, tagsRepo } from "@/data/tags-core";
+import { tagIdsForQuery } from "@/data/tags-core";
 import { transactionRateSuggestions } from "@/data/transaction-entry-rates";
-import { getTransactionById, transactionsRepo } from "@/data/transactions-core";
+import { getTransactionById } from "@/data/transactions-core";
 import type { Transaction, TransactionInput } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 import { rowAmountLabel } from "@/domain/amount-label";
@@ -116,6 +111,18 @@ import { openNotificationSettings, reminderPermission, requestReminderPermission
 import { askForReview } from "@/lib/review-prompt";
 import { syncSubscriptionReminders } from "@/lib/subscription-reminder-sync";
 import { useHaptics } from "@/lib/use-haptics";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import {
+    backfillRecurringCommand,
+    carryMerchantLookupCommand,
+    ensureTagCommand,
+    queueEnrichmentCommand,
+    recallMerchantCommand,
+    rememberedCategoryCommand,
+    rememberFeeCategoryCommand,
+} from "@/state/ledger-commands";
+import { PendingCategoryError, saveTransactionCommand } from "@/state/transaction-save-command";
+import { useAtomCommand } from "@/state/use-atom-command";
 import { glowFromEmoji, glowFromImage } from "@/theme/glow";
 import { useColors } from "@/theme/use-colors";
 
@@ -330,53 +337,6 @@ function seedAccount(db: Database, initial: Transaction | undefined, seed: Trans
     return (seed?.accountId ? getAccountById(db, seed.accountId) : null) ?? getLastUsedAccount(db);
 }
 
-async function createPendingCategory(
-    db: Database,
-    pending: PendingCategory,
-    income: boolean,
-    siblings: readonly { id: string; name: string | null; parentId: string | null }[]
-): Promise<string> {
-    const parentId =
-        pending.parentName == null
-            ? null
-            : (siblings.find((candidate) => candidate.parentId == null && candidate.name === pending.parentName)?.id ??
-              null);
-    return await ensureCategoryByName(db, pending.name, income, pending.icon, pending.color, {
-        emoji: pending.emoji,
-        parentId,
-    });
-}
-
-async function materializeTagIds(
-    db: Database,
-    tagIds: readonly string[],
-    pendingTagNames: readonly string[]
-): Promise<string[]> {
-    const materialized = [...tagIds];
-    for (const tagName of pendingTagNames) {
-        // oxlint-disable-next-line no-await-in-loop -- `ensureTag` matches before inserting with no unique constraint behind it, so two pending names that normalize to the same tag would each insert a row if these ran concurrently.
-        const tagId = await tagsRepo.ensureTag(db, tagName);
-        if (tagId != null && !materialized.includes(tagId)) {
-            materialized.push(tagId);
-        }
-    }
-    return materialized;
-}
-
-async function persistTransaction(
-    db: Database,
-    mode: "create" | "edit",
-    initial: Transaction | undefined,
-    input: TransactionInput,
-    inSameTransaction: (id: string) => Promise<void>
-): Promise<string> {
-    if (mode === "edit" && initial) {
-        await transactionsRepo.update(db, initial.id, input, { inSameTransaction });
-        return initial.id;
-    }
-    return await transactionsRepo.create(db, input, { inSameTransaction });
-}
-
 function initialEntryRateType(currency: string, rateType: string | null | undefined): EntryRateType | null {
     if (currency === "USD") {
         return null;
@@ -558,6 +518,14 @@ export function TransactionForm({
     const [identitySource, setIdentitySource] = useState<FieldSource>(restore?.identitySource ?? "initial");
     const { pickerOpen, setPickerOpen } = useIdentityFlyUp();
     const [saveFailure, setSaveFailure] = useState<string | null>(null);
+    const saveTransaction = useAtomCommand(saveTransactionCommand, SILENT);
+    const backfillRecurring = useAtomCommand(backfillRecurringCommand, SILENT);
+    const queueEnrichment = useAtomCommand(queueEnrichmentCommand, SILENT);
+    const ensureTag = useAtomCommand(ensureTagCommand, SILENT);
+    const rememberFeeCategory = useAtomCommand(rememberFeeCategoryCommand, SILENT);
+    const rememberedCategory = useAtomCommand(rememberedCategoryCommand, SILENT);
+    const recallBookMerchantCommand = useAtomCommand(recallMerchantCommand, SILENT);
+    const carryMerchantLookup = useAtomCommand(carryMerchantLookupCommand, SILENT);
 
     // Frozen at mount: `useForm` re-applies changed `defaultValues` while untouched, and `date`/`endDate` are
     // `new Date()` here, so an inline object would re-seed both to now every render.
@@ -597,81 +565,73 @@ export function TransactionForm({
                 return;
             }
 
-            let categoryId: string | null = null;
-            if (value.category) {
-                categoryId = value.category.id;
-            } else if (value.pendingCategory) {
-                const pending = value.pendingCategory;
-                try {
-                    categoryId = await createPendingCategory(db, pending, value.income, latest.current.categories);
-                } catch (error) {
-                    console.error("Failed to create the pending category", error);
+            const buildEntry = (categoryId: string | null): TransactionInput => ({
+                ...buildTransactionInput({
+                    accountId: value.account?.id ?? null,
+                    // Rounded to the currency's units at save: switching currency mid-entry leaves the typed digits
+                    // alone, so 12.34 typed in USD would show as ¥12 while the row kept 12.34.
+                    amount,
+                    categoryId,
+                    coefficient: value.coefficient,
+                    currency: value.txCurrency,
+                    customColor: identity.color,
+                    date: value.date,
+                    details: notesRef.current,
+                    emoji: identity.emoji,
+                    endDate: value.endDate,
+                    exchangeRate: value.exchangeRateType == null ? null : entryRateOf(value.rateEntry, entryCurrency),
+                    exchangeRateType: value.exchangeRateType,
+                    hasEndDate: value.hasEndDate,
+                    icon: identity.icon,
+                    imageColor: identity.photoColor,
+                    imageUri: identity.photoUri,
+                    income: value.income,
+                    isSubscription: value.isSubscription,
+                    leadDays: value.leadDays,
+                    note: value.merchant,
+                    recurringType: value.recurringType,
+                }),
+                fee: feeInputFor(value.merchant.trim() || (value.category?.name ?? ""), categoryId, amount),
+                paidVia: paysBolivares ? (value.paidVia ?? suggestedPaidVia) : null,
+            });
+            const saved = await saveTransaction({
+                attachments,
+                buildEntry,
+                categoryId: value.category?.id ?? null,
+                db,
+                decimals: minorUnitsFor(entryCurrency),
+                initial,
+                installments: (entry, writeExtras) => installmentOrder.save(entry, amount, writeExtras),
+                mode,
+                pendingCategory:
+                    value.category || !value.pendingCategory
+                        ? null
+                        : {
+                              income: value.income,
+                              siblings: latest.current.categories,
+                              value: value.pendingCategory,
+                          },
+                splits: isRealSplit(splitAllocations) ? splitAllocations : [],
+                tags: tagsSource === "initial" ? null : { pendingNames: value.pendingTagNames, tagIds: value.tagIds },
+                total: amount,
+            });
+            if (AsyncResult.isFailure(saved)) {
+                const failure = Cause.squash(saved.cause);
+                if (failure instanceof PendingCategoryError) {
+                    console.error("Failed to create the pending category", failure);
                     flagMissingCategory();
                     return;
                 }
-            }
-
-            const baseInput = buildTransactionInput({
-                accountId: value.account?.id ?? null,
-                // Rounded to the currency's units at save: switching currency mid-entry leaves the typed digits alone,
-                // so 12.34 typed in USD would show as ¥12 while the row kept 12.34.
-                amount,
-                categoryId,
-                coefficient: value.coefficient,
-                currency: value.txCurrency,
-                customColor: identity.color,
-                date: value.date,
-                details: notesRef.current,
-                emoji: identity.emoji,
-                endDate: value.endDate,
-                exchangeRate: value.exchangeRateType == null ? null : entryRateOf(value.rateEntry, entryCurrency),
-                exchangeRateType: value.exchangeRateType,
-                hasEndDate: value.hasEndDate,
-                icon: identity.icon,
-                imageColor: identity.photoColor,
-                imageUri: identity.photoUri,
-                income: value.income,
-                isSubscription: value.isSubscription,
-                leadDays: value.leadDays,
-                note: value.merchant,
-                recurringType: value.recurringType,
-            });
-            const input: TransactionInput = {
-                ...baseInput,
-                fee: feeInputFor(value.merchant.trim() || (value.category?.name ?? ""), categoryId, amount),
-                paidVia: paysBolivares ? (value.paidVia ?? suggestedPaidVia) : null,
-            };
-            const writeExtras = async (id: string) => {
-                if (tagsSource !== "initial") {
-                    const materializedTagIds = await materializeTagIds(db, value.tagIds, value.pendingTagNames);
-                    await tagsRepo.writeTagsFor(db, id, materializedTagIds);
-                }
-                await splitsRepo.writeSplit(
-                    db,
-                    id,
-                    amount,
-                    isRealSplit(splitAllocations) ? splitAllocations : [],
-                    minorUnitsFor(entryCurrency)
-                );
-                await attachmentsRepo.writeFor(db, id, attachments);
-            };
-            let savedId: string;
-            try {
-                let saving = installmentOrder.save(input, amount, writeExtras);
-                if (saving === null) {
-                    saving = persistTransaction(db, mode, initial, input, writeExtras);
-                }
-                savedId = await saving;
-                if (mode === "create") {
-                    freshEntries.mark(savedId);
-                }
-            } catch (error) {
-                console.error("Failed to save transaction", error);
+                console.error("Failed to save transaction", failure);
                 // Say so: un-dimming the CTA in silence reads as a missed tap. Pinned under the header, since a toast
                 // would sit under this sheet and the footer must stay pressable.
                 haptics("error");
                 setSaveFailure(t("transaction.save.failedBody"));
                 return;
+            }
+            const savedId = saved.value;
+            if (mode === "create") {
+                freshEntries.mark(savedId);
             }
             posthog?.capture("transaction_saved", {
                 has_split: isRealSplit(splitAllocations),
@@ -688,11 +648,13 @@ export function TransactionForm({
                 });
             }
             if (mode === "create" && queueable(value.merchant)) {
-                queueEnrichment(db, savedId)
-                    .then(() => sendEnrichmentQueue(db))
-                    .catch((error) => {
-                        console.error("Failed to queue the merchant lookup", error);
-                    });
+                queueEnrichment({ db, id: savedId }).then((queued) => {
+                    if (AsyncResult.isFailure(queued)) {
+                        console.error("Failed to queue the merchant lookup", Cause.squash(queued.cause));
+                        return;
+                    }
+                    sendEnrichmentQueue(db);
+                });
             }
             const answered = lookupAnsweredRef.current;
             const carryCurrency = value.txCurrency ?? globalCurrency;
@@ -711,7 +673,7 @@ export function TransactionForm({
             let scheduleFailed = false;
             if (value.isSubscription) {
                 try {
-                    await backfillRecurring(db, savedId);
+                    unwrapAtomCommand(await backfillRecurring({ db, id: savedId }));
                 } catch (error) {
                     console.error("Failed to back-fill the subscription", error);
                     scheduleFailed = true;
@@ -1272,9 +1234,11 @@ export function TransactionForm({
             name: parent.name as string,
         }));
 
-    const resolveHistory = (key: string, forIncome: boolean) => rememberedCategoryFor(db, key, forIncome);
+    const resolveHistory = async (key: string, forIncome: boolean) =>
+        unwrapAtomCommand(await rememberedCategory({ db, income: forIncome, key }));
 
-    const recallBookMerchant = (name: string, forCurrency: string | undefined) => recallMerchant(db, name, forCurrency);
+    const recallBookMerchant = async (name: string, forCurrency: string | undefined) =>
+        unwrapAtomCommand(await recallBookMerchantCommand({ currency: forCurrency, db, name }));
 
     const logoRequestRef = useRef(0);
     // Read at write time, not closed over: the seeding effect can fill the well while a request is out. Mirrored in an
@@ -1569,19 +1533,26 @@ export function TransactionForm({
                   };
         // SAFETY: untyped `require`, asserted to the module's own type; lazy as in `attachLogo`.
         const photoStorage = require("@/lib/photo-storage") as typeof import("@/lib/photo-storage");
-        await applyMerchantToSiblings(db, {
-            categoryId: carryCategory ? (saved?.categoryId ?? null) : null,
-            currency: forCurrency,
-            defaultCurrency: globalCurrency,
-            discard: (imageUri) => {
-                photoStorage.photoFiles.remove(imageUri.slice(imageUri.lastIndexOf("/") + 1));
-            },
-            excludeId: savedId,
-            income: forIncome,
-            key: merchantKey(merchant),
-            persistLogo,
-            tagIds: carryTags ? await tagIdsForQuery(db, savedId).then((rows) => rows.map((row) => row.tagId)) : [],
-        });
+        unwrapAtomCommand(
+            await carryMerchantLookup({
+                db,
+                siblings: {
+                    categoryId: carryCategory ? (saved?.categoryId ?? null) : null,
+                    currency: forCurrency,
+                    defaultCurrency: globalCurrency,
+                    discard: (imageUri) => {
+                        photoStorage.photoFiles.remove(imageUri.slice(imageUri.lastIndexOf("/") + 1));
+                    },
+                    excludeId: savedId,
+                    income: forIncome,
+                    key: merchantKey(merchant),
+                    persistLogo,
+                    tagIds: carryTags
+                        ? await tagIdsForQuery(db, savedId).then((rows) => rows.map((row) => row.tagId))
+                        : [],
+                },
+            })
+        );
     };
 
     useEffect(
@@ -2072,8 +2043,13 @@ export function TransactionForm({
                         onCreate={() => router.push("/settings/categories/create")}
                         onSelect={(picked) => {
                             form.setFieldValue("feeCategoryId", picked.id);
-                            rememberFeeCategory(db, picked.id).catch((error) => {
-                                console.error("Failed to remember the fee category", error);
+                            rememberFeeCategory({ categoryId: picked.id, db }).then((remembered) => {
+                                if (AsyncResult.isFailure(remembered)) {
+                                    console.error(
+                                        "Failed to remember the fee category",
+                                        Cause.squash(remembered.cause)
+                                    );
+                                }
                             });
                             leaveTo("fee");
                         }}
@@ -2742,7 +2718,7 @@ export function TransactionForm({
                     {({ tagIds, pendingTagNames }) => (
                         <TagPickerSheet
                             onCreate={async (createdTagName) => {
-                                const id = await tagsRepo.ensureTag(db, createdTagName);
+                                const id = unwrapAtomCommand(await ensureTag({ db, name: createdTagName }));
                                 if (id) {
                                     setTagsSource("user");
                                     markTouched("tags");

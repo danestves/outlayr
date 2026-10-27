@@ -45,7 +45,10 @@ describe("background program", () => {
         ).pipe(
             Layer.provide(
                 Layer.mergeAll(
-                    Layer.succeed(RecurrenceSweep.RecurrenceWalk, { backfill: () => walk(), repair: async () => 0 }),
+                    Layer.succeed(RecurrenceSweep.RecurrenceWalk, {
+                        backfill: () => Effect.promise(() => walk()),
+                        repair: () => Effect.succeed(0),
+                    }),
                     Layer.succeed(SystemSync.SystemSources, {
                         pullRates: async () => ({ rows: [], windowStart: "2026-10-01" }),
                         watchPendingWrites: pendingWrites.watch,

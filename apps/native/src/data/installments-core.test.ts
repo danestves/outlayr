@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "@jest/globals";
 import { utcDateString } from "@outlayr/money/dates";
 import { buildRateTable } from "@outlayr/money/valuation";
 import { and, eq, isNotNull, isNull } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { exchangeRates, installmentPlans, installments, outsidePayments, transactions, transfers } from "@/db/schema";
@@ -184,7 +185,7 @@ describe("editing and removing", () => {
     it("deletes the order with its purchase entry", async () => {
         await order();
         const [plan] = await db.select().from(installmentPlans);
-        await transactionsRepo.remove(db, plan?.transactionId ?? "");
+        await Effect.runPromise(transactionsRepo.remove(db, plan?.transactionId ?? ""));
         expect(readPlans(db, PURCHASE)).toStrictEqual([]);
         await expect(db.select().from(installments).where(isNull(installments.deletedAt))).resolves.toStrictEqual([]);
     });
@@ -195,8 +196,8 @@ describe("editing and removing", () => {
         const before = readPlans(db, PURCHASE)[0]?.standing;
         const [plan] = await db.select().from(installmentPlans);
 
-        await transactionsRepo.remove(db, plan?.transactionId ?? "");
-        await transactionsRepo.restore(db, plan?.transactionId ?? "");
+        await Effect.runPromise(transactionsRepo.remove(db, plan?.transactionId ?? ""));
+        await Effect.runPromise(transactionsRepo.restore(db, plan?.transactionId ?? ""));
 
         const after = readPlans(db, PURCHASE)[0]?.standing;
         expect(after).toMatchObject({ paid: 60, remaining: 40 });
@@ -276,11 +277,11 @@ describe("payments made outside Outlayr", () => {
         await startedBefore(1);
         const [plan] = await db.select().from(installmentPlans);
 
-        await transactionsRepo.remove(db, plan?.transactionId ?? "");
+        await Effect.runPromise(transactionsRepo.remove(db, plan?.transactionId ?? ""));
         await expect(balanceOf(cashea, tonight)).resolves.toBe(0);
         expect(readPlans(db, PURCHASE)).toStrictEqual([]);
 
-        await transactionsRepo.restore(db, plan?.transactionId ?? "");
+        await Effect.runPromise(transactionsRepo.restore(db, plan?.transactionId ?? ""));
         await expect(balanceOf(cashea, tonight)).resolves.toBe(-40);
         expect(readPlans(db, PURCHASE)[0]?.standing).toMatchObject({ installmentsPaid: 1, paid: 60 });
     });
@@ -388,7 +389,7 @@ describe("late fees", () => {
         const installmentId = await cuota(planId, 1);
         const fee = await installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId });
 
-        await transactionsRepo.remove(db, fee);
+        await Effect.runPromise(transactionsRepo.remove(db, fee));
         expect(readPlans(db, PURCHASE)[0]?.standing.remaining).toBe(60);
         await expect(balanceOf(cashea, tonight)).resolves.toBe(-60);
 
@@ -403,11 +404,11 @@ describe("late fees", () => {
         await installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId: await cuota(planId, 3) });
         const [plan] = await db.select().from(installmentPlans);
 
-        await transactionsRepo.remove(db, plan?.transactionId ?? "");
+        await Effect.runPromise(transactionsRepo.remove(db, plan?.transactionId ?? ""));
         await expect(balanceOf(cashea, tonight)).resolves.toBe(40);
         await expect(liveFees()).resolves.toStrictEqual([]);
 
-        await transactionsRepo.restore(db, plan?.transactionId ?? "");
+        await Effect.runPromise(transactionsRepo.restore(db, plan?.transactionId ?? ""));
         await expect(balanceOf(cashea, tonight)).resolves.toBe(-64);
         expect(readPlans(db, PURCHASE)[0]?.standing.remaining).toBe(64);
     });

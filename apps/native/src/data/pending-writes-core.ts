@@ -210,7 +210,7 @@ export async function fileWaitingPurchases(db: Database): Promise<void> {
         const { account } = cardStatus(card.text, cards, live);
         return account
             ? (card.waiting ?? []).map(async (txId) =>
-                  (await transactionsRepo.attachAccount(db, txId, account)) ? txId : null
+                  (await Effect.runPromise(transactionsRepo.attachAccount(db, txId, account))) ? txId : null
               )
             : [];
     });
@@ -440,21 +440,23 @@ export async function applyPendingWrites(db: Database, jobs: PendingWrite[], now
             const txId =
                 twin?.id ??
                 settled?.id ??
-                (await transactionsRepo.create(db, {
-                    accountId: account?.id ?? null,
-                    amount: job.amount,
-                    categoryId,
-                    currency,
-                    date: new Date(job.date),
-                    details: null,
-                    fee: job.income
-                        ? null
-                        : suggestedCardFee(db, { account, categoryId, currency, merchant: job.note }),
-                    income: job.income,
-                    note: job.note,
-                }));
+                (await Effect.runPromise(
+                    transactionsRepo.create(db, {
+                        accountId: account?.id ?? null,
+                        amount: job.amount,
+                        categoryId,
+                        currency,
+                        date: new Date(job.date),
+                        details: null,
+                        fee: job.income
+                            ? null
+                            : suggestedCardFee(db, { account, categoryId, currency, merchant: job.note }),
+                        income: job.income,
+                        note: job.note,
+                    })
+                ));
             if (lookup && !twin && !settled) {
-                await queueEnrichment(db, txId);
+                await Effect.runPromise(queueEnrichment(db, txId));
             }
             const source = sourceOf(job) ?? undefined;
             ledger = remember(
@@ -474,7 +476,7 @@ export async function applyPendingWrites(db: Database, jobs: PendingWrite[], now
         });
         const opened = twin && !twin.accountId && account ? getAccountById(db, account.id) : null;
         if (twin && opened) {
-            await transactionsRepo.attachAccount(db, twin.id, opened, now);
+            await Effect.runPromise(transactionsRepo.attachAccount(db, twin.id, opened, now));
         }
         applied += 1;
     }
@@ -635,7 +637,9 @@ async function settledOccurrence(
             recurringAnchorDay: match.recurringAnchorDay,
         };
     }
-    await backfillRecurring(db, match.id, new Date(Math.max(now.getTime(), match.landing.getTime())));
+    await Effect.runPromise(
+        backfillRecurring(db, match.id, new Date(Math.max(now.getTime(), match.landing.getTime())))
+    );
     const id = occurrenceId(match.id, match.landing);
     const [written] = await db
         .select({

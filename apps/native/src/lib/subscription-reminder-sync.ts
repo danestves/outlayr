@@ -1,9 +1,9 @@
 import { readBoolSetting, setBoolSetting } from "@/data/settings-core";
-import { pendingReminderPlan } from "@/data/subscription-reminders-core";
 import type { Database } from "@/db/client";
 import { reminderReconcile } from "@/domain/reminder";
 import { orphanedReminderIds } from "@/domain/subscription-reminder";
 import { reminderNotices } from "@/domain/subscription-reminder-copy";
+import { pendingReminderPlanCommand, runLedgerCommand } from "@/state/ledger-commands";
 
 import { readReminderTime } from "./reminder-sync";
 import { cancelReminders, pendingReminderIds, reminderPermission, scheduleDatedReminder } from "./reminders";
@@ -35,7 +35,14 @@ async function reconcileSubscriptionReminders(db: Database): Promise<void> {
     const decision = reminderReconcile(enabled, permission);
     const notices =
         decision === "schedule"
-            ? reminderNotices(await pendingReminderPlan(db, new Date(), await readReminderTime(db)), hideAmounts)
+            ? reminderNotices(
+                  await runLedgerCommand(pendingReminderPlanCommand, {
+                      db,
+                      now: new Date(),
+                      time: await readReminderTime(db),
+                  }),
+                  hideAmounts
+              )
             : [];
 
     await cancelReminders(

@@ -6,7 +6,7 @@ import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { accounts, exchangeRates, outbox, transactions, transfers } from "@/db/schema";
-import { migratedDatabase, migratedSqlite, testDatabase } from "@/db/test-database";
+import { migratedDatabase, migratedSqlite, testDatabase, transactionalDatabase } from "@/db/test-database";
 import { buildTransactionInput } from "@/domain/transaction-form-save";
 
 import { META_KEYS, setMeta } from "./app-meta-core";
@@ -18,6 +18,7 @@ import {
     getTransactionById,
     ledgerSizeQuery,
     logWindowDaysQuery,
+    TransactionsError,
     transactionsRepo,
 } from "./transactions-core";
 import type { TransactionInput } from "./transactions-core";
@@ -76,16 +77,18 @@ describe("transactionsRepo.update over a row the rates no longer reach", () => {
             rateType: "official",
             source: "frankfurter",
         });
-        id = await transactionsRepo.create(db, DRAFT);
+        id = await Effect.runPromise(transactionsRepo.create(db, DRAFT));
         // The feed serves only the last 90 days, so once the replica is replaced this row is unvaluable again.
         await db.delete(exchangeRates);
     });
 
     it("keeps that value when the edit leaves the money alone", async () => {
-        await transactionsRepo.update(db, id, {
-            ...DRAFT,
-            note: "Bakery, corner one",
-        });
+        await Effect.runPromise(
+            transactionsRepo.update(db, id, {
+                ...DRAFT,
+                note: "Bakery, corner one",
+            })
+        );
 
         const row = await frozen(db, id);
         expect(row.note).toBe("Bakery, corner one");
@@ -95,7 +98,7 @@ describe("transactionsRepo.update over a row the rates no longer reach", () => {
     });
 
     it("declines to carry it onto an amount it no longer describes", async () => {
-        await transactionsRepo.update(db, id, { ...DRAFT, amount: 200 });
+        await Effect.runPromise(transactionsRepo.update(db, id, { ...DRAFT, amount: 200 }));
 
         const row = await frozen(db, id);
         expect(row.amount).toBe(200);
@@ -114,7 +117,7 @@ describe("transactionsRepo.update over a row the rates no longer reach", () => {
             source: "frankfurter",
         });
 
-        await transactionsRepo.update(db, id, { ...DRAFT, amount: 200 });
+        await Effect.runPromise(transactionsRepo.update(db, id, { ...DRAFT, amount: 200 }));
 
         const row = await frozen(db, id);
         expect(row.amountUsd).toBe(222.222222);
@@ -125,12 +128,14 @@ describe("transactionsRepo.update over a row the rates no longer reach", () => {
 describe("transactionsRepo entry-rate selections", () => {
     it("keeps a custom freeze when a real form mapper omits rate fields on an unrelated edit", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, {
-            ...DRAFT,
-            currency: "VES",
-            exchangeRate: 55.5,
-            exchangeRateType: "custom",
-        });
+        const id = await Effect.runPromise(
+            transactionsRepo.create(db, {
+                ...DRAFT,
+                currency: "VES",
+                exchangeRate: 55.5,
+                exchangeRateType: "custom",
+            })
+        );
         const input = buildTransactionInput({
             accountId: null,
             amount: 100,
@@ -152,7 +157,7 @@ describe("transactionsRepo entry-rate selections", () => {
             note: "Renamed",
             recurringType: RECURRING_TYPE.none,
         });
-        await transactionsRepo.update(db, id, input);
+        await Effect.runPromise(transactionsRepo.update(db, id, input));
         await expect(frozen(db, id)).resolves.toMatchObject({
             amountUsd: 1.801802,
             exchangeRate: 55.5,
@@ -178,8 +183,10 @@ describe("transactionsRepo entry-rate selections", () => {
     it("re-freezes when an edit changes official to custom without changing amount currency or date", async () => {
         const db = makeDb();
         await seedRate(db, "EUR", "official", 0.8);
-        const id = await transactionsRepo.create(db, DRAFT);
-        await transactionsRepo.update(db, id, { ...DRAFT, exchangeRate: 0.5, exchangeRateType: "custom" });
+        const id = await Effect.runPromise(transactionsRepo.create(db, DRAFT));
+        await Effect.runPromise(
+            transactionsRepo.update(db, id, { ...DRAFT, exchangeRate: 0.5, exchangeRateType: "custom" })
+        );
         await expect(frozen(db, id)).resolves.toMatchObject({
             amountUsd: 200,
             exchangeRate: 0.5,
@@ -190,8 +197,8 @@ describe("transactionsRepo entry-rate selections", () => {
     it("drops the frozen USD value when an edit changes only the rate type", async () => {
         const db = makeDb();
         await seedRate(db, "EUR", "official", 0.8);
-        const id = await transactionsRepo.create(db, DRAFT);
-        await transactionsRepo.update(db, id, { ...DRAFT, exchangeRateType: "custom" });
+        const id = await Effect.runPromise(transactionsRepo.create(db, DRAFT));
+        await Effect.runPromise(transactionsRepo.update(db, id, { ...DRAFT, exchangeRateType: "custom" }));
         await expect(frozen(db, id)).resolves.toMatchObject({
             amountUsd: null,
             exchangeRate: null,
@@ -202,8 +209,8 @@ describe("transactionsRepo entry-rate selections", () => {
     it("re-freezes when an edit changes only the custom actual rate", async () => {
         const db = makeDb();
         const input = { ...DRAFT, currency: "VES", exchangeRate: 50, exchangeRateType: "custom" } as const;
-        const id = await transactionsRepo.create(db, input);
-        await transactionsRepo.update(db, id, { ...input, exchangeRate: 40 });
+        const id = await Effect.runPromise(transactionsRepo.create(db, input));
+        await Effect.runPromise(transactionsRepo.update(db, id, { ...input, exchangeRate: 40 }));
         await expect(frozen(db, id)).resolves.toMatchObject({
             amountUsd: 2.5,
             exchangeRate: 40,
@@ -214,8 +221,8 @@ describe("transactionsRepo entry-rate selections", () => {
     it("keeps a pending custom row pending through an unrelated edit", async () => {
         const db = makeDb();
         const input = { ...DRAFT, currency: "VES", exchangeRate: null, exchangeRateType: "custom" } as const;
-        const id = await transactionsRepo.create(db, input);
-        await transactionsRepo.update(db, id, { ...input, note: "Updated" });
+        const id = await Effect.runPromise(transactionsRepo.create(db, input));
+        await Effect.runPromise(transactionsRepo.update(db, id, { ...input, note: "Updated" }));
         await expect(frozen(db, id)).resolves.toMatchObject({
             amountUsd: null,
             exchangeRate: null,
@@ -241,10 +248,10 @@ describe("transactionsRepo.update and the replicated photo key", () => {
 
     it("clears the key when the user takes a visible photo off", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, { ...DRAFT, imageUri: PHOTO });
+        const id = await Effect.runPromise(transactionsRepo.create(db, { ...DRAFT, imageUri: PHOTO }));
         await db.update(transactions).set({ imageKey: KEY }).where(eq(transactions.id, id));
 
-        await transactionsRepo.update(db, id, { ...DRAFT, imageUri: null });
+        await Effect.runPromise(transactionsRepo.update(db, id, { ...DRAFT, imageUri: null }));
 
         await expect(photoColumns(db, id)).resolves.toStrictEqual({
             imageKey: null,
@@ -254,13 +261,13 @@ describe("transactionsRepo.update and the replicated photo key", () => {
 
     it("registers a named entry saved without an identity as a logo candidate, unless told not to", async () => {
         const db = makeDb();
-        const bare = await transactionsRepo.create(db, DRAFT);
-        const chosen = await transactionsRepo.create(db, { ...DRAFT, emoji: "☕" });
-        const photo = await transactionsRepo.create(db, { ...DRAFT, imageUri: PHOTO });
-        const imported = await transactionsRepo.create(db, DRAFT, { logoCandidate: false });
-        const unnamed = await transactionsRepo.create(db, { ...DRAFT, note: "  " });
+        const bare = await Effect.runPromise(transactionsRepo.create(db, DRAFT));
+        const chosen = await Effect.runPromise(transactionsRepo.create(db, { ...DRAFT, emoji: "☕" }));
+        const photo = await Effect.runPromise(transactionsRepo.create(db, { ...DRAFT, imageUri: PHOTO }));
+        const imported = await Effect.runPromise(transactionsRepo.create(db, DRAFT, { logoCandidate: false }));
+        const unnamed = await Effect.runPromise(transactionsRepo.create(db, { ...DRAFT, note: "  " }));
 
-        const candidates = await candidateLogoIds(db);
+        const candidates = await Effect.runPromise(candidateLogoIds(db));
         expect(candidates.has(bare)).toBeTruthy();
         expect(candidates.has(chosen)).toBeFalsy();
         expect(candidates.has(photo)).toBeFalsy();
@@ -270,20 +277,20 @@ describe("transactionsRepo.update and the replicated photo key", () => {
 
     it("moves the candidate with a local edit that keeps the row bare, and makes one only for a new name", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, DRAFT);
-        const imported = await transactionsRepo.create(db, DRAFT, { logoCandidate: false });
-        const unnamed = await transactionsRepo.create(db, { ...DRAFT, note: "" });
+        const id = await Effect.runPromise(transactionsRepo.create(db, DRAFT));
+        const imported = await Effect.runPromise(transactionsRepo.create(db, DRAFT, { logoCandidate: false }));
+        const unnamed = await Effect.runPromise(transactionsRepo.create(db, { ...DRAFT, note: "" }));
 
-        await transactionsRepo.update(db, id, { ...DRAFT, amount: 5 });
-        await transactionsRepo.update(db, imported, { ...DRAFT, amount: 5 });
-        await transactionsRepo.update(db, unnamed, { ...DRAFT, note: "Intermarche" });
+        await Effect.runPromise(transactionsRepo.update(db, id, { ...DRAFT, amount: 5 }));
+        await Effect.runPromise(transactionsRepo.update(db, imported, { ...DRAFT, amount: 5 }));
+        await Effect.runPromise(transactionsRepo.update(db, unnamed, { ...DRAFT, note: "Intermarche" }));
 
         const stamps = new Map(
             (await db.select({ id: transactions.id, updatedAt: transactions.updatedAt }).from(transactions)).map(
                 (row) => [row.id, row.updatedAt.getTime()]
             )
         );
-        const candidates = await candidateLogoIds(db);
+        const candidates = await Effect.runPromise(candidateLogoIds(db));
         expect(candidates.get(id)).toBe(stamps.get(id));
         expect(candidates.has(imported)).toBeFalsy();
         expect(candidates.get(unnamed)).toBe(stamps.get(unnamed));
@@ -291,37 +298,37 @@ describe("transactionsRepo.update and the replicated photo key", () => {
 
     it("moves the candidate when a schedule is ended or a tombstone lifted", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, DRAFT);
+        const id = await Effect.runPromise(transactionsRepo.create(db, DRAFT));
         const later = new Date("2026-09-08T10:00:00Z");
 
-        await transactionsRepo.stopRecurring(db, id, later);
-        expect((await candidateLogoIds(db)).get(id)).toBe(later.getTime());
+        await Effect.runPromise(transactionsRepo.stopRecurring(db, id, later));
+        expect((await Effect.runPromise(candidateLogoIds(db))).get(id)).toBe(later.getTime());
 
-        await transactionsRepo.remove(db, id, later);
+        await Effect.runPromise(transactionsRepo.remove(db, id, later));
         const lifted = new Date("2026-09-08T11:00:00Z");
-        await transactionsRepo.restore(db, id, lifted);
-        expect((await candidateLogoIds(db)).get(id)).toBe(lifted.getTime());
+        await Effect.runPromise(transactionsRepo.restore(db, id, lifted));
+        expect((await Effect.runPromise(candidateLogoIds(db))).get(id)).toBe(lifted.getTime());
     });
 
     it("forgets a dismissal when the merchant changes", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, { ...DRAFT, emoji: "☕" });
+        const id = await Effect.runPromise(transactionsRepo.create(db, { ...DRAFT, emoji: "☕" }));
 
-        await transactionsRepo.update(db, id, { ...DRAFT, emoji: null });
-        await expect(dismissedLogoIds(db)).resolves.toStrictEqual(new Set([id]));
+        await Effect.runPromise(transactionsRepo.update(db, id, { ...DRAFT, emoji: null }));
+        await expect(Effect.runPromise(dismissedLogoIds(db))).resolves.toStrictEqual(new Set([id]));
 
-        await transactionsRepo.update(db, id, { ...DRAFT, note: "Intermarche" });
-        await expect(dismissedLogoIds(db)).resolves.toStrictEqual(new Set());
-        expect((await candidateLogoIds(db)).has(id)).toBeTruthy();
+        await Effect.runPromise(transactionsRepo.update(db, id, { ...DRAFT, note: "Intermarche" }));
+        await expect(Effect.runPromise(dismissedLogoIds(db))).resolves.toStrictEqual(new Set());
+        expect((await Effect.runPromise(candidateLogoIds(db))).has(id)).toBeTruthy();
     });
 
     it("keeps a logo that landed while the edit was being built", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, DRAFT);
+        const id = await Effect.runPromise(transactionsRepo.create(db, DRAFT));
         // A null currency makes the edit await between its read and write; EUR keeps the merchant details unchanged.
         await setMeta(db, META_KEYS.currency, "EUR");
 
-        const editing = transactionsRepo.update(db, id, { ...DRAFT, amount: 5, currency: null });
+        const editing = Effect.runPromise(transactionsRepo.update(db, id, { ...DRAFT, amount: 5, currency: null }));
         await Promise.resolve();
         const painted = new Date(Date.now() + 60_000);
         await db
@@ -337,9 +344,11 @@ describe("transactionsRepo.update and the replicated photo key", () => {
 
     it("drops a logo that landed for the old merchant when the edit renamed it", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, DRAFT);
+        const id = await Effect.runPromise(transactionsRepo.create(db, DRAFT));
 
-        const editing = transactionsRepo.update(db, id, { ...DRAFT, currency: null, note: "Carrefour" });
+        const editing = Effect.runPromise(
+            transactionsRepo.update(db, id, { ...DRAFT, currency: null, note: "Carrefour" })
+        );
         await Promise.resolve();
         await db.update(transactions).set({ imageColor: "#123456", imageUri: PHOTO }).where(eq(transactions.id, id));
         await editing;
@@ -349,9 +358,11 @@ describe("transactionsRepo.update and the replicated photo key", () => {
 
     it("lets a tint chosen in the edit win over a logo that landed meanwhile", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, DRAFT);
+        const id = await Effect.runPromise(transactionsRepo.create(db, DRAFT));
 
-        const editing = transactionsRepo.update(db, id, { ...DRAFT, currency: null, customColor: "#abcdef" });
+        const editing = Effect.runPromise(
+            transactionsRepo.update(db, id, { ...DRAFT, currency: null, customColor: "#abcdef" })
+        );
         await Promise.resolve();
         await db.update(transactions).set({ imageColor: "#123456", imageUri: PHOTO }).where(eq(transactions.id, id));
         await editing;
@@ -375,24 +386,29 @@ describe("transactionsRepo.update and the replicated photo key", () => {
                 }
             },
         });
-        const id = await transactionsRepo.create(db, DRAFT);
-        const before = (await candidateLogoIds(db)).get(id);
+        const id = await Effect.runPromise(transactionsRepo.create(db, DRAFT));
+        const before = (await Effect.runPromise(candidateLogoIds(db))).get(id);
 
-        await expect(transactionsRepo.update(db, id, { ...DRAFT, amount: Number.NaN })).rejects.toThrow();
+        const failure = await Effect.runPromise(
+            Effect.flip(transactionsRepo.update(db, id, { ...DRAFT, amount: Number.NaN }))
+        );
 
-        expect((await candidateLogoIds(db)).get(id)).toBe(before);
+        expect(failure).toBeInstanceOf(TransactionsError);
+        expect(failure).toMatchObject({ operation: "update" });
+
+        expect((await Effect.runPromise(candidateLogoIds(db))).get(id)).toBe(before);
     });
 
     it("keeps every candidate when saves overlap", async () => {
         const db = makeDb();
 
         const ids = await Promise.all([
-            transactionsRepo.create(db, DRAFT),
-            transactionsRepo.create(db, { ...DRAFT, note: "Coffee" }),
-            transactionsRepo.create(db, { ...DRAFT, note: "Metro" }),
+            Effect.runPromise(transactionsRepo.create(db, DRAFT)),
+            Effect.runPromise(transactionsRepo.create(db, { ...DRAFT, note: "Coffee" })),
+            Effect.runPromise(transactionsRepo.create(db, { ...DRAFT, note: "Metro" })),
         ]);
 
-        const candidates = await candidateLogoIds(db);
+        const candidates = await Effect.runPromise(candidateLogoIds(db));
         for (const id of ids) {
             expect(candidates.has(id)).toBeTruthy();
         }
@@ -400,45 +416,47 @@ describe("transactionsRepo.update and the replicated photo key", () => {
 
     it("records a removal so the logo backfill leaves the row alone", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, { ...DRAFT, imageUri: PHOTO });
+        const id = await Effect.runPromise(transactionsRepo.create(db, { ...DRAFT, imageUri: PHOTO }));
 
-        await transactionsRepo.update(db, id, { ...DRAFT, imageUri: null });
+        await Effect.runPromise(transactionsRepo.update(db, id, { ...DRAFT, imageUri: null }));
 
-        await expect(dismissedLogoIds(db)).resolves.toStrictEqual(new Set([id]));
+        await expect(Effect.runPromise(dismissedLogoIds(db))).resolves.toStrictEqual(new Set([id]));
     });
 
     it("records clearing an emoji or a tint too, and not an ordinary edit", async () => {
         const db = makeDb();
-        const emoji = await transactionsRepo.create(db, { ...DRAFT, emoji: "☕" });
-        const tint = await transactionsRepo.create(db, { ...DRAFT, customColor: "#123456" });
-        const plain = await transactionsRepo.create(db, DRAFT);
+        const emoji = await Effect.runPromise(transactionsRepo.create(db, { ...DRAFT, emoji: "☕" }));
+        const tint = await Effect.runPromise(transactionsRepo.create(db, { ...DRAFT, customColor: "#123456" }));
+        const plain = await Effect.runPromise(transactionsRepo.create(db, DRAFT));
 
-        await transactionsRepo.update(db, emoji, { ...DRAFT, emoji: null });
-        await transactionsRepo.update(db, tint, { ...DRAFT, customColor: null });
-        await transactionsRepo.update(db, plain, { ...DRAFT, note: "Renamed" });
+        await Effect.runPromise(transactionsRepo.update(db, emoji, { ...DRAFT, emoji: null }));
+        await Effect.runPromise(transactionsRepo.update(db, tint, { ...DRAFT, customColor: null }));
+        await Effect.runPromise(transactionsRepo.update(db, plain, { ...DRAFT, note: "Renamed" }));
 
-        await expect(dismissedLogoIds(db)).resolves.toStrictEqual(new Set([emoji, tint]));
+        await expect(Effect.runPromise(dismissedLogoIds(db))).resolves.toStrictEqual(new Set([emoji, tint]));
     });
 
     it("keeps the key when the row's bytes have not reached this device", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, DRAFT);
+        const id = await Effect.runPromise(transactionsRepo.create(db, DRAFT));
         await db.update(transactions).set({ imageKey: KEY }).where(eq(transactions.id, id));
 
-        await transactionsRepo.update(db, id, { ...DRAFT, note: "Renamed" });
+        await Effect.runPromise(transactionsRepo.update(db, id, { ...DRAFT, note: "Renamed" }));
 
         expect((await photoColumns(db, id)).imageKey).toBe(KEY);
     });
 
     it("keeps the superseded key when the photo is replaced, for the uploader to release", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, { ...DRAFT, imageUri: PHOTO });
+        const id = await Effect.runPromise(transactionsRepo.create(db, { ...DRAFT, imageUri: PHOTO }));
         await db.update(transactions).set({ imageKey: KEY }).where(eq(transactions.id, id));
 
-        await transactionsRepo.update(db, id, {
-            ...DRAFT,
-            imageUri: "file:///container/Documents/transaction-photos/b.jpg",
-        });
+        await Effect.runPromise(
+            transactionsRepo.update(db, id, {
+                ...DRAFT,
+                imageUri: "file:///container/Documents/transaction-photos/b.jpg",
+            })
+        );
 
         expect((await photoColumns(db, id)).imageKey).toBe(KEY);
     });
@@ -472,9 +490,9 @@ describe("the reminder notice on a subscription", () => {
 
     it("hands the notice to the successor and clears it on the tombstone", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, SUBSCRIPTION);
+        const id = await Effect.runPromise(transactionsRepo.create(db, SUBSCRIPTION));
 
-        await transactionsRepo.remove(db, id, NOW);
+        await Effect.runPromise(transactionsRepo.remove(db, id, NOW));
 
         const rows = await notices(db);
         expect(rows.find((row) => row.id === id)?.reminderLeadDays).toBeNull();
@@ -485,20 +503,20 @@ describe("the reminder notice on a subscription", () => {
 
     it("registers the successor it creates as a logo candidate", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, SUBSCRIPTION);
+        const id = await Effect.runPromise(transactionsRepo.create(db, SUBSCRIPTION));
 
-        await transactionsRepo.remove(db, id, NOW);
+        await Effect.runPromise(transactionsRepo.remove(db, id, NOW));
 
         const successor = (await notices(db)).find((row) => row.id !== id);
         expect(successor).toBeDefined();
-        expect((await candidateLogoIds(db)).has(successor?.id ?? "")).toBeTruthy();
+        expect((await Effect.runPromise(candidateLogoIds(db))).has(successor?.id ?? "")).toBeTruthy();
     });
 
     it("clears the notice when the schedule is stopped", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, SUBSCRIPTION);
+        const id = await Effect.runPromise(transactionsRepo.create(db, SUBSCRIPTION));
 
-        await transactionsRepo.stopRecurring(db, id, NOW);
+        await Effect.runPromise(transactionsRepo.stopRecurring(db, id, NOW));
 
         const [row] = await notices(db);
         expect(row?.reminderLeadDays).toBeNull();
@@ -506,11 +524,13 @@ describe("the reminder notice on a subscription", () => {
 
     it("writes no notice on a transaction that does not recur", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, {
-            ...SUBSCRIPTION,
-            onceRecurring: false,
-            recurringType: RECURRING_TYPE.none,
-        });
+        const id = await Effect.runPromise(
+            transactionsRepo.create(db, {
+                ...SUBSCRIPTION,
+                onceRecurring: false,
+                recurringType: RECURRING_TYPE.none,
+            })
+        );
 
         const [row] = await notices(db);
         expect(row?.id).toBe(id);
@@ -519,14 +539,18 @@ describe("the reminder notice on a subscription", () => {
 
     it("keeps a same-day notice distinct from no notice", async () => {
         const db = makeDb();
-        const sameDay = await transactionsRepo.create(db, {
-            ...SUBSCRIPTION,
-            reminderLeadDays: 0,
-        });
-        const off = await transactionsRepo.create(db, {
-            ...SUBSCRIPTION,
-            reminderLeadDays: undefined,
-        });
+        const sameDay = await Effect.runPromise(
+            transactionsRepo.create(db, {
+                ...SUBSCRIPTION,
+                reminderLeadDays: 0,
+            })
+        );
+        const off = await Effect.runPromise(
+            transactionsRepo.create(db, {
+                ...SUBSCRIPTION,
+                reminderLeadDays: undefined,
+            })
+        );
 
         const rows = await notices(db);
         expect(rows.find((row) => row.id === sameDay)?.reminderLeadDays).toBe(0);
@@ -535,10 +559,10 @@ describe("the reminder notice on a subscription", () => {
 
     it("keeps the notice through an edit that never mentions it", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, SUBSCRIPTION);
+        const id = await Effect.runPromise(transactionsRepo.create(db, SUBSCRIPTION));
         const { reminderLeadDays: _absent, ...silentEdit } = SUBSCRIPTION;
 
-        await transactionsRepo.update(db, id, { ...silentEdit, amount: 13 });
+        await Effect.runPromise(transactionsRepo.update(db, id, { ...silentEdit, amount: 13 }));
 
         const [row] = await notices(db);
         expect(row?.reminderLeadDays).toBe(3);
@@ -546,12 +570,14 @@ describe("the reminder notice on a subscription", () => {
 
     it("turns the notice off when an edit says null", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, SUBSCRIPTION);
+        const id = await Effect.runPromise(transactionsRepo.create(db, SUBSCRIPTION));
 
-        await transactionsRepo.update(db, id, {
-            ...SUBSCRIPTION,
-            reminderLeadDays: null,
-        });
+        await Effect.runPromise(
+            transactionsRepo.update(db, id, {
+                ...SUBSCRIPTION,
+                reminderLeadDays: null,
+            })
+        );
 
         const [row] = await notices(db);
         expect(row?.reminderLeadDays).toBeNull();
@@ -559,14 +585,16 @@ describe("the reminder notice on a subscription", () => {
 
     it("drops the notice when an edit ends the subscription", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, SUBSCRIPTION);
+        const id = await Effect.runPromise(transactionsRepo.create(db, SUBSCRIPTION));
         const { reminderLeadDays: _absent, ...silentEdit } = SUBSCRIPTION;
 
-        await transactionsRepo.update(db, id, {
-            ...silentEdit,
-            onceRecurring: false,
-            recurringType: RECURRING_TYPE.none,
-        });
+        await Effect.runPromise(
+            transactionsRepo.update(db, id, {
+                ...silentEdit,
+                onceRecurring: false,
+                recurringType: RECURRING_TYPE.none,
+            })
+        );
 
         const [row] = await notices(db);
         expect(row?.reminderLeadDays).toBeNull();
@@ -595,21 +623,21 @@ describe("restoring a tombstoned transaction", () => {
 
     beforeEach(async () => {
         db = makeDb();
-        id = await transactionsRepo.create(db, DRAFT);
-        await transactionsRepo.remove(db, id, DELETED_AT);
+        id = await Effect.runPromise(transactionsRepo.create(db, DRAFT));
+        await Effect.runPromise(transactionsRepo.remove(db, id, DELETED_AT));
     });
 
     it("puts the entry back in every read that hides tombstones", async () => {
         await expect(ledgerSizeQuery(db)).resolves.toStrictEqual([{ live: 0 }]);
 
-        await transactionsRepo.restore(db, id, RESTORED_AT);
+        await Effect.runPromise(transactionsRepo.restore(db, id, RESTORED_AT));
 
         await expect(ledgerSizeQuery(db)).resolves.toStrictEqual([{ live: 1 }]);
         await expect(logWindowDaysQuery(db, Date.now(), 30)).resolves.toHaveLength(1);
     });
 
     it("moves updatedAt, so a peer is told the row came back", async () => {
-        await transactionsRepo.restore(db, id, RESTORED_AT);
+        await Effect.runPromise(transactionsRepo.restore(db, id, RESTORED_AT));
 
         const row = await timestamps(db, id);
         expect(row?.deletedAt).toBeNull();
@@ -617,16 +645,18 @@ describe("restoring a tombstoned transaction", () => {
     });
 
     it("leaves a subscription the delete ended ended", async () => {
-        const carrier = await transactionsRepo.create(db, {
-            ...DRAFT,
-            onceRecurring: true,
-            recurringCoefficient: 1,
-            recurringType: RECURRING_TYPE.monthly,
-            reminderLeadDays: 3,
-        });
-        await transactionsRepo.remove(db, carrier, DELETED_AT);
+        const carrier = await Effect.runPromise(
+            transactionsRepo.create(db, {
+                ...DRAFT,
+                onceRecurring: true,
+                recurringCoefficient: 1,
+                recurringType: RECURRING_TYPE.monthly,
+                reminderLeadDays: 3,
+            })
+        );
+        await Effect.runPromise(transactionsRepo.remove(db, carrier, DELETED_AT));
 
-        await transactionsRepo.restore(db, carrier, RESTORED_AT);
+        await Effect.runPromise(transactionsRepo.restore(db, carrier, RESTORED_AT));
 
         const row = await timestamps(db, carrier);
         expect(row?.recurringType).toBe(RECURRING_TYPE.none);
@@ -651,24 +681,24 @@ describe("a restore the account has to hear about", () => {
 
     it("queues the row it brought back", async () => {
         const db = syncedDb();
-        const id = await transactionsRepo.create(db, DRAFT);
-        await transactionsRepo.remove(db, id, DELETED_AT);
+        const id = await Effect.runPromise(transactionsRepo.create(db, DRAFT));
+        await Effect.runPromise(transactionsRepo.remove(db, id, DELETED_AT));
         await Effect.runPromise(setSyncEnabled(db, true));
 
-        await transactionsRepo.restore(db, id, RESTORED_AT);
+        await Effect.runPromise(transactionsRepo.restore(db, id, RESTORED_AT));
 
         expect((await queued(db)).map((row) => [row.tableName, row.localId])).toStrictEqual([["transactions", id]]);
     });
 
     it("queues nothing for a restore that had nothing to lift", async () => {
         const db = syncedDb();
-        const id = await transactionsRepo.create(db, DRAFT);
-        await transactionsRepo.remove(db, id, DELETED_AT);
+        const id = await Effect.runPromise(transactionsRepo.create(db, DRAFT));
+        await Effect.runPromise(transactionsRepo.remove(db, id, DELETED_AT));
         await Effect.runPromise(setSyncEnabled(db, true));
-        await transactionsRepo.restore(db, id, RESTORED_AT);
+        await Effect.runPromise(transactionsRepo.restore(db, id, RESTORED_AT));
         const first = (await queued(db))[0]?.seq;
 
-        await transactionsRepo.restore(db, id, LATER_STILL);
+        await Effect.runPromise(transactionsRepo.restore(db, id, LATER_STILL));
 
         expect((await queued(db))[0]?.seq).toBe(first);
     });
@@ -720,7 +750,7 @@ describe("the fee on a transfer the user deleted", () => {
     it("takes the transfer with it when the row deleted is that transfer's fee", async () => {
         const { db, feeId, transferId } = await movedWithAFee();
 
-        await transactionsRepo.remove(db, feeId, DELETED_AT);
+        await Effect.runPromise(transactionsRepo.remove(db, feeId, DELETED_AT));
 
         const [transfer] = await db
             .select({ deletedAt: transfers.deletedAt })
@@ -737,8 +767,8 @@ describe("the fee on a transfer the user deleted", () => {
 
     it("is not offered back on its own, while an ordinary expense still is", async () => {
         const { db, transferId } = await movedWithAFee();
-        const groceries = await transactionsRepo.create(db, { ...DRAFT, currency: "USD" });
-        await transactionsRepo.remove(db, groceries, DELETED_AT);
+        const groceries = await Effect.runPromise(transactionsRepo.create(db, { ...DRAFT, currency: "USD" }));
+        await Effect.runPromise(transactionsRepo.remove(db, groceries, DELETED_AT));
 
         await transfersRepo.softDelete(db, transferId, DELETED_AT);
 
@@ -749,7 +779,7 @@ describe("the fee on a transfer the user deleted", () => {
         const { db, feeId, transferId } = await movedWithAFee();
         await transfersRepo.softDelete(db, transferId, DELETED_AT);
 
-        await transactionsRepo.restore(db, feeId, new Date(Date.UTC(2026, 5, 3, 9)));
+        await Effect.runPromise(transactionsRepo.restore(db, feeId, new Date(Date.UTC(2026, 5, 3, 9))));
 
         const [row] = await db
             .select({ deletedAt: transactions.deletedAt })
@@ -765,12 +795,12 @@ describe("switching sync off over a ledger already logged", () => {
     it("stops the queue without taking a row off this device", async () => {
         const db = syncedDb();
         await Effect.runPromise(setSyncEnabled(db, true));
-        await transactionsRepo.create(db, DRAFT);
-        const tombstoned = await transactionsRepo.create(db, DRAFT);
-        await transactionsRepo.remove(db, tombstoned, DELETED_AT);
+        await Effect.runPromise(transactionsRepo.create(db, DRAFT));
+        const tombstoned = await Effect.runPromise(transactionsRepo.create(db, DRAFT));
+        await Effect.runPromise(transactionsRepo.remove(db, tombstoned, DELETED_AT));
 
         await Effect.runPromise(setSyncEnabled(db, false));
-        await transactionsRepo.create(db, DRAFT);
+        await Effect.runPromise(transactionsRepo.create(db, DRAFT));
 
         await expect(db.select({ seq: outbox.seq }).from(outbox)).resolves.toStrictEqual([]);
         expect((await ledgerSizeQuery(db))[0]?.live).toBe(2);
@@ -789,24 +819,28 @@ describe("the account an entry is attached to", () => {
 
     it("detaches on an explicit null", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, {
-            ...DRAFT,
-            accountId: "acc-1",
-        });
+        const id = await Effect.runPromise(
+            transactionsRepo.create(db, {
+                ...DRAFT,
+                accountId: "acc-1",
+            })
+        );
 
-        await transactionsRepo.update(db, id, { ...DRAFT, accountId: null });
+        await Effect.runPromise(transactionsRepo.update(db, id, { ...DRAFT, accountId: null }));
 
         await expect(attachedTo(db, id)).resolves.toBeNull();
     });
 
     it("keeps the attachment through an edit that never mentions it", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, {
-            ...DRAFT,
-            accountId: "acc-1",
-        });
+        const id = await Effect.runPromise(
+            transactionsRepo.create(db, {
+                ...DRAFT,
+                accountId: "acc-1",
+            })
+        );
 
-        await transactionsRepo.update(db, id, { ...DRAFT, note: "Renamed" });
+        await Effect.runPromise(transactionsRepo.update(db, id, { ...DRAFT, note: "Renamed" }));
 
         await expect(attachedTo(db, id)).resolves.toBe("acc-1");
     });
@@ -848,14 +882,46 @@ describe("accountTransactionsQuery", () => {
 describe("transactionsRepo.update over a row a peer has deleted", () => {
     it("keeps the tombstone rather than putting the row back", async () => {
         const db = makeDb();
-        const id = await transactionsRepo.create(db, DRAFT);
-        await transactionsRepo.remove(db, id);
+        const id = await Effect.runPromise(transactionsRepo.create(db, DRAFT));
+        await Effect.runPromise(transactionsRepo.remove(db, id));
         const tombstoned = getTransactionById(db, id);
 
-        await transactionsRepo.update(db, id, { ...DRAFT, amount: 200 });
+        await Effect.runPromise(transactionsRepo.update(db, id, { ...DRAFT, amount: 200 }));
 
         const row = getTransactionById(db, id);
         expect(row?.deletedAt).toStrictEqual(tombstoned?.deletedAt);
         expect(row?.amount).toBe(200);
+    });
+});
+
+describe("transactionsRepo.create with the caller's writes in the same transaction", () => {
+    it("rolls the row back and hands back the callback's own failure", async () => {
+        const db = transactionalDatabase({ foreignKeys: false });
+
+        const failure = await Effect.runPromise(
+            Effect.flip(
+                transactionsRepo.create(db, DRAFT, { inSameTransaction: () => Effect.fail("refused" as const) })
+            )
+        );
+
+        expect(failure).toBe("refused");
+        await expect(db.select().from(transactions)).resolves.toHaveLength(0);
+    });
+
+    it("commits the row together with what the callback wrote", async () => {
+        const db = transactionalDatabase({ foreignKeys: false });
+        let seen: string | null = null;
+
+        const id = await Effect.runPromise(
+            transactionsRepo.create(db, DRAFT, {
+                inSameTransaction: (created) =>
+                    Effect.sync(() => {
+                        seen = created;
+                    }),
+            })
+        );
+
+        expect(seen).toBe(id);
+        await expect(db.select().from(transactions)).resolves.toHaveLength(1);
     });
 });

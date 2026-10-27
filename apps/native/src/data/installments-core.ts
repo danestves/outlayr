@@ -2,6 +2,7 @@ import { toAccountKind } from "@outlayr/money/account-kind";
 import { firstOfMonth, startOfDay } from "@outlayr/money/calendar";
 import { canonicalUsd } from "@outlayr/money/canonical-usd";
 import { and, asc, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { accounts, installmentPlans, installments, outsidePayments, transactions, transfers } from "@/db/schema";
@@ -258,32 +259,35 @@ export const installmentsRepo = {
             );
         }
 
-        const purchaseId = await transactionsRepo.create(db, purchase, {
-            inSameTransaction: async (transactionId) => {
-                await db.insert(installmentPlans).values({
-                    accountId: account.id,
-                    dateCreated: now,
-                    id: planId,
-                    transactionId,
-                    updatedAt: now,
-                });
-                await db.insert(installments).values(
-                    schedule.map((row) => ({
-                        amount: row.amount,
-                        dueDate: startOfDay(row.dueDate),
-                        id: newId(),
-                        planId,
-                        sequence: row.sequence,
-                        updatedAt: now,
-                    }))
-                );
-                if (outside.length > 0) {
-                    await db.insert(outsidePayments).values(outside);
-                }
-                await upfront?.write();
-                await input.inSameTransaction?.(transactionId);
-            },
-        });
+        const purchaseId = await Effect.runPromise(
+            transactionsRepo.create(db, purchase, {
+                inSameTransaction: (transactionId) =>
+                    Effect.tryPromise(async () => {
+                        await db.insert(installmentPlans).values({
+                            accountId: account.id,
+                            dateCreated: now,
+                            id: planId,
+                            transactionId,
+                            updatedAt: now,
+                        });
+                        await db.insert(installments).values(
+                            schedule.map((row) => ({
+                                amount: row.amount,
+                                dueDate: startOfDay(row.dueDate),
+                                id: newId(),
+                                planId,
+                                sequence: row.sequence,
+                                updatedAt: now,
+                            }))
+                        );
+                        if (outside.length > 0) {
+                            await db.insert(outsidePayments).values(outside);
+                        }
+                        await upfront?.write();
+                        await input.inSameTransaction?.(transactionId);
+                    }),
+            })
+        );
         return { planId, transactionId: purchaseId };
     },
 
@@ -310,7 +314,7 @@ export const installmentsRepo = {
                 return;
             }
             if (entry.standing.paid === 0) {
-                await tombstonePlans(db, eq(installmentPlans.id, planId), now, true);
+                await Effect.runPromise(tombstonePlans(db, eq(installmentPlans.id, planId), now, true));
                 return;
             }
             await Promise.all(

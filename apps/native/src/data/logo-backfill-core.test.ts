@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { eq, sql } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
@@ -32,7 +33,7 @@ async function seedRow(
     note: string,
     overrides: Partial<typeof transactions.$inferInsert> = {}
 ): Promise<void> {
-    await rememberLogoCandidate(db, id, NOW.getTime(), 14 * 24 * 60 * 60 * 1000);
+    await Effect.runPromise(rememberLogoCandidate(db, id, NOW.getTime(), 14 * 24 * 60 * 60 * 1000));
     await db.insert(transactions).values({
         amount: 10,
         currency: "EUR",
@@ -100,7 +101,7 @@ describe("attachMissingLogos", () => {
         });
         const deps = makeDeps();
 
-        await expect(attachMissingLogos(db, deps)).resolves.toBe(0);
+        await expect(Effect.runPromise(attachMissingLogos(db, deps))).resolves.toBe(0);
         expect(deps.enrichCalls).toStrictEqual([]);
     });
 
@@ -113,7 +114,7 @@ describe("attachMissingLogos", () => {
             return calls === 1 ? null : { groundedLookup: true, result: REMOTE };
         });
 
-        await expect(attachMissingLogos(db, makeDeps({ enrich }))).resolves.toBe(0);
+        await expect(Effect.runPromise(attachMissingLogos(db, makeDeps({ enrich })))).resolves.toBe(0);
 
         expect(enrich).toHaveBeenCalledTimes(1);
     });
@@ -126,12 +127,14 @@ describe("attachMissingLogos", () => {
             .where(eq(transactions.id, "a"));
         const deps = makeDeps();
 
-        await expect(attachMissingLogos(db, deps)).resolves.toBe(0);
+        await expect(Effect.runPromise(attachMissingLogos(db, deps))).resolves.toBe(0);
         expect(deps.enrichCalls).toStrictEqual([]);
     });
 
     it("lets a future-dated row age out by when it was saved, not by its date", async () => {
-        await rememberLogoCandidate(db, "pending", NOW.getTime() - 15 * 24 * 60 * 60 * 1000, Number.POSITIVE_INFINITY);
+        await Effect.runPromise(
+            rememberLogoCandidate(db, "pending", NOW.getTime() - 15 * 24 * 60 * 60 * 1000, Number.POSITIVE_INFINITY)
+        );
         await db.insert(transactions).values({
             amount: 10,
             currency: "EUR",
@@ -145,7 +148,7 @@ describe("attachMissingLogos", () => {
         });
         const deps = makeDeps();
 
-        await expect(attachMissingLogos(db, deps)).resolves.toBe(0);
+        await expect(Effect.runPromise(attachMissingLogos(db, deps))).resolves.toBe(0);
         expect(deps.enrichCalls).toStrictEqual([]);
     });
 
@@ -156,9 +159,9 @@ describe("attachMissingLogos", () => {
             result: NOTHING,
         }));
 
-        await attachMissingLogos(db, makeDeps({ enrich }));
+        await Effect.runPromise(attachMissingLogos(db, makeDeps({ enrich })));
         // A fresh process holds nothing in memory; only the row's database survives.
-        await attachMissingLogos(db, makeDeps({ enrich }));
+        await Effect.runPromise(attachMissingLogos(db, makeDeps({ enrich })));
 
         expect(enrich).toHaveBeenCalledTimes(1);
     });
@@ -175,7 +178,7 @@ describe("attachMissingLogos", () => {
             },
         });
 
-        await expect(attachMissingLogos(db, deps)).resolves.toBe(2);
+        await expect(Effect.runPromise(attachMissingLogos(db, deps))).resolves.toBe(2);
 
         expect(deps.enrichCalls).toStrictEqual(["Intermarche"]);
         expect(deps.fetched).toStrictEqual(["intermarche.com"]);
@@ -186,6 +189,26 @@ describe("attachMissingLogos", () => {
         await expect(rowImage(db, "b")).resolves.toMatchObject({ imageUri: "file:///photos/logo-2.jpg" });
     });
 
+    it("skips a row whose file could not be stored and still paints the others", async () => {
+        await seedRow(db, "a", "Intermarche");
+        await seedRow(db, "b", "INTERMARCHÉ", { date: new Date(NOW.getTime() - 3_600_000) });
+        let persisted = 0;
+        const deps = makeDeps({
+            persist: async () => {
+                persisted += 1;
+                if (persisted === 1) {
+                    throw new Error("disk full");
+                }
+                return { imageColor: null, imageUri: "file:///photos/second.jpg" };
+            },
+        });
+
+        await expect(Effect.runPromise(attachMissingLogos(db, deps))).resolves.toBe(1);
+
+        await expect(rowImage(db, "a")).resolves.toMatchObject({ imageUri: null });
+        await expect(rowImage(db, "b")).resolves.toMatchObject({ imageUri: "file:///photos/second.jpg" });
+    });
+
     it("asks the backend past a session entry that has no domain", async () => {
         await seedRow(db, "a", "Sushi Way Les Ha");
         setCachedEnrichment("sushi way les ha", { ...NOTHING, domain: null }, "EUR");
@@ -193,14 +216,14 @@ describe("attachMissingLogos", () => {
             enrich: async () => ({ groundedLookup: true, result: { ...REMOTE, domain: "sushiway.fr" } }),
         });
 
-        await expect(attachMissingLogos(db, deps)).resolves.toBe(1);
+        await expect(Effect.runPromise(attachMissingLogos(db, deps))).resolves.toBe(1);
         expect(deps.fetched).toStrictEqual(["sushiway.fr"]);
     });
 
     it("stamps the paint past a row whose clock runs ahead", async () => {
         const today = new Date();
         const ahead = new Date(today.getTime() + 60 * 60 * 1000);
-        await rememberLogoCandidate(db, "a", ahead.getTime(), Number.POSITIVE_INFINITY);
+        await Effect.runPromise(rememberLogoCandidate(db, "a", ahead.getTime(), Number.POSITIVE_INFINITY));
         await db.insert(transactions).values({
             amount: 10,
             currency: "EUR",
@@ -213,7 +236,7 @@ describe("attachMissingLogos", () => {
             updatedAt: ahead,
         });
 
-        await expect(attachMissingLogos(db, makeDeps({ now: today.getTime() }))).resolves.toBe(1);
+        await expect(Effect.runPromise(attachMissingLogos(db, makeDeps({ now: today.getTime() })))).resolves.toBe(1);
 
         const [row] = await db.select({ updatedAt: transactions.updatedAt }).from(transactions);
         expect(row.updatedAt.getTime()).toBeGreaterThan(ahead.getTime());
@@ -230,7 +253,7 @@ describe("attachMissingLogos", () => {
         await seedRow(db, "old", "Intermarche", { date: new Date("2026-08-01T00:00:00Z") });
         const deps = makeDeps();
 
-        await expect(attachMissingLogos(db, deps)).resolves.toBe(0);
+        await expect(Effect.runPromise(attachMissingLogos(db, deps))).resolves.toBe(0);
         expect(deps.enrichCalls).toStrictEqual([]);
     });
 
@@ -238,15 +261,15 @@ describe("attachMissingLogos", () => {
         await seedRow(db, "before", "Intermarche");
         await seedRow(db, "during", "Intermarche");
         await seedRow(db, "still", "Intermarche");
-        await rememberLogoDismissal(db, "before");
+        await Effect.runPromise(rememberLogoDismissal(db, "before"));
         const deps = makeDeps({
             persist: async () => {
-                await rememberLogoDismissal(db, "during");
+                await Effect.runPromise(rememberLogoDismissal(db, "during"));
                 return { imageColor: null, imageUri: "file:///photos/logo.jpg" };
             },
         });
 
-        await expect(attachMissingLogos(db, deps)).resolves.toBe(1);
+        await expect(Effect.runPromise(attachMissingLogos(db, deps))).resolves.toBe(1);
 
         await expect(rowImage(db, "before")).resolves.toMatchObject({ imageUri: null });
         await expect(rowImage(db, "during")).resolves.toMatchObject({ imageUri: null });
@@ -266,12 +289,12 @@ describe("attachMissingLogos", () => {
             },
         });
 
-        await attachMissingLogos(db, deps);
-        await attachMissingLogos(db, deps);
+        await Effect.runPromise(attachMissingLogos(db, deps));
+        await Effect.runPromise(attachMissingLogos(db, deps));
         await expect(rowImage(db, "a")).resolves.toMatchObject({ imageUri: null });
 
         deps.now = NOW.getTime() + 3 * 60 * 1000;
-        await expect(attachMissingLogos(db, deps)).resolves.toBe(1);
+        await expect(Effect.runPromise(attachMissingLogos(db, deps))).resolves.toBe(1);
         expect(deps.fetched).toStrictEqual(["sushiway.fr"]);
     });
 
@@ -281,10 +304,10 @@ describe("attachMissingLogos", () => {
         }
         const deps = makeDeps();
 
-        await attachMissingLogos(db, deps);
+        await Effect.runPromise(attachMissingLogos(db, deps));
         expect(deps.enrichCalls).toHaveLength(3);
 
-        await attachMissingLogos(db, deps);
+        await Effect.runPromise(attachMissingLogos(db, deps));
         expect(deps.enrichCalls).toHaveLength(5);
     });
 
@@ -305,7 +328,7 @@ describe("attachMissingLogos", () => {
             },
         });
 
-        await expect(attachMissingLogos(db, deps)).resolves.toBe(1);
+        await expect(Effect.runPromise(attachMissingLogos(db, deps))).resolves.toBe(1);
 
         await expect(rowImage(db, "photo")).resolves.toMatchObject({ imageUri: "file:///photos/mine.jpg" });
         await expect(rowImage(db, "renamed")).resolves.toMatchObject({ imageUri: null });
@@ -322,7 +345,7 @@ describe("attachMissingLogos", () => {
         await seedRow(db, "old", "Uber Eats", { date: new Date(NOW.getTime() - 5 * 24 * 60 * 60 * 1000) });
         const deps = makeDeps({ enrich: async () => ({ groundedLookup: true, result: NOTHING }) });
 
-        await expect(attachMissingLogos(db, deps)).resolves.toBe(1);
+        await expect(Effect.runPromise(attachMissingLogos(db, deps))).resolves.toBe(1);
 
         expect(deps.fetched).toStrictEqual(["ubereats.com"]);
     });
@@ -336,7 +359,7 @@ describe("attachMissingLogos", () => {
         }));
         const deps = makeDeps({ enrich });
 
-        await attachMissingLogos(db, deps);
+        await Effect.runPromise(attachMissingLogos(db, deps));
 
         expect(enrich).toHaveBeenCalledTimes(2);
         expect(deps.fetched.sort()).toStrictEqual(["carrefour.com.ve", "carrefour.fr"]);
@@ -351,11 +374,11 @@ describe("attachMissingLogos", () => {
         }));
         const deps = makeDeps({ enrich });
 
-        await attachMissingLogos(db, deps);
+        await Effect.runPromise(attachMissingLogos(db, deps));
 
         expect(getCachedEnrichment("intermarche")).toStrictEqual({ hit: false });
         deps.now = NOW.getTime() + 31 * 60 * 1000;
-        await attachMissingLogos(db, deps);
+        await Effect.runPromise(attachMissingLogos(db, deps));
         expect(enrich).toHaveBeenCalledTimes(2);
     });
 
@@ -369,11 +392,11 @@ describe("attachMissingLogos", () => {
         }));
         const deps = makeDeps({ enrich });
 
-        await attachMissingLogos(db, deps);
+        await Effect.runPromise(attachMissingLogos(db, deps));
         expect(enrich.mock.calls.map(([args]) => args.name)).toStrictEqual(["Lescot", "Monoprix", "Franprix"]);
 
         deps.now = NOW.getTime() + 7 * 60 * 60 * 1000;
-        await attachMissingLogos(db, deps);
+        await Effect.runPromise(attachMissingLogos(db, deps));
         expect(enrich.mock.calls[3]?.[0].name).toBe("Amorino");
     });
 
@@ -393,7 +416,7 @@ describe("attachMissingLogos", () => {
             },
         });
 
-        await expect(attachMissingLogos(db, deps)).resolves.toBe(0);
+        await expect(Effect.runPromise(attachMissingLogos(db, deps))).resolves.toBe(0);
 
         expect(discarded).toStrictEqual(["file:///photos/late.jpg"]);
         expect(deps.fetched).toStrictEqual(["intermarche.com"]);
@@ -410,7 +433,7 @@ describe("attachMissingLogos", () => {
             return { groundedLookup: true, result: REMOTE };
         });
 
-        await attachMissingLogos(db, makeDeps({ enrich }));
+        await Effect.runPromise(attachMissingLogos(db, makeDeps({ enrich })));
 
         expect(enrich.mock.calls.map(([args]) => args.name)).toStrictEqual(["Intermarche"]);
     });
@@ -428,7 +451,8 @@ describe("attachMissingLogos", () => {
             },
         });
 
-        await expect(attachMissingLogos(db, deps)).rejects.toThrow();
+        const failure = await Effect.runPromise(Effect.flip(attachMissingLogos(db, deps)));
+        expect(failure).toMatchObject({ _tag: "LogoBackfillError", operation: "paint" });
         expect(discarded).toStrictEqual(["file:///photos/orphan.jpg"]);
     });
 
@@ -441,7 +465,7 @@ describe("attachMissingLogos", () => {
             },
         });
 
-        await attachMissingLogos(db, deps);
+        await Effect.runPromise(attachMissingLogos(db, deps));
 
         expect(deps.fetched).toStrictEqual([]);
     });
@@ -457,7 +481,7 @@ describe("attachMissingLogos", () => {
             },
         });
 
-        await attachMissingLogos(db, deps);
+        await Effect.runPromise(attachMissingLogos(db, deps));
 
         expect(deps.fetched).toStrictEqual([]);
     });
@@ -470,9 +494,9 @@ describe("attachMissingLogos", () => {
         }));
         const deps = makeDeps({ enrich });
 
-        await attachMissingLogos(db, deps);
+        await Effect.runPromise(attachMissingLogos(db, deps));
         deps.now = NOW.getTime() + 31 * 60 * 1000;
-        await attachMissingLogos(db, deps);
+        await Effect.runPromise(attachMissingLogos(db, deps));
 
         expect(enrich).toHaveBeenCalledTimes(2);
     });
@@ -482,11 +506,11 @@ describe("attachMissingLogos", () => {
         await seedRow(db, "b", "Uber Eats");
         const off = makeDeps({ enrich: null });
 
-        await expect(attachMissingLogos(db, off)).resolves.toBe(1);
+        await expect(Effect.runPromise(attachMissingLogos(db, off))).resolves.toBe(1);
         expect(off.fetched).toStrictEqual(["ubereats.com"]);
 
         const on = makeDeps();
-        await expect(attachMissingLogos(db, on)).resolves.toBe(1);
+        await expect(Effect.runPromise(attachMissingLogos(db, on))).resolves.toBe(1);
         expect(on.enrichCalls).toStrictEqual(["Intermarche"]);
     });
 
@@ -502,7 +526,7 @@ describe("attachMissingLogos", () => {
             },
         });
 
-        await expect(attachMissingLogos(db, deps)).resolves.toBe(0);
+        await expect(Effect.runPromise(attachMissingLogos(db, deps))).resolves.toBe(0);
         await expect(rowImage(db, "a")).resolves.toMatchObject({ imageUri: null });
     });
 
@@ -511,13 +535,13 @@ describe("attachMissingLogos", () => {
         const fetchImage = jest.fn<LogoBackfillDeps["fetchImage"]>(async () => ({ kind: "none" }));
         const deps = makeDeps({ fetchImage });
 
-        await attachMissingLogos(db, deps);
-        await attachMissingLogos(db, deps);
+        await Effect.runPromise(attachMissingLogos(db, deps));
+        await Effect.runPromise(attachMissingLogos(db, deps));
         expect(fetchImage).toHaveBeenCalledTimes(1);
         await expect(rowImage(db, "a")).resolves.toMatchObject({ imageUri: null });
 
         deps.now = NOW.getTime() + 31 * 60 * 1000;
-        await attachMissingLogos(db, deps);
+        await Effect.runPromise(attachMissingLogos(db, deps));
         expect(fetchImage).toHaveBeenCalledTimes(2);
     });
 });

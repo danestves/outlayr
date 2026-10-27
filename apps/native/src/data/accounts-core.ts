@@ -2,6 +2,7 @@ import { DEFAULT_ACCOUNT_KIND, isPerson } from "@outlayr/money/account-kind";
 import type { AccountKind } from "@outlayr/money/account-kind";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { and, eq, isNull, max } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { accounts, outsideMoves, savingsGoals, transactions } from "@/db/schema";
@@ -121,7 +122,7 @@ export const accountsRepo = {
         const person = isPerson(account ?? {});
         await withTransaction(db, async () => {
             await tombstoneTransfersTouchingAccount(db, id, now);
-            await tombstonePlansOnAccount(db, id, now);
+            await Effect.runPromise(tombstonePlansOnAccount(db, id, now));
             await db
                 .update(outsideMoves)
                 .set({ deletedAt: now, updatedAt: now })
@@ -140,10 +141,12 @@ export const accountsRepo = {
                 .select({ id: transactions.id })
                 .from(transactions)
                 .where(eq(transactions.accountId, id));
-            await refreshLogoCandidates(
-                db,
-                attached.map((row) => row.id),
-                now.getTime()
+            await Effect.runPromise(
+                refreshLogoCandidates(
+                    db,
+                    attached.map((row) => row.id),
+                    now.getTime()
+                )
             );
             if (!person) {
                 await db

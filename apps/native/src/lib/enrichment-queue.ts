@@ -1,3 +1,5 @@
+import * as Effect from "effect/Effect";
+
 import { sendQueuedEnrichment } from "@/data/enrichment-queue-core";
 import { readBoolSetting, readRemoteEnrichment } from "@/data/settings-core";
 import type { Database } from "@/db/client";
@@ -12,12 +14,14 @@ async function sendOnce(db: Database): Promise<number> {
         return 0;
     }
     const device = firstLocale();
-    return sendQueuedEnrichment(db, {
-        enqueue: enrichmentQueueTransport().enqueue,
-        groundedLookup: await readBoolSetting(db, "groundedLookup"),
-        locale: device?.languageTag?.trim() || undefined,
-        regionCode: device?.regionCode?.trim() || undefined,
-    });
+    return Effect.runPromise(
+        sendQueuedEnrichment(db, {
+            enqueue: enrichmentQueueTransport().enqueue,
+            groundedLookup: await readBoolSetting(db, "groundedLookup"),
+            locale: device?.languageTag?.trim() || undefined,
+            regionCode: device?.regionCode?.trim() || undefined,
+        })
+    );
 }
 
 export function sendEnrichmentQueue(db: Database): void {

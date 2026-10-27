@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@jest/globals";
+import * as Effect from "effect/Effect";
 
 import { transactionAttachments } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
@@ -37,11 +38,13 @@ describe("attachmentsRepo.writeFor", () => {
         const db = await seeded();
         const [receipt] = await attachmentsForQuery(db, "tx");
 
-        await attachmentsRepo.writeFor(
-            db,
-            "tx",
-            [receipt, { id: null, imageKey: null, imageUri: "file:///p/new.jpg", name: null }],
-            EDITED
+        await Effect.runPromise(
+            attachmentsRepo.writeFor(
+                db,
+                "tx",
+                [receipt, { id: null, imageKey: null, imageUri: "file:///p/new.jpg", name: null }],
+                EDITED
+            )
         );
 
         const rows = await db.select().from(transactionAttachments);

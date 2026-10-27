@@ -1,3 +1,5 @@
+import * as Cause from "effect/Cause";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 
@@ -9,7 +11,6 @@ import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { buildArchive } from "@/data/archive-core";
-import { downloadEveryPhoto } from "@/data/photo-sync-core";
 import { useTransactionCount } from "@/data/transactions";
 import { exportFileName, exportTransactionsCsv } from "@/data/transfer-core";
 import { archiveFileName, serializeArchive } from "@/domain/archive";
@@ -21,6 +22,7 @@ import { shareFile, TransferError } from "@/lib/data-transfer";
 import { notifyFailure } from "@/lib/notify";
 import { photoFiles, storedPhotosBase64 } from "@/lib/photo-storage";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { downloadEveryPhotoCommand } from "@/state/ledger-commands";
 import { isSyncEnabledCommand } from "@/state/sync-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
@@ -40,6 +42,7 @@ export function ExportData() {
     const count = useTransactionCount(db);
     const [busy, setBusy] = useState<"archive" | "csv" | null>(null);
     const isSyncEnabled = useAtomCommand(isSyncEnabledCommand, SILENT);
+    const downloadEveryPhoto = useAtomCommand(downloadEveryPhotoCommand, SILENT);
 
     const runExport = (
         kind: "archive" | "csv",
@@ -68,9 +71,13 @@ export function ExportData() {
             "archive",
             async () => {
                 if (unwrapAtomCommand(await isSyncEnabled(db))) {
-                    await downloadEveryPhoto(db, photoFiles, photoTransport()).catch((cause: unknown) => {
-                        console.warn("[outlayr] fetching missing photos before export failed", cause);
-                    });
+                    const fetched = await downloadEveryPhoto({ db, files: photoFiles, transport: photoTransport() });
+                    if (AsyncResult.isFailure(fetched)) {
+                        console.warn(
+                            "[outlayr] fetching missing photos before export failed",
+                            Cause.squash(fetched.cause)
+                        );
+                    }
                 }
                 // ponytail: one in-memory string with base64 photos; stream it to a zip if ledgers outgrow 512px JPEGs
                 return serializeArchive(await buildArchive(db, new Date(), storedPhotosBase64()));

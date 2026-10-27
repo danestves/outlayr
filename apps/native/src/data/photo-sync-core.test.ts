@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@jest/globals";
 import BetterSqlite3 from "better-sqlite3";
 import { eq } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import { accounts, transactions } from "@/db/schema";
 import { testSpendDb } from "@/db/test-database";
@@ -239,7 +240,7 @@ describe("uploadPhotos", () => {
         const { bucket, transport } = fakeTransport();
         await insert(db, "t1", { imageUri: `${DIRECTORY}/a.jpg` });
 
-        const result = await uploadPhotos(db, files, transport, NOW);
+        const result = await Effect.runPromise(uploadPhotos(db, files, transport, NOW));
 
         expect(result.uploaded).toBe(1);
         const row = await readRow(db, "t1");
@@ -254,7 +255,7 @@ describe("uploadPhotos", () => {
         const { transport } = fakeTransport();
         await insert(db, "t1", { imageUri: `${DIRECTORY}/a.jpg` });
 
-        await uploadPhotos(db, files, transport, NOW);
+        await Effect.runPromise(uploadPhotos(db, files, transport, NOW));
 
         expect((await readRow(db, "t1")).updatedAt.getTime()).toBe(NOW.getTime());
     });
@@ -268,7 +269,7 @@ describe("uploadPhotos", () => {
             imageUri: `${DIRECTORY}/a.jpg`,
         });
 
-        expect((await uploadPhotos(db, files, transport, NOW)).uploaded).toBe(0);
+        expect((await Effect.runPromise(uploadPhotos(db, files, transport, NOW))).uploaded).toBe(0);
         expect(bucket.confirmed).toHaveLength(0);
     });
 
@@ -287,11 +288,12 @@ describe("uploadPhotos", () => {
         });
         await insert(db, "t1", { imageUri: `${DIRECTORY}/a.jpg` });
 
-        await expect(uploadPhotos(db, files, failing.transport, NOW)).rejects.toThrow();
+        const failure = await Effect.runPromise(Effect.flip(uploadPhotos(db, files, failing.transport, NOW)));
+        expect(failure).toMatchObject({ _tag: "PhotoTransferError", operation: "upload" });
         expect((await readRow(db, "t1")).imageKey).toBeNull();
 
         const retry = fakeTransport(bucket);
-        expect((await uploadPhotos(db, files, retry.transport, NOW)).uploaded).toBe(1);
+        expect((await Effect.runPromise(uploadPhotos(db, files, retry.transport, NOW))).uploaded).toBe(1);
         expect([...bucket.objects.keys()]).toStrictEqual([`transaction-photos/${USER}/a.jpg`]);
         expect((await readRow(db, "t1")).imageKey).toBe(`transaction-photos/${USER}/a.jpg`);
     });
@@ -309,7 +311,7 @@ describe("uploadPhotos", () => {
             imageUri: `${DIRECTORY}/new.jpg`,
         });
 
-        const result = await uploadPhotos(db, files, transport, NOW);
+        const result = await Effect.runPromise(uploadPhotos(db, files, transport, NOW));
 
         expect(result.released).toBe(1);
         expect(bucket.released).toStrictEqual([`transaction-photos/${USER}/old.jpg`]);
@@ -329,7 +331,7 @@ describe("uploadPhotos", () => {
             imageUri: `${DIRECTORY}/new.jpg`,
         });
 
-        const result = await uploadPhotos(db, files, transport, NOW);
+        const result = await Effect.runPromise(uploadPhotos(db, files, transport, NOW));
 
         expect(result.uploaded).toBe(1);
         expect(result.released).toBe(0);
@@ -342,7 +344,7 @@ describe("uploadPhotos", () => {
         const { bucket, transport } = fakeTransport();
         await insert(db, "t1", { imageUri: `${DIRECTORY}/gone.jpg` });
 
-        expect((await uploadPhotos(db, files, transport, NOW)).uploaded).toBe(0);
+        expect((await Effect.runPromise(uploadPhotos(db, files, transport, NOW))).uploaded).toBe(0);
         expect(bucket.confirmed).toHaveLength(0);
         expect((await readRow(db, "t1")).imageKey).toBeNull();
     });
@@ -353,7 +355,7 @@ describe("uploadPhotos", () => {
         const { bucket, transport } = fakeTransport();
         await insertAccount(db, "a1", { imageUri: `${DIRECTORY}/logo.jpg` });
 
-        const result = await uploadPhotos(db, files, transport, NOW);
+        const result = await Effect.runPromise(uploadPhotos(db, files, transport, NOW));
 
         expect(result.uploaded).toBe(1);
         const row = await readAccount(db, "a1");
@@ -377,7 +379,7 @@ describe("uploadPhotos", () => {
         }
         await insertAccount(db, "a1", { imageUri: `${DIRECTORY}/logo.jpg` });
 
-        expect((await uploadPhotos(db, files, transport, NOW)).uploaded).toBe(PHOTO_SYNC_BATCH);
+        expect((await Effect.runPromise(uploadPhotos(db, files, transport, NOW))).uploaded).toBe(PHOTO_SYNC_BATCH);
         expect((await readAccount(db, "a1")).imageKey).toBeNull();
     });
 });
@@ -390,7 +392,7 @@ describe("downloadPhotos", () => {
         bucket.objects.set(`transaction-photos/${USER}/a.jpg`, new TextEncoder().encode("PHOTO"));
         await insert(db, "t1", { imageKey: `transaction-photos/${USER}/a.jpg` });
 
-        await expect(downloadPhotos(db, peer, transport)).resolves.toBe(1);
+        await expect(Effect.runPromise(downloadPhotos(db, peer, transport))).resolves.toBe(1);
         expect(peer.read("a.jpg")).toStrictEqual(new TextEncoder().encode("PHOTO"));
         expect((await readRow(db, "t1")).imageUri).toBe(`${PEER_DIRECTORY}/a.jpg`);
     });
@@ -401,7 +403,7 @@ describe("downloadPhotos", () => {
         const { transport } = fakeTransport();
         await insert(db, "t1", { imageKey: `transaction-photos/${USER}/a.jpg` });
 
-        await expect(downloadPhotos(db, peer, transport)).resolves.toBe(0);
+        await expect(Effect.runPromise(downloadPhotos(db, peer, transport))).resolves.toBe(0);
         const row = await readRow(db, "t1");
         expect(row.imageUri).toBeNull();
         expect(row.imageKey).toBe(`transaction-photos/${USER}/a.jpg`);
@@ -419,7 +421,7 @@ describe("downloadPhotos", () => {
         });
         await insert(db, "t1", { imageKey: `transaction-photos/${USER}/a.jpg` });
 
-        await downloadPhotos(db, files, transport);
+        await Effect.runPromise(downloadPhotos(db, files, transport));
 
         expect(fetched).toBe(0);
         expect((await readRow(db, "t1")).imageUri).toBe(`${DIRECTORY}/a.jpg`);
@@ -432,7 +434,7 @@ describe("downloadPhotos", () => {
         bucket.objects.set(`transaction-photos/${USER}/a.jpg`, new TextEncoder().encode("PHOTO"));
         await insert(db, "t1", { imageKey: null, imageUri: null });
 
-        await expect(downloadPhotos(db, peer, transport)).resolves.toBe(0);
+        await expect(Effect.runPromise(downloadPhotos(db, peer, transport))).resolves.toBe(0);
         expect((await readRow(db, "t1")).imageUri).toBeNull();
     });
 
@@ -445,7 +447,7 @@ describe("downloadPhotos", () => {
         await insert(db, "t1", { imageKey: key });
         await insert(db, "t2", { imageKey: key });
 
-        await expect(downloadPhotos(db, peer, transport)).resolves.toBe(2);
+        await expect(Effect.runPromise(downloadPhotos(db, peer, transport))).resolves.toBe(2);
         expect((await readRow(db, "t1")).imageUri).toBe(`${PEER_DIRECTORY}/a.jpg`);
         expect((await readRow(db, "t2")).imageUri).toBe(`${PEER_DIRECTORY}/a.jpg`);
     });
@@ -459,7 +461,7 @@ describe("downloadPhotos", () => {
             imageKey: `transaction-photos/${USER}/logo.jpg`,
         });
 
-        await expect(downloadPhotos(db, peer, transport)).resolves.toBe(1);
+        await expect(Effect.runPromise(downloadPhotos(db, peer, transport))).resolves.toBe(1);
         expect(peer.read("logo.jpg")).toStrictEqual(new TextEncoder().encode("LOGO"));
         const row = await readAccount(db, "a1");
         expect(row.imageUri).toBe(`${PEER_DIRECTORY}/logo.jpg`);
@@ -479,7 +481,7 @@ describe("downloadEveryPhoto", () => {
             await insert(db, `t${i}`, { imageKey: key });
         }
 
-        await downloadEveryPhoto(db, peer, transport);
+        await Effect.runPromise(downloadEveryPhoto(db, peer, transport));
 
         expect(peer.list()).toHaveLength(total);
     });
@@ -496,7 +498,7 @@ describe("runPhotoSync", () => {
         const deviceA = makeDb();
         const filesA = new FakeFiles(DIRECTORY, [["a.jpg", "PHOTO"]]);
         await insert(deviceA, "t1", { imageUri: `${DIRECTORY}/a.jpg` });
-        await runPhotoSync(deviceA, filesA, fakeTransport(bucket).transport, NOW);
+        await Effect.runPromise(runPhotoSync(deviceA, filesA, fakeTransport(bucket).transport, NOW));
 
         const key = (await readRow(deviceA, "t1")).imageKey;
         expect(key).toBe(`transaction-photos/${USER}/a.jpg`);
@@ -505,7 +507,7 @@ describe("runPhotoSync", () => {
         const filesB = new FakeFiles(PEER_DIRECTORY);
         await insert(deviceB, "t1", { imageKey: key });
 
-        const result = await runPhotoSync(deviceB, filesB, fakeTransport(bucket).transport, NOW);
+        const result = await Effect.runPromise(runPhotoSync(deviceB, filesB, fakeTransport(bucket).transport, NOW));
 
         expect(result.downloaded).toBe(1);
         expect(filesB.read("a.jpg")).toStrictEqual(new TextEncoder().encode("PHOTO"));
@@ -522,8 +524,8 @@ describe("runPhotoSync", () => {
         const files = new FakeFiles(DIRECTORY, [["a.jpg", "PHOTO"]]);
         await insert(db, "t1", { imageUri: `${DIRECTORY}/a.jpg` });
 
-        await runPhotoSync(db, files, fakeTransport(bucket).transport, NOW);
-        const second = await runPhotoSync(db, files, fakeTransport(bucket).transport, NOW);
+        await Effect.runPromise(runPhotoSync(db, files, fakeTransport(bucket).transport, NOW));
+        const second = await Effect.runPromise(runPhotoSync(db, files, fakeTransport(bucket).transport, NOW));
 
         expect(second).toStrictEqual({ downloaded: 0, released: 0, uploaded: 0 });
         expect(bucket.confirmed).toHaveLength(1);

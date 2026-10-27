@@ -1202,11 +1202,11 @@ describe("two devices against one account", () => {
         await addTransaction(alpha, "t1");
         await Effect.runPromise(runSync(alpha, server.transport));
         await Effect.runPromise(runSync(beta, server.transport));
-        await transactionsRepo.remove(alpha, "t1", AT(2000));
+        await Effect.runPromise(transactionsRepo.remove(alpha, "t1", AT(2000)));
         await Effect.runPromise(runSync(alpha, server.transport));
         await Effect.runPromise(runSync(beta, server.transport));
 
-        await transactionsRepo.restore(beta, "t1", AT(3000));
+        await Effect.runPromise(transactionsRepo.restore(beta, "t1", AT(3000)));
         await Effect.runPromise(runSync(beta, server.transport));
         await Effect.runPromise(runSync(alpha, server.transport));
         await expect(liveOn(alpha)).resolves.toBe(true);
@@ -1214,7 +1214,7 @@ describe("two devices against one account", () => {
         await Effect.runPromise(pullAndApply(alpha, async ({ limit }) => await server.pull({ cursor: 0, limit })));
         await expect(liveOn(alpha)).resolves.toBe(true);
 
-        await transactionsRepo.remove(alpha, "t1", AT(4000));
+        await Effect.runPromise(transactionsRepo.remove(alpha, "t1", AT(4000)));
         await Effect.runPromise(runSync(alpha, server.transport));
         await Effect.runPromise(runSync(beta, server.transport));
         await expect(liveOn(beta)).resolves.toBe(false);

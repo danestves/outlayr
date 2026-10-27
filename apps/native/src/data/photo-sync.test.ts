@@ -35,7 +35,11 @@ describe("photo sync", () => {
                 Effect.flatMap((photos) => photos[step](db)),
                 Effect.provideService(
                     PhotoPasses,
-                    PhotoPasses.of({ reconcile: () => reconciles(), replateLogos: async () => 0, sync: () => cycles() })
+                    PhotoPasses.of({
+                        reconcile: () => Effect.promise(() => reconciles()),
+                        replateLogos: async () => 0,
+                        sync: () => Effect.promise(() => cycles()),
+                    })
                 )
             )
         );

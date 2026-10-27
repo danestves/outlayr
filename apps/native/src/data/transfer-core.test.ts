@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import BetterSqlite3 from "better-sqlite3";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { categories, exchangeRates, transactions } from "@/db/schema";
@@ -454,7 +455,7 @@ describe("applyImport", () => {
     it("never hands an imported row to the background logo lookup", async () => {
         const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income);
         await applyImport(db, plan);
-        await expect(candidateLogoIds(db)).resolves.toStrictEqual(new Map());
+        await expect(Effect.runPromise(candidateLogoIds(db))).resolves.toStrictEqual(new Map());
     });
 
     it("buckets each row into its own day and month", async () => {
@@ -472,12 +473,9 @@ describe("applyImport", () => {
         const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income);
         const originalCreate = transactionsRepo.create;
         let calls = 0;
-        const spy = jest.spyOn(transactionsRepo, "create").mockImplementation(async (targetDb, input) => {
+        const spy = jest.spyOn(transactionsRepo, "create").mockImplementation((targetDb, input) => {
             calls += 1;
-            if (calls === 2) {
-                throw new Error("disk full");
-            }
-            return originalCreate(targetDb, input);
+            return calls === 2 ? Effect.die(new Error("disk full")) : originalCreate(targetDb, input);
         });
 
         await expect(applyImport(transactionalDb, plan)).rejects.toThrow("disk full");

@@ -3,6 +3,7 @@ import { accountBalance } from "@outlayr/money/account-balance";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { buildRateTable } from "@outlayr/money/valuation";
 import { eq } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { accounts, exchangeRates, savingsGoals, transactions } from "@/db/schema";
@@ -227,26 +228,30 @@ describe("accountsRepo lifecycle", () => {
             currency: "USD",
             name: "Savings",
         });
-        const detached = await transactionsRepo.create(db, {
-            accountId: doomed,
-            amount: 25,
-            categoryId: "cat-1",
-            currency: "USD",
-            date: JAN_5,
-            details: null,
-            income: false,
-            note: "Coffee",
-        });
-        const untouched = await transactionsRepo.create(db, {
-            accountId: kept,
-            amount: 10,
-            categoryId: "cat-1",
-            currency: "USD",
-            date: JAN_5,
-            details: null,
-            income: false,
-            note: "Tea",
-        });
+        const detached = await Effect.runPromise(
+            transactionsRepo.create(db, {
+                accountId: doomed,
+                amount: 25,
+                categoryId: "cat-1",
+                currency: "USD",
+                date: JAN_5,
+                details: null,
+                income: false,
+                note: "Coffee",
+            })
+        );
+        const untouched = await Effect.runPromise(
+            transactionsRepo.create(db, {
+                accountId: kept,
+                amount: 10,
+                categoryId: "cat-1",
+                currency: "USD",
+                date: JAN_5,
+                details: null,
+                income: false,
+                note: "Tea",
+            })
+        );
 
         await accountsRepo.softDelete(db, doomed);
 
@@ -254,36 +259,44 @@ describe("accountsRepo lifecycle", () => {
         const byId = new Map(rows.map((row) => [row.id, row]));
         expect(byId.get(detached)?.accountId).toBeNull();
         expect(byId.get(untouched)?.accountId).toBe(kept);
-        expect((await candidateLogoIds(db)).get(detached)).toBe(byId.get(detached)?.updatedAt.getTime());
+        expect((await Effect.runPromise(candidateLogoIds(db))).get(detached)).toBe(
+            byId.get(detached)?.updatedAt.getTime()
+        );
     });
 
     it("softDelete takes a person's own entries with them, schedule and all", async () => {
         const pedro = await accountsRepo.create(db, { currency: "USD", kind: "person", name: "Pedro" });
         const checking = await accountsRepo.create(db, { currency: "USD", name: "Checking" });
         const entry = { categoryId: "cat-1", currency: "USD", date: JAN_5, details: null };
-        const sale = await transactionsRepo.create(db, {
-            ...entry,
-            accountId: pedro,
-            amount: 40,
-            income: true,
-            note: "Sold on credit",
-        });
-        const lunch = await transactionsRepo.create(db, {
-            ...entry,
-            accountId: pedro,
-            amount: 12,
-            income: false,
-            note: "Lunch",
-            onceRecurring: true,
-            recurringType: RECURRING_TYPE.monthly,
-        });
-        const coffee = await transactionsRepo.create(db, {
-            ...entry,
-            accountId: checking,
-            amount: 3,
-            income: false,
-            note: "Coffee",
-        });
+        const sale = await Effect.runPromise(
+            transactionsRepo.create(db, {
+                ...entry,
+                accountId: pedro,
+                amount: 40,
+                income: true,
+                note: "Sold on credit",
+            })
+        );
+        const lunch = await Effect.runPromise(
+            transactionsRepo.create(db, {
+                ...entry,
+                accountId: pedro,
+                amount: 12,
+                income: false,
+                note: "Lunch",
+                onceRecurring: true,
+                recurringType: RECURRING_TYPE.monthly,
+            })
+        );
+        const coffee = await Effect.runPromise(
+            transactionsRepo.create(db, {
+                ...entry,
+                accountId: checking,
+                amount: 3,
+                income: false,
+                note: "Coffee",
+            })
+        );
 
         await accountsRepo.softDelete(db, pedro);
 
@@ -297,19 +310,21 @@ describe("accountsRepo lifecycle", () => {
 
     it("a deleted person's entries are neither offered back nor restorable alone", async () => {
         const pedro = await accountsRepo.create(db, { currency: "USD", kind: "person", name: "Pedro" });
-        const sale = await transactionsRepo.create(db, {
-            accountId: pedro,
-            amount: 40,
-            categoryId: "cat-1",
-            currency: "USD",
-            date: JAN_5,
-            details: null,
-            income: true,
-            note: "Sold on credit",
-        });
+        const sale = await Effect.runPromise(
+            transactionsRepo.create(db, {
+                accountId: pedro,
+                amount: 40,
+                categoryId: "cat-1",
+                currency: "USD",
+                date: JAN_5,
+                details: null,
+                income: true,
+                note: "Sold on credit",
+            })
+        );
 
         await accountsRepo.softDelete(db, pedro);
-        await transactionsRepo.restore(db, sale);
+        await Effect.runPromise(transactionsRepo.restore(db, sale));
 
         await expect(deletedTransactionsQuery(db)).resolves.toStrictEqual([]);
         const [row] = await db.select().from(transactions).where(eq(transactions.id, sale));
@@ -466,28 +481,32 @@ describe("an attached entry moving the balance", () => {
         });
         expect((await balanceOf(accountId)).total).toBe(100);
 
-        await transactionsRepo.create(db, {
-            accountId,
-            amount: 25,
-            categoryId: "cat-1",
-            currency: "USD",
-            date: JAN_5,
-            details: null,
-            income: false,
-            note: "Coffee",
-        });
+        await Effect.runPromise(
+            transactionsRepo.create(db, {
+                accountId,
+                amount: 25,
+                categoryId: "cat-1",
+                currency: "USD",
+                date: JAN_5,
+                details: null,
+                income: false,
+                note: "Coffee",
+            })
+        );
         expect((await balanceOf(accountId)).total).toBe(75);
 
-        await transactionsRepo.create(db, {
-            accountId,
-            amount: 40,
-            categoryId: "cat-1",
-            currency: "USD",
-            date: JAN_5,
-            details: null,
-            income: true,
-            note: "Refund",
-        });
+        await Effect.runPromise(
+            transactionsRepo.create(db, {
+                accountId,
+                amount: 40,
+                categoryId: "cat-1",
+                currency: "USD",
+                date: JAN_5,
+                details: null,
+                income: true,
+                note: "Refund",
+            })
+        );
         expect((await balanceOf(accountId)).total).toBe(115);
     });
 });

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { categories, transactionSplits, transactions } from "@/db/schema";
@@ -42,15 +43,17 @@ describe("splitsRepo", () => {
     });
 
     it("writes the parts in the order they were given", async () => {
-        await splitsRepo.writeSplit(
-            db,
-            "t1",
-            40,
-            [
-                { amount: 25, categoryId: "food" },
-                { amount: 15, categoryId: "travel" },
-            ],
-            2
+        await Effect.runPromise(
+            splitsRepo.writeSplit(
+                db,
+                "t1",
+                40,
+                [
+                    { amount: 25, categoryId: "food" },
+                    { amount: 15, categoryId: "travel" },
+                ],
+                2
+            )
         );
 
         expect((await splitsForQuery(db, "t1")).map((row) => [row.categoryId, row.amount])).toStrictEqual([
@@ -60,24 +63,27 @@ describe("splitsRepo", () => {
     });
 
     it("refuses a split that does not add up", async () => {
-        await expect(splitsRepo.writeSplit(db, "t1", 40, [{ amount: 25, categoryId: "food" }], 2)).rejects.toThrow(
-            UnbalancedSplitError
+        const failure = await Effect.runPromise(
+            Effect.flip(splitsRepo.writeSplit(db, "t1", 40, [{ amount: 25, categoryId: "food" }], 2))
         );
+        expect(failure).toBeInstanceOf(UnbalancedSplitError);
         await expect(splitsForQuery(db, "t1")).resolves.toStrictEqual([]);
     });
 
     it("replaces a split wholesale rather than merging into it", async () => {
-        await splitsRepo.writeSplit(
-            db,
-            "t1",
-            40,
-            [
-                { amount: 25, categoryId: "food" },
-                { amount: 15, categoryId: "travel" },
-            ],
-            2
+        await Effect.runPromise(
+            splitsRepo.writeSplit(
+                db,
+                "t1",
+                40,
+                [
+                    { amount: 25, categoryId: "food" },
+                    { amount: 15, categoryId: "travel" },
+                ],
+                2
+            )
         );
-        await splitsRepo.writeSplit(db, "t1", 40, [{ amount: 40, categoryId: "travel" }], 2);
+        await Effect.runPromise(splitsRepo.writeSplit(db, "t1", 40, [{ amount: 40, categoryId: "travel" }], 2));
 
         expect((await splitsForQuery(db, "t1")).map((row) => [row.categoryId, row.amount])).toStrictEqual([
             ["travel", 40],
@@ -85,8 +91,8 @@ describe("splitsRepo", () => {
     });
 
     it("leaves the replaced rows as tombstones so the change travels", async () => {
-        await splitsRepo.writeSplit(db, "t1", 40, [{ amount: 40, categoryId: "food" }], 2);
-        await splitsRepo.writeSplit(db, "t1", 40, [], 2);
+        await Effect.runPromise(splitsRepo.writeSplit(db, "t1", 40, [{ amount: 40, categoryId: "food" }], 2));
+        await Effect.runPromise(splitsRepo.writeSplit(db, "t1", 40, [], 2));
 
         const all = await db.select().from(transactionSplits);
         expect(all).toHaveLength(1);
@@ -94,40 +100,44 @@ describe("splitsRepo", () => {
     });
 
     it("retires the parts of an entry that is going", async () => {
-        await splitsRepo.writeSplit(
-            db,
-            "t1",
-            40,
-            [
-                { amount: 25, categoryId: "food" },
-                { amount: 15, categoryId: "travel" },
-            ],
-            2
+        await Effect.runPromise(
+            splitsRepo.writeSplit(
+                db,
+                "t1",
+                40,
+                [
+                    { amount: 25, categoryId: "food" },
+                    { amount: 15, categoryId: "travel" },
+                ],
+                2
+            )
         );
 
-        await splitsRepo.clearForTransactions(db, ["t1"]);
+        await Effect.runPromise(splitsRepo.clearForTransactions(db, ["t1"]));
 
         await expect(splitsForQuery(db, "t1")).resolves.toStrictEqual([]);
     });
 
     it("does nothing when given no entries to clear", async () => {
-        await splitsRepo.writeSplit(db, "t1", 40, [{ amount: 40, categoryId: "food" }], 2);
-        await splitsRepo.clearForTransactions(db, []);
+        await Effect.runPromise(splitsRepo.writeSplit(db, "t1", 40, [{ amount: 40, categoryId: "food" }], 2));
+        await Effect.runPromise(splitsRepo.clearForTransactions(db, []));
         await expect(splitsForQuery(db, "t1")).resolves.toHaveLength(1);
     });
 
     it("is not consulted for an entry that is gone", async () => {
-        await splitsRepo.writeSplit(
-            db,
-            "t1",
-            40,
-            [
-                { amount: 25, categoryId: "food" },
-                { amount: 15, categoryId: "travel" },
-            ],
-            2
+        await Effect.runPromise(
+            splitsRepo.writeSplit(
+                db,
+                "t1",
+                40,
+                [
+                    { amount: 25, categoryId: "food" },
+                    { amount: 15, categoryId: "travel" },
+                ],
+                2
+            )
         );
-        await transactionsRepo.remove(db, "t1");
+        await Effect.runPromise(transactionsRepo.remove(db, "t1"));
 
         await expect(splitsForQuery(db, "t1")).resolves.toHaveLength(2);
     });

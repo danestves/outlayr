@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import { firstOfMonth, startOfDay } from "@outlayr/money/calendar";
 import { eq } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 import { toast } from "panelui-native/components/toast";
 import type { ToastOptions } from "panelui-native/components/toast";
 import { isValidElement } from "react";
@@ -13,7 +14,7 @@ import { migratedDatabase } from "@/db/test-database";
 
 import { accountsRepo } from "./accounts-core";
 import { budgetsRepo } from "./budgets-core";
-import { createDeferredDeleteRegistry, UNDO_WINDOW_MS } from "./deferred-delete-registry";
+import { commitDeferredDelete, createDeferredDeleteRegistry, UNDO_WINDOW_MS } from "./deferred-delete-registry";
 import { transfersRepo } from "./transfers-core";
 
 function slipOf(options: ToastOptions | string | undefined): NoticeSlipProps | null {
@@ -31,9 +32,10 @@ function settle(): Promise<void> {
 }
 
 function registryFor(db: Database | null) {
-    const registry = createDeferredDeleteRegistry();
-    registry.attachDatabase(db);
-    return registry;
+    return createDeferredDeleteRegistry({
+        commit: (kind, target, id) => Effect.runPromise(commitDeferredDelete(kind, target, id)),
+        database: () => db,
+    });
 }
 
 function logRow(db: Database, id: string): Promise<unknown> {

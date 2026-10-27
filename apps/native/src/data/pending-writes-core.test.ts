@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, jest, test } from "@jest/globals";
 import { eq, isNull, ne } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { accounts, categories, transactions } from "@/db/schema";
@@ -316,7 +317,7 @@ describe("applyPendingWrites", () => {
     it("does not bring back an authorized charge the user deleted", async () => {
         await applyPendingWrites(db, [busFare("auth", 0)], NOW);
         const [row] = await liveRows(db);
-        await transactionsRepo.remove(db, row?.id ?? "", NOW);
+        await Effect.runPromise(transactionsRepo.remove(db, row?.id ?? "", NOW));
 
         await applyPendingWrites(db, [busFare("settle", 20)], NOW);
 
@@ -442,7 +443,7 @@ describe("applyPendingWrites", () => {
         });
 
         await applyPendingWrites(db, [job], charged);
-        await backfillRecurring(db, "sub-netflix", new Date(2026, 3, 5, 8, 0));
+        await Effect.runPromise(backfillRecurring(db, "sub-netflix", new Date(2026, 3, 5, 8, 0)));
 
         const rows = await db
             .select({ date: transactions.date, id: transactions.id })
@@ -613,7 +614,7 @@ describe("applyPendingWrites", () => {
         await applyPendingWrites(db, [walletWrite("auth")], NOW);
         const [row] = await liveRows(db);
         expect(row).toBeTruthy();
-        await transactionsRepo.remove(db, row.id, NOW);
+        await Effect.runPromise(transactionsRepo.remove(db, row.id, NOW));
 
         const applied = await applyPendingWrites(db, [walletWrite("again")], NOW);
 
@@ -759,9 +760,9 @@ describe("applyPendingWrites", () => {
             NOW
         );
         const [queued] = await db.select({ id: transactions.id }).from(transactions);
-        await transactionsRepo.remove(db, queued?.id ?? "");
+        await Effect.runPromise(transactionsRepo.remove(db, queued?.id ?? ""));
         await pickCardAccount(db, "Binance Card", "acc-n26");
-        await transactionsRepo.restore(db, queued?.id ?? "");
+        await Effect.runPromise(transactionsRepo.restore(db, queued?.id ?? ""));
         await fileWaitingPurchases(db);
 
         const [row] = await db.select({ accountId: transactions.accountId }).from(transactions);
@@ -874,7 +875,7 @@ describe("applyPendingWrites", () => {
         await applyPendingWrites(db, [job], NOW);
         const [first] = await liveRows(db);
 
-        await transactionsRepo.remove(db, first?.id ?? "", NOW);
+        await Effect.runPromise(transactionsRepo.remove(db, first?.id ?? "", NOW));
         const replay = new Date(NOW.getTime() + WALLET_DEDUPE_WINDOW_MS + 1);
         await applyPendingWrites(db, [job], replay);
         await expect(undeleted(db)).resolves.toHaveLength(1);
@@ -935,17 +936,19 @@ test("adds the card's usual fee to a foreign Wallet charge, inside the queue's o
     const db = transactionalDatabase();
     await seedCategories(db);
     await seedAccounts(db);
-    await transactionsRepo.create(db, {
-        accountId: "acc-n26",
-        amount: 10,
-        categoryId: "cat-expense",
-        currency: "USD",
-        date: new Date("2026-03-01T09:00:00Z"),
-        details: null,
-        fee: { amount: null, categoryId: "cat-expense", currency: "EUR", note: "Fee · Grok", rate: 0.035 },
-        income: false,
-        note: "Grok",
-    });
+    await Effect.runPromise(
+        transactionsRepo.create(db, {
+            accountId: "acc-n26",
+            amount: 10,
+            categoryId: "cat-expense",
+            currency: "USD",
+            date: new Date("2026-03-01T09:00:00Z"),
+            details: null,
+            fee: { amount: null, categoryId: "cat-expense", currency: "EUR", note: "Fee · Grok", rate: 0.035 },
+            income: false,
+            note: "Grok",
+        })
+    );
 
     await applyPendingWrites(db, [walletWrite("a", { amountText: "$6.40", card: "N26", currency: "USD" })], NOW);
 
@@ -957,17 +960,19 @@ test("adds the card's usual fee when a foreign charge that waited on its card ge
     const db = transactionalDatabase();
     await seedCategories(db);
     await seedAccounts(db);
-    await transactionsRepo.create(db, {
-        accountId: "acc-n26",
-        amount: 10,
-        categoryId: "cat-expense",
-        currency: "USD",
-        date: new Date("2026-03-01T09:00:00Z"),
-        details: null,
-        fee: { amount: null, categoryId: "cat-expense", currency: "EUR", note: "Fee · Grok", rate: 0.035 },
-        income: false,
-        note: "Grok",
-    });
+    await Effect.runPromise(
+        transactionsRepo.create(db, {
+            accountId: "acc-n26",
+            amount: 10,
+            categoryId: "cat-expense",
+            currency: "USD",
+            date: new Date("2026-03-01T09:00:00Z"),
+            details: null,
+            fee: { amount: null, categoryId: "cat-expense", currency: "EUR", note: "Fee · Grok", rate: 0.035 },
+            income: false,
+            note: "Grok",
+        })
+    );
     await applyPendingWrites(db, [walletWrite("a", { amountText: "$6.40", card: "Work card", currency: "USD" })], NOW);
 
     await pickCardAccount(db, "Work card", "acc-n26");
@@ -981,17 +986,19 @@ test("keeps a fee typed on a waiting charge when its card gets the account", asy
     const db = transactionalDatabase();
     await seedCategories(db);
     await seedAccounts(db);
-    await transactionsRepo.create(db, {
-        accountId: "acc-n26",
-        amount: 10,
-        categoryId: "cat-expense",
-        currency: "USD",
-        date: new Date("2026-03-01T09:00:00Z"),
-        details: null,
-        fee: { amount: null, categoryId: "cat-expense", currency: "EUR", note: "Fee · Grok", rate: 0.035 },
-        income: false,
-        note: "Grok",
-    });
+    await Effect.runPromise(
+        transactionsRepo.create(db, {
+            accountId: "acc-n26",
+            amount: 10,
+            categoryId: "cat-expense",
+            currency: "USD",
+            date: new Date("2026-03-01T09:00:00Z"),
+            details: null,
+            fee: { amount: null, categoryId: "cat-expense", currency: "EUR", note: "Fee · Grok", rate: 0.035 },
+            income: false,
+            note: "Grok",
+        })
+    );
     await applyPendingWrites(db, [walletWrite("a", { amountText: "$6.40", card: "Work card", currency: "USD" })], NOW);
     const [charge] = await db.select().from(transactions).where(eq(transactions.note, "Blue Bottle"));
     await db.insert(transactions).values({

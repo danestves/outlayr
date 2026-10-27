@@ -2,12 +2,13 @@ import { beforeEach, describe, expect, it } from "@jest/globals";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import BetterSqlite3 from "better-sqlite3";
 import { asc, isNull } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
 import { testDatabase } from "@/db/test-database";
 
-import { backfillRecurring } from "./recurrence-backfill";
+import { backfillRecurring, RecurrenceBackfillError } from "./recurrence-backfill";
 import { transactionsRepo } from "./transactions-core";
 import type { TransactionInput } from "./transactions-core";
 
@@ -107,12 +108,11 @@ describe("a subscription whose back-fill fails after the row is committed", () =
 
     it("writes no charges, so the source is the whole ledger", async () => {
         const { db, breakRateReplica } = harness;
-        const id = await transactionsRepo.create(db, SUBSCRIPTION);
+        const id = await Effect.runPromise(transactionsRepo.create(db, SUBSCRIPTION));
         breakRateReplica();
 
-        await expect(backfillRecurring(db, id, NOW)).rejects.toMatchObject({
-            message: expect.any(String),
-        });
+        const failure = await Effect.runPromise(Effect.flip(backfillRecurring(db, id, NOW)));
+        expect(failure).toBeInstanceOf(RecurrenceBackfillError);
 
         const rows = await liveRows(db);
         expect(rows).toHaveLength(1);
@@ -121,12 +121,11 @@ describe("a subscription whose back-fill fails after the row is committed", () =
 
     it("leaves the schedule live for the next sweep to walk", async () => {
         const { db, breakRateReplica } = harness;
-        const id = await transactionsRepo.create(db, SUBSCRIPTION);
+        const id = await Effect.runPromise(transactionsRepo.create(db, SUBSCRIPTION));
         breakRateReplica();
 
-        await expect(backfillRecurring(db, id, NOW)).rejects.toMatchObject({
-            message: expect.any(String),
-        });
+        const failure = await Effect.runPromise(Effect.flip(backfillRecurring(db, id, NOW)));
+        expect(failure).toBeInstanceOf(RecurrenceBackfillError);
 
         const [source] = await liveRows(db);
         expect(source?.recurringType).toBe(RECURRING_TYPE.monthly);
@@ -144,10 +143,12 @@ describe("the day a saved schedule is anchored to", () => {
     it("stamps a subscription with its first payment's day of the month", async () => {
         const { db } = harness;
 
-        const id = await transactionsRepo.create(db, {
-            ...SUBSCRIPTION,
-            date: new Date(2025, 0, 31),
-        });
+        const id = await Effect.runPromise(
+            transactionsRepo.create(db, {
+                ...SUBSCRIPTION,
+                date: new Date(2025, 0, 31),
+            })
+        );
 
         const [row] = await liveRows(db);
         expect(row?.id).toBe(id);

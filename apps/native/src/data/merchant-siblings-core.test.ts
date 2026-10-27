@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import { eq } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { categories, tags, transactions, transactionTags } from "@/db/schema";
@@ -72,15 +73,17 @@ describe("applyMerchantToSiblings", () => {
         await seedRow(db, "other-currency", { currency: "USD" });
         await seedRow(db, "other-merchant", { note: "Carrefour" });
         let persisted = 0;
-        const touched = await applyMerchantToSiblings(
-            db,
-            input({
-                categoryId: "groceries",
-                persistLogo: async () => {
-                    persisted += 1;
-                    return { imageColor: "#123456", imageUri: `file:///logo-${persisted}.png` };
-                },
-            })
+        const touched = await Effect.runPromise(
+            applyMerchantToSiblings(
+                db,
+                input({
+                    categoryId: "groceries",
+                    persistLogo: async () => {
+                        persisted += 1;
+                        return { imageColor: "#123456", imageUri: `file:///logo-${persisted}.png` };
+                    },
+                })
+            )
         );
 
         expect(touched).toBe(2);
@@ -97,7 +100,7 @@ describe("applyMerchantToSiblings", () => {
         await seedRow(db, "filed", { categoryId: "work" });
         await seedRow(db, "refund", { income: true });
 
-        await applyMerchantToSiblings(db, input({ categoryId: "groceries" }));
+        await Effect.runPromise(applyMerchantToSiblings(db, input({ categoryId: "groceries" })));
 
         expect((await row(db, "filed")).categoryId).toBe("work");
         expect((await row(db, "refund")).categoryId).toBeNull();
@@ -107,26 +110,28 @@ describe("applyMerchantToSiblings", () => {
         await seedRow(db, "old-logo", { imageColor: "#000", imageUri: "file:///old.png" });
         await seedRow(db, "emoji", { emoji: "🛒" });
         await seedRow(db, "tinted", { customColor: "#f00" });
-        await rememberLogoDismissal(db, "old-logo");
+        await Effect.runPromise(rememberLogoDismissal(db, "old-logo"));
 
-        await applyMerchantToSiblings(
-            db,
-            input({ persistLogo: async () => ({ imageColor: "#0f0", imageUri: "file:///new.png" }) })
+        await Effect.runPromise(
+            applyMerchantToSiblings(
+                db,
+                input({ persistLogo: async () => ({ imageColor: "#0f0", imageUri: "file:///new.png" }) })
+            )
         );
 
         await expect(row(db, "old-logo")).resolves.toMatchObject({ imageColor: "#0f0", imageUri: "file:///new.png" });
         expect((await row(db, "emoji")).imageUri).toBeNull();
         expect((await row(db, "tinted")).imageUri).toBeNull();
-        expect((await dismissedLogoIds(db)).has("old-logo")).toBe(false);
+        expect((await Effect.runPromise(dismissedLogoIds(db))).has("old-logo")).toBe(false);
     });
 
     it("attaches tags only to siblings that carry none", async () => {
         await db.insert(tags).values({ id: "tag-own", name: "Own", updatedAt: NOW });
         await seedRow(db, "untagged");
         await seedRow(db, "tagged");
-        await tagsRepo.setTagsFor(db, "tagged", ["tag-own"]);
+        await Effect.runPromise(tagsRepo.setTagsFor(db, "tagged", ["tag-own"]));
 
-        await applyMerchantToSiblings(db, input({ tagIds: ["tag-food"] }));
+        await Effect.runPromise(applyMerchantToSiblings(db, input({ tagIds: ["tag-food"] })));
 
         expect((await tagIdsForQuery(db, "untagged")).map((r) => r.tagId)).toStrictEqual(["tag-food"]);
         expect((await tagIdsForQuery(db, "tagged")).map((r) => r.tagId)).toStrictEqual(["tag-own"]);
@@ -137,7 +142,7 @@ describe("applyMerchantToSiblings", () => {
         await seedRow(db, "explicit", { currency: "USD" });
         await seedRow(db, "other", { currency: "EUR" });
 
-        await applyMerchantToSiblings(db, input({ categoryId: "groceries", currency: null }));
+        await Effect.runPromise(applyMerchantToSiblings(db, input({ categoryId: "groceries", currency: null })));
 
         expect((await row(db, "implicit")).categoryId).toBe("groceries");
         expect((await row(db, "explicit")).categoryId).toBe("groceries");
@@ -148,19 +153,21 @@ describe("applyMerchantToSiblings", () => {
         await seedRow(db, "moved");
         const discarded: string[] = [];
 
-        await applyMerchantToSiblings(
-            db,
-            input({
-                categoryId: "groceries",
-                discard: (uri) => discarded.push(uri),
-                persistLogo: async () => {
-                    await db
-                        .update(transactions)
-                        .set({ emoji: "🛒", updatedAt: new Date(NOW.getTime() + 1000) })
-                        .where(eq(transactions.id, "moved"));
-                    return { imageColor: null, imageUri: "file:///late.png" };
-                },
-            })
+        await Effect.runPromise(
+            applyMerchantToSiblings(
+                db,
+                input({
+                    categoryId: "groceries",
+                    discard: (uri) => discarded.push(uri),
+                    persistLogo: async () => {
+                        await db
+                            .update(transactions)
+                            .set({ emoji: "🛒", updatedAt: new Date(NOW.getTime() + 1000) })
+                            .where(eq(transactions.id, "moved"));
+                        return { imageColor: null, imageUri: "file:///late.png" };
+                    },
+                })
+            )
         );
 
         await expect(row(db, "moved")).resolves.toMatchObject({ categoryId: null, emoji: "🛒", imageUri: null });
@@ -170,18 +177,20 @@ describe("applyMerchantToSiblings", () => {
     it("attaches no tags to a sibling that was renamed while the logo was being persisted", async () => {
         await seedRow(db, "renamed");
 
-        await applyMerchantToSiblings(
-            db,
-            input({
-                persistLogo: async () => {
-                    await db
-                        .update(transactions)
-                        .set({ note: "Carrefour", updatedAt: new Date(NOW.getTime() + 1000) })
-                        .where(eq(transactions.id, "renamed"));
-                    return { imageColor: null, imageUri: "file:///late.png" };
-                },
-                tagIds: ["tag-food"],
-            })
+        await Effect.runPromise(
+            applyMerchantToSiblings(
+                db,
+                input({
+                    persistLogo: async () => {
+                        await db
+                            .update(transactions)
+                            .set({ note: "Carrefour", updatedAt: new Date(NOW.getTime() + 1000) })
+                            .where(eq(transactions.id, "renamed"));
+                        return { imageColor: null, imageUri: "file:///late.png" };
+                    },
+                    tagIds: ["tag-food"],
+                })
+            )
         );
 
         await expect(tagIdsForQuery(db, "renamed")).resolves.toStrictEqual([]);
@@ -192,18 +201,20 @@ describe("applyMerchantToSiblings", () => {
         await seedRow(db, "first", { date: new Date(NOW.getTime() + 1000) });
         await seedRow(db, "moved", { emoji: "🛒" });
 
-        const touched = await applyMerchantToSiblings(
-            db,
-            input({
-                persistLogo: async () => {
-                    await db
-                        .update(transactions)
-                        .set({ updatedAt: new Date(NOW.getTime() + 5000) })
-                        .where(eq(transactions.id, "moved"));
-                    return { imageColor: null, imageUri: "file:///first.png" };
-                },
-                tagIds: ["tag-food"],
-            })
+        const touched = await Effect.runPromise(
+            applyMerchantToSiblings(
+                db,
+                input({
+                    persistLogo: async () => {
+                        await db
+                            .update(transactions)
+                            .set({ updatedAt: new Date(NOW.getTime() + 5000) })
+                            .where(eq(transactions.id, "moved"));
+                        return { imageColor: null, imageUri: "file:///first.png" };
+                    },
+                    tagIds: ["tag-food"],
+                })
+            )
         );
 
         expect(touched).toBe(1);
@@ -213,13 +224,13 @@ describe("applyMerchantToSiblings", () => {
 
     it("revives a retired link for the same pair rather than inserting a second one", async () => {
         await seedRow(db, "retired");
-        await tagsRepo.setTagsFor(db, "retired", ["tag-food"]);
-        await tagsRepo.setTagsFor(db, "retired", []);
+        await Effect.runPromise(tagsRepo.setTagsFor(db, "retired", ["tag-food"]));
+        await Effect.runPromise(tagsRepo.setTagsFor(db, "retired", []));
         const before = await db.select().from(transactionTags).where(eq(transactionTags.transactionId, "retired"));
         expect(before).toHaveLength(1);
         expect(before[0].deletedAt).not.toBeNull();
 
-        await applyMerchantToSiblings(db, input({ tagIds: ["tag-food"] }));
+        await Effect.runPromise(applyMerchantToSiblings(db, input({ tagIds: ["tag-food"] })));
 
         const after = await db.select().from(transactionTags).where(eq(transactionTags.transactionId, "retired"));
         expect(after).toHaveLength(1);
@@ -228,22 +239,24 @@ describe("applyMerchantToSiblings", () => {
 
     it("keeps a bare sibling the backfill's when only a category is carried", async () => {
         await seedRow(db, "bare");
-        await rememberLogoCandidate(db, "bare", NOW.getTime(), 14 * 24 * 60 * 60 * 1000);
+        await Effect.runPromise(rememberLogoCandidate(db, "bare", NOW.getTime(), 14 * 24 * 60 * 60 * 1000));
 
-        await applyMerchantToSiblings(db, input({ categoryId: "groceries" }));
+        await Effect.runPromise(applyMerchantToSiblings(db, input({ categoryId: "groceries" })));
 
         const after = await row(db, "bare");
         expect(after.categoryId).toBe("groceries");
-        expect((await candidateLogoIds(db)).get("bare")).toBe(after.updatedAt.getTime());
+        expect((await Effect.runPromise(candidateLogoIds(db))).get("bare")).toBe(after.updatedAt.getTime());
     });
 
     it("moves a painted row's clock forward so the sync keeps the paint", async () => {
         await seedRow(db, "bare", { updatedAt: new Date(Date.now() + 60_000) });
         const before = (await row(db, "bare")).updatedAt.getTime();
 
-        await applyMerchantToSiblings(
-            db,
-            input({ persistLogo: async () => ({ imageColor: null, imageUri: "file:///new.png" }) })
+        await Effect.runPromise(
+            applyMerchantToSiblings(
+                db,
+                input({ persistLogo: async () => ({ imageColor: null, imageUri: "file:///new.png" }) })
+            )
         );
 
         expect((await row(db, "bare")).updatedAt.getTime()).toBeGreaterThan(before);

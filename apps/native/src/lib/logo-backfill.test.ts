@@ -3,7 +3,7 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { unusedDatabase } from "@/db/test-database";
 
 jest.mock("@/data/logo-backfill-core", () => ({
-    attachMissingLogos: jest.fn(async () => 1),
+    attachMissingLogos: jest.fn(() => require("effect/Effect").succeed(1)),
 }));
 jest.mock("@/data/settings-core", () => ({
     readBoolSetting: jest.fn(async () => false),

@@ -1,6 +1,8 @@
 import { inArray } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
@@ -10,135 +12,171 @@ import type { SpendDb } from "./budget-spent";
 
 const DISMISSAL_LIMIT = 200;
 
-// Each write is a read-modify-write of one JSON value and saves overlap (Wallet drain, form save), so they chain. A
-// holder only awaits its own statements, so a caller inside `withTransaction` can't deadlock one outside it.
-let chain: Promise<unknown> = Promise.resolve();
+const LogoBackfillStateArea = Schema.Literals(["candidates", "dismissals", "retries"]);
 
-function serialized<T>(task: () => Promise<T>): Promise<T> {
-    const next = chain.then(task, task);
-    chain = next.catch(() => undefined);
-    return next;
-}
-
-const decodeIdList = Schema.decodeUnknownOption(Schema.mutable(Schema.Array(Schema.String)));
-
-async function readIds(db: SpendDb, key: string): Promise<string[]> {
-    const raw = await getMeta(db, key);
-    if (!raw) {
-        return [];
-    }
-    try {
-        return Option.getOrElse(decodeIdList(JSON.parse(raw)), () => []);
-    } catch {
-        return [];
+export class LogoBackfillStateError extends Schema.TaggedError<LogoBackfillStateError>()("LogoBackfillStateError", {
+    area: LogoBackfillStateArea,
+    cause: Schema.Defect(),
+}) {
+    override get message(): string {
+        return `Logo backfill ${this.area} state failed`;
     }
 }
+
+const query = <A>(area: typeof LogoBackfillStateArea.Type, run: () => PromiseLike<A>) =>
+    Effect.tryPromise({ catch: (cause) => new LogoBackfillStateError({ area, cause }), try: run });
+
+// Each write is a read-modify-write of one JSON value and saves overlap (Wallet drain, form save), so they queue. A
+// holder only awaits its own statements, so a caller inside `transaction` can't deadlock one outside it.
+const exclusive = Semaphore.makeUnsafe(1);
+
+const decodeIdList = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.mutable(Schema.Array(Schema.String))));
+
+const readIds = Effect.fn("LogoBackfillState.readIds")(function* readIds(db: SpendDb, key: string) {
+    const raw = yield* query("dismissals", () => getMeta(db, key));
+    return raw ? Option.getOrElse(decodeIdList(raw), () => []) : [];
+});
 
 // A removed logo and one that never arrived both leave every identity column null; without this list the backfill
 // puts back the image the user just removed.
-export async function dismissedLogoIds(db: SpendDb): Promise<Set<string>> {
-    return new Set(await readIds(db, META_KEYS.logoDismissals));
-}
+export const dismissedLogoIds = Effect.fn("LogoBackfillState.dismissedLogoIds")(function* dismissedLogoIds(
+    db: SpendDb
+) {
+    return new Set(yield* readIds(db, META_KEYS.logoDismissals));
+});
 
-export function forgetLogoDismissal(db: SpendDb, id: string): Promise<void> {
-    return serialized(async () => {
-        const ids = await dismissedLogoIds(db);
-        if (ids.delete(id)) {
-            await setMeta(db, META_KEYS.logoDismissals, JSON.stringify([...ids]));
-        }
-    });
-}
+export const forgetLogoDismissal = Effect.fn("LogoBackfillState.forgetLogoDismissal")(function* forgetLogoDismissal(
+    db: SpendDb,
+    id: string
+) {
+    yield* exclusive.withPermits(1)(
+        Effect.gen(function* forget() {
+            const ids = yield* dismissedLogoIds(db);
+            if (ids.delete(id)) {
+                yield* query("dismissals", () => setMeta(db, META_KEYS.logoDismissals, JSON.stringify([...ids])));
+            }
+        })
+    );
+});
 
-export function rememberLogoDismissal(db: SpendDb, id: string): Promise<void> {
-    return serialized(async () => {
-        const ids = await dismissedLogoIds(db);
-        ids.delete(id);
-        const kept = [...ids, id].slice(-DISMISSAL_LIMIT);
-        await setMeta(db, META_KEYS.logoDismissals, JSON.stringify(kept));
-    });
-}
-
-const decodeStampedIds = Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Finite));
-
-async function readStamped(db: SpendDb, key: string): Promise<Record<string, number>> {
-    const raw = await getMeta(db, key);
-    if (!raw) {
-        return {};
+export const rememberLogoDismissal = Effect.fn("LogoBackfillState.rememberLogoDismissal")(
+    function* rememberLogoDismissal(db: SpendDb, id: string) {
+        yield* exclusive.withPermits(1)(
+            Effect.gen(function* remember() {
+                const ids = yield* dismissedLogoIds(db);
+                ids.delete(id);
+                const kept = [...ids, id].slice(-DISMISSAL_LIMIT);
+                yield* query("dismissals", () => setMeta(db, META_KEYS.logoDismissals, JSON.stringify(kept)));
+            })
+        );
     }
-    try {
-        return Option.getOrElse(decodeStampedIds(JSON.parse(raw)), () => ({}));
-    } catch {
-        return {};
-    }
-}
+);
+
+const decodeStampedIds = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Record(Schema.String, Schema.Finite)));
+
+const readStamped = Effect.fn("LogoBackfillState.readStamped")(function* readStamped(
+    db: SpendDb,
+    area: "candidates" | "retries",
+    key: string
+) {
+    const raw = yield* query(area, () => getMeta(db, key));
+    const stamped: Record<string, number> = raw ? Option.getOrElse(decodeStampedIds(raw), () => ({})) : {};
+    return stamped;
+});
 
 // Only a row whose `updatedAt` still matches this device's bare write is ours: a synced or peer-edited row is the
 // other device's to paint, and a logo removed over there must not reappear here.
-export async function candidateLogoIds(db: SpendDb): Promise<Map<string, number>> {
-    return new Map(Object.entries(await readStamped(db, META_KEYS.logoCandidates)));
-}
+export const candidateLogoIds = Effect.fn("LogoBackfillState.candidateLogoIds")(function* candidateLogoIds(
+    db: SpendDb
+) {
+    return new Map(Object.entries(yield* readStamped(db, "candidates", META_KEYS.logoCandidates)));
+});
 
-export function rememberLogoCandidates(db: SpendDb, ids: readonly string[], at: number, keepMs: number): Promise<void> {
-    return serialized(async () => {
-        const candidates = await candidateLogoIds(db);
-        for (const id of ids) {
-            candidates.set(id, at);
-        }
-        for (const [candidate, stamped] of candidates) {
-            if (at - stamped > keepMs) {
-                candidates.delete(candidate);
-            }
-        }
-        await setMeta(db, META_KEYS.logoCandidates, JSON.stringify(Object.fromEntries(candidates)));
-    });
-}
+const writeCandidates = (db: SpendDb, candidates: Map<string, number>) =>
+    query("candidates", () => setMeta(db, META_KEYS.logoCandidates, JSON.stringify(Object.fromEntries(candidates))));
 
-export async function rememberLogoCandidate(db: SpendDb, id: string, at: number, keepMs: number): Promise<void> {
-    await rememberLogoCandidates(db, [id], at, keepMs);
-}
+export const rememberLogoCandidates = Effect.fn("LogoBackfillState.rememberLogoCandidates")(
+    function* rememberLogoCandidates(db: SpendDb, ids: readonly string[], at: number, keepMs: number) {
+        yield* exclusive.withPermits(1)(
+            Effect.gen(function* remember() {
+                const candidates = yield* candidateLogoIds(db);
+                for (const id of ids) {
+                    candidates.set(id, at);
+                }
+                for (const [candidate, stamped] of candidates) {
+                    if (at - stamped > keepMs) {
+                        candidates.delete(candidate);
+                    }
+                }
+                yield* writeCandidates(db, candidates);
+            })
+        );
+    }
+);
+
+export const rememberLogoCandidate = Effect.fn("LogoBackfillState.rememberLogoCandidate")(
+    function* rememberLogoCandidate(db: SpendDb, id: string, at: number, keepMs: number) {
+        yield* rememberLogoCandidates(db, [id], at, keepMs);
+    }
+);
 
 // Every local path that bumps a row's `updatedAt` without giving it an identity must call this BEFORE its write, in the
 // same transaction, or the row reads as a peer's edit and is never painted. Rows are read live: a peer's edit can land
 // after the caller's snapshot, so only a stamp matching the row as it is now moves.
-export function refreshLogoCandidates(db: Database, ids: readonly string[], at: number): Promise<void> {
-    if (ids.length === 0) {
-        return Promise.resolve();
+export const refreshLogoCandidates = Effect.fn("LogoBackfillState.refreshLogoCandidates")(
+    function* refreshLogoCandidates(db: Database, ids: readonly string[], at: number) {
+        if (ids.length === 0) {
+            return;
+        }
+        yield* exclusive.withPermits(1)(
+            Effect.gen(function* refresh() {
+                const candidates = yield* candidateLogoIds(db);
+                const live = yield* query("candidates", () =>
+                    db
+                        .select({ id: transactions.id, updatedAt: transactions.updatedAt })
+                        .from(transactions)
+                        .where(inArray(transactions.id, [...ids]))
+                );
+                let moved = false;
+                for (const row of live) {
+                    if (candidates.get(row.id) === row.updatedAt.getTime()) {
+                        candidates.set(row.id, at);
+                        moved = true;
+                    }
+                }
+                if (moved) {
+                    yield* writeCandidates(db, candidates);
+                }
+            })
+        );
     }
-    return serialized(async () => {
-        const candidates = await candidateLogoIds(db);
-        const live = await db
-            .select({ id: transactions.id, updatedAt: transactions.updatedAt })
+);
+
+export const refreshLogoCandidate = Effect.fn("LogoBackfillState.refreshLogoCandidate")(function* refreshLogoCandidate(
+    db: Database,
+    id: string,
+    at: number
+) {
+    yield* refreshLogoCandidates(db, [id], at);
+});
+
+export const isLiveLogoCandidate = Effect.fn("LogoBackfillState.isLiveLogoCandidate")(function* isLiveLogoCandidate(
+    db: Database,
+    id: string
+) {
+    const [row] = yield* query("candidates", () =>
+        db
+            .select({ updatedAt: transactions.updatedAt })
             .from(transactions)
-            .where(inArray(transactions.id, [...ids]));
-        let moved = false;
-        for (const row of live) {
-            if (candidates.get(row.id) === row.updatedAt.getTime()) {
-                candidates.set(row.id, at);
-                moved = true;
-            }
-        }
-        if (moved) {
-            await setMeta(db, META_KEYS.logoCandidates, JSON.stringify(Object.fromEntries(candidates)));
-        }
-    });
-}
-
-export async function refreshLogoCandidate(db: Database, id: string, at: number): Promise<void> {
-    await refreshLogoCandidates(db, [id], at);
-}
-
-export async function isLiveLogoCandidate(db: Database, id: string): Promise<boolean> {
-    const [row] = await db
-        .select({ updatedAt: transactions.updatedAt })
-        .from(transactions)
-        .where(inArray(transactions.id, [id]));
+            .where(inArray(transactions.id, [id]))
+    );
     if (row == null) {
         return false;
     }
-    const candidates = await candidateLogoIds(db);
-    const dismissed = await dismissedLogoIds(db);
+    const candidates = yield* candidateLogoIds(db);
+    const dismissed = yield* dismissedLogoIds(db);
     return candidates.get(id) === row.updatedAt.getTime() && !dismissed.has(id);
-}
+});
 
 // Matches the backfill's `WINDOW_MS`; an older candidate is never read.
 export const LOGO_CANDIDATE_KEEP_MS = 14 * 24 * 60 * 60 * 1000;
@@ -157,11 +195,21 @@ export function isLogoCandidate(row: {
 const RETRY_DEADLINE_KEEP_MS = 14 * 24 * 60 * 60 * 1000;
 
 // An expired deadline is kept: it marks the name as tried before, so never-tried names go first.
-export async function readRetryDeadlines(db: SpendDb, now: number): Promise<Map<string, number>> {
-    const stamped = await readStamped(db, META_KEYS.logoBackfillRetries);
+export const readRetryDeadlines = Effect.fn("LogoBackfillState.readRetryDeadlines")(function* readRetryDeadlines(
+    db: SpendDb,
+    now: number
+) {
+    const stamped = yield* readStamped(db, "retries", META_KEYS.logoBackfillRetries);
     return new Map(Object.entries(stamped).filter(([, until]) => now - until < RETRY_DEADLINE_KEEP_MS));
-}
+});
 
-export function writeRetryDeadlines(db: SpendDb, deadlines: Map<string, number>): Promise<void> {
-    return serialized(() => setMeta(db, META_KEYS.logoBackfillRetries, JSON.stringify(Object.fromEntries(deadlines))));
-}
+export const writeRetryDeadlines = Effect.fn("LogoBackfillState.writeRetryDeadlines")(function* writeRetryDeadlines(
+    db: SpendDb,
+    deadlines: Map<string, number>
+) {
+    yield* exclusive.withPermits(1)(
+        query("retries", () =>
+            setMeta(db, META_KEYS.logoBackfillRetries, JSON.stringify(Object.fromEntries(deadlines)))
+        )
+    );
+});

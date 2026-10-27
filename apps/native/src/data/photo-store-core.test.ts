@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import BetterSqlite3 from "better-sqlite3";
+import * as Effect from "effect/Effect";
 
 import { accounts, transactionAttachments, transactions } from "@/db/schema";
 import { testSpendDb } from "@/db/test-database";
@@ -198,7 +199,7 @@ describe("reconcilePhotos", () => {
         await insert(db, "t1", uri);
         const files = new FakeFiles([["keep.jpg", SETTLED]]);
 
-        const result = await reconcilePhotos(db, files, NOW);
+        const result = await Effect.runPromise(reconcilePhotos(db, files, NOW));
 
         await expect(storedUri(db, "t1")).resolves.toBe(uri);
         expect(result).toStrictEqual({
@@ -213,7 +214,7 @@ describe("reconcilePhotos", () => {
         await insert(db, "t1", "file:///old-container/Documents/photos/keep.jpg");
         const files = new FakeFiles([["keep.jpg", SETTLED]]);
 
-        const result = await reconcilePhotos(db, files, NOW);
+        const result = await Effect.runPromise(reconcilePhotos(db, files, NOW));
 
         await expect(storedUri(db, "t1")).resolves.toBe(`${DIRECTORY}/keep.jpg`);
         expect(result.repointed).toBe(1);
@@ -225,7 +226,7 @@ describe("reconcilePhotos", () => {
         await insert(db, "t1", cached);
         const files = new FakeFiles([], [cached]);
 
-        const result = await reconcilePhotos(db, files, NOW);
+        const result = await Effect.runPromise(reconcilePhotos(db, files, NOW));
 
         await expect(storedUri(db, "t1")).resolves.toBe(`${DIRECTORY}/t1.jpeg`);
         expect(result.rescued).toBe(1);
@@ -236,7 +237,7 @@ describe("reconcilePhotos", () => {
         await insert(db, "t1", "file:///tmp/ImagePicker/reclaimed.jpg");
         const files = new FakeFiles();
 
-        const result = await reconcilePhotos(db, files, NOW);
+        const result = await Effect.runPromise(reconcilePhotos(db, files, NOW));
 
         await expect(storedUri(db, "t1")).resolves.toBeNull();
         expect(result.cleared).toBe(1);
@@ -249,7 +250,7 @@ describe("reconcilePhotos", () => {
             ["orphan.jpg", SETTLED],
         ]);
 
-        const result = await reconcilePhotos(db, files, NOW);
+        const result = await Effect.runPromise(reconcilePhotos(db, files, NOW));
 
         expect(files.removed).toStrictEqual(["orphan.jpg"]);
         expect(result.purged).toBe(1);
@@ -258,7 +259,7 @@ describe("reconcilePhotos", () => {
     it("spares a file written inside the grace window", async () => {
         const files = new FakeFiles([["just-picked.jpg", NOW - 1000]]);
 
-        const result = await reconcilePhotos(db, files, NOW);
+        const result = await Effect.runPromise(reconcilePhotos(db, files, NOW));
 
         expect(files.removed).toStrictEqual([]);
         expect(result.purged).toBe(0);
@@ -268,7 +269,7 @@ describe("reconcilePhotos", () => {
         await insert(db, "t1", `${DIRECTORY}/keep.jpg`, new Date(NOW));
         const files = new FakeFiles([["keep.jpg", SETTLED]]);
 
-        const result = await reconcilePhotos(db, files, NOW);
+        const result = await Effect.runPromise(reconcilePhotos(db, files, NOW));
 
         expect(files.removed).toStrictEqual([]);
         await expect(storedUri(db, "t1")).resolves.toBe(`${DIRECTORY}/keep.jpg`);
@@ -279,7 +280,7 @@ describe("reconcilePhotos", () => {
         await insertAccount(db, "a1", `${DIRECTORY}/logo.jpg`);
         const files = new FakeFiles([["logo.jpg", SETTLED]]);
 
-        const result = await reconcilePhotos(db, files, NOW);
+        const result = await Effect.runPromise(reconcilePhotos(db, files, NOW));
 
         expect(files.removed).toStrictEqual([]);
         await expect(storedAccountUri(db, "a1")).resolves.toBe(`${DIRECTORY}/logo.jpg`);
@@ -295,7 +296,7 @@ describe("reconcilePhotos", () => {
         });
         const files = new FakeFiles([["invoice.pdf", SETTLED]]);
 
-        const result = await reconcilePhotos(db, files, NOW);
+        const result = await Effect.runPromise(reconcilePhotos(db, files, NOW));
 
         expect(files.removed).toStrictEqual([]);
         expect(result.purged).toBe(0);
@@ -305,7 +306,7 @@ describe("reconcilePhotos", () => {
         await insertAccount(db, "a1", "file:///old-container/Documents/photos/l.jpg");
         const files = new FakeFiles([["l.jpg", SETTLED]]);
 
-        const result = await reconcilePhotos(db, files, NOW);
+        const result = await Effect.runPromise(reconcilePhotos(db, files, NOW));
 
         await expect(storedAccountUri(db, "a1")).resolves.toBe(`${DIRECTORY}/l.jpg`);
         expect(result.repointed).toBe(1);
@@ -318,8 +319,8 @@ describe("reconcilePhotos", () => {
         await insert(db, "t2", "file:///tmp/ImagePicker/reclaimed.jpg");
         const files = new FakeFiles([["orphan.jpg", SETTLED]], [cached]);
 
-        await reconcilePhotos(db, files, NOW);
-        const second = await reconcilePhotos(db, files, NOW);
+        await Effect.runPromise(reconcilePhotos(db, files, NOW));
+        const second = await Effect.runPromise(reconcilePhotos(db, files, NOW));
 
         expect(second).toStrictEqual({
             cleared: 0,

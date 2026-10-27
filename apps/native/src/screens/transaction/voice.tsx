@@ -30,10 +30,10 @@ import { getAccountById, getLastUsedAccount, rememberLastUsedAccount } from "@/d
 import { useGlobalCurrency } from "@/data/app-meta";
 import { suggestedCardFee } from "@/data/card-fees-core";
 import { getCategoryById } from "@/data/categories-core";
-import { backfillRecurring } from "@/data/recurrence-backfill";
 import { useAiConsent } from "@/data/settings";
-import { lastLoggedEntry, transactionsRepo } from "@/data/transactions-core";
+import type { TransactionInput } from "@/data/transactions-core";
 import { transfersRepo } from "@/data/transfers-core";
+import type { Database } from "@/db/client";
 import type { AuthGate } from "@/domain/auth-gate";
 import { formatChargeDate } from "@/domain/dates";
 import type { HapticEvent } from "@/domain/haptics";
@@ -71,6 +71,14 @@ import { freshEntries } from "@/lib/fresh-entries";
 import { posthog } from "@/lib/posthog";
 import { syncSubscriptionReminders } from "@/lib/subscription-reminder-sync";
 import { useHaptics } from "@/lib/use-haptics";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import {
+    backfillRecurringCommand,
+    createTransactionCommand,
+    lastLoggedEntryCommand,
+    runLedgerCommand,
+} from "@/state/ledger-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
 import { usePromptLedger } from "./use-prompt-ledger";
@@ -465,7 +473,7 @@ function useVoiceHint(): string | null {
 
     useEffect(() => {
         let live = true;
-        lastLoggedEntry(db, new Date())
+        runLedgerCommand(lastLoggedEntryCommand, { db, now: new Date() })
             .catch(() => null)
             .then((last) => {
                 if (live) {
@@ -566,9 +574,7 @@ function failedActions(
     };
 }
 
-type CreateArgs = Parameters<typeof transactionsRepo.create>;
-
-function voiceEntry(db: CreateArgs[0], draft: ResolvedVoiceEntry, categoryId: string): CreateArgs[1] {
+function voiceEntry(db: Database, draft: ResolvedVoiceEntry, categoryId: string): TransactionInput {
     return {
         accountId: draft.accountId,
         amount: draft.amount,
@@ -606,6 +612,8 @@ function VoiceThreadScreen() {
     const { accounts, bounded, context, live } = usePromptLedger(db, currency);
     const [saving, setSaving] = useState(false);
     const isMounted = useIsMounted();
+    const createTransaction = useAtomCommand(createTransactionCommand, SILENT);
+    const backfillRecurring = useAtomCommand(backfillRecurringCommand, SILENT);
 
     const request = {
         accounts: bounded.accounts,
@@ -684,7 +692,7 @@ function VoiceThreadScreen() {
         const write = async () => {
             let id: string;
             try {
-                id = await transactionsRepo.create(db, voiceEntry(db, draft, categoryId));
+                id = unwrapAtomCommand(await createTransaction({ db, entry: voiceEntry(db, draft, categoryId) }));
             } catch {
                 // The row did not land; the form has the failure strip this screen lacks.
                 setSaving(false);
@@ -705,7 +713,7 @@ function VoiceThreadScreen() {
             if (draft.recurrence) {
                 try {
                     // As the form does after its own save: past charges land now.
-                    await backfillRecurring(db, id);
+                    unwrapAtomCommand(await backfillRecurring({ db, id }));
                 } catch (error) {
                     console.error("Failed to back-fill the spoken subscription", error);
                 }

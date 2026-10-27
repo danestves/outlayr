@@ -1,6 +1,8 @@
 import { addDays, startOfDay } from "@outlayr/money/calendar";
 import { anchorDayOf, nextLanding, RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { and, eq, gt, isNotNull, isNull } from "drizzle-orm";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { accounts, categories, transactions } from "@/db/schema";
@@ -11,6 +13,20 @@ import type { ArmedReminder, ReminderCandidate } from "@/domain/subscription-rem
 
 import { getMeta, META_KEYS } from "./app-meta-core";
 import { occurrenceId } from "./recurrence-backfill";
+
+const SubscriptionRemindersRead = Schema.Literals(["currency", "rows"]);
+
+export class SubscriptionRemindersError extends Schema.TaggedError<SubscriptionRemindersError>()(
+    "SubscriptionRemindersError",
+    { cause: Schema.Defect(), read: SubscriptionRemindersRead }
+) {
+    override get message(): string {
+        return `Subscription reminders ${this.read} read failed`;
+    }
+}
+
+const query = <A>(read: typeof SubscriptionRemindersRead.Type, run: () => PromiseLike<A>) =>
+    Effect.tryPromise({ catch: (cause) => new SubscriptionRemindersError({ cause, read }), try: run });
 
 export interface SubscriptionReminderCandidate extends ReminderCandidate {
     account: string | null;
@@ -45,31 +61,33 @@ const CANDIDATE_COLUMNS = {
  * `recurringType > 0` and a null `deletedAt` are load-bearing: `reminderLeadDays` rides whichever row carries the
  * chain's schedule, so it cannot tell a live carrier from a tombstone or retired occurrence (see `db/schema.ts`).
  */
-export async function reminderCandidates(
+export const reminderCandidates = Effect.fn("SubscriptionReminders.reminderCandidates")(function* reminderCandidates(
     db: Database,
     now: Date,
     time: TimeOfDay
-): Promise<SubscriptionReminderCandidate[]> {
-    const rows = await db
-        .select(CANDIDATE_COLUMNS)
-        .from(transactions)
-        .leftJoin(categories, eq(categories.id, transactions.categoryId))
-        .leftJoin(accounts, and(eq(accounts.id, transactions.accountId), isNull(accounts.deletedAt)))
-        .where(
-            and(
-                gt(transactions.recurringType, RECURRING_TYPE.none),
-                isNull(transactions.deletedAt),
-                isNotNull(transactions.reminderLeadDays)
+) {
+    const rows = yield* query("rows", () =>
+        db
+            .select(CANDIDATE_COLUMNS)
+            .from(transactions)
+            .leftJoin(categories, eq(categories.id, transactions.categoryId))
+            .leftJoin(accounts, and(eq(accounts.id, transactions.accountId), isNull(accounts.deletedAt)))
+            .where(
+                and(
+                    gt(transactions.recurringType, RECURRING_TYPE.none),
+                    isNull(transactions.deletedAt),
+                    isNotNull(transactions.reminderLeadDays)
+                )
             )
-        );
+    );
     if (rows.length === 0) {
         return [];
     }
 
     // Mirrors `transactions-core`: a null `currency` means the ledger's, so a notice resolves it the same way.
-    const ledgerCurrency = (await getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
+    const ledgerCurrency = (yield* query("currency", () => getMeta(db, META_KEYS.currency))) ?? DEFAULT_CURRENCY;
 
-    return rows.flatMap((row) => {
+    const candidates: SubscriptionReminderCandidate[] = rows.flatMap((row) => {
         const landingAfter = (day: Date) =>
             nextLanding(
                 row.date,
@@ -104,7 +122,8 @@ export async function reminderCandidates(
             },
         ];
     });
-}
+    return candidates;
+});
 
 export interface PendingSubscriptionReminder extends ArmedReminder {
     account: string | null;
@@ -119,15 +138,15 @@ export interface PendingSubscriptionReminder extends ArmedReminder {
 }
 
 /** Read-only: only the caller touches the queue, after comparing this against what iOS already holds. */
-export async function pendingReminderPlan(
+export const pendingReminderPlan = Effect.fn("SubscriptionReminders.pendingReminderPlan")(function* pendingReminderPlan(
     db: Database,
     now: Date,
     time: TimeOfDay,
     cap?: number
-): Promise<PendingSubscriptionReminder[]> {
-    const candidates = await reminderCandidates(db, now, time);
+) {
+    const candidates = yield* reminderCandidates(db, now, time);
     const byLocalId = new Map(candidates.map((candidate) => [candidate.localId, candidate]));
-    return reminderPlan({ candidates, cap, now, time }).arm.flatMap((armed) => {
+    const plan: PendingSubscriptionReminder[] = reminderPlan({ candidates, cap, now, time }).arm.flatMap((armed) => {
         const candidate = byLocalId.get(armed.localId);
         if (candidate === undefined) {
             return [];
@@ -147,4 +166,5 @@ export async function pendingReminderPlan(
             },
         ];
     });
-}
+    return plan;
+});

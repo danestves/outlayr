@@ -1,4 +1,5 @@
 import { eq, inArray } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
@@ -176,7 +177,7 @@ export async function discardAccountLedger(
                 for (const row of rows) {
                     // A lifted transaction's logo candidate stamp follows the new clock, before the write.
                     if (table === "transactions") {
-                        await refreshLogoCandidate(db, row.id, row.updatedAt.getTime());
+                        await Effect.runPromise(refreshLogoCandidate(db, row.id, row.updatedAt.getTime()));
                     }
                     // SAFETY: the runtime table name erases the update type; every synced table has `updatedAt`, and
                     // `restoredAt` is set only from a row that carried one.

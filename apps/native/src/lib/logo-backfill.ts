@@ -1,7 +1,8 @@
+import * as Effect from "effect/Effect";
 import { File } from "expo-file-system";
 
-import { attachMissingLogos } from "@/data/logo-backfill-core";
 import type { LogoBackfillDeps } from "@/data/logo-backfill-core";
+import { attachMissingLogos } from "@/data/logo-backfill-core";
 import { readBoolSetting, readRemoteEnrichment } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import { firstLocale } from "@/i18n/device-language";
@@ -91,5 +92,5 @@ async function runBackfill(db: Database, cancelled: () => boolean): Promise<numb
         fetchImage: fetchMerchantImage,
         persist: persistLogo,
     };
-    return attachMissingLogos(db, deps);
+    return Effect.runPromise(attachMissingLogos(db, deps));
 }

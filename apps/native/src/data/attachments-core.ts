@@ -1,10 +1,26 @@
 import { and, asc, eq, inArray, isNull } from "drizzle-orm";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { transactionAttachments } from "@/db/schema";
 import { newId } from "@/domain/ids";
 
 import { photoExtension, photoFileName } from "./photo-store-core";
+
+const AttachmentsOperation = Schema.Literals(["read", "write"]);
+
+export class AttachmentsError extends Schema.TaggedError<AttachmentsError>()("AttachmentsError", {
+    cause: Schema.Defect(),
+    operation: AttachmentsOperation,
+}) {
+    override get message(): string {
+        return `Attachments ${this.operation} failed`;
+    }
+}
+
+const query = <A>(operation: typeof AttachmentsOperation.Type, run: () => PromiseLike<A>) =>
+    Effect.tryPromise({ catch: (cause) => new AttachmentsError({ cause, operation }), try: run });
 
 export const MAX_ATTACHMENTS = 10;
 
@@ -38,25 +54,32 @@ export function attachmentsForQuery(db: Database, transactionId: string) {
 }
 
 export const attachmentsRepo = {
-    async writeFor(
+    writeFor: Effect.fn("Attachments.writeFor")(function* writeFor(
         db: Database,
         transactionId: string,
         drafts: readonly AttachmentDraft[],
         now: Date = new Date()
-    ): Promise<void> {
+    ) {
         const kept = new Set(drafts.flatMap((draft) => (draft.id === null ? [] : [draft.id])));
-        const live = await db
-            .select({ id: transactionAttachments.id })
-            .from(transactionAttachments)
-            .where(
-                and(eq(transactionAttachments.transactionId, transactionId), isNull(transactionAttachments.deletedAt))
-            );
+        const live = yield* query("read", () =>
+            db
+                .select({ id: transactionAttachments.id })
+                .from(transactionAttachments)
+                .where(
+                    and(
+                        eq(transactionAttachments.transactionId, transactionId),
+                        isNull(transactionAttachments.deletedAt)
+                    )
+                )
+        );
         const removed = live.map((row) => row.id).filter((id) => !kept.has(id));
         if (removed.length > 0) {
-            await db
-                .update(transactionAttachments)
-                .set({ deletedAt: now, updatedAt: now })
-                .where(inArray(transactionAttachments.id, removed));
+            yield* query("write", () =>
+                db
+                    .update(transactionAttachments)
+                    .set({ deletedAt: now, updatedAt: now })
+                    .where(inArray(transactionAttachments.id, removed))
+            );
         }
         const added = drafts.flatMap((draft, sortOrder) =>
             draft.id === null && draft.imageUri !== null
@@ -75,7 +98,7 @@ export const attachmentsRepo = {
                 : []
         );
         if (added.length > 0) {
-            await db.insert(transactionAttachments).values(added);
+            yield* query("write", () => db.insert(transactionAttachments).values(added));
         }
-    },
+    }),
 };
