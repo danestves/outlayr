@@ -9,27 +9,32 @@ import { LABEL, PARENT_NAME } from "@/components/category-list-swift";
 import { groupedList, groupedRows } from "@/components/native/styles";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useBankAccounts } from "@/data/accounts";
-import { accountsRepo } from "@/data/accounts-core";
 import type { Account } from "@/data/accounts-core";
 import { applyMove } from "@/domain/reorder";
 import { useTranslation } from "@/i18n/context";
+import { reorderAccountsCommand } from "@/state/accounts-commands";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
 export function AccountReorder() {
     const db = useDatabase();
+    const reorderAccounts = useAtomCommand(reorderAccountsCommand, SILENT);
     const t = useTranslation();
     const colors = useColors();
     const rows = useBankAccounts(db);
 
-    const reorder = (source: number[], destination: number) => {
+    const reorder = async (source: number[], destination: number) => {
         const ordered = applyMove(
             rows.map((account) => account.id),
             source,
             destination
         );
-        accountsRepo.reorder(db, ordered).catch((error) => {
+        try {
+            unwrapAtomCommand(await reorderAccounts({ db, orderedIds: ordered }));
+        } catch (error) {
             console.error("Failed to reorder the accounts", error);
-        });
+        }
     };
 
     return (

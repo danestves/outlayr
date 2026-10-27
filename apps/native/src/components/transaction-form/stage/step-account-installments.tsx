@@ -11,7 +11,7 @@ import { MonoLabel } from "@/components/mono-label";
 import { SEARCH_FIELD } from "@/components/search-field-style";
 import { Text, TextInput } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
-import { accountsRepo, getAccountById } from "@/data/accounts-core";
+import { getAccountById } from "@/data/accounts-core";
 import type { Account } from "@/data/accounts-core";
 import {
     installmentAppDomain,
@@ -29,6 +29,9 @@ import { useTranslation } from "@/i18n/context";
 import { fetchMerchantImage } from "@/lib/logo-fetch";
 import { notifyFailure } from "@/lib/notify";
 import { persistLogo } from "@/lib/persist-logo";
+import { createAccountCommand } from "@/state/accounts-commands";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
 import { StageOptionRow } from "./stage-options";
@@ -46,6 +49,7 @@ interface StepAccountInstallmentsProps {
 
 export function StepAccountInstallments({ accounts, onPick, searchable }: StepAccountInstallmentsProps) {
     const db = useDatabase();
+    const createAccount = useAtomCommand(createAccountCommand, SILENT);
     const router = useRouter();
     const t = useTranslation();
     const colors = useColors();
@@ -94,12 +98,12 @@ export function StepAccountInstallments({ accounts, onPick, searchable }: StepAc
             if (outcome.kind === "logo") {
                 logo = await persistLogo(outcome.bytes);
             }
-            const id = await accountsRepo.create(db, {
-                currency: app.currency,
-                kind: "liability",
-                name: app.label,
-                ...logo,
-            });
+            const id = unwrapAtomCommand(
+                await createAccount({
+                    db,
+                    input: { currency: app.currency, kind: "liability", name: app.label, ...logo },
+                })
+            );
             const account = getAccountById(db, id);
             if (account) {
                 onPick(account);

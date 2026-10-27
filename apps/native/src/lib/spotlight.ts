@@ -6,12 +6,12 @@ import { Platform } from "react-native";
 
 import type { SpendDb } from "@/data/budget-spent";
 import { parseBoolSetting } from "@/data/settings-core";
-import { loadValuation } from "@/data/valuation-source";
 import type { Valuation } from "@/data/valuation-source";
 import { budgets as budgetsTable, categories as categoriesTable, transactions as transactionsTable } from "@/db/schema";
 import { formatDayHeader } from "@/domain/dates";
 import { formatAmount, minorUnitsFor } from "@/domain/money";
 import { translateNow } from "@/i18n/runtime";
+import { loadValuationCommand, runAccountsCommand } from "@/state/accounts-commands";
 import { getMetaCommand, runSettingsCommand } from "@/state/settings-commands";
 
 import { budgetLink, transactionLink } from "./deep-links";
@@ -36,7 +36,7 @@ export async function indexSpotlight(db: SpendDb, now = new Date()) {
             return;
         }
 
-        const valuation = await loadValuation(db);
+        const valuation = await runAccountsCommand(loadValuationCommand, db);
         const showCents = parseBoolSetting(await runSettingsCommand(getMetaCommand, { db, key: "showCents" }), true);
         const money = (value: number, code: string) => formatAmount(value, code, showCents);
 

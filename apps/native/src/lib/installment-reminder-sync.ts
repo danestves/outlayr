@@ -1,5 +1,4 @@
 import { readPlans } from "@/data/installments-core";
-import { owedPayoffPlans } from "@/data/payoff-plans";
 import type { Database } from "@/db/client";
 import { accounts } from "@/db/schema";
 import {
@@ -14,6 +13,7 @@ import { orderName } from "@/domain/installments";
 import type { TimeOfDay } from "@/domain/reminder";
 import { reminderReconcile } from "@/domain/reminder";
 import { translateNow } from "@/i18n/runtime";
+import { owedPayoffPlansCommand, runPlanningCommand } from "@/state/planning-commands";
 import { readBoolSettingCommand, runSettingsCommand, setBoolSettingCommand } from "@/state/settings-commands";
 
 import { readReminderTime } from "./reminder-sync";
@@ -77,7 +77,7 @@ async function dueNotices(
     cap: number,
     hideAmounts: boolean
 ): Promise<DatedReminder[]> {
-    const debts = debtReminders(await owedPayoffPlans(db, now), now, time).map((plan) =>
+    const debts = debtReminders(await runPlanningCommand(owedPayoffPlansCommand, { db, now }), now, time).map((plan) =>
         debtNotice(
             {
                 accountId: plan.account.id,

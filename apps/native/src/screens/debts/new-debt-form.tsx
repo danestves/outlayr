@@ -10,14 +10,11 @@ import { CategoryPickerSheet } from "@/components/category-picker-sheet";
 import { CurrencyPickerSheet } from "@/components/currency-picker-sheet";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useAccountBalance, useBankAccounts, usePeople } from "@/data/accounts";
-import { accountsRepo, getLastUsedAccount } from "@/data/accounts-core";
+import { getLastUsedAccount } from "@/data/accounts-core";
 import type { Account } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
 import type { Category } from "@/data/categories-core";
-import { createPerson, recordDebtMovement, recordOutsideMove, recordSoldOnCredit } from "@/data/debts-core";
-import { setPayoffPlan } from "@/data/payoff-plans";
 import { useNow } from "@/data/use-now";
-import type { Database } from "@/db/client";
 import { comesFromPerson, debtChoices, debtStanding } from "@/domain/debt-choices";
 import type { DebtVerb } from "@/domain/debts";
 import { addLocalMonths } from "@/domain/local-day";
@@ -28,6 +25,10 @@ import { useTranslation } from "@/i18n/context";
 import { rearmInstallmentReminders } from "@/lib/installment-reminder-sync";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { writeDebtCommand, writePayoffPlanCommand } from "@/state/planning-commands";
+import type { DebtDraft } from "@/state/planning-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 const MAX_SUGGESTIONS = 4;
 
@@ -42,61 +43,6 @@ export function resolvePerson(people: readonly Account[], personId: string | und
             ? people.filter((row) => row.name.toLocaleLowerCase().includes(query)).slice(0, MAX_SUGGESTIONS)
             : [];
     return { lockedPerson, person, suggestions };
-}
-
-interface DebtDraft {
-    account: Account | null;
-    amount: number;
-    /** Set for a sale on credit, which records income instead of a movement. */
-    category: Category | null;
-    currency: string;
-    date: Date;
-    newName: string;
-    note: string;
-    person: Account | null;
-    /** The person's side of a cross-currency movement, in their currency. */
-    theirAmount: number;
-    verb: DebtVerb;
-}
-
-async function writeDebt(db: Database, draft: DebtDraft): Promise<string> {
-    const { account, amount, category, currency, person } = draft;
-    const note = draft.note === "" ? undefined : draft.note;
-    if (category !== null) {
-        const buyer = person ?? { currency, id: await createPerson(db, { currency, name: draft.newName }) };
-        await recordSoldOnCredit(db, { amount, categoryId: category.id, date: draft.date, note, person: buyer });
-        return buyer.id;
-    }
-    if (account === null && person !== null) {
-        await recordOutsideMove(db, { amount, date: draft.date, note, person, verb: draft.verb });
-        return person.id;
-    }
-    if (account === null) {
-        return await createPerson(db, {
-            currency,
-            name: draft.newName,
-            openingBalance: comesFromPerson(draft.verb) ? -amount : amount,
-        });
-    }
-    const target = person ?? { currency, id: await createPerson(db, { currency, name: draft.newName }) };
-    const crossCurrency = target.currency !== account.currency;
-    await recordDebtMovement(db, {
-        account: { accountId: account.id, amount, currency: account.currency },
-        date: draft.date,
-        note,
-        person: { accountId: target.id, amount: crossCurrency ? draft.theirAmount : amount, currency: target.currency },
-        rateType: crossCurrency ? "custom" : null,
-        verb: draft.verb,
-    });
-    return target.id;
-}
-
-export async function writePayoffPlan(db: Database, personId: string, targetDate: Date): Promise<void> {
-    const people = await accountsRepo.listActive(db);
-    const person = people.find((row) => row.id === personId);
-    if (person) {
-        await setPayoffPlan(db, person, targetDate);
-    }
 }
 
 interface DraftInput {
@@ -142,6 +88,8 @@ export interface NewDebtProps {
 
 export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialVerb }: NewDebtProps) {
     const db = useDatabase();
+    const writeDebt = useAtomCommand(writeDebtCommand, SILENT);
+    const writePayoffPlan = useAtomCommand(writePayoffPlanCommand, SILENT);
     const router = useRouter();
     const t = useTranslation();
     const haptics = useHaptics();
@@ -211,7 +159,7 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
         };
         let debtorId: string;
         try {
-            debtorId = await writeDebt(db, debt);
+            debtorId = unwrapAtomCommand(await writeDebt({ db, draft: debt }));
         } catch (error) {
             console.error("Failed to save the debt", error);
             haptics("error");
@@ -222,7 +170,7 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
         // A failed plan is reported, but the debt stands.
         if (payBackBy !== null) {
             try {
-                await writePayoffPlan(db, debtorId, payBackBy);
+                unwrapAtomCommand(await writePayoffPlan({ db, personId: debtorId, targetDate: payBackBy }));
             } catch (error) {
                 console.error("Failed to save the payoff plan", error);
                 notifyFailure({ title: t("debts.plan.failed") });

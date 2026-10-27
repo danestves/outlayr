@@ -22,7 +22,6 @@ import { cn } from "@/components/tw";
 import { useDisplaySettings, useSettingNumber } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { usePeople } from "@/data/accounts";
-import { transfersRepo } from "@/data/transfers-core";
 import type { SavedTransfer, TransferInput } from "@/data/transfers-core";
 import { formatSignedAmount } from "@/domain/account-display";
 import { rowAmountLabel } from "@/domain/amount-label";
@@ -50,6 +49,9 @@ import { freshEntries } from "@/lib/fresh-entries";
 import { notifySaved } from "@/lib/notify";
 import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
+import { createTransferCommand, updateTransferCommand } from "@/state/accounts-commands";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
 import { blockPrompt, formatRate, gapPrompt, rateDeltaNote } from "./prompts";
@@ -228,6 +230,8 @@ export default function TransferEditor({
     seed,
 }: TransferEditorProps) {
     const db = useDatabase();
+    const createTransfer = useAtomCommand(createTransferCommand, SILENT);
+    const updateTransfer = useAtomCommand(updateTransferCommand, SILENT);
     const router = useRouter();
     const accountCreateRoute = useAccountCreateRoute();
     const t = useTranslation();
@@ -342,9 +346,9 @@ export default function TransferEditor({
         };
         const persist = async () => {
             if (saved) {
-                await transfersRepo.update(db, saved.id, input);
+                unwrapAtomCommand(await updateTransfer({ db, id: saved.id, input }));
             } else {
-                freshEntries.mark(await transfersRepo.create(db, input));
+                freshEntries.mark(unwrapAtomCommand(await createTransfer({ db, input })));
                 notifySaved({
                     actionLabel: t("transfers.saved.another"),
                     amount: {

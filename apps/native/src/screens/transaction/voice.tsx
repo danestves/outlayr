@@ -26,13 +26,12 @@ import { ModalClose } from "@/components/modal-close";
 import { VoiceOrb } from "@/components/voice/voice-orb";
 import type { VoiceOrbState } from "@/components/voice/voice-orb";
 import { useDatabase } from "@/contexts/local-data-context";
-import { getAccountById, getLastUsedAccount, rememberLastUsedAccount } from "@/data/accounts-core";
+import { getAccountById, getLastUsedAccount } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { suggestedCardFee } from "@/data/card-fees-core";
 import { getCategoryById } from "@/data/categories-core";
 import { useAiConsent } from "@/data/settings";
 import type { TransactionInput } from "@/data/transactions-core";
-import { transfersRepo } from "@/data/transfers-core";
 import type { Database } from "@/db/client";
 import type { AuthGate } from "@/domain/auth-gate";
 import { formatChargeDate } from "@/domain/dates";
@@ -71,6 +70,7 @@ import { freshEntries } from "@/lib/fresh-entries";
 import { posthog } from "@/lib/posthog";
 import { syncSubscriptionReminders } from "@/lib/subscription-reminder-sync";
 import { useHaptics } from "@/lib/use-haptics";
+import { createTransferCommand, rememberLastUsedAccountCommand } from "@/state/accounts-commands";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
 import {
     backfillRecurringCommand,
@@ -605,6 +605,8 @@ function openSettings() {
 function VoiceThreadScreen() {
     const router = useRouter();
     const db = useDatabase();
+    const rememberLastUsed = useAtomCommand(rememberLastUsedAccountCommand, SILENT);
+    const createTransfer = useAtomCommand(createTransferCommand, SILENT);
     const t = useTranslation();
     const haptics = useHaptics();
     const { language } = useLanguage();
@@ -723,7 +725,7 @@ function VoiceThreadScreen() {
                 });
             }
             if (draft.accountId) {
-                await rememberLastUsedAccount(db, draft.accountId).catch(() => null);
+                await rememberLastUsed({ db, id: draft.accountId });
             }
             haptics("success");
             // A modal gesture can dismiss this mid-write; popping again would take the screen beneath.
@@ -740,18 +742,23 @@ function VoiceThreadScreen() {
         const note = draft.details ?? "";
         const write = async () => {
             try {
-                const transferId = await transfersRepo.create(db, {
-                    date: draft.date,
-                    exchangeRate: 1,
-                    exchangeRateType: null,
-                    fromAccountId: from.id,
-                    fromAmount: draft.amount,
-                    fromCurrency: draft.currency,
-                    note,
-                    toAccountId: to.id,
-                    toAmount: draft.amount,
-                    toCurrency: draft.currency,
-                });
+                const transferId = unwrapAtomCommand(
+                    await createTransfer({
+                        db,
+                        input: {
+                            date: draft.date,
+                            exchangeRate: 1,
+                            exchangeRateType: null,
+                            fromAccountId: from.id,
+                            fromAmount: draft.amount,
+                            fromCurrency: draft.currency,
+                            note,
+                            toAccountId: to.id,
+                            toAmount: draft.amount,
+                            toCurrency: draft.currency,
+                        },
+                    })
+                );
                 freshEntries.mark(transferId);
             } catch {
                 setSaving(false);

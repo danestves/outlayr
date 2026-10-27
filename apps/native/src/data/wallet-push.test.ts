@@ -62,7 +62,7 @@ test("says where the next tap lands, the way the drain will file it", async () =
     const deleted = await entry("Gone Cafe", "cat-coffee", "2026-03-02T12:00:00Z");
     await db.update(transactions).set({ deletedAt: NOW }).where(eq(transactions.id, deleted));
 
-    await expect(buildWalletPush(db)).resolves.toStrictEqual({
+    await expect(Effect.runPromise(buildWalletPush(db))).resolves.toStrictEqual({
         cards: {
             Amex: { label: null, pick: false },
             "Chase Sapphire Visa": { label: "Chase Sapphire", pick: false },
@@ -79,7 +79,9 @@ test("never asks which account while the ledger has none", async () => {
     const db = migratedDatabase();
     await Effect.runPromise(setMeta(db, META_KEYS.walletCards, JSON.stringify([{ lastAt: 1, text: "Visa" }])));
 
-    await expect(buildWalletPush(db)).resolves.toMatchObject({ cards: { Visa: { label: null, pick: false } } });
+    await expect(Effect.runPromise(buildWalletPush(db))).resolves.toMatchObject({
+        cards: { Visa: { label: null, pick: false } },
+    });
 });
 
 test("keeps the newest category when two spellings of a place normalize together", async () => {
@@ -105,5 +107,7 @@ test("keeps the newest category when two spellings of a place normalize together
     await entry("Café", "cat-coffee", "2026-02-01T12:00:00Z");
     await entry("Cafe\u0301", "cat-food", "2026-03-01T12:00:00Z");
 
-    await expect(buildWalletPush(db)).resolves.toMatchObject({ places: { expense: { café: "Restaurants" } } });
+    await expect(Effect.runPromise(buildWalletPush(db))).resolves.toMatchObject({
+        places: { expense: { café: "Restaurants" } },
+    });
 });

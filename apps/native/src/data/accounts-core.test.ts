@@ -37,14 +37,18 @@ describe("accountsRepo.create", () => {
 
     it("stamps identity, dates, and an appended sortOrder", async () => {
         const before = Date.now();
-        const first = await accountsRepo.create(db, {
-            currency: "USD",
-            name: "Checking",
-        });
-        const second = await accountsRepo.create(db, {
-            currency: "USD",
-            name: "Savings",
-        });
+        const first = await Effect.runPromise(
+            accountsRepo.create(db, {
+                currency: "USD",
+                name: "Checking",
+            })
+        );
+        const second = await Effect.runPromise(
+            accountsRepo.create(db, {
+                currency: "USD",
+                name: "Savings",
+            })
+        );
 
         const row = getAccountById(db, first);
         expect(row?.name).toBe("Checking");
@@ -61,12 +65,14 @@ describe("accountsRepo.create", () => {
     it("freezes a foreign opening balance at the rate of its own day", async () => {
         await addRate(db, "EUR", "2026-01-01", 0.8);
 
-        const id = await accountsRepo.create(db, {
-            currency: "EUR",
-            initialBalance: 100,
-            initialBalanceDate: JAN_5,
-            name: "Girokonto",
-        });
+        const id = await Effect.runPromise(
+            accountsRepo.create(db, {
+                currency: "EUR",
+                initialBalance: 100,
+                initialBalanceDate: JAN_5,
+                name: "Girokonto",
+            })
+        );
 
         const row = getAccountById(db, id);
         expect(row?.initialBalanceDate.getTime()).toBe(JAN_5.getTime());
@@ -76,12 +82,14 @@ describe("accountsRepo.create", () => {
     it("keeps the sign of a negative opening balance through the freeze", async () => {
         await addRate(db, "EUR", "2026-01-01", 0.8);
 
-        const id = await accountsRepo.create(db, {
-            currency: "EUR",
-            initialBalance: -40,
-            initialBalanceDate: JAN_5,
-            name: "Overdrawn",
-        });
+        const id = await Effect.runPromise(
+            accountsRepo.create(db, {
+                currency: "EUR",
+                initialBalance: -40,
+                initialBalanceDate: JAN_5,
+                name: "Overdrawn",
+            })
+        );
 
         const row = getAccountById(db, id);
         expect(row?.initialBalance).toBe(-40);
@@ -89,12 +97,14 @@ describe("accountsRepo.create", () => {
     });
 
     it("leaves the freeze null when no rate reaches the day", async () => {
-        const id = await accountsRepo.create(db, {
-            currency: "EUR",
-            initialBalance: 100,
-            initialBalanceDate: JAN_5,
-            name: "Cash",
-        });
+        const id = await Effect.runPromise(
+            accountsRepo.create(db, {
+                currency: "EUR",
+                initialBalance: 100,
+                initialBalanceDate: JAN_5,
+                name: "Cash",
+            })
+        );
 
         expect(getAccountById(db, id)?.initialBalanceUsd).toBeNull();
     });
@@ -108,15 +118,17 @@ describe("accountsRepo.update", () => {
 
     it("keeps the frozen USD value when the money fields do not move", async () => {
         await addRate(db, "EUR", "2026-01-01", 0.8);
-        const id = await accountsRepo.create(db, {
-            currency: "EUR",
-            initialBalance: 100,
-            initialBalanceDate: JAN_5,
-            name: "Girokonto",
-        });
+        const id = await Effect.runPromise(
+            accountsRepo.create(db, {
+                currency: "EUR",
+                initialBalance: 100,
+                initialBalanceDate: JAN_5,
+                name: "Girokonto",
+            })
+        );
         await db.delete(exchangeRates);
 
-        await accountsRepo.update(db, id, { icon: "Bank", name: "Konto" });
+        await Effect.runPromise(accountsRepo.update(db, id, { icon: "Bank", name: "Konto" }));
 
         const row = getAccountById(db, id);
         expect(row?.name).toBe("Konto");
@@ -126,68 +138,78 @@ describe("accountsRepo.update", () => {
 
     it("re-freezes when the opening balance moves", async () => {
         await addRate(db, "EUR", "2026-01-01", 0.8);
-        const id = await accountsRepo.create(db, {
-            currency: "EUR",
-            initialBalance: 100,
-            initialBalanceDate: JAN_5,
-            name: "Girokonto",
-        });
+        const id = await Effect.runPromise(
+            accountsRepo.create(db, {
+                currency: "EUR",
+                initialBalance: 100,
+                initialBalanceDate: JAN_5,
+                name: "Girokonto",
+            })
+        );
 
-        await accountsRepo.update(db, id, { initialBalance: 200 });
+        await Effect.runPromise(accountsRepo.update(db, id, { initialBalance: 200 }));
 
         expect(getAccountById(db, id)?.initialBalanceUsd).toBe(250);
     });
 
     it("re-freezes when the currency moves", async () => {
         await addRate(db, "EUR", "2026-01-01", 0.8);
-        const id = await accountsRepo.create(db, {
-            currency: "EUR",
-            initialBalance: 100,
-            initialBalanceDate: JAN_5,
-            name: "Konto",
-        });
+        const id = await Effect.runPromise(
+            accountsRepo.create(db, {
+                currency: "EUR",
+                initialBalance: 100,
+                initialBalanceDate: JAN_5,
+                name: "Konto",
+            })
+        );
 
-        await accountsRepo.update(db, id, { currency: "USD" });
+        await Effect.runPromise(accountsRepo.update(db, id, { currency: "USD" }));
 
         expect(getAccountById(db, id)?.initialBalanceUsd).toBe(100);
     });
 
     it("clears the key when the logo is taken off", async () => {
-        const id = await accountsRepo.create(db, {
-            currency: "USD",
-            imageKey: "transaction-photos/user/logo.jpg",
-            imageUri: "file:///photos/logo.jpg",
-            name: "Checking",
-        });
+        const id = await Effect.runPromise(
+            accountsRepo.create(db, {
+                currency: "USD",
+                imageKey: "transaction-photos/user/logo.jpg",
+                imageUri: "file:///photos/logo.jpg",
+                name: "Checking",
+            })
+        );
 
-        await accountsRepo.update(db, id, { imageUri: null });
+        await Effect.runPromise(accountsRepo.update(db, id, { imageUri: null }));
 
         expect(getAccountById(db, id)?.imageKey).toBeNull();
     });
 
     it("keeps the key of a logo this device has yet to fetch", async () => {
-        const id = await accountsRepo.create(db, {
-            currency: "USD",
-            imageKey: "transaction-photos/user/logo.jpg",
-            name: "Checking",
-        });
+        const id = await Effect.runPromise(
+            accountsRepo.create(db, {
+                currency: "USD",
+                imageKey: "transaction-photos/user/logo.jpg",
+                name: "Checking",
+            })
+        );
 
-        await accountsRepo.update(db, id, { imageUri: null, name: "Renamed" });
+        await Effect.runPromise(accountsRepo.update(db, id, { imageUri: null, name: "Renamed" }));
 
         expect(getAccountById(db, id)?.imageKey).toBe("transaction-photos/user/logo.jpg");
     });
 
     it("stamps updatedAt", async () => {
-        const id = await accountsRepo.create(db, {
-            currency: "USD",
-            name: "Checking",
-        });
+        const id = await Effect.runPromise(
+            accountsRepo.create(db, {
+                currency: "USD",
+                name: "Checking",
+            })
+        );
         const created = getAccountById(db, id)?.updatedAt.getTime() ?? 0;
         await new Promise((resolve) => {
             setTimeout(resolve, 2);
         });
 
-        await accountsRepo.update(db, id, { name: "Renamed" });
+        await Effect.runPromise(accountsRepo.update(db, id, { name: "Renamed" }));
 
         expect(getAccountById(db, id)?.updatedAt.getTime()).toBeGreaterThan(created);
     });
@@ -200,18 +222,22 @@ describe("accountsRepo lifecycle", () => {
     });
 
     it("softDelete tombstones and drops the row from listActive", async () => {
-        const first = await accountsRepo.create(db, {
-            currency: "USD",
-            name: "Checking",
-        });
-        const second = await accountsRepo.create(db, {
-            currency: "USD",
-            name: "Savings",
-        });
+        const first = await Effect.runPromise(
+            accountsRepo.create(db, {
+                currency: "USD",
+                name: "Checking",
+            })
+        );
+        const second = await Effect.runPromise(
+            accountsRepo.create(db, {
+                currency: "USD",
+                name: "Savings",
+            })
+        );
 
-        await accountsRepo.softDelete(db, first);
+        await Effect.runPromise(accountsRepo.softDelete(db, first));
 
-        const rows = await accountsRepo.listActive(db);
+        const rows = await Effect.runPromise(accountsRepo.listActive(db));
         expect(rows.map((row) => row.id)).toStrictEqual([second]);
         const gone = (await db.select().from(accounts)).find((row) => row.id === first);
         expect(gone?.deletedAt).not.toBeNull();
@@ -220,14 +246,18 @@ describe("accountsRepo lifecycle", () => {
     });
 
     it("softDelete detaches the entries it kept, and leaves other accounts alone", async () => {
-        const doomed = await accountsRepo.create(db, {
-            currency: "USD",
-            name: "Checking",
-        });
-        const kept = await accountsRepo.create(db, {
-            currency: "USD",
-            name: "Savings",
-        });
+        const doomed = await Effect.runPromise(
+            accountsRepo.create(db, {
+                currency: "USD",
+                name: "Checking",
+            })
+        );
+        const kept = await Effect.runPromise(
+            accountsRepo.create(db, {
+                currency: "USD",
+                name: "Savings",
+            })
+        );
         const detached = await Effect.runPromise(
             transactionsRepo.create(db, {
                 accountId: doomed,
@@ -253,7 +283,7 @@ describe("accountsRepo lifecycle", () => {
             })
         );
 
-        await accountsRepo.softDelete(db, doomed);
+        await Effect.runPromise(accountsRepo.softDelete(db, doomed));
 
         const rows = await db.select().from(transactions);
         const byId = new Map(rows.map((row) => [row.id, row]));
@@ -265,8 +295,10 @@ describe("accountsRepo lifecycle", () => {
     });
 
     it("softDelete takes a person's own entries with them, schedule and all", async () => {
-        const pedro = await accountsRepo.create(db, { currency: "USD", kind: "person", name: "Pedro" });
-        const checking = await accountsRepo.create(db, { currency: "USD", name: "Checking" });
+        const pedro = await Effect.runPromise(
+            accountsRepo.create(db, { currency: "USD", kind: "person", name: "Pedro" })
+        );
+        const checking = await Effect.runPromise(accountsRepo.create(db, { currency: "USD", name: "Checking" }));
         const entry = { categoryId: "cat-1", currency: "USD", date: JAN_5, details: null };
         const sale = await Effect.runPromise(
             transactionsRepo.create(db, {
@@ -298,7 +330,7 @@ describe("accountsRepo lifecycle", () => {
             })
         );
 
-        await accountsRepo.softDelete(db, pedro);
+        await Effect.runPromise(accountsRepo.softDelete(db, pedro));
 
         const byId = new Map((await db.select().from(transactions)).map((row) => [row.id, row]));
         expect(byId.get(sale)?.deletedAt).toStrictEqual(expect.any(Date));
@@ -309,7 +341,9 @@ describe("accountsRepo lifecycle", () => {
     });
 
     it("a deleted person's entries are neither offered back nor restorable alone", async () => {
-        const pedro = await accountsRepo.create(db, { currency: "USD", kind: "person", name: "Pedro" });
+        const pedro = await Effect.runPromise(
+            accountsRepo.create(db, { currency: "USD", kind: "person", name: "Pedro" })
+        );
         const sale = await Effect.runPromise(
             transactionsRepo.create(db, {
                 accountId: pedro,
@@ -323,7 +357,7 @@ describe("accountsRepo lifecycle", () => {
             })
         );
 
-        await accountsRepo.softDelete(db, pedro);
+        await Effect.runPromise(accountsRepo.softDelete(db, pedro));
         await Effect.runPromise(transactionsRepo.restore(db, sale));
 
         await expect(deletedTransactionsQuery(db)).resolves.toStrictEqual([]);
@@ -332,7 +366,9 @@ describe("accountsRepo lifecycle", () => {
     });
 
     it("softDelete takes the account's savings goals with it", async () => {
-        const pedro = await accountsRepo.create(db, { currency: "USD", kind: "person", name: "Pedro" });
+        const pedro = await Effect.runPromise(
+            accountsRepo.create(db, { currency: "USD", kind: "person", name: "Pedro" })
+        );
         db.insert(savingsGoals)
             .values({
                 accountId: pedro,
@@ -347,20 +383,20 @@ describe("accountsRepo lifecycle", () => {
             })
             .run();
 
-        await accountsRepo.softDelete(db, pedro);
+        await Effect.runPromise(accountsRepo.softDelete(db, pedro));
 
         const [goal] = await db.select().from(savingsGoals);
         expect(goal?.deletedAt).toStrictEqual(expect.any(Date));
     });
 
     it("reorder assigns each id its array index and stamps updatedAt", async () => {
-        const a = await accountsRepo.create(db, { currency: "USD", name: "A" });
-        const b = await accountsRepo.create(db, { currency: "USD", name: "B" });
-        const c = await accountsRepo.create(db, { currency: "USD", name: "C" });
+        const a = await Effect.runPromise(accountsRepo.create(db, { currency: "USD", name: "A" }));
+        const b = await Effect.runPromise(accountsRepo.create(db, { currency: "USD", name: "B" }));
+        const c = await Effect.runPromise(accountsRepo.create(db, { currency: "USD", name: "C" }));
 
-        await accountsRepo.reorder(db, [c, a, b]);
+        await Effect.runPromise(accountsRepo.reorder(db, [c, a, b]));
 
-        const rows = await accountsRepo.listActive(db);
+        const rows = await Effect.runPromise(accountsRepo.listActive(db));
         expect(rows.map((row) => row.id)).toStrictEqual([c, a, b]);
         expect(rows.map((row) => row.sortOrder)).toStrictEqual([0, 1, 2]);
     });
@@ -424,36 +460,44 @@ describe("the last-used account", () => {
     });
 
     it("moves with the newest attachment", async () => {
-        const first = await accountsRepo.create(db, {
-            currency: "USD",
-            name: "Checking",
-        });
-        const second = await accountsRepo.create(db, {
-            currency: "USD",
-            name: "Savings",
-        });
+        const first = await Effect.runPromise(
+            accountsRepo.create(db, {
+                currency: "USD",
+                name: "Checking",
+            })
+        );
+        const second = await Effect.runPromise(
+            accountsRepo.create(db, {
+                currency: "USD",
+                name: "Savings",
+            })
+        );
 
-        await rememberLastUsedAccount(db, first);
-        await rememberLastUsedAccount(db, second);
+        await Effect.runPromise(rememberLastUsedAccount(db, first));
+        await Effect.runPromise(rememberLastUsedAccount(db, second));
 
         expect(getLastUsedAccount(db)?.id).toBe(second);
     });
 
     it("never defaults the next entry to a person", async () => {
-        const pedro = await accountsRepo.create(db, { currency: "USD", kind: "person", name: "Pedro" });
-        await rememberLastUsedAccount(db, pedro);
+        const pedro = await Effect.runPromise(
+            accountsRepo.create(db, { currency: "USD", kind: "person", name: "Pedro" })
+        );
+        await Effect.runPromise(rememberLastUsedAccount(db, pedro));
 
         expect(getLastUsedAccount(db)).toBeNull();
     });
 
     it("answers null once the remembered account is deleted", async () => {
-        const id = await accountsRepo.create(db, {
-            currency: "USD",
-            name: "Checking",
-        });
-        await rememberLastUsedAccount(db, id);
+        const id = await Effect.runPromise(
+            accountsRepo.create(db, {
+                currency: "USD",
+                name: "Checking",
+            })
+        );
+        await Effect.runPromise(rememberLastUsedAccount(db, id));
 
-        await accountsRepo.softDelete(db, id);
+        await Effect.runPromise(accountsRepo.softDelete(db, id));
 
         expect(getLastUsedAccount(db)).toBeNull();
     });
@@ -474,11 +518,13 @@ describe("an attached entry moving the balance", () => {
     }
 
     it("shifts the balance in the account's own currency", async () => {
-        const accountId = await accountsRepo.create(db, {
-            currency: "USD",
-            initialBalance: 100,
-            name: "Checking",
-        });
+        const accountId = await Effect.runPromise(
+            accountsRepo.create(db, {
+                currency: "USD",
+                initialBalance: 100,
+                name: "Checking",
+            })
+        );
         expect((await balanceOf(accountId)).total).toBe(100);
 
         await Effect.runPromise(

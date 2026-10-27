@@ -6,6 +6,8 @@ import type { AccountCellRow, DisplayedBalance, AccountsOverview } from "@outlay
 import { utcDateString } from "@outlayr/money/dates";
 import type { RateTable } from "@outlayr/money/valuation";
 import { isNull } from "drizzle-orm";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { accounts, outsideMoves, outsidePayments, transactions, transfers } from "@/db/schema";
@@ -110,16 +112,35 @@ function plottedCells(
     ];
 }
 
-export async function settledCellsAt(db: Database, accountId: string, now: Date): Promise<PlottedCell[]> {
-    const [rows, outbound, inbound, outside, moves] = await Promise.all([
-        settledAccountCellQuery(db, accountId, now),
-        settledTransferOutboundQuery(db, accountId, now),
-        settledTransferInboundQuery(db, accountId, now),
-        settledOutsidePaymentQuery(db, accountId, now),
-        settledOutsideMoveQuery(db, accountId, now),
-    ]);
-    return plottedCells(rows, outbound, inbound, [...outside, ...moves]);
+export class AccountBalanceError extends Schema.TaggedError<AccountBalanceError>()("AccountBalanceError", {
+    accountId: Schema.String,
+    cause: Schema.Defect(),
+}) {
+    override get message(): string {
+        return `Reading the settled cells of account ${this.accountId} failed`;
+    }
 }
+
+const readCell = <A>(accountId: string, run: () => PromiseLike<A>) =>
+    Effect.tryPromise({ catch: (cause) => new AccountBalanceError({ accountId, cause }), try: run });
+
+export const settledCellsAt = Effect.fn("AccountBalance.settledCellsAt")(function* settledCellsAt(
+    db: Database,
+    accountId: string,
+    now: Date
+) {
+    const [rows, outbound, inbound, outside, moves] = yield* Effect.all(
+        [
+            readCell(accountId, () => settledAccountCellQuery(db, accountId, now)),
+            readCell(accountId, () => settledTransferOutboundQuery(db, accountId, now)),
+            readCell(accountId, () => settledTransferInboundQuery(db, accountId, now)),
+            readCell(accountId, () => settledOutsidePaymentQuery(db, accountId, now)),
+            readCell(accountId, () => settledOutsideMoveQuery(db, accountId, now)),
+        ],
+        { concurrency: "unbounded" }
+    );
+    return plottedCells(rows, outbound, inbound, [...outside, ...moves]);
+});
 
 interface AccountBalanceDetails {
     balance: AccountBalance;
@@ -218,28 +239,30 @@ export function useAccountTransactions(db: Database, accountId: string): Transac
 
 // Not the `useNow()`-bounded hooks: those miss a row scheduled earlier today until the next tick, and a goal's
 // start anchor is frozen once written, so it needs the balance at this instant.
-export async function settledBalanceAt(
+export const settledBalanceAt = Effect.fn("AccountBalance.settledBalanceAt")(function* settledBalanceAt(
     db: Database,
     account: Account,
     valuation: Valuation,
     now: Date
-): Promise<DisplayedBalance> {
-    const [cells, { rates }] = await Promise.all([
-        settledCellsAt(db, account.id, now),
-        loadValuationIn(db, valuation.displayCurrency, [account.currency]),
-    ]);
+) {
+    const [cells, { rates }] = yield* Effect.all(
+        [settledCellsAt(db, account.id, now), loadValuationIn(db, valuation.displayCurrency, [account.currency])],
+        { concurrency: "unbounded" }
+    );
     const { exact, value } = balanceIn(account, cells, valuation.displayCurrency, rates, utcDateString(now.getTime()));
-    return { exact, value };
-}
+    return { exact, value } satisfies DisplayedBalance;
+});
 
-export async function openingForBalance(
+export const openingForBalance = Effect.fn("AccountBalance.openingForBalance")(function* openingForBalance(
     db: Database,
     accountId: string,
     balance: number,
     currency: string,
     now: Date
-): Promise<number> {
-    const [cells, { rates }] = await Promise.all([settledCellsAt(db, accountId, now), loadValuationIn(db, currency)]);
+) {
+    const [cells, { rates }] = yield* Effect.all([settledCellsAt(db, accountId, now), loadValuationIn(db, currency)], {
+        concurrency: "unbounded",
+    });
     const flow = accountBalance({ currency, initialBalance: 0 }, cells, rates).total;
     return roundToMinorUnits(balance - flow, currency);
-}
+});

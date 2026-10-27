@@ -41,6 +41,11 @@ export class PendingWritesError extends Schema.TaggedError<PendingWritesError>()
 const attempt = <A>(operation: typeof PendingWritesOperation.Type, run: () => PromiseLike<A>) =>
     Effect.tryPromise({ catch: (cause) => new PendingWritesError({ cause, operation }), try: run });
 
+const listBanks = (db: Database) =>
+    accountsRepo
+        .listBanks(db)
+        .pipe(Effect.mapError((cause) => new PendingWritesError({ cause, operation: "account" })));
+
 const attemptSync = <A>(operation: typeof PendingWritesOperation.Type, run: () => A) =>
     Effect.try({ catch: (cause) => new PendingWritesError({ cause, operation }), try: run });
 
@@ -213,7 +218,7 @@ export const cardStillAsks = Effect.fn("PendingWrites.cardStillAsks")(function* 
     db: Database,
     text: string
 ) {
-    const live = yield* attempt("account", () => accountsRepo.listBanks(db));
+    const live = yield* listBanks(db);
     return cardStatus(text, parseWalletCards(yield* getMeta(db, META_KEYS.walletCards)), live).asks;
 });
 
@@ -241,7 +246,7 @@ export const fileWaitingPurchases = Effect.fn("PendingWrites.fileWaitingPurchase
     if (waitingCards.length === 0) {
         return;
     }
-    const live = yield* attempt("account", () => accountsRepo.listBanks(db));
+    const live = yield* listBanks(db);
     const attempts = waitingCards.flatMap((card) => {
         const { account } = cardStatus(card.text, cards, live);
         return account
@@ -742,7 +747,7 @@ const resolveAccount = Effect.fn("PendingWrites.resolveAccount")(function* resol
     if (!card) {
         return { account: null, asks: false };
     }
-    const rows = yield* attempt("account", () => accountsRepo.listBanks(db));
+    const rows = yield* listBanks(db);
     const status = cardStatus(card, parseWalletCards(yield* getMeta(db, META_KEYS.walletCards)), rows);
     const charged = job.currency?.trim().toUpperCase() || detectCurrency(job.amountText);
     const same = charged ? rows.filter((row) => row.currency === charged) : [];

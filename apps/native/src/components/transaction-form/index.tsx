@@ -28,7 +28,7 @@ import { SubscribeFields } from "@/components/form/subscribe-fields";
 import { useAppSettings, useDisplaySettings, useSettingBool } from "@/contexts/display-settings-context";
 import { EMPTY_DRAFT, useIdentityDraft, useIdentityFlyUp } from "@/contexts/identity-draft-context";
 import { useBankAccounts, usePeople } from "@/data/accounts";
-import { getAccountById, getLastUsedAccount, rememberLastUsedAccount } from "@/data/accounts-core";
+import { getAccountById, getLastUsedAccount } from "@/data/accounts-core";
 import type { Account } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
 import type { AttachmentDraft } from "@/data/attachments-core";
@@ -111,6 +111,7 @@ import { openNotificationSettings, reminderPermission, requestReminderPermission
 import { askForReview } from "@/lib/review-prompt";
 import { syncSubscriptionReminders } from "@/lib/subscription-reminder-sync";
 import { useHaptics } from "@/lib/use-haptics";
+import { rememberLastUsedAccountCommand } from "@/state/accounts-commands";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
 import {
     backfillRecurringCommand,
@@ -501,6 +502,7 @@ export function TransactionForm({
     const colors = useColors();
     const haptics = useHaptics();
     const setBoolSetting = useAtomCommand(setBoolSettingCommand, SILENT);
+    const rememberLastUsed = useAtomCommand(rememberLastUsedAccountCommand, SILENT);
     const t = useTranslation();
     const { language } = useLanguage();
     const { use24Hour } = useDisplaySettings().state;
@@ -645,9 +647,10 @@ export function TransactionForm({
             // Committed from here down: no failure below may re-enable the CTA, or a second tap mints a fresh id and
             // the ledger gets two subscriptions.
             if (value.account != null) {
-                rememberLastUsedAccount(db, value.account.id).catch((error) => {
-                    console.error("Failed to remember the account", error);
-                });
+                const remembered = await rememberLastUsed({ db, id: value.account.id });
+                if (AsyncResult.isFailure(remembered)) {
+                    console.error("Failed to remember the account", Cause.squash(remembered.cause));
+                }
             }
             if (mode === "create" && queueable(value.merchant)) {
                 queueEnrichment({ db, id: savedId }).then((queued) => {

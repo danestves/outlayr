@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 import BetterSqlite3 from "better-sqlite3";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { appMeta, exchangeRates } from "@/db/schema";
@@ -104,13 +105,15 @@ describe("pullRatesIfDue", () => {
         const db = makeDb();
         await db.insert(appMeta).values({ key: "lastRatesPullAt", value: String(NOW - 1000) });
         let asked = 0;
-        const landed = await pullRatesIfDue(
-            db,
-            async () => {
-                asked += 1;
-                return { nextCursor: null, rows: [], windowStart: "2026-01-01" };
-            },
-            { now: NOW }
+        const landed = await Effect.runPromise(
+            pullRatesIfDue(
+                db,
+                async () => {
+                    asked += 1;
+                    return { nextCursor: null, rows: [], windowStart: "2026-01-01" };
+                },
+                { now: NOW }
+            )
         );
 
         expect(landed).toBe(false);
@@ -122,7 +125,7 @@ describe("pullRatesIfDue", () => {
         await db.insert(appMeta).values({ key: "lastRatesPullAt", value: String(NOW - 1000) });
         const { pull } = pagedPuller([[wireRow("EUR", "2026-07-28")]]);
 
-        await expect(pullRatesIfDue(db, pull, { force: true, now: NOW })).resolves.toBe(true);
+        await expect(Effect.runPromise(pullRatesIfDue(db, pull, { force: true, now: NOW }))).resolves.toBe(true);
         await expect(storedRates(db)).resolves.toHaveLength(1);
     });
 
@@ -134,7 +137,7 @@ describe("pullRatesIfDue", () => {
             [wireRow("JPY", "2026-07-28")],
         ]);
 
-        await expect(pullRatesIfDue(db, pull, { now: NOW })).resolves.toBe(true);
+        await expect(Effect.runPromise(pullRatesIfDue(db, pull, { now: NOW }))).resolves.toBe(true);
         expect(calls).toStrictEqual([undefined, 1, 2]);
         expect((await storedRates(db)).map((row) => row.quote)).toStrictEqual(["EUR", "GBP", "JPY"]);
     });
@@ -144,7 +147,7 @@ describe("pullRatesIfDue", () => {
         const oversized = Array.from({ length: 6000 }, (_, index) => wireRow(`Q${index}`, "2026-07-28"));
         const { pull } = pagedPuller([oversized]);
 
-        await expect(pullRatesIfDue(db, pull, { now: NOW })).resolves.toBe(true);
+        await expect(Effect.runPromise(pullRatesIfDue(db, pull, { now: NOW }))).resolves.toBe(true);
         await expect(storedRates(db)).resolves.toHaveLength(6000);
     });
 
@@ -153,7 +156,7 @@ describe("pullRatesIfDue", () => {
         await db.insert(exchangeRates).values(wireRow("VES", "2020-01-01"));
         const { pull } = pagedPuller([[wireRow("EUR", "2026-07-28")]]);
 
-        await pullRatesIfDue(db, pull, { now: NOW });
+        await Effect.runPromise(pullRatesIfDue(db, pull, { now: NOW }));
         await expect(storedRates(db)).resolves.toStrictEqual([{ date: "2026-07-28", quote: "EUR" }]);
     });
 
@@ -162,7 +165,7 @@ describe("pullRatesIfDue", () => {
         await db.insert(appMeta).values({ key: "lastRatesPullAt", value: String(NOW - 1) });
         const { pull } = pagedPuller([[wireRow("EUR", "2026-07-28")]]);
 
-        await pullRatesIfDue(db, pull, { force: true, now: NOW });
+        await Effect.runPromise(pullRatesIfDue(db, pull, { force: true, now: NOW }));
         await expect(lastPullAt(db)).resolves.toBe(String(NOW));
     });
 
@@ -171,7 +174,7 @@ describe("pullRatesIfDue", () => {
         await db.insert(exchangeRates).values(wireRow("VES", "2020-01-01"));
         const { pull } = pagedPuller([[]]);
 
-        await expect(pullRatesIfDue(db, pull, { now: NOW })).resolves.toBe(false);
+        await expect(Effect.runPromise(pullRatesIfDue(db, pull, { now: NOW }))).resolves.toBe(false);
         await expect(storedRates(db)).resolves.toHaveLength(1);
         await expect(lastPullAt(db)).resolves.toBeNull();
     });
@@ -185,7 +188,7 @@ describe("pullRatesIfDue", () => {
 
         // `toMatchObject`, not `.rejects.toThrow()`: the native `SqliteError` comes from another realm, so `toThrow()`
         // can report "did not throw".
-        await expect(pullRatesIfDue(db, pull, { now: NOW })).rejects.toMatchObject({
+        await expect(Effect.runPromise(pullRatesIfDue(db, pull, { now: NOW }))).rejects.toMatchObject({
             message: expect.any(String),
         });
         await expect(storedRates(db)).resolves.toStrictEqual([{ date: "2020-01-01", quote: "VES" }]);
@@ -206,7 +209,7 @@ describe("pullRatesIfDue", () => {
                 .all();
         });
 
-        await pullRatesIfDue(db, pull, { now: NOW });
+        await Effect.runPromise(pullRatesIfDue(db, pull, { now: NOW }));
         unsubscribe();
         expect(atBump).toStrictEqual([{ date: "2026-07-28", quote: "EUR" }]);
     });
@@ -220,7 +223,7 @@ describe("pullRatesIfDue", () => {
         const { pull } = pagedPuller([rows]);
         const before = ratesRevision();
 
-        await expect(pullRatesIfDue(db, pull, { now: NOW })).rejects.toThrow();
+        await expect(Effect.runPromise(pullRatesIfDue(db, pull, { now: NOW }))).rejects.toThrow();
 
         expect(ratesRevision()).toBe(before);
         await expect(storedRates(db)).resolves.toStrictEqual([{ date: "2020-01-01", quote: "VES" }]);
@@ -233,10 +236,9 @@ describe("applyRecentRates", () => {
         await db.insert(exchangeRates).values([wireRow("EUR", "2026-07-27"), wireRow("EUR", "2026-07-28")]);
         const before = ratesRevision();
 
-        const landed = await applyRecentRates(db, [
-            { ...wireRow("EUR", "2026-07-28"), rate: 0.88 },
-            wireRow("GBP", "2026-07-28"),
-        ]);
+        const landed = await Effect.runPromise(
+            applyRecentRates(db, [{ ...wireRow("EUR", "2026-07-28"), rate: 0.88 }, wireRow("GBP", "2026-07-28")])
+        );
 
         expect(landed).toBe(true);
         expect(ratesRevision()).toBe(before + 1);
@@ -257,18 +259,20 @@ describe("applyRecentRates", () => {
         const delivery = [wireRow("EUR", "2026-07-27"), wireRow("EUR", "2026-07-28")];
         const before = ratesRevision();
 
-        await expect(applyRecentRates(db, delivery)).resolves.toBe(true);
-        await expect(applyRecentRates(db, delivery)).resolves.toBe(false);
+        await expect(Effect.runPromise(applyRecentRates(db, delivery))).resolves.toBe(true);
+        await expect(Effect.runPromise(applyRecentRates(db, delivery))).resolves.toBe(false);
         expect(ratesRevision()).toBe(before + 1);
     });
 
     it("writes the one rate that moved in an otherwise repeated delivery", async () => {
         const db = makeDb();
         const eur = wireRow("EUR", "2026-07-28");
-        await applyRecentRates(db, [eur, wireRow("GBP", "2026-07-28")]);
+        await Effect.runPromise(applyRecentRates(db, [eur, wireRow("GBP", "2026-07-28")]));
         const before = ratesRevision();
 
-        await expect(applyRecentRates(db, [eur, { ...wireRow("GBP", "2026-07-28"), rate: 0.85 }])).resolves.toBe(true);
+        await expect(
+            Effect.runPromise(applyRecentRates(db, [eur, { ...wireRow("GBP", "2026-07-28"), rate: 0.85 }]))
+        ).resolves.toBe(true);
         expect(ratesRevision()).toBe(before + 1);
         await expect(
             db
@@ -283,11 +287,11 @@ describe("applyRecentRates", () => {
 
     it("takes a re-stamped fetch time without bumping when the rate held", async () => {
         const db = makeDb();
-        await applyRecentRates(db, [wireRow("EUR", "2026-07-28")]);
+        await Effect.runPromise(applyRecentRates(db, [wireRow("EUR", "2026-07-28")]));
         const before = ratesRevision();
 
         await expect(
-            applyRecentRates(db, [{ ...wireRow("EUR", "2026-07-28"), fetchedAt: NOW + 3_600_000 }])
+            Effect.runPromise(applyRecentRates(db, [{ ...wireRow("EUR", "2026-07-28"), fetchedAt: NOW + 3_600_000 }]))
         ).resolves.toBe(false);
         expect(ratesRevision()).toBe(before);
         await expect(db.select({ fetchedAt: exchangeRates.fetchedAt }).from(exchangeRates)).resolves.toStrictEqual([

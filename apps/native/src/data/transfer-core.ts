@@ -2,10 +2,11 @@ import { ENTRY_RATE_TYPES } from "@outlayr/money/rates";
 import type { EntryRateType } from "@outlayr/money/rates";
 import { desc, eq, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
-import { withTransaction } from "@/db/transaction";
+import { transaction } from "@/db/transaction";
 import { parseCsv } from "@/domain/csv";
 import { DEFAULT_CURRENCY } from "@/domain/money";
 import { parseCsvAmount, parseCsvDate, parseCsvType, transactionsToCsv } from "@/domain/transaction-csv";
@@ -14,26 +15,44 @@ import type { DecimalSeparator } from "@/domain/transaction-csv";
 import { getMeta, META_KEYS } from "./app-meta-core";
 import { transactionsRepo } from "./transactions-core";
 
-export async function exportTransactionsCsv(db: Database): Promise<string> {
-    const rows = await db
-        .select({
-            amount: transactions.amount,
-            categoryName: categories.name,
-            currency: transactions.currency,
-            date: transactions.date,
-            exchangeRate: transactions.exchangeRate,
-            exchangeRateType: transactions.exchangeRateType,
-            income: transactions.income,
-            note: transactions.note,
-        })
-        .from(transactions)
-        .leftJoin(categories, eq(transactions.categoryId, categories.id))
-        .where(isNull(transactions.deletedAt))
-        .orderBy(desc(transactions.date));
+const CsvTransferOperation = Schema.Literals(["export", "import"]);
 
-    const ledgerCurrency = (await Effect.runPromise(getMeta(db, META_KEYS.currency))) ?? DEFAULT_CURRENCY;
-    return transactionsToCsv(rows, ledgerCurrency);
+export class CsvTransferError extends Schema.TaggedError<CsvTransferError>()("CsvTransferError", {
+    cause: Schema.Defect(),
+    operation: CsvTransferOperation,
+}) {
+    override get message(): string {
+        return `CSV ${this.operation} failed`;
+    }
 }
+
+const attempt = <A>(operation: typeof CsvTransferOperation.Type, run: () => PromiseLike<A>) =>
+    Effect.tryPromise({ catch: (cause) => new CsvTransferError({ cause, operation }), try: run });
+
+export const exportTransactionsCsv = Effect.fn("CsvTransfer.exportTransactionsCsv")(function* exportTransactionsCsv(
+    db: Database
+) {
+    const rows = yield* attempt("export", () =>
+        db
+            .select({
+                amount: transactions.amount,
+                categoryName: categories.name,
+                currency: transactions.currency,
+                date: transactions.date,
+                exchangeRate: transactions.exchangeRate,
+                exchangeRateType: transactions.exchangeRateType,
+                income: transactions.income,
+                note: transactions.note,
+            })
+            .from(transactions)
+            .leftJoin(categories, eq(transactions.categoryId, categories.id))
+            .where(isNull(transactions.deletedAt))
+            .orderBy(desc(transactions.date))
+    );
+
+    const ledgerCurrency = (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
+    return transactionsToCsv(rows, ledgerCurrency);
+});
 
 export function exportFileName(now: Date): string {
     const year = now.getFullYear();
@@ -362,37 +381,45 @@ export function buildImportPlan(
  * All or nothing: after a half-applied import the user cannot tell which rows landed,
  * and re-running it duplicates whatever did.
  */
-export async function applyImport(db: Database, plan: ImportPlan): Promise<number> {
+const createEntry = (db: Database, entry: ImportEntry) =>
+    transactionsRepo
+        .create(
+            db,
+            {
+                amount: entry.amount,
+                categoryId: entry.categoryId,
+                currency: entry.currency,
+                date: entry.date,
+                details: null,
+                exchangeRate: entry.exchangeRate,
+                exchangeRateType: entry.exchangeRateType,
+                imageColor: entry.imageColor ?? null,
+                imageUri: entry.imageUri ?? null,
+                income: entry.income,
+                note: entry.note,
+            },
+            // Imported rows are never looked up in the background: the import
+            // said what left the device, and that was decided at import time.
+            { logoCandidate: false }
+        )
+        .pipe(Effect.mapError((error) => new CsvTransferError({ cause: error.cause, operation: "import" })));
+
+export const applyImport = Effect.fn("CsvTransfer.applyImport")(function* applyImport(db: Database, plan: ImportPlan) {
     if (plan.entries.length === 0) {
         return 0;
     }
 
-    await withTransaction(db, async () => {
-        for (const entry of plan.entries) {
-            // oxlint-disable-next-line no-await-in-loop -- each create reads before it inserts on the one connection withTransaction holds, so running them together interleaves those reads and writes
-            await Effect.runPromise(
-                transactionsRepo.create(
-                    db,
-                    {
-                        amount: entry.amount,
-                        categoryId: entry.categoryId,
-                        currency: entry.currency,
-                        date: entry.date,
-                        details: null,
-                        exchangeRate: entry.exchangeRate,
-                        exchangeRateType: entry.exchangeRateType,
-                        imageColor: entry.imageColor ?? null,
-                        imageUri: entry.imageUri ?? null,
-                        income: entry.income,
-                        note: entry.note,
-                    },
-                    // Imported rows are never looked up in the background: the import
-                    // said what left the device, and that was decided at import time.
-                    { logoCandidate: false }
-                )
-            );
-        }
-    });
+    yield* transaction(
+        db,
+        Effect.gen(function* write() {
+            for (const entry of plan.entries) {
+                // Each create reads before it inserts on the one connection the transaction holds, so running them
+                // together interleaves those reads and writes.
+                yield* createEntry(db, entry);
+            }
+        }),
+        (cause) => new CsvTransferError({ cause, operation: "import" })
+    );
 
     return plan.entries.length;
-}
+});

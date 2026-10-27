@@ -121,8 +121,8 @@ describe("openingForBalance", () => {
         await addTransaction(db, { accountId: "a1", amount: 40, deletedAt: JUNE_1, id: "t3" });
         await addTransaction(db, { accountId: "a2", amount: 99, id: "t4" });
 
-        await expect(openingForBalance(db, "a1", 50, "USD", JUNE_1)).resolves.toBe(57);
-        await expect(openingForBalance(db, "a1", -20, "USD", JUNE_1)).resolves.toBe(-13);
+        await expect(Effect.runPromise(openingForBalance(db, "a1", 50, "USD", JUNE_1))).resolves.toBe(57);
+        await expect(Effect.runPromise(openingForBalance(db, "a1", -20, "USD", JUNE_1))).resolves.toBe(-13);
     });
 });
 
@@ -366,6 +366,8 @@ describe("a row dated after now", () => {
         const { result } = await renderHook(() => useAccountBalance(db, checking, JUNE_1.getTime()).total);
 
         expect(result.current).toBe(90);
-        await expect(openingForBalance(db, "a1", result.current, "USD", JUNE_1)).resolves.toBe(checking.initialBalance);
+        await expect(Effect.runPromise(openingForBalance(db, "a1", result.current, "USD", JUNE_1))).resolves.toBe(
+            checking.initialBalance
+        );
     });
 });

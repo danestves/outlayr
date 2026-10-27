@@ -1,12 +1,12 @@
 import { Platform } from "react-native";
 
-import { buildWalletPush } from "@/data/wallet-push";
 import type { Database } from "@/db/client";
 import { formatUpcomingDate } from "@/domain/dates";
 import { amountParts } from "@/domain/money";
 import { translateNow } from "@/i18n/runtime";
 import { publishWatchSnapshot } from "@/lib/watch-link";
 import { publishIntentSnapshot, publishWalletPush } from "@/lib/widget-bridge";
+import { buildWalletPushCommand, runAccountsCommand } from "@/state/accounts-commands";
 import { appliedWriteIdsCommand, runLifecycleCommand } from "@/state/lifecycle-commands";
 
 import BudgetWidget from "./budget";
@@ -111,7 +111,7 @@ export async function publishWidgets(db: Database): Promise<void> {
         console.warn("[outlayr] widget publish failed", error);
     }
     try {
-        publishWalletPush(await buildWalletPush(db));
+        publishWalletPush(await runAccountsCommand(buildWalletPushCommand, db));
     } catch (error) {
         console.warn("[outlayr] wallet push build failed", error);
     }

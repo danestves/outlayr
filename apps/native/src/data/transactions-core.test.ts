@@ -728,18 +728,20 @@ describe("the fee on a transfer the user deleted", () => {
                 updatedAt: WHEN,
             },
         ]);
-        const transferId = await transfersRepo.create(db, {
-            date: WHEN,
-            exchangeRate: null,
-            exchangeRateType: null,
-            fees: { destination: { amount: 2, note: "Wire fee" }, source: { amount: 3, note: "Wire fee" } },
-            fromAccountId: "acc-checking",
-            fromAmount: 500,
-            fromCurrency: "USD",
-            toAccountId: "acc-savings",
-            toAmount: 500,
-            toCurrency: "USD",
-        });
+        const transferId = await Effect.runPromise(
+            transfersRepo.create(db, {
+                date: WHEN,
+                exchangeRate: null,
+                exchangeRateType: null,
+                fees: { destination: { amount: 2, note: "Wire fee" }, source: { amount: 3, note: "Wire fee" } },
+                fromAccountId: "acc-checking",
+                fromAmount: 500,
+                fromCurrency: "USD",
+                toAccountId: "acc-savings",
+                toAmount: 500,
+                toCurrency: "USD",
+            })
+        );
         const [fee] = await db
             .select({ id: transactions.id })
             .from(transactions)
@@ -770,14 +772,14 @@ describe("the fee on a transfer the user deleted", () => {
         const groceries = await Effect.runPromise(transactionsRepo.create(db, { ...DRAFT, currency: "USD" }));
         await Effect.runPromise(transactionsRepo.remove(db, groceries, DELETED_AT));
 
-        await transfersRepo.softDelete(db, transferId, DELETED_AT);
+        await Effect.runPromise(transfersRepo.softDelete(db, transferId, DELETED_AT));
 
         expect((await deletedTransactionsQuery(db)).map((row) => row.id)).toStrictEqual([groceries]);
     });
 
     it("stays tombstoned when a restore names it directly", async () => {
         const { db, feeId, transferId } = await movedWithAFee();
-        await transfersRepo.softDelete(db, transferId, DELETED_AT);
+        await Effect.runPromise(transfersRepo.softDelete(db, transferId, DELETED_AT));
 
         await Effect.runPromise(transactionsRepo.restore(db, feeId, new Date(Date.UTC(2026, 5, 3, 9))));
 

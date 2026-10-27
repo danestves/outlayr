@@ -712,12 +712,14 @@ describe("backfillCanonicalUsd over a backlog", () => {
 describe("backfillOpeningUsd", () => {
     it("values an opening saved before its rate arrived once the rate lands", async () => {
         const db = migratedDatabase({ foreignKeys: false });
-        const id = await accountsRepo.create(db, {
-            currency: "VES",
-            initialBalance: -12_761.76,
-            initialBalanceDate: new Date("2026-09-20T20:59:25Z"),
-            name: "Mercantil",
-        });
+        const id = await Effect.runPromise(
+            accountsRepo.create(db, {
+                currency: "VES",
+                initialBalance: -12_761.76,
+                initialBalanceDate: new Date("2026-09-20T20:59:25Z"),
+                name: "Mercantil",
+            })
+        );
         await expect(Effect.runPromise(backfillOpeningUsd(db))).resolves.toBe(0);
 
         await db.insert(exchangeRates).values({

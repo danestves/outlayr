@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { useLiveQuery } from "@/data/live-query";
-import { applyImport, buildImportPlan } from "@/data/transfer-core";
+import { buildImportPlan, CsvTransferError } from "@/data/transfer-core";
 import type { ImportEntry, ImportPlan, SkipReason } from "@/data/transfer-core";
 import { categories, transactions } from "@/db/schema";
 import { fingerprintsOf, flagDuplicates } from "@/domain/import-dedup";
@@ -14,6 +14,9 @@ import { FALLBACK_IDENTITY_COLOR } from "@/domain/transaction-identity";
 import { importDraftStore, useImportDraft } from "@/lib/import-draft-store";
 import { attachImportLogos } from "@/lib/import-logo-attach";
 import { useHaptics } from "@/lib/use-haptics";
+import { applyImportCommand } from "@/state/accounts-commands";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 export type ReviewRow =
     | {
@@ -133,6 +136,7 @@ function onToggle(index: number) {
 export function useImportReview(): ImportReviewResult {
     const haptics = useHaptics();
     const db = useDatabase();
+    const applyImport = useAtomCommand(applyImportCommand, SILENT);
     const { flow } = useImportDraft();
     const { parsed, resolved, resolution } = flow;
 
@@ -207,7 +211,9 @@ export function useImportReview(): ImportReviewResult {
         const duplicatesSkipped = [...flow.duplicates].filter((index) => flow.excluded.has(index)).length;
         attachImportLogos(entries)
             .catch(() => entries)
-            .then((decorated) => applyImport(db, { ...plan, entries: decorated }))
+            .then(async (decorated) =>
+                unwrapAtomCommand(await applyImport({ db, plan: { ...plan, entries: decorated } }))
+            )
             .then((count) => {
                 haptics("success");
                 // The draft is NOT cleared here: the done step still reads the
@@ -221,8 +227,9 @@ export function useImportReview(): ImportReviewResult {
                 importDraftStore.setStep("done");
             })
             .catch((cause: unknown) => {
+                const reason = cause instanceof CsvTransferError ? cause.cause : cause;
                 importDraftStore.dispatch({
-                    detail: cause instanceof Error ? cause.message : null,
+                    detail: reason instanceof Error ? reason.message : null,
                     type: "commitFailed",
                 });
             });

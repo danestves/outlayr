@@ -34,9 +34,9 @@ beforeEach(async () => {
         rateType: "official",
         source: "test",
     });
-    bank = await accountsRepo.create(db, { currency: "USD", name: "Zinli" });
-    bolivares = await accountsRepo.create(db, { currency: "VES", name: "Banesco" });
-    cashea = await accountsRepo.create(db, { currency: "USD", kind: "liability", name: "Cashea" });
+    bank = await Effect.runPromise(accountsRepo.create(db, { currency: "USD", name: "Zinli" }));
+    bolivares = await Effect.runPromise(accountsRepo.create(db, { currency: "VES", name: "Banesco" }));
+    cashea = await Effect.runPromise(accountsRepo.create(db, { currency: "USD", kind: "liability", name: "Cashea" }));
 });
 
 const fromBank = (amount: number): PaymentSource => ({
@@ -49,27 +49,29 @@ const fromBank = (amount: number): PaymentSource => ({
 
 /** A $100 Cashea order: $40 upfront from the bank, then 3 cuotas every 14 days. */
 async function order(accountId = cashea): Promise<string> {
-    const { planId } = await installmentsRepo.createOrder(db, {
-        purchase: {
-            accountId,
-            amount: 100,
-            categoryId: null,
-            currency: "USD",
-            date: PURCHASE,
-            details: null,
-            income: false,
-            note: "Shoes",
-        },
-        schedule: generateSchedule({
-            amount: { total: 60 },
-            count: 3,
-            currency: "USD",
-            interval: { every: 14, kind: "days" },
-            purchaseDay: PURCHASE,
-            upfront: 40,
-        }),
-        upfront: fromBank(40),
-    });
+    const { planId } = await Effect.runPromise(
+        installmentsRepo.createOrder(db, {
+            purchase: {
+                accountId,
+                amount: 100,
+                categoryId: null,
+                currency: "USD",
+                date: PURCHASE,
+                details: null,
+                income: false,
+                note: "Shoes",
+            },
+            schedule: generateSchedule({
+                amount: { total: 60 },
+                count: 3,
+                currency: "USD",
+                interval: { every: 14, kind: "days" },
+                purchaseDay: PURCHASE,
+                upfront: 40,
+            }),
+            upfront: fromBank(40),
+        })
+    );
     return planId;
 }
 
@@ -114,18 +116,20 @@ describe("creating an order", () => {
 describe("paying an order", () => {
     it("counts what arrives in the plan's currency when bolivares pay a dollar cuota", async () => {
         const planId = await order();
-        await installmentsRepo.recordPayment(db, {
-            amount: 20,
-            date: PURCHASE,
-            planId,
-            source: {
-                exchangeRate: VES_PER_USD,
-                exchangeRateType: "official",
-                fromAccountId: bolivares,
-                fromAmount: 4000,
-                fromCurrency: "VES",
-            },
-        });
+        await Effect.runPromise(
+            installmentsRepo.recordPayment(db, {
+                amount: 20,
+                date: PURCHASE,
+                planId,
+                source: {
+                    exchangeRate: VES_PER_USD,
+                    exchangeRateType: "official",
+                    fromAccountId: bolivares,
+                    fromAmount: 4000,
+                    fromCurrency: "VES",
+                },
+            })
+        );
 
         const [{ standing } = { standing: null }] = readPlans(db, PURCHASE);
         expect(standing).toMatchObject({ installmentsPaid: 1, paid: 60, remaining: 40 });
@@ -134,27 +138,31 @@ describe("paying an order", () => {
 
     it("stops counting a payment once it is deleted", async () => {
         const planId = await order();
-        const payment = await installmentsRepo.recordPayment(db, {
-            amount: 20,
-            date: PURCHASE,
-            planId,
-            source: fromBank(20),
-        });
-        await transfersRepo.softDelete(db, payment);
+        const payment = await Effect.runPromise(
+            installmentsRepo.recordPayment(db, {
+                amount: 20,
+                date: PURCHASE,
+                planId,
+                source: fromBank(20),
+            })
+        );
+        await Effect.runPromise(transfersRepo.softDelete(db, payment));
         expect(readPlans(db, PURCHASE)[0]?.standing.paid).toBe(40);
     });
 
     it("keeps the link when the transfer editor saves without knowing about it", async () => {
         await order();
         const [upfront] = await db.select().from(transfers);
-        await transfersRepo.update(db, upfront?.id ?? "", {
-            ...fromBank(40),
-            date: PURCHASE,
-            note: "inicial",
-            toAccountId: cashea,
-            toAmount: 40,
-            toCurrency: "USD",
-        });
+        await Effect.runPromise(
+            transfersRepo.update(db, upfront?.id ?? "", {
+                ...fromBank(40),
+                date: PURCHASE,
+                note: "inicial",
+                toAccountId: cashea,
+                toAmount: 40,
+                toCurrency: "USD",
+            })
+        );
         expect(readPlans(db, PURCHASE)[0]?.standing.paid).toBe(40);
     });
 });
@@ -164,7 +172,9 @@ describe("editing and removing", () => {
         const planId = await order();
         const rows = await db.select().from(installments).where(eq(installments.planId, planId));
         const third = rows.find((row) => row.sequence === 3);
-        await installmentsRepo.updateInstallment(db, third?.id ?? "", { dueDate: new Date(2026, 10, 10, 9) });
+        await Effect.runPromise(
+            installmentsRepo.updateInstallment(db, third?.id ?? "", { dueDate: new Date(2026, 10, 10, 9) })
+        );
 
         const today = new Date(2026, 10, 3);
         const upcoming = upcomingInstallments(readPlans(db, today), new Date(2026, 10, 17));
@@ -178,7 +188,9 @@ describe("editing and removing", () => {
     it("drops a deleted row from what is owed", async () => {
         const planId = await order();
         const rows = await db.select().from(installments).where(eq(installments.planId, planId));
-        await installmentsRepo.deleteInstallment(db, rows.find((row) => row.sequence === 3)?.id ?? "");
+        await Effect.runPromise(
+            installmentsRepo.deleteInstallment(db, rows.find((row) => row.sequence === 3)?.id ?? "")
+        );
         expect(readPlans(db, PURCHASE)[0]?.standing.remaining).toBe(40);
     });
 
@@ -192,7 +204,9 @@ describe("editing and removing", () => {
 
     it("brings the order back with its payments when the purchase is restored", async () => {
         const planId = await order();
-        await installmentsRepo.recordPayment(db, { amount: 20, date: PURCHASE, planId, source: fromBank(20) });
+        await Effect.runPromise(
+            installmentsRepo.recordPayment(db, { amount: 20, date: PURCHASE, planId, source: fromBank(20) })
+        );
         const before = readPlans(db, PURCHASE)[0]?.standing;
         const [plan] = await db.select().from(installmentPlans);
 
@@ -208,7 +222,7 @@ describe("editing and removing", () => {
 
     it("deletes the order with its account", async () => {
         await order();
-        await accountsRepo.softDelete(db, cashea);
+        await Effect.runPromise(accountsRepo.softDelete(db, cashea));
         expect(readPlans(db, PURCHASE)).toStrictEqual([]);
     });
 });
@@ -218,34 +232,40 @@ async function balanceOf(id: string, now: Date): Promise<number> {
     if (!account) {
         throw new Error(`No account ${id}`);
     }
-    return (await settledBalanceAt(db, account, { displayCurrency: "USD", rates: buildRateTable([]) }, now)).value;
+    return (
+        await Effect.runPromise(
+            settledBalanceAt(db, account, { displayCurrency: "USD", rates: buildRateTable([]) }, now)
+        )
+    ).value;
 }
 
 /** The $100 order bought on Aug 1, before Outlayr: the upfront and the first `paid` cuotas settled outside it. */
 async function startedBefore(paid: number): Promise<string> {
     const bought = new Date(2026, 7, 1, 12);
-    const { planId } = await installmentsRepo.createOrder(db, {
-        installmentsPaidOutside: paid,
-        purchase: {
-            accountId: cashea,
-            amount: 100,
-            categoryId: null,
-            currency: "USD",
-            date: bought,
-            details: null,
-            income: false,
-            note: "Phone",
-        },
-        schedule: generateSchedule({
-            amount: { total: 60 },
-            count: 3,
-            currency: "USD",
-            interval: { every: 14, kind: "days" },
-            purchaseDay: bought,
-            upfront: 40,
-        }),
-        upfront: null,
-    });
+    const { planId } = await Effect.runPromise(
+        installmentsRepo.createOrder(db, {
+            installmentsPaidOutside: paid,
+            purchase: {
+                accountId: cashea,
+                amount: 100,
+                categoryId: null,
+                currency: "USD",
+                date: bought,
+                details: null,
+                income: false,
+                note: "Phone",
+            },
+            schedule: generateSchedule({
+                amount: { total: 60 },
+                count: 3,
+                currency: "USD",
+                interval: { every: 14, kind: "days" },
+                purchaseDay: bought,
+                upfront: 40,
+            }),
+            upfront: null,
+        })
+    );
     return planId;
 }
 
@@ -267,7 +287,9 @@ describe("payments made outside Outlayr", () => {
         await expect(balanceOf(bank, tonight)).resolves.toBe(0);
         await expect(db.select().from(transfers)).resolves.toStrictEqual([]);
 
-        await installmentsRepo.recordPayment(db, { amount: 20, date: PURCHASE, planId, source: fromBank(20) });
+        await Effect.runPromise(
+            installmentsRepo.recordPayment(db, { amount: 20, date: PURCHASE, planId, source: fromBank(20) })
+        );
         expect(readPlans(db, PURCHASE)[0]?.standing).toMatchObject({ finished: true, installmentsPaid: 3 });
         await expect(balanceOf(cashea, tonight)).resolves.toBe(0);
         await expect(balanceOf(bank, tonight)).resolves.toBe(-20);
@@ -288,14 +310,18 @@ describe("payments made outside Outlayr", () => {
 
     it("counts a mid-plan payment with no account, moves no bank, and undoes it on its own", async () => {
         const planId = await order();
-        const outside = await installmentsRepo.recordPayment(db, { amount: 20, date: PURCHASE, planId, source: null });
-        await installmentsRepo.recordPayment(db, { amount: 20, date: PURCHASE, planId, source: fromBank(20) });
+        const outside = await Effect.runPromise(
+            installmentsRepo.recordPayment(db, { amount: 20, date: PURCHASE, planId, source: null })
+        );
+        await Effect.runPromise(
+            installmentsRepo.recordPayment(db, { amount: 20, date: PURCHASE, planId, source: fromBank(20) })
+        );
 
         expect(readPlans(db, PURCHASE)[0]?.standing).toMatchObject({ installmentsPaid: 2, remaining: 20 });
         await expect(balanceOf(cashea, tonight)).resolves.toBe(-20);
         await expect(balanceOf(bank, tonight)).resolves.toBe(-60);
 
-        await installmentsRepo.deleteOutsidePayment(db, outside);
+        await Effect.runPromise(installmentsRepo.deleteOutsidePayment(db, outside));
         expect(readPlans(db, PURCHASE)[0]?.standing).toMatchObject({ installmentsPaid: 1, remaining: 40 });
         await expect(balanceOf(cashea, tonight)).resolves.toBe(-40);
         await expect(db.select().from(outsidePayments).where(isNull(outsidePayments.deletedAt))).resolves.toStrictEqual(
@@ -310,11 +336,15 @@ describe("deleting an order", () => {
 
     it("drops the pending cuotas, trims a partly paid one, and keeps the balance its payments made", async () => {
         const planId = await order();
-        await installmentsRepo.recordPayment(db, { amount: 20, date: PURCHASE, planId, source: null });
-        await installmentsRepo.recordPayment(db, { amount: 5, date: PURCHASE, planId, source: fromBank(5) });
+        await Effect.runPromise(
+            installmentsRepo.recordPayment(db, { amount: 20, date: PURCHASE, planId, source: null })
+        );
+        await Effect.runPromise(
+            installmentsRepo.recordPayment(db, { amount: 5, date: PURCHASE, planId, source: fromBank(5) })
+        );
         await expect(balanceOf(cashea, tonight)).resolves.toBe(-35);
 
-        await installmentsRepo.deletePlan(db, planId);
+        await Effect.runPromise(installmentsRepo.deletePlan(db, planId));
 
         expect(schedule()).toStrictEqual([
             [0, 40],
@@ -329,9 +359,9 @@ describe("deleting an order", () => {
     it("removes an order with nothing paid entirely", async () => {
         const planId = await order();
         const [upfront] = await db.select().from(transfers);
-        await transfersRepo.softDelete(db, upfront?.id ?? "");
+        await Effect.runPromise(transfersRepo.softDelete(db, upfront?.id ?? ""));
 
-        await installmentsRepo.deletePlan(db, planId);
+        await Effect.runPromise(installmentsRepo.deletePlan(db, planId));
 
         expect(readPlans(db, PURCHASE)).toStrictEqual([]);
         await expect(db.select().from(installments).where(isNull(installments.deletedAt))).resolves.toStrictEqual([]);
@@ -341,7 +371,7 @@ describe("deleting an order", () => {
         const planId = await startedBefore(3);
         const before = await db.select().from(installments);
 
-        await installmentsRepo.deletePlan(db, planId);
+        await Effect.runPromise(installmentsRepo.deletePlan(db, planId));
 
         await expect(db.select().from(installments)).resolves.toStrictEqual(before);
         await expect(balanceOf(cashea, tonight)).resolves.toBe(0);
@@ -362,11 +392,15 @@ describe("late fees", () => {
 
     it("owes the fee on the order and settles the liability at zero once base and fee are paid", async () => {
         const planId = await order();
-        await installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId: await cuota(planId, 3) });
+        await Effect.runPromise(
+            installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId: await cuota(planId, 3) })
+        );
         expect(readPlans(db, PURCHASE)[0]?.standing).toMatchObject({ remaining: 64, scheduled: 104 });
         await expect(balanceOf(cashea, tonight)).resolves.toBe(-64);
 
-        await installmentsRepo.recordPayment(db, { amount: 64, date: PURCHASE, planId, source: fromBank(64) });
+        await Effect.runPromise(
+            installmentsRepo.recordPayment(db, { amount: 64, date: PURCHASE, planId, source: fromBank(64) })
+        );
 
         expect(readPlans(db, PURCHASE)[0]?.standing).toMatchObject({ finished: true, overpaid: 0 });
         await expect(balanceOf(cashea, tonight)).resolves.toBe(0);
@@ -376,8 +410,10 @@ describe("late fees", () => {
     it("replaces the cuota's fee instead of adding a second one", async () => {
         const planId = await order();
         const installmentId = await cuota(planId, 2);
-        const first = await installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId });
-        const second = await installmentsRepo.addFee(db, { amount: 5, installmentId });
+        const first = await Effect.runPromise(
+            installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId })
+        );
+        const second = await Effect.runPromise(installmentsRepo.addFee(db, { amount: 5, installmentId }));
 
         expect(second).toBe(first);
         await expect(liveFees()).resolves.toMatchObject([{ amount: 5, date: PURCHASE, income: false }]);
@@ -387,21 +423,23 @@ describe("late fees", () => {
     it("leaves the order when the fee is deleted from the ledger or removed from the cuota", async () => {
         const planId = await order();
         const installmentId = await cuota(planId, 1);
-        const fee = await installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId });
+        const fee = await Effect.runPromise(installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId }));
 
         await Effect.runPromise(transactionsRepo.remove(db, fee));
         expect(readPlans(db, PURCHASE)[0]?.standing.remaining).toBe(60);
         await expect(balanceOf(cashea, tonight)).resolves.toBe(-60);
 
-        await installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId });
-        await installmentsRepo.removeFee(db, installmentId);
+        await Effect.runPromise(installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId }));
+        await Effect.runPromise(installmentsRepo.removeFee(db, installmentId));
         expect(readPlans(db, PURCHASE)[0]?.standing.remaining).toBe(60);
         await expect(liveFees()).resolves.toStrictEqual([]);
     });
 
     it("goes with the purchase and comes back when it is restored", async () => {
         const planId = await order();
-        await installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId: await cuota(planId, 3) });
+        await Effect.runPromise(
+            installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId: await cuota(planId, 3) })
+        );
         const [plan] = await db.select().from(installmentPlans);
 
         await Effect.runPromise(transactionsRepo.remove(db, plan?.transactionId ?? ""));
@@ -415,12 +453,18 @@ describe("late fees", () => {
 
     it("keeps charged fees in the ledger when the pending cuotas are deleted", async () => {
         const planId = await order();
-        await installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId: await cuota(planId, 2) });
-        await installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId: await cuota(planId, 3) });
-        await installmentsRepo.recordPayment(db, { amount: 42.2, date: PURCHASE, planId, source: fromBank(42.2) });
+        await Effect.runPromise(
+            installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId: await cuota(planId, 2) })
+        );
+        await Effect.runPromise(
+            installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId: await cuota(planId, 3) })
+        );
+        await Effect.runPromise(
+            installmentsRepo.recordPayment(db, { amount: 42.2, date: PURCHASE, planId, source: fromBank(42.2) })
+        );
         await expect(balanceOf(cashea, tonight)).resolves.toBeCloseTo(-25.8, 10);
 
-        await installmentsRepo.deletePlan(db, planId);
+        await Effect.runPromise(installmentsRepo.deletePlan(db, planId));
 
         const standing = readPlans(db, PURCHASE)[0]?.standing;
         expect(standing?.rows.map(({ row }) => [row.sequence, row.amount, row.fee])).toStrictEqual([
@@ -435,10 +479,14 @@ describe("late fees", () => {
 
     it("detaches the fee from a cuota trimmed below it", async () => {
         const planId = await order();
-        await installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId: await cuota(planId, 2) });
-        await installmentsRepo.recordPayment(db, { amount: 23, date: PURCHASE, planId, source: fromBank(23) });
+        await Effect.runPromise(
+            installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId: await cuota(planId, 2) })
+        );
+        await Effect.runPromise(
+            installmentsRepo.recordPayment(db, { amount: 23, date: PURCHASE, planId, source: fromBank(23) })
+        );
 
-        await installmentsRepo.deletePlan(db, planId);
+        await Effect.runPromise(installmentsRepo.deletePlan(db, planId));
 
         const standing = readPlans(db, PURCHASE)[0]?.standing;
         expect(standing?.rows.map(({ row }) => [row.sequence, row.amount, row.fee])).toStrictEqual([

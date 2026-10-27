@@ -1,3 +1,4 @@
+import { useAtomMount } from "@effect/atom-react/Hooks";
 import { carryWindows, effectiveLimit, rolloverCarryFrom } from "@outlayr/money/budget-rollover";
 import { spentForCategory, spentForMain } from "@outlayr/money/budget-spent";
 import type { ExpenseContribution } from "@outlayr/money/budget-spent";
@@ -15,7 +16,9 @@ import { utcDateString } from "@outlayr/money/dates";
 import { limitIn, sumValuedIn, valueDatedRowsIn } from "@outlayr/money/valuation";
 import type { DatedValuable, RateTable } from "@outlayr/money/valuation";
 import { and, asc, desc, eq, getTableColumns, gte, inArray, isNull, lte } from "drizzle-orm";
-import { useEffect, useMemo } from "react";
+import * as Effect from "effect/Effect";
+import * as Atom from "effect/reactivity/Atom";
+import { useMemo } from "react";
 
 import { useSettingNumber } from "@/contexts/display-settings-context";
 import type { Database } from "@/db/client";
@@ -24,6 +27,7 @@ import { buildBurndown } from "@/domain/budget-burndown";
 import type { Burndown } from "@/domain/budget-burndown";
 import { closedWindowsBefore, EVERY_SCOPE, spendPerWindow, typicalOf } from "@/domain/budget-typical";
 import { translateNow } from "@/i18n/runtime";
+import { appRuntime } from "@/lib/runtime";
 
 import { expenseContributionQuery } from "./budget-spent";
 import { budgetsRepo } from "./budgets-core";
@@ -37,6 +41,50 @@ export { type BudgetSeverity, compareBudgetSeverity } from "@/domain/budget-seve
 export * from "./budgets-core";
 
 export type Budget = typeof budgets.$inferSelect;
+
+interface StartAdvance {
+    readonly id: string;
+    readonly kind: "budget" | "main";
+    readonly startMs: number;
+}
+
+const startAdvancesAtom = Atom.family((db: Database) =>
+    Atom.family((advances: readonly StartAdvance[]) =>
+        appRuntime
+            .atom(
+                Effect.all(
+                    advances.map(({ id, kind, startMs }) =>
+                        kind === "main"
+                            ? budgetsRepo.advanceMainStart(db, id, new Date(startMs))
+                            : budgetsRepo.advanceBudgetStart(db, id, new Date(startMs))
+                    ),
+                    { concurrency: "unbounded", discard: true }
+                ).pipe(
+                    Effect.catchTags({ BudgetsError: (error) => Effect.logWarning(error.message, error.cause) }),
+                    Effect.uninterruptible
+                )
+            )
+            .pipe(Atom.withLabel("budgets:advance-starts"))
+    )
+);
+
+function pendingAdvances(
+    kind: StartAdvance["kind"],
+    rows: readonly Pick<Budget, "id" | "startDate" | "type">[],
+    now: Date
+): StartAdvance[] {
+    const advances: StartAdvance[] = [];
+    for (const row of rows) {
+        if (!row.startDate) {
+            continue;
+        }
+        const { start } = advanceBudgetWindow(row.startDate, row.type, now);
+        if (start.getTime() !== row.startDate.getTime()) {
+            advances.push({ id: row.id, kind, startMs: start.getTime() });
+        }
+    }
+    return advances;
+}
 
 export interface CategoryBudgetView {
     amount: number;
@@ -138,15 +186,7 @@ export function useMainBudget(
     const row = data[0] ?? null;
     const { displayCurrency, rates } = useValuation(db);
 
-    useEffect(() => {
-        if (!row?.startDate) {
-            return;
-        }
-        const win = advanceBudgetWindow(row.startDate, row.type, new Date(nowMs));
-        if (win.start.getTime() !== row.startDate.getTime()) {
-            budgetsRepo.advanceMainStart(db, row.id, win.start);
-        }
-    }, [db, row, nowMs]);
+    useAtomMount(startAdvancesAtom(db)(pendingAdvances("main", row ? [row] : [], new Date(nowMs))));
 
     if (!row) {
         return null;
@@ -242,18 +282,7 @@ export function usePerCategoryBudgets(
     const categoryMeta = useCategoryMeta(db);
     const { displayCurrency, rates } = useValuation(db);
 
-    useEffect(() => {
-        const now = new Date(nowMs);
-        for (const row of rows) {
-            if (!row.startDate) {
-                continue;
-            }
-            const win = advanceBudgetWindow(row.startDate, row.type, now);
-            if (win.start.getTime() !== row.startDate.getTime()) {
-                budgetsRepo.advanceBudgetStart(db, row.id, win.start);
-            }
-        }
-    }, [db, rows, nowMs]);
+    useAtomMount(startAdvancesAtom(db)(pendingAdvances("budget", rows, new Date(nowMs))));
 
     const now = new Date(nowMs);
     return rows.map((row) => {
@@ -363,14 +392,7 @@ export function useCategoryBudget(db: Database, id: string, nowMs: number, perio
 
     const windows = viewedWindows(row, nowMs, periodOffset);
 
-    useEffect(() => {
-        if (!(row?.startDate && windows.current)) {
-            return;
-        }
-        if (windows.current.start.getTime() !== row.startDate.getTime()) {
-            budgetsRepo.advanceBudgetStart(db, row.id, windows.current.start);
-        }
-    }, [db, row, windows]);
+    useAtomMount(startAdvancesAtom(db)(pendingAdvances("budget", row ? [row] : [], new Date(nowMs))));
 
     const { current, window, windowEnd } = windows;
     const windowTransactions = useBudgetContributions(

@@ -1,9 +1,9 @@
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useRouter } from "expo-router";
 
 import { useDatabase } from "@/contexts/local-data-context";
 import { useBankAccounts, usePeople } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
-import { livePayoffPlanCount } from "@/data/payoff-plans";
 import {
     blocksSavedCurrency,
     FREE_PAYOFF_PLANS,
@@ -12,6 +12,9 @@ import {
     fullAccountCaps,
 } from "@/domain/pro-limits";
 import { useProLocked } from "@/hooks/use-pro-locked";
+import { SILENT } from "@/state/atom-command";
+import { livePayoffPlanCountCommand } from "@/state/planning-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 export function useProCapped(count: number, limit: number): boolean {
     return useProLocked() && count >= limit;
@@ -49,15 +52,22 @@ export function usePayoffPlanGate(): (accountId: string | null, open: () => void
     const db = useDatabase();
     const router = useRouter();
     const locked = useProLocked();
+    const liveCount = useAtomCommand(livePayoffPlanCountCommand, SILENT);
     return (accountId, open) => {
         if (!locked) {
             open();
             return;
         }
-        livePayoffPlanCount(db, accountId)
-            .then((count) => (count >= FREE_PAYOFF_PLANS ? router.push("/paywall") : open()))
+        const check = async () => {
+            const counted = await liveCount({ db, exceptAccountId: accountId });
             // A count that failed is not a full cap.
-            .catch(open);
+            if (AsyncResult.isSuccess(counted) && counted.value >= FREE_PAYOFF_PLANS) {
+                router.push("/paywall");
+                return;
+            }
+            open();
+        };
+        check();
     };
 }
 

@@ -3,12 +3,13 @@ import { firstOfMonth, startOfDay } from "@outlayr/money/calendar";
 import { utcDateString } from "@outlayr/money/dates";
 import BetterSqlite3 from "better-sqlite3";
 import { eq, isNull } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { transactions, transfers } from "@/db/schema";
 import { testDatabase, withAsyncTransactions } from "@/db/test-database";
 
-import { accountsRepo } from "./accounts-core";
+import { AccountsError, accountsRepo } from "./accounts-core";
 import { lastTransfer, sameSavedTransfer, savedTransfer, transfersRepo } from "./transfers-core";
 
 const DAY = new Date(Date.UTC(2026, 7, 9));
@@ -105,8 +106,8 @@ function severTheDetach(db: Database): void {
 }
 
 async function twoAccounts(db: Database) {
-    const from = await accountsRepo.create(db, { currency: "USD", name: "Zinli" });
-    const to = await accountsRepo.create(db, { currency: "VES", name: "Banesco" });
+    const from = await Effect.runPromise(accountsRepo.create(db, { currency: "USD", name: "Zinli" }));
+    const to = await Effect.runPromise(accountsRepo.create(db, { currency: "VES", name: "Banesco" }));
     return { from, to };
 }
 
@@ -140,7 +141,7 @@ describe("transfersRepo.create", () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
 
-        const id = await transfersRepo.create(db, baseInput(from, to));
+        const id = await Effect.runPromise(transfersRepo.create(db, baseInput(from, to)));
         const [row] = await db.select().from(transfers).where(eq(transfers.id, id));
 
         expect(row).toMatchObject({
@@ -157,7 +158,7 @@ describe("transfersRepo.create", () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
 
-        const id = await transfersRepo.create(db, baseInput(from, to));
+        const id = await Effect.runPromise(transfersRepo.create(db, baseInput(from, to)));
         const [row] = await db.select().from(transfers).where(eq(transfers.id, id));
 
         expect(row.day.getTime()).toBe(startOfDay(DAY).getTime());
@@ -173,12 +174,14 @@ describe("transfersRepo.create", () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
 
-        const id = await transfersRepo.create(db, {
-            ...baseInput(from, to),
-            exchangeRate: P2P_VES_PER_USD,
-            exchangeRateType: "custom",
-            toAmount: 100 * P2P_VES_PER_USD,
-        });
+        const id = await Effect.runPromise(
+            transfersRepo.create(db, {
+                ...baseInput(from, to),
+                exchangeRate: P2P_VES_PER_USD,
+                exchangeRateType: "custom",
+                toAmount: 100 * P2P_VES_PER_USD,
+            })
+        );
         const [row] = await db.select().from(transfers).where(eq(transfers.id, id));
 
         expect(row.fromAmountUsd).toBe(100);
@@ -188,18 +191,20 @@ describe("transfersRepo.create", () => {
 
     it("leaves only the leg it cannot price unvalued", async () => {
         const db = makeDb();
-        const from = await accountsRepo.create(db, { currency: "ARS", name: "Galicia" });
-        const to = await accountsRepo.create(db, { currency: "USD", name: "Zinli" });
+        const from = await Effect.runPromise(accountsRepo.create(db, { currency: "ARS", name: "Galicia" }));
+        const to = await Effect.runPromise(accountsRepo.create(db, { currency: "USD", name: "Zinli" }));
 
-        const id = await transfersRepo.create(db, {
-            ...baseInput(from, to),
-            exchangeRate: 1200,
-            exchangeRateType: "official",
-            fromAmount: 120_000,
-            fromCurrency: "ARS",
-            toAmount: 100,
-            toCurrency: "USD",
-        });
+        const id = await Effect.runPromise(
+            transfersRepo.create(db, {
+                ...baseInput(from, to),
+                exchangeRate: 1200,
+                exchangeRateType: "official",
+                fromAmount: 120_000,
+                fromCurrency: "ARS",
+                toAmount: 100,
+                toCurrency: "USD",
+            })
+        );
         const [row] = await db.select().from(transfers).where(eq(transfers.id, id));
 
         expect(row.fromAmountUsd).toBeNull();
@@ -210,7 +215,7 @@ describe("transfersRepo.create", () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
 
-        await transfersRepo.create(db, baseInput(from, to));
+        await Effect.runPromise(transfersRepo.create(db, baseInput(from, to)));
 
         await expect(db.select().from(transactions)).resolves.toStrictEqual([]);
     });
@@ -219,10 +224,12 @@ describe("transfersRepo.create", () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
 
-        const id = await transfersRepo.create(db, {
-            ...baseInput(from, to),
-            fees: { source: { amount: 2.7 } },
-        });
+        const id = await Effect.runPromise(
+            transfersRepo.create(db, {
+                ...baseInput(from, to),
+                fees: { source: { amount: 2.7 } },
+            })
+        );
         const [fee] = await db.select().from(transactions);
 
         expect(fee).toMatchObject({
@@ -239,10 +246,12 @@ describe("transfersRepo.create", () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
 
-        await transfersRepo.create(db, {
-            ...baseInput(from, to),
-            fees: { destination: { amount: 150 } },
-        });
+        await Effect.runPromise(
+            transfersRepo.create(db, {
+                ...baseInput(from, to),
+                fees: { destination: { amount: 150 } },
+            })
+        );
         const [fee] = await db.select().from(transactions);
 
         expect(fee).toMatchObject({ accountId: to, amount: 150, currency: "VES", income: false });
@@ -252,14 +261,18 @@ describe("transfersRepo.create", () => {
         const db = makeDb();
         const { from } = await twoAccounts(db);
 
-        await expect(transfersRepo.create(db, baseInput(from, from))).rejects.toThrow(/same account/i);
+        await expect(Effect.runPromise(transfersRepo.create(db, baseInput(from, from)))).rejects.toThrow(
+            /same account/i
+        );
     });
 
     it("refuses a non-positive leg", async () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
 
-        await expect(transfersRepo.create(db, { ...baseInput(from, to), fromAmount: 0 })).rejects.toThrow(/positive/i);
+        await expect(
+            Effect.runPromise(transfersRepo.create(db, { ...baseInput(from, to), fromAmount: 0 }))
+        ).rejects.toThrow(/positive/i);
     });
 });
 
@@ -267,15 +280,19 @@ describe("transfersRepo.update", () => {
     it("rewrites the legs and moves the fee to the other side in place", async () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
-        const id = await transfersRepo.create(db, { ...baseInput(from, to), fees: { source: { amount: 2.7 } } });
+        const id = await Effect.runPromise(
+            transfersRepo.create(db, { ...baseInput(from, to), fees: { source: { amount: 2.7 } } })
+        );
         const [before] = await db.select().from(transactions);
 
-        await transfersRepo.update(db, id, {
-            ...baseInput(from, to),
-            fees: { destination: { amount: 150 } },
-            fromAmount: 110,
-            toAmount: 6105,
-        });
+        await Effect.runPromise(
+            transfersRepo.update(db, id, {
+                ...baseInput(from, to),
+                fees: { destination: { amount: 150 } },
+                fromAmount: 110,
+                toAmount: 6105,
+            })
+        );
         const [row] = await db.select().from(transfers).where(eq(transfers.id, id));
         const fees = await db.select().from(transactions);
 
@@ -294,9 +311,11 @@ describe("transfersRepo.update", () => {
     it("tombstones the fee when the edit drops it", async () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
-        const id = await transfersRepo.create(db, { ...baseInput(from, to), fees: { source: { amount: 2.7 } } });
+        const id = await Effect.runPromise(
+            transfersRepo.create(db, { ...baseInput(from, to), fees: { source: { amount: 2.7 } } })
+        );
 
-        await transfersRepo.update(db, id, baseInput(from, to));
+        await Effect.runPromise(transfersRepo.update(db, id, baseInput(from, to)));
         const [fee] = await db.select().from(transactions);
 
         expect(fee.deletedAt).not.toBeNull();
@@ -305,9 +324,11 @@ describe("transfersRepo.update", () => {
     it("adds a fee to a transfer that had none", async () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
-        const id = await transfersRepo.create(db, baseInput(from, to));
+        const id = await Effect.runPromise(transfersRepo.create(db, baseInput(from, to)));
 
-        await transfersRepo.update(db, id, { ...baseInput(from, to), fees: { source: { amount: 2.7 } } });
+        await Effect.runPromise(
+            transfersRepo.update(db, id, { ...baseInput(from, to), fees: { source: { amount: 2.7 } } })
+        );
         const [fee] = await db.select().from(transactions);
 
         expect(fee).toMatchObject({ accountId: from, amount: 2.7, categoryId: null, income: false, transferId: id });
@@ -316,21 +337,25 @@ describe("transfersRepo.update", () => {
     it("keeps the USD value frozen on legs the edit left alone", async () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
-        const id = await transfersRepo.create(db, {
-            ...baseInput(from, to),
-            exchangeRate: OFFICIAL_VES_PER_USD,
-            exchangeRateType: "official",
-            toAmount: 100 * OFFICIAL_VES_PER_USD,
-        });
+        const id = await Effect.runPromise(
+            transfersRepo.create(db, {
+                ...baseInput(from, to),
+                exchangeRate: OFFICIAL_VES_PER_USD,
+                exchangeRateType: "official",
+                toAmount: 100 * OFFICIAL_VES_PER_USD,
+            })
+        );
         (db.$client as unknown as { exec: (sql: string) => void }).exec("DELETE FROM exchangeRates");
 
-        await transfersRepo.update(db, id, {
-            ...baseInput(from, to),
-            exchangeRate: OFFICIAL_VES_PER_USD,
-            exchangeRateType: "official",
-            note: "rent",
-            toAmount: 100 * OFFICIAL_VES_PER_USD,
-        });
+        await Effect.runPromise(
+            transfersRepo.update(db, id, {
+                ...baseInput(from, to),
+                exchangeRate: OFFICIAL_VES_PER_USD,
+                exchangeRateType: "official",
+                note: "rent",
+                toAmount: 100 * OFFICIAL_VES_PER_USD,
+            })
+        );
         const [row] = await db.select().from(transfers).where(eq(transfers.id, id));
 
         expect(row).toMatchObject({ fromAmountUsd: 100, note: "rent", toAmountUsd: 100 });
@@ -339,21 +364,25 @@ describe("transfersRepo.update", () => {
     it("carries the frozen USD value through an amount edit once its day's rates are gone", async () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
-        const id = await transfersRepo.create(db, {
-            ...baseInput(from, to),
-            exchangeRate: OFFICIAL_VES_PER_USD,
-            exchangeRateType: "official",
-            toAmount: 100 * OFFICIAL_VES_PER_USD,
-        });
+        const id = await Effect.runPromise(
+            transfersRepo.create(db, {
+                ...baseInput(from, to),
+                exchangeRate: OFFICIAL_VES_PER_USD,
+                exchangeRateType: "official",
+                toAmount: 100 * OFFICIAL_VES_PER_USD,
+            })
+        );
         (db.$client as unknown as { exec: (sql: string) => void }).exec("DELETE FROM exchangeRates");
 
-        await transfersRepo.update(db, id, {
-            ...baseInput(from, to),
-            exchangeRate: OFFICIAL_VES_PER_USD,
-            exchangeRateType: "official",
-            fromAmount: 110,
-            toAmount: 110 * OFFICIAL_VES_PER_USD,
-        });
+        await Effect.runPromise(
+            transfersRepo.update(db, id, {
+                ...baseInput(from, to),
+                exchangeRate: OFFICIAL_VES_PER_USD,
+                exchangeRateType: "official",
+                fromAmount: 110,
+                toAmount: 110 * OFFICIAL_VES_PER_USD,
+            })
+        );
         const [row] = await db.select().from(transfers).where(eq(transfers.id, id));
 
         expect(row).toMatchObject({ fromAmountUsd: 110, toAmountUsd: 110 });
@@ -362,12 +391,16 @@ describe("transfersRepo.update", () => {
     it("keeps a fee on each side, each charging its own account", async () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
-        const id = await transfersRepo.create(db, { ...baseInput(from, to), fees: { source: { amount: 2.7 } } });
+        const id = await Effect.runPromise(
+            transfersRepo.create(db, { ...baseInput(from, to), fees: { source: { amount: 2.7 } } })
+        );
 
-        await transfersRepo.update(db, id, {
-            ...baseInput(from, to),
-            fees: { destination: { amount: 150 }, source: { amount: 2.7 } },
-        });
+        await Effect.runPromise(
+            transfersRepo.update(db, id, {
+                ...baseInput(from, to),
+                fees: { destination: { amount: 150 }, source: { amount: 2.7 } },
+            })
+        );
         const live = await db.select().from(transactions).where(isNull(transactions.deletedAt));
 
         expect(live).toHaveLength(2);
@@ -381,11 +414,15 @@ describe("transfersRepo.update", () => {
     it("leaves exactly one live fee when sync left the transfer with two", async () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
-        const id = await transfersRepo.create(db, { ...baseInput(from, to), fees: { source: { amount: 2.7 } } });
+        const id = await Effect.runPromise(
+            transfersRepo.create(db, { ...baseInput(from, to), fees: { source: { amount: 2.7 } } })
+        );
         const [first] = await db.select().from(transactions);
         await db.insert(transactions).values({ ...first, id: "synced-twin" });
 
-        await transfersRepo.update(db, id, { ...baseInput(from, to), fees: { source: { amount: 5 } } });
+        await Effect.runPromise(
+            transfersRepo.update(db, id, { ...baseInput(from, to), fees: { source: { amount: 5 } } })
+        );
         const live = await db.select().from(transactions).where(isNull(transactions.deletedAt));
 
         expect(live).toHaveLength(1);
@@ -395,14 +432,16 @@ describe("transfersRepo.update", () => {
     it("adds no fee to a transfer deleted while its USD values were being frozen", async () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
-        const id = await transfersRepo.create(db, baseInput(from, to));
+        const id = await Effect.runPromise(transfersRepo.create(db, baseInput(from, to)));
 
-        const pending = transfersRepo.update(db, id, {
-            ...baseInput(from, to),
-            fees: { source: { amount: 2.7 } },
-            fromAmount: 110,
-        });
-        await transfersRepo.softDelete(db, id, DAY);
+        const pending = Effect.runPromise(
+            transfersRepo.update(db, id, {
+                ...baseInput(from, to),
+                fees: { source: { amount: 2.7 } },
+                fromAmount: 110,
+            })
+        );
+        await Effect.runPromise(transfersRepo.softDelete(db, id, DAY));
 
         await expect(pending).rejects.toThrow(/no longer exists/);
         await expect(db.select().from(transactions)).resolves.toStrictEqual([]);
@@ -411,11 +450,13 @@ describe("transfersRepo.update", () => {
     it("refuses to edit a transfer deleted while it was open, and leaves it deleted", async () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
-        const id = await transfersRepo.create(db, baseInput(from, to));
-        await transfersRepo.softDelete(db, id, DAY);
+        const id = await Effect.runPromise(transfersRepo.create(db, baseInput(from, to)));
+        await Effect.runPromise(transfersRepo.softDelete(db, id, DAY));
 
         await expect(
-            transfersRepo.update(db, id, { ...baseInput(from, to), fees: { source: { amount: 2.7 } } })
+            Effect.runPromise(
+                transfersRepo.update(db, id, { ...baseInput(from, to), fees: { source: { amount: 2.7 } } })
+            )
         ).rejects.toThrow(/no longer exists/);
         const [row] = await db.select().from(transfers).where(eq(transfers.id, id));
 
@@ -428,14 +469,18 @@ describe("savedTransfer", () => {
     it("reads what was sent and what arrived back from the legs and the fee", async () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
-        const sourceFee = await transfersRepo.create(db, {
-            ...baseInput(from, to),
-            fees: { source: { amount: 2.7 } },
-        });
-        const destinationFee = await transfersRepo.create(db, {
-            ...baseInput(from, to),
-            fees: { destination: { amount: 150 } },
-        });
+        const sourceFee = await Effect.runPromise(
+            transfersRepo.create(db, {
+                ...baseInput(from, to),
+                fees: { source: { amount: 2.7 } },
+            })
+        );
+        const destinationFee = await Effect.runPromise(
+            transfersRepo.create(db, {
+                ...baseInput(from, to),
+                fees: { destination: { amount: 150 } },
+            })
+        );
 
         expect(savedTransfer(db, sourceFee)).toMatchObject({
             arrived: 5550,
@@ -454,7 +499,9 @@ describe("savedTransfer", () => {
     it("tells a transfer read twice from one edited in between", async () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
-        const id = await transfersRepo.create(db, { ...baseInput(from, to), fees: { source: { amount: 2.7 } } });
+        const id = await Effect.runPromise(
+            transfersRepo.create(db, { ...baseInput(from, to), fees: { source: { amount: 2.7 } } })
+        );
         const read = () => {
             const saved = savedTransfer(db, id);
             if (saved === null) {
@@ -465,15 +512,17 @@ describe("savedTransfer", () => {
         const before = read();
 
         expect(sameSavedTransfer(before, read())).toBe(true);
-        await transfersRepo.update(db, id, { ...baseInput(from, to), fees: { source: { amount: 3 } } });
+        await Effect.runPromise(
+            transfersRepo.update(db, id, { ...baseInput(from, to), fees: { source: { amount: 3 } } })
+        );
         expect(sameSavedTransfer(before, read())).toBe(false);
     });
 
     it("finds nothing behind a deleted transfer", async () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
-        const id = await transfersRepo.create(db, baseInput(from, to));
-        await transfersRepo.softDelete(db, id, DAY);
+        const id = await Effect.runPromise(transfersRepo.create(db, baseInput(from, to)));
+        await Effect.runPromise(transfersRepo.softDelete(db, id, DAY));
 
         expect(savedTransfer(db, id)).toBeNull();
     });
@@ -484,9 +533,9 @@ describe("lastTransfer", () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
         const ids = [
-            await transfersRepo.create(db, baseInput(from, to)),
-            await transfersRepo.create(db, baseInput(from, to)),
-            await transfersRepo.create(db, baseInput(from, to)),
+            await Effect.runPromise(transfersRepo.create(db, baseInput(from, to))),
+            await Effect.runPromise(transfersRepo.create(db, baseInput(from, to))),
+            await Effect.runPromise(transfersRepo.create(db, baseInput(from, to))),
         ];
         for (const [index, id] of ids.entries()) {
             await db
@@ -494,7 +543,7 @@ describe("lastTransfer", () => {
                 .set({ dateCreated: new Date(index + 1) })
                 .where(eq(transfers.id, id));
         }
-        await transfersRepo.softDelete(db, ids[2] ?? "", DAY);
+        await Effect.runPromise(transfersRepo.softDelete(db, ids[2] ?? "", DAY));
 
         expect(lastTransfer(db)?.id).toBe(ids[1]);
     });
@@ -504,12 +553,14 @@ describe("transfersRepo.softDelete", () => {
     it("takes the fee transaction with it", async () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
-        const id = await transfersRepo.create(db, {
-            ...baseInput(from, to),
-            fees: { source: { amount: 2.7 } },
-        });
+        const id = await Effect.runPromise(
+            transfersRepo.create(db, {
+                ...baseInput(from, to),
+                fees: { source: { amount: 2.7 } },
+            })
+        );
 
-        await transfersRepo.softDelete(db, id, DAY);
+        await Effect.runPromise(transfersRepo.softDelete(db, id, DAY));
         const [fee] = await db.select().from(transactions);
 
         expect(fee.deletedAt).not.toBeNull();
@@ -518,10 +569,10 @@ describe("transfersRepo.softDelete", () => {
     it("leaves an unrelated transaction alone", async () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
-        const id = await transfersRepo.create(db, baseInput(from, to));
+        const id = await Effect.runPromise(transfersRepo.create(db, baseInput(from, to)));
         await addEntry(db, from, "other");
 
-        await transfersRepo.softDelete(db, id, DAY);
+        await Effect.runPromise(transfersRepo.softDelete(db, id, DAY));
         const [other] = await db.select().from(transactions).where(eq(transactions.id, "other"));
 
         expect(other.deletedAt).toBeNull();
@@ -532,9 +583,9 @@ describe("deleting an account takes its transfers with it", () => {
     it("tombstones a transfer that leaves the deleted account", async () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
-        const id = await transfersRepo.create(db, baseInput(from, to));
+        const id = await Effect.runPromise(transfersRepo.create(db, baseInput(from, to)));
 
-        await accountsRepo.softDelete(db, from, DAY);
+        await Effect.runPromise(accountsRepo.softDelete(db, from, DAY));
         const [row] = await db.select().from(transfers).where(eq(transfers.id, id));
 
         expect(row.deletedAt).not.toBeNull();
@@ -543,9 +594,9 @@ describe("deleting an account takes its transfers with it", () => {
     it("tombstones a transfer that arrives at the deleted account", async () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
-        const id = await transfersRepo.create(db, baseInput(from, to));
+        const id = await Effect.runPromise(transfersRepo.create(db, baseInput(from, to)));
 
-        await accountsRepo.softDelete(db, to, DAY);
+        await Effect.runPromise(accountsRepo.softDelete(db, to, DAY));
         const [row] = await db.select().from(transfers).where(eq(transfers.id, id));
 
         expect(row.deletedAt).not.toBeNull();
@@ -554,12 +605,14 @@ describe("deleting an account takes its transfers with it", () => {
     it("takes the fee with it, since a fee has no meaning without its transfer", async () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
-        await transfersRepo.create(db, {
-            ...baseInput(from, to),
-            fees: { source: { amount: 2.7 } },
-        });
+        await Effect.runPromise(
+            transfersRepo.create(db, {
+                ...baseInput(from, to),
+                fees: { source: { amount: 2.7 } },
+            })
+        );
 
-        await accountsRepo.softDelete(db, from, DAY);
+        await Effect.runPromise(accountsRepo.softDelete(db, from, DAY));
         const [fee] = await db.select().from(transactions);
 
         expect(fee.deletedAt).not.toBeNull();
@@ -568,10 +621,12 @@ describe("deleting an account takes its transfers with it", () => {
     it("counts what a delete would take, for the confirmation copy", async () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
-        await transfersRepo.create(db, baseInput(from, to));
-        await transfersRepo.create(db, { ...baseInput(to, from), fromCurrency: "VES", toCurrency: "USD" });
+        await Effect.runPromise(transfersRepo.create(db, baseInput(from, to)));
+        await Effect.runPromise(
+            transfersRepo.create(db, { ...baseInput(to, from), fromCurrency: "VES", toCurrency: "USD" })
+        );
 
-        await expect(transfersRepo.countForAccount(db, from)).resolves.toBe(2);
+        await expect(Effect.runPromise(transfersRepo.countForAccount(db, from))).resolves.toBe(2);
     });
 });
 
@@ -579,19 +634,24 @@ describe("an account delete that cannot finish", () => {
     it("leaves every one of its transfers live", async () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
-        await transfersRepo.create(db, baseInput(from, to));
-        await transfersRepo.create(db, baseInput(from, to));
-        await transfersRepo.create(db, { ...baseInput(to, from), fromCurrency: "VES", toCurrency: "USD" });
+        await Effect.runPromise(transfersRepo.create(db, baseInput(from, to)));
+        await Effect.runPromise(transfersRepo.create(db, baseInput(from, to)));
+        await Effect.runPromise(
+            transfersRepo.create(db, { ...baseInput(to, from), fromCurrency: "VES", toCurrency: "USD" })
+        );
         await addEntry(db, from, "groceries");
         severTheDetach(db);
 
-        await expect(accountsRepo.softDelete(db, from, DAY)).rejects.toThrow(/mid-delete/);
+        const failure = await Effect.runPromise(Effect.flip(accountsRepo.softDelete(db, from, DAY)));
+        expect(failure).toBeInstanceOf(AccountsError);
+        expect(failure).toMatchObject({ operation: "delete" });
+        expect(String(failure.cause)).toContain("mid-delete");
 
         const rows = await db.select().from(transfers);
         expect(rows).toHaveLength(3);
         expect(rows.filter((row) => row.deletedAt === null)).toHaveLength(3);
-        await expect(transfersRepo.countForAccount(db, from)).resolves.toBe(3);
-        expect((await accountsRepo.listActive(db)).map((row) => row.id)).toContain(from);
+        await expect(Effect.runPromise(transfersRepo.countForAccount(db, from))).resolves.toBe(3);
+        expect((await Effect.runPromise(accountsRepo.listActive(db))).map((row) => row.id)).toContain(from);
         const [entry] = await db.select().from(transactions).where(eq(transactions.id, "groceries"));
         expect(entry.accountId).toBe(from);
     });
@@ -599,13 +659,18 @@ describe("an account delete that cannot finish", () => {
     it("leaves the fee transaction live with its transfer", async () => {
         const db = makeDb();
         const { from, to } = await twoAccounts(db);
-        await transfersRepo.create(db, {
-            ...baseInput(from, to),
-            fees: { source: { amount: 2.7 } },
-        });
+        await Effect.runPromise(
+            transfersRepo.create(db, {
+                ...baseInput(from, to),
+                fees: { source: { amount: 2.7 } },
+            })
+        );
         severTheDetach(db);
 
-        await expect(accountsRepo.softDelete(db, from, DAY)).rejects.toThrow(/mid-delete/);
+        const failure = await Effect.runPromise(Effect.flip(accountsRepo.softDelete(db, from, DAY)));
+        expect(failure).toBeInstanceOf(AccountsError);
+        expect(failure).toMatchObject({ operation: "delete" });
+        expect(String(failure.cause)).toContain("mid-delete");
 
         const [fee] = await db.select().from(transactions);
         expect(fee.deletedAt).toBeNull();

@@ -13,11 +13,10 @@ import { MonoLabel } from "@/components/mono-label";
 import { toolbarIcon } from "@/components/toolbar-icons";
 import { useSettingBool, useSettingNumber } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
-import { settledBalanceAt, useAccounts } from "@/data/accounts";
+import { useAccounts } from "@/data/accounts";
 import { useGlobalCurrency } from "@/data/app-meta";
 import type { CategoryBudgetView } from "@/data/budgets";
 import {
-    budgetsRepo,
     compareBudgetSeverity,
     useBurndown,
     useBurndowns,
@@ -29,7 +28,7 @@ import {
 import { useCategoryMeta } from "@/data/categories";
 import type { Category } from "@/data/categories-core";
 import { useSavingsGoals } from "@/data/savings-goals";
-import { GoalValuationError, savingsGoalsRepo } from "@/data/savings-goals-core";
+import { GoalValuationError } from "@/data/savings-goals-core";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useNow } from "@/data/use-now";
 import { useValuation } from "@/data/use-valuation";
@@ -42,6 +41,15 @@ import { useTranslation } from "@/i18n/context";
 import { budgetMenuItems } from "@/lib/budget-actions";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
+import { settledBalanceAtCommand } from "@/state/accounts-commands";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import {
+    createBudgetCommand,
+    createMainBudgetCommand,
+    createSavingsGoalCommand,
+    patchBudgetCommand,
+} from "@/state/planning-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 import { BudgetBurndownHero } from "./components/budget-burndown-hero";
 import { BudgetCard } from "./components/budget-card";
@@ -62,6 +70,11 @@ const NO_BUDGETS: readonly CategoryBudgetView[] = [];
 
 export function Budgets() {
     const db = useDatabase();
+    const settledBalanceAt = useAtomCommand(settledBalanceAtCommand, SILENT);
+    const createGoal = useAtomCommand(createSavingsGoalCommand, SILENT);
+    const createMainBudget = useAtomCommand(createMainBudgetCommand, SILENT);
+    const createBudget = useAtomCommand(createBudgetCommand, SILENT);
+    const patchBudget = useAtomCommand(patchBudgetCommand, SILENT);
     const router = useRouter();
     const accountCreateRoute = useAccountCreateRoute();
     const [gridWidth, setGridWidth] = useState<number | null>(null);
@@ -144,7 +157,8 @@ export function Budgets() {
         }
         // Re-read now: a scheduled row can land while the sheet is open, and the anchor is frozen forever.
         const account = accounts.find((candidate) => candidate.id === target.accountId);
-        const balance = account && (await settledBalanceAt(db, account, valuation, new Date()));
+        const balance =
+            account && unwrapAtomCommand(await settledBalanceAt({ account, db, now: new Date(), valuation }));
         if (!balance?.exact) {
             notifyFailure({
                 body: t("goals.unvalued.body", { account: target.name }),
@@ -154,14 +168,19 @@ export function Budgets() {
         }
         goalSheetRef.current?.dismiss();
         try {
-            await savingsGoalsRepo.create(db, {
-                accountId: target.accountId,
-                currency: target.currency,
-                name: target.name,
-                startAmount: balance.value,
-                targetAmount,
-                targetDate,
-            });
+            unwrapAtomCommand(
+                await createGoal({
+                    db,
+                    goal: {
+                        accountId: target.accountId,
+                        currency: target.currency,
+                        name: target.name,
+                        startAmount: balance.value,
+                        targetAmount,
+                        targetDate,
+                    },
+                })
+            );
             haptics("success");
         } catch (error) {
             console.error("Failed to save the goal", error);
@@ -189,7 +208,7 @@ export function Budgets() {
 
     const commitEverything = async ({ limit, type }: LimitCommit) => {
         try {
-            await budgetsRepo.createMainBudget(db, { amount: limit, type });
+            unwrapAtomCommand(await createMainBudget({ db, input: { amount: limit, type } }));
             haptics("success");
         } catch (error) {
             console.error("Failed to create the overall budget", error);
@@ -205,7 +224,7 @@ export function Budgets() {
         limitSheetRef.current?.dismiss();
         const save = async () => {
             if (target.categoryId === null) {
-                await budgetsRepo.createMainBudget(db, { amount: limit, type });
+                unwrapAtomCommand(await createMainBudget({ db, input: { amount: limit, type } }));
                 haptics("success");
                 return;
             }
@@ -215,9 +234,15 @@ export function Budgets() {
                 router.push("/paywall");
                 return;
             }
-            await (existing
-                ? budgetsRepo.patchBudget(db, existing.id, { ...(limitChanged && { amount: limit }), type })
-                : budgetsRepo.createBudget(db, { amount: limit, categoryId: target.categoryId, type }));
+            if (existing) {
+                unwrapAtomCommand(
+                    await patchBudget({ db, id: existing.id, patch: { ...(limitChanged && { amount: limit }), type } })
+                );
+            } else {
+                unwrapAtomCommand(
+                    await createBudget({ db, input: { amount: limit, categoryId: target.categoryId, type } })
+                );
+            }
             haptics("success");
         };
         await save().catch((error) => {
@@ -260,7 +285,9 @@ export function Budgets() {
                     if (!picked) {
                         return;
                     }
-                    const balance = await settledBalanceAt(db, picked, valuation, new Date());
+                    const balance = unwrapAtomCommand(
+                        await settledBalanceAt({ account: picked, db, now: new Date(), valuation })
+                    );
                     // The anchor is frozen, so an approximate balance would leave a permanent gap.
                     if (!balance.exact) {
                         notifyFailure({
