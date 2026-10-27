@@ -10,6 +10,7 @@ import type { AppStateStatus } from "react-native";
 import type { PurchasesPackage } from "react-native-purchases";
 
 import { entitlementAtom, revenueCatAtom, revenueCatSessionAtom } from "@/contexts/revenuecat-context";
+import { WatchAppState } from "@/lib/app-events";
 import { appRuntime } from "@/lib/runtime";
 
 import * as RevenueCat from "./revenuecat-service";
@@ -87,7 +88,7 @@ describe("revenueCat", () => {
                 Layer.provide(
                     Layer.mergeAll(
                         Layer.succeed(RevenueCat.RevenueCatSdk, client),
-                        Layer.succeed(RevenueCat.WatchAppState, appState.watch)
+                        Layer.succeed(WatchAppState, appState.watch)
                     )
                 )
             ),

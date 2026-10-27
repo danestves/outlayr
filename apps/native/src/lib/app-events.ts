@@ -3,20 +3,16 @@ import * as Effect from "effect/Effect";
 import * as Queue from "effect/Queue";
 import * as Stream from "effect/Stream";
 import { addDatabaseChangeListener } from "expo-sqlite";
-import { AppState } from "react-native";
 import type { AppStateStatus } from "react-native";
+
+import { subscribeAppState } from "./app-state";
 
 export type Watch<A> = (listener: (value: A) => void) => () => void;
 
 export type Signal = (listener: () => void) => () => void;
 
 export const WatchAppState = Context.Reference<Watch<AppStateStatus>>("outlayr/lib/AppEvents/WatchAppState", {
-    defaultValue: () => (listener) => {
-        const subscription = AppState.addEventListener("change", listener);
-        return () => {
-            subscription.remove();
-        };
-    },
+    defaultValue: () => subscribeAppState,
 });
 
 export const WatchTableWrites = Context.Reference<Watch<string>>("outlayr/lib/AppEvents/WatchTableWrites", {

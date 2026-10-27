@@ -166,6 +166,8 @@ test("persists and validates the SecureStore reset marker", async () => {
     const writeMarker = jest.mocked(setItemAsync);
     const eraseMarker = jest.mocked(deleteItemAsync);
     getMarker.mockResolvedValue(JSON.stringify({ phase: "device", v: 1 }));
+    writeMarker.mockResolvedValue();
+    eraseMarker.mockResolvedValue();
 
     await expect(readDeviceResetMarker()).resolves.toStrictEqual({ phase: "device", v: 1 });
     await writeDeviceResetMarker({ phase: "cloud", v: 1 });

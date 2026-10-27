@@ -10,7 +10,6 @@ import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { buildArchive } from "@/data/archive-core";
 import { downloadEveryPhoto } from "@/data/photo-sync-core";
-import { isSyncEnabled, runPromiseUnwrapped } from "@/data/sync-outbox-core";
 import { useTransactionCount } from "@/data/transactions";
 import { exportFileName, exportTransactionsCsv } from "@/data/transfer-core";
 import { archiveFileName, serializeArchive } from "@/domain/archive";
@@ -21,6 +20,9 @@ import { photoTransport } from "@/lib/convex";
 import { shareFile, TransferError } from "@/lib/data-transfer";
 import { notifyFailure } from "@/lib/notify";
 import { photoFiles, storedPhotosBase64 } from "@/lib/photo-storage";
+import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { isSyncEnabledCommand } from "@/state/sync-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
 /** Named so a CSV is not taken for a backup: a restore from it comes back thinner. */
@@ -37,6 +39,7 @@ export function ExportData() {
     const t = useTranslation();
     const count = useTransactionCount(db);
     const [busy, setBusy] = useState<"archive" | "csv" | null>(null);
+    const isSyncEnabled = useAtomCommand(isSyncEnabledCommand, SILENT);
 
     const runExport = (
         kind: "archive" | "csv",
@@ -64,7 +67,7 @@ export function ExportData() {
         runExport(
             "archive",
             async () => {
-                if (await runPromiseUnwrapped(isSyncEnabled(db))) {
+                if (unwrapAtomCommand(await isSyncEnabled(db))) {
                     await downloadEveryPhoto(db, photoFiles, photoTransport()).catch((cause: unknown) => {
                         console.warn("[outlayr] fetching missing photos before export failed", cause);
                     });

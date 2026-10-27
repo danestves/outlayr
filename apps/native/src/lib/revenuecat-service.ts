@@ -10,10 +10,9 @@ import * as Schema from "effect/Schema";
 import type * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 import * as SubscriptionRef from "effect/SubscriptionRef";
-import { AppState } from "react-native";
-import type { AppStateStatus } from "react-native";
 import type { PurchasesPackage } from "react-native-purchases";
 
+import { WatchAppState } from "@/lib/app-events";
 import { mirrorEntitlement } from "@/lib/entitlement-mirror";
 import {
     configureRevenueCat,
@@ -95,15 +94,6 @@ const revenueCatSdk = {
 
 export const RevenueCatSdk = Context.Reference<typeof revenueCatSdk>("outlayr/lib/RevenueCat/Sdk", {
     defaultValue: () => revenueCatSdk,
-});
-
-export const WatchAppState = Context.Reference<Watch<AppStateStatus>>("outlayr/lib/RevenueCat/WatchAppState", {
-    defaultValue: () => (listener) => {
-        const subscription = AppState.addEventListener("change", listener);
-        return () => {
-            subscription.remove();
-        };
-    },
 });
 
 export interface Session {

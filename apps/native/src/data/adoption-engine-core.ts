@@ -5,18 +5,18 @@ import type { Database } from "@/db/client";
 import { appMeta } from "@/db/schema";
 import { withTransaction } from "@/db/transaction";
 import type { RemoteLedger } from "@/domain/ledger-adoption";
+import {
+    applyPulledRowsCommand,
+    getOrCreateDeviceIdCommand,
+    runSyncCommand,
+    setSyncCursorCommand,
+} from "@/state/sync-commands";
 
 import { META_KEYS } from "./app-meta-core";
 import { refreshLogoCandidate } from "./logo-backfill-state";
-import { applyPulledRows, PULL_PAGE_LIMIT, PUSH_BATCH_LIMIT, specFor } from "./sync-engine-core";
+import { PULL_PAGE_LIMIT, PUSH_BATCH_LIMIT, specFor } from "./sync-engine-core";
 import type { LocalValue, PulledRow, PullFn, PushFn, SyncedTable, WireRow } from "./sync-engine-core";
-import {
-    getOrCreateDeviceId,
-    SYNCED_META_KEYS,
-    SYNCED_TABLES,
-    setSyncCursor,
-    runPromiseUnwrapped,
-} from "./sync-outbox-core";
+import { SYNCED_META_KEYS, SYNCED_TABLES } from "./sync-outbox-core";
 
 type Row = Record<string, LocalValue>;
 
@@ -88,7 +88,7 @@ export async function replaceLocalFromAccount(db: Database, pull: PullFn, now: D
             await db.delete(spec.table);
         }
         /* oxlint-enable no-await-in-loop */
-        await runPromiseUnwrapped(setSyncCursor(db, 0));
+        await runSyncCommand(setSyncCursorCommand, { cursor: 0, db });
         // The walk below reads the whole log under the merge that knows `restoredAt`.
         await db.delete(appMeta).where(eq(appMeta.key, META_KEYS.syncRestoresReread));
     });
@@ -100,7 +100,7 @@ export async function replaceLocalFromAccount(db: Database, pull: PullFn, now: D
         if (page.rows.length === 0) {
             return;
         }
-        await runPromiseUnwrapped(applyPulledRows(db, page, now));
+        await runSyncCommand(applyPulledRowsCommand, { db, now, page });
         if (page.cursor <= cursor) {
             return;
         }
@@ -121,7 +121,7 @@ export async function discardAccountLedger(
     now: Date = new Date()
 ): Promise<void> {
     const log = await readAccountLog(transport.pull);
-    const deviceId = await runPromiseUnwrapped(getOrCreateDeviceId(db));
+    const deviceId = await runSyncCommand(getOrCreateDeviceIdCommand, db);
     const stamp = now.getTime();
 
     const tombstones: WireRow[] = [];

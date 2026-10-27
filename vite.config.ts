@@ -75,11 +75,16 @@ const HAPTICS_IMPORT = {
     message: "A direct call fires whatever the Haptics setting says. Use useHaptics from @/lib/use-haptics.",
     name: "expo-haptics",
 };
+const SECURE_STORE_IMPORT = {
+    message:
+        "Secure storage is the SecureStorage service. Call it through @/state/secure-storage-commands; only lib/cloud-runtime.ts keeps the synchronous API better-auth's storage adapter needs.",
+    name: "expo-secure-store",
+};
 const ICON_BARREL_IMPORTS = ["solid", "stroke"].map((weight) => ({
     message: `The pack barrel is 6-12MB and Metro ships all of it. Import the icon by path: @hugeicons-pro/core-${weight}-rounded/<Name>Icon.`,
     name: `@hugeicons-pro/core-${weight}-rounded`,
 }));
-const NATIVE_RESTRICTED_IMPORTS = [LIVE_QUERY_IMPORT, HAPTICS_IMPORT, ...ICON_BARREL_IMPORTS];
+const NATIVE_RESTRICTED_IMPORTS = [LIVE_QUERY_IMPORT, HAPTICS_IMPORT, SECURE_STORE_IMPORT, ...ICON_BARREL_IMPORTS];
 
 const RUNNER_OPT_OUT = [
     "expect-expect",
@@ -261,13 +266,19 @@ export default defineConfig({
             {
                 files: ["apps/native/src/data/live-query.ts"],
                 rules: {
-                    "no-restricted-imports": ["error", { paths: [HAPTICS_IMPORT, ...ICON_BARREL_IMPORTS] }],
+                    "no-restricted-imports": [
+                        "error",
+                        { paths: [HAPTICS_IMPORT, SECURE_STORE_IMPORT, ...ICON_BARREL_IMPORTS] },
+                    ],
                 },
             },
             {
                 files: ["apps/native/src/lib/use-haptics.ts", "apps/native/src/lib/use-haptics.android.ts"],
                 rules: {
-                    "no-restricted-imports": ["error", { paths: [LIVE_QUERY_IMPORT, ...ICON_BARREL_IMPORTS] }],
+                    "no-restricted-imports": [
+                        "error",
+                        { paths: [LIVE_QUERY_IMPORT, SECURE_STORE_IMPORT, ...ICON_BARREL_IMPORTS] },
+                    ],
                 },
             },
             {
@@ -293,6 +304,20 @@ export default defineConfig({
                 files: ["apps/native/src/components/import-sheet/import-sheet.tsx"],
                 rules: {
                     "no-restricted-imports": ["error", { paths: NATIVE_RESTRICTED_IMPORTS }],
+                },
+            },
+            {
+                files: [
+                    "apps/native/src/lib/secure-storage.ts",
+                    "apps/native/src/lib/cloud-runtime.ts",
+                    "apps/native/src/lib/deletion-resume.test.ts",
+                    "apps/native/src/lib/device-data-reset.test.ts",
+                ],
+                rules: {
+                    "no-restricted-imports": [
+                        "error",
+                        { paths: NATIVE_RESTRICTED_IMPORTS.filter((entry) => entry !== SECURE_STORE_IMPORT) },
+                    ],
                 },
             },
             {

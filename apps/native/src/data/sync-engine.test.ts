@@ -7,6 +7,7 @@ import type { AppStateStatus } from "react-native";
 
 import type { Database } from "@/db/client";
 import { migratedDatabase } from "@/db/test-database";
+import { WatchAppState } from "@/lib/app-events";
 import { appRuntime } from "@/lib/runtime";
 
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
@@ -71,7 +72,7 @@ describe("sync engine", () => {
                 Layer.provide(
                     Layer.mergeAll(
                         store,
-                        Layer.succeed(SyncEngine.WatchAppState, appState.watch),
+                        Layer.succeed(WatchAppState, appState.watch),
                         Layer.succeed(SyncEngine.WatchWatermark, watermark.watch)
                     )
                 )

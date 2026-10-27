@@ -97,9 +97,6 @@ const failedAt = (step: typeof SyncOutboxStep.Type) => (cause: unknown) =>
 const query = <A>(step: typeof SyncOutboxStep.Type, run: () => PromiseLike<A>) =>
     Effect.tryPromise({ catch: failedAt(step), try: run });
 
-export const runPromiseUnwrapped = <A>(effect: Effect.Effect<A, { readonly cause: unknown }>): Promise<A> =>
-    Effect.runPromise(Effect.mapError(effect, (error) => error.cause));
-
 export const isSyncEnabled = Effect.fn("SyncOutbox.isSyncEnabled")(function* isSyncEnabled(db: Database) {
     return (yield* query("gate", () => getMeta(db, META_KEYS.syncEnabled))) === "1";
 });

@@ -1,6 +1,7 @@
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import { getItemAsync, setItemAsync } from "expo-secure-store";
+
+import { readSecureItem, writeSecureItem } from "@/state/secure-storage-commands";
 
 export const PROVIDER_BINDING_KEY = "outlayr.provider-binding";
 
@@ -20,11 +21,11 @@ export async function persistProviderBinding(binding: ProviderBinding): Promise<
     if (!isProviderBinding(binding)) {
         throw new Error("Provider binding is invalid");
     }
-    await setItemAsync(PROVIDER_BINDING_KEY, JSON.stringify(binding));
+    await writeSecureItem(PROVIDER_BINDING_KEY, JSON.stringify(binding));
 }
 
 export async function providerBindingFor(betterAuthUserId: string): Promise<ProviderBinding> {
-    const raw = await getItemAsync(PROVIDER_BINDING_KEY);
+    const raw = await readSecureItem(PROVIDER_BINDING_KEY);
     if (raw === null) {
         throw new Error("Provider revocation requires reauthentication");
     }

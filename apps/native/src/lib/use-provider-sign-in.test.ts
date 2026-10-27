@@ -9,7 +9,7 @@ jest.mock("@/lib/auth-session", () => ({
     useAuthSession: () => ({ activate: jest.fn(), begin: jest.fn(), reject: jest.fn() }),
 }));
 
-const mockSetItemAsync = jest.fn();
+const mockSetItemAsync = jest.fn<(key: string, value: string) => Promise<void>>(() => Promise.resolve());
 
 jest.mock("expo-secure-store", () => ({
     setItemAsync: mockSetItemAsync,

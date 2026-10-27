@@ -5,11 +5,10 @@ import * as Layer from "effect/Layer";
 import * as Queue from "effect/Queue";
 import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
-import { AppState } from "react-native";
-import type { AppStateStatus } from "react-native";
 
 import type { Database } from "@/db/client";
 import { isBehindWatermark } from "@/domain/sync-wakeup";
+import { WatchAppState } from "@/lib/app-events";
 import { watchSyncWatermark } from "@/lib/convex";
 
 import { subscribeToTableChanges } from "./database-changes";
@@ -23,15 +22,6 @@ type Watch<A> = (listener: (value: A) => void) => () => void;
 
 export const WatchWatermark = Context.Reference<Watch<number>>("outlayr/data/SyncEngine/WatchWatermark", {
     defaultValue: () => watchSyncWatermark,
-});
-
-export const WatchAppState = Context.Reference<Watch<AppStateStatus>>("outlayr/data/SyncEngine/WatchAppState", {
-    defaultValue: () => (listener) => {
-        const subscription = AppState.addEventListener("change", listener);
-        return () => {
-            subscription.remove();
-        };
-    },
 });
 
 /**

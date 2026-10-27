@@ -18,6 +18,14 @@ One module per service, in this order:
 
 Every registry test imports `src/lib/runtime.ts`, so nothing it imports may load a module jest cannot: `expo-widgets`, `expo-core-spotlight`, Skia through `lib/photo-storage`, or `expo-notifications`, which warns at import and throws under the Android project. Such a dependency is a `Context.Service` tag with no default, read inside the operation so it shows in its requirements (`SystemSurfaces` in `SystemSync.run`), and the mount module provides the live value (`data/background-work-mount.ts`).
 
+## Platform seams
+
+A native API that holds state or can fail is a service or a `Context.Reference` with the production value as its default, so a test swaps it through a layer.
+
+- **App state.** `WatchAppState` in `src/lib/app-events.ts` is the one reference for the app's foreground and background changes. Services read it; nothing declares a second one. Components read the same state through `useAppActive()` and `useAppForeground()` in `src/lib/app-state.ts`, which sit on `useSyncExternalStore`. Foreground counts the transient `inactive` state (the app switcher, a system prompt); active does not.
+- **Secure storage.** `SecureStorage` in `src/lib/secure-storage.ts` wraps `expo-secure-store` and fails with `SecureStorageError`, which carries the `operation` and the `key`. Module code reaches it through `readSecureItem`, `writeSecureItem` and `deleteSecureItem` in `src/state/secure-storage-commands.ts`; a component runs the commands next to them with `useAtomCommand`. Only the service imports `expo-secure-store`, which lint enforces. `src/lib/cloud-runtime.ts` is the exception: better-auth's storage adapter is a synchronous contract, so it keeps the synchronous `getItem` and `setItem`.
+- A test fakes the native call by providing the reference: `Layer.succeed(SecureStoreDriver, fake)`.
+
 ## Operations
 
 A reusable operation is `Effect.fn("LocalDatabase.open")(function* open() { ... })`, which names its span. Wrap a promise API in `Effect.tryPromise({ try, catch })` and a throwing sync one in `Effect.try`, with `catch` returning the module's typed error.
@@ -27,13 +35,18 @@ A reusable operation is `Effect.fn("LocalDatabase.open")(function* open() { ... 
 - A `Schema.TaggedError` class. It stays `instanceof Error`, so it can sit where callers expect an `Error`.
 - Structured attributes say what failed (`stage: "migrate"`), and the original error goes in `cause: Schema.Defect()`.
 - `message` is built from the attributes, never from `cause`, so it reads the same for every failure of that kind; the driver's detail stays on `cause`. A screen that shows the underlying detail reads it from `cause` at the bridge, as `localDataState` does.
-- Recover with `Effect.catchTags({ LocalDatabaseError: ... })`, even for one tag; lint enforces it.
+- Attributes and log annotations stay bounded: a category, an id, a key, a count. Raw payloads, URLs with credentials, tokens and arbitrary defect text live only in `cause`.
+- **Translation.** Construct the error where the failure happens, and map it to another error only at a boundary. A boundary passes through errors already in the target channel and wraps only unknown or lower-level failures. Map each failure where its context is known; don't wrap a whole pipeline in one generic error.
+- **Discriminators.** Don't say one thing twice, as a specific tag and a single-value `stage` or `operation` literal. Split classes when the distinction drives control flow or the copy a user sees; a field that only helps diagnosis stays a field. A message that reaches the UI or a log a person reads is behavior, so a refactor keeps it.
+- **Mappers.** No helper that only does `(...args) => new SomeError({ ...args })`. Keep one when it normalizes, passes a domain error through, or adds context. A mapper that belongs to the error is a static factory on its class.
+- **Predicates** are exported directly, `export const isFoo = Schema.is(Foo)`, not a function wrapping a private `Schema.is`.
+- Recover with `Effect.catchTags({ LocalDatabaseError: ... })`, even for one tag; lint enforces it. `Effect.catch` handles the whole channel; `catchIf` is for structural checks such as a platform error code.
 
 ## Runtime boundaries
 
 - **One runtime, one registry.** `appRuntime = Atom.runtime(layer)` in `apps/native/src/lib/runtime.ts` and `appAtomRegistry` in `src/state/atom-registry.ts`, provided once as the outermost element of `src/app/_layout.tsx` with `<RegistryContext value={appAtomRegistry}>`. A new service merges its layer into `appRuntime`'s; nothing else makes a runtime or a registry.
 - `Atom.runtime` builds the layer inside the registry, so every atom shares one instance of each service. A runtime atom is disposed like any other once nothing reads it, so `appRuntime` is `Atom.keepAlive`: services live for the registry's lifetime. A `ManagedRuntime` would build a second copy for whatever ran through it.
-- **Effects run only at edges**: an atom (`appRuntime.atom`, `appRuntime.fn`), an event handler through a `fn` atom, a Convex handler, a test. Never `Effect.runPromise` inside a service or inside another effect.
+- **Effects run only at edges**: an atom (`appRuntime.atom`), a command (below), a Convex handler, a test. Never `Effect.runPromise` inside a service or inside another effect.
 - **Retryable work does not run while a layer builds.** The registry keeps a failed layer build, so refreshing an atom would not rebuild it. `LocalDatabase` opens the file in `open()`, which the atom calls, so a refresh re-runs every step on a fresh connection.
 - **Fast Refresh.** `_layout.tsx` imports the runtime and registry modules and is not a refresh boundary (it exports `unstable_settings`), so an edit to either, or to a service they import, makes Metro reload the bundle instead of running them a second time. Keep them imported from `_layout.tsx`.
 - The `@effect/language-service` plugin in each tsconfig reports in the editor only; `tsc` is not patched, so `check-types` does not run its diagnostics.
@@ -45,9 +58,28 @@ A reusable operation is `Effect.fn("LocalDatabase.open")(function* open() { ... 
 - Retry is `registry.refresh(atom)`, with the registry from `use(RegistryContext)`.
 - App state that outlives any screen is a writable `Atom.make(initial).pipe(Atom.keepAlive)`; the hook returns `useAtom`'s setter, which also takes an updater that reads the latest value. Derive the rest with `Atom.make((get) => ...)`.
 - An atom compares by `Object.is`. A derived value rebuilt on every upstream change keeps its readers still with `Atom.withEquality` (`Equal.equals` is structural for plain objects). `display-settings-context.ts` reads SQLite this way: `get.addFinalizer(subscribeToTableChanges(...))` calls `get.refreshSelf()`, and `sameRows` keeps the rows when nothing changed.
-- A promise per call (a purchase from a press) runs through `AtomRegistry.getResult(registry, appRuntime)` with `Effect.provideContext(services)`, as `useRevenueCat` does. A `fn` atom in `useAtomSet` promise mode resolves with whichever write settles next, so overlapping calls can get each other's results.
+- Every atom has a label, `Atom.withLabel("<area>:<name>")`, set last in its `pipe`: `local-data:open`, `revenuecat:entitlement`. The label names the atom in devtools, in a failing test and in a reported failure. A family shares one label for all its members.
 - `Service.use(...)` trips `rules-of-hooks` outside a component. Write `LocalDatabase.pipe(Effect.flatMap((local) => local.open()))`.
 - React effects are for synchronizing with something outside React. Derive in render and act in handlers instead of syncing state, but do not hide real lifecycle work in refs or stores to dodge an effect. Reach for, in order: state derived in render; the event handler that causes the change; a `key` remount to reset; `useSyncExternalStore` through a shared helper for external stores; `useAtomMount` on an atom family whose body starts the work and registers `get.addFinalizer`; a module service attached outside React; Reanimated `useDerivedValue` or `useAnimatedReaction`; a ref callback. An effect that stays says why on the line above it, `// oxlint-disable-next-line outlayr/react-effect-budget -- <why>`, and `scripts/effect-budget.json` caps the rest (see `linting.md`, "React effect budget").
+
+## Commands are the write path
+
+A read is an atom. A write a user or a module starts, and any call that must hand back one answer per call, is a command from `src/state/atom-command.ts`.
+
+```ts
+const purchaseCommand = createRuntimeCommand(appRuntime, {
+    execute: (input: { accountId: string | null; pack: PurchasesPackage }) =>
+        RevenueCat.pipe(Effect.flatMap((revenueCat) => revenueCat.purchase(input.accountId, input.pack))),
+    label: "revenuecat:purchase",
+});
+```
+
+- `run(registry, input)` builds one throwaway atom for the call, mounts it, awaits `AtomRegistry.getResult` and resolves to a settled `AsyncResult`: `Success` or `Failure`, never a rejection. A throw inside `execute` is a defect in that result. Overlapping calls each get their own result; a `fn` atom in `useAtomSet` promise mode resolves with whichever write settles next, so it is not used for this.
+- A component calls `useAtomCommand(command, options)` and gets `(input) => Promise<result>`; module code with no registry calls `runAtomCommand(appAtomRegistry, command, input, options)`.
+- One reporter handles the result. It ignores interrupts, logs a defect with `console.error` and a typed failure with `console.warn`, which is a red or a yellow LogBox entry in dev and an error or warn native log in release, as `Effect.logWarning` is under `appRuntime`'s logger. `reportDefect` and `reportFailure` switch each off per call.
+- **A component handles a settled failure in the handler.** It awaits the result, branches on `AsyncResult.isFailure`, and sets its own state or shows its own copy. Pass `SILENT` when that branch is the report, so one failure is not logged twice. Busy state is the component's own `useState` set around the `await`, not the atom's `waiting`.
+- **Code behind a promise contract** (`runAccountLifecycle`'s callbacks, the `RevenueCatValue` functions the paywall awaits) passes `SILENT` and returns `unwrapAtomCommand(result)`, which throws the squashed cause, so the caller's `catch` keeps seeing what it saw before.
+- A command whose calls must not overlap needs a scheduler, which does not exist yet. Add one with the first caller that needs it.
 
 ## Long-running services
 

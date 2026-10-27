@@ -24,7 +24,7 @@ const idleStartAtom = Atom.make(
             cancelIdleCallback(handle);
         });
     })
-);
+).pipe(Atom.withLabel("background-work:idle-start"));
 
 export function BackgroundWork() {
     const db = useDatabase();
