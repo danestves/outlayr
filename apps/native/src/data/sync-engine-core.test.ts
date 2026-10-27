@@ -459,6 +459,17 @@ describe("applyPulledRows", () => {
         await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(1);
     });
 
+    it("takes an amount the server accepted beyond drizzle's default number range", async () => {
+        const huge = 4_111_111_111_111_111;
+        await Effect.runPromise(
+            applyPulledRows(db, { cursor: 1, rows: [txRow("card", 1, 5000, { fields: { amount: huge } })] })
+        );
+
+        const [row] = await db.select().from(transactions);
+        expect(row.amount).toBe(huge);
+        await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(1);
+    });
+
     it("refuses a page holding a value its column cannot take, writing none of it", async () => {
         const transactional = transactionalDatabase();
         await Effect.runPromise(setMeta(transactional, META_KEYS.syncEnabled, "true"));

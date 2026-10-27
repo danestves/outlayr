@@ -1,4 +1,4 @@
-import { and, eq, gte, isNull, lte } from "drizzle-orm";
+import { DrizzleQueryError, and, eq, gte, isNull, lte } from "drizzle-orm";
 import { useEffect } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
@@ -226,7 +226,8 @@ export function useImportReview(): ImportReviewResult {
                 });
                 importDraftStore.setStep("done");
             } catch (cause: unknown) {
-                const reason = cause instanceof CsvTransferError ? cause.cause : cause;
+                const failure = cause instanceof CsvTransferError ? cause.cause : cause;
+                const reason = failure instanceof DrizzleQueryError ? failure.cause : failure;
                 importDraftStore.dispatch({
                     detail: reason instanceof Error ? reason.message : null,
                     type: "commitFailed",

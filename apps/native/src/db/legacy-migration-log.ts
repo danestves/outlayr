@@ -38,7 +38,10 @@ export function adoptLegacyMigrationLog(db: Database): void {
         }
         db.run(sql`COMMIT`);
     } catch (error) {
-        db.run(sql`ROLLBACK`);
+        try {
+            db.run(sql`ROLLBACK`);
+            // oxlint-disable-next-line no-empty -- SQLite already rolled back after a disk or I/O failure, so keep the original error
+        } catch {}
         throw error;
     }
 }
