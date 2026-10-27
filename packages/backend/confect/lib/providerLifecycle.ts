@@ -1,7 +1,8 @@
 import { createAuthEndpoint, sessionMiddleware } from "better-auth/api";
 import { decryptOAuthToken, setTokenUtil } from "better-auth/oauth2";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import { createRemoteJWKSet, jwtVerify } from "jose";
-import { z } from "zod";
 
 import { sha256Hex } from "./sha256Hex";
 
@@ -88,20 +89,20 @@ const APPLE_TIMEOUT_MS = 10_000;
 const APPLE_ISSUER = "https://appleid.apple.com";
 const APPLE_JWKS = createRemoteJWKSet(new URL("https://appleid.apple.com/auth/keys"));
 
-const appleIdentityClaims = z.object({ sub: z.string() });
+const decodeAppleIdentityClaims = Schema.decodeUnknownOption(Schema.Struct({ sub: Schema.String }));
 
 export function appleTokenVerifier(clientId: string): AppleGrantDependencies["verify"] {
     return async (idToken, rawNonce) => {
         const { payload } = await jwtVerify(idToken, APPLE_JWKS, { audience: clientId, issuer: APPLE_ISSUER });
         // `jose` types `sub` but the payload is JSON, so the claim is checked rather than trusted.
-        const claims = appleIdentityClaims.safeParse(payload);
-        if (!claims.success) {
+        const claims = decodeAppleIdentityClaims(payload);
+        if (Option.isNone(claims)) {
             throw new TypeError("Apple identity token does not contain a subject");
         }
         if (rawNonce && payload.nonce !== (await sha256Hex(rawNonce))) {
             throw new Error("Apple identity token nonce does not match the raw nonce");
         }
-        return { subject: claims.data.sub };
+        return { subject: claims.value.sub };
     };
 }
 
@@ -130,12 +131,25 @@ interface AppleLifecycleContext {
 }
 
 // `refresh_token` comes only on an authorization-code response, never on a refresh grant.
-const appleTokenResponse = z.object({
-    access_token: z.string(),
-    expires_in: z.number(),
-    id_token: z.string(),
-    refresh_token: z.string().optional(),
-});
+const decodeAppleTokenResponse = Schema.decodeUnknownOption(
+    Schema.Struct({
+        access_token: Schema.String,
+        expires_in: Schema.Number,
+        id_token: Schema.String,
+        refresh_token: Schema.optional(Schema.String),
+    })
+);
+
+const AppleGrantBody = Schema.toStandardSchemaV1(
+    Schema.Struct({
+        authorizationCode: Schema.NonEmptyString,
+        identityToken: Schema.NonEmptyString,
+        nonce: Schema.NonEmptyString,
+        providerSubject: Schema.NonEmptyString,
+    })
+);
+
+const AppleRevokeBody = Schema.toStandardSchemaV1(Schema.Struct({ resumeSecret: Schema.NonEmptyString }));
 
 async function appleTokenRequest(config: AppleServerConfig, parameters: Record<string, string>): Promise<AppleTokens> {
     const response = await fetch("https://appleid.apple.com/auth/token", {
@@ -151,15 +165,15 @@ async function appleTokenRequest(config: AppleServerConfig, parameters: Record<s
     if (!response.ok) {
         throw new Error("Apple token exchange failed");
     }
-    const tokens = appleTokenResponse.safeParse(await response.json());
-    if (!tokens.success) {
+    const tokens = decodeAppleTokenResponse(await response.json());
+    if (Option.isNone(tokens)) {
         throw new Error("Apple token exchange returned incomplete token material");
     }
     return {
-        accessToken: tokens.data.access_token,
-        expiresIn: tokens.data.expires_in,
-        idToken: tokens.data.id_token,
-        refreshToken: tokens.data.refresh_token,
+        accessToken: tokens.value.access_token,
+        expiresIn: tokens.value.expires_in,
+        idToken: tokens.value.id_token,
+        refreshToken: tokens.value.refresh_token,
     };
 }
 
@@ -215,12 +229,7 @@ export function appleCredentialLifecycle(config: AppleServerConfig | null, resum
             grantAppleCredential: createAuthEndpoint(
                 "/apple/grant",
                 {
-                    body: z.object({
-                        authorizationCode: z.string().min(1),
-                        identityToken: z.string().min(1),
-                        nonce: z.string().min(1),
-                        providerSubject: z.string().min(1),
-                    }),
+                    body: AppleGrantBody,
                     method: "POST",
                     use: [sessionMiddleware],
                 },
@@ -240,7 +249,7 @@ export function appleCredentialLifecycle(config: AppleServerConfig | null, resum
             revokeAppleCredential: createAuthEndpoint(
                 "/apple/revoke",
                 {
-                    body: z.object({ resumeSecret: z.string().min(1) }),
+                    body: AppleRevokeBody,
                     method: "POST",
                 },
                 async (ctx) => {

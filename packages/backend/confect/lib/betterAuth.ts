@@ -8,8 +8,9 @@ import { env } from "@outlayr/env/backend";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { betterAuth } from "better-auth/minimal";
 import { emailOTP } from "better-auth/plugins";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import { importPKCS8, SignJWT } from "jose";
-import { z } from "zod";
 
 import { components, internal } from "../../convex/_generated/api";
 import type { DataModel } from "../../convex/_generated/dataModel";
@@ -53,7 +54,7 @@ const emailLimiter = new RateLimiter(components.rateLimiter, {
     emailAuth: { capacity: 10, kind: "token bucket", period: HOUR, rate: 10 },
 });
 
-const emailBody = z.object({ email: z.string() });
+const decodeEmailBody = Schema.decodeUnknownOption(Schema.Struct({ email: Schema.String }));
 
 export const authComponent = createClient<DataModel>(components.betterAuth);
 
@@ -125,9 +126,9 @@ function createAuth(ctx: GenericCtx<DataModel>) {
         },
         hooks: {
             before: createAuthMiddleware(async (endpoint) => {
-                const body = emailBody.safeParse(endpoint.body);
-                if (EMAIL_LIMITED_PATHS.has(endpoint.path) && body.success) {
-                    const key = await sha256Hex(body.data.email.trim().toLowerCase());
+                const body = decodeEmailBody(endpoint.body);
+                if (EMAIL_LIMITED_PATHS.has(endpoint.path) && Option.isSome(body)) {
+                    const key = await sha256Hex(body.value.email.trim().toLowerCase());
                     const { ok } = await emailLimiter.limit(requireRunMutationCtx(ctx), "emailAuth", { key });
                     if (!ok) {
                         throw new APIError("TOO_MANY_REQUESTS", { message: "Too many attempts for this email" });

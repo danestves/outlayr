@@ -4,6 +4,7 @@ import type { TestConvex } from "convex-test";
 import type { GenericSchema, SchemaDefinition } from "convex/server";
 
 import { components } from "../convex/_generated/api";
+import "./lib/betterAuth";
 import { PRO_ENTITLEMENT_ID, revenuecat } from "./revenuecat";
 
 // `safeGetAuthUser` needs both an unexpired `session` row (`identity.sessionId`) and a `user` row (`identity.subject`).

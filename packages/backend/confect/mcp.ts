@@ -1,18 +1,21 @@
+import { SchemaToValidator } from "@confect/core";
 import { McpServer, tool } from "@convex-dev/mcp";
 import { env } from "@outlayr/env/backend";
 import type { Auth } from "convex/server";
-import { v } from "convex/values";
+import * as Schema from "effect/Schema";
 
 import { components, internal } from "../convex/_generated/api";
 import type { ActionCtx, MutationCtx, QueryCtx } from "../convex/_generated/server";
 import { optionalUserId } from "./lib/auth";
-import { logEntryInput, logEntryResult } from "./mcpEntries";
+import { LogEntryInput, LoggedEntry } from "./mcpEntries";
 import {
-    accountBalancesResult,
-    budgetStatusResult,
-    recentTransactionsResult,
-    spendingSummaryResult,
-    upcomingChargesResult,
+    AccountBalances,
+    BudgetStatus,
+    RecentTransactions,
+    RecentTransactionsInput,
+    SpendingSummary,
+    SpendingSummaryInput,
+    UpcomingCharges,
 } from "./mcpLedger";
 
 const READ = "ledger:read";
@@ -38,7 +41,7 @@ export const mcp: McpServer = new McpServer(components.mcp, {
             description:
                 "Every account's balance today, as on Outlayr's Accounts screen: in the account's own currency and in the user's main currency, with its kind and what the user owns, owes and is worth in total. A kind is `asset`, `liability`, or `person`: someone the user lent to or borrowed from, positive when they owe the user and negative when the user owes them, so it counts as owned or owed by its sign. People are listed here though the Accounts screen leaves them out. Entries and transfers dated later than now are not counted. `exact` is false when a rate was missing and part of a figure stayed at face value.",
             handler: (ctx, _args, user) => ctx.runQuery(internal.mcpLedger.accountBalances, { user }),
-            returns: accountBalancesResult,
+            returns: SchemaToValidator.compileSchema(AccountBalances),
             scope: READ,
         }),
         budget_status: tool({
@@ -46,12 +49,12 @@ export const mcp: McpServer = new McpServer(components.mcp, {
             description:
                 "Where the user's budgets stand in the current window, as on Outlayr's Budgets screen, in their main currency: the overall budget and each category budget with its period, window dates (`from` and `to`, inclusive), limit, carry-over from earlier windows when rollover is on, the effective limit, spent, remaining and whether it is over. A category budget counts its subcategories, which are listed.",
             handler: (ctx, _args, user) => ctx.runQuery(internal.mcpLedger.budgetStatus, { user }),
-            returns: budgetStatusResult,
+            returns: SchemaToValidator.compileSchema(BudgetStatus),
             scope: READ,
         }),
         log_entry: tool({
             annotations: { destructiveHint: false },
-            args: logEntryInput,
+            args: SchemaToValidator.compileSchema(Schema.Struct(LogEntryInput)).fields,
             description: [
                 "Adds one expense or income to the signed-in user's Outlayr ledger. Their devices receive it on the next sync, as if they had logged it in the app. Needs Outlayr Pro. Returns the entry as saved.",
                 "`amount` is positive; `kind` says which way the money moved.",
@@ -63,25 +66,25 @@ export const mcp: McpServer = new McpServer(components.mcp, {
                 "`idempotencyKey` is any unique string for this entry: send the same one on a retry so it is not logged twice.",
             ].join(" "),
             handler: (ctx, args, user) => ctx.runMutation(internal.mcpEntries.logEntry, { user, ...args }),
-            returns: logEntryResult,
+            returns: SchemaToValidator.compileSchema(LoggedEntry),
             scope: WRITE,
         }),
         recent_transactions: tool({
             annotations: { readOnlyHint: true },
-            args: { limit: v.optional(v.number()) },
+            args: SchemaToValidator.compileSchema(Schema.Struct(RecentTransactionsInput)).fields,
             description:
                 "The signed-in user's most recent Outlayr entries, newest first: date, amount, currency, category, note, and whether each is an expense or income. Reads what the user's devices last synced. `limit` defaults to 20, at most 50.",
             handler: (ctx, args, user) => ctx.runQuery(internal.mcpLedger.recentTransactions, { user, ...args }),
-            returns: recentTransactionsResult,
+            returns: SchemaToValidator.compileSchema(RecentTransactions),
             scope: READ,
         }),
         spending_summary: tool({
             annotations: { readOnlyHint: true },
-            args: { monthsAgo: v.optional(v.number()) },
+            args: SchemaToValidator.compileSchema(Schema.Struct(SpendingSummaryInput)).fields,
             description:
                 "What the signed-in user spent and earned in one budgeting month, in their main currency, with spending by category: the same figures as Outlayr's Insights screen. A month starts on the user's payday setting. `monthsAgo` is 0 for the current month (default), 1 for the previous one, and so on. Reads what the user's devices last synced.",
             handler: (ctx, args, user) => ctx.runQuery(internal.mcpLedger.spendingSummary, { user, ...args }),
-            returns: spendingSummaryResult,
+            returns: SchemaToValidator.compileSchema(SpendingSummary),
             scope: READ,
         }),
         upcoming_charges: tool({
@@ -89,7 +92,7 @@ export const mcp: McpServer = new McpServer(components.mcp, {
             description:
                 "The user's recurring and future-dated entries, soonest first, as on Outlayr's Upcoming list: the date each next lands, its amount and currency, category, note, cadence and end date. `monthlyCost` is what the recurring expenses cost per month, per currency, converted into the main currency where a rate allows.",
             handler: (ctx, _args, user) => ctx.runQuery(internal.mcpLedger.upcomingCharges, { user }),
-            returns: upcomingChargesResult,
+            returns: SchemaToValidator.compileSchema(UpcomingCharges),
             scope: READ,
         }),
     },
