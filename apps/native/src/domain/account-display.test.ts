@@ -41,7 +41,8 @@ describe("formatSignedAmount", () => {
     it("drops the minus when the balance rounds to zero", () => {
         // 120.35 - 100.2 - 20.15 is -7.1e-15 in floating point.
         expect(formatSignedAmount(120.35 - 100.2 - 20.15, "USD")).toBe("$0.00");
-        expect(formatSignedAmount(-0.4, "USD", false)).toBe("$0");
+        expect(formatSignedAmount(-0.004, "USD", false)).toBe("$0");
+        expect(formatSignedAmount(-0.4, "USD", false)).toBe("-$0.40");
         expect(formatSignedAmount(-0.6, "USD", false)).toBe("-$1");
     });
 });

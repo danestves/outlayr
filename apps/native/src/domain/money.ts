@@ -101,6 +101,11 @@ export interface AmountParts {
     symbol: string;
 }
 
+function roundsToNothing(amount: number, code: string): boolean {
+    const magnitude = Math.abs(amount);
+    return roundMoney(magnitude, 0) === 0 && roundMoney(magnitude, decimalsFor(code)) !== 0;
+}
+
 // Separators come from the language (and, for Spanish, the region), not `Intl`: Hermes lacks full ICU.
 export function amountParts(
     amount: number,
@@ -109,7 +114,7 @@ export function amountParts(
     language: Language = runtimeLanguage()
 ): AmountParts {
     const locale = numberLocale(language);
-    const minorUnits = showCents ? decimalsFor(code) : 0;
+    const minorUnits = showCents || roundsToNothing(amount, code) ? decimalsFor(code) : 0;
     const rounded = roundMoney(Math.abs(amount), minorUnits);
     const { fraction, integer } = splitFixed(rounded.toFixed(minorUnits), locale);
     return {
