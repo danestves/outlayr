@@ -39,6 +39,30 @@ interface SentenceValueProps {
 
 // The rule animates `scaleX`, not width: a width relayouts every later word per frame, and inside `RNHostView`
 // that re-measures the whole SwiftUI form.
+function SentenceRule({ bottom, color }: { bottom: number; color: string }) {
+    const reduced = useReducedMotion();
+    const draw = useSharedValue(reduced ? 1 : 0);
+
+    useEffect(() => {
+        if (reduced) {
+            draw.set(1);
+            return;
+        }
+        draw.set(0);
+        draw.set(withTiming(1, SENTENCE_DRAW));
+    }, [draw, reduced]);
+
+    const ruleStyle = useAnimatedStyle(() => ({ transform: [{ scaleX: draw.get() }] }));
+
+    return (
+        <Animated.View
+            className="absolute right-0 left-0 h-[2px] rounded-full"
+            pointerEvents="none"
+            style={[{ backgroundColor: color, bottom, transformOrigin: "left" }, ruleStyle]}
+        />
+    );
+}
+
 export function SentenceValue({
     accessibilityLabel,
     active,
@@ -54,21 +78,8 @@ export function SentenceValue({
 }: SentenceValueProps) {
     const { textClassName } = useSentenceStyle();
     const colors = useColors();
-    const reduced = useReducedMotion();
-    const draw = useSharedValue(reduced ? 1 : 0);
     const shakeStyle = useSentenceShake(shake);
     const identity = swapKey ?? value;
-
-    useEffect(() => {
-        if (reduced) {
-            draw.set(1);
-            return;
-        }
-        draw.set(0);
-        draw.set(withTiming(1, SENTENCE_DRAW));
-    }, [draw, identity, reduced]);
-
-    const ruleStyle = useAnimatedStyle(() => ({ transform: [{ scaleX: draw.get() }] }));
 
     const tone = () => {
         if (flagged) {
@@ -105,18 +116,7 @@ export function SentenceValue({
                         <Text className={cn(textClassName, tone())}>{value}</Text>
                     )}
                 </Animated.View>
-                <Animated.View
-                    className="absolute right-0 left-0 h-[2px] rounded-full"
-                    pointerEvents="none"
-                    style={[
-                        {
-                            backgroundColor: flagged ? colors.danger : colors.tint,
-                            bottom: ruleBottom,
-                            transformOrigin: "left",
-                        },
-                        ruleStyle,
-                    ]}
-                />
+                <SentenceRule bottom={ruleBottom} color={flagged ? colors.danger : colors.tint} key={identity} />
             </Pressable>
         </Animated.View>
     );

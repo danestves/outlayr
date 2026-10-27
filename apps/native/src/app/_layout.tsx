@@ -7,7 +7,7 @@ import { useConvexAuth } from "convex/react";
 import { useFonts } from "expo-font";
 import { setNotificationHandler } from "expo-notifications";
 import type { ErrorBoundaryProps } from "expo-router";
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider, usePathname } from "expo-router";
 import { hideAsync, preventAutoHideAsync } from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { PanelUIProvider } from "panelui-native/provider";
@@ -96,10 +96,14 @@ function CloudRuntimeProvider({ children }: { children: ReactNode }) {
     );
 }
 
-function Analytics() {
-    useAnalyticsConsent();
+function ScreenView() {
     useScreenTracking();
     return null;
+}
+
+function Analytics() {
+    useAnalyticsConsent();
+    return <ScreenView key={usePathname()} />;
 }
 
 function ActivatedCloudRuntime({ children }: { children: ReactNode }) {
