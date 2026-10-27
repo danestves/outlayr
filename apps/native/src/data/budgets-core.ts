@@ -46,14 +46,12 @@ const budgetLimit = Effect.fn("Budgets.budgetLimit")(function* budgetLimit(
 ) {
     const magnitude = Math.abs(amount);
     const currency = storedCurrency ?? (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
-    const { amountUsd } = yield* query(operation, () =>
-        canonicalUsd(localRateLookup(db), {
-            amount: magnitude,
-            currency,
-            date: at,
-            displayCurrency: currency,
-        })
-    );
+    const { amountUsd } = yield* canonicalUsd(localRateLookup(db), {
+        amount: magnitude,
+        currency,
+        date: at,
+        displayCurrency: currency,
+    }).pipe(Effect.mapError((cause) => new BudgetsError({ cause, operation })));
     return { amount: magnitude, amountUsd, currency };
 });
 

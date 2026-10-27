@@ -1,4 +1,5 @@
 import { dinero, toDecimal, USD } from "dinero.js/bigint";
+import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 import { MoneyValidationError } from "./errors";
@@ -21,42 +22,63 @@ export interface RateRow {
 }
 
 /** Must return the newest row on or before `date`, else `null`. */
-export type RateLookup = (quote: string, rateType: MarketRateType, date: string) => Promise<RateRow | null>;
+export type RateLookup<E = never> = (
+    quote: string,
+    rateType: MarketRateType,
+    date: string
+) => Effect.Effect<RateRow | null, E>;
 
-export async function resolveEntryRate(
-    lookup: RateLookup,
+export const resolveEntryRate = Effect.fn("Rates.resolveEntryRate")(function* resolveEntryRate<E>(
+    lookup: RateLookup<E>,
     currency: string,
     rateType: EntryRateType,
     customRate: number | undefined,
     date: string
-): Promise<number> {
+) {
     if (rateType === "custom") {
         if (customRate === undefined) {
-            throw new MoneyValidationError({ message: 'customRate is required when exchangeRateType is "custom"' });
+            return yield* new MoneyValidationError({
+                message: 'customRate is required when exchangeRateType is "custom"',
+            });
         }
         if (!Number.isFinite(customRate) || customRate <= 0) {
-            throw new MoneyValidationError({ message: "customRate must be a positive number" });
+            return yield* new MoneyValidationError({ message: "customRate must be a positive number" });
         }
         return customRate;
     }
     if (customRate !== undefined) {
-        throw new MoneyValidationError({ message: 'customRate is only allowed when exchangeRateType is "custom"' });
+        return yield* new MoneyValidationError({
+            message: 'customRate is only allowed when exchangeRateType is "custom"',
+        });
     }
     if (rateType === "eur_reference" && currency !== "VES") {
-        throw new MoneyValidationError({ message: "eur_reference rates are only available for VES amounts" });
+        return yield* new MoneyValidationError({
+            message: "eur_reference rates are only available for VES amounts",
+        });
     }
-    const row = await lookup(currency, rateType, date);
+    const row = yield* lookup(currency, rateType, date);
     if (!row) {
-        throw new MoneyValidationError({ message: `No ${rateType} rate available for ${currency} on ${date}` });
+        return yield* new MoneyValidationError({
+            message: `No ${rateType} rate available for ${currency} on ${date}`,
+        });
     }
-    return requirePositiveRate(row.rate, currency, rateType, date);
+    if (!isPositiveRate(row.rate)) {
+        return yield* new MoneyValidationError({ message: positiveRateMessage(row.rate, currency, rateType, date) });
+    }
+    return row.rate;
+});
+
+function isPositiveRate(rate: number): boolean {
+    return Number.isFinite(rate) && rate > 0;
+}
+
+function positiveRateMessage(rate: number, currency: string, rateType: string, date: string): string {
+    return `Resolved ${rateType} rate for ${currency} on ${date} must be a positive number, got: ${rate}`;
 }
 
 function requirePositiveRate(rate: number, currency: string, rateType: string, date: string): number {
-    if (!Number.isFinite(rate) || rate <= 0) {
-        throw new MoneyValidationError({
-            message: `Resolved ${rateType} rate for ${currency} on ${date} must be a positive number, got: ${rate}`,
-        });
+    if (!isPositiveRate(rate)) {
+        throw new MoneyValidationError({ message: positiveRateMessage(rate, currency, rateType, date) });
     }
     return rate;
 }

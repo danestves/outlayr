@@ -135,20 +135,20 @@ export const backfillCanonicalUsd = Effect.fn("CanonicalizeBackfill.backfillCano
             let valuedInBatch = 0;
             let removedFromBacklog = 0;
             for (const row of pending) {
-                const canonical = yield* query("canonicalize", () =>
-                    canonicalUsd(lookup, {
-                        amount: row.amount,
-                        currency: row.currency,
-                        date: row.date,
-                        displayCurrency: row.currency ?? DEFAULT_CURRENCY,
-                        exchangeRate: row.exchangeRate,
-                        exchangeRateType:
-                            row.exchangeRateType === "custom" ||
-                            row.exchangeRateType === "eur_reference" ||
-                            row.exchangeRateType === "official"
-                                ? row.exchangeRateType
-                                : null,
-                    })
+                const canonical = yield* canonicalUsd(lookup, {
+                    amount: row.amount,
+                    currency: row.currency,
+                    date: row.date,
+                    displayCurrency: row.currency ?? DEFAULT_CURRENCY,
+                    exchangeRate: row.exchangeRate,
+                    exchangeRateType:
+                        row.exchangeRateType === "custom" ||
+                        row.exchangeRateType === "eur_reference" ||
+                        row.exchangeRateType === "official"
+                            ? row.exchangeRateType
+                            : null,
+                }).pipe(
+                    Effect.mapError((cause) => new CanonicalizeBackfillError({ cause, operation: "canonicalize" }))
                 );
                 if (canonical.amountUsd === null) {
                     if (row.exchangeRate !== null && canonical.exchangeRate === null) {
@@ -209,14 +209,12 @@ export const backfillBudgetUsd = Effect.fn("CanonicalizeBackfill.backfillBudgetU
                 continue;
             }
             const { currency } = row;
-            const { amountUsd } = yield* query("budgets", () =>
-                canonicalUsd(lookup, {
-                    amount: row.amount,
-                    currency,
-                    date: row.dateCreated ?? row.startDate ?? new Date(),
-                    displayCurrency: currency,
-                })
-            );
+            const { amountUsd } = yield* canonicalUsd(lookup, {
+                amount: row.amount,
+                currency,
+                date: row.dateCreated ?? row.startDate ?? new Date(),
+                displayCurrency: currency,
+            }).pipe(Effect.mapError((cause) => new CanonicalizeBackfillError({ cause, operation: "budgets" })));
             if (amountUsd === null) {
                 continue;
             }

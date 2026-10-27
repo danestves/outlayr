@@ -14,7 +14,7 @@ describe("rateTypeOptions", () => {
         expect(rateTypeOptions("VES")).toContain("eur_reference");
     });
 
-    it("withholds the EUR reference from every other currency, because resolveEntryRate throws for them", () => {
+    it("withholds the EUR reference from every other currency, because resolveEntryRate rejects them", () => {
         expect(rateTypeOptions("BRL")).not.toContain("eur_reference");
         expect(rateTypeOptions("EUR")).not.toContain("eur_reference");
     });

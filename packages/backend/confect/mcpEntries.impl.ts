@@ -150,17 +150,22 @@ const logEntry = FunctionImpl.make(
             }
 
             const lookup: RateLookup = (quote, rateType, day) =>
-                ctx.db
-                    .query("exchangeRates")
-                    .withIndex("by_quote_and_rateType_and_date", (q) =>
-                        q.eq("quote", quote).eq("rateType", rateType).lte("date", day)
-                    )
-                    .order("desc")
-                    .first();
+                Effect.promise(() =>
+                    ctx.db
+                        .query("exchangeRates")
+                        .withIndex("by_quote_and_rateType_and_date", (q) =>
+                            q.eq("quote", quote).eq("rateType", rateType).lte("date", day)
+                        )
+                        .order("desc")
+                        .first()
+                );
             const counter = yield* seqCounter(userId);
-            const valuation = yield* Effect.promise(() =>
-                canonicalUsd(lookup, { amount, currency, date: new Date(date), displayCurrency: currency })
-            );
+            const valuation = yield* canonicalUsd(lookup, {
+                amount,
+                currency,
+                date: new Date(date),
+                displayCurrency: currency,
+            });
             yield* writer.table("transactions").insert({
                 ...valuation,
                 ...localMidnights(date, offsetMs),

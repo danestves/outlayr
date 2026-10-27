@@ -210,16 +210,17 @@ export const backfillRecurring = Effect.fn("RecurrenceBackfill.backfillRecurring
     const display = (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
     const canonicalized = yield* Effect.all(
         pending.map((row) =>
-            query("backfill", () =>
-                canonicalUsd(lookup, {
-                    amount: row.amount,
-                    currency: row.currency ?? null,
-                    date: row.date,
-                    displayCurrency: display,
-                    exchangeRate: null,
-                    exchangeRateType: recurrenceRateType(row.exchangeRateType),
-                })
-            ).pipe(Effect.map((canonical) => ({ ...row, ...canonical })))
+            canonicalUsd(lookup, {
+                amount: row.amount,
+                currency: row.currency ?? null,
+                date: row.date,
+                displayCurrency: display,
+                exchangeRate: null,
+                exchangeRateType: recurrenceRateType(row.exchangeRateType),
+            }).pipe(
+                Effect.mapError(failedAt("backfill")),
+                Effect.map((canonical) => ({ ...row, ...canonical }))
+            )
         ),
         { concurrency: "unbounded" }
     );
@@ -269,16 +270,14 @@ const withCanonicalUsd = Effect.fn("RecurrenceBackfill.withCanonicalUsd")(functi
     row: TransactionInsert
 ) {
     const display = (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
-    const canonical = yield* query("successor", () =>
-        canonicalUsd(localRateLookup(db), {
-            amount: row.amount,
-            currency: row.currency ?? null,
-            date: row.date,
-            displayCurrency: display,
-            exchangeRate: null,
-            exchangeRateType: recurrenceRateType(row.exchangeRateType),
-        })
-    );
+    const canonical = yield* canonicalUsd(localRateLookup(db), {
+        amount: row.amount,
+        currency: row.currency ?? null,
+        date: row.date,
+        displayCurrency: display,
+        exchangeRate: null,
+        exchangeRateType: recurrenceRateType(row.exchangeRateType),
+    }).pipe(Effect.mapError(failedAt("successor")));
     return { ...row, ...canonical };
 });
 

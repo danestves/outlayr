@@ -1,3 +1,4 @@
+import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vite-plus/test";
 
 import {
@@ -57,51 +58,55 @@ describe(resolveEntryRate, () => {
     ]);
 
     it("returns a positive custom rate verbatim", async () => {
-        await expect(resolveEntryRate(lookup, "VES", "custom", 55.5, "2026-06-30")).resolves.toBe(55.5);
-    });
-
-    it("requires a customRate for the custom type", async () => {
-        await expect(resolveEntryRate(lookup, "VES", "custom", undefined, "2026-06-30")).rejects.toThrow(
-            CUSTOM_REQUIRED_PATTERN
+        await expect(Effect.runPromise(resolveEntryRate(lookup, "VES", "custom", 55.5, "2026-06-30"))).resolves.toBe(
+            55.5
         );
     });
 
+    it("requires a customRate for the custom type", async () => {
+        await expect(
+            Effect.runPromise(resolveEntryRate(lookup, "VES", "custom", undefined, "2026-06-30"))
+        ).rejects.toThrow(CUSTOM_REQUIRED_PATTERN);
+    });
+
     it("rejects a non-positive custom rate", async () => {
-        await expect(resolveEntryRate(lookup, "VES", "custom", 0, "2026-06-30")).rejects.toThrow(
+        await expect(Effect.runPromise(resolveEntryRate(lookup, "VES", "custom", 0, "2026-06-30"))).rejects.toThrow(
             CUSTOM_POSITIVE_PATTERN
         );
     });
 
     it("rejects a customRate supplied with a market type", async () => {
-        await expect(resolveEntryRate(lookup, "VES", "official", 10, "2026-06-30")).rejects.toThrow(
+        await expect(Effect.runPromise(resolveEntryRate(lookup, "VES", "official", 10, "2026-06-30"))).rejects.toThrow(
             CUSTOM_ONLY_PATTERN
         );
     });
 
     it("resolves a market rate on the effective date", async () => {
-        await expect(resolveEntryRate(lookup, "VES", "official", undefined, "2026-06-30")).resolves.toBe(40);
+        await expect(
+            Effect.runPromise(resolveEntryRate(lookup, "VES", "official", undefined, "2026-06-30"))
+        ).resolves.toBe(40);
     });
 
     it("rejects eur_reference for a non-VES currency", async () => {
-        await expect(resolveEntryRate(lookup, "COP", "eur_reference", undefined, "2026-06-30")).rejects.toThrow(
-            EUR_VES_ONLY_PATTERN
-        );
+        await expect(
+            Effect.runPromise(resolveEntryRate(lookup, "COP", "eur_reference", undefined, "2026-06-30"))
+        ).rejects.toThrow(EUR_VES_ONLY_PATTERN);
     });
 
     it("throws when no market rate is available", async () => {
-        await expect(resolveEntryRate(lookup, "VES", "official", undefined, "2020-01-01")).rejects.toThrow(
-            NO_MARKET_RATE_PATTERN
-        );
+        await expect(
+            Effect.runPromise(resolveEntryRate(lookup, "VES", "official", undefined, "2020-01-01"))
+        ).rejects.toThrow(NO_MARKET_RATE_PATTERN);
     });
 
     it("rejects a resolved market rate that is zero or negative (S1)", async () => {
         const badLookup = makeRateLookup([{ date: "2026-06-01", quote: "VES", rate: 0, rateType: "official" }]);
-        await expect(resolveEntryRate(badLookup, "VES", "official", undefined, "2026-06-30")).rejects.toThrow(
-            RESOLVED_RATE_POSITIVE_PATTERN
-        );
-        await expect(resolveEntryRate(badLookup, "VES", "official", undefined, "2026-06-30")).rejects.toThrow(
-            MoneyValidationError
-        );
+        await expect(
+            Effect.runPromise(resolveEntryRate(badLookup, "VES", "official", undefined, "2026-06-30"))
+        ).rejects.toThrow(RESOLVED_RATE_POSITIVE_PATTERN);
+        await expect(
+            Effect.runPromise(resolveEntryRate(badLookup, "VES", "official", undefined, "2026-06-30"))
+        ).rejects.toThrow(MoneyValidationError);
     });
 
     it("rejects a negative entry rate rather than flipping the amount's sign", () => {

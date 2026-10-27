@@ -227,9 +227,8 @@ export function useImportReview(): ImportReviewResult {
                 importDraftStore.setStep("done");
             } catch (cause: unknown) {
                 const failure = cause instanceof CsvTransferError ? cause.cause : cause;
-                const reason = failure instanceof DrizzleQueryError ? failure.cause : failure;
                 importDraftStore.dispatch({
-                    detail: reason instanceof Error ? reason.message : null,
+                    detail: failure instanceof Error ? failureDetail(failure) : null,
                     type: "commitFailed",
                 });
             }
@@ -248,4 +247,13 @@ export function useImportReview(): ImportReviewResult {
         rows,
         selectedCount,
     };
+}
+
+function failureDetail(error: Error): string {
+    for (let current: unknown = error; current instanceof Error; current = current.cause) {
+        if (current instanceof DrizzleQueryError && current.cause instanceof Error) {
+            return current.cause.message;
+        }
+    }
+    return error.message;
 }

@@ -292,14 +292,12 @@ export const installmentsRepo = {
         const date = input.date ?? current?.date ?? new Date();
         const now = new Date();
         const values = {
-            ...(yield* query("add-fee", () =>
-                canonicalUsd(localRateLookup(db), {
-                    amount: input.amount,
-                    currency: account.currency,
-                    date,
-                    displayCurrency: account.currency,
-                })
-            )),
+            ...(yield* canonicalUsd(localRateLookup(db), {
+                amount: input.amount,
+                currency: account.currency,
+                date,
+                displayCurrency: account.currency,
+            }).pipe(Effect.mapError((cause) => new InstallmentsError({ cause, operation: "add-fee" })))),
             accountId: account.id,
             amount: input.amount,
             currency: account.currency,
