@@ -16,6 +16,8 @@ One module per service, in this order:
 
 `make` yields what it needs (`yield* OpenConnection`); it takes no parameters. A dependency with one production value and test doubles is a `Context.Reference` whose `defaultValue` is the production value, so the app layer provides nothing extra and a test provides `Layer.succeed(OpenConnection, fake)`.
 
+Every registry test imports `src/lib/runtime.ts`, so nothing it imports may load a module jest cannot: `expo-widgets`, `expo-core-spotlight`, Skia through `lib/photo-storage`, or `expo-notifications`, which warns at import and throws under the Android project. Such a dependency is a `Context.Service` tag with no default, read inside the operation so it shows in its requirements (`SystemSurfaces` in `SystemSync.run`), and the mount module provides the live value (`data/background-work-mount.ts`).
+
 ## Operations
 
 A reusable operation is `Effect.fn("LocalDatabase.open")(function* open() { ... })`, which names its span. Wrap a promise API in `Effect.tryPromise({ try, catch })` and a throwing sync one in `Effect.try`, with `catch` returning the module's typed error.
@@ -50,6 +52,8 @@ A reusable operation is `Effect.fn("LocalDatabase.open")(function* open() { ... 
 - Each event source is a `Stream.callback` whose `Effect.acquireRelease` subscribes and unsubscribes, so interrupting the fiber undoes every subscription. Sources merge into one stream of triggers.
 - Coalescing is `Stream.buffer({ capacity: 1, strategy: "sliding" })` before `Stream.runForEach(pass)`: every trigger that lands during a pass collapses into one more pass.
 - Single flight is a `Semaphore.make(1)` taken in `make`, not in `run`, so a run that starts while an interrupted one is still finishing its pass waits for it.
+- `listen` in `src/lib/app-events.ts` is that source for any `(listener) => unsubscribe` API. Its buffer is sliding, so it filters before buffering: filter after it and a burst of other tables or app states can push out the one event you wanted.
+- Order between services is in the code, not in mount order: a step that must follow another takes it as an effect (`RecurrenceSweep.run(db, onSwept)`), reads a `Queue` the other fills (`SystemSync.run(db, swept)`), or awaits a `Latch` the other opens (`PhotoSync.run` after `reconcile`). `data/background-program.ts` composes the ones that share a lifetime.
 - It runs from an atom (`Atom.family` keyed by its input) that a component mounts with `useAtomMount`, rendered only while the work should run. Unmounting interrupts the fiber; a step that must finish once started is `Effect.uninterruptible`.
 - Log with `Effect.logWarning`, not `console.warn`. Effect's default logger writes every level with `console.log`, so `appRuntime` swaps in `Logger.withLeveledConsole(Logger.formatSimple)`: a warning is a LogBox warning in dev and a warn-level native log in release, as `console.warn` was.
 
@@ -58,6 +62,7 @@ A reusable operation is `Effect.fn("LocalDatabase.open")(function* open() { ... 
 - Swap dependencies through the environment, not `jest.mock`: provide `Layer.succeed(Dependency, fake)` to the service's layer.
 - Fake only what needs native code. `local-data-context.test.ts` swaps the SQLite connection and runs the real migrations, bootstrap and settle on better-sqlite3 (`db/test-database.ts`).
 - To test through an atom, give a fresh registry the test layer, `AtomRegistry.make({ initialValues: [[appRuntime.layer, testLayer]] })`, and await `Effect.runPromiseExit(AtomRegistry.getResult(registry, atom, { suspendOnWaiting: true }))`. The test is the edge that runs the effect.
+- A long-running service is tested by mounting `appRuntime.atom(Service.pipe(Effect.flatMap((s) => s.run(db)), Effect.provide(fakes)))` with `registry.mount`, which also gives the unmount. `appRuntime` exposes a composed service's dependencies (`Layer.provideMerge`) so such an atom type-checks against them.
 - Assert on what a caller sees (the derived state, the rows written), not on which steps were called.
 - A fiber reads its logger from the runtime's context, so silence logs by merging `Logger.layer([])` into the test layer; inside `Layer.provide` it only reaches the layer's construction.
 - Drive time with `jest.useFakeTimers()` and `await jest.advanceTimersByTimeAsync(ms)`. Registry fibers dispatch on microtasks and Effect's clock sleeps on `setTimeout`, so one call runs the due sleeps and every fiber and promise they wake. `TestClock` does not wait for promise continuations, and a bare `Effect.runFork` dispatches on `setImmediate`, which fake timers move 1 ms per hop.

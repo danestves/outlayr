@@ -1,94 +1,49 @@
-import { useEffect, useState } from "react";
+import { useAtomValue } from "@effect/atom-react/Hooks";
+import * as Effect from "effect/Effect";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as Atom from "effect/reactivity/Atom";
 
 import { useDatabase } from "@/contexts/local-data-context";
-import { META_KEYS } from "@/data/app-meta-core";
-import { subscribeToSettingChanges } from "@/data/database-changes";
 import { SyncEngineMount } from "@/data/sync-engine-mount";
-import { usePhotoReconcile } from "@/data/use-photo-reconcile";
-import { usePhotoSync } from "@/data/use-photo-sync";
-import { useRecurrenceSweep } from "@/data/use-recurrence-sweep";
-import type { Database } from "@/db/client";
 import { useProEntitled } from "@/hooks/use-pro-locked";
 import { useCloudAuthenticated } from "@/lib/convex";
-import { useEnrichmentQueue } from "@/lib/enrichment-queue";
-import { syncInstallmentReminders } from "@/lib/installment-reminder-sync";
-import { useDailyReminderSync } from "@/lib/reminder-sync";
-import { syncSubscriptionReminders } from "@/lib/subscription-reminder-sync";
-import { debounce, PUBLISH_DEBOUNCE_MS } from "@/lib/sync-cadence";
-import { useSystemSync } from "@/lib/use-system-sync";
+
+import { BackgroundProgramMount, EnrichmentSyncMount, PhotoSyncMount } from "./background-work-mount";
 
 const IDLE_TIMEOUT_MS = 1000;
 
-const DUE_REMINDER_SETTINGS = [
-    "subscriptionReminders",
-    "installmentReminders",
-    "hideAmounts",
-    "notificationOption",
-    "notificationHour",
-    "notificationMinute",
-    META_KEYS.currency,
-] as const;
-
-let duePass: Promise<void> = Promise.resolve();
-
-// Cuotas take the headroom the subscription notices leave, so they wait for that pass. Whole passes chain, or one
-// pass's cuotas could count the queue while another's subscriptions are mid re-arm.
-const reconcileDueReminders = (db: Database) => {
-    duePass = duePass
-        .then(() => syncSubscriptionReminders(db))
-        .catch((error) => {
-            console.error("Subscription reminder sync failed", error);
-        })
-        .then(() => syncInstallmentReminders(db))
-        .catch((error) => {
-            console.error("Installment reminder sync failed", error);
-        });
-};
-
-export function BackgroundWork() {
-    const db = useDatabase();
-    const [started, setStarted] = useState(false);
-    const proEntitled = useProEntitled();
-    const cloudAuthenticated = useCloudAuthenticated();
-
-    useEffect(() => {
+const idleStartAtom = Atom.make(
+    Effect.callback<boolean>((resume) => {
         const handle = requestIdleCallback(
             () => {
-                setStarted(true);
+                resume(Effect.succeed(true));
             },
             { timeout: IDLE_TIMEOUT_MS }
         );
-        return () => {
+        return Effect.sync(() => {
             cancelIdleCallback(handle);
-        };
-    }, []);
-
-    const ready = started ? db : null;
-
-    useDailyReminderSync(ready);
-    // The sweep moves the landing the notices are dated from, so due reminders reconcile from its callback.
-    useRecurrenceSweep(ready, reconcileDueReminders);
-    useEffect(() => {
-        if (ready == null) {
-            return;
-        }
-        const resync = debounce(PUBLISH_DEBOUNCE_MS, () => {
-            reconcileDueReminders(ready);
         });
-        const unsubscribe = subscribeToSettingChanges(ready, resync.schedule, DUE_REMINDER_SETTINGS);
-        return () => {
-            resync.cancel();
-            unsubscribe();
-        };
-    }, [ready]);
-    // After the sweep, so a subscription that advanced this foreground is in the table when the widgets rebuild.
-    useSystemSync(ready);
-    useEnrichmentQueue(ready);
+    })
+);
+
+export function BackgroundWork() {
+    const db = useDatabase();
+    const started = AsyncResult.isSuccess(useAtomValue(idleStartAtom));
+    const proEntitled = useProEntitled();
+    const cloudAuthenticated = useCloudAuthenticated();
+
+    if (!started) {
+        return null;
+    }
     // Held down without a confirmed entitlement and session: the server refuses a lapsed customer and a missing token.
     const cloudPaused = !proEntitled || !cloudAuthenticated;
-    usePhotoReconcile(ready);
-    // After the reconciliation: running first would upload against paths it is about to repair.
-    usePhotoSync(ready, cloudPaused);
 
-    return ready != null && !cloudPaused ? <SyncEngineMount db={ready} /> : null;
+    return (
+        <>
+            <BackgroundProgramMount db={db} />
+            {cloudAuthenticated ? <EnrichmentSyncMount db={db} /> : null}
+            {cloudPaused ? null : <PhotoSyncMount db={db} />}
+            {cloudPaused ? null : <SyncEngineMount db={db} />}
+        </>
+    );
 }
