@@ -1,5 +1,4 @@
 import * as Layer from "effect/Layer";
-import * as Logger from "effect/Logger";
 import * as Atom from "effect/reactivity/Atom";
 
 import * as BackgroundProgram from "@/data/background-program";
@@ -8,6 +7,7 @@ import * as PhotoSync from "@/data/photo-sync";
 import * as RecurrenceSweep from "@/data/recurrence-sweep";
 import * as SyncEngine from "@/data/sync-engine";
 import * as SyncStore from "@/data/sync-store";
+import { appLogger } from "@/lib/app-logger";
 import * as CsvImport from "@/lib/csv-import";
 import * as DailyReminderSync from "@/lib/daily-reminder-sync";
 import * as DueReminderSync from "@/lib/due-reminder-sync";
@@ -32,6 +32,6 @@ export const appRuntime = Atom.runtime(
         RevenueCat.layer,
         SecureStorage.layer,
         outboundHttp,
-        Logger.layer([Logger.withLeveledConsole(Logger.formatSimple)])
+        appLogger
     )
 ).pipe(Atom.keepAlive, Atom.withLabel("app:runtime"));

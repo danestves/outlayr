@@ -1,5 +1,8 @@
 import Search01Icon from "@hugeicons-pro/core-stroke-rounded/Search01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
+import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
@@ -11,8 +14,9 @@ import { MonoLabel } from "@/components/mono-label";
 import { SEARCH_FIELD } from "@/components/search-field-style";
 import { Text, TextInput } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
-import { getAccountById } from "@/data/accounts-core";
+import { accountsRepo, getAccountById } from "@/data/accounts-core";
 import type { Account } from "@/data/accounts-core";
+import type { Database } from "@/db/client";
 import {
     installmentAppDomain,
     installmentAppsIn,
@@ -26,11 +30,10 @@ import { useMerchantMark } from "@/hooks/use-merchant-mark";
 import { useAccountCaps, useLiabilityCreateRoute } from "@/hooks/use-pro-gate";
 import { useRegionCode } from "@/hooks/use-region-code";
 import { useTranslation } from "@/i18n/context";
+import { fetchMerchantImage } from "@/lib/logo-fetch";
 import { notifyFailure } from "@/lib/notify";
-import { createAccountCommand } from "@/state/accounts-commands";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import { fetchMerchantLogo } from "@/state/capture-commands";
-import { persistLogoCommand, runMediaCommand } from "@/state/media-commands";
+import { persistLogo } from "@/lib/persist-logo";
+import { voidAppFlowCommand } from "@/state/entry-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
@@ -47,9 +50,37 @@ interface StepAccountInstallmentsProps {
     searchable: boolean;
 }
 
+const addInstallmentApp = Effect.fn("StepAccountInstallments.add")(function* addInstallmentApp(
+    db: Database,
+    app: InstallmentApp,
+    done: { onFailed: () => void; onPicked: (account: Account) => void; onSettled: () => void }
+) {
+    const created = yield* Effect.gen(function* create() {
+        // Fetched before the account exists, since the entry holds the account as picked. Named by its domain, as
+        // the mark is, so both read the same cache entry.
+        const outcome = yield* fetchMerchantImage({ domain: app.domain, name: app.domain });
+        const logo = outcome.kind === "logo" ? yield* persistLogo(outcome.bytes) : null;
+        const id = yield* accountsRepo.create(db, {
+            currency: app.currency,
+            kind: "liability",
+            name: app.label,
+            ...logo,
+        });
+        return getAccountById(db, id);
+    }).pipe(Effect.exit);
+    yield* Effect.gen(function* report() {
+        if (Exit.isFailure(created)) {
+            yield* Effect.logError("Failed to add the installment app", Cause.squash(created.cause));
+            done.onFailed();
+        } else if (created.value) {
+            done.onPicked(created.value);
+        }
+    }).pipe(Effect.ensuring(Effect.sync(done.onSettled)));
+});
+
 export function StepAccountInstallments({ accounts, onPick, searchable }: StepAccountInstallmentsProps) {
     const db = useDatabase();
-    const createAccount = useAtomCommand(createAccountCommand, SILENT);
+    const runFlow = useAtomCommand(voidAppFlowCommand);
     const router = useRouter();
     const t = useTranslation();
     const colors = useColors();
@@ -84,36 +115,21 @@ export function StepAccountInstallments({ accounts, onPick, searchable }: StepAc
         return null;
     }
 
-    const add = async (app: InstallmentApp) => {
+    const add = (app: InstallmentApp) => {
         before.current = null;
         if (caps.installmentApps) {
             router.push("/paywall");
             return;
         }
         setAdding(app.id);
-        try {
-            // Fetched before the account exists, since the entry holds the account as picked. Named by its domain, as
-            // the mark is, so both read the same cache entry.
-            const outcome = await fetchMerchantLogo({ domain: app.domain, name: app.domain });
-            let logo: { imageColor: string | null; imageUri: string } | null = null;
-            if (outcome.kind === "logo") {
-                logo = await runMediaCommand(persistLogoCommand, outcome.bytes);
-            }
-            const id = unwrapAtomCommand(
-                await createAccount({
-                    db,
-                    input: { currency: app.currency, kind: "liability", name: app.label, ...logo },
-                })
-            );
-            const account = getAccountById(db, id);
-            if (account) {
-                onPick(account);
-            }
-        } catch (error) {
-            console.error("Failed to add the installment app", error);
-            notifyFailure({ body: t("installments.failedBody"), title: t("installments.failedTitle") });
-        }
-        setAdding(null);
+        void runFlow(
+            addInstallmentApp(db, app, {
+                onFailed: () =>
+                    notifyFailure({ body: t("installments.failedBody"), title: t("installments.failedTitle") }),
+                onPicked: onPick,
+                onSettled: () => setAdding(null),
+            })
+        );
     };
 
     const other = () => {

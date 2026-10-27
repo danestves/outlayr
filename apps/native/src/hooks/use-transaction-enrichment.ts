@@ -1,7 +1,8 @@
-import type * as Effect from "effect/Effect";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
-import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
+import type { RefObject } from "react";
 
 import { findCategoryPreset, presetForName } from "@/data/categories-core";
 import { getCachedEnrichment, setCachedEnrichment } from "@/domain/enrichment-cache";
@@ -13,14 +14,10 @@ import type { CloudError } from "@/lib/cloud-error";
 import { enrichmentTransport } from "@/lib/convex";
 import type { CategoryBranch, EnrichmentFn } from "@/lib/convex";
 import { useLatest } from "@/lib/use-latest";
-import { createCommand, SILENT } from "@/state/atom-command";
 import { ENRICHMENT_TIMEOUT, timedCaptureCommand } from "@/state/capture-commands";
+import { fromCommand, voidFlowCommand } from "@/state/entry-commands";
+import { logged } from "@/state/entry-save";
 import { useAtomCommand } from "@/state/use-atom-command";
-
-const followUpCommand = createCommand({
-    execute: (call: Effect.Effect<RemoteEnrichmentResult, CloudError>) => call,
-    label: "capture:enrich-follow-up",
-});
 
 const enrichCommand = timedCaptureCommand<RemoteEnrichmentResult | null>({
     operation: "enrich",
@@ -72,15 +69,18 @@ export interface UseTransactionEnrichmentArgs {
     onSuggest: (suggestion: EnrichmentSuggestion) => void;
     regionCode?: string;
     remoteEnabled?: boolean;
-    resolveHistory?: (key: string, income: boolean) => Promise<string | null>;
+    resolveHistory?: (key: string, income: boolean) => Effect.Effect<string | null, unknown>;
     resolveLocal: (suggestion: EnrichmentSuggestion) => EnrichmentSuggestion;
-    recallMerchant?: (name: string, currency: string | undefined) => Promise<RemoteEnrichmentResult | null>;
+    recallMerchant?: (
+        name: string,
+        currency: string | undefined
+    ) => Effect.Effect<RemoteEnrichmentResult | null, unknown>;
     resolveDomain?: (key: string) => string | null;
     transport?: EnrichmentFn | null;
 }
 
 export interface UseTransactionEnrichmentResult {
-    lookupNow: () => Promise<void>;
+    lookupNow: () => void;
     onNameChange: (next: string) => void;
     pending: boolean;
 }
@@ -91,6 +91,9 @@ const GROUNDED_IDLE_MS = 1800;
 const GROUNDED_RECHECK_MS = 8000;
 const GROUNDED_RECHECK_RETRY_MS = 12_000;
 const MIN_KEY_LENGTH = 3;
+
+const settledResult = (call: Effect.Effect<RemoteEnrichmentResult, CloudError>) =>
+    call.pipe(Effect.catchCause(() => Effect.succeed(null)));
 
 function toCuratedSuggestion(match: MerchantMatch): EnrichmentSuggestion {
     const preset = findCategoryPreset(match.categoryName);
@@ -133,6 +136,338 @@ function toRemoteSuggestion(result: RemoteEnrichmentResult): EnrichmentSuggestio
     };
 }
 
+type LatestArgs = Omit<UseTransactionEnrichmentArgs, "groundedLookup" | "initialName" | "remoteEnabled"> & {
+    groundedLookup: boolean;
+    remoteEnabled: boolean;
+};
+
+interface EnrichmentPorts {
+    curatedFallbackRef: RefObject<{ key: string; suggestion: EnrichmentSuggestion } | null>;
+    forceRef: RefObject<boolean>;
+    groundedTimerRef: RefObject<ReturnType<typeof setTimeout> | null>;
+    inFlightRef: RefObject<Map<string, number>>;
+    lastEmittedRef: RefObject<{ key: string; suggestion: EnrichmentSuggestion } | null>;
+    lastRemoteOutcomeRef: RefObject<{ hasDomain: boolean; key: string } | null>;
+    latest: RefObject<LatestArgs>;
+    nameRef: RefObject<string>;
+    recheckTimerRef: RefObject<ReturnType<typeof setTimeout> | null>;
+    rememberedRef: RefObject<{ categoryId: string | null; key: string } | null>;
+    remoteAbortRef: RefObject<AbortController | null>;
+    requestIdRef: RefObject<number>;
+    setPending: (pending: boolean) => void;
+    start: (flow: Effect.Effect<void, unknown>) => void;
+    timerRef: RefObject<ReturnType<typeof setTimeout> | null>;
+}
+
+function clearTimers({ groundedTimerRef, recheckTimerRef, timerRef }: EnrichmentPorts) {
+    for (const ref of [timerRef, groundedTimerRef, recheckTimerRef]) {
+        if (ref.current != null) {
+            clearTimeout(ref.current);
+            ref.current = null;
+        }
+    }
+}
+
+function supersedeRequest({ remoteAbortRef, requestIdRef }: EnrichmentPorts) {
+    requestIdRef.current += 1;
+    remoteAbortRef.current?.abort();
+    remoteAbortRef.current = null;
+}
+
+function rememberedNow({ nameRef, rememberedRef }: EnrichmentPorts): string | null {
+    const held = rememberedRef.current;
+    if (held == null || held.key !== merchantKey(nameRef.current)) {
+        return null;
+    }
+    return held.categoryId;
+}
+
+function emit(ports: EnrichmentPorts, suggestion: EnrichmentSuggestion) {
+    const { lastEmittedRef, latest, nameRef } = ports;
+    lastEmittedRef.current = { key: merchantKey(nameRef.current), suggestion };
+    latest.current.onSuggest(latest.current.resolveLocal(withRemembered(suggestion, rememberedNow(ports))));
+}
+
+function emitNothing(ports: EnrichmentPorts) {
+    emit(ports, NOTHING);
+}
+
+function resolveTransport({ latest }: EnrichmentPorts) {
+    return latest.current.transport === undefined ? enrichmentTransport() : latest.current.transport;
+}
+
+function buildRequest({ latest, nameRef }: EnrichmentPorts, grounded: boolean) {
+    return {
+        categoryTree: latest.current.categoryTree.map((branch) => ({
+            children: [...branch.children],
+            name: branch.name,
+        })),
+        currency: latest.current.currency,
+        groundedLookup: grounded,
+        income: latest.current.income,
+        locale: latest.current.locale,
+        name: nameRef.current.trim(),
+        regionCode: latest.current.regionCode,
+    };
+}
+
+// `askedIn` is the request's currency, not the one on screen: filing under the screen's would cache the old
+// country's answer in the new partition.
+function emitDomainResult(
+    ports: EnrichmentPorts,
+    key: string,
+    result: RemoteEnrichmentResult | null,
+    askedIn: string | undefined
+): boolean {
+    if (result?.domain == null || merchantKey(ports.nameRef.current) !== key) {
+        return false;
+    }
+    if (result.grounding !== true) {
+        setCachedEnrichment(key, result, askedIn);
+    }
+    const fallback = ports.curatedFallbackRef.current;
+    if (fallback != null && fallback.key === key) {
+        emit(ports, { ...fallback.suggestion, domain: result.domain });
+    } else {
+        emit(ports, toRemoteSuggestion(result));
+    }
+    return true;
+}
+
+function emitRemoteResult(ports: EnrichmentPorts, key: string, result: RemoteEnrichmentResult | null) {
+    const fallback = ports.curatedFallbackRef.current;
+    if (fallback != null && fallback.key === key) {
+        if (result?.domain != null) {
+            emit(ports, { ...fallback.suggestion, domain: result.domain });
+        }
+        return;
+    }
+    if (result == null) {
+        emitNothing(ports);
+        return;
+    }
+    emit(ports, toRemoteSuggestion(result));
+}
+
+// Every final answer `run` reaches without the model must supersede older requests, or one settling late emits
+// the PREVIOUS name's suggestion (in the account editor, the last merchant's logo).
+function supersedeInFlight(ports: EnrichmentPorts) {
+    supersedeRequest(ports);
+    // Cleared with the ticket, or `run` refuses to restart a name whose abandoned call is still out. `runRemote`
+    // bumps the ticket as it starts, so this never drops a live request.
+    ports.inFlightRef.current.clear();
+    ports.setPending(false);
+}
+
+const recallFromLedger = Effect.fn("TransactionEnrichment.recallFromLedger")(function* recallFromLedger(
+    ports: EnrichmentPorts,
+    key: string
+) {
+    const { lastEmittedRef, latest, nameRef, rememberedRef } = ports;
+    const resolve = latest.current.resolveHistory;
+    if (resolve == null) {
+        rememberedRef.current = { categoryId: null, key };
+        return;
+    }
+    const categoryId = yield* resolve(key, latest.current.income);
+    if (merchantKey(nameRef.current) !== key) {
+        return;
+    }
+    rememberedRef.current = { categoryId, key };
+    if (categoryId == null) {
+        return;
+    }
+    const last = lastEmittedRef.current;
+    const base = last != null && last.key === key ? last.suggestion : NOTHING;
+    latest.current.onSuggest(latest.current.resolveLocal(withRemembered(base, categoryId)));
+});
+
+const runRemote = Effect.fn("TransactionEnrichment.runRemote")(function* runRemote(
+    ports: EnrichmentPorts,
+    key: string
+) {
+    const { inFlightRef, lastRemoteOutcomeRef, nameRef, remoteAbortRef, requestIdRef, setPending } = ports;
+    const call = resolveTransport(ports);
+    if (call == null) {
+        return;
+    }
+    supersedeRequest(ports);
+    const id = requestIdRef.current;
+    const controller = new AbortController();
+    remoteAbortRef.current = controller;
+    inFlightRef.current.set(key, id);
+    setPending(true);
+    const request = buildRequest(ports, false);
+    const outcome = yield* fromCommand(enrichCommand, { call: call(request), signal: controller.signal }).pipe(
+        Effect.exit
+    );
+    const result = Exit.isSuccess(outcome) ? Option.getOrNull(outcome.value) : null;
+    if (inFlightRef.current.get(key) === id) {
+        inFlightRef.current.delete(key);
+    }
+    if (id !== requestIdRef.current) {
+        return;
+    }
+    if (result?.grounding !== true) {
+        setCachedEnrichment(key, result, request.currency);
+    }
+    if (merchantKey(nameRef.current) !== key) {
+        setPending(false);
+        return;
+    }
+    // Below the ticket check: a superseded request recording here would answer for a name the user has left,
+    // wrongly suppressing or spending the grounded follow-up.
+    lastRemoteOutcomeRef.current = { hasDomain: result?.domain != null, key };
+    setPending(false);
+    emitRemoteResult(ports, key, result);
+});
+
+const recheckGrounded = Effect.fn("TransactionEnrichment.recheck")(function* recheckGrounded(
+    ports: EnrichmentPorts,
+    lookup: GroundedLookup,
+    retriesLeft: number
+) {
+    const rechecked = yield* settledResult(
+        lookup.call({
+            ...lookup.request,
+            groundedLookup: false,
+            knowledgeOnly: true,
+        })
+    );
+    if (lookup.stale() || emitDomainResult(ports, lookup.key, rechecked, lookup.request.currency)) {
+        return;
+    }
+    if (retriesLeft > 0) {
+        scheduleRecheck(ports, lookup, GROUNDED_RECHECK_RETRY_MS, retriesLeft - 1);
+    }
+});
+
+function scheduleRecheck(ports: EnrichmentPorts, lookup: GroundedLookup, delay: number, retriesLeft: number) {
+    ports.recheckTimerRef.current = setTimeout(() => ports.start(recheckGrounded(ports, lookup, retriesLeft)), delay);
+}
+
+interface GroundedLookup {
+    call: NonNullable<ReturnType<typeof resolveTransport>>;
+    key: string;
+    request: ReturnType<typeof buildRequest>;
+    stale: () => boolean;
+}
+
+const runGroundedFollowUp: (ports: EnrichmentPorts) => Effect.Effect<void> = Effect.fn(
+    "TransactionEnrichment.runGroundedFollowUp"
+)(function* groundedFollowUp(ports: EnrichmentPorts) {
+    const { groundedTimerRef, inFlightRef, lastRemoteOutcomeRef, latest, nameRef, requestIdRef } = ports;
+    // `remoteEnabled` too: a merchant the ledger already knew records an outcome, and its name must not leave
+    // here.
+    if (!latest.current.groundedLookup || !latest.current.remoteEnabled) {
+        return;
+    }
+    const key = merchantKey(nameRef.current);
+    const outcome = lastRemoteOutcomeRef.current;
+    if (outcome == null || outcome.key !== key) {
+        if (inFlightRef.current.has(key)) {
+            groundedTimerRef.current = setTimeout(() => ports.start(runGroundedFollowUp(ports)), GROUNDED_IDLE_MS);
+        }
+        return;
+    }
+    if (outcome.hasDomain) {
+        return;
+    }
+    const call = resolveTransport(ports);
+    if (call == null) {
+        return;
+    }
+    const ticket = requestIdRef.current;
+    const request = buildRequest(ports, true);
+    const stale = () =>
+        ticket !== requestIdRef.current ||
+        merchantKey(nameRef.current) !== key ||
+        latest.current.currency !== request.currency;
+    const result = yield* settledResult(call(request));
+    if (stale()) {
+        return;
+    }
+    if (emitDomainResult(ports, key, result, request.currency) || result?.grounding !== true) {
+        return;
+    }
+    scheduleRecheck(ports, { call, key, request, stale }, GROUNDED_RECHECK_MS, 1);
+});
+
+const runLookup = Effect.fn("TransactionEnrichment.run")(function* runLookup(ports: EnrichmentPorts) {
+    const { curatedFallbackRef, forceRef, inFlightRef, lastRemoteOutcomeRef, latest, nameRef, rememberedRef } = ports;
+    // Read first: every early return below is final, and a force left standing would skip the next lookup's
+    // cache.
+    const force = forceRef.current;
+    forceRef.current = false;
+    const key = merchantKey(nameRef.current);
+    if (key.length < MIN_KEY_LENGTH) {
+        supersedeInFlight(ports);
+        rememberedRef.current = null;
+        emitNothing(ports);
+        return;
+    }
+    if (force) {
+        rememberedRef.current = { categoryId: null, key };
+    } else {
+        yield* Effect.forkDetach(logged("Failed to recall the merchant category")(recallFromLedger(ports, key)), {
+            startImmediately: true,
+        });
+    }
+    const match = resolveMerchant(key);
+    let curatedFallback = false;
+    if (match != null) {
+        const curatedSuggestion = toCuratedSuggestion(match);
+        emit(ports, curatedSuggestion);
+        if (match.domain != null) {
+            supersedeInFlight(ports);
+            return;
+        }
+        curatedFallback = true;
+        curatedFallbackRef.current = { key, suggestion: curatedSuggestion };
+    }
+    const localDomain = latest.current.resolveDomain?.(key) ?? null;
+    if (localDomain != null) {
+        const base = curatedFallback ? curatedFallbackRef.current?.suggestion : undefined;
+        emit(ports, { ...(base ?? NOTHING), domain: localDomain });
+        supersedeInFlight(ports);
+        return;
+    }
+    const recalled = force
+        ? null
+        : ((yield* latest.current.recallMerchant?.(nameRef.current, latest.current.currency) ?? Effect.succeed(null)) ??
+          null);
+    if (merchantKey(nameRef.current) !== key) {
+        return;
+    }
+    if (recalled != null) {
+        lastRemoteOutcomeRef.current = { hasDomain: recalled.domain != null, key };
+        emitRemoteResult(ports, key, recalled);
+        supersedeInFlight(ports);
+        return;
+    }
+    if (!latest.current.remoteEnabled) {
+        if (!curatedFallback) {
+            emitNothing(ports);
+        }
+        supersedeInFlight(ports);
+        return;
+    }
+    const cached = force ? { hit: false as const } : getCachedEnrichment(key, latest.current.currency);
+    if (cached.hit) {
+        lastRemoteOutcomeRef.current = { hasDomain: cached.value?.domain != null, key };
+        emitRemoteResult(ports, key, cached.value);
+        supersedeInFlight(ports);
+        return;
+    }
+    if (inFlightRef.current.has(key)) {
+        if (!force) {
+            return;
+        }
+        supersedeInFlight(ports);
+    }
+    yield* runRemote(ports, key);
+});
+
 export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): UseTransactionEnrichmentResult {
     const {
         enabled,
@@ -161,26 +496,11 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const groundedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const recheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const clearTimers = () => {
-        for (const ref of [timerRef, groundedTimerRef, recheckTimerRef]) {
-            if (ref.current != null) {
-                clearTimeout(ref.current);
-                ref.current = null;
-            }
-        }
-    };
     const requestIdRef = useRef(0);
     const remoteAbortRef = useRef<AbortController | null>(null);
-    const enrich = useAtomCommand(enrichCommand, SILENT);
-    const followUp = useAtomCommand(followUpCommand, SILENT);
-    const settledResult = async (call: Effect.Effect<RemoteEnrichmentResult, CloudError>) => {
-        const outcome = await followUp(call);
-        return AsyncResult.isSuccess(outcome) ? outcome.value : null;
-    };
-    const supersedeRequest = () => {
-        requestIdRef.current += 1;
-        remoteAbortRef.current?.abort();
-        remoteAbortRef.current = null;
+    const runFlow = useAtomCommand(voidFlowCommand);
+    const start = (flow: Effect.Effect<void, unknown>) => {
+        void runFlow(logged("Merchant lookup failed")(flow));
     };
     // Ticketed, not a bare set: a superseded request still settles and must not delete an entry a LATER request owns.
     const inFlightRef = useRef<Map<string, number>>(new Map());
@@ -215,260 +535,22 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
     };
     const latest = useLatest(resolved);
 
-    const rememberedNow = (): string | null => {
-        const held = rememberedRef.current;
-        if (held == null || held.key !== merchantKey(nameRef.current)) {
-            return null;
-        }
-        return held.categoryId;
-    };
-
-    const emit = (suggestion: EnrichmentSuggestion) => {
-        lastEmittedRef.current = { key: merchantKey(nameRef.current), suggestion };
-        latest.current.onSuggest(latest.current.resolveLocal(withRemembered(suggestion, rememberedNow())));
-    };
-
-    const emitNothing = () => {
-        emit(NOTHING);
-    };
-
-    const recallFromLedger = async (key: string) => {
-        const resolve = latest.current.resolveHistory;
-        if (resolve == null) {
-            rememberedRef.current = { categoryId: null, key };
-            return;
-        }
-        const categoryId = await resolve(key, latest.current.income);
-        if (merchantKey(nameRef.current) !== key) {
-            return;
-        }
-        rememberedRef.current = { categoryId, key };
-        if (categoryId == null) {
-            return;
-        }
-        const last = lastEmittedRef.current;
-        const base = last != null && last.key === key ? last.suggestion : NOTHING;
-        latest.current.onSuggest(latest.current.resolveLocal(withRemembered(base, categoryId)));
-    };
-
-    const resolveTransport = () =>
-        latest.current.transport === undefined ? enrichmentTransport() : latest.current.transport;
-
-    const buildRequest = (grounded: boolean) => ({
-        categoryTree: latest.current.categoryTree.map((branch) => ({
-            children: [...branch.children],
-            name: branch.name,
-        })),
-        currency: latest.current.currency,
-        groundedLookup: grounded,
-        income: latest.current.income,
-        locale: latest.current.locale,
-        name: nameRef.current.trim(),
-        regionCode: latest.current.regionCode,
-    });
-
-    // `askedIn` is the request's currency, not the one on screen: filing under the screen's would cache the old
-    // country's answer in the new partition.
-    const emitDomainResult = (
-        key: string,
-        result: RemoteEnrichmentResult | null,
-        askedIn: string | undefined
-    ): boolean => {
-        if (result?.domain == null || merchantKey(nameRef.current) !== key) {
-            return false;
-        }
-        if (result.grounding !== true) {
-            setCachedEnrichment(key, result, askedIn);
-        }
-        const fallback = curatedFallbackRef.current;
-        if (fallback != null && fallback.key === key) {
-            emit({ ...fallback.suggestion, domain: result.domain });
-        } else {
-            emit(toRemoteSuggestion(result));
-        }
-        return true;
-    };
-
-    const emitRemoteResult = (key: string, result: RemoteEnrichmentResult | null) => {
-        const fallback = curatedFallbackRef.current;
-        if (fallback != null && fallback.key === key) {
-            if (result?.domain != null) {
-                emit({ ...fallback.suggestion, domain: result.domain });
-            }
-            return;
-        }
-        if (result == null) {
-            emitNothing();
-            return;
-        }
-        emit(toRemoteSuggestion(result));
-    };
-
-    const runRemote = async (key: string) => {
-        const call = resolveTransport();
-        if (call == null) {
-            return;
-        }
-        supersedeRequest();
-        const id = requestIdRef.current;
-        const controller = new AbortController();
-        remoteAbortRef.current = controller;
-        inFlightRef.current.set(key, id);
-        setPending(true);
-        const request = buildRequest(false);
-        const outcome = await enrich({ call: call(request), signal: controller.signal });
-        const result = AsyncResult.isSuccess(outcome) ? Option.getOrNull(outcome.value) : null;
-        if (inFlightRef.current.get(key) === id) {
-            inFlightRef.current.delete(key);
-        }
-        if (id !== requestIdRef.current) {
-            return;
-        }
-        if (result?.grounding !== true) {
-            setCachedEnrichment(key, result, request.currency);
-        }
-        if (merchantKey(nameRef.current) !== key) {
-            setPending(false);
-            return;
-        }
-        // Below the ticket check: a superseded request recording here would answer for a name the user has left,
-        // wrongly suppressing or spending the grounded follow-up.
-        lastRemoteOutcomeRef.current = { hasDomain: result?.domain != null, key };
-        setPending(false);
-        emitRemoteResult(key, result);
-    };
-
-    const runGroundedFollowUp = async () => {
-        // `remoteEnabled` too: a merchant the ledger already knew records an outcome, and its name must not leave here.
-        if (!latest.current.groundedLookup || !latest.current.remoteEnabled) {
-            return;
-        }
-        const key = merchantKey(nameRef.current);
-        const outcome = lastRemoteOutcomeRef.current;
-        if (outcome == null || outcome.key !== key) {
-            if (inFlightRef.current.has(key)) {
-                groundedTimerRef.current = setTimeout(() => runGroundedFollowUp(), GROUNDED_IDLE_MS);
-            }
-            return;
-        }
-        if (outcome.hasDomain) {
-            return;
-        }
-        const call = resolveTransport();
-        if (call == null) {
-            return;
-        }
-        const ticket = requestIdRef.current;
-        const request = buildRequest(true);
-        const stale = () =>
-            ticket !== requestIdRef.current ||
-            merchantKey(nameRef.current) !== key ||
-            latest.current.currency !== request.currency;
-        const result = await settledResult(call(request));
-        if (stale()) {
-            return;
-        }
-        if (emitDomainResult(key, result, request.currency) || result?.grounding !== true) {
-            return;
-        }
-        const scheduleRecheck = (delay: number, retriesLeft: number) => {
-            recheckTimerRef.current = setTimeout(async () => {
-                const rechecked = await settledResult(
-                    call({
-                        ...request,
-                        groundedLookup: false,
-                        knowledgeOnly: true,
-                    })
-                );
-                if (stale() || emitDomainResult(key, rechecked, request.currency)) {
-                    return;
-                }
-                if (retriesLeft > 0) {
-                    scheduleRecheck(GROUNDED_RECHECK_RETRY_MS, retriesLeft - 1);
-                }
-            }, delay);
-        };
-        scheduleRecheck(GROUNDED_RECHECK_MS, 1);
-    };
-
-    // Every final answer `run` reaches without the model must supersede older requests, or one settling late emits
-    // the PREVIOUS name's suggestion (in the account editor, the last merchant's logo).
-    const supersedeInFlight = () => {
-        supersedeRequest();
-        // Cleared with the ticket, or `run` refuses to restart a name whose abandoned call is still out. `runRemote`
-        // bumps the ticket as it starts, so this never drops a live request.
-        inFlightRef.current.clear();
-        setPending(false);
-    };
-
-    const run = async () => {
-        // Read first: every early return below is final, and a force left standing would skip the next lookup's cache.
-        const force = forceRef.current;
-        forceRef.current = false;
-        const key = merchantKey(nameRef.current);
-        if (key.length < MIN_KEY_LENGTH) {
-            supersedeInFlight();
-            rememberedRef.current = null;
-            emitNothing();
-            return;
-        }
-        if (force) {
-            rememberedRef.current = { categoryId: null, key };
-        } else {
-            void recallFromLedger(key);
-        }
-        const match = resolveMerchant(key);
-        let curatedFallback = false;
-        if (match != null) {
-            const curatedSuggestion = toCuratedSuggestion(match);
-            emit(curatedSuggestion);
-            if (match.domain != null) {
-                supersedeInFlight();
-                return;
-            }
-            curatedFallback = true;
-            curatedFallbackRef.current = { key, suggestion: curatedSuggestion };
-        }
-        const localDomain = latest.current.resolveDomain?.(key) ?? null;
-        if (localDomain != null) {
-            const base = curatedFallback ? curatedFallbackRef.current?.suggestion : undefined;
-            emit({ ...(base ?? NOTHING), domain: localDomain });
-            supersedeInFlight();
-            return;
-        }
-        const recalled = force
-            ? null
-            : ((await latest.current.recallMerchant?.(nameRef.current, latest.current.currency)) ?? null);
-        if (merchantKey(nameRef.current) !== key) {
-            return;
-        }
-        if (recalled != null) {
-            lastRemoteOutcomeRef.current = { hasDomain: recalled.domain != null, key };
-            emitRemoteResult(key, recalled);
-            supersedeInFlight();
-            return;
-        }
-        if (!latest.current.remoteEnabled) {
-            if (!curatedFallback) {
-                emitNothing();
-            }
-            supersedeInFlight();
-            return;
-        }
-        const cached = force ? { hit: false as const } : getCachedEnrichment(key, latest.current.currency);
-        if (cached.hit) {
-            lastRemoteOutcomeRef.current = { hasDomain: cached.value?.domain != null, key };
-            emitRemoteResult(key, cached.value);
-            supersedeInFlight();
-            return;
-        }
-        if (inFlightRef.current.has(key)) {
-            if (!force) {
-                return;
-            }
-            supersedeInFlight();
-        }
-        await runRemote(key);
+    const ports: EnrichmentPorts = {
+        curatedFallbackRef,
+        forceRef,
+        groundedTimerRef,
+        inFlightRef,
+        lastEmittedRef,
+        lastRemoteOutcomeRef,
+        latest,
+        nameRef,
+        recheckTimerRef,
+        rememberedRef,
+        remoteAbortRef,
+        requestIdRef,
+        setPending,
+        start,
+        timerRef,
     };
 
     const onNameChange = (next: string) => {
@@ -476,30 +558,35 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         if (!latest.current.enabled) {
             return;
         }
-        clearTimers();
-        timerRef.current = setTimeout(run, DEBOUNCE_MS);
-        groundedTimerRef.current = setTimeout(runGroundedFollowUp, GROUNDED_IDLE_MS);
+        clearTimers(ports);
+        timerRef.current = setTimeout(() => start(runLookup(ports)), DEBOUNCE_MS);
+        groundedTimerRef.current = setTimeout(() => start(runGroundedFollowUp(ports)), GROUNDED_IDLE_MS);
     };
 
-    const lookupNow = async () => {
+    const lookupNow = () => {
         if (!latest.current.enabled || forcingRef.current) {
             return;
         }
         forcingRef.current = true;
         setForcing(true);
-        clearTimers();
+        clearTimers(ports);
         forceRef.current = true;
-        await run()
-            .then(() => runGroundedFollowUp())
-            .finally(() => {
-                forcingRef.current = false;
-                setForcing(false);
-            });
+        start(
+            runLookup(ports).pipe(
+                Effect.andThen(runGroundedFollowUp(ports)),
+                Effect.ensuring(
+                    Effect.sync(() => {
+                        forcingRef.current = false;
+                        setForcing(false);
+                    })
+                )
+            )
+        );
     };
 
     const cancel = useEffectEvent(() => {
-        clearTimers();
-        supersedeRequest();
+        clearTimers(ports);
+        supersedeRequest(ports);
         inFlightRef.current.clear();
     });
 
@@ -514,7 +601,7 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
     // so a currency change asks again.
     const seenCurrencyRef = useRef(currency);
     const restartForCurrency = useEffectEvent(() => {
-        supersedeInFlight();
+        supersedeInFlight(ports);
         lastRemoteOutcomeRef.current = null;
         const key = merchantKey(nameRef.current);
         if (key.length < MIN_KEY_LENGTH) {
@@ -522,13 +609,13 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         }
         const last = lastEmittedRef.current;
         if (last != null && last.key === key && last.suggestion.domain != null) {
-            emit({ ...last.suggestion, domain: null });
+            emit(ports, { ...last.suggestion, domain: null });
         }
         onNameChange(nameRef.current);
     });
     const seenIncomeRef = useRef(income);
     const restartForIncome = useEffectEvent(() => {
-        supersedeInFlight();
+        supersedeInFlight(ports);
         lastRemoteOutcomeRef.current = null;
         if (merchantKey(nameRef.current).length < MIN_KEY_LENGTH) {
             return;

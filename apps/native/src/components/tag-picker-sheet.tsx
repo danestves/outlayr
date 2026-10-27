@@ -1,5 +1,6 @@
 import { BottomSheetFlatList, BottomSheetModal, BottomSheetTextInput } from "@expo/ui/community/bottom-sheet";
 import * as Cause from "effect/Cause";
+import type * as Effect from "effect/Effect";
 import { useRef, useState } from "react";
 import type { Ref } from "react";
 import { Pressable, View } from "react-native";
@@ -28,7 +29,7 @@ function TagSlot() {
 }
 
 interface TagPickerSheetProps {
-    onCreate: (name: string) => Promise<string | null>;
+    onCreate: (name: string) => Effect.Effect<string | null, unknown>;
     onToggle: (tagId: string) => void;
     pendingTagNames?: readonly string[];
     ref?: Ref<BottomSheetModal>;
@@ -100,7 +101,7 @@ export function TagPickerSheet({
             return;
         }
         creating.current = true;
-        create(() => onCreate(name));
+        create(onCreate(name));
     };
 
     return (

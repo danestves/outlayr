@@ -21,8 +21,8 @@ export class TagCreateError extends Schema.TaggedError<TagCreateError>()("TagCre
 }
 
 export const createTagCommand = createCommand({
-    execute: (create: () => Promise<string | null>) =>
-        Effect.tryPromise({ catch: (cause) => new TagCreateError({ cause }), try: create }),
+    execute: (create: Effect.Effect<string | null, unknown>) =>
+        create.pipe(Effect.mapError((cause) => new TagCreateError({ cause }))),
     label: "editor:create-tag",
 });
 
