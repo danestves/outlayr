@@ -91,3 +91,7 @@ export function numberToNumpad(amount: number, minorUnits: number): string {
     const fixed = amount.toFixed(minorUnits);
     return fixed.replace(ZERO_FRACTION, "");
 }
+
+export function wholeUnitsToNumpad(amount: number): string {
+    return numberToNumpad(Math.round(amount), 0);
+}
