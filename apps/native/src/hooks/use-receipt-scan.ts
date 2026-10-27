@@ -18,6 +18,7 @@ import type { ReceiptDraft, ReceiptScanFn, ScanRequest } from "@/lib/convex";
 import { launchPick, pendingPick } from "@/lib/pending-pick";
 import type { PickOwner } from "@/lib/pending-pick";
 import { prepareReceiptImage } from "@/lib/receipt-image";
+import { useLatest } from "@/lib/use-latest";
 import { SILENT } from "@/state/atom-command";
 import { RECEIPT_SCAN_TIMEOUT, timedCaptureCommand } from "@/state/capture-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
@@ -60,6 +61,8 @@ type ScanSend<Draft> = (image: ArrayBuffer, today: string) => Effect.Effect<Scan
 
 interface UseImageScanArgs<Context, Draft> {
     context: Context;
+    initialPhoto?: ScanPhoto | null;
+    onReview?: (draft: Draft) => void;
     owner: PickOwner;
     send: ScanSend<Draft>;
 }
@@ -133,26 +136,28 @@ export function useReceiptScan<Context>({ context, request, transport }: UseRece
 
 export function useImageScan<Context, Draft>({
     context,
+    initialPhoto = null,
+    onReview,
     owner,
     send,
 }: UseImageScanArgs<Context, Draft>): UseImageScanResult<Context, Draft> {
-    const [phase, setPhase] = useState<ScanPhase<Context, Draft>>({ kind: "idle" });
+    const [firstPhoto] = useState(initialPhoto);
+    const [phase, setPhase] = useState<ScanPhase<Context, Draft>>(
+        firstPhoto === null ? { kind: "idle" } : { kind: "scanning", photo: firstPhoto }
+    );
     const takeRef = useRef(0);
     const scanAbortRef = useRef<AbortController | null>(null);
     const [scanCommand] = useState(() =>
         timedCaptureCommand<ScanReply<Draft>>({ operation: "scan", timeout: RECEIPT_SCAN_TIMEOUT })
     );
     const runScan = useAtomCommand(scanCommand, SILENT);
-    const sentRef = useRef({ context, send });
+    const latest = useLatest({ context, onReview, send });
     const supersedeTake = () => {
         takeRef.current += 1;
         scanAbortRef.current?.abort();
         scanAbortRef.current = null;
         return takeRef.current;
     };
-    useEffect(() => {
-        sentRef.current = { context, send };
-    });
 
     const read = async (photo: ScanPhoto, take: number) => {
         setPhase({ kind: "scanning", photo });
@@ -169,7 +174,7 @@ export function useImageScan<Context, Draft>({
             setPhase({ kind: "failed", photo, reason: "unreadable" });
             return;
         }
-        const { context: sentContext, send: sent } = sentRef.current;
+        const { context: sentContext, send: sent } = latest.current;
         const { bytes } = prepared;
         const controller = new AbortController();
         scanAbortRef.current = controller;
@@ -191,6 +196,7 @@ export function useImageScan<Context, Draft>({
         }
         if (settled.status === "ok" && settled.draft !== null) {
             setPhase({ context: sentContext, draft: settled.draft, image: bytes, kind: "review", photo });
+            latest.current.onReview?.(settled.draft);
             return;
         }
         setPhase({ kind: "failed", photo, reason: failureFor(settled.status) });
@@ -210,7 +216,10 @@ export function useImageScan<Context, Draft>({
 
     // Android can tear the app down under the picker: that launch never resolves, so its photo is picked up here.
     const adoptPending = useEffectEvent((result: ImagePickerResult, take: number) => adopt(result, take));
-    useEffect(() => {
+    const startMounted = useEffectEvent(() => {
+        if (firstPhoto !== null) {
+            void read(firstPhoto, supersedeTake());
+        }
         const take = takeRef.current;
         pendingPick(owner)
             .then((result) => {
@@ -219,7 +228,7 @@ export function useImageScan<Context, Draft>({
                 }
             })
             .catch(() => undefined);
-    }, [owner]);
+    });
 
     const takePhoto = () => {
         const take = supersedeTake();
@@ -289,12 +298,15 @@ export function useImageScan<Context, Draft>({
     };
 
     const endScans = useEffectEvent(() => supersedeTake());
-    useEffect(
-        () => () => {
+    // oxlint-disable-next-line outlayr/react-effect-budget -- scans a handed-off photo or adopts the picker's pending result when mounted, and aborts the scan in flight when unmounted
+    useEffect(() => {
+        let disposed = false;
+        void Promise.resolve().then(() => (disposed ? undefined : startMounted()));
+        return () => {
+            disposed = true;
             endScans();
-        },
-        []
-    );
+        };
+    }, []);
 
     return { chooseFromLibrary, phase, reset, retry, scan, takePhoto };
 }

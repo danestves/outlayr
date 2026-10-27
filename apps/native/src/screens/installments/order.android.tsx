@@ -53,7 +53,7 @@ function OrderLoaded({ entry, leave, nowMs }: { entry: PlanWithStanding; leave: 
     const account = useAccounts(db).find((row) => row.id === plan.accountId);
     const money = (value: number) => formatAmount(value, plan.currency, showCents, language);
     const planLine = orderPlanPhrase(t, standing.rows);
-    const { cuotaSheetRef, deletePending, editing, pay, setEditing } = useOrderActions(entry, leave);
+    const { cuotaSheetRef, deletePending, edit, editing, pay, setEditing } = useOrderActions(entry, leave);
     const feeSuggestion = lateFeeSuggestion(standing);
 
     return (
@@ -134,7 +134,7 @@ function OrderLoaded({ entry, leave, nowMs }: { entry: PlanWithStanding; leave: 
                         key={row.row.id}
                         money={money}
                         nowMs={nowMs}
-                        onPress={row.row.sequence === 0 ? undefined : () => setEditing({ ...row.row })}
+                        onPress={row.row.sequence === 0 ? undefined : () => edit({ ...row.row })}
                         row={row}
                     />
                 ))}

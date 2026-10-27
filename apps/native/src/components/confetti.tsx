@@ -1,8 +1,9 @@
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useWindowDimensions, View } from "react-native";
 import Animated, {
     Easing,
     interpolate,
+    useAnimatedReaction,
     useAnimatedStyle,
     useReducedMotion,
     useSharedValue,
@@ -81,17 +82,21 @@ function Piece({
 }) {
     const progress = useSharedValue(0);
 
-    useEffect(() => {
-        progress.set(
-            withDelay(
-                piece.delayMs,
-                withTiming(1, {
-                    duration: piece.durationMs,
-                    easing: Easing.out(Easing.quad),
-                })
-            )
-        );
-    }, [progress, piece.delayMs, piece.durationMs]);
+    const { delayMs, durationMs } = piece;
+    useAnimatedReaction(
+        () => ({ delayMs, durationMs }),
+        (timing) => {
+            progress.set(
+                withDelay(
+                    timing.delayMs,
+                    withTiming(1, {
+                        duration: timing.durationMs,
+                        easing: Easing.out(Easing.quad),
+                    })
+                )
+            );
+        }
+    );
 
     const style = useAnimatedStyle(() => {
         const p = progress.get();

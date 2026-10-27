@@ -3,6 +3,7 @@ import { useEffect, useEffectEvent, useRef } from "react";
 import { resolveInstitutionDomain } from "@/domain/institution-map";
 import type { EnrichmentFn } from "@/lib/convex";
 import { persistLogo as persistLogoDefault } from "@/lib/persist-logo";
+import { useLatest } from "@/lib/use-latest";
 import { fetchMerchantLogo } from "@/state/capture-commands";
 
 import { useTransactionEnrichment } from "./use-transaction-enrichment";
@@ -52,10 +53,7 @@ export function useAccountIdentity(args: UseAccountIdentityArgs): UseAccountIden
 
     const nameRef = useRef("");
     const ticketRef = useRef(0);
-    const latest = useRef({ canAttach, fetchImage, onClear, onLogo, persistLogo });
-    useEffect(() => {
-        latest.current = { canAttach, fetchImage, onClear, onLogo, persistLogo };
-    });
+    const latest = useLatest({ canAttach, fetchImage, onClear, onLogo, persistLogo });
 
     const attach = async (domain: string | null) => {
         const blocked = () => latest.current.canAttach?.() === false;
@@ -121,18 +119,16 @@ export function useAccountIdentity(args: UseAccountIdentityArgs): UseAccountIden
             onNameChange(initialName);
         }
     });
-    useEffect(() => {
-        enrichInitialName();
-    }, []);
-
     // The enrichment teardown cancels its timers but not an `attach` already past them, whose logo would land in the
     // next editor's draft; taking the ticket on the way out makes it stale.
-    useEffect(
-        () => () => {
+
+    // oxlint-disable-next-line outlayr/react-effect-budget -- starts the logo lookup for the account's existing name when the editor opens and invalidates an attach in flight when it closes
+    useEffect(() => {
+        enrichInitialName();
+        return () => {
             ticketRef.current += 1;
-        },
-        []
-    );
+        };
+    }, []);
 
     return { onNameChange, pending };
 }

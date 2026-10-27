@@ -1,4 +1,8 @@
+import { useAtomValue } from "@effect/atom-react/Hooks";
 import { startOfDay } from "@outlayr/money/calendar";
+import * as Effect from "effect/Effect";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as Atom from "effect/reactivity/Atom";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
@@ -10,6 +14,7 @@ import Animated, {
     FadeIn,
     FadeOut,
     useAnimatedStyle,
+    useDerivedValue,
     useReducedMotion,
     useSharedValue,
     withSpring,
@@ -31,6 +36,7 @@ import { useGlobalCurrency } from "@/data/app-meta";
 import { suggestedCardFee } from "@/data/card-fees-core";
 import { getCategoryById } from "@/data/categories-core";
 import { useAiConsent } from "@/data/settings";
+import { lastLoggedEntry } from "@/data/transactions-core";
 import type { TransactionInput } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 import type { AuthGate } from "@/domain/auth-gate";
@@ -71,12 +77,7 @@ import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
 import { createTransferCommand, rememberLastUsedAccountCommand } from "@/state/accounts-commands";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import {
-    backfillRecurringCommand,
-    createTransactionCommand,
-    lastLoggedEntryCommand,
-    runLedgerCommand,
-} from "@/state/ledger-commands";
+import { backfillRecurringCommand, createTransactionCommand } from "@/state/ledger-commands";
 import { syncSubscriptionRemindersCommand } from "@/state/surfaces-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
@@ -207,10 +208,9 @@ function OrbControl({
 }) {
     const reducedMotion = useReducedMotion();
     const pressed = useSharedValue(1);
-    const frame = useSharedValue(size);
-    useEffect(() => {
-        frame.set(reducedMotion ? withTiming(size, { duration: 160 }) : withSpring(size, ORB_SPRING));
-    }, [frame, reducedMotion, size]);
+    const frame = useDerivedValue(() =>
+        reducedMotion ? withTiming(size, { duration: 160 }) : withSpring(size, ORB_SPRING)
+    );
     const box = useAnimatedStyle(() => ({ height: frame.get(), width: frame.get() }));
     const canvas = useAnimatedStyle(() => ({
         transform: [{ scale: (frame.get() / ORB_SIZE) * pressed.get() }],
@@ -457,6 +457,7 @@ function hintShown(phase: VoicePhase, spoke: boolean, turns: VoiceTurn[]): boole
 
 function useHandoffHaptics(kind: VoicePhase["kind"]) {
     const haptics = useHaptics();
+    // oxlint-disable-next-line outlayr/react-effect-budget -- plays the Taptic cue for each voice phase, which settles from recorder and Convex events with no single handler
     useEffect(() => {
         const cue = HANDOFF_HAPTIC[kind];
         if (cue) {
@@ -465,29 +466,26 @@ function useHandoffHaptics(kind: VoicePhase["kind"]) {
     }, [haptics, kind]);
 }
 
+const voiceHintSeedAtom = Atom.family((db: Database) =>
+    Atom.make(
+        Effect.suspend(() => lastLoggedEntry(db, new Date())).pipe(
+            Effect.catchTags({ TransactionsError: () => Effect.succeed(null) }),
+            Effect.catchDefect(() => Effect.succeed(null)),
+            Effect.map((last: LastEntry | null) => ({ account: getLastUsedAccount(db)?.name ?? null, last }))
+        )
+    ).pipe(Atom.withLabel("voice:hint-seed"))
+);
+
 function useVoiceHint(): string | null {
     const db = useDatabase();
     const t = useTranslation();
     const amountsHidden = use(AmountsHiddenContext);
-    const [seed, setSeed] = useState<{ account: string | null; last: LastEntry | null } | null>(null);
+    const seedResult = useAtomValue(voiceHintSeedAtom(db));
 
-    useEffect(() => {
-        let live = true;
-        runLedgerCommand(lastLoggedEntryCommand, { db, now: new Date() })
-            .catch(() => null)
-            .then((last) => {
-                if (live) {
-                    setSeed({ account: getLastUsedAccount(db)?.name ?? null, last });
-                }
-            });
-        return () => {
-            live = false;
-        };
-    }, [db]);
-
-    if (seed === null) {
+    if (!AsyncResult.isSuccess(seedResult)) {
         return null;
     }
+    const seed = seedResult.value;
     const merchant = seed.last?.note.trim() ?? "";
     const usable =
         !amountsHidden &&

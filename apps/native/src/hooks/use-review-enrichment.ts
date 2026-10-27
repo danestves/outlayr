@@ -1,16 +1,15 @@
-import { useEffect, useState } from "react";
+import { useAtomValue } from "@effect/atom-react/Hooks";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 
 import type { ImportEntry } from "@/data/transfer-core";
 import { reviewEntryIdentity } from "@/domain/import-review-identity";
 import { cachedLogoUri, logoCacheKey } from "@/lib/logo-cache";
-import { fetchMerchantLogo } from "@/state/capture-commands";
+import { fetchedLogosAtom, logoDomainsKey, NO_FETCHED_LOGOS } from "@/state/merchant-logos";
 
 export interface ReviewEnrichment {
     displayName: string;
     logoUri: string | null;
 }
-
-const FETCH_BATCH = 4;
 
 function onDiskLogos(identities: readonly ReturnType<typeof reviewEntryIdentity>[]): Map<string, string | null> {
     const map = new Map<string, string | null>();
@@ -27,64 +26,18 @@ function onDiskLogos(identities: readonly ReturnType<typeof reviewEntryIdentity>
 }
 
 export function useReviewEnrichment(entries: readonly ImportEntry[]): ReadonlyMap<number, ReviewEnrichment> {
-    const [fetched, setFetched] = useState<ReadonlyMap<string, string | null>>(new Map());
     const identities = entries.map((entry) => reviewEntryIdentity(entry.note));
 
     // Once per distinct merchant: `cachedLogoUri` makes several blocking file-system calls, and per row that is
     // O(rows x domains) syscalls on the JS thread.
     const onDisk = onDiskLogos(identities);
 
-    useEffect(() => {
-        const pending = new Map<string, { name: string; domain: string }>();
-        for (const identity of identities) {
-            if (identity.domain == null) {
-                continue;
-            }
-            const key = logoCacheKey(identity.domain, identity.domain);
-            if (pending.has(key) || onDisk.get(key) != null) {
-                continue;
-            }
-            pending.set(key, { domain: identity.domain, name: identity.domain });
-        }
-        if (pending.size === 0) {
-            return;
-        }
-        let cancelled = false;
-        const queue = [...pending.entries()];
-        const settle = (key: string) => {
-            if (cancelled) {
-                return;
-            }
-            setFetched((prev) => {
-                const resolved = cachedLogoUri(key);
-                // Compared by VALUE, not presence: a timed-out first attempt records null, and a presence check would
-                // refuse the later attempt that succeeds.
-                if (prev.get(key) === resolved) {
-                    return prev;
-                }
-                return new Map(prev).set(key, resolved);
-            });
-        };
-        const worker = async () => {
-            let item = queue.shift();
-            while (item != null) {
-                if (cancelled) {
-                    return;
-                }
-                const [key, request] = item;
-                // oxlint-disable-next-line no-await-in-loop -- this loop IS the concurrency limit: FETCH_BATCH workers drain one shared queue, so each must finish its fetch before taking the next domain
-                await fetchMerchantLogo(request).catch(() => null);
-                settle(key);
-                item = queue.shift();
-            }
-        };
-        for (let i = 0; i < Math.min(FETCH_BATCH, queue.length); i += 1) {
-            worker();
-        }
-        return () => {
-            cancelled = true;
-        };
-    }, [identities, onDisk]);
+    const result = useAtomValue(
+        fetchedLogosAtom(
+            logoDomainsKey(identities.flatMap((identity) => (identity.domain == null ? [] : [identity.domain])))
+        )
+    );
+    const fetched = AsyncResult.isSuccess(result) ? result.value : NO_FETCHED_LOGOS;
 
     const map = new Map<number, ReviewEnrichment>();
     for (const [index, identity] of identities.entries()) {

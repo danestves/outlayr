@@ -12,11 +12,10 @@ import { translateNow } from "@/i18n/runtime";
 import type { CloudError } from "@/lib/cloud-error";
 import { enrichmentTransport } from "@/lib/convex";
 import type { CategoryBranch, EnrichmentFn } from "@/lib/convex";
+import { useLatest } from "@/lib/use-latest";
 import { createCommand, SILENT } from "@/state/atom-command";
 import { ENRICHMENT_TIMEOUT, timedCaptureCommand } from "@/state/capture-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
-
-const noop = () => undefined;
 
 const followUpCommand = createCommand({
     execute: (call: Effect.Effect<RemoteEnrichmentResult, CloudError>) => call,
@@ -161,7 +160,6 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
     const forcingRef = useRef(false);
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const groundedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const groundedFollowUpRef = useRef<() => void>(noop);
     const recheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const clearTimers = () => {
         for (const ref of [timerRef, groundedTimerRef, recheckTimerRef]) {
@@ -215,10 +213,7 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         resolveLocal,
         transport,
     };
-    const latest = useRef(resolved);
-    useEffect(() => {
-        latest.current = resolved;
-    });
+    const latest = useLatest(resolved);
 
     const rememberedNow = (): string | null => {
         const held = rememberedRef.current;
@@ -352,7 +347,7 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         const outcome = lastRemoteOutcomeRef.current;
         if (outcome == null || outcome.key !== key) {
             if (inFlightRef.current.has(key)) {
-                groundedTimerRef.current = setTimeout(() => groundedFollowUpRef.current(), GROUNDED_IDLE_MS);
+                groundedTimerRef.current = setTimeout(() => runGroundedFollowUp(), GROUNDED_IDLE_MS);
             }
             return;
         }
@@ -476,10 +471,6 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         await runRemote(key);
     };
 
-    useEffect(() => {
-        groundedFollowUpRef.current = runGroundedFollowUp;
-    });
-
     const onNameChange = (next: string) => {
         nameRef.current = next;
         if (!latest.current.enabled) {
@@ -516,13 +507,8 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         setPending(false);
     }
 
-    useEffect(() => {
-        if (!enabled) {
-            cancel();
-        }
-    }, [enabled]);
-
-    useEffect(() => () => cancel(), []);
+    // oxlint-disable-next-line outlayr/react-effect-budget -- cancels the debounce timers and aborts the in-flight lookup when enrichment turns off or the form unmounts
+    useEffect(() => (enabled ? () => cancel() : undefined), [enabled]);
 
     // The same name in another currency can be another business, and the backfill treats a saved logo as final,
     // so a currency change asks again.
@@ -540,17 +526,6 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         }
         onNameChange(nameRef.current);
     });
-    useEffect(() => {
-        if (seenCurrencyRef.current === currency) {
-            return;
-        }
-        seenCurrencyRef.current = currency;
-        if (!latest.current.enabled) {
-            return;
-        }
-        restartForCurrency();
-    }, [currency]);
-
     const seenIncomeRef = useRef(income);
     const restartForIncome = useEffectEvent(() => {
         supersedeInFlight();
@@ -560,16 +535,22 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         }
         onNameChange(nameRef.current);
     });
+    // oxlint-disable-next-line outlayr/react-effect-budget -- re-arms the lookup timers and request ticket held in refs when the currency or income a lookup is filed under changes
     useEffect(() => {
-        if (seenIncomeRef.current === income) {
-            return;
-        }
+        const currencyChanged = seenCurrencyRef.current !== currency;
+        const incomeChanged = seenIncomeRef.current !== income;
+        seenCurrencyRef.current = currency;
         seenIncomeRef.current = income;
-        if (!latest.current.enabled) {
+        if (!enabled) {
             return;
         }
-        restartForIncome();
-    }, [income]);
+        if (currencyChanged) {
+            restartForCurrency();
+        }
+        if (incomeChanged) {
+            restartForIncome();
+        }
+    }, [currency, enabled, income]);
 
     return { lookupNow, onNameChange, pending: pending || forcing };
 }

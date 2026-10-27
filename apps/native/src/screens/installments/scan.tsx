@@ -2,7 +2,7 @@ import Image01Icon from "@hugeicons-pro/core-stroke-rounded/Image01Icon";
 import * as Effect from "effect/Effect";
 import { useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useState } from "react";
 import { Text } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 
@@ -47,6 +47,12 @@ const FAILURES = {
     unclear: "installments.scan.unclear",
 } as const satisfies Record<ScanFailure, TranslatableKey>;
 
+function reviewedOrder(plan: InstallmentPlanDraft | null, account: Account) {
+    const foreign = plan?.currency != null && plan.currency !== account.currency ? plan.currency : null;
+    const order = plan === null || foreign !== null ? null : scannedOrder(plan, account.currency);
+    return { foreign, order };
+}
+
 function ScanFlow({ account, photo }: { account: Account; photo: ScanPhoto | null }) {
     const router = useRouter();
     const t = useTranslation();
@@ -56,8 +62,25 @@ function ScanFlow({ account, photo }: { account: Account; photo: ScanPhoto | nul
     const regionCode = useRegionCode();
     const stageBox = useStageBox();
     const [api] = useState(installmentScanTransport);
-    const { chooseFromLibrary, phase, reset, retry, scan } = useImageScan<null, InstallmentPlanDraft>({
+    const { chooseFromLibrary, phase, reset, retry } = useImageScan<null, InstallmentPlanDraft>({
         context: null,
+        initialPhoto: photo,
+        onReview: (draft) => {
+            const { order } = reviewedOrder(draft, account);
+            if (order !== null) {
+                router.replace({
+                    params: {
+                        accountId: account.id,
+                        amount: String(order.price),
+                        currency: account.currency,
+                        date: String(order.purchaseDay.getTime()),
+                        installmentDraft: encodeInstallmentSeed(order),
+                        installments: "1",
+                    },
+                    pathname: "/transactions/create",
+                });
+            }
+        },
         owner: "installment-scan",
         send: (image, today) =>
             api({
@@ -76,31 +99,7 @@ function ScanFlow({ account, photo }: { account: Account; photo: ScanPhoto | nul
     const limitToast = <LimitToast feature="receiptScan" {...limit} />;
 
     const plan = phase.kind === "review" ? phase.draft : null;
-    const foreign = plan?.currency != null && plan.currency !== account.currency ? plan.currency : null;
-    const order = plan === null || foreign !== null ? null : scannedOrder(plan, account.currency);
-
-    useLayoutEffect(() => {
-        if (photo !== null) {
-            scan(photo);
-        }
-    }, [photo, scan]);
-
-    useEffect(() => {
-        if (order === null) {
-            return;
-        }
-        router.replace({
-            params: {
-                accountId: account.id,
-                amount: String(order.price),
-                currency: account.currency,
-                date: String(order.purchaseDay.getTime()),
-                installmentDraft: encodeInstallmentSeed(order),
-                installments: "1",
-            },
-            pathname: "/transactions/create",
-        });
-    }, [account, order, router]);
+    const { foreign, order } = reviewedOrder(plan, account);
 
     const close = () => router.back();
     const choose: BarAction = { icon: Image01Icon, label: t("installments.scan.choose"), onPress: chooseFromLibrary };

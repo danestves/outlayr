@@ -1,9 +1,9 @@
-import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { View } from "react-native";
 import type { ViewStyle } from "react-native";
 import Animated, {
     Easing,
+    useAnimatedReaction,
     useAnimatedStyle,
     useReducedMotion,
     useSharedValue,
@@ -36,9 +36,12 @@ function Arriving({
 }: ArriveProps) {
     const progress = useSharedValue(0);
 
-    useEffect(() => {
-        progress.set(withDelay(delay, withTiming(1, { duration, easing: SETTLE })));
-    }, [progress, delay, duration]);
+    useAnimatedReaction(
+        () => ({ delay, duration }),
+        (timing) => {
+            progress.set(withDelay(timing.delay, withTiming(1, { duration: timing.duration, easing: SETTLE })));
+        }
+    );
 
     const travel = useAnimatedStyle(() => {
         const frame = arrivalFrame(progress.get(), distance);
@@ -72,9 +75,12 @@ function Settling({
 }: SettleProps) {
     const progress = useSharedValue(0);
 
-    useEffect(() => {
-        progress.set(withDelay(delay, withTiming(1, { duration, easing: SETTLE })));
-    }, [progress, delay, duration]);
+    useAnimatedReaction(
+        () => ({ delay, duration }),
+        (timing) => {
+            progress.set(withDelay(timing.delay, withTiming(1, { duration: timing.duration, easing: SETTLE })));
+        }
+    );
 
     const landing = useAnimatedStyle(() => {
         const frame = settleFrame(progress.get(), from);
@@ -107,9 +113,12 @@ export function Fade(props: FadeProps) {
 function Fading({ children, to, from = 1, style, delay = 0, duration = MARK_MOTION.fade.duration }: FadeProps) {
     const opacity = useSharedValue(from);
 
-    useEffect(() => {
-        opacity.set(withDelay(delay, withTiming(to, { duration })));
-    }, [opacity, to, delay, duration]);
+    useAnimatedReaction(
+        () => ({ delay, duration, to }),
+        (timing) => {
+            opacity.set(withDelay(timing.delay, withTiming(timing.to, { duration: timing.duration })));
+        }
+    );
 
     const dissolve = useAnimatedStyle(() => ({ opacity: opacity.get() }));
 
