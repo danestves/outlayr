@@ -28,7 +28,13 @@ import { holdSubmitting, pressSubmit } from "@/components/form/submit-guard";
 import { IdentityCurtain } from "@/components/identity-curtain";
 import { HERO_RING, IdentityFlyUpLayer } from "@/components/identity-fly-up";
 import { Text } from "@/components/text";
-import { EMPTY_DRAFT, useIdentitySeed, useIdentityDraft, useIdentityFlyUp } from "@/contexts/identity-draft-context";
+import {
+    EMPTY_DRAFT,
+    useIdentityDraft,
+    useIdentityDraftScope,
+    useIdentityFlyUp,
+    useIdentitySeed,
+} from "@/contexts/identity-draft-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useCategoriesByNamespace } from "@/data/categories";
 import { CATEGORY_PALETTE, getCategoryById, isCategoryValidationError } from "@/data/categories-core";
@@ -122,6 +128,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
     const insets = useSafeAreaInsets();
     const [ctaHeight, setCtaHeight] = useState(CTA_HEIGHT);
 
+    useIdentityDraftScope();
     const { draft, setDraft } = useIdentityDraft();
     const { pickerOpen, setPickerOpen, floatProgress } = useIdentityFlyUp();
 
