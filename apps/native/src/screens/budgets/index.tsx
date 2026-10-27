@@ -2,7 +2,7 @@ import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import type { ExpenseContribution } from "@outlayr/money/budget-spent";
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import { Stack, useRouter } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollView, View } from "react-native";
 import Animated, { Easing, FadeOut, LinearTransition } from "react-native-reanimated";
 
@@ -82,27 +82,13 @@ export function Budgets() {
     // `mainRow` gates creation: a new singleton set while the old is pending rewrites the row being tombstoned.
     const main = mainRow?.id === pendingId ? null : mainRow;
     const allBudgets = usePerCategoryBudgets(db, nowMs, contributions);
-    const budgets = useMemo(() => allBudgets.filter((budget) => budget.id !== pendingId), [allBudgets, pendingId]);
+    const budgets = allBudgets.filter((budget) => budget.id !== pendingId);
     const mainBurndown = useBurndown(contributions, nowMs, main, null);
     const dominant = useDominant(db, contributions, main, nowMs);
     const burndowns = useBurndowns(contributions, nowMs, asRows ? NO_BUDGETS : budgets);
-    const heroTimeLeft = main ? budgetTimeLeftLabel(main.window, main.type, new Date(nowMs), t) : null;
-
-    const goals = useMemo(() => allGoals.filter((entry) => entry.goal.id !== pendingGoalId), [allGoals, pendingGoalId]);
-    const ranked = useMemo(() => [...budgets].sort(compareBudgetSeverity), [budgets]);
-    // `allBudgets`: a budget in its undo window still owns its unique category id.
-    const budgetedCategoryIds = useMemo(
-        () => allBudgets.map((budget) => budget.categoryId).filter((id): id is string => id !== null),
-        [allBudgets]
-    );
-    const overCount = budgets.filter((budget) => budget.overBudget).length;
-
-    // Undo-window rows and goals count, so the takeover never hides them.
-    const isEmpty = mainRow === null && allBudgets.length === 0 && allGoals.length === 0;
-
     const firstDayOfMonth = useSettingNumber("firstDayOfMonth");
     const firstWeekday = useSettingNumber("firstWeekday");
-    const calendar = useMemo(() => ({ firstDayOfMonth, firstWeekday }), [firstDayOfMonth, firstWeekday]);
+    const calendar = { firstDayOfMonth, firstWeekday };
     const rail = useUnbudgetedScopes(db, nowMs, contributions);
 
     const limitSheetRef = useRef<BottomSheetModal>(null);
@@ -110,16 +96,9 @@ export function Budgets() {
     const budgetsCapped = useProCapped(allBudgets.length, FREE_BUDGETS);
     const accountSheetRef = useRef<BottomSheetModal>(null);
     const goalSheetRef = useRef<BottomSheetModal>(null);
+    const categoryPickerRef = useRef<CategoryPickerSheetRef>(null);
     const [goalTarget, setGoalTarget] = useState<GoalTarget | null>(null);
 
-    // Presented from an effect: `menuItems` runs in render, where a ref read trips the compiler.
-    const openLimit = (target: LimitTarget) => {
-        if (blocksNewBudget(target.categoryId, budgetedCategoryIds, budgetsCapped)) {
-            router.push("/paywall");
-            return;
-        }
-        setLimitTarget(target);
-    };
     useEffect(() => {
         if (limitTarget) {
             limitSheetRef.current?.present();
@@ -131,6 +110,26 @@ export function Budgets() {
             goalSheetRef.current?.present();
         }
     }, [goalTarget]);
+
+    const heroTimeLeft = main ? budgetTimeLeftLabel(main.window, main.type, new Date(nowMs), t) : null;
+
+    const goals = allGoals.filter((entry) => entry.goal.id !== pendingGoalId);
+    const ranked = [...budgets].sort(compareBudgetSeverity);
+    // `allBudgets`: a budget in its undo window still owns its unique category id.
+    const budgetedCategoryIds = allBudgets.map((budget) => budget.categoryId).filter((id): id is string => id !== null);
+    const overCount = budgets.filter((budget) => budget.overBudget).length;
+
+    // Undo-window rows and goals count, so the takeover never hides them.
+    const isEmpty = mainRow === null && allBudgets.length === 0 && allGoals.length === 0;
+
+    // Presented from an effect: `menuItems` runs in render, where a ref read trips the compiler.
+    const openLimit = (target: LimitTarget) => {
+        if (blocksNewBudget(target.categoryId, budgetedCategoryIds, budgetsCapped)) {
+            router.push("/paywall");
+            return;
+        }
+        setLimitTarget(target);
+    };
 
     const commitGoal = async ({ targetAmount, targetDate }: GoalCommit) => {
         const target = goalTarget;
@@ -174,7 +173,6 @@ export function Budgets() {
         }
     };
 
-    const categoryPickerRef = useRef<CategoryPickerSheetRef>(null);
     const presentCategoryPicker = () => categoryPickerRef.current?.present();
     const selectCategory = (picked: Category) => {
         openLimit({
@@ -470,12 +468,10 @@ function useDominant(
     nowMs: number
 ): { name: string; share: number } | null {
     const categoryMeta = useCategoryMeta(db);
-    return useMemo(() => {
-        if (!main) {
-            return null;
-        }
-        const top = dominantCategory(contributions, main.window, Math.min(nowMs, main.window.end.getTime()));
-        const name = top ? categoryMeta.get(top.categoryId)?.name : undefined;
-        return top && name ? { name, share: top.share } : null;
-    }, [contributions, main, nowMs, categoryMeta]);
+    if (!main) {
+        return null;
+    }
+    const top = dominantCategory(contributions, main.window, Math.min(nowMs, main.window.end.getTime()));
+    const name = top ? categoryMeta.get(top.categoryId)?.name : undefined;
+    return top && name ? { name, share: top.share } : null;
 }

@@ -12,7 +12,7 @@ import {
     onTapGesture,
 } from "@expo/ui/swift-ui/modifiers";
 import { useRouter } from "expo-router";
-import { memo, use, useCallback, useState } from "react";
+import { use, useState } from "react";
 import { View } from "react-native";
 
 import { AccountTile } from "@/components/account-tile";
@@ -100,10 +100,7 @@ export function DebtSections({ currency, debts }: SectionsProps) {
     const rowGround = groupedRows(colors);
     const format = (amount: number) => formatSignedAmount(amount, currency, showCents, language);
 
-    const open = useCallback(
-        (id: string) => router.push({ params: { accountId: id }, pathname: "/accounts/[accountId]" }),
-        [router]
-    );
+    const open = (id: string) => router.push({ params: { accountId: id }, pathname: "/accounts/[accountId]" });
 
     const wording = { currency, language, showCents, t };
     const tones = { due: colors.tint, income: colors.income, muted: colors.muted, overdue: colors.expense };
@@ -221,7 +218,7 @@ interface DebtRowProps {
     subtitleColor: string;
 }
 
-const DebtRow = memo(({ colors, currency, format, onOpen, plan, row, subtitle, subtitleColor }: DebtRowProps) => {
+function DebtRow({ colors, currency, format, onOpen, plan, row, subtitle, subtitleColor }: DebtRowProps) {
     const { account } = row;
     const label = [account.name, plan?.a11y, subtitle].filter(Boolean).join(", ");
 
@@ -274,5 +271,4 @@ const DebtRow = memo(({ colors, currency, format, onOpen, plan, row, subtitle, s
             <Image color={colors.muted} modifiers={[CHEVRON]} systemName="chevron.right" />
         </HStack>
     );
-});
-DebtRow.displayName = "DebtRow";
+}

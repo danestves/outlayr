@@ -2,7 +2,7 @@ import ArrowDown01Icon from "@hugeicons-pro/core-stroke-rounded/ArrowDown01Icon"
 import ArrowUp01Icon from "@hugeicons-pro/core-stroke-rounded/ArrowUp01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import { useRouter } from "expo-router";
-import { memo, use, useCallback, useState } from "react";
+import { use, useState } from "react";
 import { Pressable, View } from "react-native";
 
 import { AccountTile } from "@/components/account-tile";
@@ -66,15 +66,9 @@ export function DebtSections({ currency, debts }: SectionsProps) {
     const { showCents } = useDisplaySettings().state;
     const hidden = use(AmountsHiddenContext);
     const [settledOpen, setSettledOpen] = useState(false);
-    const format = useCallback(
-        (amount: number) => formatSignedAmount(amount, currency, showCents, language),
-        [currency, showCents, language]
-    );
+    const format = (amount: number) => formatSignedAmount(amount, currency, showCents, language);
 
-    const open = useCallback(
-        (id: string) => router.push({ params: { accountId: id }, pathname: "/accounts/[accountId]" }),
-        [router]
-    );
+    const open = (id: string) => router.push({ params: { accountId: id }, pathname: "/accounts/[accountId]" });
 
     const wording = { currency, language, showCents, t };
     const row = (item: DebtListRow) => {
@@ -218,7 +212,7 @@ const SUBTITLE_TONE = {
     paidOff: "text-income",
 } as const;
 
-const DebtRow = memo(({ currency, format, onOpen, plan, row, subtitle, tone }: DebtRowProps) => {
+function DebtRow({ currency, format, onOpen, plan, row, subtitle, tone }: DebtRowProps) {
     const m3 = useMaterialColors();
     const { account } = row;
     const amount = format(row.amount);
@@ -261,5 +255,4 @@ const DebtRow = memo(({ currency, format, onOpen, plan, row, subtitle, tone }: D
             </Text>
         </Pressable>
     );
-});
-DebtRow.displayName = "DebtRow";
+}

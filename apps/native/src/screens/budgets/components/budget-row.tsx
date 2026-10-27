@@ -1,6 +1,6 @@
 import type { ExpenseContribution } from "@outlayr/money/budget-spent";
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
-import { useMemo, useRef } from "react";
+import { useRef } from "react";
 import { Pressable, View } from "react-native";
 import type { AccessibilityActionEvent } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -56,22 +56,18 @@ export function BudgetRow({
     const { language } = useLanguage();
     const stacked = useAccessibilityTextSize();
     const swipeRef = useRef<SwipeableMethods>(null);
-    const now = new Date(nowMs);
     const over = budget.overBudget;
     const crossedStyle = useOverBudgetMoment(budget.id, over, budget.window.start);
+    const now = new Date(nowMs);
     const isDay = budget.type === BUDGET_TYPE.day;
-    const daySlots = useMemo(
-        () =>
-            isDay
-                ? buildDaySlots(contributions, {
-                      categoryId: budget.categoryId,
-                      limit: budget.amount,
-                      now: new Date(nowMs),
-                      window: budget.window,
-                  })
-                : null,
-        [isDay, contributions, budget, nowMs]
-    );
+    const daySlots = isDay
+        ? buildDaySlots(contributions, {
+              categoryId: budget.categoryId,
+              limit: budget.amount,
+              now: new Date(nowMs),
+              window: budget.window,
+          })
+        : null;
     const dayVerdict = daySlots ? dayVerdictSentence(daySlots, budget.name, t) : null;
     const difference = Math.abs(budget.leftover);
     const perDay = leftPerDay(budget.leftover, budget.window, now);

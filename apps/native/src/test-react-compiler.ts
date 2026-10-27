@@ -17,11 +17,6 @@ const KNOWN_BAILOUTS = [
     "src/data/live-query.ts",
     "src/hooks/use-receipt-scan.ts",
     "src/lib/ledger-adoption.tsx",
-    "src/screens/debts/new-debt-form.tsx",
-    "src/screens/debts/use-owe-form.ts",
-    "src/screens/installments/pay-form.tsx",
-    "src/screens/installments/use-fee-editor.ts",
-    "src/screens/paywall/index.tsx",
 ];
 
 const COVERAGE_SHARDS = 4;

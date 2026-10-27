@@ -1,7 +1,7 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { windowEndMs } from "@outlayr/money/budget-window";
 import { Color, Stack, useRouter } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 
 import { ScreenHeader } from "@/components/screen-header";
@@ -38,7 +38,7 @@ export function OverallBudgetDetail({ db, onDone }: { db: Database; onDone: () =
     const limitSheetRef = useRef<BottomSheetModal>(null);
     const firstDayOfMonth = useSettingNumber("firstDayOfMonth");
     const firstWeekday = useSettingNumber("firstWeekday");
-    const calendar = useMemo(() => ({ firstDayOfMonth, firstWeekday }), [firstDayOfMonth, firstWeekday]);
+    const calendar = { firstDayOfMonth, firstWeekday };
     const contributions = useExpenseContributions(db, nowMs);
     const budget = useMainBudget(db, nowMs, contributions, periodOffset);
     const transactions = useBudgetContributions(

@@ -5,7 +5,7 @@ import {
     Group as SkGroup,
     Path as SkPath,
 } from "@shopify/react-native-skia";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { View } from "react-native";
 import { GestureDetector, usePanGesture } from "react-native-gesture-handler";
 import { useDerivedValue, useReducedMotion, useSharedValue } from "react-native-reanimated";
@@ -103,6 +103,11 @@ function deficitPathD(burndown: Burndown, plot: Plot, last: Burndown["points"][n
     return `M ${crossX} ${plot.zeroY} L ${crossX} ${plot.y(last.balance)} L ${plot.x(last.day)} ${plot.y(last.balance)} ${tail} Z`;
 }
 
+function scrubRule(x: number, height: number) {
+    const over = CHART_SCRUB.ruleOvershoot;
+    return `M ${x} ${PAD.top - over} L ${x} ${height - PAD.bottom + over}`;
+}
+
 function makeGeometry(burndown: Burndown, limit: number, width: number, height: number, domain: "auto" | "limit") {
     const plot = makePlot(burndown, limit, width, height, domain);
     const last = burndown.points.at(-1);
@@ -142,37 +147,26 @@ interface BurndownMarkerProps {
     animated: boolean;
     colors: ReturnType<typeof useColors>;
     draw: SharedValue<number>;
+    height: number;
     marker: Burndown["points"][number];
-    markerRule: string | null;
     plot: Plot;
     pointCount: number;
     scrubbing: boolean;
 }
 
-function BurndownMarker({
-    animated,
-    colors,
-    draw,
-    marker,
-    markerRule,
-    plot,
-    pointCount,
-    scrubbing,
-}: BurndownMarkerProps) {
+function BurndownMarker({ animated, colors, draw, height, marker, plot, pointCount, scrubbing }: BurndownMarkerProps) {
     const settles = animated && !scrubbing;
-    const rule = useChartPath(markerRule ?? "", settles, pointCount);
+    const rule = useChartPath(scrubRule(plot.x(marker.day), height), settles, pointCount);
     const cx = useChartDraw(settles, plot.x(marker.day), plot.x(marker.day), pointCount);
     const cy = useChartDraw(settles, plot.y(marker.balance), plot.y(marker.balance), pointCount);
     return (
         <SkGroup opacity={draw}>
-            {markerRule ? (
-                <SkPath
-                    color={scrubbing ? colors.foreground : withAlpha(colors.foreground, 0.55)}
-                    path={rule}
-                    strokeWidth={CHART_SCRUB.ruleWidth}
-                    style="stroke"
-                />
-            ) : null}
+            <SkPath
+                color={scrubbing ? colors.foreground : withAlpha(colors.foreground, 0.55)}
+                path={rule}
+                strokeWidth={CHART_SCRUB.ruleWidth}
+                style="stroke"
+            />
             <SkCircle
                 color={marker.balance < 0 ? colors.overBudget : colors.foreground}
                 cx={cx}
@@ -270,13 +264,18 @@ export function BudgetBurndownChart({
     const activeDay = useSharedValue(-1);
     const draw = useChartDraw(animatedCharts);
 
-    const geometry = useMemo(
-        () => makeGeometry(burndown, limit, width, height, domain),
-        [burndown, limit, width, height, domain]
-    );
+    const geometry = makeGeometry(burndown, limit, width, height, domain);
 
     const { plot, last } = geometry;
     const pointCount = burndown.points.length;
+    const runwayX = burndown.runwayDay == null ? null : plot.x(burndown.runwayDay);
+    /** A share of the limit: the chart is handed no currency code to qualify an amount. */
+    const summaryBalance = last?.balance ?? limit;
+    const summary = t(summaryBalance < 0 ? "insights.burndown.over" : "insights.burndown.holding", {
+        day: last?.day ?? 1,
+        days: burndown.totalDays,
+        percent: Math.round((Math.abs(summaryBalance) / Math.max(1, limit)) * 100),
+    });
     const surplus = useChartPath(geometry.surplus, animatedCharts, pointCount);
     const deficit = useChartPath(geometry.deficit ?? "", animatedCharts, pointCount);
     const ideal = useChartPath(geometry.ideal, animatedCharts, pointCount);
@@ -286,19 +285,8 @@ export function BudgetBurndownChart({
     const zeroY = useChartDraw(animatedCharts, plot.zeroY, plot.zeroY, pointCount);
     const aboveZero = useDerivedValue(() => ({ height: zeroY.get(), width, x: 0, y: 0 }));
     const belowZero = useDerivedValue(() => ({ height: height - zeroY.get(), width, x: 0, y: zeroY.get() }));
-
     const scrubbed = scrubDay == null ? null : burndown.points[scrubDay - 1];
     const marker = scrubbed ?? last;
-
-    const markerRule = useMemo(() => {
-        if (!marker) {
-            return null;
-        }
-        const x = plot.x(marker.day);
-        const over = CHART_SCRUB.ruleOvershoot;
-        return `M ${x} ${PAD.top - over} L ${x} ${height - PAD.bottom + over}`;
-    }, [plot, marker, height]);
-
     const pan = useScrubPan({
         activeDay,
         interactive,
@@ -308,18 +296,6 @@ export function BudgetBurndownChart({
         scrubX,
         setScrubDay,
     });
-
-    /** A share of the limit: the chart is handed no currency code to qualify an amount. */
-    const summary = useMemo(() => {
-        const day = last?.day ?? 1;
-        const balance = last?.balance ?? limit;
-        const share = Math.round((Math.abs(balance) / Math.max(1, limit)) * 100);
-        return t(balance < 0 ? "insights.burndown.over" : "insights.burndown.holding", {
-            day,
-            days: burndown.totalDays,
-            percent: share,
-        });
-    }, [last, limit, burndown.totalDays, t]);
 
     const canvas = (
         <View
@@ -394,12 +370,12 @@ export function BudgetBurndownChart({
                     <SkPath color={colors.foreground} path={axis} strokeWidth={1.6} style="stroke" />
                 ) : null}
 
-                {burndown.runwayDay == null ? null : (
+                {runwayX == null ? null : (
                     <RunwayMark
                         animated={animatedCharts}
                         color={colors.overBudget}
                         draw={draw}
-                        x={plot.x(burndown.runwayDay)}
+                        x={runwayX}
                         y={zeroY}
                         pointCount={pointCount}
                     />
@@ -410,8 +386,8 @@ export function BudgetBurndownChart({
                         animated={animatedCharts}
                         colors={colors}
                         draw={draw}
+                        height={height}
                         marker={marker}
-                        markerRule={markerRule}
                         plot={plot}
                         scrubbing={scrubbed != null}
                         pointCount={pointCount}

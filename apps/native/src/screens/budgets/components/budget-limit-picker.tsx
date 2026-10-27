@@ -8,7 +8,7 @@ import {
     Path as SkPath,
     vec,
 } from "@shopify/react-native-skia";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useWindowDimensions, View } from "react-native";
 import type { LayoutChangeEvent } from "react-native";
 import { GestureDetector, usePanGesture } from "react-native-gesture-handler";
@@ -77,6 +77,32 @@ function curvePathD(
     return parts.join(" ");
 }
 
+function limitGeometry(burndown: Burndown, width: number, axisTop: number) {
+    const plotLeft = PAD.left;
+    const plotRight = width - PAD.right;
+    const span = Math.max(1, burndown.totalDays - 1);
+    const bottomY = PLOT_TOP + PLOT_HEIGHT;
+    const x = (day: number) => plotLeft + ((day - 1) / span) * (plotRight - plotLeft);
+    const y = (value: number) => yForLimit(value, axisTop);
+
+    const curveD = curvePathD(burndown.points, x, y);
+    const lastDay = burndown.points.at(-1)?.day ?? 1;
+    const weeksD = weekRulesD(burndown.totalDays, x, PLOT_TOP, bottomY);
+
+    return {
+        area: `${curveD} L ${x(lastDay)} ${bottomY} L ${x(1)} ${bottomY} Z`,
+        bottomY,
+        curve: curveD,
+        hatch: hatchPathD(width, CHART_HEIGHT),
+        lastDay,
+        plotLeft,
+        plotRight,
+        weeks: weeksD,
+        x,
+        y,
+    };
+}
+
 function formatDayMonth(date: Date, language: Language): string {
     return `${date.getDate()} ${monthAbbrevTitle(date, language)}`;
 }
@@ -103,8 +129,8 @@ export function BudgetLimitPicker({
     const [measured, setMeasured] = useState(0);
     const width = measured > 0 ? measured : windowWidth - GUTTER * 2;
 
-    const cumulative = useMemo(() => burndown.points.map((point) => point.spent), [burndown]);
-    const total = cumulative.at(-1) ?? 0;
+    const cumulative = burndown.points.map((point) => point.spent);
+    const total = burndown.points.at(-1)?.spent ?? 0;
     // Frozen at mount so the plot does not rescale under a dragging finger; the caller remounts it per period.
     const [axisTop] = useState(() => Math.max(LIMIT_STEP * 4, total * 1.35, limit * 1.2));
     const maxLimit = Math.floor(axisTop / LIMIT_STEP) * LIMIT_STEP;
@@ -127,22 +153,19 @@ export function BudgetLimitPicker({
         snapped.set(limit);
     }, [limit, axisTop, maxLimit, cumulative, limitY, snapped, dragging, lastCrossing]);
 
-    const applyLimit = useCallback(
-        (next: number) => {
-            if (sparse) {
-                haptics("selection");
-            } else {
-                const crossing = crossingDay(cumulative, next);
-                if (crossing !== lastCrossing.get()) {
-                    const turned = lastCrossing.get() === null && crossing !== null;
-                    haptics(turned ? "medium" : "light");
-                    lastCrossing.set(crossing);
-                }
+    const applyLimit = (next: number) => {
+        if (sparse) {
+            haptics("selection");
+        } else {
+            const crossing = crossingDay(cumulative, next);
+            if (crossing !== lastCrossing.get()) {
+                const turned = lastCrossing.get() === null && crossing !== null;
+                haptics(turned ? "medium" : "light");
+                lastCrossing.set(crossing);
             }
-            onLimit(next);
-        },
-        [cumulative, sparse, haptics, lastCrossing, onLimit]
-    );
+        }
+        onLimit(next);
+    };
 
     const report = (y: number) => {
         "worklet";
@@ -176,31 +199,7 @@ export function BudgetLimitPicker({
         shouldCancelWhenOutside: false,
     });
 
-    const geometry = useMemo(() => {
-        const plotLeft = PAD.left;
-        const plotRight = width - PAD.right;
-        const span = Math.max(1, burndown.totalDays - 1);
-        const bottomY = PLOT_TOP + PLOT_HEIGHT;
-        const x = (day: number) => plotLeft + ((day - 1) / span) * (plotRight - plotLeft);
-        const y = (value: number) => yForLimit(value, axisTop);
-
-        const curveD = curvePathD(burndown.points, x, y);
-        const lastDay = burndown.points.at(-1)?.day ?? 1;
-        const weeksD = weekRulesD(burndown.totalDays, x, PLOT_TOP, bottomY);
-
-        return {
-            area: `${curveD} L ${x(lastDay)} ${bottomY} L ${x(1)} ${bottomY} Z`,
-            bottomY,
-            curve: curveD,
-            hatch: hatchPathD(width, CHART_HEIGHT),
-            lastDay,
-            plotLeft,
-            plotRight,
-            weeks: weeksD,
-            x,
-            y,
-        };
-    }, [burndown, width, axisTop]);
+    const geometry = limitGeometry(burndown, width, axisTop);
 
     const limitLineStart = useDerivedValue(() => vec(geometry.plotLeft, limitY.get()));
     const limitLineEnd = useDerivedValue(() => vec(geometry.plotRight, limitY.get()));

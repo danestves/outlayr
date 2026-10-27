@@ -86,7 +86,7 @@ export function usePayForm({ account, amount: owed, entry, forNext, sources }: P
     const rate = usePaymentRate(db, from?.currency ?? plan.currency, plan.currency, date);
     const source = from === null ? null : paymentSource(amount, from, plan.currency, rate);
     const canPay = amount > 0 && (from === null || source !== null);
-    const money = (value: number, code = plan.currency) => formatAmount(value, code, showCents, language);
+    const money = (value: number, code?: string) => formatAmount(value, code ?? plan.currency, showCents, language);
     const converted = from ? convertedLine(t, language, amount, from.currency, plan.currency, rate) : null;
 
     const name = orderName(t, purchase);

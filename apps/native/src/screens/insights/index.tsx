@@ -1,7 +1,7 @@
 import type { MenuAction } from "@expo/ui/community/menu";
 import { useRouter } from "expo-router";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
-import { useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 import { ScrollView, View } from "react-native";
 
 import { HeroNumber } from "@/components/amount-text";
@@ -211,15 +211,11 @@ export function Insights() {
     const { showCents } = useDisplaySettings().state;
     const nowMs = useNow();
     const { overview: ledger, series: netWorth } = useNetWorth(db, nowMs);
-    const debts = useMemo(() => {
-        if (ledger === null) {
-            return null;
-        }
-        const split = debtsOverview(ledger.rows, currency);
-        return split.youOwe.length + split.owedToYou.length + split.settled.length > 0
+    const split = ledger === null ? null : debtsOverview(ledger.rows, currency);
+    const debts =
+        split !== null && split.youOwe.length + split.owedToYou.length + split.settled.length > 0
             ? { owedToYou: split.owedToYouTotal, youOwe: split.youOweTotal }
             : null;
-    }, [ledger, currency]);
 
     const incomeTracking = useSettingBool("incomeTracking");
     const storedPeriod = useSettingNumber("insightsTimeFrame");
@@ -230,10 +226,7 @@ export function Insights() {
 
     const firstWeekday = useSettingNumber("firstWeekday");
     const firstDayOfMonth = useSettingNumber("firstDayOfMonth");
-    const calendar: InsightsCalendar = useMemo(
-        () => ({ firstDayOfMonth, firstWeekday }),
-        [firstWeekday, firstDayOfMonth]
-    );
+    const calendar: InsightsCalendar = { firstDayOfMonth, firstWeekday };
 
     const [offset, setOffset] = useState(0);
     const [lockedIndex, setLockedIndex] = useState<number | null>(null);
@@ -252,9 +245,9 @@ export function Insights() {
         setFilterId(null);
     }
 
-    const step = useCallback((direction: 1 | -1) => {
+    const step = (direction: 1 | -1) => {
         setOffset((current) => (direction === 1 ? Math.min(0, current + 1) : current - 1));
-    }, []);
+    };
 
     const selectPeriod = (value: number) => {
         setOffset(0);
@@ -298,7 +291,7 @@ export function Insights() {
 
     const isNet = measure === "net";
     const readIndex = scrubIndex ?? lockedIndex;
-    const running = useMemo(() => (isNet ? runningTotals(result.buckets) : []), [isNet, result.buckets]);
+    const running = isNet ? runningTotals(result.buckets) : [];
     const readBalance = balanceAt(running, readIndex, isNet);
 
     const heroMagnitude = heroMagnitudeFor(filteredEntry, readBalance, readBucket, measure, totals);
@@ -352,6 +345,7 @@ export function Insights() {
     // Held here: the list unmounts with the selection and the hook flushes its pending write on unmount.
     const { pendingId, requestDelete } = useDeferredDelete("row");
     const listGrouped = !(lockedBucket && period !== "year");
+    const openTransaction = (id: string) => router.push(`/transactions/${id}`);
 
     if (!result.hasHistory) {
         return <InsightsSample onAddTransaction={() => router.push("/transactions/create")} />;
@@ -369,7 +363,6 @@ export function Insights() {
             onScrub={setScrubIndex}
             period={period}
             quietAlt={quietAlt}
-            running={running}
             selectedIndex={lockedIndex}
         />
     );
@@ -497,7 +490,7 @@ export function Insights() {
                             currency={currency}
                             grouped={listGrouped}
                             key={`${listQuery.start.getTime()}:${listQuery.end.getTime()}:${listQuery.categoryId}:${listQuery.income}`}
-                            onPress={(id) => router.push(`/transactions/${id}`)}
+                            onPress={openTransaction}
                             onRequestDelete={requestDelete}
                             pendingDeleteId={pendingId}
                             transactions={listTransactions}
@@ -545,7 +538,6 @@ interface ChartSlotProps {
     onScrub: Dispatch<SetStateAction<number | null>>;
     period: InsightsPeriod;
     quietAlt: InsightsMeasure | null;
-    running: number[];
     selectedIndex: number | null;
 }
 
@@ -560,7 +552,6 @@ function ChartSlot({
     onScrub,
     period,
     quietAlt,
-    running,
     selectedIndex,
 }: ChartSlotProps): ReactNode {
     if (isEmpty) {
@@ -576,7 +567,7 @@ function ChartSlot({
                 onScrub={onScrub}
                 period={period}
                 selectedIndex={selectedIndex}
-                totals={running}
+                totals={runningTotals(buckets)}
             />
         );
     }

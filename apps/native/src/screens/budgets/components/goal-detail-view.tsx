@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { ScrollView, View } from "react-native";
 
@@ -35,10 +35,9 @@ export function GoalDetailView({ currency, editor, entry, nowMs }: GoalDetailVie
     const { goal, progress, saved, start, target } = entry;
     const display = (value: number) => formatAmount(value, currency, showCents, language);
 
-    const required = useMemo(
-        () =>
-            goalRequiredLine({ startAmount: start, startDate: goal.dateCreated, targetDate: goal.targetDate }, target),
-        [start, goal.dateCreated, goal.targetDate, target]
+    const required = goalRequiredLine(
+        { startAmount: start, startDate: goal.dateCreated, targetDate: goal.targetDate },
+        target
     );
 
     const { standing } = progress;

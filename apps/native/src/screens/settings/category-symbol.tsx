@@ -1,5 +1,4 @@
 import { useRouter } from "expo-router";
-import { useMemo } from "react";
 
 import { IdentityFlyUpSheetHost } from "@/components/identity-fly-up";
 import { CATEGORY_TABS, IdentityPickerHost } from "@/components/identity-picker-content";
@@ -7,7 +6,23 @@ import { useIdentityDraft } from "@/contexts/identity-draft-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useCategoriesByNamespace } from "@/data/categories";
 import { CATEGORY_PALETTE } from "@/data/categories-core";
+import type { CategoryWithChildren } from "@/data/categories-core";
 import { useColors } from "@/theme/use-colors";
+
+function colorsInUse(tree: readonly CategoryWithChildren[], editId: string | null): string[] {
+    const set = new Set<string>();
+    for (const node of tree) {
+        for (const category of [node, ...node.children]) {
+            if (category.id === editId) {
+                continue;
+            }
+            if (category.color) {
+                set.add(category.color);
+            }
+        }
+    }
+    return [...set];
+}
 
 export function CategorySymbol({
     editId,
@@ -24,20 +39,7 @@ export function CategorySymbol({
     const colors = useColors();
 
     const expenseTree = useCategoriesByNamespace(db, false);
-    const usedColors = useMemo(() => {
-        const set = new Set<string>();
-        for (const node of expenseTree) {
-            for (const category of [node, ...node.children]) {
-                if (category.id === editId) {
-                    continue;
-                }
-                if (category.color) {
-                    set.add(category.color);
-                }
-            }
-        }
-        return [...set];
-    }, [expenseTree, editId]);
+    const usedColors = colorsInUse(expenseTree, editId);
 
     const tint = income ? colors.income : (draft.color ?? CATEGORY_PALETTE[0]);
 

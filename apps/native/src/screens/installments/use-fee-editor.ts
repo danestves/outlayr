@@ -28,12 +28,15 @@ export function useFeeEditor({
     const [padText, setPadText] = useState("");
 
     const write = async (next: number) => {
-        try {
-            await (next > 0
+        const saving =
+            next > 0
                 ? installmentsRepo.addFee(db, { amount: next, installmentId: row.id })
-                : installmentsRepo.removeFee(db, row.id));
+                : installmentsRepo.removeFee(db, row.id);
+        const feedback = next > 0 ? "success" : "warning";
+        try {
+            await saving;
             rearmInstallmentReminders(db);
-            haptics(next > 0 ? "success" : "warning");
+            haptics(feedback);
         } catch (error) {
             console.error("Failed to save the late fee", error);
             notifyFailure({ body: t("installments.failedBody"), title: t("installments.failedTitle") });

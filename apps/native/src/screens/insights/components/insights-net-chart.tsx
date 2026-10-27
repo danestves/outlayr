@@ -1,5 +1,5 @@
 import { Canvas, Circle as SkCircle, Group as SkGroup, Path as SkPath } from "@shopify/react-native-skia";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Text as RNText, View } from "react-native";
 import type { LayoutChangeEvent } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
@@ -27,6 +27,55 @@ const LABEL_H = 18;
 const LABEL_W = 32;
 const PAD = { bottom: 12, top: 12 } as const;
 const HEADROOM = 0.1;
+
+function liveBucketCount(buckets: readonly InsightsBucket[], nowMs: number): number {
+    let count = buckets.length;
+    while (count > 1 && buckets[count - 1].start.getTime() > nowMs) {
+        count -= 1;
+    }
+    return count;
+}
+
+function netPlot(live: readonly number[], bucketCount: number, width: number) {
+    const rawTop = Math.max(0, ...live);
+    const rawBottom = Math.min(0, ...live);
+    const pad = Math.max(1, rawTop - rawBottom) * HEADROOM;
+    const top = rawTop + pad;
+    const bottom = rawBottom - pad;
+    const span = Math.max(1, top - bottom);
+    const plotHeight = HEIGHT - PAD.top - PAD.bottom;
+    const y = (value: number) => PAD.top + ((top - value) / span) * plotHeight;
+    // Scaled to the whole window so the line meets the x-axis labels.
+    const step = bucketCount > 1 ? width / (bucketCount - 1) : 0;
+    return { step, x: (index: number) => index * step, y, zeroY: y(0) };
+}
+
+function netGeometry(live: readonly number[], plot: ReturnType<typeof netPlot>, width: number) {
+    if (width <= 0 || live.length < 2) {
+        return null;
+    }
+    const line = live
+        .map((value, index) => {
+            const command = index === 0 ? "M" : "L";
+            return `${command} ${plot.x(index)} ${plot.y(value)}`;
+        })
+        .join(" ");
+
+    const lastX = plot.x(live.length - 1);
+    const area = `${line} L ${lastX} ${plot.zeroY} L 0 ${plot.zeroY} Z`;
+
+    return {
+        axis: `M 0 ${plot.zeroY} L ${width} ${plot.zeroY}`,
+        hatch: hatchPathD(width, HEIGHT),
+        line,
+        surplus: area,
+    };
+}
+
+function scrubRule(x: number) {
+    const over = CHART_SCRUB.ruleOvershoot;
+    return `M ${x} ${PAD.top - over} L ${x} ${HEIGHT - PAD.bottom + over}`;
+}
 
 interface InsightsNetChartProps {
     buckets: InsightsBucket[];
@@ -63,51 +112,13 @@ export function InsightsNetChart({
     const draw = useChartDraw(animated);
     const reported = useSharedValue(-1);
 
-    const liveCount = useMemo(() => {
-        let count = buckets.length;
-        while (count > 1 && buckets[count - 1].start.getTime() > nowMs) {
-            count -= 1;
-        }
-        return count;
-    }, [buckets, nowMs]);
+    const liveCount = liveBucketCount(buckets, nowMs);
 
     const live = totals.slice(0, liveCount);
 
-    const plot = useMemo(() => {
-        const rawTop = Math.max(0, ...live);
-        const rawBottom = Math.min(0, ...live);
-        const pad = Math.max(1, rawTop - rawBottom) * HEADROOM;
-        const top = rawTop + pad;
-        const bottom = rawBottom - pad;
-        const span = Math.max(1, top - bottom);
-        const plotHeight = HEIGHT - PAD.top - PAD.bottom;
-        const y = (value: number) => PAD.top + ((top - value) / span) * plotHeight;
-        // Scaled to the whole window so the line meets the x-axis labels.
-        const step = buckets.length > 1 ? width / (buckets.length - 1) : 0;
-        return { step, x: (index: number) => index * step, y, zeroY: y(0) };
-    }, [live, width, buckets.length]);
+    const plot = netPlot(live, buckets.length, width);
 
-    const geometry = useMemo(() => {
-        if (width <= 0 || live.length < 2) {
-            return null;
-        }
-        const line = live
-            .map((value, index) => {
-                const command = index === 0 ? "M" : "L";
-                return `${command} ${plot.x(index)} ${plot.y(value)}`;
-            })
-            .join(" ");
-
-        const lastX = plot.x(live.length - 1);
-        const area = `${line} L ${lastX} ${plot.zeroY} L 0 ${plot.zeroY} Z`;
-
-        return {
-            axis: `M 0 ${plot.zeroY} L ${width} ${plot.zeroY}`,
-            hatch: hatchPathD(width, HEIGHT),
-            line,
-            surplus: area,
-        };
-    }, [live, plot, width]);
+    const geometry = netGeometry(live, plot, width);
 
     const surplus = useChartPath(geometry?.surplus ?? "", animated, liveCount);
     const line = useChartPath(geometry?.line ?? "", animated, liveCount);
@@ -122,14 +133,7 @@ export function InsightsNetChart({
     }));
 
     const marker = scrubIndex ?? selectedIndex;
-    const markerRule = useMemo(() => {
-        if (marker == null || width <= 0 || marker >= live.length) {
-            return null;
-        }
-        const x = plot.x(marker);
-        const over = CHART_SCRUB.ruleOvershoot;
-        return `M ${x} ${PAD.top - over} L ${x} ${HEIGHT - PAD.bottom + over}`;
-    }, [marker, plot, width, live.length]);
+    const markerRule = marker == null || width <= 0 || marker >= live.length ? null : scrubRule(plot.x(marker));
 
     const count = live.length;
     const { step } = plot;

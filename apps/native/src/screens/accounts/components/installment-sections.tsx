@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Pressable, View } from "react-native";
 import Animated, { LinearTransition } from "react-native-reanimated";
 
@@ -27,12 +27,9 @@ export function InstallmentSections({ account, db, nowMs }: { account: Account; 
     const router = useRouter();
     const t = useTranslation();
     const plans = useInstallmentPlans(db, nowMs, account.id);
-    const upcoming = useMemo(
-        () => upcomingInstallments(plans, new Date(addLocalDays(nowMs, COMING_UP_DAYS))),
-        [plans, nowMs]
-    );
     const [showFinished, setShowFinished] = useState(false);
     const importScreenshot = useScreenshotImport(account.id);
+    const upcoming = upcomingInstallments(plans, new Date(addLocalDays(nowMs, COMING_UP_DAYS)));
     if (plans.length === 0 && !isInstallmentAppAccount(account)) {
         return null;
     }

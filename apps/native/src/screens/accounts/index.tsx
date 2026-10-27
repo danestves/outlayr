@@ -27,7 +27,6 @@ import {
 import { toAccountKind } from "@outlayr/money/account-kind";
 import { isMultiCurrency } from "@outlayr/money/account-overview";
 import { Stack, useRouter } from "expo-router";
-import { memo, useCallback, useMemo } from "react";
 import { View } from "react-native";
 
 import { CategoryIconTile } from "@/components/category-icon-tile";
@@ -83,30 +82,24 @@ export function Accounts() {
     const colors = useColors();
     const all = useBankAccounts(db);
     const { pendingId, requestDelete } = useDeferredDelete("account");
-    const rows = useMemo(() => all.filter((account) => account.id !== pendingId), [all, pendingId]);
-    const assets = useMemo(() => rows.filter((account) => toAccountKind(account.kind) === "asset"), [rows]);
     const currency = useGlobalCurrency(db);
     const debts = useDebtsOverview(db, useNow());
     const addMenu = useAddMenu();
+    const rows = all.filter((account) => account.id !== pendingId);
+    const assets = rows.filter((account) => toAccountKind(account.kind) === "asset");
     const empty = rows.length + debts.owedToYou.length + debts.youOwe.length + debts.settled.length === 0;
     const rowGround = groupedRows(colors);
 
-    const openDetail = useCallback(
-        (id: string) => {
-            router.push({
-                params: { accountId: id },
-                pathname: "/accounts/[accountId]",
-            });
-        },
-        [router]
-    );
+    const openDetail = (id: string) => {
+        router.push({
+            params: { accountId: id },
+            pathname: "/accounts/[accountId]",
+        });
+    };
 
-    const deleteAccount = useCallback(
-        (account: Account) => {
-            requestDelete(account.id, t("accounts.undo.body"));
-        },
-        [requestDelete, t]
-    );
+    const deleteAccount = (account: Account) => {
+        requestDelete(account.id, t("accounts.undo.body"));
+    };
 
     return (
         <>
@@ -198,7 +191,7 @@ interface AccountRowProps {
     onOpen: (id: string) => void;
 }
 
-const AccountRow = memo(({ account, colors, db, onDelete, onOpen }: AccountRowProps) => {
+function AccountRow({ account, colors, db, onDelete, onOpen }: AccountRowProps) {
     const t = useTranslation();
     const { language } = useLanguage();
     const { showCents } = useDisplaySettings().state;
@@ -286,5 +279,4 @@ const AccountRow = memo(({ account, colors, db, onDelete, onOpen }: AccountRowPr
             </SwipeActions.Actions>
         </SwipeActions>
     );
-});
-AccountRow.displayName = "AccountRow";
+}

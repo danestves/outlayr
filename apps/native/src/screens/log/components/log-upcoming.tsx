@@ -2,7 +2,6 @@ import { currencyTotals } from "@outlayr/money/currency-totals";
 import { landingDate } from "@outlayr/money/recurrence";
 import { monthlySubscriptionCost } from "@outlayr/money/subscription-cost";
 import type { RateTable } from "@outlayr/money/valuation";
-import { useMemo } from "react";
 import { View } from "react-native";
 
 import type { ActionMenuItem } from "@/components/action-menu";
@@ -31,27 +30,22 @@ interface LogUpcomingProps {
 
 export function LogUpcoming({ transactions, schedules, currency, rates, onPress, menuItems, nowMs }: LogUpcomingProps) {
     const { showCents } = useDisplaySettings().state;
-    const now = new Date(nowMs);
     const t = useTranslation();
     const largeText = useAccessibilityTextSize();
+    const now = new Date(nowMs);
     const headerRow = cn("flex-row items-baseline justify-between gap-2", largeText && "flex-wrap");
     // Valued at the coming charge: a renewal's saved date can predate every held rate.
-    const charges = useMemo(
-        () => transactions.map((transaction) => ({ ...transaction, date: landingDate(transaction, new Date(nowMs)) })),
-        [transactions, nowMs]
-    );
-    const totals = useMemo(() => currencyTotals(charges, currency, rates), [charges, currency, rates]);
+    const charges = transactions.map((transaction) => ({
+        ...transaction,
+        date: landingDate(transaction, new Date(nowMs)),
+    }));
+    const totals = currencyTotals(charges, currency, rates);
     // The rows keep their stored date, which the menu reads, and only borrow the value.
-    const rows = useMemo(() => {
-        const valued = valueRows(charges, currency, rates);
-        return foldFees(
-            transactions.map((transaction, index) => ({ ...transaction, valued: valued[index]?.valued ?? null }))
-        );
-    }, [transactions, charges, currency, rates]);
-    const perMonth = useMemo(
-        () => monthlySubscriptionCost(schedules, currency, rates, new Date(nowMs)),
-        [schedules, currency, rates, nowMs]
+    const valued = valueRows(charges, currency, rates);
+    const rows = foldFees(
+        transactions.map((transaction, index) => ({ ...transaction, valued: valued[index]?.valued ?? null }))
     );
+    const perMonth = monthlySubscriptionCost(schedules, currency, rates, new Date(nowMs));
     const showPerMonth = perMonth.some((bucket) => bucket.transactionCount > 0);
 
     if (transactions.length === 0) {

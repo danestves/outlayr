@@ -7,7 +7,7 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
 import { Shimmer } from "panelui-native/components/shimmer";
-import { useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 import type React from "react";
 import { Linking, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import Animated, { FadeIn, FadeInDown, FadeOut } from "react-native-reanimated";
@@ -21,12 +21,10 @@ import type { StageBox } from "@/components/receipt/photo-stage";
 import { ReceiptFrame } from "@/components/receipt/receipt-frame";
 import { ThinkingOrb } from "@/components/thinking-orb/thinking-orb";
 import { useDatabase } from "@/contexts/local-data-context";
-import { useBankAccounts } from "@/data/accounts";
 import { getAccountById, rememberLastUsedAccount } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { attachmentsRepo } from "@/data/attachments-core";
 import { suggestedCardFee } from "@/data/card-fees-core";
-import { useCategoriesByNamespace } from "@/data/categories";
 import { getCategoryById } from "@/data/categories-core";
 import { photoFileName } from "@/data/photo-store-core";
 import { useAiConsent } from "@/data/settings";
@@ -35,11 +33,9 @@ import { useValuationIn } from "@/data/use-valuation";
 import type { AuthGate } from "@/domain/auth-gate";
 import { formatChargeDate } from "@/domain/dates";
 import { formatAmount } from "@/domain/money";
-import { boundedPromptNames } from "@/domain/prompt-budget";
 import { conversionOf, formatQuantity, receiptDetails, resolveReceipt, savableReceipt } from "@/domain/receipt-scan";
 import type { Conversion, ResolvedReceipt } from "@/domain/receipt-scan";
 import { formatRateFigure, pairQuotedInverse, pairUnitSymbols, quotePairRate } from "@/domain/transaction-entry-rate";
-import type { CategoryCandidate } from "@/domain/voice-entry";
 import { stillCurrent } from "@/domain/voice-entry";
 import { useIsMounted } from "@/hooks/use-is-mounted";
 import { useLocaleTag } from "@/hooks/use-locale-tag";
@@ -59,6 +55,9 @@ import { persistAttachmentBytes } from "@/lib/photo-storage";
 import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
 import { useColors } from "@/theme/use-colors";
+
+import { usePromptLedger } from "./use-prompt-ledger";
+import { useResolvedPhase } from "./use-resolved-phase";
 
 const STAGE_GUTTER = 24;
 const STAGE_MAX_HEIGHT_RATIO = 0.5;
@@ -589,6 +588,10 @@ function keptScan(image: ArrayBuffer): string | null {
     }
 }
 
+function openSettings() {
+    Linking.openSettings().catch(() => undefined);
+}
+
 function ScanFlowScreen() {
     const router = useRouter();
     const entitled = useProEntitled();
@@ -600,61 +603,17 @@ function ScanFlowScreen() {
     const localeTag = useLocaleTag();
     const regionCode = useRegionCode();
     const currency = useGlobalCurrency(db);
-    const accounts = useBankAccounts(db);
-    const expenseCategories = useCategoriesByNamespace(db, false);
-    const incomeCategories = useCategoriesByNamespace(db, true);
+    const { bounded, context, live } = usePromptLedger(db, currency);
     const [saving, setSaving] = useState(false);
     const isMounted = useIsMounted();
 
-    const categoryTree = useMemo(
-        () =>
-            [...expenseCategories, ...incomeCategories]
-                .filter((parent) => parent.name != null)
-                .map((parent) => ({
-                    children: parent.children.map((child) => child.name).filter((name) => name != null),
-                    // SAFETY: filtered to a non-null name just above.
-                    name: parent.name as string,
-                })),
-        [expenseCategories, incomeCategories]
-    );
-    const candidates = useMemo<CategoryCandidate[]>(
-        () =>
-            [...expenseCategories, ...incomeCategories].flatMap((parent) => [
-                { id: parent.id, income: parent.income, name: parent.name },
-                ...parent.children.map((child) => ({ id: child.id, income: child.income, name: child.name })),
-            ]),
-        [expenseCategories, incomeCategories]
-    );
-    const bounded = useMemo(
-        () => boundedPromptNames({ accounts: accounts.map((account) => account.name), categoryTree }),
-        [accounts, categoryTree]
-    );
-    const request = useMemo(
-        () => ({
-            accounts: bounded.accounts,
-            categoryTree: bounded.categoryTree,
-            currency,
-            language: localeTag,
-            regionCode,
-        }),
-        [bounded, currency, localeTag, regionCode]
-    );
-
-    // The ledger the model saw, not the one sync may have left by the time it answers.
-    const context = useMemo(
-        () => ({
-            accounts: accounts.map((account) => ({
-                currency: account.currency,
-                id: account.id,
-                name: account.name,
-            })),
-            accountsOmitted: bounded.accountsOmitted,
-            categories: candidates,
-            categoriesOmitted: bounded.categoriesOmitted,
-            currency,
-        }),
-        [accounts, bounded.accountsOmitted, bounded.categoriesOmitted, candidates, currency]
-    );
+    const request = {
+        accounts: bounded.accounts,
+        categoryTree: bounded.categoryTree,
+        currency,
+        language: localeTag,
+        regionCode,
+    };
 
     const { phase, takePhoto, chooseFromLibrary, retry, reset } = useReceiptScan({ context, request });
     const limit = useLimitNotice(
@@ -663,117 +622,86 @@ function ScanFlowScreen() {
     );
     const limitToast = <LimitToast feature="receiptScan" {...limit} />;
 
-    const receipt = useMemo(
-        () =>
-            phase.kind === "review" ? resolveReceipt({ ...phase.context, draft: phase.draft, now: new Date() }) : null,
-        [phase]
+    const receipt = useResolvedPhase(phase, (next) =>
+        next.kind === "review" ? resolveReceipt({ ...next.context, draft: next.draft, now: new Date() }) : null
     );
     const paidCurrency = receipt?.currency ?? currency;
     const paidValuation = useValuationIn(db, paidCurrency);
     const ledgerValuation = useValuationIn(db, currency);
-    const rates = useMemo(
-        () => pairRates(paidValuation.rates, ledgerValuation.rates, paidCurrency),
-        [ledgerValuation.rates, paidCurrency, paidValuation.rates]
-    );
-    const live = useMemo(
-        () => ({
-            accountIds: new Set(accounts.map((account) => account.id)),
-            categoryIds: new Set(candidates.map((candidate) => candidate.id)),
-        }),
-        [accounts, candidates]
-    );
+    const rates = pairRates(paidValuation.rates, ledgerValuation.rates, paidCurrency);
     const savableCategoryId =
         receipt && stillCurrent(receipt, live) ? (savableReceipt(receipt)?.categoryId ?? null) : null;
     const categoryName = receipt?.categoryId ? (getCategoryById(db, receipt.categoryId)?.name ?? null) : null;
 
-    const detailsOf = useCallback(
-        (draft: ResolvedReceipt) =>
-            receiptDetails(
-                draft,
-                (amount) => formatAmount(amount, draft.currency, true, language),
-                (count) => t("receipt.details.more", { count })
-            ),
-        [language, t]
-    );
+    const detailsOf = (draft: ResolvedReceipt) =>
+        receiptDetails(
+            draft,
+            (amount) => formatAmount(amount, draft.currency, true, language),
+            (count) => t("receipt.details.more", { count })
+        );
 
-    const close = useCallback(() => {
+    const close = () => {
         router.back();
-    }, [router]);
+    };
 
-    const openForm = useCallback(
-        (draft: ResolvedReceipt, attachment: string | null) => {
-            // An account sync removed is a question for the form, not a seed to swap for the last used.
-            const accountLive = draft.accountId === null || live.accountIds.has(draft.accountId);
-            const params = {
-                accountId: accountLive ? (draft.accountId ?? undefined) : undefined,
-                accountUnresolved: draft.accountUnresolved || !accountLive ? "1" : undefined,
-                amount: String(draft.amount),
-                attachment: attachment === null ? undefined : photoFileName(attachment),
-                categoryId: draft.categoryId ?? undefined,
-                currency: draft.currency,
-                date: String(draft.date.getTime()),
-                details: detailsOf(draft) ?? undefined,
-                income: draft.income ? "1" : "0",
-                note: draft.merchant,
-            };
-            router.replace({ params, pathname: "/transactions/create" });
-        },
-        [detailsOf, live, router]
-    );
+    const openForm = (draft: ResolvedReceipt, attachment: string | null) => {
+        // An account sync removed is a question for the form, not a seed to swap for the last used.
+        const accountLive = draft.accountId === null || live.accountIds.has(draft.accountId);
+        const params = {
+            accountId: accountLive ? (draft.accountId ?? undefined) : undefined,
+            accountUnresolved: draft.accountUnresolved || !accountLive ? "1" : undefined,
+            amount: String(draft.amount),
+            attachment: attachment === null ? undefined : photoFileName(attachment),
+            categoryId: draft.categoryId ?? undefined,
+            currency: draft.currency,
+            date: String(draft.date.getTime()),
+            details: detailsOf(draft) ?? undefined,
+            income: draft.income ? "1" : "0",
+            note: draft.merchant,
+        };
+        router.replace({ params, pathname: "/transactions/create" });
+    };
 
-    const save = useCallback(
-        (draft: ResolvedReceipt, categoryId: string, image: ArrayBuffer) => {
-            setSaving(true);
-            const write = async () => {
-                const attachment = keptScan(image);
-                try {
-                    const id = await transactionsRepo.create(
-                        db,
-                        receiptEntry(db, draft, categoryId, detailsOf(draft)),
-                        {
-                            inSameTransaction: (created) =>
-                                attachmentsRepo.writeFor(
-                                    db,
-                                    created,
-                                    attachment === null
-                                        ? []
-                                        : [{ id: null, imageKey: null, imageUri: attachment, name: null }]
-                                ),
-                        }
-                    );
-                    freshEntries.mark(id);
-                } catch {
-                    // The row did not land; the form has the failure strip this screen lacks.
-                    setSaving(false);
-                    if (isMounted()) {
-                        openForm(draft, attachment);
-                    }
-                    return;
-                }
-                if (draft.accountId) {
-                    await rememberLastUsedAccount(db, draft.accountId).catch(() => null);
-                }
-                posthog?.capture("transaction_saved", {
-                    has_split: false,
-                    is_subscription: false,
-                    mode: "create",
-                    source: "scan",
-                    transaction_type: draft.income ? "income" : "expense",
+    const save = (draft: ResolvedReceipt, categoryId: string, image: ArrayBuffer) => {
+        setSaving(true);
+        const write = async () => {
+            const attachment = keptScan(image);
+            try {
+                const id = await transactionsRepo.create(db, receiptEntry(db, draft, categoryId, detailsOf(draft)), {
+                    inSameTransaction: (created) =>
+                        attachmentsRepo.writeFor(
+                            db,
+                            created,
+                            attachment === null ? [] : [{ id: null, imageKey: null, imageUri: attachment, name: null }]
+                        ),
                 });
-                haptics("success");
-                // A modal gesture can dismiss this mid-write; popping again would take the screen beneath.
+                freshEntries.mark(id);
+            } catch {
+                // The row did not land; the form has the failure strip this screen lacks.
+                setSaving(false);
                 if (isMounted()) {
-                    router.back();
+                    openForm(draft, attachment);
                 }
-            };
-            void write();
-        },
-        [db, detailsOf, haptics, isMounted, openForm, router]
-    );
-
-    const openSettings = useCallback(() => {
-        Linking.openSettings().catch(() => undefined);
-    }, []);
+                return;
+            }
+            if (draft.accountId) {
+                await rememberLastUsedAccount(db, draft.accountId).catch(() => null);
+            }
+            posthog?.capture("transaction_saved", {
+                has_split: false,
+                is_subscription: false,
+                mode: "create",
+                source: "scan",
+                transaction_type: draft.income ? "income" : "expense",
+            });
+            haptics("success");
+            // A modal gesture can dismiss this mid-write; popping again would take the screen beneath.
+            if (isMounted()) {
+                router.back();
+            }
+        };
+        void write();
+    };
 
     const stageBox = useStageBox();
 

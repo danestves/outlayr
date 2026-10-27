@@ -1,5 +1,4 @@
 import { LineChart } from "panelui-native/components/line-chart";
-import { useMemo } from "react";
 import { Pressable, View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 
@@ -52,11 +51,8 @@ export function NetWorthCard({ series, currency, debts, onOpenDebts, showCents }
     const reduceMotion = useReducedMotion();
     const animated = useSettingBool("animatedCharts") && !reduceMotion;
 
-    const data = useMemo(
-        () => series.map(({ date, exact, value }) => ({ date, exact: exact ? 1 : 0, value })),
-        [series]
-    );
-    const domain = useMemo(() => worthDomain(data.map((point) => point.value)), [data]);
+    const data = series.map(({ date, exact, value }) => ({ date, exact: exact ? 1 : 0, value }));
+    const domain = worthDomain(data.map((point) => point.value));
 
     if (data.length === 0) {
         return null;

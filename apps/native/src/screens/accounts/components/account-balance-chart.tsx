@@ -1,6 +1,5 @@
 import type { RateTable } from "@outlayr/money/valuation";
 import { LineChart } from "panelui-native/components/line-chart";
-import { useMemo } from "react";
 import { View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 
@@ -52,22 +51,18 @@ function balanceDomain(values: readonly number[]): [number, number] {
 
 export function AccountBalanceChart({ account, cells, now, rates, showCents }: AccountBalanceChartProps) {
     const clock = useNow();
-    const at = useMemo(() => now ?? new Date(clock), [now, clock]);
     const colors = useColors();
     const t = useTranslation();
     const { language } = useLanguage();
     const reduceMotion = useReducedMotion();
     const animated = useSettingBool("animatedCharts") && !reduceMotion;
-    const data = useMemo(
-        () =>
-            accountBalanceSeries(account, cells, rates, at).map(({ date, exact, value }) => ({
-                date,
-                exact: exact ? 1 : 0,
-                value,
-            })),
-        [account, cells, at, rates]
-    );
-    const domain = useMemo(() => balanceDomain(data.map((point) => point.value)), [data]);
+    const at = now ?? new Date(clock);
+    const data = accountBalanceSeries(account, cells, rates, at).map(({ date, exact, value }) => ({
+        date,
+        exact: exact ? 1 : 0,
+        value,
+    }));
+    const domain = balanceDomain(data.map((point) => point.value));
     const latest = data.at(-1) ?? { date: "", exact: 1, value: 0 };
     const summary = t(latest.exact === 1 ? "accounts.chart.summary" : "accounts.chart.summaryApproximate", {
         amount: formatSignedAmount(latest.value, account.currency, showCents, language),

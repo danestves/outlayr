@@ -1,5 +1,4 @@
 import { Canvas, DashPathEffect, Circle as SkCircle, Path as SkPath } from "@shopify/react-native-skia";
-import { useMemo } from "react";
 import { View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
@@ -40,10 +39,7 @@ export function GoalPaceChart({
     const animatedCharts = useSettingBool("animatedCharts") && !reduceMotion;
     const draw = useChartDraw(animatedCharts);
 
-    const geometry = useMemo(
-        () => makeGeometry({ actual, height, nowMs, required, startTime, target, targetTime, width }),
-        [actual, required, startTime, targetTime, target, nowMs, width, height]
-    );
+    const geometry = makeGeometry({ actual, height, nowMs, required, startTime, target, targetTime, width });
     const pointCount = actual.length;
     const requiredPath = useChartPath(geometry.required, animatedCharts, pointCount);
     const axis = useChartPath(geometry.axis, animatedCharts, pointCount);

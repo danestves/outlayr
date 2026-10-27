@@ -197,20 +197,21 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
         }
         setBusy(true);
         setFailure(null);
+        const debt: DebtDraft = {
+            account,
+            amount: draft.amount,
+            category: soldOnCredit ? category : null,
+            currency: draft.currency,
+            date,
+            newName: draft.newName,
+            note: note.trim(),
+            person,
+            theirAmount: draft.theirAmount,
+            verb: choice.verb,
+        };
         let debtorId: string;
         try {
-            debtorId = await writeDebt(db, {
-                account,
-                amount: draft.amount,
-                category: soldOnCredit ? category : null,
-                currency: draft.currency,
-                date,
-                newName: draft.newName,
-                note: note.trim(),
-                person,
-                theirAmount: draft.theirAmount,
-                verb: choice.verb,
-            });
+            debtorId = await writeDebt(db, debt);
         } catch (error) {
             console.error("Failed to save the debt", error);
             haptics("error");
