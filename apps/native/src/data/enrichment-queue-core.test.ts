@@ -55,7 +55,7 @@ async function readRow(db: Database, id: string) {
 function applyDeps(): ApplyDeps {
     return {
         discard: jest.fn(),
-        fetchImage: async () => ({ bytes: LOGO, kind: "logo" }),
+        fetchImage: () => Effect.succeed({ bytes: LOGO, kind: "logo" }),
         persist: async () => ({ imageColor: "#123456", imageUri: "file:///photos/care4bag.jpg" }),
     };
 }

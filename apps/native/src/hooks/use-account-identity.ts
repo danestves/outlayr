@@ -2,8 +2,8 @@ import { useEffect, useEffectEvent, useRef } from "react";
 
 import { resolveInstitutionDomain } from "@/domain/institution-map";
 import type { EnrichmentFn } from "@/lib/convex";
-import { fetchMerchantImage } from "@/lib/logo-fetch";
 import { persistLogo as persistLogoDefault } from "@/lib/persist-logo";
+import { fetchMerchantLogo } from "@/state/capture-commands";
 
 import { useTransactionEnrichment } from "./use-transaction-enrichment";
 import type { EnrichmentSuggestion } from "./use-transaction-enrichment";
@@ -16,7 +16,7 @@ export interface AccountLogo {
 export interface UseAccountIdentityArgs {
     canAttach?: () => boolean;
     enabled: boolean;
-    fetchImage?: typeof fetchMerchantImage;
+    fetchImage?: typeof fetchMerchantLogo;
     groundedLookup?: boolean;
     initialName?: string;
     locale?: string;
@@ -46,7 +46,7 @@ export function useAccountIdentity(args: UseAccountIdentityArgs): UseAccountIden
         onLogo,
         onClear,
         transport,
-        fetchImage = fetchMerchantImage,
+        fetchImage = fetchMerchantLogo,
         persistLogo = persistLogoDefault,
     } = args;
 

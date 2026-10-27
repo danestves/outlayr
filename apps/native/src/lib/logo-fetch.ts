@@ -1,7 +1,14 @@
+import * as Cause from "effect/Cause";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as HttpClient from "effect/http/HttpClient";
+import * as Schedule from "effect/Schedule";
+import * as Schema from "effect/Schema";
+
 import { isRealLogo } from "@/domain/logo-acceptance";
 import { ENV } from "@/env";
 
-const REQUEST_TIMEOUT_MS = 3000;
+const REQUEST_TIMEOUT = Duration.seconds(3);
 /** A cold TLS handshake can alone exceed the budget; the retry reuses the connection. */
 const TIMEOUT_ATTEMPTS = 2;
 
@@ -33,34 +40,38 @@ export function faviconUrl(domain: string): string {
     return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`;
 }
 
-async function fetchOnce(url: string, fetchImpl: typeof fetch): Promise<TierOutcome | "timeout"> {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-    try {
-        const response = await fetchImpl(url, { signal: controller.signal });
-        const bytes = new Uint8Array(await response.arrayBuffer());
-        const verdict = isRealLogo(response.status, response.headers.get("content-type"), bytes);
-        if (verdict.ok) {
-            return { bytes, kind: "logo" };
-        }
-        return refused(response.status) ? REFUSED : INDETERMINATE;
-    } catch {
-        return controller.signal.aborted ? "timeout" : INDETERMINATE;
-    } finally {
-        clearTimeout(timer);
-    }
-}
+const LogoResponse = Schema.Struct({
+    bytes: Schema.Uint8Array,
+    contentType: Schema.NullOr(Schema.String),
+    status: Schema.Int,
+});
+const decodeLogoResponse = Schema.decodeUnknownEffect(LogoResponse);
 
-async function fetchAccepted(url: string, fetchImpl: typeof fetch): Promise<TierOutcome> {
-    for (let attempt = 1; attempt <= TIMEOUT_ATTEMPTS; attempt += 1) {
-        // oxlint-disable-next-line no-await-in-loop -- a retry only makes sense once the first attempt has timed out
-        const outcome = await fetchOnce(url, fetchImpl);
-        if (outcome !== "timeout") {
-            return outcome;
-        }
+const fetchOnce = Effect.fn("LogoFetch.fetchOnce")(function* fetchOnce(url: string) {
+    const response = yield* HttpClient.get(url);
+    const { bytes, contentType, status } = yield* decodeLogoResponse({
+        bytes: new Uint8Array(yield* response.arrayBuffer),
+        contentType: response.headers["content-type"] ?? null,
+        status: response.status,
+    });
+    const verdict = isRealLogo(status, contentType, bytes);
+    if (verdict.ok) {
+        const logo: TierOutcome = { bytes, kind: "logo" };
+        return logo;
     }
-    return INDETERMINATE;
-}
+    return refused(status) ? REFUSED : INDETERMINATE;
+});
+
+const fetchAccepted = (url: string) =>
+    fetchOnce(url).pipe(
+        Effect.timeout(REQUEST_TIMEOUT),
+        Effect.retry({ schedule: Schedule.recurs(TIMEOUT_ATTEMPTS - 1), while: Cause.isTimeoutError }),
+        Effect.catchTags({
+            HttpClientError: () => Effect.succeed(INDETERMINATE),
+            SchemaError: () => Effect.succeed(INDETERMINATE),
+            TimeoutError: () => Effect.succeed(INDETERMINATE),
+        })
+    );
 
 export interface MerchantImageRequest {
     domain: string | null;
@@ -68,10 +79,35 @@ export interface MerchantImageRequest {
     refresh?: boolean;
 }
 
-export async function fetchMerchantImage(
-    request: MerchantImageRequest,
-    fetchImpl: typeof fetch = fetch
-): Promise<LogoOutcome> {
+/** No App Store tier: Apple's Search API terms allow app icons only on pages promoting that store content. */
+const resolveMerchantImage = Effect.fn("LogoFetch.resolveMerchantImage")(function* resolveMerchantImage(
+    request: MerchantImageRequest
+) {
+    const { domain } = request;
+    if (domain == null || domain.length === 0) {
+        return INDETERMINATE;
+    }
+
+    let definitive = true;
+    const token = ENV.EXPO_PUBLIC_LOGO_DEV_TOKEN;
+    if (token) {
+        const branded = yield* fetchAccepted(logoDevUrl(domain, token));
+        if (branded.kind === "logo") {
+            return branded;
+        }
+        ({ definitive } = branded);
+    }
+
+    const favicon = yield* fetchAccepted(faviconUrl(domain));
+    if (favicon.kind === "logo") {
+        return favicon;
+    }
+    return definitive && favicon.definitive ? REFUSED : INDETERMINATE;
+});
+
+export const fetchMerchantImage = Effect.fn("LogoFetch.fetchMerchantImage")(function* fetchMerchantImage(
+    request: MerchantImageRequest
+) {
     // Required lazily so importing this module does not pull expo-file-system into every consumer's graph.
     let cache: typeof import("@/lib/logo-cache") | null = null;
     try {
@@ -81,11 +117,11 @@ export async function fetchMerchantImage(
         cache = null;
     }
     const key = cache?.logoCacheKey(request.name.trim(), request.domain) ?? "";
-    const cached = (await cache?.readCachedLogo(key)) ?? {
+    const cached = (yield* Effect.promise(async () => await cache?.readCachedLogo(key))) ?? {
         kind: "unknown" as const,
     };
     if (cached.kind === "logo") {
-        return { bytes: cached.bytes, kind: "logo" };
+        return { bytes: cached.bytes, kind: "logo" } satisfies LogoOutcome;
     }
     if (cached.kind === "miss" && request.refresh !== true) {
         return NONE;
@@ -96,37 +132,13 @@ export async function fetchMerchantImage(
     if (request.domain == null || request.domain.length === 0) {
         return NONE;
     }
-    const outcome = await resolveMerchantImage(request, fetchImpl);
+    const outcome = yield* resolveMerchantImage(request);
     if (outcome.kind === "logo") {
         cache?.writeCachedLogo(key, outcome.bytes);
-        return outcome;
+        return outcome satisfies LogoOutcome;
     }
     if (outcome.definitive) {
         cache?.writeCachedLogo(key, null);
     }
     return NONE;
-}
-
-/** No App Store tier: Apple's Search API terms allow app icons only on pages promoting that store content. */
-async function resolveMerchantImage(request: MerchantImageRequest, fetchImpl: typeof fetch): Promise<TierOutcome> {
-    const { domain } = request;
-    if (domain == null || domain.length === 0) {
-        return INDETERMINATE;
-    }
-
-    let definitive = true;
-    const token = ENV.EXPO_PUBLIC_LOGO_DEV_TOKEN;
-    if (token) {
-        const branded = await fetchAccepted(logoDevUrl(domain, token), fetchImpl);
-        if (branded.kind === "logo") {
-            return branded;
-        }
-        ({ definitive } = branded);
-    }
-
-    const favicon = await fetchAccepted(faviconUrl(domain), fetchImpl);
-    if (favicon.kind === "logo") {
-        return favicon;
-    }
-    return definitive && favicon.definitive ? REFUSED : INDETERMINATE;
-}
+});

@@ -1,5 +1,6 @@
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as HttpClient from "effect/http/HttpClient";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
@@ -32,17 +33,20 @@ export class EnrichmentSyncError extends Schema.TaggedError<EnrichmentSyncError>
 
 export const EnrichmentResults = Context.Reference<{
     readonly ack: (localIds: string[]) => Effect.Effect<null, CloudError>;
-    readonly apply: (db: Database, job: AnsweredJob) => Effect.Effect<void, unknown>;
+    readonly apply: (db: Database, job: AnsweredJob) => Effect.Effect<void, unknown, HttpClient.HttpClient>;
     readonly watch: Watch<AnsweredJob[]>;
 }>("outlayr/lib/EnrichmentSync/EnrichmentResults", {
     defaultValue: () => ({
         ack: (localIds) => enrichmentQueueTransport().ack(localIds),
-        apply: (db, job) =>
-            applyEnrichmentAnswer(db, job, {
+        apply: Effect.fn("EnrichmentResults.apply")(function* apply(db, job) {
+            const http = yield* HttpClient.HttpClient;
+            return yield* applyEnrichmentAnswer(db, job, {
                 discard: discardLogo,
-                fetchImage: fetchMerchantImage,
+                fetchImage: (request) =>
+                    fetchMerchantImage(request).pipe(Effect.provideService(HttpClient.HttpClient, http)),
                 persist: persistLogo,
-            }),
+            });
+        }),
         watch: watchEnrichmentResults,
     }),
 });
@@ -60,6 +64,7 @@ const warn = (error: EnrichmentSyncError) => Effect.logWarning(error.message, er
 export const make = Effect.gen(function* make() {
     const results = yield* EnrichmentResults;
     const watchAppState = yield* WatchAppState;
+    const http = yield* HttpClient.HttpClient;
 
     const run = Effect.fn("EnrichmentSync.run")(function* run(db: Database) {
         const settle = (jobs: AnsweredJob[]) =>
@@ -69,7 +74,11 @@ export const make = Effect.gen(function* make() {
                 jobs.map((job) =>
                     results
                         .apply(db, job)
-                        .pipe(Effect.mapError(failedAt("apply")), Effect.catchTags({ EnrichmentSyncError: warn }))
+                        .pipe(
+                            Effect.provideService(HttpClient.HttpClient, http),
+                            Effect.mapError(failedAt("apply")),
+                            Effect.catchTags({ EnrichmentSyncError: warn })
+                        )
                 ),
                 { discard: true }
             ).pipe(

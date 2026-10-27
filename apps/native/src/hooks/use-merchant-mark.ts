@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import { reviewEntryIdentity } from "@/domain/import-review-identity";
 import { cachedLogoUri, logoCacheKey } from "@/lib/logo-cache";
-import { fetchMerchantImage } from "@/lib/logo-fetch";
+import { fetchMerchantLogo } from "@/state/capture-commands";
 
 // Null for good when there is no mark: the caller shows nothing, never a placeholder.
 export function useMerchantMark(name: string | null, spokenDomain: string | null = null): string | null {
@@ -15,7 +15,7 @@ export function useMerchantMark(name: string | null, spokenDomain: string | null
             return;
         }
         let cancelled = false;
-        fetchMerchantImage({ domain, name: domain })
+        fetchMerchantLogo({ domain, name: domain })
             .catch(() => null)
             .then(() => {
                 if (!cancelled) {

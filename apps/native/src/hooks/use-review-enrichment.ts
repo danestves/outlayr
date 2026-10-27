@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import type { ImportEntry } from "@/data/transfer-core";
 import { reviewEntryIdentity } from "@/domain/import-review-identity";
 import { cachedLogoUri, logoCacheKey } from "@/lib/logo-cache";
-import { fetchMerchantImage } from "@/lib/logo-fetch";
+import { fetchMerchantLogo } from "@/state/capture-commands";
 
 export interface ReviewEnrichment {
     displayName: string;
@@ -73,7 +73,7 @@ export function useReviewEnrichment(entries: readonly ImportEntry[]): ReadonlyMa
                 }
                 const [key, request] = item;
                 // oxlint-disable-next-line no-await-in-loop -- this loop IS the concurrency limit: FETCH_BATCH workers drain one shared queue, so each must finish its fetch before taking the next domain
-                await fetchMerchantImage(request).catch(() => null);
+                await fetchMerchantLogo(request).catch(() => null);
                 settle(key);
                 item = queue.shift();
             }

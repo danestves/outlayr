@@ -1,3 +1,6 @@
+import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import {
     CameraType,
     launchCameraAsync,
@@ -15,9 +18,9 @@ import type { ReceiptDraft, ReceiptScanFn, ScanRequest } from "@/lib/convex";
 import { launchPick, pendingPick } from "@/lib/pending-pick";
 import type { PickOwner } from "@/lib/pending-pick";
 import { prepareReceiptImage } from "@/lib/receipt-image";
-import { withTimeout } from "@/lib/with-timeout";
-
-const REQUEST_TIMEOUT_MS = 30_000;
+import { SILENT } from "@/state/atom-command";
+import { RECEIPT_SCAN_TIMEOUT, timedCaptureCommand } from "@/state/capture-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 export type ScanFailure =
     | "denied"
@@ -48,7 +51,12 @@ type ScanPhase<Context, Draft> =
     | { context: Context; draft: Draft; image: ArrayBuffer; kind: "review"; photo: ScanPhoto }
     | { kind: "failed"; photo: ScanPhoto | null; reason: ScanFailure };
 
-type ScanSend<Draft> = (image: ArrayBuffer, today: string) => Promise<{ draft: Draft | null; status: string }>;
+interface ScanReply<Draft> {
+    draft: Draft | null;
+    status: string;
+}
+
+type ScanSend<Draft> = (image: ArrayBuffer, today: string) => Effect.Effect<ScanReply<Draft>, unknown>;
 
 interface UseImageScanArgs<Context, Draft> {
     context: Context;
@@ -118,10 +126,8 @@ export function useReceiptScan<Context>({ context, request, transport }: UseRece
     return useImageScan<Context, ReceiptDraft>({
         context,
         owner: "receipt-scan",
-        send: async (image, today) => {
-            const { receipt, status } = await api({ ...request, image, today });
-            return { draft: receipt, status };
-        },
+        send: (image, today) =>
+            api({ ...request, image, today }).pipe(Effect.map(({ receipt, status }) => ({ draft: receipt, status }))),
     });
 }
 
@@ -132,7 +138,18 @@ export function useImageScan<Context, Draft>({
 }: UseImageScanArgs<Context, Draft>): UseImageScanResult<Context, Draft> {
     const [phase, setPhase] = useState<ScanPhase<Context, Draft>>({ kind: "idle" });
     const takeRef = useRef(0);
+    const scanAbortRef = useRef<AbortController | null>(null);
+    const [scanCommand] = useState(() =>
+        timedCaptureCommand<ScanReply<Draft>>({ operation: "scan", timeout: RECEIPT_SCAN_TIMEOUT })
+    );
+    const runScan = useAtomCommand(scanCommand, SILENT);
     const sentRef = useRef({ context, send });
+    const supersedeTake = () => {
+        takeRef.current += 1;
+        scanAbortRef.current?.abort();
+        scanAbortRef.current = null;
+        return takeRef.current;
+    };
     useEffect(() => {
         sentRef.current = { context, send };
     });
@@ -153,28 +170,27 @@ export function useImageScan<Context, Draft>({
             return;
         }
         const { context: sentContext, send: sent } = sentRef.current;
-        let settled: Awaited<ReturnType<typeof sent>> | "timeout";
-        try {
-            settled = await withTimeout(
-                sent(prepared.bytes, localIsoDate(new Date())),
-                REQUEST_TIMEOUT_MS,
-                "timeout" as const
-            );
-        } catch {
-            if (take === takeRef.current) {
-                setPhase({ kind: "failed", photo, reason: "offline" });
-            }
-            return;
-        }
+        const { bytes } = prepared;
+        const controller = new AbortController();
+        scanAbortRef.current = controller;
+        const result = await runScan({
+            call: sent(bytes, localIsoDate(new Date())),
+            signal: controller.signal,
+        });
         if (take !== takeRef.current) {
             return;
         }
-        if (settled === "timeout") {
+        if (AsyncResult.isFailure(result)) {
+            setPhase({ kind: "failed", photo, reason: "offline" });
+            return;
+        }
+        const settled = Option.getOrNull(result.value);
+        if (settled === null) {
             setPhase({ kind: "failed", photo, reason: "timeout" });
             return;
         }
         if (settled.status === "ok" && settled.draft !== null) {
-            setPhase({ context: sentContext, draft: settled.draft, image: prepared.bytes, kind: "review", photo });
+            setPhase({ context: sentContext, draft: settled.draft, image: bytes, kind: "review", photo });
             return;
         }
         setPhase({ kind: "failed", photo, reason: failureFor(settled.status) });
@@ -206,8 +222,7 @@ export function useImageScan<Context, Draft>({
     }, [owner]);
 
     const takePhoto = () => {
-        takeRef.current += 1;
-        const take = takeRef.current;
+        const take = supersedeTake();
         setPhase({ kind: "picking", source: "camera" });
         void (async () => {
             let permission: Awaited<ReturnType<typeof requestCameraPermissionsAsync>>;
@@ -245,8 +260,7 @@ export function useImageScan<Context, Draft>({
     };
 
     const chooseFromLibrary = () => {
-        takeRef.current += 1;
-        const take = takeRef.current;
+        const take = supersedeTake();
         setPhase({ kind: "picking", source: "library" });
         void (async () => {
             try {
@@ -260,8 +274,7 @@ export function useImageScan<Context, Draft>({
     };
 
     const scan = (photo: ScanPhoto) => {
-        takeRef.current += 1;
-        void read(photo, takeRef.current);
+        void read(photo, supersedeTake());
     };
 
     const retry = () => {
@@ -271,13 +284,14 @@ export function useImageScan<Context, Draft>({
     };
 
     const reset = () => {
-        takeRef.current += 1;
+        supersedeTake();
         setPhase({ kind: "idle" });
     };
 
+    const endScans = useEffectEvent(() => supersedeTake());
     useEffect(
         () => () => {
-            takeRef.current += 1;
+            endScans();
         },
         []
     );
