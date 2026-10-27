@@ -39,6 +39,7 @@
         "@content-collections/core": "0.15.2",
         "@content-collections/vite": "^0.3.1",
         "@outlayr/config": "workspace:*",
+        "@tanstack/redact": "0.2.0",
         "@types/react": "^19.2.18",
         "@types/react-dom": "^19.2.7",
         "@varlock/vite-integration": "1.5.4",

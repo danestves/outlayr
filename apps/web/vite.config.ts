@@ -1,6 +1,7 @@
 import contentCollections from "@content-collections/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import { redact } from "@tanstack/redact/vite";
 import { varlockVitePlugin } from "@varlock/vite-integration";
 import viteReact from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
@@ -54,6 +55,7 @@ export default defineConfig({
             routes: { "/assets/**": "./src/server/missing-asset.ts" },
         }),
         viteReact(),
+        redact(),
     ],
     resolve: {
         tsconfigPaths: true,
@@ -62,6 +64,9 @@ export default defineConfig({
         port: 3001,
     },
     ssr: {
-        noExternal: ["@convex-dev/better-auth"],
+        // Redact can only swap the React imports of server dependencies Vite bundles.
+        noExternal: true,
+        // CommonJS without React, which the dev SSR module runner cannot evaluate inline.
+        external: ["@opentelemetry/semantic-conventions", "partial-json"],
     },
 });
