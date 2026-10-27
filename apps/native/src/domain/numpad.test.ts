@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 
-import { applyNumpadKey, numberToNumpad, numpadMode, numpadToNumber } from "./numpad";
+import { applyNumpadKey, numberToNumpad, numpadMode, numpadToNumber, wholeUnitsToNumpad } from "./numpad";
 import type { NumpadKey, NumpadMode } from "./numpad";
 
 function type(keys: string, minorUnits = 2, from = "", mode: NumpadMode = "explicitSeparator"): string {
@@ -176,5 +176,18 @@ describe("numberToNumpad", () => {
         ] as const) {
             expect(numpadToNumber(numberToNumpad(amount, minorUnits))).toBe(Number(amount.toFixed(minorUnits)));
         }
+    });
+});
+
+describe("wholeUnitsToNumpad", () => {
+    it("seeds an entry the separator keypad still accepts digits on", () => {
+        const mode = numpadMode(2);
+        expect(applyNumpadKey(numberToNumpad(22.37, 2), "5", 2, mode)).toBe("22.37");
+        expect(applyNumpadKey(wholeUnitsToNumpad(22.37), "5", 2, mode)).toBe("225");
+    });
+
+    it("leaves no entry for a zero or negative amount", () => {
+        expect(wholeUnitsToNumpad(0)).toBe("");
+        expect(wholeUnitsToNumpad(0.4)).toBe("");
     });
 });

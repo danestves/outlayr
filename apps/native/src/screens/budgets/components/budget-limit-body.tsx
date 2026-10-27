@@ -21,7 +21,7 @@ import { budgetPeriodCadence, budgetPeriodName, budgetWindowLabel } from "@/doma
 import { typicalSpend } from "@/domain/budget-typical";
 import { monthLongTitle } from "@/domain/dates";
 import { formatAmount, minorUnitsFor } from "@/domain/money";
-import { numberToNumpad, numpadToNumber } from "@/domain/numpad";
+import { numpadToNumber, wholeUnitsToNumpad } from "@/domain/numpad";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { useHaptics } from "@/lib/use-haptics";
 
@@ -115,7 +115,7 @@ export function BudgetLimitBody({
         () => target.limit ?? evidence.typical ?? suggestedLimit(burndown.points.at(-1)?.spent ?? 0)
     );
     const [limit, setLimit] = useState(opening);
-    const [entry, setEntry] = useState(() => numberToNumpad(opening, minorUnits));
+    const [entry, setEntry] = useState(() => wholeUnitsToNumpad(opening));
 
     /**
      * Guards a write in flight: `mainBudget` has no singleton constraint, so a double tap would insert two.
@@ -145,7 +145,7 @@ export function BudgetLimitBody({
 
     const dragLimit = (next: number) => {
         setLimit(next);
-        setEntry(numberToNumpad(next, minorUnits));
+        setEntry(wholeUnitsToNumpad(next));
     };
 
     const periodPhrase = t(budgetPeriodCadence(type));
