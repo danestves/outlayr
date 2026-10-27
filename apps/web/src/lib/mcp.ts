@@ -1,6 +1,9 @@
 import { toolDefinition } from "@tanstack/ai";
 import { createMCPServer, resourceDefinition } from "@tanstack/ai-mcp/server";
-import { z } from "zod";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
+import * as SchemaRepresentation from "effect/SchemaRepresentation";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 import llms from "../../public/llms.txt?raw";
 import { PER_YEAR, installmentCost, settleUp, splitBudget, subscriptionCost } from "./calculators";
@@ -39,17 +42,33 @@ const aboutOutlayr = toolDefinition({
 
 const toCents = (amount: number) => Math.round(amount * 100);
 const fromCents = (cents: number) => cents / 100;
-const Amount = z.number().min(0).max(1e12);
+const Amount = Schema.Finite.check(Schema.isBetween({ maximum: 1e12, minimum: 0 }));
 const UNITS = "Amounts are in currency units and come back rounded to cents.";
 
-function calculator<S extends z.ZodType>(
+const withDefault = <A extends string | number>(schema: Schema.Codec<A>, value: A) =>
+    schema.annotate({ default: value }).pipe(Schema.withDecodingDefaultKey(Effect.succeed(value)));
+
+const TrimmedName = Schema.String.check(
+    Schema.makeFilter(
+        (name: string) => {
+            const { length } = [...name.trim()];
+            return length >= 1 && length <= 100;
+        },
+        { expected: "a name of 1 to 100 characters", toJsonSchema: () => ({ maxLength: 100, minLength: 1 }) }
+    )
+).pipe(Schema.decodeTo(Schema.String, SchemaTransformation.trim()));
+
+function calculator<S extends Schema.ConstraintDecoder<unknown>>(
     { title, ...tool }: { description: string; name: string; title: string },
-    inputSchema: S,
-    run: (args: z.output<S>) => object
+    input: S,
+    run: (args: S["Type"]) => object
 ) {
-    return toolDefinition({ ...tool, inputSchema, metadata: { annotations: READ_ONLY, title } }).server((input) =>
-        run(inputSchema.parse(input))
-    );
+    const decode = Schema.decodeUnknownSync(input, { errors: "all" });
+    return toolDefinition({
+        ...tool,
+        inputSchema: SchemaRepresentation.toJsonSchemaDocument(Schema.toRepresentation(input)).schema,
+        metadata: { annotations: READ_ONLY, title },
+    }).server((args) => run(decode(args)));
 }
 
 const CALCULATORS = [
@@ -59,10 +78,15 @@ const CALCULATORS = [
             name: "budget_split",
             title: "50/30/20 budget calculator",
         },
-        z.object({
-            every: z.enum(["week", "twoWeeks", "month", "year"]).default("month").describe("How often the pay arrives"),
-            income: Amount.describe("Take home pay, after taxes"),
-            split: z.enum(["50-30-20", "60-20-20", "70-20-10"]).default("50-30-20"),
+        Schema.Struct({
+            every: withDefault(
+                Schema.Literals(["week", "twoWeeks", "month", "year"]).annotate({
+                    description: "How often the pay arrives",
+                }),
+                "month"
+            ),
+            income: Amount.annotate({ description: "Take home pay, after taxes" }),
+            split: withDefault(Schema.Literals(["50-30-20", "60-20-20", "70-20-10"]), "50-30-20"),
         }),
         ({ every, income, split }) => {
             const yearly = toCents(income) * PER_YEAR[every];
@@ -79,17 +103,14 @@ const CALCULATORS = [
             name: "subscription_cost",
             title: "Subscription cost calculator",
         },
-        z.object({
-            subscriptions: z
-                .array(
-                    z.object({
-                        every: z.enum(["week", "month", "quarter", "year"]).default("month"),
-                        name: z.string().max(100).optional(),
-                        price: Amount,
-                    })
-                )
-                .min(1)
-                .max(100),
+        Schema.Struct({
+            subscriptions: Schema.Array(
+                Schema.Struct({
+                    every: withDefault(Schema.Literals(["week", "month", "quarter", "year"]), "month"),
+                    name: Schema.optionalKey(Schema.String.check(Schema.isMaxCodePoints(100))),
+                    price: Amount,
+                })
+            ).check(Schema.isMinLength(1), Schema.isMaxLength(100)),
         }),
         ({ subscriptions }) => {
             const cost = subscriptionCost(
@@ -111,12 +132,14 @@ const CALCULATORS = [
             name: "installment_cost",
             title: "Installment calculator",
         },
-        z.object({
-            cashPrice: Amount.describe("What the item costs paid in full today"),
+        Schema.Struct({
+            cashPrice: Amount.annotate({ description: "What the item costs paid in full today" }),
             eachPayment: Amount,
-            every: z.enum(["week", "twoWeeks", "month"]).default("month"),
-            paidToday: Amount.default(0),
-            payments: z.int().min(1).max(600).describe("Number of payments after today"),
+            every: withDefault(Schema.Literals(["week", "twoWeeks", "month"]), "month"),
+            paidToday: withDefault(Amount, 0),
+            payments: Schema.Int.check(Schema.isBetween({ maximum: 600, minimum: 1 })).annotate({
+                description: "Number of payments after today",
+            }),
         }),
         ({ cashPrice, eachPayment, every, paidToday, payments }) => {
             const cost = installmentCost({
@@ -140,15 +163,18 @@ const CALCULATORS = [
             name: "split_expenses",
             title: "Split expenses calculator",
         },
-        z.object({
-            people: z
-                .array(z.object({ name: z.string().trim().min(1).max(100), paid: Amount }))
-                .min(2)
-                .max(100)
-                .refine((people) => new Set(people.map(({ name }) => name.toLowerCase())).size === people.length, {
-                    message: "Each person needs a different name",
-                })
-                .describe("Everyone in the group, each with a different name"),
+        Schema.Struct({
+            people: Schema.Array(Schema.Struct({ name: TrimmedName, paid: Amount }))
+                .annotate({ description: "Everyone in the group, each with a different name" })
+                .check(
+                    Schema.isMinLength(2),
+                    Schema.isMaxLength(100),
+                    Schema.makeFilter(
+                        (people) =>
+                            new Set(people.map(({ name }) => name.toLowerCase())).size === people.length ||
+                            "Each person needs a different name"
+                    )
+                ),
         }),
         ({ people }) => {
             const { share, total, transfers } = settleUp(people.map((person) => toCents(person.paid)));

@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { z } from "zod";
+import * as Schema from "effect/Schema";
 
 import { SignInFlow } from "@/components/account/sign-in-flow";
 import { safeRedirect } from "@/lib/account";
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_account/login")({
     },
     component: Login,
     head: () => ({ meta: [{ title: "Sign in · Outlayr" }] }),
-    validateSearch: z.object({ redirect: z.string().optional() }),
+    validateSearch: Schema.toStandardSchemaV1(Schema.Struct({ redirect: Schema.optional(Schema.String) })),
 });
 
 function Login() {
