@@ -1,6 +1,7 @@
 import { useAtomValue } from "@effect/atom-react/Hooks";
 import { startOfDay } from "@outlayr/money/calendar";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as Atom from "effect/reactivity/Atom";
 import { Image } from "expo-image";
@@ -9,7 +10,7 @@ import { Button } from "panelui-native/components/button";
 import { Shimmer } from "panelui-native/components/shimmer";
 import { use, useEffect, useState } from "react";
 import type React from "react";
-import { Linking, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import Animated, {
     FadeIn,
     FadeOut,
@@ -31,13 +32,15 @@ import { ModalClose } from "@/components/modal-close";
 import { VoiceOrb } from "@/components/voice/voice-orb";
 import type { VoiceOrbState } from "@/components/voice/voice-orb";
 import { useDatabase } from "@/contexts/local-data-context";
-import { getAccountById, getLastUsedAccount } from "@/data/accounts-core";
+import { getAccountById, getLastUsedAccount, rememberLastUsedAccount } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { suggestedCardFee } from "@/data/card-fees-core";
 import { getCategoryById } from "@/data/categories-core";
+import { backfillRecurring } from "@/data/recurrence-backfill";
 import { useAiConsent } from "@/data/settings";
-import { lastLoggedEntry } from "@/data/transactions-core";
+import { lastLoggedEntry, transactionsRepo } from "@/data/transactions-core";
 import type { TransactionInput } from "@/data/transactions-core";
+import { transfersRepo } from "@/data/transfers-core";
 import type { Database } from "@/db/client";
 import type { AuthGate } from "@/domain/auth-gate";
 import { formatChargeDate } from "@/domain/dates";
@@ -73,11 +76,10 @@ import { useAuthSession } from "@/lib/auth-session";
 import type { VoiceDraft, VoiceQuote } from "@/lib/convex";
 import { freshEntries } from "@/lib/fresh-entries";
 import { posthog } from "@/lib/posthog";
+import { syncSubscriptionReminders } from "@/lib/subscription-reminder-sync";
 import { useHaptics } from "@/lib/use-haptics";
-import { createTransferCommand, rememberLastUsedAccountCommand } from "@/state/accounts-commands";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import { backfillRecurringCommand, createTransactionCommand } from "@/state/ledger-commands";
-import { syncSubscriptionRemindersCommand } from "@/state/surfaces-commands";
+import { openAppSettings, runEntryFlow, voidFlowCommand } from "@/state/entry-commands";
+import { logged } from "@/state/entry-save";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
@@ -595,15 +597,91 @@ function voiceEntry(db: Database, draft: ResolvedVoiceEntry, categoryId: string)
     };
 }
 
+interface WriteDone {
+    onFailed: () => void;
+    onSaved: () => void;
+}
+
+const writeEntry = Effect.fn("VoiceThread.writeEntry")(function* writeEntry(
+    db: Database,
+    draft: ResolvedVoiceEntry,
+    categoryId: string,
+    done: WriteDone
+) {
+    const created = yield* Effect.suspend(() =>
+        transactionsRepo.create(db, voiceEntry(db, draft, categoryId), { inSameTransaction: undefined })
+    ).pipe(Effect.exit);
+    if (Exit.isFailure(created)) {
+        // The row did not land; the form has the failure strip this screen lacks.
+        done.onFailed();
+        return;
+    }
+    const id = created.value;
+    freshEntries.mark(id);
+    posthog?.capture("transaction_saved", {
+        has_split: false,
+        is_subscription: draft.recurrence !== null,
+        mode: "create",
+        source: "voice",
+        transaction_type: draft.income ? "income" : "expense",
+    });
+    // The row is committed: nothing below may reopen a form that would write it twice.
+    if (draft.recurrence) {
+        // As the form does after its own save: past charges land now.
+        yield* logged("Failed to back-fill the spoken subscription")(backfillRecurring(db, id));
+        // Scheduled now: the next resume may come after the due date.
+        yield* Effect.forkDetach(logged("Failed to sync subscription reminders")(syncSubscriptionReminders(db)));
+    }
+    if (draft.accountId) {
+        yield* logged("Failed to remember the account")(rememberLastUsedAccount(db, draft.accountId));
+    }
+    done.onSaved();
+});
+
+/** Same-currency legs only (`savableTransfer`): rate 1, no fee. */
+const writeTransfer = Effect.fn("VoiceThread.writeTransfer")(function* writeTransfer(
+    db: Database,
+    draft: ResolvedVoiceTransfer,
+    from: { id: string },
+    to: { id: string },
+    done: WriteDone
+) {
+    const created = yield* transfersRepo
+        .create(db, {
+            date: draft.date,
+            exchangeRate: 1,
+            exchangeRateType: null,
+            fromAccountId: from.id,
+            fromAmount: draft.amount,
+            fromCurrency: draft.currency,
+            note: draft.details ?? "",
+            toAccountId: to.id,
+            toAmount: draft.amount,
+            toCurrency: draft.currency,
+        })
+        .pipe(Effect.exit);
+    if (Exit.isFailure(created)) {
+        done.onFailed();
+        return;
+    }
+    freshEntries.mark(created.value);
+    posthog?.capture("transfer_saved", {
+        cross_currency: false,
+        has_fee: false,
+        mode: "create",
+        source: "voice",
+    });
+    done.onSaved();
+});
+
 function openSettings() {
-    Linking.openSettings().catch(() => undefined);
+    void runEntryFlow(openAppSettings);
 }
 
 function VoiceThreadScreen() {
     const router = useRouter();
     const db = useDatabase();
-    const rememberLastUsed = useAtomCommand(rememberLastUsedAccountCommand, SILENT);
-    const createTransfer = useAtomCommand(createTransferCommand, SILENT);
+    const runFlow = useAtomCommand(voidFlowCommand);
     const t = useTranslation();
     const haptics = useHaptics();
     const { language } = useLanguage();
@@ -611,9 +689,6 @@ function VoiceThreadScreen() {
     const { accounts, bounded, context, live } = usePromptLedger(db, currency);
     const [saving, setSaving] = useState(false);
     const navigation = useNavigation();
-    const createTransaction = useAtomCommand(createTransactionCommand, SILENT);
-    const backfillRecurring = useAtomCommand(backfillRecurringCommand, SILENT);
-    const syncSubscriptionReminders = useAtomCommand(syncSubscriptionRemindersCommand, SILENT);
 
     const request = {
         accounts: bounded.accounts,
@@ -687,99 +762,42 @@ function VoiceThreadScreen() {
         router.replace({ params, pathname: "/transactions/transfers/create" });
     };
 
-    const save = (draft: ResolvedVoiceEntry, categoryId: string) => {
-        setSaving(true);
-        const write = async () => {
-            let id: string;
-            try {
-                id = unwrapAtomCommand(await createTransaction({ db, entry: voiceEntry(db, draft, categoryId) }));
-            } catch {
-                // The row did not land; the form has the failure strip this screen lacks.
-                setSaving(false);
-                if (navigation.isFocused()) {
-                    openForm(draft);
-                }
-                return;
-            }
-            freshEntries.mark(id);
-            posthog?.capture("transaction_saved", {
-                has_split: false,
-                is_subscription: draft.recurrence !== null,
-                mode: "create",
-                source: "voice",
-                transaction_type: draft.income ? "income" : "expense",
-            });
-            // The row is committed: nothing below may reopen a form that would write it twice.
-            if (draft.recurrence) {
-                try {
-                    // As the form does after its own save: past charges land now.
-                    unwrapAtomCommand(await backfillRecurring({ db, id }));
-                } catch (error) {
-                    console.error("Failed to back-fill the spoken subscription", error);
-                }
-                // Scheduled now: the next resume may come after the due date.
-                syncSubscriptionReminders(db)
-                    .then(unwrapAtomCommand)
-                    .catch((error) => {
-                        console.error("Failed to sync subscription reminders", error);
-                    });
-            }
-            if (draft.accountId) {
-                await rememberLastUsed({ db, id: draft.accountId });
-            }
-            haptics("success");
-            // A modal gesture can dismiss this mid-write; popping again would take the screen beneath.
-            if (navigation.isFocused()) {
-                router.back();
-            }
-        };
-        void write();
+    const finishSaving = () => {
+        haptics("success");
+        // A modal gesture can dismiss this mid-write; popping again would take the screen beneath.
+        if (navigation.isFocused()) {
+            router.back();
+        }
     };
 
-    /** Same-currency legs only (`savableTransfer`): rate 1, no fee. */
+    const save = (draft: ResolvedVoiceEntry, categoryId: string) => {
+        setSaving(true);
+        void runFlow(
+            writeEntry(db, draft, categoryId, {
+                onFailed: () => {
+                    setSaving(false);
+                    if (navigation.isFocused()) {
+                        openForm(draft);
+                    }
+                },
+                onSaved: finishSaving,
+            })
+        );
+    };
+
     const saveTransfer = (draft: ResolvedVoiceTransfer, from: { id: string }, to: { id: string }) => {
         setSaving(true);
-        const note = draft.details ?? "";
-        const write = async () => {
-            try {
-                const transferId = unwrapAtomCommand(
-                    await createTransfer({
-                        db,
-                        input: {
-                            date: draft.date,
-                            exchangeRate: 1,
-                            exchangeRateType: null,
-                            fromAccountId: from.id,
-                            fromAmount: draft.amount,
-                            fromCurrency: draft.currency,
-                            note,
-                            toAccountId: to.id,
-                            toAmount: draft.amount,
-                            toCurrency: draft.currency,
-                        },
-                    })
-                );
-                freshEntries.mark(transferId);
-            } catch {
-                setSaving(false);
-                if (navigation.isFocused()) {
-                    openTransferForm(draft);
-                }
-                return;
-            }
-            posthog?.capture("transfer_saved", {
-                cross_currency: false,
-                has_fee: false,
-                mode: "create",
-                source: "voice",
-            });
-            haptics("success");
-            // A modal gesture can dismiss this mid-write; popping again would take the screen beneath.
-            if (navigation.isFocused()) {
-                router.back();
-            }
-        };
-        void write();
+        void runFlow(
+            writeTransfer(db, draft, from, to, {
+                onFailed: () => {
+                    setSaving(false);
+                    if (navigation.isFocused()) {
+                        openTransferForm(draft);
+                    }
+                },
+                onSaved: finishSaving,
+            })
+        );
     };
 
     const seePro = () => {

@@ -4,7 +4,6 @@ import { ENTRY_RATE_TYPES } from "@outlayr/money/rates";
 import type { EntryRateType } from "@outlayr/money/rates";
 import { ensureRecurringType, RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { useField, useForm, useSelector } from "@tanstack/react-form";
-import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useRouter } from "expo-router";
@@ -39,19 +38,19 @@ import { getAccountById, getLastUsedAccount } from "@/data/accounts-core";
 import type { Account } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
 import type { AttachmentDraft } from "@/data/attachments-core";
-import { cardFeeFor, recentPaidVia } from "@/data/card-fees-core";
+import { cardFeeFor, recentPaidVia, rememberFeeCategory } from "@/data/card-fees-core";
 import type { CardFeeInput } from "@/data/card-fees-core";
 import { useCategoriesByNamespace } from "@/data/categories";
 import { getCategoryById } from "@/data/categories-core";
 import type { Category } from "@/data/categories-core";
 import { useFavouriteCurrencies } from "@/data/favourite-currencies";
 import { useRatesRead } from "@/data/live-query";
+import { recallMerchant } from "@/data/merchant-book-core";
 import { useRecentMerchants } from "@/data/merchant-history";
+import { rememberedCategoryFor } from "@/data/merchant-history-core";
 import { remoteEnrichmentOn } from "@/data/settings-core";
 import { useTagIdsFor, useTags } from "@/data/tags";
-import { tagIdsForQuery } from "@/data/tags-core";
 import { transactionRateSuggestions } from "@/data/transaction-entry-rates";
-import { getTransactionById } from "@/data/transactions-core";
 import type { Transaction, TransactionInput } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 import { rowAmountLabel } from "@/domain/amount-label";
@@ -68,7 +67,6 @@ import { isPaidVia, PAID_VIA, paidViaCharge, paidViaFee, rememberedPaidVia } fro
 import type { PaidVia } from "@/domain/paid-via";
 import { rateAge } from "@/domain/rate-age";
 import type { RateAge } from "@/domain/rate-age";
-import { enableReminderStep } from "@/domain/reminder";
 import { isBalanced } from "@/domain/split";
 import type { Allocation } from "@/domain/split";
 import { isRealSplit } from "@/domain/split-draft";
@@ -109,33 +107,11 @@ import { useTransactionEnrichment } from "@/hooks/use-transaction-enrichment";
 import type { EnrichmentSuggestion, PendingCategory } from "@/hooks/use-transaction-enrichment";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { celebration } from "@/lib/celebration";
-import { freshEntries } from "@/lib/fresh-entries";
 import { notifyFailure, notifySaved } from "@/lib/notify";
-import { posthog } from "@/lib/posthog";
 import { openNotificationSettings } from "@/lib/reminders";
 import { useHaptics } from "@/lib/use-haptics";
-import { rememberLastUsedAccountCommand } from "@/state/accounts-commands";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import { fetchMerchantLogo } from "@/state/capture-commands";
-import {
-    backfillRecurringCommand,
-    carryMerchantLookupCommand,
-    ensureTagCommand,
-    queueEnrichmentCommand,
-    sendEnrichmentQueueCommand,
-    recallMerchantCommand,
-    rememberedCategoryCommand,
-    rememberFeeCategoryCommand,
-} from "@/state/ledger-commands";
-import { glowFromImageCommand, persistLogoBytesCommand, runMediaCommand } from "@/state/media-commands";
-import { setBoolSettingCommand } from "@/state/settings-commands";
-import {
-    askForReviewCommand,
-    reminderPermissionCommand,
-    requestReminderPermissionCommand,
-    syncSubscriptionRemindersCommand,
-} from "@/state/surfaces-commands";
-import { PendingCategoryError, saveTransactionCommand } from "@/state/transaction-save-command";
+import { voidAppFlowCommand } from "@/state/entry-commands";
+import { logged } from "@/state/entry-save";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { glowFromEmoji } from "@/theme/glow";
 import { useColors } from "@/theme/use-colors";
@@ -154,6 +130,7 @@ import { ThinkingOrb } from "../thinking-orb/thinking-orb";
 import { TransactionFormAmountPad } from "./amount-pad";
 import { AttachmentStrip } from "./attachment-strip";
 import { TransactionFormCta } from "./cta";
+import { attachMerchantLogo, carryLookup, confirmRemindersAllowed, createTagEntry, saveEntry } from "./entry-flows";
 import { FormScroll, FormScrollItem, FormScrollStageTarget } from "./form-scroll";
 import { FeeTotal } from "./sentence/fee-total";
 import { TransactionSentenceBody } from "./sentence/sentence-body";
@@ -513,12 +490,7 @@ export function TransactionForm({
     const resting = rest !== undefined;
     const colors = useColors();
     const haptics = useHaptics();
-    const setBoolSetting = useAtomCommand(setBoolSettingCommand, SILENT);
-    const readReminderPermission = useAtomCommand(reminderPermissionCommand, SILENT);
-    const requestReminderPermission = useAtomCommand(requestReminderPermissionCommand, SILENT);
-    const syncSubscriptionReminders = useAtomCommand(syncSubscriptionRemindersCommand, SILENT);
-    const askForReview = useAtomCommand(askForReviewCommand, SILENT);
-    const rememberLastUsed = useAtomCommand(rememberLastUsedAccountCommand, SILENT);
+    const runFlow = useAtomCommand(voidAppFlowCommand);
     const t = useTranslation();
     const { language } = useLanguage();
     const { use24Hour } = useDisplaySettings().state;
@@ -544,15 +516,6 @@ export function TransactionForm({
     const { pickerOpen, setPickerOpen } = useIdentityFlyUp();
     const identityReads = useIdentityReads();
     const [saveFailure, setSaveFailure] = useState<string | null>(null);
-    const saveTransaction = useAtomCommand(saveTransactionCommand, SILENT);
-    const backfillRecurring = useAtomCommand(backfillRecurringCommand, SILENT);
-    const queueEnrichment = useAtomCommand(queueEnrichmentCommand, SILENT);
-    const sendQueuedEnrichment = useAtomCommand(sendEnrichmentQueueCommand, SILENT);
-    const ensureTag = useAtomCommand(ensureTagCommand, SILENT);
-    const rememberFeeCategory = useAtomCommand(rememberFeeCategoryCommand, SILENT);
-    const rememberedCategory = useAtomCommand(rememberedCategoryCommand, SILENT);
-    const recallBookMerchantCommand = useAtomCommand(recallMerchantCommand, SILENT);
-    const carryMerchantLookup = useAtomCommand(carryMerchantLookupCommand, SILENT);
 
     // Frozen at mount: `useForm` re-applies changed `defaultValues` while untouched, and `date`/`endDate` are
     // `new Date()` here, so an inline object would re-seed both to now every render.
@@ -568,60 +531,92 @@ export function TransactionForm({
             exchangeRate: entryRateOf(value.rateEntry, value.txCurrency ?? globalCurrency),
         });
 
-    const form = useForm({
-        defaultValues: initialValues,
-        listeners: {
-            onChange: ({ formApi, fieldApi }) => {
-                if (fieldApi.name !== "income") {
-                    return;
-                }
-                formApi.setFieldValue("category", null);
-                formApi.setFieldValue("pendingCategory", null);
-                setCategorySource("initial");
+    const submitEntry = (value: typeof initialValues): Effect.Effect<boolean> | null => {
+        setSaveFailure(null);
+
+        const entryCurrency = value.txCurrency ?? globalCurrency;
+        const amount = roundToMinorUnits(numpadToNumber(value.amount), entryCurrency);
+        const refusal = saveRefusal(amount, entryCurrency);
+        if (refusal !== null) {
+            haptics("error");
+            setSaveFailure(refusal);
+            return null;
+        }
+
+        const buildEntry = (categoryId: string | null): TransactionInput => ({
+            ...buildTransactionInput({
+                accountId: value.account?.id ?? null,
+                // Rounded to the currency's units at save: switching currency mid-entry leaves the typed digits
+                // alone, so 12.34 typed in USD would show as ¥12 while the row kept 12.34.
+                amount,
+                categoryId,
+                coefficient: value.coefficient,
+                currency: value.txCurrency,
+                customColor: identity.color,
+                date: value.date,
+                details: notesRef.current,
+                emoji: identity.emoji,
+                endDate: value.endDate,
+                exchangeRate: value.exchangeRateType == null ? null : entryRateOf(value.rateEntry, entryCurrency),
+                exchangeRateType: value.exchangeRateType,
+                hasEndDate: value.hasEndDate,
+                icon: identity.icon,
+                imageColor: identity.photoColor,
+                imageUri: identity.photoUri,
+                income: value.income,
+                isSubscription: value.isSubscription,
+                leadDays: value.leadDays,
+                note: value.merchant,
+                recurringType: value.recurringType,
+            }),
+            fee: feeInputFor(value.merchant.trim() || (value.category?.name ?? ""), categoryId, amount),
+            paidVia: paysBolivares ? (value.paidVia ?? suggestedPaidVia) : null,
+        });
+        return saveEntry({
+            accountId: value.account?.id ?? null,
+            carry: (savedId) => {
+                const answered = lookupAnsweredRef.current;
+                const carriesLookup =
+                    mode === "edit" &&
+                    forcedLookupRef.current &&
+                    answered?.key === merchantKey(value.merchant) &&
+                    answered.currency === entryCurrency;
+                return carriesLookup
+                    ? carryLookupToSiblings(savedId, value.income, value.merchant, value.txCurrency)
+                    : null;
             },
-        },
-        onSubmit: async ({ value }) => {
-            setSaveFailure(null);
-
-            const entryCurrency = value.txCurrency ?? globalCurrency;
-            const amount = roundToMinorUnits(numpadToNumber(value.amount), entryCurrency);
-            const refusal = saveRefusal(amount, entryCurrency);
-            if (refusal !== null) {
+            db,
+            hasSplit: isRealSplit(splitAllocations),
+            income: value.income,
+            isSubscription: value.isSubscription,
+            mode,
+            onMissingCategory: () => flagMissingCategory(),
+            onSaveFailed: () => {
+                // Say so: un-dimming the CTA in silence reads as a missed tap. Pinned under the header, since a toast
+                // would sit under this sheet and the footer must stay pressable.
                 haptics("error");
-                setSaveFailure(refusal);
-                return;
-            }
-
-            const buildEntry = (categoryId: string | null): TransactionInput => ({
-                ...buildTransactionInput({
-                    accountId: value.account?.id ?? null,
-                    // Rounded to the currency's units at save: switching currency mid-entry leaves the typed digits
-                    // alone, so 12.34 typed in USD would show as ¥12 while the row kept 12.34.
-                    amount,
-                    categoryId,
-                    coefficient: value.coefficient,
-                    currency: value.txCurrency,
-                    customColor: identity.color,
-                    date: value.date,
-                    details: notesRef.current,
-                    emoji: identity.emoji,
-                    endDate: value.endDate,
-                    exchangeRate: value.exchangeRateType == null ? null : entryRateOf(value.rateEntry, entryCurrency),
-                    exchangeRateType: value.exchangeRateType,
-                    hasEndDate: value.hasEndDate,
-                    icon: identity.icon,
-                    imageColor: identity.photoColor,
-                    imageUri: identity.photoUri,
-                    income: value.income,
-                    isSubscription: value.isSubscription,
-                    leadDays: value.leadDays,
-                    note: value.merchant,
-                    recurringType: value.recurringType,
-                }),
-                fee: feeInputFor(value.merchant.trim() || (value.category?.name ?? ""), categoryId, amount),
-                paidVia: paysBolivares ? (value.paidVia ?? suggestedPaidVia) : null,
-            });
-            const saved = await saveTransaction({
+                setSaveFailure(t("transaction.save.failedBody"));
+            },
+            onSaved: () => {
+                haptics("success");
+                if (mode === "create") {
+                    announceSaved(value, amount);
+                }
+                onDone();
+                return mode === "create" && !installmentOrder.afterDone();
+            },
+            onScheduleFailed: () => {
+                haptics("error");
+                // Raised before the dismissal: the root toast outlives this route, while an alert's presenter is gone
+                // once the modal tears down.
+                notifyFailure({
+                    body: t("transaction.save.scheduleFailedBody"),
+                    title: t("transaction.save.scheduleFailedTitle"),
+                });
+                onDone();
+            },
+            queueLookup: mode === "create" && queueable(value.merchant),
+            save: {
                 attachments,
                 buildEntry,
                 categoryId: value.category?.id ?? null,
@@ -641,103 +636,30 @@ export function TransactionForm({
                 splits: isRealSplit(splitAllocations) ? splitAllocations : [],
                 tags: tagsSource === "initial" ? null : { pendingNames: value.pendingTagNames, tagIds: value.tagIds },
                 total: amount,
-            });
-            if (AsyncResult.isFailure(saved)) {
-                const failure = Cause.squash(saved.cause);
-                if (failure instanceof PendingCategoryError) {
-                    console.error("Failed to create the pending category", failure);
-                    flagMissingCategory();
+            },
+        });
+    };
+
+    const form = useForm({
+        defaultValues: initialValues,
+        listeners: {
+            onChange: ({ formApi, fieldApi }) => {
+                if (fieldApi.name !== "income") {
                     return;
                 }
-                console.error("Failed to save transaction", failure);
-                // Say so: un-dimming the CTA in silence reads as a missed tap. Pinned under the header, since a toast
-                // would sit under this sheet and the footer must stay pressable.
-                haptics("error");
-                setSaveFailure(t("transaction.save.failedBody"));
+                formApi.setFieldValue("category", null);
+                formApi.setFieldValue("pendingCategory", null);
+                setCategorySource("initial");
+            },
+        },
+        onSubmit: ({ value }) => {
+            const submitting = submitEntry(value);
+            if (submitting === null) {
                 return;
             }
-            const savedId = saved.value;
-            if (mode === "create") {
-                freshEntries.mark(savedId);
-            }
-            posthog?.capture("transaction_saved", {
-                has_split: isRealSplit(splitAllocations),
-                is_subscription: value.isSubscription,
-                mode,
-                source: "form",
-                transaction_type: value.income ? "income" : "expense",
-            });
-            // Committed from here down: no failure below may re-enable the CTA, or a second tap mints a fresh id and
-            // the ledger gets two subscriptions.
-            if (value.account != null) {
-                const remembered = await rememberLastUsed({ db, id: value.account.id });
-                if (AsyncResult.isFailure(remembered)) {
-                    console.error("Failed to remember the account", Cause.squash(remembered.cause));
-                }
-            }
-            if (mode === "create" && queueable(value.merchant)) {
-                queueEnrichment({ db, id: savedId }).then((queued) => {
-                    if (AsyncResult.isFailure(queued)) {
-                        console.error("Failed to queue the merchant lookup", Cause.squash(queued.cause));
-                        return;
-                    }
-                    sendQueuedEnrichment(db);
-                });
-            }
-            const answered = lookupAnsweredRef.current;
-            const carryCurrency = value.txCurrency ?? globalCurrency;
-            if (
-                mode === "edit" &&
-                forcedLookupRef.current &&
-                answered?.key === merchantKey(value.merchant) &&
-                answered.currency === carryCurrency
-            ) {
-                // Not awaited: the row is saved, and a sibling that would not take the answer is not this save's
-                // failure.
-                carryLookupToSiblings(savedId, value.income, value.merchant, value.txCurrency).catch((error) => {
-                    console.error("Failed to carry the merchant lookup to its other rows", error);
-                });
-            }
-            let scheduleFailed = false;
-            if (value.isSubscription) {
-                try {
-                    unwrapAtomCommand(await backfillRecurring({ db, id: savedId }));
-                } catch (error) {
-                    console.error("Failed to back-fill the subscription", error);
-                    scheduleFailed = true;
-                }
-            }
-            // After the backfill, which moves the chain's next landing. Not awaited: a notification the queue refused
-            // must not send this down the catch and re-enable the CTA.
-            syncSubscriptionReminders(db)
-                .then(unwrapAtomCommand)
-                .catch((error) => {
-                    console.error("Subscription reminder sync failed", error);
-                });
-            if (scheduleFailed) {
-                haptics("error");
-                // Raised before the dismissal: the root toast outlives this route, while an alert's presenter is gone
-                // once the modal tears down.
-                notifyFailure({
-                    body: t("transaction.save.scheduleFailedBody"),
-                    title: t("transaction.save.scheduleFailedTitle"),
-                });
-                onDone();
-                return await holdSubmitting();
-            }
-            haptics("success");
-            if (mode === "create") {
-                announceSaved(value, amount);
-            }
-            onDone();
-            if (mode === "create" && !installmentOrder.afterDone()) {
-                askForReview(db)
-                    .then(unwrapAtomCommand)
-                    .catch((error) => {
-                        console.error("Failed to ask for a review", error);
-                    });
-            }
-            return await holdSubmitting();
+            return runFlow(submitting).then((result) =>
+                AsyncResult.isSuccess(result) && result.value === true ? holdSubmitting() : undefined
+            );
         },
         // The footer is never disabled, so a tap with no category lands here.
         onSubmitInvalid: ({ value }) => {
@@ -1264,11 +1186,9 @@ export function TransactionForm({
             name: parent.name as string,
         }));
 
-    const resolveHistory = async (key: string, forIncome: boolean) =>
-        unwrapAtomCommand(await rememberedCategory({ db, income: forIncome, key }));
+    const resolveHistory = (key: string, forIncome: boolean) => rememberedCategoryFor(db, key, forIncome);
 
-    const recallBookMerchant = async (name: string, forCurrency: string | undefined) =>
-        unwrapAtomCommand(await recallBookMerchantCommand({ currency: forCurrency, db, name }));
+    const recallBookMerchant = (name: string, forCurrency: string | undefined) => recallMerchant(db, name, forCurrency);
 
     const logoRequestRef = useRef(0);
     const resolveLocal = (suggestion: EnrichmentSuggestion): EnrichmentSuggestion => {
@@ -1333,91 +1253,56 @@ export function TransactionForm({
         const current = identityReads.draft();
         return Boolean(current.emoji || current.icon || current.photoUri);
     };
-    const attachLogo = async (domain: string | null): Promise<boolean> => {
-        const blocked = () =>
-            identityReads.pickerOpen() ||
-            // A requested lookup outranks what the well holds; only an open picker outranks it.
-            ((!forcedLookupRef.current || touchedSinceLookupRef.current.has("identity")) &&
-                (identitySourceRef.current === "user" ||
-                    // An emoji or photo from `initial`/`copyOf` is a choice already made.
-                    (identitySourceRef.current === "initial" && hasIdentityNow())));
-        if (blocked()) {
-            return false;
+    const logoBlocked = () =>
+        identityReads.pickerOpen() ||
+        // A requested lookup outranks what the well holds; only an open picker outranks it.
+        ((!forcedLookupRef.current || touchedSinceLookupRef.current.has("identity")) &&
+            (identitySourceRef.current === "user" ||
+                // An emoji or photo from `initial`/`copyOf` is a choice already made.
+                (identitySourceRef.current === "initial" && hasIdentityNow())));
+    const dropSuggestedLogo = () => {
+        if (identitySourceRef.current === "suggested") {
+            setIdentitySource("initial");
+            setIdentity((previous) => ({
+                ...previous,
+                photoColor: null,
+                photoUri: null,
+            }));
         }
-        logoRequestRef.current += 1;
-        const ticket = logoRequestRef.current;
-        // This pipeline is awaited on its own, so a rename during the next debounce would otherwise take the previous
-        // merchant's logo.
-        const askedFor = merchantKey(form.store.state.values.merchant);
-        const stale = () =>
-            ticket !== logoRequestRef.current ||
-            merchantKey(form.store.state.values.merchant) !== askedFor ||
-            blocked();
-        const dropSuggested = () => {
-            if (identitySourceRef.current === "suggested") {
-                setIdentitySource("initial");
-                setIdentity((previous) => ({
-                    ...previous,
-                    photoColor: null,
-                    photoUri: null,
-                }));
-            }
-        };
-
-        // Dropped now, not after a fetch: a save in that gap would keep the wrong brand on the row.
-        if (domain == null) {
-            dropSuggested();
-            return false;
-        }
-        const outcome = await fetchMerchantLogo({
-            domain,
-            name: form.store.state.values.merchant,
-            refresh: forcedLookupRef.current,
-        });
-        if (stale()) {
-            return false;
-        }
-        if (outcome.kind !== "logo") {
-            dropSuggested();
-            return false;
-        }
-        // SAFETY: untyped `require` of a first-party module, asserted to its own type. Lazy so rendering the form does
-        // not pull Skia's downscaler into the module graph, as in `domain/ids.ts`.
-        const photoStorage = require("@/lib/photo-storage") as typeof import("@/lib/photo-storage");
-        let photoUri: string;
-        try {
-            photoUri = await runMediaCommand(persistLogoBytesCommand, outcome.bytes);
-        } catch {
-            return false;
-        }
-        const hues = await runMediaCommand(glowFromImageCommand, photoUri);
-        if (stale()) {
-            // Nothing will name this file: the row moved on, or the form unmounted (which bumps the ticket).
-            try {
-                photoStorage.photoFiles.remove(photoUri.slice(photoUri.lastIndexOf("/") + 1));
-            } catch {
-                // A file already gone is the outcome wanted.
-            }
-            return false;
-        }
-        suggestedDomainRef.current = domain;
-        setIdentitySource("suggested");
-        const replacesChoice = forcedLookupRef.current && !touchedSinceLookupRef.current.has("identity");
-        setIdentity((previous) => ({
-            ...previous,
-            emoji: replacesChoice ? null : previous.emoji,
-            icon: replacesChoice ? null : previous.icon,
-            photoColor: hues[0] ?? null,
-            photoUri,
-        }));
-        return true;
     };
+    const attachLogo = (domain: string | null) =>
+        attachMerchantLogo(
+            {
+                apply: (photoUri, hue) => {
+                    suggestedDomainRef.current = domain;
+                    setIdentitySource("suggested");
+                    const replacesChoice = forcedLookupRef.current && !touchedSinceLookupRef.current.has("identity");
+                    setIdentity((previous) => ({
+                        ...previous,
+                        emoji: replacesChoice ? null : previous.emoji,
+                        icon: replacesChoice ? null : previous.icon,
+                        photoColor: hue,
+                        photoUri,
+                    }));
+                },
+                blocked: logoBlocked,
+                currentMerchant: () => form.store.state.values.merchant,
+                dropSuggested: dropSuggestedLogo,
+                forced: () => forcedLookupRef.current,
+                isLatest: (ticket) => ticket === logoRequestRef.current,
+                nextTicket: () => {
+                    logoRequestRef.current += 1;
+                    return logoRequestRef.current;
+                },
+            },
+            domain
+        );
     // oxlint-disable-next-line outlayr/react-effect-budget -- stops an in-flight logo fetch and file write from landing after the form unmounts
     useEffect(
         () => () => {
             logoRequestRef.current += 1;
         },
-        []
+        [logoRequestRef]
     );
 
     // Its only consumer reads it through a committed snapshot, so its identity may change.
@@ -1470,13 +1355,22 @@ export function TransactionForm({
                 setTagsSource("initial");
             }
         }
-        attachLogo(suggestion.domain)
-            .then((landed) => {
-                if (landed && forcedLookupRef.current && merchantKey(form.store.state.values.merchant) === answer.key) {
-                    recordLookupAnswer(answer);
-                }
-            })
-            .catch(() => undefined);
+        void runFlow(
+            attachLogo(suggestion.domain).pipe(
+                Effect.flatMap((landed) =>
+                    Effect.sync(() => {
+                        if (
+                            landed &&
+                            forcedLookupRef.current &&
+                            merchantKey(form.store.state.values.merchant) === answer.key
+                        ) {
+                            recordLookupAnswer(answer);
+                        }
+                    })
+                ),
+                Effect.catchCause(() => Effect.void)
+            )
+        );
     };
 
     const locale = useLocaleTag();
@@ -1521,56 +1415,29 @@ export function TransactionForm({
         rest?.onWake();
         setForcedLookup(true);
         haptics("light");
-        lookupNow().catch(() => undefined);
+        lookupNow();
     };
 
     // Read back from the saved row: a pending category only gets an id at save. `forCurrency` is the row's own column
     // (null in the default currency), so siblings stored the same way match.
-    const carryLookupToSiblings = async (
-        savedId: string,
-        forIncome: boolean,
-        merchant: string,
-        forCurrency: string | null
-    ) => {
-        const saved = getTransactionById(db, savedId);
-        const touched = touchedSinceLookupRef.current;
-        const carryCategory = categorySource === "suggested" && !touched.has("category");
-        const carryTags = tagsSource === "suggested" && !touched.has("tags");
-        const domain = identitySource === "suggested" && !touched.has("identity") ? suggestedDomainRef.current : null;
-        const persistLogo =
-            domain == null
-                ? null
-                : Effect.tryPromise(async () => {
-                      const outcome = await fetchMerchantLogo({ domain, name: merchant });
-                      if (outcome.kind !== "logo") {
-                          throw new Error("No logo to carry");
-                      }
-                      const imageUri = await runMediaCommand(persistLogoBytesCommand, outcome.bytes);
-                      return { imageColor: saved?.imageColor ?? null, imageUri };
-                  });
-        // SAFETY: untyped `require`, asserted to the module's own type; lazy as in `attachLogo`.
-        const photoStorage = require("@/lib/photo-storage") as typeof import("@/lib/photo-storage");
-        unwrapAtomCommand(
-            await carryMerchantLookup({
-                db,
-                siblings: {
-                    categoryId: carryCategory ? (saved?.categoryId ?? null) : null,
-                    currency: forCurrency,
-                    defaultCurrency: globalCurrency,
-                    discard: (imageUri) => {
-                        photoStorage.photoFiles.remove(imageUri.slice(imageUri.lastIndexOf("/") + 1));
-                    },
-                    excludeId: savedId,
-                    income: forIncome,
-                    key: merchantKey(merchant),
-                    persistLogo,
-                    tagIds: carryTags
-                        ? await tagIdsForQuery(db, savedId).then((rows) => rows.map((row) => row.tagId))
-                        : [],
-                },
-            })
-        );
-    };
+    const carryLookupToSiblings = (savedId: string, forIncome: boolean, merchant: string, forCurrency: string | null) =>
+        carryLookup({
+            db,
+            forCurrency,
+            forIncome,
+            globalCurrency,
+            merchant,
+            read: () => {
+                const touched = touchedSinceLookupRef.current;
+                return {
+                    carryCategory: categorySource === "suggested" && !touched.has("category"),
+                    carryTags: tagsSource === "suggested" && !touched.has("tags"),
+                    domain:
+                        identitySource === "suggested" && !touched.has("identity") ? suggestedDomainRef.current : null,
+                };
+            },
+            savedId,
+        });
 
     // oxlint-disable-next-line outlayr/react-effect-budget -- clears the pending shake timers when the form unmounts
     useEffect(
@@ -1622,40 +1489,22 @@ export function TransactionForm({
         }
     };
 
-    // Picking a lead here is the intent behind the master switch: a ledger whose owner never opened the notifications
-    // screen would otherwise arm nothing.
-    const armSubscriptionReminders = async () => {
-        unwrapAtomCommand(await setBoolSetting({ db, key: "subscriptionReminders", value: true }));
-    };
-
-    const confirmRemindersAllowed = async () => {
-        const existing = unwrapAtomCommand(await readReminderPermission());
-        if (enableReminderStep(existing) === "open-settings") {
-            Alert.alert(t("settings.notifications.deniedTitle"), t("settings.notifications.deniedBody"), [
-                { style: "cancel", text: t("settings.notifications.notNow") },
-                {
-                    onPress: openNotificationSettings,
-                    text: t("settings.notifications.openSettings"),
-                },
-            ]);
-            form.setFieldValue("leadDays", null);
-            return;
-        }
-        if (existing === "granted") {
-            await armSubscriptionReminders();
-            return;
-        }
-        if (unwrapAtomCommand(await requestReminderPermission()) === "granted") {
-            await armSubscriptionReminders();
-            return;
-        }
-        form.setFieldValue("leadDays", null);
-    };
-
     const confirmLead = () => {
-        confirmRemindersAllowed().catch((error) => {
-            console.error("Reminder permission check failed", error);
-        });
+        void runFlow(
+            confirmRemindersAllowed(db, {
+                onDeclined: () => form.setFieldValue("leadDays", null),
+                onDenied: () => {
+                    Alert.alert(t("settings.notifications.deniedTitle"), t("settings.notifications.deniedBody"), [
+                        { style: "cancel", text: t("settings.notifications.notNow") },
+                        {
+                            onPress: openNotificationSettings,
+                            text: t("settings.notifications.openSettings"),
+                        },
+                    ]);
+                    form.setFieldValue("leadDays", null);
+                },
+            }).pipe(logged("Reminder permission check failed"))
+        );
     };
 
     const handleLeadChange = (lead: number | null) => {
@@ -2047,14 +1896,9 @@ export function TransactionForm({
                         onCreate={() => router.push("/settings/categories/create")}
                         onSelect={(picked) => {
                             form.setFieldValue("feeCategoryId", picked.id);
-                            rememberFeeCategory({ categoryId: picked.id, db }).then((remembered) => {
-                                if (AsyncResult.isFailure(remembered)) {
-                                    console.error(
-                                        "Failed to remember the fee category",
-                                        Cause.squash(remembered.cause)
-                                    );
-                                }
-                            });
+                            void runFlow(
+                                rememberFeeCategory(db, picked.id).pipe(logged("Failed to remember the fee category"))
+                            );
                             leaveTo("fee");
                         }}
                         selectedId={feeCategory?.id ?? null}
@@ -2721,9 +2565,8 @@ export function TransactionForm({
                 >
                     {({ tagIds, pendingTagNames }) => (
                         <TagPickerSheet
-                            onCreate={async (createdTagName) => {
-                                const id = unwrapAtomCommand(await ensureTag({ db, name: createdTagName }));
-                                if (id) {
+                            onCreate={(createdTagName) =>
+                                createTagEntry(db, createdTagName, (id) => {
                                     setTagsSource("user");
                                     markTouched("tags");
                                     form.setFieldValue("tagIds", [...effectiveTagIdsOf(form.state.values.tagIds), id]);
@@ -2732,9 +2575,8 @@ export function TransactionForm({
                                             (pendingName) => normalizeTagName(pendingName) !== createdTagName
                                         )
                                     );
-                                }
-                                return id;
-                            }}
+                                })
+                            }
                             onToggle={(tagId) => {
                                 setTagsSource("user");
                                 markTouched("tags");

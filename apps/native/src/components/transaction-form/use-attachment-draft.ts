@@ -1,3 +1,4 @@
+import * as Effect from "effect/Effect";
 import { getDocumentAsync } from "expo-document-picker";
 import {
     launchCameraAsync,
@@ -15,16 +16,12 @@ import type { Transaction } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 import type { TranslatableKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
-import { persistAttachmentPdf, photoFiles } from "@/lib/photo-storage";
+import { duringHandoff } from "@/lib/app-handoff";
+import { previewFiles } from "@/lib/file-preview";
+import { photoFiles } from "@/lib/photo-storage";
 import type { AttachmentIntake } from "@/lib/photo-storage";
-import {
-    handoffDocumentCommand,
-    handoffImageCommand,
-    handoffPermissionCommand,
-    runHandoffCommand,
-} from "@/state/handoff-commands";
-import { persistAttachmentPhotoCommand, runMediaCommand } from "@/state/media-commands";
-import { previewFilesCommand, runTransferCommand } from "@/state/transfer-commands";
+import { entryMedia, voidFlowCommand } from "@/state/entry-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 const DOCUMENT_TYPES = ["application/pdf", "image/jpeg", "image/png"];
 
@@ -44,52 +41,83 @@ interface Picked {
     uri: string;
 }
 
-async function pickCamera(): Promise<Picked[] | "denied"> {
-    const permission = await runHandoffCommand(handoffPermissionCommand, requestCameraPermissionsAsync);
+const pickCamera = Effect.fn("AttachmentDraft.pickCamera")(function* pickCamera() {
+    const permission = yield* duringHandoff(Effect.tryPromise(() => requestCameraPermissionsAsync()));
     if (!permission.granted) {
-        return "denied";
+        return "denied" as const;
     }
-    const result = await runHandoffCommand(handoffImageCommand, () =>
-        launchCameraAsync({ mediaTypes: ["images"], quality: 0.9 })
+    const result = yield* duringHandoff(
+        Effect.tryPromise(() => launchCameraAsync({ mediaTypes: ["images"], quality: 0.9 }))
     );
-    return result.canceled ? [] : result.assets.map((asset) => ({ name: null, pdf: false, uri: asset.uri }));
-}
+    return result.canceled ? [] : result.assets.map((asset): Picked => ({ name: null, pdf: false, uri: asset.uri }));
+});
 
-async function pickLibrary(room: number): Promise<Picked[]> {
-    const result = await runHandoffCommand(handoffImageCommand, () =>
-        launchImageLibraryAsync({
-            allowsMultipleSelection: true,
-            mediaTypes: ["images"],
-            preferredAssetRepresentationMode: UIImagePickerPreferredAssetRepresentationMode.Compatible,
-            quality: 0.9,
-            selectionLimit: room,
-        })
+const pickLibrary = Effect.fn("AttachmentDraft.pickLibrary")(function* pickLibrary(room: number) {
+    const result = yield* duringHandoff(
+        Effect.tryPromise(() =>
+            launchImageLibraryAsync({
+                allowsMultipleSelection: true,
+                mediaTypes: ["images"],
+                preferredAssetRepresentationMode: UIImagePickerPreferredAssetRepresentationMode.Compatible,
+                quality: 0.9,
+                selectionLimit: room,
+            })
+        )
     );
-    return result.canceled ? [] : result.assets.map((asset) => ({ name: null, pdf: false, uri: asset.uri }));
-}
+    return result.canceled ? [] : result.assets.map((asset): Picked => ({ name: null, pdf: false, uri: asset.uri }));
+});
 
-async function pickFiles(): Promise<Picked[]> {
-    const result = await runHandoffCommand(handoffDocumentCommand, () =>
-        getDocumentAsync({ copyToCacheDirectory: true, multiple: true, type: DOCUMENT_TYPES })
+const pickFiles = Effect.fn("AttachmentDraft.pickFiles")(function* pickFiles() {
+    const result = yield* duringHandoff(
+        Effect.tryPromise(() => getDocumentAsync({ copyToCacheDirectory: true, multiple: true, type: DOCUMENT_TYPES }))
     );
     return result.canceled
         ? []
-        : result.assets.map((asset) => ({
+        : result.assets.map((asset): Picked => ({
               name: asset.name,
               pdf: asset.mimeType === "application/pdf" || asset.name.toLowerCase().endsWith(".pdf"),
               uri: asset.uri,
           }));
-}
+});
 
-async function intake(picked: Picked): Promise<AttachmentIntake> {
-    try {
-        return picked.pdf
-            ? persistAttachmentPdf(picked.uri, picked.name)
-            : await runMediaCommand(persistAttachmentPhotoCommand, picked.uri);
-    } catch {
-        return { failure: "unreadable" };
+type PickAttachments = (room: number) => Effect.Effect<Picked[] | "denied", unknown>;
+
+export const intake = Effect.fn("AttachmentDraft.intake")(function* intake(picked: Picked) {
+    const stored: AttachmentIntake = yield* (
+        picked.pdf
+            ? entryMedia.persistAttachmentPdf(picked.uri, picked.name)
+            : entryMedia.persistAttachmentPhoto(picked.uri)
+    ).pipe(Effect.catchCause(() => Effect.succeed<AttachmentIntake>({ failure: "unreadable" })));
+    return stored;
+});
+
+const addAttachments = Effect.fn("AttachmentDraft.add")(function* addAttachments(
+    held: number,
+    pick: PickAttachments,
+    done: { onAdded: (added: AttachmentDraft[]) => void; onFailed: (failure: Failure) => void }
+) {
+    const room = MAX_ATTACHMENTS - held;
+    if (room <= 0) {
+        done.onFailed("full");
+        return;
     }
-}
+    const picked = yield* pick(room);
+    if (picked === "denied") {
+        done.onFailed("denied");
+        return;
+    }
+    const taken = yield* Effect.all(picked.slice(0, room).map(intake), { concurrency: "unbounded" });
+    const added = taken.flatMap((one) =>
+        "failure" in one ? [] : [{ id: null, imageKey: null, imageUri: one.imageUri, name: one.name }]
+    );
+    const failed = taken.find((one) => "failure" in one);
+    if (failed !== undefined && "failure" in failed) {
+        done.onFailed(failed.failure);
+    }
+    if (added.length > 0) {
+        done.onAdded(added);
+    }
+});
 
 interface AttachmentDraftArgs {
     db: Database;
@@ -115,38 +143,25 @@ export function useAttachmentDraft({ db, initial, mode, onEdit, onFailure, resto
             : [{ id: null, imageKey: null, imageUri: photoUriFor(photoFiles.directoryUri, seeded), name: null }];
     });
 
+    const runFlow = useAtomCommand(voidFlowCommand);
     const fail = (failure: Failure) => onFailure(t(FAILURE_KEYS[failure]));
 
-    const add = async (pick: (room: number) => Promise<Picked[] | "denied">) => {
-        const room = MAX_ATTACHMENTS - attachments.length;
-        if (room <= 0) {
-            fail("full");
-            return;
-        }
-        const picked = await pick(room);
-        if (picked === "denied") {
-            fail("denied");
-            return;
-        }
-        const taken = await Promise.all(picked.slice(0, room).map(intake));
-        const added = taken.flatMap((one) =>
-            "failure" in one ? [] : [{ id: null, imageKey: null, imageUri: one.imageUri, name: one.name }]
+    const run = (pick: PickAttachments) => {
+        void runFlow(
+            addAttachments(attachments.length, pick, {
+                onAdded: (added) => {
+                    setAttachments((current) => [...current, ...added].slice(0, MAX_ATTACHMENTS));
+                    onEdit();
+                },
+                onFailed: fail,
+            }).pipe(
+                Effect.catchCause((cause) =>
+                    Effect.logError("Failed to attach a file", cause).pipe(
+                        Effect.andThen(Effect.sync(() => fail("unreadable")))
+                    )
+                )
+            )
         );
-        const failed = taken.find((one) => "failure" in one);
-        if (failed !== undefined && "failure" in failed) {
-            fail(failed.failure);
-        }
-        if (added.length > 0) {
-            setAttachments((current) => [...current, ...added].slice(0, MAX_ATTACHMENTS));
-            onEdit();
-        }
-    };
-
-    const run = (pick: (room: number) => Promise<Picked[] | "denied">) => {
-        add(pick).catch((error) => {
-            console.error("Failed to attach a file", error);
-            fail("unreadable");
-        });
     };
 
     const menu: ActionMenuItem[] = [
@@ -187,10 +202,15 @@ export function useAttachmentDraft({ db, initial, mode, onEdit, onFailure, resto
         if (start === -1) {
             return;
         }
-        runTransferCommand(previewFilesCommand, { files: local, index: start }).catch((error) => {
-            console.error("Failed to open the attachment", error);
-            fail("open");
-        });
+        void runFlow(
+            previewFiles(local, start).pipe(
+                Effect.catchCause((cause) =>
+                    Effect.logError("Failed to open the attachment", cause).pipe(
+                        Effect.andThen(Effect.sync(() => fail("open")))
+                    )
+                )
+            )
+        );
     };
 
     return { attachments, menu, preview, remove };

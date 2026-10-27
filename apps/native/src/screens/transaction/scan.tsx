@@ -3,13 +3,15 @@ import Image01Icon from "@hugeicons-pro/core-stroke-rounded/Image01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import { addDays, startOfDay } from "@outlayr/money/calendar";
 import type { RateTable } from "@outlayr/money/valuation";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import { Image } from "expo-image";
 import { useNavigation, useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
 import { Shimmer } from "panelui-native/components/shimmer";
 import { useState } from "react";
 import type React from "react";
-import { Linking, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { ScrollView, Text, useWindowDimensions, View } from "react-native";
 import Animated, { FadeIn, FadeInDown, FadeOut } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -21,12 +23,14 @@ import type { StageBox } from "@/components/receipt/photo-stage";
 import { ReceiptFrame } from "@/components/receipt/receipt-frame";
 import { ThinkingOrb } from "@/components/thinking-orb/thinking-orb";
 import { useDatabase } from "@/contexts/local-data-context";
-import { getAccountById } from "@/data/accounts-core";
+import { getAccountById, rememberLastUsedAccount } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
+import { attachmentsRepo } from "@/data/attachments-core";
 import { suggestedCardFee } from "@/data/card-fees-core";
 import { getCategoryById } from "@/data/categories-core";
 import { photoFileName } from "@/data/photo-store-core";
 import { useAiConsent } from "@/data/settings";
+import { transactionsRepo } from "@/data/transactions-core";
 import type { TransactionInput } from "@/data/transactions-core";
 import { useValuationIn } from "@/data/use-valuation";
 import type { Database } from "@/db/client";
@@ -53,9 +57,8 @@ import { freshEntries } from "@/lib/fresh-entries";
 import { persistAttachmentBytes } from "@/lib/photo-storage";
 import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
-import { rememberLastUsedAccountCommand } from "@/state/accounts-commands";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import { createTransactionCommand } from "@/state/ledger-commands";
+import { openAppSettings, runEntryFlow, voidFlowCommand } from "@/state/entry-commands";
+import { logged } from "@/state/entry-save";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
@@ -589,15 +592,51 @@ function keptScan(image: ArrayBuffer): string | null {
     }
 }
 
+interface WriteEntryInput {
+    accountId: string | null;
+    attachment: string | null;
+    entry: () => TransactionInput;
+    income: boolean;
+    onFailed: () => void;
+    onSaved: () => void;
+}
+
+const writeEntry = Effect.fn("ReceiptScan.writeEntry")(function* writeEntry(db: Database, input: WriteEntryInput) {
+    const { attachment } = input;
+    const attachments = attachment === null ? [] : [{ id: null, imageKey: null, imageUri: attachment, name: null }];
+    const created = yield* Effect.suspend(() =>
+        transactionsRepo.create(db, input.entry(), {
+            inSameTransaction: (id) => attachmentsRepo.writeFor(db, id, attachments),
+        })
+    ).pipe(Effect.exit);
+    if (Exit.isFailure(created)) {
+        // The row did not land; the form has the failure strip this screen lacks.
+        input.onFailed();
+        return;
+    }
+    freshEntries.mark(created.value);
+    if (input.accountId) {
+        yield* logged("Failed to remember the account")(rememberLastUsedAccount(db, input.accountId));
+    }
+    posthog?.capture("transaction_saved", {
+        has_split: false,
+        is_subscription: false,
+        mode: "create",
+        source: "scan",
+        transaction_type: input.income ? "income" : "expense",
+    });
+    input.onSaved();
+});
+
 function openSettings() {
-    Linking.openSettings().catch(() => undefined);
+    void runEntryFlow(openAppSettings);
 }
 
 function ScanFlowScreen() {
     const router = useRouter();
     const entitled = useProEntitled();
     const db = useDatabase();
-    const rememberLastUsed = useAtomCommand(rememberLastUsedAccountCommand, SILENT);
+    const runFlow = useAtomCommand(voidFlowCommand);
     const t = useTranslation();
     const colors = useColors();
     const haptics = useHaptics();
@@ -608,7 +647,6 @@ function ScanFlowScreen() {
     const { bounded, context, live } = usePromptLedger(db, currency);
     const [saving, setSaving] = useState(false);
     const navigation = useNavigation();
-    const createTransaction = useAtomCommand(createTransactionCommand, SILENT);
 
     const request = {
         accounts: bounded.accounts,
@@ -667,44 +705,28 @@ function ScanFlowScreen() {
 
     const save = (draft: ResolvedReceipt, categoryId: string, image: ArrayBuffer) => {
         setSaving(true);
-        const write = async () => {
-            const attachment = keptScan(image);
-            const attachments =
-                attachment === null ? [] : [{ id: null, imageKey: null, imageUri: attachment, name: null }];
-            try {
-                const id = unwrapAtomCommand(
-                    await createTransaction({
-                        attachments,
-                        db,
-                        entry: receiptEntry(db, draft, categoryId, detailsOf(draft)),
-                    })
-                );
-                freshEntries.mark(id);
-            } catch {
-                // The row did not land; the form has the failure strip this screen lacks.
-                setSaving(false);
-                if (navigation.isFocused()) {
-                    openForm(draft, attachment);
-                }
-                return;
-            }
-            if (draft.accountId) {
-                await rememberLastUsed({ db, id: draft.accountId });
-            }
-            posthog?.capture("transaction_saved", {
-                has_split: false,
-                is_subscription: false,
-                mode: "create",
-                source: "scan",
-                transaction_type: draft.income ? "income" : "expense",
-            });
-            haptics("success");
-            // A modal gesture can dismiss this mid-write; popping again would take the screen beneath.
-            if (navigation.isFocused()) {
-                router.back();
-            }
-        };
-        void write();
+        const attachment = keptScan(image);
+        void runFlow(
+            writeEntry(db, {
+                accountId: draft.accountId,
+                attachment,
+                entry: () => receiptEntry(db, draft, categoryId, detailsOf(draft)),
+                income: draft.income,
+                onFailed: () => {
+                    setSaving(false);
+                    if (navigation.isFocused()) {
+                        openForm(draft, attachment);
+                    }
+                },
+                onSaved: () => {
+                    haptics("success");
+                    // A modal gesture can dismiss this mid-write; popping again would take the screen beneath.
+                    if (navigation.isFocused()) {
+                        router.back();
+                    }
+                },
+            })
+        );
     };
 
     const stageBox = useStageBox();

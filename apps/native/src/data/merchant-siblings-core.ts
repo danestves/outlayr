@@ -31,7 +31,7 @@ const failedAt = (operation: typeof MerchantSiblingsOperation.Type) => (cause: u
 const query = <A>(operation: typeof MerchantSiblingsOperation.Type, run: () => PromiseLike<A>) =>
     Effect.tryPromise({ catch: failedAt(operation), try: run });
 
-export interface MerchantSiblingsInput {
+export interface MerchantSiblingsInput<R = never> {
     categoryId: string | null;
     /** Null means the ledger default; a same-currency sibling may store null or the code, so both match. */
     currency: string | null;
@@ -40,7 +40,7 @@ export interface MerchantSiblingsInput {
     excludeId: string;
     income: boolean;
     key: string;
-    persistLogo: Effect.Effect<{ imageColor: string | null; imageUri: string }, unknown> | null;
+    persistLogo: Effect.Effect<{ imageColor: string | null; imageUri: string }, unknown, R> | null;
     tagIds: readonly string[];
 }
 
@@ -54,7 +54,7 @@ interface SiblingPatch {
 // often a wrong earlier lookup. Category and tags only fill rows that have none. `imageKey` stays on a repainted row
 // so the uploader can release the superseded object.
 export const applyMerchantToSiblings = Effect.fn("MerchantSiblings.applyMerchantToSiblings")(
-    function* applyMerchantToSiblings(db: Database, input: MerchantSiblingsInput) {
+    function* applyMerchantToSiblings<R>(db: Database, input: MerchantSiblingsInput<R>) {
         const effective = input.currency ?? input.defaultCurrency;
         const sameCurrency =
             effective === input.defaultCurrency

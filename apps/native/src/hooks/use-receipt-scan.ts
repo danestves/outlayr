@@ -1,7 +1,6 @@
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
-import * as AsyncResult from "effect/reactivity/AsyncResult";
-import type { PermissionResponse } from "expo";
 import {
     CameraType,
     launchCameraAsync,
@@ -13,20 +12,14 @@ import type { ImagePickerResult } from "expo-image-picker";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { localIsoDate } from "@/domain/voice-entry";
+import { duringHandoff } from "@/lib/app-handoff";
 import { receiptScanTransport } from "@/lib/convex";
 import type { ReceiptDraft, ReceiptScanFn, ScanRequest } from "@/lib/convex";
+import { launchPick, pendingPick } from "@/lib/pending-pick";
 import type { PickOwner } from "@/lib/pending-pick";
-import type { PreparedReceipt } from "@/lib/receipt-image";
 import { useLatest } from "@/lib/use-latest";
-import { SILENT } from "@/state/atom-command";
 import { RECEIPT_SCAN_TIMEOUT, timedCaptureCommand } from "@/state/capture-commands";
-import {
-    handoffPermissionCommand,
-    launchPickCommand,
-    pendingPickCommand,
-    runHandoffCommand,
-} from "@/state/handoff-commands";
-import { prepareReceiptImageCommand, runMediaCommand } from "@/state/media-commands";
+import { entryMedia, fromCommand, runEntryFlow, voidFlowCommand } from "@/state/entry-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 
 export type ScanFailure =
@@ -119,18 +112,127 @@ export function photoFrom(result: ImagePickerResult): ScanPhoto | null {
     return asset === undefined ? null : { height: asset.height, uri: asset.uri, width: asset.width };
 }
 
-export function pickFromLibrary(owner: PickOwner): Promise<ImagePickerResult> {
-    return runHandoffCommand(launchPickCommand, {
-        launch: () =>
+const libraryPick = (owner: PickOwner) =>
+    launchPick(
+        owner,
+        Effect.tryPromise(() =>
             launchImageLibraryAsync({
                 allowsEditing: false,
                 mediaTypes: ["images"],
                 preferredAssetRepresentationMode: UIImagePickerPreferredAssetRepresentationMode.Compatible,
                 quality: 0.9,
-            }),
-        owner,
-    });
+            })
+        )
+    );
+
+export function pickFromLibrary(owner: PickOwner): Promise<ImagePickerResult> {
+    return runEntryFlow(libraryPick(owner));
 }
+
+interface ScanPorts<Context, Draft> {
+    adopt: (result: ImagePickerResult, take: number) => void;
+    beginScan: () => AbortController;
+    isCurrent: (take: number) => boolean;
+    latest: () => { context: Context; onReview?: (draft: Draft) => void; send: ScanSend<Draft> };
+    owner: PickOwner;
+    scanCommand: ReturnType<typeof timedCaptureCommand<ScanReply<Draft>>>;
+    setPhase: (phase: ScanPhase<Context, Draft>) => void;
+}
+
+const readPhoto = Effect.fn("ReceiptScan.read")(function* readPhoto<Context, Draft>(
+    ports: ScanPorts<Context, Draft>,
+    photo: ScanPhoto,
+    take: number
+) {
+    ports.setPhase({ kind: "scanning", photo });
+    const prepared = yield* entryMedia
+        .prepareReceiptImage(photo.uri)
+        .pipe(Effect.catchCause(() => Effect.succeed(null)));
+    if (!ports.isCurrent(take)) {
+        return;
+    }
+    if (prepared === null) {
+        ports.setPhase({ kind: "failed", photo, reason: "unreadable" });
+        return;
+    }
+    const { context: sentContext, send: sent } = ports.latest();
+    const { bytes } = prepared;
+    const controller = ports.beginScan();
+    const result = yield* fromCommand(ports.scanCommand, {
+        call: sent(bytes, localIsoDate(new Date())),
+        signal: controller.signal,
+    }).pipe(Effect.exit);
+    if (!ports.isCurrent(take)) {
+        return;
+    }
+    if (Exit.isFailure(result)) {
+        ports.setPhase({ kind: "failed", photo, reason: "offline" });
+        return;
+    }
+    const settled = Option.getOrNull(result.value);
+    if (settled === null) {
+        ports.setPhase({ kind: "failed", photo, reason: "timeout" });
+        return;
+    }
+    if (settled.status === "ok" && settled.draft !== null) {
+        ports.setPhase({ context: sentContext, draft: settled.draft, image: bytes, kind: "review", photo });
+        ports.latest().onReview?.(settled.draft);
+        return;
+    }
+    ports.setPhase({ kind: "failed", photo, reason: failureFor(settled.status) });
+});
+
+const pickPhotoFromCamera = Effect.fn("ReceiptScan.pickFromCamera")(function* pickPhotoFromCamera<Context, Draft>(
+    ports: ScanPorts<Context, Draft>,
+    take: number
+) {
+    const permission = yield* duringHandoff(Effect.tryPromise(() => requestCameraPermissionsAsync())).pipe(Effect.exit);
+    if (Exit.isFailure(permission)) {
+        if (ports.isCurrent(take)) {
+            ports.setPhase({ kind: "failed", photo: null, reason: "noCamera" });
+        }
+        return;
+    }
+    if (!ports.isCurrent(take)) {
+        return;
+    }
+    if (!permission.value.granted) {
+        ports.setPhase({ kind: "failed", photo: null, reason: "denied" });
+        return;
+    }
+    const result = yield* launchPick(
+        ports.owner,
+        Effect.tryPromise(() =>
+            launchCameraAsync({
+                cameraType: CameraType.back,
+                mediaTypes: ["images"],
+                quality: 0.9,
+            })
+        )
+    ).pipe(Effect.exit);
+    if (Exit.isFailure(result)) {
+        // On iOS the launch only rejects on a device with no camera (the simulator, or a broken lens).
+        if (ports.isCurrent(take)) {
+            ports.setPhase({ kind: "failed", photo: null, reason: "noCamera" });
+        }
+        return;
+    }
+    ports.adopt(result.value, take);
+});
+
+const pickPhotoFromLibrary = Effect.fn("ReceiptScan.pickFromLibrary")(function* pickPhotoFromLibrary<Context, Draft>(
+    ports: ScanPorts<Context, Draft>,
+    take: number
+) {
+    const result = yield* libraryPick(ports.owner).pipe(Effect.exit);
+    if (Exit.isFailure(result)) {
+        if (ports.isCurrent(take)) {
+            ports.setPhase({ kind: "failed", photo: null, reason: "unreadable" });
+        }
+        return;
+    }
+    ports.adopt(result.value, take);
+});
 
 export function useReceiptScan<Context>({ context, request, transport }: UseReceiptScanArgs<Context>) {
     const [api] = useState(() => transport ?? receiptScanTransport());
@@ -158,56 +260,16 @@ export function useImageScan<Context, Draft>({
     const [scanCommand] = useState(() =>
         timedCaptureCommand<ScanReply<Draft>>({ operation: "scan", timeout: RECEIPT_SCAN_TIMEOUT })
     );
-    const runScan = useAtomCommand(scanCommand, SILENT);
+    const runFlow = useAtomCommand(voidFlowCommand);
+    const start = (flow: Effect.Effect<void, never>) => {
+        void runFlow(flow);
+    };
     const latest = useLatest({ context, onReview, send });
     const supersedeTake = () => {
         takeRef.current += 1;
         scanAbortRef.current?.abort();
         scanAbortRef.current = null;
         return takeRef.current;
-    };
-
-    const read = async (photo: ScanPhoto, take: number) => {
-        setPhase({ kind: "scanning", photo });
-        let prepared: PreparedReceipt | null;
-        try {
-            prepared = await runMediaCommand(prepareReceiptImageCommand, photo.uri);
-        } catch {
-            prepared = null;
-        }
-        if (take !== takeRef.current) {
-            return;
-        }
-        if (prepared === null) {
-            setPhase({ kind: "failed", photo, reason: "unreadable" });
-            return;
-        }
-        const { context: sentContext, send: sent } = latest.current;
-        const { bytes } = prepared;
-        const controller = new AbortController();
-        scanAbortRef.current = controller;
-        const result = await runScan({
-            call: sent(bytes, localIsoDate(new Date())),
-            signal: controller.signal,
-        });
-        if (take !== takeRef.current) {
-            return;
-        }
-        if (AsyncResult.isFailure(result)) {
-            setPhase({ kind: "failed", photo, reason: "offline" });
-            return;
-        }
-        const settled = Option.getOrNull(result.value);
-        if (settled === null) {
-            setPhase({ kind: "failed", photo, reason: "timeout" });
-            return;
-        }
-        if (settled.status === "ok" && settled.draft !== null) {
-            setPhase({ context: sentContext, draft: settled.draft, image: bytes, kind: "review", photo });
-            latest.current.onReview?.(settled.draft);
-            return;
-        }
-        setPhase({ kind: "failed", photo, reason: failureFor(settled.status) });
     };
 
     const adopt = (result: ImagePickerResult, take: number) => {
@@ -219,81 +281,58 @@ export function useImageScan<Context, Draft>({
             setPhase({ kind: "idle" });
             return;
         }
-        void read(photo, take);
+        start(readPhoto(ports, photo, take));
+    };
+
+    const ports: ScanPorts<Context, Draft> = {
+        adopt,
+        beginScan: () => {
+            const controller = new AbortController();
+            scanAbortRef.current = controller;
+            return controller;
+        },
+        isCurrent: (take) => take === takeRef.current,
+        latest: () => latest.current,
+        owner,
+        scanCommand,
+        setPhase,
     };
 
     // Android can tear the app down under the picker: that launch never resolves, so its photo is picked up here.
     const adoptPending = useEffectEvent((result: ImagePickerResult, take: number) => adopt(result, take));
     const startMounted = useEffectEvent(() => {
         if (firstPhoto !== null) {
-            void read(firstPhoto, supersedeTake());
+            start(readPhoto(ports, firstPhoto, supersedeTake()));
         }
         const take = takeRef.current;
-        runHandoffCommand(pendingPickCommand, owner)
-            .then((result) => {
-                if (result !== null) {
-                    adoptPending(result, take);
-                }
-            })
-            .catch(() => undefined);
+        start(
+            pendingPick(owner).pipe(
+                Effect.flatMap((result) =>
+                    Effect.sync(() => {
+                        if (result !== null) {
+                            adoptPending(result, take);
+                        }
+                    })
+                ),
+                Effect.catchCause(() => Effect.void)
+            )
+        );
     });
 
     const takePhoto = () => {
         const take = supersedeTake();
         setPhase({ kind: "picking", source: "camera" });
-        void (async () => {
-            let permission: PermissionResponse;
-            try {
-                permission = await runHandoffCommand(handoffPermissionCommand, requestCameraPermissionsAsync);
-            } catch {
-                if (take === takeRef.current) {
-                    setPhase({ kind: "failed", photo: null, reason: "noCamera" });
-                }
-                return;
-            }
-            if (take !== takeRef.current) {
-                return;
-            }
-            if (!permission.granted) {
-                setPhase({ kind: "failed", photo: null, reason: "denied" });
-                return;
-            }
-            try {
-                const result = await runHandoffCommand(launchPickCommand, {
-                    launch: () =>
-                        launchCameraAsync({
-                            cameraType: CameraType.back,
-                            mediaTypes: ["images"],
-                            quality: 0.9,
-                        }),
-                    owner,
-                });
-                adopt(result, take);
-            } catch {
-                // On iOS the launch only rejects on a device with no camera (the simulator, or a broken lens).
-                if (take === takeRef.current) {
-                    setPhase({ kind: "failed", photo: null, reason: "noCamera" });
-                }
-            }
-        })();
+        start(pickPhotoFromCamera(ports, take));
     };
 
     const chooseFromLibrary = () => {
         const take = supersedeTake();
         setPhase({ kind: "picking", source: "library" });
-        void (async () => {
-            try {
-                adopt(await pickFromLibrary(owner), take);
-            } catch {
-                if (take === takeRef.current) {
-                    setPhase({ kind: "failed", photo: null, reason: "unreadable" });
-                }
-            }
-        })();
+        start(pickPhotoFromLibrary(ports, take));
     };
 
     const scan = (photo: ScanPhoto) => {
-        void read(photo, supersedeTake());
+        start(readPhoto(ports, photo, supersedeTake()));
     };
 
     const retry = () => {
@@ -311,7 +350,11 @@ export function useImageScan<Context, Draft>({
     // oxlint-disable-next-line outlayr/react-effect-budget -- scans a handed-off photo or adopts the picker's pending result when mounted, and aborts the scan in flight when unmounted
     useEffect(() => {
         let disposed = false;
-        void Promise.resolve().then(() => (disposed ? undefined : startMounted()));
+        queueMicrotask(() => {
+            if (!disposed) {
+                startMounted();
+            }
+        });
         return () => {
             disposed = true;
             endScans();
