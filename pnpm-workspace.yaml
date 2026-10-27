@@ -12,6 +12,9 @@ allowBuilds:
     unrs-resolver: false
 catalog:
     "@better-auth/expo": ~1.6.15
+    "@confect/cli": ^10.3.2
+    "@confect/core": ^10.3.2
+    "@confect/server": ^10.3.2
     "@convex-dev/agent": ^0.7.1
     "@convex-dev/better-auth": ^0.12.5
     "@effect/atom-react": ^4.0.6

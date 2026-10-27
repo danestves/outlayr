@@ -160,7 +160,7 @@ export interface EnrichmentRequest {
 
 export type EnrichmentFn = (args: EnrichmentRequest) => Promise<RemoteEnrichmentResult>;
 
-/** Names only: `packages/backend/convex/enrichment.test.ts` asserts the action's validator against this field set. */
+/** Names only: `packages/backend/confect/enrichment.test.ts` asserts the action's validator against this field set. */
 export function enrichmentTransport(): EnrichmentFn | null {
     if (!authenticated) {
         return null;

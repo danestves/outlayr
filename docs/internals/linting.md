@@ -68,8 +68,9 @@ If you re-enable any of these, run `vp run -r --no-cache test` and `vp run -r --
 | Scope | Rules | Why |
 |---|---|---|
 | tests, `**/test-*.ts`, `**/test.helpers.ts`, `apps/native/jest/**`, `**/scripts/**` | 25 rules, plus the six `outlayr/*` design rules in a second block, all listed in `vite.config.ts` | Node-side code, not app code. See "How the test scope was measured". |
-| `packages/backend/convex/**` | `unicorn/filename-case` → camelCase | In Convex the filename **is** the API path: `convex/exchangeRates.ts` is `api.exchangeRates.get`. Kebab-casing would rewrite every client call site. |
-| `packages/backend/convex/**` | `unicorn/prefer-at` | Convex's generated tsconfig pins `lib: ["ES2021"]`; `Array.prototype.at` is ES2022. |
+| `packages/backend/convex/**`, `packages/backend/confect/**` | `unicorn/filename-case` → camelCase | In Convex the filename **is** the API path: `convex/exchangeRates.ts` is `api.exchangeRates.get`. Kebab-casing would rewrite every client call site. |
+| `packages/backend/convex/**`, `packages/backend/confect/**` | `unicorn/prefer-at` | Convex's generated tsconfig pins `lib: ["ES2021"]`; `Array.prototype.at` is ES2022. |
+| `packages/backend/confect/**/*.spec.ts` | `vitest/consistent-test-filename` | A Confect spec declares a function group; `.spec.ts` is the suffix the Confect CLI reads, not a test. |
 | `apps/native/src/app/**` | `unicorn/filename-case` | An expo-router dynamic segment is named for the param it binds: `[subcategoryId].tsx` is `params.subcategoryId`. |
 | `apps/native/src/widgets/**` | `unicorn/consistent-function-scoping` | A widget body is stringified and evaluated in the extension's bare `JSContext`, so a hoisted helper paints a `ReferenceError` on the tile. `outlayr/widget-module-scope` enforces the inverse rule. |
 | `domain/uuid5.ts`, `domain/confetti.ts` | `no-bitwise` | RFC 4122 defines the version and variant bits in bitwise terms. |
@@ -78,10 +79,9 @@ If you re-enable any of these, run `vp run -r --no-cache test` and `vp run -r --
 | `components/import-sheet/**` | `no-restricted-imports` (`expo-router`), `outlayr/no-sheet-repaint` | The import flow is one `BottomSheetModal`, never a route: steps navigate through the draft store and only `import-sheet.tsx` may import the router. Step content sits on the root's `backgroundStyle` paper, so no `bg-background`, wash or card class under the directory. |
 | `db/transaction.ts` | `outlayr/no-drizzle-transaction` | Where `withTransaction` is implemented, so it necessarily calls the API the rule bans. |
 | `lib/convex.ts`, `data/sync-engine-core.ts` | `anti-slop/no-chained-type-assertions` | Two assertion chains against a type we do not own: React Native's `BodyInit` omits the typed array its `fetch` actually sends, and drizzle's builders are generic per table so `Database` shares no members with the single-code-path writer the sync engine calls. |
-| `convex/providerLifecycle.ts` | `anti-slop/no-unknown-returns` | `AppleLifecycleContext` is a structural view of better-auth's endpoint context. Its members are better-auth's to declare: tightening `updateAccount` to the `void` the callers use removes the overlap the assertion needs. |
+| `confect/lib/providerLifecycle.ts` | `anti-slop/no-unknown-returns` | `AppleLifecycleContext` is a structural view of better-auth's endpoint context. Its members are better-auth's to declare: tightening `updateAccount` to the `void` the callers use removes the overlap the assertion needs. |
 | `MANUAL_MEMO_FILES` | `outlayr/no-manual-memo` → `allowManualMemo` | The ratchet. Those files may keep `useMemo`, `useCallback` and `memo`; every other file in `apps/native/src` may not. Memo directives stay banned everywhere. Drop a file from the list once its memoization is gone, and never add one. oxlint 1.85 keeps a JS plugin rule's options in an override, which this relies on. |
 | `lib/app-icon.android.ts`, `navigation/stack-chrome.ts` | `outlayr/no-hookless-use-function` | Platform siblings of a hook that does call hooks. They must keep its name, so callers obey the rules of hooks on every platform, and they return a module constant, so there is nothing to cache. |
-| `convex/account.test.ts` | `outlayr/require-suppression-reason` | One reasonless `eslint-disable-next-line no-await-in-loop`, which is also unused there (`no-await-in-loop` is off in tests). It lives in `packages/backend`, whose migration owns the file; delete the directive and this exemption together. |
 
 `complexity` is set to **35**. oxlint counts *cyclomatic* complexity where Biome counted *cognitive*, so the old threshold of 25 does not carry across. On the new metric the barely-over cluster sits at 26–33; only `TransactionForm` is genuinely out of hand; its three suppressions are the only ones in the tree and each names that as known debt.
 
@@ -205,7 +205,7 @@ Both presets claim `**/*.{test,spec}.*`, so extending both reports every asserti
 | `no-test-timeout-or-retry` | On in test files instead, both runners: no timeout argument on a test or hook, no `{ timeout }` or `{ retry }` options, no `jest.setTimeout`, `jest.retryTimes` or `vi.setConfig` override. A test that needs more time is waiting on something it should await. `*.live.test.ts` model probes are exempt. |
 | `no-manual-memo` | `apps/native/src`: no `useMemo`, `useCallback`, `memo` or memo directive (`"use memo"`, `"use no memo"`, `"use no forget"`). The compiler memoizes, and a directive hides a bailout from the coverage test. Ratcheted by `MANUAL_MEMO_FILES`, see "Rules we scoped". |
 | `no-hookless-use-function` | `apps/native/src`: a `use*` function must call a hook. The compiler only compiles functions that do, so a hookless one rebuilds what it returns on every render. Rename it, as `unconfiguredSession` in `lib/auth-client.ts` was. |
-| `no-hermes-unsupported-apis` | `apps/native/src`, and what it imports at runtime from `packages/money/src`, `packages/env/src` and `convex/lib/syncTables.ts`: no `Array#toSorted` and no `Intl.Segmenter`. Neither name is in the shipped Hermes (260318099.0.4) VM, while `toReversed`, `toSpliced` and `with` are, so those stay allowed. Tests run on node and are exempt. |
+| `no-hermes-unsupported-apis` | `apps/native/src`, and what it imports at runtime from `packages/money/src`, `packages/env/src` and `confect/lib/syncTables.ts`: no `Array#toSorted` and no `Intl.Segmenter`. Neither name is in the shipped Hermes (260318099.0.4) VM, while `toReversed`, `toSpliced` and `with` are, so those stay allowed. Tests run on node and are exempt. |
 | `prefer-effect-fn` | Every file outside the node-side scope: a function that only returns `Effect.gen(...)` is written `Effect.fn("Module.operation")(...)`, which names its span. |
 | `prefer-catch-tags` | Every file: `Effect.catchTags({ Tag: handler })` rather than `Effect.catchTag`, even for one tag. |
 | `no-inline-schema-compile` | Every file: no `Schema.decodeUnknownSync(S)(input)` and friends inside a function, which compiles the decoder on every call. Hoist the compiled function to module scope. |
@@ -221,7 +221,7 @@ The reason for each lives in the plugin, as a comment above the rule or in its m
 
 ## Effect diagnostics
 
-`@effect/language-service` is a TypeScript plugin in `packages/config/tsconfig.base.json`, so it reaches `packages/money`, `packages/env` and `apps/web`, not `apps/native` (Expo's base) or the Convex tsconfig. `tsc` ignores plugins, so these diagnostics show in the editor and from the CLI, not in `check-types`:
+`@effect/language-service` is a TypeScript plugin in `packages/config/tsconfig.base.json`, which reaches `packages/money`, `packages/env` and `apps/web`. `apps/native/tsconfig.json` and `packages/backend/tsconfig.json` extend Expo's and Convex's bases instead, so each repeats the same plugin block. `tsc` ignores plugins, so these diagnostics show in the editor and from the CLI, not in `check-types`:
 
 ```bash
 vp exec effect-language-service diagnostics --project packages/money/tsconfig.json --strict
@@ -233,7 +233,7 @@ The tree has no findings. Patching `tsc` (`effect-language-service patch`) would
 
 ## Tailwind
 
-`oxlint-tailwindcss` reads `apps/native/global.css` and lints class strings against the real Uniwind theme. `apps/screenshots` is ignored by both lint and format: it is scaffolded rather than authored here, and it is Tailwind v3 against that v4 entry point, so every class would report unknown. Its hand-written `scripts/` stay checked. Only its correctness rules are on. `enforce-sort-order` and the rest of its style set are off: oxfmt already owns class order inside `cn`/`tv`/`clsx`, and the plugin's sorter would additionally reorder 302 raw `className` strings.
+`oxlint-tailwindcss` reads `apps/native/global.css` and lints class strings against the real Uniwind theme. `apps/screenshots` is ignored by both lint and format: it is scaffolded rather than authored here, and it is Tailwind v3 against that v4 entry point, so every class would report unknown. Its hand-written `scripts/` stay checked. The group modules `confect codegen` writes into `packages/backend/convex/` are ignored the same way; `http.ts`, `crons.ts`, `auth.config.ts` and `convex.config.ts` there are hand-written and stay checked. Only its correctness rules are on. `enforce-sort-order` and the rest of its style set are off: oxfmt already owns class order inside `cn`/`tv`/`clsx`, and the plugin's sorter would additionally reorder 302 raw `className` strings.
 
 One class the theme does not define is allowed, `ph-no-capture`: PostHog's opt-out, which keeps the web calculators out of autocapture, dead clicks and session replay. `data-ph-no-autocapture` only covers autocapture. It does nothing in `apps/native`, where posthog-react-native ignores `className`. The allowlist sits on the root rule because oxlint drops a JS plugin rule's options in an override.
 

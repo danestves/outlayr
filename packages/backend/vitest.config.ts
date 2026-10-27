@@ -18,5 +18,6 @@ export default defineConfig({
         },
         // `convex-test` runs functions in a Convex-like runtime, not Node.
         environment: "edge-runtime",
+        include: ["**/*.test.ts"],
     },
 });

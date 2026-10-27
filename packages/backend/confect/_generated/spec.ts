@@ -1,0 +1,67 @@
+import { GroupSpec, Spec } from "@confect/core";
+import accountDeletion from "../accountDeletion.spec";
+import cotizave from "../cotizave.spec";
+import csvImport from "../csvImport.spec";
+import enrichment from "../enrichment.spec";
+import enrichmentQueue from "../enrichmentQueue.spec";
+import exchangeRates from "../exchangeRates.spec";
+import groundedLookup from "../groundedLookup.spec";
+import groundedSpend from "../groundedSpend.spec";
+import installmentScan from "../installmentScan.spec";
+import limits from "../limits.spec";
+import mcp from "../mcp.spec";
+import mcpEntries from "../mcpEntries.spec";
+import mcpLedger from "../mcpLedger.spec";
+import merchantKnowledge from "../merchantKnowledge.spec";
+import openexchangerates from "../openexchangerates.spec";
+import photos from "../photos.spec";
+import receiptScan from "../receiptScan.spec";
+import revenuecat from "../revenuecat.spec";
+import sync from "../sync.spec";
+import voiceEntry from "../voiceEntry.spec";
+
+const spec: Spec.Spec<{
+  readonly accountDeletion: GroupSpec.NamedAt<typeof accountDeletion, "accountDeletion">;
+  readonly cotizave: GroupSpec.NamedAt<typeof cotizave, "cotizave">;
+  readonly csvImport: GroupSpec.NamedAt<typeof csvImport, "csvImport">;
+  readonly enrichment: GroupSpec.NamedAt<typeof enrichment, "enrichment">;
+  readonly enrichmentQueue: GroupSpec.NamedAt<typeof enrichmentQueue, "enrichmentQueue">;
+  readonly exchangeRates: GroupSpec.NamedAt<typeof exchangeRates, "exchangeRates">;
+  readonly groundedLookup: GroupSpec.NamedAt<typeof groundedLookup, "groundedLookup">;
+  readonly groundedSpend: GroupSpec.NamedAt<typeof groundedSpend, "groundedSpend">;
+  readonly installmentScan: GroupSpec.NamedAt<typeof installmentScan, "installmentScan">;
+  readonly limits: GroupSpec.NamedAt<typeof limits, "limits">;
+  readonly mcp: GroupSpec.NamedAt<typeof mcp, "mcp">;
+  readonly mcpEntries: GroupSpec.NamedAt<typeof mcpEntries, "mcpEntries">;
+  readonly mcpLedger: GroupSpec.NamedAt<typeof mcpLedger, "mcpLedger">;
+  readonly merchantKnowledge: GroupSpec.NamedAt<typeof merchantKnowledge, "merchantKnowledge">;
+  readonly openexchangerates: GroupSpec.NamedAt<typeof openexchangerates, "openexchangerates">;
+  readonly photos: GroupSpec.NamedAt<typeof photos, "photos">;
+  readonly receiptScan: GroupSpec.NamedAt<typeof receiptScan, "receiptScan">;
+  readonly revenuecat: GroupSpec.NamedAt<typeof revenuecat, "revenuecat">;
+  readonly sync: GroupSpec.NamedAt<typeof sync, "sync">;
+  readonly voiceEntry: GroupSpec.NamedAt<typeof voiceEntry, "voiceEntry">;
+}> = Spec.fromGroups({
+  ["accountDeletion"]: accountDeletion,
+  ["cotizave"]: cotizave,
+  ["csvImport"]: csvImport,
+  ["enrichment"]: enrichment,
+  ["enrichmentQueue"]: enrichmentQueue,
+  ["exchangeRates"]: exchangeRates,
+  ["groundedLookup"]: groundedLookup,
+  ["groundedSpend"]: groundedSpend,
+  ["installmentScan"]: installmentScan,
+  ["limits"]: limits,
+  ["mcp"]: mcp,
+  ["mcpEntries"]: mcpEntries,
+  ["mcpLedger"]: mcpLedger,
+  ["merchantKnowledge"]: merchantKnowledge,
+  ["openexchangerates"]: openexchangerates,
+  ["photos"]: photos,
+  ["receiptScan"]: receiptScan,
+  ["revenuecat"]: revenuecat,
+  ["sync"]: sync,
+  ["voiceEntry"]: voiceEntry,
+}) as typeof spec;
+
+export default spec;

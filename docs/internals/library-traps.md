@@ -30,5 +30,5 @@ Library behavior that breaks code far from where we first hit it. Each entry nam
 
 ## Convex
 
-- **An unsharded rate limiter throws OCC conflicts.** `shards: 10` is load-bearing (`packages/backend/convex/enrichment.ts`, `csvImport.ts`).
+- **An unsharded rate limiter throws OCC conflicts.** `shards: 10` is load-bearing (`packages/backend/confect/enrichment.ts`, `csvImport.ts`).
 - **A query can serve an expired signed URL.** Convex caches query results, so `photos.readUrls` is a mutation though it writes nothing.

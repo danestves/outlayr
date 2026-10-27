@@ -20,7 +20,7 @@ Verified against the tree, not from memory:
 |---|---|---|
 | Convex client | `apps/native/src/app/_layout.tsx` | `ConvexBetterAuthProvider`, mounted only when `cloud-runtime.ts` resolved a configured deployment |
 | Convex usage | `apps/native/src/data/sync-engine-core.ts` and the exchange-rate pull | the sync engine drains the outbox and applies `pullSince` |
-| Auth | `packages/backend/convex/auth.ts`, `auth.config.ts`, `http.ts` | Better Auth; `convex.config.ts` calls `app.use()` for betterAuth, r2, rateLimiter, agent and revenuecat |
+| Auth | `packages/backend/confect/lib/betterAuth.ts`, `convex/auth.config.ts`, `convex/http.ts` | Better Auth; `convex.config.ts` calls `app.use()` for betterAuth, r2, rateLimiter, agent and revenuecat |
 | Source of truth | `apps/native/src/db/schema.ts` | expo-sqlite + drizzle, local-first |
 | Sync affordances already in the local schema | `src/db/schema.ts` | every user table already carries `updatedAt` **and** a soft-delete `deletedAt`, explicitly "so a future sync layer can reconcile without a schema migration" |
 | Settings row | `src/screens/settings/index.tsx` | reads live state from `useSyncStatus` |
@@ -64,9 +64,9 @@ string, and every sync query/mutation must start by resolving it and reject with
 ### The sign-in surface in an app that has none
 
 Ported from the sibling, which is already the owner's stated intent (Apple + Google, no
-email/password — `packages/backend/convex/auth.ts` sets `emailAndPassword: { enabled: false }`):
+email/password — `packages/backend/confect/lib/betterAuth.ts` sets `emailAndPassword: { enabled: false }`):
 
-- `packages/backend/convex/auth.ts` — `createClient`, `betterAuth` from
+- `packages/backend/confect/lib/betterAuth.ts` — `createClient`, `betterAuth` from
   `better-auth/minimal`, Apple config with the ES256 client-secret JWT minted in-process
   via `jose`, Google with the web+iOS client-id pair, plugins `[expo(), crossDomain(), convex()]`.
 - `packages/backend/convex/auth.config.ts` — `getAuthConfigProvider()`.
@@ -110,8 +110,8 @@ categories are the user's to clean up. Do not attempt automatic de-duplication b
 
 ## 2. Schema
 
-Written for real in `packages/backend/convex/schema.ts`; the list of record is
-`SYNCED_TABLES` in `packages/backend/convex/lib/syncTables.ts`. Seventeen replicated tables
+Written for real in `packages/backend/confect/tables/`; the list of record is
+`SYNCED_TABLES` in `packages/backend/confect/lib/syncTables.ts`. Seventeen replicated tables
 (`categories`, `transactions`, `budgets`, `mainBudget`, `savingsGoals`, `tags`,
 `transactionTags`, `transactionPhotos`, `transactionSplits`, `accounts`, `transfers`,
 `installmentPlans`, `installments`, `outsidePayments`, `outsideMoves`, `transactionAttachments`, `appMeta`), one control table (`syncState`), and the pre-existing server-owned
@@ -147,7 +147,7 @@ runs against the local SQLite replica.
 | `mainBudget` singleton (`src/data/budgets-core.ts`) | ⚠️ same | Convention, not a constraint. |
 | `transactionTags` one live link per `(transactionId, tagId)` (`transactionTags_pair_idx`, partial on `deletedAt IS NULL`) | ⚠️ same | Two devices tagging the same entry offline each mint their own link id. Reconciled client-side at the write — see §4. Before `0029` made the index partial, a tombstoned link still held the slot and the second link wedged every later pull. |
 | `imageUri` (`:57`) | ❌ **never** — device-local | A `file://` path whose container uuid changes on every app update. Replicating it lost photos: the receiver could not resolve the path, its launch reconciliation nulled the column, and the resulting push tie-broke on `deviceId` back onto the *originating* device. Removed from the wire in S11. |
-| `imageKey` | ✅ verbatim | The photo's R2 object key. Not a url — `r2.getUrl` signs one with a 15-minute default lifetime, so a stored url rots; every read re-mints from the key. The bytes travel out of band (`packages/backend/convex/photos.ts`, `apps/native/src/data/photo-sync-core.ts`), never in a `push` batch. |
+| `imageKey` | ✅ verbatim | The photo's R2 object key. Not a url — `r2.getUrl` signs one with a 15-minute default lifetime, so a stored url rots; every read re-mints from the key. The bytes travel out of band (`packages/backend/confect/photos.ts`, `apps/native/src/data/photo-sync-core.ts`), never in a `push` batch. |
 | `appMeta` key/value (`:166-169`) | partly | No `updatedAt`/`deletedAt` locally. Only `SYNCED_META_KEYS` (`src/data/sync-outbox-core.ts`) sync: the currency and how the ledger reads, which belong to the person. `colorScheme` stays local because an OLED phone at night and a tablet in daylight want different answers; `numberEntryType` because a phone typed one-handed and a tablet typed with both do (syncing it let a second device reverse a choice). `biometricLock` and `notification*` describe a permission this handset holds; `sync*` and `ledgerAdoption` are this device's replication identity; `firstLaunch`, `onboardingComplete` and `recurrenceRepaired` record this install's first run. |
 | `exchangeRates` local replica (`:180-194`) | ❌ never | One-way server→device, wiped and replaced by `src/data/rates.ts`. Not user data. Do not sync it. |
 
@@ -245,7 +245,7 @@ and stall every other table behind it. So a photo is split.
   every call, so a stored url is a reference that rots. Reads re-mint.
 - **The bytes** move device ↔ R2 directly over signed PUT/GET urls. Only the three small
   calls that mint and account for those urls go through Convex
-  (`packages/backend/convex/photos.ts`); the payload never does.
+  (`packages/backend/confect/photos.ts`); the payload never does.
 
 The key is `transaction-photos/<userId>/<device file name>`. The user id half is written by
 the server and never accepted as an argument, so ownership is enforced by re-deriving the
@@ -286,7 +286,7 @@ Every replicated row carries `restoredAt` in its envelope: when it was last lift
 tombstone, or null. A version's **era** is `restoredAt` for a live row and
 `max(deletedAt, restoredAt)` for a tombstone (null reads as 0). Compare eras first and
 the later one wins outright; at the same era a tombstone beats a live row; only then
-does R2 run. The rule is `incomingWins` in `packages/backend/convex/lib/syncTables.ts`
+does R2 run. The rule is `incomingWins` in `packages/backend/confect/lib/syncTables.ts`
 and `incomingWinsLocally` in `apps/native/src/data/sync-engine-core.ts`, and both test
 files run the same cases.
 
@@ -475,7 +475,7 @@ and why it had to come in that order.
 | **S3** | **Auth client + sign-in surface.** `src/lib/auth-client.ts`, swap `ConvexShell` → `ConvexBetterAuthProvider`, Apple + Google buttons, Settings → Account row. App fully usable signed out. | M | **needs owner** — three new native modules ⇒ dev-client rebuild, and OAuth cannot be verified on a simulator |
 | **S4** | **Tombstone the two hard-delete paths** (§6.1, §6.2). Pure local, TDD, no network. Ships value alone. **Must precede any push.** | S | unattended |
 | **S5** | **Outbox.** Drizzle migration adding the `outbox` table + `AFTER INSERT/UPDATE` triggers on the replicated tables; device-local `syncDeviceId` / `syncCursor` meta keys. No network. | M | unattended |
-| **S6** | **Push.** `packages/backend/convex/sync.ts` `push` mutation (auth-scoped, seq stamping, 500-row batches) + the client drainer. Signed-in only, no-op signed out. | M | unattended to build; **needs owner** for the first real end-to-end run |
+| **S6** | **Push.** `packages/backend/confect/sync.ts` `push` mutation (auth-scoped, seq stamping, 500-row batches) + the client drainer. Signed-in only, no-op signed out. | M | unattended to build; **needs owner** for the first real end-to-end run |
 | **S7** | **Pull + apply.** `pullSince` query, one merge-sort across the replicated streams, transactional apply with FKs off, R1/R2/R3 from §4, outbox self-cleanup, cursor advance, plus the `live-query.ts` invalidation fix from §6.3. | **L** | unattended to build; **needs owner** for two-device verification |
 | **S8** | **First-sign-in adoption.** The three-way decision from §1, the "Keep this iPhone's / the account's / both" prompt, and initial-sync progress UI. | M | **needs owner** — product copy and the destructive-choice UX |
 | **S9** | **`appMeta` preference sync.** `currency`, `currencyChosen`, and the account-scoped settings; explicit device-local deny-list. | S | unattended |
@@ -492,7 +492,7 @@ lands. S7 is the one genuinely large slice and should not be combined with anyth
 
 **Resolved since this was written:** Q1 shipped — `src/data/recurrence-backfill.ts` derives the
 child id with `uuidV5` from `@/domain/uuid5`, so both devices compute the same id. Q3 shipped
-paid — `packages/backend/convex/sync.ts` calls `requirePro` in both the `push` and `pullSince`
+paid — `packages/backend/confect/sync.ts` calls `requirePro` in both the `push` and `pullSince`
 handlers, which is where the recommendation said the check belonged. Both are kept below for
 the reasoning; neither is still open.
 

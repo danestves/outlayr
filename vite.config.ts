@@ -27,6 +27,11 @@ const projectIgnores = [
     "**/.playwright-mcp",
     "**/.claude",
     "skills-lock.json",
+    "packages/backend/convex/*.ts",
+    "!packages/backend/convex/auth.config.ts",
+    "!packages/backend/convex/convex.config.ts",
+    "!packages/backend/convex/crons.ts",
+    "!packages/backend/convex/http.ts",
 ];
 
 const formatOnlyIgnores = ["**/*.html", "**/*.md"];
@@ -34,7 +39,7 @@ const formatOnlyIgnores = ["**/*.html", "**/*.md"];
 const NATIVE_SOURCE = "apps/native/src/**";
 const HERMES_SOURCE = [
     NATIVE_SOURCE,
-    "packages/backend/convex/lib/syncTables.ts",
+    "packages/backend/confect/lib/syncTables.ts",
     "packages/env/src/**",
     "packages/money/src/**",
 ];
@@ -304,10 +309,17 @@ export default defineConfig({
                 },
             },
             {
-                files: ["packages/backend/convex/**"],
+                files: ["packages/backend/convex/**", "packages/backend/confect/**"],
                 rules: {
                     "unicorn/filename-case": ["error", { case: "camelCase" }],
                     "unicorn/prefer-at": "off",
+                },
+            },
+            {
+                files: ["packages/backend/confect/**/*.spec.ts"],
+                plugins: ["vitest"],
+                rules: {
+                    "vitest/consistent-test-filename": "off",
                 },
             },
             {
@@ -443,13 +455,7 @@ export default defineConfig({
                 },
             },
             {
-                files: ["packages/backend/convex/account.test.ts"],
-                rules: {
-                    "outlayr/require-suppression-reason": "off",
-                },
-            },
-            {
-                files: ["packages/backend/convex/providerLifecycle.ts"],
+                files: ["packages/backend/confect/lib/providerLifecycle.ts"],
                 rules: {
                     "anti-slop/no-unknown-returns": "off",
                 },

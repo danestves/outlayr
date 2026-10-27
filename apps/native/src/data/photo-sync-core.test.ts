@@ -193,7 +193,7 @@ interface FakeBucket {
     released: string[];
 }
 
-// Stands in for R2 plus `packages/backend/convex/photos.ts`, minting the same account-namespaced key shape.
+// Stands in for R2 plus `packages/backend/confect/photos.ts`, minting the same account-namespaced key shape.
 function fakeTransport(
     bucket: FakeBucket = { confirmed: [], objects: new Map(), released: [] },
     overrides: Partial<PhotoTransport> = {}

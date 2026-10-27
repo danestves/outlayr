@@ -1,0 +1,56 @@
+import type { Document } from "@confect/server";
+import type schemaDefinition from "./schema";
+
+export type AccountDeletionJobsDoc = Document.Document<typeof schemaDefinition, "accountDeletionJobs">;
+export type AccountsDoc = Document.Document<typeof schemaDefinition, "accounts">;
+export type AppMetaDoc = Document.Document<typeof schemaDefinition, "appMeta">;
+export type BudgetsDoc = Document.Document<typeof schemaDefinition, "budgets">;
+export type CategoriesDoc = Document.Document<typeof schemaDefinition, "categories">;
+export type EnrichmentJobsDoc = Document.Document<typeof schemaDefinition, "enrichmentJobs">;
+export type ExchangeRatesDoc = Document.Document<typeof schemaDefinition, "exchangeRates">;
+export type GroundedSpendDoc = Document.Document<typeof schemaDefinition, "groundedSpend">;
+export type InstallmentPlansDoc = Document.Document<typeof schemaDefinition, "installmentPlans">;
+export type InstallmentsDoc = Document.Document<typeof schemaDefinition, "installments">;
+export type MainBudgetDoc = Document.Document<typeof schemaDefinition, "mainBudget">;
+export type MerchantKnowledgeDoc = Document.Document<typeof schemaDefinition, "merchantKnowledge">;
+export type OutsideMovesDoc = Document.Document<typeof schemaDefinition, "outsideMoves">;
+export type OutsidePaymentsDoc = Document.Document<typeof schemaDefinition, "outsidePayments">;
+export type PhotoObjectsDoc = Document.Document<typeof schemaDefinition, "photoObjects">;
+export type PhotoSizesDoc = Document.Document<typeof schemaDefinition, "photoSizes">;
+export type SavingsGoalsDoc = Document.Document<typeof schemaDefinition, "savingsGoals">;
+export type SyncStateDoc = Document.Document<typeof schemaDefinition, "syncState">;
+export type TagsDoc = Document.Document<typeof schemaDefinition, "tags">;
+export type TransactionAttachmentsDoc = Document.Document<typeof schemaDefinition, "transactionAttachments">;
+export type TransactionPhotosDoc = Document.Document<typeof schemaDefinition, "transactionPhotos">;
+export type TransactionSplitsDoc = Document.Document<typeof schemaDefinition, "transactionSplits">;
+export type TransactionTagsDoc = Document.Document<typeof schemaDefinition, "transactionTags">;
+export type TransactionsDoc = Document.Document<typeof schemaDefinition, "transactions">;
+export type TransfersDoc = Document.Document<typeof schemaDefinition, "transfers">;
+
+export interface Docs {
+  accountDeletionJobs: AccountDeletionJobsDoc;
+  accounts: AccountsDoc;
+  appMeta: AppMetaDoc;
+  budgets: BudgetsDoc;
+  categories: CategoriesDoc;
+  enrichmentJobs: EnrichmentJobsDoc;
+  exchangeRates: ExchangeRatesDoc;
+  groundedSpend: GroundedSpendDoc;
+  installmentPlans: InstallmentPlansDoc;
+  installments: InstallmentsDoc;
+  mainBudget: MainBudgetDoc;
+  merchantKnowledge: MerchantKnowledgeDoc;
+  outsideMoves: OutsideMovesDoc;
+  outsidePayments: OutsidePaymentsDoc;
+  photoObjects: PhotoObjectsDoc;
+  photoSizes: PhotoSizesDoc;
+  savingsGoals: SavingsGoalsDoc;
+  syncState: SyncStateDoc;
+  tags: TagsDoc;
+  transactionAttachments: TransactionAttachmentsDoc;
+  transactionPhotos: TransactionPhotosDoc;
+  transactionSplits: TransactionSplitsDoc;
+  transactionTags: TransactionTagsDoc;
+  transactions: TransactionsDoc;
+  transfers: TransfersDoc;
+}
