@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "@jest/globals";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import type BetterSqlite3 from "better-sqlite3";
 import { and, eq, isNull } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { accounts, exchangeRates, outbox, transactions, transfers } from "@/db/schema";
@@ -652,7 +653,7 @@ describe("a restore the account has to hear about", () => {
         const db = syncedDb();
         const id = await transactionsRepo.create(db, DRAFT);
         await transactionsRepo.remove(db, id, DELETED_AT);
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
 
         await transactionsRepo.restore(db, id, RESTORED_AT);
 
@@ -663,7 +664,7 @@ describe("a restore the account has to hear about", () => {
         const db = syncedDb();
         const id = await transactionsRepo.create(db, DRAFT);
         await transactionsRepo.remove(db, id, DELETED_AT);
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
         await transactionsRepo.restore(db, id, RESTORED_AT);
         const first = (await queued(db))[0]?.seq;
 
@@ -763,12 +764,12 @@ describe("switching sync off over a ledger already logged", () => {
 
     it("stops the queue without taking a row off this device", async () => {
         const db = syncedDb();
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
         await transactionsRepo.create(db, DRAFT);
         const tombstoned = await transactionsRepo.create(db, DRAFT);
         await transactionsRepo.remove(db, tombstoned, DELETED_AT);
 
-        await setSyncEnabled(db, false);
+        await Effect.runPromise(setSyncEnabled(db, false));
         await transactionsRepo.create(db, DRAFT);
 
         await expect(db.select({ seq: outbox.seq }).from(outbox)).resolves.toStrictEqual([]);

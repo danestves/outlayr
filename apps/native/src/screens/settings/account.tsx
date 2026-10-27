@@ -9,7 +9,7 @@ import { MonoLabel } from "@/components/mono-label";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { useDatabase, useLocalData } from "@/contexts/local-data-context";
-import { setSyncEnabled } from "@/data/sync-outbox-core";
+import { setSyncEnabled, runPromiseUnwrapped } from "@/data/sync-outbox-core";
 import { closeDatabase } from "@/db/client";
 import type { Database } from "@/db/client";
 import { accountLabel, signInFailureMessage } from "@/domain/account";
@@ -86,7 +86,7 @@ function AccountContent({ client, db }: { client: AuthClient; db: Database }) {
                 await client.deleteUser();
             },
             navigateToLedger: openLedger,
-            quiesce: () => setSyncEnabled(db, false),
+            quiesce: () => runPromiseUnwrapped(setSyncEnabled(db, false)),
             signOut: async () => {
                 await client.signOut();
             },
@@ -151,7 +151,7 @@ function AccountContent({ client, db }: { client: AuthClient; db: Database }) {
                 >("accountDeletion:prepare", {});
                 return { ...preparation, provider: binding.provider, providerSubject: binding.providerSubject };
             },
-            quiesce: () => setSyncEnabled(db, false),
+            quiesce: () => runPromiseUnwrapped(setSyncEnabled(db, false)),
             resetDevice: action === "deleteAll" && resetGate ? async () => await resetGate.recover() : undefined,
             revokeProvider: async (preparation) => {
                 // SAFETY: `prepareDeletion` is the only producer and adds the pair `StoredDeletionPreparation` needs.

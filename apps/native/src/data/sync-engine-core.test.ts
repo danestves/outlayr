@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import { eq, getTableColumns, sql } from "drizzle-orm";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import {
@@ -253,23 +254,23 @@ describe("drainOutbox", () => {
             return { accepted: 0, nextSeq: 1, skipped: 0 };
         };
 
-        await expect(drainOutbox(db, push)).resolves.toBe(0);
+        await expect(Effect.runPromise(drainOutbox(db, push))).resolves.toBe(0);
         expect(calls).toBe(0);
     });
 
     it("pushes queued rows and clears exactly what it sent", async () => {
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
         await addTransaction(db, "t1");
         await addTransaction(db, "t2");
         const server = makeServer();
 
-        await expect(drainOutbox(db, server.push)).resolves.toBe(2);
-        await expect(outboxPendingCount(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(drainOutbox(db, server.push))).resolves.toBe(2);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
         expect(server.rows.size).toBe(2);
     });
 
     it("carries the row's own values, dates as epoch milliseconds", async () => {
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
         await addTransaction(db, "t1", {
             amount: 42.5,
             date: AT(5000),
@@ -277,10 +278,12 @@ describe("drainOutbox", () => {
             updatedAt: AT(7000),
         });
         let seen: WireRow[] = [];
-        await drainOutbox(db, async ({ rows }) => {
-            seen = rows;
-            return { accepted: rows.length, nextSeq: 1, skipped: 0 };
-        });
+        await Effect.runPromise(
+            drainOutbox(db, async ({ rows }) => {
+                seen = rows;
+                return { accepted: rows.length, nextSeq: 1, skipped: 0 };
+            })
+        );
 
         expect(seen[0].table).toBe("transactions");
         expect(seen[0].updatedAt).toBe(7000);
@@ -292,7 +295,7 @@ describe("drainOutbox", () => {
     });
 
     it("round-trips resolved and pending custom transaction rate triples", async () => {
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
         await addTransaction(db, "resolved-custom", {
             amountUsd: 1.801802,
             exchangeRate: 55.5,
@@ -304,16 +307,20 @@ describe("drainOutbox", () => {
             exchangeRateType: "custom",
         });
         let wireRows: WireRow[] = [];
-        await drainOutbox(db, async ({ rows }) => {
-            wireRows = rows;
-            return { accepted: rows.length, nextSeq: rows.length, skipped: 0 };
-        });
+        await Effect.runPromise(
+            drainOutbox(db, async ({ rows }) => {
+                wireRows = rows;
+                return { accepted: rows.length, nextSeq: rows.length, skipped: 0 };
+            })
+        );
 
         const target = makeDb();
-        await applyPulledRows(target, {
-            cursor: wireRows.length,
-            rows: wireRows.map((row, index) => ({ ...row, deviceId: "device-a", seq: index + 1 })),
-        });
+        await Effect.runPromise(
+            applyPulledRows(target, {
+                cursor: wireRows.length,
+                rows: wireRows.map((row, index) => ({ ...row, deviceId: "device-a", seq: index + 1 })),
+            })
+        );
         const replicated = await target.select().from(transactions);
         expect(replicated.find((row) => row.id === "resolved-custom")).toMatchObject({
             amountUsd: 1.801802,
@@ -329,22 +336,24 @@ describe("drainOutbox", () => {
 
     it("pushes a tombstone as one", async () => {
         await addTransaction(db, "t1");
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
         await db
             .update(transactions)
             .set({ deletedAt: AT(9000), updatedAt: AT(9000) })
             .where(eqId("t1"));
         let seen: WireRow[] = [];
-        await drainOutbox(db, async ({ rows }) => {
-            seen = rows;
-            return { accepted: rows.length, nextSeq: 1, skipped: 0 };
-        });
+        await Effect.runPromise(
+            drainOutbox(db, async ({ rows }) => {
+                seen = rows;
+                return { accepted: rows.length, nextSeq: 1, skipped: 0 };
+            })
+        );
 
         expect(seen[0].deletedAt).toBe(9000);
     });
 
     it("leaves an edit that arrived mid-flight queued", async () => {
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
         await addTransaction(db, "t1");
         const push: PushFn = async ({ rows }) => {
             await db
@@ -354,47 +363,53 @@ describe("drainOutbox", () => {
             return { accepted: rows.length, nextSeq: 1, skipped: 0 };
         };
 
-        await drainOutbox(db, push);
+        await Effect.runPromise(drainOutbox(db, push));
 
-        await expect(outboxPendingCount(db)).resolves.toBe(1);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(1);
     });
 
     it("pages a queue longer than one batch", async () => {
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
         for (let i = 0; i < 501; i += 1) {
             await addTransaction(db, `t${i}`);
         }
         const batches: number[] = [];
-        await drainOutbox(db, async ({ rows }) => {
-            batches.push(rows.length);
-            return { accepted: rows.length, nextSeq: 1, skipped: 0 };
-        });
+        await Effect.runPromise(
+            drainOutbox(db, async ({ rows }) => {
+                batches.push(rows.length);
+                return { accepted: rows.length, nextSeq: 1, skipped: 0 };
+            })
+        );
 
         expect(batches).toStrictEqual([500, 1]);
-        await expect(outboxPendingCount(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
     });
 
     it("keeps the queue when the push throws", async () => {
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
         await addTransaction(db, "t1");
 
         await expect(
-            drainOutbox(db, async () => {
-                throw new Error("offline");
-            })
+            Effect.runPromise(
+                drainOutbox(db, async () => {
+                    throw new Error("offline");
+                })
+            )
         ).rejects.toThrow();
-        await expect(outboxPendingCount(db)).resolves.toBe(1);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(1);
     });
 
     it("pushes only the account-scoped meta keys", async () => {
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
         await setMeta(db, META_KEYS.currency, "EUR");
         await setMeta(db, META_KEYS.firstLaunch, "0");
         let seen: WireRow[] = [];
-        await drainOutbox(db, async ({ rows }) => {
-            seen = rows;
-            return { accepted: rows.length, nextSeq: 1, skipped: 0 };
-        });
+        await Effect.runPromise(
+            drainOutbox(db, async ({ rows }) => {
+                seen = rows;
+                return { accepted: rows.length, nextSeq: 1, skipped: 0 };
+            })
+        );
 
         expect(seen.map((row) => row.localId)).toStrictEqual([META_KEYS.currency]);
         expect(seen[0].fields.value).toBe("EUR");
@@ -409,17 +424,19 @@ describe("applyPulledRows", () => {
     });
 
     it("inserts a row this device has never seen", async () => {
-        const result = await applyPulledRows(db, {
-            cursor: 1,
-            rows: [txRow("remote", 1, 5000, { fields: { amount: 7.5 } })],
-        });
+        const result = await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor: 1,
+                rows: [txRow("remote", 1, 5000, { fields: { amount: 7.5 } })],
+            })
+        );
 
         const [row] = await db.select().from(transactions);
         expect(result.applied).toBe(1);
         expect(row.id).toBe("remote");
         expect(row.amount).toBe(7.5);
         expect(row.updatedAt.getTime()).toBe(5000);
-        await expect(getSyncCursor(db)).resolves.toBe(1);
+        await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(1);
     });
 
     it("commits the whole apply inside one real transaction", async () => {
@@ -435,27 +452,31 @@ describe("applyPulledRows", () => {
             updatedAt: new Date(1000),
         });
 
-        const result = await applyPulledRows(transactional, {
-            cursor: 9,
-            rows: [txRow("remote", 1, 5000, { fields: { amount: 7.5 } })],
-        });
+        const result = await Effect.runPromise(
+            applyPulledRows(transactional, {
+                cursor: 9,
+                rows: [txRow("remote", 1, 5000, { fields: { amount: 7.5 } })],
+            })
+        );
 
         const [row] = await transactional.select().from(transactions);
         expect(result.applied).toBe(1);
         expect(row.amount).toBe(7.5);
-        await expect(getSyncCursor(transactional)).resolves.toBe(9);
-        await expect(outboxPendingCount(transactional)).resolves.toBe(0);
+        await expect(Effect.runPromise(getSyncCursor(transactional))).resolves.toBe(9);
+        await expect(Effect.runPromise(outboxPendingCount(transactional))).resolves.toBe(0);
     });
 
     it("round-trips dates and nulls", async () => {
-        await applyPulledRows(db, {
-            cursor: 1,
-            rows: [
-                txRow("remote", 1, 5000, {
-                    fields: { date: 111, day: 222, month: 333, recurringEndDate: null },
-                }),
-            ],
-        });
+        await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor: 1,
+                rows: [
+                    txRow("remote", 1, 5000, {
+                        fields: { date: 111, day: 222, month: 333, recurringEndDate: null },
+                    }),
+                ],
+            })
+        );
 
         const [row] = await db.select().from(transactions);
         expect(row.date.getTime()).toBe(111);
@@ -466,18 +487,20 @@ describe("applyPulledRows", () => {
     });
 
     it("keeps a newer local row and does not clear its queue entry", async () => {
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
         await addTransaction(db, "t1", { note: "mine", updatedAt: AT(9000) });
 
-        const result = await applyPulledRows(db, {
-            cursor: 1,
-            rows: [txRow("t1", 1, 1000, { fields: { note: "theirs" } })],
-        });
+        const result = await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor: 1,
+                rows: [txRow("t1", 1, 1000, { fields: { note: "theirs" } })],
+            })
+        );
 
         const [row] = await db.select().from(transactions);
         expect(result.applied).toBe(0);
         expect(row.note).toBe("mine");
-        await expect(outboxPendingCount(db)).resolves.toBe(1);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(1);
     });
 
     it("r1 — a local tombstone is not resurrected by a newer incoming edit", async () => {
@@ -486,10 +509,12 @@ describe("applyPulledRows", () => {
             updatedAt: AT(1000),
         });
 
-        await applyPulledRows(db, {
-            cursor: 1,
-            rows: [txRow("t1", 1, 9000, { fields: { note: "back" } })],
-        });
+        await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor: 1,
+                rows: [txRow("t1", 1, 9000, { fields: { note: "back" } })],
+            })
+        );
 
         const [row] = await db.select().from(transactions);
         expect(row.deletedAt?.getTime()).toBe(1000);
@@ -504,14 +529,16 @@ describe("applyPulledRows", () => {
             updatedAt: AT(1000),
         });
 
-        await applyPulledRows(db, {
-            cursor: 1,
-            rows: [
-                txRow("t1", 1, 9000, {
-                    fields: { onceRecurring: true, recurringType: 0 },
-                }),
-            ],
-        });
+        await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor: 1,
+                rows: [
+                    txRow("t1", 1, 9000, {
+                        fields: { onceRecurring: true, recurringType: 0 },
+                    }),
+                ],
+            })
+        );
 
         const [row] = await db.select().from(transactions);
         expect(row.reminderLeadDays).toBeNull();
@@ -525,10 +552,12 @@ describe("applyPulledRows", () => {
             updatedAt: AT(1000),
         });
 
-        await applyPulledRows(db, {
-            cursor: 1,
-            rows: [txRow("t1", 1, 9000, { deletedAt: 9000 })],
-        });
+        await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor: 1,
+                rows: [txRow("t1", 1, 9000, { deletedAt: 9000 })],
+            })
+        );
 
         const [row] = await db.select().from(transactions);
         expect(row.reminderLeadDays).toBeNull();
@@ -542,14 +571,16 @@ describe("applyPulledRows", () => {
             updatedAt: AT(1000),
         });
 
-        await applyPulledRows(db, {
-            cursor: 1,
-            rows: [
-                txRow("t1", 1, 9000, {
-                    fields: { note: "theirs", onceRecurring: true, recurringType: 3 },
-                }),
-            ],
-        });
+        await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor: 1,
+                rows: [
+                    txRow("t1", 1, 9000, {
+                        fields: { note: "theirs", onceRecurring: true, recurringType: 3 },
+                    }),
+                ],
+            })
+        );
 
         const [row] = await db.select().from(transactions);
         expect(row.note).toBe("theirs");
@@ -557,28 +588,32 @@ describe("applyPulledRows", () => {
     });
 
     it("keeps an unsent local edit on an exact updatedAt tie", async () => {
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
         await addTransaction(db, "t1", { note: "mine", updatedAt: AT(5000) });
 
-        await applyPulledRows(db, {
-            cursor: 1,
-            rows: [txRow("t1", 1, 5000, { fields: { note: "theirs" } })],
-        });
+        await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor: 1,
+                rows: [txRow("t1", 1, 5000, { fields: { note: "theirs" } })],
+            })
+        );
 
         const [row] = await db.select().from(transactions);
         expect(row.note).toBe("mine");
-        await expect(outboxPendingCount(db)).resolves.toBe(1);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(1);
     });
 
     it("deletes the queue entries its own writes create", async () => {
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
 
-        await applyPulledRows(db, {
-            cursor: 1,
-            rows: [txRow("remote", 1, 5000)],
-        });
+        await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor: 1,
+                rows: [txRow("remote", 1, 5000)],
+            })
+        );
 
-        await expect(outboxPendingCount(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
     });
 
     it("applies a page whose transaction precedes the category it references", async () => {
@@ -601,10 +636,12 @@ describe("applyPulledRows", () => {
             updatedAt: 6000,
         };
 
-        const result = await applyPulledRows(db, {
-            cursor: 2,
-            rows: [txRow("t1", 1, 5000, { fields: { categoryId: "c1" } }), category],
-        });
+        const result = await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor: 2,
+                rows: [txRow("t1", 1, 5000, { fields: { categoryId: "c1" } }), category],
+            })
+        );
 
         expect(result.applied).toBe(2);
         const [row] = await db.select().from(transactions);
@@ -612,38 +649,42 @@ describe("applyPulledRows", () => {
     });
 
     it("advances the cursor only as far as the page reached", async () => {
-        await applyPulledRows(db, { cursor: 1, rows: [txRow("t1", 1, 5000)] });
-        await applyPulledRows(db, { cursor: 7, rows: [txRow("t2", 7, 5000)] });
+        await Effect.runPromise(applyPulledRows(db, { cursor: 1, rows: [txRow("t1", 1, 5000)] }));
+        await Effect.runPromise(applyPulledRows(db, { cursor: 7, rows: [txRow("t2", 7, 5000)] }));
 
-        await expect(getSyncCursor(db)).resolves.toBe(7);
+        await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(7);
     });
 
     it("leaves the cursor alone on an empty page", async () => {
-        await applyPulledRows(db, { cursor: 99, rows: [] });
+        await Effect.runPromise(applyPulledRows(db, { cursor: 99, rows: [] }));
 
-        await expect(getSyncCursor(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(0);
     });
 
     it("keeps an unsent local meta value rather than taking the incoming one", async () => {
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
         await setMeta(db, META_KEYS.currency, "GBP");
 
-        await applyPulledRows(db, {
-            cursor: 1,
-            rows: [metaRow(META_KEYS.currency, 1, 9000, "JPY")],
-        });
+        await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor: 1,
+                rows: [metaRow(META_KEYS.currency, 1, 9000, "JPY")],
+            })
+        );
 
         await expect(getMeta(db, META_KEYS.currency)).resolves.toBe("GBP");
-        await expect(outboxPendingCount(db)).resolves.toBe(1);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(1);
     });
 
     it("takes the incoming meta value when nothing local is owed", async () => {
         await setMeta(db, META_KEYS.currency, "GBP");
 
-        await applyPulledRows(db, {
-            cursor: 1,
-            rows: [metaRow(META_KEYS.currency, 1, 9000, "JPY")],
-        });
+        await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor: 1,
+                rows: [metaRow(META_KEYS.currency, 1, 9000, "JPY")],
+            })
+        );
 
         await expect(getMeta(db, META_KEYS.currency)).resolves.toBe("JPY");
     });
@@ -651,31 +692,35 @@ describe("applyPulledRows", () => {
     it("ignores an incoming meta key the allow-list no longer names", async () => {
         await setMeta(db, "numberEntryType", "1");
 
-        const result = await applyPulledRows(db, {
-            cursor: 1,
-            rows: [metaRow("numberEntryType", 1, 9000, "2")],
-        });
+        const result = await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor: 1,
+                rows: [metaRow("numberEntryType", 1, 9000, "2")],
+            })
+        );
 
         await expect(getMeta(db, "numberEntryType")).resolves.toBe("1");
         expect(result.tables).toStrictEqual([]);
     });
 
     it("reports the tables it wrote so the caller can invalidate them", async () => {
-        const result = await applyPulledRows(db, {
-            cursor: 2,
-            rows: [
-                txRow("t1", 1, 5000),
-                {
-                    deletedAt: null,
-                    deviceId: "device-b",
-                    fields: { value: "JPY" },
-                    localId: META_KEYS.currency,
-                    seq: 2,
-                    table: "appMeta",
-                    updatedAt: 5000,
-                },
-            ],
-        });
+        const result = await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor: 2,
+                rows: [
+                    txRow("t1", 1, 5000),
+                    {
+                        deletedAt: null,
+                        deviceId: "device-b",
+                        fields: { value: "JPY" },
+                        localId: META_KEYS.currency,
+                        seq: 2,
+                        table: "appMeta",
+                        updatedAt: 5000,
+                    },
+                ],
+            })
+        );
 
         expect(result.tables.sort((a, b) => a.localeCompare(b))).toStrictEqual(["appMeta", "transactions"]);
     });
@@ -687,12 +732,12 @@ describe("the echo of this device's own push", () => {
     beforeEach(async () => {
         db = makeDb();
         server = makeServer();
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
     });
 
     async function pushAndEcho() {
-        await drainOutbox(db, server.push);
-        return await server.pull({ cursor: await getSyncCursor(db), limit: 100 });
+        await Effect.runPromise(drainOutbox(db, server.push));
+        return await server.pull({ cursor: await Effect.runPromise(getSyncCursor(db)), limit: 100 });
     }
 
     const totalChanges = async () => (await db.all<{ n: number }>(sql`SELECT total_changes() AS n`))[0]?.n;
@@ -703,21 +748,23 @@ describe("the echo of this device's own push", () => {
         const echo = await pushAndEcho();
         const before = await totalChanges();
 
-        const result = await applyPulledRows(db, echo);
+        const result = await Effect.runPromise(applyPulledRows(db, echo));
 
         expect(result.tables).toStrictEqual([]);
         await expect(totalChanges()).resolves.toBe((before ?? 0) + 1);
-        await expect(outboxPendingCount(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
     });
 
     it("still writes a row that differs in a single field", async () => {
         await addTransaction(db, "t1", { note: "mine" });
         const { cursor, rows } = await pushAndEcho();
 
-        const result = await applyPulledRows(db, {
-            cursor,
-            rows: rows.map((row) => ({ ...row, fields: { ...row.fields, note: "theirs" } })),
-        });
+        const result = await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor,
+                rows: rows.map((row) => ({ ...row, fields: { ...row.fields, note: "theirs" } })),
+            })
+        );
 
         const [row] = await db.select().from(transactions);
         expect(result.tables).toStrictEqual(["transactions"]);
@@ -748,7 +795,7 @@ describe("the echo of this device's own push", () => {
             updatedAt: AT(1000),
         });
 
-        const result = await applyPulledRows(db, await pushAndEcho());
+        const result = await Effect.runPromise(applyPulledRows(db, await pushAndEcho()));
 
         const [goal] = await db.select().from(savingsGoals);
         expect(goal.startAmountUsd).toBeNull();
@@ -758,7 +805,7 @@ describe("the echo of this device's own push", () => {
     it("still clears the notice on an echoed row with no live schedule", async () => {
         await addTransaction(db, "t1", { recurringType: 0, reminderLeadDays: 3 });
 
-        const result = await applyPulledRows(db, await pushAndEcho());
+        const result = await Effect.runPromise(applyPulledRows(db, await pushAndEcho()));
 
         const [row] = await db.select().from(transactions);
         expect(result.tables).toStrictEqual(["transactions"]);
@@ -822,10 +869,12 @@ describe("r3 — invariants Convex cannot hold", () => {
             updatedAt: AT(1000),
         });
 
-        await applyPulledRows(db, {
-            cursor: 1,
-            rows: [budgetRow("remote", 1, 9000, "c1")],
-        });
+        await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor: 1,
+                rows: [budgetRow("remote", 1, 9000, "c1")],
+            })
+        );
 
         const rows = await db.select().from(budgets);
         const live = rows.filter((row) => row.deletedAt === null);
@@ -837,7 +886,7 @@ describe("r3 — invariants Convex cannot hold", () => {
     });
 
     it("tombstones the incoming budget when the local one wins", async () => {
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
         await db.insert(categories).values({ id: "c1", updatedAt: AT(1) });
         await db.insert(budgets).values({
             amount: 50,
@@ -848,10 +897,12 @@ describe("r3 — invariants Convex cannot hold", () => {
         });
         await db.delete(outbox);
 
-        await applyPulledRows(db, {
-            cursor: 1,
-            rows: [budgetRow("remote", 1, 1000, "c1")],
-        });
+        await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor: 1,
+                rows: [budgetRow("remote", 1, 1000, "c1")],
+            })
+        );
 
         const rows = await db.select().from(budgets);
         const live = rows.filter((row) => row.deletedAt === null);
@@ -862,7 +913,7 @@ describe("r3 — invariants Convex cannot hold", () => {
     });
 
     it("queues the tombstone it writes so the other device converges", async () => {
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
         await db.insert(categories).values({ id: "c1", updatedAt: AT(1) });
         await db.insert(budgets).values({
             amount: 50,
@@ -873,10 +924,12 @@ describe("r3 — invariants Convex cannot hold", () => {
         });
         await db.delete(outbox);
 
-        await applyPulledRows(db, {
-            cursor: 1,
-            rows: [budgetRow("remote", 1, 9000, "c1")],
-        });
+        await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor: 1,
+                rows: [budgetRow("remote", 1, 9000, "c1")],
+            })
+        );
 
         const queued = await db.select().from(outbox);
         expect(queued.map((row) => row.localId)).toStrictEqual(["local"]);
@@ -892,10 +945,12 @@ describe("r3 — invariants Convex cannot hold", () => {
                 type: 0,
                 updatedAt: AT(5000),
             });
-            await applyPulledRows(database, {
-                cursor: 1,
-                rows: [budgetRow(theirs, 1, 5000, "c1")],
-            });
+            await Effect.runPromise(
+                applyPulledRows(database, {
+                    cursor: 1,
+                    rows: [budgetRow(theirs, 1, 5000, "c1")],
+                })
+            );
             const rows = await database.select().from(budgets);
             return rows.filter((row) => row.deletedAt === null).map((row) => row.id);
         };
@@ -911,7 +966,7 @@ describe("r3 — invariants Convex cannot hold", () => {
         await seedTagPair(db);
         await db.insert(transactionTags).values({ id: "local", tagId: "g1", transactionId: "t1", updatedAt: AT(1000) });
 
-        await applyPulledRows(db, { cursor: 1, rows: [tagLinkRow("remote", 9000)] });
+        await Effect.runPromise(applyPulledRows(db, { cursor: 1, rows: [tagLinkRow("remote", 9000)] }));
 
         const rows = await db.select().from(transactionTags);
         const live = rows.filter((row) => row.deletedAt === null);
@@ -920,12 +975,12 @@ describe("r3 — invariants Convex cannot hold", () => {
     });
 
     it("tombstones the incoming tag link when the local one wins, and keeps it queued", async () => {
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
         await seedTagPair(db);
         await db.insert(transactionTags).values({ id: "local", tagId: "g1", transactionId: "t1", updatedAt: AT(9000) });
         await db.delete(outbox);
 
-        await applyPulledRows(db, { cursor: 1, rows: [tagLinkRow("remote", 1000)] });
+        await Effect.runPromise(applyPulledRows(db, { cursor: 1, rows: [tagLinkRow("remote", 1000)] }));
 
         const rows = await db.select().from(transactionTags);
         expect(rows.filter((row) => row.deletedAt === null).map((row) => row.id)).toStrictEqual(["local"]);
@@ -946,10 +1001,12 @@ describe("r3 — invariants Convex cannot hold", () => {
             updatedAt: AT(1000),
         });
 
-        await applyPulledRows(db, {
-            cursor: 1,
-            rows: [budgetRow("remote", 1, 9000, "c2")],
-        });
+        await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor: 1,
+                rows: [budgetRow("remote", 1, 9000, "c2")],
+            })
+        );
 
         const live = (await db.select().from(budgets)).filter((row) => row.deletedAt === null);
         expect(live).toHaveLength(2);
@@ -963,30 +1020,32 @@ describe("r3 — invariants Convex cannot hold", () => {
             updatedAt: AT(1000),
         });
 
-        await applyPulledRows(db, {
-            cursor: 1,
-            rows: [
-                {
-                    deletedAt: null,
-                    deviceId: "device-b",
-                    fields: {
-                        amount: 100,
-                        amountUsd: 100,
-                        currency: "USD",
-                        dateCreated: null,
-                        green: false,
-                        name: null,
-                        rollover: false,
-                        startDate: null,
-                        type: 0,
+        await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor: 1,
+                rows: [
+                    {
+                        deletedAt: null,
+                        deviceId: "device-b",
+                        fields: {
+                            amount: 100,
+                            amountUsd: 100,
+                            currency: "USD",
+                            dateCreated: null,
+                            green: false,
+                            name: null,
+                            rollover: false,
+                            startDate: null,
+                            type: 0,
+                        },
+                        localId: "remote",
+                        seq: 1,
+                        table: "mainBudget",
+                        updatedAt: 9000,
                     },
-                    localId: "remote",
-                    seq: 1,
-                    table: "mainBudget",
-                    updatedAt: 9000,
-                },
-            ],
-        });
+                ],
+            })
+        );
 
         const live = (await db.select().from(mainBudget)).filter((row) => row.deletedAt === null);
         expect(live).toHaveLength(1);
@@ -997,7 +1056,7 @@ describe("r3 — invariants Convex cannot hold", () => {
 describe("a pulled page that outgrows the queue lookup's chunk", () => {
     it("still defers to an unsent local edit queued beyond the first chunk", async () => {
         const db = makeDb();
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
         await addTransaction(db, "t1", { note: "mine", updatedAt: AT(5000) });
 
         // Last in the page, so its id falls past the 300-id cut the outbox lookup shares with `rowsById`.
@@ -1007,20 +1066,20 @@ describe("a pulled page that outgrows the queue lookup's chunk", () => {
             rows: [...fillers, txRow("t1", ID_CHUNK + 10, 5000, { fields: { note: "theirs" } })],
         };
 
-        const result = await applyPulledRows(db, page);
+        const result = await Effect.runPromise(applyPulledRows(db, page));
 
         expect(result.applied).toBe(ID_CHUNK + 9);
         const [row] = await db.select().from(transactions).where(eqId("t1"));
         expect(row.note).toBe("mine");
-        await expect(outboxPendingCount(db)).resolves.toBe(1);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(1);
     });
 });
 
 describe("two devices against one account", () => {
     it("applies a re-emitted pending-custom winner after its original sequence was consumed", async () => {
         const db = makeDb();
-        await setSyncEnabled(db, true);
-        await applyPulledRows(db, { cursor: 1, rows: [metaRow("currency", 1, 50, "VES")] });
+        await Effect.runPromise(setSyncEnabled(db, true));
+        await Effect.runPromise(applyPulledRows(db, { cursor: 1, rows: [metaRow("currency", 1, 50, "VES")] }));
         await addTransaction(db, "t1", {
             amountUsd: 2.5,
             currency: "VES",
@@ -1046,20 +1105,20 @@ describe("two devices against one account", () => {
                 : [],
         });
 
-        await runSync(db, { pull, push });
+        await Effect.runPromise(runSync(db, { pull, push }));
 
         const [row] = await db.select().from(transactions);
         expect(row).toMatchObject({ amountUsd: null, exchangeRate: null, exchangeRateType: "custom" });
-        await expect(getSyncCursor(db)).resolves.toBe(2);
-        await expect(outboxPendingCount(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(2);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
     });
 
     it("replicates an account, dates as epochs and the local path withheld", async () => {
         const alpha = makeDb();
         const beta = makeDb();
         const server = makeServer();
-        await setSyncEnabled(alpha, true);
-        await setSyncEnabled(beta, true);
+        await Effect.runPromise(setSyncEnabled(alpha, true));
+        await Effect.runPromise(setSyncEnabled(beta, true));
 
         await alpha.insert(accounts).values({
             currency: "EUR",
@@ -1073,8 +1132,8 @@ describe("two devices against one account", () => {
             sortOrder: 2,
             updatedAt: AT(3000),
         });
-        await runSync(alpha, server.transport);
-        await runSync(beta, server.transport);
+        await Effect.runPromise(runSync(alpha, server.transport));
+        await Effect.runPromise(runSync(beta, server.transport));
 
         const [row] = await beta.select().from(accounts);
         expect(row.name).toBe("Checking");
@@ -1085,25 +1144,25 @@ describe("two devices against one account", () => {
         expect(row.dateCreated.getTime()).toBe(3000);
         expect(row.sortOrder).toBe(2);
         expect(row.imageUri).toBeNull();
-        await expect(outboxPendingCount(beta)).resolves.toBe(0);
+        await expect(Effect.runPromise(outboxPendingCount(beta))).resolves.toBe(0);
     });
 
     it("converges a concurrent edit to the same row on the later writer", async () => {
         const alpha = makeDb();
         const beta = makeDb();
         const server = makeServer();
-        await setSyncEnabled(alpha, true);
-        await setSyncEnabled(beta, true);
+        await Effect.runPromise(setSyncEnabled(alpha, true));
+        await Effect.runPromise(setSyncEnabled(beta, true));
 
         await addTransaction(alpha, "t1", { note: "seed", updatedAt: AT(1000) });
-        await runSync(alpha, server.transport);
-        await runSync(beta, server.transport);
+        await Effect.runPromise(runSync(alpha, server.transport));
+        await Effect.runPromise(runSync(beta, server.transport));
 
         await bumpNote(alpha, "t1", "from-alpha", 2000);
         await bumpNote(beta, "t1", "from-beta", 3000);
-        await runSync(alpha, server.transport);
-        await runSync(beta, server.transport);
-        await runSync(alpha, server.transport);
+        await Effect.runPromise(runSync(alpha, server.transport));
+        await Effect.runPromise(runSync(beta, server.transport));
+        await Effect.runPromise(runSync(alpha, server.transport));
 
         expect((await alpha.select().from(transactions))[0].note).toBe("from-beta");
         expect((await beta.select().from(transactions))[0].note).toBe("from-beta");
@@ -1113,20 +1172,20 @@ describe("two devices against one account", () => {
         const alpha = makeDb();
         const beta = makeDb();
         const server = makeServer();
-        await setSyncEnabled(alpha, true);
-        await setSyncEnabled(beta, true);
+        await Effect.runPromise(setSyncEnabled(alpha, true));
+        await Effect.runPromise(setSyncEnabled(beta, true));
 
         await addTransaction(alpha, "t1", { updatedAt: AT(1000) });
-        await runSync(alpha, server.transport);
-        await runSync(beta, server.transport);
+        await Effect.runPromise(runSync(alpha, server.transport));
+        await Effect.runPromise(runSync(beta, server.transport));
 
         // Beta's later edit still loses: R1 does not consult the clock.
         await tombstone(alpha, "t1", 2000);
         await bumpNote(beta, "t1", "still-here", 9000);
-        await runSync(alpha, server.transport);
-        await runSync(beta, server.transport);
-        await runSync(alpha, server.transport);
-        await runSync(beta, server.transport);
+        await Effect.runPromise(runSync(alpha, server.transport));
+        await Effect.runPromise(runSync(beta, server.transport));
+        await Effect.runPromise(runSync(alpha, server.transport));
+        await Effect.runPromise(runSync(beta, server.transport));
 
         for (const db of [alpha, beta]) {
             const [row] = await db.select().from(transactions);
@@ -1138,28 +1197,28 @@ describe("two devices against one account", () => {
         const alpha = makeDb();
         const beta = makeDb();
         const server = makeServer();
-        await setSyncEnabled(alpha, true);
-        await setSyncEnabled(beta, true);
+        await Effect.runPromise(setSyncEnabled(alpha, true));
+        await Effect.runPromise(setSyncEnabled(beta, true));
         const liveOn = async (db: Database) => (await db.select().from(transactions))[0].deletedAt === null;
 
         await addTransaction(alpha, "t1");
-        await runSync(alpha, server.transport);
-        await runSync(beta, server.transport);
+        await Effect.runPromise(runSync(alpha, server.transport));
+        await Effect.runPromise(runSync(beta, server.transport));
         await transactionsRepo.remove(alpha, "t1", AT(2000));
-        await runSync(alpha, server.transport);
-        await runSync(beta, server.transport);
+        await Effect.runPromise(runSync(alpha, server.transport));
+        await Effect.runPromise(runSync(beta, server.transport));
 
         await transactionsRepo.restore(beta, "t1", AT(3000));
-        await runSync(beta, server.transport);
-        await runSync(alpha, server.transport);
+        await Effect.runPromise(runSync(beta, server.transport));
+        await Effect.runPromise(runSync(alpha, server.transport));
         await expect(liveOn(alpha)).resolves.toBe(true);
 
-        await pullAndApply(alpha, async ({ limit }) => await server.pull({ cursor: 0, limit }));
+        await Effect.runPromise(pullAndApply(alpha, async ({ limit }) => await server.pull({ cursor: 0, limit })));
         await expect(liveOn(alpha)).resolves.toBe(true);
 
         await transactionsRepo.remove(alpha, "t1", AT(4000));
-        await runSync(alpha, server.transport);
-        await runSync(beta, server.transport);
+        await Effect.runPromise(runSync(alpha, server.transport));
+        await Effect.runPromise(runSync(beta, server.transport));
         await expect(liveOn(beta)).resolves.toBe(false);
     });
 
@@ -1184,12 +1243,12 @@ describe("two devices against one account", () => {
         await addTransaction(db, "restored-there", { deletedAt: AT(2000), updatedAt: AT(2000) });
         await addTransaction(db, "from-archive", { updatedAt: AT(1500) });
         await addTransaction(db, "deleted", { deletedAt: AT(2000), updatedAt: AT(2000) });
-        await setSyncEnabled(db, true);
-        await setSyncCursor(db, 5);
+        await Effect.runPromise(setSyncEnabled(db, true));
+        await Effect.runPromise(setSyncCursor(db, 5));
         await setMeta(db, META_KEYS.syncRestoresReread, "1");
 
-        await runSync(db, server.transport);
-        await runSync(db, server.transport);
+        await Effect.runPromise(runSync(db, server.transport));
+        await Effect.runPromise(runSync(db, server.transport));
 
         const deletedAt = async (id: string) =>
             (await db.select().from(transactions).where(eqId(id)))[0].deletedAt?.getTime() ?? null;
@@ -1206,17 +1265,17 @@ describe("two devices against one account", () => {
         const alpha = makeDb();
         const beta = makeDb();
         const server = makeServer();
-        await setSyncEnabled(alpha, true);
-        await setSyncEnabled(beta, true);
+        await Effect.runPromise(setSyncEnabled(alpha, true));
+        await Effect.runPromise(setSyncEnabled(beta, true));
 
         await addTransaction(alpha, "remote-row", { note: "from-alpha" });
-        await runSync(alpha, server.transport);
+        await Effect.runPromise(runSync(alpha, server.transport));
 
         await addTransaction(beta, "local-row", { note: "unsent" });
-        const applied = await pullAndApply(beta, server.pull);
+        const applied = await Effect.runPromise(pullAndApply(beta, server.pull));
 
         expect(applied.applied).toBe(1);
-        await expect(outboxPendingCount(beta)).resolves.toBe(1);
+        await expect(Effect.runPromise(outboxPendingCount(beta))).resolves.toBe(1);
         const notes = (await beta.select().from(transactions)).map((row) => row.note).sort();
         expect(notes).toStrictEqual(["from-alpha", "unsent"]);
     });
@@ -1225,34 +1284,36 @@ describe("two devices against one account", () => {
         const alpha = makeDb();
         const beta = makeDb();
         const server = makeServer();
-        await setSyncEnabled(alpha, true);
-        await setSyncEnabled(beta, true);
+        await Effect.runPromise(setSyncEnabled(alpha, true));
+        await Effect.runPromise(setSyncEnabled(beta, true));
 
         await addTransaction(alpha, "t1");
         await addTransaction(beta, "t2");
         for (let round = 0; round < 3; round += 1) {
-            await runSync(alpha, server.transport);
-            await runSync(beta, server.transport);
+            await Effect.runPromise(runSync(alpha, server.transport));
+            await Effect.runPromise(runSync(beta, server.transport));
         }
 
-        await expect(outboxPendingCount(alpha)).resolves.toBe(0);
-        await expect(outboxPendingCount(beta)).resolves.toBe(0);
+        await expect(Effect.runPromise(outboxPendingCount(alpha))).resolves.toBe(0);
+        await expect(Effect.runPromise(outboxPendingCount(beta))).resolves.toBe(0);
         await expect(alpha.select().from(transactions)).resolves.toHaveLength(2);
         await expect(beta.select().from(transactions)).resolves.toHaveLength(2);
-        const settled = await getSyncCursor(alpha);
+        const settled = await Effect.runPromise(getSyncCursor(alpha));
         expect(settled).toBeGreaterThan(0);
-        await expect(getSyncCursor(beta)).resolves.toBe(settled);
+        await expect(Effect.runPromise(getSyncCursor(beta))).resolves.toBe(settled);
     });
 
     it("stops rather than looping when a page does not advance the cursor", async () => {
         const db = makeDb();
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
         let calls = 0;
 
-        await pullAndApply(db, async () => {
-            calls += 1;
-            return { cursor: 0, hasMore: true, rows: [txRow("t1", 1, 5000)] };
-        });
+        await Effect.runPromise(
+            pullAndApply(db, async () => {
+                calls += 1;
+                return { cursor: 0, hasMore: true, rows: [txRow("t1", 1, 5000)] };
+            })
+        );
 
         expect(calls).toBe(1);
     });
@@ -1260,7 +1321,7 @@ describe("two devices against one account", () => {
     it("re-reads only the tables an older build skipped, leaving a restored entry live", async () => {
         const db = makeDb();
         const server = makeServer();
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
         server.rows.set("transactions restored", txRow("restored", 1, 5000, { deletedAt: 5000 }));
         server.rows.set("installmentPlans plan-1", {
             deletedAt: null,
@@ -1276,12 +1337,12 @@ describe("two devices against one account", () => {
         await setMeta(db, META_KEYS.syncCursor, "9");
         await setMeta(db, META_KEYS.syncReread, "installmentPlans,installments,transfers");
 
-        await pullAndApply(db, server.pull);
+        await Effect.runPromise(pullAndApply(db, server.pull));
 
         const [entry] = await db.select().from(transactions).where(eqId("restored"));
         expect(entry?.deletedAt).toBeNull();
         await expect(db.select().from(installmentPlans)).resolves.toHaveLength(1);
-        await expect(getSyncCursor(db)).resolves.toBe(9);
+        await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(9);
         await expect(getMeta(db, META_KEYS.syncReread)).resolves.toBeNull();
     });
 
@@ -1289,10 +1350,12 @@ describe("two devices against one account", () => {
         const db = makeDb();
         let calls = 0;
 
-        await pullAndApply(db, async () => {
-            calls += 1;
-            return { cursor: 0, hasMore: false, rows: [] };
-        });
+        await Effect.runPromise(
+            pullAndApply(db, async () => {
+                calls += 1;
+                return { cursor: 0, hasMore: false, rows: [] };
+            })
+        );
 
         expect(calls).toBe(0);
     });
@@ -1336,7 +1399,7 @@ describe("a savings goal from a build that predates the start anchor", () => {
         const db = makeDb();
         await withAccount(db);
 
-        await applyPulledRows(db, { cursor: 1, rows: [legacyGoal()] });
+        await Effect.runPromise(applyPulledRows(db, { cursor: 1, rows: [legacyGoal()] }));
 
         const [row] = await db.select().from(savingsGoals);
         expect(row.startAmount).toBe(0);
@@ -1348,10 +1411,12 @@ describe("a savings goal from a build that predates the start anchor", () => {
         const db = makeDb();
         await withAccount(db);
 
-        const applied = await applyPulledRows(db, {
-            cursor: 1,
-            rows: [legacyGoal({ targetDate: null }), txRow("t-live", 2, 5000, { fields: { note: "kept" } })],
-        });
+        const applied = await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor: 1,
+                rows: [legacyGoal({ targetDate: null }), txRow("t-live", 2, 5000, { fields: { note: "kept" } })],
+            })
+        );
 
         const [goal] = await db.select().from(savingsGoals);
         expect(goal.deletedAt).not.toBeNull();
@@ -1365,7 +1430,9 @@ describe("a savings goal from a build that predates the start anchor", () => {
         // which `drainOutbox` clears unpushed, so other devices would keep the goal.
         const db = makeDb();
         await withAccount(db);
-        await applyPulledRows(db, { cursor: 1, rows: [legacyGoal({ deletedAt: 6000, targetDate: null })] });
+        await Effect.runPromise(
+            applyPulledRows(db, { cursor: 1, rows: [legacyGoal({ deletedAt: 6000, targetDate: null })] })
+        );
 
         const [row] = await db.select().from(savingsGoals);
         expect(row.deletedAt).not.toBeNull();
@@ -1375,9 +1442,11 @@ describe("a savings goal from a build that predates the start anchor", () => {
     it("still applies a dateless goal's tombstone, so a delete is never lost", async () => {
         const db = makeDb();
         await withAccount(db);
-        await applyPulledRows(db, { cursor: 1, rows: [legacyGoal()] });
+        await Effect.runPromise(applyPulledRows(db, { cursor: 1, rows: [legacyGoal()] }));
 
-        await applyPulledRows(db, { cursor: 2, rows: [legacyGoal({ deletedAt: 6000, targetDate: null })] });
+        await Effect.runPromise(
+            applyPulledRows(db, { cursor: 2, rows: [legacyGoal({ deletedAt: 6000, targetDate: null })] })
+        );
 
         const [row] = await db.select().from(savingsGoals);
         expect(row.deletedAt).not.toBeNull();
@@ -1388,27 +1457,29 @@ describe("an account from a build that predates account kinds", () => {
     it("lands as an asset rather than failing the page", async () => {
         const db = makeDb();
 
-        await applyPulledRows(db, {
-            cursor: 1,
-            rows: [
-                {
-                    deletedAt: null,
-                    deviceId: "device-b",
-                    fields: {
-                        currency: "USD",
-                        dateCreated: 1000,
-                        initialBalance: 0,
-                        initialBalanceDate: 1000,
-                        name: "Savings",
-                        sortOrder: 0,
+        await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor: 1,
+                rows: [
+                    {
+                        deletedAt: null,
+                        deviceId: "device-b",
+                        fields: {
+                            currency: "USD",
+                            dateCreated: 1000,
+                            initialBalance: 0,
+                            initialBalanceDate: 1000,
+                            name: "Savings",
+                            sortOrder: 0,
+                        },
+                        localId: "acct-1",
+                        seq: 1,
+                        table: "accounts",
+                        updatedAt: 5000,
                     },
-                    localId: "acct-1",
-                    seq: 1,
-                    table: "accounts",
-                    updatedAt: 5000,
-                },
-            ],
-        });
+                ],
+            })
+        );
 
         const [row] = await db.select().from(accounts);
         expect(row.kind).toBe("asset");

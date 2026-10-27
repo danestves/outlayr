@@ -95,7 +95,7 @@ export const make = Effect.gen(function* make() {
         yield* reconciled(db).await;
 
         const cycle = Effect.gen(function* cycle() {
-            if (!(yield* attempt("sync", () => isSyncEnabled(db)))) {
+            if (!(yield* isSyncEnabled(db).pipe(Effect.mapError((error) => failedAt("sync")(error.cause))))) {
                 return;
             }
             const { downloaded } = yield* attempt("sync", () => passes.sync(db));

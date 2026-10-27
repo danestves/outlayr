@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "@jest/globals";
+import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { accounts, categories, outbox, transactions } from "@/db/schema";
@@ -36,18 +37,18 @@ describe("sync device identity", () => {
     });
 
     it("mints a device id once and keeps it", async () => {
-        const first = await getOrCreateDeviceId(db);
+        const first = await Effect.runPromise(getOrCreateDeviceId(db));
 
         expect(first).toMatch(/^[0-9a-f-]{36}$/);
-        await expect(getOrCreateDeviceId(db)).resolves.toBe(first);
+        await expect(Effect.runPromise(getOrCreateDeviceId(db))).resolves.toBe(first);
         await expect(getMeta(db, META_KEYS.syncDeviceId)).resolves.toBe(first);
     });
 
     it("never queues the device id for replication", async () => {
-        await setSyncEnabled(db, true);
-        await getOrCreateDeviceId(db);
+        await Effect.runPromise(setSyncEnabled(db, true));
+        await Effect.runPromise(getOrCreateDeviceId(db));
 
-        await expect(outboxPendingCount(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
     });
 });
 
@@ -61,14 +62,14 @@ describe("sync cursor", () => {
     it("falls back to zero rather than replaying from a corrupt cursor", async () => {
         await setMeta(db, META_KEYS.syncCursor, "not-a-number");
 
-        await expect(getSyncCursor(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(0);
     });
 
     it("never queues the cursor for replication", async () => {
-        await setSyncEnabled(db, true);
-        await setSyncCursor(db, 7);
+        await Effect.runPromise(setSyncEnabled(db, true));
+        await Effect.runPromise(setSyncCursor(db, 7));
 
-        await expect(outboxPendingCount(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
     });
 });
 
@@ -80,34 +81,34 @@ describe("the sync gate", () => {
     });
 
     it("is off until something turns it on", async () => {
-        await expect(isSyncEnabled(db)).resolves.toBe(false);
+        await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(false);
 
         await addTransaction(db, "t1");
 
-        await expect(outboxPendingCount(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
     });
 
     it("queues writes once it is on", async () => {
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
 
-        await expect(isSyncEnabled(db)).resolves.toBe(true);
+        await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(true);
 
         await addTransaction(db, "t1");
 
-        await expect(outboxPendingCount(db)).resolves.toBe(1);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(1);
     });
 
     it("empties the queue when it is turned back off", async () => {
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
         await addTransaction(db, "t1");
 
-        await setSyncEnabled(db, false);
+        await Effect.runPromise(setSyncEnabled(db, false));
 
-        await expect(outboxPendingCount(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
 
         await addTransaction(db, "t2");
 
-        await expect(outboxPendingCount(db)).resolves.toBe(0);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
     });
 });
 
@@ -140,18 +141,18 @@ describe("enqueueAllForSync", () => {
             updatedAt: new Date(1),
         });
 
-        await setSyncEnabled(db, true);
-        await enqueueAllForSync(db);
+        await Effect.runPromise(setSyncEnabled(db, true));
+        await Effect.runPromise(enqueueAllForSync(db));
 
-        await expect(outboxPendingCount(db)).resolves.toBe(4);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(4);
     });
 
     it("re-queues an already pending row under a new seq", async () => {
-        await setSyncEnabled(db, true);
+        await Effect.runPromise(setSyncEnabled(db, true));
         await addTransaction(db, "t1");
         const before = await db.select().from(outbox);
 
-        await enqueueAllForSync(db);
+        await Effect.runPromise(enqueueAllForSync(db));
 
         const after = await db.select().from(outbox);
         const queued = after.filter((row) => row.tableName === "transactions" && row.localId === "t1");
@@ -165,9 +166,9 @@ describe("enqueueAllForSync", () => {
             await setMeta(db, key, "x");
         }
 
-        await enqueueAllForSync(db);
+        await Effect.runPromise(enqueueAllForSync(db));
 
-        await expect(outboxPendingCount(db)).resolves.toBe(SYNCED_META_KEYS.length);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(SYNCED_META_KEYS.length);
     });
 
     it("queues a ledger larger than one insert can bind", async () => {
@@ -175,8 +176,8 @@ describe("enqueueAllForSync", () => {
             await addTransaction(db, `t${i}`);
         }
 
-        await enqueueAllForSync(db);
+        await Effect.runPromise(enqueueAllForSync(db));
 
-        await expect(outboxPendingCount(db)).resolves.toBe(420);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(420);
     });
 });
