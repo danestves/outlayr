@@ -1,20 +1,57 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
+import * as Schema from "effect/Schema";
 
-import type {
-    callerId,
-    confirmUpload,
-    mapStorageId,
-    readUrls,
-    recordPhotoSize,
-    releaseUnreferenced,
-    requestUpload,
-} from "./photos";
+import { Id } from "./_generated/id";
+
+const PhotoUrl = Schema.Struct({ key: Schema.String, url: Schema.String });
 
 export default GroupSpec.make()
-    .addFunction(FunctionSpec.convexPublicMutation<typeof requestUpload>()("requestUpload"))
-    .addFunction(FunctionSpec.convexInternalQuery<typeof callerId>()("callerId"))
-    .addFunction(FunctionSpec.convexPublicAction<typeof confirmUpload>()("confirmUpload"))
-    .addFunction(FunctionSpec.convexInternalMutation<typeof recordPhotoSize>()("recordPhotoSize"))
-    .addFunction(FunctionSpec.convexInternalMutation<typeof mapStorageId>()("mapStorageId"))
-    .addFunction(FunctionSpec.convexPublicMutation<typeof readUrls>()("readUrls"))
-    .addFunction(FunctionSpec.convexPublicMutation<typeof releaseUnreferenced>()("releaseUnreferenced"));
+    .addFunction(
+        FunctionSpec.publicMutation({
+            name: "requestUpload",
+            args: () => ({ name: Schema.String }),
+            returns: () => PhotoUrl,
+        })
+    )
+    .addFunction(
+        FunctionSpec.internalQuery({
+            name: "callerId",
+            args: () => ({}),
+            returns: () => Schema.String,
+        })
+    )
+    .addFunction(
+        FunctionSpec.publicAction({
+            name: "confirmUpload",
+            args: () => ({ key: Schema.String, storageId: Schema.optional(Id("_storage")) }),
+            returns: () => Schema.Null,
+        })
+    )
+    .addFunction(
+        FunctionSpec.internalMutation({
+            name: "recordPhotoSize",
+            args: () => ({ bytes: Schema.Number, key: Schema.String }),
+            returns: () => Schema.Null,
+        })
+    )
+    .addFunction(
+        FunctionSpec.internalMutation({
+            name: "mapStorageId",
+            args: () => ({ key: Schema.String, storageId: Id("_storage") }),
+            returns: () => Schema.Null,
+        })
+    )
+    .addFunction(
+        FunctionSpec.publicMutation({
+            name: "readUrls",
+            args: () => ({ keys: Schema.Array(Schema.String) }),
+            returns: () => Schema.Array(PhotoUrl),
+        })
+    )
+    .addFunction(
+        FunctionSpec.publicMutation({
+            name: "releaseUnreferenced",
+            args: () => ({ key: Schema.String }),
+            returns: () => Schema.Struct({ released: Schema.Boolean }),
+        })
+    );

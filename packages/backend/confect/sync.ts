@@ -1,24 +1,21 @@
-import { compileSchema } from "@confect/core/SchemaToValidator";
-import type { WithoutSystemFields } from "convex/server";
-import { ConvexError, v } from "convex/values";
+import { ConvexError } from "convex/values";
+import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import type { Doc, Id } from "../convex/_generated/dataModel";
-import { mutation, query } from "../convex/_generated/server";
 import type { MutationCtx, QueryCtx } from "../convex/_generated/server";
-import { requireUserId } from "./lib/auth";
+import type { Docs, TransactionsDoc } from "./_generated/docs";
 import {
     accountFields,
     appMetaFields,
     budgetFields,
     categoryFields,
     FIELDS_BY_TABLE,
-    incomingWins,
     installmentFields,
     installmentPlanFields,
     outsideMoveFields,
     outsidePaymentFields,
     mainBudgetFields,
+    replicated,
     SYNCED_TABLES,
     savingsGoalFields,
     tagFields,
@@ -30,7 +27,6 @@ import {
     transferFields,
 } from "./lib/syncTables";
 import type { SyncedTable, WireFields, WireValue } from "./lib/syncTables";
-import { requirePro } from "./revenuecat";
 
 // Convex reads at most 4,096 index ranges per transaction and push does one lookup per row, so 500 is an 8x margin.
 export const PUSH_BATCH_LIMIT = 500;
@@ -38,154 +34,82 @@ export const PUSH_BATCH_LIMIT = 500;
 export const PULL_PAGE_LIMIT = 1000;
 
 const tombstone = {
-    deletedAt: v.union(v.number(), v.null()),
-    restoredAt: v.optional(v.union(v.number(), v.null())),
-    updatedAt: v.number(),
+    deletedAt: replicated.deletedAt,
+    restoredAt: replicated.restoredAt,
+    updatedAt: replicated.updatedAt,
 };
 
+const pushArm = <const Table extends SyncedTable, const Fields extends Schema.Struct.Fields>(
+    table: Table,
+    fields: Fields
+) =>
+    Schema.Struct({
+        ...tombstone,
+        fields: Schema.Struct(fields),
+        localId: Schema.String,
+        table: Schema.Literal(table),
+    });
+
 // A row names its own table so a batch keeps the outbox's edit order across tables; sorting by table breaks causality.
-const pushRow = v.union(
-    v.object({
-        localId: v.string(),
-        table: v.literal("categories"),
-        ...tombstone,
-        fields: compileSchema(Schema.Struct(categoryFields)),
+export const PushRow = Schema.Union([
+    pushArm("categories", categoryFields),
+    pushArm("transactions", transactionFields),
+    pushArm("budgets", budgetFields),
+    pushArm("mainBudget", mainBudgetFields),
+    pushArm("savingsGoals", savingsGoalFields),
+    pushArm("tags", tagFields),
+    pushArm("transactionTags", transactionTagFields),
+    pushArm("transactionAttachments", transactionAttachmentFields),
+    pushArm("transactionPhotos", transactionPhotoFields),
+    pushArm("transactionSplits", transactionSplitFields),
+    pushArm("accounts", accountFields),
+    pushArm("transfers", transferFields),
+    pushArm("installmentPlans", installmentPlanFields),
+    pushArm("installments", installmentFields),
+    pushArm("outsidePayments", outsidePaymentFields),
+    pushArm("outsideMoves", outsideMoveFields),
+    Schema.Struct({
+        deletedAt: Schema.Null,
+        fields: Schema.Struct(appMetaFields),
+        localId: Schema.String,
+        table: Schema.Literal("appMeta"),
+        updatedAt: Schema.Number,
     }),
-    v.object({
-        localId: v.string(),
-        table: v.literal("transactions"),
-        ...tombstone,
-        fields: compileSchema(Schema.Struct(transactionFields)),
-    }),
-    v.object({
-        localId: v.string(),
-        table: v.literal("budgets"),
-        ...tombstone,
-        fields: compileSchema(Schema.Struct(budgetFields)),
-    }),
-    v.object({
-        localId: v.string(),
-        table: v.literal("mainBudget"),
-        ...tombstone,
-        fields: compileSchema(Schema.Struct(mainBudgetFields)),
-    }),
-    v.object({
-        localId: v.string(),
-        table: v.literal("savingsGoals"),
-        ...tombstone,
-        fields: compileSchema(Schema.Struct(savingsGoalFields)),
-    }),
-    v.object({
-        localId: v.string(),
-        table: v.literal("tags"),
-        ...tombstone,
-        fields: compileSchema(Schema.Struct(tagFields)),
-    }),
-    v.object({
-        localId: v.string(),
-        table: v.literal("transactionTags"),
-        ...tombstone,
-        fields: compileSchema(Schema.Struct(transactionTagFields)),
-    }),
-    v.object({
-        localId: v.string(),
-        table: v.literal("transactionAttachments"),
-        ...tombstone,
-        fields: compileSchema(Schema.Struct(transactionAttachmentFields)),
-    }),
-    v.object({
-        localId: v.string(),
-        table: v.literal("transactionPhotos"),
-        ...tombstone,
-        fields: compileSchema(Schema.Struct(transactionPhotoFields)),
-    }),
-    v.object({
-        localId: v.string(),
-        table: v.literal("transactionSplits"),
-        ...tombstone,
-        fields: compileSchema(Schema.Struct(transactionSplitFields)),
-    }),
-    v.object({
-        localId: v.string(),
-        table: v.literal("accounts"),
-        ...tombstone,
-        fields: compileSchema(Schema.Struct(accountFields)),
-    }),
-    v.object({
-        localId: v.string(),
-        table: v.literal("transfers"),
-        ...tombstone,
-        fields: compileSchema(Schema.Struct(transferFields)),
-    }),
-    v.object({
-        localId: v.string(),
-        table: v.literal("installmentPlans"),
-        ...tombstone,
-        fields: compileSchema(Schema.Struct(installmentPlanFields)),
-    }),
-    v.object({
-        localId: v.string(),
-        table: v.literal("installments"),
-        ...tombstone,
-        fields: compileSchema(Schema.Struct(installmentFields)),
-    }),
-    v.object({
-        localId: v.string(),
-        table: v.literal("outsidePayments"),
-        ...tombstone,
-        fields: compileSchema(Schema.Struct(outsidePaymentFields)),
-    }),
-    v.object({
-        localId: v.string(),
-        table: v.literal("outsideMoves"),
-        ...tombstone,
-        fields: compileSchema(Schema.Struct(outsideMoveFields)),
-    }),
-    v.object({
-        deletedAt: v.null(),
-        fields: compileSchema(Schema.Struct(appMetaFields)),
-        localId: v.string(),
-        table: v.literal("appMeta"),
-        updatedAt: v.number(),
-    })
-);
+]);
 
-interface PushRow {
-    deletedAt: number | null;
-    fields: WireFields;
-    localId: string;
-    restoredAt?: number | null;
-    table: SyncedTable;
-    updatedAt: number;
-}
+export type PushRow = typeof PushRow.Type;
 
-const syncedTable = v.union(...SYNCED_TABLES.map((table) => v.literal(table)));
+export const SyncedTableName = Schema.Literals(SYNCED_TABLES);
 
-const pulledRow = v.object({
-    deletedAt: v.union(v.number(), v.null()),
-    deviceId: v.string(),
-    fields: v.record(v.string(), v.any()),
-    localId: v.string(),
-    restoredAt: v.union(v.number(), v.null()),
-    seq: v.number(),
-    table: syncedTable,
-    updatedAt: v.number(),
+export const PulledRow = Schema.Struct({
+    deletedAt: Schema.NullOr(Schema.Number),
+    deviceId: Schema.String,
+    fields: Schema.Record(Schema.String, Schema.Any),
+    localId: Schema.String,
+    restoredAt: Schema.NullOr(Schema.Number),
+    seq: Schema.Number,
+    table: SyncedTableName,
+    updatedAt: Schema.Number,
 });
 
-async function findExisting(ctx: MutationCtx, userId: string, row: PushRow): Promise<Doc<SyncedTable> | null> {
-    if (row.table === "appMeta") {
-        return await ctx.db
-            .query("appMeta")
-            .withIndex("by_user_and_key", (q) => q.eq("userId", userId).eq("key", row.localId))
-            .unique();
+export type SyncedDoc = Docs[SyncedTable];
+
+export class AccountDeleting extends Schema.TaggedError<AccountDeleting>()("AccountDeleting", {
+    message: Schema.String.pipe(
+        Schema.withConstructorDefault(Effect.succeed("This account is being deleted and can no longer accept changes"))
+    ),
+}) {}
+
+export class PushTooLarge extends Schema.TaggedError<PushTooLarge>()("PushTooLarge", {
+    limit: Schema.Number,
+    rows: Schema.Number,
+}) {
+    override get message(): string {
+        return `A push carries at most ${this.limit} rows; got ${this.rows}`;
     }
-    return await ctx.db
-        .query(row.table)
-        .withIndex("by_user_and_localId", (q) => q.eq("userId", userId).eq("localId", row.localId))
-        .unique();
 }
 
-function versioned(doc: Doc<SyncedTable>) {
+export function versioned(doc: SyncedDoc) {
     return {
         deletedAt: "deletedAt" in doc ? doc.deletedAt : null,
         deviceId: doc.deviceId,
@@ -216,7 +140,7 @@ function transactionFieldsEqual(
     return Object.is(stored, incoming);
 }
 
-function transactionPolicyTieDecision(row: PushRow, existing: Doc<SyncedTable> | null): "existing" | "incoming" | null {
+export function transactionPolicyTieDecision(row: PushRow, existing: SyncedDoc | null): "existing" | "incoming" | null {
     if (
         row.table !== "transactions" ||
         existing === null ||
@@ -229,8 +153,8 @@ function transactionPolicyTieDecision(row: PushRow, existing: Doc<SyncedTable> |
         return null;
     }
     // SAFETY: the guard above returned unless `row.table` is "transactions", the table `existing` came from.
-    const stored = existing as Doc<"transactions">;
-    const incoming = fieldsFor<"transactions">(row);
+    const stored = existing as TransactionsDoc;
+    const incoming = row.fields;
     // SAFETY: `Object.keys` widens to string[]; the keys are this object's own.
     for (const field of Object.keys(transactionFields) as (keyof typeof transactionFields)[]) {
         if (
@@ -253,145 +177,6 @@ function transactionPolicyTieDecision(row: PushRow, existing: Doc<SyncedTable> |
     return incomingPendingCustom ? "incoming" : "existing";
 }
 
-// `push`'s validator already checked `fields` against `row.table`'s columns; this restores the erased type.
-function fieldsFor<T extends SyncedTable>(row: PushRow): Doc<T> {
-    // SAFETY: the caller passes the table literal matching the case it is in.
-    return row.fields as Doc<T>;
-}
-
-async function writeRow<T extends SyncedTable>(
-    ctx: MutationCtx,
-    table: T,
-    existing: Doc<SyncedTable> | null,
-    doc: WithoutSystemFields<Doc<T>>
-): Promise<void> {
-    // SAFETY: `existing` was looked up by `row.table`, the same `T` this call was given.
-    await (existing ? ctx.db.patch(table, existing._id as Id<T>, doc) : ctx.db.insert(table, doc));
-}
-
-// A switch: a runtime table name erases the per-table type that catches a payload drifting from tables/.
-async function upsert(
-    ctx: MutationCtx,
-    row: PushRow,
-    existing: Doc<SyncedTable> | null,
-    stamp: { userId: string; deviceId: string; seq: number }
-): Promise<void> {
-    const envelope = {
-        deletedAt: row.deletedAt,
-        deviceId: stamp.deviceId,
-        localId: row.localId,
-        restoredAt: row.restoredAt ?? null,
-        seq: stamp.seq,
-        updatedAt: row.updatedAt,
-        userId: stamp.userId,
-    };
-
-    switch (row.table) {
-        case "categories": {
-            return await writeRow(ctx, "categories", existing, { ...envelope, ...fieldsFor<"categories">(row) });
-        }
-        case "transactions": {
-            return await writeRow(ctx, "transactions", existing, {
-                ...envelope,
-                ...fieldsFor<"transactions">(row),
-            });
-        }
-        case "budgets": {
-            return await writeRow(ctx, "budgets", existing, { ...envelope, ...fieldsFor<"budgets">(row) });
-        }
-        case "mainBudget": {
-            return await writeRow(ctx, "mainBudget", existing, { ...envelope, ...fieldsFor<"mainBudget">(row) });
-        }
-        case "tags": {
-            return await writeRow(ctx, "tags", existing, { ...envelope, ...fieldsFor<"tags">(row) });
-        }
-        case "transactionTags": {
-            return await writeRow(ctx, "transactionTags", existing, {
-                ...envelope,
-                ...fieldsFor<"transactionTags">(row),
-            });
-        }
-        case "transactionAttachments": {
-            return await writeRow(ctx, "transactionAttachments", existing, {
-                ...envelope,
-                ...fieldsFor<"transactionAttachments">(row),
-            });
-        }
-        case "transactionPhotos": {
-            return await writeRow(ctx, "transactionPhotos", existing, {
-                ...envelope,
-                ...fieldsFor<"transactionPhotos">(row),
-            });
-        }
-        case "transactionSplits": {
-            return await writeRow(ctx, "transactionSplits", existing, {
-                ...envelope,
-                ...fieldsFor<"transactionSplits">(row),
-            });
-        }
-        case "accounts": {
-            return await writeRow(ctx, "accounts", existing, { ...envelope, ...fieldsFor<"accounts">(row) });
-        }
-        case "transfers": {
-            return await writeRow(ctx, "transfers", existing, { ...envelope, ...fieldsFor<"transfers">(row) });
-        }
-        case "installmentPlans": {
-            return await writeRow(ctx, "installmentPlans", existing, {
-                ...envelope,
-                ...fieldsFor<"installmentPlans">(row),
-            });
-        }
-        case "installments": {
-            return await writeRow(ctx, "installments", existing, { ...envelope, ...fieldsFor<"installments">(row) });
-        }
-        case "outsidePayments": {
-            return await writeRow(ctx, "outsidePayments", existing, {
-                ...envelope,
-                ...fieldsFor<"outsidePayments">(row),
-            });
-        }
-        case "outsideMoves": {
-            return await writeRow(ctx, "outsideMoves", existing, { ...envelope, ...fieldsFor<"outsideMoves">(row) });
-        }
-        case "savingsGoals": {
-            const fields = fieldsFor<"savingsGoals">(row);
-            // An older client omits `exchangeRate` but values a moved target at the edit date, so the stale rate is
-            // cleared. A rename leaves the target alone and keeps the precise rate.
-            // SAFETY: this branch is reached only for `savingsGoals`, whose fields declare both targets.
-            const priced = existing as { targetAmount?: number; targetAmountUsd?: number | null } | null;
-            const targetMoved =
-                priced == null ||
-                priced.targetAmount !== fields.targetAmount ||
-                priced.targetAmountUsd !== fields.targetAmountUsd;
-            const rateless = !("exchangeRate" in row.fields) && fields.targetAmountUsd != null && targetMoved;
-            return await writeRow(ctx, "savingsGoals", existing, {
-                ...envelope,
-                ...fields,
-                ...(rateless && { exchangeRate: null }),
-            });
-        }
-        case "appMeta": {
-            const doc = {
-                deviceId: stamp.deviceId,
-                key: row.localId,
-                seq: stamp.seq,
-                updatedAt: row.updatedAt,
-                userId: stamp.userId,
-                // SAFETY: `appMeta`'s payload is this single column, as declared in `syncTables.ts`.
-                value: (row.fields as { value: string | null }).value,
-            };
-            // SAFETY: `existing` was looked up by `row.table`, which this case matched against "appMeta".
-            await (existing
-                ? ctx.db.patch("appMeta", existing._id as Id<"appMeta">, doc)
-                : ctx.db.insert("appMeta", doc));
-            return;
-        }
-        default: {
-            throw new ConvexError(`Unknown sync table: ${String(row.table)}`);
-        }
-    }
-}
-
 // The session and Pro outlive `purgeUserBatch` by up to a retried RevenueCat call, and a push in that window writes
 // rows for a user id no purge path can find again. `prepared` is allowed: the owner may yet cancel.
 export async function refuseWhileDeleting(ctx: QueryCtx, userId: string): Promise<void> {
@@ -401,7 +186,7 @@ export async function refuseWhileDeleting(ctx: QueryCtx, userId: string): Promis
         .withIndex("by_userId", (q) => q.eq("userId", userId))
         .collect();
     if (jobs.some((job) => job.phase !== "prepared")) {
-        throw new ConvexError("This account is being deleted and can no longer accept changes");
+        throw new ConvexError(new AccountDeleting().message);
     }
 }
 
@@ -425,75 +210,6 @@ export async function seqCounter(ctx: MutationCtx, userId: string) {
     };
 }
 
-export const push = mutation({
-    args: {
-        deviceId: v.string(),
-        rows: v.array(pushRow),
-    },
-    handler: async (ctx, args) => {
-        const userId = await requireUserId(ctx);
-        await requirePro(ctx, userId);
-        await refuseWhileDeleting(ctx, userId);
-
-        if (args.rows.length > PUSH_BATCH_LIMIT) {
-            throw new ConvexError(`A push carries at most ${PUSH_BATCH_LIMIT} rows; got ${args.rows.length}`);
-        }
-
-        const counter = await seqCounter(ctx, userId);
-        let { nextSeq } = counter;
-        let accepted = 0;
-        let skipped = 0;
-        const reEmittedPolicyWinners = new Set<string>();
-
-        /* oxlint-disable no-await-in-loop -- rows are applied in order: `seq` is handed out one per accepted row, and two rows for the same localId in one batch require the second lookup to observe the first row's upsert. */
-        // SAFETY: `pushRow` above validates each row into this shape; `PushRow` is that union flattened.
-        for (const row of args.rows as PushRow[]) {
-            const existing = await findExisting(ctx, userId, row);
-            const candidate = {
-                deletedAt: row.deletedAt,
-                deviceId: args.deviceId,
-                restoredAt: row.restoredAt,
-                updatedAt: row.updatedAt,
-            };
-            const policyTieDecision = transactionPolicyTieDecision(row, existing);
-            if (policyTieDecision === "existing") {
-                const key = `${row.table}:${row.localId}`;
-                if (!reEmittedPolicyWinners.has(key)) {
-                    // SAFETY: the tie decision is null for every table but "transactions", where `existing` came from.
-                    await ctx.db.patch("transactions", (existing as Doc<"transactions">)._id, { seq: nextSeq });
-                    nextSeq += 1;
-                    reEmittedPolicyWinners.add(key);
-                }
-                skipped += 1;
-                continue;
-            }
-            if (policyTieDecision === null && !incomingWins(candidate, existing ? versioned(existing) : null)) {
-                // The pull hands the winner back, so the losing device converges without pushing again.
-                skipped += 1;
-                continue;
-            }
-
-            await upsert(ctx, row, existing, {
-                deviceId: args.deviceId,
-                seq: nextSeq,
-                userId,
-            });
-            nextSeq += 1;
-            accepted += 1;
-        }
-        /* oxlint-enable no-await-in-loop */
-
-        await counter.advanceTo(nextSeq);
-
-        return { accepted, nextSeq, skipped };
-    },
-    returns: v.object({
-        accepted: v.number(),
-        nextSeq: v.number(),
-        skipped: v.number(),
-    }),
-});
-
 type StoredDocument = Record<string, WireValue | undefined> & {
     deletedAt?: number | null;
     restoredAt?: number | null;
@@ -501,7 +217,7 @@ type StoredDocument = Record<string, WireValue | undefined> & {
     localId?: string;
 };
 
-function toWire(table: SyncedTable, doc: Doc<SyncedTable>) {
+export function toWire(table: SyncedTable, doc: SyncedDoc) {
     const fieldNames = Object.keys(FIELDS_BY_TABLE[table]);
     const source: StoredDocument = doc;
     const fields: WireFields = {};
@@ -527,59 +243,3 @@ function toWire(table: SyncedTable, doc: Doc<SyncedTable>) {
         updatedAt: doc.updatedAt,
     };
 }
-
-// Taking `limit` per table before the merge keeps truncation safe. Pages are in seq order, not foreign-key order,
-// so the applier runs with foreign keys off. A `tables` walk's cursor cannot vouch for the tables it omits.
-export const pullSince = query({
-    args: {
-        cursor: v.number(),
-        limit: v.optional(v.number()),
-        tables: v.optional(v.array(syncedTable)),
-    },
-    handler: async (ctx, args) => {
-        const userId = await requireUserId(ctx);
-        await requirePro(ctx, userId);
-        const limit = Math.min(Math.max(Math.trunc(args.limit ?? PULL_PAGE_LIMIT), 1), PULL_PAGE_LIMIT);
-
-        const tables: readonly SyncedTable[] = args.tables ?? SYNCED_TABLES;
-        const pages = await Promise.all(
-            tables.map((table) =>
-                ctx.db
-                    .query(table)
-                    .withIndex("by_user_and_seq", (q) => q.eq("userId", userId).gt("seq", args.cursor))
-                    .take(limit)
-            )
-        );
-
-        const merged = pages
-            .flatMap((docs, index) => docs.map((doc) => toWire(tables[index], doc)))
-            .sort((a, b) => a.seq - b.seq);
-
-        const rows = merged.slice(0, limit);
-        const last = rows[rows.length - 1];
-
-        return {
-            cursor: last ? last.seq : args.cursor,
-            hasMore: merged.length >= limit,
-            rows,
-        };
-    },
-    returns: v.object({
-        cursor: v.number(),
-        hasMore: v.boolean(),
-        rows: v.array(pulledRow),
-    }),
-});
-
-export const currentSeq = query({
-    args: {},
-    handler: async (ctx) => {
-        const userId = await requireUserId(ctx);
-        const state = await ctx.db
-            .query("syncState")
-            .withIndex("by_user", (q) => q.eq("userId", userId))
-            .unique();
-        return state?.nextSeq ?? 0;
-    },
-    returns: v.number(),
-});
