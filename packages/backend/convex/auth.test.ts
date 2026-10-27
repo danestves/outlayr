@@ -60,7 +60,10 @@ describe("auth base url", () => {
             SITE_URL: "",
         });
 
-        expect(baseURL).toBe("https://example-deployment.convex.site");
+        expect(baseURL).toStrictEqual({
+            allowedHosts: ["example-deployment.convex.site"],
+            fallback: "https://example-deployment.convex.site",
+        });
     });
 
     it("prefers an explicit SITE_URL over the deployment site url", async () => {
@@ -69,7 +72,10 @@ describe("auth base url", () => {
             SITE_URL: "https://app.tryoutlayr.com",
         });
 
-        expect(baseURL).toBe("https://app.tryoutlayr.com");
+        expect(baseURL).toStrictEqual({
+            allowedHosts: ["app.tryoutlayr.com", "example-deployment.convex.site"],
+            fallback: "https://app.tryoutlayr.com",
+        });
     });
 });
 

@@ -13,6 +13,12 @@ const SECURITY_HEADERS = {
     "strict-transport-security": "max-age=31536000",
     "x-content-type-options": "nosniff",
 };
+const UNFRAMEABLE = {
+    headers: {
+        ...SECURITY_HEADERS,
+        "content-security-policy": "frame-ancestors 'none'; base-uri 'self'; object-src 'none'",
+    },
+};
 const AN_HOUR = { headers: { "cache-control": "public, max-age=3600" } };
 const A_DAY = { headers: { "cache-control": "public, max-age=86400" } };
 
@@ -25,6 +31,8 @@ export default defineConfig({
         nitro({
             routeRules: {
                 "/**": { headers: SECURITY_HEADERS },
+                "/connect": UNFRAMEABLE,
+                "/login": UNFRAMEABLE,
                 // Every file under /assets is content-hashed by Vite, so a URL never changes meaning.
                 "/assets/**": { headers: { "cache-control": "public, max-age=31536000, immutable" } },
                 "/app/**": A_DAY,
@@ -50,5 +58,8 @@ export default defineConfig({
     },
     server: {
         port: 3001,
+    },
+    ssr: {
+        noExternal: ["@convex-dev/better-auth"],
     },
 });
