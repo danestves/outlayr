@@ -1,4 +1,5 @@
 import { drizzle } from "drizzle-orm/expo-sqlite";
+import * as Equal from "effect/Equal";
 import { openDatabaseSync } from "expo-sqlite";
 
 import * as schema from "./schema";
@@ -26,7 +27,7 @@ export function openDatabase() {
         );
     }
 
-    return drizzle(sqlite, { schema });
+    return Equal.byReferenceUnsafe(drizzle(sqlite, { schema }));
 }
 
 export type Database = ReturnType<typeof openDatabase>;
