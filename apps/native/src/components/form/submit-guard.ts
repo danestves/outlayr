@@ -1,3 +1,7 @@
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+
+import type { AtomCommandResult } from "@/state/atom-command";
+
 interface SubmittableForm {
     handleSubmit: () => Promise<void>;
     readonly state: { readonly isSubmitting: boolean };
@@ -33,4 +37,8 @@ export function holdSubmitting(): Promise<never> {
     return new Promise<never>(() => {
         // Intentionally never settles.
     });
+}
+
+export function holdAfterSuccess<A, E>(result: Promise<AtomCommandResult<A, E>>, hold = true): Promise<void> {
+    return result.then((settled) => (hold && AsyncResult.isSuccess(settled) ? holdSubmitting() : undefined));
 }

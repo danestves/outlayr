@@ -1,9 +1,10 @@
 import { useAtomValue } from "@effect/atom-react/Hooks";
+import { RegistryContext } from "@effect/atom-react/RegistryContext";
 import { getTableName } from "drizzle-orm";
 import * as Cause from "effect/Cause";
 import * as Equal from "effect/Equal";
-import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as Atom from "effect/reactivity/Atom";
+import { use } from "react";
 
 import { subscribeToTableChanges } from "@/data/database-changes";
 import { selectDisplaySettings } from "@/data/display-settings";
@@ -15,7 +16,7 @@ import type { BoolSettingKey, NumberSettingKey } from "@/data/settings-core";
 import { appMeta } from "@/db/schema";
 import { SILENT } from "@/state/atom-command";
 import { setBoolSettingCommand, setNumberSettingCommand } from "@/state/settings-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { fireAtomCommand } from "@/state/use-atom-action";
 
 import { localDataAtom, localDataState, useLocalData } from "./local-data-context";
 
@@ -61,29 +62,36 @@ export function useDisplaySettings(): DisplaySettingsValue {
 export function useAppSettings(): AppSettingsValue {
     const { db } = useLocalData();
     const state = useAtomValue(settingsAtom);
-    const setBoolSetting = useAtomCommand(setBoolSettingCommand, SILENT);
-    const setNumberSetting = useAtomCommand(setNumberSettingCommand, SILENT);
+    const registry = use(RegistryContext);
     return {
         actions: {
             setBool: (key, value) => {
-                if (db == null) {
-                    return;
+                if (db != null) {
+                    fireAtomCommand(
+                        registry,
+                        setBoolSettingCommand,
+                        { db, key, value },
+                        {
+                            onFailure: (cause) =>
+                                console.error(`Saving the ${key} setting failed`, Cause.squash(cause)),
+                        },
+                        SILENT
+                    );
                 }
-                setBoolSetting({ db, key, value }).then((result) => {
-                    if (AsyncResult.isFailure(result)) {
-                        console.error(`Saving the ${key} setting failed`, Cause.squash(result.cause));
-                    }
-                });
             },
             setNumber: (key, value) => {
-                if (db == null) {
-                    return;
+                if (db != null) {
+                    fireAtomCommand(
+                        registry,
+                        setNumberSettingCommand,
+                        { db, key, value },
+                        {
+                            onFailure: (cause) =>
+                                console.error(`Saving the ${key} setting failed`, Cause.squash(cause)),
+                        },
+                        SILENT
+                    );
                 }
-                setNumberSetting({ db, key, value }).then((result) => {
-                    if (AsyncResult.isFailure(result)) {
-                        console.error(`Saving the ${key} setting failed`, Cause.squash(result.cause));
-                    }
-                });
             },
         },
         state,

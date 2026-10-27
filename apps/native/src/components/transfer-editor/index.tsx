@@ -1,3 +1,5 @@
+import { RegistryContext } from "@effect/atom-react/RegistryContext";
+import * as Cause from "effect/Cause";
 import { useRouter } from "expo-router";
 import { HeaderHeightContext } from "expo-router/react-navigation";
 import { use, useLayoutEffect, useRef, useState } from "react";
@@ -49,9 +51,9 @@ import { freshEntries } from "@/lib/fresh-entries";
 import { notifySaved } from "@/lib/notify";
 import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
-import { createTransferCommand, updateTransferCommand } from "@/state/accounts-commands";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { saveTransferCommand } from "@/state/accounts-commands";
+import { SILENT } from "@/state/atom-command";
+import { fireAtomCommand } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
 
 import { blockPrompt, formatRate, gapPrompt, rateDeltaNote } from "./prompts";
@@ -220,8 +222,7 @@ export default function TransferEditor({
     seed,
 }: TransferEditorProps) {
     const db = useDatabase();
-    const createTransfer = useAtomCommand(createTransferCommand, SILENT);
-    const updateTransfer = useAtomCommand(updateTransferCommand, SILENT);
+    const registry = use(RegistryContext);
     const router = useRouter();
     const accountCreateRoute = useAccountCreateRoute();
     const t = useTranslation();
@@ -306,7 +307,7 @@ export default function TransferEditor({
             pad.onChange(trimsEntry ? applyNumpadKey(pad.value, "back", pad.minorUnits, pad.mode ?? entryMode) : text);
         };
 
-    const save = async () => {
+    const save = () => {
         const { from, to, legs, quotedRate, fees, crossCurrency, rateType, date } = draft;
         if (!(draft.canSave && from && to && legs && quotedRate) || savingRef.current) {
             return;
@@ -334,41 +335,50 @@ export default function TransferEditor({
             toAmount: legs.toAmount,
             toCurrency: draft.toCurrency,
         };
-        const persist = async () => {
-            if (saved) {
-                unwrapAtomCommand(await updateTransfer({ db, id: saved.id, input }));
-            } else {
-                freshEntries.mark(unwrapAtomCommand(await createTransfer({ db, input })));
-                notifySaved({
-                    actionLabel: t("transfers.saved.another"),
-                    amount: {
-                        label: rowAmountLabel({ amount: draft.sent, code: draft.fromCurrency, income: null }, t),
-                        text: formatAmount(draft.sent, draft.fromCurrency, true, language),
-                    },
-                    body: t("transfers.saved.from", { from: from.name }),
-                    onActionPress: () => router.push("/transactions/transfers/create"),
-                    stamp: t("transfers.saved.title"),
-                    title: to.name,
-                    tone: { ends: { from, to }, kind: "transfer" },
-                });
-            }
-            posthog?.capture("transfer_saved", {
-                cross_currency: crossCurrency,
-                has_fee: fees.source > 0 || fees.destination > 0,
-                mode: saved ? "edit" : "create",
-                source: "form",
-            });
-            haptics("success");
-            onDone();
-        };
-        await persist().catch((error) => {
-            console.error("Failed to save the transfer", error);
-            haptics("error");
-            savingRef.current = false;
-            setSaving(false);
-            setSavingLedger(null);
-            setSaveFailure(t("transfers.save.failed"));
-        });
+        fireAtomCommand(
+            registry,
+            saveTransferCommand,
+            { db, id: saved?.id ?? null, input },
+            {
+                onFailure: (cause) => {
+                    console.error("Failed to save the transfer", Cause.squash(cause));
+                    haptics("error");
+                    savingRef.current = false;
+                    setSaving(false);
+                    setSavingLedger(null);
+                    setSaveFailure(t("transfers.save.failed"));
+                },
+                onSuccess: (id) => {
+                    if (!saved) {
+                        freshEntries.mark(id);
+                        notifySaved({
+                            actionLabel: t("transfers.saved.another"),
+                            amount: {
+                                label: rowAmountLabel(
+                                    { amount: draft.sent, code: draft.fromCurrency, income: null },
+                                    t
+                                ),
+                                text: formatAmount(draft.sent, draft.fromCurrency, true, language),
+                            },
+                            body: t("transfers.saved.from", { from: from.name }),
+                            onActionPress: () => router.push("/transactions/transfers/create"),
+                            stamp: t("transfers.saved.title"),
+                            title: to.name,
+                            tone: { ends: { from, to }, kind: "transfer" },
+                        });
+                    }
+                    posthog?.capture("transfer_saved", {
+                        cross_currency: crossCurrency,
+                        has_fee: fees.source > 0 || fees.destination > 0,
+                        mode: saved ? "edit" : "create",
+                        source: "form",
+                    });
+                    haptics("success");
+                    onDone();
+                },
+            },
+            SILENT
+        );
     };
 
     const onFooter = () => {

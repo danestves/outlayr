@@ -112,7 +112,7 @@ export const commitDeferredDelete = Effect.fn("DeferredDelete.commit")(function*
 });
 
 export interface DeferredDeleteRegistry {
-    flushAll: () => Promise<void>;
+    flushAll: Effect.Effect<void>;
     pendingId: (kind: DeferredDeleteKind) => string | null;
     requestDelete: (kind: DeferredDeleteKind, id: string, body?: string) => void;
     subscribe: (kind: DeferredDeleteKind, listener: () => void) => () => void;
@@ -125,14 +125,19 @@ interface Slot {
 }
 
 export interface DeferredDeleteSources {
-    commit: (kind: DeferredDeleteKind, db: Database, id: string) => Promise<void>;
+    commit: (kind: DeferredDeleteKind, db: Database, id: string) => Effect.Effect<void, unknown>;
     /** Read when the window closes, not captured per request: a delete lands in the database the app is on then. */
     database: () => Database | null;
+    launch: (write: Effect.Effect<void>) => void;
 }
 
 // Not React on purpose: the window outlives the screen that opened it (a detail screen navigates straight back), and
 // a screen-owned controller would flush on the way out.
-export function createDeferredDeleteRegistry({ commit, database }: DeferredDeleteSources): DeferredDeleteRegistry {
+export function createDeferredDeleteRegistry({
+    commit,
+    database,
+    launch,
+}: DeferredDeleteSources): DeferredDeleteRegistry {
     const slots = new Map<DeferredDeleteKind, Slot>();
 
     function build(kind: DeferredDeleteKind): Slot {
@@ -143,13 +148,20 @@ export function createDeferredDeleteRegistry({ commit, database }: DeferredDelet
         let toastFor: string | null = null;
 
         const controller = createDeferredDelete({
-            commit: async (id) => {
-                const db = database();
-                if (db === null) {
-                    throw new Error("The local database went away before the delete could be written");
-                }
-                await commit(kind, db, id);
-            },
+            commit: (id) =>
+                Effect.suspend(() => {
+                    const db = database();
+                    if (db === null) {
+                        return Effect.fail(
+                            new DeferredDeleteError({
+                                cause: new Error("The local database went away before the delete could be written"),
+                                kind,
+                            })
+                        );
+                    }
+                    return commit(kind, db, id);
+                }),
+            launch,
             onChange: (next) => {
                 // Keyed on the id, not null-ness: a second delete replaces the first, and reusing its toast would
                 // expire the new row's undo on the old row's clock.
@@ -210,9 +222,12 @@ export function createDeferredDeleteRegistry({ commit, database }: DeferredDelet
     }
 
     return {
-        flushAll: async () => {
-            await Promise.all(Array.from(slots.values(), (slot) => slot.controller.flush()));
-        },
+        flushAll: Effect.suspend(() =>
+            Effect.all(
+                Array.from(slots.values(), (slot) => slot.controller.flush),
+                { concurrency: "unbounded", discard: true }
+            )
+        ),
         pendingId: (kind) => slots.get(kind)?.controller.snapshot.pendingId ?? null,
         requestDelete: (kind, id, body) => {
             const slot = slotFor(kind);

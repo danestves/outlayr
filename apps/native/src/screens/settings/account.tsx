@@ -25,7 +25,7 @@ import { appRuntime } from "@/lib/runtime";
 import { useProviderSignIn } from "@/lib/use-provider-sign-in";
 import { SILENT } from "@/state/atom-command";
 import { deleteAccountCommand, signOutCommand } from "@/state/cloud-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 
 type AuthClient = NonNullable<typeof authClient>;
 export function Account() {
@@ -75,8 +75,12 @@ function AccountContent({ client, db }: { client: AuthClient; db: Database }) {
     const [busy, setBusy] = useState<"deleteAll" | "deleteCloud" | "signOut" | null>(null);
     const [error, setError] = useState<string | null>(null);
     const { busy: signingIn, error: signInError, start } = useProviderSignIn(client);
-    const signOutAccount = useAtomCommand(signOutCommand, SILENT);
-    const deleteAccountRun = useAtomCommand(deleteAccountCommand, SILENT);
+    const finishing = {
+        onFailure: (cause: Cause.Cause<unknown>) => setError(signInFailureMessage(Cause.squash(cause), t)),
+        onSettled: () => setBusy(null),
+    };
+    const signOutAccount = useAtomAction(signOutCommand, finishing, SILENT);
+    const deleteAccountRun = useAtomAction(deleteAccountCommand, finishing, SILENT);
 
     const resumed = useAtomValue(resumeDeletionAtom);
     const [resumeAcknowledged, setResumeAcknowledged] = useState(false);
@@ -88,17 +92,10 @@ function AccountContent({ client, db }: { client: AuthClient; db: Database }) {
         setResumeAcknowledged(true);
     };
 
-    const finish = (result: AsyncResult.AsyncResult<unknown, unknown>) => {
-        if (AsyncResult.isFailure(result)) {
-            setError(signInFailureMessage(Cause.squash(result.cause), t));
-        }
-        setBusy(null);
-    };
-
     const signOut = () => {
         clearError();
         setBusy("signOut");
-        signOutAccount({ allowLocal: openLedger, client, db, navigateToLedger: openLedger }).then(finish);
+        signOutAccount({ allowLocal: openLedger, client, db, navigateToLedger: openLedger });
     };
 
     const deleteAccount = (action: "deleteAll" | "deleteCloud" = "deleteCloud") => {
@@ -118,7 +115,7 @@ function AccountContent({ client, db }: { client: AuthClient; db: Database }) {
                 router.replace("/onboarding");
             },
             userId: activeSession.user.id,
-        }).then(finish);
+        });
     };
 
     const confirmDelete = () => {

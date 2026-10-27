@@ -1,5 +1,5 @@
 import { BottomSheetModal, BottomSheetView } from "@expo/ui/community/bottom-sheet";
-import { use, useRef, useState } from "react";
+import { use, useState } from "react";
 import type { Ref } from "react";
 import { Pressable, View } from "react-native";
 import Animated from "react-native-reanimated";
@@ -52,7 +52,7 @@ export interface GoalCommit {
 }
 
 interface GoalTargetSheetProps {
-    onCommit: (commit: GoalCommit) => Promise<void> | void;
+    onCommit: (commit: GoalCommit) => void;
     onRemove?: () => void;
     ref?: Ref<BottomSheetModal>;
     target: GoalTarget | null;
@@ -135,30 +135,19 @@ function GoalTargetBody({
         start: target.existing && target.existing.targetDate < tomorrow ? target.existing.targetDate : tomorrow,
     };
 
-    const inFlight = useRef(false);
-
-    const commit = async () => {
+    const commit = () => {
         if (amount <= 0 && !payoff) {
             setMode("amount");
             return;
         }
-        if (inFlight.current) {
-            return;
-        }
-        inFlight.current = true;
-        const write = async () => {
-            // Re-clamped because the sheet can sit open across midnight. Only a chosen date, though: an overdue
-            // goal opened to change its amount must keep its old deadline.
-            await onCommit({
-                dateChanged: dateEdited,
-                startAmount: target.balance ?? 0,
-                targetAmount: amount,
-                targetChanged: edited,
-                targetDate: dateEdited ? notBefore(date, tomorrowLocal(nowMs)) : date,
-            });
-        };
-        await write().finally(() => {
-            inFlight.current = false;
+        // Re-clamped because the sheet can sit open across midnight. Only a chosen date, though: an overdue
+        // goal opened to change its amount must keep its old deadline.
+        onCommit({
+            dateChanged: dateEdited,
+            startAmount: target.balance ?? 0,
+            targetAmount: amount,
+            targetChanged: edited,
+            targetDate: dateEdited ? notBefore(date, tomorrowLocal(nowMs)) : date,
         });
     };
 

@@ -2,7 +2,7 @@ import type { ExpenseContribution } from "@outlayr/money/budget-spent";
 import { lastMsBefore, spentForCategory, spentForMain } from "@outlayr/money/budget-spent";
 import { BUDGET_TYPE, periodEnd, startOfPeriod } from "@outlayr/money/budget-window";
 import type { BudgetWindow } from "@outlayr/money/budget-window";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Pressable, View } from "react-native";
 import Animated from "react-native-reanimated";
 
@@ -56,7 +56,7 @@ interface BudgetLimitBodyProps {
     contributions: readonly ExpenseContribution[];
     currency: string;
     nowMs: number;
-    onCommit: (commit: LimitCommit) => Promise<void> | void;
+    onCommit: (commit: LimitCommit) => void;
     periodChoice?: boolean;
     target: LimitTarget;
 }
@@ -117,25 +117,12 @@ export function BudgetLimitBody({
     const [limit, setLimit] = useState(opening);
     const [entry, setEntry] = useState(() => wholeUnitsToNumpad(opening));
 
-    /**
-     * Guards a write in flight: `mainBudget` has no singleton constraint, so a double tap would insert two.
-     * Released on settle rather than latched, so the inline first-run takeover can retry after a failed write.
-     */
-    const inFlight = useRef(false);
-
-    const commit = async () => {
+    const commit = () => {
         if (limit <= 0) {
             setTyping(true);
             return;
         }
-        if (inFlight.current) {
-            return;
-        }
-        inFlight.current = true;
-        const write = async () => onCommit({ limit, limitChanged: limit !== target.limit, type });
-        await write().finally(() => {
-            inFlight.current = false;
-        });
+        onCommit({ limit, limitChanged: limit !== target.limit, type });
     };
 
     const typeLimit = (next: string) => {

@@ -78,10 +78,10 @@ describe("applyMerchantToSiblings", () => {
                 db,
                 input({
                     categoryId: "groceries",
-                    persistLogo: async () => {
+                    persistLogo: Effect.promise(async () => {
                         persisted += 1;
                         return { imageColor: "#123456", imageUri: `file:///logo-${persisted}.png` };
-                    },
+                    }),
                 })
             )
         );
@@ -93,6 +93,19 @@ describe("applyMerchantToSiblings", () => {
         await expect(row(db, "other-currency")).resolves.toMatchObject({ categoryId: null, imageUri: null });
         await expect(row(db, "other-merchant")).resolves.toMatchObject({ categoryId: null, imageUri: null });
         expect((await row(db, "source")).imageUri).toBeNull();
+    });
+
+    it("still files the category when the logo cannot be stored", async () => {
+        await seedRow(db, "bare");
+
+        await Effect.runPromise(
+            applyMerchantToSiblings(
+                db,
+                input({ categoryId: "groceries", persistLogo: Effect.fail(new Error("disk full")) })
+            )
+        );
+
+        await expect(row(db, "bare")).resolves.toMatchObject({ categoryId: "groceries", imageUri: null });
     });
 
     it("keeps a sibling's own category, and a category from the other side of the ledger", async () => {
@@ -115,7 +128,9 @@ describe("applyMerchantToSiblings", () => {
         await Effect.runPromise(
             applyMerchantToSiblings(
                 db,
-                input({ persistLogo: async () => ({ imageColor: "#0f0", imageUri: "file:///new.png" }) })
+                input({
+                    persistLogo: Effect.promise(async () => ({ imageColor: "#0f0", imageUri: "file:///new.png" })),
+                })
             )
         );
 
@@ -159,13 +174,13 @@ describe("applyMerchantToSiblings", () => {
                 input({
                     categoryId: "groceries",
                     discard: (uri) => discarded.push(uri),
-                    persistLogo: async () => {
+                    persistLogo: Effect.promise(async () => {
                         await db
                             .update(transactions)
                             .set({ emoji: "🛒", updatedAt: new Date(NOW.getTime() + 1000) })
                             .where(eq(transactions.id, "moved"));
                         return { imageColor: null, imageUri: "file:///late.png" };
-                    },
+                    }),
                 })
             )
         );
@@ -181,13 +196,13 @@ describe("applyMerchantToSiblings", () => {
             applyMerchantToSiblings(
                 db,
                 input({
-                    persistLogo: async () => {
+                    persistLogo: Effect.promise(async () => {
                         await db
                             .update(transactions)
                             .set({ note: "Carrefour", updatedAt: new Date(NOW.getTime() + 1000) })
                             .where(eq(transactions.id, "renamed"));
                         return { imageColor: null, imageUri: "file:///late.png" };
-                    },
+                    }),
                     tagIds: ["tag-food"],
                 })
             )
@@ -205,13 +220,13 @@ describe("applyMerchantToSiblings", () => {
             applyMerchantToSiblings(
                 db,
                 input({
-                    persistLogo: async () => {
+                    persistLogo: Effect.promise(async () => {
                         await db
                             .update(transactions)
                             .set({ updatedAt: new Date(NOW.getTime() + 5000) })
                             .where(eq(transactions.id, "moved"));
                         return { imageColor: null, imageUri: "file:///first.png" };
-                    },
+                    }),
                     tagIds: ["tag-food"],
                 })
             )
@@ -255,7 +270,7 @@ describe("applyMerchantToSiblings", () => {
         await Effect.runPromise(
             applyMerchantToSiblings(
                 db,
-                input({ persistLogo: async () => ({ imageColor: null, imageUri: "file:///new.png" }) })
+                input({ persistLogo: Effect.promise(async () => ({ imageColor: null, imageUri: "file:///new.png" })) })
             )
         );
 

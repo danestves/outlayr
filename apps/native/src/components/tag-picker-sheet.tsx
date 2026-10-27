@@ -1,4 +1,5 @@
 import { BottomSheetFlatList, BottomSheetModal, BottomSheetTextInput } from "@expo/ui/community/bottom-sheet";
+import * as Cause from "effect/Cause";
 import { useRef, useState } from "react";
 import type { Ref } from "react";
 import { Pressable, View } from "react-native";
@@ -7,6 +8,9 @@ import type { TagRow } from "@/data/tags-core";
 import { findTagByName, isUsableTagName, normalizeTagName } from "@/domain/tags";
 import { useSheetSurface } from "@/hooks/use-sheet-surface";
 import { useTranslation } from "@/i18n/context";
+import { SILENT } from "@/state/atom-command";
+import { createTagCommand } from "@/state/editor-commands";
+import { useAtomAction } from "@/state/use-atom-action";
 import { MARK_CEILING } from "@/theme/empty-state-ink";
 import { useColors } from "@/theme/use-colors";
 
@@ -76,23 +80,27 @@ export function TagPickerSheet({
     // `canCreate` only changes once the insert commits, so without this a second tap reruns `ensureTag`'s
     // check-then-insert before the first row is visible to it.
     const creating = useRef(false);
+    const create = useAtomAction(
+        createTagCommand,
+        {
+            onFailure: (cause) => console.error("Failed to create the tag", Cause.squash(cause)),
+            onSettled: () => {
+                creating.current = false;
+            },
+            onSuccess: (id) => {
+                if (id) {
+                    setQuery("");
+                }
+            },
+        },
+        SILENT
+    );
     const createTag = (name: string) => {
         if (creating.current) {
             return;
         }
         creating.current = true;
-        onCreate(name)
-            .then((id) => {
-                if (id) {
-                    setQuery("");
-                }
-            })
-            .catch((error) => {
-                console.error("Failed to create the tag", error);
-            })
-            .finally(() => {
-                creating.current = false;
-            });
+        create(() => onCreate(name));
     };
 
     return (

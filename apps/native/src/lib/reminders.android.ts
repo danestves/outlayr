@@ -100,7 +100,12 @@ export const Reminders: typeof IosReminders = Context.Reference<(typeof IosRemin
 
 export const openNotificationSettings: typeof iosOpenNotificationSettings = () => {
     expectHandoff();
-    Linking.openSettings().catch((error) => {
-        console.warn("[outlayr] opening notification settings failed", error);
-    });
+    Effect.runFork(
+        Effect.tryPromise(() => Linking.openSettings()).pipe(
+            Effect.catchTags({
+                UnknownError: (error) =>
+                    Effect.sync(() => console.warn("[outlayr] opening notification settings failed", error.cause)),
+            })
+        )
+    );
 };

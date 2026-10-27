@@ -1,4 +1,6 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
+import * as Cause from "effect/Cause";
+import * as Result from "effect/Result";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 
@@ -15,11 +17,11 @@ import { usePayoffPlanGate, usePeopleCapped } from "@/hooks/use-pro-gate";
 import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import { writeOweCommand, writePayoffPlanCommand } from "@/state/planning-commands";
+import { SILENT } from "@/state/atom-command";
+import { saveOweCommand } from "@/state/debt-flow-commands";
 import type { OweDraft } from "@/state/planning-commands";
 import { askForInstallmentReminders, rearmInstallmentReminders } from "@/state/surfaces-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 
 import { resolvePerson } from "./new-debt-form";
 
@@ -44,8 +46,6 @@ function isDirty(edits: { amountText: string; category: Category | null; name: s
 
 export function useOweForm({ onDirtyChange, onDone }: OweProps) {
     const db = useDatabase();
-    const writeOwe = useAtomCommand(writeOweCommand, SILENT);
-    const writePayoffPlan = useAtomCommand(writePayoffPlanCommand, SILENT);
     const router = useRouter();
     const t = useTranslation();
     const haptics = useHaptics();
@@ -100,7 +100,33 @@ export function useOweForm({ onDirtyChange, onDone }: OweProps) {
     const targetDate = payBy === "none" ? null : days[payBy];
     const complete = amount > 0 && (person !== null || newName !== "") && category !== null;
 
-    const save = async () => {
+    const saveOwe = useAtomAction(
+        saveOweCommand,
+        {
+            onFailure: (cause) => {
+                console.error("Failed to save what you owe", Cause.squash(cause));
+                haptics("error");
+                setFailure(t("debts.error.saveFailed"));
+                setBusy(false);
+            },
+            onSuccess: (plan) => {
+                if (plan !== null && Result.isFailure(plan)) {
+                    console.error("Failed to save the payoff plan", plan.failure);
+                    notifyFailure({ title: t("debts.plan.failed") });
+                } else if (plan !== null) {
+                    rearmInstallmentReminders(db);
+                }
+                haptics("success");
+                onDone();
+                if (targetDate !== null) {
+                    askForInstallmentReminders(db, "debts.reminder.ask");
+                }
+            },
+        },
+        SILENT
+    );
+
+    const save = () => {
         if (category === null) {
             return;
         }
@@ -119,30 +145,7 @@ export function useOweForm({ onDirtyChange, onDone }: OweProps) {
             note: note === "" ? undefined : note,
             person,
         };
-        let personId: string;
-        try {
-            personId = unwrapAtomCommand(await writeOwe({ db, draft: owe }));
-        } catch (error) {
-            console.error("Failed to save what you owe", error);
-            haptics("error");
-            setFailure(t("debts.error.saveFailed"));
-            setBusy(false);
-            return;
-        }
-        if (targetDate !== null) {
-            try {
-                unwrapAtomCommand(await writePayoffPlan({ db, personId, targetDate }));
-                rearmInstallmentReminders(db);
-            } catch (error) {
-                console.error("Failed to save the payoff plan", error);
-                notifyFailure({ title: t("debts.plan.failed") });
-            }
-        }
-        haptics("success");
-        onDone();
-        if (targetDate !== null) {
-            askForInstallmentReminders(db, "debts.reminder.ask");
-        }
+        saveOwe({ db, owe, targetDate });
     };
 
     return {

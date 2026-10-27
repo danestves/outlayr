@@ -1,3 +1,5 @@
+import * as Effect from "effect/Effect";
+
 interface DeferredDeleteTimers<Handle> {
     clear: (handle: Handle) => void;
     set: (run: () => void, ms: number) => Handle;
@@ -11,15 +13,16 @@ export interface DeferredDeleteSnapshot {
 
 export interface DeferredDeleteController {
     acknowledgeFailure: () => void;
-    /** Commits whatever is pending; settles once written. */
-    flush: () => Promise<void>;
+    /** Commits whatever is pending; completes once written. */
+    flush: Effect.Effect<void>;
     requestDelete: (id: string) => void;
     snapshot: DeferredDeleteSnapshot;
     undo: () => void;
 }
 
 export interface DeferredDeleteOptions<Handle> {
-    commit: (id: string) => Promise<void>;
+    commit: (id: string) => Effect.Effect<void, unknown>;
+    launch: (write: Effect.Effect<void>) => void;
     onChange: (snapshot: DeferredDeleteSnapshot) => void;
     timers: DeferredDeleteTimers<Handle>;
     windowMs: number;
@@ -27,6 +30,7 @@ export interface DeferredDeleteOptions<Handle> {
 
 export function createDeferredDelete<Handle>({
     commit,
+    launch,
     windowMs,
     timers,
     onChange,
@@ -37,7 +41,7 @@ export function createDeferredDelete<Handle>({
 
     const controller: DeferredDeleteController = {
         acknowledgeFailure,
-        flush,
+        flush: Effect.suspend(flush),
         requestDelete,
         snapshot: { failedId: null, pendingId: null },
         undo,
@@ -55,17 +59,22 @@ export function createDeferredDelete<Handle>({
         }
     }
 
-    function write(id: string): Promise<void> {
-        return commit(id).catch(() => {
-            failedId = id;
-            publish();
-        });
+    function write(id: string): Effect.Effect<void> {
+        return commit(id).pipe(
+            Effect.uninterruptible,
+            Effect.catchCause(() =>
+                Effect.sync(() => {
+                    failedId = id;
+                    publish();
+                })
+            )
+        );
     }
 
     function requestDelete(id: string) {
         // One row hides at a time, so a delete still in its window commits now rather than being dropped.
         if (pendingId !== null && pendingId !== id) {
-            write(pendingId);
+            launch(write(pendingId));
         }
         cancelTimer();
         pendingId = id;
@@ -74,7 +83,7 @@ export function createDeferredDelete<Handle>({
             handle = null;
             pendingId = null;
             publish();
-            write(id);
+            launch(write(id));
         }, windowMs);
     }
 
@@ -89,15 +98,15 @@ export function createDeferredDelete<Handle>({
         publish();
     }
 
-    async function flush() {
+    function flush(): Effect.Effect<void> {
         cancelTimer();
         if (pendingId === null) {
-            return;
+            return Effect.void;
         }
         const id = pendingId;
         pendingId = null;
         // No snapshot for the hide ending: the caller is tearing down. A rejected write still publishes.
-        await write(id);
+        return write(id);
     }
 
     return controller;

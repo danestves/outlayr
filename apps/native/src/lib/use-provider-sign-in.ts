@@ -1,5 +1,5 @@
 import * as Cause from "effect/Cause";
-import * as AsyncResult from "effect/reactivity/AsyncResult";
+import type * as Effect from "effect/Effect";
 import { useState } from "react";
 
 import { isSignInCancellation, signInFailureDetail, signInFailureMessage } from "@/domain/account";
@@ -10,7 +10,7 @@ import { ProviderSignInError } from "@/lib/provider-sign-in";
 import type { SignInProvider, SignInRequest } from "@/lib/provider-sign-in";
 import { SILENT } from "@/state/atom-command";
 import { providerSignInCommand } from "@/state/cloud-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 
 type AuthClient = NonNullable<typeof authClient>;
 
@@ -21,32 +21,34 @@ export interface ProviderSignIn {
 }
 
 interface ProviderSignInOptions {
-    onAppleFailure?: () => Promise<void>;
+    onAppleFailure?: () => Effect.Effect<void, unknown>;
 }
 
 export function useProviderSignIn(client: AuthClient, options: ProviderSignInOptions = {}): ProviderSignIn {
     const t = useTranslation();
     const activation = useAuthSession();
-    const signIn = useAtomCommand(providerSignInCommand, SILENT);
     const [busy, setBusy] = useState<SignInProvider | null>(null);
     const [error, setError] = useState<string | null>(null);
-
-    const start = (request: SignInRequest) => {
-        setError(null);
-        setBusy(request.provider);
-        signIn({ activation, client, onAppleFailure: options.onAppleFailure, request })
-            .then((result) => {
-                if (!AsyncResult.isFailure(result)) {
-                    return;
-                }
-                const failure = Cause.squash(result.cause);
+    const signIn = useAtomAction(
+        providerSignInCommand,
+        {
+            onFailure: (failed) => {
+                const failure = Cause.squash(failed);
                 const cause = failure instanceof ProviderSignInError ? failure.cause : failure;
                 if (!isSignInCancellation(cause)) {
                     console.warn("[outlayr] sign-in failed", signInFailureDetail(cause));
                     setError(signInFailureMessage(cause, t));
                 }
-            })
-            .finally(() => setBusy(null));
+            },
+            onSettled: () => setBusy(null),
+        },
+        SILENT
+    );
+
+    const start = (request: SignInRequest) => {
+        setError(null);
+        setBusy(request.provider);
+        signIn({ activation, client, onAppleFailure: options.onAppleFailure, request });
     };
 
     return { busy, error, start };

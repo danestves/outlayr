@@ -1,12 +1,12 @@
 import { RegistryContext } from "@effect/atom-react/RegistryContext";
 import { eq } from "drizzle-orm";
 import * as Cause from "effect/Cause";
-import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { createContext, use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
-import { createSingleAdoptionRetry } from "@/data/adoption-retry";
+import { createAdoptionSlot } from "@/data/adoption-retry";
+import type { AdoptionSlot } from "@/data/adoption-retry";
 import { META_KEYS } from "@/data/app-meta-core";
 import { useLiveValue } from "@/data/live-query";
 import { appMeta } from "@/db/schema";
@@ -15,8 +15,10 @@ import type { AdoptionChoice } from "@/domain/ledger-adoption";
 import { useProLocked, useProPending } from "@/hooks/use-pro-locked";
 import { subscribeAppState } from "@/lib/app-state";
 import { useAuthSession } from "@/lib/auth-session";
-import { SILENT, runAtomCommand } from "@/state/atom-command";
-import { completeAdoptionCommand, reconcileAdoptionCommand, runLifecycleCommand } from "@/state/lifecycle-commands";
+import { reconcileLedgerCommand, retryLedgerReconcileCommand } from "@/state/adoption-commands";
+import { SILENT } from "@/state/atom-command";
+import { completeAdoptionCommand } from "@/state/lifecycle-commands";
+import { fireAtomCommand } from "@/state/use-atom-action";
 
 export type AdoptionStatus = "resolving" | "settled" | "ask" | "working";
 
@@ -87,58 +89,31 @@ export function LedgerAdoptionProvider({ children }: { children: ReactNode }) {
             setFailed(false);
         }
     }
-    const retryByAccount = useRef<{
-        accountId: string;
-        inFlight: Promise<AdoptionStatus> | null;
-        retry: ReturnType<typeof createSingleAdoptionRetry>;
-    } | null>(null);
+    const retryByAccount = useRef<AdoptionSlot | null>(null);
 
     // oxlint-disable-next-line outlayr/react-effect-budget -- runs the account's ledger reconciliation and its one foreground retry on AppState, cancelled when the account or database changes
     useEffect(() => {
         if (reconcilingFor === null) {
             return;
         }
-        const account = reconcilingFor;
         let cancelled = false;
-        if (retryByAccount.current?.accountId !== account) {
-            retryByAccount.current = { accountId: account, inFlight: null, retry: createSingleAdoptionRetry() };
-        }
-        const slot = retryByAccount.current;
-        const { retry } = slot;
-
-        const runReconcile = async (): Promise<AdoptionStatus> => {
-            try {
-                const outcome = await runLifecycleCommand(reconcileAdoptionCommand, { accountId: account, db });
-                if (outcome === "ask") {
-                    return "ask";
+        const { current } = retryByAccount;
+        const slot = current?.accountId === reconcilingFor ? current : createAdoptionSlot(reconcilingFor);
+        retryByAccount.current = slot;
+        const input = {
+            db,
+            report: (outcome: AdoptionStatus) => {
+                if (!cancelled) {
+                    setReconciled(outcome);
                 }
-                if (outcome === "defer") {
-                    retry.schedule();
-                }
-                return "settled";
-            } catch (error: unknown) {
-                console.warn("[outlayr] ledger adoption deferred", error);
-                retry.schedule();
-                return "settled";
-            }
+            },
+            slot,
         };
 
-        const reconcile = async () => {
-            if (slot.inFlight === null) {
-                slot.inFlight = runReconcile().finally(() => {
-                    slot.inFlight = null;
-                });
-            }
-            const outcome = await slot.inFlight;
-            if (!cancelled) {
-                setReconciled(outcome);
-            }
-        };
-
-        reconcile();
+        fireAtomCommand(registry, reconcileLedgerCommand, input, {});
         const unsubscribe = subscribeAppState((state) => {
             if (state === "active") {
-                retry.run(reconcile);
+                fireAtomCommand(registry, retryLedgerReconcileCommand, input, {});
             }
         });
 
@@ -146,7 +121,7 @@ export function LedgerAdoptionProvider({ children }: { children: ReactNode }) {
             cancelled = true;
             unsubscribe();
         };
-    }, [db, reconcilingFor]);
+    }, [db, reconcilingFor, registry]);
 
     const choose = useCallback(
         (choice: AdoptionChoice) => {
@@ -155,20 +130,20 @@ export function LedgerAdoptionProvider({ children }: { children: ReactNode }) {
             }
             setReconciled("working");
             setFailed(false);
-            runAtomCommand(
+            fireAtomCommand(
                 registry,
                 completeAdoptionCommand,
                 { accountId, actions: choiceActions(choice), db },
+                {
+                    onFailure: (cause) => {
+                        console.warn("[outlayr] ledger adoption failed", Cause.squash(cause));
+                        setFailed(true);
+                        setReconciled("ask");
+                    },
+                    onSuccess: () => setReconciled("settled"),
+                },
                 SILENT
-            ).then((result) => {
-                if (AsyncResult.isFailure(result)) {
-                    console.warn("[outlayr] ledger adoption failed", Cause.squash(result.cause));
-                    setFailed(true);
-                    setReconciled("ask");
-                    return;
-                }
-                setReconciled("settled");
-            });
+            );
         },
         [db, accountId, registry]
     );

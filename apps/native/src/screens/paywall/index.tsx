@@ -28,10 +28,14 @@ import { alternateIconsSupported } from "@/lib/app-icon";
 import { useAuthSession } from "@/lib/auth-session";
 import { legalUrl } from "@/lib/legal-url";
 import { paywallPlansAtom } from "@/lib/paywall-plans";
+import { SILENT } from "@/state/atom-command";
+import { buyPlanCommand, confirmEntitlementCommand, restorePlanCommand } from "@/state/settings-flow-commands";
+import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
 
 import { PaywallCta } from "./paywall-cta";
 import { PlanList } from "./plan-list";
+import { purchaseNext, restoreNext } from "./purchase-result";
 import { StoreTerms } from "./store-terms";
 
 const UNLIMITED = "\u221E";
@@ -177,7 +181,7 @@ export function Paywall() {
     const colors = useColors();
     const router = useRouter();
     const navigation = useNavigation();
-    const { isMirrored, isPro, mirrorEntitlement, purchasePackage, restorePurchases } = useRevenueCat();
+    const { isMirrored, isPro } = useRevenueCat();
     const largeText = useAccessibilityTextSize();
     const { accountId } = useAuthSession();
     const [busy, setBusy] = useState<"buy" | "confirm" | "restore" | null>(null);
@@ -193,67 +197,81 @@ export function Paywall() {
         setAttempt((count) => count + 1);
     };
 
+    const leave = () => {
+        if (navigation.isFocused()) {
+            router.back();
+        }
+    };
+
     /** For a customer the store calls Pro whose account has not been told yet. */
-    const confirm = async () => {
-        setBusy("confirm");
-        setFailure(null);
-        await mirrorEntitlement()
-            .then((mirrored) => {
+    const confirmEntitlement = useAtomAction(
+        confirmEntitlementCommand,
+        {
+            onSettled: () => setBusy(null),
+            onSuccess: (mirrored) => {
                 if (!mirrored) {
                     setFailure("pro.syncPendingBody");
                 }
-            })
-            .finally(() => {
-                setBusy(null);
-            });
+            },
+        },
+        SILENT
+    );
+    const buyPlan = useAtomAction(
+        buyPlanCommand,
+        {
+            onFailure: () => setFailure("pro.failedBody"),
+            onSettled: () => setBusy(null),
+            onSuccess: ({ mirrored, outcome }) => {
+                const next = purchaseNext(outcome, mirrored);
+                if (next.failure !== null) {
+                    setFailure(next.failure);
+                }
+                if (next.leave) {
+                    leave();
+                }
+            },
+        },
+        SILENT
+    );
+    const restorePlan = useAtomAction(
+        restorePlanCommand,
+        {
+            onFailure: () => setFailure("pro.restoreFailedBody"),
+            onSettled: () => setBusy(null),
+            onSuccess: ({ mirrored, restored }) => {
+                const next = restoreNext(restored, mirrored);
+                if (next.failure !== null) {
+                    setFailure(next.failure);
+                }
+                if (next.leave) {
+                    leave();
+                }
+            },
+        },
+        SILENT
+    );
+
+    const confirm = () => {
+        setBusy("confirm");
+        setFailure(null);
+        confirmEntitlement(accountId);
     };
 
     const plan = plans?.find((candidate) => candidate.kind === selected) ?? null;
 
-    const buy = async () => {
+    const buy = () => {
         if (plan === null) {
             return;
         }
-        const { offer } = plan;
         setBusy("buy");
         setFailure(null);
-        const purchase = async () => {
-            const outcome = await purchasePackage(offer);
-            const mirrored = outcome !== "pro" || (await mirrorEntitlement());
-            if (!mirrored) {
-                setFailure("pro.syncPendingBody");
-            } else if (outcome === "pro") {
-                if (navigation.isFocused()) {
-                    router.back();
-                }
-            } else if (outcome === "unentitled") {
-                setFailure("pro.unentitledBody");
-            }
-        };
-        await purchase()
-            .catch(() => setFailure("pro.failedBody"))
-            .finally(() => setBusy(null));
+        buyPlan({ accountId, offer: plan.offer });
     };
 
-    const restore = async () => {
+    const restore = () => {
         setBusy("restore");
         setFailure(null);
-        const restoreAndMirror = async () => {
-            const restored = await restorePurchases();
-            const mirrored = !restored || (await mirrorEntitlement());
-            if (!mirrored) {
-                setFailure("pro.restorePendingBody");
-            } else if (restored) {
-                if (navigation.isFocused()) {
-                    router.back();
-                }
-            } else {
-                setFailure("pro.nothingRestoredBody");
-            }
-        };
-        await restoreAndMirror()
-            .catch(() => setFailure("pro.restoreFailedBody"))
-            .finally(() => setBusy(null));
+        restorePlan(accountId);
     };
 
     const empty = failed || (plans !== null && plans.length === 0);

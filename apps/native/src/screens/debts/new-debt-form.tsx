@@ -1,4 +1,6 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
+import * as Cause from "effect/Cause";
+import * as Result from "effect/Result";
 import { useRouter } from "expo-router";
 import { useLayoutEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
@@ -24,11 +26,11 @@ import { useAccountCreateRoute, usePayoffPlanGate, usePeopleCapped } from "@/hoo
 import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import { writeDebtCommand, writePayoffPlanCommand } from "@/state/planning-commands";
+import { SILENT } from "@/state/atom-command";
+import { saveDebtCommand } from "@/state/debt-flow-commands";
 import type { DebtDraft } from "@/state/planning-commands";
 import { rearmInstallmentReminders } from "@/state/surfaces-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 
 const MAX_SUGGESTIONS = 4;
 
@@ -92,8 +94,6 @@ export interface NewDebtProps {
 
 export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialVerb }: NewDebtProps) {
     const db = useDatabase();
-    const writeDebt = useAtomCommand(writeDebtCommand, SILENT);
-    const writePayoffPlan = useAtomCommand(writePayoffPlanCommand, SILENT);
     const router = useRouter();
     const t = useTranslation();
     const haptics = useHaptics();
@@ -158,7 +158,30 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
 
     const draft = readDraft({ account, amountText, category, name, newCurrency, person, soldOnCredit, theirText });
 
-    const save = async () => {
+    const saveDebt = useAtomAction(
+        saveDebtCommand,
+        {
+            onFailure: (cause) => {
+                console.error("Failed to save the debt", Cause.squash(cause));
+                haptics("error");
+                setFailure(t("debts.error.saveFailed"));
+                setBusy(false);
+            },
+            onSuccess: (plan) => {
+                // A failed plan is reported, but the debt stands.
+                if (plan !== null && Result.isFailure(plan)) {
+                    console.error("Failed to save the payoff plan", plan.failure);
+                    notifyFailure({ title: t("debts.plan.failed") });
+                }
+                rearmInstallmentReminders(db);
+                haptics("success");
+                onDone();
+            },
+        },
+        SILENT
+    );
+
+    const save = () => {
         if (person === null && peopleCapped) {
             router.push("/paywall");
             return;
@@ -177,28 +200,7 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
             theirAmount: draft.theirAmount,
             verb: choice.verb,
         };
-        let debtorId: string;
-        try {
-            debtorId = unwrapAtomCommand(await writeDebt({ db, draft: debt }));
-        } catch (error) {
-            console.error("Failed to save the debt", error);
-            haptics("error");
-            setFailure(t("debts.error.saveFailed"));
-            setBusy(false);
-            return;
-        }
-        // A failed plan is reported, but the debt stands.
-        if (payBackBy !== null) {
-            try {
-                unwrapAtomCommand(await writePayoffPlan({ db, personId: debtorId, targetDate: payBackBy }));
-            } catch (error) {
-                console.error("Failed to save the payoff plan", error);
-                notifyFailure({ title: t("debts.plan.failed") });
-            }
-        }
-        rearmInstallmentReminders(db);
-        haptics("success");
-        onDone();
+        saveDebt({ db, debt, payBackBy });
     };
     const handlers = useRef({ save });
     // oxlint-disable-next-line outlayr/react-effect-budget -- keeps the latest save behind the stable press handler the native header button registers once
@@ -207,7 +209,7 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
     });
     // Reads only the ref, so Save does not re-register per keystroke.
     const onSave = () => {
-        void handlers.current.save();
+        handlers.current.save();
     };
 
     return {

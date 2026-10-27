@@ -83,7 +83,12 @@ export const Reminders = Context.Reference<{
 
 export function openNotificationSettings(): void {
     expectHandoff();
-    Linking.openSettings().catch((error) => {
-        console.warn("[outlayr] opening notification settings failed", error);
-    });
+    Effect.runFork(
+        Effect.tryPromise(() => Linking.openSettings()).pipe(
+            Effect.catchTags({
+                UnknownError: (error) =>
+                    Effect.sync(() => console.warn("[outlayr] opening notification settings failed", error.cause)),
+            })
+        )
+    );
 }

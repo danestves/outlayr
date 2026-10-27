@@ -53,7 +53,7 @@ export interface OweDraft {
     person: Account | null;
 }
 
-const writeDebt = Effect.fn("Planning.writeDebt")(function* writeDebt(db: Database, draft: DebtDraft) {
+export const writeDebt = Effect.fn("Planning.writeDebt")(function* writeDebt(db: Database, draft: DebtDraft) {
     const { account, amount, category, currency, person } = draft;
     const note = draft.note === "" ? undefined : draft.note;
     if (category !== null) {
@@ -85,14 +85,14 @@ const writeDebt = Effect.fn("Planning.writeDebt")(function* writeDebt(db: Databa
     return target.id;
 });
 
-const writeOwe = Effect.fn("Planning.writeOwe")(function* writeOwe(db: Database, draft: OweDraft) {
+export const writeOwe = Effect.fn("Planning.writeOwe")(function* writeOwe(db: Database, draft: OweDraft) {
     const { amount, categoryId, currency, note } = draft;
     const owed = draft.person ?? { currency, id: yield* createPerson(db, { currency, name: draft.newName }) };
     yield* recordBoughtOnCredit(db, { amount, categoryId, date: new Date(), note, person: owed });
     return owed.id;
 });
 
-const writePayoffPlan = Effect.fn("Planning.writePayoffPlan")(function* writePayoffPlan(
+export const writePayoffPlan = Effect.fn("Planning.writePayoffPlan")(function* writePayoffPlan(
     db: Database,
     personId: string,
     targetDate: Date

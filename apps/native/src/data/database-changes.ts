@@ -1,8 +1,13 @@
 import { inArray, sql } from "drizzle-orm";
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 import { addDatabaseChangeListener } from "expo-sqlite";
 
 import type { Database } from "@/db/client";
 import { appMeta } from "@/db/schema";
+import { createCommand } from "@/state/atom-command";
+import { appAtomRegistry } from "@/state/atom-registry";
+import { fireAtomCommand } from "@/state/use-atom-action";
 
 import type { META_KEYS } from "./app-meta-core";
 import { SETTING_KEYS } from "./settings-core";
@@ -23,6 +28,14 @@ interface SettingListener {
     run: () => void;
 }
 
+export class DatabaseChangesError extends Schema.TaggedError<DatabaseChangesError>()("DatabaseChangesError", {
+    cause: Schema.Defect(),
+}) {
+    override get message(): string {
+        return `${this._tag}: reading the changed settings failed`;
+    }
+}
+
 function flush(): void {
     flushTimer = null;
     const tableNames = [...pending];
@@ -34,29 +47,46 @@ function flush(): void {
         return;
     }
     for (const [db, listeners] of settingListeners) {
-        changedSettings(db, metaRows)
-            .catch(() => null)
-            .then((changed) => {
-                for (const listener of listeners) {
-                    if (settingChangeReaches(changed, listener.keys)) {
-                        listener.run();
-                    }
-                }
-            });
+        fireAtomCommand(appAtomRegistry, wakeSettingListenersCommand, { db, listeners, rowIds: metaRows }, {});
     }
 }
 
 // `null` when a row is already gone: it was deleted and may have been any setting.
-async function changedSettings(db: Database, rowIds: number[]): Promise<ReadonlySet<string> | null> {
-    const rows = await db
-        .select({ key: appMeta.key })
-        .from(appMeta)
-        .where(inArray(sql`rowid`, rowIds));
+const changedSettings = Effect.fn("DatabaseChanges.changedSettings")(function* changedSettings(
+    db: Database,
+    rowIds: number[]
+) {
+    const rows = yield* Effect.tryPromise({
+        catch: (cause) => new DatabaseChangesError({ cause }),
+        try: () =>
+            db
+                .select({ key: appMeta.key })
+                .from(appMeta)
+                .where(inArray(sql`rowid`, rowIds)),
+    });
     if (rows.length < rowIds.length) {
         return null;
     }
     return new Set(rows.map((row) => row.key).filter((key) => SETTING_KEYS.has(key)));
-}
+});
+
+export const wakeSettingListeners = Effect.fn("DatabaseChanges.wakeSettingListeners")(
+    function* wakeSettingListeners(input: { db: Database; listeners: ReadonlySet<SettingListener>; rowIds: number[] }) {
+        const changed = yield* changedSettings(input.db, input.rowIds).pipe(
+            Effect.catchTags({ DatabaseChangesError: () => Effect.succeed(null) })
+        );
+        for (const listener of input.listeners) {
+            if (settingChangeReaches(changed, listener.keys)) {
+                listener.run();
+            }
+        }
+    }
+);
+
+const wakeSettingListenersCommand = createCommand({
+    execute: wakeSettingListeners,
+    label: "database-changes:wake-setting-listeners",
+});
 
 export function settingChangeReaches(changed: ReadonlySet<string> | null, keys?: readonly string[]): boolean {
     if (changed === null) {

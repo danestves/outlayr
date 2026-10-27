@@ -1,6 +1,5 @@
 import type { MenuAction } from "@expo/ui/community/menu";
 import * as Cause from "effect/Cause";
-import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useRouter } from "expo-router";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { useState } from "react";
@@ -57,7 +56,7 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
 import { SILENT } from "@/state/atom-command";
 import { setNumberSettingCommand } from "@/state/settings-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 import { withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";
 
@@ -209,7 +208,16 @@ function balanceAt(running: readonly number[], index: number | null, isNet: bool
 
 export function Insights() {
     const db = useDatabase();
-    const setNumberSetting = useAtomCommand(setNumberSettingCommand, SILENT);
+    const savePeriod = useAtomAction(
+        setNumberSettingCommand,
+        { onFailure: (cause) => console.error("Saving the insights period failed", Cause.squash(cause)) },
+        SILENT
+    );
+    const saveMeasure = useAtomAction(
+        setNumberSettingCommand,
+        { onFailure: (cause) => console.error("Saving the insights measure failed", Cause.squash(cause)) },
+        SILENT
+    );
     const t = useTranslation();
     const router = useRouter();
     const currency = useGlobalCurrency(db);
@@ -256,19 +264,11 @@ export function Insights() {
 
     const selectPeriod = (value: number) => {
         setOffset(0);
-        setNumberSetting({ db, key: "insightsTimeFrame", value }).then((settled) => {
-            if (AsyncResult.isFailure(settled)) {
-                console.error("Saving the insights period failed", Cause.squash(settled.cause));
-            }
-        });
+        savePeriod({ db, key: "insightsTimeFrame", value });
     };
 
     const promote = (next: typeof measure) => {
-        setNumberSetting({ db, key: "insightsMeasure", value: storedInsightsMeasure(next) }).then((settled) => {
-            if (AsyncResult.isFailure(settled)) {
-                console.error("Saving the insights measure failed", Cause.squash(settled.cause));
-            }
-        });
+        saveMeasure({ db, key: "insightsMeasure", value: storedInsightsMeasure(next) });
     };
 
     const lockedBucket = bucketAt(result.buckets, lockedIndex);

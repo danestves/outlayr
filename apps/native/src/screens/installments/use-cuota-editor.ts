@@ -1,4 +1,5 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
+import * as Cause from "effect/Cause";
 import { useRef, useState } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
@@ -8,10 +9,10 @@ import { numberToNumpad, numpadToNumber } from "@/domain/numpad";
 import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { SILENT } from "@/state/atom-command";
 import { deleteInstallmentCommand, updateInstallmentCommand } from "@/state/planning-commands";
 import { rearmInstallmentReminders } from "@/state/surfaces-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 
 /** Edits touch one row; payments are re-allocated by date on the next read. */
 export function useCuotaEditor({
@@ -24,30 +25,48 @@ export function useCuotaEditor({
     row: InstallmentRow;
 }) {
     const db = useDatabase();
-    const updateInstallment = useAtomCommand(updateInstallmentCommand, SILENT);
-    const deleteInstallment = useAtomCommand(deleteInstallmentCommand, SILENT);
     const t = useTranslation();
     const haptics = useHaptics();
+    const updateInstallment = useAtomAction(
+        updateInstallmentCommand,
+        {
+            onFailure: (cause) => {
+                console.error("Failed to update the installment", Cause.squash(cause));
+                notifyFailure({ body: t("installments.failedBody"), title: t("installments.failedTitle") });
+            },
+            onSuccess: () => {
+                rearmInstallmentReminders(db);
+                haptics("success");
+            },
+        },
+        SILENT
+    );
+    const deleteInstallment = useAtomAction(
+        deleteInstallmentCommand,
+        {
+            onFailure: (cause) => {
+                console.error("Failed to delete the installment", Cause.squash(cause));
+                notifyFailure({ body: t("installments.failedBody"), title: t("installments.failedTitle") });
+            },
+            onSuccess: () => {
+                rearmInstallmentReminders(db);
+                haptics("warning");
+                onClose();
+            },
+        },
+        SILENT
+    );
     const minorUnits = minorUnitsFor(currency);
     const padRef = useRef<BottomSheetModal>(null);
     const [dueDate, setDueDate] = useState(row.dueDate);
     const [amount, setAmount] = useState(row.amount);
     const [padText, setPadText] = useState(() => numberToNumpad(row.amount, minorUnits));
 
-    const write = async (patch: { amount?: number; dueDate?: Date }) => {
-        try {
-            unwrapAtomCommand(await updateInstallment({ db, id: row.id, patch }));
-            rearmInstallmentReminders(db);
-            haptics("success");
-        } catch (error) {
-            console.error("Failed to update the installment", error);
-            notifyFailure({ body: t("installments.failedBody"), title: t("installments.failedTitle") });
-        }
-    };
+    const write = (patch: { amount?: number; dueDate?: Date }) => updateInstallment({ db, id: row.id, patch });
 
     const moveTo = (next: Date) => {
         setDueDate(next);
-        write({ dueDate: next }).catch(() => undefined);
+        write({ dueDate: next });
     };
 
     const commitAmount = () => {
@@ -55,21 +74,11 @@ export function useCuotaEditor({
         const next = numpadToNumber(padText);
         if (next > 0 && next !== amount) {
             setAmount(next);
-            write({ amount: next }).catch(() => undefined);
+            write({ amount: next });
         }
     };
 
-    const remove = async () => {
-        try {
-            unwrapAtomCommand(await deleteInstallment({ db, id: row.id }));
-            rearmInstallmentReminders(db);
-            haptics("warning");
-            onClose();
-        } catch (error) {
-            console.error("Failed to delete the installment", error);
-            notifyFailure({ body: t("installments.failedBody"), title: t("installments.failedTitle") });
-        }
-    };
+    const remove = () => deleteInstallment({ db, id: row.id });
 
     return { amount, commitAmount, dueDate, minorUnits, moveTo, padRef, padText, remove, setPadText };
 }

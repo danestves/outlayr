@@ -16,7 +16,7 @@ import {
 } from "@/lib/deletion-resume";
 import type { StoredDeletionPreparation } from "@/lib/deletion-resume";
 import { createDeviceResetGate, writeDeviceResetMarker } from "@/lib/device-data-reset";
-import { providerBindingFor, persistProviderBinding } from "@/lib/provider-revocation";
+import { providerBindingFor } from "@/lib/provider-revocation";
 import { signInWithProvider } from "@/lib/provider-sign-in";
 import { appRuntime } from "@/lib/runtime";
 import { SecureStorage } from "@/lib/secure-storage";
@@ -36,11 +36,6 @@ export const requestUnlockCommand = createCommand({ execute: requestUnlock, labe
 export const providerSignInCommand = createRuntimeCommand(appRuntime, {
     execute: signInWithProvider,
     label: "cloud:provider-sign-in",
-});
-
-export const persistProviderBindingCommand = createRuntimeCommand(appRuntime, {
-    execute: persistProviderBinding,
-    label: "cloud:persist-provider-binding",
 });
 
 const cloudConfigured = Effect.suspend(() =>

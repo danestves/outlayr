@@ -1,6 +1,7 @@
 import ViewIcon from "@hugeicons-pro/core-stroke-rounded/ViewIcon";
 import ViewOffSlashIcon from "@hugeicons-pro/core-stroke-rounded/ViewOffSlashIcon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
+import * as Cause from "effect/Cause";
 import * as Schema from "effect/Schema";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
@@ -16,7 +17,17 @@ import { cn } from "@/components/tw";
 import { signInFailureDetail, signInFailureMessage } from "@/domain/account";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { authClient } from "@/lib/auth-client";
-import { persistProviderBindingCommand, runCloudCommand } from "@/state/cloud-commands";
+import { SILENT } from "@/state/atom-command";
+import {
+    EmailAuthError,
+    requestPasswordResetCommand,
+    resetPasswordCommand,
+    sendVerificationOtpCommand,
+    signInEmailCommand,
+    signUpEmailCommand,
+    verifyEmailCommand,
+} from "@/state/auth-flow-commands";
+import { useAtomAction } from "@/state/use-atom-action";
 
 type AuthClient = NonNullable<typeof authClient>;
 
@@ -68,51 +79,43 @@ function useRequest() {
     const t = useTranslation();
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const run = (work: () => Promise<void>) => {
+    const run = (fire: () => void) => {
         setError(null);
         setBusy(true);
-        work()
-            .catch((cause: unknown) => {
-                console.warn("[outlayr] email sign-in failed", signInFailureDetail(cause));
-                setError(signInFailureMessage(cause, t));
-            })
-            .finally(() => setBusy(false));
+        fire();
     };
-    return { busy, error, run };
-}
-
-function unwrap<T>({ data, error }: { data: T | null; error: { message?: string } | null }): T {
-    if (error !== null || data === null) {
-        throw Object.assign(new Error(error?.message ?? "Email sign-in failed"), error);
-    }
-    return data;
-}
-
-async function bindPassword(user: { email: string; id: string }) {
-    await runCloudCommand(persistProviderBindingCommand, {
-        betterAuthUserId: user.id,
-        provider: "password",
-        providerSubject: user.email,
-    });
+    const handlers = {
+        onFailure: (failed: Cause.Cause<unknown>) => {
+            const failure = Cause.squash(failed);
+            const cause = failure instanceof EmailAuthError ? failure.cause : failure;
+            console.warn("[outlayr] email sign-in failed", signInFailureDetail(cause));
+            setError(signInFailureMessage(cause, t));
+        },
+        onSettled: () => setBusy(false),
+    };
+    return { busy, error, handlers, run };
 }
 
 function SignInStep({ client, email: givenEmail, route }: Flow) {
     const t = useTranslation();
     const fetchOptions = useFetchOptions();
-    const { busy, error, run } = useRequest();
+    const { busy, error, handlers, run } = useRequest();
     const [email, setEmail] = useState(givenEmail);
     const [password, setPassword] = useState("");
+    const signIn = useAtomAction(
+        signInEmailCommand,
+        {
+            ...handlers,
+            onSuccess: (outcome) => {
+                if (outcome === "verify") {
+                    goTo(route, "verify", email);
+                }
+            },
+        },
+        SILENT
+    );
 
-    const submit = () =>
-        run(async () => {
-            const result = await client.signIn.email({ email: email.trim(), fetchOptions, password });
-            // Better Auth has just sent a fresh code for exactly this case.
-            if (result.error?.code === "EMAIL_NOT_VERIFIED") {
-                goTo(route, "verify", email);
-                return;
-            }
-            await bindPassword(unwrap(result).user);
-        });
+    const submit = () => run(() => signIn({ client, email, fetchOptions, password }));
 
     return (
         <FirstRun
@@ -145,16 +148,17 @@ function SignInStep({ client, email: givenEmail, route }: Flow) {
 function CreateStep({ client, email: givenEmail, route }: Flow) {
     const t = useTranslation();
     const fetchOptions = useFetchOptions();
-    const { busy, error, run } = useRequest();
+    const { busy, error, handlers, run } = useRequest();
     const [email, setEmail] = useState(givenEmail);
     const [password, setPassword] = useState("");
     const ready = Boolean(email) && password.length >= MIN_PASSWORD_LENGTH;
+    const signUp = useAtomAction(
+        signUpEmailCommand,
+        { ...handlers, onSuccess: () => goTo(route, "verify", email) },
+        SILENT
+    );
 
-    const submit = () =>
-        run(async () => {
-            unwrap(await client.signUp.email({ email: email.trim(), fetchOptions, name: "", password }));
-            goTo(route, "verify", email);
-        });
+    const submit = () => run(() => signUp({ client, email, fetchOptions, password }));
 
     return (
         <FirstRun
@@ -174,19 +178,21 @@ function CreateStep({ client, email: givenEmail, route }: Flow) {
 function VerifyStep({ client, email }: Flow) {
     const t = useTranslation();
     const fetchOptions = useFetchOptions();
-    const { busy, error, run } = useRequest();
+    const { busy, error, handlers, run } = useRequest();
     const [code, setCode] = useState("");
     const [resent, setResent] = useState(false);
+    const verifyEmail = useAtomAction(verifyEmailCommand, handlers, SILENT);
+    const sendOtp = useAtomAction(
+        sendVerificationOtpCommand,
+        { ...handlers, onSuccess: () => setResent(true) },
+        SILENT
+    );
 
-    const verify = (otp: string) =>
-        run(async () => {
-            await bindPassword(unwrap(await client.emailOtp.verifyEmail({ email, fetchOptions, otp })).user);
-        });
+    const verify = (otp: string) => run(() => verifyEmail({ client, email, fetchOptions, otp }));
     const resend = () =>
-        run(async () => {
+        run(() => {
             setResent(false);
-            unwrap(await client.emailOtp.sendVerificationOtp({ email, fetchOptions, type: "email-verification" }));
-            setResent(true);
+            sendOtp({ client, email, fetchOptions });
         });
 
     return (
@@ -221,14 +227,15 @@ function VerifyStep({ client, email }: Flow) {
 function ForgotStep({ client, email: givenEmail, route }: Flow) {
     const t = useTranslation();
     const fetchOptions = useFetchOptions();
-    const { busy, error, run } = useRequest();
+    const { busy, error, handlers, run } = useRequest();
     const [email, setEmail] = useState(givenEmail);
+    const requestReset = useAtomAction(
+        requestPasswordResetCommand,
+        { ...handlers, onSuccess: () => goTo(route, "reset", email) },
+        SILENT
+    );
 
-    const submit = () =>
-        run(async () => {
-            unwrap(await client.emailOtp.requestPasswordReset({ email: email.trim(), fetchOptions }));
-            goTo(route, "reset", email);
-        });
+    const submit = () => run(() => requestReset({ client, email: email.trim(), fetchOptions }));
 
     return (
         <FirstRun
@@ -249,22 +256,23 @@ function ForgotStep({ client, email: givenEmail, route }: Flow) {
 function ResetStep({ client, email }: Flow) {
     const t = useTranslation();
     const fetchOptions = useFetchOptions();
-    const { busy, error, run } = useRequest();
+    const { busy, error, handlers, run } = useRequest();
     const [code, setCode] = useState("");
     const [password, setPassword] = useState("");
     const [resent, setResent] = useState(false);
     const ready = code.length === CODE_LENGTH && password.length >= MIN_PASSWORD_LENGTH;
+    const resetPassword = useAtomAction(resetPasswordCommand, handlers, SILENT);
+    const requestReset = useAtomAction(
+        requestPasswordResetCommand,
+        { ...handlers, onSuccess: () => setResent(true) },
+        SILENT
+    );
 
-    const submit = () =>
-        run(async () => {
-            unwrap(await client.emailOtp.resetPassword({ email, fetchOptions, otp: code, password }));
-            await bindPassword(unwrap(await client.signIn.email({ email, fetchOptions, password })).user);
-        });
+    const submit = () => run(() => resetPassword({ client, email, fetchOptions, otp: code, password }));
     const resend = () =>
-        run(async () => {
+        run(() => {
             setResent(false);
-            unwrap(await client.emailOtp.requestPasswordReset({ email, fetchOptions }));
-            setResent(true);
+            requestReset({ client, email, fetchOptions });
         });
 
     return (

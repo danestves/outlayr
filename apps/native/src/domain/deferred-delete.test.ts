@@ -1,4 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 
 import { createDeferredDelete } from "./deferred-delete";
 import type { DeferredDeleteSnapshot } from "./deferred-delete";
@@ -41,11 +43,14 @@ const settle = () =>
         setTimeout(resolve, 0);
     });
 
-function harness(commit: (id: string) => Promise<void>) {
+function harness(commit: (id: string) => Effect.Effect<void, unknown>) {
     const clock = fakeClock();
     const seen: DeferredDeleteSnapshot[] = [];
     const controller = createDeferredDelete({
         commit,
+        launch: (write) => {
+            Effect.runFork(write);
+        },
         onChange: (snapshot) => {
             seen.push(snapshot);
         },
@@ -58,15 +63,15 @@ function harness(commit: (id: string) => Promise<void>) {
 function recorder() {
     const committed: string[] = [];
     return {
-        commit: (id: string) => {
-            committed.push(id);
-            return Promise.resolve();
-        },
+        commit: (id: string) =>
+            Effect.sync(() => {
+                committed.push(id);
+            }),
         committed,
     };
 }
 
-const rejecting = (): Promise<void> => Promise.reject(new Error("database is locked"));
+const rejecting = () => Effect.fail(new Error("database is locked"));
 
 describe("createDeferredDelete", () => {
     it("hides the row now and holds the write until the window closes", () => {
@@ -145,7 +150,7 @@ describe("createDeferredDelete", () => {
         const { clock, controller } = harness(writes.commit);
 
         controller.requestDelete("a");
-        controller.flush();
+        Effect.runFork(controller.flush);
         clock.elapse(WINDOW_MS * 4);
 
         expect(writes.committed).toStrictEqual(["a"]);
@@ -153,16 +158,18 @@ describe("createDeferredDelete", () => {
 
     it("settles a flush only once its write has", async () => {
         let land = () => {};
-        const { controller } = harness(
-            () =>
-                new Promise<void>((resolve) => {
-                    land = resolve;
-                })
+        const { controller } = harness(() =>
+            Effect.promise(
+                () =>
+                    new Promise<void>((resolve) => {
+                        land = resolve;
+                    })
+            )
         );
         let settled = false;
 
         controller.requestDelete("a");
-        const flushed = controller.flush().then(() => {
+        const flushed = Effect.runPromise(controller.flush).then(() => {
             settled = true;
         });
         await settle();
@@ -177,7 +184,7 @@ describe("createDeferredDelete", () => {
         const { controller, seen } = harness(rejecting);
 
         controller.requestDelete("a");
-        controller.flush();
+        Effect.runFork(controller.flush);
         await settle();
 
         expect(controller.snapshot.failedId).toBe("a");
@@ -190,8 +197,36 @@ describe("createDeferredDelete", () => {
 
         controller.requestDelete("a");
         controller.undo();
-        controller.flush();
+        Effect.runFork(controller.flush);
 
         expect(writes.committed).toStrictEqual([]);
+    });
+
+    it("finishes a write that started before its flush was interrupted", async () => {
+        let land = () => {};
+        const committed: string[] = [];
+        const { controller } = harness((id) =>
+            Effect.promise(
+                () =>
+                    new Promise<void>((resolve) => {
+                        land = resolve;
+                    })
+            ).pipe(
+                Effect.andThen(
+                    Effect.sync(() => {
+                        committed.push(id);
+                    })
+                )
+            )
+        );
+
+        controller.requestDelete("a");
+        const fiber = Effect.runFork(controller.flush);
+        await settle();
+        const interrupted = Effect.runPromise(Fiber.interrupt(fiber));
+        land();
+        await interrupted;
+
+        expect(committed).toStrictEqual(["a"]);
     });
 });

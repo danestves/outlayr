@@ -1,7 +1,7 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import type { AccountBalance } from "@outlayr/money/account-balance";
 import { isPerson } from "@outlayr/money/account-kind";
-import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as Cause from "effect/Cause";
 import { useRef, useState } from "react";
 
 import type { Account } from "@/data/accounts-core";
@@ -13,10 +13,11 @@ import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
 import type { GoalCommit, GoalTarget } from "@/screens/budgets/components/goal-target-sheet";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { useCommitLatch } from "@/screens/budgets/components/use-commit-latch";
+import { SILENT } from "@/state/atom-command";
 import { removeSavingsGoalCommand, setPayoffPlanCommand } from "@/state/planning-commands";
 import { rearmInstallmentReminders } from "@/state/surfaces-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 
 function statedKey(account: Account, balance: number) {
     if (!isPerson(account)) {
@@ -27,9 +28,31 @@ function statedKey(account: Account, balance: number) {
 
 export function usePayoffPlan(db: Database, account: Account, balance: AccountBalance, line: PayoffLine | null) {
     const t = useTranslation();
-    const setPlan = useAtomCommand(setPayoffPlanCommand, SILENT);
-    const removeGoal = useAtomCommand(removeSavingsGoalCommand, SILENT);
     const haptics = useHaptics();
+    const latch = useCommitLatch();
+    const setPlan = useAtomAction(
+        setPayoffPlanCommand,
+        {
+            onFailure: (cause) => {
+                console.error("Failed to save the payoff plan", Cause.squash(cause));
+                notifyFailure({ title: t("debts.plan.failed") });
+            },
+            onSettled: latch.release,
+            onSuccess: () => {
+                rearmInstallmentReminders(db);
+                haptics("success");
+            },
+        },
+        SILENT
+    );
+    const removeGoal = useAtomAction(
+        removeSavingsGoalCommand,
+        {
+            onFailure: () => notifyFailure({ title: t("debts.plan.failed") }),
+            onSuccess: () => rearmInstallmentReminders(db),
+        },
+        SILENT
+    );
     const gate = usePayoffPlanGate();
     const ref = useRef<BottomSheetModal>(null);
     const [target, setTarget] = useState<GoalTarget | null>(null);
@@ -47,33 +70,22 @@ export function usePayoffPlan(db: Database, account: Account, balance: AccountBa
         ref.current?.present();
     };
 
-    const onCommit = async ({ dateChanged, targetDate }: GoalCommit) => {
-        ref.current?.dismiss();
-        if (!dateChanged) {
+    const onCommit = ({ dateChanged, targetDate }: GoalCommit) => {
+        if (!latch.hold()) {
             return;
         }
-        try {
-            unwrapAtomCommand(await setPlan({ account, db, targetDate }));
-            rearmInstallmentReminders(db);
-            haptics("success");
-        } catch (error) {
-            console.error("Failed to save the payoff plan", error);
-            notifyFailure({ title: t("debts.plan.failed") });
+        ref.current?.dismiss();
+        if (!dateChanged) {
+            latch.release();
+            return;
         }
+        setPlan({ account, db, targetDate });
     };
 
     const remove = () => {
         ref.current?.dismiss();
         if (live) {
-            const settle = async () => {
-                const result = await removeGoal({ db, id: live.goalId });
-                if (AsyncResult.isFailure(result)) {
-                    notifyFailure({ title: t("debts.plan.failed") });
-                    return;
-                }
-                rearmInstallmentReminders(db);
-            };
-            settle();
+            removeGoal({ db, id: live.goalId });
         }
     };
 

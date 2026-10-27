@@ -1,6 +1,5 @@
 import { and, eq, isNull } from "drizzle-orm";
 import * as Cause from "effect/Cause";
-import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Image } from "expo-image";
 import { Carousel } from "panelui-native/components/carousel";
 import { View } from "react-native";
@@ -23,7 +22,7 @@ import type { TranslationKey } from "@/i18n/catalog";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { SILENT } from "@/state/atom-command";
 import { pickCardAccountCommand } from "@/state/lifecycle-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 
 export function LastEntry({ db, txId }: { db: Database; txId: string }) {
     const t = useTranslation();
@@ -82,7 +81,11 @@ const UNPICKED = "unpicked";
 
 export function CardsSection({ db }: { db: Database }) {
     const t = useTranslation();
-    const pickCardAccount = useAtomCommand(pickCardAccountCommand, SILENT);
+    const pickCardAccount = useAtomAction(
+        pickCardAccountCommand,
+        { onFailure: (cause) => console.warn("[outlayr] card pick failed", Cause.squash(cause)) },
+        SILENT
+    );
     const { language } = useLanguage();
     const accounts = useBankAccounts(db);
     const raw = useLiveValue(
@@ -116,11 +119,7 @@ export function CardsSection({ db }: { db: Database }) {
                                 if (next === UNPICKED) {
                                     return;
                                 }
-                                pickCardAccount({ accountId: next || null, db, text: card.text }).then((result) => {
-                                    if (AsyncResult.isFailure(result)) {
-                                        console.warn("[outlayr] card pick failed", Cause.squash(result.cause));
-                                    }
-                                });
+                                pickCardAccount({ accountId: next || null, db, text: card.text });
                             }}
                             options={
                                 unpicked

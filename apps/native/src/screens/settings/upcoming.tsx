@@ -16,7 +16,7 @@ import { useTranslation } from "@/i18n/context";
 import { useTransactionRowActions } from "@/lib/use-transaction-row-actions";
 import { LogUpcoming } from "@/screens/log/components/log-upcoming";
 import { setBoolSettingCommand } from "@/state/settings-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 import { MARK_CEILING } from "@/theme/empty-state-ink";
 import { useColors } from "@/theme/use-colors";
 
@@ -47,7 +47,7 @@ function TimelineStops() {
 
 export function Upcoming() {
     const db = useDatabase();
-    const setBoolSetting = useAtomCommand(setBoolSettingCommand);
+    const setBoolSetting = useAtomAction(setBoolSettingCommand);
     const router = useRouter();
     const t = useTranslation();
     const { state: settings } = useAppSettings();

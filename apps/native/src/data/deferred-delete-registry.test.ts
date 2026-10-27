@@ -33,8 +33,11 @@ function settle(): Promise<void> {
 
 function registryFor(db: Database | null) {
     return createDeferredDeleteRegistry({
-        commit: (kind, target, id) => Effect.runPromise(commitDeferredDelete(kind, target, id)),
+        commit: commitDeferredDelete,
         database: () => db,
+        launch: (write) => {
+            Effect.runFork(write);
+        },
     });
 }
 
@@ -116,7 +119,7 @@ describe("createDeferredDeleteRegistry", () => {
         const registry = registryFor(db);
 
         registry.requestDelete("row", id);
-        registry.flushAll();
+        Effect.runFork(registry.flushAll);
         await settle();
 
         const [transfer] = await db.select().from(transfers).where(eq(transfers.id, id));
@@ -145,10 +148,10 @@ describe("createDeferredDeleteRegistry", () => {
         const registry = registryFor(db);
 
         registry.requestDelete("budget", overall);
-        registry.flushAll();
+        Effect.runFork(registry.flushAll);
         await settle();
         registry.requestDelete("budget", perCategory);
-        registry.flushAll();
+        Effect.runFork(registry.flushAll);
         await settle();
 
         const [main] = await db.select().from(mainBudget).where(eq(mainBudget.id, overall));

@@ -1,5 +1,4 @@
 import * as Cause from "effect/Cause";
-import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useRouter, useSegments } from "expo-router";
 import { BottomSheet } from "panelui-native/components/bottom-sheet";
 import { Button } from "panelui-native/components/button";
@@ -23,7 +22,7 @@ import { useAuthSession } from "@/lib/auth-session";
 import { legalUrl } from "@/lib/legal-url";
 import { SILENT } from "@/state/atom-command";
 import { saveAiConsentCommand } from "@/state/settings-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
 
 const FEATURES = [
@@ -35,14 +34,12 @@ const FEATURES = [
 ] as const satisfies readonly { sends: TranslationKey; title: TranslationKey }[];
 
 export function useRecordAiConsent() {
-    const saveAiConsent = useAtomCommand(saveAiConsentCommand, SILENT);
-    return (db: Database, allowed: boolean): void => {
-        saveAiConsent({ allowed, db }).then((result) => {
-            if (AsyncResult.isFailure(result)) {
-                console.error("Saving the AI consent failed", Cause.squash(result.cause));
-            }
-        });
-    };
+    const saveAiConsent = useAtomAction(
+        saveAiConsentCommand,
+        { onFailure: (cause) => console.error("Saving the AI consent failed", Cause.squash(cause)) },
+        SILENT
+    );
+    return (db: Database, allowed: boolean): void => saveAiConsent({ allowed, db });
 }
 
 export function AiConsentDetails() {

@@ -8,7 +8,10 @@ import { Text } from "@/components/text";
 import { useTranslation } from "@/i18n/context";
 import { expectHandoff, openInAppBrowser } from "@/lib/app-handoff";
 import { APP_VERSION } from "@/lib/app-version";
-import { openStoreReviewCommand, runLinkCommand } from "@/state/link-commands";
+import { SILENT } from "@/state/atom-command";
+import { appAtomRegistry } from "@/state/atom-registry";
+import { openStoreReviewCommand } from "@/state/link-commands";
+import { fireAtomCommand } from "@/state/use-atom-action";
 
 const WEBSITE = "https://tryoutlayr.com";
 const X_PROFILE = "https://x.com/tryoutlayr";
@@ -30,7 +33,7 @@ export function About() {
                 <LinkRow
                     icon="Star"
                     onPress={() => {
-                        runLinkCommand(openStoreReviewCommand, undefined);
+                        fireAtomCommand(appAtomRegistry, openStoreReviewCommand, undefined, {}, SILENT);
                     }}
                     title={t("settings.row.rate")}
                 />

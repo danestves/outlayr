@@ -20,7 +20,6 @@ import { useSyncStatus } from "@/data/use-sync-status";
 import { useValuationCoverage } from "@/data/use-valuation-coverage";
 import { ACCENT_OPTIONS, DEFAULT_ACCENT_VALUE } from "@/domain/accent-options";
 import { appIconLabel } from "@/domain/app-icons";
-import { lockFailureMessage } from "@/domain/app-lock";
 import { offeredAccentValue } from "@/domain/material-accent";
 import { syncPaused, syncStatusLabel } from "@/domain/sync-status";
 import { coverageNote } from "@/domain/valuation-coverage";
@@ -39,11 +38,12 @@ import { legalUrl } from "@/lib/legal-url";
 import { notifyFailure } from "@/lib/notify";
 import { supportMailto } from "@/lib/support-mailto";
 import type { SupportDiagnostics } from "@/lib/support-mailto";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import { requestUnlockCommand, runCloudCommand } from "@/state/cloud-commands";
-import { openLanguageSettingsCommand, runLinkCommand } from "@/state/link-commands";
+import { SILENT } from "@/state/atom-command";
+import { appAtomRegistry } from "@/state/atom-registry";
+import { openLanguageSettingsCommand } from "@/state/link-commands";
 import { saveAiConsentCommand, setBoolSettingCommand, setNumberSettingCommand } from "@/state/settings-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { toggleAppLockCommand } from "@/state/settings-flow-commands";
+import { fireAtomCommand, useAtomAction } from "@/state/use-atom-action";
 import { THEME_OPTIONS } from "@/theme/theme-preference";
 import { useIsDark } from "@/theme/use-is-dark";
 
@@ -58,35 +58,27 @@ const DATA_LINKS = [
     { destructive: true, href: "/settings/erase", icon: "Delete02", title: "settings.row.erase" },
 ] satisfies readonly { destructive?: boolean; href: Href; icon: SettingsIconName; title: TranslationKey }[];
 
-async function toggleAppLock(saveBiometricLock: (value: boolean) => Promise<void>, next: boolean): Promise<void> {
-    const result = await runCloudCommand(
-        requestUnlockCommand,
-        translateNow(next ? "settings.lock.promptOn" : "settings.lock.promptOff")
-    );
-    if (result.success) {
-        await saveBiometricLock(next);
-        return;
-    }
-    const messageKey = lockFailureMessage(result.error);
-    if (messageKey) {
-        notifyFailure({
-            body: translateNow(messageKey),
-            title: translateNow("settings.lock.alertTitle"),
-        });
-    }
-}
-
 export function Settings() {
     const db = useDatabase();
-    const setBool = useAtomCommand(setBoolSettingCommand);
-    const setBoolSilently = useAtomCommand(setBoolSettingCommand, SILENT);
-    const setNumber = useAtomCommand(setNumberSettingCommand);
-    const saveAiConsent = useAtomCommand(saveAiConsentCommand);
+    const setBool = useAtomAction(setBoolSettingCommand);
+    const setNumber = useAtomAction(setNumberSettingCommand);
+    const saveAiConsent = useAtomAction(saveAiConsentCommand);
     const router = useRouter();
     const t = useTranslation();
     const { isPro } = useRevenueCat();
     const importSheetRef = useRef<ImportSheetHandle>(null);
     const [lockPending, setLockPending] = useState<boolean | null>(null);
+    const toggleAppLock = useAtomAction(toggleAppLockCommand, {
+        onSettled: () => setLockPending(null),
+        onSuccess: (messageKey) => {
+            if (messageKey) {
+                notifyFailure({
+                    body: translateNow(messageKey),
+                    title: translateNow("settings.lock.alertTitle"),
+                });
+            }
+        },
+    });
     const { language } = useLanguage();
     const { accountId } = useAuthSession();
 
@@ -109,9 +101,6 @@ export function Settings() {
     const accentColor = settings.number("accentColor");
     const colorScheme = settings.number("colorScheme");
     const scheme = useIsDark() ? "dark" : "light";
-
-    const saveBiometricLock = async (value: boolean) =>
-        unwrapAtomCommand(await setBoolSilently({ db, key: "biometricLock", value }));
 
     const diagnostics = supportDiagnostics(APP_VERSION, APP_BUILD);
 
@@ -227,7 +216,7 @@ export function Settings() {
                         icon="LanguageSkill"
                         onPress={() => {
                             expectHandoff();
-                            runLinkCommand(openLanguageSettingsCommand, undefined);
+                            fireAtomCommand(appAtomRegistry, openLanguageSettingsCommand, undefined, {}, SILENT);
                         }}
                         title={t("settings.row.language")}
                         value={languageLabel(language)}
@@ -272,9 +261,13 @@ export function Settings() {
                 />
                 <ToggleRow
                     icon="BiometricAccess"
-                    onValueChange={async (next) => {
+                    onValueChange={(next) => {
                         setLockPending(next);
-                        await toggleAppLock(saveBiometricLock, next).finally(() => setLockPending(null));
+                        toggleAppLock({
+                            db,
+                            next,
+                            promptMessage: translateNow(next ? "settings.lock.promptOn" : "settings.lock.promptOff"),
+                        });
                     }}
                     title={t("settings.row.authentication")}
                     value={lockPending ?? biometricLock}

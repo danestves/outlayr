@@ -4,11 +4,11 @@ import { useAppSettings, useDisplaySettings } from "@/contexts/display-settings-
 import { useDatabase } from "@/contexts/local-data-context";
 import { useTranslation } from "@/i18n/context";
 import { setBoolSettingCommand } from "@/state/settings-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 
 export function FeatureLab() {
     const db = useDatabase();
-    const setBoolSetting = useAtomCommand(setBoolSettingCommand);
+    const setBoolSetting = useAtomAction(setBoolSettingCommand);
     const t = useTranslation();
     const { state: settings } = useAppSettings();
     const { swapTimeLabel } = useDisplaySettings().state;

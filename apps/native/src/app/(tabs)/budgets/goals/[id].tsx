@@ -1,4 +1,5 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
+import * as Cause from "effect/Cause";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useRef, useState } from "react";
 
@@ -18,20 +19,40 @@ import { GoalEditor } from "@/screens/budgets/components/goal-editor";
 import type { GoalEdit } from "@/screens/budgets/components/goal-editor";
 import { GoalTargetSheet } from "@/screens/budgets/components/goal-target-sheet";
 import type { GoalCommit, GoalTarget } from "@/screens/budgets/components/goal-target-sheet";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { useCommitLatch } from "@/screens/budgets/components/use-commit-latch";
+import { SILENT } from "@/state/atom-command";
 import { updateSavingsGoalCommand } from "@/state/planning-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 
 export default function GoalScreen() {
     const router = useRouter();
     const t = useTranslation();
     const db = useDatabase();
-    const updateGoal = useAtomCommand(updateSavingsGoalCommand, SILENT);
     const haptics = useHaptics();
     const nowMs = useNow();
     const currency = useGlobalCurrency(db);
     const { id } = useLocalSearchParams<{ id: string }>();
     const entry = useSavingsGoal(db, id, nowMs);
+    const latch = useCommitLatch();
+    const saved = {
+        onFailure: (cause: Cause.Cause<unknown>) => {
+            const error = Cause.squash(cause);
+            console.error("Failed to save the goal", error);
+            // An uncanonicalisable target is refused: stored against a null it would read back as the face value in
+            // whatever currency the ledger is shown in next.
+            notifyFailure(
+                error instanceof GoalValuationError
+                    ? {
+                          body: t("goals.unvalued.body", { account: entry?.accountName ?? "" }),
+                          title: t("goals.unvalued.title"),
+                      }
+                    : { body: t("goals.failedBody"), title: t("goals.failedTitle") }
+            );
+        },
+        onSuccess: () => haptics("success"),
+    };
+    const updateGoal = useAtomAction(updateSavingsGoalCommand, saved, SILENT);
+    const commitGoalTarget = useAtomAction(updateSavingsGoalCommand, { ...saved, onSettled: latch.release }, SILENT);
     const { requestDelete } = useDeferredDelete("goal");
 
     const targetSheetRef = useRef<BottomSheetModal>(null);
@@ -43,30 +64,20 @@ export default function GoalScreen() {
 
     const { goal } = entry;
 
-    const write = async (patch: SavingsGoalPatch) => {
-        try {
-            unwrapAtomCommand(await updateGoal({ db, id: goal.id, patch }));
-            haptics("success");
-        } catch (error) {
-            console.error("Failed to save the goal", error);
-            // An uncanonicalisable target is refused: stored against a null it would read back as the face value in
-            // whatever currency the ledger is shown in next.
-            notifyFailure(
-                error instanceof GoalValuationError
-                    ? {
-                          body: t("goals.unvalued.body", { account: entry.accountName }),
-                          title: t("goals.unvalued.title"),
-                      }
-                    : { body: t("goals.failedBody"), title: t("goals.failedTitle") }
-            );
-        }
-    };
+    const write = (patch: SavingsGoalPatch) => updateGoal({ db, id: goal.id, patch });
 
     // Only touched facts commit: a peer can move the deadline while the sheet is up, and writing the snapshot back
     // would revert it. The sheet opens in the goal's own currency, so a typed target is stored as-is.
-    const commitTarget = async ({ dateChanged, targetAmount, targetChanged, targetDate }: GoalCommit) => {
+    const commitTarget = ({ dateChanged, targetAmount, targetChanged, targetDate }: GoalCommit) => {
+        if (!latch.hold()) {
+            return;
+        }
         targetSheetRef.current?.dismiss();
-        await write({ ...(dateChanged && { targetDate }), ...(targetChanged && { targetAmount }) });
+        commitGoalTarget({
+            db,
+            id: goal.id,
+            patch: { ...(dateChanged && { targetDate }), ...(targetChanged && { targetAmount }) },
+        });
     };
 
     return (

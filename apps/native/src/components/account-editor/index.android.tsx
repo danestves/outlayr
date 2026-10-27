@@ -1,11 +1,12 @@
 import { useAtomMount } from "@effect/atom-react/Hooks";
+import { RegistryContext } from "@effect/atom-react/RegistryContext";
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import Delete02Icon from "@hugeicons-pro/core-stroke-rounded/Delete02Icon";
 import { isPerson, toAccountKind } from "@outlayr/money/account-kind";
 import type { AccountKind } from "@outlayr/money/account-kind";
 import { useForm, useSelector } from "@tanstack/react-form";
 import { useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { use, useRef, useState } from "react";
 import { Keyboard, ScrollView, View } from "react-native";
 import type { TextInputInstance } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -13,7 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AmountEntrySheet } from "@/components/amount-entry-sheet";
 import { CurrencyPickerSheet } from "@/components/currency-picker-sheet";
 import { InlineFailure } from "@/components/form/inline-failure";
-import { holdSubmitting, pressSubmit } from "@/components/form/submit-guard";
+import { holdAfterSuccess, pressSubmit } from "@/components/form/submit-guard";
 import { IdentityHero } from "@/components/identity-hero";
 import { SheetHeader, SheetHeaderIconButton, SheetHeaderTextButton } from "@/components/sheet-header";
 import { useAppSettings } from "@/contexts/display-settings-context";
@@ -41,9 +42,8 @@ import { useRegionCode } from "@/hooks/use-region-code";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
-import { createAccountCommand, openingForBalanceCommand, updateAccountCommand } from "@/state/accounts-commands";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { saveAccountCommand } from "@/state/accounts-commands";
+import { runAtomCommand, SILENT } from "@/state/atom-command";
 import { useColors } from "@/theme/use-colors";
 
 import { AccountDetailsFields } from "./details-fields";
@@ -77,9 +77,7 @@ function sheetTitle(props: AccountEditorProps) {
 
 function AccountEditorReady(props: AccountEditorProps & { db: Database }) {
     const { db, mode } = props;
-    const createAccount = useAtomCommand(createAccountCommand, SILENT);
-    const updateAccount = useAtomCommand(updateAccountCommand, SILENT);
-    const openingFor = useAtomCommand(openingForBalanceCommand, SILENT);
+    const registry = use(RegistryContext);
     const editId = props.mode === "edit" ? props.id : null;
     const router = useRouter();
     const currencyBlocked = useCurrencyBlocked(editId);
@@ -140,7 +138,7 @@ function AccountEditorReady(props: AccountEditorProps & { db: Database }) {
     });
     const form = useForm({
         defaultValues: initialValues,
-        onSubmit: async ({ value }) => {
+        onSubmit: ({ value }) => {
             setFailure(null);
             // A currency swapped after typing can leave more precision than the new code has: JPY cannot hold "12.34".
             const magnitude = roundToMinorUnits(numpadToNumber(value.balanceText), value.currency);
@@ -169,44 +167,37 @@ function AccountEditorReady(props: AccountEditorProps & { db: Database }) {
                 router.push("/paywall");
                 return;
             }
-            const persist = async () => {
-                if (mode === "create") {
-                    unwrapAtomCommand(await createAccount({ db, input: { ...input, initialBalance: balance } }));
-                } else {
-                    if (loaded == null) {
-                        return;
-                    }
-                    unwrapAtomCommand(
-                        await updateAccount({
-                            db,
-                            id: loaded.id,
-                            patch: {
-                                ...input,
-                                initialBalance: balanceChanged
-                                    ? unwrapAtomCommand(
-                                          await openingFor({
-                                              accountId: loaded.id,
-                                              balance,
-                                              currency: value.currency,
-                                              db,
-                                              now: new Date(balanceAt),
-                                          })
-                                      )
-                                    : loaded.initialBalance,
-                            },
-                        })
-                    );
-                }
-                posthog?.capture("account_saved", { account_kind: input.kind, mode });
-                haptics("success");
-                router.back();
-                return await holdSubmitting();
-            };
-            return await persist().catch((error) => {
-                console.error("Failed to save the account", error);
-                haptics("error");
-                setFailure(t("accounts.error.saveFailed"));
-            });
+            return holdAfterSuccess(
+                runAtomCommand(
+                    registry,
+                    saveAccountCommand,
+                    {
+                        balance,
+                        db,
+                        draft: input,
+                        onFailure: (error) => {
+                            console.error("Failed to save the account", error);
+                            haptics("error");
+                            setFailure(t("accounts.error.saveFailed"));
+                        },
+                        onSaved: () => {
+                            posthog?.capture("account_saved", { account_kind: input.kind, mode });
+                            haptics("success");
+                            router.back();
+                        },
+                        target:
+                            loaded == null
+                                ? { mode: "create" }
+                                : {
+                                      id: loaded.id,
+                                      initialBalance: loaded.initialBalance,
+                                      mode: "edit",
+                                      reopenAt: balanceChanged ? new Date(balanceAt) : null,
+                                  },
+                    },
+                    SILENT
+                )
+            );
         },
     });
     const { name, currency, balanceText, negative, liability } = useSelector(form.store, (s) => s.values);

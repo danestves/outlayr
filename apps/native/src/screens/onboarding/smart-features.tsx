@@ -1,5 +1,4 @@
 import * as Cause from "effect/Cause";
-import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useRouter } from "expo-router";
 import { ScrollView } from "react-native";
 
@@ -9,23 +8,23 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { useTranslation } from "@/i18n/context";
 import { SILENT } from "@/state/atom-command";
 import { saveAiConsentCommand } from "@/state/settings-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 
 /** Asked before an account exists, so the answer is in place before any feature could send. */
 export function OnboardingSmartFeatures() {
     const db = useDatabase();
     const router = useRouter();
     const t = useTranslation();
-    const saveAiConsent = useAtomCommand(saveAiConsentCommand, SILENT);
+    const saveAiConsent = useAtomAction(
+        saveAiConsentCommand,
+        {
+            onFailure: (cause) => console.error("Saving the AI consent failed", Cause.squash(cause)),
+            onSettled: () => router.push("/onboarding/rhythm"),
+        },
+        SILENT
+    );
 
-    const answer = (allowed: boolean) => {
-        saveAiConsent({ allowed, db }).then((result) => {
-            if (AsyncResult.isFailure(result)) {
-                console.error("Saving the AI consent failed", Cause.squash(result.cause));
-            }
-            router.push("/onboarding/rhythm");
-        });
-    };
+    const answer = (allowed: boolean) => saveAiConsent({ allowed, db });
 
     return (
         <FirstRun

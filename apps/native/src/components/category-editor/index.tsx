@@ -1,3 +1,4 @@
+import { RegistryContext } from "@effect/atom-react/RegistryContext";
 import { Host } from "@expo/ui";
 import { ScrollView, useNativeState, VStack } from "@expo/ui/swift-ui";
 import type { TextFieldRef } from "@expo/ui/swift-ui";
@@ -5,7 +6,7 @@ import { animation, blur, opacity, overlay, padding, scrollDismissesKeyboard } f
 import { useForm, useSelector } from "@tanstack/react-form";
 import { Stack, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { Keyboard, View } from "react-native";
 import Animated, { FadeInDown, FadeOutDown, useDerivedValue, useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -24,7 +25,7 @@ import {
     HERO_BOTTOM_PADDING,
     HERO_TOP_PADDING,
 } from "@/components/editor-style";
-import { holdSubmitting, pressSubmit } from "@/components/form/submit-guard";
+import { holdAfterSuccess, pressSubmit } from "@/components/form/submit-guard";
 import { IdentityCurtain } from "@/components/identity-curtain";
 import { HERO_RING, IdentityFlyUpLayer } from "@/components/identity-fly-up";
 import { Text } from "@/components/text";
@@ -46,9 +47,8 @@ import type { TranslateFn } from "@/i18n/context";
 import { posthog } from "@/lib/posthog";
 import { CATEGORY_DETENT, LARGE_ONLY, SUBCATEGORY_DETENT } from "@/lib/sheet-detents";
 import { useHaptics } from "@/lib/use-haptics";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import { createCategoryCommand, updateCategoryCommand } from "@/state/categories-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { runAtomCommand, SILENT } from "@/state/atom-command";
+import { saveCategoryCommand } from "@/state/categories-commands";
 import { glowFromEmoji } from "@/theme/glow";
 import { withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";
@@ -123,8 +123,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
     const t = useTranslation();
     const colors = useColors();
     const haptics = useHaptics();
-    const createCategory = useAtomCommand(createCategoryCommand, SILENT);
-    const updateCategory = useAtomCommand(updateCategoryCommand, SILENT);
+    const registry = use(RegistryContext);
     const insets = useSafeAreaInsets();
     const [ctaHeight, setCtaHeight] = useState(CTA_HEIGHT);
 
@@ -150,37 +149,44 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
     }));
     const form = useForm({
         defaultValues: initialValues,
-        onSubmit: async ({ value }) => {
+        onSubmit: ({ value }) => {
             setFailure(null);
-            const persist = async () => {
-                if (mode === "create") {
-                    return await addCategory(value);
-                }
-                if (loaded == null) {
-                    return;
-                }
-                unwrapAtomCommand(
-                    await updateCategory({
+            if (mode === "create") {
+                return addCategory(value);
+            }
+            if (loaded == null) {
+                return;
+            }
+            return holdAfterSuccess(
+                runAtomCommand(
+                    registry,
+                    saveCategoryCommand,
+                    {
                         db,
-                        id: loaded.id,
-                        patch: {
-                            color: loaded.income ? undefined : (draft.color ?? CATEGORY_PALETTE[0]),
-                            emoji: draft.emoji ?? null,
-                            icon: draft.icon ?? null,
-                            name: value.name,
+                        onFailure: reportSaveFailure,
+                        onSaved: () => {
+                            posthog?.capture("category_saved", {
+                                category_type: loaded.income ? "income" : "expense",
+                                is_subcategory: isSubcategory,
+                                mode: "edit",
+                            });
+                            haptics("success");
+                            router.back();
                         },
-                    })
-                );
-                posthog?.capture("category_saved", {
-                    category_type: loaded.income ? "income" : "expense",
-                    is_subcategory: isSubcategory,
-                    mode: "edit",
-                });
-                haptics("success");
-                router.back();
-                return await holdSubmitting();
-            };
-            return await persist().catch(reportSaveFailure);
+                        write: {
+                            id: loaded.id,
+                            mode: "edit",
+                            patch: {
+                                color: loaded.income ? undefined : (draft.color ?? CATEGORY_PALETTE[0]),
+                                emoji: draft.emoji ?? null,
+                                icon: draft.icon ?? null,
+                                name: value.name,
+                            },
+                        },
+                    },
+                    SILENT
+                )
+            );
         },
     });
     const { name, income: formIncome } = useSelector(form.store, (s) => s.values);
@@ -273,39 +279,51 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
         });
     };
 
-    const addCategory = async (value: { name: string }) => {
+    const addCategory = (value: { name: string }) => {
         const pickedColor = color ?? CATEGORY_PALETTE[0];
         const expenseColor = isSubcategory ? (parent?.color ?? pickedColor) : pickedColor;
-        unwrapAtomCommand(
-            await createCategory({
-                category: {
-                    color: income ? colors.income : expenseColor,
-                    emoji: draft.emoji ?? null,
-                    icon: draft.icon ?? undefined,
-                    income,
-                    name: value.name,
-                    parentId,
+        return holdAfterSuccess(
+            runAtomCommand(
+                registry,
+                saveCategoryCommand,
+                {
+                    db,
+                    onFailure: reportSaveFailure,
+                    onSaved: () => {
+                        posthog?.capture("category_saved", {
+                            category_type: income ? "income" : "expense",
+                            is_subcategory: isSubcategory,
+                            mode: "create",
+                        });
+                        haptics("success");
+                        if (isSubcategory) {
+                            router.back();
+                            return;
+                        }
+                        nameState.set("");
+                        form.setFieldValue("name", "");
+                        // Cleared, not advanced: with `colorTouched` released, the auto color is the first free slot
+                        // after this insert lands, where a value chosen now would come from the pre-insert set.
+                        setColorTouched(false);
+                        setDraft(EMPTY_DRAFT);
+                        flashAdded();
+                    },
+                    write: {
+                        category: {
+                            color: income ? colors.income : expenseColor,
+                            emoji: draft.emoji ?? null,
+                            icon: draft.icon ?? undefined,
+                            income,
+                            name: value.name,
+                            parentId,
+                        },
+                        mode: "create",
+                    },
                 },
-                db,
-            })
+                SILENT
+            ),
+            isSubcategory
         );
-        posthog?.capture("category_saved", {
-            category_type: income ? "income" : "expense",
-            is_subcategory: isSubcategory,
-            mode: "create",
-        });
-        haptics("success");
-        if (isSubcategory) {
-            router.back();
-            return await holdSubmitting();
-        }
-        nameState.set("");
-        form.setFieldValue("name", "");
-        // Cleared, not advanced: with `colorTouched` released, the auto color is the first free slot after
-        // this insert lands, where a value chosen now would come from the pre-insert set.
-        setColorTouched(false);
-        setDraft(EMPTY_DRAFT);
-        flashAdded();
     };
 
     const reportSaveFailure = (cause: unknown) => {

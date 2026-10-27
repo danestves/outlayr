@@ -40,7 +40,7 @@ export interface MerchantSiblingsInput {
     excludeId: string;
     income: boolean;
     key: string;
-    persistLogo: (() => Promise<{ imageColor: string | null; imageUri: string }>) | null;
+    persistLogo: Effect.Effect<{ imageColor: string | null; imageUri: string }, unknown> | null;
     tagIds: readonly string[];
 }
 
@@ -96,7 +96,8 @@ export const applyMerchantToSiblings = Effect.fn("MerchantSiblings.applyMerchant
             }
             const chosenIdentity = row.emoji != null || row.icon != null || row.customColor != null;
             if (persistLogo != null && !chosenIdentity) {
-                const logo = yield* Effect.tryPromise({ catch: failedAt("logo"), try: persistLogo }).pipe(
+                const logo = yield* persistLogo.pipe(
+                    Effect.mapError(failedAt("logo")),
                     Effect.catchTags({ MerchantSiblingsError: () => Effect.succeed(null) })
                 );
                 if (logo != null) {

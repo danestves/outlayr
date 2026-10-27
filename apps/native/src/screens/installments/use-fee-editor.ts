@@ -1,4 +1,5 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
+import * as Cause from "effect/Cause";
 import { useRef, useState } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
@@ -9,10 +10,10 @@ import { numberToNumpad, numpadToNumber } from "@/domain/numpad";
 import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { SILENT } from "@/state/atom-command";
 import { addInstallmentFeeCommand, removeInstallmentFeeCommand } from "@/state/planning-commands";
 import { rearmInstallmentReminders } from "@/state/surfaces-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
+import { useAtomAction } from "@/state/use-atom-action";
 
 export function useFeeEditor({
     accountId,
@@ -24,30 +25,42 @@ export function useFeeEditor({
     row: InstallmentRow;
 }) {
     const db = useDatabase();
-    const addFee = useAtomCommand(addInstallmentFeeCommand, SILENT);
-    const removeFee = useAtomCommand(removeInstallmentFeeCommand, SILENT);
     const t = useTranslation();
     const haptics = useHaptics();
+    const onFailure = (cause: Cause.Cause<unknown>) => {
+        console.error("Failed to save the late fee", Cause.squash(cause));
+        notifyFailure({ body: t("installments.failedBody"), title: t("installments.failedTitle") });
+    };
+    const addFee = useAtomAction(
+        addInstallmentFeeCommand,
+        {
+            onFailure,
+            onSuccess: () => {
+                rearmInstallmentReminders(db);
+                haptics("success");
+            },
+        },
+        SILENT
+    );
+    const removeFee = useAtomAction(
+        removeInstallmentFeeCommand,
+        {
+            onFailure,
+            onSuccess: () => {
+                rearmInstallmentReminders(db);
+                haptics("warning");
+            },
+        },
+        SILENT
+    );
     const minorUnits = minorUnitsFor(currency);
     const padRef = useRef<BottomSheetModal>(null);
     const [padText, setPadText] = useState("");
 
-    const write = async (next: number) => {
-        const save = async () =>
-            next > 0
-                ? unwrapAtomCommand(await addFee({ db, fee: { amount: next, installmentId: row.id } }))
-                : unwrapAtomCommand(await removeFee({ db, installmentId: row.id }));
-        const saving = save();
-        const feedback = next > 0 ? "success" : "warning";
-        try {
-            await saving;
-            rearmInstallmentReminders(db);
-            haptics(feedback);
-        } catch (error) {
-            console.error("Failed to save the late fee", error);
-            notifyFailure({ body: t("installments.failedBody"), title: t("installments.failedTitle") });
-        }
-    };
+    const write = (next: number) =>
+        next > 0
+            ? addFee({ db, fee: { amount: next, installmentId: row.id } })
+            : removeFee({ db, installmentId: row.id });
 
     const open = () => {
         setPadText(numberToNumpad(row.fee > 0 ? row.fee : (lastFeeAmount(db, accountId) ?? 0), minorUnits));
@@ -58,12 +71,12 @@ export function useFeeEditor({
         padRef.current?.dismiss();
         const next = numpadToNumber(padText);
         if (next !== row.fee) {
-            write(next).catch(() => undefined);
+            write(next);
         }
     };
 
     const remove = () => {
-        write(0).catch(() => undefined);
+        write(0);
     };
 
     return { commit, minorUnits, open, padRef, padText, remove, setPadText };

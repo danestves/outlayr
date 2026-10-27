@@ -9,15 +9,17 @@ import { localDataAtom, localDataState } from "@/contexts/local-data-context";
 import { listen, WatchAppState } from "@/lib/app-events";
 import { appRuntime } from "@/lib/runtime";
 import { appAtomRegistry } from "@/state/atom-registry";
-import { commitDeferredDeleteCommand, runLedgerCommand } from "@/state/ledger-commands";
+import { launchDeferredDeleteCommand } from "@/state/deferred-delete-commands";
+import { fireAtomCommand } from "@/state/use-atom-action";
 
-import { createDeferredDeleteRegistry } from "./deferred-delete-registry";
+import { commitDeferredDelete, createDeferredDeleteRegistry } from "./deferred-delete-registry";
 import type { DeferredDeleteKind } from "./deferred-delete-registry";
 
 // At module scope because a held delete outlives its screen; the database is read when its window closes.
 const registry = createDeferredDeleteRegistry({
-    commit: (kind, db, id) => runLedgerCommand(commitDeferredDeleteCommand, { db, id, kind }),
+    commit: commitDeferredDelete,
     database: () => localDataState(appAtomRegistry.get(localDataAtom)).db,
+    launch: (write) => fireAtomCommand(appAtomRegistry, launchDeferredDeleteCommand, write, {}),
 });
 
 // A backgrounded app can be killed, losing an open window's write, so leaving the foreground flushes early.
@@ -26,7 +28,7 @@ const flushOnLeaveAtom = appRuntime
         Effect.gen(function* flushOnLeave() {
             const watchAppState = yield* WatchAppState;
             yield* listen(watchAppState, (phase) => phase !== "active").pipe(
-                Stream.runForEach(() => Effect.promise(() => registry.flushAll()))
+                Stream.runForEach(() => registry.flushAll)
             );
         })
     )
@@ -57,5 +59,5 @@ export function useDeferredDelete(kind: DeferredDeleteKind): DeferredDelete {
     return { pendingId, requestDelete };
 }
 
-/** For a JS reload, which tears the runtime down without the AppState change that flushes. */
+/** For a JS reload, which tears the runtime down without the AppState change that flushes. An effect: yield it. */
 export const flushDeferredDeletes = registry.flushAll;

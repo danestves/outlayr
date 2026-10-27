@@ -83,7 +83,7 @@ export const completeAppleSignIn = Effect.fn("ProviderSignIn.completeApple")(fun
     client: AuthClient,
     activation: Activation,
     credential: AppleSignInCredential,
-    onFailure?: () => Promise<void>
+    onFailure?: () => Effect.Effect<void, unknown>
 ) {
     activation.begin();
     yield* Effect.gen(function* signIn() {
@@ -126,10 +126,9 @@ export const completeAppleSignIn = Effect.fn("ProviderSignIn.completeApple")(fun
                 }
                 activation.reject();
                 if (onFailure) {
-                    yield* Effect.tryPromise({
-                        catch: (cause) => new ProviderSignInError({ cause, operation: "cleanup" }),
-                        try: onFailure,
-                    });
+                    yield* Effect.suspend(onFailure).pipe(
+                        Effect.mapError((cause) => new ProviderSignInError({ cause, operation: "cleanup" }))
+                    );
                 }
             })
         )
@@ -158,7 +157,7 @@ export const completeGoogleSignIn = Effect.fn("ProviderSignIn.completeGoogle")(f
 export const signInWithProvider = Effect.fn("ProviderSignIn.start")(function* signInWithProvider(input: {
     activation: Activation;
     client: AuthClient;
-    onAppleFailure?: () => Promise<void>;
+    onAppleFailure?: () => Effect.Effect<void, unknown>;
     request: SignInRequest;
 }) {
     const { activation, client, onAppleFailure, request } = input;

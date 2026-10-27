@@ -10,20 +10,13 @@ import { useBankAccounts } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
 import { useTranslation } from "@/i18n/context";
 import { reorderAccountsCommand } from "@/state/accounts-commands";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
 export function AccountReorder() {
     const db = useDatabase();
-    const reorderAccounts = useAtomCommand(reorderAccountsCommand, SILENT);
     const t = useTranslation();
     const colors = useColors();
     const rows = useBankAccounts(db);
-
-    const reorder = async (ids: string[]) => {
-        unwrapAtomCommand(await reorderAccounts({ db, orderedIds: ids }));
-    };
 
     return (
         <ScrollView className="bg-m3-surface flex-1">
@@ -31,10 +24,11 @@ export function AccountReorder() {
                 <Eyebrow colors={colors}>{t("accounts.title")}</Eyebrow>
             </View>
             <ReorderList
+                db={db}
                 items={rows}
                 keyOf={(account) => account.id}
                 labelOf={(account) => account.name}
-                onReorder={reorder}
+                reorder={reorderAccountsCommand}
                 renderItem={(account) => (
                     <ReorderRow
                         account={account}

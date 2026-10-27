@@ -9,9 +9,7 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { useCategoriesByNamespace } from "@/data/categories";
 import type { Category, CategoryWithChildren } from "@/data/categories-core";
 import { useTranslation } from "@/i18n/context";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
 import { reorderCategoriesCommand } from "@/state/categories-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
 /** Within its own list only: the write cannot re-parent. */
@@ -22,21 +20,17 @@ export function CategoryReorder({ income }: { income: boolean }) {
     const parents = useCategoriesByNamespace(db, income);
     const accent = (parent: CategoryWithChildren) => (income ? colors.income : (parent.color ?? colors.foreground));
 
-    const reorderCategories = useAtomCommand(reorderCategoriesCommand, SILENT);
-    const reorder = async (ids: string[]) => {
-        unwrapAtomCommand(await reorderCategories({ db, orderedIds: ids }));
-    };
-
     return (
         <ScrollView className="bg-m3-surface flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
             <View className="px-4 pt-2 pb-2">
                 <Eyebrow colors={colors}>{t("categories.title")}</Eyebrow>
             </View>
             <ReorderList
+                db={db}
                 items={parents}
                 keyOf={(parent) => parent.id}
                 labelOf={(parent) => parent.name ?? ""}
-                onReorder={reorder}
+                reorder={reorderCategoriesCommand}
                 renderItem={(parent) => <ReorderRow category={parent} tint={accent(parent)} />}
             />
 
@@ -48,10 +42,11 @@ export function CategoryReorder({ income }: { income: boolean }) {
                             <Eyebrow colors={colors}>{parent.name ?? ""}</Eyebrow>
                         </View>
                         <ReorderList
+                            db={db}
                             items={parent.children}
                             keyOf={(child) => child.id}
                             labelOf={(child) => child.name ?? ""}
-                            onReorder={reorder}
+                            reorder={reorderCategoriesCommand}
                             renderItem={(child) => <ReorderRow category={child} indented tint={accent(parent)} />}
                         />
                     </View>
