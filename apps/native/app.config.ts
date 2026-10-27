@@ -160,7 +160,36 @@ const ANDROID_WIDGETS = [
         name: "Overview",
         size: { minHeight: 110, minWidth: 250, targetCellHeight: 2, targetCellWidth: 4 },
     },
-] satisfies (AndroidWidgetCopy & { size: object })[];
+    {
+        configurable: true,
+        description: {
+            en: "Your latest entries, with the period total you pick.",
+            es: "Tus últimos registros, con el total del período que elijas.",
+            fr: "Vos dernières opérations, avec le total de la période choisie.",
+            pt: "Seus últimos lançamentos, com o total do período que escolher.",
+        },
+        displayName: {
+            en: "Recent Entries",
+            es: "Últimos registros",
+            fr: "Opérations récentes",
+            pt: "Últimos lançamentos",
+        },
+        name: "Entries",
+        size: { minHeight: 110, minWidth: 250, targetCellHeight: 2, targetCellWidth: 4 },
+    },
+    {
+        configurable: true,
+        description: {
+            en: "Spend, income and net for the period, with where the money went.",
+            es: "Gasto, ingresos y neto del período, y en qué se fue el dinero.",
+            fr: "Dépenses, revenus et solde de la période, et où est allé l'argent.",
+            pt: "Gastos, receitas e saldo do período, e para onde foi o dinheiro.",
+        },
+        displayName: { en: "Insights", es: "Estadísticas", fr: "Statistiques", pt: "Estatísticas" },
+        name: "Trends",
+        size: { minHeight: 110, minWidth: 110, targetCellHeight: 2, targetCellWidth: 2 },
+    },
+] satisfies (AndroidWidgetCopy & { configurable?: boolean; size: object })[];
 
 type QuickAction = AndroidShortcut & { readonly iosIcon: string };
 
@@ -302,9 +331,10 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
                 groupIdentifier: APP_GROUP,
                 widgets: [
                     ...WIDGETS,
-                    ...ANDROID_WIDGETS.map(({ description, displayName, name, size }) => ({
+                    ...ANDROID_WIDGETS.map(({ description, displayName, name, size, ...widget }) => ({
                         android: {
                             ...size,
+                            ...widget,
                             initialLayout: `src/widgets/glance/${name.toLowerCase()}.tsx`,
                             previewLayout: `widget_${name.toLowerCase()}_preview`,
                             resizeMode: "both",

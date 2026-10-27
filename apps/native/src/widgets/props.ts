@@ -26,7 +26,8 @@ import { compareBudgetSeverity } from "@/domain/budget-severity";
 import { formatDateHeader, formatDayHeader, formatUpcomingDate, weekdayInitial } from "@/domain/dates";
 import { DEFAULT_CURRENCY, formatAmount } from "@/domain/money";
 import type { TranslationKey } from "@/i18n/catalog";
-import { translateNow } from "@/i18n/runtime";
+import type { Language } from "@/i18n/languages";
+import { runtimeLanguage, translateIn, translateNow } from "@/i18n/runtime";
 import { DEEP_LINKS } from "@/lib/deep-links";
 
 import { WIDGET_PALETTE } from "./palette";
@@ -95,8 +96,8 @@ export interface WatchEntryProps extends LedgerEntryProps {
     writeId: string | null;
 }
 
-type LedgerHeaderPeriod = "today" | InsightsPeriod;
-type LedgerHeaderMeasure = "spent" | "income" | "net";
+export type LedgerHeaderPeriod = "today" | InsightsPeriod;
+export type LedgerHeaderMeasure = "spent" | "income" | "net";
 
 interface LedgerHeaderProps {
     amount: string;
@@ -198,7 +199,7 @@ const PERIODS = new Map<number, InsightsPeriod>([
     [3, "year"],
 ]);
 
-const PERIOD_EYEBROW = {
+export const PERIOD_EYEBROW = {
     month: "insights.quiet.thisMonth",
     week: "insights.quiet.thisWeek",
     year: "insights.quiet.thisYear",
@@ -244,36 +245,32 @@ interface CategoryRow {
     sortOrder: number;
 }
 
-/** Formatted here: the widget's `JSContext` cannot call `formatAmount`. */
-export const buildWidgetProps = Effect.fn("Widgets.buildProps")(function* buildWidgetProps(
-    db: SpendDb,
-    now: Date = new Date()
-) {
-    const [currencyRaw, showCentsRaw, weekdayRaw, monthDayRaw, periodRaw] = yield* Effect.all(
+const loadSettings = Effect.fn("Widgets.loadSettings")(function* loadSettings(db: SpendDb) {
+    const [currencyRaw, showCentsRaw, weekdayRaw, monthDayRaw, periodRaw, clockRaw] = yield* Effect.all(
         [
             getMeta(db, META_KEYS.currency),
             getMeta(db, "showCents"),
             getMeta(db, "firstWeekday"),
             getMeta(db, "firstDayOfMonth"),
             getMeta(db, "insightsTimeFrame"),
+            getMeta(db, "use24HourClock"),
         ],
         { concurrency: "unbounded" }
     );
-
-    const currency = currencyRaw ?? DEFAULT_CURRENCY;
-    const showCents = parseBoolSetting(showCentsRaw, true);
-    const calendar: InsightsCalendar = {
-        firstDayOfMonth: parseIntSetting(monthDayRaw, 1),
-        firstWeekday: parseIntSetting(weekdayRaw, 1),
+    return {
+        calendar: {
+            firstDayOfMonth: parseIntSetting(monthDayRaw, 1),
+            firstWeekday: parseIntSetting(weekdayRaw, 1),
+        } satisfies InsightsCalendar,
+        currency: currencyRaw ?? DEFAULT_CURRENCY,
+        period: PERIODS.get(parseIntSetting(periodRaw, 1)) ?? ("week" as const),
+        showCents: parseBoolSetting(showCentsRaw, true),
+        use24HourClock: parseBoolSetting(clockRaw, false),
     };
-    const period = PERIODS.get(parseIntSetting(periodRaw, 1)) ?? "week";
-    const money = (value: number) => formatAmount(value, currency, showCents);
-    const whole = (value: number) => formatAmount(value, currency, false);
-    const entryMoney = (value: number, code: string | null) => formatAmount(value, code ?? currency, showCents);
+});
 
-    const valuation = yield* loadValuation(db);
-    const contributions = yield* loadContributions(db, now, valuation);
-    const categoryRows = yield* attempt("categories", () =>
+const loadCategories = (db: SpendDb) =>
+    attempt("categories", () =>
         db
             .select({
                 color: categoriesTable.color,
@@ -289,6 +286,20 @@ export const buildWidgetProps = Effect.fn("Widgets.buildProps")(function* buildW
             .where(isNull(categoriesTable.deletedAt))
             .orderBy(asc(categoriesTable.sortOrder), asc(categoriesTable.name))
     );
+
+/** Formatted here: the widget's `JSContext` cannot call `formatAmount`. */
+export const buildWidgetProps = Effect.fn("Widgets.buildProps")(function* buildWidgetProps(
+    db: SpendDb,
+    now: Date = new Date()
+) {
+    const { calendar, currency, period, showCents } = yield* loadSettings(db);
+    const money = (value: number) => formatAmount(value, currency, showCents);
+    const whole = (value: number) => formatAmount(value, currency, false);
+    const entryMoney = (value: number, code: string | null) => formatAmount(value, code ?? currency, showCents);
+
+    const valuation = yield* loadValuation(db);
+    const contributions = yield* loadContributions(db, now, valuation);
+    const categoryRows = yield* loadCategories(db);
     const categoriesById = new Map(categoryRows.map((row) => [row.id, row]));
     const budgets = yield* budgetFigures(db, now, contributions, valuation);
     const watchEntries = yield* buildWatchEntries(db, now, categoriesById, entryMoney, contributions, valuation);
@@ -399,17 +410,22 @@ function worstBudget(categories: BudgetFigures["categories"]) {
 }
 
 export const loadWidgetFigures = Effect.fn("Widgets.loadFigures")(function* loadWidgetFigures(db: SpendDb, now: Date) {
-    const [currencyRaw, showCentsRaw] = yield* Effect.all([getMeta(db, META_KEYS.currency), getMeta(db, "showCents")], {
-        concurrency: "unbounded",
-    });
+    const settings = yield* loadSettings(db);
     const valuation = yield* loadValuation(db);
     const contributions = yield* loadContributions(db, now, valuation);
+    const categoryRows = yield* loadCategories(db);
+    const categoriesById = new Map(categoryRows.map((row) => [row.id, row]));
     const budgets = yield* budgetFigures(db, now, contributions, valuation);
     const budget = budgets.main ?? worstBudget(budgets.categories);
+    const entries = yield* loadLedgerRows(db, now, categoriesById, contributions, valuation);
     return {
-        budget: budget ? { limit: budget.limit, spent: budget.spent } : null,
-        currency: currencyRaw ?? DEFAULT_CURRENCY,
-        showCents: parseBoolSetting(showCentsRaw, true),
+        ...settings,
+        budget: budget
+            ? { limit: budget.limit, spent: budget.spent, type: budget.row.type, window: budget.window }
+            : null,
+        categoriesById,
+        contributions,
+        entries,
         todayCount: countExpenses(contributions, startOfDay(now), now),
         todaySpent: sumExpenses(contributions, startOfDay(now), now, null),
         valuation,
@@ -612,11 +628,10 @@ function buildWeek(contributions: readonly Contribution[], now: Date, whole: Mon
     };
 }
 
-const buildWatchEntries = Effect.fn("Widgets.buildWatchEntries")(function* buildWatchEntries(
+const loadLedgerRows = Effect.fn("Widgets.loadLedgerRows")(function* loadLedgerRows(
     db: SpendDb,
     now: Date,
     categoriesById: ReadonlyMap<string, CategoryRow>,
-    entryMoney: EntryMoney,
     contributions: readonly Contribution[],
     valuation: Valuation
 ) {
@@ -640,11 +655,10 @@ const buildWatchEntries = Effect.fn("Widgets.buildWatchEntries")(function* build
             .orderBy(desc(transactionsTable.date))
             .limit(LEDGER_LIMIT)
     );
-    const writeIds = yield* writeIdsByTransaction(db);
     const valuedById = new Map(contributions.map((row) => [row.id, row.amount]));
     const { displayCurrency, rates } = valuation;
 
-    return rows.map((row): WatchEntryProps => {
+    return rows.map((row) => {
         const category = row.categoryId ? categoriesById.get(row.categoryId) : undefined;
         // The figure the headers summed; an inexact entry keeps its own currency.
         const valued =
@@ -653,26 +667,46 @@ const buildWatchEntries = Effect.fn("Widgets.buildWatchEntries")(function* build
                 ? valuedById.get(row.id)
                 : undefined;
         return {
-            amount: valued === undefined ? entryMoney(row.amount, row.currency) : entryMoney(valued, displayCurrency),
-            at: row.date.getTime(),
+            amount: valued ?? row.amount,
             category: category?.name ?? "",
             // Identity precedence, matching the form.
             color: row.customColor ?? row.imageColor ?? category?.color ?? "#767676",
-            date: formatDateHeader(row.date, now),
-            day: formatDayHeader(row.date, now),
+            currency: valued === undefined ? row.currency : displayCurrency,
+            date: row.date,
             // The widget runtime does not link Hugeicons, so an icon identity degrades to its colour dot.
             emoji: row.emoji ?? category?.emoji ?? "",
             id: row.id,
             income: row.income,
             note: row.note,
             rootCategoryId: category?.parentId ?? row.categoryId,
-            writeId: writeIds.get(row.id) ?? null,
         };
     });
 });
 
+export type LedgerRow = Effect.Success<ReturnType<typeof loadLedgerRows>>[number];
+
+const buildWatchEntries = Effect.fn("Widgets.buildWatchEntries")(function* buildWatchEntries(
+    db: SpendDb,
+    now: Date,
+    categoriesById: ReadonlyMap<string, CategoryRow>,
+    entryMoney: EntryMoney,
+    contributions: readonly Contribution[],
+    valuation: Valuation
+) {
+    const rows = yield* loadLedgerRows(db, now, categoriesById, contributions, valuation);
+    const writeIds = yield* writeIdsByTransaction(db);
+    return rows.map(({ amount, currency, date, ...row }): WatchEntryProps => ({
+        ...row,
+        amount: entryMoney(amount, currency),
+        at: date.getTime(),
+        date: formatDateHeader(date, now),
+        day: formatDayHeader(date, now),
+        writeId: writeIds.get(row.id) ?? null,
+    }));
+});
+
 /** `today` from raw contributions: `aggregateInsightsWindows` has no day window. */
-function buildLedgerHeaders(
+export function buildLedgerHeaders(
     contributions: readonly Contribution[],
     now: Date,
     calendar: InsightsCalendar,
@@ -701,15 +735,25 @@ function buildLedgerHeaders(
     } satisfies Record<LedgerHeaderPeriod, Record<LedgerHeaderMeasure, LedgerHeaderProps>>;
 }
 
-function buildInsights(
+export function buildInsights(
     contributions: readonly Contribution[],
     categoriesById: ReadonlyMap<string, CategoryRow>,
     period: InsightsPeriod,
     now: Date,
     calendar: InsightsCalendar,
-    money: Money
+    money: Money,
+    language: Language = runtimeLanguage()
 ): InsightsViewProps {
-    const aggregate = aggregateInsightsWindows(contributions, categoriesById, period, "spent", now, 0, calendar);
+    const aggregate = aggregateInsightsWindows(
+        contributions,
+        categoriesById,
+        period,
+        "spent",
+        now,
+        0,
+        calendar,
+        language
+    );
     const net = aggregate.income - aggregate.spent;
     const slices = aggregate.categories.slice(0, SLICE_LIMIT);
 
@@ -721,8 +765,8 @@ function buildInsights(
         income: money(aggregate.income),
         net: money(Math.abs(net)),
         netPositive: net >= 0,
-        periodLabel: translateNow(PERIOD_EYEBROW[period]).toUpperCase(),
-        rangeLabel: windowLabel(period, 0, now, calendar),
+        periodLabel: translateIn(language, PERIOD_EYEBROW[period]).toUpperCase(),
+        rangeLabel: windowLabel(period, 0, now, calendar, language),
         slices: slices.map((slice) => ({
             amount: money(slice.amount),
             color: slice.color,

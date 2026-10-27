@@ -491,6 +491,13 @@ const log = {
             pt: "{count} lançamentos",
             "pt-PT": "{count} registos",
         }),
+        "log.widget.matchApp": t({
+            en: "Match the app",
+            es: "Igual que la app",
+            fr: "Comme dans l'app",
+            pt: "Igual ao app",
+            "pt-PT": "Igual à app",
+        }),
         "log.widget.overBudget": t({
             en: "Over budget",
             es: "Excedido",
@@ -498,12 +505,24 @@ const log = {
             pt: "Orçamento estourado",
             "pt-PT": "Orçamento excedido",
         }),
+        "log.widget.period": t({
+            en: "Period",
+            es: "Período",
+            fr: "Période",
+            pt: "Período",
+        }),
         "log.widget.scan": t({
             en: "Scan",
             es: "Escanear",
             fr: "Scanner",
             pt: "Escanear",
             "pt-PT": "Talão",
+        }),
+        "log.widget.show": t({
+            en: "Show",
+            es: "Mostrar",
+            fr: "Afficher",
+            pt: "Mostrar",
         }),
         "log.widget.spentToday": t({
             en: "Spent today",

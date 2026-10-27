@@ -1,5 +1,5 @@
 diff --git a/android/build.gradle b/android/build.gradle
-index 9639055..491d72c 100644
+index 9639055..937e345 100644
 --- a/android/build.gradle
 +++ b/android/build.gradle
 @@ -1,10 +1,21 @@
@@ -32,6 +32,36 @@ index 9639055..491d72c 100644
    }
  
    packagingOptions {
+@@ -146,6 +158,9 @@ dependencies {
+   implementation expoModule.getExpoDependency("expo-ui")
+   api 'io.github.expo.peek:peek-emittables:0.3.2'
+   implementation "androidx.glance:glance:1.2.0"
++  implementation 'androidx.activity:activity:1.11.0'
++  implementation 'androidx.compose.foundation:foundation-android:1.12.1'
++  implementation 'androidx.compose.ui:ui-android:1.12.1'
+   // Glance requests work-runtime-ktx 2.7.1, which still bundles the Kotlin extensions WorkManager 2.8+
+   // moved into work-runtime, so any 2.8+ in the graph duplicates those classes in release builds.
+   // 2.9.1, the version expo-background-task and expo-observe use, is the empty shim.
+diff --git a/android/src/main/AndroidManifest.xml b/android/src/main/AndroidManifest.xml
+index 2fa6c08..3dd3f51 100644
+--- a/android/src/main/AndroidManifest.xml
++++ b/android/src/main/AndroidManifest.xml
+@@ -3,5 +3,15 @@
+     <receiver
+       android:name="expo.modules.widgets.notifications.ExpoWidgetsNotificationReceiver"
+       android:exported="false" />
++    <activity
++      android:name="expo.modules.widgets.WidgetConfigureActivity"
++      android:excludeFromRecents="true"
++      android:exported="true"
++      android:taskAffinity=""
++      android:theme="@android:style/Theme.Material.Light.NoActionBar">
++      <intent-filter>
++        <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
++      </intent-filter>
++    </activity>
+   </application>
+ </manifest>
 diff --git a/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.kt b/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.kt
 index 3df9e4a..aed25c2 100644
 --- a/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.kt
@@ -84,10 +114,10 @@ index 3df9e4a..aed25c2 100644
  
  private fun LayoutProps.toPeekHorizontalAlignment(): Alignment.Horizontal {
 diff --git a/android/src/main/java/expo/modules/widgets/ExpoWidgetsAppWidgetProvider.kt b/android/src/main/java/expo/modules/widgets/ExpoWidgetsAppWidgetProvider.kt
-index 84c025f..af4e95b 100644
+index 84c025f..42a3df8 100644
 --- a/android/src/main/java/expo/modules/widgets/ExpoWidgetsAppWidgetProvider.kt
 +++ b/android/src/main/java/expo/modules/widgets/ExpoWidgetsAppWidgetProvider.kt
-@@ -1,23 +1,50 @@
+@@ -1,23 +1,51 @@
  package expo.modules.widgets
  
 +import android.appwidget.AppWidgetManager
@@ -141,12 +171,13 @@ index 84c025f..af4e95b 100644
 +  override fun onDeleted(context: Context, appWidgetIds: IntArray) {
 +    appWidgetIds.forEach { appWidgetId ->
 +      WidgetsStorage.remove(context, WidgetsLayoutRegistry.pressedPropsKey(widgetName, appWidgetId))
++      WidgetsStorage.remove(context, WidgetsLayoutRegistry.configurationKey(widgetName, appWidgetId))
 +    }
 +    super.onDeleted(context, appWidgetIds)
    }
  }
 diff --git a/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt b/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt
-index edabde8..bd27dfc 100644
+index edabde8..bd0c98d 100644
 --- a/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt
 +++ b/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt
 @@ -5,11 +5,16 @@ import android.annotation.SuppressLint
@@ -166,7 +197,7 @@ index edabde8..bd27dfc 100644
  internal class ExpoWidgetsPeekWidget(
    private val widgetName: String
  ) : PeekEmittableAppWidget() {
-@@ -21,13 +26,25 @@ internal class ExpoWidgetsPeekWidget(
+@@ -21,13 +26,30 @@ internal class ExpoWidgetsPeekWidget(
      options: Bundle,
      size: DpSize
    ): Emittable {
@@ -180,7 +211,12 @@ index edabde8..bd27dfc 100644
 +    provideContent { EmittableTree(root) }
 +  }
 +
-+  private fun renderRoot(context: Context, appWidgetId: Int?, size: DpSize?): Emittable {
++  fun renderRoot(
++    context: Context,
++    appWidgetId: Int?,
++    size: DpSize?,
++    configuration: Map<String, Any?> = WidgetsLayoutRegistry.configuration(context, widgetName, appWidgetId)
++  ): Emittable {
 +    val layout = WidgetsLayoutRegistry.layout(context, widgetName)
        ?: return createErrorRoot("No layout found for $widgetName")
 -    val props = WidgetsLayoutRegistry.props(appContext, widgetName)
@@ -190,7 +226,7 @@ index edabde8..bd27dfc 100644
 +    val dimensions = size?.let {
 +      mapOf("width" to it.width.value.toDouble(), "height" to it.height.value.toDouble())
 +    }.orEmpty()
-+    val node = evaluateLayout(context, layout, props, getWidgetEnvironment(context) + dimensions)
++    val node = evaluateLayout(context, layout, props, getWidgetEnvironment(context, configuration) + dimensions)
  
 -    return node.toPeekRoot(appContext, InteractionSource.Widget(widgetName), size)
 +    return WidgetNightColors.using(props) {
@@ -198,8 +234,340 @@ index edabde8..bd27dfc 100644
 +    }
    }
  }
+diff --git a/android/src/main/java/expo/modules/widgets/WidgetConfigureActivity.kt b/android/src/main/java/expo/modules/widgets/WidgetConfigureActivity.kt
+new file mode 100644
+index 0000000..c76578d
+--- /dev/null
++++ b/android/src/main/java/expo/modules/widgets/WidgetConfigureActivity.kt
+@@ -0,0 +1,326 @@
++@file:SuppressLint("RestrictedApi")
++@file:OptIn(ExperimentalGlanceRemoteViewsApi::class)
++package expo.modules.widgets
++
++import android.annotation.SuppressLint
++import android.app.Activity
++import android.appwidget.AppWidgetManager
++import android.content.Intent
++import android.os.Bundle
++import android.widget.FrameLayout
++import android.widget.RemoteViews
++import androidx.activity.ComponentActivity
++import androidx.activity.enableEdgeToEdge
++import androidx.compose.foundation.background
++import androidx.compose.foundation.border
++import androidx.compose.foundation.clickable
++import androidx.compose.foundation.isSystemInDarkTheme
++import androidx.compose.foundation.layout.Arrangement
++import androidx.compose.foundation.layout.Box
++import androidx.compose.foundation.layout.Column
++import androidx.compose.foundation.layout.Row
++import androidx.compose.foundation.layout.Spacer
++import androidx.compose.foundation.layout.fillMaxSize
++import androidx.compose.foundation.layout.fillMaxWidth
++import androidx.compose.foundation.layout.height
++import androidx.compose.foundation.layout.padding
++import androidx.compose.foundation.layout.safeDrawingPadding
++import androidx.compose.foundation.layout.size
++import androidx.compose.foundation.layout.width
++import androidx.compose.foundation.rememberScrollState
++import androidx.compose.foundation.selection.selectable
++import androidx.compose.foundation.shape.RoundedCornerShape
++import androidx.compose.foundation.text.BasicText
++import androidx.compose.foundation.verticalScroll
++import androidx.compose.runtime.Composable
++import androidx.compose.runtime.LaunchedEffect
++import androidx.compose.runtime.getValue
++import androidx.compose.runtime.mutableStateMapOf
++import androidx.compose.runtime.mutableStateOf
++import androidx.compose.runtime.remember
++import androidx.compose.runtime.rememberCoroutineScope
++import androidx.compose.runtime.setValue
++import androidx.compose.ui.Alignment
++import androidx.compose.ui.Modifier
++import androidx.compose.ui.draw.clip
++import androidx.compose.ui.graphics.Color
++import androidx.compose.ui.platform.ComposeView
++import androidx.compose.ui.semantics.Role
++import androidx.compose.ui.text.TextStyle
++import androidx.compose.ui.text.font.FontWeight
++import androidx.compose.ui.text.style.TextOverflow
++import androidx.compose.ui.unit.DpSize
++import androidx.compose.ui.unit.dp
++import androidx.compose.ui.unit.sp
++import androidx.compose.ui.viewinterop.AndroidView
++import androidx.glance.appwidget.ExperimentalGlanceRemoteViewsApi
++import androidx.glance.appwidget.GlanceRemoteViews
++import io.github.expo.peek.emittables.EmittableTree
++import kotlinx.coroutines.Dispatchers
++import kotlinx.coroutines.launch
++import kotlinx.coroutines.withContext
++
++private data class SettingsOption(val label: String, val value: String)
++
++private data class SettingsGroup(
++  val key: String,
++  val label: String,
++  val default: String,
++  val options: List<SettingsOption>
++)
++
++private data class WidgetSettings(val close: String, val done: String, val groups: List<SettingsGroup>)
++
++private class WidgetColors(palette: Map<*, *>, night: Map<*, *>, dark: Boolean) {
++  private val resolve = { role: String, fallback: Long ->
++    val day = palette[role] as? String
++    val hex = if (dark) (night[day] as? String) ?: day else day
++    hex?.let { runCatching { Color(android.graphics.Color.parseColor(it)) }.getOrNull() } ?: Color(fallback)
++  }
++  val background = resolve("background", 0xFFFFFFFF)
++  val ink = resolve("ink", 0xFF111111)
++  val muted = resolve("muted", 0xFF767676)
++  val border = resolve("border", 0xFFE5E5E5)
++}
++
++class WidgetConfigureActivity : ComponentActivity() {
++  override fun onCreate(savedInstanceState: Bundle?) {
++    super.onCreate(savedInstanceState)
++    val appWidgetId = intent?.extras?.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
++      ?: AppWidgetManager.INVALID_APPWIDGET_ID
++    val result = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
++    setResult(Activity.RESULT_CANCELED, result)
++
++    val manager = AppWidgetManager.getInstance(this)
++    val info = manager.getAppWidgetInfo(appWidgetId)
++    val name = info?.provider?.className?.substringAfterLast('.')?.removeSuffix("Provider")
++    val props = name?.let { WidgetsLayoutRegistry.props(this, it, appWidgetId) }
++    val settings = props?.let(::readSettings)
++    if (info == null || name == null || props == null || settings == null) {
++      finish()
++      return
++    }
++
++    val stored = WidgetsLayoutRegistry.configuration(this, name, appWidgetId)
++    val options = manager.getAppWidgetOptions(appWidgetId)
++    val density = resources.displayMetrics.density
++    val widthDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH).takeIf { it > 0 }
++      ?: (info.minWidth / density).toInt()
++    val heightDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT).takeIf { it > 0 }
++      ?: (info.minHeight / density).toInt()
++    val previewSize = DpSize(widthDp.coerceIn(110, 300).dp, heightDp.coerceIn(110, 320).dp)
++    val title = info.loadLabel(packageManager).toString()
++
++    enableEdgeToEdge()
++    setContentView(
++      ComposeView(this).apply {
++        setContent {
++          val dark = isSystemInDarkTheme()
++          val colors = remember(dark) {
++            WidgetColors(
++              props["palette"] as? Map<*, *> ?: emptyMap<Any, Any>(),
++              props["nightColors"] as? Map<*, *> ?: emptyMap<Any, Any>(),
++              dark
++            )
++          }
++          val selection = remember {
++            mutableStateMapOf<String, String>().apply {
++              settings.groups.forEach { group ->
++                val saved = stored[group.key] as? String
++                put(group.key, saved?.takeIf { value -> group.options.any { it.value == value } } ?: group.default)
++              }
++            }
++          }
++          val scope = rememberCoroutineScope()
++          ConfigureScreen(
++            title = title,
++            settings = settings,
++            colors = colors,
++            selection = selection,
++            preview = { configuration -> preview(name, appWidgetId, previewSize, configuration) },
++            previewSize = previewSize,
++            onClose = { finish() },
++            onDone = {
++              scope.launch {
++                val configuration = selection.toMap()
++                withContext(Dispatchers.Default) {
++                  val key = WidgetsLayoutRegistry.configurationKey(name, appWidgetId)
++                  WidgetsStorage.set(this@WidgetConfigureActivity, key, configuration)
++                  WidgetsUpdater.update(this@WidgetConfigureActivity, name)
++                }
++                setResult(Activity.RESULT_OK, result)
++                finish()
++              }
++            }
++          )
++        }
++      }
++    )
++  }
++
++  private suspend fun preview(name: String, appWidgetId: Int, size: DpSize, configuration: Map<String, Any?>): RemoteViews? {
++    return withContext(Dispatchers.Default) {
++      runCatching {
++        val root = ExpoWidgetsPeekWidget(name).renderRoot(applicationContext, appWidgetId, size, configuration)
++        GlanceRemoteViews().compose(applicationContext, size) { EmittableTree(root) }.remoteViews
++      }.getOrNull()
++    }
++  }
++
++  private fun readSettings(props: Map<String, Any?>): WidgetSettings? {
++    val locales = props["locales"] as? Map<*, *> ?: return null
++    val locale = resources.configuration.locales[0]
++    val copy = (locales["${locale.language}-${locale.country}"] ?: locales[locale.language] ?: locales["en"]) as? Map<*, *>
++    val settings = copy?.get("settings") as? Map<*, *> ?: return null
++    val groups = (settings["groups"] as? List<*>).orEmpty().mapNotNull { raw ->
++      val group = raw as? Map<*, *> ?: return@mapNotNull null
++      SettingsGroup(
++        key = group["key"] as? String ?: return@mapNotNull null,
++        label = group["label"] as? String ?: "",
++        default = group["default"] as? String ?: "",
++        options = (group["options"] as? List<*>).orEmpty().mapNotNull { option ->
++          val entry = option as? Map<*, *> ?: return@mapNotNull null
++          SettingsOption(entry["label"] as? String ?: "", entry["value"] as? String ?: return@mapNotNull null)
++        }
++      )
++    }
++    return WidgetSettings(
++      close = settings["close"] as? String ?: "Close",
++      done = settings["done"] as? String ?: "Done",
++      groups = groups
++    ).takeIf { groups.isNotEmpty() }
++  }
++}
++
++@Composable
++private fun ConfigureScreen(
++  title: String,
++  settings: WidgetSettings,
++  colors: WidgetColors,
++  selection: MutableMap<String, String>,
++  preview: suspend (Map<String, Any?>) -> RemoteViews?,
++  previewSize: DpSize,
++  onClose: () -> Unit,
++  onDone: () -> Unit
++) {
++  var remoteViews by remember { mutableStateOf<RemoteViews?>(null) }
++  val configuration = selection.toMap()
++  LaunchedEffect(configuration) {
++    remoteViews = preview(configuration)
++  }
++
++  Column(
++    modifier = Modifier
++      .fillMaxSize()
++      .background(colors.background)
++      .safeDrawingPadding()
++  ) {
++    Row(
++      modifier = Modifier.padding(start = 8.dp, end = 16.dp, top = 8.dp, bottom = 12.dp),
++      verticalAlignment = Alignment.CenterVertically
++    ) {
++      Box(
++        modifier = Modifier
++          .size(48.dp)
++          .clip(RoundedCornerShape(24.dp))
++          .clickable(role = Role.Button, onClickLabel = settings.close, onClick = onClose),
++        contentAlignment = Alignment.Center
++      ) {
++        BasicText("✕", style = TextStyle(color = colors.ink, fontSize = 20.sp))
++      }
++      Spacer(Modifier.width(4.dp))
++      BasicText(title, style = TextStyle(color = colors.ink, fontSize = 18.sp, fontWeight = FontWeight.Medium))
++    }
++
++    Column(
++      modifier = Modifier
++        .weight(1f)
++        .verticalScroll(rememberScrollState())
++    ) {
++      Box(
++        modifier = Modifier
++          .padding(horizontal = 16.dp)
++          .fillMaxWidth()
++          .clip(RoundedCornerShape(20.dp))
++          .background(Color(0xFF0F1320))
++          .padding(16.dp),
++        contentAlignment = Alignment.Center
++      ) {
++        val views = remoteViews
++        Box(modifier = Modifier.size(previewSize.width, previewSize.height)) {
++          if (views != null) {
++            AndroidView(
++              factory = { context -> FrameLayout(context) },
++              update = { frame ->
++                frame.removeAllViews()
++                frame.addView(views.apply(frame.context, frame))
++              },
++              modifier = Modifier.fillMaxSize()
++            )
++          }
++        }
++      }
++
++      settings.groups.forEach { group ->
++        Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp)) {
++          BasicText(group.label, style = TextStyle(color = colors.muted, fontSize = 12.sp))
++          Spacer(Modifier.height(8.dp))
++          Segmented(group, selection[group.key] ?: group.default, colors) { selection[group.key] = it }
++        }
++      }
++      Spacer(Modifier.height(24.dp))
++    }
++
++    Box(
++      modifier = Modifier
++        .padding(horizontal = 16.dp, vertical = 18.dp)
++        .fillMaxWidth()
++        .height(48.dp)
++        .clip(RoundedCornerShape(24.dp))
++        .background(colors.ink)
++        .clickable(role = Role.Button, onClick = onDone),
++      contentAlignment = Alignment.Center
++    ) {
++      BasicText(settings.done, style = TextStyle(color = colors.background, fontSize = 15.sp, fontWeight = FontWeight.Medium))
++    }
++  }
++}
++
++@Composable
++private fun Segmented(group: SettingsGroup, selected: String, colors: WidgetColors, onSelect: (String) -> Unit) {
++  val shape = RoundedCornerShape(12.dp)
++  Row(
++    modifier = Modifier
++      .fillMaxWidth()
++      .clip(shape)
++      .border(1.dp, colors.border, shape),
++    horizontalArrangement = Arrangement.spacedBy(0.dp)
++  ) {
++    group.options.forEachIndexed { index, option ->
++      val on = option.value == selected
++      if (index > 0) {
++        Box(Modifier.width(1.dp).height(44.dp).background(colors.border))
++      }
++      Box(
++        modifier = Modifier
++          .weight(1f)
++          .height(44.dp)
++          .background(if (on) colors.ink else Color.Transparent)
++          .selectable(selected = on, role = Role.RadioButton, onClick = { onSelect(option.value) }),
++        contentAlignment = Alignment.Center
++      ) {
++        BasicText(
++          option.label,
++          maxLines = 1,
++          overflow = TextOverflow.Ellipsis,
++          style = TextStyle(
++            color = if (on) colors.background else colors.ink,
++            fontSize = 13.sp,
++            fontWeight = if (on) FontWeight.Medium else FontWeight.Normal
++          ),
++          modifier = Modifier.padding(horizontal = 4.dp)
++        )
++      }
++    }
++  }
++}
 diff --git a/android/src/main/java/expo/modules/widgets/WidgetInteractionAction.kt b/android/src/main/java/expo/modules/widgets/WidgetInteractionAction.kt
-index b0b6479..aebf0cb 100644
+index b0b6479..d8e3846 100644
 --- a/android/src/main/java/expo/modules/widgets/WidgetInteractionAction.kt
 +++ b/android/src/main/java/expo/modules/widgets/WidgetInteractionAction.kt
 @@ -1,5 +1,6 @@
@@ -228,7 +596,7 @@ index b0b6479..aebf0cb 100644
    intent
      .putExtra(WIDGET_INTERACTION_SOURCE_EXTRA, source.name)
      .putExtra(WIDGET_INTERACTION_TARGET_EXTRA, target)
-@@ -53,13 +57,16 @@ internal fun WidgetInteraction.toGlanceAction(context: Context): Action {
+@@ -53,13 +57,17 @@ internal fun WidgetInteraction.toGlanceAction(context: Context): Action {
  }
  
  internal object WidgetsInteraction {
@@ -236,8 +604,10 @@ index b0b6479..aebf0cb 100644
 +  fun handle(context: Context, source: String, target: String, appWidgetId: Int? = null) {
      val layout = WidgetsLayoutRegistry.layout(context, source) ?: return
 -    val props = WidgetsLayoutRegistry.props(context, source)
+-    val environment = getWidgetEnvironment(context) + ("target" to target)
 +    val props = WidgetsLayoutRegistry.props(context, source, appWidgetId)
-     val environment = getWidgetEnvironment(context) + ("target" to target)
++    val configuration = WidgetsLayoutRegistry.configuration(context, source, appWidgetId)
++    val environment = getWidgetEnvironment(context, configuration) + ("target" to target)
      val updatedProps = evaluateWidgetButtonPress(context, layout, props, environment)
  
 -    if (updatedProps != null) {
@@ -296,10 +666,10 @@ index 881ad3b..9749e28 100644
    }
  }
 diff --git a/android/src/main/java/expo/modules/widgets/WidgetsLayoutRegistry.kt b/android/src/main/java/expo/modules/widgets/WidgetsLayoutRegistry.kt
-index 0591e9e..3ad63cd 100644
+index 0591e9e..695ad55 100644
 --- a/android/src/main/java/expo/modules/widgets/WidgetsLayoutRegistry.kt
 +++ b/android/src/main/java/expo/modules/widgets/WidgetsLayoutRegistry.kt
-@@ -18,9 +18,16 @@ internal object WidgetsLayoutRegistry {
+@@ -18,9 +18,24 @@ internal object WidgetsLayoutRegistry {
        ?: embeddedWidget(context, name)?.layout
    }
  
@@ -315,6 +685,14 @@ index 0591e9e..3ad63cd 100644
 +
 +  fun pressedPropsKey(name: String, appWidgetId: Int): String {
 +    return storageKey(name, "pressed_props_$appWidgetId")
++  }
++
++  fun configuration(context: Context, name: String, appWidgetId: Int?): Map<String, Any?> {
++    return appWidgetId?.let { WidgetsStorage.getDictionary(context, configurationKey(name, it)) }.orEmpty()
++  }
++
++  fun configurationKey(name: String, appWidgetId: Int): String {
++    return storageKey(name, "config_$appWidgetId")
    }
  
    private fun initialProps(context: Context, name: String): Map<String, Any?>? {
@@ -399,17 +777,26 @@ index e1caef7..29ea288 100644
      val appWidgetManager = AppWidgetManager.getInstance(context)
      val componentName = widgetProviderComponentName(context, name)
 diff --git a/android/src/main/java/expo/modules/widgets/WidgetsUtils.kt b/android/src/main/java/expo/modules/widgets/WidgetsUtils.kt
-index 1ffad5e..ea9b5a8 100644
+index 1ffad5e..0b8cc0d 100644
 --- a/android/src/main/java/expo/modules/widgets/WidgetsUtils.kt
 +++ b/android/src/main/java/expo/modules/widgets/WidgetsUtils.kt
-@@ -9,6 +9,7 @@ import expo.modules.ui.colors.getMaterialColorTokens
- internal fun getWidgetEnvironment(context: Context): Map<String, Any?> {
+@@ -6,10 +6,14 @@ import com.facebook.react.bridge.Arguments
+ import com.facebook.react.bridge.ReadableMap
+ import expo.modules.ui.colors.getMaterialColorTokens
+ 
+-internal fun getWidgetEnvironment(context: Context): Map<String, Any?> {
++internal fun getWidgetEnvironment(
++  context: Context,
++  configuration: Map<String, Any?> = emptyMap()
++): Map<String, Any?> {
    return mapOf(
      "colorScheme" to context.colorScheme(),
+-    "configuration" to emptyMap<String, Any?>(),
 +    "locale" to context.resources.configuration.locales[0].toLanguageTag(),
-     "configuration" to emptyMap<String, Any?>(),
++    "configuration" to configuration,
      // TODO(@jakex7): accessing a materialColors through environment is
      //  a hack to fulfill expo-ui module stub with data
+     "materialColors" to mapOf(
 diff --git a/build/Widgets.types.d.ts b/build/Widgets.types.d.ts
 index 4c474bb..042bf40 100644
 --- a/build/Widgets.types.d.ts
@@ -425,7 +812,7 @@ index 4c474bb..042bf40 100644
       * A Boolean value that indicates whether the display or environment currently requires reduced luminance.
       *
 diff --git a/plugin/build/android/withAndroidWidgetFiles.js b/plugin/build/android/withAndroidWidgetFiles.js
-index 0fcc4a9..b8e59eb 100644
+index 0fcc4a9..004141d 100644
 --- a/plugin/build/android/withAndroidWidgetFiles.js
 +++ b/plugin/build/android/withAndroidWidgetFiles.js
 @@ -153,7 +153,7 @@ const createWidgetInfoXml = (widget)=>{
@@ -433,7 +820,7 @@ index 0fcc4a9..b8e59eb 100644
    android:targetCellHeight="${android.targetCellHeight}"
    android:updatePeriodMillis="0"
 -  android:initialLayout="@layout/expo_widgets_initial_layout"
-+  android:initialLayout="@layout/expo_widgets_initial_layout"${widget.android?.previewLayout ? `\n  android:previewLayout="@layout/${widget.android.previewLayout}"` : ''}
++  android:initialLayout="@layout/expo_widgets_initial_layout"${widget.android?.previewLayout ? `\n  android:previewLayout="@layout/${widget.android.previewLayout}"` : ''}${widget.android?.configurable ? '\n  android:configure="expo.modules.widgets.WidgetConfigureActivity"\n  android:widgetFeatures="reconfigurable"' : ''}
    android:description="@string/${(0, _resourceNames.getWidgetDescriptionResourceName)(widget)}"
    android:resizeMode="${getWidgetResizeMode(widget)}"
    android:widgetCategory="home_screen" />
@@ -471,28 +858,33 @@ index a43f48f..93ed23f 100644
  ${Object.entries(configuration?.parameters ?? {}).map(([name, param])=>{
          return parameterDeclaration(widget.name, name, param);
 diff --git a/plugin/build/types/WidgetConfig.type.d.ts b/plugin/build/types/WidgetConfig.type.d.ts
-index d617583..bddb02b 100644
+index d617583..b064ee8 100644
 --- a/plugin/build/types/WidgetConfig.type.d.ts
 +++ b/plugin/build/types/WidgetConfig.type.d.ts
-@@ -27,6 +27,7 @@ export type WidgetConfig = {
+@@ -27,6 +27,8 @@ export type WidgetConfig = {
          targetCellHeight?: number;
          resizeMode?: 'none' | 'horizontal' | 'vertical' | 'both';
          initialLayout?: string;
 +        previewLayout?: string;
++        configurable?: boolean;
      } | null;
  };
  export type WidgetParameterString = {
 diff --git a/plugin/src/android/withAndroidWidgetFiles.ts b/plugin/src/android/withAndroidWidgetFiles.ts
-index 3b8f154..7a91711 100644
+index 3b8f154..a71b013 100644
 --- a/plugin/src/android/withAndroidWidgetFiles.ts
 +++ b/plugin/src/android/withAndroidWidgetFiles.ts
-@@ -105,7 +105,9 @@ const createWidgetInfoXml = (widget: WidgetConfig): string => {
+@@ -105,7 +105,13 @@ const createWidgetInfoXml = (widget: WidgetConfig): string => {
    android:targetCellWidth="${android.targetCellWidth}"
    android:targetCellHeight="${android.targetCellHeight}"
    android:updatePeriodMillis="0"
 -  android:initialLayout="@layout/expo_widgets_initial_layout"
 +  android:initialLayout="@layout/expo_widgets_initial_layout"${
 +    widget.android?.previewLayout ? `\n  android:previewLayout="@layout/${widget.android.previewLayout}"` : ''
++  }${
++    widget.android?.configurable
++      ? '\n  android:configure="expo.modules.widgets.WidgetConfigureActivity"\n  android:widgetFeatures="reconfigurable"'
++      : ''
 +  }
    android:description="@string/${getWidgetDescriptionResourceName(widget)}"
    android:resizeMode="${getWidgetResizeMode(widget)}"
@@ -531,14 +923,15 @@ index 33a8283..906b727 100644
  ${Object.entries(configuration?.parameters ?? {})
    .map(([name, param]) => {
 diff --git a/plugin/src/types/WidgetConfig.type.ts b/plugin/src/types/WidgetConfig.type.ts
-index 71fc39d..4436db3 100644
+index 71fc39d..a214fd2 100644
 --- a/plugin/src/types/WidgetConfig.type.ts
 +++ b/plugin/src/types/WidgetConfig.type.ts
-@@ -31,6 +31,7 @@ export type WidgetConfig = {
+@@ -31,6 +31,8 @@ export type WidgetConfig = {
      targetCellHeight?: number;
      resizeMode?: 'none' | 'horizontal' | 'vertical' | 'both';
      initialLayout?: string;
 +    previewLayout?: string;
++    configurable?: boolean;
    } | null;
  };
  

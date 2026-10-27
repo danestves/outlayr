@@ -7,9 +7,11 @@ import { purchaseListener } from "@/lib/purchase-listener";
 import { warnAndContinue } from "@/lib/warn-and-continue";
 import type { publishWidgets as iosPublishWidgets } from "@/widgets/publish";
 
+import EntriesWidget from "./glance/entries";
 import OverviewWidget from "./glance/overview";
 import { buildAndroidWidgetProps } from "./glance/props";
 import TodayWidget from "./glance/today";
+import TrendsWidget from "./glance/trends";
 import WalletWidget from "./glance/wallet";
 
 const PUSH_CHANNEL = "purchases";
@@ -21,6 +23,8 @@ export const publishWidgets: typeof iosPublishWidgets = Effect.fn("Widgets.publi
             WalletWidget.updateSnapshot(props.Wallet);
             TodayWidget.updateSnapshot(props.Today);
             OverviewWidget.updateSnapshot(props.Overview);
+            EntriesWidget.updateSnapshot(props.Entries);
+            TrendsWidget.updateSnapshot(props.Trends);
         });
     }).pipe(warnAndContinue("[outlayr] widget publish failed"));
 

@@ -1,4 +1,5 @@
 import { describe, expect, it, test } from "@jest/globals";
+import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import * as Effect from "effect/Effect";
 
 import { accounts } from "@/db/schema";
@@ -7,6 +8,7 @@ import { migratedDatabase } from "@/db/test-database";
 import { WIDGET_PALETTE } from "../palette";
 import { NIGHT_COLORS } from "./envelope";
 import { androidWidgetProps, buildAndroidWidgetProps } from "./props";
+import type { AndroidWidgetFigures } from "./props";
 
 const JUNE_1 = new Date("2026-06-01T12:00:00.000Z");
 const JUNE_2 = new Date("2026-06-02T12:00:00.000Z");
@@ -22,14 +24,41 @@ const account = (id: string, kind: string, initialBalance: number) => ({
     updatedAt: JUNE_1,
 });
 
-const figures = {
+const JUNE_11 = new Date(2026, 5, 11, 12);
+
+const figures: AndroidWidgetFigures = {
     balance: { currency: "EUR", total: 1240.5 },
-    budget: { limit: 100, spent: 130 },
+    budget: {
+        limit: 100,
+        spent: 130,
+        type: BUDGET_TYPE.month,
+        window: { end: new Date(2026, 6, 1), start: new Date(2026, 5, 1) },
+    },
+    calendar: { firstDayOfMonth: 1, firstWeekday: 1 },
+    categoriesById: new Map(),
+    contributions: [],
     currency: "EUR",
+    entries: [],
+    now: JUNE_11,
+    period: "week",
     showCents: true,
     todayCount: 1,
     todaySpent: 12,
+    use24HourClock: true,
 };
+
+const entry = (id: string, date: Date, income = false) => ({
+    amount: 4.5,
+    category: "Coffee",
+    color: "#3b82f6",
+    currency: "EUR",
+    date,
+    emoji: "",
+    id,
+    income,
+    note: id,
+    rootCategoryId: null,
+});
 
 describe("buildAndroidWidgetProps", () => {
     it("counts only asset accounts in the balance, leaving cards and people out", async () => {
@@ -73,6 +102,30 @@ describe("androidWidgetProps", () => {
 
         expect(budget).toMatchObject({ fraction: 1, label: "Over budget", over: true });
         expect(budget.left).toContain("30.00");
+    });
+
+    it("marks how far into the budget period today is, with the days still left", () => {
+        const { budget } = androidWidgetProps(figures).Overview.locales.en;
+
+        expect(budget.pace).toBeCloseTo(10.5 / 30, 2);
+        expect(budget.timeLeft).toBe("20d left");
+    });
+
+    it("says when each recent entry happened, relative to today", () => {
+        const { entries } = androidWidgetProps({
+            ...figures,
+            entries: [
+                entry("latte", new Date(2026, 5, 11, 9, 12)),
+                entry("taxi", new Date(2026, 5, 10, 22, 5)),
+                entry("salary", new Date(2026, 5, 3, 8), true),
+            ],
+        }).Entries.locales.es;
+
+        expect(entries.map(({ amount, when }) => [amount, when])).toStrictEqual([
+            ["-€4.50", "09:12"],
+            ["-€4.50", "Ayer"],
+            ["+€4.50", "3 JUN"],
+        ]);
     });
 });
 

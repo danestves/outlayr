@@ -79,16 +79,37 @@ const OverviewWidget = (snapshot: WidgetEnvelope<OverviewCopy>, environment: Wid
             {props.budget.present ? (
                 <Column>
                     {figure(props.budget.left, props.budget.over ? palette.over : palette.ink)}
-                    <Spacer modifiers={[height(4)]} />
-                    <Box modifiers={[size(stat, 4), cornerRadius(2), background(palette.border)]}>
-                        <Box
-                            modifiers={[
-                                size(Math.max(4, Math.round(stat * props.budget.fraction)), 4),
-                                cornerRadius(2),
-                                background(props.budget.over ? palette.over : palette.ink),
-                            ]}
-                        />
+                    <Spacer modifiers={[height(2)]} />
+                    <Box modifiers={[size(stat, 10)]}>
+                        <Box contentAlignment="centerStart" modifiers={[fillMaxSize()]}>
+                            <Box modifiers={[size(stat, 4), cornerRadius(2), background(palette.border)]}>
+                                <Box
+                                    modifiers={[
+                                        size(Math.max(4, Math.round(stat * props.budget.fraction)), 4),
+                                        cornerRadius(2),
+                                        background(props.budget.over ? palette.over : palette.ink),
+                                    ]}
+                                />
+                            </Box>
+                        </Box>
+                        <Box contentAlignment="centerStart" modifiers={[fillMaxSize()]}>
+                            <Row>
+                                <Spacer
+                                    modifiers={[
+                                        width(
+                                            Math.max(0, Math.min(stat - 2, Math.round(stat * props.budget.pace) - 1))
+                                        ),
+                                    ]}
+                                />
+                                <Box modifiers={[size(2, 10), cornerRadius(1), background(palette.muted)]} />
+                            </Row>
+                        </Box>
                     </Box>
+                    {widgetHeight >= 140 ? (
+                        <Text color={palette.muted} maxLines={1} style={{ fontSize: 10 }}>
+                            {props.budget.timeLeft}
+                        </Text>
+                    ) : null}
                 </Column>
             ) : null}
         </Column>
