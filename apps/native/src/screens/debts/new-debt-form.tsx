@@ -1,6 +1,6 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { useRouter } from "expo-router";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 import { Keyboard } from "react-native";
 
@@ -74,6 +74,10 @@ function readDraft(input: DraftInput) {
     return { amount, before, complete, currency, newName, pickCurrency, theirAmount, theirCurrency };
 }
 
+function isDirty(edits: { amountText: string; name: string; note: string; payBackBy: Date | null }) {
+    return edits.amountText !== "" || edits.name.trim() !== "" || edits.note.trim() !== "" || edits.payBackBy !== null;
+}
+
 export function present(sheet: RefObject<BottomSheetModal | null>) {
     Keyboard.dismiss();
     sheet.current?.present();
@@ -100,7 +104,7 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
     const payoffGate = usePayoffPlanGate();
     const nowMs = useNow();
 
-    const [name, setName] = useState("");
+    const [name, setNameState] = useState("");
     const { lockedPerson, person, suggestions } = resolvePerson(people, personId, name);
 
     const [verb, setVerb] = useState<DebtVerb>(initialVerb ?? "borrowed");
@@ -109,11 +113,31 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
     const [accountId, setAccountId] = useState<string | null>(() => getLastUsedAccount(db)?.id ?? banks[0]?.id ?? null);
     const account = banks.find((row) => row.id === accountId) ?? null;
     const [newCurrency, setNewCurrency] = useState(globalCurrency);
-    const [amountText, setAmountText] = useState("");
+    const [amountText, setAmountTextState] = useState("");
     const [theirText, setTheirText] = useState("");
     const [date, setDate] = useState(() => new Date());
-    const [note, setNote] = useState("");
-    const [payBackBy, setPayBackBy] = useState<Date | null>(null);
+    const [note, setNoteState] = useState("");
+    const [payBackBy, setPayBackByState] = useState<Date | null>(null);
+    const edits = { amountText, name, note, payBackBy };
+    const edit = (change: Partial<typeof edits>) => {
+        onDirtyChange(isDirty({ ...edits, ...change }));
+    };
+    const setName = (value: string) => {
+        setNameState(value);
+        edit({ name: value });
+    };
+    const setAmountText = (value: string) => {
+        setAmountTextState(value);
+        edit({ amountText: value });
+    };
+    const setNote = (value: string) => {
+        setNoteState(value);
+        edit({ note: value });
+    };
+    const setPayBackBy = (value: Date | null) => {
+        setPayBackByState(value);
+        edit({ payBackBy: value });
+    };
     const [busy, setBusy] = useState(false);
     const [failure, setFailure] = useState<string | null>(null);
 
@@ -133,10 +157,6 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
     const choice = choices.find((option) => comesFromPerson(option.verb) === incoming) ?? choices[0];
 
     const draft = readDraft({ account, amountText, category, name, newCurrency, person, soldOnCredit, theirText });
-
-    useEffect(() => {
-        onDirtyChange(amountText !== "" || name.trim() !== "" || note.trim() !== "" || payBackBy !== null);
-    }, [amountText, name, note, payBackBy, onDirtyChange]);
 
     const save = async () => {
         if (person === null && peopleCapped) {
@@ -181,6 +201,7 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
         onDone();
     };
     const handlers = useRef({ save });
+    // oxlint-disable-next-line outlayr/react-effect-budget -- keeps the latest save behind the stable press handler the native header button registers once
     useLayoutEffect(() => {
         handlers.current = { save };
     });

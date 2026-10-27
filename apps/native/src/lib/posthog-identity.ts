@@ -5,6 +5,7 @@ import { posthog } from "@/lib/posthog";
 
 export function usePostHogIdentity() {
     const { accountId, gate } = useAuthSession();
+    // oxlint-disable-next-line outlayr/react-effect-budget -- keeps the PostHog client's identity equal to the signed-in account
     useEffect(() => {
         const client = posthog;
         if (client === null) {

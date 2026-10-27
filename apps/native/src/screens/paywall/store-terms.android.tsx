@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useAtomValue } from "@effect/atom-react/Hooks";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Linking, Pressable, View } from "react-native";
 
 import { Text } from "@/components/text";
 import { useRevenueCat } from "@/contexts/revenuecat-context";
 import { useTranslation } from "@/i18n/context";
 import { expectHandoff } from "@/lib/app-handoff";
-import { managementUrl, onCustomerInfoUpdated } from "@/lib/revenuecat";
+import { managementUrlAtom } from "@/lib/management-url";
 import { withAlpha } from "@/theme/shade";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
@@ -16,28 +17,7 @@ export type { StoreTermsProps } from "./store-terms";
 /** Null with nothing to manage: no subscription, or the lifetime purchase. */
 function useManagementUrl(): string | null {
     const { isConfigured } = useRevenueCat();
-    const [url, setUrl] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (!isConfigured) {
-            return undefined;
-        }
-        let cancelled = false;
-        const load = async () => {
-            const next = await managementUrl().catch(() => null);
-            if (!cancelled) {
-                setUrl(next);
-            }
-        };
-        void load();
-        const stopListening = onCustomerInfoUpdated((customerInfo) => setUrl(customerInfo.managementURL));
-        return () => {
-            cancelled = true;
-            stopListening();
-        };
-    }, [isConfigured]);
-
-    return url;
+    return AsyncResult.getOrElse(useAtomValue(managementUrlAtom(isConfigured)), () => null);
 }
 
 export function StoreTerms({ plan }: StoreTermsProps) {

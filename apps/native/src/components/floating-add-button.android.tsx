@@ -18,6 +18,7 @@ import Animated, {
     FadeOut,
     interpolate,
     interpolateColor,
+    useAnimatedReaction,
     useAnimatedStyle,
     useSharedValue,
     withSpring,
@@ -88,10 +89,14 @@ export function FloatingAddButton() {
         };
     });
 
-    useEffect(() => {
-        progress.set(withSpring(open ? 1 : 0, MORPH));
-    }, [open, progress]);
+    useAnimatedReaction(
+        () => open,
+        (expanded) => {
+            progress.set(withSpring(expanded ? 1 : 0, MORPH));
+        }
+    );
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- registers the Android back handler while the menu is open
     useEffect(() => {
         if (!open) {
             return;

@@ -1,6 +1,6 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
 import { usePeople } from "@/data/accounts";
@@ -32,6 +32,16 @@ export interface OweProps {
     onDone: () => void;
 }
 
+function isDirty(edits: { amountText: string; category: Category | null; name: string; payBy: PayBy; what: string }) {
+    return (
+        edits.amountText !== "" ||
+        edits.name.trim() !== "" ||
+        edits.what.trim() !== "" ||
+        edits.category !== null ||
+        edits.payBy !== "none"
+    );
+}
+
 export function useOweForm({ onDirtyChange, onDone }: OweProps) {
     const db = useDatabase();
     const writeOwe = useAtomCommand(writeOweCommand, SILENT);
@@ -45,13 +55,37 @@ export function useOweForm({ onDirtyChange, onDone }: OweProps) {
     const payoffGate = usePayoffPlanGate();
     const days = payDays(useNow());
 
-    const [name, setName] = useState("");
+    const [name, setNameState] = useState("");
     const { person, suggestions } = resolvePerson(people, undefined, name);
     const [newCurrency, setNewCurrency] = useState(globalCurrency);
-    const [amountText, setAmountText] = useState("");
-    const [what, setWhat] = useState("");
-    const [category, setCategory] = useState<Category | null>(null);
-    const [payBy, setPayBy] = useState<PayBy>("none");
+    const [amountText, setAmountTextState] = useState("");
+    const [what, setWhatState] = useState("");
+    const [category, setCategoryState] = useState<Category | null>(null);
+    const [payBy, setPayByState] = useState<PayBy>("none");
+    const edits = { amountText, category, name, payBy, what };
+    const edit = (change: Partial<typeof edits>) => {
+        onDirtyChange(isDirty({ ...edits, ...change }));
+    };
+    const setName = (value: string) => {
+        setNameState(value);
+        edit({ name: value });
+    };
+    const setAmountText = (value: string) => {
+        setAmountTextState(value);
+        edit({ amountText: value });
+    };
+    const setWhat = (value: string) => {
+        setWhatState(value);
+        edit({ what: value });
+    };
+    const setCategory = (value: Category | null) => {
+        setCategoryState(value);
+        edit({ category: value });
+    };
+    const setPayBy = (value: PayBy) => {
+        setPayByState(value);
+        edit({ payBy: value });
+    };
     const [active, setActive] = useState<OweSlot>("who");
     const [busy, setBusy] = useState(false);
     const [failure, setFailure] = useState<string | null>(null);
@@ -65,12 +99,6 @@ export function useOweForm({ onDirtyChange, onDone }: OweProps) {
     const newName = person === null ? name.trim() : "";
     const targetDate = payBy === "none" ? null : days[payBy];
     const complete = amount > 0 && (person !== null || newName !== "") && category !== null;
-
-    useEffect(() => {
-        onDirtyChange(
-            amountText !== "" || name.trim() !== "" || what.trim() !== "" || category !== null || payBy !== "none"
-        );
-    }, [amountText, category, name, onDirtyChange, payBy, what]);
 
     const save = async () => {
         if (category === null) {

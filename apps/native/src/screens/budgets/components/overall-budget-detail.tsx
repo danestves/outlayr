@@ -1,7 +1,7 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { windowEndMs } from "@outlayr/money/budget-window";
 import { Color, Stack, useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { View } from "react-native";
 
 import { ScreenHeader } from "@/components/screen-header";
@@ -14,6 +14,7 @@ import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useNow } from "@/data/use-now";
 import type { Database } from "@/db/client";
 import { budgetDetailPace, budgetPeriodPhrase, budgetWindowLabel } from "@/domain/budget-math";
+import { useLeaveWhenGone } from "@/hooks/use-leave-when-gone";
 import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
@@ -52,11 +53,7 @@ export function OverallBudgetDetail({ db, onDone }: { db: Database; onDone: () =
         budget ? windowEndMs(budget.window, nowMs) : nowMs
     );
 
-    useEffect(() => {
-        if (budget === null) {
-            onDone();
-        }
-    }, [budget, onDone]);
+    useLeaveWhenGone(budget === null, onDone);
 
     if (!budget) {
         return <View className="bg-background flex-1" />;

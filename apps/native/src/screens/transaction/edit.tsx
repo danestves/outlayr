@@ -1,5 +1,5 @@
 import { Stack, useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { CloseToolbar } from "@/components/close-toolbar";
 import { notifyEditsNotRestored } from "@/components/edits-discarded-snackbar";
@@ -13,6 +13,7 @@ import type { Transaction } from "@/data/transactions-core";
 import { savedTransfer } from "@/data/transfers-core";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useDiscardGuard } from "@/hooks/use-discard-guard";
+import { useLeaveWhenGone } from "@/hooks/use-leave-when-gone";
 import { useRestingSheet } from "@/hooks/use-resting-sheet";
 import { useTranslation } from "@/i18n/context";
 import { createDraftStash } from "@/lib/draft-stash";
@@ -31,11 +32,7 @@ export function EditTransaction({ id }: { id: string }) {
         initial?.transferId != null && savedTransfer(db, initial.transferId) !== null ? initial.transferId : null
     );
 
-    useEffect(() => {
-        if (initial == null) {
-            router.back();
-        }
-    }, [initial, router]);
+    useLeaveWhenGone(initial == null, () => router.back());
 
     if (initial == null) {
         return null;

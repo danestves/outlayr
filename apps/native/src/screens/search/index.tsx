@@ -2,7 +2,7 @@ import { SectionList } from "@legendapp/list/section-list";
 import { cellFigures, toCells } from "@outlayr/money/currency-totals";
 import type { CurrencyFigures } from "@outlayr/money/currency-totals";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ScrollView, View } from "react-native";
 
 import { MeasureCellAmount } from "@/components/amount-text";
@@ -18,6 +18,7 @@ import { useNow } from "@/data/use-now";
 import { useValuation } from "@/data/use-valuation";
 import { groupByDay } from "@/domain/day-sections";
 import { useTranslation } from "@/i18n/context";
+import { useDebouncedText } from "@/lib/debounced-text";
 import { useTransactionRowActions } from "@/lib/use-transaction-row-actions";
 
 import { SearchBar } from "./components/search-bar";
@@ -43,15 +44,10 @@ export function Search() {
     const { displayCurrency: currency, rates } = useValuation(db);
     const { showCents } = useDisplaySettings().state;
     const [query, setQuery] = useState("");
-    const [readQuery, setReadQuery] = useState("");
+    const readQuery = useDebouncedText(query, READ_DEBOUNCE_MS);
     const nowMs = useNow();
     const { pendingId, requestDelete } = useDeferredDelete("row");
     const openRowActions = useTransactionRowActions(nowMs, requestDelete);
-
-    useEffect(() => {
-        const timer = setTimeout(() => setReadQuery(query), READ_DEBOUNCE_MS);
-        return () => clearTimeout(timer);
-    }, [query]);
 
     const found = useSearchedTransactions(db, readQuery, nowMs);
     const rows = found.filter((row) => !goesWithPendingDelete(row, pendingId));

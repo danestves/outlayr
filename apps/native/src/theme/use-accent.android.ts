@@ -1,12 +1,12 @@
 import { getMaterialColors, isDynamicColorAvailable } from "@expo/ui/jetpack-compose";
 import { useLayoutEffect } from "react";
-import { AppState } from "react-native";
 import { Uniwind } from "uniwind";
 
 import { useSettingNumber } from "@/contexts/display-settings-context";
 import { accentForValue } from "@/domain/accent";
 import type { Accent } from "@/domain/accent";
 import { materialSeed } from "@/domain/material-accent";
+import { subscribeAppState } from "@/lib/app-state";
 
 import { applyMaterialScheme } from "./material-revision";
 import { MATERIAL_ROLES } from "./material-roles";
@@ -27,6 +27,7 @@ export function useAccent(): Accent {
     const value = useSettingNumber("accentColor");
     const seedColor = materialSeed(value, isDynamicColorAvailable);
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- writes the Compose scheme into Uniwind before the first paint and again on foreground
     useLayoutEffect(() => {
         const apply = () => {
             const schemes = THEMES.map((theme) => composeScheme(theme, seedColor));
@@ -37,14 +38,11 @@ export function useAccent(): Accent {
             });
         };
         apply();
-        const appState = AppState.addEventListener("change", (state) => {
+        return subscribeAppState((state) => {
             if (state === "active") {
                 apply();
             }
         });
-        return () => {
-            appState.remove();
-        };
     }, [seedColor]);
 
     return accentForValue(value);

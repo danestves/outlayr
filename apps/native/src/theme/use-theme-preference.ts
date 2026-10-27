@@ -10,6 +10,7 @@ import type { ThemePreference } from "./theme-preference";
 export function useApplyThemePreference(): ThemePreference {
     const preference = themePreferenceForValue(useSettingNumber("colorScheme"));
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- sets the Uniwind theme before the first paint
     useLayoutEffect(() => {
         Uniwind.setTheme(preference);
     }, [preference]);

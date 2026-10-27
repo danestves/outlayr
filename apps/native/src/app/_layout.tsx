@@ -121,6 +121,7 @@ function ActivatedCloudRuntime({ children }: { children: ReactNode }) {
 
 function CloudAuthMirror() {
     const { isAuthenticated } = useConvexAuth();
+    // oxlint-disable-next-line outlayr/react-effect-budget -- mirrors Convex auth state into the cloud client's authenticated flag
     useEffect(() => {
         setCloudAuthenticated(isAuthenticated);
         return () => {
@@ -158,6 +159,7 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
         setSplashHidden(true);
     }
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- hides the native splash screen once the error surface can render
     useEffect(() => {
         if (failed) {
             hideAsync();
@@ -222,6 +224,7 @@ function RouteGate({
     const { status } = useLedgerAdoption();
     const settled = routeSettled({ adoption: status, gate });
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- hides the native splash screen once the root route is settled
     useEffect(() => {
         if (settled) {
             hideSplash();

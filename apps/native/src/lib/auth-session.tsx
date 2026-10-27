@@ -1,4 +1,9 @@
-import { createContext, use, useCallback, useEffect, useMemo, useState } from "react";
+import { useAtomValue } from "@effect/atom-react/Hooks";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as Atom from "effect/reactivity/Atom";
+import { createContext, use, useCallback, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
 import { AUTH_RESTORE_BUDGET_MS, authGate } from "@/domain/auth-gate";
@@ -34,6 +39,10 @@ const UNCONFIGURED: AuthSession = {
 
 const AuthSessionContext = createContext<AuthSession>(UNCONFIGURED);
 
+const restoreBudgetAtom = Atom.make(Effect.sleep(Duration.millis(AUTH_RESTORE_BUDGET_MS))).pipe(
+    Atom.withLabel("auth-session:restore-budget")
+);
+
 export function useAuthSession(): AuthSession {
     return use(AuthSessionContext);
 }
@@ -48,14 +57,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
 function LiveSession({ client, children }: { client: AuthClient; children: ReactNode }) {
     const { data: session, isPending } = useAuthClientSession();
     const [provisional, setProvisional] = useState(false);
-    const [restoreExpired, setRestoreExpired] = useState(false);
-
-    useEffect(() => {
-        const timer = setTimeout(() => setRestoreExpired(true), AUTH_RESTORE_BUDGET_MS);
-        return () => {
-            clearTimeout(timer);
-        };
-    }, []);
+    const restoreExpired = AsyncResult.isSuccess(useAtomValue(restoreBudgetAtom));
 
     const begin = useCallback(() => setProvisional(true), []);
     const activate = useCallback(() => setProvisional(false), []);

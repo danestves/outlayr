@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import { AppState } from "react-native";
 
 import { handoffOverran, takeHandoff } from "@/lib/app-handoff";
+import { subscribeAppState } from "@/lib/app-state";
 import type { useRelock as iosUseRelock } from "@/lib/use-relock";
 
 /**
@@ -10,17 +10,17 @@ import type { useRelock as iosUseRelock } from "@/lib/use-relock";
  * relocks on return, since a detour from it to Home is invisible from here.
  */
 export const useRelock: typeof iosUseRelock = (relock) => {
-    useEffect(() => {
-        const subscription = AppState.addEventListener("change", (phase) => {
-            if (phase === "background" && !takeHandoff()) {
-                relock();
-            }
-            if (phase === "active" && handoffOverran()) {
-                relock();
-            }
-        });
-        return () => {
-            subscription.remove();
-        };
-    }, [relock]);
+    // oxlint-disable-next-line outlayr/react-effect-budget -- subscribes to AppState phase changes for the gate's lifetime
+    useEffect(
+        () =>
+            subscribeAppState((phase) => {
+                if (phase === "background" && !takeHandoff()) {
+                    relock();
+                }
+                if (phase === "active" && handoffOverran()) {
+                    relock();
+                }
+            }),
+        [relock]
+    );
 };

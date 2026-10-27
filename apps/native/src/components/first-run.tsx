@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
-import { useEffect } from "react";
 import { Pressable, View } from "react-native";
 import Animated, {
     Easing,
+    useAnimatedReaction,
     useAnimatedStyle,
     useReducedMotion,
     useSharedValue,
@@ -29,14 +29,16 @@ function useRise(active: boolean, delayMs: number, distance = 6) {
     const reduced = useReducedMotion();
     const progress = useSharedValue(active ? 0 : 1);
 
-    useEffect(() => {
-        if (!active) {
-            return;
+    useAnimatedReaction(
+        () => active,
+        (rising) => {
+            if (rising) {
+                progress.set(
+                    withDelay(reduced ? 0 : delayMs, withTiming(1, { duration: reduced ? FADE_MS : 480, easing: EASE }))
+                );
+            }
         }
-        progress.set(
-            withDelay(reduced ? 0 : delayMs, withTiming(1, { duration: reduced ? FADE_MS : 480, easing: EASE }))
-        );
-    }, [active, delayMs, reduced, progress]);
+    );
 
     return useAnimatedStyle(() => ({
         opacity: progress.get(),
@@ -48,11 +50,14 @@ function Ring({ size, targetOpacity, delayMs }: { size: number; targetOpacity: n
     const reduced = useReducedMotion();
     const progress = useSharedValue(0);
 
-    useEffect(() => {
-        progress.set(
-            withDelay(reduced ? 0 : delayMs, withTiming(1, { duration: reduced ? FADE_MS : 600, easing: EASE }))
-        );
-    }, [delayMs, reduced, progress]);
+    useAnimatedReaction(
+        () => delayMs,
+        (delay) => {
+            progress.set(
+                withDelay(reduced ? 0 : delay, withTiming(1, { duration: reduced ? FADE_MS : 600, easing: EASE }))
+            );
+        }
+    );
 
     const style = useAnimatedStyle(() => ({
         opacity: progress.get() * targetOpacity,
@@ -86,15 +91,18 @@ function StageObject({ children, cover }: { children: ReactNode; cover: boolean 
     const reduced = useReducedMotion();
     const progress = useSharedValue(0);
 
-    useEffect(() => {
-        const arrivalMs = cover ? 480 : 380;
-        progress.set(
-            withTiming(1, {
-                duration: reduced ? FADE_MS : arrivalMs,
-                easing: EASE,
-            })
-        );
-    }, [cover, reduced, progress]);
+    useAnimatedReaction(
+        () => cover,
+        (covering) => {
+            const arrivalMs = covering ? 480 : 380;
+            progress.set(
+                withTiming(1, {
+                    duration: reduced ? FADE_MS : arrivalMs,
+                    easing: EASE,
+                })
+            );
+        }
+    );
 
     const style = useAnimatedStyle(() => {
         if (reduced) {

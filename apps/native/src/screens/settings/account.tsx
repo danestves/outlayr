@@ -1,7 +1,10 @@
+import { useAtomValue } from "@effect/atom-react/Hooks";
 import * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as Atom from "effect/reactivity/Atom";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Alert, View } from "react-native";
 
 import { ProviderSignInButtons } from "@/components/account/provider-sign-in-buttons";
@@ -16,15 +19,12 @@ import { useTranslation } from "@/i18n/context";
 import { authClient, useAuthClientSession } from "@/lib/auth-client";
 import { useAuthSession } from "@/lib/auth-session";
 import { CloudError } from "@/lib/cloud-error";
+import { resumePersistedCloudDeletion } from "@/lib/deletion-resume";
 import { posthog } from "@/lib/posthog";
+import { appRuntime } from "@/lib/runtime";
 import { useProviderSignIn } from "@/lib/use-provider-sign-in";
 import { SILENT } from "@/state/atom-command";
-import {
-    deleteAccountCommand,
-    resumeCloudDeletionCommand,
-    runCloudCommand,
-    signOutCommand,
-} from "@/state/cloud-commands";
+import { deleteAccountCommand, signOutCommand } from "@/state/cloud-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 
 type AuthClient = NonNullable<typeof authClient>;
@@ -53,6 +53,20 @@ function openLedger() {
     router.replace("/");
 }
 
+const resumeDeletionAtom = appRuntime
+    .atom(
+        resumePersistedCloudDeletion().pipe(
+            Effect.uninterruptible,
+            Effect.tap((resumed) => (resumed ? Effect.sync(openLedger) : Effect.void))
+        )
+    )
+    .pipe(Atom.withLabel("account:resume-deletion"));
+
+function failureMessage(cause: Cause.Cause<unknown>, t: Parameters<typeof signInFailureMessage>[1]) {
+    const failure = Cause.squash(cause);
+    return signInFailureMessage(failure instanceof CloudError ? failure.cause : failure, t);
+}
+
 function AccountContent({ client, db }: { client: AuthClient; db: Database }) {
     const t = useTranslation();
     const { retry: reopenLocalData } = useLocalData();
@@ -64,23 +78,15 @@ function AccountContent({ client, db }: { client: AuthClient; db: Database }) {
     const signOutAccount = useAtomCommand(signOutCommand, SILENT);
     const deleteAccountRun = useAtomCommand(deleteAccountCommand, SILENT);
 
-    useEffect(() => {
-        let mounted = true;
-        runCloudCommand(resumeCloudDeletionCommand, undefined)
-            .then((resumed) => {
-                if (resumed && mounted) {
-                    router.replace("/");
-                }
-            })
-            .catch((cause: unknown) => {
-                if (mounted) {
-                    setError(signInFailureMessage(cause instanceof CloudError ? cause.cause : cause, t));
-                }
-            });
-        return () => {
-            mounted = false;
-        };
-    }, [t]);
+    const resumed = useAtomValue(resumeDeletionAtom);
+    const [resumeAcknowledged, setResumeAcknowledged] = useState(false);
+    const resumeFailure =
+        AsyncResult.isFailure(resumed) && !resumeAcknowledged ? failureMessage(resumed.cause, t) : null;
+    const shownError = error ?? resumeFailure;
+    const clearError = () => {
+        setError(null);
+        setResumeAcknowledged(true);
+    };
 
     const finish = (result: AsyncResult.AsyncResult<unknown, unknown>) => {
         if (AsyncResult.isFailure(result)) {
@@ -90,7 +96,7 @@ function AccountContent({ client, db }: { client: AuthClient; db: Database }) {
     };
 
     const signOut = () => {
-        setError(null);
+        clearError();
         setBusy("signOut");
         signOutAccount({ allowLocal: openLedger, client, db, navigateToLedger: openLedger }).then(finish);
     };
@@ -99,7 +105,7 @@ function AccountContent({ client, db }: { client: AuthClient; db: Database }) {
         if (!activeSession) {
             return;
         }
-        setError(null);
+        clearError();
         setBusy(action);
         posthog?.reset();
         deleteAccountRun({
@@ -214,7 +220,7 @@ function AccountContent({ client, db }: { client: AuthClient; db: Database }) {
                 />
             </SettingsSection>
 
-            {error ? <Failure message={error} /> : null}
+            {shownError ? <Failure message={shownError} /> : null}
         </SettingsScreen>
     );
 }

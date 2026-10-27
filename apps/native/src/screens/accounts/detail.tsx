@@ -2,7 +2,6 @@ import { SectionList } from "@legendapp/list/section-list";
 import { isPerson, toAccountKind } from "@outlayr/money/account-kind";
 import { Stack, useRouter } from "expo-router";
 import type { ReactNode } from "react";
-import { useEffect } from "react";
 import { Alert, View } from "react-native";
 
 import { HeroNumber } from "@/components/amount-text";
@@ -29,6 +28,7 @@ import { monthAbbrevTitle } from "@/domain/dates";
 import { groupByDay } from "@/domain/day-sections";
 import { formatAmount } from "@/domain/money";
 import { mergeByRecency } from "@/domain/transfer-log-rows";
+import { useLeaveWhenGone } from "@/hooks/use-leave-when-gone";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { GoalTargetSheet } from "@/screens/budgets/components/goal-target-sheet";
 import { PayoffSummary } from "@/screens/debts/payoff-line";
@@ -47,11 +47,7 @@ export function AccountDetail({ id }: { id: string }) {
     const { pendingId } = useDeferredDelete("account");
     const account = accounts.find((row) => row.id === id && row.id !== pendingId) ?? null;
 
-    useEffect(() => {
-        if (account == null) {
-            router.back();
-        }
-    }, [account, router]);
+    useLeaveWhenGone(account == null, () => router.back());
 
     if (account == null) {
         return null;

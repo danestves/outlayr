@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { AccessibilityInfo, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -24,16 +24,20 @@ export function useRestingSheet(wakeAnnouncement: string) {
     const [awake, setAwake] = useState(false);
     const [bodyHeight, setBodyHeight] = useState(REST_BODY_ESTIMATE);
 
-    useEffect(() => {
-        if (awake) {
-            AccessibilityInfo.announceForAccessibility(wakeAnnouncement);
+    const woke = useRef(false);
+    const wake = () => {
+        if (woke.current) {
+            return;
         }
-    }, [awake, wakeAnnouncement]);
+        woke.current = true;
+        setAwake(true);
+        AccessibilityInfo.announceForAccessibility(wakeAnnouncement);
+    };
 
     const height = awake
         ? windowHeight - LARGE_SHEET_TOP_INSET
         : SHEET_HEADER_HEIGHT + bodyHeight + REST_BOTTOM_ROOM + insets.bottom;
-    const rest: SheetRest | undefined = awake ? undefined : { onHeight: setBodyHeight, onWake: () => setAwake(true) };
+    const rest: SheetRest | undefined = awake ? undefined : { onHeight: setBodyHeight, onWake: wake };
 
     return { awake, height, rest, sheet: SHEET };
 }

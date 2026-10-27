@@ -4,7 +4,7 @@ import { HugeiconsIcon } from "@hugeicons/react-native";
 import { addDays, startOfDay } from "@outlayr/money/calendar";
 import type { RateTable } from "@outlayr/money/valuation";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
 import { Shimmer } from "panelui-native/components/shimmer";
 import { useState } from "react";
@@ -37,7 +37,6 @@ import { conversionOf, formatQuantity, receiptDetails, resolveReceipt, savableRe
 import type { Conversion, ResolvedReceipt } from "@/domain/receipt-scan";
 import { formatRateFigure, pairQuotedInverse, pairUnitSymbols, quotePairRate } from "@/domain/transaction-entry-rate";
 import { stillCurrent } from "@/domain/voice-entry";
-import { useIsMounted } from "@/hooks/use-is-mounted";
 import { useLocaleTag } from "@/hooks/use-locale-tag";
 import { useMerchantMark } from "@/hooks/use-merchant-mark";
 import { useProEntitled } from "@/hooks/use-pro-locked";
@@ -608,7 +607,7 @@ function ScanFlowScreen() {
     const currency = useGlobalCurrency(db);
     const { bounded, context, live } = usePromptLedger(db, currency);
     const [saving, setSaving] = useState(false);
-    const isMounted = useIsMounted();
+    const navigation = useNavigation();
     const createTransaction = useAtomCommand(createTransactionCommand, SILENT);
 
     const request = {
@@ -684,7 +683,7 @@ function ScanFlowScreen() {
             } catch {
                 // The row did not land; the form has the failure strip this screen lacks.
                 setSaving(false);
-                if (isMounted()) {
+                if (navigation.isFocused()) {
                     openForm(draft, attachment);
                 }
                 return;
@@ -701,7 +700,7 @@ function ScanFlowScreen() {
             });
             haptics("success");
             // A modal gesture can dismiss this mid-write; popping again would take the screen beneath.
-            if (isMounted()) {
+            if (navigation.isFocused()) {
                 router.back();
             }
         };

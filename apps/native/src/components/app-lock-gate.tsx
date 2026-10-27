@@ -1,6 +1,8 @@
+import { useAtomValue } from "@effect/atom-react/Hooks";
 import SquareLock02Icon from "@hugeicons-pro/core-solid-rounded/SquareLock02Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
-import { createContext, use, useEffect, useEffectEvent, useRef, useState } from "react";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
+import { createContext, use, useEffect, useEffectEvent, useRef, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { AppState, Pressable, View } from "react-native";
 
@@ -9,9 +11,11 @@ import { useSettingBool } from "@/contexts/display-settings-context";
 import { lockFailureMessage, lockGate, lockIsUnenforceable } from "@/domain/app-lock";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
+import { lockEnforceableAtom } from "@/lib/app-lock-enforceable";
+import { subscribeAppState } from "@/lib/app-state";
 import { useRelock } from "@/lib/use-relock";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import { lockIsEnforceableCommand, requestUnlockCommand, runCloudCommand } from "@/state/cloud-commands";
+import { requestUnlockCommand } from "@/state/cloud-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
@@ -26,7 +30,7 @@ export function AppLockGate({ children }: { children: ReactNode }) {
     const t = useTranslation();
     const enabled = useSettingBool("biometricLock");
     const [unlocked, setUnlocked] = useState(false);
-    const [enforceable, setEnforceable] = useState<boolean | null>(null);
+    const [unenforceable, setUnenforceable] = useState(false);
     const [failure, setFailure] = useState<TranslationKey | null>(null);
     const [checking, setChecking] = useState(false);
     const unlock = useAtomCommand(requestUnlockCommand, SILENT);
@@ -38,25 +42,14 @@ export function AppLockGate({ children }: { children: ReactNode }) {
         // The Settings toggle only flips on behind a passed check, so prompting here would be a second prompt.
         setUnlocked(enabled);
         if (!enabled) {
-            setEnforceable(null);
+            setUnenforceable(false);
             setFailure(null);
         }
     }
 
-    useEffect(() => {
-        if (!enabled) {
-            return;
-        }
-        let cancelled = false;
-        runCloudCommand(lockIsEnforceableCommand, undefined).then((ok) => {
-            if (!cancelled) {
-                setEnforceable(ok);
-            }
-        });
-        return () => {
-            cancelled = true;
-        };
-    }, [enabled]);
+    const probe = useAtomValue(lockEnforceableAtom(enabled));
+    const probed = AsyncResult.isSuccess(probe) ? probe.value : null;
+    const enforceable = unenforceable ? false : probed;
 
     useRelock(() => setUnlocked(false));
 
@@ -70,7 +63,7 @@ export function AppLockGate({ children }: { children: ReactNode }) {
             return;
         }
         if (lockIsUnenforceable(result.error)) {
-            setEnforceable(false);
+            setUnenforceable(true);
             return;
         }
         setFailure(lockFailureMessage(result.error));
@@ -83,6 +76,7 @@ export function AppLockGate({ children }: { children: ReactNode }) {
     const promptUnlock = useEffectEvent(() => {
         void attempt();
     });
+    // oxlint-disable-next-line outlayr/react-effect-budget -- opens the system biometric prompt once each time the gate shuts
     useEffect(() => {
         if (gate === "open") {
             prompted.current = false;
@@ -117,16 +111,7 @@ const outOfFront = (phase: typeof AppState.currentState) => phase === "inactive"
 // iOS snapshots the app-switcher card during `inactive`, before a `background` relock could render.
 function SwitcherShield() {
     const colors = useColors();
-    const [covering, setCovering] = useState(() => outOfFront(AppState.currentState));
-
-    useEffect(() => {
-        const subscription = AppState.addEventListener("change", (phase) => {
-            setCovering(outOfFront(phase));
-        });
-        return () => {
-            subscription.remove();
-        };
-    }, []);
+    const covering = useSyncExternalStore(subscribeAppState, () => outOfFront(AppState.currentState));
 
     if (!covering) {
         return null;

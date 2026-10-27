@@ -1,6 +1,6 @@
 import DragDropVerticalIcon from "@hugeicons-pro/core-stroke-rounded/DragDropVerticalIcon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { View } from "react-native";
 import type { AccessibilityActionEvent, LayoutChangeEvent } from "react-native";
@@ -50,13 +50,16 @@ export function ReorderList<T>({ items, keyOf, labelOf, onReorder, renderItem }:
     const { order } = drag;
     const signature = keys.join("\n");
 
-    useEffect(() => {
-        order.set(signature.length === 0 ? [] : signature.split("\n"));
-    }, [order, signature]);
+    useAnimatedReaction(
+        () => signature,
+        (saved) => {
+            order.set(saved.length === 0 ? [] : saved.split("\n"));
+        }
+    );
 
     const commit = (next: string[]) => {
         order.set(next);
-        // The saved order never changed, so the effect above won't put the rows back on its own.
+        // The saved order never changed, so the reaction above won't put the rows back on its own.
         onReorder(next).catch((error) => {
             order.set(keys);
             console.error("Failed to save the new order", error);
