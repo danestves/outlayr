@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import { useDatabase } from "@/contexts/local-data-context";
 import { META_KEYS } from "@/data/app-meta-core";
 import { subscribeToSettingChanges } from "@/data/database-changes";
+import { SyncEngineMount } from "@/data/sync-engine-mount";
 import { usePhotoReconcile } from "@/data/use-photo-reconcile";
 import { usePhotoSync } from "@/data/use-photo-sync";
 import { useRecurrenceSweep } from "@/data/use-recurrence-sweep";
-import { useSyncEngine } from "@/data/use-sync-engine";
 import type { Database } from "@/db/client";
 import { useProEntitled } from "@/hooks/use-pro-locked";
 import { useCloudAuthenticated } from "@/lib/convex";
@@ -85,10 +85,10 @@ export function BackgroundWork() {
     useSystemSync(ready);
     useEnrichmentQueue(ready);
     // Held down without a confirmed entitlement and session: the server refuses a lapsed customer and a missing token.
-    useSyncEngine(ready, !proEntitled || !cloudAuthenticated);
+    const cloudPaused = !proEntitled || !cloudAuthenticated;
     usePhotoReconcile(ready);
     // After the reconciliation: running first would upload against paths it is about to repair.
-    usePhotoSync(ready, !proEntitled || !cloudAuthenticated);
+    usePhotoSync(ready, cloudPaused);
 
-    return null;
+    return ready != null && !cloudPaused ? <SyncEngineMount db={ready} /> : null;
 }
