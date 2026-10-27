@@ -43,6 +43,7 @@ minimumReleaseAgeExclude:
 
 patchedDependencies:
     "@expo/fingerprint@0.21.6": patches/@expo__fingerprint@0.21.6.patch
+    "@tanstack/ai-mcp@1.0.0": patches/@tanstack__ai-mcp@1.0.0.patch
     expo-router@58.0.25: patches/expo-router@58.0.25.patch
     expo-widgets@58.0.22: patches/expo-widgets@58.0.22.patch
     number-flow-react-native@0.5.1: patches/number-flow-react-native@0.5.1.patch

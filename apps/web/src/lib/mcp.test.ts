@@ -36,6 +36,7 @@ describe("public MCP server", () => {
         });
         expect(init.result.protocolVersion).toBe("2025-11-25");
         expect(init.result.serverInfo.name).toBe("com.tryoutlayr/outlayr");
+        expect(init.result.instructions).toContain("about_outlayr");
 
         const list = await rpc({ method: "tools/list" }, { "mcp-protocol-version": "2025-11-25" });
         expect(list.result.tools.map((tool: { name: string }) => tool.name)).toEqual([
@@ -50,6 +51,9 @@ describe("public MCP server", () => {
         const resource = await rpc({ method: "resources/read", params: { uri: "https://tryoutlayr.com/llms.txt" } });
         expect(about.result.content[0].text).toMatch(/^# Outlayr/u);
         expect(resource.result.contents[0].text).toBe(about.result.content[0].text);
+
+        const plans = await callTool("about_outlayr", { section: "Plans" });
+        expect(plans.result.content[0].text).toMatch(/^## Plans\n[^#]*\$7\.99/u);
     });
 
     it("serves a 2026-07-28 request that carries its own version and no initialize", async () => {
