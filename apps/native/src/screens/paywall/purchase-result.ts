@@ -1,12 +1,12 @@
-import type { PurchaseOutcome } from "@/contexts/revenuecat-context";
 import type { TranslationKey } from "@/i18n/catalog";
+import type { PurchaseOutcome } from "@/lib/revenuecat-service";
 
 interface PaywallNext {
     failure: TranslationKey | null;
     leave: boolean;
 }
 
-export function purchaseNext(outcome: PurchaseOutcome, mirrored: boolean): PaywallNext {
+export function purchaseNext(outcome: typeof PurchaseOutcome.Type, mirrored: boolean): PaywallNext {
     if (!mirrored) {
         return { failure: "pro.syncPendingBody", leave: false };
     }
