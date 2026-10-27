@@ -20,3 +20,119 @@ diff --git a/plugin/src/ios/withWidgetSourceFiles.ts b/plugin/src/ios/withWidget
  ${configuration?.description ? `  static var description: LocalizedStringResource = ${JSON.stringify(configuration.description)}\n` : ''}
  ${Object.entries(configuration?.parameters ?? {})
    .map(([name, param]) => {
+diff --git a/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.kt b/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.kt
+index 3df9e4a..34f1dcf 100644
+--- a/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.kt
++++ b/android/src/main/java/expo/modules/widgets/ExpoWidgetEmittableTree.kt
+@@ -66,6 +66,9 @@ import androidx.glance.ImageProvider
+ import androidx.glance.TintColorFilterParams
+ import androidx.glance.GlanceModifier
+ import androidx.glance.action.clickable
++import androidx.glance.appwidget.action.actionStartActivity
++import android.content.Intent
++import android.net.Uri
+ import androidx.glance.appwidget.CheckboxDefaults
+ import androidx.glance.appwidget.cornerRadius
+ import androidx.glance.appwidget.EmittableCheckBox
+@@ -295,8 +298,14 @@ private fun ImageContentScale.toGlanceContentScale(): ContentScale {
+ private fun ReadableMap.toPeekButton(converterContext: WidgetConverterContext, source: InteractionSource): Emittable {
+   val props = props<WidgetButtonProps>(converterContext)
+   val children = children()
+-  val action =
+-    props.target?.let { target -> WidgetInteraction(source, target).toGlanceAction(converterContext.applicationContext) }
++  val action = props.target?.let { target ->
++    if (target.contains("://")) {
++      val context = converterContext.applicationContext
++      actionStartActivity(Intent(Intent.ACTION_VIEW, Uri.parse(target)).setPackage(context.packageName))
++    } else {
++      WidgetInteraction(source, target).toGlanceAction(converterContext.applicationContext)
++    }
++  }
+   val modifier = props.buttonModifier(converterContext)
+   val contentColor = props.contentColorProvider()
+   val textContent = children.textContent(converterContext) ?: props.label
+diff --git a/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt b/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt
+index edabde8..da3e7b5 100644
+--- a/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt
++++ b/android/src/main/java/expo/modules/widgets/ExpoWidgetsPeekWidget.kt
+@@ -25,7 +25,10 @@ internal class ExpoWidgetsPeekWidget(
+     val layout = WidgetsLayoutRegistry.layout(appContext, widgetName)
+       ?: return createErrorRoot("No layout found for $widgetName")
+     val props = WidgetsLayoutRegistry.props(appContext, widgetName)
+-    val environment = getWidgetEnvironment(appContext)
++    val environment = getWidgetEnvironment(appContext) + mapOf(
++      "width" to size.width.value.toDouble(),
++      "height" to size.height.value.toDouble()
++    )
+     val node = evaluateLayout(appContext, layout, props, environment)
+ 
+     return node.toPeekRoot(appContext, InteractionSource.Widget(widgetName), size)
+diff --git a/android/src/main/java/expo/modules/widgets/WidgetInteractionAction.kt b/android/src/main/java/expo/modules/widgets/WidgetInteractionAction.kt
+index b0b6479..e78e24d 100644
+--- a/android/src/main/java/expo/modules/widgets/WidgetInteractionAction.kt
++++ b/android/src/main/java/expo/modules/widgets/WidgetInteractionAction.kt
+@@ -61,6 +61,8 @@ internal object WidgetsInteraction {
+ 
+     if (updatedProps != null) {
+       WidgetsStorage.set(context, "__expo_widgets_${source}_props", props.orEmpty() + updatedProps)
++      val pressed = WidgetsStorage.getDictionary(context, "__expo_widgets_${source}_pressed_props").orEmpty()
++      WidgetsStorage.set(context, "__expo_widgets_${source}_pressed_props", pressed + updatedProps)
+     }
+ 
+     WidgetsEvents.sendUserInteraction(source, target)
+diff --git a/android/src/main/java/expo/modules/widgets/WidgetObject.kt b/android/src/main/java/expo/modules/widgets/WidgetObject.kt
+index 881ad3b..a226bd7 100644
+--- a/android/src/main/java/expo/modules/widgets/WidgetObject.kt
++++ b/android/src/main/java/expo/modules/widgets/WidgetObject.kt
+@@ -23,7 +23,8 @@ internal class WidgetObject(
+   }
+ 
+   fun updateSnapshot(props: Map<String, Any?>) {
+-    WidgetsStorage.set(context, "__expo_widgets_${name}_props", props)
++    val pressed = WidgetsStorage.getDictionary(context, "__expo_widgets_${name}_pressed_props").orEmpty()
++    WidgetsStorage.set(context, "__expo_widgets_${name}_props", props + pressed)
+     reload()
+   }
+ }
+diff --git a/build/Widgets.types.d.ts b/build/Widgets.types.d.ts
+index 4c474bb..ed9f456 100644
+--- a/build/Widgets.types.d.ts
++++ b/build/Widgets.types.d.ts
+@@ -50,6 +50,16 @@ export type WidgetEnvironment<T extends object | undefined = undefined> = {
+      * The color scheme of the widget's environment.
+      */
+     colorScheme?: 'light' | 'dark';
++    /**
++     * The widget's current width in dp.
++     * @platform android
++     */
++    width?: number;
++    /**
++     * The widget's current height in dp.
++     * @platform android
++     */
++    height?: number;
+     /**
+      * A Boolean value that indicates whether the display or environment currently requires reduced luminance.
+      *
+diff --git a/src/Widgets.types.ts b/src/Widgets.types.ts
+index 690d069..369fa74 100644
+--- a/src/Widgets.types.ts
++++ b/src/Widgets.types.ts
+@@ -63,6 +63,16 @@ export type WidgetEnvironment<T extends object | undefined = undefined> = {
+    * The color scheme of the widget's environment.
+    */
+   colorScheme?: 'light' | 'dark';
++  /**
++   * The widget's current width in dp.
++   * @platform android
++   */
++  width?: number;
++  /**
++   * The widget's current height in dp.
++   * @platform android
++   */
++  height?: number;
+   /**
+    * A Boolean value that indicates whether the display or environment currently requires reduced luminance.
+    *

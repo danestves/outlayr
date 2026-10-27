@@ -146,6 +146,8 @@ export interface InsightsWidgetProps {
 
 export interface LogWidgetProps {
     chrome: WidgetChrome;
+    /** Transactions, not rows: a split entry contributes one row per category. */
+    todayCount: number;
     todayLabel: string;
     todaySpent: string;
     url: string;
@@ -329,6 +331,7 @@ export const buildWidgetProps = Effect.fn("Widgets.buildProps")(function* buildW
         },
         Log: {
             chrome: WIDGET_PALETTE,
+            todayCount: countExpenses(contributions, startOfDay(now), now),
             todayLabel: translateNow("common.today").toUpperCase(),
             todaySpent: money(sumExpenses(contributions, startOfDay(now), now, null)),
             url: DEEP_LINKS.newExpense,
@@ -551,6 +554,17 @@ function sumExpenses(rows: readonly Contribution[], start: Date, now: Date, cate
         }
     }
     return total;
+}
+
+function countExpenses(rows: readonly Contribution[], start: Date, now: Date): number {
+    const ids = new Set<string>();
+    for (const row of rows) {
+        const t = row.date.getTime();
+        if (!row.income && t >= start.getTime() && t <= now.getTime()) {
+            ids.add(row.id);
+        }
+    }
+    return ids.size;
 }
 
 function buildWeek(contributions: readonly Contribution[], now: Date, whole: Money): WeekProps {

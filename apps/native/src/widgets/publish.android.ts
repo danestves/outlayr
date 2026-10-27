@@ -7,10 +7,24 @@ import { purchaseListener } from "@/lib/purchase-listener";
 import { warnAndContinue } from "@/lib/warn-and-continue";
 import type { publishWidgets as iosPublishWidgets } from "@/widgets/publish";
 
+import OverviewWidget from "./android/overview";
+import { buildAndroidWidgetProps } from "./android/props";
+import TodayWidget from "./android/today";
+import WalletWidget from "./android/wallet";
+
 const PUSH_CHANNEL = "purchases";
 
-/** A sibling, not an early return, so the widget layouts stay out of the Android bundle. */
+/** A sibling of `publish.ts`, so the SwiftUI layouts stay out of the Android bundle and these out of iOS. */
 export const publishWidgets: typeof iosPublishWidgets = Effect.fn("Widgets.publish")(function* publishWidgets(db) {
+    yield* Effect.gen(function* publish() {
+        const props = yield* buildAndroidWidgetProps(db, new Date());
+        yield* Effect.sync(() => {
+            WalletWidget.updateSnapshot(props.Wallet);
+            TodayWidget.updateSnapshot(props.Today);
+            OverviewWidget.updateSnapshot(props.Overview);
+        });
+    }).pipe(warnAndContinue("[outlayr] widget publish failed"));
+
     if (!purchaseListener) {
         return;
     }

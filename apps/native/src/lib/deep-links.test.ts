@@ -11,6 +11,8 @@ describe("resolveDeepLink", () => {
         expect(resolveDeepLink(DEEP_LINKS.search)).toBe("/search");
         expect(resolveDeepLink(DEEP_LINKS.newExpense)).toBe("/transactions/create");
         expect(resolveDeepLink(DEEP_LINKS.newIncome)).toBe("/transactions/create?income=1");
+        expect(resolveDeepLink(DEEP_LINKS.voice)).toBe("/transactions/voice");
+        expect(resolveDeepLink(DEEP_LINKS.scan)).toBe("/transactions/scan");
     });
 
     it("accepts the bare path form expo-router hands it while running", () => {
