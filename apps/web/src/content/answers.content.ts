@@ -61,6 +61,10 @@ const RIVALS = {
         en: "Monefy is an expense tracker for iPhone and Android that records a purchase in two taps, free at its core, with an optional paid upgrade.",
         es: "Monefy es una app para controlar gastos en iPhone y Android que registra una compra en dos toques, gratis en lo básico, con una mejora de pago opcional.",
     },
+    moneyLover: {
+        en: "Money Lover is an expense tracker for iPhone, Android, and the web, free with ads, with a paid Premium and bank linking as a separate monthly subscription.",
+        es: "Money Lover es una app para controlar gastos en iPhone, Android y la web, gratis con anuncios, con un Premium de pago y la conexión al banco como una suscripción mensual aparte.",
+    },
 } as const;
 
 const OUTLAYR_SUBSCRIPTIONS = t({
@@ -1462,6 +1466,165 @@ const answers = {
                 source: "https://www.monefy.com/",
                 summary: t(RIVALS.monefy),
                 title: t({ en: "Outlayr as a Monefy alternative.", es: "Outlayr como alternativa a Monefy." }),
+            },
+            "money-lover": {
+                faq: [
+                    {
+                        answer: t({
+                            en: "It is if you want a free plan with no ads, recurring entries and reminders without paying, or voice and receipt captures that refill every 30 days. Money Lover fits better if you use an iPhone today, need a web app, or want linked bank accounts to sync on their own.",
+                            es: "Sí, si quieres un plan gratis sin anuncios, registros recurrentes y avisos sin pagar, o capturas de voz y de recibos que se renuevan cada 30 días. Money Lover te conviene más si usas un iPhone hoy, necesitas una app web o quieres que tus cuentas de banco vinculadas se sincronicen solas.",
+                        }),
+                        question: t({
+                            en: "Is Outlayr a good Money Lover alternative?",
+                            es: "¿Outlayr es una buena alternativa a Money Lover?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. Subscriptions, bills, and paychecks log themselves on their day, with a reminder before each charge, on the free plan. Money Lover's free plan allows one recurring transaction and one bill, and its help center says recurring transactions don't sync across devices yet.",
+                            es: "Sí. Las suscripciones, los pagos fijos y el sueldo se registran solos en su día, con un aviso antes de cada cobro, en el plan gratis. El plan gratis de Money Lover permite un movimiento recurrente y una factura, y su centro de ayuda dice que los movimientos recurrentes todavía no se sincronizan entre dispositivos.",
+                        }),
+                        question: t({
+                            en: "Are recurring entries free in Outlayr?",
+                            es: "¿Los registros recurrentes son gratis en Outlayr?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "No, on no plan. Money Lover shows ads on its free plan, and Premium removes them.",
+                            es: "No, en ningún plan. Money Lover muestra anuncios en su plan gratis, y Premium los quita.",
+                        }),
+                        question: t({ en: "Does Outlayr show ads?", es: "¿Outlayr muestra anuncios?" }),
+                    },
+                    COST_FAQ,
+                ],
+                fit: {
+                    outlayr: [
+                        t({
+                            en: "Want a free plan with no ads",
+                            es: "Quieres un plan gratis sin anuncios",
+                        }),
+                        t({
+                            en: "Want recurring entries and reminders on the free plan",
+                            es: "Quieres registros recurrentes y avisos en el plan gratis",
+                        }),
+                        t({
+                            en: "Want voice and receipt captures that refill every 30 days",
+                            es: "Quieres capturas de voz y de recibos que se renuevan cada 30 días",
+                        }),
+                    ],
+                    rival: [t({ en: "Use an iPhone today", es: "Usas un iPhone hoy" }), NEED_WEB, SYNC_ACCOUNTS],
+                },
+                lead: t({
+                    en: `${OUTLAYR_LEAD.en} ${RIVALS.moneyLover.en}`,
+                    es: `${OUTLAYR_LEAD.es} ${RIVALS.moneyLover.es}`,
+                }),
+                meta: {
+                    description: t({
+                        en: "Outlayr vs Money Lover: ads, recurring entries on the free plan, AI and receipt entry, platforms, and price. Money Lover facts checked in its help center, October 2026.",
+                        es: "Outlayr vs Money Lover: anuncios, registros recurrentes gratis, registro con IA y recibos, plataformas y precio. Datos de Money Lover revisados en su centro de ayuda, octubre de 2026.",
+                    }),
+                    title: t({
+                        en: "Money Lover Alternative: Outlayr vs Money Lover",
+                        es: "Alternativa a Money Lover: Outlayr vs Money Lover",
+                    }),
+                },
+                moving: [
+                    {
+                        label: MOVING.export,
+                        source: "https://moneylover.zendesk.com/hc/en-us/articles/36369130766617-Export-to-Google-Sheet-CSV",
+                        text: t({
+                            en: "Money Lover lists CSV export as a Premium feature. On iPhone, open Account, then Settings, then Export CSV. On Android, open Account, then Tools, then Export CSV. Pick the wallet, the categories, and the time range.",
+                            es: "Money Lover incluye la exportación a CSV en Premium. En iPhone, abre Account, luego Settings y luego Export CSV. En Android, abre Account, luego Tools y luego Export CSV. Elige la billetera, las categorías y el período.",
+                        }),
+                    },
+                    {
+                        label: MOVING.file,
+                        source: "https://moneylover.zendesk.com/hc/en-us/articles/36369130766617-Export-to-Google-Sheet-CSV",
+                        text: t({
+                            en: "A CSV with commas, semicolons, or tabs between columns, as you choose. Money Lover doesn't list its columns.",
+                            es: "Un CSV con comas, punto y coma o tabulaciones entre columnas, como elijas. Money Lover no publica sus columnas.",
+                        }),
+                    },
+                    {
+                        label: MOVING.into,
+                        text: t({
+                            en: `Choose commas when you export, then import it in Settings, under Import data, as a CSV file. Check that Outlayr picked the date, the amount, and the category before you import. ${SIGN_LOST.en}`,
+                            es: `Elige comas al exportar y luego impórtalo en Configuración, en Importar datos, como archivo CSV. Revisa que Outlayr haya elegido la fecha, el monto y la categoría antes de importar. ${SIGN_LOST.es}`,
+                        }),
+                    },
+                    {
+                        label: MOVING.lost,
+                        text: t({
+                            en: "Wallets, budgets, events, and debts and loans.",
+                            es: "Las billeteras, los presupuestos, los eventos y las deudas y préstamos.",
+                        }),
+                    },
+                ],
+                related: [
+                    "/guides/best-expense-tracker-apps",
+                    "/compare/monefy",
+                    "/compare/wallet",
+                ] satisfies PageRef[],
+                rival: "Money Lover",
+                rows: [
+                    {
+                        label: LABELS.price,
+                        outlayr: OUTLAYR.price,
+                        rival: t({
+                            en: "Free with 1 wallet and 2 budgets. Premium, priced in the app, adds unlimited wallets, budgets, and recurring transactions. Bank linking is a separate monthly subscription with a 7-day trial",
+                            es: "Gratis con 1 billetera y 2 presupuestos. Premium, con precio en la app, agrega billeteras, presupuestos y movimientos recurrentes ilimitados. La conexión al banco es una suscripción mensual aparte con 7 días de prueba",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Ads", es: "Anuncios" }),
+                        outlayr: t({ en: "None on any plan", es: "Ninguno en ningún plan" }),
+                        rival: t({
+                            en: "On the free plan. Premium removes them",
+                            es: "En el plan gratis. Premium los quita",
+                        }),
+                    },
+                    {
+                        label: LABELS.entries,
+                        outlayr: OUTLAYR.entries,
+                        rival: t({
+                            en: "By hand, a typed sentence, receipt scan, Apple Pay through Shortcuts on iPhone, and bank linking. Free accounts get 10 AI uses",
+                            es: "A mano, una oración escrita, escaneo de recibos, Apple Pay con Atajos en iPhone y conexión al banco. Las cuentas gratis tienen 10 usos de IA",
+                        }),
+                    },
+                    {
+                        label: LABELS.currencies,
+                        outlayr: OUTLAYR.currencies,
+                        rival: t({
+                            en: "One per wallet. An entry in another currency converts to the wallet's",
+                            es: "Una por billetera. Un registro en otra moneda se convierte a la de la billetera",
+                        }),
+                    },
+                    {
+                        label: LABELS.subscriptions,
+                        outlayr: OUTLAYR_SUBSCRIPTIONS,
+                        rival: t({
+                            en: "Recurring transactions and bills, one of each on the free plan. Recurring transactions don't sync across devices",
+                            es: "Movimientos recurrentes y facturas, uno de cada uno en el plan gratis. Los movimientos recurrentes no se sincronizan entre dispositivos",
+                        }),
+                    },
+                    {
+                        label: LABELS.platforms,
+                        outlayr: OUTLAYR.platforms,
+                        rival: t({
+                            en: "iPhone, iPad, Apple Watch, Android, and the web on a computer",
+                            es: "iPhone, iPad, Apple Watch, Android y la web en una computadora",
+                        }),
+                    },
+                    LICENSE_ROW,
+                ],
+                site: "moneylover.zendesk.com",
+                source: "https://moneylover.zendesk.com/hc/en-us",
+                summary: t(RIVALS.moneyLover),
+                title: t({
+                    en: "Outlayr as a Money Lover alternative.",
+                    es: "Outlayr como alternativa a Money Lover.",
+                }),
             },
             pocketguard: {
                 faq: [
@@ -5674,8 +5837,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Outlayr next to YNAB, Monarch, Copilot, Spendee, and seven more apps: price, how entries get in, and platforms, checked at each app's own site.",
-                        es: "Outlayr junto a YNAB, Monarch, Copilot, Spendee y siete apps más: precio, cómo registras y plataformas, revisados en el sitio de cada app.",
+                        en: "Outlayr next to YNAB, Monarch, Copilot, Spendee, and eight more apps: price, how entries get in, and platforms, checked at each app's own site.",
+                        es: "Outlayr junto a YNAB, Monarch, Copilot, Spendee y ocho apps más: precio, cómo registras y plataformas, revisados en el sitio de cada app.",
                     }),
                     title: t({
                         en: "Outlayr vs YNAB, Monarch, Copilot, and More: Compared",

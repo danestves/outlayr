@@ -36,6 +36,7 @@ const RIVALS_RECHECKED = {
     fintonic: new Date(Date.UTC(2026, 9, 9)),
     goodbudget: new Date(Date.UTC(2026, 9, 23)),
     monefy: new Date(Date.UTC(2026, 9, 23)),
+    "money-lover": new Date(Date.UTC(2026, 9, 26)),
     spendee: new Date(Date.UTC(2026, 9, 23)),
     ynab: new Date(Date.UTC(2026, 9, 23)),
 };
