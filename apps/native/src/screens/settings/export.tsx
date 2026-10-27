@@ -14,7 +14,6 @@ import { archiveFileName, serializeArchive } from "@/domain/archive";
 import { CSV_HEADER } from "@/domain/transaction-csv";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
-import { photoTransport } from "@/lib/convex";
 import { shareFile, TransferError } from "@/lib/data-transfer";
 import { notifyFailure } from "@/lib/notify";
 import { photoFiles, storedPhotosBase64 } from "@/lib/photo-storage";
@@ -74,7 +73,6 @@ export function ExportData() {
                             db,
                             files: photoFiles,
                             photos: storedPhotosBase64,
-                            transport: photoTransport(),
                         })
                     )
                 ),

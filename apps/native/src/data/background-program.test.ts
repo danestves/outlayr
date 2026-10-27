@@ -10,6 +10,7 @@ import { migratedDatabase } from "@/db/test-database";
 import { WatchAppState, WatchTableWrites } from "@/lib/app-events";
 import * as DailyReminderSync from "@/lib/daily-reminder-sync";
 import * as DueReminderSync from "@/lib/due-reminder-sync";
+import { asCloudCall } from "@/lib/fake-cloud";
 import { appRuntime } from "@/lib/runtime";
 import { PUBLISH_DEBOUNCE_MS } from "@/lib/sync-cadence";
 import * as SystemSync from "@/lib/system-sync";
@@ -50,7 +51,7 @@ describe("background program", () => {
                         repair: () => Effect.succeed(0),
                     }),
                     Layer.succeed(SystemSync.SystemSources, {
-                        pullRates: async () => ({ rows: [], windowStart: "2026-10-01" }),
+                        pullRates: asCloudCall(async () => ({ rows: [], windowStart: "2026-10-01" })),
                         watchPendingWrites: pendingWrites.watch,
                         watchRecentRates: recentRates.watch,
                     }),

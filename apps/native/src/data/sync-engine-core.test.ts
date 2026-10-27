@@ -16,6 +16,7 @@ import {
     transactionTags,
 } from "@/db/schema";
 import { migratedDatabase, transactionalDatabase } from "@/db/test-database";
+import { asCloudCall } from "@/lib/fake-cloud";
 
 import { incomingWins } from "../../../../packages/backend/confect/lib/syncTables";
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
@@ -39,7 +40,7 @@ function makeServer() {
     const rows = new Map<string, PulledRow>();
     let nextSeq = 1;
 
-    const push: PushFn = async ({ deviceId, rows: pushed }) => {
+    const push = async ({ deviceId, rows: pushed }: Parameters<PushFn>[0]) => {
         let accepted = 0;
         let skipped = 0;
         for (const row of pushed) {
@@ -56,7 +57,7 @@ function makeServer() {
         return { accepted, nextSeq, skipped };
     };
 
-    const pull: PullFn = async ({ cursor, limit, tables }) => {
+    const pull = async ({ cursor, limit, tables }: Parameters<PullFn>[0]) => {
         const after = [...rows.values()]
             .filter((row) => row.seq > cursor && (tables === undefined || tables.includes(row.table)))
             .sort((a, b) => a.seq - b.seq);
@@ -68,7 +69,10 @@ function makeServer() {
         };
     };
 
-    return { pull, push, rows, transport: { pull, push } };
+    const pushFn: PushFn = asCloudCall(push);
+    const pullFn: PullFn = asCloudCall(pull);
+
+    return { pull, pullFn, push, pushFn, rows, transport: { pull: pullFn, push: pushFn } };
 }
 
 const AT = (ms: number) => new Date(ms);
@@ -247,10 +251,10 @@ describe("drainOutbox", () => {
     it("pushes nothing while the gate is shut", async () => {
         await addTransaction(db, "t1");
         let calls = 0;
-        const push: PushFn = async () => {
+        const push: PushFn = asCloudCall(async () => {
             calls += 1;
             return { accepted: 0, nextSeq: 1, skipped: 0 };
-        };
+        });
 
         await expect(Effect.runPromise(drainOutbox(db, push))).resolves.toBe(0);
         expect(calls).toBe(0);
@@ -262,7 +266,7 @@ describe("drainOutbox", () => {
         await addTransaction(db, "t2");
         const server = makeServer();
 
-        await expect(Effect.runPromise(drainOutbox(db, server.push))).resolves.toBe(2);
+        await expect(Effect.runPromise(drainOutbox(db, server.pushFn))).resolves.toBe(2);
         await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
         expect(server.rows.size).toBe(2);
     });
@@ -277,10 +281,13 @@ describe("drainOutbox", () => {
         });
         let seen: WireRow[] = [];
         await Effect.runPromise(
-            drainOutbox(db, async ({ rows }) => {
-                seen = rows;
-                return { accepted: rows.length, nextSeq: 1, skipped: 0 };
-            })
+            drainOutbox(
+                db,
+                asCloudCall(async ({ rows }: Parameters<PushFn>[0]) => {
+                    seen = rows;
+                    return { accepted: rows.length, nextSeq: 1, skipped: 0 };
+                })
+            )
         );
 
         expect(seen[0].table).toBe("transactions");
@@ -306,10 +313,13 @@ describe("drainOutbox", () => {
         });
         let wireRows: WireRow[] = [];
         await Effect.runPromise(
-            drainOutbox(db, async ({ rows }) => {
-                wireRows = rows;
-                return { accepted: rows.length, nextSeq: rows.length, skipped: 0 };
-            })
+            drainOutbox(
+                db,
+                asCloudCall(async ({ rows }: Parameters<PushFn>[0]) => {
+                    wireRows = rows;
+                    return { accepted: rows.length, nextSeq: rows.length, skipped: 0 };
+                })
+            )
         );
 
         const target = makeDb();
@@ -341,10 +351,13 @@ describe("drainOutbox", () => {
             .where(eqId("t1"));
         let seen: WireRow[] = [];
         await Effect.runPromise(
-            drainOutbox(db, async ({ rows }) => {
-                seen = rows;
-                return { accepted: rows.length, nextSeq: 1, skipped: 0 };
-            })
+            drainOutbox(
+                db,
+                asCloudCall(async ({ rows }: Parameters<PushFn>[0]) => {
+                    seen = rows;
+                    return { accepted: rows.length, nextSeq: 1, skipped: 0 };
+                })
+            )
         );
 
         expect(seen[0].deletedAt).toBe(9000);
@@ -353,13 +366,13 @@ describe("drainOutbox", () => {
     it("leaves an edit that arrived mid-flight queued", async () => {
         await Effect.runPromise(setSyncEnabled(db, true));
         await addTransaction(db, "t1");
-        const push: PushFn = async ({ rows }) => {
+        const push: PushFn = asCloudCall(async ({ rows }: Parameters<PushFn>[0]) => {
             await db
                 .update(transactions)
                 .set({ note: "edited", updatedAt: AT(2000) })
                 .where(eqId("t1"));
             return { accepted: rows.length, nextSeq: 1, skipped: 0 };
-        };
+        });
 
         await Effect.runPromise(drainOutbox(db, push));
 
@@ -373,10 +386,13 @@ describe("drainOutbox", () => {
         }
         const batches: number[] = [];
         await Effect.runPromise(
-            drainOutbox(db, async ({ rows }) => {
-                batches.push(rows.length);
-                return { accepted: rows.length, nextSeq: 1, skipped: 0 };
-            })
+            drainOutbox(
+                db,
+                asCloudCall(async ({ rows }: Parameters<PushFn>[0]) => {
+                    batches.push(rows.length);
+                    return { accepted: rows.length, nextSeq: 1, skipped: 0 };
+                })
+            )
         );
 
         expect(batches).toStrictEqual([500, 1]);
@@ -389,9 +405,12 @@ describe("drainOutbox", () => {
 
         await expect(
             Effect.runPromise(
-                drainOutbox(db, async () => {
-                    throw new Error("offline");
-                })
+                drainOutbox(
+                    db,
+                    asCloudCall(async () => {
+                        throw new Error("offline");
+                    })
+                )
             )
         ).rejects.toThrow();
         await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(1);
@@ -403,10 +422,13 @@ describe("drainOutbox", () => {
         await Effect.runPromise(setMeta(db, META_KEYS.firstLaunch, "0"));
         let seen: WireRow[] = [];
         await Effect.runPromise(
-            drainOutbox(db, async ({ rows }) => {
-                seen = rows;
-                return { accepted: rows.length, nextSeq: 1, skipped: 0 };
-            })
+            drainOutbox(
+                db,
+                asCloudCall(async ({ rows }: Parameters<PushFn>[0]) => {
+                    seen = rows;
+                    return { accepted: rows.length, nextSeq: 1, skipped: 0 };
+                })
+            )
         );
 
         expect(seen.map((row) => row.localId)).toStrictEqual([META_KEYS.currency]);
@@ -734,7 +756,7 @@ describe("the echo of this device's own push", () => {
     });
 
     async function pushAndEcho() {
-        await Effect.runPromise(drainOutbox(db, server.push));
+        await Effect.runPromise(drainOutbox(db, server.pushFn));
         return await server.pull({ cursor: await Effect.runPromise(getSyncCursor(db)), limit: 100 });
     }
 
@@ -1086,10 +1108,10 @@ describe("two devices against one account", () => {
             updatedAt: AT(100),
         });
         let correctionEmitted = false;
-        const push: PushFn = async ({ rows }) => {
+        const push: PushFn = asCloudCall(async ({ rows }: Parameters<PushFn>[0]) => {
             correctionEmitted = true;
             return { accepted: 0, nextSeq: 3, skipped: rows.length };
-        };
+        });
         const pull = async ({ cursor }: { cursor: number; limit: number }) => ({
             cursor: correctionEmitted ? 2 : cursor,
             hasMore: false,
@@ -1103,7 +1125,7 @@ describe("two devices against one account", () => {
                 : [],
         });
 
-        await Effect.runPromise(runSync(db, { pull, push }));
+        await Effect.runPromise(runSync(db, { pull: asCloudCall(pull), push }));
 
         const [row] = await db.select().from(transactions);
         expect(row).toMatchObject({ amountUsd: null, exchangeRate: null, exchangeRateType: "custom" });
@@ -1211,7 +1233,12 @@ describe("two devices against one account", () => {
         await Effect.runPromise(runSync(alpha, server.transport));
         await expect(liveOn(alpha)).resolves.toBe(true);
 
-        await Effect.runPromise(pullAndApply(alpha, async ({ limit }) => await server.pull({ cursor: 0, limit })));
+        await Effect.runPromise(
+            pullAndApply(
+                alpha,
+                asCloudCall(async ({ limit }: { limit: number }) => await server.pull({ cursor: 0, limit }))
+            )
+        );
         await expect(liveOn(alpha)).resolves.toBe(true);
 
         await Effect.runPromise(transactionsRepo.remove(alpha, "t1", AT(4000)));
@@ -1270,7 +1297,7 @@ describe("two devices against one account", () => {
         await Effect.runPromise(runSync(alpha, server.transport));
 
         await addTransaction(beta, "local-row", { note: "unsent" });
-        const applied = await Effect.runPromise(pullAndApply(beta, server.pull));
+        const applied = await Effect.runPromise(pullAndApply(beta, server.pullFn));
 
         expect(applied.applied).toBe(1);
         await expect(Effect.runPromise(outboxPendingCount(beta))).resolves.toBe(1);
@@ -1307,10 +1334,13 @@ describe("two devices against one account", () => {
         let calls = 0;
 
         await Effect.runPromise(
-            pullAndApply(db, async () => {
-                calls += 1;
-                return { cursor: 0, hasMore: true, rows: [txRow("t1", 1, 5000)] };
-            })
+            pullAndApply(
+                db,
+                asCloudCall(async () => {
+                    calls += 1;
+                    return { cursor: 0, hasMore: true, rows: [txRow("t1", 1, 5000)] };
+                })
+            )
         );
 
         expect(calls).toBe(1);
@@ -1335,7 +1365,7 @@ describe("two devices against one account", () => {
         await Effect.runPromise(setMeta(db, META_KEYS.syncCursor, "9"));
         await Effect.runPromise(setMeta(db, META_KEYS.syncReread, "installmentPlans,installments,transfers"));
 
-        await Effect.runPromise(pullAndApply(db, server.pull));
+        await Effect.runPromise(pullAndApply(db, server.pullFn));
 
         const [entry] = await db.select().from(transactions).where(eqId("restored"));
         expect(entry?.deletedAt).toBeNull();
@@ -1349,10 +1379,13 @@ describe("two devices against one account", () => {
         let calls = 0;
 
         await Effect.runPromise(
-            pullAndApply(db, async () => {
-                calls += 1;
-                return { cursor: 0, hasMore: false, rows: [] };
-            })
+            pullAndApply(
+                db,
+                asCloudCall(async () => {
+                    calls += 1;
+                    return { cursor: 0, hasMore: false, rows: [] };
+                })
+            )
         );
 
         expect(calls).toBe(0);

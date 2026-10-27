@@ -99,6 +99,15 @@ const purchaseCommand = createRuntimeCommand(appRuntime, {
 - Module promise code with no registry runs a command through `runSettingsCommand`, `runLedgerCommand`, `runLifecycleCommand`, `runAccountsCommand` or `runPlanningCommand`, which settle under `SILENT` and throw the squashed cause.
 - A command whose calls must not overlap needs a scheduler, which does not exist yet. Add one with the first caller that needs it.
 
+## Convex, HTTP and the account lifecycle (native)
+
+- **Convex calls are Effects.** `cloudQuery`, `cloudMutation` and `cloudAction` in `src/lib/convex.ts` fail with `CloudError` (`src/lib/cloud-error.ts`, a module of its own so data cores and tests can import it without the Convex client). A transport whose callers are Effects (`syncTransport`, `ratesPuller`, `enrichmentQueueTransport`, `csvImportTransport`, `photoTransport`) returns Effects, and its consumer maps `CloudError` to its own tagged error with `Effect.mapError`. A transport a promise-only hook still calls (`voiceThreadTransport`, `receiptScanTransport`, `installmentScanTransport`, `enrichmentTransport`) runs the same effect through a `createCommand` and `runCloud`; `convex.ts` is imported by `runtime.ts`, so it cannot use `createRuntimeCommand`. The `watch*` functions stay callbacks: the Convex client demands them.
+- **Raw `fetch` is `HttpClient`.** `src/lib/http.ts` is `outboundHttp`, provided by `appRuntime`: `Fetch` reads `globalThis.fetch` per request, so a test can stub it, and trace headers are off, since the photo hosts sign the request. `photoTransport` is an effect that reads `HttpClient` and returns methods with no requirement, so `PhotoTransport` stays environment-free for its consumers and tests.
+- **A retry is a `Schedule`.** `retryTokenFetch` keeps better-auth's `fetchImpl` contract (a promise-returning fetch) and runs a `createCommand` whose body is `Effect.retry` over `Schedule.spaced(Duration.zero)` with `Schedule.modifyDelay` picking the delay by attempt, the last one repeating. An aborted request is not retried, and the original error is what the caller sees.
+- **A sequence whose order is the contract** (`runAccountLifecycle`, `recoverDeviceReset`, `resetAllDeviceData`) takes its steps as effects and runs them in order in one generator, so "stop on failure" is a `yield*` and "continue on failure" is a `catchTags` on that step alone. The steps share one error and requirement type (`AccountLifecycleDependencies<E, R>`); the command that builds them in `src/state/cloud-commands.ts` provides `SecureStorage` from the runtime.
+- **A device store's clear is an effect that fails with `DeviceStoreError`**, and `resetAllDeviceData` records the store's name and goes on, which is the only place a store failure is swallowed.
+- **A screen that shows a failure's text reads `cause` for a wrapper error** (`CloudError`, `ProviderSignInError`), as `localDataState` does, so the copy is still the library's message.
+
 ## Long-running services
 
 `apps/native/src/data/sync-engine.ts` is the reference: `run(db)` is one effect that runs until interrupted.

@@ -18,13 +18,13 @@ import {
 import { reconcilePhotos } from "@/data/photo-store-core";
 import type { PhotoFiles } from "@/data/photo-store-core";
 import { downloadEveryPhoto } from "@/data/photo-sync-core";
-import type { PhotoTransport } from "@/data/photo-sync-core";
 import { isSyncEnabled } from "@/data/sync-outbox-core";
 import { closeDatabase } from "@/db/client";
 import type { Database } from "@/db/client";
 import { adoptionActions, adoptionPlan } from "@/domain/ledger-adoption";
 import type { AdoptionActions } from "@/domain/ledger-adoption";
 import { adoptionEngine } from "@/lib/adoption-engine";
+import { photoTransport } from "@/lib/convex";
 import { appRuntime } from "@/lib/runtime";
 
 import { createRuntimeCommand, runAtomCommand, SILENT, unwrapAtomCommand } from "./atom-command";
@@ -60,10 +60,9 @@ export const exportArchiveCommand = createRuntimeCommand(appRuntime, {
         db: Database;
         files: PhotoFiles;
         photos: () => Record<string, string>;
-        transport: PhotoTransport;
     }) {
         if (yield* isSyncEnabled(input.db)) {
-            yield* downloadEveryPhoto(input.db, input.files, input.transport).pipe(
+            yield* downloadEveryPhoto(input.db, input.files, yield* photoTransport()).pipe(
                 Effect.catchCause((cause) =>
                     Cause.hasInterruptsOnly(cause)
                         ? Effect.failCause(cause)

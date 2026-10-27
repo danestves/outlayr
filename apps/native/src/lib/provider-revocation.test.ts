@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import * as Effect from "effect/Effect";
 
 const mockSecureStore = new Map<string, string>();
 
@@ -11,6 +12,7 @@ jest.mock<Partial<typeof import("expo-secure-store")>>("expo-secure-store", () =
 
 const { persistProviderBinding, providerBindingFor } =
     require("./provider-revocation") as typeof import("./provider-revocation");
+const { layer } = require("./secure-storage") as typeof import("./secure-storage");
 
 beforeEach(() => {
     mockSecureStore.clear();
@@ -18,13 +20,16 @@ beforeEach(() => {
 
 describe("provider binding", () => {
     it("makes a validated provider sign-in binding available for later deletion", async () => {
-        await persistProviderBinding({
-            betterAuthUserId: "better-auth-user",
-            provider: "google",
-            providerSubject: "google-subject",
+        const program = Effect.gen(function* program() {
+            yield* persistProviderBinding({
+                betterAuthUserId: "better-auth-user",
+                provider: "google",
+                providerSubject: "google-subject",
+            });
+            return yield* providerBindingFor("better-auth-user");
         });
 
-        await expect(providerBindingFor("better-auth-user")).resolves.toStrictEqual({
+        await expect(Effect.runPromise(program.pipe(Effect.provide(layer)))).resolves.toStrictEqual({
             betterAuthUserId: "better-auth-user",
             provider: "google",
             providerSubject: "google-subject",

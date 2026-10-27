@@ -1,9 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import * as Effect from "effect/Effect";
 import { deleteItemAsync, getItemAsync, setItemAsync } from "expo-secure-store";
 
 import { resumePersistedCloudDeletion } from "./deletion-resume";
+import { layer } from "./secure-storage";
 
-const mockRevokeGoogleProviderSubject = jest.fn();
+const mockRevokeGoogleProviderSubject = jest.fn<(subject: string) => Effect.Effect<void>>(() => Effect.void);
+
+const run = (options?: Parameters<typeof resumePersistedCloudDeletion>[0]) =>
+    resumePersistedCloudDeletion(options).pipe(Effect.provide(layer));
 
 jest.mock<Partial<typeof import("expo-secure-store")>>("expo-secure-store", () => ({
     deleteItemAsync: jest.fn<typeof import("expo-secure-store").deleteItemAsync>(),
@@ -19,7 +24,7 @@ jest.mock("@/lib/convex", () => ({
     convex: {},
 }));
 jest.mock("@/lib/provider-revocation", () => ({
-    revokeGoogleProviderSubject: (...args: unknown[]) => mockRevokeGoogleProviderSubject(...args),
+    revokeGoogleProviderSubject: (subject: string) => mockRevokeGoogleProviderSubject(subject),
 }));
 
 function cloudMocks() {
@@ -30,8 +35,12 @@ describe("resumePersistedCloudDeletion", () => {
     beforeEach(() => {
         jest.clearAllMocks();
         const { cloudMutation, cloudQuery } = cloudMocks();
-        cloudQuery.mockResolvedValueOnce({ phase: "prepared" }).mockResolvedValueOnce({ phase: "complete" });
-        cloudMutation.mockResolvedValueOnce({ phase: "providersRevoked" }).mockResolvedValueOnce({ phase: "complete" });
+        cloudQuery
+            .mockReturnValueOnce(Effect.succeed({ phase: "prepared" }))
+            .mockReturnValueOnce(Effect.succeed({ phase: "complete" }));
+        cloudMutation
+            .mockReturnValueOnce(Effect.succeed({ phase: "providersRevoked" }))
+            .mockReturnValueOnce(Effect.succeed({ phase: "complete" }));
         jest.mocked(setItemAsync).mockResolvedValue();
         jest.mocked(deleteItemAsync).mockResolvedValue();
         jest.mocked(getItemAsync).mockResolvedValue(
@@ -45,7 +54,7 @@ describe("resumePersistedCloudDeletion", () => {
     });
 
     it("resumes a cloud marker through the sessionless provider receipt and deletion job", async () => {
-        await resumePersistedCloudDeletion({ clearOnComplete: false, required: true });
+        await Effect.runPromise(run({ clearOnComplete: false, required: true }));
         const { cloudMutation } = cloudMocks();
 
         expect(mockRevokeGoogleProviderSubject).toHaveBeenCalledWith("provider-subject");
@@ -71,7 +80,7 @@ describe("resumePersistedCloudDeletion", () => {
             })
         );
 
-        await resumePersistedCloudDeletion({ clearOnComplete: false, required: true });
+        await Effect.runPromise(run({ clearOnComplete: false, required: true }));
 
         expect(mockRevokeGoogleProviderSubject).not.toHaveBeenCalled();
         expect(cloudMocks().cloudMutation).toHaveBeenCalledWith("accountDeletion:recordCredentialOnly", {
@@ -82,16 +91,18 @@ describe("resumePersistedCloudDeletion", () => {
     it("fails closed when a cloud marker has no usable resume secret", async () => {
         jest.mocked(getItemAsync).mockResolvedValue(null);
 
-        await expect(resumePersistedCloudDeletion({ required: true })).rejects.toThrow("requires reauthentication");
+        const failure = await Effect.runPromise(run({ required: true }).pipe(Effect.flip));
+        expect(failure.message).toContain("requires reauthentication");
         expect(cloudMocks().cloudMutation).not.toHaveBeenCalled();
     });
 
     it("maps an expired deletion job to reauthentication without advancing device cleanup", async () => {
         const { cloudMutation, cloudQuery } = cloudMocks();
         cloudQuery.mockReset();
-        cloudQuery.mockResolvedValue(null);
+        cloudQuery.mockReturnValue(Effect.succeed(null));
 
-        await expect(resumePersistedCloudDeletion({ required: true })).rejects.toThrow("requires reauthentication");
+        const failure = await Effect.runPromise(run({ required: true }).pipe(Effect.flip));
+        expect(failure.message).toContain("requires reauthentication");
         expect(cloudMutation).not.toHaveBeenCalled();
     });
 });
@@ -106,10 +117,11 @@ describe("resumePersistedCloudDeletion with no cloud configured", () => {
     });
 
     it("fails closed when the resume is required", async () => {
-        await expect(resumePersistedCloudDeletion({ required: true })).rejects.toThrow("requires reauthentication");
+        const failure = await Effect.runPromise(run({ required: true }).pipe(Effect.flip));
+        expect(failure.message).toContain("requires reauthentication");
     });
 
     it("reports nothing resumed otherwise", async () => {
-        await expect(resumePersistedCloudDeletion()).resolves.toBe(false);
+        await expect(Effect.runPromise(run())).resolves.toBe(false);
     });
 });

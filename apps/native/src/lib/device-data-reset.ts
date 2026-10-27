@@ -1,10 +1,10 @@
+import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-import { deleteSecureItem, readSecureItem, writeSecureItem } from "@/state/secure-storage-commands";
-
 import { createNativeDeviceDataStores, DEVICE_STORES } from "./device-data-stores";
 import type { DeviceDataStores, DeviceStore, NativeDeviceDataStoreDependencies } from "./device-data-stores";
+import { SecureStorage } from "./secure-storage";
 
 const RESET_MARKER_KEY = "outlayr.device-reset";
 
@@ -15,110 +15,121 @@ const DeviceResetMarker = Schema.Struct({
 
 export type DeviceResetMarker = typeof DeviceResetMarker.Type;
 
-const decodeResetMarker = Schema.decodeUnknownOption(DeviceResetMarker);
+export class DeviceResetMarkerError extends Schema.TaggedError<DeviceResetMarkerError>()("DeviceResetMarkerError", {}) {
+    // oxlint-disable-next-line class-methods-use-this -- the fixed sentence is the copy the recovery screen shows
+    override get message(): string {
+        return "Malformed device reset marker";
+    }
+}
 
-function parseResetMarker(raw: string | null): DeviceResetMarker | null {
+const decodeResetMarker = Schema.decodeUnknownOption(Schema.fromJsonString(DeviceResetMarker));
+
+export const readDeviceResetMarker = Effect.fn("DeviceReset.readMarker")(function* readMarker() {
+    const storage = yield* SecureStorage;
+    const raw = yield* storage.get(RESET_MARKER_KEY);
     if (raw === null) {
         return null;
     }
-    try {
-        const parsed = decodeResetMarker(JSON.parse(raw));
-        if (Option.isSome(parsed)) {
-            return parsed.value;
-        }
-    } catch {
-        // A malformed marker cannot safely be treated as no reset.
+    const parsed = decodeResetMarker(raw);
+    if (Option.isNone(parsed)) {
+        return yield* new DeviceResetMarkerError();
     }
-    throw new Error("Malformed device reset marker");
-}
+    return parsed.value;
+});
 
-export async function readDeviceResetMarker(): Promise<DeviceResetMarker | null> {
-    return parseResetMarker(await readSecureItem(RESET_MARKER_KEY));
-}
+export const writeDeviceResetMarker = Effect.fn("DeviceReset.writeMarker")(function* writeMarker(
+    marker: DeviceResetMarker
+) {
+    const storage = yield* SecureStorage;
+    yield* storage.set(RESET_MARKER_KEY, JSON.stringify(marker));
+});
 
-export async function writeDeviceResetMarker(marker: DeviceResetMarker): Promise<void> {
-    await writeSecureItem(RESET_MARKER_KEY, JSON.stringify(marker));
-}
-
-export async function clearDeviceResetMarker(): Promise<void> {
-    await deleteSecureItem(RESET_MARKER_KEY);
-}
+export const clearDeviceResetMarker = Effect.fn("DeviceReset.clearMarker")(function* clearMarker() {
+    const storage = yield* SecureStorage;
+    yield* storage.remove(RESET_MARKER_KEY);
+});
 
 export interface DeviceResetGateDependencies extends NativeDeviceDataStoreDependencies {
-    completeCloudDeletion: () => Promise<void>;
+    completeCloudDeletion: Effect.Effect<void, unknown, SecureStorage>;
 }
 
 export interface DeviceResetGate {
-    begin: () => Promise<DeviceResetResult>;
-    recover: () => Promise<DeviceResetResult>;
-    retry: (failures: readonly DeviceStore[]) => Promise<DeviceResetResult>;
+    begin: () => Effect.Effect<DeviceResetResult, unknown, SecureStorage>;
+    recover: () => Effect.Effect<DeviceResetResult, unknown, SecureStorage>;
+    retry: (failures: readonly DeviceStore[]) => Effect.Effect<DeviceResetResult, unknown, SecureStorage>;
 }
 
-export interface DeviceResetRecoveryDependencies {
-    clearMarker: () => Promise<void>;
-    completeCloudDeletion: () => Promise<void>;
-    readMarker: () => Promise<DeviceResetMarker | null>;
-    stores: DeviceDataStores;
-    writeMarker: (marker: DeviceResetMarker) => Promise<void>;
+export interface DeviceResetRecoveryDependencies<E = never, R = never> {
+    clearMarker: () => Effect.Effect<void, E, R>;
+    completeCloudDeletion: Effect.Effect<void, E, R>;
+    readMarker: () => Effect.Effect<DeviceResetMarker | null, E, R>;
+    stores: DeviceDataStores<R>;
+    writeMarker: (marker: DeviceResetMarker) => Effect.Effect<void, E, R>;
 }
 
 export interface DeviceResetResult {
     failures: DeviceStore[];
 }
 
-export async function resetAllDeviceData(
-    stores: DeviceDataStores,
+export const resetAllDeviceData = Effect.fn("DeviceReset.resetAll")(function* resetAll<R>(
+    stores: DeviceDataStores<R>,
     only: readonly DeviceStore[] = DEVICE_STORES
-): Promise<DeviceResetResult> {
+) {
     const failures: DeviceStore[] = [];
     for (const store of only) {
-        try {
-            // oxlint-disable-next-line no-await-in-loop -- reset order is part of the crash-recovery contract.
-            await stores[store]();
-        } catch {
-            failures.push(store);
-        }
+        yield* stores[store]().pipe(
+            Effect.catchTags({
+                DeviceStoreError: () =>
+                    Effect.sync(() => {
+                        failures.push(store);
+                    }),
+            })
+        );
     }
-    return { failures };
-}
+    return { failures } satisfies DeviceResetResult;
+});
 
-export async function beginDeviceReset(deps: DeviceResetRecoveryDependencies): Promise<DeviceResetResult> {
-    await deps.writeMarker({ phase: "cloud", v: 1 });
-    return await recoverDeviceReset(deps);
-}
-
-export async function retryDeviceReset(
-    deps: Pick<DeviceResetRecoveryDependencies, "clearMarker" | "stores">,
-    failures: readonly DeviceStore[]
-): Promise<DeviceResetResult> {
-    const result = await resetAllDeviceData(deps.stores, failures);
-    if (result.failures.length === 0) {
-        await deps.clearMarker();
-    }
-    return result;
-}
-
-export async function recoverDeviceReset(deps: DeviceResetRecoveryDependencies): Promise<DeviceResetResult> {
-    const marker = await deps.readMarker();
+export const recoverDeviceReset = Effect.fn("DeviceReset.recover")(function* recover<E, R>(
+    deps: DeviceResetRecoveryDependencies<E, R>
+) {
+    const marker = yield* deps.readMarker();
     if (marker === null) {
-        return { failures: [] };
+        return { failures: [] } satisfies DeviceResetResult;
     }
     if (marker.phase === "cloud") {
-        await deps.completeCloudDeletion();
-        await deps.writeMarker({ phase: "device", v: 1 });
+        yield* deps.completeCloudDeletion;
+        yield* deps.writeMarker({ phase: "device", v: 1 });
     }
-    const result = await resetAllDeviceData(deps.stores);
+    const result = yield* resetAllDeviceData(deps.stores);
     if (result.failures.length === 0) {
-        await deps.clearMarker();
+        yield* deps.clearMarker();
     }
     return result;
-}
+});
+
+export const beginDeviceReset = Effect.fn("DeviceReset.begin")(function* begin<E, R>(
+    deps: DeviceResetRecoveryDependencies<E, R>
+) {
+    yield* deps.writeMarker({ phase: "cloud", v: 1 });
+    return yield* recoverDeviceReset(deps);
+});
+
+export const retryDeviceReset = Effect.fn("DeviceReset.retry")(function* retry<E, R>(
+    deps: Pick<DeviceResetRecoveryDependencies<E, R>, "clearMarker" | "stores">,
+    failures: readonly DeviceStore[]
+) {
+    const result = yield* resetAllDeviceData(deps.stores, failures);
+    if (result.failures.length === 0) {
+        yield* deps.clearMarker();
+    }
+    return result;
+});
 
 export function createDeviceResetGate({
     closeDatabase,
     completeCloudDeletion,
 }: DeviceResetGateDependencies): DeviceResetGate {
-    const deps: DeviceResetRecoveryDependencies = {
+    const deps: DeviceResetRecoveryDependencies<unknown, SecureStorage> = {
         clearMarker: clearDeviceResetMarker,
         completeCloudDeletion,
         readMarker: readDeviceResetMarker,
@@ -126,8 +137,8 @@ export function createDeviceResetGate({
         writeMarker: writeDeviceResetMarker,
     };
     return {
-        begin: async () => await beginDeviceReset(deps),
-        recover: async () => await recoverDeviceReset(deps),
-        retry: async (failures) => await retryDeviceReset(deps, failures),
+        begin: () => beginDeviceReset(deps),
+        recover: () => recoverDeviceReset(deps),
+        retry: (failures) => retryDeviceReset(deps, failures),
     };
 }

@@ -1,26 +1,43 @@
+import { useAtomValue } from "@effect/atom-react/Hooks";
+import { RegistryContext } from "@effect/atom-react/RegistryContext";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as AtomRegistry from "effect/reactivity/AtomRegistry";
+import type { ReactNode } from "react";
 import { Text } from "react-native";
 
+import { localDataAtom } from "@/contexts/local-data-context";
 import { testLocalData as mockTestLocalData } from "@/contexts/test-local-data";
 import { unusedDatabase as mockUnusedDatabase } from "@/db/test-database";
 
 import { DeviceResetRecovery } from "./device-reset-recovery";
+import { appRuntime } from "./runtime";
 
-const mockRecover = jest.fn<typeof import("@/lib/device-data-reset").recoverDeviceReset>();
-const mockResumePersistedCloudDeletion = jest.fn<typeof import("@/lib/deletion-resume").resumePersistedCloudDeletion>();
-let mockCompleteCloudDeletion: (() => Promise<void>) | undefined;
-let mockCloseDatabase: (() => Promise<void>) | undefined;
+const mockRecover = jest.fn<() => Effect.Effect<{ failures: string[] }, unknown>>();
+const mockResumePersistedCloudDeletion =
+    jest.fn<(options?: { clearOnComplete?: boolean; required?: boolean }) => Effect.Effect<boolean, unknown>>();
+let mockCompleteCloudDeletion: Effect.Effect<void, unknown> | undefined;
+let mockCloseDatabase: Effect.Effect<void, unknown> | undefined;
 const mockDatabase = mockUnusedDatabase();
-const mockRetry = jest.fn();
-jest.mock("@/contexts/local-data-context", () => ({
-    useLocalData: () => mockTestLocalData({ db: mockDatabase, retry: mockRetry }),
-}));
-jest.mock("@/state/lifecycle-commands", () => ({
-    closeDatabaseCommand: {},
-    runLifecycleCommand: async () => undefined,
+const mockLocalDataReads = jest.fn();
+jest.mock("@/contexts/local-data-context", () => {
+    const { make } = jest.requireActual<typeof import("effect/reactivity/Atom")>("effect/reactivity/Atom");
+    return {
+        localDataAtom: make(() => {
+            mockLocalDataReads();
+            return null;
+        }),
+        useLocalData: () => mockTestLocalData({ db: mockDatabase }),
+    };
+});
+jest.mock("@/db/client", () => ({
+    closeDatabase: () => jest.requireActual<typeof import("effect/Effect")>("effect/Effect").void,
 }));
 jest.mock("./deletion-resume", () => ({
+    DeletionResumeError:
+        jest.requireActual<typeof import("./deletion-resume")>("./deletion-resume").DeletionResumeError,
     resumePersistedCloudDeletion: (...args: Parameters<typeof mockResumePersistedCloudDeletion>) =>
         mockResumePersistedCloudDeletion(...args),
 }));
@@ -29,8 +46,8 @@ jest.mock("./device-data-reset", () => ({
         closeDatabase,
         completeCloudDeletion,
     }: {
-        closeDatabase: () => Promise<void>;
-        completeCloudDeletion: () => Promise<void>;
+        closeDatabase: Effect.Effect<void, unknown>;
+        completeCloudDeletion: Effect.Effect<void, unknown>;
     }) => {
         mockCompleteCloudDeletion = completeCloudDeletion;
         mockCloseDatabase = closeDatabase;
@@ -38,40 +55,66 @@ jest.mock("./device-data-reset", () => ({
     },
 }));
 
+const recovering = (failures: string[] = [], closeDatabase = false) =>
+    Effect.gen(function* recover() {
+        if (mockCompleteCloudDeletion) {
+            yield* mockCompleteCloudDeletion;
+        }
+        if (closeDatabase && mockCloseDatabase) {
+            yield* mockCloseDatabase;
+        }
+        return { failures };
+    });
+
+function LocalDataWatcher() {
+    useAtomValue(localDataAtom);
+    return null;
+}
+
+function renderRecovery(children: ReactNode) {
+    const registry = AtomRegistry.make({
+        initialValues: [[appRuntime.layer, Layer.empty]],
+        scheduleTask: (task) => {
+            const timer = setTimeout(task, 0);
+            return () => clearTimeout(timer);
+        },
+    });
+    return render(
+        <RegistryContext value={registry}>
+            <LocalDataWatcher />
+            {children}
+        </RegistryContext>
+    );
+}
+
 describe("deviceResetRecovery", () => {
     beforeEach(() => {
         mockRecover.mockReset();
         mockResumePersistedCloudDeletion.mockReset();
-        mockRetry.mockReset();
+        mockResumePersistedCloudDeletion.mockReturnValue(Effect.succeed(true));
+        mockLocalDataReads.mockReset();
         mockCompleteCloudDeletion = undefined;
         mockCloseDatabase = undefined;
     });
 
     it("invokes persisted-marker recovery before rendering the root child", async () => {
-        mockResumePersistedCloudDeletion.mockResolvedValue(true);
-        mockRecover.mockImplementation(async () => {
-            await mockCompleteCloudDeletion?.();
-            return { failures: [] };
-        });
-        const { getByText } = await render(
+        mockRecover.mockReturnValue(recovering());
+        const { getByText } = await renderRecovery(
             <DeviceResetRecovery>
                 <Text>ledger</Text>
             </DeviceResetRecovery>
         );
         await waitFor(() => expect(mockRecover).toHaveBeenCalledTimes(1));
         expect(mockResumePersistedCloudDeletion).toHaveBeenCalledWith({ clearOnComplete: false, required: true });
-        expect(getByText("ledger")).toBeTruthy();
+        await waitFor(() => expect(getByText("ledger")).toBeTruthy());
     });
 
     it("discloses a failed recovery and retries it before rendering the ledger", async () => {
         mockResumePersistedCloudDeletion
-            .mockRejectedValueOnce(new Error("network unavailable"))
-            .mockResolvedValueOnce(true);
-        mockRecover.mockImplementation(async () => {
-            await mockCompleteCloudDeletion?.();
-            return { failures: [] };
-        });
-        const { getByRole, getByText, queryByText } = await render(
+            .mockReturnValueOnce(Effect.fail(new Error("network unavailable")))
+            .mockReturnValueOnce(Effect.succeed(true));
+        mockRecover.mockReturnValue(recovering());
+        const { getByRole, getByText, queryByText } = await renderRecovery(
             <DeviceResetRecovery>
                 <Text>ledger</Text>
             </DeviceResetRecovery>
@@ -87,65 +130,56 @@ describe("deviceResetRecovery", () => {
     });
 
     it("reopens the database only once every store is clear, never mid-sweep", async () => {
-        mockResumePersistedCloudDeletion.mockResolvedValue(true);
-        let retriesDuringSweep = -1;
-        mockRecover.mockImplementation(async () => {
-            await mockCompleteCloudDeletion?.();
-            // Where `clearSqlite` calls it: a reopen started here would race `deleteDatabaseAsync`.
-            await mockCloseDatabase?.();
-            retriesDuringSweep = mockRetry.mock.calls.length;
-            return { failures: [] };
-        });
-        const { getByText } = await render(
+        let reopensDuringSweep = -1;
+        mockRecover.mockImplementation(() =>
+            recovering([], true).pipe(
+                Effect.tap(() =>
+                    Effect.sync(() => {
+                        reopensDuringSweep = mockLocalDataReads.mock.calls.length;
+                    })
+                )
+            )
+        );
+        const { getByText } = await renderRecovery(
             <DeviceResetRecovery>
                 <Text>ledger</Text>
             </DeviceResetRecovery>
         );
 
         await waitFor(() => expect(getByText("ledger")).toBeTruthy());
-        expect(retriesDuringSweep).toBe(0);
-        expect(mockRetry).toHaveBeenCalledTimes(1);
+        expect(reopensDuringSweep).toBe(1);
+        expect(mockLocalDataReads).toHaveBeenCalledTimes(2);
     });
 
-    it("does not reopen on an ordinary launch, when there was no reset to recover", () => {
-        mockRecover.mockResolvedValue({ failures: [] });
-        return render(
+    it("does not reopen on an ordinary launch, when there was no reset to recover", async () => {
+        mockRecover.mockReturnValue(Effect.succeed({ failures: [] }));
+        const { getByText } = await renderRecovery(
             <DeviceResetRecovery>
                 <Text>ledger</Text>
             </DeviceResetRecovery>
-        ).then(({ getByText }) =>
-            waitFor(() => {
-                expect(getByText("ledger")).toBeTruthy();
-                expect(mockRetry).not.toHaveBeenCalled();
-            })
         );
+        await waitFor(() => expect(getByText("ledger")).toBeTruthy());
+        expect(mockLocalDataReads).toHaveBeenCalledTimes(1);
     });
 
     it("leaves the database closed when a store failed, rather than reopening onto a half-erased device", async () => {
-        mockResumePersistedCloudDeletion.mockResolvedValue(true);
-        mockRecover.mockImplementation(async () => {
-            await mockCompleteCloudDeletion?.();
-            return { failures: ["photos"] };
-        });
-        const { getByText } = await render(
+        mockRecover.mockReturnValue(recovering(["photos"], true));
+        const { getByText } = await renderRecovery(
             <DeviceResetRecovery>
                 <Text>ledger</Text>
             </DeviceResetRecovery>
         );
 
         await waitFor(() => expect(getByText("Device cleanup incomplete: photos")).toBeTruthy());
-        expect(mockRetry).not.toHaveBeenCalled();
+        expect(mockLocalDataReads).toHaveBeenCalledTimes(1);
     });
 
     it("keeps the root opaque when the cloud marker has no usable resume material", async () => {
-        mockResumePersistedCloudDeletion.mockRejectedValue(
-            new Error("Cloud deletion recovery requires reauthentication")
+        mockResumePersistedCloudDeletion.mockReturnValue(
+            Effect.fail(new Error("Cloud deletion recovery requires reauthentication"))
         );
-        mockRecover.mockImplementation(async () => {
-            await mockCompleteCloudDeletion?.();
-            return { failures: [] };
-        });
-        const { getByText, queryByText } = await render(
+        mockRecover.mockReturnValue(recovering());
+        const { getByText, queryByText } = await renderRecovery(
             <DeviceResetRecovery>
                 <Text>ledger</Text>
             </DeviceResetRecovery>

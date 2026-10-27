@@ -102,7 +102,7 @@ describe("csvImport", () => {
     it("settles a run once into the draft with its links, outcome and reason", async () => {
         const parsed = parsedFile("Zq Cafe");
         const store = openDraft(parsed);
-        const transport = jest.fn<CsvImportFn>().mockResolvedValue(answered("Zq Cafe"));
+        const transport = jest.fn<CsvImportFn>().mockReturnValue(Effect.succeed(answered("Zq Cafe")));
         const writes = jest.fn();
         store.subscribe(writes);
 
@@ -128,7 +128,7 @@ describe("csvImport", () => {
     it("runs once for a file however often it is started, and again only on retry", async () => {
         const parsed = parsedFile("Zq Cafe");
         const store = openDraft(parsed);
-        const transport = jest.fn<CsvImportFn>().mockResolvedValue(answered("Zq Cafe"));
+        const transport = jest.fn<CsvImportFn>().mockReturnValue(Effect.succeed(answered("Zq Cafe")));
 
         await withService(
             transport,
@@ -154,7 +154,7 @@ describe("csvImport", () => {
         const second = parsedFile("Other Place");
         const store = openDraft(first);
         const answer = held();
-        const transport = jest.fn<CsvImportFn>().mockReturnValueOnce(answer.promise);
+        const transport = jest.fn<CsvImportFn>().mockReturnValueOnce(Effect.promise(() => answer.promise));
 
         await withService(
             transport,
@@ -176,7 +176,9 @@ describe("csvImport", () => {
     it("settles a provider failure as providerError", async () => {
         const parsed = parsedFile("Zq Cafe");
         const store = openDraft(parsed);
-        const transport = jest.fn<CsvImportFn>().mockResolvedValue({ status: "providerError", suggestions: null });
+        const transport = jest
+            .fn<CsvImportFn>()
+            .mockReturnValue(Effect.succeed({ status: "providerError", suggestions: null }));
 
         await withService(
             transport,

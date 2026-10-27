@@ -5,6 +5,7 @@ import * as Effect from "effect/Effect";
 
 import { accounts, transactions } from "@/db/schema";
 import { testSpendDb } from "@/db/test-database";
+import { asCloudCall } from "@/lib/fake-cloud";
 
 import type { SpendDb } from "./budget-spent";
 import type { PhotoFiles } from "./photo-store-core";
@@ -194,12 +195,19 @@ interface FakeBucket {
     released: string[];
 }
 
+type PromiseTransport = {
+    [K in keyof PhotoTransport]: (
+        ...args: Parameters<PhotoTransport[K]>
+    ) => Promise<Effect.Success<ReturnType<PhotoTransport[K]>>>;
+};
+
 // Stands in for R2 plus `packages/backend/confect/photos.ts`, minting the same account-namespaced key shape.
+
 function fakeTransport(
     bucket: FakeBucket = { confirmed: [], objects: new Map(), released: [] },
-    overrides: Partial<PhotoTransport> = {}
+    overrides: Partial<PromiseTransport> = {}
 ): { bucket: FakeBucket; transport: PhotoTransport } {
-    const transport: PhotoTransport = {
+    const promised: PromiseTransport = {
         async confirmUpload(key) {
             bucket.confirmed.push(key);
         },
@@ -222,6 +230,14 @@ function fakeTransport(
             return { key, url: `https://r2.test/put/${key}` };
         },
         ...overrides,
+    };
+    const transport: PhotoTransport = {
+        confirmUpload: asCloudCall(promised.confirmUpload),
+        get: asCloudCall(promised.get),
+        put: asCloudCall(promised.put),
+        readUrls: asCloudCall(promised.readUrls),
+        release: asCloudCall(promised.release),
+        requestUpload: asCloudCall(promised.requestUpload),
     };
     return { bucket, transport };
 }

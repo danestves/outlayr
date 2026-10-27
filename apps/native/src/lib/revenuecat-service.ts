@@ -340,7 +340,7 @@ export const make = Effect.gen(function* make() {
     });
 
     const answerMirror = Effect.fn("RevenueCat.answerMirror")(function* answerMirror(request: MirrorRequest) {
-        const exit = yield* Effect.exit(call("mirror", sdk.mirrorEntitlement));
+        const exit = yield* Effect.exit(sdk.mirrorEntitlement());
         const answer = yield* transition((state): readonly [Exit.Exit<boolean, RevenueCatError>, State] => {
             const released =
                 state.mirrorInFlight === request ? { ...state, mirrorAnswered: true, mirrorInFlight: null } : state;

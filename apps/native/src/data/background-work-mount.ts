@@ -1,5 +1,6 @@
 import { useAtomMount } from "@effect/atom-react/Hooks";
 import * as Effect from "effect/Effect";
+import * as HttpClient from "effect/http/HttpClient";
 import * as Layer from "effect/Layer";
 import * as Atom from "effect/reactivity/Atom";
 
@@ -33,12 +34,19 @@ const backgroundSurfaces = Layer.mergeAll(
     Layer.succeed(SystemSurfaces, SystemSurfaces.of({ indexSpotlight: (db) => indexSpotlight(db), publishWidgets }))
 );
 
-const photoPasses = Layer.succeed(
+const photoPasses = Layer.effect(
     PhotoPasses,
-    PhotoPasses.of({
-        reconcile: (db, nowMs) => reconcilePhotos(db, photoFiles, nowMs),
-        replateLogos,
-        sync: (db) => runPhotoSync(db, photoFiles, photoTransport()),
+    Effect.gen(function* photoPassesMake() {
+        const http = yield* HttpClient.HttpClient;
+        return PhotoPasses.of({
+            reconcile: (db, nowMs) => reconcilePhotos(db, photoFiles, nowMs),
+            replateLogos,
+            sync: (db) =>
+                photoTransport().pipe(
+                    Effect.flatMap((transport) => runPhotoSync(db, photoFiles, transport)),
+                    Effect.provideService(HttpClient.HttpClient, http)
+                ),
+        });
     })
 );
 

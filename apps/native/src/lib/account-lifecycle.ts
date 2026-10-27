@@ -1,7 +1,9 @@
+import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
+
 import type { ProviderBinding } from "./provider-revocation";
 
 export type AccountLifecycleAction = "deleteAll" | "deleteCloud" | "signOut";
-type AccountLifecycleStage = "deleteAccount" | "resetDevice" | "revokeProvider" | "signOut";
 
 type DeletionPhase = "authDeleting" | "billingErased" | "complete" | "prepared" | "providersRevoked" | "purged";
 
@@ -12,60 +14,60 @@ export interface DeletionPreparation {
     resumeSecret: string;
 }
 
-export interface AccountLifecycleDependencies {
-    advanceDeletion?: (resumeSecret: string) => Promise<{ phase: DeletionPhase }>;
+export interface AccountLifecycleDependencies<E = never, R = never> {
+    advanceDeletion?: (resumeSecret: string) => Effect.Effect<{ phase: DeletionPhase }, E, R>;
     allowLocal: () => void;
-    beginDeviceReset?: () => Promise<void>;
-    clearDeletionSecret?: () => Promise<void>;
-    deleteAccount: () => Promise<void>;
-    eraseBilling?: (resumeSecret: string) => Promise<{ phase: DeletionPhase }>;
-    markDeviceCleanupReady?: () => Promise<void>;
+    beginDeviceReset?: () => Effect.Effect<void, E, R>;
+    clearDeletionSecret?: () => Effect.Effect<void, E, R>;
+    eraseBilling?: (resumeSecret: string) => Effect.Effect<{ phase: DeletionPhase }, E, R>;
+    markDeviceCleanupReady?: () => Effect.Effect<void, E, R>;
     navigateToLedger: () => void;
     navigateToOnboarding?: () => void;
-    persistDeletionSecret?: (preparation: DeletionPreparation) => Promise<void>;
-    prepareDeletion?: () => Promise<DeletionPreparation>;
-    quiesce: () => Promise<void>;
-    resetDevice?: () => Promise<{ failures: readonly string[] }>;
-    revokeProvider?: (preparation: DeletionPreparation) => Promise<void>;
-    signOut?: () => Promise<void>;
+    persistDeletionSecret?: (preparation: DeletionPreparation) => Effect.Effect<void, E, R>;
+    prepareDeletion?: () => Effect.Effect<DeletionPreparation, E, R>;
+    quiesce: () => Effect.Effect<void, E, R>;
+    resetDevice?: () => Effect.Effect<{ failures: readonly string[] }, E, R>;
+    revokeProvider?: (preparation: DeletionPreparation) => Effect.Effect<void, E, R>;
+    signOut?: () => Effect.Effect<void, E, R>;
 }
 
-class AccountLifecycleError extends Error {
-    readonly stage: AccountLifecycleStage;
-
-    constructor(stage: AccountLifecycleStage, options: ErrorOptions) {
-        super(`Account lifecycle failed during ${stage}`, options);
-        this.name = "AccountLifecycleError";
-        this.stage = stage;
+export class AccountLifecycleError extends Schema.TaggedError<AccountLifecycleError>()("AccountLifecycleError", {
+    cause: Schema.Defect(),
+    stage: Schema.Literals(["deleteAccount", "resetDevice", "revokeProvider", "signOut"]),
+}) {
+    override get message(): string {
+        return `Account lifecycle failed during ${this.stage}`;
     }
 }
 
-export async function resumeCloudDeletion(
+const NOT_CONFIGURED = "Resumable account deletion is not configured";
+
+export const resumeCloudDeletion = Effect.fn("AccountLifecycle.resumeCloudDeletion")(function* resumeCloudDeletion<
+    E,
+    R,
+>(
     phase: DeletionPhase,
     preparation: DeletionPreparation,
-    deps: Pick<AccountLifecycleDependencies, "advanceDeletion" | "eraseBilling" | "revokeProvider">
-): Promise<void> {
-    if (!(deps.advanceDeletion && deps.eraseBilling && deps.revokeProvider)) {
-        throw new Error("Resumable account deletion is not configured");
-    }
+    deps: Required<Pick<AccountLifecycleDependencies<E, R>, "advanceDeletion" | "eraseBilling" | "revokeProvider">>
+) {
     const { advanceDeletion, eraseBilling, revokeProvider } = deps;
     if (phase === "prepared") {
-        await revokeProvider(preparation);
+        yield* revokeProvider(preparation);
     }
-    const advanceFrom = async (current: DeletionPhase): Promise<void> => {
-        if (current === "complete" || current === "prepared") {
-            return;
-        }
-        const next =
+    let current: DeletionPhase = phase === "prepared" ? "providersRevoked" : phase;
+    while (current !== "complete" && current !== "prepared") {
+        const next: { phase: DeletionPhase } =
             current === "purged"
-                ? await eraseBilling(preparation.resumeSecret)
-                : await advanceDeletion(preparation.resumeSecret);
-        await advanceFrom(next.phase);
-    };
-    await advanceFrom(phase === "prepared" ? "providersRevoked" : phase);
-}
+                ? yield* eraseBilling(preparation.resumeSecret)
+                : yield* advanceDeletion(preparation.resumeSecret);
+        current = next.phase;
+    }
+});
 
-async function completeCloudDeletion(deps: AccountLifecycleDependencies, clearSecret = true): Promise<void> {
+const completeCloudDeletion = Effect.fn("AccountLifecycle.completeCloudDeletion")(function* completeCloudDeletion<E, R>(
+    deps: AccountLifecycleDependencies<E, R>,
+    clearSecret: boolean
+) {
     if (
         !(
             deps.prepareDeletion &&
@@ -76,7 +78,7 @@ async function completeCloudDeletion(deps: AccountLifecycleDependencies, clearSe
             deps.clearDeletionSecret
         )
     ) {
-        throw new Error("Resumable account deletion is not configured");
+        return yield* Effect.fail(new Error(NOT_CONFIGURED));
     }
     const {
         advanceDeletion,
@@ -86,59 +88,52 @@ async function completeCloudDeletion(deps: AccountLifecycleDependencies, clearSe
         prepareDeletion,
         revokeProvider,
     } = deps;
-    const preparation = await prepareDeletion();
-    await persistDeletionSecret(preparation);
-    await resumeCloudDeletion("prepared", preparation, { advanceDeletion, eraseBilling, revokeProvider });
+    const preparation = yield* prepareDeletion();
+    yield* persistDeletionSecret(preparation);
+    yield* resumeCloudDeletion("prepared", preparation, { advanceDeletion, eraseBilling, revokeProvider });
     if (clearSecret) {
-        await clearDeletionSecret();
+        yield* clearDeletionSecret();
     }
-}
+});
 
-export async function runAccountLifecycle(
+const inStage = (stage: typeof AccountLifecycleError.Type.stage) =>
+    Effect.mapError((cause: unknown) => new AccountLifecycleError({ cause, stage }));
+
+export const runAccountLifecycle = Effect.fn("AccountLifecycle.run")(function* runAccountLifecycle<E, R>(
     action: AccountLifecycleAction,
-    deps: AccountLifecycleDependencies
-): Promise<void> {
+    deps: AccountLifecycleDependencies<E, R>
+) {
     deps.allowLocal();
-    await deps.quiesce();
+    yield* deps.quiesce();
 
     if (action === "signOut") {
-        try {
-            await deps.signOut?.();
-        } catch (cause) {
-            throw new AccountLifecycleError("signOut", { cause });
+        if (deps.signOut) {
+            yield* deps.signOut().pipe(inStage("signOut"));
         }
         deps.navigateToLedger();
         return;
     }
 
-    if (action === "deleteAll") {
-        try {
-            await deps.beginDeviceReset?.();
-        } catch (cause) {
-            throw new AccountLifecycleError("resetDevice", { cause });
-        }
+    if (action === "deleteAll" && deps.beginDeviceReset) {
+        yield* deps.beginDeviceReset().pipe(inStage("resetDevice"));
     }
 
-    try {
-        await completeCloudDeletion(deps, action !== "deleteAll");
-    } catch (cause) {
-        throw new AccountLifecycleError("revokeProvider", { cause });
-    }
+    yield* completeCloudDeletion(deps, action !== "deleteAll").pipe(inStage("revokeProvider"));
     if (action === "deleteAll") {
-        try {
-            await deps.markDeviceCleanupReady?.();
-            await deps.clearDeletionSecret?.();
-            const result = await deps.resetDevice?.();
-            if (result && result.failures.length > 0) {
-                throw new Error(`Device cleanup incomplete: ${result.failures.join(", ")}`);
+        yield* Effect.gen(function* resetDevice() {
+            if (deps.markDeviceCleanupReady) {
+                yield* deps.markDeviceCleanupReady();
             }
-        } catch (cause) {
-            throw new AccountLifecycleError("resetDevice", { cause });
-        }
-    }
-    if (action === "deleteAll") {
+            if (deps.clearDeletionSecret) {
+                yield* deps.clearDeletionSecret();
+            }
+            const result = deps.resetDevice ? yield* deps.resetDevice() : undefined;
+            if (result && result.failures.length > 0) {
+                return yield* Effect.fail(new Error(`Device cleanup incomplete: ${result.failures.join(", ")}`));
+            }
+        }).pipe(inStage("resetDevice"));
         (deps.navigateToOnboarding ?? deps.navigateToLedger)();
         return;
     }
     deps.navigateToLedger();
-}
+});

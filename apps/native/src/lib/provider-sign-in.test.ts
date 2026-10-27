@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import * as Effect from "effect/Effect";
 
 jest.mock<Partial<typeof import("@react-native-async-storage/async-storage")>>(
     "@react-native-async-storage/async-storage",
@@ -20,7 +21,8 @@ beforeEach(() => {
 });
 
 const { completeAppleSignIn, completeGoogleSignIn, googleProviderSubject } =
-    require("./use-provider-sign-in") as typeof import("./use-provider-sign-in");
+    require("./provider-sign-in") as typeof import("./provider-sign-in");
+const { layer } = require("./secure-storage") as typeof import("./secure-storage");
 
 describe("apple-credential-captures-code", () => {
     it("binds raw nonce through Better Auth then grants the captured Apple credential", async () => {
@@ -35,14 +37,14 @@ describe("apple-credential-captures-code", () => {
         };
         const activation = { activate: jest.fn(), begin: jest.fn(), reject: jest.fn() };
 
-        await expect(
+        await Effect.runPromise(
             completeAppleSignIn(client as never, activation, {
                 authorizationCode: "code",
                 identityToken: "id-token",
                 nonce: "raw-nonce",
                 providerSubject: "apple-subject",
-            })
-        ).resolves.toBeUndefined();
+            }).pipe(Effect.provide(layer))
+        );
 
         expect(activation.begin).toHaveBeenCalledTimes(1);
         expect(client.signIn.social).toHaveBeenCalledWith({
@@ -81,7 +83,7 @@ describe("apple-credential-captures-code", () => {
         const activation = { activate: jest.fn(), begin: jest.fn(), reject: jest.fn() };
         const restoreLocal = jest.fn(async () => undefined);
 
-        await expect(
+        const failure = await Effect.runPromise(
             completeAppleSignIn(
                 client as never,
                 activation,
@@ -92,8 +94,9 @@ describe("apple-credential-captures-code", () => {
                     providerSubject: "apple-subject",
                 },
                 restoreLocal
-            )
-        ).rejects.toThrow("grant failed");
+            ).pipe(Effect.provide(layer), Effect.flip)
+        );
+        expect(failure.cause).toMatchObject({ message: "grant failed" });
 
         expect(client.signOut).toHaveBeenCalledTimes(1);
         expect(activation.reject).toHaveBeenCalledTimes(1);
@@ -112,7 +115,7 @@ describe("google provider binding", () => {
         };
         const identityToken = "header.eyJzdWIiOiJnb29nbGUtc3ViamVjdCJ9.signature";
 
-        await expect(completeGoogleSignIn(client as never, identityToken)).resolves.toBeUndefined();
+        await Effect.runPromise(completeGoogleSignIn(client as never, identityToken).pipe(Effect.provide(layer)));
 
         expect(mockSetItemAsync).toHaveBeenCalledWith(
             "outlayr.provider-binding",
@@ -129,7 +132,10 @@ describe("google provider binding", () => {
             signIn: { social: jest.fn(async () => ({ data: null, error: { message: "rejected" } })) },
         };
 
-        await expect(completeGoogleSignIn(client as never, "header.payload.signature")).rejects.toThrow("rejected");
+        const failure = await Effect.runPromise(
+            completeGoogleSignIn(client as never, "header.payload.signature").pipe(Effect.provide(layer), Effect.flip)
+        );
+        expect(failure.cause).toMatchObject({ message: "rejected" });
         expect(mockSetItemAsync).not.toHaveBeenCalled();
         expect(() => googleProviderSubject("header.eyJhdWQiOiJjbGllbnQifQ.signature")).toThrow(
             "Google identity token does not contain a subject"

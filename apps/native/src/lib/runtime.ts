@@ -12,6 +12,7 @@ import * as CsvImport from "@/lib/csv-import";
 import * as DailyReminderSync from "@/lib/daily-reminder-sync";
 import * as DueReminderSync from "@/lib/due-reminder-sync";
 import * as EnrichmentSync from "@/lib/enrichment-sync";
+import { outboundHttp } from "@/lib/http";
 import * as RevenueCat from "@/lib/revenuecat-service";
 import * as SecureStorage from "@/lib/secure-storage";
 import * as SystemSync from "@/lib/system-sync";
@@ -30,6 +31,7 @@ export const appRuntime = Atom.runtime(
         PhotoSync.layer,
         RevenueCat.layer,
         SecureStorage.layer,
+        outboundHttp,
         Logger.layer([Logger.withLeveledConsole(Logger.formatSimple)])
     )
 ).pipe(Atom.keepAlive, Atom.withLabel("app:runtime"));

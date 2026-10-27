@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
 
 import { retryTokenFetch } from "./token-fetch";
 
@@ -39,5 +39,34 @@ describe("retryTokenFetch", () => {
             "Network request failed"
         );
         expect(server.calls()).toBe(1);
+    });
+
+    describe("with the clock held", () => {
+        afterEach(() => {
+            jest.useRealTimers();
+        });
+
+        it("waits each delay in turn and keeps the last one", async () => {
+            jest.useFakeTimers();
+            const server = failingTimes(3);
+            const answer = retryTokenFetch(server.fetchImpl, [100, 200])(TOKEN_URL);
+
+            await jest.advanceTimersByTimeAsync(1);
+            expect(server.calls()).toBe(1);
+            await jest.advanceTimersByTimeAsync(98);
+            expect(server.calls()).toBe(1);
+            await jest.advanceTimersByTimeAsync(2);
+            expect(server.calls()).toBe(2);
+            await jest.advanceTimersByTimeAsync(198);
+            expect(server.calls()).toBe(2);
+            await jest.advanceTimersByTimeAsync(2);
+            expect(server.calls()).toBe(3);
+            await jest.advanceTimersByTimeAsync(198);
+            expect(server.calls()).toBe(3);
+            await jest.advanceTimersByTimeAsync(2);
+
+            await expect(answer).resolves.toBe("answered");
+            expect(server.calls()).toBe(4);
+        });
     });
 });

@@ -1,3 +1,5 @@
+import * as Cause from "effect/Cause";
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, View } from "react-native";
@@ -11,20 +13,18 @@ import { useDatabase, useLocalData } from "@/contexts/local-data-context";
 import type { Database } from "@/db/client";
 import { accountLabel, signInFailureMessage } from "@/domain/account";
 import { useTranslation } from "@/i18n/context";
-import { runAccountLifecycle } from "@/lib/account-lifecycle";
 import { authClient, useAuthClientSession } from "@/lib/auth-client";
 import { useAuthSession } from "@/lib/auth-session";
-import { cloudAction, cloudMutation, convex } from "@/lib/convex";
-import { deletionResumeSecretKey, resumePersistedCloudDeletion, resumeProviderRevocation } from "@/lib/deletion-resume";
-import type { StoredDeletionPreparation } from "@/lib/deletion-resume";
-import { createDeviceResetGate, writeDeviceResetMarker } from "@/lib/device-data-reset";
+import { CloudError } from "@/lib/cloud-error";
 import { posthog } from "@/lib/posthog";
-import { providerBindingFor } from "@/lib/provider-revocation";
 import { useProviderSignIn } from "@/lib/use-provider-sign-in";
-import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
-import { closeDatabaseCommand } from "@/state/lifecycle-commands";
-import { removeSecureItemCommand, setSecureItemCommand } from "@/state/secure-storage-commands";
-import { setSyncEnabledCommand } from "@/state/sync-commands";
+import { SILENT } from "@/state/atom-command";
+import {
+    deleteAccountCommand,
+    resumeCloudDeletionCommand,
+    runCloudCommand,
+    signOutCommand,
+} from "@/state/cloud-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 
 type AuthClient = NonNullable<typeof authClient>;
@@ -61,47 +61,38 @@ function AccountContent({ client, db }: { client: AuthClient; db: Database }) {
     const [busy, setBusy] = useState<"deleteAll" | "deleteCloud" | "signOut" | null>(null);
     const [error, setError] = useState<string | null>(null);
     const { busy: signingIn, error: signInError, start } = useProviderSignIn(client);
-    const setSyncEnabled = useAtomCommand(setSyncEnabledCommand, SILENT);
-    const closeDb = useAtomCommand(closeDatabaseCommand, SILENT);
-    const setSecureItem = useAtomCommand(setSecureItemCommand, SILENT);
-    const removeSecureItem = useAtomCommand(removeSecureItemCommand, SILENT);
-    const quiesce = async () => {
-        unwrapAtomCommand(await setSyncEnabled({ db, enabled: false }));
-    };
+    const signOutAccount = useAtomCommand(signOutCommand, SILENT);
+    const deleteAccountRun = useAtomCommand(deleteAccountCommand, SILENT);
 
     useEffect(() => {
         let mounted = true;
-        const resumeDeletion = async () => {
-            if ((await resumePersistedCloudDeletion()) && mounted) {
-                router.replace("/");
-            }
-        };
-        resumeDeletion().catch((cause: unknown) => {
-            if (mounted) {
-                setError(signInFailureMessage(cause, t));
-            }
-        });
+        runCloudCommand(resumeCloudDeletionCommand, undefined)
+            .then((resumed) => {
+                if (resumed && mounted) {
+                    router.replace("/");
+                }
+            })
+            .catch((cause: unknown) => {
+                if (mounted) {
+                    setError(signInFailureMessage(cause instanceof CloudError ? cause.cause : cause, t));
+                }
+            });
         return () => {
             mounted = false;
         };
     }, [t]);
 
+    const finish = (result: AsyncResult.AsyncResult<unknown, unknown>) => {
+        if (AsyncResult.isFailure(result)) {
+            setError(signInFailureMessage(Cause.squash(result.cause), t));
+        }
+        setBusy(null);
+    };
+
     const signOut = () => {
         setError(null);
         setBusy("signOut");
-        runAccountLifecycle("signOut", {
-            allowLocal: openLedger,
-            deleteAccount: async () => {
-                await client.deleteUser();
-            },
-            navigateToLedger: openLedger,
-            quiesce,
-            signOut: async () => {
-                await client.signOut();
-            },
-        })
-            .catch((cause: unknown) => setError(signInFailureMessage(cause, t)))
-            .finally(() => setBusy(null));
+        signOutAccount({ allowLocal: openLedger, client, db, navigateToLedger: openLedger }).then(finish);
     };
 
     const deleteAccount = (action: "deleteAll" | "deleteCloud" = "deleteCloud") => {
@@ -111,71 +102,17 @@ function AccountContent({ client, db }: { client: AuthClient; db: Database }) {
         setError(null);
         setBusy(action);
         posthog?.reset();
-        const resetGate =
-            action === "deleteAll"
-                ? createDeviceResetGate({
-                      closeDatabase: async () => {
-                          unwrapAtomCommand(await closeDb(db));
-                      },
-                      completeCloudDeletion: async () => {
-                          await resumePersistedCloudDeletion({ clearOnComplete: false, required: true });
-                      },
-                  })
-                : null;
-        runAccountLifecycle(action, {
-            advanceDeletion: async (resumeSecret) => {
-                if (convex === null) {
-                    throw new Error("Cloud deletion is unavailable");
-                }
-                return await cloudMutation("accountDeletion:advance", { resumeSecret });
-            },
+        deleteAccountRun({
+            action,
             allowLocal: openLedger,
-            beginDeviceReset:
-                action === "deleteAll" ? async () => await writeDeviceResetMarker({ phase: "cloud", v: 1 }) : undefined,
-            clearDeletionSecret: async () => {
-                unwrapAtomCommand(await removeSecureItem(deletionResumeSecretKey));
-            },
-            deleteAccount: async () => undefined,
-            eraseBilling: async (resumeSecret) => {
-                if (convex === null) {
-                    throw new Error("Cloud deletion is unavailable");
-                }
-                return await cloudAction("accountDeletion:eraseBilling", { resumeSecret });
-            },
-            markDeviceCleanupReady:
-                action === "deleteAll"
-                    ? async () => await writeDeviceResetMarker({ phase: "device", v: 1 })
-                    : undefined,
+            db,
             navigateToLedger: openLedger,
             navigateToOnboarding: () => {
                 reopenLocalData();
                 router.replace("/onboarding");
             },
-            persistDeletionSecret: async (preparation) => {
-                unwrapAtomCommand(
-                    await setSecureItem({ key: deletionResumeSecretKey, value: JSON.stringify(preparation) })
-                );
-            },
-            prepareDeletion: async () => {
-                if (convex === null) {
-                    throw new Error("Cloud deletion is unavailable");
-                }
-                const binding = await providerBindingFor(activeSession.user.id);
-                const preparation = await cloudMutation<
-                    Record<string, never>,
-                    { receiptChallenge: string; resumeSecret: string }
-                >("accountDeletion:prepare", {});
-                return { ...preparation, provider: binding.provider, providerSubject: binding.providerSubject };
-            },
-            quiesce,
-            resetDevice: action === "deleteAll" && resetGate ? async () => await resetGate.recover() : undefined,
-            revokeProvider: async (preparation) => {
-                // SAFETY: `prepareDeletion` is the only producer and adds the pair `StoredDeletionPreparation` needs.
-                await resumeProviderRevocation(preparation as StoredDeletionPreparation);
-            },
-        })
-            .catch((cause: unknown) => setError(signInFailureMessage(cause, t)))
-            .finally(() => setBusy(null));
+            userId: activeSession.user.id,
+        }).then(finish);
     };
 
     const confirmDelete = () => {

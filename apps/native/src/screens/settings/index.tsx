@@ -31,7 +31,6 @@ import { languageLabel } from "@/i18n/languages";
 import { translateNow } from "@/i18n/runtime";
 import { expectHandoff, openInAppBrowser } from "@/lib/app-handoff";
 import { alternateIconsSupported, useAppIcon } from "@/lib/app-icon";
-import { requestUnlock } from "@/lib/app-lock";
 import { APP_BUILD, APP_VERSION } from "@/lib/app-version";
 import { useAuthSession } from "@/lib/auth-session";
 import { importDraftStore } from "@/lib/import-draft-store";
@@ -41,6 +40,7 @@ import { notifyFailure } from "@/lib/notify";
 import { supportMailto } from "@/lib/support-mailto";
 import type { SupportDiagnostics } from "@/lib/support-mailto";
 import { SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import { requestUnlockCommand, runCloudCommand } from "@/state/cloud-commands";
 import { saveAiConsentCommand, setBoolSettingCommand, setNumberSettingCommand } from "@/state/settings-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { THEME_OPTIONS } from "@/theme/theme-preference";
@@ -58,7 +58,10 @@ const DATA_LINKS = [
 ] satisfies readonly { destructive?: boolean; href: Href; icon: SettingsIconName; title: TranslationKey }[];
 
 async function toggleAppLock(saveBiometricLock: (value: boolean) => Promise<void>, next: boolean): Promise<void> {
-    const result = await requestUnlock(translateNow(next ? "settings.lock.promptOn" : "settings.lock.promptOff"));
+    const result = await runCloudCommand(
+        requestUnlockCommand,
+        translateNow(next ? "settings.lock.promptOn" : "settings.lock.promptOff")
+    );
     if (result.success) {
         await saveBiometricLock(next);
         return;

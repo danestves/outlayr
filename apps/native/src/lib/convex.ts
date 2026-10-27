@@ -2,6 +2,10 @@ import type { StreamArgs, SyncStreamsReturnValue, UIMessage } from "@convex-dev/
 import { utcDateString } from "@outlayr/money/dates";
 import { makeFunctionReference } from "convex/server";
 import type { PaginationOptions, PaginationResult } from "convex/server";
+import * as Effect from "effect/Effect";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpIncomingMessage from "effect/http/HttpIncomingMessage";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { useSyncExternalStore } from "react";
@@ -13,7 +17,11 @@ import type { PullFn, PushFn } from "@/data/sync-engine-core";
 import { AI_CONSENT_VERSION } from "@/domain/ai-consent";
 import type { RemoteEnrichmentResult } from "@/domain/enrichment-cache";
 import type { UsageLimits } from "@/domain/usage-limits";
+import { createCommand, runAtomCommand, SILENT, unwrapAtomCommand } from "@/state/atom-command";
+import type { AtomCommand } from "@/state/atom-command";
+import { appAtomRegistry } from "@/state/atom-registry";
 
+import { CloudError } from "./cloud-error";
 import { cloudRuntime } from "./cloud-runtime";
 import type { CloudRuntime } from "./cloud-runtime";
 
@@ -54,20 +62,36 @@ function cloudClient(): CloudRuntime["convex"] {
     return cloudRuntime.convex;
 }
 
+function callCloud<Result>(
+    kind: "query" | "mutation" | "action",
+    path: string,
+    run: (client: CloudRuntime["convex"]) => Promise<Result>
+) {
+    return Effect.tryPromise({
+        catch: (cause) => new CloudError({ cause, kind, path }),
+        try: () => run(cloudClient()),
+    }).pipe(Effect.withSpan("Cloud.call", { attributes: { kind, path } }));
+}
+
 /** Addressed by string path: `packages/backend` is not a build dependency, so the generated `api` object is absent. */
-export function cloudQuery<Args, Result>(path: string, args: Args): Promise<Result> {
-    // SAFETY: `never` satisfies the generated-API overloads; the real values are a deployed function's path and args.
-    return cloudClient().query(path as never, args as never) as Promise<Result>;
+export function cloudQuery<Args, Result>(path: string, args: Args): Effect.Effect<Result, CloudError> {
+    // SAFETY: `never` satisfies the generated-API overloads, and the result type is the deployed function's, which
+    // this client cannot check.
+    return callCloud("query", path, (client) => client.query(path as never, args as never) as Promise<Result>);
 }
 
-export function cloudMutation<Args, Result>(path: string, args: Args): Promise<Result> {
+export function cloudMutation<Args, Result>(path: string, args: Args): Effect.Effect<Result, CloudError> {
     // SAFETY: as in `cloudQuery`.
-    return cloudClient().mutation(path as never, args as never) as Promise<Result>;
+    return callCloud("mutation", path, (client) => client.mutation(path as never, args as never) as Promise<Result>);
 }
 
-export function cloudAction<Args, Result>(path: string, args: Args): Promise<Result> {
+export function cloudAction<Args, Result>(path: string, args: Args): Effect.Effect<Result, CloudError> {
     // SAFETY: as in `cloudQuery`.
-    return cloudClient().action(path as never, args as never) as Promise<Result>;
+    return callCloud("action", path, (client) => client.action(path as never, args as never) as Promise<Result>);
+}
+
+async function runCloud<W, A>(command: AtomCommand<W, A, CloudError>, input: W): Promise<A> {
+    return unwrapAtomCommand(await runAtomCommand(appAtomRegistry, command, input, SILENT));
 }
 
 /** Rounded to the UTC day so identical args let Convex answer every page and device from its query cache. */
@@ -76,7 +100,7 @@ function rateWindowAt(): number {
 }
 
 export function ratesPuller(): PullRatesFn {
-    return async (args) => cloudQuery("exchangeRates:pullRates", { ...args, at: rateWindowAt() });
+    return (args) => cloudQuery("exchangeRates:pullRates", { ...args, at: rateWindowAt() });
 }
 
 const decodeRateWireRows = Schema.decodeUnknownOption(
@@ -123,8 +147,8 @@ export interface SyncTransport {
 
 export function syncTransport(): SyncTransport {
     return {
-        pull: async (args) => cloudQuery("sync:pullSince", args),
-        push: async (args) => cloudMutation("sync:push", args),
+        pull: (args) => cloudQuery("sync:pullSince", args),
+        push: (args) => cloudMutation("sync:push", args),
     };
 }
 
@@ -167,12 +191,18 @@ export interface EnrichmentRequest {
 
 export type EnrichmentFn = (args: EnrichmentRequest) => Promise<RemoteEnrichmentResult>;
 
+const enrichmentCommand = createCommand({
+    execute: (args: EnrichmentRequest) =>
+        cloudAction<unknown, RemoteEnrichmentResult>("enrichment:suggest", { ...args, aiConsent: AI_CONSENT_VERSION }),
+    label: "cloud:enrichment-suggest",
+});
+
 /** Names only: `packages/backend/confect/enrichment.test.ts` asserts the action's validator against this field set. */
 export function enrichmentTransport(): EnrichmentFn | null {
     if (!authenticated) {
         return null;
     }
-    return async (args) => cloudAction("enrichment:suggest", { ...args, aiConsent: AI_CONSENT_VERSION });
+    return (args) => runCloud(enrichmentCommand, args);
 }
 
 const decodeAnsweredJobs = Schema.decodeUnknownOption(
@@ -198,15 +228,14 @@ const decodeAnsweredJobs = Schema.decodeUnknownOption(
 );
 
 export interface EnrichmentQueueTransport {
-    ack: (localIds: string[]) => Promise<null>;
-    enqueue: (request: EnrichmentJobRequest) => Promise<boolean>;
+    ack: (localIds: string[]) => Effect.Effect<null, CloudError>;
+    enqueue: (request: EnrichmentJobRequest) => Effect.Effect<boolean, CloudError>;
 }
 
 export function enrichmentQueueTransport(): EnrichmentQueueTransport {
     return {
-        ack: async (localIds) => cloudMutation("enrichmentQueue:ack", { localIds }),
-        enqueue: async (request) =>
-            cloudMutation("enrichmentQueue:enqueue", { ...request, aiConsent: AI_CONSENT_VERSION }),
+        ack: (localIds) => cloudMutation("enrichmentQueue:ack", { localIds }),
+        enqueue: (request) => cloudMutation("enrichmentQueue:enqueue", { ...request, aiConsent: AI_CONSENT_VERSION }),
     };
 }
 
@@ -258,10 +287,10 @@ export interface CsvImportRequest {
     regionCode?: string;
 }
 
-export type CsvImportFn = (args: CsvImportRequest) => Promise<CsvImportResult>;
+export type CsvImportFn = (args: CsvImportRequest) => Effect.Effect<CsvImportResult, CloudError>;
 
 export function csvImportTransport(): CsvImportFn {
-    return async (args) => cloudAction("csvImport:csvImport", { ...args, aiConsent: AI_CONSENT_VERSION });
+    return (args) => cloudAction("csvImport:csvImport", { ...args, aiConsent: AI_CONSENT_VERSION });
 }
 
 interface VoiceDraftBase {
@@ -362,58 +391,86 @@ export interface VoiceThreadTransport {
     start: () => Promise<StartThreadResult>;
 }
 
+const endThreadCommand = createCommand({
+    execute: (threadId: string) => cloudMutation<unknown, null>("voiceEntry:endThread", { threadId }),
+    label: "cloud:voice-end-thread",
+});
+
+const speakCommand = createCommand({
+    execute: (args: SpeakRequest) =>
+        cloudAction<unknown, SpeakResult>("voiceEntry:speak", { ...args, aiConsent: AI_CONSENT_VERSION }),
+    label: "cloud:voice-speak",
+});
+
+const startThreadCommand = createCommand({
+    execute: () => cloudMutation<unknown, StartThreadResult>("voiceEntry:startThread", {}),
+    label: "cloud:voice-start-thread",
+});
+
 export function voiceThreadTransport(): VoiceThreadTransport {
     return {
-        end: async (threadId) => cloudMutation("voiceEntry:endThread", { threadId }),
-        speak: async (args) => cloudAction("voiceEntry:speak", { ...args, aiConsent: AI_CONSENT_VERSION }),
-        start: async () => cloudMutation("voiceEntry:startThread", {}),
+        end: (threadId) => runCloud(endThreadCommand, threadId),
+        speak: (args) => runCloud(speakCommand, args),
+        start: () => runCloud(startThreadCommand, undefined),
     };
 }
+
+const UploadReceipt = Schema.Struct({ storageId: Schema.optional(Schema.String) });
 
 /** Convex file storage answers the PUT with the id it allocated; R2 sends nothing. */
-const decodeUploadReceipt = Schema.decodeUnknownOption(Schema.Struct({ storageId: Schema.optional(Schema.String) }));
+const decodeUploadReceipt = HttpIncomingMessage.schemaBodyJson(UploadReceipt);
 
-export function photoTransport(): PhotoTransport {
+const isOk = (status: number) => status >= 200 && status < 300;
+
+const failed = (kind: "download" | "upload", cause: Error) => new CloudError({ cause, kind, path: "photos" });
+
+export const photoTransport = Effect.fn("Cloud.photoTransport")(function* photoTransport() {
+    const client = yield* HttpClient.HttpClient;
+
+    const get = Effect.fn("Cloud.photoGet")(function* get(url: string) {
+        const response = yield* client
+            .execute(HttpClientRequest.get(url))
+            .pipe(Effect.catchTags({ HttpClientError: (cause) => Effect.fail(failed("download", cause)) }));
+        if (response.status === 404 || response.status === 403) {
+            return null;
+        }
+        if (!isOk(response.status)) {
+            return yield* failed("download", new Error(`Photo download failed: ${response.status}`));
+        }
+        const bytes = yield* response.arrayBuffer.pipe(
+            Effect.catchTags({ HttpClientError: (cause) => Effect.fail(failed("download", cause)) })
+        );
+        return new Uint8Array(bytes);
+    });
+
+    const put = Effect.fn("Cloud.photoPut")(function* put(url: string, bytes: Uint8Array) {
+        const response = yield* client
+            .execute(HttpClientRequest.put(url).pipe(HttpClientRequest.bodyUint8Array(bytes, "image/jpeg")))
+            .pipe(Effect.catchTags({ HttpClientError: (cause) => Effect.fail(failed("upload", cause)) }));
+        if (!isOk(response.status)) {
+            return yield* failed("upload", new Error(`Photo upload failed: ${response.status}`));
+        }
+        return yield* decodeUploadReceipt(response).pipe(
+            Effect.map((receipt) => receipt.storageId ?? null),
+            Effect.catchTags({
+                HttpClientError: () => Effect.succeed(null),
+                SchemaError: () => Effect.succeed(null),
+            })
+        );
+    });
+
     return {
-        confirmUpload: async (key, storageId) => {
-            await cloudAction("photos:confirmUpload", storageId ? { key, storageId } : { key });
-        },
-        get: async (url) => {
-            const response = await fetch(url);
-            if (response.status === 404 || response.status === 403) {
-                // Gone, or the url outlived its signature: no bytes this pass, retry next one.
-                return null;
-            }
-            if (!response.ok) {
-                throw new Error(`Photo download failed: ${response.status}`);
-            }
-            return new Uint8Array(await response.arrayBuffer());
-        },
-        put: async (url, bytes) => {
-            const response = await fetch(url, {
-                // SAFETY: React Native sends a typed array as raw bytes, but its `BodyInit` type omits typed arrays.
-                body: bytes as unknown as BodyInit,
-                headers: { "Content-Type": "image/jpeg" },
-                method: "PUT",
-            });
-            if (!response.ok) {
-                throw new Error(`Photo upload failed: ${response.status}`);
-            }
-            try {
-                return Option.getOrUndefined(decodeUploadReceipt(await response.json()))?.storageId ?? null;
-            } catch {
-                return null;
-            }
-        },
-        // A mutation though it writes nothing: a cached query result could serve an expired signed url forever.
-        // See `photos.readUrls`.
-        readUrls: async (keys) => cloudMutation("photos:readUrls", { keys: [...keys] }),
-        release: async (key) => {
-            await cloudMutation("photos:releaseUnreferenced", { key });
-        },
-        requestUpload: async (name) => cloudMutation("photos:requestUpload", { name }),
-    };
-}
+        confirmUpload: (key, storageId) =>
+            cloudAction<unknown, unknown>("photos:confirmUpload", storageId ? { key, storageId } : { key }).pipe(
+                Effect.asVoid
+            ),
+        get,
+        put,
+        readUrls: (keys) => cloudMutation("photos:readUrls", { keys: [...keys] }),
+        release: (key) => cloudMutation<unknown, unknown>("photos:releaseUnreferenced", { key }).pipe(Effect.asVoid),
+        requestUpload: (name) => cloudMutation("photos:requestUpload", { name }),
+    } satisfies PhotoTransport;
+});
 
 export interface ReceiptItem {
     name: string;
@@ -471,8 +528,14 @@ export interface ScanRequest {
 
 export type ReceiptScanFn = (args: ScanRequest) => Promise<ScanResult>;
 
+const receiptScanCommand = createCommand({
+    execute: (args: ScanRequest) =>
+        cloudAction<unknown, ScanResult>("receiptScan:scan", { ...args, aiConsent: AI_CONSENT_VERSION }),
+    label: "cloud:receipt-scan",
+});
+
 export function receiptScanTransport(): ReceiptScanFn {
-    return async (args) => cloudAction("receiptScan:scan", { ...args, aiConsent: AI_CONSENT_VERSION });
+    return (args) => runCloud(receiptScanCommand, args);
 }
 
 export interface InstallmentPlanRow {
@@ -499,6 +562,12 @@ export type InstallmentScanRequest = Omit<ScanRequest, "categoryTree">;
 
 export type InstallmentScanFn = (args: InstallmentScanRequest) => Promise<InstallmentScanResult>;
 
+const installmentScanCommand = createCommand({
+    execute: (args: InstallmentScanRequest) =>
+        cloudAction<unknown, InstallmentScanResult>("installmentScan:scan", { ...args, aiConsent: AI_CONSENT_VERSION }),
+    label: "cloud:installment-scan",
+});
+
 export function installmentScanTransport(): InstallmentScanFn {
-    return async (args) => cloudAction("installmentScan:scan", { ...args, aiConsent: AI_CONSENT_VERSION });
+    return (args) => runCloud(installmentScanCommand, args);
 }

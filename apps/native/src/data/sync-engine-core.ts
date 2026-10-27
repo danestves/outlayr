@@ -27,6 +27,7 @@ import {
 } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { chunkRows } from "@/lib/chunk";
+import type { CloudError } from "@/lib/cloud-error";
 
 import { getMeta, META_KEYS } from "./app-meta-core";
 import {
@@ -85,13 +86,13 @@ export interface PulledRow extends WireRow {
 export type PushFn = (args: {
     deviceId: string;
     rows: WireRow[];
-}) => Promise<{ accepted: number; skipped: number; nextSeq: number }>;
+}) => Effect.Effect<{ accepted: number; skipped: number; nextSeq: number }, CloudError>;
 
 export type PullFn = (args: {
     cursor: number;
     limit: number;
     tables?: readonly SyncedTable[];
-}) => Promise<{ rows: PulledRow[]; cursor: number; hasMore: boolean }>;
+}) => Effect.Effect<{ rows: PulledRow[]; cursor: number; hasMore: boolean }, CloudError>;
 
 interface TableSpec {
     dates: readonly string[];
@@ -484,7 +485,7 @@ export const drainOutbox = Effect.fn("SyncCore.drainOutbox")(function* drainOutb
         }
 
         if (rows.length > 0) {
-            yield* query("push", () => push({ deviceId, rows }));
+            yield* push({ deviceId, rows }).pipe(Effect.mapError(failedAt("push")));
             pushed += rows.length;
         }
 
@@ -923,7 +924,9 @@ const walkLog = Effect.fn("SyncCore.walkLog")(function* walkLog(
     let applied = 0;
     const touched = new Set<SyncedTable>();
     const fetchPage = (after: number) =>
-        query("pull", () => pull({ cursor: after, limit: PULL_PAGE_LIMIT, ...(tables && { tables }) }));
+        pull({ cursor: after, limit: PULL_PAGE_LIMIT, ...(tables && { tables }) }).pipe(
+            Effect.mapError(failedAt("pull"))
+        );
 
     // Each page is fetched from the cursor the previous page returned, so the walk is inherently sequential.
     for (;;) {

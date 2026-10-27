@@ -11,6 +11,7 @@ import { persistLogo } from "@/lib/persist-logo";
 
 import { launchAndForegrounds, listen, WatchAppState } from "./app-events";
 import type { Watch } from "./app-events";
+import type { CloudError } from "./cloud-error";
 import { enrichmentQueueTransport, watchEnrichmentResults } from "./convex";
 import { sendEnrichmentQueue } from "./enrichment-queue";
 import { discardLogo } from "./logo-backfill";
@@ -30,7 +31,7 @@ export class EnrichmentSyncError extends Schema.TaggedError<EnrichmentSyncError>
 }) {}
 
 export const EnrichmentResults = Context.Reference<{
-    readonly ack: (localIds: string[]) => Promise<null>;
+    readonly ack: (localIds: string[]) => Effect.Effect<null, CloudError>;
     readonly apply: (db: Database, job: AnsweredJob) => Effect.Effect<void, unknown>;
     readonly watch: Watch<AnsweredJob[]>;
 }>("outlayr/lib/EnrichmentSync/EnrichmentResults", {
@@ -56,9 +57,6 @@ const failedAt = (step: typeof EnrichmentStep.Type) => (cause: unknown) =>
 
 const warn = (error: EnrichmentSyncError) => Effect.logWarning(error.message, error.cause);
 
-const attempt = <A>(step: typeof EnrichmentStep.Type, task: () => Promise<A>) =>
-    Effect.tryPromise({ catch: failedAt(step), try: task }).pipe(Effect.catchTags({ EnrichmentSyncError: warn }));
-
 export const make = Effect.gen(function* make() {
     const results = yield* EnrichmentResults;
     const watchAppState = yield* WatchAppState;
@@ -75,7 +73,11 @@ export const make = Effect.gen(function* make() {
                 ),
                 { discard: true }
             ).pipe(
-                Effect.andThen(attempt("settle", () => results.ack(jobs.map((job) => job.localId)))),
+                Effect.andThen(
+                    results
+                        .ack(jobs.map((job) => job.localId))
+                        .pipe(Effect.mapError(failedAt("settle")), Effect.catchTags({ EnrichmentSyncError: warn }))
+                ),
                 Effect.uninterruptible
             );
 

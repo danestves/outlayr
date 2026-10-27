@@ -6,9 +6,10 @@ import type { Database } from "@/db/client";
 import { appMeta, exchangeRates } from "@/db/schema";
 import { testDatabase, withAsyncTransactions } from "@/db/test-database";
 import { chunkRows } from "@/lib/chunk";
+import { asCloudCall } from "@/lib/fake-cloud";
 
 import { applyRecentRates, isThrottled, pullRatesIfDue, RATE_ROWS_PER_CHUNK, RATES_THROTTLE_MS } from "./rates";
-import type { PullRatesPage, RateWireRow } from "./rates";
+import type { PullRatesFn, RateWireRow } from "./rates";
 import { ratesRevision, subscribeRatesRevision } from "./rates-revision";
 
 describe("chunkRows", () => {
@@ -70,13 +71,13 @@ function wireRow(quote: string, date: string): RateWireRow {
 }
 
 function pagedPuller(pages: RateWireRow[][]): {
-    pull: (args?: { cursor?: number }) => Promise<PullRatesPage>;
+    pull: PullRatesFn;
     calls: (number | undefined)[];
 } {
     const calls: (number | undefined)[] = [];
     return {
         calls,
-        pull: async (args) => {
+        pull: asCloudCall(async (args?: { cursor?: number }) => {
             const index = args?.cursor ?? 0;
             calls.push(args?.cursor);
             return {
@@ -84,7 +85,7 @@ function pagedPuller(pages: RateWireRow[][]): {
                 rows: pages[index] ?? [],
                 windowStart: "2026-01-01",
             };
-        },
+        }),
     };
 }
 
@@ -108,10 +109,10 @@ describe("pullRatesIfDue", () => {
         const landed = await Effect.runPromise(
             pullRatesIfDue(
                 db,
-                async () => {
+                asCloudCall(async () => {
                     asked += 1;
                     return { nextCursor: null, rows: [], windowStart: "2026-01-01" };
-                },
+                }),
                 { now: NOW }
             )
         );

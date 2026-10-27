@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import * as Effect from "effect/Effect";
 
+import { CloudError } from "./cloud-error";
 import { mirrorEntitlement } from "./entitlement-mirror";
 
-const mockCloudAction = jest.fn<(path: string, args: Record<string, never>) => Promise<boolean>>();
+const mockCloudAction = jest.fn<(path: string, args: Record<string, never>) => Effect.Effect<boolean, CloudError>>();
 
 let mockConvex: object | null = {};
 jest.mock("@/lib/convex", () => ({
@@ -19,21 +21,25 @@ beforeEach(() => {
 
 describe("mirrorEntitlement", () => {
     it("reports the mirror behind when the backend says so", async () => {
-        mockCloudAction.mockResolvedValue(false);
+        mockCloudAction.mockReturnValue(Effect.succeed(false));
 
-        await expect(mirrorEntitlement()).resolves.toBe(false);
+        await expect(Effect.runPromise(mirrorEntitlement())).resolves.toBe(false);
     });
 
     it("reports the mirror behind when the call fails", async () => {
-        mockCloudAction.mockRejectedValue(new Error("offline"));
+        mockCloudAction.mockReturnValue(
+            Effect.fail(
+                new CloudError({ cause: new Error("offline"), kind: "action", path: "revenuecat:syncFromStore" })
+            )
+        );
 
-        await expect(mirrorEntitlement()).resolves.toBe(false);
+        await expect(Effect.runPromise(mirrorEntitlement())).resolves.toBe(false);
     });
 
     it("reports a build with no backend as already mirrored", async () => {
         mockConvex = null;
 
-        await expect(mirrorEntitlement()).resolves.toBe(true);
+        await expect(Effect.runPromise(mirrorEntitlement())).resolves.toBe(true);
         expect(mockCloudAction).not.toHaveBeenCalled();
     });
 });
