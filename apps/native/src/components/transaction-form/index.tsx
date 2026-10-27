@@ -2570,8 +2570,8 @@ export function TransactionForm({
     } satisfies Partial<ComponentProps<typeof TransactionSentenceBody>>;
 
     return (
-        // Its own PortalProvider: PanelUI's host sits above `LocalDataProvider`, so a sheet portalled there loses the
-        // database and `useLocalData` throws.
+        // Its own PortalProvider: PanelUI's host sits above `LanguageProvider`, so a sheet portalled there loses it and
+        // `useTranslation` throws.
         <PortalProvider>
             <View
                 className="flex-1"
