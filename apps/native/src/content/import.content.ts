@@ -31,13 +31,26 @@ const importSheet = {
             fr: "Ajoutées",
             pt: "Adicionados",
         }),
-        "import.doneStamp": t({
+        "import.doneStamp_one": t({
+            en: "Imported · {count} row",
+            es: "Importado · {count} fila",
+            fr: "Importé · {count} ligne",
+            pt: "Importado · {count} linha",
+        }),
+        "import.doneStamp_other": t({
             en: "Imported · {count} rows",
             es: "Importado · {count} filas",
             fr: "Importé · {count} lignes",
             pt: "Importado · {count} linhas",
         }),
-        "import.doneSubline": t({
+        "import.doneSubline_one": t({
+            en: "{count} duplicate skipped · {month} is on the Log",
+            es: "{count} duplicado omitido · {month} ya está en el registro",
+            fr: "Doublon ignoré : {count} · retrouvez {month} dans le Journal",
+            pt: "{count} duplicado ignorado · {month} já está em Lançamentos",
+            "pt-PT": "{count} duplicado ignorado · {month} já está em Registos",
+        }),
+        "import.doneSubline_other": t({
             en: "{count} duplicates skipped · {month} is on the Log",
             es: "{count} duplicados omitidos · {month} ya está en el registro",
             fr: "Doublons ignorés : {count} · retrouvez {month} dans le Journal",
@@ -284,14 +297,28 @@ const importSheet = {
             pt: "Continuando de onde você parou",
             "pt-PT": "A continuar de onde parou",
         }),
-        "import.reviewCommitConfirmCta": t({
+        "import.reviewCommitConfirmCta_one": t({
+            en: "Import {count} transaction?",
+            es: "¿Importar {count} transacción?",
+            fr: "Importer {count} opération ?",
+            pt: "Importar {count} lançamento?",
+            "pt-PT": "Importar {count} registo?",
+        }),
+        "import.reviewCommitConfirmCta_other": t({
             en: "Import {count} transactions?",
             es: "¿Importar {count} transacciones?",
             fr: "Importer {count} opérations ?",
             pt: "Importar {count} lançamentos?",
             "pt-PT": "Importar {count} registos?",
         }),
-        "import.reviewCommitCta": t({
+        "import.reviewCommitCta_one": t({
+            en: "Import {count} transaction",
+            es: "Importar {count} transacción",
+            fr: "Importer {count} opération",
+            pt: "Importar {count} lançamento",
+            "pt-PT": "Importar {count} registo",
+        }),
+        "import.reviewCommitCta_other": t({
             en: "Import {count} transactions",
             es: "Importar {count} transacciones",
             fr: "Importer {count} opérations",
@@ -337,13 +364,25 @@ const importSheet = {
             fr: "Rien à importer",
             pt: "Nada para importar",
         }),
-        "import.reviewSkippedHide": t({
+        "import.reviewSkippedHide_one": t({
+            en: "{count} row skipped · Hide",
+            es: "{count} fila omitida · Ocultar",
+            fr: "{count} ligne ignorée · Masquer",
+            pt: "{count} linha ignorada · Ocultar",
+        }),
+        "import.reviewSkippedHide_other": t({
             en: "{count} rows skipped · Hide",
             es: "{count} filas omitidas · Ocultar",
             fr: "{count} lignes ignorées · Masquer",
             pt: "{count} linhas ignoradas · Ocultar",
         }),
-        "import.reviewSkippedShow": t({
+        "import.reviewSkippedShow_one": t({
+            en: "{count} row skipped · Show",
+            es: "{count} fila omitida · Mostrar",
+            fr: "{count} ligne ignorée · Afficher",
+            pt: "{count} linha ignorada · Mostrar",
+        }),
+        "import.reviewSkippedShow_other": t({
             en: "{count} rows skipped · Show",
             es: "{count} filas omitidas · Mostrar",
             fr: "{count} lignes ignorées · Afficher",

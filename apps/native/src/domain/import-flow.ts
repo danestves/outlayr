@@ -1,3 +1,5 @@
+import type { CurrencyBucket } from "@outlayr/money/currency-totals";
+
 import type { ParsedImportFile } from "@/data/transfer-core";
 
 import type { MappingDraft, MappingGap, ResolvedMapping } from "./import-mapping";
@@ -30,7 +32,7 @@ export type ImportCommitState =
     | {
           phase: "success";
           count: number;
-          outAmount: number;
+          outTotals: CurrencyBucket[];
           duplicatesSkipped: number;
       };
 
@@ -84,7 +86,7 @@ export type ImportFlowEvent =
     | {
           type: "commitSucceeded";
           count: number;
-          outAmount: number;
+          outTotals: CurrencyBucket[];
           duplicatesSkipped: number;
       };
 
@@ -180,7 +182,7 @@ export function importFlowReducer(state: ImportFlowState, event: ImportFlowEvent
                 commit: {
                     count: event.count,
                     duplicatesSkipped: event.duplicatesSkipped,
-                    outAmount: event.outAmount,
+                    outTotals: event.outTotals,
                     phase: "success",
                 },
             };

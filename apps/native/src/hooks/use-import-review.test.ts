@@ -242,7 +242,7 @@ describe("useImportReview", () => {
         expect(snapshot.flow.commit).toStrictEqual({
             count: 2,
             duplicatesSkipped: 0,
-            outAmount: 12.5,
+            outTotals: [{ amount: -12.5, currencyCode: "USD", transactionCount: 1 }],
             phase: "success",
         });
         expect(snapshot.flow).not.toStrictEqual(INITIAL_IMPORT_FLOW_STATE);

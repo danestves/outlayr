@@ -7,6 +7,8 @@ import type { ImportFlowEvent, ImportFlowState } from "./import-flow";
 import type { ResolvedMapping } from "./import-mapping";
 import type { ImportSourceId } from "./import-sources";
 
+const OUT = [{ amount: -348.4, currencyCode: "EUR", transactionCount: 12 }];
+
 const PARSED: ParsedImportFile = {
     header: ["date", "description", "amount"],
     rows: [["2026-07-28", "Bakery", "12.50"]],
@@ -262,18 +264,18 @@ describe("duplicates reset on invalidation", () => {
 });
 
 describe("commitSucceeded", () => {
-    it("captures the written count and out amount for the done step", () => {
+    it("captures the written count and out totals for the done step", () => {
         const writing = dispatch(withResolution(), { type: "commitStarted" });
         const done = dispatch(writing, {
             count: 12,
             duplicatesSkipped: 0,
-            outAmount: 348.4,
+            outTotals: OUT,
             type: "commitSucceeded",
         });
         expect(done.commit).toStrictEqual({
             count: 12,
             duplicatesSkipped: 0,
-            outAmount: 348.4,
+            outTotals: OUT,
             phase: "success",
         });
     });
@@ -283,7 +285,7 @@ describe("commitSucceeded", () => {
         const done = dispatch(state, {
             count: 1,
             duplicatesSkipped: 0,
-            outAmount: 1,
+            outTotals: OUT,
             type: "commitSucceeded",
         });
         expect(done).toBe(state);
@@ -325,7 +327,7 @@ describe("canAdvance", () => {
         const done = dispatch(writing, {
             count: 2,
             duplicatesSkipped: 0,
-            outAmount: 10,
+            outTotals: OUT,
             type: "commitSucceeded",
         });
         expect(canAdvance(done, "review")).toBe(true);
