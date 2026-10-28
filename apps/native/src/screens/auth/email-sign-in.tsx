@@ -6,7 +6,7 @@ import * as Schema from "effect/Schema";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import type { ComponentProps, ReactNode } from "react";
-import { KeyboardAvoidingView, Pressable, View } from "react-native";
+import { KeyboardAvoidingView, Pressable, ScrollView, View } from "react-native";
 import { useCSSVariable } from "uniwind";
 
 import type { EmailSignInRoute } from "@/components/account/provider-sign-in-buttons";
@@ -294,7 +294,16 @@ function ResetStep({ client, email }: Flow) {
 }
 
 function Fields({ children }: { children: ReactNode }) {
-    return <View className="flex-1 gap-4 pt-7">{children}</View>;
+    return (
+        <ScrollView
+            className="flex-1"
+            contentContainerClassName="gap-4 pt-7"
+            keyboardDismissMode="interactive"
+            keyboardShouldPersistTaps="handled"
+        >
+            {children}
+        </ScrollView>
+    );
 }
 
 type FieldProps = ComponentProps<typeof TextInput> & { hint?: string; label: string };
