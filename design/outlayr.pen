@@ -248822,6 +248822,1697 @@
         },
         {
           "type": "frame",
+          "id": "C3svo8",
+          "name": "AI data consent",
+          "layout": "vertical",
+          "gap": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "ZkY35",
+              "name": "Label",
+              "fill": "#6b6557",
+              "content": "AI data consent",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "l22i7",
+              "name": "Variants",
+              "gap": 32,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "TysIe",
+                  "name": "AI data consent · iOS · light",
+                  "theme": {
+                    "platform": "ios",
+                    "mode": "light"
+                  },
+                  "clip": true,
+                  "width": 402,
+                  "height": 874,
+                  "fill": "$background",
+                  "cornerRadius": 48,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "x6xBx",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Dim",
+                      "fill": "$sheet-dim",
+                      "width": 402,
+                      "height": 874
+                    },
+                    {
+                      "id": "RlO5N",
+                      "type": "ref",
+                      "ref": "RZCb5",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "mkB5D",
+                      "x": 14.67,
+                      "y": 60.67,
+                      "name": "Search (native glass, dimmed)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/consent-search-ios-light.png",
+                        "mode": "cover"
+                      },
+                      "width": 47,
+                      "height": 47
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "f4WAe",
+                      "x": 288,
+                      "y": 60.67,
+                      "name": "Period and filter (native glass, dimmed)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/consent-period-filter-ios-light.png",
+                        "mode": "cover"
+                      },
+                      "width": 100,
+                      "height": 47
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 40,
+                      "id": "x1rf4D",
+                      "x": 8,
+                      "y": 108,
+                      "name": "Sheet",
+                      "fill": "$background",
+                      "width": 386,
+                      "height": 757
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2.5,
+                      "id": "vYGA2",
+                      "x": 183,
+                      "y": 114,
+                      "name": "Grabber",
+                      "fill": "$switch-off",
+                      "width": 36,
+                      "height": 5
+                    },
+                    {
+                      "type": "text",
+                      "id": "AqSpb",
+                      "x": 27.3,
+                      "y": 143.3,
+                      "name": "Heading",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "Send data to third-party AI providers?",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ah9Fy",
+                      "x": 27.3,
+                      "y": 172.7,
+                      "name": "Lead",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "These features need an account and go through our server to third-party AI providers, which turn recordings into text and suggest categories. They never get your name, email, or account ID.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "apbHG",
+                      "x": 27.3,
+                      "y": 267.2,
+                      "name": "Rule",
+                      "fill": "$border",
+                      "width": 347.7,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "Q0Hgw",
+                      "x": 27.3,
+                      "y": 277.9,
+                      "name": "Voice entry",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "Voice entry",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "GKCHt",
+                      "x": 27.3,
+                      "y": 300.9,
+                      "name": "Voice entry sends",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "The recording, your account and category names, currency, language, and today's date",
+                      "lineHeight": 1.385,
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "ErV3T",
+                      "x": 27.3,
+                      "y": 345.7,
+                      "name": "Rule",
+                      "fill": "$border",
+                      "width": 347.7,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "Ro3Gm",
+                      "x": 27.3,
+                      "y": 355.7,
+                      "name": "Receipt scan",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "Receipt scan",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "l3CC1",
+                      "x": 27.3,
+                      "y": 379.6,
+                      "name": "Receipt scan sends",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "The photo, plus the same details as voice entry and your region",
+                      "lineHeight": 1.385,
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "sdsFz",
+                      "x": 27.3,
+                      "y": 423.7,
+                      "name": "Rule",
+                      "fill": "$border",
+                      "width": 347.7,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "Sl7gg",
+                      "x": 27.3,
+                      "y": 433.5,
+                      "name": "Installment plan import",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "Installment plan import",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "CIuFM",
+                      "x": 27.3,
+                      "y": 457.4,
+                      "name": "Installment plan import sends",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "The screenshot, the account's name, currency, language, region, and today's date",
+                      "lineHeight": 1.385,
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "H7cgSw",
+                      "x": 27.3,
+                      "y": 501.7,
+                      "name": "Rule",
+                      "fill": "$border",
+                      "width": 347.7,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "EII1T",
+                      "x": 27.3,
+                      "y": 512.2,
+                      "name": "Category suggestions",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "Category suggestions",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "AfyZg",
+                      "x": 27.3,
+                      "y": 535.1,
+                      "name": "Category suggestions sends",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "Merchant names, expense or income, currency, language, region, and your category names. On import, CSV descriptions with long numbers removed.",
+                      "lineHeight": 1.385,
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "p7gKUr",
+                      "x": 27.3,
+                      "y": 597,
+                      "name": "Rule",
+                      "fill": "$border",
+                      "width": 347.7,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "WCq28",
+                      "x": 27.3,
+                      "y": 607.4,
+                      "name": "Web lookup",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "Web lookup",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "H3p7nN",
+                      "x": 27.3,
+                      "y": 630.4,
+                      "name": "Web lookup sends",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "The AI provider may search the web for a merchant's name",
+                      "lineHeight": 1.385,
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "KooVP",
+                      "x": 27.3,
+                      "y": 658,
+                      "name": "Rule",
+                      "fill": "$border",
+                      "width": 347.7,
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "y9DZR",
+                      "x": 27.3,
+                      "y": 723.7,
+                      "name": "Allow",
+                      "width": 347.7,
+                      "height": 42,
+                      "fill": "$accent",
+                      "cornerRadius": 21,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "n7Dp5a",
+                          "name": "Label",
+                          "fill": "$accent-foreground",
+                          "content": "Allow",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "HAfTR",
+                      "x": 27.3,
+                      "y": 776.1,
+                      "name": "Not now",
+                      "width": 347.7,
+                      "height": 42,
+                      "cornerRadius": 21,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "OrCej",
+                          "name": "Label",
+                          "fill": "$foreground",
+                          "content": "Not now",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "chg9H",
+                      "x": 27.3,
+                      "y": 671,
+                      "name": "Footer",
+                      "width": 347.7,
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "S9c4G",
+                          "name": "Line 1",
+                          "fill": "$muted",
+                          "content": "Suggestions never include amounts, dates, or accounts. We",
+                          "lineHeight": 1.385,
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "dpXly",
+                          "name": "Line 2",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "bi7nh",
+                              "name": "Text",
+                              "fill": "$muted",
+                              "content": "don't keep recordings, photos, or screenshots.",
+                              "lineHeight": 1.385,
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "text",
+                              "id": "ci000",
+                              "name": "Privacy policy",
+                              "fill": "$tint",
+                              "content": "Privacy policy",
+                              "lineHeight": 1.385,
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "GpBgI",
+                  "name": "AI data consent · iOS · dark",
+                  "theme": {
+                    "platform": "ios",
+                    "mode": "dark"
+                  },
+                  "clip": true,
+                  "width": 402,
+                  "height": 874,
+                  "fill": "$background",
+                  "cornerRadius": 48,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "CGkTn",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Dim",
+                      "fill": "$sheet-dim",
+                      "width": 402,
+                      "height": 874
+                    },
+                    {
+                      "id": "n46mB",
+                      "type": "ref",
+                      "ref": "RZCb5",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "zd2cQ",
+                      "x": 14.67,
+                      "y": 60.67,
+                      "name": "Search (native glass, dimmed)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/consent-search-ios-dark.png",
+                        "mode": "cover"
+                      },
+                      "width": 47,
+                      "height": 47
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "pV6jY",
+                      "x": 288,
+                      "y": 60.67,
+                      "name": "Period and filter (native glass, dimmed)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/consent-period-filter-ios-dark.png",
+                        "mode": "cover"
+                      },
+                      "width": 100,
+                      "height": 47
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 40,
+                      "id": "jgVFH",
+                      "x": 8,
+                      "y": 108,
+                      "name": "Sheet",
+                      "fill": "$background",
+                      "width": 386,
+                      "height": 757
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2.5,
+                      "id": "t4CwS",
+                      "x": 183,
+                      "y": 114,
+                      "name": "Grabber",
+                      "fill": "$switch-off",
+                      "width": 36,
+                      "height": 5
+                    },
+                    {
+                      "type": "text",
+                      "id": "dXExs",
+                      "x": 27.3,
+                      "y": 143.3,
+                      "name": "Heading",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "Send data to third-party AI providers?",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "pRCR2",
+                      "x": 27.3,
+                      "y": 172.7,
+                      "name": "Lead",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "These features need an account and go through our server to third-party AI providers, which turn recordings into text and suggest categories. They never get your name, email, or account ID.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "O7boA",
+                      "x": 27.3,
+                      "y": 267.2,
+                      "name": "Rule",
+                      "fill": "$border",
+                      "width": 347.7,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "u06N3",
+                      "x": 27.3,
+                      "y": 277.9,
+                      "name": "Voice entry",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "Voice entry",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "A4q35A",
+                      "x": 27.3,
+                      "y": 300.9,
+                      "name": "Voice entry sends",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "The recording, your account and category names, currency, language, and today's date",
+                      "lineHeight": 1.385,
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "Go1VJ",
+                      "x": 27.3,
+                      "y": 345.7,
+                      "name": "Rule",
+                      "fill": "$border",
+                      "width": 347.7,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "D4Pkf",
+                      "x": 27.3,
+                      "y": 355.7,
+                      "name": "Receipt scan",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "Receipt scan",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "TRw3i",
+                      "x": 27.3,
+                      "y": 379.6,
+                      "name": "Receipt scan sends",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "The photo, plus the same details as voice entry and your region",
+                      "lineHeight": 1.385,
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "hGULV",
+                      "x": 27.3,
+                      "y": 423.7,
+                      "name": "Rule",
+                      "fill": "$border",
+                      "width": 347.7,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "wqipw",
+                      "x": 27.3,
+                      "y": 433.5,
+                      "name": "Installment plan import",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "Installment plan import",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "u7fhlA",
+                      "x": 27.3,
+                      "y": 457.4,
+                      "name": "Installment plan import sends",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "The screenshot, the account's name, currency, language, region, and today's date",
+                      "lineHeight": 1.385,
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "W6Fyup",
+                      "x": 27.3,
+                      "y": 501.7,
+                      "name": "Rule",
+                      "fill": "$border",
+                      "width": 347.7,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "f9nP09",
+                      "x": 27.3,
+                      "y": 512.2,
+                      "name": "Category suggestions",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "Category suggestions",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "jZwzF",
+                      "x": 27.3,
+                      "y": 535.1,
+                      "name": "Category suggestions sends",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "Merchant names, expense or income, currency, language, region, and your category names. On import, CSV descriptions with long numbers removed.",
+                      "lineHeight": 1.385,
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "FZ5mK",
+                      "x": 27.3,
+                      "y": 597,
+                      "name": "Rule",
+                      "fill": "$border",
+                      "width": 347.7,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "XyRHq",
+                      "x": 27.3,
+                      "y": 607.4,
+                      "name": "Web lookup",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "Web lookup",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "W0ZkR",
+                      "x": 27.3,
+                      "y": 630.4,
+                      "name": "Web lookup sends",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 347.7,
+                      "content": "The AI provider may search the web for a merchant's name",
+                      "lineHeight": 1.385,
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "xSLKg",
+                      "x": 27.3,
+                      "y": 658,
+                      "name": "Rule",
+                      "fill": "$border",
+                      "width": 347.7,
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "n4SY01",
+                      "x": 27.3,
+                      "y": 723.7,
+                      "name": "Allow",
+                      "width": 347.7,
+                      "height": 42,
+                      "fill": "$accent",
+                      "cornerRadius": 21,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "K4mJOf",
+                          "name": "Label",
+                          "fill": "$accent-foreground",
+                          "content": "Allow",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "w66hbv",
+                      "x": 27.3,
+                      "y": 776.1,
+                      "name": "Not now",
+                      "width": 347.7,
+                      "height": 42,
+                      "cornerRadius": 21,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "C4lo1",
+                          "name": "Label",
+                          "fill": "$foreground",
+                          "content": "Not now",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "NtY1u",
+                      "x": 27.3,
+                      "y": 671,
+                      "name": "Footer",
+                      "width": 347.7,
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "YHc0p",
+                          "name": "Line 1",
+                          "fill": "$muted",
+                          "content": "Suggestions never include amounts, dates, or accounts. We",
+                          "lineHeight": 1.385,
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "jhIMb",
+                          "name": "Line 2",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "CDGYb",
+                              "name": "Text",
+                              "fill": "$muted",
+                              "content": "don't keep recordings, photos, or screenshots.",
+                              "lineHeight": 1.385,
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "text",
+                              "id": "XwLKg",
+                              "name": "Privacy policy",
+                              "fill": "$tint",
+                              "content": "Privacy policy",
+                              "lineHeight": 1.385,
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "PPqXl",
+                  "name": "AI data consent · Android · light",
+                  "theme": {
+                    "platform": "android",
+                    "mode": "light"
+                  },
+                  "clip": true,
+                  "width": 412,
+                  "height": 915,
+                  "fill": "$m3-surface",
+                  "cornerRadius": 28,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "PzZx0",
+                      "type": "ref",
+                      "ref": "BCCA1",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": [
+                        28,
+                        28,
+                        0,
+                        0
+                      ],
+                      "id": "zcqCN",
+                      "x": 0,
+                      "y": 99.5,
+                      "name": "Sheet",
+                      "fill": "$m3-surface-container-low",
+                      "width": 412,
+                      "height": 815.5
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "NU84d",
+                      "x": 190,
+                      "y": 121.7,
+                      "name": "Drag handle",
+                      "fill": "$m3-on-surface-variant",
+                      "width": 32,
+                      "height": 4
+                    },
+                    {
+                      "type": "text",
+                      "id": "x3kOE",
+                      "x": 20.2,
+                      "y": 168.4,
+                      "name": "Heading",
+                      "fill": "$m3-on-surface",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "Send data to third-party AI providers?",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "s1nrg",
+                      "x": 20.2,
+                      "y": 198.9,
+                      "name": "Lead",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "These features need an account and go through our server to third-party AI providers, which turn recordings into text and suggest categories. They never get your name, email, or account ID.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "wDflw",
+                      "x": 20.2,
+                      "y": 298.9,
+                      "name": "Rule",
+                      "fill": "$m3-outline-variant",
+                      "width": 372,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "oZSPK",
+                      "x": 20.2,
+                      "y": 309.3,
+                      "name": "Voice entry",
+                      "fill": "$m3-on-surface",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "Voice entry",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Z5a64Y",
+                      "x": 20.2,
+                      "y": 333.2,
+                      "name": "Voice entry sends",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "The recording, your account and category names, currency, language, and today's date",
+                      "lineHeight": 1.385,
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "h53cwG",
+                      "x": 20.2,
+                      "y": 380.4,
+                      "name": "Rule",
+                      "fill": "$m3-outline-variant",
+                      "width": 372,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "hsRPH",
+                      "x": 20.2,
+                      "y": 390.7,
+                      "name": "Receipt scan",
+                      "fill": "$m3-on-surface",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "Receipt scan",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "x0L2JO",
+                      "x": 20.2,
+                      "y": 415.6,
+                      "name": "Receipt scan sends",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "The photo, plus the same details as voice entry and your region",
+                      "lineHeight": 1.385,
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "H9xks",
+                      "x": 20.2,
+                      "y": 462.3,
+                      "name": "Rule",
+                      "fill": "$m3-outline-variant",
+                      "width": 372,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "iUCdj",
+                      "x": 20.2,
+                      "y": 473,
+                      "name": "Installment plan import",
+                      "fill": "$m3-on-surface",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "Installment plan import",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "fpHxe",
+                      "x": 20.2,
+                      "y": 497,
+                      "name": "Installment plan import sends",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "The screenshot, the account's name, currency, language, region, and today's date",
+                      "lineHeight": 1.385,
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "XRt5U",
+                      "x": 20.2,
+                      "y": 543.8,
+                      "name": "Rule",
+                      "fill": "$m3-outline-variant",
+                      "width": 372,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "n8gqmT",
+                      "x": 20.2,
+                      "y": 554.5,
+                      "name": "Category suggestions",
+                      "fill": "$m3-on-surface",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "Category suggestions",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ibjt1",
+                      "x": 20.2,
+                      "y": 578.5,
+                      "name": "Category suggestions sends",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "Merchant names, expense or income, currency, language, region, and your category names. On import, CSV descriptions with long numbers removed.",
+                      "lineHeight": 1.385,
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "I4OMj",
+                      "x": 20.2,
+                      "y": 644,
+                      "name": "Rule",
+                      "fill": "$m3-outline-variant",
+                      "width": 372,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "B0LicK",
+                      "x": 20.2,
+                      "y": 655.1,
+                      "name": "Web lookup",
+                      "fill": "$m3-on-surface",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "Web lookup",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Aa88M",
+                      "x": 20.2,
+                      "y": 679.1,
+                      "name": "Web lookup sends",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "The AI provider may search the web for a merchant's name",
+                      "lineHeight": 1.385,
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "Czcs9",
+                      "x": 20.2,
+                      "y": 707.6,
+                      "name": "Rule",
+                      "fill": "$m3-outline-variant",
+                      "width": 372,
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "J3UJuh",
+                      "x": 20.2,
+                      "y": 776.8,
+                      "name": "Allow",
+                      "width": 372,
+                      "height": 44,
+                      "fill": "$m3-primary",
+                      "cornerRadius": 22,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "FCb6E",
+                          "name": "Label",
+                          "fill": "$m3-on-primary",
+                          "content": "Allow",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "X61Tf",
+                      "x": 20.2,
+                      "y": 830.8,
+                      "name": "Not now",
+                      "width": 372,
+                      "height": 44,
+                      "cornerRadius": 22,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "YAXsK",
+                          "name": "Label",
+                          "fill": "$m3-on-surface",
+                          "content": "Not now",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "GYtbd",
+                      "x": 154,
+                      "y": 901,
+                      "name": "Gesture handle",
+                      "fill": "$m3-on-surface",
+                      "width": 104,
+                      "height": 4
+                    },
+                    {
+                      "type": "frame",
+                      "id": "f9w3S",
+                      "x": 20.2,
+                      "y": 720.2,
+                      "name": "Footer",
+                      "width": 372,
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "s5noeu",
+                          "name": "Line 1",
+                          "fill": "$m3-on-surface-variant",
+                          "content": "Suggestions never include amounts, dates, or accounts. We",
+                          "lineHeight": 1.385,
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "gVni8",
+                          "name": "Line 2",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "I6zRiX",
+                              "name": "Text",
+                              "fill": "$m3-on-surface-variant",
+                              "content": "don't keep recordings, photos, or screenshots.",
+                              "lineHeight": 1.385,
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Bh33F",
+                              "name": "Privacy policy",
+                              "fill": "$m3-primary",
+                              "content": "Privacy policy",
+                              "lineHeight": 1.385,
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "K83Dvm",
+                  "name": "AI data consent · Android · dark",
+                  "theme": {
+                    "platform": "android",
+                    "mode": "dark"
+                  },
+                  "clip": true,
+                  "width": 412,
+                  "height": 915,
+                  "fill": "$m3-surface",
+                  "cornerRadius": 28,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "zZ74c",
+                      "type": "ref",
+                      "ref": "BCCA1",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": [
+                        28,
+                        28,
+                        0,
+                        0
+                      ],
+                      "id": "Anmbm",
+                      "x": 0,
+                      "y": 99.5,
+                      "name": "Sheet",
+                      "fill": "$m3-surface-container-low",
+                      "width": 412,
+                      "height": 815.5
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "m12bpZ",
+                      "x": 190,
+                      "y": 121.7,
+                      "name": "Drag handle",
+                      "fill": "$m3-on-surface-variant",
+                      "width": 32,
+                      "height": 4
+                    },
+                    {
+                      "type": "text",
+                      "id": "sPAXz",
+                      "x": 20.2,
+                      "y": 168.4,
+                      "name": "Heading",
+                      "fill": "$m3-on-surface",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "Send data to third-party AI providers?",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "NP8i1",
+                      "x": 20.2,
+                      "y": 198.9,
+                      "name": "Lead",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "These features need an account and go through our server to third-party AI providers, which turn recordings into text and suggest categories. They never get your name, email, or account ID.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "quw9M",
+                      "x": 20.2,
+                      "y": 298.9,
+                      "name": "Rule",
+                      "fill": "$m3-outline-variant",
+                      "width": 372,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "jBomj",
+                      "x": 20.2,
+                      "y": 309.3,
+                      "name": "Voice entry",
+                      "fill": "$m3-on-surface",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "Voice entry",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "JrzUm",
+                      "x": 20.2,
+                      "y": 333.2,
+                      "name": "Voice entry sends",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "The recording, your account and category names, currency, language, and today's date",
+                      "lineHeight": 1.385,
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "w1QoP",
+                      "x": 20.2,
+                      "y": 380.4,
+                      "name": "Rule",
+                      "fill": "$m3-outline-variant",
+                      "width": 372,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "u7tRv1",
+                      "x": 20.2,
+                      "y": 390.7,
+                      "name": "Receipt scan",
+                      "fill": "$m3-on-surface",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "Receipt scan",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "jdy9o",
+                      "x": 20.2,
+                      "y": 415.6,
+                      "name": "Receipt scan sends",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "The photo, plus the same details as voice entry and your region",
+                      "lineHeight": 1.385,
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "u9YYo2",
+                      "x": 20.2,
+                      "y": 462.3,
+                      "name": "Rule",
+                      "fill": "$m3-outline-variant",
+                      "width": 372,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "lxPQZ",
+                      "x": 20.2,
+                      "y": 473,
+                      "name": "Installment plan import",
+                      "fill": "$m3-on-surface",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "Installment plan import",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "h0EJM",
+                      "x": 20.2,
+                      "y": 497,
+                      "name": "Installment plan import sends",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "The screenshot, the account's name, currency, language, region, and today's date",
+                      "lineHeight": 1.385,
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "FKBRR",
+                      "x": 20.2,
+                      "y": 543.8,
+                      "name": "Rule",
+                      "fill": "$m3-outline-variant",
+                      "width": 372,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "Vqp6k",
+                      "x": 20.2,
+                      "y": 554.5,
+                      "name": "Category suggestions",
+                      "fill": "$m3-on-surface",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "Category suggestions",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "n11dM",
+                      "x": 20.2,
+                      "y": 578.5,
+                      "name": "Category suggestions sends",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "Merchant names, expense or income, currency, language, region, and your category names. On import, CSV descriptions with long numbers removed.",
+                      "lineHeight": 1.385,
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "pieTc",
+                      "x": 20.2,
+                      "y": 644,
+                      "name": "Rule",
+                      "fill": "$m3-outline-variant",
+                      "width": 372,
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "UPZNL",
+                      "x": 20.2,
+                      "y": 655.1,
+                      "name": "Web lookup",
+                      "fill": "$m3-on-surface",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "Web lookup",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "XlhGa",
+                      "x": 20.2,
+                      "y": 679.1,
+                      "name": "Web lookup sends",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 372,
+                      "content": "The AI provider may search the web for a merchant's name",
+                      "lineHeight": 1.385,
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "q6WqX",
+                      "x": 20.2,
+                      "y": 707.6,
+                      "name": "Rule",
+                      "fill": "$m3-outline-variant",
+                      "width": 372,
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "VFG5g",
+                      "x": 20.2,
+                      "y": 776.8,
+                      "name": "Allow",
+                      "width": 372,
+                      "height": 44,
+                      "fill": "$m3-primary",
+                      "cornerRadius": 22,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "i6CZs",
+                          "name": "Label",
+                          "fill": "$m3-on-primary",
+                          "content": "Allow",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Dh7EF",
+                      "x": 20.2,
+                      "y": 830.8,
+                      "name": "Not now",
+                      "width": 372,
+                      "height": 44,
+                      "cornerRadius": 22,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "le1rq",
+                          "name": "Label",
+                          "fill": "$m3-on-surface",
+                          "content": "Not now",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "nEDnb",
+                      "x": 154,
+                      "y": 901,
+                      "name": "Gesture handle",
+                      "fill": "$m3-on-surface",
+                      "width": 104,
+                      "height": 4
+                    },
+                    {
+                      "type": "frame",
+                      "id": "UWSN1",
+                      "x": 20.2,
+                      "y": 720.2,
+                      "name": "Footer",
+                      "width": 372,
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "fqimG",
+                          "name": "Line 1",
+                          "fill": "$m3-on-surface-variant",
+                          "content": "Suggestions never include amounts, dates, or accounts. We",
+                          "lineHeight": 1.385,
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "UTBPA",
+                          "name": "Line 2",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "SQZEb",
+                              "name": "Text",
+                              "fill": "$m3-on-surface-variant",
+                              "content": "don't keep recordings, photos, or screenshots.",
+                              "lineHeight": 1.385,
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "vsVVr",
+                              "name": "Privacy policy",
+                              "fill": "$m3-primary",
+                              "content": "Privacy policy",
+                              "lineHeight": 1.385,
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
           "id": "DWY8J",
           "name": "Usage (signed out)",
           "layout": "vertical",
@@ -274514,6 +276205,23 @@
         },
         {
           "value": "#8E918F",
+          "theme": {
+            "mode": "dark"
+          }
+        }
+      ]
+    },
+    "sheet-dim": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#00000033",
+          "theme": {
+            "mode": "light"
+          }
+        },
+        {
+          "value": "#0000007A",
           "theme": {
             "mode": "dark"
           }
