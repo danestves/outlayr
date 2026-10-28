@@ -113,6 +113,11 @@ export const HAPTICS_OPTIONS: readonly ChoiceOption[] = [
     },
 ];
 
+export const WEEKDAY_OPTIONS: readonly ChoiceOption[] = [
+    { label: "settings.time.sunday", value: 1 },
+    { label: "settings.time.monday", value: 2 },
+];
+
 export const NUMBER_ENTRY_OPTIONS: readonly ChoiceOption[] = [
     {
         label: "settings.numberEntry.type1",

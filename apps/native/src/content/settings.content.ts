@@ -272,22 +272,22 @@ const settings = {
             pt: "Suave",
         }),
         "settings.lock.alertTitle": t({
-            en: "Authentication",
-            es: "Autenticación",
-            fr: "Authentification",
-            pt: "Autenticação",
+            en: "Biometric lock",
+            es: "Bloqueo biométrico",
+            fr: "Verrouillage biométrique",
+            pt: "Bloqueio biométrico",
         }),
         "settings.lock.promptOff": t({
-            en: "Turn off authentication",
-            es: "Desactivar la autenticación",
-            fr: "Désactiver l'authentification",
-            pt: "Desativar a autenticação",
+            en: "Turn off biometric lock",
+            es: "Desactivar el bloqueo biométrico",
+            fr: "Désactiver le verrouillage biométrique",
+            pt: "Desativar o bloqueio biométrico",
         }),
         "settings.lock.promptOn": t({
-            en: "Turn on authentication",
-            es: "Activar la autenticación",
-            fr: "Activer l'authentification",
-            pt: "Ativar a autenticação",
+            en: "Turn on biometric lock",
+            es: "Activar el bloqueo biométrico",
+            fr: "Activer le verrouillage biométrique",
+            pt: "Ativar o bloqueio biométrico",
         }),
         "settings.numberEntry.type1": t({
             en: "Cents last",
@@ -302,13 +302,6 @@ const settings = {
             es: "Punto decimal",
             fr: "Séparateur décimal",
             pt: "Separador decimal",
-        }),
-        "settings.row.about": t({
-            en: "About and credits",
-            es: "Acerca de y créditos",
-            fr: "À propos et crédits",
-            pt: "Sobre e créditos",
-            "pt-PT": "Acerca da app e créditos",
         }),
         "settings.row.accounts": t({
             en: "Accounts",
@@ -331,22 +324,16 @@ const settings = {
             "pt-PT": "Ícone da app",
         }),
         "settings.row.authentication": t({
-            en: "Authentication",
-            es: "Autenticación",
-            fr: "Authentification",
-            pt: "Autenticação",
+            en: "Biometric lock",
+            es: "Bloqueo biométrico",
+            fr: "Verrouillage biométrique",
+            pt: "Bloqueio biométrico",
         }),
         "settings.row.categories": t({
             en: "Categories",
             es: "Categorías",
             fr: "Catégories",
             pt: "Categorias",
-        }),
-        "settings.row.colorScheme": t({
-            en: "Color scheme",
-            es: "Esquema de color",
-            fr: "Thème",
-            pt: "Esquema de cores",
         }),
         "settings.row.contactSupport": t({
             en: "Contact support",
@@ -376,16 +363,10 @@ const settings = {
             "pt-PT": "Mostrar cêntimos",
         }),
         "settings.row.erase": t({
-            en: "Erase data",
-            es: "Borrar datos",
-            fr: "Effacer les données",
-            pt: "Apagar dados",
-        }),
-        "settings.row.export": t({
-            en: "Export data",
-            es: "Exportar datos",
-            fr: "Exporter les données",
-            pt: "Exportar dados",
+            en: "Erase all data",
+            es: "Borrar todos los datos",
+            fr: "Effacer toutes les données",
+            pt: "Apagar todos os dados",
         }),
         "settings.row.featureLab": t({
             en: "Feature lab",
@@ -406,12 +387,6 @@ const settings = {
             fr: "Retour haptique",
             pt: "Vibração",
         }),
-        "settings.row.import": t({
-            en: "Import data",
-            es: "Importar datos",
-            fr: "Importer des données",
-            pt: "Importar dados",
-        }),
         "settings.row.incomeTracking": t({
             en: "Income tracking",
             es: "Seguimiento de ingresos",
@@ -426,12 +401,6 @@ const settings = {
             pt: "Integrações",
         }),
         "settings.row.language": t({
-            en: "Language (iOS)",
-            es: "Idioma (iOS)",
-            fr: "Langue (iOS)",
-            pt: "Idioma (iOS)",
-        }),
-        "settings.row.language.android": t({
             en: "Language",
             es: "Idioma",
             fr: "Langue",
@@ -470,12 +439,6 @@ const settings = {
             "es-ES": "Valóranos en Google Play",
             fr: "Noter sur Google Play",
             pt: "Avalie no Google Play",
-        }),
-        "settings.row.restore": t({
-            en: "Restore data",
-            es: "Restaurar datos",
-            fr: "Restaurer les données",
-            pt: "Restaurar dados",
         }),
         "settings.row.sendToAi": t({
             en: "Send data to AI providers",
@@ -538,19 +501,6 @@ const settings = {
             pt: "Ajustes",
             "pt-PT": "Definições",
         }),
-        "settings.section.about": t({
-            en: "About",
-            es: "Acerca de",
-            fr: "À propos",
-            pt: "Sobre",
-            "pt-PT": "Acerca de",
-        }),
-        "settings.section.account": t({
-            en: "Account",
-            es: "Cuenta",
-            fr: "Compte",
-            pt: "Conta",
-        }),
         "settings.section.appearance": t({
             en: "Appearance",
             es: "Apariencia",
@@ -563,12 +513,6 @@ const settings = {
             fr: "Données",
             pt: "Dados",
         }),
-        "settings.section.device": t({
-            en: "Device",
-            es: "Dispositivo",
-            fr: "Appareil",
-            pt: "Dispositivo",
-        }),
         "settings.section.ledger": t({
             en: "Ledger",
             es: "Registro",
@@ -576,11 +520,23 @@ const settings = {
             pt: "Lançamentos",
             "pt-PT": "Registos",
         }),
+        "settings.section.general": t({
+            en: "General",
+            es: "General",
+            fr: "Général",
+            pt: "Geral",
+        }),
         "settings.section.money": t({
             en: "Money",
             es: "Dinero",
             fr: "Argent",
             pt: "Dinheiro",
+        }),
+        "settings.section.privacy": t({
+            en: "Privacy",
+            es: "Privacidad",
+            fr: "Confidentialité",
+            pt: "Privacidade",
         }),
         "settings.share.message": t({
             en: "Track your money with Outlayr. {url}",

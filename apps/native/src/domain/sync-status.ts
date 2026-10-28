@@ -23,6 +23,34 @@ export interface SyncLabelProbe {
     syncedAt: Date | null;
 }
 
+export interface SyncedAgo {
+    count?: number;
+    key:
+        | "settings.panel.syncedNow"
+        | "settings.panel.syncedMinutes"
+        | "settings.panel.syncedHours"
+        | "settings.panel.syncedDays";
+}
+
+const MINUTE_MS = 60_000;
+const MINUTES_PER_HOUR = 60;
+const HOURS_PER_DAY = 24;
+
+export function syncedAgo(syncedAt: Date, now: number): SyncedAgo {
+    const minutes = Math.max(0, Math.floor((now - syncedAt.getTime()) / MINUTE_MS));
+    if (minutes < 1) {
+        return { key: "settings.panel.syncedNow" };
+    }
+    if (minutes < MINUTES_PER_HOUR) {
+        return { count: minutes, key: "settings.panel.syncedMinutes" };
+    }
+    const hours = Math.floor(minutes / MINUTES_PER_HOUR);
+    if (hours < HOURS_PER_DAY) {
+        return { count: hours, key: "settings.panel.syncedHours" };
+    }
+    return { count: Math.floor(hours / HOURS_PER_DAY), key: "settings.panel.syncedDays" };
+}
+
 export type EffectiveCapabilityStatus =
     | { kind: "local" }
     | { kind: "unavailable" }

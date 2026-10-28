@@ -110,12 +110,6 @@ const pro = {
             fr: "Formule gratuite",
             pt: "Plano grátis",
         }),
-        "pro.entry.valuePro": t({
-            en: "Active",
-            es: "Activo",
-            fr: "Actif",
-            pt: "Ativo",
-        }),
         "pro.eyebrow": t({
             en: "Outlayr Pro",
             es: "Outlayr Pro",

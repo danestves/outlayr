@@ -1,11 +1,11 @@
 import ArrowRight01Icon from "@hugeicons-pro/core-stroke-rounded/ArrowRight01Icon";
+import ArrowUpRight01Icon from "@hugeicons-pro/core-stroke-rounded/ArrowUpRight01Icon";
 import Tick02Icon from "@hugeicons-pro/core-stroke-rounded/Tick02Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import type { ReactNode } from "react";
 import { Pressable, Switch, View } from "react-native";
 
 import { RowShell } from "@/components/list/row-shell";
-import { MonoLabel } from "@/components/mono-label";
 import type { SettingsIconName } from "@/components/settings/settings-icons";
 import { Text } from "@/components/text";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
@@ -15,41 +15,55 @@ export { PickerRow } from "@/components/list/picker-row";
 
 export function SettingsSection({
     title,
+    accessory,
     footer,
     footerLink,
     children,
 }: {
     title?: string;
+    accessory?: ReactNode;
     footer?: string;
     footerLink?: { label: string; onPress: () => void };
     children?: ReactNode;
 }) {
+    const colors = useColors();
     return (
-        <View className="pt-6">
+        <View className="pt-8">
             {title ? (
-                <View className="pb-1.5">
-                    <MonoLabel accessibilityRole="header">{title}</MonoLabel>
-                </View>
+                <>
+                    <View className="flex-row items-end justify-between gap-3">
+                        <Text
+                            accessibilityRole="header"
+                            className="text-title font-sans-bold text-foreground shrink tracking-tight"
+                        >
+                            {title}
+                        </Text>
+                        {accessory}
+                    </View>
+                    <View className="bg-foreground mt-1.5 h-[1.5px]" />
+                </>
             ) : null}
-            <View className="border-border border-t">{children}</View>
+            <View className={title ? undefined : "border-border border-t"}>{children}</View>
             {footer ? (
-                <Text className="text-muted text-subtitle pt-2 leading-snug">
-                    {footer}
+                <View className="pt-2">
+                    <Text className="text-muted text-subtitle leading-snug">{footer}</Text>
                     {footerLink ? (
-                        <>
-                            {" "}
-                            <Text accessibilityRole="link" className="text-tint" onPress={footerLink.onPress}>
-                                {footerLink.label}
-                            </Text>
-                        </>
+                        <Pressable
+                            accessibilityRole="link"
+                            className="flex-row items-center gap-1 self-start pt-3 active:opacity-60"
+                            onPress={footerLink.onPress}
+                        >
+                            <Text className="text-tint text-subtitle font-sans-semibold">{footerLink.label}</Text>
+                            <HugeiconsIcon color={colors.tint} icon={ArrowUpRight01Icon} size={14} strokeWidth={2.2} />
+                        </Pressable>
                     ) : null}
-                </Text>
+                </View>
             ) : null}
         </View>
     );
 }
 
-function Disclosure({ value }: { value?: string }) {
+function Disclosure({ external, value }: { external?: boolean; value?: string }) {
     const colors = useColors();
     return (
         <View className="flex-row items-center gap-1.5">
@@ -58,14 +72,19 @@ function Disclosure({ value }: { value?: string }) {
                     {value}
                 </Text>
             ) : null}
-            <HugeiconsIcon color={colors.subtle} icon={ArrowRight01Icon} size={16} strokeWidth={2.2} />
+            <HugeiconsIcon
+                color={colors.subtle}
+                icon={external ? ArrowUpRight01Icon : ArrowRight01Icon}
+                size={16}
+                strokeWidth={2.2}
+            />
         </View>
     );
 }
 
-function RowTrailing({ interactive, value }: { interactive: boolean; value?: string }) {
+function RowTrailing({ external, interactive, value }: { external?: boolean; interactive: boolean; value?: string }) {
     if (interactive) {
-        return <Disclosure value={value} />;
+        return <Disclosure external={external} value={value} />;
     }
     if (value) {
         return <Text className="text-body text-muted">{value}</Text>;
@@ -76,13 +95,15 @@ function RowTrailing({ interactive, value }: { interactive: boolean; value?: str
 interface LinkRowProps {
     destructive?: boolean;
     detail?: string;
+    external?: boolean;
     icon?: SettingsIconName;
+    noChevron?: boolean;
     onPress?: () => void;
     title: string;
     value?: string;
 }
 
-export function LinkRow({ icon, title, value, detail, destructive, onPress }: LinkRowProps) {
+export function LinkRow({ icon, title, value, detail, destructive, external, noChevron, onPress }: LinkRowProps) {
     const stacked = useAccessibilityTextSize() && Boolean(value);
     const body = (
         <RowShell
@@ -92,7 +113,11 @@ export function LinkRow({ icon, title, value, detail, destructive, onPress }: Li
             icon={icon}
             title={title}
         >
-            <RowTrailing interactive={onPress != null} value={stacked ? undefined : value} />
+            <RowTrailing
+                external={external}
+                interactive={onPress != null && !noChevron}
+                value={stacked ? undefined : value}
+            />
         </RowShell>
     );
 

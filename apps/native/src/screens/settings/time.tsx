@@ -2,16 +2,11 @@ import { ChoiceRow, PickerRow, SettingsSection } from "@/components/list/list-ro
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { useAppSettings, useDisplaySettings } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
-import { ordinalDay } from "@/data/settings-core";
+import { ordinalDay, WEEKDAY_OPTIONS } from "@/data/settings-core";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { setBoolSettingCommand, setNumberSettingCommand } from "@/state/settings-commands";
 import { useAtomAction } from "@/state/use-atom-action";
-
-const WEEKDAY_OPTIONS: readonly { label: TranslationKey; value: number }[] = [
-    { label: "settings.time.sunday", value: 1 },
-    { label: "settings.time.monday", value: 2 },
-];
 
 const CLOCK_OPTIONS: readonly { label: TranslationKey; value: boolean }[] = [
     { label: "clock.twelveHour", value: false },
