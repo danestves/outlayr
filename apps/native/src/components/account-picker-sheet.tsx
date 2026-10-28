@@ -23,6 +23,8 @@ const SNAP_POINTS = Platform.OS === "android" ? ["50%", "92%"] : ["50%"];
 const EMPTY_ALIGN = Platform.OS === "android" ? "pt-10" : "justify-center";
 
 interface AccountPickerSheetProps {
+    /** Narrows the list; every bank account when omitted. */
+    accounts?: readonly Account[];
     allowNone?: boolean;
     db: Database;
     noneLabel?: string;
@@ -35,6 +37,7 @@ interface AccountPickerSheetProps {
 }
 
 export function AccountPickerSheet({
+    accounts: only,
     db,
     selectedId,
     onSelect,
@@ -47,7 +50,8 @@ export function AccountPickerSheet({
     const t = useTranslation();
     const colors = useColors();
     const sheetSurface = useSheetSurface(colors.surfaceSecondary);
-    const accounts = useBankAccounts(db);
+    const bankAccounts = useBankAccounts(db);
+    const accounts = only ?? bankAccounts;
     const sheetRef = useRef<BottomSheetModal>(null);
 
     const setRefs = useMergedRef(sheetRef, ref);
