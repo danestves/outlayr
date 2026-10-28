@@ -50,6 +50,7 @@ minimumReleaseAgeExclude:
 patchedDependencies:
     "@convex-dev/agent@0.7.8": patches/@convex-dev__agent@0.7.8.patch
     "@confect/server@10.4.1": patches/@confect__server@10.4.1.patch
+    "@expo/ui@58.0.24": patches/@expo__ui@58.0.24.patch
     "@expo/fingerprint@0.21.7": patches/@expo__fingerprint@0.21.7.patch
     "@hugeicons/react-native@1.0.16": patches/@hugeicons__react-native@1.0.16.patch
     "@tanstack/ai-mcp@1.0.0": patches/@tanstack__ai-mcp@1.0.0.patch

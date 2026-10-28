@@ -1,0 +1,26 @@
+diff --git a/build/universal/BottomSheet/index.android.js b/build/universal/BottomSheet/index.android.js
+index 6b00228..642e819 100644
+--- a/build/universal/BottomSheet/index.android.js
++++ b/build/universal/BottomSheet/index.android.js
+@@ -8,7 +8,7 @@ import { resolveContentPadding } from './utils';
+ // M3 `ModalBottomSheet` only has partial/expanded states.
+ // Only allow the partial state when the consumer requested a partial-friendly snap point.
+ function shouldSkipPartiallyExpanded(snapPoints) {
+-    if (!snapPoints || snapPoints.length === 0) return false;
++    if (!snapPoints || snapPoints.length === 0) return true;
+     return !snapPoints.some((sp)=>sp === 'half' || typeof sp === 'object' && 'fraction' in sp && sp.fraction < 1 || typeof sp === 'object' && 'height' in sp);
+ }
+ // M3 sizes content to intrinsic height.
+diff --git a/src/universal/BottomSheet/index.android.tsx b/src/universal/BottomSheet/index.android.tsx
+index b95efa2..d2e227d 100644
+--- a/src/universal/BottomSheet/index.android.tsx
++++ b/src/universal/BottomSheet/index.android.tsx
+@@ -15,7 +15,7 @@ import { resolveContentPadding } from './utils';
+ // M3 `ModalBottomSheet` only has partial/expanded states.
+ // Only allow the partial state when the consumer requested a partial-friendly snap point.
+ function shouldSkipPartiallyExpanded(snapPoints: SnapPoint[] | undefined): boolean {
+-  if (!snapPoints || snapPoints.length === 0) return false;
++  if (!snapPoints || snapPoints.length === 0) return true;
+   return !snapPoints.some(
+     (sp) =>
+       sp === 'half' ||
