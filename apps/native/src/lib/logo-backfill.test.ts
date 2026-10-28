@@ -1,23 +1,22 @@
-import { describe, expect, it, jest } from "@jest/globals";
 import * as Effect from "effect/Effect";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import { unusedDatabase } from "@/db/test-database";
 
-jest.mock("@/data/logo-backfill-core", () => ({
-    attachMissingLogos: jest.fn(() => require("effect/Effect").succeed(1)),
+vi.mock("@/data/logo-backfill-core", () => ({
+    attachMissingLogos: vi.fn(() => Effect.succeed(1)),
 }));
-jest.mock("@/data/settings-core", () => ({
-    readBoolSetting: jest.fn(() => require("effect/Effect").succeed(false)),
-    readRemoteEnrichment: jest.fn(() => require("effect/Effect").succeed(false)),
+vi.mock("@/data/settings-core", () => ({
+    readBoolSetting: vi.fn(() => Effect.succeed(false)),
+    readRemoteEnrichment: vi.fn(() => Effect.succeed(false)),
 }));
-jest.mock("./convex", () => ({ convex: null, enrichmentTransport: () => null }));
-jest.mock("./logo-fetch", () => ({ fetchMerchantImage: jest.fn() }));
-jest.mock("expo-file-system", () => ({ File: jest.fn() }));
-jest.mock("expo-localization", () => ({ getLocales: () => [] }));
+vi.mock("./convex", () => ({ convex: null, enrichmentTransport: () => null }));
+vi.mock("./logo-fetch", () => ({ fetchMerchantImage: vi.fn() }));
+vi.mock("expo-file-system", () => ({ File: vi.fn() }));
+vi.mock("expo-localization", () => ({ getLocales: () => [] }));
 
-// SAFETY: `require` after the mocks above, so the module under test sees them.
-const { armLogoBackfill, backfillLogos, cancelLogoBackfill } =
-    require("./logo-backfill") as typeof import("./logo-backfill");
+const { armLogoBackfill, backfillLogos, cancelLogoBackfill } = await import("./logo-backfill");
+const { attachMissingLogos } = await import("@/data/logo-backfill-core");
 
 describe("cancelLogoBackfill", () => {
     it("refuses passes for the cancelled database until it is armed again", async () => {
@@ -33,13 +32,11 @@ describe("cancelLogoBackfill", () => {
     });
 
     it("shares one pass between overlapping callers", async () => {
-        const { attachMissingLogos } =
-            jest.requireMock<typeof import("@/data/logo-backfill-core")>("@/data/logo-backfill-core");
         const db = unusedDatabase();
         armLogoBackfill(db);
-        const calls = jest.mocked(attachMissingLogos).mock.calls.length;
+        const calls = vi.mocked(attachMissingLogos).mock.calls.length;
         const gate = Promise.withResolvers<undefined>();
-        jest.mocked(attachMissingLogos).mockReturnValueOnce(Effect.promise(() => gate.promise).pipe(Effect.as(1)));
+        vi.mocked(attachMissingLogos).mockReturnValueOnce(Effect.promise(() => gate.promise).pipe(Effect.as(1)));
 
         const overlapping = Effect.runPromise(
             Effect.all([backfillLogos(db), backfillLogos(db)], { concurrency: "unbounded" })
@@ -48,6 +45,6 @@ describe("cancelLogoBackfill", () => {
         const [first, second] = await overlapping;
 
         expect([first, second]).toStrictEqual([1, 1]);
-        expect(jest.mocked(attachMissingLogos).mock.calls.length - calls).toBe(1);
+        expect(vi.mocked(attachMissingLogos).mock.calls.length - calls).toBe(1);
     });
 });

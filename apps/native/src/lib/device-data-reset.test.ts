@@ -1,30 +1,31 @@
-import { describe, expect, it, jest, test } from "@jest/globals";
+import { describe, expect, it, vi, test } from "vite-plus/test";
 
-jest.mock("./shared-store", () => ({ sharedStore: { remove: jest.fn() } }));
-jest.mock("@react-native-async-storage/async-storage", () => ({ clear: jest.fn() }));
-jest.mock<Partial<typeof import("expo-alternate-app-icons")>>("expo-alternate-app-icons", () => ({
-    setAlternateAppIcon: jest.fn<typeof import("expo-alternate-app-icons").setAlternateAppIcon>(),
+vi.mock("./shared-store", () => ({ sharedStore: { remove: vi.fn() } }));
+vi.mock("@react-native-async-storage/async-storage", () => ({ clear: vi.fn() }));
+vi.mock<Partial<typeof import("expo-alternate-app-icons")>>(import("expo-alternate-app-icons"), () => ({
+    setAlternateAppIcon: vi.fn<typeof import("expo-alternate-app-icons").setAlternateAppIcon>(),
     supportsAlternateIcons: true,
 }));
-jest.mock("expo-core-spotlight", () => ({
+vi.mock("expo-core-spotlight", () => ({
     __esModule: true,
-    default: { isAvailable: jest.fn(), removeAllItems: jest.fn() },
+    default: { isAvailable: vi.fn(), removeAllItems: vi.fn() },
 }));
-jest.mock<Partial<typeof import("expo-notifications")>>("expo-notifications", () => ({
+vi.mock<Partial<typeof import("expo-notifications")>>(import("expo-notifications"), () => ({
     cancelAllScheduledNotificationsAsync:
-        jest.fn<typeof import("expo-notifications").cancelAllScheduledNotificationsAsync>(),
-    dismissAllNotificationsAsync: jest.fn<typeof import("expo-notifications").dismissAllNotificationsAsync>(),
-    setBadgeCountAsync: jest.fn<typeof import("expo-notifications").setBadgeCountAsync>(),
+        vi.fn<typeof import("expo-notifications").cancelAllScheduledNotificationsAsync>(),
+    dismissAllNotificationsAsync: vi.fn<typeof import("expo-notifications").dismissAllNotificationsAsync>(),
+    setBadgeCountAsync: vi.fn<typeof import("expo-notifications").setBadgeCountAsync>(),
 }));
-jest.mock<Partial<typeof import("expo-secure-store")>>("expo-secure-store", () => ({
-    deleteItemAsync: jest.fn<typeof import("expo-secure-store").deleteItemAsync>(),
-    getItem: jest.fn<typeof import("expo-secure-store").getItem>(),
-    getItemAsync: jest.fn<typeof import("expo-secure-store").getItemAsync>(),
-    setItemAsync: jest.fn<typeof import("expo-secure-store").setItemAsync>(),
+vi.mock<typeof import("expo-secure-store")>(import("expo-secure-store"), async (importOriginal) => ({
+    ...(await importOriginal()),
+    deleteItemAsync: vi.fn<typeof import("expo-secure-store").deleteItemAsync>(),
+    getItem: vi.fn<typeof import("expo-secure-store").getItem>(),
+    getItemAsync: vi.fn<typeof import("expo-secure-store").getItemAsync>(),
+    setItemAsync: vi.fn<typeof import("expo-secure-store").setItemAsync>(),
 }));
-jest.mock("expo-sqlite", () => ({ deleteDatabaseAsync: jest.fn() }));
-jest.mock<Partial<typeof import("./photo-storage")>>("./photo-storage", () => ({ clearStoredPhotos: jest.fn() }));
-jest.mock<Partial<typeof import("./widget-bridge")>>("./widget-bridge", () => ({
+vi.mock("expo-sqlite", () => ({ deleteDatabaseAsync: vi.fn() }));
+vi.mock<Partial<typeof import("./photo-storage")>>(import("./photo-storage"), () => ({ clearStoredPhotos: vi.fn() }));
+vi.mock<Partial<typeof import("./widget-bridge")>>(import("./widget-bridge"), () => ({
     INTENT_SNAPSHOT_KEY: "intentSnapshot",
     PENDING_WRITES_KEY: "pendingWrites",
     PUSHED_PURCHASES_KEY: "pushedPurchases",
@@ -171,9 +172,9 @@ test("does not clean device stores when cloud completion fails", async () => {
 });
 
 test("persists and validates the SecureStore reset marker", async () => {
-    const getMarker = jest.mocked(getItemAsync);
-    const writeMarker = jest.mocked(setItemAsync);
-    const eraseMarker = jest.mocked(deleteItemAsync);
+    const getMarker = vi.mocked(getItemAsync);
+    const writeMarker = vi.mocked(setItemAsync);
+    const eraseMarker = vi.mocked(deleteItemAsync);
     getMarker.mockResolvedValue(JSON.stringify({ phase: "device", v: 1 }));
     writeMarker.mockResolvedValue();
     eraseMarker.mockResolvedValue();
@@ -190,8 +191,8 @@ test("persists and validates the SecureStore reset marker", async () => {
 });
 
 test("still deletes every credential key when one delete fails, and reports the store as failed", async () => {
-    jest.mocked(getItemAsync).mockResolvedValue(null);
-    const eraseKey = jest.mocked(deleteItemAsync);
+    vi.mocked(getItemAsync).mockResolvedValue(null);
+    const eraseKey = vi.mocked(deleteItemAsync);
     eraseKey.mockReset();
     eraseKey.mockRejectedValueOnce(new Error("keychain locked")).mockResolvedValue();
 

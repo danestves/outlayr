@@ -1,30 +1,24 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { waitFor } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { waitFor } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import type { startActivityAsync } from "expo-intent-launcher";
 import { Platform } from "react-native";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { hasSystemLanguageSettings, openLanguageSettings } from "./language-settings";
 
-const mockStartActivity = jest.fn<typeof startActivityAsync>(async () => ({ resultCode: 0 }));
-const mockOpenSettings = jest.fn<() => Promise<void>>(async () => undefined);
-const mockBuild = { hasIntentLauncher: true };
-jest.mock("expo-intent-launcher", () => {
-    if (!mockBuild.hasIntentLauncher) {
-        throw new Error("Cannot find native module 'ExpoIntentLauncher'");
-    }
-    return {
-        ActivityAction: { APP_LOCALE_SETTINGS: "android.settings.APP_LOCALE_SETTINGS" },
-        startActivityAsync: (...launch: Parameters<typeof startActivityAsync>) => mockStartActivity(...launch),
-    };
-});
-jest.mock("expo-linking", () => ({ openSettings: () => mockOpenSettings() }));
-jest.mock("expo-application", () => ({ applicationId: "com.tryoutlayr.app" }));
+const mockStartActivity = vi.fn<typeof startActivityAsync>(async () => ({ resultCode: 0 }));
+const mockOpenSettings = vi.fn<() => Promise<void>>(async () => undefined);
+vi.mock("expo-intent-launcher", () => ({
+    ActivityAction: { APP_LOCALE_SETTINGS: "android.settings.APP_LOCALE_SETTINGS" },
+    startActivityAsync: (...launch: Parameters<typeof startActivityAsync>) => mockStartActivity(...launch),
+}));
+vi.mock("expo-linking", () => ({ openSettings: () => mockOpenSettings() }));
+vi.mock("expo-application", () => ({ applicationId: "com.tryoutlayr.app" }));
 
-const mockApi = jest.spyOn(Platform, "Version", "get");
+const mockApi = vi.spyOn(Platform, "Version", "get");
 
 beforeEach(() => {
-    mockBuild.hasIntentLauncher = true;
     mockStartActivity.mockClear();
     mockOpenSettings.mockClear();
 });
@@ -56,18 +50,20 @@ describe("system language settings on Android", () => {
         await Effect.runPromise(openLanguageSettings());
 
         await waitFor(() => {
-            expect(mockOpenSettings).toHaveBeenCalledTimes(1);
+            expect(mockOpenSettings).toHaveBeenCalledOnce();
         });
     });
 
     it("falls back to App info on a build made before the module was added", async () => {
-        jest.resetModules();
-        mockBuild.hasIntentLauncher = false;
+        vi.resetModules();
+        vi.doMock("expo-intent-launcher", () => {
+            throw new Error("Cannot find native module 'ExpoIntentLauncher'");
+        });
 
         await Effect.runPromise(openLanguageSettings());
 
         await waitFor(() => {
-            expect(mockOpenSettings).toHaveBeenCalledTimes(1);
+            expect(mockOpenSettings).toHaveBeenCalledOnce();
         });
         expect(mockStartActivity).not.toHaveBeenCalled();
     });

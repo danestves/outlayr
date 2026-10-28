@@ -1,6 +1,7 @@
-import { describe, expect, it } from "@jest/globals";
+// @vitest-environment jsdom
 import { buildRateTable } from "@outlayr/money/valuation";
-import { renderHook } from "@testing-library/react-native";
+import { renderHook } from "@testing-library/react";
+import { describe, expect, it } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";

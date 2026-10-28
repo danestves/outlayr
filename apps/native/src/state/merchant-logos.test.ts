@@ -1,15 +1,15 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Effect from "effect/Effect";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { fetchedLogosAtom, logoDomainsKey } from "./merchant-logos";
 
 const mockFiles = new Map<string, string>();
 
-jest.mock("@/lib/logo-cache", () => ({
+vi.mock("@/lib/logo-cache", () => ({
     cachedLogoUri: (key: string) => mockFiles.get(key) ?? null,
     logoCacheKey: (name: string) => name,
-    readCachedLogo: () => require("effect/Effect").succeed({ kind: "unknown" }),
+    readCachedLogo: () => Effect.succeed({ kind: "unknown" }),
     writeCachedLogo: (key: string, bytes: Uint8Array | null) => {
         if (bytes !== null) {
             mockFiles.set(key, `file:///${key}`);
@@ -17,7 +17,7 @@ jest.mock("@/lib/logo-cache", () => ({
     },
 }));
 
-jest.mock<Partial<typeof import("@/env")>>("@/env", () => ({
+vi.mock<Partial<typeof import("@/env")>>(import("@/env"), () => ({
     ENV: { EXPO_PUBLIC_LOGO_DEV_TOKEN: "pk_test" },
 }));
 
@@ -29,7 +29,7 @@ let inFlight = 0;
 let mostInFlight = 0;
 
 function stubFetch(failing: ReadonlySet<string>) {
-    jest.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
         inFlight += 1;
         mostInFlight = Math.max(mostInFlight, inFlight);
         await new Promise((resolve) => {
@@ -67,7 +67,7 @@ describe("fetchedLogosAtom", () => {
     });
 
     afterEach(() => {
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
     });
 
     it("fetches four domains at a time, skips the ones already on disk and files a failed fetch as null", async () => {

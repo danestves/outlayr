@@ -1,18 +1,32 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Effect from "effect/Effect";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-jest.mock<Partial<typeof import("@react-native-async-storage/async-storage")>>(
-    "@react-native-async-storage/async-storage",
-    () => require("@react-native-async-storage/async-storage/jest/async-storage-mock")
-);
+import { isSignInCancellation } from "@/domain/account";
 
-jest.mock("@/lib/auth-session", () => ({
-    useAuthSession: () => ({ activate: jest.fn(), begin: jest.fn(), reject: jest.fn() }),
+import {
+    completeAppleSignIn,
+    completeGoogleSignIn,
+    googleProviderSubject,
+    signInWithProvider,
+} from "./provider-sign-in";
+import { layer } from "./secure-storage";
+
+vi.mock("@react-native-async-storage/async-storage", async () => {
+    vi.stubGlobal("jest", vi);
+    return import("@react-native-async-storage/async-storage/jest/async-storage-mock");
+});
+
+vi.mock("@/lib/auth-session", () => ({
+    useAuthSession: () => ({ activate: vi.fn(), begin: vi.fn(), reject: vi.fn() }),
 }));
 
-const mockSetItemAsync = jest.fn<(key: string, value: string) => Promise<void>>(() => Promise.resolve());
+const mockSetItemAsync = vi.hoisted(() =>
+    vi.fn<(key: string, value: string) => Promise<void>>(() => Promise.resolve())
+);
 
-jest.mock("expo-secure-store", () => ({
+vi.mock("expo-secure-store", () => ({
+    deleteItemAsync: vi.fn(),
+    getItemAsync: vi.fn(),
     setItemAsync: mockSetItemAsync,
 }));
 
@@ -20,23 +34,18 @@ beforeEach(() => {
     mockSetItemAsync.mockClear();
 });
 
-const { completeAppleSignIn, completeGoogleSignIn, googleProviderSubject, signInWithProvider } =
-    require("./provider-sign-in") as typeof import("./provider-sign-in");
-const { isSignInCancellation } = require("@/domain/account") as typeof import("@/domain/account");
-const { layer } = require("./secure-storage") as typeof import("./secure-storage");
-
 describe("apple-credential-captures-code", () => {
     it("binds raw nonce through Better Auth then grants the captured Apple credential", async () => {
         const client = {
-            $fetch: jest.fn(async (_path: string, _init: unknown) => ({ data: { active: true }, error: null })),
+            $fetch: vi.fn(async (_path: string, _init: unknown) => ({ data: { active: true }, error: null })),
             signIn: {
-                social: jest.fn(async (_request: unknown) => ({
+                social: vi.fn(async (_request: unknown) => ({
                     data: { user: { id: "better-auth-user" } },
                     error: null,
                 })),
             },
         };
-        const activation = { activate: jest.fn(), begin: jest.fn(), reject: jest.fn() };
+        const activation = { activate: vi.fn(), begin: vi.fn(), reject: vi.fn() };
 
         await Effect.runPromise(
             completeAppleSignIn(client as never, activation, {
@@ -47,7 +56,7 @@ describe("apple-credential-captures-code", () => {
             }).pipe(Effect.provide(layer))
         );
 
-        expect(activation.begin).toHaveBeenCalledTimes(1);
+        expect(activation.begin).toHaveBeenCalledOnce();
         expect(client.signIn.social).toHaveBeenCalledWith({
             idToken: { nonce: "raw-nonce", token: "id-token" },
             provider: "apple",
@@ -61,7 +70,7 @@ describe("apple-credential-captures-code", () => {
             },
             method: "POST",
         });
-        expect(activation.activate).toHaveBeenCalledTimes(1);
+        expect(activation.activate).toHaveBeenCalledOnce();
         expect(activation.reject).not.toHaveBeenCalled();
         expect(mockSetItemAsync).toHaveBeenCalledWith(
             "outlayr.provider-binding",
@@ -75,14 +84,14 @@ describe("apple-credential-captures-code", () => {
 
     it("apple-capture-failure-returns-local", async () => {
         const client = {
-            $fetch: jest.fn(async () => ({ data: null, error: { message: "grant failed" } })),
+            $fetch: vi.fn(async () => ({ data: null, error: { message: "grant failed" } })),
             signIn: {
-                social: jest.fn(async () => ({ data: { user: { id: "better-auth-user" } }, error: null })),
+                social: vi.fn(async () => ({ data: { user: { id: "better-auth-user" } }, error: null })),
             },
-            signOut: jest.fn(async () => ({ error: null })),
+            signOut: vi.fn(async () => ({ error: null })),
         };
-        const activation = { activate: jest.fn(), begin: jest.fn(), reject: jest.fn() };
-        const restoreLocal = jest.fn(() => Effect.void);
+        const activation = { activate: vi.fn(), begin: vi.fn(), reject: vi.fn() };
+        const restoreLocal = vi.fn(() => Effect.void);
 
         const failure = await Effect.runPromise(
             completeAppleSignIn(
@@ -99,10 +108,10 @@ describe("apple-credential-captures-code", () => {
         );
         expect(failure.cause).toMatchObject({ message: "grant failed" });
 
-        expect(client.signOut).toHaveBeenCalledTimes(1);
-        expect(activation.reject).toHaveBeenCalledTimes(1);
+        expect(client.signOut).toHaveBeenCalledOnce();
+        expect(activation.reject).toHaveBeenCalledOnce();
         expect(activation.activate).not.toHaveBeenCalled();
-        expect(restoreLocal).toHaveBeenCalledTimes(1);
+        expect(restoreLocal).toHaveBeenCalledOnce();
         expect(mockSetItemAsync).not.toHaveBeenCalled();
     });
 });
@@ -111,7 +120,7 @@ describe("google provider binding", () => {
     it("persists the Better Auth user and validated Google subject after sign-in", async () => {
         const client = {
             signIn: {
-                social: jest.fn(async () => ({ data: { user: { id: "better-auth-user" } }, error: null })),
+                social: vi.fn(async () => ({ data: { user: { id: "better-auth-user" } }, error: null })),
             },
         };
         const identityToken = "header.eyJzdWIiOiJnb29nbGUtc3ViamVjdCJ9.signature";
@@ -130,7 +139,7 @@ describe("google provider binding", () => {
 
     it("does not persist a binding for rejected or malformed Google sign-ins", async () => {
         const client = {
-            signIn: { social: jest.fn(async () => ({ data: null, error: { message: "rejected" } })) },
+            signIn: { social: vi.fn(async () => ({ data: null, error: { message: "rejected" } })) },
         };
 
         const failure = await Effect.runPromise(

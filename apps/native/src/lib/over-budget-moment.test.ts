@@ -1,15 +1,15 @@
-import { describe, expect, it, jest } from "@jest/globals";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Effect from "effect/Effect";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import { claimOverBudgetMoment as claim, overBudgetMomentKey } from "./over-budget-moment";
 
 const claimOverBudgetMoment = (key: string) => Effect.runPromise(claim(key));
 
-jest.mock<Partial<typeof import("@react-native-async-storage/async-storage")>>(
-    "@react-native-async-storage/async-storage",
-    () => require("@react-native-async-storage/async-storage/jest/async-storage-mock")
-);
+vi.mock("@react-native-async-storage/async-storage", async () => {
+    vi.stubGlobal("jest", vi);
+    return import("@react-native-async-storage/async-storage/jest/async-storage-mock");
+});
 
 describe("claimOverBudgetMoment", () => {
     it("plays a budget's over moment once per window and remembers it on the device", async () => {
@@ -40,10 +40,10 @@ describe("claimOverBudgetMoment", () => {
     it("does not replay a moment this device saw in an earlier launch", async () => {
         const rent = overBudgetMomentKey("rent", new Date("2026-12-01T00:00:00Z"));
 
-        jest.resetModules();
-        const storage = require("@react-native-async-storage/async-storage") as typeof AsyncStorage;
+        vi.resetModules();
+        const { default: storage } = await import("@react-native-async-storage/async-storage");
         await storage.setItem("outlayr.over-budget-seen", JSON.stringify([rent]));
-        const relaunched = require("./over-budget-moment") as typeof import("./over-budget-moment");
+        const relaunched = await import("./over-budget-moment");
 
         await expect(Effect.runPromise(relaunched.claimOverBudgetMoment(rent))).resolves.toBe(false);
     });

@@ -1,20 +1,20 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Effect from "effect/Effect";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { fetchMerchantImage, logoDevUrl } from "./logo-fetch";
 import type { MerchantImageRequest } from "./logo-fetch";
 
-const mockWriteCachedLogo = jest.fn();
+const mockWriteCachedLogo = vi.hoisted(() => vi.fn());
 
-jest.mock("@/lib/logo-cache", () => ({
+vi.mock("@/lib/logo-cache", () => ({
     logoCacheKey: () => "test-key",
-    readCachedLogo: () => require("effect/Effect").succeed({ kind: "unknown" }),
+    readCachedLogo: () => Effect.succeed({ kind: "unknown" }),
     writeCachedLogo: (...args: unknown[]) => mockWriteCachedLogo(...args),
 }));
 
-jest.mock<Partial<typeof import("@/env")>>("@/env", () => ({
+vi.mock<Partial<typeof import("@/env")>>(import("@/env"), () => ({
     ENV: { EXPO_PUBLIC_LOGO_DEV_TOKEN: "pk_test" },
 }));
 
@@ -76,11 +76,11 @@ describe("fetchMerchantImage", () => {
     });
 
     it("skips straight to the favicon when no logo.dev token is configured", async () => {
-        jest.resetModules();
-        jest.doMock<Partial<typeof import("@/env")>>("@/env", () => ({
+        vi.resetModules();
+        vi.doMock<Partial<typeof import("@/env")>>(import("@/env"), () => ({
             ENV: { EXPO_PUBLIC_LOGO_DEV_TOKEN: undefined },
         }));
-        const { fetchMerchantImage: fetchWithNoToken } = require("./logo-fetch") as typeof import("./logo-fetch");
+        const { fetchMerchantImage: fetchWithNoToken } = await import("./logo-fetch");
 
         const favicon = png(1300);
         const calls: string[] = [];
@@ -99,12 +99,12 @@ describe("fetchMerchantImage", () => {
         expect(result).toStrictEqual({ bytes: favicon, kind: "logo" });
         expect(calls).toHaveLength(1);
         expect(calls[0]).toContain("s2/favicons");
-        jest.dontMock("@/env");
+        vi.doUnmock("@/env");
     });
 
     it("does not remember a miss for a request that queried nothing", async () => {
         mockWriteCachedLogo.mockClear();
-        const handler = jest.fn<Handler>();
+        const handler = vi.fn<Handler>();
 
         const outcome = await run({ domain: null, name: "Netflix" }, handler);
 
@@ -159,12 +159,12 @@ describe("what a miss remembers", () => {
 
 describe("timeouts", () => {
     beforeEach(() => {
-        jest.useFakeTimers();
+        vi.useFakeTimers();
         mockWriteCachedLogo.mockClear();
     });
 
     afterEach(() => {
-        jest.useRealTimers();
+        vi.useRealTimers();
     });
 
     function stalled(signal: AbortSignal | null | undefined): Promise<Response> {
@@ -183,7 +183,7 @@ describe("timeouts", () => {
             }
             return url.includes("img.logo.dev") ? imageResponse(200, branded) : notFound();
         });
-        await jest.runAllTimersAsync();
+        await vi.runAllTimersAsync();
         await expect(pending).resolves.toStrictEqual({ bytes: branded, kind: "logo" });
         expect(attempts).toBe(2);
     });
@@ -194,7 +194,7 @@ describe("timeouts", () => {
             attempts += 1;
             return stalled(init?.signal);
         });
-        await jest.runAllTimersAsync();
+        await vi.runAllTimersAsync();
         await expect(pending).resolves.toStrictEqual({ kind: "none" });
         expect(attempts).toBe(4);
         expect(mockWriteCachedLogo).not.toHaveBeenCalled();

@@ -1,9 +1,9 @@
-import { describe, expect, it } from "@jest/globals";
 import { firstOfMonth, startOfDay } from "@outlayr/money/calendar";
 import { utcDateString } from "@outlayr/money/dates";
 import BetterSqlite3 from "better-sqlite3";
 import { eq, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import { describe, expect, it } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { transactions, transfers } from "@/db/schema";

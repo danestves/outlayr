@@ -1,9 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import type { AppStateStatus } from "react-native";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { migratedDatabase } from "@/db/test-database";
@@ -20,7 +20,7 @@ import * as BackgroundProgram from "./background-program";
 import type { RateWireRow } from "./rates";
 import * as RecurrenceSweep from "./recurrence-sweep";
 
-const flush = () => jest.advanceTimersByTimeAsync(0);
+const flush = () => vi.advanceTimersByTimeAsync(0);
 
 describe("background program", () => {
     let db: Database;
@@ -95,7 +95,7 @@ describe("background program", () => {
     };
 
     beforeEach(() => {
-        jest.useFakeTimers();
+        vi.useFakeTimers();
         db = migratedDatabase();
         events.length = 0;
         walk = record("walked");
@@ -103,7 +103,7 @@ describe("background program", () => {
 
     afterEach(() => {
         registry.dispose();
-        jest.useRealTimers();
+        vi.useRealTimers();
     });
 
     it("reconciles due reminders and rebuilds the widgets only once the sweep has committed", async () => {
@@ -113,12 +113,12 @@ describe("background program", () => {
             events.push("walked");
         };
         await start();
-        await jest.advanceTimersByTimeAsync(10_000);
+        await vi.advanceTimersByTimeAsync(10_000);
         expect(events).toStrictEqual(["daily"]);
 
         committed.resolve(undefined);
         await flush();
-        await jest.advanceTimersByTimeAsync(PUBLISH_DEBOUNCE_MS);
+        await vi.advanceTimersByTimeAsync(PUBLISH_DEBOUNCE_MS);
 
         expect(events).toStrictEqual(["daily", "walked", "subscriptions", "installments", "widgets"]);
     });
@@ -135,7 +135,7 @@ describe("background program", () => {
         appState.emit("active");
         tableWrites.emit("transactions");
         pendingWrites.emit(undefined);
-        await jest.advanceTimersByTimeAsync(60_000);
+        await vi.advanceTimersByTimeAsync(60_000);
 
         for (const watcher of watchers) {
             expect(watcher.listeners.size).toBe(0);

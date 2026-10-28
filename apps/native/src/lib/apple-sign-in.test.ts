@@ -1,23 +1,23 @@
-import { describe, expect, it, jest } from "@jest/globals";
 import * as Effect from "effect/Effect";
 import type { AppleAuthenticationCredential } from "expo-apple-authentication";
 import { CryptoDigestAlgorithm } from "expo-crypto";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import { appleCredential } from "./apple-sign-in";
 
-jest.mock<typeof import("expo-apple-authentication")>("expo-apple-authentication", () => ({
-    ...jest.requireActual<typeof import("expo-apple-authentication")>("expo-apple-authentication"),
-    signInAsync: jest.fn<typeof import("expo-apple-authentication").signInAsync>(),
+vi.mock<typeof import("expo-apple-authentication")>(import("expo-apple-authentication"), async (importOriginal) => ({
+    ...(await importOriginal()),
+    signInAsync: vi.fn<typeof import("expo-apple-authentication").signInAsync>(),
 }));
 
-jest.mock<typeof import("expo-crypto")>("expo-crypto", () => ({
-    ...jest.requireActual<typeof import("expo-crypto")>("expo-crypto"),
-    digestStringAsync: jest.fn<typeof import("expo-crypto").digestStringAsync>(),
-    getRandomBytesAsync: jest.fn<typeof import("expo-crypto").getRandomBytesAsync>(),
+vi.mock<typeof import("expo-crypto")>(import("expo-crypto"), async (importOriginal) => ({
+    ...(await importOriginal()),
+    digestStringAsync: vi.fn<typeof import("expo-crypto").digestStringAsync>(),
+    getRandomBytesAsync: vi.fn<typeof import("expo-crypto").getRandomBytesAsync>(),
 }));
 
-const apple = jest.mocked(jest.requireMock<typeof import("expo-apple-authentication")>("expo-apple-authentication"));
-const crypto = jest.mocked(jest.requireMock<typeof import("expo-crypto")>("expo-crypto"));
+const apple = vi.mocked(await import("expo-apple-authentication"));
+const crypto = vi.mocked(await import("expo-crypto"));
 
 describe("apple-nonce-binds-once", () => {
     it("passes only the SHA-256 nonce to Apple while retaining raw nonce for Better Auth", async () => {

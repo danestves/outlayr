@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "@jest/globals";
+import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import { clearEnrichmentCache, getCachedEnrichment, setCachedEnrichment } from "./enrichment-cache";
 import type { RemoteEnrichmentResult } from "./enrichment-cache";

@@ -1,10 +1,10 @@
-import { beforeAll, describe, expect, it } from "@jest/globals";
 import { lastMsBefore, spentForCategory, spentForMain } from "@outlayr/money/budget-spent";
 import type { ExpenseContribution } from "@outlayr/money/budget-spent";
 import { utcDateString } from "@outlayr/money/dates";
 import { buildRateTable, sumValuedIn, valueDatedRowsIn, valueIn } from "@outlayr/money/valuation";
 import BetterSqlite3 from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
+import { beforeAll, describe, expect, it } from "vite-plus/test";
 
 import { categories, transactions } from "@/db/schema";
 

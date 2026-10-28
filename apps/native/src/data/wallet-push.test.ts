@@ -1,6 +1,6 @@
-import { expect, test } from "@jest/globals";
 import { eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import { expect, test } from "vite-plus/test";
 
 import { accounts, categories, transactions } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";

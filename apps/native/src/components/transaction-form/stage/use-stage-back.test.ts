@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { renderHook } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { renderHook } from "@testing-library/react";
 import { BackHandler } from "react-native";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { useStageBack } from "./use-stage-back";
 
@@ -10,7 +11,7 @@ const PRESS = { timeStamp: 0, type: "hardwareBackPress" };
 
 let mockFocused = true;
 
-jest.mock("expo-router", () => ({ useIsFocused: () => mockFocused }));
+vi.mock("expo-router", () => ({ useIsFocused: () => mockFocused }));
 
 /** Presses system back: the latest live listener first, as React Native does. */
 function pressBack(listeners: BackListener[]): boolean {
@@ -23,22 +24,22 @@ describe("useStageBack", () => {
     beforeEach(() => {
         mockFocused = true;
         listeners.length = 0;
-        jest.spyOn(BackHandler, "addEventListener").mockImplementation((_event, listener) => {
+        vi.spyOn(BackHandler, "addEventListener").mockImplementation((_event, listener) => {
             listeners.push(listener);
             return { remove: () => listeners.splice(listeners.indexOf(listener), 1) };
         });
     });
 
     it("steps the stage back on system back", async () => {
-        const onBack = jest.fn();
+        const onBack = vi.fn();
         await renderHook(() => useStageBack(onBack));
 
         expect(pressBack(listeners)).toBe(true);
-        expect(onBack).toHaveBeenCalledTimes(1);
+        expect(onBack).toHaveBeenCalledOnce();
     });
 
     it("leaves system back to a screen pushed over the form", async () => {
-        const onBack = jest.fn();
+        const onBack = vi.fn();
         const { rerender } = await renderHook(() => useStageBack(onBack));
 
         mockFocused = false;

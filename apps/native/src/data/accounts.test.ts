@@ -1,9 +1,10 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+// @vitest-environment jsdom
 import { accountBalance } from "@outlayr/money/account-balance";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { buildRateTable } from "@outlayr/money/valuation";
-import { renderHook } from "@testing-library/react-native";
+import { renderHook } from "@testing-library/react";
 import * as Effect from "effect/Effect";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { accounts, transactions, transfers } from "@/db/schema";
@@ -13,6 +14,7 @@ import { openingForBalance, useAccountBalance, useSettledAccountCells } from "./
 import { settledAccountCellQuery, settledAccountsCellQuery, toCurrencyCell, toCurrencyCells } from "./cell-query";
 import type { CellRow } from "./cell-query";
 import { useLogOverviewIn } from "./debts";
+import * as liveQuery from "./live-query";
 import { backfillRecurring } from "./recurrence-backfill";
 import { transactionsRepo } from "./transactions-core";
 
@@ -126,13 +128,13 @@ describe("openingForBalance", () => {
     });
 });
 
-jest.mock("./live-query", () => ({
-    ...jest.requireActual<typeof import("./live-query")>("./live-query"),
-    useLiveQuery: jest.fn<typeof import("./live-query").useLiveQuery>(),
+vi.mock("./live-query", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("./live-query")>()),
+    useLiveQuery: vi.fn<typeof import("./live-query").useLiveQuery>(),
 }));
 
-const mockUseLiveQuery = jest.mocked(jest.requireMock<typeof import("./live-query")>("./live-query").useLiveQuery);
-const { useLiveQuery } = jest.requireActual<typeof import("./live-query")>("./live-query");
+const mockUseLiveQuery = vi.mocked(liveQuery.useLiveQuery);
+const { useLiveQuery } = await vi.importActual<typeof import("./live-query")>("./live-query");
 
 function liveRow(overrides: Partial<CellRow & { plotDay: string }> = {}): CellRow & { plotDay: string } {
     return {
@@ -179,9 +181,7 @@ describe("useSettledAccountCells", () => {
             .mockReturnValueOnce([])
             .mockReturnValueOnce([]);
 
-        const { result } = await renderHook(() =>
-            useSettledAccountCells({} as Database, "account-1", JUNE_1.getTime())
-        );
+        const { result } = renderHook(() => useSettledAccountCells({} as Database, "account-1", JUNE_1.getTime()));
 
         expect(result.current).toStrictEqual([
             {
@@ -251,7 +251,7 @@ describe("useLogOverviewIn", () => {
             .mockReturnValueOnce([])
             .mockReturnValueOnce([]);
 
-        const { result } = await renderHook(() => useLogOverviewIn(makeDb(), valuation, JUNE_1.getTime(), "going"));
+        const { result } = renderHook(() => useLogOverviewIn(makeDb(), valuation, JUNE_1.getTime(), "going"));
 
         expect(result.current.banks?.count).toBe(1);
         expect(result.current.banks?.total).toBe(100);
@@ -266,7 +266,7 @@ describe("useLogOverviewIn", () => {
             .mockReturnValueOnce([])
             .mockReturnValueOnce([]);
 
-        const { result } = await renderHook(() => useLogOverviewIn(makeDb(), valuation, JUNE_1.getTime()));
+        const { result } = renderHook(() => useLogOverviewIn(makeDb(), valuation, JUNE_1.getTime()));
 
         expect(result.current.banks?.total).toBe(100);
         expect(result.current.banks?.rows.map((row) => row.id)).toStrictEqual(["zinli"]);
@@ -280,13 +280,13 @@ describe("useLogOverviewIn", () => {
             .insert(accounts)
             .values({ ...account("a1", 100), dateCreated: JUNE_1, name: "Checking", updatedAt: JUNE_1 });
         await addTransaction(db, { accountId: "a1", amount: 7, date: JUNE_2, day: JUNE_2, id: "later" });
-        const { rerender, result } = await renderHook(
+        const { rerender, result } = renderHook(
             (nowMs: number) => useLogOverviewIn(db, valuation, nowMs).banks?.total,
             { initialProps: JUNE_1.getTime() }
         );
         expect(result.current).toBe(100);
 
-        await rerender(JUNE_2.getTime());
+        rerender(JUNE_2.getTime());
 
         expect(result.current).toBe(93);
     });
@@ -304,11 +304,11 @@ describe("a row dated after now", () => {
     });
 
     async function balanceBeforeAndOn(account: typeof checking): Promise<number[]> {
-        const { rerender, result } = await renderHook((nowMs: number) => useAccountBalance(db, account, nowMs).total, {
+        const { rerender, result } = renderHook((nowMs: number) => useAccountBalance(db, account, nowMs).total, {
             initialProps: JUNE_1.getTime(),
         });
         const before = result.current;
-        await rerender(JUNE_2.getTime());
+        rerender(JUNE_2.getTime());
         return [before, result.current];
     }
 
@@ -363,7 +363,7 @@ describe("a row dated after now", () => {
 
     it("keeps the opening when the editor saves the balance it shows", async () => {
         await addTransaction(db, { accountId: "a1", amount: 7, date: JUNE_2, day: JUNE_2, id: "later" });
-        const { result } = await renderHook(() => useAccountBalance(db, checking, JUNE_1.getTime()).total);
+        const { result } = renderHook(() => useAccountBalance(db, checking, JUNE_1.getTime()).total);
 
         expect(result.current).toBe(90);
         await expect(Effect.runPromise(openingForBalance(db, "a1", result.current, "USD", JUNE_1))).resolves.toBe(

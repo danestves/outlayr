@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 import { allocationsFor, isBalanced, rebalance, unallocated } from "./split";
 import type { Allocation } from "./split";

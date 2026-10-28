@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 import { DAY_CARD_WIDTH, layoutDayCard, truncateToWidth } from "./day-card";
 import type { DayCardInput } from "./day-card";

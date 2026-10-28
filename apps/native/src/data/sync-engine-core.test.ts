@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it } from "@jest/globals";
 import { eq, getTableColumns, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import {

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 import { heightDetent, LARGE_SHEET_TOP_INSET } from "./sheet-detents";
 

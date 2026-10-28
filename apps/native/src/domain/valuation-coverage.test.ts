@@ -1,5 +1,5 @@
-import { describe, expect, it } from "@jest/globals";
 import { buildRateTable } from "@outlayr/money/valuation";
+import { describe, expect, it } from "vite-plus/test";
 
 import { EN } from "@/i18n/catalog";
 import type { TranslateFn } from "@/i18n/context";

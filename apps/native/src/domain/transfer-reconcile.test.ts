@@ -1,5 +1,5 @@
-import { describe, expect, it } from "@jest/globals";
 import { roundMoney } from "@outlayr/money/round";
+import { describe, expect, it } from "vite-plus/test";
 
 import { NO_FEES, savedRate, solveTransfer, transferGap, transferLegs } from "./transfer-reconcile";
 import type { TransferValues } from "./transfer-reconcile";

@@ -1,21 +1,19 @@
-import { describe, expect, it, jest } from "@jest/globals";
+import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import * as Result from "effect/Result";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { appRuntime } from "@/lib/runtime";
 
-jest.mock<Partial<typeof import("./planning-commands")>>("./planning-commands", () => {
-    const { die, succeed } = require("effect/Effect") as typeof import("effect/Effect");
-    return {
-        writeDebt: () => succeed("person-1"),
-        writePayoffPlan: () => die(new Error("plan insert threw")),
-    };
-});
+import { saveDebtCommand } from "./debt-flow-commands";
 
-const { saveDebtCommand } = require("./debt-flow-commands") as typeof import("./debt-flow-commands");
+vi.mock<Partial<typeof import("./planning-commands")>>(import("./planning-commands"), () => ({
+    writeDebt: () => Effect.succeed("person-1"),
+    writePayoffPlan: () => Effect.die(new Error("plan insert threw")),
+}));
 
 describe("saveDebtCommand", () => {
     it("keeps the saved debt when its payoff plan dies, so a retry cannot write it twice", async () => {

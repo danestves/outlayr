@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 import type { CategoryBreakdownEntry, InsightsBucket, InsightsMeasure } from "@/data/insights";
 import type { InsightsTotals } from "@/domain/insights-measure";

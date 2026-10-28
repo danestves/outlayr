@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 import { ACCENTS, DEFAULT_ACCENT, WALLPAPER_ACCENT_VALUE } from "./accent";
 import { defaultMaterialAccentValue, materialAccentOptions, materialSeed, offeredAccentValue } from "./material-accent";

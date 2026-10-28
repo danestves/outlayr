@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 import { CATALOGS } from "./catalog";
 import { SUPPORTED_LANGUAGES } from "./languages";

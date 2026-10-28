@@ -1,6 +1,6 @@
-import { describe, expect, it } from "@jest/globals";
 import type { UpdateInfo } from "expo-updates";
 import { UpdateInfoType } from "expo-updates";
+import { describe, expect, it } from "vite-plus/test";
 
 import { describeUpdate } from "./app-update";
 

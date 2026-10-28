@@ -13,10 +13,8 @@ interface Brand {
 export const attachImportLogos = Effect.fn("ImportLogoAttach.attach")(function* attachImportLogos(
     entries: readonly ImportEntry[]
 ) {
-    // SAFETY: untyped `require`, asserted to that module's own type.
-    const photoStorage = require("@/lib/photo-storage") as typeof import("@/lib/photo-storage");
-    // SAFETY: as on the line above.
-    const { glowFromImage } = require("@/theme/glow") as typeof import("@/theme/glow");
+    const photoStorage = yield* Effect.promise(() => import("@/lib/photo-storage"));
+    const { glowFromImage } = yield* Effect.promise(() => import("@/theme/glow"));
 
     const brands = new Map<string, Brand | null>();
     const result: ImportEntry[] = [];

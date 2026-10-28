@@ -1,20 +1,20 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Effect from "effect/Effect";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { IdentitySelection } from "@/components/identity-picker-shared";
 
 import { adoptPickedPhoto } from "./identity-commands";
 
-const mockPersist = jest.fn<(uri: string) => Promise<string>>();
-const mockGlow = jest.fn<(uri: string) => Promise<string[]>>();
+const mockPersist = vi.fn<(uri: string) => Promise<string>>();
+const mockGlow = vi.fn<(uri: string) => Promise<string[]>>();
 
-jest.mock<Partial<typeof import("@/lib/photo-storage")>>("@/lib/photo-storage", () => ({
+vi.mock<Partial<typeof import("@/lib/photo-storage")>>(import("@/lib/photo-storage"), () => ({
     persistPickedPhoto: (uri: string) => require("effect/Effect").promise(() => mockPersist(uri)),
 }));
-jest.mock<Partial<typeof import("@/theme/glow")>>("@/theme/glow", () => ({
+vi.mock<Partial<typeof import("@/theme/glow")>>(import("@/theme/glow"), () => ({
     glowFromImage: (uri: string) => require("effect/Effect").promise(() => mockGlow(uri)),
 }));
-jest.mock("expo-image-picker", () => ({ launchImageLibraryAsync: jest.fn() }));
+vi.mock("expo-image-picker", () => ({ launchImageLibraryAsync: vi.fn() }));
 
 const EMPTY: IdentitySelection = { color: null, emoji: null, icon: null, photoColor: null, photoUri: null };
 
@@ -35,7 +35,7 @@ describe("adoptPickedPhoto", () => {
     });
 
     it("keeps the picked file when the copy fails, with no glow when unreadable", async () => {
-        jest.spyOn(console, "error").mockImplementation(() => {});
+        vi.spyOn(console, "error").mockImplementation(() => {});
         mockPersist.mockRejectedValue(new Error("disk full"));
         mockGlow.mockResolvedValue([]);
 

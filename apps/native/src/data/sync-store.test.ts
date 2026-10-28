@@ -1,5 +1,5 @@
-import { expect, test } from "@jest/globals";
 import * as Effect from "effect/Effect";
+import { expect, test } from "vite-plus/test";
 
 import { migratedDatabase } from "@/db/test-database";
 import { asCloudCall } from "@/lib/fake-cloud";

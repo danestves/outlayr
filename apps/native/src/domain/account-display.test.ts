@@ -1,7 +1,7 @@
-import { describe, expect, it } from "@jest/globals";
 import { accountsOverview, isMultiCurrency } from "@outlayr/money/account-overview";
 import type { AccountCellRow, OverviewAccount } from "@outlayr/money/account-overview";
 import { buildRateTable } from "@outlayr/money/valuation";
+import { describe, expect, it } from "vite-plus/test";
 
 import { formatSignedAmount } from "./account-display";
 

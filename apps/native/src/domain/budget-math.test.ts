@@ -1,7 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 
-import { describe, expect, it } from "@jest/globals";
 import {
     advanceBudgetWindow,
     BUDGET_TYPE,
@@ -11,6 +10,7 @@ import {
     shiftWindow,
     startOfPeriod,
 } from "@outlayr/money/budget-window";
+import { describe, expect, it } from "vite-plus/test";
 
 import { EN } from "@/i18n/catalog";
 

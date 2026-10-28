@@ -13,10 +13,6 @@ export const testDatabase = (sqlite: BetterSqlite3.Database): Database =>
 export const testSpendDb = (sqlite: BetterSqlite3.Database): SpendDb =>
     drizzle({ client: sqlite }) as unknown as SpendDb;
 
-/**
- * Inert, not throwing: jest matchers probe the handle (`asymmetricMatch`), so a throwing stub would fail the
- * assertion instead of the call.
- */
 // SAFETY: an empty object has none of Database's members, and these suites touch none of them.
 export const unusedDatabase = (): Database => ({}) as Database;
 

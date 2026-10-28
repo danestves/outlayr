@@ -1,10 +1,11 @@
-import { afterEach, describe, expect, it, jest } from "@jest/globals";
-import { act, render, screen } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { act, render, screen } from "@testing-library/react";
 import { AppState } from "react-native";
 import type { AppStateStatus } from "react-native";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
-jest.mock<Partial<typeof import("expo-localization")>>("expo-localization", () => ({
-    getLocales: jest.fn<typeof import("expo-localization").getLocales>(),
+vi.mock<Partial<typeof import("expo-localization")>>(import("expo-localization"), () => ({
+    getLocales: vi.fn<typeof import("expo-localization").getLocales>(),
 }));
 
 import { getLocales } from "expo-localization";
@@ -15,10 +16,9 @@ import { testLocale as mockTestLocale } from "@/i18n/test-locale";
 
 import { LanguageProvider } from "./context";
 
-// This suite is the module under test, so it opts out of jest/i18n-key-stub.js.
-jest.unmock("@/i18n/context");
+vi.unmock("@/i18n/context");
 
-const mockGetLocales = jest.mocked(getLocales);
+const mockGetLocales = vi.mocked(getLocales);
 
 function setDeviceLanguage(tag: string, overrides: Partial<Locale> = {}) {
     mockGetLocales.mockReturnValue([mockTestLocale({ languageTag: tag, ...overrides })]);
@@ -32,7 +32,7 @@ function watchAppState() {
         if (event === "change") {
             listeners.push(listener as (status: AppStateStatus) => void);
         }
-        return { remove: jest.fn() };
+        return { remove: vi.fn() };
     }) as typeof AppState.addEventListener;
     return {
         async returnToForeground() {

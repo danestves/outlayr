@@ -1,8 +1,8 @@
-import { beforeAll, describe, expect, it } from "@jest/globals";
 import { buildRateTable } from "@outlayr/money/valuation";
 import BetterSqlite3 from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import * as Effect from "effect/Effect";
+import { beforeAll, describe, expect, it } from "vite-plus/test";
 
 import { categories, transactions } from "@/db/schema";
 

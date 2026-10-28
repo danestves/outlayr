@@ -1,5 +1,5 @@
-import { describe, expect, it } from "@jest/globals";
 import { buildRateTable } from "@outlayr/money/valuation";
+import { describe, expect, it } from "vite-plus/test";
 
 import { capAtDayEnd, groupByDay, groupByDayAsItGrows, joinDaySections } from "./day-sections";
 

@@ -1,27 +1,28 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+// @vitest-environment jsdom
 import { addDays } from "@outlayr/money/calendar";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
-import { renderHook } from "@testing-library/react-native";
+import { renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { occurrenceId } from "@/data/recurrence-backfill";
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
 
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 const mockRouter = { navigate: mockNavigate };
 const mockTaps: { last: unknown; listener: ((response: unknown) => void) | null } = { last: null, listener: null };
 
-jest.mock<Partial<typeof import("@react-native-async-storage/async-storage")>>(
-    "@react-native-async-storage/async-storage",
-    () => require("@react-native-async-storage/async-storage/jest/async-storage-mock")
-);
-jest.mock("expo-core-spotlight", () => ({ __esModule: true, default: {} }));
-jest.mock("expo-router", () => ({ useRouter: () => mockRouter }));
-jest.mock("expo-notifications", () => ({
+vi.mock("@react-native-async-storage/async-storage", async () => {
+    vi.stubGlobal("jest", vi);
+    return import("@react-native-async-storage/async-storage/jest/async-storage-mock");
+});
+vi.mock("expo-core-spotlight", () => ({ __esModule: true, default: {} }));
+vi.mock("expo-router", () => ({ useRouter: () => mockRouter }));
+vi.mock("expo-notifications", () => ({
     addNotificationResponseReceivedListener: (listener: (response: unknown) => void) => {
         mockTaps.listener = listener;
-        return { remove: jest.fn() };
+        return { remove: vi.fn() };
     },
     clearLastNotificationResponse: () => {
         mockTaps.last = null;

@@ -1,4 +1,4 @@
-import { describe, expect, it, jest } from "@jest/globals";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import type { ParsedImportFile } from "@/data/transfer-core";
 import { INITIAL_IMPORT_FLOW_STATE } from "@/domain/import-flow";
@@ -67,15 +67,15 @@ describe("createImportDraftStore", () => {
 
     it("notifies subscribers on dispatch and stops after unsubscribe", () => {
         const store = createImportDraftStore();
-        const listener = jest.fn();
+        const listener = vi.fn();
         const unsubscribe = store.subscribe(listener);
 
         store.dispatch({ sourceId: "csv", type: "sourceSelected" });
-        expect(listener).toHaveBeenCalledTimes(1);
+        expect(listener).toHaveBeenCalledOnce();
 
         unsubscribe();
         store.setStep("file");
-        expect(listener).toHaveBeenCalledTimes(1);
+        expect(listener).toHaveBeenCalledOnce();
     });
 });
 

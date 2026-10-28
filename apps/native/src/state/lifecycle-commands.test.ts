@@ -1,8 +1,8 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { seedCategories } from "@/data/categories-core";
 import { adoptedAccount } from "@/data/ledger-adoption";
@@ -14,14 +14,14 @@ import { migratedDatabase } from "@/db/test-database";
 import { appRuntime } from "@/lib/runtime";
 
 let mockEngine: AdoptionEngine | null = null;
-jest.mock("@/lib/adoption-engine", () => ({ adoptionEngine: () => mockEngine }));
+vi.mock("@/lib/adoption-engine", () => ({ adoptionEngine: () => mockEngine }));
 
 import { reconcileAdoptionCommand } from "./lifecycle-commands";
 
 const ACCOUNT = "account-a";
 
 function engineReading(remote: "empty" | "populated") {
-    const replaced = jest.fn();
+    const replaced = vi.fn();
     const engine: AdoptionEngine = {
         accountLedger: () => Effect.succeed(remote),
         discardAccountLedger: () => Effect.void,
@@ -80,7 +80,7 @@ describe("reconcileAdoptionCommand", () => {
 
         await expect(reconcile(db)).resolves.toBe("settled");
 
-        expect(replaced).toHaveBeenCalledTimes(1);
+        expect(replaced).toHaveBeenCalledOnce();
         await expect(Effect.runPromise(adoptedAccount(db))).resolves.toBe(ACCOUNT);
         await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(true);
     });

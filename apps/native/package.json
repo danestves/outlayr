@@ -15,7 +15,7 @@
         "i18n:test": "intlayer test",
         "ios": "expo run:ios",
         "start": "vp run i18n:build && expo start",
-        "test": "vp run i18n:build && jest"
+        "test": "vp run i18n:build && vp test run"
     },
     "dependencies": {
         "@better-auth/expo": "catalog:",
@@ -106,19 +106,17 @@
     "devDependencies": {
         "@bacons/apple-targets": "5.0.0",
         "@hugeicons/core-free-icons": "^4.3.5",
-        "@jest/globals": "30.5.2",
         "@jridgewell/trace-mapping": "^0.3.31",
         "@outlayr/config": "workspace:*",
-        "@testing-library/react-native": "^14.1.0",
+        "@testing-library/react": "^16.3.3",
         "@types/better-sqlite3": "^9.6.0",
-        "@types/jest": "30.0.0",
         "@types/react": "19.3.0",
         "babel-plugin-inline-import": "^3.0.0",
         "babel-preset-expo": "58.0.21",
         "better-sqlite3": "^13.0.3",
         "drizzle-kit": "1.0.0-rc.5",
-        "jest": "~30.5.2",
-        "jest-expo": "~58.0.12",
+        "jsdom": "^26.1.0",
+        "react-dom": "19.3.0",
         "react-native-nano-icons": "1.0.1",
         "tsx": "^4.23.15",
         "typescript": "catalog:"

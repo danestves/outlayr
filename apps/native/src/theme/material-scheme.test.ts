@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { describe, expect, it } from "@jest/globals";
 import {
     argbFromHex,
     Hct,
@@ -17,6 +16,7 @@ import {
     SchemeVibrant,
 } from "@material/material-color-utilities";
 import type { DynamicScheme } from "@material/material-color-utilities";
+import { describe, expect, it } from "vite-plus/test";
 
 import {
     FIRST_RUN_TEXT,

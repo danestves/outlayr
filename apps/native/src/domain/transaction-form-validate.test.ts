@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 import { TRANSACTION_FORM_ERROR, transactionFormErrors } from "./transaction-form-validate";
 

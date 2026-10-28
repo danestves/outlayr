@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 import { isBalanced, unallocated } from "./split";
 import { addPart, isRealSplit, openDraft, removePart, setPartAmount, setPartCategory } from "./split-draft";

@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 // Ids must not depend on the sweeping device's zone, or a synced pair in two zones doubles every subscription.
 function occurrenceIdIn(timeZone: string, parentLocalId: string, isoHolding: string): string {

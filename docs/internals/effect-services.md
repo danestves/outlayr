@@ -16,7 +16,7 @@ One module per service, in this order:
 
 `make` yields what it needs (`yield* OpenConnection`); it takes no parameters. A dependency with one production value and test doubles is a `Context.Reference` whose `defaultValue` is the production value, so the app layer provides nothing extra and a test provides `Layer.succeed(OpenConnection, fake)`.
 
-Every registry test imports `src/lib/runtime.ts`, so nothing it imports may load a module jest cannot: `expo-widgets`, `expo-core-spotlight`, Skia through `lib/photo-storage`, or `expo-notifications`, which warns at import and throws under the Android project. Such a dependency is a `Context.Service` tag with no default, read inside the operation so it shows in its requirements (`SystemSurfaces` in `SystemSync.run`), and the mount module provides the live value (`data/background-work-mount.ts`).
+Every registry test imports `src/lib/runtime.ts`, so nothing it imports may load a module vitest cannot load: `expo-widgets`, `expo-core-spotlight`, Skia through `lib/photo-storage`, or `expo-notifications`, which warns at import and throws under the Android project. Such a dependency is a `Context.Service` tag with no default, read inside the operation so it shows in its requirements (`SystemSurfaces` in `SystemSync.run`), and the mount module provides the live value (`data/background-work-mount.ts`).
 
 ## Platform seams
 
@@ -51,7 +51,7 @@ A reusable operation is `Effect.fn("LocalDatabase.open")(function* open() { ... 
 
 ## Data modules
 
-`apps/native/src/data/*-core.ts` modules run in jest on better-sqlite3, so they take no service and import neither `src/state/` nor `src/lib/runtime.ts`.
+`apps/native/src/data/*-core.ts` modules run in vitest on better-sqlite3, so they take no service and import neither `src/state/` nor `src/lib/runtime.ts`.
 
 - **An operation** is `Effect.fn("Transactions.create")(function* create(db: Database, ...) { ... })`. `db` stays a parameter because `LocalDatabase` reopens the connection on reset and retry. An exported object of operations (`transactionsRepo`, `tagsRepo`) keeps its members, each an `Effect.fn`.
 - **One error per module**, `<Module>Error`, with `operation: Schema.Literals([...])` (left out when the module has one) and `cause: Schema.Defect()`. A private helper wraps a drizzle query in `Effect.tryPromise({ catch, try })`; a query builder is a thenable, so `() => db.update(...)` is the `try`. A synchronous read used inside an operation goes through `Effect.try` with the same error, since a bare throw in a generator is a defect.
@@ -86,7 +86,7 @@ A reusable operation is `Effect.fn("LocalDatabase.open")(function* open() { ... 
 - `Service.use(...)` trips `rules-of-hooks` outside a component. Write `LocalDatabase.pipe(Effect.flatMap((local) => local.open()))`.
 - React effects are for synchronizing with something outside React. Derive in render and act in handlers instead of syncing state, but do not hide real lifecycle work in refs or stores to dodge an effect. Reach for, in order: state derived in render; the event handler that causes the change; a `key` remount to reset; `useSyncExternalStore` through a shared helper for external stores; `useAtomMount` on an atom family whose body starts the work and registers `get.addFinalizer`; a module service attached outside React; Reanimated `useDerivedValue` or `useAnimatedReaction`; a ref callback. An effect that stays says why on the line above it, `// oxlint-disable-next-line outlayr/react-effect-budget -- <why>`, and `scripts/effect-budget.json` caps the rest (see `linting.md`, "React effect budget").
 - A timer or async continuation that outlives the render that started it reads its arguments through `useLatest` (`src/lib/use-latest.ts`). `useEffectEvent` is no substitute: lint allows calling one only from effects and other effect events.
-- A Reanimated reaction that writes a shared value which a derived value reads lands one frame later, because mappers that run during a mapper pass wait for the next frame. Jest never advances that frame, so a hook whose test pins "swaps at once" keeps its effect (`useChartPath`).
+- A Reanimated reaction that writes a shared value which a derived value reads lands one frame later, because mappers that run during a mapper pass wait for the next frame. Tests never advance that frame, so a hook whose test pins "swaps at once" keeps its effect (`useChartPath`).
 
 ## Commands are the write path
 
@@ -139,15 +139,15 @@ const purchaseCommand = createRuntimeCommand(appRuntime, {
 - Calls that must run one at a time take a module-level `Semaphore.makeUnsafe(1)` and `withPermits(1)`; a failed call releases its permit (`toggleFavouriteCurrency`).
 - Calls that must share one run, so a second caller gets the first's result instead of repeating it, keep the in-flight `Deferred` in a module variable, complete it from `Effect.onExit` and clear the variable there; the body is uninterruptible so a waiter never inherits an interrupt (`drainPendingWrites`).
 
-## Testing a service under jest
+## Testing a service under vitest
 
-- Swap dependencies through the environment, not `jest.mock`: provide `Layer.succeed(Dependency, fake)` to the service's layer.
+- Swap dependencies through the environment, not `vi.mock`: provide `Layer.succeed(Dependency, fake)` to the service's layer.
 - Fake only what needs native code. `local-data-context.test.ts` swaps the SQLite connection and runs the real migrations, bootstrap and settle on better-sqlite3 (`db/test-database.ts`).
 - To test through an atom, give a fresh registry the test layer, `AtomRegistry.make({ initialValues: [[appRuntime.layer, testLayer]] })`, and await `Effect.runPromiseExit(AtomRegistry.getResult(registry, atom, { suspendOnWaiting: true }))`. The test is the edge that runs the effect.
 - A long-running service is tested by mounting `appRuntime.atom(Service.pipe(Effect.flatMap((s) => s.run(db)), Effect.provide(fakes)))` with `registry.mount`, which also gives the unmount. `appRuntime` exposes a composed service's dependencies (`Layer.provideMerge`) so such an atom type-checks against them.
 - Assert on what a caller sees (the derived state, the rows written), not on which steps were called.
 - A fiber reads its logger from the runtime's context, so silence logs by merging `Logger.layer([])` into the test layer; inside `Layer.provide` it only reaches the layer's construction.
-- Drive time with `jest.useFakeTimers()` and `await jest.advanceTimersByTimeAsync(ms)`. Registry fibers dispatch on microtasks and Effect's clock sleeps on `setTimeout`, so one call runs the due sleeps and every fiber and promise they wake. `TestClock` does not wait for promise continuations, and a bare `Effect.runFork` dispatches on `setImmediate`, which fake timers move 1 ms per hop.
+- Drive time with `vi.useFakeTimers()` and `await vi.advanceTimersByTimeAsync(ms)`. Registry fibers dispatch on microtasks and Effect's clock sleeps on `setTimeout`, so one call runs the due sleeps and every fiber and promise they wake. `TestClock` does not wait for promise continuations, and a bare `Effect.runFork` dispatches on `setImmediate`, which fake timers move 1 ms per hop.
 - A fake that counts calls counts inside `Effect.suspend`: a service may build an effect once and run it many times.
 - Give the test registry a `scheduleTask` built on `setTimeout` so node removal waits for the next timer hop, as it does under React.
 

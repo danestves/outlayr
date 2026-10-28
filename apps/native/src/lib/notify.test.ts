@@ -1,14 +1,14 @@
-import { describe, expect, it, jest } from "@jest/globals";
 import { toast } from "panelui-native/components/toast";
 import type { ToastOptions } from "panelui-native/components/toast";
 import { isValidElement } from "react";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import type { NoticeSlipProps } from "@/components/notice-slip";
 
 import { notifyFailure, notifySaved } from "./notify";
 
 function shown(options: ToastOptions | string | undefined) {
-    const handle = { hide: jest.fn(), id: "toast" };
+    const handle = { hide: vi.fn(), id: "toast" };
     const slip = typeof options === "string" ? null : options?.component?.(handle);
     if (!isValidElement<NoticeSlipProps>(slip)) {
         throw new Error("Expected the notice to render a NoticeSlip");
@@ -18,10 +18,10 @@ function shown(options: ToastOptions | string | undefined) {
 
 describe("notifyFailure", () => {
     it("holds an actionable notice longer than one that only has to be read", () => {
-        const showSpy = jest.spyOn(toast, "show").mockReturnValue("toast-3");
+        const showSpy = vi.spyOn(toast, "show").mockReturnValue("toast-3");
 
         notifyFailure({ title: "Read me" });
-        notifyFailure({ actionLabel: "Retry", onActionPress: jest.fn(), title: "Act on me" });
+        notifyFailure({ actionLabel: "Retry", onActionPress: vi.fn(), title: "Act on me" });
 
         const [plain, actionable] = showSpy.mock.calls.map(([options]) =>
             typeof options === "string" ? 0 : (options.duration ?? 0)
@@ -31,21 +31,21 @@ describe("notifyFailure", () => {
     });
 
     it("can be dismissed with the escape gesture, which a swipe-only toast would not allow", () => {
-        const showSpy = jest.spyOn(toast, "show").mockReturnValue("toast-4");
+        const showSpy = vi.spyOn(toast, "show").mockReturnValue("toast-4");
 
         notifyFailure({ title: "Not saved" });
 
         const { handle, props } = shown(showSpy.mock.calls[0]?.[0]);
         props.onDismiss?.();
-        expect(handle.hide).toHaveBeenCalledTimes(1);
+        expect(handle.hide).toHaveBeenCalledOnce();
         showSpy.mockRestore();
     });
 });
 
 describe("notifySaved", () => {
     it("runs the action, then dismisses the toast it was pressed on", () => {
-        const showSpy = jest.spyOn(toast, "show").mockReturnValue("toast-6");
-        const onActionPress = jest.fn();
+        const showSpy = vi.spyOn(toast, "show").mockReturnValue("toast-6");
+        const onActionPress = vi.fn();
         const end = {
             customColor: null,
             emoji: null,
@@ -68,7 +68,7 @@ describe("notifySaved", () => {
         props.onAction?.();
 
         expect(onActionPress).toHaveBeenCalledWith(handle);
-        expect(handle.hide).toHaveBeenCalledTimes(1);
+        expect(handle.hide).toHaveBeenCalledOnce();
         showSpy.mockRestore();
     });
 });

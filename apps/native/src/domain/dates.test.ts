@@ -1,8 +1,8 @@
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 
-import { describe, expect, it } from "@jest/globals";
 import { startOfWeek } from "@outlayr/money/calendar";
+import { describe, expect, it } from "vite-plus/test";
 
 import { runtimeLanguage, setRuntimeLanguage } from "@/i18n/runtime";
 

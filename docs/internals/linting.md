@@ -1,6 +1,6 @@
 # Linting and formatting
 
-Vite+ runs **oxlint** (lint) and **oxfmt** (format) from one config. The `lint` block in `vite.config.ts` extends `ultracite/oxlint/{core,react,tanstack,anti-slop}`; the jest and vitest presets are re-anchored into `overrides` rather than extended (see below); the `fmt` block spreads `ultracite/oxfmt`. Both keep only what genuinely differs from those presets.
+Vite+ runs **oxlint** (lint) and **oxfmt** (format) from one config. The `lint` block in `vite.config.ts` extends `ultracite/oxlint/{core,react,tanstack,anti-slop}`; the vitest preset is re-anchored into `overrides` rather than extended (see below); the `fmt` block spreads `ultracite/oxfmt`. Both keep only what genuinely differs from those presets.
 
 Ultracite is still the preset source, but no longer the CLI: the entry point is `vp`, which reads those two blocks.
 
@@ -31,7 +31,7 @@ Formatting is **4-space indent, 120 columns**. oxfmt also formats CSS, so `globa
 | `unicorn/throw-new-error` | Matches any call whose name ends in `Error`, not only a `throw`, so it rewrote Effect's `class X extends Schema.TaggedError<X>()("X", …)` to `extends new Schema.TaggedError…`, which throws "TaggedError is not a constructor" at import. `unicorn/new-for-builtins` still covers `Error()`, and `tsc` rejects calling a class without `new`. |
 | `vitest/prefer-describe-function-title` | Substituted the binding for the string title — `describe("crons", …)` → `describe(crons, …)`, a type error for any subject that is a value rather than a function. Four in `packages/backend` on the run that re-enabled it. |
 
-One more is suppressed at its single call site rather than disabled: `jest/prefer-mock-return-shorthand` rewrites `mockImplementation(() => v)` to `mockReturnValue(v)`, which evaluates `v` at setup — and `device-language.test.ts` passes a `fn` that throws, to exercise the failure path.
+One more is suppressed at its single call site rather than disabled: `vitest/prefer-mock-return-shorthand` rewrites `mockImplementation(() => v)` to `mockReturnValue(v)`, which evaluates `v` at setup — and `device-language.test.ts` passes a `fn` that throws, to exercise the failure path.
 
 If you re-enable any of these, run `vp run -r --no-cache test` and `vp run -r --no-cache check-types` before staging the result. `--no-cache` matters: the root `test` and `check-types` scripts pass `--cache`, so a plain `vp run test` can replay a cached run instead of executing one.
 
@@ -67,7 +67,7 @@ If you re-enable any of these, run `vp run -r --no-cache test` and `vp run -r --
 
 | Scope | Rules | Why |
 |---|---|---|
-| tests, `**/test-*.ts`, `**/test.helpers.ts`, `apps/native/jest/**`, `**/scripts/**` | 25 rules, plus the six `outlayr/*` design rules in a second block, all listed in `vite.config.ts` | Node-side code, not app code. See "How the test scope was measured". |
+| tests, `**/test-*.ts`, `**/test.helpers.ts`, `apps/native/test/**`, `**/scripts/**` | 25 rules, plus the six `outlayr/*` design rules in a second block, all listed in `vite.config.ts` | Node-side code, not app code. See "How the test scope was measured". |
 | `packages/backend/convex/**`, `packages/backend/confect/**` | `unicorn/filename-case` → camelCase | In Convex the filename **is** the API path: `convex/exchangeRates.ts` is `api.exchangeRates.get`. Kebab-casing would rewrite every client call site. |
 | `packages/backend/convex/**`, `packages/backend/confect/**` | `unicorn/prefer-at` | Convex's generated tsconfig pins `lib: ["ES2021"]`; `Array.prototype.at` is ES2022. |
 | `packages/backend/confect/**/*.spec.ts` | `vitest/consistent-test-filename` | A Confect spec declares a function group; `.spec.ts` is the suffix the Confect CLI reads, not a test. |
@@ -85,9 +85,9 @@ If you re-enable any of these, run `vp run -r --no-cache test` and `vp run -r --
 
 `complexity` is set to **35**. oxlint counts *cyclomatic* complexity where Biome counted *cognitive*, so the old threshold of 25 does not carry across. On the new metric the barely-over cluster sits at 26–33; only `TransactionForm` is genuinely out of hand; its three suppressions are the only ones in the tree and each names that as known debt.
 
-`typescript/consistent-type-imports` sets `disallowTypeAnnotations: false`: `import()` type annotations are the idiom for `jest.mock<typeof import("…")>` factories and ambient asset declarations, and the `import type` preference itself stays on.
+`typescript/consistent-type-imports` sets `disallowTypeAnnotations: false`: `import()` type annotations are the idiom for `vi.fn<typeof import("…")>` doubles and ambient asset declarations, and the `import type` preference itself stays on.
 
-`globals` declares `__DEV__` at the top level and `jest` in the `apps/native/jest/**` override, for the setup stubs that cannot import it. Neither runner preset ships globals, and that alone was 275 findings.
+`globals` declares `__DEV__` at the top level.
 
 ## anti-slop
 
@@ -95,7 +95,7 @@ If you re-enable any of these, run `vp run -r --no-cache test` and `vp run -r --
 
 The preset goes **last** in `extends`, because it also turns off the two core rules that fight it: `typescript/consistent-indexed-object-style` autofixes an index-signature interface into a `Record` alias that `no-known-value-widening` then re-flags, and `unicorn/no-immediate-mutation` bans that rule's own empty-accumulator escape.
 
-The tests scope drops eight of them — `no-chained-type-assertions`, `no-known-value-widening`, `no-module-mocking`, `no-runtime-typeof`, `no-unknown-parameters`, `no-unknown-returns`, `no-unsafe-dictionary-type`, `require-safety-comment-for-type-assertion`. A test declares its own doubles, so the cast, the widened literal and the `unknown` argument **are** the fixture; and `jest.mock` is how jest-expo isolates a native module at all.
+The tests scope drops eight of them — `no-chained-type-assertions`, `no-known-value-widening`, `no-module-mocking`, `no-runtime-typeof`, `no-unknown-parameters`, `no-unknown-returns`, `no-unsafe-dictionary-type`, `require-safety-comment-for-type-assertion`. A test declares its own doubles, so the cast, the widened literal and the `unknown` argument **are** the fixture; and `vi.mock` is how a suite isolates a native module at all.
 
 Three patterns the rules pushed the source into, worth knowing before writing new code:
 
@@ -108,11 +108,6 @@ Three patterns the rules pushed the source into, worth knowing before writing ne
 Every test-file carve-out was deleted and the resulting **3,130 errors** worked
 through before any rule went back off. What the exercise produced:
 
-- **`@jest/globals` is a real dependency.** Every suite imports its runner
-  globals, so the `jest` global is declared only for the setup stubs that cannot
-  import it. That typing is not free: `@jest/globals` gives `jest.fn()` the type
-  `Mock<UnknownFunction>` where the ambient `jest` gave back `any`, so every spy
-  now names the export it stands in for or takes its implementation inline.
 - **A real defect.** `apple-sign-in.test.ts` stubbed `CryptoDigestAlgorithm`
   itself and asserted the hash algorithm was `"SHA256"`. The enum's value is
   `"SHA-256"` — the assertion could only ever agree with a constant the test
@@ -122,7 +117,7 @@ through before any rule went back off. What the exercise produced:
   bridge), `@/theme/test-colors` (26 hand-picked palettes), `@/i18n/test-locale`,
   `@/contexts/test-local-data`, `@/contexts/test-settings`.
 - **The shared stubs moved to `setupFiles`.** `@/i18n/context` and `expo-sqlite`'s change
-  listener were environment jest-expo does not supply, retyped verbatim across
+  listener were environment the runner does not supply, retyped verbatim across
   60 files. `@/theme/use-colors` and `@/contexts/local-data-context` stayed
   per-file: their mocked values are each suite's input, not shared setup.
 - **Two suites deleted.** `device-data-stores.test.ts` built its own adapters
@@ -135,38 +130,24 @@ block in `vite.config.ts`:
 
 1. **Evidence rules (248).** A test declares its own doubles, so the cast and the
    widened literal *are* the fixture. `no-module-mocking` is here because
-   jest-expo has no other isolation mechanism.
+   `vi.mock` is how a suite isolates a native module.
 2. **Shape rules (335).** `max-expects`, `require-top-level-describe`,
    `prefer-ending-with-an-expect` and friends describe someone else's layout. The
    worst `max-expects` file is `erase-core`, where ten well-named tests check a
    tombstone is scrubbed column by column — one behaviour, many fields.
-3. **`no-untyped-mock-factory` (152 type errors).** It reads `typeof import("m")`
-   as the whole module, so a factory standing in for two exports out of nine
-   cannot satisfy it. `Partial<>` reaches the top level and no further: below
-   that a `useRouter` stub owes a whole `Router`. Vitest spells the same rule
-   `require-mock-type-parameters`.
+3. **`require-mock-type-parameters`.** A `typeof import("m")` type reads as the
+   whole module, so a factory standing in for two exports out of nine cannot
+   satisfy it. `Partial<>` reaches the top level and no further: below that a
+   `useRouter` stub owes a whole `Router`.
 
 The rest of that block is style in code read top to bottom: stub classes with
 no `this` (`class-methods-use-this`, `max-classes-per-file`), fixture rows
 applied in order (`no-await-in-loop`), and RFC 4122 and confetti suites checking
-bits (`no-bitwise`). `import/first` is off because the hoisting below puts spies
+bits (`no-bitwise`). `import/first` is off because `vi.mock` hoisting puts spies
 above the imports on purpose (22 reports). `react/globals` and
 `react/immutability` reported 9 render probes whose body is the assertion
 (counting renders, capturing a hook's return); the compiler never bundles a
 suite, and both stay on in `src/`.
-
-Two traps worth knowing before editing a mock factory, both from
-`babel-plugin-jest-hoist` lifting `jest.mock` above the imports:
-
-- A factory may only reach a **`mock`-prefixed** binding, and a shared fixture it
-  calls must have **no runtime imports of its own** — the factory can run before
-  those imports evaluate, and if a suite mocks that module the fixture silently
-  resolves to the mock. `test-settings.ts` restates its defaults as literals for
-  exactly this reason.
-- `(...args) => mockFn(...args)` is **deferral, not ceremony**. Passing the spy
-  directly binds it at factory time, before the module-scope `const` runs, so the
-  export lands as `undefined` and the suite fails with "Number of calls: 0".
-  Type the wrapper `(...args: Parameters<typeof mockFn>)`.
 
 ## React Compiler
 
@@ -182,15 +163,15 @@ The last five findings were `exhaustive-effect-dependencies`: a dependency the e
 - `lib/ledger-adoption.tsx`: `??=` was the only path to `db`, and the compiler cannot lower `??=`, so `db` looked unused. It is an explicit `if` now.
 - `apps/web` demo `sentence-form.tsx`: `idle` and the `touches` counter are one `number | null`, null while idle.
 
-oxlint's compiler rules are a port and do not see every bailout: `try`/`finally`, value blocks inside `try`/`catch` and `??=` pass lint and still make the real compiler skip the component, which then ships unmemoized. `src/test-react-compiler.ts` compiles every `src` file with the app's own `babel.config.js` and Metro's release caller, and fails on any bailout outside `KNOWN_BAILOUTS`. It also fails when a listed file compiles, so the list only shrinks. The compiler itself is about 80% of the cost, close to three CPU minutes for the tree under jest, so it runs as four `react-compiler-coverage-N.test.ts` shards that jest spreads across workers.
+oxlint's compiler rules are a port and do not see every bailout: `try`/`finally`, value blocks inside `try`/`catch` and `??=` pass lint and still make the real compiler skip the component, which then ships unmemoized. `src/test-react-compiler.ts` compiles every `src` file with the app's own `babel.config.js` and Metro's release caller, and fails on any bailout outside `KNOWN_BAILOUTS`. It also fails when a listed file compiles, so the list only shrinks. The compiler itself is about 80% of the cost, close to three CPU minutes for the tree under vitest, so it runs as four `react-compiler-coverage-N.test.ts` shards that vitest spreads across workers.
 
-## Why jest and vitest are re-anchored
+## Why vitest is re-anchored
 
-Both presets claim `**/*.{test,spec}.*`, so extending both reports every assertion twice. `apps/native` runs jest-expo and the packages run vitest, so `scopeTo()` re-prefixes each preset's own overrides to the tree that uses that runner. The per-runner opt-outs have to be merged into those blocks rather than added as a later override — a rule from a plugin is only resolvable in a block that enables the plugin.
+`scopeTo()` re-prefixes the vitest preset's own overrides to `apps/native` and `packages`, so each tree carries its own opt-outs. The opt-outs have to be merged into those blocks rather than added as a later override — a rule from a plugin is only resolvable in a block that enables the plugin.
 
 ## outlayr
 
-`packages/config/oxlint/plugin.mjs` is the repo's own plugin, registered as `outlayr/*`. Each of the first six rules below replaced a jest suite that read source files as text and asserted with a regex (`grounds.test.ts`, `transaction-guard.test.ts`, `widget-scope.test.ts`, `no-background.test.ts`, the `EditorCta` call-site scan). On the AST the same invariant reports at the offending line, ignores comments, and fires in the editor instead of after a full jest run. Those six are on for `apps/native/src/**` only and off in tests, where a `<List>` fixture or a `db.transaction` double is not a shipped screen.
+`packages/config/oxlint/plugin.mjs` is the repo's own plugin, registered as `outlayr/*`. Each of the first six rules below replaced a test suite that read source files as text and asserted with a regex (`grounds.test.ts`, `transaction-guard.test.ts`, `widget-scope.test.ts`, `no-background.test.ts`, the `EditorCta` call-site scan). On the AST the same invariant reports at the offending line, ignores comments, and fires in the editor instead of after a full test run. Those six are on for `apps/native/src/**` only and off in tests, where a `<List>` fixture or a `db.transaction` double is not a shipped screen.
 
 | Rule | Invariant |
 |---|---|
@@ -202,7 +183,7 @@ Both presets claim `**/*.{test,spec}.*`, so extending both reports every asserti
 | `editor-cta-busy` | Every `<EditorCta>` passes `busy`, so a save spins rather than only dimming. |
 | `no-slop-comments` | On for every file. A comment block (consecutive `//` lines count as one) has at most three lines, no line past column 120 unless it holds a URL, and no em dash. Lint and TypeScript directives are exempt from the length limits. Longer reasoning goes in the commit message or here. |
 | `no-low-value-comments` | On for every file. Rejects a comment that only repeats the name below it, a section divider, a test step label (`// arrange`), a `TODO`/`FIXME` with no issue link, a JSDoc type in TypeScript, an empty `@param`/`@returns`, and commented-out code. Ported from t3code, MIT: the rule and its `LICENSE` live in `packages/config/oxlint/t3code/`. |
-| `no-test-timeout-or-retry` | On in test files instead, both runners: no timeout argument on a test or hook, no `{ timeout }` or `{ retry }` options, no `jest.setTimeout`, `jest.retryTimes` or `vi.setConfig` override. A test that needs more time is waiting on something it should await. `*.live.test.ts` model probes are exempt. |
+| `no-test-timeout-or-retry` | On in test files instead: no timeout argument on a test or hook, no `{ timeout }` or `{ retry }` options, no `vi.setConfig` override. A test that needs more time is waiting on something it should await. `*.live.test.ts` model probes are exempt. |
 | `no-manual-memo` | `apps/native/src`: no `useMemo`, `useCallback`, `memo` or memo directive (`"use memo"`, `"use no memo"`, `"use no forget"`). The compiler memoizes, and a directive hides a bailout from the coverage test. Ratcheted by `MANUAL_MEMO_FILES`, see "Rules we scoped". |
 | `no-hookless-use-function` | `apps/native/src`: a `use*` function must call a hook. The compiler only compiles functions that do, so a hookless one rebuilds what it returns on every render. Rename it, as `unconfiguredSession` in `lib/auth-client.ts` was. |
 | `no-hermes-unsupported-apis` | `apps/native/src`, and what it imports at runtime from `packages/money/src` and `confect/lib/syncTables.ts`: no `Array#toSorted` and no `Intl.Segmenter`. Neither name is in the shipped Hermes (260318099.0.4) VM, while `toReversed`, `toSpliced` and `with` are, so those stay allowed. Tests run on node and are exempt. |
@@ -217,8 +198,8 @@ Both presets claim `**/*.{test,spec}.*`, so extending both reports every asserti
 
 The rows from `no-manual-memo` down are ported under the MIT License; the upstream license sits beside them and each file's first line links its source. Ported and skipped:
 
-- `no-manual-effect-runtime-in-tests`, `no-wall-clock-in-tests` and `no-real-time-wait-in-tests` assume `@effect/vitest` and its `TestClock`. This repo does not use it, and `apps/native` runs jest with fake timers. Revisit with `@effect/vitest`.
-- `no-manual-effect-runtime-in-tests` bans `Effect.runPromise` in tests in favour of `@effect/vitest`, which this repo does not use, and `apps/native` runs jest. Revisit with `@effect/vitest`.
+- `no-manual-effect-runtime-in-tests`, `no-wall-clock-in-tests` and `no-real-time-wait-in-tests` assume `@effect/vitest` and its `TestClock`. This repo does not use it, and `apps/native` drives time with `vi.useFakeTimers`. Revisit with `@effect/vitest`.
+- `no-manual-effect-runtime-in-tests` bans `Effect.runPromise` in tests in favour of `@effect/vitest`, which this repo does not use. Revisit with `@effect/vitest`.
 - `no-manual-memo` is not on in `apps/web`: without the compiler there, nothing replaces the memoization it would remove. The site has no `useMemo`, `useCallback` or `memo` today.
 - The rest of that plugin duplicates `no-low-value-comments` and `no-test-timeout-or-retry`, or polices another product's components, RPC layer, browser tests and styling.
 

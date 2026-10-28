@@ -1,9 +1,9 @@
-import { beforeEach, describe, expect, it } from "@jest/globals";
 import { accountBalance } from "@outlayr/money/account-balance";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { buildRateTable } from "@outlayr/money/valuation";
 import { eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { accounts, exchangeRates, savingsGoals, transactions } from "@/db/schema";

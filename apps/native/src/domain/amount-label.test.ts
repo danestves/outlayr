@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 import { CATALOGS, EN } from "@/i18n/catalog";
 import type { TranslateFn } from "@/i18n/context";

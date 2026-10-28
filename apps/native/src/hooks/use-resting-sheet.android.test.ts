@@ -1,5 +1,6 @@
-import { describe, expect, it, jest } from "@jest/globals";
-import { act, renderHook } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { act, renderHook } from "@testing-library/react";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import { LARGE_SHEET_TOP_INSET } from "@/lib/sheet-detents";
 import { SHEET_HEADER_HEIGHT } from "@/navigation/material-chrome";
@@ -10,17 +11,17 @@ const mockWindow = { fontScale: 1, height: 915, scale: 2.625, width: 412 };
 const mockInsets = { bottom: 24, left: 0, right: 0, top: 32 };
 const REST_BOTTOM_ROOM = 8;
 
-jest.mock("react-native/Libraries/Utilities/useWindowDimensions", () => ({
-    __esModule: true,
-    default: () => mockWindow,
+vi.mock("react-native", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("react-native")>()),
+    useWindowDimensions: () => mockWindow,
 }));
-jest.mock("react-native-safe-area-context", () => ({
+vi.mock("react-native-safe-area-context", () => ({
     useSafeAreaInsets: () => mockInsets,
 }));
 
 describe("useRestingSheet on Android", () => {
     it("declares the same fitToContents options at rest and awake", async () => {
-        const { result } = await renderHook(() => useRestingSheet("Edit"));
+        const { result } = renderHook(() => useRestingSheet("Edit"));
         const resting = result.current.sheet;
 
         await act(async () => {
@@ -33,7 +34,7 @@ describe("useRestingSheet on Android", () => {
     });
 
     it("rests at the header plus the measured body, and wakes to the tallest sheet", async () => {
-        const { result } = await renderHook(() => useRestingSheet("Edit"));
+        const { result } = renderHook(() => useRestingSheet("Edit"));
 
         await act(async () => {
             result.current.rest?.onHeight(300);

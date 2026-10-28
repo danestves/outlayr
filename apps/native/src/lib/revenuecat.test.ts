@@ -1,24 +1,24 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Effect from "effect/Effect";
 import type { CustomerInfo } from "react-native-purchases";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-jest.mock("react-native-purchases", () => ({
+vi.mock("react-native-purchases", () => ({
     LOG_LEVEL: { ERROR: "ERROR", WARN: "WARN" },
     __esModule: true,
     default: {
-        addCustomerInfoUpdateListener: jest.fn(),
-        configure: jest.fn(),
-        getCustomerInfo: jest.fn(),
-        getOfferings: jest.fn(),
-        isAnonymous: jest.fn(),
-        logIn: jest.fn(),
-        logOut: jest.fn(),
-        purchasePackage: jest.fn(),
-        removeCustomerInfoUpdateListener: jest.fn(),
-        restorePurchases: jest.fn(),
-        setDisplayName: jest.fn(),
-        setEmail: jest.fn(),
-        setLogLevel: jest.fn(),
+        addCustomerInfoUpdateListener: vi.fn(),
+        configure: vi.fn(),
+        getCustomerInfo: vi.fn(),
+        getOfferings: vi.fn(),
+        isAnonymous: vi.fn(),
+        logIn: vi.fn(),
+        logOut: vi.fn(),
+        purchasePackage: vi.fn(),
+        removeCustomerInfoUpdateListener: vi.fn(),
+        restorePurchases: vi.fn(),
+        setDisplayName: vi.fn(),
+        setEmail: vi.fn(),
+        setLogLevel: vi.fn(),
     },
 }));
 
@@ -26,10 +26,10 @@ import Purchases from "react-native-purchases";
 
 import { logOutUser } from "./revenuecat";
 
-const purchases = jest.mocked(Purchases);
+const purchases = vi.mocked(Purchases);
 
 beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 });
 
 describe("logOutUser", () => {
@@ -45,6 +45,6 @@ describe("logOutUser", () => {
         purchases.isAnonymous.mockResolvedValue(false);
         purchases.logOut.mockResolvedValue(loggedOut);
         await expect(Effect.runPromise(logOutUser())).resolves.toBe(false);
-        expect(purchases.logOut).toHaveBeenCalledTimes(1);
+        expect(purchases.logOut).toHaveBeenCalledOnce();
     });
 });

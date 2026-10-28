@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { act, renderHook } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { act, renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { Account } from "@/data/accounts-core";
 import type { SavedTransfer } from "@/data/transfers-core";
@@ -23,24 +24,24 @@ const mockAccounts = [
 const mockRates = new Map<string, number>();
 const mockBinanceRates = new Map<string, number>();
 const mockBalances = new Map<string, number>();
-const mockLastTransfer = jest.fn<() => SavedTransfer | null>(() => null);
+const mockLastTransfer = vi.fn<() => SavedTransfer | null>(() => null);
 const mockNowMs = Date.UTC(2026, 9, 1);
 
-jest.mock("@/data/accounts", () => ({
+vi.mock("@/data/accounts", () => ({
     useAccountBalance: (_db: unknown, account: { id: string }) => ({ total: mockBalances.get(account.id) ?? 0 }),
     useAccounts: () => mockAccounts,
     useBankAccounts: () => mockAccounts,
 }));
 
-jest.mock("@/data/use-now", () => ({
+vi.mock("@/data/use-now", () => ({
     useNow: () => mockNowMs,
 }));
 
-jest.mock("@/data/transfers-core", () => ({
+vi.mock("@/data/transfers-core", () => ({
     lastTransfer: () => mockLastTransfer(),
 }));
 
-jest.mock("@/data/transfer-rates", () => ({
+vi.mock("@/data/transfer-rates", () => ({
     pairRateSource: () => null,
     usePriorCustomRate: () => null,
     useTransferRates: (_db: unknown, _codes: unknown, rateTypes: readonly string[]) =>

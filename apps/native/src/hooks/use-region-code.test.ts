@@ -1,8 +1,9 @@
-import { describe, expect, it, jest } from "@jest/globals";
-import { renderHook } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { renderHook } from "@testing-library/react";
+import { describe, expect, it, vi } from "vite-plus/test";
 
-jest.mock<Partial<typeof import("expo-localization")>>("expo-localization", () => ({
-    getLocales: jest.fn<typeof import("expo-localization").getLocales>(),
+vi.mock<Partial<typeof import("expo-localization")>>(import("expo-localization"), () => ({
+    getLocales: vi.fn<typeof import("expo-localization").getLocales>(),
 }));
 
 import { getLocales } from "expo-localization";
@@ -11,7 +12,7 @@ import { testLocale as mockTestLocale } from "@/i18n/test-locale";
 
 import { useRegionCode } from "./use-region-code";
 
-const mockGetLocales = jest.mocked(getLocales);
+const mockGetLocales = vi.mocked(getLocales);
 
 describe("useRegionCode", () => {
     it("returns the device's own region code", async () => {

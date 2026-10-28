@@ -1,18 +1,20 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Effect from "effect/Effect";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-const mockSecureStore = new Map<string, string>();
+import { persistProviderBinding, providerBindingFor } from "./provider-revocation";
+import { layer } from "./secure-storage";
 
-jest.mock<Partial<typeof import("expo-secure-store")>>("expo-secure-store", () => ({
+const mockSecureStore = vi.hoisted(() => new Map<string, string>());
+
+vi.mock<Partial<typeof import("expo-secure-store")>>(import("expo-secure-store"), () => ({
+    deleteItemAsync: async (key: string) => {
+        mockSecureStore.delete(key);
+    },
     getItemAsync: async (key: string) => mockSecureStore.get(key) ?? null,
     setItemAsync: async (key: string, value: string) => {
         mockSecureStore.set(key, value);
     },
 }));
-
-const { persistProviderBinding, providerBindingFor } =
-    require("./provider-revocation") as typeof import("./provider-revocation");
-const { layer } = require("./secure-storage") as typeof import("./secure-storage");
 
 beforeEach(() => {
     mockSecureStore.clear();

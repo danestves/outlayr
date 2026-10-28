@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 import { groupByDay } from "./day-sections";
 import { mergeByRecency, toAccountTransferRow, toTransferLogRow } from "./transfer-log-rows";

@@ -1,5 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { act, renderHook } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { act, renderHook } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { CHART_DRAW } from "@/theme/chart";
 
@@ -10,19 +11,19 @@ const TO = "M 0 30 L 60 8 Z";
 const FRAME_MS = 16;
 
 beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
 });
 
 afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
 });
 
 async function morph(to: string, animated: boolean, pointCounts: [number, number] = [1, 1]) {
-    const hook = await renderHook(
+    const hook = renderHook(
         ({ path, pointCount }: { path: string; pointCount: number }) => useChartPath(path, animated, pointCount),
         { initialProps: { path: FROM, pointCount: pointCounts[0] } }
     );
-    await hook.rerender({ path: to, pointCount: pointCounts[1] });
+    hook.rerender({ path: to, pointCount: pointCounts[1] });
     return hook.result;
 }
 
@@ -31,7 +32,7 @@ describe("useChartPath", () => {
         const result = await morph(TO, true);
 
         await act(async () => {
-            jest.advanceTimersByTime(CHART_DRAW.durationMs / 3);
+            vi.advanceTimersByTime(CHART_DRAW.durationMs / 3);
         });
         const midway = result.current.get();
         expect(midway).not.toBe(FROM);
@@ -39,7 +40,7 @@ describe("useChartPath", () => {
         expect(midway.replaceAll(/[\d.e-]+/g, "#")).toBe("M # # L # # Z");
 
         await act(async () => {
-            jest.advanceTimersByTime(CHART_DRAW.durationMs);
+            vi.advanceTimersByTime(CHART_DRAW.durationMs);
         });
         expect(result.current.get()).toBe(TO);
     });
@@ -52,7 +53,7 @@ describe("useChartPath", () => {
         const result = await morph(to, animated, pointCounts);
 
         await act(async () => {
-            jest.advanceTimersByTime(FRAME_MS);
+            vi.advanceTimersByTime(FRAME_MS);
         });
         expect(result.current.get()).toBe(to);
     });
@@ -60,17 +61,17 @@ describe("useChartPath", () => {
 
 describe("useChartDraw", () => {
     it("jumps to a new value when its point count changes", async () => {
-        const hook = await renderHook(
+        const hook = renderHook(
             ({ value, pointCount }: { value: number; pointCount: number }) =>
                 useChartDraw(true, value, value, pointCount),
             {
                 initialProps: { pointCount: 7, value: 40 },
             }
         );
-        await hook.rerender({ pointCount: 30, value: 120 });
+        hook.rerender({ pointCount: 30, value: 120 });
 
         await act(async () => {
-            jest.advanceTimersByTime(FRAME_MS);
+            vi.advanceTimersByTime(FRAME_MS);
         });
         expect(hook.result.current.get()).toBe(120);
     });

@@ -1,12 +1,13 @@
-import { describe, expect, it, jest } from "@jest/globals";
-import { render } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { render } from "@testing-library/react";
 import { Text } from "react-native";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import { AuthSessionProvider, useAuthSession } from "./auth-session";
 
 const mockCookie = { current: "" };
 
-jest.mock<Partial<typeof import("@/lib/auth-client")>>("@/lib/auth-client", () => ({
+vi.mock<Partial<typeof import("@/lib/auth-client")>>(import("@/lib/auth-client"), () => ({
     authClient: {
         getCookie: () => mockCookie.current,
     } as never,
@@ -19,12 +20,12 @@ function Gate() {
 
 async function gateWithCookie(cookie: string) {
     mockCookie.current = cookie;
-    const { getByTestId } = await render(
+    const { getByTestId } = render(
         <AuthSessionProvider>
             <Gate />
         </AuthSessionProvider>
     );
-    return getByTestId("gate").props.children;
+    return getByTestId("gate").textContent;
 }
 
 describe("session restore", () => {

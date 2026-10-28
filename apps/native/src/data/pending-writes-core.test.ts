@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it, jest, test } from "@jest/globals";
 import { eq, isNull, ne } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import { beforeEach, describe, expect, it, vi, test } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { accounts, categories, transactions } from "@/db/schema";
@@ -947,7 +947,7 @@ describe("drainPendingWrites", () => {
     });
 
     it("drains again once the first pass has finished", async () => {
-        const claim = jest
+        const claim = vi
             .fn<() => { jobs: PendingWrite[]; names: string[] }>()
             .mockReturnValueOnce({ jobs: [walletWrite("wallet-1")], names: ["a.jsonl"] })
             .mockReturnValueOnce({

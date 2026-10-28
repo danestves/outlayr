@@ -34,10 +34,9 @@ const openAppLanguagePage = Effect.fn("LanguageSettings.openAppLanguagePage")(fu
     if (applicationId === null) {
         return yield* new LanguagePageError();
     }
-    const { ActivityAction, startActivityAsync } = yield* Effect.try({
+    const { ActivityAction, startActivityAsync } = yield* Effect.tryPromise({
         catch: (cause) => new LanguagePageError({ cause }),
-        // SAFETY: untyped `require`, asserted to that module's own type.
-        try: () => require("expo-intent-launcher") as typeof import("expo-intent-launcher"),
+        try: () => import("expo-intent-launcher"),
     });
     yield* Effect.tryPromise({
         catch: (cause) => new LanguagePageError({ cause }),

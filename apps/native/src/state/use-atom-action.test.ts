@@ -1,7 +1,7 @@
-import { describe, expect, it, jest } from "@jest/globals";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import { createCommand, SILENT } from "./atom-command";
 import { fireAtomCommand } from "./use-atom-action";
@@ -36,23 +36,23 @@ describe("fireAtomCommand", () => {
 
     it("hands a typed failure to onFailure instead of rejecting", async () => {
         const registry = AtomRegistry.make();
-        const onFailure = jest.fn<(cause: Cause.Cause<string>) => void>();
-        const onSettled = jest.fn();
+        const onFailure = vi.fn<(cause: Cause.Cause<string>) => void>();
+        const onSettled = vi.fn();
         const command = createCommand({ execute: () => Effect.fail("nope"), label: "test:fail" });
 
         fireAtomCommand(registry, command, undefined, { onFailure, onSettled }, SILENT);
         await settle();
 
         expect(Cause.squash(onFailure.mock.calls[0]?.[0] as Cause.Cause<string>)).toBe("nope");
-        expect(onSettled).toHaveBeenCalledTimes(1);
+        expect(onSettled).toHaveBeenCalledOnce();
         registry.dispose();
     });
 
     it("still settles when a callback throws", async () => {
         const registry = AtomRegistry.make();
-        const onSettled = jest.fn();
+        const onSettled = vi.fn();
         const command = createCommand({ execute: () => Effect.succeed(1), label: "test:throwing-callback" });
-        const quiet = jest.spyOn(console, "error").mockImplementation(() => {});
+        const quiet = vi.spyOn(console, "error").mockImplementation(() => {});
 
         fireAtomCommand(
             registry,
@@ -68,7 +68,7 @@ describe("fireAtomCommand", () => {
         );
         await settle();
 
-        expect(onSettled).toHaveBeenCalledTimes(1);
+        expect(onSettled).toHaveBeenCalledOnce();
         quiet.mockRestore();
         registry.dispose();
     });

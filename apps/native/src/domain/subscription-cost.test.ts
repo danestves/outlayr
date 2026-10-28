@@ -1,8 +1,8 @@
-import { describe, expect, it } from "@jest/globals";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { monthlyChargeCount, monthlySubscriptionCost } from "@outlayr/money/subscription-cost";
 import type { ScheduleCostEntry } from "@outlayr/money/subscription-cost";
 import { buildRateTable } from "@outlayr/money/valuation";
+import { describe, expect, it } from "vite-plus/test";
 
 const DAYS_PER_MONTH = 365 / 12;
 

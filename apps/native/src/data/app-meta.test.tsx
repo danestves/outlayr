@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { act, renderHook } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { act, renderHook } from "@testing-library/react";
 import * as Effect from "effect/Effect";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { migratedDatabase } from "@/db/test-database";
@@ -8,7 +9,7 @@ import { migratedDatabase } from "@/db/test-database";
 type ChangeListener = (event: { tableName: string }) => void;
 
 const mockListeners = new Set<ChangeListener>();
-jest.mock("expo-sqlite", () => ({
+vi.mock("expo-sqlite", () => ({
     addDatabaseChangeListener: (listener: ChangeListener) => {
         mockListeners.add(listener);
         return {
@@ -43,9 +44,12 @@ describe("useGlobalCurrency", () => {
 
     it("does not re-render its callers when an unrelated setting is written", async () => {
         let renders = 0;
-        const { result } = await renderHook(() => {
+        const { result } = renderHook(() => {
             renders += 1;
             return useGlobalCurrency(db);
+        });
+        await act(async () => {
+            await announceMetaWrite();
         });
         const before = renders;
 
@@ -59,7 +63,10 @@ describe("useGlobalCurrency", () => {
     });
 
     it("still follows its own key", async () => {
-        const { result } = await renderHook(() => useGlobalCurrency(db));
+        const { result } = renderHook(() => useGlobalCurrency(db));
+        await act(async () => {
+            await announceMetaWrite();
+        });
 
         await Effect.runPromise(setMeta(db, META_KEYS.currency, "JPY"));
         await act(async () => {

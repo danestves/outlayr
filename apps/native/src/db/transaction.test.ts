@@ -1,8 +1,8 @@
-import { describe, expect, it } from "@jest/globals";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Schema from "effect/Schema";
+import { describe, expect, it } from "vite-plus/test";
 
 import type { Database } from "./client";
 import { transaction, withTransaction } from "./transaction";

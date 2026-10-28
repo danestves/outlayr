@@ -1,5 +1,5 @@
-import { describe, expect, it } from "@jest/globals";
 import { DrizzleQueryError } from "drizzle-orm/errors";
+import { describe, expect, it } from "vite-plus/test";
 
 import { scrubQueryParams } from "./exception-scrub";
 

@@ -1,5 +1,5 @@
-import { describe, expect, it } from "@jest/globals";
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
+import { describe, expect, it } from "vite-plus/test";
 
 import {
     closedWindowsBefore,

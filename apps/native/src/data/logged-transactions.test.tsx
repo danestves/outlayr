@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { act, renderHook } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { act, renderHook } from "@testing-library/react";
 import { eq } from "drizzle-orm";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
@@ -12,7 +13,7 @@ type ChangeListener = (event: { tableName: string }) => void;
 
 const mockChangeListeners = new Set<ChangeListener>();
 
-jest.mock("expo-sqlite", () => ({
+vi.mock("expo-sqlite", () => ({
     addDatabaseChangeListener: (listener: ChangeListener) => {
         mockChangeListeners.add(listener);
         return {
@@ -64,7 +65,7 @@ const ids = (rows: readonly { id: string }[]) => rows.map((row) => row.id);
 
 describe("useLoggedTransactions", () => {
     it("keeps the older days' rows through a write to a recent entry", async () => {
-        const { result } = await renderHook(() => useLoggedTransactions(db, NOW, 540));
+        const { result } = renderHook(() => useLoggedTransactions(db, NOW, 540));
         const { tail } = result.current;
         expect(ids(result.current.head)).toStrictEqual(["recent"]);
         expect(ids(tail)).toStrictEqual(["old", "older"]);
@@ -80,16 +81,13 @@ describe("useLoggedTransactions", () => {
     });
 
     it("pages in older days without rebuilding the ones already held, and still shows an edit to them", async () => {
-        const { rerender, result } = await renderHook(
-            ({ days }: { days: number }) => useLoggedTransactions(db, NOW, days),
-            {
-                initialProps: { days: 2 },
-            }
-        );
+        const { rerender, result } = renderHook(({ days }: { days: number }) => useLoggedTransactions(db, NOW, days), {
+            initialProps: { days: 2 },
+        });
         const [old] = result.current.tail;
         expect(ids(result.current.tail)).toStrictEqual(["old"]);
 
-        await rerender({ days: 3 });
+        rerender({ days: 3 });
         expect(ids(result.current.tail)).toStrictEqual(["old", "older"]);
         expect(result.current.tail[0]).toBe(old);
 
@@ -99,7 +97,7 @@ describe("useLoggedTransactions", () => {
     });
 
     it("re-reads the older days when one of their rows changes, stamp or no stamp", async () => {
-        const { result } = await renderHook(() => useLoggedTransactions(db, NOW, 540));
+        const { result } = renderHook(() => useLoggedTransactions(db, NOW, 540));
 
         // The canonicalize backfill rewrites history without moving `updatedAt`.
         await db.update(transactions).set({ amountUsd: 5.5 }).where(eq(transactions.id, "old"));

@@ -1,5 +1,5 @@
-import { describe, expect, it } from "@jest/globals";
 import { buildRateTable } from "@outlayr/money/valuation";
+import { describe, expect, it } from "vite-plus/test";
 
 import { marketRateFor, rateTypeOptions, transferRateOptions } from "./transfer-rate-options";
 

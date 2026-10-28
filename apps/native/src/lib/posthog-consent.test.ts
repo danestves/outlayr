@@ -1,15 +1,16 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { renderHook } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { useAnalyticsConsent } from "./posthog-consent";
 
 const mockState: { db: object | null; share: boolean } = { db: null, share: true };
-const mockOptIn = jest.fn(async () => undefined);
-const mockOptOut = jest.fn(async () => undefined);
+const mockOptIn = vi.fn(async () => undefined);
+const mockOptOut = vi.fn(async () => undefined);
 
-jest.mock("@/contexts/local-data-context", () => ({ useLocalData: () => ({ db: mockState.db }) }));
-jest.mock("@/data/settings", () => ({ useBoolSetting: () => mockState.share }));
-jest.mock("@/lib/posthog", () => ({
+vi.mock("@/contexts/local-data-context", () => ({ useLocalData: () => ({ db: mockState.db }) }));
+vi.mock("@/data/settings", () => ({ useBoolSetting: () => mockState.share }));
+vi.mock("@/lib/posthog", () => ({
     posthog: { optIn: () => mockOptIn(), optOut: () => mockOptOut() },
 }));
 
@@ -32,7 +33,7 @@ describe("useAnalyticsConsent", () => {
         const { rerender } = await renderHook(useAnalyticsConsent);
         mockState.db = {};
         await rerender(undefined);
-        expect(mockOptOut).toHaveBeenCalledTimes(1);
+        expect(mockOptOut).toHaveBeenCalledOnce();
         expect(mockOptIn).not.toHaveBeenCalled();
     });
 
@@ -42,6 +43,6 @@ describe("useAnalyticsConsent", () => {
         const { rerender } = await renderHook(useAnalyticsConsent);
         mockState.share = true;
         await rerender(undefined);
-        expect(mockOptIn).toHaveBeenCalledTimes(1);
+        expect(mockOptIn).toHaveBeenCalledOnce();
     });
 });

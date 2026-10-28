@@ -1,7 +1,7 @@
-import { describe, expect, it } from "@jest/globals";
 import BetterSqlite3 from "better-sqlite3";
 import { eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import { describe, expect, it } from "vite-plus/test";
 
 import { accounts, appMeta, budgets, exchangeRates, mainBudget, transactions } from "@/db/schema";
 import { migratedDatabase, testSpendDb } from "@/db/test-database";

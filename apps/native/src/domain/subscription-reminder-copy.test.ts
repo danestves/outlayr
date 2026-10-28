@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 import { subscriptionReminderId } from "./subscription-reminder";
 import { reminderCopy, reminderNotices } from "./subscription-reminder-copy";

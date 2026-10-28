@@ -1,9 +1,9 @@
-import { describe, expect, it, jest } from "@jest/globals";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as Stream from "effect/Stream";
 import * as SubscriptionRef from "effect/SubscriptionRef";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import { categoryKey } from "@/data/transfer-core";
 import type { ColumnMapping, ParsedImportFile } from "@/data/transfer-core";
@@ -102,8 +102,8 @@ describe("csvImport", () => {
     it("settles a run once into the draft with its links, outcome and reason", async () => {
         const parsed = parsedFile("Zq Cafe");
         const store = openDraft(parsed);
-        const transport = jest.fn<CsvImportFn>().mockReturnValue(Effect.succeed(answered("Zq Cafe")));
-        const writes = jest.fn();
+        const transport = vi.fn<CsvImportFn>().mockReturnValue(Effect.succeed(answered("Zq Cafe")));
+        const writes = vi.fn();
         store.subscribe(writes);
 
         await withService(
@@ -122,13 +122,13 @@ describe("csvImport", () => {
             outcome: "applied",
             reason: null,
         });
-        expect(writes).toHaveBeenCalledTimes(1);
+        expect(writes).toHaveBeenCalledOnce();
     });
 
     it("runs once for a file however often it is started, and again only on retry", async () => {
         const parsed = parsedFile("Zq Cafe");
         const store = openDraft(parsed);
-        const transport = jest.fn<CsvImportFn>().mockReturnValue(Effect.succeed(answered("Zq Cafe")));
+        const transport = vi.fn<CsvImportFn>().mockReturnValue(Effect.succeed(answered("Zq Cafe")));
 
         await withService(
             transport,
@@ -139,7 +139,7 @@ describe("csvImport", () => {
                 yield* csvImport.run(requestFor(parsed));
                 yield* untilSettled;
                 yield* csvImport.run(requestFor(parsed));
-                expect(transport).toHaveBeenCalledTimes(1);
+                expect(transport).toHaveBeenCalledOnce();
 
                 yield* csvImport.retry(requestFor(parsed));
                 yield* untilSettled;
@@ -154,7 +154,7 @@ describe("csvImport", () => {
         const second = parsedFile("Other Place");
         const store = openDraft(first);
         const answer = held();
-        const transport = jest.fn<CsvImportFn>().mockReturnValueOnce(Effect.promise(() => answer.promise));
+        const transport = vi.fn<CsvImportFn>().mockReturnValueOnce(Effect.promise(() => answer.promise));
 
         await withService(
             transport,
@@ -176,7 +176,7 @@ describe("csvImport", () => {
     it("settles a provider failure as providerError", async () => {
         const parsed = parsedFile("Zq Cafe");
         const store = openDraft(parsed);
-        const transport = jest
+        const transport = vi
             .fn<CsvImportFn>()
             .mockReturnValue(Effect.succeed({ status: "providerError", suggestions: null }));
 
@@ -196,7 +196,7 @@ describe("csvImport", () => {
     it("never calls the model while AI enrichment is off", async () => {
         const parsed = parsedFile("Zq Cafe");
         const store = openDraft(parsed);
-        const transport = jest.fn<CsvImportFn>();
+        const transport = vi.fn<CsvImportFn>();
 
         await withService(
             transport,

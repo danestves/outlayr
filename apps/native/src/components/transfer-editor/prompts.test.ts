@@ -1,4 +1,4 @@
-import { describe, expect, it, jest } from "@jest/globals";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import { blockMessage, gapPrompt } from "./prompts";
 
@@ -59,7 +59,7 @@ describe("what an unexplained remainder offers", () => {
     });
 
     it("offers the bank that charged nothing yet before adding to the fee already typed", () => {
-        const resolveAsFee = jest.fn();
+        const resolveAsFee = vi.fn();
         const prompt = gapped({
             crossCurrency: false,
             fees: { destination: 0, source: 15 },
@@ -74,7 +74,7 @@ describe("what an unexplained remainder offers", () => {
     });
 
     it("reads more arriving than the typed rate converts as money from another account", () => {
-        const setOutside = jest.fn();
+        const setOutside = vi.fn();
         const prompt = gapped({ gapAmount: -4.53, setOutside });
 
         expect(prompt?.message).toBe('transfers.gap.more:{"amount":"$4.53"}');

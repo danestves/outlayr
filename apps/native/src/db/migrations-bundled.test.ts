@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 import bundle from "../../drizzle/migrations";
 import { LEGACY_MIGRATION_NAMES } from "./legacy-migration-names";

@@ -14,8 +14,6 @@ import { MATERIAL_ROLE_VARIABLES, MATERIAL_ROLES } from "./material-roles";
 import type { MaterialRoleColors } from "./material-roles";
 import { withAlpha } from "./shade";
 
-/* Pure so jest can sweep it across wallpapers. */
-
 export type MaterialTheme = "light" | "dark";
 
 /** WCAG 2.2 AA, normal text. */

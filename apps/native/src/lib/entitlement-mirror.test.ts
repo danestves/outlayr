@@ -1,13 +1,13 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Effect from "effect/Effect";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { CloudError } from "./cloud-error";
 import { mirrorEntitlement } from "./entitlement-mirror";
 
-const mockCloudAction = jest.fn<(path: string, args: Record<string, never>) => Effect.Effect<boolean, CloudError>>();
+const mockCloudAction = vi.fn<(path: string, args: Record<string, never>) => Effect.Effect<boolean, CloudError>>();
 
 let mockConvex: object | null = {};
-jest.mock("@/lib/convex", () => ({
+vi.mock("@/lib/convex", () => ({
     cloudAction: (path: string, args: Record<string, never>) => mockCloudAction(path, args),
     get convex() {
         return mockConvex;

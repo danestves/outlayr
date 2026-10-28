@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 import { EVERY_OPTIONS, EVERY_ORDER } from "./installment-draft";
 import { planFromRows } from "./installment-plan-phrase";

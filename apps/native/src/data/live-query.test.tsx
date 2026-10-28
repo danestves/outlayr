@@ -1,10 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { act, render, renderHook, waitFor } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { act, render, renderHook, waitFor } from "@testing-library/react";
 import type BetterSqlite3 from "better-sqlite3";
 import { eq, lte } from "drizzle-orm";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { Text } from "react-native";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { appMeta, transactions } from "@/db/schema";
@@ -19,7 +20,7 @@ type ChangeListener = (event: { tableName: string }) => void;
 
 const mockChangeListeners = new Set<ChangeListener>();
 
-jest.mock("expo-sqlite", () => ({
+vi.mock("expo-sqlite", () => ({
     addDatabaseChangeListener: (listener: ChangeListener) => {
         mockChangeListeners.add(listener);
         return {
@@ -79,32 +80,32 @@ describe("useLiveValue", () => {
     });
 
     it("does not re-render when an invalidation leaves the derived value unchanged", async () => {
-        const { getByTestId } = await render(<Probe db={db} watch="alpha" />);
-        await waitFor(() => expect(getByTestId("probe").props.children).toBe("unset"));
+        const { getByTestId } = render(<Probe db={db} watch="alpha" />);
+        await waitFor(() => expect(getByTestId("probe").textContent).toBe("unset"));
         const before = renders;
 
         write(db, "beta", "irrelevant");
         await fireChange("appMeta");
 
         expect(renders).toBe(before);
-        expect(getByTestId("probe").props.children).toBe("unset");
+        expect(getByTestId("probe").textContent).toBe("unset");
     });
 
     it("re-renders when the watched value changes", async () => {
-        const { getByTestId } = await render(<Probe db={db} watch="alpha" />);
-        await waitFor(() => expect(getByTestId("probe").props.children).toBe("unset"));
+        const { getByTestId } = render(<Probe db={db} watch="alpha" />);
+        await waitFor(() => expect(getByTestId("probe").textContent).toBe("unset"));
         const before = renders;
 
         write(db, "alpha", "one");
         await fireChange("appMeta");
 
-        await waitFor(() => expect(getByTestId("probe").props.children).toBe("one"));
+        await waitFor(() => expect(getByTestId("probe").textContent).toBe("one"));
         expect(renders).toBeGreaterThan(before);
     });
 
     it("re-reads once for a write's burst of row events, not once per row", async () => {
         let reads = 0;
-        const { result } = await renderHook(() =>
+        const { result } = renderHook(() =>
             useLiveValue(
                 appMeta,
                 () => {
@@ -128,7 +129,7 @@ describe("useRatesRead", () => {
     it("re-reads once per rates revision and never per written row", async () => {
         mockChangeListeners.clear();
         let reads = 0;
-        const { result } = await renderHook(() =>
+        const { result } = renderHook(() =>
             useRatesRead(() => {
                 reads += 1;
                 return reads;
@@ -165,7 +166,7 @@ describe("a useLiveQuery bounded by the clock", () => {
     });
 
     afterEach(() => {
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
     });
 
     function useRowsUpTo(boundMs: number) {
@@ -190,12 +191,12 @@ describe("a useLiveQuery bounded by the clock", () => {
             )
             .run(dateMs);
         clockMs += 60_000;
-        jest.spyOn(Date, "now").mockReturnValue(clockMs);
+        vi.spyOn(Date, "now").mockReturnValue(clockMs);
         await fireChange("transactions");
     }
 
     it("runs its query once for a write that moves useNow()", async () => {
-        const { result } = await renderHook(() => useRowsUpTo(useNow()));
+        const { result } = renderHook(() => useRowsUpTo(useNow()));
         const before = reads;
 
         await saveEntryLater();
@@ -206,7 +207,7 @@ describe("a useLiveQuery bounded by the clock", () => {
 
     it("runs its query once when its tab is selected again after a write it missed", async () => {
         const pause = createTabPause();
-        const { result } = await renderHook(() => useRowsUpTo(useNow()), {
+        const { result } = renderHook(() => useRowsUpTo(useNow()), {
             wrapper: ({ children }: { children: ReactNode }) => (
                 <TabPauseContext.Provider value={pause}>{children}</TabPauseContext.Provider>
             ),
@@ -226,9 +227,9 @@ describe("a useLiveQuery bounded by the clock", () => {
     });
 
     it("still picks up a write when its bound was pinned at the reading", async () => {
-        await renderHook(() => useNow());
+        renderHook(() => useNow());
         const pinnedMs = readNow();
-        const { result } = await renderHook(() => useRowsUpTo(pinnedMs));
+        const { result } = renderHook(() => useRowsUpTo(pinnedMs));
 
         await saveEntryLater();
 
@@ -236,10 +237,10 @@ describe("a useLiveQuery bounded by the clock", () => {
     });
 
     it("moves useNow() on a payment made outside Outlayr", async () => {
-        const { result } = await renderHook(() => useNow());
+        const { result } = renderHook(() => useNow());
         const before = result.current;
         clockMs += 60_000;
-        jest.spyOn(Date, "now").mockReturnValue(clockMs);
+        vi.spyOn(Date, "now").mockReturnValue(clockMs);
 
         await fireChange("outsidePayments");
 
@@ -247,8 +248,8 @@ describe("a useLiveQuery bounded by the clock", () => {
     });
 
     it("leaves a bound that never followed the clock still when a write keeps its rows", async () => {
-        await renderHook(() => useNow());
-        await renderHook(() => {
+        renderHook(() => useNow());
+        renderHook(() => {
             renders += 1;
             const [boundMs] = useState(Date.now);
             return useRowsUpTo(boundMs);

@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { eq, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
@@ -111,7 +111,7 @@ describe("attachMissingLogos", () => {
         await seedRow(db, "a", "Lescot", { date: NOW });
         await seedRow(db, "b", "Monoprix", { date: new Date(NOW.getTime() - 1000) });
         let calls = 0;
-        const enrich = jest.fn<NonNullable<LogoBackfillDeps["enrich"]>>(() =>
+        const enrich = vi.fn<NonNullable<LogoBackfillDeps["enrich"]>>(() =>
             Effect.tryPromise(async () => {
                 calls += 1;
                 return calls === 1 ? null : { groundedLookup: true, result: REMOTE };
@@ -120,7 +120,7 @@ describe("attachMissingLogos", () => {
 
         await expect(Effect.runPromise(attachMissingLogos(db, makeDeps({ enrich })))).resolves.toBe(0);
 
-        expect(enrich).toHaveBeenCalledTimes(1);
+        expect(enrich).toHaveBeenCalledOnce();
     });
 
     it("leaves a row a peer has edited since this device wrote it bare", async () => {
@@ -158,7 +158,7 @@ describe("attachMissingLogos", () => {
 
     it("keeps a retry deadline across launches", async () => {
         await seedRow(db, "a", "Iolanda");
-        const enrich = jest.fn<NonNullable<LogoBackfillDeps["enrich"]>>(() =>
+        const enrich = vi.fn<NonNullable<LogoBackfillDeps["enrich"]>>(() =>
             Effect.tryPromise(async () => ({
                 groundedLookup: true,
                 result: NOTHING,
@@ -169,7 +169,7 @@ describe("attachMissingLogos", () => {
         // A fresh process holds nothing in memory; only the row's database survives.
         await Effect.runPromise(attachMissingLogos(db, makeDeps({ enrich })));
 
-        expect(enrich).toHaveBeenCalledTimes(1);
+        expect(enrich).toHaveBeenCalledOnce();
     });
 
     it("paints every row of a merchant from one lookup, each with its own file", async () => {
@@ -367,7 +367,7 @@ describe("attachMissingLogos", () => {
     it("looks a same-named merchant up once per currency", async () => {
         await seedRow(db, "fr", "Carrefour", { currency: "EUR" });
         await seedRow(db, "ve", "Carrefour", { currency: "VES" });
-        const enrich = jest.fn<NonNullable<LogoBackfillDeps["enrich"]>>(({ currency }) =>
+        const enrich = vi.fn<NonNullable<LogoBackfillDeps["enrich"]>>(({ currency }) =>
             Effect.tryPromise(async () => ({
                 groundedLookup: true,
                 result: { ...REMOTE, domain: currency === "EUR" ? "carrefour.fr" : "carrefour.com.ve" },
@@ -384,7 +384,7 @@ describe("attachMissingLogos", () => {
     it("neither caches an empty answer for the form nor believes it for long", async () => {
         await seedRow(db, "a", "Intermarche");
         const empty: RemoteEnrichmentResult = { categoryName: null, domain: null, isNewCategory: false, tags: [] };
-        const enrich = jest.fn<NonNullable<LogoBackfillDeps["enrich"]>>(() =>
+        const enrich = vi.fn<NonNullable<LogoBackfillDeps["enrich"]>>(() =>
             Effect.tryPromise(async () => ({
                 groundedLookup: true,
                 result: empty,
@@ -404,7 +404,7 @@ describe("attachMissingLogos", () => {
         for (const [index, name] of ["Lescot", "Monoprix", "Franprix", "Amorino"].entries()) {
             await seedRow(db, name, name, { date: new Date(NOW.getTime() - index * 1000) });
         }
-        const enrich = jest.fn<NonNullable<LogoBackfillDeps["enrich"]>>(() =>
+        const enrich = vi.fn<NonNullable<LogoBackfillDeps["enrich"]>>(() =>
             Effect.tryPromise(async () => ({
                 groundedLookup: true,
                 result: NOTHING,
@@ -447,7 +447,7 @@ describe("attachMissingLogos", () => {
     it("sends nothing for a row renamed while an earlier lookup was out", async () => {
         await seedRow(db, "first", "Intermarche");
         await seedRow(db, "second", "Iolanda", { date: new Date(NOW.getTime() - 1000) });
-        const enrich = jest.fn<NonNullable<LogoBackfillDeps["enrich"]>>(({ name }) =>
+        const enrich = vi.fn<NonNullable<LogoBackfillDeps["enrich"]>>(({ name }) =>
             Effect.tryPromise(async () => {
                 if (name === "Intermarche") {
                     await db.update(transactions).set({ note: "Renamed" }).where(eq(transactions.id, "second"));
@@ -514,7 +514,7 @@ describe("attachMissingLogos", () => {
 
     it("treats a miss as provisional when the request went out without the web lookup", async () => {
         await seedRow(db, "a", "Iolanda");
-        const enrich = jest.fn<NonNullable<LogoBackfillDeps["enrich"]>>(() =>
+        const enrich = vi.fn<NonNullable<LogoBackfillDeps["enrich"]>>(() =>
             Effect.tryPromise(async () => ({
                 groundedLookup: false,
                 result: NOTHING,
@@ -561,12 +561,12 @@ describe("attachMissingLogos", () => {
 
     it("retries a domain whose image tiers had nothing after a short wait, without painting", async () => {
         await seedRow(db, "a", "Intermarche");
-        const fetchImage = jest.fn<LogoBackfillDeps["fetchImage"]>(() => Effect.succeed({ kind: "none" }));
+        const fetchImage = vi.fn<LogoBackfillDeps["fetchImage"]>(() => Effect.succeed({ kind: "none" }));
         const deps = makeDeps({ fetchImage });
 
         await Effect.runPromise(attachMissingLogos(db, deps));
         await Effect.runPromise(attachMissingLogos(db, deps));
-        expect(fetchImage).toHaveBeenCalledTimes(1);
+        expect(fetchImage).toHaveBeenCalledOnce();
         await expect(rowImage(db, "a")).resolves.toMatchObject({ imageUri: null });
 
         deps.now = NOW.getTime() + 31 * 60 * 1000;
