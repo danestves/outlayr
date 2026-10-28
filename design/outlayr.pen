@@ -243527,6 +243527,1271 @@
         },
         {
           "type": "frame",
+          "id": "JM7Pl",
+          "name": "Account · signed in",
+          "layout": "vertical",
+          "gap": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "QSbYd",
+              "name": "Label",
+              "fill": "#6b6557",
+              "content": "Account · signed in",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "DuUaO",
+              "name": "Variants",
+              "gap": 32,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "z7xss7",
+                  "name": "Account · signed in · iOS · light",
+                  "theme": {
+                    "platform": "ios",
+                    "mode": "light"
+                  },
+                  "clip": true,
+                  "width": 402,
+                  "height": 874,
+                  "fill": "$background",
+                  "cornerRadius": 48,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "bELjh",
+                      "type": "ref",
+                      "ref": "RZCb5",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "L2LA4x",
+                      "x": 16,
+                      "y": 62,
+                      "name": "Back (native glass)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/settings-back-ios-light.png",
+                        "mode": "cover"
+                      },
+                      "width": 44,
+                      "height": 44
+                    },
+                    {
+                      "type": "text",
+                      "id": "lRn49",
+                      "x": 0,
+                      "y": 73,
+                      "name": "Nav title",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 402,
+                      "content": "Account",
+                      "textAlign": "center",
+                      "fontFamily": "Inter",
+                      "fontSize": 17,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "o9kHB",
+                      "x": 20,
+                      "y": 140,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "SIGNED IN AS",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "wTkci",
+                      "x": 20,
+                      "y": 162,
+                      "name": "Email",
+                      "fill": "$foreground",
+                      "content": "pen.design@outlayr.local",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "BrbDI",
+                      "x": 20,
+                      "y": 211.5,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "ACCOUNT",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "frame",
+                      "id": "YkDNm",
+                      "x": 20,
+                      "y": 233.2,
+                      "name": "Sign Out row",
+                      "width": 362,
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "top": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "layout": "vertical",
+                      "padding": [
+                        1,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "kOOEp",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Sign Out",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "logout",
+                              "fill": "$danger",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Sign Out",
+                              "fill": "$danger"
+                            },
+                            "D7dG1": {
+                              "content": "",
+                              "enabled": false
+                            },
+                            "INRhi": {
+                              "enabled": true
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": false,
+                              "fill": "$switch-off",
+                              "justifyContent": "start"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "TJCKV",
+                      "x": 20,
+                      "y": 278,
+                      "name": "Footer",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 362,
+                      "content": "Signing out ends the session on this phone. Every transaction, budget and category stays exactly where it is.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "oGxmQ",
+                      "x": 20,
+                      "y": 379.3,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "DELETING YOUR ACCOUNT",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Dj9vd",
+                      "x": 20,
+                      "y": 401,
+                      "name": "Delete account row",
+                      "width": 362,
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "top": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "layout": "vertical",
+                      "padding": [
+                        1,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "Dn3tA",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Delete account",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "person_remove",
+                              "fill": "$danger",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Delete account",
+                              "fill": "$danger"
+                            },
+                            "D7dG1": {
+                              "content": "",
+                              "enabled": false
+                            },
+                            "INRhi": {
+                              "enabled": true
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": false,
+                              "fill": "$switch-off",
+                              "justifyContent": "start"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "i3QsV",
+                      "x": 20,
+                      "y": 446,
+                      "name": "Footer",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 362,
+                      "content": "Deletes your account and everything synced to it. The ledger on this device stays, and signing in again adopts it.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "l5QodL",
+                      "x": 20,
+                      "y": 548,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "ERASE THIS DEVICE",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "frame",
+                      "id": "VJIxR",
+                      "x": 20,
+                      "y": 569,
+                      "name": "Delete account and erase this device row",
+                      "width": 362,
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "top": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "layout": "vertical",
+                      "padding": [
+                        1,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "Jii3a",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Delete account and erase this device",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "person_remove",
+                              "fill": "$danger",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Delete account and erase this device",
+                              "fill": "$danger"
+                            },
+                            "D7dG1": {
+                              "content": "",
+                              "enabled": false
+                            },
+                            "INRhi": {
+                              "enabled": true
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": false,
+                              "fill": "$switch-off",
+                              "justifyContent": "start"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "WrjPK",
+                      "x": 20,
+                      "y": 614,
+                      "name": "Footer",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 362,
+                      "content": "Erases Outlayr data on this device after your cloud account is deleted. System permissions and widget placement remain controlled by the OS.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "HDjhj",
+                      "x": 134,
+                      "y": 861,
+                      "name": "Home indicator",
+                      "fill": "$foreground",
+                      "width": 134,
+                      "height": 5
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "lEYue",
+                  "name": "Account · signed in · iOS · dark",
+                  "theme": {
+                    "platform": "ios",
+                    "mode": "dark"
+                  },
+                  "clip": true,
+                  "width": 402,
+                  "height": 874,
+                  "fill": "$background",
+                  "cornerRadius": 48,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "FD7an",
+                      "type": "ref",
+                      "ref": "RZCb5",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "tgyAl",
+                      "x": 16,
+                      "y": 62,
+                      "name": "Back (native glass)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/settings-back-ios-dark.png",
+                        "mode": "cover"
+                      },
+                      "width": 44,
+                      "height": 44
+                    },
+                    {
+                      "type": "text",
+                      "id": "HpycZ",
+                      "x": 0,
+                      "y": 73,
+                      "name": "Nav title",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 402,
+                      "content": "Account",
+                      "textAlign": "center",
+                      "fontFamily": "Inter",
+                      "fontSize": 17,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ZvdTC",
+                      "x": 20,
+                      "y": 140,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "SIGNED IN AS",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "HMvu5",
+                      "x": 20,
+                      "y": 162,
+                      "name": "Email",
+                      "fill": "$foreground",
+                      "content": "pen.design@outlayr.local",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "BKx2f",
+                      "x": 20,
+                      "y": 211.5,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "ACCOUNT",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "frame",
+                      "id": "tQWwf",
+                      "x": 20,
+                      "y": 233.2,
+                      "name": "Sign Out row",
+                      "width": 362,
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "top": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "layout": "vertical",
+                      "padding": [
+                        1,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "Afg86",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Sign Out",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "logout",
+                              "fill": "$danger",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Sign Out",
+                              "fill": "$danger"
+                            },
+                            "D7dG1": {
+                              "content": "",
+                              "enabled": false
+                            },
+                            "INRhi": {
+                              "enabled": true
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": false,
+                              "fill": "$switch-off",
+                              "justifyContent": "start"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "jbyGf",
+                      "x": 20,
+                      "y": 278,
+                      "name": "Footer",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 362,
+                      "content": "Signing out ends the session on this phone. Every transaction, budget and category stays exactly where it is.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "BHai7",
+                      "x": 20,
+                      "y": 379.3,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "DELETING YOUR ACCOUNT",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "frame",
+                      "id": "in1Tk",
+                      "x": 20,
+                      "y": 401,
+                      "name": "Delete account row",
+                      "width": 362,
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "top": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "layout": "vertical",
+                      "padding": [
+                        1,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "O2EA9",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Delete account",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "person_remove",
+                              "fill": "$danger",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Delete account",
+                              "fill": "$danger"
+                            },
+                            "D7dG1": {
+                              "content": "",
+                              "enabled": false
+                            },
+                            "INRhi": {
+                              "enabled": true
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": false,
+                              "fill": "$switch-off",
+                              "justifyContent": "start"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "z5zkyt",
+                      "x": 20,
+                      "y": 446,
+                      "name": "Footer",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 362,
+                      "content": "Deletes your account and everything synced to it. The ledger on this device stays, and signing in again adopts it.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ucMpt",
+                      "x": 20,
+                      "y": 548,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "ERASE THIS DEVICE",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "frame",
+                      "id": "o02PFb",
+                      "x": 20,
+                      "y": 569,
+                      "name": "Delete account and erase this device row",
+                      "width": 362,
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "top": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "layout": "vertical",
+                      "padding": [
+                        1,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "zSQxd",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Delete account and erase this device",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "person_remove",
+                              "fill": "$danger",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Delete account and erase this device",
+                              "fill": "$danger"
+                            },
+                            "D7dG1": {
+                              "content": "",
+                              "enabled": false
+                            },
+                            "INRhi": {
+                              "enabled": true
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": false,
+                              "fill": "$switch-off",
+                              "justifyContent": "start"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "v4Zcm",
+                      "x": 20,
+                      "y": 614,
+                      "name": "Footer",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 362,
+                      "content": "Erases Outlayr data on this device after your cloud account is deleted. System permissions and widget placement remain controlled by the OS.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "Qeyea",
+                      "x": 134,
+                      "y": 861,
+                      "name": "Home indicator",
+                      "fill": "$foreground",
+                      "width": 134,
+                      "height": 5
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "hdV8q",
+                  "name": "Account · signed in · Android · light",
+                  "theme": {
+                    "platform": "android",
+                    "mode": "light"
+                  },
+                  "clip": true,
+                  "width": 412,
+                  "height": 915,
+                  "fill": "$m3-surface",
+                  "cornerRadius": 28,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "UDRGo",
+                      "type": "ref",
+                      "ref": "BCCA1",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "cOpwq",
+                      "x": 0,
+                      "y": 54,
+                      "name": "Back (native)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/settings-back-android-light.png",
+                        "mode": "cover"
+                      },
+                      "width": 56,
+                      "height": 52
+                    },
+                    {
+                      "type": "text",
+                      "id": "Mqfq3",
+                      "x": 60,
+                      "y": 61,
+                      "name": "Title",
+                      "fill": "$m3-on-surface",
+                      "content": "Account",
+                      "fontFamily": "$font-body",
+                      "fontSize": 22,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Qlowb",
+                      "x": 16,
+                      "y": 131,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "SIGNED IN AS",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "tiE6R",
+                      "x": 16,
+                      "y": 152,
+                      "name": "Email",
+                      "fill": "$m3-on-surface",
+                      "content": "pen.design@outlayr.local",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "qUv8q",
+                      "x": 16,
+                      "y": 198.6,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "ACCOUNT",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "id": "S9bXK",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Sign Out",
+                      "x": 0,
+                      "y": 216.9,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 56
+                        },
+                        "P8ORXF": {
+                          "icon": "logout",
+                          "fill": "$danger",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Sign Out",
+                          "fill": "$danger"
+                        },
+                        "SOmnC": {
+                          "content": "",
+                          "enabled": false
+                        },
+                        "NwABC": {
+                          "enabled": true
+                        },
+                        "J5h2o": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "z3Dl2",
+                      "x": 16,
+                      "y": 280,
+                      "name": "Footer",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 380,
+                      "content": "Signing out ends the session on this phone. Every transaction, budget and category stays exactly where it is.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ekhYK",
+                      "x": 16,
+                      "y": 342.2,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "DELETING YOUR ACCOUNT",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "id": "j77Lu",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Delete account",
+                      "x": 0,
+                      "y": 361.4,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 56
+                        },
+                        "P8ORXF": {
+                          "icon": "person_remove",
+                          "fill": "$danger",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Delete account",
+                          "fill": "$danger"
+                        },
+                        "SOmnC": {
+                          "content": "",
+                          "enabled": false
+                        },
+                        "NwABC": {
+                          "enabled": true
+                        },
+                        "J5h2o": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "pHoQl",
+                      "x": 16,
+                      "y": 423,
+                      "name": "Footer",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 380,
+                      "content": "Deletes your account and everything synced to it. The ledger on this device stays, and signing in again adopts it.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "oAkUo",
+                      "x": 16,
+                      "y": 485.9,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "ERASE THIS DEVICE",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "id": "BgXN7",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Delete account and erase this device",
+                      "x": 0,
+                      "y": 505,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 56
+                        },
+                        "P8ORXF": {
+                          "icon": "person_remove",
+                          "fill": "$danger",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Delete account and erase this device",
+                          "fill": "$danger"
+                        },
+                        "SOmnC": {
+                          "content": "",
+                          "enabled": false
+                        },
+                        "NwABC": {
+                          "enabled": true
+                        },
+                        "J5h2o": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "g38QVK",
+                      "x": 16,
+                      "y": 567,
+                      "name": "Footer",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 380,
+                      "content": "Erases Outlayr data on this device after your cloud account is deleted. System permissions and widget placement remain controlled by the OS.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "f7FWAG",
+                  "name": "Account · signed in · Android · dark",
+                  "theme": {
+                    "platform": "android",
+                    "mode": "dark"
+                  },
+                  "clip": true,
+                  "width": 412,
+                  "height": 915,
+                  "fill": "$m3-surface",
+                  "cornerRadius": 28,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "r0Bw3",
+                      "type": "ref",
+                      "ref": "BCCA1",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "qvfJO",
+                      "x": 0,
+                      "y": 54,
+                      "name": "Back (native)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/settings-back-android-dark.png",
+                        "mode": "cover"
+                      },
+                      "width": 56,
+                      "height": 52
+                    },
+                    {
+                      "type": "text",
+                      "id": "MeMCU",
+                      "x": 60,
+                      "y": 61,
+                      "name": "Title",
+                      "fill": "$m3-on-surface",
+                      "content": "Account",
+                      "fontFamily": "$font-body",
+                      "fontSize": 22,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "jYBYt",
+                      "x": 16,
+                      "y": 131,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "SIGNED IN AS",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "qV7PN",
+                      "x": 16,
+                      "y": 152,
+                      "name": "Email",
+                      "fill": "$m3-on-surface",
+                      "content": "pen.design@outlayr.local",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "dE0Vy",
+                      "x": 16,
+                      "y": 198.6,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "ACCOUNT",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "id": "TXRyb",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Sign Out",
+                      "x": 0,
+                      "y": 216.9,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 56
+                        },
+                        "P8ORXF": {
+                          "icon": "logout",
+                          "fill": "$danger",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Sign Out",
+                          "fill": "$danger"
+                        },
+                        "SOmnC": {
+                          "content": "",
+                          "enabled": false
+                        },
+                        "NwABC": {
+                          "enabled": true
+                        },
+                        "J5h2o": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "jlYQw",
+                      "x": 16,
+                      "y": 280,
+                      "name": "Footer",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 380,
+                      "content": "Signing out ends the session on this phone. Every transaction, budget and category stays exactly where it is.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Ti7UU",
+                      "x": 16,
+                      "y": 342.2,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "DELETING YOUR ACCOUNT",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "id": "UhMUJ",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Delete account",
+                      "x": 0,
+                      "y": 361.4,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 56
+                        },
+                        "P8ORXF": {
+                          "icon": "person_remove",
+                          "fill": "$danger",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Delete account",
+                          "fill": "$danger"
+                        },
+                        "SOmnC": {
+                          "content": "",
+                          "enabled": false
+                        },
+                        "NwABC": {
+                          "enabled": true
+                        },
+                        "J5h2o": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "ICFZO",
+                      "x": 16,
+                      "y": 423,
+                      "name": "Footer",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 380,
+                      "content": "Deletes your account and everything synced to it. The ledger on this device stays, and signing in again adopts it.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "B3oA12",
+                      "x": 16,
+                      "y": 485.9,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "ERASE THIS DEVICE",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "id": "B0sFk",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Delete account and erase this device",
+                      "x": 0,
+                      "y": 505,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 56
+                        },
+                        "P8ORXF": {
+                          "icon": "person_remove",
+                          "fill": "$danger",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Delete account and erase this device",
+                          "fill": "$danger"
+                        },
+                        "SOmnC": {
+                          "content": "",
+                          "enabled": false
+                        },
+                        "NwABC": {
+                          "enabled": true
+                        },
+                        "J5h2o": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "yJkxH",
+                      "x": 16,
+                      "y": 567,
+                      "name": "Footer",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 380,
+                      "content": "Erases Outlayr data on this device after your cloud account is deleted. System permissions and widget placement remain controlled by the OS.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
           "id": "kGfEU",
           "name": "Sign in with email",
           "layout": "vertical",
