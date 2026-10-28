@@ -513,8 +513,8 @@ export const categoriesRepo = {
     }),
 
     // Cascaded by hand: `foreign_keys` isn't enabled on the connection, so the schema's `ON DELETE` never fires. The
-    // budget takes the full tombstone since `budgets.categoryId` is UNIQUE even when deleted. Schedules retire so
-    // `repairOrphanedRecurrence` mints no successor, and photos drop so `reconcilePhotos` collects them.
+    // budget is fully tombstoned for peers before 0038, whose `budgets.categoryId` stays UNIQUE when deleted. Schedules
+    // retire so `repairOrphanedRecurrence` mints no successor, and photos drop so `reconcilePhotos` collects them.
     remove: Effect.fn("Categories.remove")(function* remove(db: Database, id: string) {
         const now = new Date();
         yield* transaction(
