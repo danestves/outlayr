@@ -275041,7 +275041,7 @@
       "type": "frame",
       "id": "g3DlL",
       "x": 0,
-      "y": 48240,
+      "y": 52738,
       "name": "References · live captures (not design)",
       "fill": "#d9d6cd",
       "cornerRadius": 48,
@@ -282827,6 +282827,1029 @@
                         "type": "image",
                         "enabled": true,
                         "url": "captures/paywall-android-dark-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "OXMZH",
+          "name": "Reference · signed in",
+          "layout": "vertical",
+          "gap": 24,
+          "children": [
+            {
+              "type": "frame",
+              "id": "EIadW",
+              "name": "Settings · signed in",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "BVv00",
+                  "name": "Label",
+                  "fill": "#6b6557",
+                  "content": "Settings · signed in",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "TP9Ve",
+                  "name": "Captures",
+                  "gap": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "bjDBN",
+                      "name": "settings-signed-in-ios-light-1",
+                      "clip": true,
+                      "width": 402,
+                      "height": 874,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/settings-signed-in-ios-light-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 48
+                    },
+                    {
+                      "type": "frame",
+                      "id": "H4OUw",
+                      "name": "settings-signed-in-ios-dark-1",
+                      "clip": true,
+                      "width": 402,
+                      "height": 874,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/settings-signed-in-ios-dark-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 48
+                    },
+                    {
+                      "type": "frame",
+                      "id": "KyIjE",
+                      "name": "settings-signed-in-android-light-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/settings-signed-in-android-light-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    },
+                    {
+                      "type": "frame",
+                      "id": "UGL6J",
+                      "name": "settings-signed-in-android-dark-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/settings-signed-in-android-dark-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "rsyRQ",
+              "name": "Account · signed in",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Zcg6e",
+                  "name": "Label",
+                  "fill": "#6b6557",
+                  "content": "Account · signed in",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "dWwFH",
+                  "name": "Captures",
+                  "gap": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "M2sFTZ",
+                      "name": "settings-account-signed-in-ios-light-1",
+                      "clip": true,
+                      "width": 402,
+                      "height": 874,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/settings-account-signed-in-ios-light-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 48
+                    },
+                    {
+                      "type": "frame",
+                      "id": "OpWAl",
+                      "name": "settings-account-signed-in-ios-dark-1",
+                      "clip": true,
+                      "width": 402,
+                      "height": 874,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/settings-account-signed-in-ios-dark-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 48
+                    },
+                    {
+                      "type": "frame",
+                      "id": "dI3mv",
+                      "name": "settings-account-signed-in-android-light-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/settings-account-signed-in-android-light-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ivW7L",
+                      "name": "settings-account-signed-in-android-dark-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/settings-account-signed-in-android-dark-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "zDK6h",
+              "name": "Usage · signed in",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "SLtUP",
+                  "name": "Label",
+                  "fill": "#6b6557",
+                  "content": "Usage · signed in",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "F0v20",
+                  "name": "Captures",
+                  "gap": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "t8UKIG",
+                      "name": "settings-usage-signed-in-ios-light-1",
+                      "clip": true,
+                      "width": 402,
+                      "height": 874,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/settings-usage-signed-in-ios-light-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 48
+                    },
+                    {
+                      "type": "frame",
+                      "id": "CyMvM",
+                      "name": "settings-usage-signed-in-ios-dark-1",
+                      "clip": true,
+                      "width": 402,
+                      "height": 874,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/settings-usage-signed-in-ios-dark-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 48
+                    },
+                    {
+                      "type": "frame",
+                      "id": "zvJG5",
+                      "name": "settings-usage-signed-in-android-light-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/settings-usage-signed-in-android-light-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    },
+                    {
+                      "type": "frame",
+                      "id": "myWMS",
+                      "name": "settings-usage-signed-in-android-dark-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/settings-usage-signed-in-android-dark-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "IYU4m",
+              "name": "Sync · off",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Hf4qB",
+                  "name": "Label",
+                  "fill": "#6b6557",
+                  "content": "Sync · off",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "r1bAE",
+                  "name": "Captures",
+                  "gap": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "nnL8e",
+                      "name": "settings-sync-off-ios-light-1",
+                      "clip": true,
+                      "width": 402,
+                      "height": 874,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/settings-sync-off-ios-light-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 48
+                    },
+                    {
+                      "type": "frame",
+                      "id": "WRurM",
+                      "name": "settings-sync-off-ios-dark-1",
+                      "clip": true,
+                      "width": 402,
+                      "height": 874,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/settings-sync-off-ios-dark-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 48
+                    },
+                    {
+                      "type": "frame",
+                      "id": "TB0ve",
+                      "name": "settings-sync-off-android-light-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/settings-sync-off-android-light-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Y1GegY",
+                      "name": "settings-sync-off-android-dark-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/settings-sync-off-android-dark-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "C6Tdfi",
+              "name": "Sync · on",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "LFWdY",
+                  "name": "Label",
+                  "fill": "#6b6557",
+                  "content": "Sync · on",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "DtjQ5",
+                  "name": "Captures",
+                  "gap": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "ZlgDQ",
+                      "name": "settings-sync-ios-light-1",
+                      "clip": true,
+                      "width": 402,
+                      "height": 874,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/settings-sync-ios-light-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 48
+                    },
+                    {
+                      "type": "frame",
+                      "id": "r8eac",
+                      "name": "settings-sync-ios-dark-1",
+                      "clip": true,
+                      "width": 402,
+                      "height": 874,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/settings-sync-ios-dark-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 48
+                    },
+                    {
+                      "type": "frame",
+                      "id": "a4YAB8",
+                      "name": "settings-sync-android-light-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/settings-sync-android-light-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    },
+                    {
+                      "type": "frame",
+                      "id": "R2nvG9",
+                      "name": "settings-sync-android-dark-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/settings-sync-android-dark-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "u6m82",
+              "name": "AI data consent",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "G6X7JE",
+                  "name": "Label",
+                  "fill": "#6b6557",
+                  "content": "AI data consent",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "Ev7St",
+                  "name": "Captures",
+                  "gap": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "KzvdV",
+                      "name": "ai-consent-ios-light-1",
+                      "clip": true,
+                      "width": 402,
+                      "height": 874,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/ai-consent-ios-light-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 48
+                    },
+                    {
+                      "type": "frame",
+                      "id": "OBDKg",
+                      "name": "ai-consent-ios-dark-1",
+                      "clip": true,
+                      "width": 402,
+                      "height": 874,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/ai-consent-ios-dark-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 48
+                    },
+                    {
+                      "type": "frame",
+                      "id": "HeU5U",
+                      "name": "ai-consent-android-light-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/ai-consent-android-light-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    },
+                    {
+                      "type": "frame",
+                      "id": "PJlJd",
+                      "name": "ai-consent-android-dark-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/ai-consent-android-dark-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    },
+                    {
+                      "type": "frame",
+                      "id": "zJw0k",
+                      "name": "ai-consent-android-light-0half",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/ai-consent-android-light-0half.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    },
+                    {
+                      "type": "frame",
+                      "id": "TUr7A",
+                      "name": "ai-consent-android-dark-0half",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/ai-consent-android-dark-0half.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "HYZXP",
+              "name": "Ledger adoption (Android live only)",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "RiIwf",
+                  "name": "Label",
+                  "fill": "#6b6557",
+                  "content": "Ledger adoption (Android live only)",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "DdpjC",
+                  "name": "Captures",
+                  "gap": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "o4tlHw",
+                      "name": "ledger-adoption-android-light-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/ledger-adoption-android-light-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    },
+                    {
+                      "type": "frame",
+                      "id": "zYc97",
+                      "name": "ledger-adoption-android-dark-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/ledger-adoption-android-dark-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "X8OUT",
+              "name": "Ledger adoption · confirm (Android live only)",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "nF0E9",
+                  "name": "Label",
+                  "fill": "#6b6557",
+                  "content": "Ledger adoption · confirm (Android live only)",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "f8gbj",
+                  "name": "Captures",
+                  "gap": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "ltOVU",
+                      "name": "ledger-adoption-confirm-android-light-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/ledger-adoption-confirm-android-light-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    },
+                    {
+                      "type": "frame",
+                      "id": "jaBqB",
+                      "name": "ledger-adoption-confirm-android-dark-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/ledger-adoption-confirm-android-dark-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "HawYx",
+              "name": "Receipt scan · signed in",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "HUFYA",
+                  "name": "Label",
+                  "fill": "#6b6557",
+                  "content": "Receipt scan · signed in",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "v9jPPY",
+                  "name": "Captures",
+                  "gap": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "KyULu",
+                      "name": "receipt-scan-signed-in-ios-light-1",
+                      "clip": true,
+                      "width": 402,
+                      "height": 874,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/receipt-scan-signed-in-ios-light-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 48
+                    },
+                    {
+                      "type": "frame",
+                      "id": "TBrVG",
+                      "name": "receipt-scan-signed-in-ios-dark-1",
+                      "clip": true,
+                      "width": 402,
+                      "height": 874,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/receipt-scan-signed-in-ios-dark-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 48
+                    },
+                    {
+                      "type": "frame",
+                      "id": "PwPSd",
+                      "name": "receipt-scan-signed-in-android-light-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/receipt-scan-signed-in-android-light-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    },
+                    {
+                      "type": "frame",
+                      "id": "HOYAU",
+                      "name": "receipt-scan-signed-in-android-dark-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/receipt-scan-signed-in-android-dark-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "I4RAU",
+              "name": "Voice entry · signed in",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "IGZLv",
+                  "name": "Label",
+                  "fill": "#6b6557",
+                  "content": "Voice entry · signed in",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "F0DK3",
+                  "name": "Captures",
+                  "gap": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "nTOLV",
+                      "name": "voice-signed-in-ios-light-1",
+                      "clip": true,
+                      "width": 402,
+                      "height": 874,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/voice-signed-in-ios-light-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 48
+                    },
+                    {
+                      "type": "frame",
+                      "id": "VKb9d",
+                      "name": "voice-signed-in-ios-dark-1",
+                      "clip": true,
+                      "width": 402,
+                      "height": 874,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/voice-signed-in-ios-dark-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 48
+                    },
+                    {
+                      "type": "frame",
+                      "id": "U2OXp4",
+                      "name": "voice-signed-in-android-light-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/voice-signed-in-android-light-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    },
+                    {
+                      "type": "frame",
+                      "id": "w21aVA",
+                      "name": "voice-signed-in-android-dark-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/voice-signed-in-android-dark-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "jrPKb",
+              "name": "Import installments · signed in",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "VFgnQ",
+                  "name": "Label",
+                  "fill": "#6b6557",
+                  "content": "Import installments · signed in",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "vSoty",
+                  "name": "Captures",
+                  "gap": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "RnCsW",
+                      "name": "installment-scan-signed-in-ios-light-1",
+                      "clip": true,
+                      "width": 402,
+                      "height": 874,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/installment-scan-signed-in-ios-light-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 48
+                    },
+                    {
+                      "type": "frame",
+                      "id": "p1DmfD",
+                      "name": "installment-scan-signed-in-ios-dark-1",
+                      "clip": true,
+                      "width": 402,
+                      "height": 874,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/installment-scan-signed-in-ios-dark-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 48
+                    },
+                    {
+                      "type": "frame",
+                      "id": "WVIRz",
+                      "name": "installment-scan-signed-in-android-light-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/installment-scan-signed-in-android-light-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    },
+                    {
+                      "type": "frame",
+                      "id": "yWvro",
+                      "name": "installment-scan-signed-in-android-dark-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/installment-scan-signed-in-android-dark-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "L7SNQK",
+              "name": "Outlayr Pro · active",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "AxgTW",
+                  "name": "Label",
+                  "fill": "#6b6557",
+                  "content": "Outlayr Pro · active",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "v9lLo",
+                  "name": "Captures",
+                  "gap": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "n2TNU",
+                      "name": "paywall-pro-ios-light-1",
+                      "clip": true,
+                      "width": 402,
+                      "height": 874,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/paywall-pro-ios-light-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 48
+                    },
+                    {
+                      "type": "frame",
+                      "id": "i08zIO",
+                      "name": "paywall-pro-ios-dark-1",
+                      "clip": true,
+                      "width": 402,
+                      "height": 874,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/paywall-pro-ios-dark-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 48
+                    },
+                    {
+                      "type": "frame",
+                      "id": "E1XIT",
+                      "name": "paywall-pro-android-light-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/paywall-pro-android-light-1.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 28
+                    },
+                    {
+                      "type": "frame",
+                      "id": "W80V9H",
+                      "name": "paywall-pro-android-dark-1",
+                      "clip": true,
+                      "width": 412,
+                      "height": 915,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "captures/paywall-pro-android-dark-1.png",
                         "mode": "cover"
                       },
                       "cornerRadius": 28
