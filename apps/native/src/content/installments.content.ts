@@ -697,12 +697,25 @@ const installments = {
             pt: "Uma captura de tela do plano de pagamento da compra.",
             "pt-PT": "Uma captura de ecrã do plano de pagamento da compra.",
         }),
+        "installments.scan.noCard": t({
+            en: "Add a card or loan to import its plan.",
+            es: "Agrega una tarjeta o préstamo para importar su plan.",
+            "es-ES": "Añade una tarjeta o préstamo para importar su plan.",
+            fr: "Ajoutez une carte ou un prêt pour importer son échéancier.",
+            pt: "Adicione um cartão ou empréstimo para importar o plano.",
+        }),
         "installments.scan.notConfigured": t({
             en: "Importing a screenshot needs the cloud tier.",
             es: "Para importar una captura se necesita el servicio en la nube.",
             fr: "L'import d'une capture nécessite le service cloud.",
             pt: "Importar uma captura de tela requer o serviço na nuvem.",
             "pt-PT": "Importar uma captura de ecrã requer o serviço na nuvem.",
+        }),
+        "installments.scan.pickAccount": t({
+            en: "Choose account",
+            es: "Elegir cuenta",
+            fr: "Choisir le compte",
+            pt: "Escolher conta",
         }),
         "installments.scan.provider": t({
             en: "Couldn't read the plan.",

@@ -1,20 +1,25 @@
+import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import Image01Icon from "@hugeicons-pro/core-stroke-rounded/Image01Icon";
+import { toAccountKind } from "@outlayr/money/account-kind";
 import * as Effect from "effect/Effect";
 import { useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Text } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 
+import { AccountPickerSheet } from "@/components/account-picker-sheet";
 import { AiConsentGate } from "@/components/ai-consent";
 import { LimitToast } from "@/components/limit-toast";
 import { PhotoStage } from "@/components/receipt/photo-stage";
 import { useDatabase } from "@/contexts/local-data-context";
+import { useBankAccounts } from "@/data/accounts";
 import { getAccountById } from "@/data/accounts-core";
 import type { Account } from "@/data/accounts-core";
 import { useAiConsent } from "@/data/settings";
 import { encodeInstallmentSeed, scannedOrder } from "@/domain/installment-scan";
 import { useLocaleTag } from "@/hooks/use-locale-tag";
+import { useLiabilityCreateRoute } from "@/hooks/use-pro-gate";
 import { useProEntitled } from "@/hooks/use-pro-locked";
 import { useImageScan } from "@/hooks/use-receipt-scan";
 import type { ScanFailure, ScanPhoto } from "@/hooks/use-receipt-scan";
@@ -168,18 +173,78 @@ function ScanFlow({ account, photo }: { account: Account; photo: ScanPhoto | nul
             onClose={close}
             overlay={limitToast}
         >
-            <Animated.View className="items-center gap-2 px-4" entering={FadeIn.duration(260)}>
-                <Text className="font-sans-semibold text-foreground text-title text-center">
-                    {t("installments.scan.import")}
-                </Text>
-                <Text className="text-muted text-center font-sans text-base">{t("installments.scan.intro")}</Text>
-            </Animated.View>
+            <Intro />
         </ScanShell>
     );
 }
 
-export function InstallmentScanScreen({ accountId, photo }: { accountId?: string; photo?: string }) {
+function Intro() {
+    const t = useTranslation();
+    return (
+        <Animated.View className="items-center gap-2 px-4" entering={FadeIn.duration(260)}>
+            <Text className="font-sans-semibold text-foreground text-title text-center">
+                {t("installments.scan.import")}
+            </Text>
+            <Text className="text-muted text-center font-sans text-base">{t("installments.scan.intro")}</Text>
+        </Animated.View>
+    );
+}
+
+// A link without a usable `accountId` (the bare URL scheme, or a deleted account) asks which liability owns the plan.
+function AccountChoice({ photo }: { photo: ScanPhoto | null }) {
     const router = useRouter();
+    const t = useTranslation();
+    const db = useDatabase();
+    const sheet = useRef<BottomSheetModal>(null);
+    const liabilityRoute = useLiabilityCreateRoute();
+    const liabilities = useBankAccounts(db).filter((account) => toAccountKind(account.kind) === "liability");
+    const [chosen, setChosen] = useState<Account | null>(null);
+    const account = chosen ?? (liabilities.length === 1 ? liabilities[0] : null);
+
+    const addLiability: BarAction = {
+        label: t("accounts.nav.newLiability"),
+        onPress: () =>
+            router.replace(
+                liabilityRoute === "/paywall"
+                    ? liabilityRoute
+                    : { params: { kind: "liability" }, pathname: liabilityRoute }
+            ),
+    };
+    let body = (
+        <ScanShell bottom={<BottomBar primary={addLiability} secondary={null} />} onClose={() => router.back()}>
+            <StatusLine>{t("installments.scan.noCard")}</StatusLine>
+        </ScanShell>
+    );
+    if (account) {
+        body = <ScanFlow account={account} photo={photo} />;
+    } else if (liabilities.length > 1) {
+        const pick: BarAction = { label: t("installments.scan.pickAccount"), onPress: () => sheet.current?.present() };
+        body = (
+            <ScanShell bottom={<BottomBar primary={pick} secondary={null} />} onClose={() => router.back()}>
+                <Intro />
+            </ScanShell>
+        );
+    }
+    // Stays mounted after a pick: the sheet is still animating its dismissal when the flow takes over.
+    return (
+        <>
+            {body}
+            {liabilities.length > 1 ? (
+                <AccountPickerSheet
+                    accounts={liabilities}
+                    allowNone={false}
+                    db={db}
+                    onCreate={addLiability.onPress}
+                    onSelect={setChosen}
+                    ref={sheet}
+                    selectedId={chosen?.id ?? null}
+                />
+            ) : null}
+        </>
+    );
+}
+
+export function InstallmentScanScreen({ accountId, photo }: { accountId?: string; photo?: string }) {
     const db = useDatabase();
     const { gate } = useAuthSession();
     const consent = useAiConsent(db, "aiConsentPlanScan");
@@ -192,11 +257,7 @@ export function InstallmentScanScreen({ accountId, photo }: { accountId?: string
         return <AiConsentGate />;
     }
     if (account === null) {
-        return (
-            <ScanShell bottom={null} onClose={() => router.back()}>
-                {null}
-            </ScanShell>
-        );
+        return <AccountChoice photo={picked} />;
     }
     return <ScanFlow account={account} photo={picked} />;
 }
