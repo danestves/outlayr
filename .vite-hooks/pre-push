@@ -11,5 +11,4 @@
 command -v git-lfs >/dev/null 2>&1 || { echo "git-lfs is required to push design/captures: brew install git-lfs"; exit 2; }
 git lfs pre-push "$@"
 vp run -r --cache check-types
-vp run --filter @outlayr/native --cache test --changedSince=origin/main --maxWorkers=25%
-vp run --filter '@outlayr/*' --filter '!@outlayr/native' --cache test --changed=origin/main --maxWorkers=25%
+vp run --filter '@outlayr/*' --cache test --changed=origin/main --maxWorkers=25%
