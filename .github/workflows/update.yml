@@ -64,6 +64,7 @@ jobs:
               with:
                   variables: ${{ toJSON(vars) }}
                   hugeicons-token: ${{ secrets.HUGEICONS_PRO_TOKEN }}
+                  minimum-release-age: ${{ vars.PNPM_MINIMUM_RELEASE_AGE }}
 
             - name: Build the i18n dictionaries
               run: vp exec intlayer build
