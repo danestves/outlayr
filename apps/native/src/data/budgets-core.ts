@@ -108,7 +108,8 @@ const anchorFor = Effect.fn("Budgets.anchorFor")(function* anchorFor(
 });
 
 // The budget tables' AFTER DELETE triggers drop the outbox entry, so a hard delete never reaches a peer, which pushes
-// the row back. `categoryId` is unique, so the tombstone clears it. `erase-core.ts` writes this same shape in bulk.
+// the row back. Installs before 0038 hold `categoryId` unique on tombstones too, so the tombstone clears it.
+// `erase-core.ts` writes this same shape in bulk.
 export const TOMBSTONED_BUDGET = {
     amount: 0,
     amountUsd: null,

@@ -194,9 +194,7 @@ export const budgets = sqliteTable(
     {
         amount: real("amount").notNull(),
         amountUsd: real("amountUsd"),
-        categoryId: text("categoryId")
-            .references(() => categories.id, { onDelete: "cascade" })
-            .unique(),
+        categoryId: text("categoryId").references(() => categories.id, { onDelete: "cascade" }),
         currency: text("currency"),
         dateCreated: integer("dateCreated", { mode: "timestamp_ms" }),
         deletedAt: integer("deletedAt", { mode: "timestamp_ms" }),
@@ -208,7 +206,12 @@ export const budgets = sqliteTable(
         type: integer("type").notNull(),
         updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).notNull(),
     },
-    (table) => [index("budgets_deletedAt_idx").on(table.deletedAt)]
+    (table) => [
+        index("budgets_deletedAt_idx").on(table.deletedAt),
+        uniqueIndex("budgets_categoryId_unique")
+            .on(table.categoryId)
+            .where(sql`${table.deletedAt} IS NULL`),
+    ]
 );
 
 export const mainBudget = sqliteTable(
