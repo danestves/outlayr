@@ -18,12 +18,25 @@ export interface RowShellProps {
     children?: ReactNode;
     destructive?: boolean;
     detail?: string;
+    /** `below` and `detail` start under the icon instead of the title. */
+    flush?: boolean;
     icon?: SettingsIconName;
+    onTitleLines?: (lines: number) => void;
     title: string;
     titleLines?: number;
 }
 
-export function RowShell({ icon, title, titleLines = 1, destructive, detail, children, below }: RowShellProps) {
+export function RowShell({
+    icon,
+    title,
+    titleLines = 1,
+    destructive,
+    detail,
+    children,
+    below,
+    flush = false,
+    onTitleLines,
+}: RowShellProps) {
     const colors = useColors();
     const largeText = useAccessibilityTextSize();
     return (
@@ -40,14 +53,17 @@ export function RowShell({ icon, title, titleLines = 1, destructive, detail, chi
                 <Text
                     className={cn("text-body flex-1", destructive ? "text-danger" : "text-foreground")}
                     numberOfLines={largeText ? Math.max(titleLines, 2) : titleLines}
+                    onTextLayout={onTitleLines ? (event) => onTitleLines(event.nativeEvent.lines.length) : undefined}
                 >
                     {title}
                 </Text>
                 {children}
             </View>
-            {below ? <View className={cn(icon && TITLE_INSET, "items-start")}>{below}</View> : null}
+            {below ? <View className={cn(icon && !flush && TITLE_INSET, "items-start")}>{below}</View> : null}
             {detail ? (
-                <Text className={cn(icon && TITLE_INSET, "text-muted text-subtitle leading-snug")}>{detail}</Text>
+                <Text className={cn(icon && !flush && TITLE_INSET, "text-muted text-subtitle mt-2 leading-snug")}>
+                    {detail}
+                </Text>
             ) : null}
         </View>
     );

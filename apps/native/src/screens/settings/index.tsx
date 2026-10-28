@@ -33,7 +33,7 @@ import { useValuationCoverage } from "@/data/use-valuation-coverage";
 import { ACCENT_OPTIONS, DEFAULT_ACCENT_VALUE } from "@/domain/accent-options";
 import { appIconLabel } from "@/domain/app-icons";
 import { offeredAccentValue } from "@/domain/material-accent";
-import { formatAmount } from "@/domain/money";
+import { formatAmount, minorUnitsFor } from "@/domain/money";
 import { coverageNote } from "@/domain/valuation-coverage";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { languageLabel } from "@/i18n/languages";
@@ -60,6 +60,8 @@ import { useIntegrationsOn } from "./integrations-on";
 
 const SUPPORT_EMAIL = "support@tryoutlayr.com";
 const SAMPLE_AMOUNT = 1284.5;
+// Matches the 1284 the `settings.numberEntry.type1Note` copy says to type.
+const CENTS_LAST_KEYS = 1284;
 const BIOMETRIC_ICON: SettingsIconName = Platform.OS === "android" ? "FingerprintPattern" : "ScanFace";
 const HAPTICS_ICON: SettingsIconName = Platform.OS === "android" ? "Vibrate" : "Hand";
 
@@ -112,6 +114,7 @@ export function Settings() {
 
     const diagnostics = supportDiagnostics(APP_VERSION, APP_BUILD);
     const previewAmount = formatAmount(SAMPLE_AMOUNT, currency, showCents, language);
+    const centsLastAmount = formatAmount(CENTS_LAST_KEYS / 10 ** minorUnitsFor(currency), currency, true, language);
 
     return (
         <SettingsScreen>
@@ -142,6 +145,7 @@ export function Settings() {
                     }}
                     options={NUMBER_ENTRY_OPTIONS.map((option) => ({
                         label: t(option.label),
+                        note: t(option.note, { amount: centsLastAmount }),
                         value: option.value,
                     }))}
                     title={t("settings.row.numberEntry")}
@@ -320,6 +324,7 @@ export function Settings() {
                     }}
                     options={HAPTICS_OPTIONS.map((option) => ({
                         label: t(option.label),
+                        note: t(option.note),
                         value: option.value,
                     }))}
                     title={t("settings.row.haptics")}

@@ -1,5 +1,6 @@
 import { Host, Picker, Text as SwiftText } from "@expo/ui/swift-ui";
 import { pickerStyle, tag } from "@expo/ui/swift-ui/modifiers";
+import { useState } from "react";
 import { View } from "react-native";
 
 import { RowShell } from "@/components/list/row-shell";
@@ -9,15 +10,21 @@ import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 export interface SegmentedRowProps {
     icon: SettingsIconName;
     onChange: (value: number) => void;
-    options: readonly { label: string; value: number }[];
+    /** The selected option's `note` shows under the row. */
+    options: readonly { label: string; note?: string; value: number }[];
     title: string;
     value: number;
 }
 
 export function SegmentedRow({ icon, onChange, options, title, value }: SegmentedRowProps) {
     const largeText = useAccessibilityTextSize();
+    // Sticky: once the pill moves below, the title gets the full width and fits, so re-measuring would flip it back.
+    const [titleWraps, setTitleWraps] = useState(false);
+    const note = options.find((option) => option.value === value)?.note;
+    const stacked = largeText || titleWraps;
     const picker = (
-        <Host matchContents>
+        // Stacked, it takes the row's width; SwiftUI's segmented control stretches to whatever width it is offered.
+        <Host matchContents={stacked ? { vertical: true } : true} style={stacked ? { width: "100%" } : undefined}>
             <Picker
                 label=""
                 modifiers={[pickerStyle("segmented")]}
@@ -37,10 +44,20 @@ export function SegmentedRow({ icon, onChange, options, title, value }: Segmente
             </Picker>
         </Host>
     );
-    return largeText ? (
-        <RowShell below={<View className="w-full pt-3">{picker}</View>} icon={icon} title={title} />
+    return stacked ? (
+        <RowShell below={<View className="w-full pt-3">{picker}</View>} detail={note} flush icon={icon} title={title} />
     ) : (
-        <RowShell icon={icon} title={title} titleLines={2}>
+        <RowShell
+            detail={note}
+            icon={icon}
+            onTitleLines={(lines) => {
+                if (lines > 1) {
+                    setTitleWraps(true);
+                }
+            }}
+            title={title}
+            titleLines={2}
+        >
             {picker}
         </RowShell>
     );

@@ -98,17 +98,25 @@ interface ChoiceOption {
     value: number;
 }
 
-export const HAPTICS_OPTIONS: readonly ChoiceOption[] = [
+/** `note` says what the selected choice does, under its segmented row. */
+interface NotedChoiceOption extends ChoiceOption {
+    note: TranslationKey;
+}
+
+export const HAPTICS_OPTIONS: readonly NotedChoiceOption[] = [
     {
         label: "settings.haptics.none",
+        note: "settings.haptics.noneNote",
         value: 0,
     },
     {
         label: "settings.haptics.subtle",
+        note: "settings.haptics.subtleNote",
         value: 1,
     },
     {
         label: "settings.haptics.excessive",
+        note: "settings.haptics.excessiveNote",
         value: 2,
     },
 ];
@@ -118,13 +126,15 @@ export const WEEKDAY_OPTIONS: readonly ChoiceOption[] = [
     { label: "settings.time.monday", value: 2 },
 ];
 
-export const NUMBER_ENTRY_OPTIONS: readonly ChoiceOption[] = [
+export const NUMBER_ENTRY_OPTIONS: readonly NotedChoiceOption[] = [
     {
         label: "settings.numberEntry.type1",
+        note: "settings.numberEntry.type1Note",
         value: 1,
     },
     {
         label: "settings.numberEntry.type2",
+        note: "settings.numberEntry.type2Note",
         value: 2,
     },
 ];
