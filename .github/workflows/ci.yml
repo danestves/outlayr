@@ -65,6 +65,7 @@ jobs:
             - uses: ./.github/actions/setup-native
               with:
                   hugeicons-token: ${{ secrets.HUGEICONS_PRO_TOKEN }}
+                  minimum-release-age: ${{ vars.PNPM_MINIMUM_RELEASE_AGE }}
 
             - name: Lint and format
               run: vp check
@@ -84,6 +85,7 @@ jobs:
             - uses: ./.github/actions/setup-native
               with:
                   hugeicons-token: ${{ secrets.HUGEICONS_PRO_TOKEN }}
+                  minimum-release-age: ${{ vars.PNPM_MINIMUM_RELEASE_AGE }}
 
             - name: Generate uniwind artifacts
               if: needs.changes.outputs.native == 'true'
@@ -122,6 +124,7 @@ jobs:
             - uses: ./.github/actions/setup-native
               with:
                   hugeicons-token: ${{ secrets.HUGEICONS_PRO_TOKEN }}
+                  minimum-release-age: ${{ vars.PNPM_MINIMUM_RELEASE_AGE }}
 
             - name: Build the i18n catalog
               working-directory: apps/native

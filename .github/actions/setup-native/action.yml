@@ -9,6 +9,10 @@ inputs:
     hugeicons-token:
         description: Token for the private @hugeicons-pro registry.
         required: true
+    minimum-release-age:
+        description: Minutes a package must be published before install accepts it, as vars.PNPM_MINIMUM_RELEASE_AGE. Empty keeps pnpm's 24h.
+        required: false
+        default: ""
 
 runs:
     using: composite
@@ -32,6 +36,9 @@ runs:
 
         - name: Install
           shell: bash
+          env:
+              # Overrides pnpm-workspace.yaml, so the gate can drop for a fresh lockfile without a commit.
+              pnpm_config_minimum_release_age: ${{ inputs.minimum-release-age || '1440' }}
           run: vp install --frozen-lockfile
 
         - name: Export the environment variables

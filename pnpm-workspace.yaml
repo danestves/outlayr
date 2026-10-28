@@ -44,8 +44,6 @@ packageExtensions:
         peerDependenciesMeta:
             "@types/react":
                 optional: true
-# 12h instead of pnpm's 24h default so the Expo SDK 58.0.20 refresh (#176) installs in CI.
-minimumReleaseAge: 720
 minimumReleaseAgeExclude:
     - panelui-native@0.75.1
 

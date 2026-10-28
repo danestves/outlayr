@@ -123,6 +123,7 @@ jobs:
               with:
                   variables: ${{ toJSON(vars) }}
                   hugeicons-token: ${{ secrets.HUGEICONS_PRO_TOKEN }}
+                  minimum-release-age: ${{ vars.PNPM_MINIMUM_RELEASE_AGE }}
 
             # EAS Build's remote counter ended at iOS 54 and Android 7. Starting past
             # both keeps every upload newer than anything either store has seen.
