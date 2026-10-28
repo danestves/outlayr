@@ -29,6 +29,9 @@ function makeServer() {
     const push = async ({ deviceId, rows: pushed }: Parameters<PushFn>[0]) => {
         let accepted = 0;
         let skipped = 0;
+        if (pushed.some((row) => row.table === "appMeta" && row.deletedAt !== null)) {
+            throw new Error("PushRow refuses an appMeta tombstone");
+        }
         for (const row of pushed) {
             const key = `${row.table} ${row.localId}`;
             const existing = rows.get(key);
@@ -233,6 +236,22 @@ describe("discardAccountLedger", () => {
 
         expect(server.rows.get("transactions theirs")?.deletedAt).not.toBeNull();
         expect(server.rows.get("transactions shared")?.deletedAt).toBeNull();
+    });
+
+    it("leaves an account setting this device never set alone", async () => {
+        const server = makeServer();
+        await server.push({
+            deviceId: "peer",
+            rows: [
+                serverRow("theirs", 900),
+                { deletedAt: null, fields: { value: "0" }, localId: "showCents", table: "appMeta", updatedAt: 900 },
+            ],
+        });
+
+        await Effect.runPromise(discardAccountLedger(db, server.transport));
+
+        expect(server.rows.get("transactions theirs")?.deletedAt).not.toBeNull();
+        expect(server.rows.get("appMeta showCents")?.deletedAt).toBeNull();
     });
 
     it("is safe to run twice", async () => {

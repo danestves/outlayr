@@ -160,7 +160,7 @@ export const discardAccountLedger = Effect.fn("AdoptionEngine.discardAccountLedg
     for (const table of SYNCED_TABLES) {
         const local = localByTable.get(table) ?? new Map<string, Row>();
         for (const row of log.values()) {
-            if (row.table !== table || row.deletedAt !== null) {
+            if (row.table !== table || row.deletedAt !== null || table === "appMeta") {
                 continue;
             }
             const mine = local.get(row.localId);
@@ -172,10 +172,6 @@ export const discardAccountLedger = Effect.fn("AdoptionEngine.discardAccountLedg
                     table,
                     updatedAt: stamp,
                 });
-                continue;
-            }
-            // No lift: `drainOutbox` stamps `appMeta` with the enqueue time, later than anything already there.
-            if (table === "appMeta") {
                 continue;
             }
             const mineAt = mine.updatedAt;
