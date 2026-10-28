@@ -11,26 +11,26 @@ allowBuilds:
     sharp: false
     unrs-resolver: false
 catalog:
-    "@better-auth/expo": ~1.6.15
-    "@confect/cli": ^10.3.2
-    "@confect/core": ^10.3.2
-    "@confect/server": ^10.3.2
-    "@convex-dev/agent": ^0.7.1
-    "@convex-dev/better-auth": ^0.12.5
-    "@effect/atom-react": ^4.0.6
-    better-auth: ~1.6.15
-    convex: ^1.45.0
-    dotenv: ^17.4.2
-    effect: ^4.0.6
-    intlayer: ^9.5.2
-    react-intlayer: ^9.5.2
-    react-native-intlayer: ^9.5.2
-    vite-intlayer: ^9.5.2
-    zod: ^4.6.5
+    "@better-auth/expo": 1.6.15
+    "@confect/cli": ^10.4.1
+    "@confect/core": ^10.4.1
+    "@confect/server": ^10.4.1
+    "@convex-dev/agent": ^0.7.8
+    "@convex-dev/better-auth": ^0.12.6
+    "@effect/atom-react": ^4.0.7
+    better-auth: 1.6.15
+    convex: ^1.48.0
+    dotenv: ^18.0.9
+    effect: ^4.0.7
+    intlayer: ^9.7.0
+    react-intlayer: ^9.7.0
+    react-native-intlayer: ^9.7.0
+    vite-intlayer: ^9.7.0
+    zod: ^4.6.7
     typescript: ~6.0.3
     varlock: 1.23.0
-    vite: npm:@voidzero-dev/vite-plus-core@1.0.0
-    vite-plus: 1.0.0
+    vite: npm:@voidzero-dev/vite-plus-core@1.4.0
+    vite-plus: 1.4.0
 packageExtensions:
     "@tanstack/react-router":
         peerDependencies:
@@ -48,14 +48,15 @@ minimumReleaseAgeExclude:
     - panelui-native@0.75.1
 
 patchedDependencies:
-    "@confect/server@10.3.2": patches/@confect__server@10.3.2.patch
-    "@expo/fingerprint@0.21.6": patches/@expo__fingerprint@0.21.6.patch
+    "@convex-dev/agent@0.7.8": patches/@convex-dev__agent@0.7.8.patch
+    "@confect/server@10.4.1": patches/@confect__server@10.4.1.patch
+    "@expo/fingerprint@0.21.7": patches/@expo__fingerprint@0.21.7.patch
     "@hugeicons/react-native@1.0.16": patches/@hugeicons__react-native@1.0.16.patch
     "@tanstack/ai-mcp@1.0.0": patches/@tanstack__ai-mcp@1.0.0.patch
-    expo-router@58.0.25: patches/expo-router@58.0.25.patch
-    expo-widgets@58.0.22: patches/expo-widgets@58.0.22.patch
+    expo-router@58.0.27: patches/expo-router@58.0.27.patch
+    expo-widgets@58.0.24: patches/expo-widgets@58.0.24.patch
     number-flow-react-native@0.5.1: patches/number-flow-react-native@0.5.1.patch
-    panelui-native@0.113.1: patches/panelui-native@0.113.1.patch
+    panelui-native@0.115.0: patches/panelui-native@0.115.0.patch
     react-native-nano-icons@1.0.1: patches/react-native-nano-icons@1.0.1.patch
 overrides:
     "@coderabbitai/config>zod": "catalog:"

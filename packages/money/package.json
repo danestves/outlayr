@@ -36,7 +36,7 @@
     },
     "devDependencies": {
         "@outlayr/config": "workspace:*",
-        "@types/node": "^22.13.14",
+        "@types/node": "^26.6.5",
         "cldr-core": "45.0.0",
         "cldr-numbers-modern": "45.0.0",
         "typescript": "^6",

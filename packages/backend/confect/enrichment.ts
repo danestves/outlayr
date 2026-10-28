@@ -6,7 +6,7 @@ import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 import { components, internal } from "../convex/_generated/api";
-import type { ActionCtx } from "../convex/_generated/server";
+import type { ActionCtx, MutationCtx } from "../convex/_generated/server";
 import type { Suggestion } from "./enrichment.spec";
 import { PICKABLE_CURRENCY_CODES } from "./lib/currencies";
 import { describeTree } from "./lib/ledgerPrompt";
@@ -297,7 +297,10 @@ export interface GroundedScheduleArgs {
 }
 
 /** `Pick` so a `convex-test` ctx fits without a widening cast. */
-export type GroundedScheduleCtx = Pick<ActionCtx, "runQuery" | "runMutation" | "scheduler">;
+// The rate limiter takes a mutation or an action ctx and tells them apart by `meta`, so this stays a union.
+export type GroundedScheduleCtx =
+    | Pick<MutationCtx, "runQuery" | "runMutation" | "scheduler" | "meta">
+    | Pick<ActionCtx, "runQuery" | "runMutation" | "runAction" | "scheduler" | "meta">;
 
 export function needsGroundedLookup(result: Pick<Suggestion, "categoryName" | "domain">): boolean {
     return result.categoryName === null || result.domain === null;

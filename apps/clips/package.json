@@ -10,17 +10,17 @@
         "check-types": "tsc --noEmit"
     },
     "dependencies": {
-        "@remotion/cli": "4.0.534",
-        "@remotion/google-fonts": "4.0.534",
-        "@remotion/media": "4.0.534",
-        "@remotion/transitions": "4.0.534",
-        "react": "19.2.3",
-        "react-dom": "19.2.3",
-        "remotion": "4.0.534"
+        "@remotion/cli": "4.0.539",
+        "@remotion/google-fonts": "4.0.539",
+        "@remotion/media": "4.0.539",
+        "@remotion/transitions": "4.0.539",
+        "react": "19.3.1",
+        "react-dom": "19.3.1",
+        "remotion": "4.0.539"
     },
     "devDependencies": {
         "@types/react": "^19.2.18",
-        "@types/web": "0.0.166",
+        "@types/web": "0.0.359",
         "typescript": "catalog:"
     }
 }

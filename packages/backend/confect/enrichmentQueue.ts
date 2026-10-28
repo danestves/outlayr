@@ -36,7 +36,7 @@ export interface ResolveDeps {
     grounded?: GroundedCallDeps;
 }
 
-type JobCtx = Pick<ActionCtx, "runMutation" | "runQuery">;
+type JobCtx = Pick<ActionCtx, "runMutation" | "runQuery" | "runAction" | "meta">;
 
 const share = Effect.fn("EnrichmentQueue.share")(function* share(
     ctx: JobCtx,

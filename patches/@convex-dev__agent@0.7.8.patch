@@ -1,0 +1,22 @@
+diff --git a/dist/vercel/index.d.ts b/dist/vercel/index.d.ts
+index 79cc7b5..b3f2558 100644
+--- a/dist/vercel/index.d.ts
++++ b/dist/vercel/index.d.ts
+@@ -70,7 +70,7 @@ CustomCtx extends object = object, AgentTools extends ToolSet = any> {
+          * const myAgent = new Agent(components.agent, {
+          *   languageModel: openai.chat("gpt-4o-mini"),
+          */
+-        languageModel: LanguageModel;
++        languageModel: NonNullable<Config["languageModel"]>;
+         /**
+          * The default system prompt to put in each request.
+          * Override per-prompt by passing the "system" parameter.
+@@ -102,7 +102,7 @@ CustomCtx extends object = object, AgentTools extends ToolSet = any> {
+          * const myAgent = new Agent(components.agent, {
+          *   languageModel: openai.chat("gpt-4o-mini"),
+          */
+-        languageModel: LanguageModel;
++        languageModel: NonNullable<Config["languageModel"]>;
+         /**
+          * The default system prompt to put in each request.
+          * Override per-prompt by passing the "system" parameter.

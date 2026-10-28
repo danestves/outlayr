@@ -22,7 +22,7 @@ index 9639055..937e345 100644
 +apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 +
  group = 'expo.modules.widgets'
- version = '58.0.22'
+ version = '58.0.24'
  
 @@ -64,6 +75,7 @@ android {
  
