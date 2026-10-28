@@ -29,6 +29,8 @@ type Receipt = typeof import("@/content/receipt.content").default;
 type Search = typeof import("@/content/search.content").default;
 type Settings = typeof import("@/content/settings.content").default;
 type SettingsAccount = typeof import("@/content/settings-account.content").default;
+type SettingsAccountPanel = typeof import("@/content/settings-account-panel.content").default;
+type SettingsControls = typeof import("@/content/settings-controls.content").default;
 type SettingsData = typeof import("@/content/settings-data.content").default;
 type SettingsFeatureLab = typeof import("@/content/settings-feature-lab.content").default;
 type SettingsNotifications = typeof import("@/content/settings-notifications.content").default;
@@ -61,6 +63,8 @@ export const DICTIONARY_KEYS = [
     "search",
     "settings",
     "settings-account",
+    "settings-account-panel",
+    "settings-controls",
     "settings-data",
     "settings-feature-lab",
     "settings-notifications",
@@ -93,6 +97,8 @@ type Content =
     | Search["content"]
     | Settings["content"]
     | SettingsAccount["content"]
+    | SettingsAccountPanel["content"]
+    | SettingsControls["content"]
     | SettingsData["content"]
     | SettingsFeatureLab["content"]
     | SettingsNotifications["content"]

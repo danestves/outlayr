@@ -6,6 +6,7 @@ import {
     syncPaused,
     syncPresentation,
     syncRunnable,
+    syncedAgo,
     syncStatusLabel,
 } from "./sync-status";
 
@@ -190,5 +191,22 @@ describe("ownsSyncSwitch", () => {
     it("withholds the switch from a device with no account or no cloud", () => {
         expect(ownsSyncSwitch("accountRequired", "settled")).toBe(false);
         expect(ownsSyncSwitch("unavailable", "settled")).toBe(false);
+    });
+});
+
+describe("syncedAgo", () => {
+    const at = (offsetMs: number) => syncedAgo(AT, AT.getTime() + offsetMs);
+    const MINUTE = 60_000;
+    const HOUR = 60 * MINUTE;
+
+    it("steps up a unit at each boundary", () => {
+        expect(at(59_999)).toStrictEqual({ key: "settings.panel.syncedNow" });
+        expect(at(2 * MINUTE)).toStrictEqual({ count: 2, key: "settings.panel.syncedMinutes" });
+        expect(at(HOUR)).toStrictEqual({ count: 1, key: "settings.panel.syncedHours" });
+        expect(at(48 * HOUR)).toStrictEqual({ count: 2, key: "settings.panel.syncedDays" });
+    });
+
+    it("reads a sync stamped ahead of this clock as just now", () => {
+        expect(at(-5 * MINUTE)).toStrictEqual({ key: "settings.panel.syncedNow" });
     });
 });

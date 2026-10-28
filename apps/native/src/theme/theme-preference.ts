@@ -29,6 +29,12 @@ export const THEME_OPTIONS: readonly {
     },
 ];
 
+const DISPLAY_ORDER: readonly ThemePreference[] = ["light", "dark", "system"];
+
+export const THEME_DISPLAY_OPTIONS = [...THEME_OPTIONS].sort(
+    (a, b) => DISPLAY_ORDER.indexOf(a.preference) - DISPLAY_ORDER.indexOf(b.preference)
+);
+
 const [SYSTEM_OPTION] = THEME_OPTIONS;
 
 /** Falls back to following the device: the value comes from storage. */

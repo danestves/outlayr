@@ -20,9 +20,10 @@ export interface RowShellProps {
     detail?: string;
     icon?: SettingsIconName;
     title: string;
+    titleLines?: number;
 }
 
-export function RowShell({ icon, title, destructive, detail, children, below }: RowShellProps) {
+export function RowShell({ icon, title, titleLines = 1, destructive, detail, children, below }: RowShellProps) {
     const colors = useColors();
     const largeText = useAccessibilityTextSize();
     return (
@@ -38,7 +39,7 @@ export function RowShell({ icon, title, destructive, detail, children, below }: 
                 ) : null}
                 <Text
                     className={cn("text-body flex-1", destructive ? "text-danger" : "text-foreground")}
-                    numberOfLines={largeText ? 2 : 1}
+                    numberOfLines={largeText ? Math.max(titleLines, 2) : titleLines}
                 >
                     {title}
                 </Text>

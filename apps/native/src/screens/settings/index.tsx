@@ -1,20 +1,24 @@
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
-import type { Href } from "expo-router";
 import { useRef, useState } from "react";
-import { Linking, Platform } from "react-native";
+import { Linking, Platform, View } from "react-native";
 
 import { AiConsentPromptSheet } from "@/components/ai-consent";
 import { ImportSheet } from "@/components/import-sheet/import-sheet";
 import type { ImportSheetHandle } from "@/components/import-sheet/import-sheet";
-import { LinkRow, PickerRow, SettingsSection, ToggleRow } from "@/components/list/list-row";
-import { AccountRow } from "@/components/settings/account-row";
+import { LinkRow, SettingsSection, ToggleRow } from "@/components/list/list-row";
+import { AccentSwatches } from "@/components/settings/accent-swatches";
+import { AccountPanel } from "@/components/settings/account-panel";
+import { DataActions } from "@/components/settings/data-actions";
+import { SegmentedRow } from "@/components/settings/segmented-row";
+import { SettingsFooterLinks } from "@/components/settings/settings-footer-links";
 import type { SettingsIconName } from "@/components/settings/settings-icons";
 import { SettingsScreen } from "@/components/settings/settings-screen";
-import { UsageRow } from "@/components/settings/usage-row";
+import { ThemePicker } from "@/components/settings/theme-picker";
+import { Text } from "@/components/text";
 import { useAppSettings, useDisplaySettings } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
-import { useRevenueCat } from "@/contexts/revenuecat-context";
+import { useBankAccounts } from "@/data/accounts";
 import { useGlobalCurrency } from "@/data/app-meta";
 import {
     HAPTICS_OPTIONS,
@@ -22,23 +26,21 @@ import {
     onOffLabel,
     remoteEnrichmentOn,
     shownHiddenLabel,
+    WEEKDAY_OPTIONS,
 } from "@/data/settings-core";
-import { useSyncStatus } from "@/data/use-sync-status";
+import { useCategoryCount, useDeletedCount } from "@/data/settings-counts";
 import { useValuationCoverage } from "@/data/use-valuation-coverage";
 import { ACCENT_OPTIONS, DEFAULT_ACCENT_VALUE } from "@/domain/accent-options";
 import { appIconLabel } from "@/domain/app-icons";
 import { offeredAccentValue } from "@/domain/material-accent";
-import { syncPaused, syncStatusLabel } from "@/domain/sync-status";
+import { formatAmount } from "@/domain/money";
 import { coverageNote } from "@/domain/valuation-coverage";
-import { useProEntitled } from "@/hooks/use-pro-locked";
-import type { TranslationKey } from "@/i18n/catalog";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { languageLabel } from "@/i18n/languages";
 import { translateNow } from "@/i18n/runtime";
 import { expectHandoff, openInAppBrowser } from "@/lib/app-handoff";
 import { alternateIconsSupported, useAppIcon } from "@/lib/app-icon";
 import { APP_BUILD, APP_VERSION } from "@/lib/app-version";
-import { useAuthSession } from "@/lib/auth-session";
 import { importDraftStore } from "@/lib/import-draft-store";
 import { hasSystemLanguageSettings } from "@/lib/language-settings";
 import { legalUrl } from "@/lib/legal-url";
@@ -51,19 +53,15 @@ import { openLanguageSettingsCommand } from "@/state/link-commands";
 import { saveAiConsentCommand, setBoolSettingCommand, setNumberSettingCommand } from "@/state/settings-commands";
 import { toggleAppLockCommand } from "@/state/settings-flow-commands";
 import { fireAtomCommand, useAtomAction } from "@/state/use-atom-action";
-import { THEME_OPTIONS } from "@/theme/theme-preference";
+import { THEME_DISPLAY_OPTIONS } from "@/theme/theme-preference";
 import { useIsDark } from "@/theme/use-is-dark";
 
 import { useIntegrationsOn } from "./integrations-on";
 
 const SUPPORT_EMAIL = "support@tryoutlayr.com";
-
-const DATA_LINKS = [
-    { href: "/settings/export", icon: "FileExport", title: "settings.row.export" },
-    { href: "/settings/restore", icon: "ArchiveRestore", title: "settings.row.restore" },
-    { href: "/settings/deleted", icon: "Clock04", title: "settings.row.deleted" },
-    { destructive: true, href: "/settings/erase", icon: "Delete02", title: "settings.row.erase" },
-] satisfies readonly { destructive?: boolean; href: Href; icon: SettingsIconName; title: TranslationKey }[];
+const SAMPLE_AMOUNT = 1284.5;
+const BIOMETRIC_ICON: SettingsIconName = Platform.OS === "android" ? "FingerprintPattern" : "ScanFace";
+const HAPTICS_ICON: SettingsIconName = Platform.OS === "android" ? "Vibrate" : "Hand";
 
 export function Settings() {
     const db = useDatabase();
@@ -72,7 +70,6 @@ export function Settings() {
     const saveAiConsent = useAtomAction(saveAiConsentCommand);
     const router = useRouter();
     const t = useTranslation();
-    const { isPro } = useRevenueCat();
     const importSheetRef = useRef<ImportSheetHandle>(null);
     const [lockPending, setLockPending] = useState<boolean | null>(null);
     const [consentFor, setConsentFor] = useState<"smartFill" | "sendToAi" | null>(null);
@@ -88,12 +85,12 @@ export function Settings() {
         },
     });
     const { language } = useLanguage();
-    const { accountId } = useAuthSession();
 
     const currency = useGlobalCurrency(db);
+    const accountCount = useBankAccounts(db).length;
+    const categoryCount = useCategoryCount(db);
+    const deletedCount = useDeletedCount(db);
     const coverage = useValuationCoverage(db);
-    const sync = useSyncStatus(db);
-    const proEntitled = useProEntitled();
     const integrationsOn = useIntegrationsOn(db);
     const { state: settings } = useAppSettings();
     const { showCents } = useDisplaySettings().state;
@@ -108,61 +105,37 @@ export function Settings() {
     const numberEntryType = settings.number("numberEntryType");
     const haptics = settings.number("haptics");
     const accentColor = settings.number("accentColor");
+    const firstWeekday = settings.number("firstWeekday");
+    const weekdayOption = WEEKDAY_OPTIONS.find((option) => option.value === firstWeekday);
     const colorScheme = settings.number("colorScheme");
     const scheme = useIsDark() ? "dark" : "light";
 
     const diagnostics = supportDiagnostics(APP_VERSION, APP_BUILD);
-
-    const syncLabel = syncStatusLabel({
-        enabled: sync.enabled,
-        paused: syncPaused(sync.enabled, proEntitled),
-        pending: sync.pending,
-        syncedAt: sync.syncedAt,
-    });
-    const syncValue = syncLabel.count === undefined ? t(syncLabel.key) : t(syncLabel.key, { count: syncLabel.count });
+    const previewAmount = formatAmount(SAMPLE_AMOUNT, currency, showCents, language);
 
     return (
-        <SettingsScreen footer={`Outlayr ${APP_VERSION} (${APP_BUILD})`}>
-            <SettingsSection title={t("settings.section.account")}>
-                <AccountRow />
-                <LinkRow
-                    icon="Sparkles"
-                    onPress={() => router.push("/paywall")}
-                    title={t("pro.entry.title")}
-                    value={isPro ? t("pro.entry.valuePro") : t("pro.entry.value")}
-                />
-                <UsageRow />
-                {accountId === null ? null : (
-                    <LinkRow
-                        icon="Cloud"
-                        onPress={() => router.push("/settings/sync")}
-                        title={t("settings.row.sync")}
-                        value={syncValue}
-                    />
-                )}
-            </SettingsSection>
+        <SettingsScreen>
+            <AccountPanel />
 
-            <SettingsSection>
+            <SettingsSection
+                accessory={
+                    <View className="flex-row items-baseline gap-2">
+                        <Text className="text-muted text-subtitle">{t("settings.controls.preview")}</Text>
+                        <Text className="text-foreground text-callout font-mono-medium tabular-nums">
+                            {previewAmount}
+                        </Text>
+                    </View>
+                }
+                footer={coverageNote(coverage, t) ?? undefined}
+                title={t("settings.section.money")}
+            >
                 <LinkRow
-                    icon="Plug01"
-                    onPress={() => router.push("/settings/integrations")}
-                    title={t("settings.row.integrations")}
-                    value={
-                        integrationsOn > 0
-                            ? t("settings.integrations.onCount", { count: integrationsOn })
-                            : t(onOffLabel(false))
-                    }
-                />
-            </SettingsSection>
-
-            <SettingsSection footer={coverageNote(coverage, t) ?? undefined} title={t("settings.section.money")}>
-                <LinkRow
-                    icon="Currency"
+                    icon="Coins01"
                     onPress={() => router.push("/settings/currency")}
                     title={t("settings.row.currency")}
                     value={currency}
                 />
-                <PickerRow
+                <SegmentedRow
                     icon="Calculator01"
                     onChange={(next) => {
                         setNumber({ db, key: "numberEntryType", value: next });
@@ -175,7 +148,7 @@ export function Settings() {
                     value={numberEntryType}
                 />
                 <ToggleRow
-                    icon="MoneyAdd01"
+                    icon="Banknote"
                     onValueChange={(next) => {
                         setBool({ db, key: "incomeTracking", value: next });
                     }}
@@ -194,20 +167,18 @@ export function Settings() {
             </SettingsSection>
 
             <SettingsSection title={t("settings.section.appearance")}>
-                <PickerRow
-                    icon="DarkMode"
+                <ThemePicker
                     onChange={(next) => {
                         setNumber({ db, key: "colorScheme", value: next });
                     }}
-                    options={THEME_OPTIONS.map((option) => ({
+                    options={THEME_DISPLAY_OPTIONS.map((option) => ({
                         label: t(option.label),
                         value: option.value,
                     }))}
-                    title={t("settings.row.colorScheme")}
                     value={colorScheme}
                 />
-                <PickerRow
-                    icon="Swatch"
+                <AccentSwatches
+                    icon="SwatchBook"
                     onChange={(next) => {
                         setNumber({ db, key: "accentColor", value: next });
                     }}
@@ -222,7 +193,8 @@ export function Settings() {
                 {alternateIconsSupported ? <AppIconRow /> : null}
                 {hasSystemLanguageSettings() ? (
                     <LinkRow
-                        icon="LanguageSkill"
+                        external
+                        icon="Languages"
                         onPress={() => {
                             expectHandoff();
                             fireAtomCommand(appAtomRegistry, openLanguageSettingsCommand, undefined, {}, SILENT);
@@ -232,32 +204,12 @@ export function Settings() {
                     />
                 ) : null}
                 <ToggleRow
-                    icon="Analytics01"
+                    icon="ChartLine"
                     onValueChange={(next) => {
                         setBool({ db, key: "animatedCharts", value: next });
                     }}
                     title={t("settings.row.animatedCharts")}
                     value={animatedCharts}
-                />
-            </SettingsSection>
-
-            <SettingsSection title={t("settings.section.ledger")}>
-                <LinkRow icon="Bank" onPress={() => router.push("/accounts")} title={t("settings.row.accounts")} />
-                <LinkRow
-                    icon="DashboardSquare01"
-                    onPress={() => router.push("/settings/categories")}
-                    title={t("settings.row.categories")}
-                />
-                <LinkRow
-                    icon="Sunrise"
-                    onPress={() => router.push("/settings/upcoming")}
-                    title={t("settings.row.upcoming")}
-                    value={t(shownHiddenLabel(showUpcoming))}
-                />
-                <LinkRow
-                    icon="Calendar01"
-                    onPress={() => router.push("/settings/time")}
-                    title={t("settings.row.timeFrames")}
                 />
             </SettingsSection>
 
@@ -267,9 +219,44 @@ export function Settings() {
                     label: t("settings.smartFill.learnMore"),
                     onPress: () => openInAppBrowser(legalUrl("privacy", language, "smartFill")),
                 }}
+                title={t("settings.section.ledger")}
             >
+                <LinkRow
+                    icon="Landmark"
+                    onPress={() => router.push("/accounts")}
+                    title={t("settings.row.accounts")}
+                    value={String(accountCount)}
+                />
+                <LinkRow
+                    icon="DashboardSquare01"
+                    onPress={() => router.push("/settings/categories")}
+                    title={t("settings.row.categories")}
+                    value={String(categoryCount)}
+                />
+                <LinkRow
+                    icon="Calendar01"
+                    onPress={() => router.push("/settings/time")}
+                    title={t("settings.row.timeFrames")}
+                    value={weekdayOption ? t(weekdayOption.label) : undefined}
+                />
+                <LinkRow
+                    icon="Sunrise"
+                    onPress={() => router.push("/settings/upcoming")}
+                    title={t("settings.row.upcoming")}
+                    value={t(shownHiddenLabel(showUpcoming))}
+                />
+                <LinkRow
+                    icon="Plug"
+                    onPress={() => router.push("/settings/integrations")}
+                    title={t("settings.row.integrations")}
+                    value={
+                        integrationsOn > 0
+                            ? t("settings.integrations.onCount", { count: integrationsOn })
+                            : t(onOffLabel(false))
+                    }
+                />
                 <ToggleRow
-                    icon="Sparkles"
+                    icon="WandSparkles"
                     onValueChange={(next) => {
                         if (next && !aiConsent) {
                             setConsentFor("smartFill");
@@ -283,15 +270,9 @@ export function Settings() {
                 />
             </SettingsSection>
 
-            <SettingsSection title={t("settings.section.device")}>
-                <LinkRow
-                    icon="Notification03"
-                    onPress={() => router.push("/settings/notifications")}
-                    title={t("settings.row.notifications")}
-                    value={t(onOffLabel(showNotifications))}
-                />
+            <SettingsSection title={t("settings.section.privacy")}>
                 <ToggleRow
-                    icon="BiometricAccess"
+                    icon={BIOMETRIC_ICON}
                     onValueChange={(next) => {
                         setLockPending(next);
                         toggleAppLock({
@@ -304,7 +285,7 @@ export function Settings() {
                     value={lockPending ?? biometricLock}
                 />
                 <ToggleRow
-                    icon="ChartBarLine"
+                    icon="ChartBarIncreasing"
                     onValueChange={(next) => {
                         setBool({ db, key: "shareAnalytics", value: next });
                     }}
@@ -323,8 +304,17 @@ export function Settings() {
                     title={t("settings.row.sendToAi")}
                     value={aiConsent || consentFor === "sendToAi"}
                 />
-                <PickerRow
-                    icon="Tap01"
+            </SettingsSection>
+
+            <SettingsSection title={t("settings.section.general")}>
+                <LinkRow
+                    icon="Bell"
+                    onPress={() => router.push("/settings/notifications")}
+                    title={t("settings.row.notifications")}
+                    value={t(onOffLabel(showNotifications))}
+                />
+                <SegmentedRow
+                    icon={HAPTICS_ICON}
                     onChange={(next) => {
                         setNumber({ db, key: "haptics", value: next });
                     }}
@@ -336,57 +326,50 @@ export function Settings() {
                     value={haptics}
                 />
                 <LinkRow
-                    icon="TestTube"
+                    icon="FlaskConical"
                     onPress={() => router.push("/settings/feature-lab")}
                     title={t("settings.row.featureLab")}
                 />
-            </SettingsSection>
-
-            <SettingsSection title={t("settings.section.data")}>
                 <LinkRow
-                    icon="FileImport"
-                    onPress={() => {
-                        importDraftStore.setStep(importDraftStore.getResumeStep());
-                        importSheetRef.current?.present();
-                    }}
-                    title={t("settings.row.import")}
-                />
-                {DATA_LINKS.map((row) => (
-                    <LinkRow
-                        destructive={"destructive" in row}
-                        icon={row.icon}
-                        key={row.href}
-                        onPress={() => router.push(row.href)}
-                        title={t(row.title)}
-                    />
-                ))}
-            </SettingsSection>
-
-            <SettingsSection title={t("settings.section.about")}>
-                <LinkRow
-                    icon="Mail01"
+                    icon="Lifebuoy"
                     onPress={() => {
                         expectHandoff();
                         Linking.openURL(supportMailto(SUPPORT_EMAIL, t("settings.support.subject"), diagnostics));
                     }}
                     title={t("settings.row.contactSupport")}
                 />
-                <LinkRow
-                    icon="SecurityCheck"
-                    onPress={() => openInAppBrowser(legalUrl("privacy", language))}
-                    title={t("settings.row.privacy")}
+            </SettingsSection>
+
+            <SettingsSection title={t("settings.section.data")}>
+                <DataActions
+                    onExport={() => router.push("/settings/export")}
+                    onImport={() => {
+                        importDraftStore.setStep(importDraftStore.getResumeStep());
+                        importSheetRef.current?.present();
+                    }}
+                    onRestore={() => router.push("/settings/restore")}
                 />
                 <LinkRow
-                    icon="LegalDocument01"
-                    onPress={() => openInAppBrowser(legalUrl("terms", language))}
-                    title={t("settings.row.terms")}
+                    icon="History"
+                    onPress={() => router.push("/settings/deleted")}
+                    title={t("settings.row.deleted")}
+                    value={deletedCount > 0 ? String(deletedCount) : undefined}
                 />
                 <LinkRow
-                    icon="InformationCircle"
-                    onPress={() => router.push("/settings/about")}
-                    title={t("settings.row.about")}
+                    destructive
+                    icon="Trash"
+                    noChevron
+                    onPress={() => router.push("/settings/erase")}
+                    title={t("settings.row.erase")}
                 />
             </SettingsSection>
+
+            <SettingsFooterLinks
+                onCredits={() => router.push("/settings/about")}
+                onPrivacy={() => openInAppBrowser(legalUrl("privacy", language))}
+                onTerms={() => openInAppBrowser(legalUrl("terms", language))}
+                version={`Outlayr ${APP_VERSION} (${APP_BUILD})`}
+            />
             <ImportSheet ref={importSheetRef} />
             <AiConsentPromptSheet
                 onAnswer={(allowed) => {
@@ -411,7 +394,7 @@ function AppIconRow() {
     const { active } = useAppIcon();
     return (
         <LinkRow
-            icon="SmartPhone01"
+            icon="Smartphone"
             onPress={() => router.push("/settings/app-icon")}
             title={t("settings.row.appIcon")}
             value={t(appIconLabel(active))}
