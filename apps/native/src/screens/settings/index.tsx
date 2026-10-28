@@ -15,7 +15,13 @@ import { useAppSettings, useDisplaySettings } from "@/contexts/display-settings-
 import { useDatabase } from "@/contexts/local-data-context";
 import { useRevenueCat } from "@/contexts/revenuecat-context";
 import { useGlobalCurrency } from "@/data/app-meta";
-import { HAPTICS_OPTIONS, NUMBER_ENTRY_OPTIONS, onOffLabel, shownHiddenLabel } from "@/data/settings-core";
+import {
+    HAPTICS_OPTIONS,
+    NUMBER_ENTRY_OPTIONS,
+    onOffLabel,
+    remoteEnrichmentOn,
+    shownHiddenLabel,
+} from "@/data/settings-core";
 import { useSyncStatus } from "@/data/use-sync-status";
 import { useValuationCoverage } from "@/data/use-valuation-coverage";
 import { ACCENT_OPTIONS, DEFAULT_ACCENT_VALUE } from "@/domain/accent-options";
@@ -93,7 +99,7 @@ export function Settings() {
     const biometricLock = settings.bool("biometricLock");
     const shareAnalytics = settings.bool("shareAnalytics");
     const aiConsent = settings.bool("aiConsentV2");
-    const smartFill = aiConsent && settings.bool("aiEnrichment") && settings.bool("groundedLookup");
+    const smartFill = remoteEnrichmentOn(settings.bool);
     const incomeTracking = settings.bool("incomeTracking");
     const showUpcoming = settings.bool("showUpcoming");
     const animatedCharts = settings.bool("animatedCharts");
