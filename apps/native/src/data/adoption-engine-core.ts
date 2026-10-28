@@ -8,7 +8,7 @@ import { transaction } from "@/db/transaction";
 
 import { META_KEYS } from "./app-meta-core";
 import { refreshLogoCandidate } from "./logo-backfill-state";
-import { applyPulledRows, PULL_PAGE_LIMIT, PUSH_BATCH_LIMIT, specFor } from "./sync-engine-core";
+import { PULL_PAGE_LIMIT, PUSH_BATCH_LIMIT, specFor, withForeignKeysOff, writePulledRows } from "./sync-engine-core";
 import type { LocalValue, PulledRow, PullFn, PushFn, SyncedTable, WireRow } from "./sync-engine-core";
 import { getOrCreateDeviceId, SYNCED_META_KEYS, SYNCED_TABLES, setSyncCursor } from "./sync-outbox-core";
 
@@ -88,50 +88,42 @@ const localRows = Effect.fn("AdoptionEngine.localRows")(function* localRows(db: 
 });
 
 // Only account-scoped `appMeta` keys are cleared: `syncDeviceId`, `syncCursor` and `onboardingComplete` never come
-// back from a pull. The cursor resets in the wipe's transaction, so a crash cannot leave an empty replica pointed at
-// the end of the log.
+// back from a pull. The log is read whole before the wipe, and the wipe commits with the write, so a failed pull or
+// write leaves the phone as it was.
 export const replaceLocalFromAccount = Effect.fn("AdoptionEngine.replaceLocalFromAccount")(
     function* replaceLocalFromAccount(db: Database, pull: PullFn, now: Date = new Date()) {
-        yield* transaction(
-            db,
-            Effect.gen(function* wipe() {
-                // `transaction` holds one SQLite connection, so the wipe's statements are issued on it one at a time.
-                for (const table of SYNCED_TABLES) {
-                    const spec = specFor(table);
-                    if (table === "appMeta") {
-                        yield* attempt("replace", () =>
-                            db.delete(spec.table).where(inArray(spec.id, [...SYNCED_META_KEYS]))
-                        );
-                        continue;
-                    }
-                    yield* attempt("replace", () => db.delete(spec.table));
-                }
-                yield* setSyncCursor(db, 0);
-                // The walk below reads the whole log under the merge that knows `restoredAt`.
-                yield* attempt("replace", () =>
-                    db.delete(appMeta).where(eq(appMeta.key, META_KEYS.syncRestoresReread))
-                );
-            }),
-            (cause) => new AdoptionEngineError({ cause, operation: "replace" })
-        );
+        const rows = [...(yield* readAccountLog(pull)).values()];
+        const cursor = rows.reduce((last, row) => Math.max(last, row.seq), 0);
 
-        let cursor = 0;
-        // Each page's cursor is the next request's argument, and a page must be applied before the one that may
-        // supersede it.
-        for (;;) {
-            const page = yield* pullPage(pull, cursor);
-            if (page.rows.length === 0) {
-                return;
-            }
-            yield* applyPulledRows(db, page, now);
-            if (page.cursor <= cursor) {
-                return;
-            }
-            ({ cursor } = page);
-            if (!page.hasMore) {
-                return;
-            }
-        }
+        yield* withForeignKeysOff(
+            db,
+            transaction(
+                db,
+                Effect.gen(function* replace() {
+                    // `transaction` holds one SQLite connection, so the wipe's statements are issued on it one at a
+                    // time.
+                    for (const table of SYNCED_TABLES) {
+                        const spec = specFor(table);
+                        if (table === "appMeta") {
+                            yield* attempt("replace", () =>
+                                db.delete(spec.table).where(inArray(spec.id, [...SYNCED_META_KEYS]))
+                            );
+                            continue;
+                        }
+                        yield* attempt("replace", () => db.delete(spec.table));
+                    }
+                    yield* setSyncCursor(db, 0);
+                    // The write below covers the whole log under the merge that knows `restoredAt`.
+                    yield* attempt("replace", () =>
+                        db.delete(appMeta).where(eq(appMeta.key, META_KEYS.syncRestoresReread))
+                    );
+                    if (rows.length > 0) {
+                        yield* writePulledRows(db, { cursor, rows }, now, false);
+                    }
+                }),
+                (cause) => new AdoptionEngineError({ cause, operation: "replace" })
+            )
+        );
     }
 );
 

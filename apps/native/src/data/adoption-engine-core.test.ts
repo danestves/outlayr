@@ -4,7 +4,7 @@ import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
-import { migratedSqlite, testDatabase } from "@/db/test-database";
+import { migratedSqlite, testDatabase, transactionalDatabase } from "@/db/test-database";
 import { asCloudCall } from "@/lib/fake-cloud";
 
 import { incomingWins } from "../../../../packages/backend/confect/lib/syncTables";
@@ -147,6 +147,31 @@ describe("replaceLocalFromAccount", () => {
 
         const rows = await db.select().from(transactions);
         expect(rows.map((row) => row.id)).toStrictEqual(["remote"]);
+    });
+
+    it("leaves the phone's ledger alone when the pull fails", async () => {
+        await addTransaction(db, "local", new Date(50));
+        const offline: PullFn = asCloudCall(async () => {
+            throw new Error("offline");
+        });
+
+        await expect(Effect.runPromise(replaceLocalFromAccount(db, offline))).rejects.toThrow();
+
+        const rows = await db.select().from(transactions);
+        expect(rows.map((row) => row.id)).toStrictEqual(["local"]);
+    });
+
+    it("rolls the wipe back when the account's rows cannot be written", async () => {
+        const atomic = transactionalDatabase();
+        const server = makeServer();
+        const broken = serverRow("broken", 100);
+        await server.push({ deviceId: "peer", rows: [{ ...broken, fields: { ...broken.fields, amount: "x" } }] });
+        await addTransaction(atomic, "local", new Date(50));
+
+        await expect(Effect.runPromise(replaceLocalFromAccount(atomic, server.pullFn))).rejects.toThrow();
+
+        const rows = await atomic.select().from(transactions);
+        expect(rows.map((row) => row.id)).toStrictEqual(["local"]);
     });
 
     it("spends the one-time restore re-read, having just read the whole log", async () => {

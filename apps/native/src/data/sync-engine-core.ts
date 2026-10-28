@@ -599,111 +599,102 @@ function isReplicated(row: PulledRow): boolean {
     return row.table !== "appMeta" || SYNCED_META_KEYS.some((key) => key === row.localId);
 }
 
-const applyInTransaction = Effect.fn("SyncCore.applyInTransaction")(function* applyInTransaction(
+export const writePulledRows = Effect.fn("SyncCore.writePulledRows")(function* writePulledRows(
     db: Database,
     page: { rows: readonly PulledRow[]; cursor: number },
     now: Date,
     keepCursor: boolean
 ) {
     const touched = new Set<SyncedTable>();
-    let applied = 0;
 
-    yield* transaction(
-        db,
-        Effect.gen(function* write() {
-            const byTable = new Map<SyncedTable, PulledRow[]>();
-            for (const row of page.rows) {
-                if (!isReplicated(row)) {
-                    continue;
-                }
-                const bucket = byTable.get(row.table) ?? [];
-                bucket.push(row);
-                byTable.set(row.table, bucket);
-            }
-            const pending = yield* outboxPending(db, byTable);
+    const byTable = new Map<SyncedTable, PulledRow[]>();
+    for (const row of page.rows) {
+        if (!isReplicated(row)) {
+            continue;
+        }
+        const bucket = byTable.get(row.table) ?? [];
+        bucket.push(row);
+        byTable.set(row.table, bucket);
+    }
+    const pending = yield* outboxPending(db, byTable);
 
-            const existing = new Map<SyncedTable, Map<string, Row>>(
-                yield* Effect.all(
-                    [...byTable].map(([table, rows]) =>
-                        rowsById(
-                            db,
-                            table,
-                            rows.map((row) => row.localId)
-                        ).pipe(Effect.map((found) => [table, found] as const))
-                    ),
-                    { concurrency: "unbounded" }
-                )
-            );
-
-            const winners: PulledRow[] = [];
-            for (const row of page.rows) {
-                if (!isReplicated(row)) {
-                    continue;
-                }
-                const local = existing.get(row.table)?.get(row.localId);
-                const localVersion =
-                    local === undefined
-                        ? null
-                        : {
-                              deletedAt: row.table === "appMeta" ? null : toEpoch(local.deletedAt),
-                              restoredAt: toEpoch(local.restoredAt),
-                              updatedAt: row.table === "appMeta" ? null : (toEpoch(local.updatedAt) ?? 0),
-                          };
-                const isPending = pending.has(`${row.table}\0${row.localId}`);
-                if (incomingWinsLocally(row, localVersion, isPending)) {
-                    winners.push(row);
-                }
-            }
-
-            const replicatedVerbatim: PulledRow[] = [];
-            // R3 resolution inside writeRow reads the budgets an earlier winner left live, so the winners must be
-            // written one at a time.
-            for (const row of winners) {
-                const outcome = yield* writeRow(db, row, existing.get(row.table)?.get(row.localId), now);
-                if (outcome === "unchanged") {
-                    continue;
-                }
-                // An R3 rewrite is not what the server holds, so it stays queued and pushes the correction.
-                if (outcome === "verbatim") {
-                    replicatedVerbatim.push(row);
-                }
-                touched.add(row.table);
-            }
-
-            // Cleared in the same transaction, so a pulled row is never queued to echo back to the server.
-            const cleared = groupByTable(
-                replicatedVerbatim.map((row) => ({
-                    localId: row.localId,
-                    tableName: row.table,
-                }))
-            );
-            for (const [table, entries] of cleared) {
-                // These deletes run inside one SQLite transaction, which admits a single writer, so they cannot
-                // overlap.
-                for (const chunk of chunkRows(
-                    entries.map((entry) => entry.localId),
-                    ID_CHUNK
-                )) {
-                    yield* query("write", () =>
-                        db.delete(outbox).where(and(eq(outbox.tableName, table), inArray(outbox.localId, chunk)))
-                    );
-                }
-            }
-
-            // After the outbox clear, so these tombstones stay queued and reach the other device.
-            if (yield* reconcileMainBudget(db, now)) {
-                touched.add("mainBudget");
-            }
-
-            applied = winners.length;
-            if (!keepCursor) {
-                yield* setSyncCursor(db, page.cursor);
-            }
-        }),
-        failedAt("transaction")
+    const existing = new Map<SyncedTable, Map<string, Row>>(
+        yield* Effect.all(
+            [...byTable].map(([table, rows]) =>
+                rowsById(
+                    db,
+                    table,
+                    rows.map((row) => row.localId)
+                ).pipe(Effect.map((found) => [table, found] as const))
+            ),
+            { concurrency: "unbounded" }
+        )
     );
 
-    return { applied, tables: [...touched] };
+    const winners: PulledRow[] = [];
+    for (const row of page.rows) {
+        if (!isReplicated(row)) {
+            continue;
+        }
+        const local = existing.get(row.table)?.get(row.localId);
+        const localVersion =
+            local === undefined
+                ? null
+                : {
+                      deletedAt: row.table === "appMeta" ? null : toEpoch(local.deletedAt),
+                      restoredAt: toEpoch(local.restoredAt),
+                      updatedAt: row.table === "appMeta" ? null : (toEpoch(local.updatedAt) ?? 0),
+                  };
+        const isPending = pending.has(`${row.table}\0${row.localId}`);
+        if (incomingWinsLocally(row, localVersion, isPending)) {
+            winners.push(row);
+        }
+    }
+
+    const replicatedVerbatim: PulledRow[] = [];
+    // R3 resolution inside writeRow reads the budgets an earlier winner left live, so the winners must be
+    // written one at a time.
+    for (const row of winners) {
+        const outcome = yield* writeRow(db, row, existing.get(row.table)?.get(row.localId), now);
+        if (outcome === "unchanged") {
+            continue;
+        }
+        // An R3 rewrite is not what the server holds, so it stays queued and pushes the correction.
+        if (outcome === "verbatim") {
+            replicatedVerbatim.push(row);
+        }
+        touched.add(row.table);
+    }
+
+    // Cleared in the same transaction, so a pulled row is never queued to echo back to the server.
+    const cleared = groupByTable(
+        replicatedVerbatim.map((row) => ({
+            localId: row.localId,
+            tableName: row.table,
+        }))
+    );
+    for (const [table, entries] of cleared) {
+        // These deletes run inside one SQLite transaction, which admits a single writer, so they cannot
+        // overlap.
+        for (const chunk of chunkRows(
+            entries.map((entry) => entry.localId),
+            ID_CHUNK
+        )) {
+            yield* query("write", () =>
+                db.delete(outbox).where(and(eq(outbox.tableName, table), inArray(outbox.localId, chunk)))
+            );
+        }
+    }
+
+    // After the outbox clear, so these tombstones stay queued and reach the other device.
+    if (yield* reconcileMainBudget(db, now)) {
+        touched.add("mainBudget");
+    }
+
+    if (!keepCursor) {
+        yield* setSyncCursor(db, page.cursor);
+    }
+    return { applied: winners.length, tables: [...touched] };
 });
 
 /**
@@ -909,7 +900,14 @@ export const applyPulledRows = Effect.fn("SyncCore.applyPulledRows")(function* a
         return nothingApplied();
     }
 
-    return yield* Effect.uninterruptible(
+    return yield* withForeignKeysOff(
+        db,
+        transaction(db, writePulledRows(db, page, now, keepCursor), failedAt("transaction"))
+    );
+});
+
+export const withForeignKeysOff = <A, E, R>(db: Database, body: Effect.Effect<A, E, R>) =>
+    Effect.uninterruptible(
         Effect.gen(function* guarded() {
             const before = yield* Effect.try({
                 catch: failedAt("foreignKeys"),
@@ -924,14 +922,13 @@ export const applyPulledRows = Effect.fn("SyncCore.applyPulledRows")(function* a
                     try: () => db.run(sql`PRAGMA foreign_keys = OFF`),
                 });
             }
-            const applying = yield* Effect.exit(applyInTransaction(db, page, now, keepCursor));
+            const running = yield* Effect.exit(body);
             if (wasOn) {
                 yield* Effect.try({ catch: failedAt("foreignKeys"), try: () => db.run(sql`PRAGMA foreign_keys = ON`) });
             }
-            return yield* applying;
+            return yield* running;
         })
     );
-});
 
 /** The cursor check stops a page that returns rows without advancing the watermark from replaying forever. */
 const walkLog = Effect.fn("SyncCore.walkLog")(function* walkLog(
