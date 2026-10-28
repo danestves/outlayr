@@ -4,6 +4,7 @@ import { View } from "react-native";
 
 import { ListItemFrame, ListItemIcon, ListItemText } from "@/components/list/material-list-item";
 import { MaterialHost } from "@/components/material-host";
+import { Text } from "@/components/text";
 
 import type { SegmentedRowProps } from "./segmented-row";
 
@@ -12,6 +13,7 @@ export type { SegmentedRowProps } from "./segmented-row";
 const LABEL_FONT = { fontFamily: "GoogleSansFlex_500Medium" } as const;
 
 export function SegmentedRow({ icon, onChange, options, title, value }: SegmentedRowProps) {
+    const note = options.find((option) => option.value === value)?.note;
     return (
         <ListItemFrame>
             <View className="flex-1 gap-2 py-2">
@@ -34,6 +36,7 @@ export function SegmentedRow({ icon, onChange, options, title, value }: Segmente
                         ))}
                     </SingleChoiceSegmentedButtonRow>
                 </MaterialHost>
+                {note ? <Text className="text-caption text-m3-on-surface-variant leading-5">{note}</Text> : null}
             </View>
         </ListItemFrame>
     );
