@@ -35,6 +35,11 @@ describe("resolveDeepLink", () => {
         expect(resolveDeepLink("outlayr://transactions")).toBe("/");
     });
 
+    it("lets a route under a retired host through instead of collapsing it to the host", () => {
+        expect(resolveDeepLink("outlayr://transactions/scan")).toBeNull();
+        expect(resolveDeepLink("/transactions/scan")).toBeNull();
+    });
+
     it("is case-insensitive on the host, as URLs are", () => {
         expect(resolveDeepLink("outlayr://Budgets")).toBe("/budgets");
     });
