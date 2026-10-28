@@ -15,33 +15,9 @@ export function FeatureLab() {
     const confetti = settings.bool("confetti");
     const lineGraph = settings.bool("logViewLineGraph");
     const budgetRows = settings.bool("budgetViewStyle");
-    const aiEnrichment = settings.bool("aiEnrichment");
-    const groundedLookup = settings.bool("groundedLookup");
 
     return (
         <SettingsScreen>
-            <SettingsSection
-                footer={`${t("settings.featureLab.aiEnrichmentNote")}\n\n${t("settings.featureLab.groundedLookupNote")}\n\n${t("settings.featureLab.aiProvidersNote")}`}
-                title={t("settings.featureLab.aiSection")}
-            >
-                <ToggleRow
-                    icon="Sparkles"
-                    onValueChange={(next) => {
-                        setBoolSetting({ db, key: "aiEnrichment", value: next });
-                    }}
-                    title={t("settings.featureLab.aiEnrichment")}
-                    value={aiEnrichment}
-                />
-                <ToggleRow
-                    icon="Sparkles"
-                    onValueChange={(next) => {
-                        setBoolSetting({ db, key: "groundedLookup", value: next });
-                    }}
-                    title={t("settings.featureLab.groundedLookup")}
-                    value={groundedLookup}
-                />
-            </SettingsSection>
-
             <SettingsSection
                 footer={t("settings.featureLab.confettiNote")}
                 title={t("settings.featureLab.addingSection")}

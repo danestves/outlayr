@@ -61,7 +61,7 @@ export function AiConsentDetails() {
                 <Text
                     accessibilityRole="link"
                     className="text-tint"
-                    onPress={() => openInAppBrowser(legalUrl("privacy", language))}
+                    onPress={() => openInAppBrowser(legalUrl("privacy", language, "ai"))}
                 >
                     {t("aiConsent.privacy")}
                 </Text>
@@ -127,8 +127,6 @@ export function AiConsentSheet() {
 
 function AiConsentSheetBody({ consent }: { consent: AiConsent }) {
     const db = useDatabase();
-    const colors = useColors();
-    const sheetInsets = useSheetInsets();
     const { gate } = useAuthSession();
     const onTabs = useSegments()[0] === "(tabs)";
     const lockOpen = useAppLockOpen();
@@ -137,6 +135,12 @@ function AiConsentSheetBody({ consent }: { consent: AiConsent }) {
 
     const open = gate === "signed-in" && consent === "unanswered" && onTabs && lockOpen && !covered;
 
+    return <AiConsentPromptSheet onAnswer={(allowed) => recordAiConsent(db, allowed)} open={open} />;
+}
+
+export function AiConsentPromptSheet({ onAnswer, open }: { onAnswer: (allowed: boolean) => void; open: boolean }) {
+    const colors = useColors();
+    const sheetInsets = useSheetInsets();
     return (
         <BottomSheet
             native
@@ -144,14 +148,14 @@ function AiConsentSheetBody({ consent }: { consent: AiConsent }) {
             onOpenChange={(next) => {
                 // Only a swipe the person made is a Not now, not a close this render asked for (an answer, a lock).
                 if (!next && open) {
-                    recordAiConsent(db, false);
+                    onAnswer(false);
                 }
             }}
             open={open}
         >
             <SafeAreaInsetsContext.Provider value={sheetInsets}>
                 <BottomSheet.Content size="auto">
-                    <AiConsentPrompt onAnswer={(allowed) => recordAiConsent(db, allowed)} />
+                    <AiConsentPrompt onAnswer={onAnswer} />
                 </BottomSheet.Content>
             </SafeAreaInsetsContext.Provider>
         </BottomSheet>

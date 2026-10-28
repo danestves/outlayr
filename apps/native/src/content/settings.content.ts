@@ -589,6 +589,29 @@ const settings = {
             pt: "Controle seu dinheiro com o Outlayr: {url}",
             "pt-PT": "Controle o seu dinheiro com o Outlayr: {url}",
         }),
+        "settings.smartFill.note": t({
+            en: "Sends merchant and category names to a third-party AI provider, never amounts, dates or accounts. Turning it on also turns on Send data to AI providers.",
+            es: "Envía nombres de comercios y categorías a un proveedor de IA externo, nunca montos, fechas ni cuentas. Activarlo también activa Enviar datos a proveedores de IA.",
+            "es-ES":
+                "Envía nombres de comercios y categorías a un proveedor de IA externo, nunca importes, fechas ni cuentas. Activarlo también activa Enviar datos a proveedores de IA.",
+            fr: "Envoie les noms des commerçants et des catégories à un fournisseur d'IA tiers, jamais les montants, les dates ni les comptes. L'activer active aussi Envoyer les données aux fournisseurs d'IA.",
+            pt: "Envia nomes de estabelecimentos e categorias a um provedor de IA terceiro, nunca valores, datas ou contas. Ativar também ativa Enviar dados a provedores de IA.",
+            "pt-PT":
+                "Envia nomes de estabelecimentos e categorias a um fornecedor de IA terceiro, nunca valores, datas ou contas. Ativar também ativa Enviar dados a fornecedores de IA.",
+        }),
+        "settings.smartFill.learnMore": t({
+            en: "Learn more",
+            es: "Más información",
+            fr: "En savoir plus",
+            pt: "Saiba mais",
+            "pt-PT": "Saber mais",
+        }),
+        "settings.smartFill.title": t({
+            en: "Smart fill",
+            es: "Autocompletado",
+            fr: "Remplissage intelligent",
+            pt: "Preenchimento inteligente",
+        }),
         "settings.support.subject": t({
             en: "Outlayr feedback",
             es: "Comentarios sobre Outlayr",

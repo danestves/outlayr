@@ -17,10 +17,12 @@ export { PickerRow } from "@/components/list/picker-row";
 export function SettingsSection({
     title,
     footer,
+    footerLink,
     children,
 }: {
     title?: string;
     footer?: string;
+    footerLink?: { label: string; onPress: () => void };
     children?: ReactNode;
 }) {
     return (
@@ -31,7 +33,19 @@ export function SettingsSection({
                 </View>
             ) : null}
             <View>{children}</View>
-            {footer ? <Text className="text-caption text-m3-on-surface-variant pt-2 leading-5">{footer}</Text> : null}
+            {footer ? (
+                <Text className="text-caption text-m3-on-surface-variant pt-2 leading-5">
+                    {footer}
+                    {footerLink ? (
+                        <>
+                            {" "}
+                            <Text accessibilityRole="link" className="text-m3-primary" onPress={footerLink.onPress}>
+                                {footerLink.label}
+                            </Text>
+                        </>
+                    ) : null}
+                </Text>
+            ) : null}
         </View>
     );
 }

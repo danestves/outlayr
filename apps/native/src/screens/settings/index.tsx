@@ -4,6 +4,7 @@ import type { Href } from "expo-router";
 import { useRef, useState } from "react";
 import { Linking, Platform } from "react-native";
 
+import { AiConsentPromptSheet } from "@/components/ai-consent";
 import { ImportSheet } from "@/components/import-sheet/import-sheet";
 import type { ImportSheetHandle } from "@/components/import-sheet/import-sheet";
 import { LinkRow, PickerRow, SettingsSection, ToggleRow } from "@/components/list/list-row";
@@ -15,7 +16,13 @@ import { useAppSettings, useDisplaySettings } from "@/contexts/display-settings-
 import { useDatabase } from "@/contexts/local-data-context";
 import { useRevenueCat } from "@/contexts/revenuecat-context";
 import { useGlobalCurrency } from "@/data/app-meta";
-import { HAPTICS_OPTIONS, NUMBER_ENTRY_OPTIONS, onOffLabel, shownHiddenLabel } from "@/data/settings-core";
+import {
+    HAPTICS_OPTIONS,
+    NUMBER_ENTRY_OPTIONS,
+    onOffLabel,
+    remoteEnrichmentOn,
+    shownHiddenLabel,
+} from "@/data/settings-core";
 import { useSyncStatus } from "@/data/use-sync-status";
 import { useValuationCoverage } from "@/data/use-valuation-coverage";
 import { ACCENT_OPTIONS, DEFAULT_ACCENT_VALUE } from "@/domain/accent-options";
@@ -68,6 +75,7 @@ export function Settings() {
     const { isPro } = useRevenueCat();
     const importSheetRef = useRef<ImportSheetHandle>(null);
     const [lockPending, setLockPending] = useState<boolean | null>(null);
+    const [consentFor, setConsentFor] = useState<"smartFill" | "sendToAi" | null>(null);
     const toggleAppLock = useAtomAction(toggleAppLockCommand, {
         onSettled: () => setLockPending(null),
         onSuccess: (messageKey) => {
@@ -93,6 +101,7 @@ export function Settings() {
     const biometricLock = settings.bool("biometricLock");
     const shareAnalytics = settings.bool("shareAnalytics");
     const aiConsent = settings.bool("aiConsentV2");
+    const smartFill = remoteEnrichmentOn(settings.bool);
     const incomeTracking = settings.bool("incomeTracking");
     const showUpcoming = settings.bool("showUpcoming");
     const animatedCharts = settings.bool("animatedCharts");
@@ -252,6 +261,28 @@ export function Settings() {
                 />
             </SettingsSection>
 
+            <SettingsSection
+                footer={t("settings.smartFill.note")}
+                footerLink={{
+                    label: t("settings.smartFill.learnMore"),
+                    onPress: () => openInAppBrowser(legalUrl("privacy", language, "smartFill")),
+                }}
+            >
+                <ToggleRow
+                    icon="Sparkles"
+                    onValueChange={(next) => {
+                        if (next && !aiConsent) {
+                            setConsentFor("smartFill");
+                            return;
+                        }
+                        setBool({ db, key: "aiEnrichment", value: next });
+                        setBool({ db, key: "groundedLookup", value: next });
+                    }}
+                    title={t("settings.smartFill.title")}
+                    value={smartFill || consentFor === "smartFill"}
+                />
+            </SettingsSection>
+
             <SettingsSection title={t("settings.section.device")}>
                 <LinkRow
                     icon="Notification03"
@@ -284,13 +315,13 @@ export function Settings() {
                     icon="Sparkles"
                     onValueChange={(next) => {
                         if (next) {
-                            setBool({ db, key: "aiConsentV2", value: true });
+                            setConsentFor("sendToAi");
                         } else {
                             saveAiConsent({ allowed: false, db });
                         }
                     }}
                     title={t("settings.row.sendToAi")}
-                    value={aiConsent}
+                    value={aiConsent || consentFor === "sendToAi"}
                 />
                 <PickerRow
                     icon="Tap01"
@@ -357,6 +388,19 @@ export function Settings() {
                 />
             </SettingsSection>
             <ImportSheet ref={importSheetRef} />
+            <AiConsentPromptSheet
+                onAnswer={(allowed) => {
+                    if (allowed) {
+                        saveAiConsent({ allowed, db });
+                        if (consentFor === "smartFill") {
+                            setBool({ db, key: "aiEnrichment", value: true });
+                            setBool({ db, key: "groundedLookup", value: true });
+                        }
+                    }
+                    setConsentFor(null);
+                }}
+                open={consentFor !== null}
+            />
         </SettingsScreen>
     );
 }
