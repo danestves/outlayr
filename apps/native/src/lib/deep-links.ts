@@ -23,7 +23,7 @@ export function budgetLink(id: string): string {
     return `${DEEP_LINKS.budgets}/${id}`;
 }
 
-/** Hosts the Swift app shipped: a shortcut built against the old build still fires them. */
+/** Hosts the Swift app shipped, always bare: a shortcut built against the old build still fires them. */
 // Keyed by an untrusted host parsed off the URL, hence a Map.
 const LEGACY_HOSTS = new Map<string, string>([
     ["budget", "/budgets"],
@@ -74,7 +74,7 @@ export function resolveDeepLink(raw: string): string | null {
     }
 
     const key = host.toLowerCase();
-    const legacy = LEGACY_HOSTS.get(key);
+    const legacy = rest.length === 0 ? LEGACY_HOSTS.get(key) : undefined;
     if (legacy) {
         return legacy;
     }
