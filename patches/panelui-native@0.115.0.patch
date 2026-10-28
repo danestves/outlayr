@@ -1,3 +1,33 @@
+diff --git a/lib/module/components/bottom-sheet/index.js b/lib/module/components/bottom-sheet/index.js
+index 44e7dc2b97fdc8f00cdd2ca44db5a3adb2cf3b44..8003c4f34ef84629289abf17f3a3feba9487c9e3 100644
+--- a/lib/module/components/bottom-sheet/index.js
++++ b/lib/module/components/bottom-sheet/index.js
+@@ -7,7 +7,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+ import Animated, { Extrapolation, FadeIn, cancelAnimation, interpolate, runOnJS, scrollTo, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useComposedEventHandler, useReducedMotion, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+ import { useSafeAreaInsets } from 'react-native-safe-area-context';
+ import { tv } from 'tailwind-variants';
+-import { NativeHost, getComposeModifiers, getNativeUI, getSwiftUIModifiers } from "../../native/index.js";
++import { NativeHost, getNativeUI, getSwiftUIModifiers } from "../../native/index.js";
+ import { XIcon } from "../../icons/index.js";
+ import { ModalPortal } from "../../primitives/portal.js";
+ import { Scrim } from "../../primitives/scrim.js";
+@@ -163,8 +163,6 @@ export function bottomSheetDetentHeight(snapPoints, screenHeight) {
+ function nativeSheetSurface(color) {
+   const swiftUI = getSwiftUIModifiers();
+   if (swiftUI) return [swiftUI.presentationBackground(color)];
+-  const compose = getComposeModifiers();
+-  if (compose) return [compose.background(color)];
+   return undefined;
+ }
+ 
+@@ -660,6 +658,7 @@ function BottomSheetContent({
+         onDismiss: onNativeDismiss,
+         snapPoints: snapPoints,
+         modifiers: modifiers,
++        containerColor: Platform.OS === 'android' ? surface : undefined,
+         children: /*#__PURE__*/_jsx(RNHostView, {
+           matchContents: true,
+           children: /*#__PURE__*/_jsx(BottomSheetContext.Provider, {
 diff --git a/lib/module/components/toast/index.js b/lib/module/components/toast/index.js
 index 7f3723be6df90d2424a895bc7fec25b7b226dbaa..e537c11818546dae2f828f420bf96351f999dccc 100644
 --- a/lib/module/components/toast/index.js
@@ -24,6 +54,37 @@ index 7f3723be6df90d2424a895bc7fec25b7b226dbaa..e537c11818546dae2f828f420bf96351
  const toastVariants = tv({
    slots: {
      root: 'w-full flex-row items-start gap-3 rounded-2xl border px-4 py-3.5 shadow-lg',
+diff --git a/src/components/bottom-sheet/index.tsx b/src/components/bottom-sheet/index.tsx
+index 0fc06b4e391138d3372cb42a79351c062ed1690f..861e3fdf7bc1f11884b52ab682ae0cfd150aef4d 100644
+--- a/src/components/bottom-sheet/index.tsx
++++ b/src/components/bottom-sheet/index.tsx
+@@ -43,7 +43,7 @@ import Animated, {
+ } from 'react-native-reanimated';
+ import { useSafeAreaInsets } from 'react-native-safe-area-context';
+ import { tv } from 'tailwind-variants';
+-import { NativeHost, getComposeModifiers, getNativeUI, getSwiftUIModifiers } from '../../native';
++import { NativeHost, getNativeUI, getSwiftUIModifiers } from '../../native';
+ import { XIcon } from '../../icons';
+ import { ModalPortal } from '../../primitives/portal';
+ import { Scrim } from '../../primitives/scrim';
+@@ -240,9 +240,6 @@ function nativeSheetSurface(color: string): unknown[] | undefined {
+   const swiftUI = getSwiftUIModifiers();
+   if (swiftUI) return [swiftUI.presentationBackground(color)];
+ 
+-  const compose = getComposeModifiers();
+-  if (compose) return [compose.background(color)];
+-
+   return undefined;
+ }
+ 
+@@ -870,6 +867,7 @@ function BottomSheetContent({
+           onDismiss={onNativeDismiss}
+           snapPoints={snapPoints}
+           modifiers={modifiers}
++          containerColor={Platform.OS === 'android' ? surface : undefined}
+         >
+           <RNHostView matchContents>
+             <BottomSheetContext.Provider value={context}>
 diff --git a/src/components/toast/index.tsx b/src/components/toast/index.tsx
 index 1b1fe41e5b9d0a2e55b1de3773c1dc40b89d825e..320544bd53e0be001f80f8c3f9c110ce820b6fba 100644
 --- a/src/components/toast/index.tsx
