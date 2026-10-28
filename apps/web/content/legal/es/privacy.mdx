@@ -9,7 +9,7 @@ intro: "Esta política explica qué recopila Outlayr, adónde va, cuánto tiempo
 - Tu registro se guarda en tu dispositivo. Puedes usar Outlayr sin una cuenta y, en ese caso, tus entradas, montos y notas nunca salen de tu celular.
 - Una cuenta (Iniciar sesión con Apple, Acceder con Google, o un correo y una contraseña) activa las sugerencias de comercios, la entrada por voz, el escaneo de recibos y la importación de planes de cuotas. Con Outlayr Pro también activa la sincronización, que guarda una copia de tu registro y tus fotos en nuestros servidores hasta que elimines tu cuenta.
 - Las entradas por voz, los escaneos de recibos, las importaciones de planes de cuotas y las sugerencias de comercios los procesa Anthropic, y ElevenLabs convierte las grabaciones de voz en texto. No guardamos tus grabaciones, las fotos escaneadas ni las capturas, y nunca le enviamos a ninguna de las dos empresas tu nombre, tu correo electrónico ni tu ID de cuenta.
-- Nada va a Anthropic ni a ElevenLabs hasta que lo permitas. La app lo pregunta durante la configuración inicial, o después de que inicias sesión, y Dictar un registro y Escanear un recibo vuelven a preguntar hasta que lo permitas. Importar desde una captura, para planes de cuotas, pregunta la primera vez que lo usas, aunque ya hayas permitido lo demás. Retira tu permiso cuando quieras en **Configuración › Enviar datos a proveedores de IA**. Una vez permitido, las sugerencias de comercios y las búsquedas web quedan activadas, y cada una se puede desactivar en **Configuración › Laboratorio de funciones**.
+- Nada va a Anthropic ni a ElevenLabs hasta que lo permitas. La app lo pregunta durante la configuración inicial, o después de que inicias sesión, y Dictar un registro y Escanear un recibo vuelven a preguntar hasta que lo permitas. Importar desde una captura, para planes de cuotas, pregunta la primera vez que lo usas, aunque ya hayas permitido lo demás. Retira tu permiso cuando quieras en **Configuración › Enviar datos a proveedores de IA**. Una vez permitido, las sugerencias de comercios y las búsquedas web quedan activadas, y ambas se pueden desactivar en **Configuración › Autocompletado**. Activar Autocompletado también permite enviar datos a proveedores de IA.
 - La app envía analíticas de uso y reportes de fallas a PostHog: qué pantallas abres, cuándo guardas algo y los errores. Nunca montos, comercios, notas ni nombres. Empieza desactivado si la región de tu dispositivo está en el EEE o el Reino Unido, y activado en el resto del mundo. Cámbialo en **Configuración › Compartir analíticas**.
 - Este sitio web también usa PostHog, con una cookie. Si estás en el EEE o el Reino Unido, te pregunta primero. Cambia tu respuesta en el pie de página, en **Cookies**.
 - Puedes conectar a tu cuenta un asistente de IA como Claude. Una vez que lo apruebas, puede leer lo que tus dispositivos sincronizaron y, con Outlayr Pro, agregar entradas. Lo que lee se rige por la política de privacidad de ese asistente.
@@ -114,13 +114,13 @@ Cuando escribes, dictas, escaneas o registras desde Apple Pay o una notificació
 
 Nuestro servidor primero revisa una lista compartida de comercios conocidos (más abajo). Si el comercio no está ahí, le pregunta al modelo Claude de Anthropic, y la respuesta (una categoría, etiquetas, un emoji y la dirección web del comercio) vuelve a tu dispositivo. Las entradas guardadas que aún no tienen logo pueden volver a consultarse en segundo plano. Esas solicitudes esperan en nuestro servidor solo hasta que tu dispositivo recoja la respuesta.
 
-Activado una vez que permites enviar datos a proveedores de IA. Desactívalo en **Configuración › Laboratorio de funciones › Sugerir categoría y etiquetas**.
+Activado una vez que permites enviar datos a proveedores de IA. Desactívalo en **Configuración › Autocompletado**.
 
 ### Búsqueda web de comercios nuevos
 
 Si el modelo no logra clasificar un comercio y tienes Pro, nuestro servidor puede pedirle a Anthropic que lo busque en la web. El modelo de Anthropic hace las búsquedas usando el nombre del comercio y, a veces, un país o una ciudad. Recibe el nombre del comercio, si es gasto o ingreso, el código de moneda, el idioma y la región, y en las búsquedas en segundo plano, también los nombres de tus categorías. Por lo general, una búsqueda web mejora la respuesta para la próxima entrada con ese comercio, no para la que estás escribiendo.
 
-Activado una vez que permites enviar datos a proveedores de IA. Desactívalo en **Configuración › Laboratorio de funciones › Buscar comercios nuevos**. La app envía tu elección con cada solicitud, y nuestro servidor también respeta la configuración sincronizada, así que no se hace ninguna búsqueda web para ti mientras esté desactivado.
+Activado una vez que permites enviar datos a proveedores de IA. Desactívalo en **Configuración › Autocompletado**, que también desactiva las sugerencias. La app envía tu elección con cada solicitud, y nuestro servidor también respeta la configuración sincronizada, así que no se hace ninguna búsqueda web para ti mientras esté desactivado.
 
 ### La lista compartida de comercios
 
@@ -142,7 +142,7 @@ Cuando importas un plan de cuotas, eliges una captura del plan de pagos de una c
 
 ### Importación de CSV
 
-El archivo se lee en tu dispositivo. Con Sugerir categoría y etiquetas activado, las descripciones que Outlayr no puede asociar en el dispositivo se envían a nuestro servidor y, con Pro, a Anthropic para sugerir categorías: como máximo 200 a la vez, sin ninguna secuencia de cuatro o más dígitos, junto con los nombres de tus categorías y la región del dispositivo. Los montos, las fechas y el resto del archivo se quedan en tu dispositivo. Con la búsqueda web activada, algunas descripciones también pueden buscarse en la web como se describe arriba.
+El archivo se lee en tu dispositivo. Con Autocompletado activado, las descripciones que Outlayr no puede asociar en el dispositivo se envían a nuestro servidor y, con Pro, a Anthropic para sugerir categorías: como máximo 200 a la vez, sin ninguna secuencia de cuatro o más dígitos, junto con los nombres de tus categorías y la región del dispositivo. Los montos, las fechas y el resto del archivo se quedan en tu dispositivo. Con la búsqueda web activada, algunas descripciones también pueden buscarse en la web como se describe arriba.
 
 ### Quiénes son Anthropic y ElevenLabs
 
@@ -238,7 +238,7 @@ Si estás en el Espacio Económico Europeo o en el Reino Unido, estas son las ba
 | --- | --- |
 | Tu cuenta, la sincronización, el almacenamiento de fotos, la entrada por voz, el escaneo de recibos, la importación de planes de cuotas, la importación de CSV, Pro y las conexiones con asistentes de IA | Contrato: necesitamos estos datos para darte lo que pides. |
 | El envío a Anthropic y ElevenLabs de entradas por voz, fotos de recibos, capturas de planes de cuotas, descripciones de CSV y nombres de comercios | Tu consentimiento, dado con Permitir cuando la app lo pregunta y retirado en **Configuración › Enviar datos a proveedores de IA**. |
-| Las sugerencias de comercios, las búsquedas web, la lista compartida de comercios y los logos | Intereses legítimos: agilizar el registro de entradas. Las sugerencias y las búsquedas web solo llegan a Anthropic una vez que lo permites, y desactivar cualquiera de ellas en el Laboratorio de funciones es la forma de oponerte. |
+| Las sugerencias de comercios, las búsquedas web, la lista compartida de comercios y los logos | Intereses legítimos: agilizar el registro de entradas. Las sugerencias y las búsquedas web solo llegan a Anthropic una vez que lo permites, y desactivar Autocompletado es la forma de oponerte. |
 | Las sesiones, los límites de uso, los registros de errores y las búsquedas de actualizaciones | Intereses legítimos: mantener Outlayr seguro, en funcionamiento y libre de abusos. |
 | Las analíticas de uso y los reportes de fallas | Tu consentimiento. Compartir analíticas empieza desactivado cuando la región de tu dispositivo está en el EEE o el Reino Unido. Activarlo es dar tu consentimiento, y desactivarlo es retirarlo. |
 | Las analíticas del sitio web | Tu consentimiento para la cookie y las grabaciones de visitas, que pedimos en tu primera visita. Rechazarla es retirarlo. Una visita rechazada se cuenta igual sin cookie, por nuestro interés legítimo en saber cuántas personas nos visitan. |

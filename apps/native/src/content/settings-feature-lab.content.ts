@@ -11,29 +11,6 @@ const settingsFeatureLab = {
             pt: "Ao adicionar um lançamento",
             "pt-PT": "Ao adicionar um registo",
         }),
-        "settings.featureLab.aiEnrichment": t({
-            en: "Suggest category and tags",
-            es: "Sugerir categoría y etiquetas",
-            fr: "Suggérer catégorie et étiquettes",
-            pt: "Sugerir categoria e tags",
-            "pt-PT": "Sugerir categoria e etiquetas",
-        }),
-        "settings.featureLab.aiEnrichmentNote": t({
-            en: "Well-known services are recognised on this device, and only their web address goes to a logo service to fetch the logo. For anything else, only the merchant name of an entry (typed, spoken, scanned or logged from Wallet), whether it is an expense or income, its currency code, your language and device region, and your own category names leave the device, never amounts, dates or accounts, and the web address that comes back goes to the same logo service. A recent entry saved without a logo is looked up again in the background.",
-            es: "Los servicios conocidos se reconocen en este dispositivo, y solo su dirección web va a un servicio de logos para traer el logo. Para todo lo demás, solo salen del dispositivo el nombre del comercio de una entrada (escrita, dictada, escaneada o registrada desde Wallet), si es gasto o ingreso, su código de moneda, tu idioma y la región del dispositivo, y los nombres de tus categorías. Nunca montos, fechas ni cuentas. La dirección web que vuelve va al mismo servicio de logos. Si una entrada reciente se guardó sin logo, se vuelve a buscar en segundo plano.",
-            "es-ES":
-                "Los servicios conocidos se reconocen en este dispositivo, y solo su dirección web va a un servicio de logos para traer el logo. Para todo lo demás, solo salen del dispositivo el nombre del comercio de una entrada (escrita, dictada, escaneada o registrada desde Cartera), si es gasto o ingreso, su código de moneda, tu idioma y la región del dispositivo, y los nombres de tus categorías. Nunca importes, fechas ni cuentas. La dirección web que vuelve va al mismo servicio de logos. Si una entrada reciente se guardó sin logo, se vuelve a buscar en segundo plano.",
-            fr: "Les services connus sont reconnus sur cet appareil, et seule leur adresse web est envoyée à un service de logos pour récupérer le logo. Pour tout le reste, seuls le nom du commerçant d'une opération (tapée, dictée, scannée ou saisie depuis Cartes), son type (dépense ou revenu), son code de devise, votre langue et la région de l'appareil, et vos propres noms de catégories quittent l'appareil, jamais les montants, les dates ni les comptes. L'adresse web renvoyée part vers le même service de logos. Une opération récente enregistrée sans logo est recherchée de nouveau en arrière-plan.",
-            pt: "Serviços conhecidos são reconhecidos neste dispositivo, e só o endereço web deles vai para um serviço de logos para buscar o logo. Para todo o resto, só saem do dispositivo o nome do estabelecimento de um lançamento (digitado, falado, escaneado ou registrado pela Carteira), se é despesa ou receita, o código da moeda, seu idioma e a região do dispositivo, e os nomes das suas categorias. Nunca valores, datas ou contas. O endereço web que volta vai para o mesmo serviço de logos. Se um lançamento recente foi salvo sem logo, ele é buscado de novo em segundo plano.",
-            "pt-PT":
-                "Os serviços conhecidos são reconhecidos neste dispositivo, e só o endereço web deles vai para um serviço de logótipos para obter o logótipo. Para todo o resto, só saem do dispositivo o nome do estabelecimento de um registo (escrito, falado, digitalizado ou registado pela Carteira), se é despesa ou receita, o código da moeda, o seu idioma e a região do dispositivo, e os nomes das suas categorias. Nunca valores, datas ou contas. O endereço web que volta vai para o mesmo serviço de logótipos. Se um registo recente foi guardado sem logótipo, é pesquisado novamente em segundo plano.",
-        }),
-        "settings.featureLab.aiSection": t({
-            en: "Smart fill",
-            es: "Autocompletado",
-            fr: "Remplissage intelligent",
-            pt: "Preenchimento inteligente",
-        }),
         "settings.featureLab.budgetRows": t({
             en: "Budget rows",
             es: "Filas de presupuesto",
@@ -74,23 +51,6 @@ const settingsFeatureLab = {
             fr: "Expérimental : ces options peuvent changer ou disparaître.",
             pt: "Experimental: isto pode mudar ou desaparecer.",
         }),
-        "settings.featureLab.groundedLookup": t({
-            en: "Look up new merchants",
-            es: "Buscar comercios nuevos",
-            fr: "Rechercher les nouveaux commerçants",
-            pt: "Buscar estabelecimentos novos",
-            "pt-PT": "Pesquisar estabelecimentos novos",
-        }),
-        "settings.featureLab.groundedLookupNote": t({
-            en: "For a merchant nobody has seen before, the name, whether it is an expense or income, the entry's currency code and your language and device region may be searched on the web to learn its category, never on the transaction you're entering, and never with any amount, date or account. Off keeps every lookup on this device and the ones already known.",
-            es: "Para un comercio que nadie ha visto antes, el nombre, si es gasto o ingreso, el código de moneda de la entrada y tu idioma y región pueden buscarse en la web para conocer su categoría. Nunca para la transacción que estás ingresando y nunca con montos, fechas ni cuentas. Si lo desactivas, cada búsqueda se queda en este dispositivo y en los comercios ya conocidos.",
-            "es-ES":
-                "Para un comercio que nadie ha visto antes, el nombre, si es gasto o ingreso, el código de moneda de la entrada y tu idioma y región pueden buscarse en la web para conocer su categoría. Nunca para la transacción que estás introduciendo y nunca con importes, fechas ni cuentas. Si lo desactivas, cada búsqueda se queda en este dispositivo y en los comercios ya conocidos.",
-            fr: "Pour un commerçant que personne n'a encore vu, son nom, son type (dépense ou revenu), le code de devise de l'opération, votre langue et la région de l'appareil peuvent être recherchés sur le web pour connaître sa catégorie, jamais pour l'opération que vous saisissez, et jamais avec un montant, une date ou un compte. Désactivé, chaque recherche reste sur cet appareil et parmi les commerçants déjà connus.",
-            pt: "Para um estabelecimento que ninguém viu antes, o nome, se é despesa ou receita, o código da moeda do lançamento, seu idioma e a região do dispositivo podem ser buscados na web para descobrir a categoria. Nunca para o lançamento que você está registrando e nunca com valores, datas ou contas. Se desativado, cada busca fica restrita a este dispositivo e aos estabelecimentos já conhecidos.",
-            "pt-PT":
-                "Para um estabelecimento que ninguém viu antes, o nome, se é despesa ou receita, o código da moeda do registo, o seu idioma e a região do dispositivo podem ser pesquisados na web para descobrir a categoria. Nunca para o registo que está a criar e nunca com valores, datas ou contas. Se desativado, cada pesquisa fica restrita a este dispositivo e aos estabelecimentos já conhecidos.",
-        }),
         "settings.featureLab.lineGraph": t({
             en: "Show line graph",
             es: "Mostrar gráfico de líneas",
@@ -125,16 +85,6 @@ const settingsFeatureLab = {
             fr: "Lignes d'opération",
             pt: "Linhas de lançamento",
             "pt-PT": "Linhas de registo",
-        }),
-        "settings.featureLab.aiProvidersNote": t({
-            en: "Both go to Claude, made by Anthropic, and only while Send data to AI providers is on in Settings.",
-            es: "Ambas van a Claude, de Anthropic, y solo mientras Enviar datos a proveedores de IA esté activado en Configuración.",
-            "es-ES":
-                "Ambas van a Claude, de Anthropic, y solo mientras Enviar datos a proveedores de IA esté activado en Ajustes.",
-            fr: "Les deux passent par Claude, d'Anthropic, et seulement si Envoyer des données aux fournisseurs d'IA est activé dans Réglages.",
-            pt: "As duas buscas vão para o Claude, da Anthropic, e só enquanto Enviar dados a provedores de IA estiver ativado em Ajustes.",
-            "pt-PT":
-                "As duas pesquisas vão para o Claude, da Anthropic, e só enquanto Enviar dados a fornecedores de IA estiver ativado nas Definições.",
         }),
     },
     key: "settings-feature-lab" as const,

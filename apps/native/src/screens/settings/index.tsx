@@ -93,6 +93,7 @@ export function Settings() {
     const biometricLock = settings.bool("biometricLock");
     const shareAnalytics = settings.bool("shareAnalytics");
     const aiConsent = settings.bool("aiConsentV2");
+    const smartFill = aiConsent && settings.bool("aiEnrichment") && settings.bool("groundedLookup");
     const incomeTracking = settings.bool("incomeTracking");
     const showUpcoming = settings.bool("showUpcoming");
     const animatedCharts = settings.bool("animatedCharts");
@@ -249,6 +250,27 @@ export function Settings() {
                     icon="Calendar01"
                     onPress={() => router.push("/settings/time")}
                     title={t("settings.row.timeFrames")}
+                />
+            </SettingsSection>
+
+            <SettingsSection
+                footer={t("settings.smartFill.note")}
+                footerLink={{
+                    label: t("settings.smartFill.learnMore"),
+                    onPress: () => openInAppBrowser(legalUrl("privacy", language, "smartFill")),
+                }}
+            >
+                <ToggleRow
+                    icon="Sparkles"
+                    onValueChange={(next) => {
+                        setBool({ db, key: "aiEnrichment", value: next });
+                        setBool({ db, key: "groundedLookup", value: next });
+                        if (next) {
+                            setBool({ db, key: "aiConsentV2", value: true });
+                        }
+                    }}
+                    title={t("settings.smartFill.title")}
+                    value={smartFill}
                 />
             </SettingsSection>
 

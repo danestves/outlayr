@@ -61,7 +61,7 @@ export function AiConsentDetails() {
                 <Text
                     accessibilityRole="link"
                     className="text-tint"
-                    onPress={() => openInAppBrowser(legalUrl("privacy", language))}
+                    onPress={() => openInAppBrowser(legalUrl("privacy", language, "ai"))}
                 >
                     {t("aiConsent.privacy")}
                 </Text>

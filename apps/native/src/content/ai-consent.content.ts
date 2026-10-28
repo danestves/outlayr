@@ -29,12 +29,12 @@ const aiConsent = {
                 "As sugestões nunca incluem valores, datas ou contas. Não guardamos gravações, fotos nem capturas de ecrã.",
         }),
         "aiConsent.lead": t({
-            en: "These features need an account and use Claude, made by Anthropic, through our server. ElevenLabs turns recordings into text. Neither gets your name, email, or account ID.",
-            es: "Estas funciones necesitan una cuenta y usan Claude, de Anthropic, a través de nuestro servidor. ElevenLabs convierte las grabaciones en texto. Ninguna recibe tu nombre, tu correo ni el ID de tu cuenta.",
-            fr: "Ces fonctions nécessitent un compte et utilisent Claude, d'Anthropic, via notre serveur. ElevenLabs transcrit les enregistrements. Aucun des deux ne reçoit votre nom, votre e-mail ni l'identifiant de votre compte.",
-            pt: "Estes recursos precisam de uma conta e usam o Claude, da Anthropic, pelo nosso servidor. A ElevenLabs transforma gravações em texto. Nenhuma das duas recebe seu nome, e-mail ou ID da conta.",
+            en: "These features need an account and go through our server to third-party AI providers, which turn recordings into text and suggest categories. They never get your name, email, or account ID.",
+            es: "Estas funciones necesitan una cuenta y pasan por nuestro servidor hacia proveedores de IA externos, que convierten las grabaciones en texto y sugieren categorías. Nunca reciben tu nombre, tu correo ni el ID de tu cuenta.",
+            fr: "Ces fonctions nécessitent un compte et passent par notre serveur vers des fournisseurs d'IA tiers, qui transcrivent les enregistrements et suggèrent des catégories. Ils ne reçoivent jamais votre nom, votre e-mail ni l'identifiant de votre compte.",
+            pt: "Estes recursos precisam de uma conta e passam pelo nosso servidor até provedores de IA terceiros, que transformam gravações em texto e sugerem categorias. Eles nunca recebem seu nome, e-mail ou ID da conta.",
             "pt-PT":
-                "Estas funcionalidades precisam de uma conta e usam o Claude, da Anthropic, através do nosso servidor. A ElevenLabs transforma gravações em texto. Nenhuma das duas recebe o seu nome, e-mail ou ID da conta.",
+                "Estas funcionalidades precisam de uma conta e passam pelo nosso servidor até fornecedores de IA terceiros, que transformam gravações em texto e sugerem categorias. Nunca recebem o seu nome, e-mail ou ID da conta.",
         }),
         "aiConsent.lookup": t({
             en: "Web lookup",
@@ -44,11 +44,11 @@ const aiConsent = {
             "pt-PT": "Pesquisa na web",
         }),
         "aiConsent.lookupSends": t({
-            en: "Anthropic may search the web for a merchant's name",
-            es: "Anthropic puede buscar en la web el nombre de un comercio",
-            fr: "Anthropic peut rechercher le nom d'un commerçant sur le web",
-            pt: "A Anthropic pode buscar na web o nome de um estabelecimento",
-            "pt-PT": "A Anthropic pode pesquisar na web o nome de um estabelecimento",
+            en: "The AI provider may search the web for a merchant's name",
+            es: "El proveedor de IA puede buscar en la web el nombre de un comercio",
+            fr: "Le fournisseur d'IA peut rechercher le nom d'un commerçant sur le web",
+            pt: "O provedor de IA pode buscar na web o nome de um estabelecimento",
+            "pt-PT": "O fornecedor de IA pode pesquisar na web o nome de um estabelecimento",
         }),
         "aiConsent.notNow": t({
             en: "Not now",
@@ -103,10 +103,11 @@ const aiConsent = {
             pt: "Nomes de estabelecimentos, se é despesa ou receita, a moeda, o idioma, a região e os nomes das suas categorias. Na importação, as descrições do CSV sem os números longos.",
         }),
         "aiConsent.title": t({
-            en: "Send data to Anthropic and ElevenLabs?",
-            es: "¿Enviar datos a Anthropic y ElevenLabs?",
-            fr: "Envoyer des données à Anthropic et ElevenLabs ?",
-            pt: "Enviar dados à Anthropic e à ElevenLabs?",
+            en: "Send data to third-party AI providers?",
+            es: "¿Enviar datos a proveedores de IA externos?",
+            fr: "Envoyer des données à des fournisseurs d'IA tiers ?",
+            pt: "Enviar dados a provedores de IA terceiros?",
+            "pt-PT": "Enviar dados a fornecedores de IA terceiros?",
         }),
         "aiConsent.voice": t({
             en: "Voice entry",
