@@ -263936,7 +263936,1973 @@
               "name": "Not rebuilt",
               "width": 600,
               "height": 90,
-              "content": "auth/adopt is only reachable with a live signed-in session (rootStackGroup returns 'adopt' when the auth gate is signed-in and the ledger is not reconciled). The capture devices are signed out and real Apple/Google/email accounts are not available here, so the screen could not render and was not rebuilt."
+              "content": "Superseded by the \"Ledger adoption\" and \"Ledger adoption · confirm\" groups below, rebuilt once a signed-in capture setup existed."
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "A3UfYK",
+          "name": "Ledger adoption",
+          "layout": "vertical",
+          "gap": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "wIVss",
+              "name": "Label",
+              "fill": "#6b6557",
+              "content": "Ledger adoption",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "rzjkP",
+              "name": "Variants",
+              "gap": 32,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "N2qMg",
+                  "name": "Ledger adoption · iOS · light",
+                  "theme": {
+                    "platform": "ios",
+                    "mode": "light"
+                  },
+                  "clip": true,
+                  "width": 402,
+                  "height": 874,
+                  "fill": "$background",
+                  "cornerRadius": 48,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "v2HIXZ",
+                      "type": "ref",
+                      "ref": "RZCb5",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "i3H1cx",
+                      "x": 24,
+                      "y": 118,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "TWO LEDGERS",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "gHhzi",
+                      "x": 24,
+                      "y": 141,
+                      "name": "Title",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 354,
+                      "content": "This phone and your account both hold entries",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "TnLwb",
+                      "x": 24,
+                      "y": 201,
+                      "name": "Body",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 354,
+                      "content": "Choose what to keep. Only the first option keeps everything; the other two delete entries permanently.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "mmhOt",
+                      "x": 24,
+                      "y": 356,
+                      "name": "Choices",
+                      "width": 354,
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "top": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "layout": "vertical",
+                      "padding": [
+                        1,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "qfZVj",
+                          "name": "Keep both",
+                          "width": "fill_container",
+                          "stroke": "$border",
+                          "strokeWidth": {
+                            "bottom": 1
+                          },
+                          "strokeAlignment": "inner",
+                          "gap": 16,
+                          "padding": [
+                            20,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "i8wDqQ",
+                              "name": "Number",
+                              "width": 24,
+                              "padding": [
+                                4,
+                                0,
+                                0,
+                                0
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "eAFct",
+                                  "name": "Label",
+                                  "fill": "$muted",
+                                  "content": "01",
+                                  "lineHeight": 1.364,
+                                  "fontFamily": "$font-mono",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal",
+                                  "letterSpacing": 1.2
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "r9XrFR",
+                              "name": "Text",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 4,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "FK3F0",
+                                  "name": "Title",
+                                  "fill": "$foreground",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Keep both",
+                                  "lineHeight": 1.353,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 17,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "fjxiF",
+                                  "name": "Body",
+                                  "fill": "$muted",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Every entry from this phone and from your account survives. Nothing is deleted. Duplicate categories are yours to tidy up afterwards.",
+                                  "lineHeight": 1.375,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 15,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "U7u6w4",
+                          "name": "Keep only this phone's",
+                          "width": "fill_container",
+                          "stroke": "$border",
+                          "strokeWidth": {
+                            "bottom": 1
+                          },
+                          "strokeAlignment": "inner",
+                          "gap": 16,
+                          "padding": [
+                            20,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "X1uZ4",
+                              "name": "Number",
+                              "width": 24,
+                              "padding": [
+                                4,
+                                0,
+                                0,
+                                0
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "x0eR9",
+                                  "name": "Label",
+                                  "fill": "$muted",
+                                  "content": "02",
+                                  "lineHeight": 1.364,
+                                  "fontFamily": "$font-mono",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal",
+                                  "letterSpacing": 1.2
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "vqt0h",
+                              "name": "Text",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 4,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "d63Si",
+                                  "name": "Title",
+                                  "fill": "$foreground",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Keep only this phone's",
+                                  "lineHeight": 1.353,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 17,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "vMoxh",
+                                  "name": "Body",
+                                  "fill": "$muted",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Deletes every entry your account holds and replaces it with this phone's ledger.",
+                                  "lineHeight": 1.375,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 15,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "dRvxE",
+                          "name": "Keep only the account's",
+                          "width": "fill_container",
+                          "stroke": "$border",
+                          "strokeWidth": {
+                            "bottom": 1
+                          },
+                          "strokeAlignment": "inner",
+                          "gap": 16,
+                          "padding": [
+                            20,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "q96uM",
+                              "name": "Number",
+                              "width": 24,
+                              "padding": [
+                                4,
+                                0,
+                                0,
+                                0
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "qiwna",
+                                  "name": "Label",
+                                  "fill": "$muted",
+                                  "content": "03",
+                                  "lineHeight": 1.364,
+                                  "fontFamily": "$font-mono",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal",
+                                  "letterSpacing": 1.2
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "P4H51",
+                              "name": "Text",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 4,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "oVNdQ",
+                                  "name": "Title",
+                                  "fill": "$foreground",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Keep only the account's",
+                                  "lineHeight": 1.353,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 17,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "uovGW",
+                                  "name": "Body",
+                                  "fill": "$muted",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Deletes every entry on this phone and replaces it with your account's ledger.",
+                                  "lineHeight": 1.375,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 15,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "S6u3KM",
+                      "x": 134,
+                      "y": 861,
+                      "name": "Home indicator",
+                      "fill": "$foreground",
+                      "width": 134,
+                      "height": 5
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "twOl4",
+                  "name": "Ledger adoption · iOS · dark",
+                  "theme": {
+                    "platform": "ios",
+                    "mode": "dark"
+                  },
+                  "clip": true,
+                  "width": 402,
+                  "height": 874,
+                  "fill": "$background",
+                  "cornerRadius": 48,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "WKofh",
+                      "type": "ref",
+                      "ref": "RZCb5",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "q0yY9",
+                      "x": 24,
+                      "y": 118,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "TWO LEDGERS",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "V2UsgM",
+                      "x": 24,
+                      "y": 141,
+                      "name": "Title",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 354,
+                      "content": "This phone and your account both hold entries",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "jcyxZ",
+                      "x": 24,
+                      "y": 201,
+                      "name": "Body",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 354,
+                      "content": "Choose what to keep. Only the first option keeps everything; the other two delete entries permanently.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "BWwFK",
+                      "x": 24,
+                      "y": 356,
+                      "name": "Choices",
+                      "width": 354,
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "top": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "layout": "vertical",
+                      "padding": [
+                        1,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "SmQiR",
+                          "name": "Keep both",
+                          "width": "fill_container",
+                          "stroke": "$border",
+                          "strokeWidth": {
+                            "bottom": 1
+                          },
+                          "strokeAlignment": "inner",
+                          "gap": 16,
+                          "padding": [
+                            20,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "fPU8M",
+                              "name": "Number",
+                              "width": 24,
+                              "padding": [
+                                4,
+                                0,
+                                0,
+                                0
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "kp0Ua",
+                                  "name": "Label",
+                                  "fill": "$muted",
+                                  "content": "01",
+                                  "lineHeight": 1.364,
+                                  "fontFamily": "$font-mono",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal",
+                                  "letterSpacing": 1.2
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "kq3or",
+                              "name": "Text",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 4,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "F5Q5fu",
+                                  "name": "Title",
+                                  "fill": "$foreground",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Keep both",
+                                  "lineHeight": 1.353,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 17,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "JkAXO",
+                                  "name": "Body",
+                                  "fill": "$muted",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Every entry from this phone and from your account survives. Nothing is deleted. Duplicate categories are yours to tidy up afterwards.",
+                                  "lineHeight": 1.375,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 15,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "SCjTS",
+                          "name": "Keep only this phone's",
+                          "width": "fill_container",
+                          "stroke": "$border",
+                          "strokeWidth": {
+                            "bottom": 1
+                          },
+                          "strokeAlignment": "inner",
+                          "gap": 16,
+                          "padding": [
+                            20,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "LPauM",
+                              "name": "Number",
+                              "width": 24,
+                              "padding": [
+                                4,
+                                0,
+                                0,
+                                0
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "OldGd",
+                                  "name": "Label",
+                                  "fill": "$muted",
+                                  "content": "02",
+                                  "lineHeight": 1.364,
+                                  "fontFamily": "$font-mono",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal",
+                                  "letterSpacing": 1.2
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "J2v0zK",
+                              "name": "Text",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 4,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "mz9x6",
+                                  "name": "Title",
+                                  "fill": "$foreground",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Keep only this phone's",
+                                  "lineHeight": 1.353,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 17,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "F1Y8zw",
+                                  "name": "Body",
+                                  "fill": "$muted",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Deletes every entry your account holds and replaces it with this phone's ledger.",
+                                  "lineHeight": 1.375,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 15,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "fQba0",
+                          "name": "Keep only the account's",
+                          "width": "fill_container",
+                          "stroke": "$border",
+                          "strokeWidth": {
+                            "bottom": 1
+                          },
+                          "strokeAlignment": "inner",
+                          "gap": 16,
+                          "padding": [
+                            20,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "j6hKh",
+                              "name": "Number",
+                              "width": 24,
+                              "padding": [
+                                4,
+                                0,
+                                0,
+                                0
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "LcHUt",
+                                  "name": "Label",
+                                  "fill": "$muted",
+                                  "content": "03",
+                                  "lineHeight": 1.364,
+                                  "fontFamily": "$font-mono",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal",
+                                  "letterSpacing": 1.2
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "RRnY8",
+                              "name": "Text",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 4,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "iBZkD",
+                                  "name": "Title",
+                                  "fill": "$foreground",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Keep only the account's",
+                                  "lineHeight": 1.353,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 17,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "ww61h",
+                                  "name": "Body",
+                                  "fill": "$muted",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Deletes every entry on this phone and replaces it with your account's ledger.",
+                                  "lineHeight": 1.375,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 15,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "a8k8gN",
+                      "x": 134,
+                      "y": 861,
+                      "name": "Home indicator",
+                      "fill": "$foreground",
+                      "width": 134,
+                      "height": 5
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "uIcmE",
+                  "name": "Ledger adoption · Android · light",
+                  "theme": {
+                    "platform": "android",
+                    "mode": "light"
+                  },
+                  "clip": true,
+                  "width": 412,
+                  "height": 915,
+                  "fill": "$m3-surface",
+                  "cornerRadius": 28,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "WEGZ1",
+                      "type": "ref",
+                      "ref": "BCCA1",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "WjnZx",
+                      "x": 23.9,
+                      "y": 126.3,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "TWO LEDGERS",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "uJUiT",
+                      "x": 23.9,
+                      "y": 150,
+                      "name": "Title",
+                      "fill": "$m3-on-surface",
+                      "textGrowth": "fixed-width",
+                      "width": 363.8,
+                      "content": "This phone and your account both hold entries",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "jHlhh",
+                      "x": 23.9,
+                      "y": 210.5,
+                      "name": "Body",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 363.8,
+                      "content": "Choose what to keep. Only the first option keeps everything; the other two delete entries permanently.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "BLsyR",
+                      "x": 23.9,
+                      "y": 397.1,
+                      "name": "Choices",
+                      "width": 363.8,
+                      "stroke": "$m3-outline-variant",
+                      "strokeWidth": {
+                        "top": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "layout": "vertical",
+                      "padding": [
+                        1,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "WXaaK",
+                          "name": "Keep both",
+                          "width": "fill_container",
+                          "stroke": "$m3-outline-variant",
+                          "strokeWidth": {
+                            "bottom": 1
+                          },
+                          "strokeAlignment": "inner",
+                          "gap": 16,
+                          "padding": [
+                            20,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "zGyYN",
+                              "name": "Number",
+                              "width": 24,
+                              "padding": [
+                                4,
+                                0,
+                                0,
+                                0
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "lz4BK",
+                                  "name": "Label",
+                                  "fill": "$m3-on-surface-variant",
+                                  "content": "01",
+                                  "lineHeight": 1.364,
+                                  "fontFamily": "$font-mono",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal",
+                                  "letterSpacing": 1.2
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "fetXv",
+                              "name": "Text",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 4,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "z0ydq",
+                                  "name": "Title",
+                                  "fill": "$m3-on-surface",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Keep both",
+                                  "lineHeight": 1.353,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 17,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "PPfh9",
+                                  "name": "Body",
+                                  "fill": "$m3-on-surface-variant",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Every entry from this phone and from your account survives. Nothing is deleted. Duplicate categories are yours to tidy up afterwards.",
+                                  "lineHeight": 1.375,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 15,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "EXasq",
+                          "name": "Keep only this phone's",
+                          "width": "fill_container",
+                          "stroke": "$m3-outline-variant",
+                          "strokeWidth": {
+                            "bottom": 1
+                          },
+                          "strokeAlignment": "inner",
+                          "gap": 16,
+                          "padding": [
+                            20,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "z21jn4",
+                              "name": "Number",
+                              "width": 24,
+                              "padding": [
+                                4,
+                                0,
+                                0,
+                                0
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "pGcdd",
+                                  "name": "Label",
+                                  "fill": "$m3-on-surface-variant",
+                                  "content": "02",
+                                  "lineHeight": 1.364,
+                                  "fontFamily": "$font-mono",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal",
+                                  "letterSpacing": 1.2
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "d5KoF4",
+                              "name": "Text",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 4,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "L4JPZ",
+                                  "name": "Title",
+                                  "fill": "$m3-on-surface",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Keep only this phone's",
+                                  "lineHeight": 1.353,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 17,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "f9IXEx",
+                                  "name": "Body",
+                                  "fill": "$m3-on-surface-variant",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Deletes every entry your account holds and replaces it with this phone's ledger.",
+                                  "lineHeight": 1.375,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 15,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "fLrqd",
+                          "name": "Keep only the account's",
+                          "width": "fill_container",
+                          "stroke": "$m3-outline-variant",
+                          "strokeWidth": {
+                            "bottom": 1
+                          },
+                          "strokeAlignment": "inner",
+                          "gap": 16,
+                          "padding": [
+                            20,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "O7oAs3",
+                              "name": "Number",
+                              "width": 24,
+                              "padding": [
+                                4,
+                                0,
+                                0,
+                                0
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "vwLbl",
+                                  "name": "Label",
+                                  "fill": "$m3-on-surface-variant",
+                                  "content": "03",
+                                  "lineHeight": 1.364,
+                                  "fontFamily": "$font-mono",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal",
+                                  "letterSpacing": 1.2
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "PEVbz",
+                              "name": "Text",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 4,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "bgUmH",
+                                  "name": "Title",
+                                  "fill": "$m3-on-surface",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Keep only the account's",
+                                  "lineHeight": 1.353,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 17,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "dmqaG",
+                                  "name": "Body",
+                                  "fill": "$m3-on-surface-variant",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Deletes every entry on this phone and replaces it with your account's ledger.",
+                                  "lineHeight": 1.375,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 15,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "U5THP",
+                      "x": 146,
+                      "y": 901,
+                      "name": "Gesture handle",
+                      "fill": "$m3-on-surface-variant",
+                      "width": 120,
+                      "height": 4
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "QfbYs",
+                  "name": "Ledger adoption · Android · dark",
+                  "theme": {
+                    "platform": "android",
+                    "mode": "dark"
+                  },
+                  "clip": true,
+                  "width": 412,
+                  "height": 915,
+                  "fill": "$m3-surface",
+                  "cornerRadius": 28,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "SP5JS",
+                      "type": "ref",
+                      "ref": "BCCA1",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "K4fKWF",
+                      "x": 23.9,
+                      "y": 126.3,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "TWO LEDGERS",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "gTlTv",
+                      "x": 23.9,
+                      "y": 150,
+                      "name": "Title",
+                      "fill": "$m3-on-surface",
+                      "textGrowth": "fixed-width",
+                      "width": 363.8,
+                      "content": "This phone and your account both hold entries",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "na6Dj",
+                      "x": 23.9,
+                      "y": 210.5,
+                      "name": "Body",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 363.8,
+                      "content": "Choose what to keep. Only the first option keeps everything; the other two delete entries permanently.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ptwIC",
+                      "x": 23.9,
+                      "y": 397.1,
+                      "name": "Choices",
+                      "width": 363.8,
+                      "stroke": "$m3-outline-variant",
+                      "strokeWidth": {
+                        "top": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "layout": "vertical",
+                      "padding": [
+                        1,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "y9XVc",
+                          "name": "Keep both",
+                          "width": "fill_container",
+                          "stroke": "$m3-outline-variant",
+                          "strokeWidth": {
+                            "bottom": 1
+                          },
+                          "strokeAlignment": "inner",
+                          "gap": 16,
+                          "padding": [
+                            20,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "ngPGD",
+                              "name": "Number",
+                              "width": 24,
+                              "padding": [
+                                4,
+                                0,
+                                0,
+                                0
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "qLfle",
+                                  "name": "Label",
+                                  "fill": "$m3-on-surface-variant",
+                                  "content": "01",
+                                  "lineHeight": 1.364,
+                                  "fontFamily": "$font-mono",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal",
+                                  "letterSpacing": 1.2
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "L7yCA0",
+                              "name": "Text",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 4,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "C25ht",
+                                  "name": "Title",
+                                  "fill": "$m3-on-surface",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Keep both",
+                                  "lineHeight": 1.353,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 17,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "QrN8T",
+                                  "name": "Body",
+                                  "fill": "$m3-on-surface-variant",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Every entry from this phone and from your account survives. Nothing is deleted. Duplicate categories are yours to tidy up afterwards.",
+                                  "lineHeight": 1.375,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 15,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "pL5hK",
+                          "name": "Keep only this phone's",
+                          "width": "fill_container",
+                          "stroke": "$m3-outline-variant",
+                          "strokeWidth": {
+                            "bottom": 1
+                          },
+                          "strokeAlignment": "inner",
+                          "gap": 16,
+                          "padding": [
+                            20,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "AtlIc",
+                              "name": "Number",
+                              "width": 24,
+                              "padding": [
+                                4,
+                                0,
+                                0,
+                                0
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "g4myx",
+                                  "name": "Label",
+                                  "fill": "$m3-on-surface-variant",
+                                  "content": "02",
+                                  "lineHeight": 1.364,
+                                  "fontFamily": "$font-mono",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal",
+                                  "letterSpacing": 1.2
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "fIsx1",
+                              "name": "Text",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 4,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "YoVwt",
+                                  "name": "Title",
+                                  "fill": "$m3-on-surface",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Keep only this phone's",
+                                  "lineHeight": 1.353,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 17,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "lPdS9",
+                                  "name": "Body",
+                                  "fill": "$m3-on-surface-variant",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Deletes every entry your account holds and replaces it with this phone's ledger.",
+                                  "lineHeight": 1.375,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 15,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "PAARb",
+                          "name": "Keep only the account's",
+                          "width": "fill_container",
+                          "stroke": "$m3-outline-variant",
+                          "strokeWidth": {
+                            "bottom": 1
+                          },
+                          "strokeAlignment": "inner",
+                          "gap": 16,
+                          "padding": [
+                            20,
+                            0
+                          ],
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "hnN2i",
+                              "name": "Number",
+                              "width": 24,
+                              "padding": [
+                                4,
+                                0,
+                                0,
+                                0
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "HJZyV",
+                                  "name": "Label",
+                                  "fill": "$m3-on-surface-variant",
+                                  "content": "03",
+                                  "lineHeight": 1.364,
+                                  "fontFamily": "$font-mono",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal",
+                                  "letterSpacing": 1.2
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "shEbd",
+                              "name": "Text",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 4,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "XEumQ",
+                                  "name": "Title",
+                                  "fill": "$m3-on-surface",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Keep only the account's",
+                                  "lineHeight": 1.353,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 17,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "Y4eZIy",
+                                  "name": "Body",
+                                  "fill": "$m3-on-surface-variant",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Deletes every entry on this phone and replaces it with your account's ledger.",
+                                  "lineHeight": 1.375,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 15,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "zoFsZ",
+                      "x": 146,
+                      "y": 901,
+                      "name": "Gesture handle",
+                      "fill": "$m3-on-surface-variant",
+                      "width": 120,
+                      "height": 4
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "note",
+              "id": "tm1nx",
+              "name": "Note",
+              "width": 600,
+              "height": 70,
+              "content": "Android captured live (emulator signed in with a ledger on both sides). iOS built from source (apps/native/src/screens/auth/adopt.tsx + FirstRun) with the Android geometry; not reachable live on the iOS capture device."
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "wtyIf",
+          "name": "Ledger adoption · confirm",
+          "layout": "vertical",
+          "gap": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "FObQJ",
+              "name": "Label",
+              "fill": "#6b6557",
+              "content": "Ledger adoption · confirm",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "Ay6Ln",
+              "name": "Variants",
+              "gap": 32,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "RMHGv",
+                  "name": "Ledger adoption · confirm · iOS · light",
+                  "theme": {
+                    "platform": "ios",
+                    "mode": "light"
+                  },
+                  "clip": true,
+                  "width": 402,
+                  "height": 874,
+                  "fill": "$background",
+                  "cornerRadius": 48,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "PBR21",
+                      "type": "ref",
+                      "ref": "RZCb5",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "i24RK",
+                      "x": 24,
+                      "y": 118,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "TWO LEDGERS",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "unB0n",
+                      "x": 24,
+                      "y": 141,
+                      "name": "Title",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 354,
+                      "content": "This deletes entries",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "G4yiKh",
+                      "x": 24,
+                      "y": 175,
+                      "name": "Body",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 354,
+                      "content": "Your account's entries will be deleted and cannot be recovered. This phone's ledger is what remains.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "m03Dpe",
+                      "x": 24,
+                      "y": 461,
+                      "name": "Keep both instead",
+                      "width": 354,
+                      "height": 50,
+                      "fill": "$accent",
+                      "cornerRadius": 25,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "q74mK3",
+                          "name": "Label",
+                          "fill": "$accent-foreground",
+                          "content": "Keep both instead",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "H3ALCg",
+                      "x": 24,
+                      "y": 523,
+                      "name": "Delete and continue",
+                      "width": 354,
+                      "height": 52,
+                      "cornerRadius": 26,
+                      "stroke": "$danger",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "N1C7Zl",
+                          "name": "Label",
+                          "fill": "$danger",
+                          "content": "Delete and continue",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "ZKC32",
+                      "x": 134,
+                      "y": 861,
+                      "name": "Home indicator",
+                      "fill": "$foreground",
+                      "width": 134,
+                      "height": 5
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "mAPCT",
+                  "name": "Ledger adoption · confirm · iOS · dark",
+                  "theme": {
+                    "platform": "ios",
+                    "mode": "dark"
+                  },
+                  "clip": true,
+                  "width": 402,
+                  "height": 874,
+                  "fill": "$background",
+                  "cornerRadius": 48,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "T7HTka",
+                      "type": "ref",
+                      "ref": "RZCb5",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "q1XP4T",
+                      "x": 24,
+                      "y": 118,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "TWO LEDGERS",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "EFfU3",
+                      "x": 24,
+                      "y": 141,
+                      "name": "Title",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 354,
+                      "content": "This deletes entries",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "yqHNa",
+                      "x": 24,
+                      "y": 175,
+                      "name": "Body",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 354,
+                      "content": "Your account's entries will be deleted and cannot be recovered. This phone's ledger is what remains.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "PfTlH",
+                      "x": 24,
+                      "y": 461,
+                      "name": "Keep both instead",
+                      "width": 354,
+                      "height": 50,
+                      "fill": "$accent",
+                      "cornerRadius": 25,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "xpV6w",
+                          "name": "Label",
+                          "fill": "$accent-foreground",
+                          "content": "Keep both instead",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "rEiYR",
+                      "x": 24,
+                      "y": 523,
+                      "name": "Delete and continue",
+                      "width": 354,
+                      "height": 52,
+                      "cornerRadius": 26,
+                      "stroke": "$danger",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "vM26M",
+                          "name": "Label",
+                          "fill": "$danger",
+                          "content": "Delete and continue",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "DflZx",
+                      "x": 134,
+                      "y": 861,
+                      "name": "Home indicator",
+                      "fill": "$foreground",
+                      "width": 134,
+                      "height": 5
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Op3rz",
+                  "name": "Ledger adoption · confirm · Android · light",
+                  "theme": {
+                    "platform": "android",
+                    "mode": "light"
+                  },
+                  "clip": true,
+                  "width": 412,
+                  "height": 915,
+                  "fill": "$m3-surface",
+                  "cornerRadius": 28,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "keWwH",
+                      "type": "ref",
+                      "ref": "BCCA1",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "LDRDu",
+                      "x": 23.9,
+                      "y": 126.3,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "TWO LEDGERS",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "Jr98N",
+                      "x": 23.9,
+                      "y": 150,
+                      "name": "Title",
+                      "fill": "$m3-on-surface",
+                      "textGrowth": "fixed-width",
+                      "width": 363.8,
+                      "content": "This deletes entries",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "GBLT9",
+                      "x": 23.9,
+                      "y": 183.9,
+                      "name": "Body",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 363.8,
+                      "content": "Your account's entries will be deleted and cannot be recovered. This phone's ledger is what remains.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ygS1C",
+                      "x": 23.9,
+                      "y": 491.4,
+                      "name": "Keep both instead",
+                      "width": 363.8,
+                      "height": 50,
+                      "fill": "$m3-primary",
+                      "cornerRadius": 25,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "bRO77",
+                          "name": "Label",
+                          "fill": "$m3-on-primary",
+                          "content": "Keep both instead",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "UEiUE",
+                      "x": 23.9,
+                      "y": 553.6,
+                      "name": "Delete and continue",
+                      "width": 363.8,
+                      "height": 52,
+                      "cornerRadius": 26,
+                      "stroke": "$m3-danger",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "wp2uw",
+                          "name": "Label",
+                          "fill": "$m3-danger",
+                          "content": "Delete and continue",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "WtFCJ",
+                      "x": 146,
+                      "y": 901,
+                      "name": "Gesture handle",
+                      "fill": "$m3-on-surface-variant",
+                      "width": 120,
+                      "height": 4
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "M1dhp",
+                  "name": "Ledger adoption · confirm · Android · dark",
+                  "theme": {
+                    "platform": "android",
+                    "mode": "dark"
+                  },
+                  "clip": true,
+                  "width": 412,
+                  "height": 915,
+                  "fill": "$m3-surface",
+                  "cornerRadius": 28,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "E8Utz",
+                      "type": "ref",
+                      "ref": "BCCA1",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "uRr0E",
+                      "x": 23.9,
+                      "y": 126.3,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "TWO LEDGERS",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "E6A0Pc",
+                      "x": 23.9,
+                      "y": 150,
+                      "name": "Title",
+                      "fill": "$m3-on-surface",
+                      "textGrowth": "fixed-width",
+                      "width": 363.8,
+                      "content": "This deletes entries",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "aH2BV",
+                      "x": 23.9,
+                      "y": 183.9,
+                      "name": "Body",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 363.8,
+                      "content": "Your account's entries will be deleted and cannot be recovered. This phone's ledger is what remains.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "k54Efa",
+                      "x": 23.9,
+                      "y": 491.4,
+                      "name": "Keep both instead",
+                      "width": 363.8,
+                      "height": 50,
+                      "fill": "$m3-primary",
+                      "cornerRadius": 25,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "H3nLXK",
+                          "name": "Label",
+                          "fill": "$m3-on-primary",
+                          "content": "Keep both instead",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "RvGv0",
+                      "x": 23.9,
+                      "y": 553.6,
+                      "name": "Delete and continue",
+                      "width": 363.8,
+                      "height": 52,
+                      "cornerRadius": 26,
+                      "stroke": "$m3-danger",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "c2mgC",
+                          "name": "Label",
+                          "fill": "$m3-danger",
+                          "content": "Delete and continue",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "YEjQH",
+                      "x": 146,
+                      "y": 901,
+                      "name": "Gesture handle",
+                      "fill": "$m3-on-surface-variant",
+                      "width": 120,
+                      "height": 4
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "note",
+              "id": "r8U4M8",
+              "name": "Note",
+              "width": 600,
+              "height": 70,
+              "content": "Android captured live (emulator signed in with a ledger on both sides). iOS built from source (apps/native/src/screens/auth/adopt.tsx + FirstRun) with the Android geometry; not reachable live on the iOS capture device."
             }
           ]
         }
