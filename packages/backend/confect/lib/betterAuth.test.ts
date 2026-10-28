@@ -167,22 +167,20 @@ function emailAuth() {
     const t = convexTest(schema, modules);
     betterAuthTest.register(t);
     rateLimiterTest.register(t);
-    return async (path: string, body: Record<string, string>, language = "en") =>
-        await t.run(async (ctx) => {
-            const response = await createAuth(ctx).handler(
-                new Request(`http://localhost:3000/api/auth${path}`, {
-                    body: JSON.stringify(body),
-                    headers: {
-                        "accept-language": language,
-                        "content-type": "application/json",
-                        origin: "http://localhost:3000",
-                    },
-                    method: "POST",
-                })
-            );
-            const json: { code?: string; token?: string | null } = await response.json();
-            return { ...json, status: response.status };
+    // Through the HTTP route, as in production: convex-test rejects `fetch` (the email send) inside `t.run`.
+    return async (path: string, body: Record<string, string>, language = "en") => {
+        const response = await t.fetch(`/api/auth${path}`, {
+            body: JSON.stringify(body),
+            headers: {
+                "accept-language": language,
+                "content-type": "application/json",
+                origin: "http://localhost:3000",
+            },
+            method: "POST",
         });
+        const json: { code?: string; token?: string | null } = await response.json();
+        return { ...json, status: response.status };
+    };
 }
 
 const codeIn = (email: SentEmail | undefined) => email?.text.match(/\d{6}/)?.[0] ?? "";

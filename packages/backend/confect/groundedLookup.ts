@@ -215,7 +215,7 @@ export const runGroundedLookupCall = Effect.fn("GroundedLookup.runCall")(functio
     };
 });
 
-export type GroundedLookupCtx = Pick<ActionCtx, "runQuery" | "runMutation">;
+export type GroundedLookupCtx = Pick<ActionCtx, "runQuery" | "runMutation" | "runAction" | "meta">;
 
 export const groundedAnswer: (
     ctx: GroundedLookupCtx,

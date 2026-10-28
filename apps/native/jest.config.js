@@ -38,7 +38,7 @@ const projectFor = (preset) => ({
         "\\.mjs$": preset.transform["\\.[jt]sx?$"],
     },
     transformIgnorePatterns: [
-        "/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-base|standard-navigation|uniwind|@legendapp/list|@hugeicons/react-native|drizzle-orm|intlayer|react-native-intlayer|dinero.js|effect|@effect|number-flow-react-native|convex|@convex-dev/better-auth|@better-auth|better-auth|@noble|jose|nanostores|panelui-native|lucide-react-native|@revenuecat|react-native-purchases|@material))",
+        "/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-base|standard-navigation|uniwind|@legendapp/list|@hugeicons/react-native|drizzle-orm|intlayer|react-native-intlayer|zod|dinero.js|effect|@effect|number-flow-react-native|convex|@convex-dev/better-auth|@better-auth|better-auth|@noble|jose|nanostores|panelui-native|lucide-react-native|@revenuecat|react-native-purchases|@material))",
     ],
 });
 
