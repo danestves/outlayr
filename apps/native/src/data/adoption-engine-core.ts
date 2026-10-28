@@ -160,8 +160,6 @@ export const discardAccountLedger = Effect.fn("AdoptionEngine.discardAccountLedg
     for (const table of SYNCED_TABLES) {
         const local = localByTable.get(table) ?? new Map<string, Row>();
         for (const row of log.values()) {
-            // `appMeta` takes no tombstone (the server's push schema refuses one) and no lift: `drainOutbox` stamps it
-            // with the enqueue time, later than anything already there.
             if (row.table !== table || row.deletedAt !== null || table === "appMeta") {
                 continue;
             }
