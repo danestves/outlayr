@@ -4,6 +4,7 @@ import type { Href } from "expo-router";
 import { useRef, useState } from "react";
 import { Linking, Platform } from "react-native";
 
+import { AiConsentPromptSheet } from "@/components/ai-consent";
 import { ImportSheet } from "@/components/import-sheet/import-sheet";
 import type { ImportSheetHandle } from "@/components/import-sheet/import-sheet";
 import { LinkRow, PickerRow, SettingsSection, ToggleRow } from "@/components/list/list-row";
@@ -74,6 +75,7 @@ export function Settings() {
     const { isPro } = useRevenueCat();
     const importSheetRef = useRef<ImportSheetHandle>(null);
     const [lockPending, setLockPending] = useState<boolean | null>(null);
+    const [consentFor, setConsentFor] = useState<"smartFill" | "sendToAi" | null>(null);
     const toggleAppLock = useAtomAction(toggleAppLockCommand, {
         onSettled: () => setLockPending(null),
         onSuccess: (messageKey) => {
@@ -269,14 +271,15 @@ export function Settings() {
                 <ToggleRow
                     icon="Sparkles"
                     onValueChange={(next) => {
+                        if (next && !aiConsent) {
+                            setConsentFor("smartFill");
+                            return;
+                        }
                         setBool({ db, key: "aiEnrichment", value: next });
                         setBool({ db, key: "groundedLookup", value: next });
-                        if (next) {
-                            setBool({ db, key: "aiConsentV2", value: true });
-                        }
                     }}
                     title={t("settings.smartFill.title")}
-                    value={smartFill}
+                    value={smartFill || consentFor === "smartFill"}
                 />
             </SettingsSection>
 
@@ -312,13 +315,13 @@ export function Settings() {
                     icon="Sparkles"
                     onValueChange={(next) => {
                         if (next) {
-                            setBool({ db, key: "aiConsentV2", value: true });
+                            setConsentFor("sendToAi");
                         } else {
                             saveAiConsent({ allowed: false, db });
                         }
                     }}
                     title={t("settings.row.sendToAi")}
-                    value={aiConsent}
+                    value={aiConsent || consentFor === "sendToAi"}
                 />
                 <PickerRow
                     icon="Tap01"
@@ -385,6 +388,19 @@ export function Settings() {
                 />
             </SettingsSection>
             <ImportSheet ref={importSheetRef} />
+            <AiConsentPromptSheet
+                onAnswer={(allowed) => {
+                    if (allowed) {
+                        saveAiConsent({ allowed, db });
+                        if (consentFor === "smartFill") {
+                            setBool({ db, key: "aiEnrichment", value: true });
+                            setBool({ db, key: "groundedLookup", value: true });
+                        }
+                    }
+                    setConsentFor(null);
+                }}
+                open={consentFor !== null}
+            />
         </SettingsScreen>
     );
 }
