@@ -162662,6 +162662,583 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "YYVjt",
+          "name": "Import installments · signed in",
+          "layout": "vertical",
+          "gap": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "ddV0Y",
+              "name": "Label",
+              "fill": "#6b6557",
+              "content": "Import installments · signed in (installments/scan?accountId=acc-apple)",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "grWkL",
+              "name": "Variants",
+              "gap": 32,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "J79UXK",
+                  "name": "Import installments · signed in · iOS · light",
+                  "theme": {
+                    "platform": "ios",
+                    "mode": "light"
+                  },
+                  "clip": true,
+                  "width": 402,
+                  "height": 874,
+                  "fill": "$sheet-backdrop",
+                  "cornerRadius": 48,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "Otm5Y",
+                      "type": "ref",
+                      "ref": "RZCb5",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Wloh4",
+                      "x": 0,
+                      "y": 62,
+                      "name": "Sheet",
+                      "clip": true,
+                      "width": 402,
+                      "height": 812,
+                      "fill": "$background",
+                      "cornerRadius": [
+                        38,
+                        38,
+                        0,
+                        0
+                      ],
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 24,
+                          "id": "BaTSG",
+                          "x": 340,
+                          "y": 14,
+                          "name": "Close (native glass)",
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "assets/chrome/scan-close-ios-light.png",
+                            "mode": "cover"
+                          },
+                          "width": 48,
+                          "height": 48
+                        },
+                        {
+                          "type": "text",
+                          "id": "PlzpH",
+                          "x": 0,
+                          "y": 368,
+                          "name": "Title",
+                          "fill": "$foreground",
+                          "textGrowth": "fixed-width",
+                          "width": 402,
+                          "content": "Import from a screenshot",
+                          "lineHeight": 1.3,
+                          "textAlign": "center",
+                          "fontFamily": "$font-body",
+                          "fontSize": 20,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "x1G45",
+                          "x": 0,
+                          "y": 402.1,
+                          "name": "Intro",
+                          "fill": "$muted",
+                          "textGrowth": "fixed-width",
+                          "width": 402,
+                          "content": "A screenshot of the order's payment plan.",
+                          "lineHeight": 1.375,
+                          "textAlign": "center",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "WlgZe",
+                          "x": 20.1,
+                          "y": 734.2,
+                          "name": "Choose screenshot",
+                          "width": 361.8,
+                          "height": 43.7,
+                          "fill": "$accent",
+                          "cornerRadius": 21.85,
+                          "gap": 8,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "eZk71",
+                              "name": "Icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "image",
+                              "library": "Material Symbols Rounded",
+                              "weight": 400,
+                              "fill": "$accent-foreground"
+                            },
+                            {
+                              "type": "text",
+                              "id": "U63eV",
+                              "name": "Label",
+                              "fill": "$accent-foreground",
+                              "content": "Choose screenshot",
+                              "fontFamily": "$font-body",
+                              "fontSize": 16,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "nCSBK",
+                      "x": 134,
+                      "y": 861,
+                      "name": "Home indicator",
+                      "fill": "$foreground",
+                      "width": 134,
+                      "height": 5
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "a7dKf3",
+                  "name": "Import installments · signed in · iOS · dark",
+                  "theme": {
+                    "platform": "ios",
+                    "mode": "dark"
+                  },
+                  "clip": true,
+                  "width": 402,
+                  "height": 874,
+                  "fill": "$sheet-backdrop",
+                  "cornerRadius": 48,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "i3ug6f",
+                      "type": "ref",
+                      "ref": "RZCb5",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "frame",
+                      "id": "W8l8e9",
+                      "x": 0,
+                      "y": 62,
+                      "name": "Sheet",
+                      "clip": true,
+                      "width": 402,
+                      "height": 812,
+                      "fill": "$background",
+                      "cornerRadius": [
+                        38,
+                        38,
+                        0,
+                        0
+                      ],
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 24,
+                          "id": "xVwoz",
+                          "x": 340,
+                          "y": 14,
+                          "name": "Close (native glass)",
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "assets/chrome/scan-close-ios-dark.png",
+                            "mode": "cover"
+                          },
+                          "width": 48,
+                          "height": 48
+                        },
+                        {
+                          "type": "text",
+                          "id": "aZz1F",
+                          "x": 0,
+                          "y": 368,
+                          "name": "Title",
+                          "fill": "$foreground",
+                          "textGrowth": "fixed-width",
+                          "width": 402,
+                          "content": "Import from a screenshot",
+                          "lineHeight": 1.3,
+                          "textAlign": "center",
+                          "fontFamily": "$font-body",
+                          "fontSize": 20,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "D36UW",
+                          "x": 0,
+                          "y": 402.1,
+                          "name": "Intro",
+                          "fill": "$muted",
+                          "textGrowth": "fixed-width",
+                          "width": 402,
+                          "content": "A screenshot of the order's payment plan.",
+                          "lineHeight": 1.375,
+                          "textAlign": "center",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "flClP",
+                          "x": 20.1,
+                          "y": 734.2,
+                          "name": "Choose screenshot",
+                          "width": 361.8,
+                          "height": 43.7,
+                          "fill": "$accent",
+                          "cornerRadius": 21.85,
+                          "gap": 8,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "LRD5X",
+                              "name": "Icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "image",
+                              "library": "Material Symbols Rounded",
+                              "weight": 400,
+                              "fill": "$accent-foreground"
+                            },
+                            {
+                              "type": "text",
+                              "id": "eWbZN",
+                              "name": "Label",
+                              "fill": "$accent-foreground",
+                              "content": "Choose screenshot",
+                              "fontFamily": "$font-body",
+                              "fontSize": 16,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "esYwb",
+                      "x": 134,
+                      "y": 861,
+                      "name": "Home indicator",
+                      "fill": "$foreground",
+                      "width": 134,
+                      "height": 5
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "wPDLK",
+                  "name": "Import installments · signed in · Android · light",
+                  "theme": {
+                    "platform": "android",
+                    "mode": "light"
+                  },
+                  "clip": true,
+                  "width": 412,
+                  "height": 915,
+                  "fill": "$m3-surface",
+                  "cornerRadius": 28,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "f2WmY",
+                      "type": "ref",
+                      "ref": "BCCA1",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0,
+                      "descendants": {
+                        "zoDwt": {
+                          "fill": "$m3-on-surface"
+                        },
+                        "nAgO5": {
+                          "fill": "$m3-on-surface"
+                        },
+                        "jkg37": {
+                          "fill": "$m3-on-surface"
+                        },
+                        "KlPea": {
+                          "fill": "$m3-on-surface"
+                        }
+                      }
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "LmjwZ",
+                      "x": 0,
+                      "y": 56,
+                      "name": "Close (native)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/modal-close-android-light.png",
+                        "mode": "cover"
+                      },
+                      "width": 56,
+                      "height": 52
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "DZ74x",
+                      "x": 154,
+                      "y": 901,
+                      "name": "Gesture handle",
+                      "fill": "$m3-on-surface",
+                      "width": 104,
+                      "height": 4
+                    },
+                    {
+                      "type": "text",
+                      "id": "flIXR",
+                      "x": 0,
+                      "y": 451.1,
+                      "name": "Title",
+                      "fill": "$m3-on-surface",
+                      "textGrowth": "fixed-width",
+                      "width": 412,
+                      "content": "Import from a screenshot",
+                      "lineHeight": 1.3,
+                      "textAlign": "center",
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "UxBDP",
+                      "x": 0,
+                      "y": 485.9,
+                      "name": "Intro",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 412,
+                      "content": "A screenshot of the order's payment plan.",
+                      "lineHeight": 1.375,
+                      "textAlign": "center",
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "LQn7W",
+                      "x": 20.2,
+                      "y": 847.3,
+                      "name": "Choose screenshot",
+                      "width": 371.6,
+                      "height": 43.9,
+                      "fill": "$m3-primary",
+                      "cornerRadius": 21.95,
+                      "gap": 8,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "vMrPI",
+                          "name": "Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "image",
+                          "library": "Material Symbols Rounded",
+                          "weight": 400,
+                          "fill": "$m3-on-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "bF1f2",
+                          "name": "Label",
+                          "fill": "$m3-on-primary",
+                          "content": "Choose screenshot",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "F6wxb",
+                  "name": "Import installments · signed in · Android · dark",
+                  "theme": {
+                    "platform": "android",
+                    "mode": "dark"
+                  },
+                  "clip": true,
+                  "width": 412,
+                  "height": 915,
+                  "fill": "$m3-surface",
+                  "cornerRadius": 28,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "xaB3C",
+                      "type": "ref",
+                      "ref": "BCCA1",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0,
+                      "descendants": {
+                        "zoDwt": {
+                          "fill": "$m3-on-surface"
+                        },
+                        "nAgO5": {
+                          "fill": "$m3-on-surface"
+                        },
+                        "jkg37": {
+                          "fill": "$m3-on-surface"
+                        },
+                        "KlPea": {
+                          "fill": "$m3-on-surface"
+                        }
+                      }
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "FFeUw",
+                      "x": 0,
+                      "y": 56,
+                      "name": "Close (native)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/modal-close-android-dark.png",
+                        "mode": "cover"
+                      },
+                      "width": 56,
+                      "height": 52
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "vzosM",
+                      "x": 154,
+                      "y": 901,
+                      "name": "Gesture handle",
+                      "fill": "$m3-on-surface",
+                      "width": 104,
+                      "height": 4
+                    },
+                    {
+                      "type": "text",
+                      "id": "h6diZ",
+                      "x": 0,
+                      "y": 451.1,
+                      "name": "Title",
+                      "fill": "$m3-on-surface",
+                      "textGrowth": "fixed-width",
+                      "width": 412,
+                      "content": "Import from a screenshot",
+                      "lineHeight": 1.3,
+                      "textAlign": "center",
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "KUT7t",
+                      "x": 0,
+                      "y": 485.9,
+                      "name": "Intro",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 412,
+                      "content": "A screenshot of the order's payment plan.",
+                      "lineHeight": 1.375,
+                      "textAlign": "center",
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "g4vUlw",
+                      "x": 20.2,
+                      "y": 847.3,
+                      "name": "Choose screenshot",
+                      "width": 371.6,
+                      "height": 43.9,
+                      "fill": "$m3-primary",
+                      "cornerRadius": 21.95,
+                      "gap": 8,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "L5wCa",
+                          "name": "Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "image",
+                          "library": "Material Symbols Rounded",
+                          "weight": 400,
+                          "fill": "$m3-on-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "t9nmXl",
+                          "name": "Label",
+                          "fill": "$m3-on-primary",
+                          "content": "Choose screenshot",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
       ]
     },
