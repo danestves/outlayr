@@ -246981,6 +246981,1089 @@
         },
         {
           "type": "frame",
+          "id": "TlVzP",
+          "name": "Usage · signed in",
+          "layout": "vertical",
+          "gap": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "p63em",
+              "name": "Label",
+              "fill": "#6b6557",
+              "content": "Usage · signed in",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "clWsJ",
+              "name": "Variants",
+              "gap": 32,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "yrB0u",
+                  "name": "Usage · signed in · iOS · light",
+                  "theme": {
+                    "platform": "ios",
+                    "mode": "light"
+                  },
+                  "clip": true,
+                  "width": 402,
+                  "height": 874,
+                  "fill": "$background",
+                  "cornerRadius": 48,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "IP1JT",
+                      "type": "ref",
+                      "ref": "RZCb5",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "gbk2n",
+                      "x": 16,
+                      "y": 62,
+                      "name": "Back (native glass)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/settings-back-ios-light.png",
+                        "mode": "cover"
+                      },
+                      "width": 44,
+                      "height": 44
+                    },
+                    {
+                      "type": "text",
+                      "id": "gQZ14",
+                      "x": 0,
+                      "y": 73,
+                      "name": "Nav title",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 402,
+                      "content": "Usage",
+                      "textAlign": "center",
+                      "fontFamily": "Inter",
+                      "fontSize": 17,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "DpAOl",
+                      "x": 20,
+                      "y": 140,
+                      "name": "Captures left",
+                      "alignItems": "end",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "bmQua",
+                          "name": "Left",
+                          "fill": "$foreground",
+                          "content": "500",
+                          "lineHeight": 1.1,
+                          "fontFamily": "$font-body",
+                          "fontSize": 40,
+                          "fontWeight": "normal",
+                          "letterSpacing": -1
+                        },
+                        {
+                          "type": "text",
+                          "id": "x4wfB2",
+                          "name": "Capacity",
+                          "fill": "$muted",
+                          "content": " of 500 captures",
+                          "lineHeight": 1.6,
+                          "fontFamily": "$font-body",
+                          "fontSize": 20,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "CiF0R",
+                      "x": 20,
+                      "y": 192,
+                      "name": "Kinds",
+                      "fill": "$muted",
+                      "content": "Voice and receipts",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "mRYim",
+                      "x": 20,
+                      "y": 237.7,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "THIS HOUR",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "frame",
+                      "id": "AwSRF",
+                      "x": 20,
+                      "y": 258.7,
+                      "name": "Rows",
+                      "width": 362,
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "top": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "layout": "vertical",
+                      "padding": [
+                        1,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "f6zMo0",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Receipt scans",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "photo_camera",
+                              "fill": "$foreground",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Receipt scans",
+                              "fill": "$foreground"
+                            },
+                            "D7dG1": {
+                              "content": "50 / 50",
+                              "enabled": true
+                            },
+                            "INRhi": {
+                              "enabled": false
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": false
+                            }
+                          }
+                        },
+                        {
+                          "id": "PKSsT",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Voice",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "mic",
+                              "fill": "$foreground",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Voice",
+                              "fill": "$foreground"
+                            },
+                            "D7dG1": {
+                              "content": "60 / 60",
+                              "enabled": true
+                            },
+                            "INRhi": {
+                              "enabled": false
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": false
+                            }
+                          }
+                        },
+                        {
+                          "id": "I30Y3W",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Suggestions",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "star_shine",
+                              "fill": "$foreground",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Suggestions",
+                              "fill": "$foreground"
+                            },
+                            "D7dG1": {
+                              "content": "30 / 30",
+                              "enabled": true
+                            },
+                            "INRhi": {
+                              "enabled": false
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": false
+                            }
+                          }
+                        },
+                        {
+                          "id": "gC76d",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "CSV imports",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "upload_file",
+                              "fill": "$foreground",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "CSV imports",
+                              "fill": "$foreground"
+                            },
+                            "D7dG1": {
+                              "content": "10 / 10",
+                              "enabled": true
+                            },
+                            "INRhi": {
+                              "enabled": false
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": false
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "u4feqN",
+                      "x": 134,
+                      "y": 861,
+                      "name": "Home indicator",
+                      "fill": "$foreground",
+                      "width": 134,
+                      "height": 5
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "l7gLs",
+                  "name": "Usage · signed in · iOS · dark",
+                  "theme": {
+                    "platform": "ios",
+                    "mode": "dark"
+                  },
+                  "clip": true,
+                  "width": 402,
+                  "height": 874,
+                  "fill": "$background",
+                  "cornerRadius": 48,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "I4eknY",
+                      "type": "ref",
+                      "ref": "RZCb5",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "N9Wll7",
+                      "x": 16,
+                      "y": 62,
+                      "name": "Back (native glass)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/settings-back-ios-dark.png",
+                        "mode": "cover"
+                      },
+                      "width": 44,
+                      "height": 44
+                    },
+                    {
+                      "type": "text",
+                      "id": "B9hrF",
+                      "x": 0,
+                      "y": 73,
+                      "name": "Nav title",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 402,
+                      "content": "Usage",
+                      "textAlign": "center",
+                      "fontFamily": "Inter",
+                      "fontSize": 17,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "vKd8f",
+                      "x": 20,
+                      "y": 140,
+                      "name": "Captures left",
+                      "alignItems": "end",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "FfaXW",
+                          "name": "Left",
+                          "fill": "$foreground",
+                          "content": "500",
+                          "lineHeight": 1.1,
+                          "fontFamily": "$font-body",
+                          "fontSize": 40,
+                          "fontWeight": "normal",
+                          "letterSpacing": -1
+                        },
+                        {
+                          "type": "text",
+                          "id": "cCwrb",
+                          "name": "Capacity",
+                          "fill": "$muted",
+                          "content": " of 500 captures",
+                          "lineHeight": 1.6,
+                          "fontFamily": "$font-body",
+                          "fontSize": 20,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "EHNfM",
+                      "x": 20,
+                      "y": 192,
+                      "name": "Kinds",
+                      "fill": "$muted",
+                      "content": "Voice and receipts",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "igMOu",
+                      "x": 20,
+                      "y": 237.7,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "THIS HOUR",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "frame",
+                      "id": "rwgKG",
+                      "x": 20,
+                      "y": 258.7,
+                      "name": "Rows",
+                      "width": 362,
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "top": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "layout": "vertical",
+                      "padding": [
+                        1,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "dKvNa",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Receipt scans",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "photo_camera",
+                              "fill": "$foreground",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Receipt scans",
+                              "fill": "$foreground"
+                            },
+                            "D7dG1": {
+                              "content": "50 / 50",
+                              "enabled": true
+                            },
+                            "INRhi": {
+                              "enabled": false
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": false
+                            }
+                          }
+                        },
+                        {
+                          "id": "IN887",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Voice",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "mic",
+                              "fill": "$foreground",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Voice",
+                              "fill": "$foreground"
+                            },
+                            "D7dG1": {
+                              "content": "60 / 60",
+                              "enabled": true
+                            },
+                            "INRhi": {
+                              "enabled": false
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": false
+                            }
+                          }
+                        },
+                        {
+                          "id": "vWOPp",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Suggestions",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "star_shine",
+                              "fill": "$foreground",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Suggestions",
+                              "fill": "$foreground"
+                            },
+                            "D7dG1": {
+                              "content": "30 / 30",
+                              "enabled": true
+                            },
+                            "INRhi": {
+                              "enabled": false
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": false
+                            }
+                          }
+                        },
+                        {
+                          "id": "ddTle",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "CSV imports",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "upload_file",
+                              "fill": "$foreground",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "CSV imports",
+                              "fill": "$foreground"
+                            },
+                            "D7dG1": {
+                              "content": "10 / 10",
+                              "enabled": true
+                            },
+                            "INRhi": {
+                              "enabled": false
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": false
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "b6frz",
+                      "x": 134,
+                      "y": 861,
+                      "name": "Home indicator",
+                      "fill": "$foreground",
+                      "width": 134,
+                      "height": 5
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "x9MwIg",
+                  "name": "Usage · signed in · Android · light",
+                  "theme": {
+                    "platform": "android",
+                    "mode": "light"
+                  },
+                  "clip": true,
+                  "width": 412,
+                  "height": 915,
+                  "fill": "$m3-surface",
+                  "cornerRadius": 28,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "JYWTJ",
+                      "type": "ref",
+                      "ref": "BCCA1",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "cBE2Z",
+                      "x": 0,
+                      "y": 54,
+                      "name": "Back (native)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/settings-back-android-light.png",
+                        "mode": "cover"
+                      },
+                      "width": 56,
+                      "height": 52
+                    },
+                    {
+                      "type": "text",
+                      "id": "q9FTq",
+                      "x": 60,
+                      "y": 61,
+                      "name": "Title",
+                      "fill": "$m3-on-surface",
+                      "content": "Usage",
+                      "fontFamily": "$font-body",
+                      "fontSize": 22,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "dyT7M",
+                      "x": 16,
+                      "y": 130,
+                      "name": "Captures left",
+                      "alignItems": "end",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "evAKH",
+                          "name": "Left",
+                          "fill": "$m3-on-surface",
+                          "content": "500",
+                          "lineHeight": 1.1,
+                          "fontFamily": "$font-body",
+                          "fontSize": 40,
+                          "fontWeight": "normal",
+                          "letterSpacing": -1
+                        },
+                        {
+                          "type": "text",
+                          "id": "bCF7o",
+                          "name": "Capacity",
+                          "fill": "$m3-on-surface-variant",
+                          "content": " of 500 captures",
+                          "lineHeight": 1.3,
+                          "fontFamily": "$font-body",
+                          "fontSize": 20,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "WWBrm",
+                      "x": 16,
+                      "y": 183,
+                      "name": "Kinds",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "Voice and receipts",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "IZoq7",
+                      "x": 16,
+                      "y": 224,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "THIS HOUR",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "id": "Pqq4u",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Receipt scans",
+                      "x": 0,
+                      "y": 242,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 72
+                        },
+                        "P8ORXF": {
+                          "icon": "photo_camera",
+                          "fill": "$m3-on-surface-variant",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Receipt scans",
+                          "fill": "$m3-on-surface"
+                        },
+                        "SOmnC": {
+                          "content": "50 / 50",
+                          "enabled": true
+                        },
+                        "NwABC": {
+                          "enabled": false
+                        },
+                        "J5h2o": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "n8EANn",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Voice",
+                      "x": 0,
+                      "y": 314.3,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 72
+                        },
+                        "P8ORXF": {
+                          "icon": "mic",
+                          "fill": "$m3-on-surface-variant",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Voice",
+                          "fill": "$m3-on-surface"
+                        },
+                        "SOmnC": {
+                          "content": "60 / 60",
+                          "enabled": true
+                        },
+                        "NwABC": {
+                          "enabled": false
+                        },
+                        "J5h2o": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "JZ2sA",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Suggestions",
+                      "x": 0,
+                      "y": 386.6,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 72
+                        },
+                        "P8ORXF": {
+                          "icon": "star_shine",
+                          "fill": "$m3-on-surface-variant",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Suggestions",
+                          "fill": "$m3-on-surface"
+                        },
+                        "SOmnC": {
+                          "content": "30 / 30",
+                          "enabled": true
+                        },
+                        "NwABC": {
+                          "enabled": false
+                        },
+                        "J5h2o": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "v66lc",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "CSV imports",
+                      "x": 0,
+                      "y": 458.9,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 72
+                        },
+                        "P8ORXF": {
+                          "icon": "upload_file",
+                          "fill": "$m3-on-surface-variant",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "CSV imports",
+                          "fill": "$m3-on-surface"
+                        },
+                        "SOmnC": {
+                          "content": "10 / 10",
+                          "enabled": true
+                        },
+                        "NwABC": {
+                          "enabled": false
+                        },
+                        "J5h2o": {
+                          "enabled": false
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "W3Mj9D",
+                  "name": "Usage · signed in · Android · dark",
+                  "theme": {
+                    "platform": "android",
+                    "mode": "dark"
+                  },
+                  "clip": true,
+                  "width": 412,
+                  "height": 915,
+                  "fill": "$m3-surface",
+                  "cornerRadius": 28,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "gJ1Hn",
+                      "type": "ref",
+                      "ref": "BCCA1",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "GrooP",
+                      "x": 0,
+                      "y": 54,
+                      "name": "Back (native)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/settings-back-android-dark.png",
+                        "mode": "cover"
+                      },
+                      "width": 56,
+                      "height": 52
+                    },
+                    {
+                      "type": "text",
+                      "id": "YfOuz",
+                      "x": 60,
+                      "y": 61,
+                      "name": "Title",
+                      "fill": "$m3-on-surface",
+                      "content": "Usage",
+                      "fontFamily": "$font-body",
+                      "fontSize": 22,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "U99vaZ",
+                      "x": 16,
+                      "y": 130,
+                      "name": "Captures left",
+                      "alignItems": "end",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "GF6tn",
+                          "name": "Left",
+                          "fill": "$m3-on-surface",
+                          "content": "500",
+                          "lineHeight": 1.1,
+                          "fontFamily": "$font-body",
+                          "fontSize": 40,
+                          "fontWeight": "normal",
+                          "letterSpacing": -1
+                        },
+                        {
+                          "type": "text",
+                          "id": "M064K",
+                          "name": "Capacity",
+                          "fill": "$m3-on-surface-variant",
+                          "content": " of 500 captures",
+                          "lineHeight": 1.3,
+                          "fontFamily": "$font-body",
+                          "fontSize": 20,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "j9aYA",
+                      "x": 16,
+                      "y": 183,
+                      "name": "Kinds",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "Voice and receipts",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "X6fqFT",
+                      "x": 16,
+                      "y": 224,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "THIS HOUR",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "id": "wXvHH",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Receipt scans",
+                      "x": 0,
+                      "y": 242,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 72
+                        },
+                        "P8ORXF": {
+                          "icon": "photo_camera",
+                          "fill": "$m3-on-surface-variant",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Receipt scans",
+                          "fill": "$m3-on-surface"
+                        },
+                        "SOmnC": {
+                          "content": "50 / 50",
+                          "enabled": true
+                        },
+                        "NwABC": {
+                          "enabled": false
+                        },
+                        "J5h2o": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "nRN2n",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Voice",
+                      "x": 0,
+                      "y": 314.3,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 72
+                        },
+                        "P8ORXF": {
+                          "icon": "mic",
+                          "fill": "$m3-on-surface-variant",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Voice",
+                          "fill": "$m3-on-surface"
+                        },
+                        "SOmnC": {
+                          "content": "60 / 60",
+                          "enabled": true
+                        },
+                        "NwABC": {
+                          "enabled": false
+                        },
+                        "J5h2o": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "V7t7c",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Suggestions",
+                      "x": 0,
+                      "y": 386.6,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 72
+                        },
+                        "P8ORXF": {
+                          "icon": "star_shine",
+                          "fill": "$m3-on-surface-variant",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Suggestions",
+                          "fill": "$m3-on-surface"
+                        },
+                        "SOmnC": {
+                          "content": "30 / 30",
+                          "enabled": true
+                        },
+                        "NwABC": {
+                          "enabled": false
+                        },
+                        "J5h2o": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "FRS9r",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "CSV imports",
+                      "x": 0,
+                      "y": 458.9,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 72
+                        },
+                        "P8ORXF": {
+                          "icon": "upload_file",
+                          "fill": "$m3-on-surface-variant",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "CSV imports",
+                          "fill": "$m3-on-surface"
+                        },
+                        "SOmnC": {
+                          "content": "10 / 10",
+                          "enabled": true
+                        },
+                        "NwABC": {
+                          "enabled": false
+                        },
+                        "J5h2o": {
+                          "enabled": false
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
           "id": "GLLWH",
           "name": "Currency",
           "layout": "vertical",
