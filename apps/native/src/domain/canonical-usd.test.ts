@@ -1,7 +1,7 @@
-import { describe, expect, it } from "@jest/globals";
 import { canonicalUsd } from "@outlayr/money/canonical-usd";
 import type { RateLookup } from "@outlayr/money/rates";
 import * as Effect from "effect/Effect";
+import { describe, expect, it } from "vite-plus/test";
 
 function lookupOf(rows: Record<string, number>, seen?: { calls: number }): RateLookup {
     return (quote, _rateType, date) =>

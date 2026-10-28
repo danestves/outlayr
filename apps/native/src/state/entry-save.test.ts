@@ -1,6 +1,6 @@
-import { describe, expect, it } from "@jest/globals";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import { describe, expect, it } from "vite-plus/test";
 
 import { commitSavedEntry } from "./entry-save";
 import type { SavedEntryPlan } from "./entry-save";

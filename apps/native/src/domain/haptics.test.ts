@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 import { HAPTICS_EXCESSIVE, HAPTICS_OFF, HAPTICS_SUBTLE, hapticPlay } from "./haptics";
 import type { HapticEvent } from "./haptics";

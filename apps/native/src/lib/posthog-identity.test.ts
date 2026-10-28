@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { act, renderHook } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { AuthGate } from "@/domain/auth-gate";
 
@@ -8,19 +9,19 @@ import { usePostHogIdentity } from "./posthog-identity";
 const mockSession: { accountId: string | null; gate: AuthGate } = { accountId: null, gate: "restoring" };
 const mockIds = { anonymous: "anon-1", distinct: "anon-1", holdReady: false, initialized: false };
 let mockReleaseReady: () => void = () => undefined;
-const mockIdentify = jest.fn((id: string) => {
+const mockIdentify = vi.fn((id: string) => {
     mockIds.distinct = id;
 });
-const mockReset = jest.fn(() => {
+const mockReset = vi.fn(() => {
     mockIds.anonymous = "anon-2";
     mockIds.distinct = "anon-2";
 });
 const readId = (id: string) => (mockIds.initialized ? id : "");
 
-jest.mock("@/lib/auth-session", () => ({
+vi.mock("@/lib/auth-session", () => ({
     useAuthSession: () => ({ accountId: mockSession.accountId, gate: mockSession.gate }),
 }));
-jest.mock("@/lib/posthog", () => ({
+vi.mock("@/lib/posthog", () => ({
     posthog: {
         getAnonymousId: () => readId(mockIds.anonymous),
         getDistinctId: () => readId(mockIds.distinct),
@@ -69,14 +70,18 @@ describe("usePostHogIdentity", () => {
         await rerender(undefined);
         setSession(null, "signed-out");
         await rerender(undefined);
-        expect(mockReset).toHaveBeenCalledTimes(1);
+        await waitFor(() => {
+            expect(mockReset).toHaveBeenCalledOnce();
+        });
     });
 
     it("resets on a signed-out launch that still carries a persisted identity, once the SDK is ready", async () => {
         mockIds.distinct = "acct-1";
         setSession(null, "signed-out");
         await renderHook(usePostHogIdentity);
-        expect(mockReset).toHaveBeenCalledTimes(1);
+        await waitFor(() => {
+            expect(mockReset).toHaveBeenCalledOnce();
+        });
     });
 
     it("does not reset when the session signs in before the SDK is ready", async () => {

@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Effect from "effect/Effect";
 import type { NotificationRequestInput } from "expo-notifications";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { DatedReminder } from "./reminders";
 import { Reminders } from "./reminders";
@@ -10,12 +10,12 @@ const scheduleDatedReminder = (reminder: DatedReminder) =>
     Effect.runPromise(Reminders.pipe(Effect.flatMap((r) => r.schedule(reminder))));
 
 const mockCalls: string[] = [];
-const mockSchedule = jest.fn<(request: NotificationRequestInput) => Promise<string>>(async () => "id");
-const mockChannel = jest.fn<(id: string, channel: { name: string | null }) => Promise<null>>(async () => {
+const mockSchedule = vi.fn<(request: NotificationRequestInput) => Promise<string>>(async () => "id");
+const mockChannel = vi.fn<(id: string, channel: { name: string | null }) => Promise<null>>(async () => {
     mockCalls.push("channel");
     return null;
 });
-jest.mock("expo-notifications", () => ({
+vi.mock("expo-notifications", () => ({
     AndroidImportance: { DEFAULT: 4 },
     requestPermissionsAsync: async () => {
         mockCalls.push("request");

@@ -1,17 +1,17 @@
-import { describe, expect, it, jest } from "@jest/globals";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as Atom from "effect/reactivity/Atom";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import { createCommand, createRuntimeCommand, runAtomCommand, tapFailure } from "./atom-command";
 
 const runtime = Atom.runtime(Layer.empty);
 
 function reporter() {
-    return { error: jest.fn(), warn: jest.fn() };
+    return { error: vi.fn(), warn: vi.fn() };
 }
 
 describe("atom command", () => {
@@ -65,8 +65,8 @@ describe("atom command", () => {
         await runAtomCommand(registry, defect, undefined, {}, spy);
         await runAtomCommand(registry, failure, undefined, {}, spy);
 
-        expect(spy.error).toHaveBeenCalledTimes(1);
-        expect(spy.warn).toHaveBeenCalledTimes(1);
+        expect(spy.error).toHaveBeenCalledOnce();
+        expect(spy.warn).toHaveBeenCalledOnce();
         registry.dispose();
     });
 
@@ -109,7 +109,7 @@ describe("atom command", () => {
     });
 
     it("reports a defect to a save's failure callback, but not an interrupt", async () => {
-        const report = jest.fn<(error: Error) => void>();
+        const report = vi.fn<(error: Error) => void>();
 
         await Effect.runPromiseExit(Effect.die(new Error("repo threw")).pipe(tapFailure(report)));
         await Effect.runPromiseExit(Effect.interrupt.pipe(tapFailure(report)));

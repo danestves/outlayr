@@ -1,33 +1,33 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Effect from "effect/Effect";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { ImportEntry } from "@/data/transfer-core";
 
 import { attachImportLogos } from "./import-logo-attach";
 
-jest.mock<Partial<typeof import("@/domain/import-review-identity")>>("@/domain/import-review-identity", () => ({
+vi.mock<Partial<typeof import("@/domain/import-review-identity")>>(import("@/domain/import-review-identity"), () => ({
     reviewEntryIdentity: (note: string) => ({
         displayName: note,
         domain: note.toLowerCase().startsWith("spotify") ? "spotify.com" : null,
     }),
 }));
 
-jest.mock("@/lib/logo-cache", () => ({
+vi.mock("@/lib/logo-cache", () => ({
     logoCacheKey: (name: string, domain: string | null) => `${name}|${domain ?? ""}`.toLowerCase(),
-    readCachedLogo: jest.fn((key: string) =>
-        require("effect/Effect").succeed(
+    readCachedLogo: vi.fn((key: string) =>
+        Effect.succeed(
             key === "spotify.com|spotify.com" ? { bytes: new Uint8Array([7]), kind: "logo" } : { kind: "unknown" }
         )
     ),
 }));
 
-const mockPersist = jest.fn(async (_bytes: Uint8Array) => "file:///documents/logo-1.png");
-jest.mock<Partial<typeof import("@/lib/photo-storage")>>("@/lib/photo-storage", () => ({
-    persistLogoBytes: (bytes: Uint8Array) => require("effect/Effect").tryPromise(() => mockPersist(bytes)),
+const mockPersist = vi.fn(async (_bytes: Uint8Array) => "file:///documents/logo-1.png");
+vi.mock("@/lib/photo-storage", () => ({
+    persistLogoBytes: (bytes: Uint8Array) => Effect.tryPromise(() => mockPersist(bytes)),
 }));
 
-jest.mock<Partial<typeof import("@/theme/glow")>>("@/theme/glow", () => ({
-    glowFromImage: jest.fn(() => require("effect/Effect").succeed(["#1DB954"])),
+vi.mock<Partial<typeof import("@/theme/glow")>>(import("@/theme/glow"), () => ({
+    glowFromImage: vi.fn(() => Effect.succeed(["#1DB954"])),
 }));
 
 function entry(note: string): ImportEntry {

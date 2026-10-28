@@ -1,5 +1,5 @@
-import { describe, expect, it } from "@jest/globals";
 import { buildRateTable } from "@outlayr/money/valuation";
+import { describe, expect, it } from "vite-plus/test";
 
 import { spendingCalendarEntries } from "./spending-calendar";
 import type { SpendingCalendarRow } from "./spending-calendar";

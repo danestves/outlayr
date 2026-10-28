@@ -1,8 +1,8 @@
-import { beforeEach, describe, expect, it } from "@jest/globals";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import type BetterSqlite3 from "better-sqlite3";
 import { and, eq, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { accounts, exchangeRates, outbox, transactions, transfers } from "@/db/schema";

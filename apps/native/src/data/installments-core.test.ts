@@ -1,8 +1,8 @@
-import { beforeEach, describe, expect, it } from "@jest/globals";
 import { utcDateString } from "@outlayr/money/dates";
 import { buildRateTable } from "@outlayr/money/valuation";
 import { and, eq, isNotNull, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { exchangeRates, installmentPlans, installments, outsidePayments, transactions, transfers } from "@/db/schema";

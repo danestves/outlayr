@@ -1,6 +1,7 @@
-import { describe, expect, it, jest } from "@jest/globals";
+// @vitest-environment jsdom
 import { buildRateTable } from "@outlayr/money/valuation";
-import { renderHook } from "@testing-library/react-native";
+import { renderHook } from "@testing-library/react";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
@@ -8,13 +9,13 @@ import { migratedDatabase } from "@/db/test-database";
 
 import { useInsights } from "./use-insights";
 
-const mockUseValuation = jest.fn();
+const mockUseValuation = vi.fn();
 
-jest.mock<Partial<typeof import("@/i18n/context")>>("@/i18n/context", () => ({
+vi.mock<Partial<typeof import("@/i18n/context")>>(import("@/i18n/context"), () => ({
     useLanguage: () => ({ language: "en" }),
 }));
 
-jest.mock("./use-valuation", () => ({
+vi.mock("./use-valuation", () => ({
     useValuation: () => mockUseValuation(),
 }));
 

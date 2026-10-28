@@ -1,31 +1,32 @@
+// @vitest-environment jsdom
 import { RegistryContext } from "@effect/atom-react/RegistryContext";
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { act, render } from "@testing-library/react-native";
+import { act, render } from "@testing-library/react";
 import * as mockEffect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import type { ReactNode } from "react";
 import { Text } from "react-native";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { unusedDatabase as mockUnusedDatabase } from "@/db/test-database";
 
 const mockDatabase = mockUnusedDatabase();
-jest.mock("@/contexts/local-data-context", () => ({ useDatabase: () => mockDatabase }));
-jest.mock("@/lib/auth-session", () => ({ useAuthSession: () => ({ accountId: "acct-1" }) }));
-jest.mock("@/data/live-query", () => ({ useLiveValue: () => null }));
+vi.mock("@/contexts/local-data-context", () => ({ useDatabase: () => mockDatabase }));
+vi.mock("@/lib/auth-session", () => ({ useAuthSession: () => ({ accountId: "acct-1" }) }));
+vi.mock("@/data/live-query", () => ({ useLiveValue: () => null }));
 const mockPro = { locked: false, pending: false };
-jest.mock("@/hooks/use-pro-locked", () => ({
+vi.mock("@/hooks/use-pro-locked", () => ({
     useProLocked: () => mockPro.locked,
     useProPending: () => mockPro.pending,
 }));
 let mockRelease: () => void = () => undefined;
-const mockReconcile = jest.fn(
+const mockReconcile = vi.fn(
     () =>
         new Promise<string>((resolve) => {
             mockRelease = () => resolve("settled");
         })
 );
-jest.mock("@/state/lifecycle-commands", () => ({
+vi.mock("@/state/lifecycle-commands", () => ({
     completeAdoptionCommand: {},
     reconcileAdoption: () => mockEffect.promise(() => mockReconcile()),
 }));
@@ -59,7 +60,7 @@ describe("ledgerAdoptionProvider", () => {
             </Harness>
         );
         await act(async () => undefined);
-        expect(mockReconcile).toHaveBeenCalledTimes(1);
+        expect(mockReconcile).toHaveBeenCalledOnce();
 
         mockPro.pending = true;
         await rerender(
@@ -79,7 +80,7 @@ describe("ledgerAdoptionProvider", () => {
         );
         await act(async () => undefined);
 
-        expect(mockReconcile).toHaveBeenCalledTimes(1);
+        expect(mockReconcile).toHaveBeenCalledOnce();
         expect(getByText("resolving")).toBeTruthy();
 
         await act(async () => {

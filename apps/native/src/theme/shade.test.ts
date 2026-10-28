@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 import { SUGGESTED_CATEGORY_PRESETS } from "@/data/categories-core";
 

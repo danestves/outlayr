@@ -1,5 +1,6 @@
-import { describe, expect, it } from "@jest/globals";
-import { renderHook } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { renderHook } from "@testing-library/react";
+import { describe, expect, it } from "vite-plus/test";
 
 import { transactions, transfers } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";

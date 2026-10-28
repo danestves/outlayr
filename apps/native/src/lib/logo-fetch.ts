@@ -109,13 +109,7 @@ export const fetchMerchantImage = Effect.fn("LogoFetch.fetchMerchantImage")(func
     request: MerchantImageRequest
 ) {
     // Required lazily so importing this module does not pull expo-file-system into every consumer's graph.
-    let cache: typeof import("@/lib/logo-cache") | null = null;
-    try {
-        // SAFETY: untyped `require`, asserted to that module's own type.
-        cache = require("@/lib/logo-cache") as typeof import("@/lib/logo-cache");
-    } catch {
-        cache = null;
-    }
+    const cache = yield* Effect.tryPromise(() => import("@/lib/logo-cache")).pipe(Effect.orElseSucceed(() => null));
     const key = cache?.logoCacheKey(request.name.trim(), request.domain) ?? "";
     const cached = cache === null ? { kind: "unknown" as const } : yield* cache.readCachedLogo(key);
     if (cached.kind === "logo") {

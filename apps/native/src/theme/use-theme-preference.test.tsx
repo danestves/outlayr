@@ -1,20 +1,24 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { render } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { render } from "@testing-library/react";
 import { Text } from "react-native";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { THEME_OPTIONS, themePreferenceForValue, valueForThemePreference } from "./theme-preference";
 import { useApplyThemePreference } from "./use-theme-preference";
 
-const mockSetTheme = jest.fn();
+const mockSetTheme = vi.fn();
 const stored = { colorScheme: 0 };
 
-jest.mock<Partial<typeof import("uniwind")>>("uniwind", () => ({
+vi.mock<Partial<typeof import("uniwind")>>(import("uniwind"), () => ({
     Uniwind: { setTheme: (theme: string) => mockSetTheme(theme) } as unknown as typeof import("uniwind").Uniwind,
 }));
 
-jest.mock<Partial<typeof import("@/contexts/display-settings-context")>>("@/contexts/display-settings-context", () => ({
-    useSettingNumber: (key: string) => (key === "colorScheme" ? stored.colorScheme : 0),
-}));
+vi.mock<Partial<typeof import("@/contexts/display-settings-context")>>(
+    import("@/contexts/display-settings-context"),
+    () => ({
+        useSettingNumber: (key: string) => (key === "colorScheme" ? stored.colorScheme : 0),
+    })
+);
 
 function Probe() {
     return <Text testID="preference">{useApplyThemePreference()}</Text>;
@@ -43,17 +47,17 @@ describe("the stored colour scheme", () => {
 });
 
 describe("useApplyThemePreference", () => {
-    it("pushes the stored scheme into uniwind", async () => {
+    it("pushes the stored scheme into uniwind", () => {
         stored.colorScheme = valueForThemePreference("dark");
 
-        const { getByTestId } = await render(<Probe />);
+        const { getByTestId } = render(<Probe />);
 
         expect(mockSetTheme).toHaveBeenCalledWith("dark");
-        expect(getByTestId("preference").props.children).toBe("dark");
+        expect(getByTestId("preference").textContent).toBe("dark");
     });
 
-    it("follows the device when nothing has been stored", async () => {
-        await render(<Probe />);
+    it("follows the device when nothing has been stored", () => {
+        render(<Probe />);
 
         expect(mockSetTheme).toHaveBeenCalledWith("system");
     });

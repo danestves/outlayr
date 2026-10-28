@@ -2,7 +2,7 @@ import { readdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join, sep } from "node:path";
 
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 interface CompilerEvent {
     data?: string;

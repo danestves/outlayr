@@ -1,7 +1,7 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { startOfDay } from "@outlayr/money/calendar";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import * as Effect from "effect/Effect";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { setBoolSetting } from "@/data/settings-core";
 import type { Database } from "@/db/client";
@@ -13,11 +13,13 @@ import { Reminders } from "./reminders";
 import type { DatedReminder } from "./reminders";
 import { syncSubscriptionReminders } from "./subscription-reminder-sync";
 
+vi.mock("expo-notifications", () => ({}));
+
 const mockReminders = {
-    cancel: jest.fn<(ids: readonly string[]) => void>(),
-    pendingIds: jest.fn<() => string[]>(),
-    permission: jest.fn<() => ReminderPermission>(),
-    schedule: jest.fn<(reminder: DatedReminder) => void>(),
+    cancel: vi.fn<(ids: readonly string[]) => void>(),
+    pendingIds: vi.fn<() => string[]>(),
+    permission: vi.fn<() => ReminderPermission>(),
+    schedule: vi.fn<(reminder: DatedReminder) => void>(),
 };
 
 const sync = (db: Database, cancel = (ids: readonly string[]) => Effect.sync(() => mockReminders.cancel(ids))) =>

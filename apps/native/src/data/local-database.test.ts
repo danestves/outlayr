@@ -1,7 +1,7 @@
-import { describe, expect, it } from "@jest/globals";
 import BetterSqlite3 from "better-sqlite3";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import * as LocalDatabase from "@/data/local-database";
 import { UnmatchedMigrationLogError } from "@/db/legacy-migration-log";
@@ -9,6 +9,8 @@ import { LEGACY_MIGRATION_NAMES } from "@/db/legacy-migration-names";
 import { applyMigrations, testDatabase, withAsyncTransactions } from "@/db/test-database";
 
 import bundle from "../../drizzle/migrations";
+
+vi.mock("expo-localization", () => ({ getLocales: () => [] }));
 
 const BUNDLE_NAMES = Object.keys(bundle.migrations).sort();
 const LAST_LEGACY_MIGRATION = "20261025034640_0037_transaction_attachments";

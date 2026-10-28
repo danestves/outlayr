@@ -1,8 +1,8 @@
-import { describe, expect, it } from "@jest/globals";
 import BetterSqlite3 from "better-sqlite3";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import { localDataAtom, localDataState } from "@/contexts/local-data-context";
 import { getMeta, META_KEYS } from "@/data/app-meta-core";
@@ -10,6 +10,8 @@ import * as LocalDatabase from "@/data/local-database";
 import type { Database } from "@/db/client";
 import { testDatabase, withAsyncTransactions } from "@/db/test-database";
 import { appRuntime } from "@/lib/runtime";
+
+vi.mock("expo-localization", () => ({ getLocales: () => [] }));
 
 function emptyDatabase(): Database {
     const sqlite = new BetterSqlite3(":memory:");

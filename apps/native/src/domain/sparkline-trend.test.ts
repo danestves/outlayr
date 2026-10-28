@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 import { sparklineSeries } from "./log-sparkline";
 import { sparklineLabelKey, sparklineTrendKey } from "./sparkline-trend";

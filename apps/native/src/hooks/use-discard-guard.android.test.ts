@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { act, renderHook } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { act, renderHook } from "@testing-library/react";
 import { Alert } from "react-native";
 import type { AlertButton } from "react-native";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { SwipeDiscardRecovery } from "./use-discard-guard";
 import { useDiscardGuard } from "./use-discard-guard.android";
@@ -11,8 +12,8 @@ interface DetentEvent {
     data: { index: number; stable: boolean };
 }
 
-const mockPreventRemove = jest.fn<(prevent: boolean, callback: Prevented) => void>();
-const mockNotifyEditsDiscarded = jest.fn<(onUndo: () => void) => void>();
+const mockPreventRemove = vi.fn<(prevent: boolean, callback: Prevented) => void>();
+const mockNotifyEditsDiscarded = vi.fn<(onUndo: () => void) => void>();
 const mockGuardAtPop: boolean[] = [];
 const mockSheetListener: { current: ((event: DetentEvent) => void) | null } = { current: null };
 
@@ -21,7 +22,7 @@ function mockLastGuard(): { callback: Prevented; prevent: boolean } {
     return { callback, prevent };
 }
 
-jest.mock("expo-router", () => ({
+vi.mock("expo-router", () => ({
     usePreventRemove: (prevent: boolean, callback: Prevented) => {
         mockPreventRemove(prevent, callback);
         return () => undefined;
@@ -34,8 +35,8 @@ jest.mock("expo-router", () => ({
     }),
     useRouter: () => ({ back: () => mockGuardAtPop.push(mockLastGuard().prevent) }),
 }));
-jest.mock("@/i18n/context", () => ({ useTranslation: () => (key: string) => key }));
-jest.mock("@/components/edits-discarded-snackbar", () => ({
+vi.mock("@/i18n/context", () => ({ useTranslation: () => (key: string) => key }));
+vi.mock("@/components/edits-discarded-snackbar", () => ({
     notifyEditsDiscarded: (onUndo: () => void) => mockNotifyEditsDiscarded(onUndo),
 }));
 
@@ -61,7 +62,7 @@ async function dirtyGuard(recovery?: SwipeDiscardRecovery<string>) {
 
 describe("useDiscardGuard on Android", () => {
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
         mockGuardAtPop.length = 0;
         mockSheetListener.current = null;
     });
@@ -83,8 +84,8 @@ describe("useDiscardGuard on Android", () => {
 
     it.each(["POP"])("asks on %s and leaves on Discard once the lowered guard has rendered", async (type) => {
         // POP is a full-screen dialog's app-bar X: it is not a swipe.
-        const alert = jest.spyOn(Alert, "alert").mockReturnValue(undefined);
-        const repeat = jest.fn(() => mockGuardAtPop.push(mockLastGuard().prevent));
+        const alert = vi.spyOn(Alert, "alert").mockReturnValue(undefined);
+        const repeat = vi.fn(() => mockGuardAtPop.push(mockLastGuard().prevent));
         await dirtyGuard();
 
         mockLastGuard().callback({ data: { action: { type } }, repeat });
@@ -95,13 +96,13 @@ describe("useDiscardGuard on Android", () => {
             buttons.find((button) => button.style === "destructive")?.onPress?.();
         });
 
-        expect(repeat).toHaveBeenCalledTimes(1);
+        expect(repeat).toHaveBeenCalledOnce();
         expect(mockGuardAtPop).toStrictEqual([false]);
     });
 
     it("lets a sheet that reported itself hidden go without asking", async () => {
-        const alert = jest.spyOn(Alert, "alert").mockReturnValue(undefined);
-        const repeat = jest.fn();
+        const alert = vi.spyOn(Alert, "alert").mockReturnValue(undefined);
+        const repeat = vi.fn();
         await dirtyGuard();
 
         await sheet(HIDDEN);
@@ -110,7 +111,7 @@ describe("useDiscardGuard on Android", () => {
         });
 
         expect(alert).not.toHaveBeenCalled();
-        expect(repeat).toHaveBeenCalledTimes(1);
+        expect(repeat).toHaveBeenCalledOnce();
     });
 
     it("stands down while the sheet is dragged and comes back when it settles", async () => {
@@ -125,19 +126,19 @@ describe("useDiscardGuard on Android", () => {
     });
 
     it("offers a swiped-away sheet's edits back, and Undo restores them", async () => {
-        const restore = jest.fn<(draft: string) => void>();
+        const restore = vi.fn<(draft: string) => void>();
         await dirtyGuard({ restore, snapshot: () => "amount 12" });
 
         await sheet(DRAGGING, HIDDEN);
 
-        expect(mockNotifyEditsDiscarded).toHaveBeenCalledTimes(1);
+        expect(mockNotifyEditsDiscarded).toHaveBeenCalledOnce();
         mockNotifyEditsDiscarded.mock.calls[0]?.[0]();
         expect(restore).toHaveBeenCalledWith("amount 12");
     });
 
     it("offers nothing for a clean swipe or a drag that settles back", async () => {
-        const snapshot = jest.fn(() => "amount 12");
-        const recovery = { restore: jest.fn(), snapshot };
+        const snapshot = vi.fn(() => "amount 12");
+        const recovery = { restore: vi.fn(), snapshot };
         const clean = await renderHook(() => useDiscardGuard(recovery));
         await sheet(DRAGGING, HIDDEN);
         clean.unmount();

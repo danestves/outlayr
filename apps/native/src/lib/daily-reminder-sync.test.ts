@@ -1,10 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { eq, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import type { AppStateStatus } from "react-native";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { META_KEYS, setMeta } from "@/data/app-meta-core";
 import type { Database } from "@/db/client";
@@ -21,8 +21,8 @@ import { watchable } from "./test-watch";
 type ChangeListener = (event: { rowId: number; tableName: string }) => void;
 
 const mockChangeListeners = new Set<ChangeListener>();
-jest.mock("expo-sqlite", () => ({
-    ...jest.requireActual<object>("expo-sqlite"),
+vi.mock("expo-sqlite", async (importOriginal) => ({
+    ...(await importOriginal<object>()),
     addDatabaseChangeListener: (listener: ChangeListener) => {
         mockChangeListeners.add(listener);
         return {
@@ -33,15 +33,15 @@ jest.mock("expo-sqlite", () => ({
     },
 }));
 
-const flush = () => jest.advanceTimersByTimeAsync(0);
+const flush = () => vi.advanceTimersByTimeAsync(0);
 
 describe("daily reminder sync", () => {
     let db: Database;
     let registry: AtomRegistry.AtomRegistry;
     const appState = watchable<AppStateStatus>();
     const tableWrites = watchable<string>();
-    const arms = jest.fn<() => void>();
-    const syncs = jest.fn<() => void>();
+    const arms = vi.fn<() => void>();
+    const syncs = vi.fn<() => void>();
 
     const start = () => {
         const layer = Layer.mergeAll(
@@ -79,11 +79,11 @@ describe("daily reminder sync", () => {
         for (const listener of mockChangeListeners) {
             listener({ rowId: row.rowId, tableName: "appMeta" });
         }
-        await jest.advanceTimersByTimeAsync(PUBLISH_DEBOUNCE_MS);
+        await vi.advanceTimersByTimeAsync(PUBLISH_DEBOUNCE_MS);
     };
 
     beforeEach(() => {
-        jest.useFakeTimers();
+        vi.useFakeTimers();
         db = migratedDatabase();
         arms.mockReset();
         syncs.mockReset();
@@ -92,12 +92,12 @@ describe("daily reminder sync", () => {
     afterEach(() => {
         registry.dispose();
         freshEntries.settle("t1");
-        jest.useRealTimers();
+        vi.useRealTimers();
     });
 
     it("reconciles at launch and on every return to the foreground", async () => {
         await start();
-        expect(syncs).toHaveBeenCalledTimes(1);
+        expect(syncs).toHaveBeenCalledOnce();
 
         appState.emit("background");
         await flush();
@@ -111,13 +111,13 @@ describe("daily reminder sync", () => {
         await start();
 
         tableWrites.emit("transactions");
-        await jest.advanceTimersByTimeAsync(PUBLISH_DEBOUNCE_MS);
+        await vi.advanceTimersByTimeAsync(PUBLISH_DEBOUNCE_MS);
         expect(syncs).toHaveBeenCalledTimes(2);
         expect(arms).not.toHaveBeenCalled();
 
         freshEntries.mark("t1");
-        await jest.advanceTimersByTimeAsync(PUBLISH_DEBOUNCE_MS);
-        expect(arms).toHaveBeenCalledTimes(1);
+        await vi.advanceTimersByTimeAsync(PUBLISH_DEBOUNCE_MS);
+        expect(arms).toHaveBeenCalledOnce();
     });
 
     it("reconciles after a setting changes, not after sync bookkeeping", async () => {
@@ -125,7 +125,7 @@ describe("daily reminder sync", () => {
 
         await writeSetting(META_KEYS.syncedAt);
         await writeSetting(META_KEYS.syncCursor);
-        expect(syncs).toHaveBeenCalledTimes(1);
+        expect(syncs).toHaveBeenCalledOnce();
 
         await writeSetting("showNotifications");
         expect(syncs).toHaveBeenCalledTimes(2);
@@ -137,7 +137,7 @@ describe("daily reminder sync", () => {
         for (const listener of mockChangeListeners) {
             listener({ rowId: 9999, tableName: "appMeta" });
         }
-        await jest.advanceTimersByTimeAsync(PUBLISH_DEBOUNCE_MS);
+        await vi.advanceTimersByTimeAsync(PUBLISH_DEBOUNCE_MS);
 
         expect(syncs).toHaveBeenCalledTimes(2);
     });

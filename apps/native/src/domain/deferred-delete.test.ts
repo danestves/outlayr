@@ -1,6 +1,6 @@
-import { describe, expect, it } from "@jest/globals";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
+import { describe, expect, it } from "vite-plus/test";
 
 import { createDeferredDelete } from "./deferred-delete";
 import type { DeferredDeleteSnapshot } from "./deferred-delete";

@@ -9,5 +9,5 @@ Native and web read build-time variables through varlock. `apps/native/.env.sche
 - Metro keys its transform cache on file content, not on env values. After changing a value, start Metro with `--clear` (`vp run dev` already does).
 - Every native variable is `EXPO_PUBLIC_*`, so every one ships in the bundle. Do not mark one `@sensitive`: the plugin refuses to inline it and the read throws on a device.
 - `app.config.ts` runs in the Expo CLI, outside Babel, so varlock does not reach it. It keeps reading build variables from `process.env`.
-- Jest never runs the Babel plugin. `@/env` maps to `apps/native/jest/env-stub.js`, so suites run without any env.
+- Tests never run the Babel plugin. `@/env` maps to `apps/native/test/env.ts`, so suites run without any env.
 - `readConvexUrl` in `apps/native/src/lib/cloud-configuration.ts` trims pasted tabs and newlines and rejects the `example.convex.*` placeholders with a message that names the host. Varlock's `url` type does neither.

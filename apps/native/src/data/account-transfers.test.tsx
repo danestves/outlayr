@@ -1,8 +1,9 @@
-import { beforeEach, describe, expect, it } from "@jest/globals";
+// @vitest-environment jsdom
 import { accountBalance } from "@outlayr/money/account-balance";
 import { buildRateTable } from "@outlayr/money/valuation";
-import { render } from "@testing-library/react-native";
+import { render } from "@testing-library/react";
 import { Text } from "react-native";
+import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { accounts, transactions, transfers } from "@/db/schema";

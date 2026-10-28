@@ -1,6 +1,6 @@
-import { describe, expect, it, jest } from "@jest/globals";
 import { eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
@@ -54,7 +54,7 @@ async function readRow(db: Database, id: string) {
 
 function applyDeps(): ApplyDeps {
     return {
-        discard: jest.fn(),
+        discard: vi.fn(),
         fetchImage: () => Effect.succeed({ bytes: LOGO, kind: "logo" }),
         persist: () => Effect.succeed({ imageColor: "#123456", imageUri: "file:///photos/care4bag.jpg" }),
     };
@@ -95,7 +95,7 @@ describe("sendQueuedEnrichment", () => {
         await seedRow(db, "tx-2", "NYX*VenetisABEET");
         await Effect.runPromise(queueEnrichment(db, "tx-1"));
         await Effect.runPromise(queueEnrichment(db, "tx-2"));
-        const enqueue = jest.fn(
+        const enqueue = vi.fn(
             asCloudCall(async (_request: EnrichmentJobRequest): Promise<boolean> => {
                 throw new Error("offline");
             })
@@ -103,7 +103,7 @@ describe("sendQueuedEnrichment", () => {
 
         await Effect.runPromise(sendQueuedEnrichment(db, { enqueue, groundedLookup: true }));
 
-        expect(enqueue).toHaveBeenCalledTimes(1);
+        expect(enqueue).toHaveBeenCalledOnce();
         expect(JSON.parse((await Effect.runPromise(getMeta(db, META_KEYS.enrichmentOutbox))) ?? "null")).toStrictEqual([
             "tx-1",
             "tx-2",
@@ -150,7 +150,7 @@ describe("applyEnrichmentAnswer", () => {
         );
         await seedRow(db, "tx-1", "Care4Bag at the airport", { categoryId: mine, emoji: "🧳" });
         const deps = applyDeps();
-        const fetchImage = jest.fn(deps.fetchImage);
+        const fetchImage = vi.fn(deps.fetchImage);
 
         await Effect.runPromise(
             applyEnrichmentAnswer(db, { localId: "tx-1", name: "CARE4BAG AE", result: ANSWER }, { ...deps, fetchImage })

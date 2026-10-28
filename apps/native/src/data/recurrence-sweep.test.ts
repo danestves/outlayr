@@ -1,9 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import type { AppStateStatus } from "react-native";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { unusedDatabase } from "@/db/test-database";
 import { WatchAppState } from "@/lib/app-events";
@@ -12,16 +12,16 @@ import { watchable } from "@/lib/test-watch";
 
 import { layer as recurrenceSweepLayer, RecurrenceSweep, RecurrenceWalk } from "./recurrence-sweep";
 
-const flush = () => jest.advanceTimersByTimeAsync(0);
+const flush = () => vi.advanceTimersByTimeAsync(0);
 
 describe("recurrence sweep", () => {
     let registry: AtomRegistry.AtomRegistry;
     const appState = watchable<AppStateStatus>();
-    const backfills = jest.fn();
-    const onSwept = jest.fn();
+    const backfills = vi.fn();
+    const onSwept = vi.fn();
 
     beforeEach(() => {
-        jest.useFakeTimers();
+        vi.useFakeTimers();
         backfills.mockClear();
         onSwept.mockClear();
         const layer = Layer.mergeAll(
@@ -46,7 +46,7 @@ describe("recurrence sweep", () => {
 
     afterEach(() => {
         registry.dispose();
-        jest.useRealTimers();
+        vi.useRealTimers();
     });
 
     it("calls onSwept once per launch and foreground, walking only outside the cooldown", async () => {
@@ -57,16 +57,16 @@ describe("recurrence sweep", () => {
             appRuntime.atom(RecurrenceSweep.pipe(Effect.flatMap((sweep) => sweep.run(unusedDatabase(), swept))))
         );
         await flush();
-        expect(backfills).toHaveBeenCalledTimes(1);
-        expect(onSwept).toHaveBeenCalledTimes(1);
+        expect(backfills).toHaveBeenCalledOnce();
+        expect(onSwept).toHaveBeenCalledOnce();
 
-        await jest.advanceTimersByTimeAsync(10_000);
+        await vi.advanceTimersByTimeAsync(10_000);
         appState.emit("active");
         await flush();
-        expect(backfills).toHaveBeenCalledTimes(1);
+        expect(backfills).toHaveBeenCalledOnce();
         expect(onSwept).toHaveBeenCalledTimes(2);
 
-        await jest.advanceTimersByTimeAsync(60_000);
+        await vi.advanceTimersByTimeAsync(60_000);
         appState.emit("active");
         await flush();
         expect(backfills).toHaveBeenCalledTimes(2);

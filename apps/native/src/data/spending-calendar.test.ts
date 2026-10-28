@@ -1,18 +1,19 @@
-import { describe, expect, it, jest } from "@jest/globals";
+// @vitest-environment jsdom
 import { buildRateTable } from "@outlayr/money/valuation";
-import { renderHook } from "@testing-library/react-native";
+import { renderHook } from "@testing-library/react";
 import BetterSqlite3 from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import { transactions } from "@/db/schema";
 
 import { spendingCalendarQuery, useSpendingCalendar } from "./spending-calendar";
 import { useValuation } from "./use-valuation";
 
-jest.mock("./live-query", () => ({
+vi.mock("./live-query", () => ({
     useLiveQuery: (_table: unknown, build: () => { all: () => unknown[] }) => build().all(),
 }));
-jest.mock("./use-valuation", () => ({ useValuation: jest.fn() }));
+vi.mock("./use-valuation", () => ({ useValuation: vi.fn() }));
 
 type TestDb = ReturnType<typeof makeDb>;
 
@@ -183,7 +184,7 @@ describe("useSpendingCalendar", () => {
             exchangeRate: null,
             exchangeRateType: "custom",
         });
-        jest.mocked(useValuation).mockReturnValue({
+        vi.mocked(useValuation).mockReturnValue({
             displayCurrency: "CAD",
             rates: buildRateTable([{ date: "2026-08-09", quote: "CAD", rate: 3 }]),
         });

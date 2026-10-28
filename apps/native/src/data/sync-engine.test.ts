@@ -1,9 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import type { AppStateStatus } from "react-native";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { migratedDatabase } from "@/db/test-database";
@@ -38,7 +38,7 @@ function watchable<A>() {
 const failure = (stage: "count" | "pass") =>
     new SyncStore.SyncError({ cause: new Error("database is closed"), message: `Sync ${stage} failed`, stage });
 
-const flush = () => jest.advanceTimersByTimeAsync(0);
+const flush = () => vi.advanceTimersByTimeAsync(0);
 
 describe("sync engine", () => {
     let db: Database;
@@ -47,8 +47,8 @@ describe("sync engine", () => {
     let unmount: () => void;
     const appState = watchable<AppStateStatus>();
     const watermark = watchable<number>();
-    const counts = jest.fn();
-    const passes = jest.fn<() => Effect.Effect<void, SyncStore.SyncError>>();
+    const counts = vi.fn();
+    const passes = vi.fn<() => Effect.Effect<void, SyncStore.SyncError>>();
 
     const start = () => {
         const store = Layer.effect(
@@ -102,7 +102,7 @@ describe("sync engine", () => {
     };
 
     beforeEach(() => {
-        jest.useFakeTimers();
+        vi.useFakeTimers();
         db = migratedDatabase({ foreignKeys: false });
         countFails = false;
         counts.mockClear();
@@ -114,27 +114,27 @@ describe("sync engine", () => {
 
     afterEach(() => {
         registry.dispose();
-        jest.useRealTimers();
+        vi.useRealTimers();
     });
 
     it("does not schedule another round trip after a cycle that had nothing to send", async () => {
         await start();
-        expect(passes).toHaveBeenCalledTimes(1);
+        expect(passes).toHaveBeenCalledOnce();
 
         invalidateAll(["appMeta"]);
-        await jest.advanceTimersByTimeAsync(10_000);
+        await vi.advanceTimersByTimeAsync(10_000);
 
-        expect(passes).toHaveBeenCalledTimes(1);
+        expect(passes).toHaveBeenCalledOnce();
     });
 
     it("syncs a local write once it has been waiting 2 s", async () => {
         await start();
 
         await queueWrite();
-        await jest.advanceTimersByTimeAsync(1999);
-        expect(passes).toHaveBeenCalledTimes(1);
+        await vi.advanceTimersByTimeAsync(1999);
+        expect(passes).toHaveBeenCalledOnce();
 
-        await jest.advanceTimersByTimeAsync(1);
+        await vi.advanceTimersByTimeAsync(1);
         expect(passes).toHaveBeenCalledTimes(2);
     });
 
@@ -143,7 +143,7 @@ describe("sync engine", () => {
         countFails = true;
 
         invalidateAll(["transactions"]);
-        await jest.advanceTimersByTimeAsync(10_000);
+        await vi.advanceTimersByTimeAsync(10_000);
 
         expect(passes).toHaveBeenCalledTimes(2);
     });
@@ -155,7 +155,7 @@ describe("sync engine", () => {
         invalidateAll(["transactions"]);
         await flush();
 
-        expect(counts).toHaveBeenCalledTimes(1);
+        expect(counts).toHaveBeenCalledOnce();
     });
 
     it("runs one more pass, not one per trigger, for everything that arrived during a pass", async () => {
@@ -165,13 +165,13 @@ describe("sync engine", () => {
         appState.emit("active");
         await flush();
         await queueWrite();
-        await jest.advanceTimersByTimeAsync(2000);
+        await vi.advanceTimersByTimeAsync(2000);
         appState.emit("active");
         await flush();
-        expect(passes).toHaveBeenCalledTimes(1);
+        expect(passes).toHaveBeenCalledOnce();
 
         acknowledge();
-        await jest.advanceTimersByTimeAsync(10_000);
+        await vi.advanceTimersByTimeAsync(10_000);
 
         expect(passes).toHaveBeenCalledTimes(2);
     });
@@ -194,8 +194,8 @@ describe("sync engine", () => {
         await queueWrite();
         await flush();
         appState.emit("background");
-        await jest.advanceTimersByTimeAsync(10_000);
-        expect(passes).toHaveBeenCalledTimes(1);
+        await vi.advanceTimersByTimeAsync(10_000);
+        expect(passes).toHaveBeenCalledOnce();
 
         appState.emit("active");
         await flush();
@@ -216,12 +216,12 @@ describe("sync engine", () => {
 
         watermark.emit(5);
         await flush();
-        expect(passes).toHaveBeenCalledTimes(1);
+        expect(passes).toHaveBeenCalledOnce();
 
         await Effect.runPromise(setSyncCursor(db, 5));
         watermark.emit(6);
         await flush();
-        expect(passes).toHaveBeenCalledTimes(1);
+        expect(passes).toHaveBeenCalledOnce();
 
         await setGate(false);
         expect(watermark.listeners.size).toBe(0);
@@ -230,14 +230,14 @@ describe("sync engine", () => {
     it("sends what queued while sync was off as soon as it is turned on", async () => {
         await start();
         await queueWrite();
-        await jest.advanceTimersByTimeAsync(10_000);
+        await vi.advanceTimersByTimeAsync(10_000);
         passes.mockClear();
 
         await setGate(true);
-        expect(passes).toHaveBeenCalledTimes(1);
+        expect(passes).toHaveBeenCalledOnce();
 
         await setGate(true);
-        expect(passes).toHaveBeenCalledTimes(1);
+        expect(passes).toHaveBeenCalledOnce();
     });
 
     it("finishes the pass in flight and then lets go of every trigger when unmounted", async () => {
@@ -255,8 +255,8 @@ describe("sync engine", () => {
         expect(appState.listeners.size).toBe(0);
         appState.emit("active");
         await queueWrite();
-        await jest.advanceTimersByTimeAsync(10_000);
-        expect(passes).toHaveBeenCalledTimes(1);
+        await vi.advanceTimersByTimeAsync(10_000);
+        expect(passes).toHaveBeenCalledOnce();
     });
 
     it("starts over after a pause only once the pass still in flight has been acknowledged", async () => {
@@ -267,7 +267,7 @@ describe("sync engine", () => {
         await flush();
         unmount = registry.mount(syncEngineAtom(db));
         await flush();
-        expect(passes).toHaveBeenCalledTimes(1);
+        expect(passes).toHaveBeenCalledOnce();
 
         acknowledge();
         await flush();

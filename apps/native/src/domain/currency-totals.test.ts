@@ -1,6 +1,6 @@
-import { describe, expect, it } from "@jest/globals";
 import { cellFigures, cellTotals, currencyTotals, toCells, valueCell } from "@outlayr/money/currency-totals";
 import { buildRateTable } from "@outlayr/money/valuation";
+import { describe, expect, it } from "vite-plus/test";
 
 function entry(amount: number, income = false, currency: string | null = null) {
     return { amount, currency, income };

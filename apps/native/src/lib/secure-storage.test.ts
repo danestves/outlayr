@@ -1,7 +1,7 @@
-import { describe, expect, it } from "@jest/globals";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
+import { describe, expect, it } from "vite-plus/test";
 
 import { layer as secureStorageLayer, SecureStorage, SecureStorageError, SecureStoreDriver } from "./secure-storage";
 

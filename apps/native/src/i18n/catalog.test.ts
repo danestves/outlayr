@@ -1,5 +1,5 @@
-import { describe, expect, it } from "@jest/globals";
 import { getIntlayer } from "intlayer";
+import { describe, expect, it } from "vite-plus/test";
 
 import { CATALOGS, DICTIONARY_KEYS, EN } from "./catalog";
 import { SUPPORTED_LANGUAGES } from "./languages";

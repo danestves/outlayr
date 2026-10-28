@@ -1,15 +1,16 @@
-import { describe, expect, it, jest } from "@jest/globals";
-import { act, renderHook } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { act, renderHook } from "@testing-library/react";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import { applyMaterialScheme, useMaterialRevision } from "./material-revision";
 
 describe("applyMaterialScheme", () => {
     it("writes a scheme once, however often it is handed back", () => {
-        const write = jest.fn();
+        const write = vi.fn();
         applyMaterialScheme("tonal green", write);
         applyMaterialScheme("tonal green", write);
         applyMaterialScheme("tonal green", write);
-        expect(write).toHaveBeenCalledTimes(1);
+        expect(write).toHaveBeenCalledOnce();
 
         applyMaterialScheme("tonal blue", write);
         expect(write).toHaveBeenCalledTimes(2);
@@ -21,9 +22,9 @@ describe("applyMaterialScheme", () => {
                 throw new Error("native module gone");
             });
         }).toThrow("native module gone");
-        const write = jest.fn();
+        const write = vi.fn();
         applyMaterialScheme("tonal pink", write);
-        expect(write).toHaveBeenCalledTimes(1);
+        expect(write).toHaveBeenCalledOnce();
     });
 });
 

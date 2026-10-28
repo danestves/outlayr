@@ -1,7 +1,7 @@
-import { describe, expect, it } from "@jest/globals";
 import { accountBalance } from "@outlayr/money/account-balance";
 import type { CurrencyCell } from "@outlayr/money/currency-totals";
 import { buildRateTable } from "@outlayr/money/valuation";
+import { describe, expect, it } from "vite-plus/test";
 
 function cell(overrides: Partial<CurrencyCell>): CurrencyCell {
     return {

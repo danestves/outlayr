@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import BetterSqlite3 from "better-sqlite3";
 import * as Effect from "effect/Effect";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { categories, exchangeRates, transactions } from "@/db/schema";
@@ -474,7 +474,7 @@ describe("applyImport", () => {
         const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income);
         const originalCreate = transactionsRepo.create;
         let calls = 0;
-        const spy = jest.spyOn(transactionsRepo, "create").mockImplementation((targetDb, input) => {
+        const spy = vi.spyOn(transactionsRepo, "create").mockImplementation((targetDb, input) => {
             calls += 1;
             return calls === 2
                 ? Effect.fail(new TransactionsError({ cause: new Error("disk full"), operation: "create" }))

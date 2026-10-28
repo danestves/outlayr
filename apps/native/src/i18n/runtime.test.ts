@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "@jest/globals";
+import { afterEach, describe, expect, it } from "vite-plus/test";
 
 import { CATALOGS, EN } from "./catalog";
 import { DEFAULT_LANGUAGE } from "./languages";

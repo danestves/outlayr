@@ -1,5 +1,5 @@
-import { describe, expect, it } from "@jest/globals";
 import BetterSqlite3 from "better-sqlite3";
+import { describe, expect, it } from "vite-plus/test";
 
 import { applyMigrations } from "@/db/test-database";
 

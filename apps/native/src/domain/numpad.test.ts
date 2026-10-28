@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 import { applyNumpadKey, numberToNumpad, numpadMode, numpadToNumber, wholeUnitsToNumpad } from "./numpad";
 import type { NumpadKey, NumpadMode } from "./numpad";

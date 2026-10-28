@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Effect from "effect/Effect";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { getMeta, META_KEYS } from "@/data/app-meta-core";
 import { markReminderChosen } from "@/data/onboarding-core";
@@ -11,8 +11,10 @@ import type { ReminderPermission } from "@/domain/reminder";
 import { armChosenReminder as arm } from "./chosen-reminder";
 import { Reminders } from "./reminders";
 
-const mockPermission = jest.fn<() => Promise<ReminderPermission>>();
-const mockRequest = jest.fn<() => Promise<ReminderPermission>>();
+vi.mock("expo-notifications", () => ({}));
+
+const mockPermission = vi.fn<() => Promise<ReminderPermission>>();
+const mockRequest = vi.fn<() => Promise<ReminderPermission>>();
 
 const armChosenReminder = (db: Database) =>
     Effect.runPromise(
@@ -40,7 +42,7 @@ describe("armChosenReminder", () => {
     it("asks after the first saved entry and turns the reminder on", async () => {
         await armChosenReminder(db);
 
-        expect(mockRequest).toHaveBeenCalledTimes(1);
+        expect(mockRequest).toHaveBeenCalledOnce();
         await expect(Effect.runPromise(readBoolSetting(db, "showNotifications"))).resolves.toBe(true);
     });
 
@@ -65,7 +67,7 @@ describe("armChosenReminder", () => {
 
         await armChosenReminder(db);
 
-        expect(mockRequest).toHaveBeenCalledTimes(1);
+        expect(mockRequest).toHaveBeenCalledOnce();
     });
 
     it("does not ask again after a refusal", async () => {
@@ -74,7 +76,7 @@ describe("armChosenReminder", () => {
         await armChosenReminder(db);
         await armChosenReminder(db);
 
-        expect(mockRequest).toHaveBeenCalledTimes(1);
+        expect(mockRequest).toHaveBeenCalledOnce();
         await expect(Effect.runPromise(readBoolSetting(db, "showNotifications"))).resolves.toBe(false);
     });
 
@@ -90,7 +92,7 @@ describe("armChosenReminder", () => {
         answer("granted");
         await both;
 
-        expect(mockRequest).toHaveBeenCalledTimes(1);
+        expect(mockRequest).toHaveBeenCalledOnce();
         await expect(Effect.runPromise(readBoolSetting(db, "showNotifications"))).resolves.toBe(true);
     });
 

@@ -1,9 +1,9 @@
-import { describe, expect, it } from "@jest/globals";
 import { effectiveLimit, MAX_CARRY_PERIODS, rolloverCarry, rolloverCarryFrom } from "@outlayr/money/budget-rollover";
 import { lastMsBefore, spentForCategory, spentForMain } from "@outlayr/money/budget-spent";
 import type { ExpenseContribution } from "@outlayr/money/budget-spent";
 import { advanceBudgetWindow, BUDGET_TYPE } from "@outlayr/money/budget-window";
 import { addDays } from "@outlayr/money/calendar";
+import { describe, expect, it } from "vite-plus/test";
 
 const MONTH = BUDGET_TYPE.month;
 

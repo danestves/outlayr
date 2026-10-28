@@ -1,7 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { describe, expect, it } from "@jest/globals";
 import {
     createSourceFile,
     forEachChild,
@@ -26,6 +25,7 @@ import type {
     Node,
     SourceFile,
 } from "typescript";
+import { describe, expect, it } from "vite-plus/test";
 
 import type { RootStackGroup } from "@/domain/auth-gate";
 

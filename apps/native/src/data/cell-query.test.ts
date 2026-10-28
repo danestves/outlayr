@@ -1,7 +1,7 @@
-import { describe, expect, it } from "@jest/globals";
 import { cellFigures } from "@outlayr/money/currency-totals";
 import { buildRateTable } from "@outlayr/money/valuation";
 import BetterSqlite3 from "better-sqlite3";
+import { describe, expect, it } from "vite-plus/test";
 
 import { transactions } from "@/db/schema";
 import { testSpendDb } from "@/db/test-database";

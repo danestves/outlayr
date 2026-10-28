@@ -1,18 +1,18 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Effect from "effect/Effect";
 import type { ImagePickerResult } from "expo-image-picker";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { launchPick, pendingPick } from "./pending-pick";
 import type { PickOwner } from "./pending-pick";
 
-jest.mock<Partial<typeof import("@react-native-async-storage/async-storage")>>(
-    "@react-native-async-storage/async-storage",
-    () => require("@react-native-async-storage/async-storage/jest/async-storage-mock")
-);
+vi.mock("@react-native-async-storage/async-storage", async () => {
+    vi.stubGlobal("jest", vi);
+    return import("@react-native-async-storage/async-storage/jest/async-storage-mock");
+});
 
 const mockPicker: { held: ImagePickerResult | null } = { held: null };
-jest.mock<Partial<typeof import("expo-image-picker")>>("expo-image-picker", () => ({
+vi.mock<Partial<typeof import("expo-image-picker")>>(import("expo-image-picker"), () => ({
     getPendingResultAsync: async () => {
         const { held } = mockPicker;
         mockPicker.held = null;
@@ -28,7 +28,7 @@ const PHOTO: ImagePickerResult = {
     canceled: false,
 };
 
-const clock = jest.spyOn(Date, "now");
+const clock = vi.spyOn(Date, "now");
 
 async function tornDownPick(owner: PickOwner) {
     let launched: () => void = () => undefined;

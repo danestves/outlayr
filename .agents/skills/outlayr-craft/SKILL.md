@@ -78,8 +78,8 @@ rule, most visible first, and edit nothing.
 
 Apply one finding. Reuse the components above before writing anything new,
 keep the diff to the element named, add no code comments, and follow the
-repo's verify order (`vp check`, `vp run check-types`, the jest suites beside
+repo's verify order (`vp check`, `vp run check-types`, the vitest suites beside
 the change). A test that imports a component rendering `ThinkingOrb` must
-mock it: `jest.mock("@/components/thinking-orb/thinking-orb", () => ({
-ThinkingOrb: () => null }))`, since Skia does not load under jest. Anything
+mock it: `vi.mock("@/components/thinking-orb/thinking-orb", () => ({
+ThinkingOrb: () => null }))`, since Skia does not load under vitest. Anything
 visible gets a simulator screenshot before and after.

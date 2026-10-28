@@ -1,9 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import type { AppStateStatus } from "react-native";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { migratedDatabase } from "@/db/test-database";
@@ -16,7 +16,7 @@ import type { PhotoReconciliation } from "./photo-store-core";
 import { layer as photoSyncLayer, PhotoPasses, PhotoSync } from "./photo-sync";
 import type { PhotoSyncResult } from "./photo-sync-core";
 
-const flush = () => jest.advanceTimersByTimeAsync(0);
+const flush = () => vi.advanceTimersByTimeAsync(0);
 
 const NOTHING_MOVED: PhotoSyncResult = { downloaded: 0, released: 0, uploaded: 0 };
 const NOTHING_REPAIRED: PhotoReconciliation = { cleared: 0, purged: 0, repointed: 0, rescued: 0 };
@@ -26,8 +26,8 @@ describe("photo sync", () => {
     let registry: AtomRegistry.AtomRegistry;
     const appState = watchable<AppStateStatus>();
     const tableWrites = watchable<string>();
-    const reconciles = jest.fn<() => Promise<PhotoReconciliation>>();
-    const cycles = jest.fn<() => Promise<PhotoSyncResult>>();
+    const reconciles = vi.fn<() => Promise<PhotoReconciliation>>();
+    const cycles = vi.fn<() => Promise<PhotoSyncResult>>();
 
     const atomFor = (step: "reconcile" | "run") =>
         appRuntime.atom(
@@ -51,7 +51,7 @@ describe("photo sync", () => {
     };
 
     beforeEach(async () => {
-        jest.useFakeTimers();
+        vi.useFakeTimers();
         db = migratedDatabase();
         await Effect.runPromise(setMeta(db, META_KEYS.syncEnabled, "1"));
         reconciles.mockReset();
@@ -74,7 +74,7 @@ describe("photo sync", () => {
 
     afterEach(() => {
         registry.dispose();
-        jest.useRealTimers();
+        vi.useRealTimers();
     });
 
     it("holds the first cycle until the launch reconciliation has repaired the paths", async () => {
@@ -86,7 +86,7 @@ describe("photo sync", () => {
 
         repaired();
         await flush();
-        expect(cycles).toHaveBeenCalledTimes(1);
+        expect(cycles).toHaveBeenCalledOnce();
     });
 
     it("resumes after a pause only once the cycle still in flight has finished", async () => {
@@ -100,7 +100,7 @@ describe("photo sync", () => {
         await flush();
         registry.mount(syncAtom);
         await flush();
-        expect(cycles).toHaveBeenCalledTimes(1);
+        expect(cycles).toHaveBeenCalledOnce();
 
         finish();
         await flush();
@@ -117,10 +117,10 @@ describe("photo sync", () => {
         await flush();
         appState.emit("active");
         tableWrites.emit("transactions");
-        await jest.advanceTimersByTimeAsync(10_000);
+        await vi.advanceTimersByTimeAsync(10_000);
 
         expect(appState.listeners.size).toBe(0);
         expect(tableWrites.listeners.size).toBe(0);
-        expect(cycles).toHaveBeenCalledTimes(1);
+        expect(cycles).toHaveBeenCalledOnce();
     });
 });

@@ -1,16 +1,16 @@
-import { describe, expect, it, jest } from "@jest/globals";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import { applyNumpadKey, numpadToNumber } from "@/domain/numpad";
 
 import { entrySeed } from "./new";
 
-jest.mock("expo-router", () => ({}));
-jest.mock("@/contexts/local-data-context", () => ({}));
-jest.mock("@/data/transactions-core", () => ({}));
-jest.mock("@/i18n/context", () => ({}));
-jest.mock("@/hooks/use-discard-guard", () => ({}));
-jest.mock("@/components/close-toolbar", () => ({}));
-jest.mock("@/components/transaction-form", () => ({}));
+vi.mock("expo-router", () => ({}));
+vi.mock("@/contexts/local-data-context", () => ({}));
+vi.mock("@/data/transactions-core", () => ({}));
+vi.mock("@/i18n/context", () => ({}));
+vi.mock("@/hooks/use-discard-guard", () => ({}));
+vi.mock("@/components/close-toolbar", () => ({}));
+vi.mock("@/components/transaction-form", () => ({}));
 
 describe("entrySeed", () => {
     it("keeps what a sound link states", () => {

@@ -1,4 +1,4 @@
-import { describe, expect, it, jest } from "@jest/globals";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import { createTabPause } from "./tab-pause";
 
@@ -23,16 +23,16 @@ describe("createTabPause", () => {
     it("holds a background tab's notifications and replays them when it is selected again", () => {
         const pause = createTabPause();
         const store = createStore();
-        const onChange = jest.fn();
+        const onChange = vi.fn();
         pause.subscribe(store.subscribe, onChange);
 
         store.emit();
-        expect(onChange).toHaveBeenCalledTimes(1);
+        expect(onChange).toHaveBeenCalledOnce();
 
         pause.setSelected(false);
         store.emit();
         store.emit();
-        expect(onChange).toHaveBeenCalledTimes(1);
+        expect(onChange).toHaveBeenCalledOnce();
 
         pause.setSelected(true);
         expect(onChange).toHaveBeenCalledTimes(2);

@@ -1,6 +1,6 @@
-import { describe, expect, it, test } from "@jest/globals";
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import * as Effect from "effect/Effect";
+import { describe, expect, it, test } from "vite-plus/test";
 
 import { accounts } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";

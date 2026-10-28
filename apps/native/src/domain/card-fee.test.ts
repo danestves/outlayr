@@ -1,4 +1,4 @@
-import { describe, expect, it, test } from "@jest/globals";
+import { describe, expect, it, test } from "vite-plus/test";
 
 import { cardFeeAmount, cardFeeBase, cardFeeOf, feeDraftOf, formatFeeRate } from "./card-fee";
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 import type { ColumnMapping, ParsedImportFile } from "@/data/transfer-core";
 import { parseCsvAmount, parseCsvDate } from "@/domain/transaction-csv";

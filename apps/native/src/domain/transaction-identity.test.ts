@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 import { resolveTransactionIdentity } from "./transaction-identity";
 import type { TransactionIdentitySource } from "./transaction-identity";

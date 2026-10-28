@@ -1,39 +1,43 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Effect from "effect/Effect";
 import { deleteItemAsync, getItemAsync, setItemAsync } from "expo-secure-store";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { resumePersistedCloudDeletion } from "./deletion-resume";
 import { layer } from "./secure-storage";
 
-const mockRevokeGoogleProviderSubject = jest.fn<(subject: string) => Effect.Effect<void>>(() => Effect.void);
+const mockRevokeGoogleProviderSubject = vi.fn<(subject: string) => Effect.Effect<void>>(() => Effect.void);
 
 const run = (options?: Parameters<typeof resumePersistedCloudDeletion>[0]) =>
     resumePersistedCloudDeletion(options).pipe(Effect.provide(layer));
 
-jest.mock<Partial<typeof import("expo-secure-store")>>("expo-secure-store", () => ({
-    deleteItemAsync: jest.fn<typeof import("expo-secure-store").deleteItemAsync>(),
-    getItemAsync: jest.fn<typeof import("expo-secure-store").getItemAsync>(),
-    setItemAsync: jest.fn<typeof import("expo-secure-store").setItemAsync>(),
+vi.mock<typeof import("expo-secure-store")>(import("expo-secure-store"), async (importOriginal) => ({
+    ...(await importOriginal()),
+    deleteItemAsync: vi.fn<typeof import("expo-secure-store").deleteItemAsync>(),
+    getItemAsync: vi.fn<typeof import("expo-secure-store").getItemAsync>(),
+    setItemAsync: vi.fn<typeof import("expo-secure-store").setItemAsync>(),
 }));
-jest.mock<Partial<typeof import("@/lib/auth-client")>>("@/lib/auth-client", () => ({ authClient: null }));
-jest.mock("@/lib/convex", () => ({
-    ...jest.requireActual<typeof import("@/lib/convex")>("@/lib/convex"),
-    cloudAction: jest.fn<typeof import("@/lib/convex").cloudAction>(),
-    cloudMutation: jest.fn<typeof import("@/lib/convex").cloudMutation>(),
-    cloudQuery: jest.fn<typeof import("@/lib/convex").cloudQuery>(),
+vi.mock<Partial<typeof import("@/lib/auth-client")>>(import("@/lib/auth-client"), () => ({ authClient: null }));
+vi.mock("@/lib/convex", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("@/lib/convex")>()),
+    cloudAction: vi.fn<typeof import("@/lib/convex").cloudAction>(),
+    cloudMutation: vi.fn<typeof import("@/lib/convex").cloudMutation>(),
+    cloudQuery: vi.fn<typeof import("@/lib/convex").cloudQuery>(),
     convex: {},
 }));
-jest.mock("@/lib/provider-revocation", () => ({
+vi.mock("@/lib/posthog", () => ({ posthog: null }));
+vi.mock("@/lib/provider-revocation", () => ({
     revokeGoogleProviderSubject: (subject: string) => mockRevokeGoogleProviderSubject(subject),
 }));
 
+const mockedConvex = vi.mocked(await import("@/lib/convex"));
+
 function cloudMocks() {
-    return jest.mocked(jest.requireMock<typeof import("@/lib/convex")>("@/lib/convex"));
+    return mockedConvex;
 }
 
 describe("resumePersistedCloudDeletion", () => {
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
         const { cloudMutation, cloudQuery } = cloudMocks();
         cloudQuery
             .mockReturnValueOnce(Effect.succeed({ phase: "prepared" }))
@@ -41,9 +45,9 @@ describe("resumePersistedCloudDeletion", () => {
         cloudMutation
             .mockReturnValueOnce(Effect.succeed({ phase: "providersRevoked" }))
             .mockReturnValueOnce(Effect.succeed({ phase: "complete" }));
-        jest.mocked(setItemAsync).mockResolvedValue();
-        jest.mocked(deleteItemAsync).mockResolvedValue();
-        jest.mocked(getItemAsync).mockResolvedValue(
+        vi.mocked(setItemAsync).mockResolvedValue();
+        vi.mocked(deleteItemAsync).mockResolvedValue();
+        vi.mocked(getItemAsync).mockResolvedValue(
             JSON.stringify({
                 provider: "google",
                 providerSubject: "provider-subject",
@@ -71,7 +75,7 @@ describe("resumePersistedCloudDeletion", () => {
     });
 
     it("resumes a password account without revoking a provider", async () => {
-        jest.mocked(getItemAsync).mockResolvedValue(
+        vi.mocked(getItemAsync).mockResolvedValue(
             JSON.stringify({
                 provider: "password",
                 providerSubject: "ana@example.com",
@@ -89,7 +93,7 @@ describe("resumePersistedCloudDeletion", () => {
     });
 
     it("fails closed when a cloud marker has no usable resume secret", async () => {
-        jest.mocked(getItemAsync).mockResolvedValue(null);
+        vi.mocked(getItemAsync).mockResolvedValue(null);
 
         const failure = await Effect.runPromise(run({ required: true }).pipe(Effect.flip));
         expect(failure.message).toContain("requires reauthentication");
@@ -109,11 +113,11 @@ describe("resumePersistedCloudDeletion", () => {
 
 describe("resumePersistedCloudDeletion with no cloud configured", () => {
     beforeEach(() => {
-        jest.replaceProperty(cloudMocks(), "convex", null);
+        vi.spyOn(cloudMocks(), "convex", "get").mockReturnValue(null);
     });
 
     afterEach(() => {
-        jest.restoreAllMocks();
+        vi.restoreAllMocks();
     });
 
     it("fails closed when the resume is required", async () => {

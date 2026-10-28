@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 const nativeRoot = join(import.meta.dirname, "../..");
 const stylesheet = readFileSync(join(nativeRoot, "global.css"), "utf-8");

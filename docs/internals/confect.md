@@ -32,7 +32,6 @@ The tables in `confect/tables/` export the same schema the hand-written `convex/
 - **`compileSchema` reverses object keys.** Validators built from Effect structs (`confect/sync.ts`) validate the same values but print in reverse order. It also only types against a concrete struct, so call it per struct rather than through a generic helper.
 - **convex-test needs `_generated` in its module map.** Tests live beside their modules in `confect/`, so they glob `../convex/**/*.ts` (`../../convex/**/*.ts` from `lib/`).
 - **Vitest's default include matches `*.spec.ts`.** `vitest.config.ts` narrows it to `**/*.test.ts`; a spec is a group declaration, not a test.
-- **Native Jest does not transform `@confect`.** `apps/native` tests import `confect/lib/syncTables.ts`, so that file imports only `effect`; `compileSchema` stays in `sync.ts`.
 - **`confect/auth.ts` is a reserved slot.** Codegen would emit `convex/auth.config.ts` from it, so the Better Auth module is `confect/lib/betterAuth.ts`. `http.ts` and `crons.ts` are reserved the same way.
 - **`convex codegen` needs a deployment.** `confect codegen` runs offline, which is why `check-types` (plain `tsc`) works on a clean checkout. Regenerating `convex/_generated/` needs a dev or local deployment; its output does not depend on which one.
 - **`skipLibCheck` hides a stale `convex/_generated/api.d.ts`.** An import of a removed module there type-checks fine. Regenerate it whenever a module is added or removed under `convex/`.

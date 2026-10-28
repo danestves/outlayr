@@ -1,7 +1,7 @@
-import { describe, expect, it, jest } from "@jest/globals";
 import { sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Logger from "effect/Logger";
+import { describe, expect, it, vi } from "vite-plus/test";
 
 import { appMeta } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
@@ -28,8 +28,8 @@ describe("wakeSettingListeners", () => {
         const db = migratedDatabase();
         await db.insert(appMeta).values({ key: "colorScheme", value: "dark" });
         const [{ rowid }] = await db.all<{ rowid: number }>("select rowid from appMeta where key = 'colorScheme'");
-        const scheme = jest.fn();
-        const reminders = jest.fn();
+        const scheme = vi.fn();
+        const reminders = vi.fn();
 
         await Effect.runPromise(
             wakeSettingListeners({
@@ -42,14 +42,14 @@ describe("wakeSettingListeners", () => {
             })
         );
 
-        expect(scheme).toHaveBeenCalledTimes(1);
+        expect(scheme).toHaveBeenCalledOnce();
         expect(reminders).not.toHaveBeenCalled();
     });
 
     it("wakes every listener when the changed rows cannot be read", async () => {
         const db = migratedDatabase();
         await db.run(sql`drop table appMeta`);
-        const run = jest.fn();
+        const run = vi.fn();
 
         await Effect.runPromise(
             wakeSettingListeners({ db, listeners: new Set([{ keys: ["colorScheme"], run }]), rowIds: [9999] }).pipe(
@@ -57,6 +57,6 @@ describe("wakeSettingListeners", () => {
             )
         );
 
-        expect(run).toHaveBeenCalledTimes(1);
+        expect(run).toHaveBeenCalledOnce();
     });
 });

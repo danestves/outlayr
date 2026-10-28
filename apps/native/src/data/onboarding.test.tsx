@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { renderHook } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { renderHook } from "@testing-library/react";
 import * as Effect from "effect/Effect";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { migratedDatabase } from "@/db/test-database";
@@ -8,7 +9,7 @@ import { migratedDatabase } from "@/db/test-database";
 type ChangeListener = (event: { tableName: string }) => void;
 
 const mockListeners = new Set<ChangeListener>();
-jest.mock("expo-sqlite", () => ({
+vi.mock("expo-sqlite", () => ({
     addDatabaseChangeListener: (listener: ChangeListener) => {
         mockListeners.add(listener);
         return {

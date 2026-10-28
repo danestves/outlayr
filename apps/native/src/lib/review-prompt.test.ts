@@ -1,9 +1,9 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { startOfDay } from "@outlayr/money/calendar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Effect from "effect/Effect";
 import * as StoreReview from "expo-store-review";
 import { AppState } from "react-native";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
@@ -14,16 +14,16 @@ import { askForReview as ask } from "./review-prompt";
 
 const askForReview = (db: Database) => Effect.runPromise(ask(db));
 
-jest.mock<Partial<typeof import("@react-native-async-storage/async-storage")>>(
-    "@react-native-async-storage/async-storage",
-    () => require("@react-native-async-storage/async-storage/jest/async-storage-mock")
-);
-jest.mock("expo-store-review", () => ({
-    isAvailableAsync: jest.fn(async () => true),
-    requestReview: jest.fn(async () => undefined),
+vi.mock("@react-native-async-storage/async-storage", async () => {
+    vi.stubGlobal("jest", vi);
+    return import("@react-native-async-storage/async-storage/jest/async-storage-mock");
+});
+vi.mock("expo-store-review", () => ({
+    isAvailableAsync: vi.fn(async () => true),
+    requestReview: vi.fn(async () => undefined),
 }));
 
-const mockStoreReview = jest.mocked(StoreReview);
+const mockStoreReview = vi.mocked(StoreReview);
 const ASKED_VERSION_KEY = "outlayr.review-asked-version";
 
 async function writeEntries(db: Database, perDay: number[], deletedAt: Date | null = null): Promise<void> {
@@ -63,7 +63,7 @@ describe("askForReview", () => {
         await askForReview(db);
         await askForReview(db);
 
-        expect(mockStoreReview.requestReview).toHaveBeenCalledTimes(1);
+        expect(mockStoreReview.requestReview).toHaveBeenCalledOnce();
         await expect(AsyncStorage.getItem(ASKED_VERSION_KEY)).resolves.toBe(APP_VERSION);
 
         await AsyncStorage.setItem(ASKED_VERSION_KEY, "0.9.0");

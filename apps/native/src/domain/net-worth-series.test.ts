@@ -1,5 +1,5 @@
-import { describe, expect, it } from "@jest/globals";
 import { buildRateTable } from "@outlayr/money/valuation";
+import { describe, expect, it } from "vite-plus/test";
 
 import type { PlottedCell } from "./goal-balance-series";
 import { netWorthSeries } from "./net-worth-series";

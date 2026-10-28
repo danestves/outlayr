@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, jest } from "@jest/globals";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { retryTokenFetch } from "./token-fetch";
 
@@ -43,27 +43,27 @@ describe("retryTokenFetch", () => {
 
     describe("with the clock held", () => {
         afterEach(() => {
-            jest.useRealTimers();
+            vi.useRealTimers();
         });
 
         it("waits each delay in turn and keeps the last one", async () => {
-            jest.useFakeTimers();
+            vi.useFakeTimers();
             const server = failingTimes(3);
             const answer = retryTokenFetch(server.fetchImpl, [100, 200])(TOKEN_URL);
 
-            await jest.advanceTimersByTimeAsync(1);
+            await vi.advanceTimersByTimeAsync(1);
             expect(server.calls()).toBe(1);
-            await jest.advanceTimersByTimeAsync(98);
+            await vi.advanceTimersByTimeAsync(98);
             expect(server.calls()).toBe(1);
-            await jest.advanceTimersByTimeAsync(2);
+            await vi.advanceTimersByTimeAsync(2);
             expect(server.calls()).toBe(2);
-            await jest.advanceTimersByTimeAsync(198);
+            await vi.advanceTimersByTimeAsync(198);
             expect(server.calls()).toBe(2);
-            await jest.advanceTimersByTimeAsync(2);
+            await vi.advanceTimersByTimeAsync(2);
             expect(server.calls()).toBe(3);
-            await jest.advanceTimersByTimeAsync(198);
+            await vi.advanceTimersByTimeAsync(198);
             expect(server.calls()).toBe(3);
-            await jest.advanceTimersByTimeAsync(2);
+            await vi.advanceTimersByTimeAsync(2);
 
             await expect(answer).resolves.toBe("answered");
             expect(server.calls()).toBe(4);

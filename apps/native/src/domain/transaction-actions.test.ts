@@ -1,5 +1,5 @@
-import { describe, expect, it } from "@jest/globals";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
+import { describe, expect, it } from "vite-plus/test";
 
 import { logAgainDraft, transactionRowActions } from "./transaction-actions";
 

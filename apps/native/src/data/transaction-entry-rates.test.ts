@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 import { exchangeRates, transactions } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";

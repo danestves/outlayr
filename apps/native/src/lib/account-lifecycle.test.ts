@@ -1,5 +1,5 @@
-import { describe, expect, it, test } from "@jest/globals";
 import * as Effect from "effect/Effect";
+import { describe, expect, it, test } from "vite-plus/test";
 
 import { resumeCloudDeletion, runAccountLifecycle } from "./account-lifecycle";
 

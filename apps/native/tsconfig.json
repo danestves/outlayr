@@ -3,7 +3,7 @@
     "compilerOptions": {
         "strict": true,
         "allowJs": true,
-        "types": ["node", "jest"],
+        "types": ["node"],
         "plugins": [
             {
                 "name": "@effect/language-service",
@@ -39,5 +39,5 @@
         "uniwind-env.d.ts",
         ".intlayer/types/**/*.ts"
     ],
-    "exclude": ["node_modules", "ios", "android", "babel.config.js", "jest.config.js", "expo-env.d.ts"]
+    "exclude": ["node_modules", "ios", "android", "babel.config.js", "expo-env.d.ts"]
 }

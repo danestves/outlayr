@@ -3,7 +3,6 @@ import { fileURLToPath } from "node:url";
 import ultraciteFmt from "ultracite/oxfmt";
 import antiSlop from "ultracite/oxlint/anti-slop";
 import core from "ultracite/oxlint/core";
-import jest from "ultracite/oxlint/jest";
 import react from "ultracite/oxlint/react";
 import tanstack from "ultracite/oxlint/tanstack";
 import vitest from "ultracite/oxlint/vitest";
@@ -55,7 +54,7 @@ const NODE_SIDE_FILES = [
     "**/*.spec.{ts,tsx}",
     "**/test-*.ts",
     "**/test.helpers.ts",
-    "apps/native/jest/**",
+    "apps/native/test/**",
     "**/scripts/**",
 ];
 
@@ -89,7 +88,6 @@ const RUNNER_OPT_OUT = [
     "require-to-throw-message",
     "require-top-level-describe",
 ];
-const JEST_ONLY_OPT_OUT = ["no-untyped-mock-factory", "prefer-ending-with-an-expect"];
 const VITEST_ONLY_OPT_OUT = ["prefer-describe-function-title", "require-mock-type-parameters"];
 const REACT_COMPILER_RULES = [
     "capitalized-calls",
@@ -148,14 +146,13 @@ export default defineConfig({
             },
         ],
         overrides: [
-            ...scopeTo("apps/native", "jest", JEST_ONLY_OPT_OUT, jest),
+            ...scopeTo(
+                "apps/native",
+                "vitest",
+                [...VITEST_ONLY_OPT_OUT, "prefer-import-in-mock", "prefer-to-be-falsy", "prefer-to-be-truthy"],
+                vitest
+            ),
             ...scopeTo("packages", "vitest", VITEST_ONLY_OPT_OUT, vitest),
-            {
-                files: ["apps/native/jest/**"],
-                globals: {
-                    jest: "readonly",
-                },
-            },
             {
                 files: NODE_SIDE_FILES,
                 rules: {
@@ -174,8 +171,6 @@ export default defineConfig({
                     "eslint/no-empty-function": "off",
                     "eslint/no-implicit-globals": "off",
                     "eslint/no-inline-comments": "off",
-                    // babel-plugin-jest-hoist lifts `jest.mock` above the imports, so a spy a factory reads is
-                    // declared above them too, and this rule's fix would break that.
                     "import/first": "off",
                     "import/no-named-as-default-member": "off",
                     "react/globals": "off",
@@ -268,7 +263,11 @@ export default defineConfig({
                 },
             },
             {
-                files: ["apps/native/src/lib/use-haptics.ts", "apps/native/src/lib/use-haptics.android.ts"],
+                files: [
+                    "apps/native/src/lib/use-haptics.ts",
+                    "apps/native/src/lib/use-haptics.android.ts",
+                    "apps/native/src/lib/use-haptics.android.test.ts",
+                ],
                 rules: {
                     "no-restricted-imports": [
                         "error",
@@ -307,6 +306,8 @@ export default defineConfig({
                     "apps/native/src/lib/cloud-runtime.ts",
                     "apps/native/src/lib/deletion-resume.test.ts",
                     "apps/native/src/lib/device-data-reset.test.ts",
+                    "apps/native/src/lib/provider-revocation.test.ts",
+                    "apps/native/src/lib/provider-sign-in.test.ts",
                 ],
                 rules: {
                     "no-restricted-imports": [

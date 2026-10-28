@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { renderHook } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { renderHook } from "@testing-library/react";
 import { Platform } from "react-native";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { HAPTICS_EXCESSIVE, HAPTICS_SUBTLE } from "@/domain/haptics";
 import type { HapticEvent } from "@/domain/haptics";
@@ -8,10 +9,10 @@ import type { HapticEvent } from "@/domain/haptics";
 import { useHaptics } from "./use-haptics";
 
 // Compared by the constants' string values: expo-haptics is import-banned outside `use-haptics`.
-const mockPerform = jest.fn<(type: string) => Promise<void>>(async () => undefined);
-const mockIos = jest.fn<() => Promise<void>>(async () => undefined);
-jest.mock<Partial<typeof import("expo-haptics")>>("expo-haptics", () => ({
-    ...jest.requireActual<typeof import("expo-haptics")>("expo-haptics"),
+const mockPerform = vi.hoisted(() => vi.fn<(type: string) => Promise<void>>(async () => undefined));
+const mockIos = vi.hoisted(() => vi.fn<() => Promise<void>>(async () => undefined));
+vi.mock<Partial<typeof import("expo-haptics")>>(import("expo-haptics"), async (importOriginal) => ({
+    ...(await importOriginal()),
     impactAsync: mockIos,
     notificationAsync: mockIos,
     performAndroidHapticsAsync: (type) => mockPerform(type),
@@ -19,11 +20,11 @@ jest.mock<Partial<typeof import("expo-haptics")>>("expo-haptics", () => ({
 }));
 
 const mockLevel = { value: HAPTICS_EXCESSIVE };
-jest.mock<Partial<typeof import("@/contexts/local-data-context")>>("@/contexts/local-data-context", () => ({
+vi.mock<Partial<typeof import("@/contexts/local-data-context")>>(import("@/contexts/local-data-context"), () => ({
     // SAFETY: the hook only checks that a database exists.
     useLocalData: () => ({ db: {} }) as ReturnType<typeof import("@/contexts/local-data-context").useLocalData>,
 }));
-jest.mock<Partial<typeof import("@/data/settings")>>("@/data/settings", () => ({
+vi.mock<Partial<typeof import("@/data/settings")>>(import("@/data/settings"), () => ({
     useNumberSetting: () => mockLevel.value,
 }));
 
@@ -32,7 +33,7 @@ async function play(event: HapticEvent) {
     result.current(event);
 }
 
-const mockApi = jest.spyOn(Platform, "Version", "get");
+const mockApi = vi.spyOn(Platform, "Version", "get");
 
 beforeEach(() => {
     mockPerform.mockClear();

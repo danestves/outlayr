@@ -1,0 +1,12 @@
+import { requireNativeModule } from "./expo";
+
+export default requireNativeModule("RNPurchases");
+
+export const LOG_LEVEL = { DEBUG: "DEBUG", ERROR: "ERROR", INFO: "INFO", VERBOSE: "VERBOSE", WARN: "WARN" };
+
+export enum INTRO_ELIGIBILITY_STATUS {
+    INTRO_ELIGIBILITY_STATUS_UNKNOWN = 0,
+    INTRO_ELIGIBILITY_STATUS_INELIGIBLE = 1,
+    INTRO_ELIGIBILITY_STATUS_ELIGIBLE = 2,
+    INTRO_ELIGIBILITY_STATUS_NO_INTRO_OFFER_EXISTS = 3,
+}

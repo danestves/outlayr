@@ -1,13 +1,13 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Effect from "effect/Effect";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { budgets, transactions } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
 
-const mockIndexItems = jest.fn<(items: { keywords: string[]; uniqueIdentifier: string }[]) => Promise<void>>();
-const mockRemoveDomain = jest.fn<(domain: string) => Promise<void>>();
-jest.mock("expo-core-spotlight", () => ({
+const mockIndexItems = vi.fn<(items: { keywords: string[]; uniqueIdentifier: string }[]) => Promise<void>>();
+const mockRemoveDomain = vi.fn<(domain: string) => Promise<void>>();
+vi.mock("expo-core-spotlight", () => ({
     __esModule: true,
     default: {
         indexItems: (items: { keywords: string[]; uniqueIdentifier: string }[]) => mockIndexItems(items),

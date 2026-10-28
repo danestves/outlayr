@@ -1,10 +1,10 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Effect from "effect/Effect";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 let mockDrawable = new Set<string>();
 const mockMatched: string[] = [];
 
-jest.mock("@shopify/react-native-skia", () => ({
+vi.mock("@shopify/react-native-skia", () => ({
     FontWeight: { Medium: 500, Normal: 400, SemiBold: 600 },
     Skia: {
         Font: (typeface: { family: string }) => ({
@@ -21,9 +21,9 @@ jest.mock("@shopify/react-native-skia", () => ({
     },
 }));
 
-function freshFonts(): typeof import("./day-card-fonts") {
-    jest.resetModules();
-    return require("./day-card-fonts");
+function freshFonts(): Promise<typeof import("./day-card-fonts")> {
+    vi.resetModules();
+    return import("./day-card-fonts");
 }
 
 beforeEach(() => {
@@ -34,7 +34,7 @@ describe("day card typefaces", () => {
     it("skips a family that matched nothing for the next one that draws", async () => {
         mockDrawable = new Set(["Helvetica Neue"]);
 
-        const faces = await Effect.runPromise(freshFonts().loadCardTypefaces());
+        const faces = await Effect.runPromise((await freshFonts()).loadCardTypefaces());
 
         expect(Object.values(faces)).toStrictEqual(Array.from({ length: 4 }, () => ({ family: "Helvetica Neue" })));
         expect(mockMatched.slice(0, 2)).toStrictEqual(["System", "Helvetica Neue"]);
@@ -43,6 +43,8 @@ describe("day card typefaces", () => {
     it("rejects rather than drawing a blank card when no family draws", async () => {
         mockDrawable = new Set();
 
-        await expect(Effect.runPromise(freshFonts().loadCardTypefaces())).rejects.toThrow("No system face draws");
+        await expect(Effect.runPromise((await freshFonts()).loadCardTypefaces())).rejects.toThrow(
+            "No system face draws"
+        );
     });
 });

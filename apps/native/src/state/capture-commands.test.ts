@@ -1,10 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Cause from "effect/Cause";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { CaptureCallError, timedCaptureCommand } from "./capture-commands";
 
@@ -12,21 +12,21 @@ const command = timedCaptureCommand<string>({ operation: "speak", timeout: Durat
 
 describe("timedCaptureCommand", () => {
     beforeEach(() => {
-        jest.useFakeTimers();
+        vi.useFakeTimers();
     });
 
     afterEach(() => {
-        jest.useRealTimers();
+        vi.useRealTimers();
     });
 
     it("settles with none once the window passes, and with the answer before it", async () => {
         const registry = AtomRegistry.make();
         const slow = command.run(registry, { call: Effect.never, signal: new AbortController().signal });
-        await jest.advanceTimersByTimeAsync(10_000);
+        await vi.advanceTimersByTimeAsync(10_000);
         await expect(slow).resolves.toMatchObject({ _tag: "Success", value: Option.none() });
 
         const quick = command.run(registry, { call: Effect.succeed("done"), signal: new AbortController().signal });
-        await jest.advanceTimersByTimeAsync(0);
+        await vi.advanceTimersByTimeAsync(0);
         await expect(quick).resolves.toMatchObject({ _tag: "Success", value: Option.some("done") });
         registry.dispose();
     });
@@ -37,7 +37,7 @@ describe("timedCaptureCommand", () => {
             call: Effect.fail(new Error("offline")),
             signal: new AbortController().signal,
         });
-        await jest.advanceTimersByTimeAsync(0);
+        await vi.advanceTimersByTimeAsync(0);
 
         const result = await pending;
         expect(AsyncResult.isFailure(result) && Cause.squash(result.cause)).toBeInstanceOf(CaptureCallError);
@@ -48,10 +48,10 @@ describe("timedCaptureCommand", () => {
         const registry = AtomRegistry.make();
         const controller = new AbortController();
         const pending = command.run(registry, { call: Effect.never, signal: controller.signal });
-        await jest.advanceTimersByTimeAsync(1000);
+        await vi.advanceTimersByTimeAsync(1000);
 
         controller.abort();
-        await jest.advanceTimersByTimeAsync(0);
+        await vi.advanceTimersByTimeAsync(0);
 
         const result = await pending;
         expect(AsyncResult.isFailure(result) && Cause.hasInterruptsOnly(result.cause)).toBe(true);
@@ -64,11 +64,11 @@ describe("timedCaptureCommand", () => {
         controller.abort();
 
         const pending = command.run(registry, { call: Effect.never, signal: controller.signal });
-        await jest.advanceTimersByTimeAsync(0);
+        await vi.advanceTimersByTimeAsync(0);
 
         const result = await pending;
         expect(AsyncResult.isFailure(result) && Cause.hasInterruptsOnly(result.cause)).toBe(true);
-        expect(jest.getTimerCount()).toBe(0);
+        expect(vi.getTimerCount()).toBe(0);
         registry.dispose();
     });
 });

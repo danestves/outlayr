@@ -1,13 +1,14 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { renderHook } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { renderHook } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import { AppState } from "react-native";
 import type { AppStateStatus } from "react-native";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { duringHandoff, expectHandoff, HANDOFF_TRIP_CAP_MS, openInAppBrowser } from "./app-handoff";
 import { useRelock } from "./use-relock";
 
-jest.mock("expo-web-browser", () => ({ openBrowserAsync: async () => ({ type: "opened" }) }));
+vi.mock("expo-web-browser", () => ({ openBrowserAsync: async () => ({ type: "opened" }) }));
 
 const SECOND_MS = 1000;
 const HOUR_MS = 60 * 60 * SECOND_MS;
@@ -15,20 +16,20 @@ const HOUR_MS = 60 * 60 * SECOND_MS;
 let changeTo: (phase: AppStateStatus) => void = () => undefined;
 
 beforeEach(() => {
-    jest.useFakeTimers({ now: new Date(2026, 9, 14, 12) });
-    jest.spyOn(AppState, "addEventListener").mockImplementation((_type, listener) => {
+    vi.useFakeTimers({ now: new Date(2026, 9, 14, 12) });
+    vi.spyOn(AppState, "addEventListener").mockImplementation((_type, listener) => {
         changeTo = listener;
         return { remove: () => undefined };
     });
 });
 
 afterEach(() => {
-    jest.useRealTimers();
-    jest.restoreAllMocks();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
 });
 
 async function relockSpy() {
-    const relock = jest.fn();
+    const relock = vi.fn();
     await renderHook(() => useRelock(relock));
     return relock;
 }
@@ -51,7 +52,7 @@ describe("useRelock on Android", () => {
 
         changeTo("background");
 
-        expect(relock).toHaveBeenCalledTimes(1);
+        expect(relock).toHaveBeenCalledOnce();
     });
 
     it("stays open across a trip Outlayr announced, then judges the next one on its own", async () => {
@@ -63,17 +64,17 @@ describe("useRelock on Android", () => {
         expect(relock).not.toHaveBeenCalled();
 
         changeTo("background");
-        expect(relock).toHaveBeenCalledTimes(1);
+        expect(relock).toHaveBeenCalledOnce();
     });
 
     it("relocks when the announced trip never started and the user leaves later", async () => {
         const relock = await relockSpy();
 
         expectHandoff();
-        jest.advanceTimersByTime(6000);
+        vi.advanceTimersByTime(6000);
         changeTo("background");
 
-        expect(relock).toHaveBeenCalledTimes(1);
+        expect(relock).toHaveBeenCalledOnce();
     });
 
     it("stays open across a short picker round trip", async () => {
@@ -81,7 +82,7 @@ describe("useRelock on Android", () => {
 
         const { close, sheet } = openSheet();
         changeTo("background");
-        jest.advanceTimersByTime(10 * SECOND_MS);
+        vi.advanceTimersByTime(10 * SECOND_MS);
         changeTo("active");
         close();
         await sheet;
@@ -94,11 +95,11 @@ describe("useRelock on Android", () => {
 
         const { close, sheet } = openSheet();
         changeTo("background");
-        jest.advanceTimersByTime(8 * SECOND_MS);
+        vi.advanceTimersByTime(8 * SECOND_MS);
         changeTo("active");
-        jest.advanceTimersByTime(SECOND_MS);
+        vi.advanceTimersByTime(SECOND_MS);
         changeTo("background");
-        jest.advanceTimersByTime(8 * SECOND_MS);
+        vi.advanceTimersByTime(8 * SECOND_MS);
         changeTo("active");
         close();
         await sheet;
@@ -110,10 +111,10 @@ describe("useRelock on Android", () => {
         const relock = await relockSpy();
 
         const { close, sheet } = openSheet();
-        jest.advanceTimersByTime(HANDOFF_TRIP_CAP_MS + SECOND_MS);
+        vi.advanceTimersByTime(HANDOFF_TRIP_CAP_MS + SECOND_MS);
         changeTo("background");
 
-        expect(relock).toHaveBeenCalledTimes(1);
+        expect(relock).toHaveBeenCalledOnce();
         close();
         await sheet;
     });
@@ -123,12 +124,12 @@ describe("useRelock on Android", () => {
 
         const { close, sheet } = openSheet();
         changeTo("background");
-        jest.advanceTimersByTime(HANDOFF_TRIP_CAP_MS + SECOND_MS);
+        vi.advanceTimersByTime(HANDOFF_TRIP_CAP_MS + SECOND_MS);
         changeTo("active");
         close();
         await sheet;
 
-        expect(relock).toHaveBeenCalledTimes(1);
+        expect(relock).toHaveBeenCalledOnce();
     });
 
     it("relocks when the user leaves a Custom Tab for Home and comes back later", async () => {
@@ -137,10 +138,10 @@ describe("useRelock on Android", () => {
         await openInAppBrowser("https://outlayr.app/privacy");
         changeTo("background");
         // Home from the tab sends Outlayr nothing; the next event is the return.
-        jest.advanceTimersByTime(3 * HOUR_MS);
+        vi.advanceTimersByTime(3 * HOUR_MS);
         changeTo("active");
 
-        expect(relock).toHaveBeenCalledTimes(1);
+        expect(relock).toHaveBeenCalledOnce();
     });
 
     it("relocks on Home after an awaited call came back without leaving", async () => {
@@ -149,6 +150,6 @@ describe("useRelock on Android", () => {
         await Effect.runPromise(duringHandoff(Effect.succeed("granted")));
         changeTo("background");
 
-        expect(relock).toHaveBeenCalledTimes(1);
+        expect(relock).toHaveBeenCalledOnce();
     });
 });

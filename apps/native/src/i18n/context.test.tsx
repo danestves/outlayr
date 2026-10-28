@@ -1,11 +1,12 @@
-import { afterEach, describe, expect, it, jest } from "@jest/globals";
-import { act, render, screen } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { act, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { AppState, Text } from "react-native";
 import type { AppStateStatus } from "react-native";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
-jest.mock<Partial<typeof import("expo-localization")>>("expo-localization", () => ({
-    getLocales: jest.fn<typeof import("expo-localization").getLocales>(),
+vi.mock<Partial<typeof import("expo-localization")>>(import("expo-localization"), () => ({
+    getLocales: vi.fn<typeof import("expo-localization").getLocales>(),
 }));
 
 import { getLocales } from "expo-localization";
@@ -16,10 +17,9 @@ import { LanguageProvider, useLanguage } from "./context";
 import { DEFAULT_LANGUAGE } from "./languages";
 import { runtimeLanguage, setRuntimeLanguage } from "./runtime";
 
-// This suite is the module under test, so it opts out of jest/i18n-key-stub.js.
-jest.unmock("@/i18n/context");
+vi.unmock("@/i18n/context");
 
-const mockGetLocales = jest.mocked(getLocales);
+const mockGetLocales = vi.mocked(getLocales);
 
 const mockDeviceLanguageTag = {
     mockReset: () => mockGetLocales.mockReset(),
@@ -35,7 +35,7 @@ function watchAppState() {
         if (event === "change") {
             listeners.push(listener as (status: AppStateStatus) => void);
         }
-        return { remove: jest.fn() };
+        return { remove: vi.fn() };
     }) as typeof AppState.addEventListener;
 
     return {
@@ -79,28 +79,28 @@ describe("languageProvider", () => {
 
         await renderProvider();
 
-        expect(screen.getByTestId("language")).toHaveTextContent("es");
+        expect(screen.getByTestId("language").textContent).toBe("es");
     });
 
     it("follows a device language change made while the app was backgrounded", async () => {
         mockDeviceLanguageTag.mockReturnValue("en-US");
         const appState = await renderProvider();
-        expect(screen.getByTestId("language")).toHaveTextContent("en");
+        expect(screen.getByTestId("language").textContent).toBe("en");
 
         mockDeviceLanguageTag.mockReturnValue("es-MX");
         await appState.emit("active");
 
-        expect(screen.getByTestId("language")).toHaveTextContent("es");
+        expect(screen.getByTestId("language").textContent).toBe("es");
     });
 
     it("has the runtime language in place before its children render", async () => {
         mockDeviceLanguageTag.mockReturnValue("en-US");
         const appState = await renderProvider(<RuntimeLanguage />);
-        expect(screen.getByTestId("runtime")).toHaveTextContent("en");
+        expect(screen.getByTestId("runtime").textContent).toBe("en");
 
         mockDeviceLanguageTag.mockReturnValue("es-MX");
         await appState.emit("active");
 
-        expect(screen.getByTestId("runtime")).toHaveTextContent("es");
+        expect(screen.getByTestId("runtime").textContent).toBe("es");
     });
 });

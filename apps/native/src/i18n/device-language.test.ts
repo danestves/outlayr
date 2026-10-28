@@ -1,10 +1,11 @@
-import { afterEach, describe, expect, it, jest } from "@jest/globals";
-import { act, renderHook } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { act, renderHook } from "@testing-library/react";
 import { AppState } from "react-native";
 import type { AppStateStatus } from "react-native";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
-jest.mock<Partial<typeof import("expo-localization")>>("expo-localization", () => ({
-    getLocales: jest.fn<typeof import("expo-localization").getLocales>(),
+vi.mock<Partial<typeof import("expo-localization")>>(import("expo-localization"), () => ({
+    getLocales: vi.fn<typeof import("expo-localization").getLocales>(),
 }));
 
 import { getLocales } from "expo-localization";
@@ -13,11 +14,11 @@ import { testLocale as mockTestLocale } from "@/i18n/test-locale";
 
 import { useDeviceLanguageTag } from "./device-language";
 
-const mockGetLocales = jest.mocked(getLocales);
+const mockGetLocales = vi.mocked(getLocales);
 
 const mockDeviceLanguageTag = {
     mockImplementation: (fn: () => string) =>
-        // oxlint-disable-next-line jest/prefer-mock-return-shorthand -- `mockReturnValue` would call `fn` here at setup, and one caller passes a `fn` that throws to exercise the failure path
+        // oxlint-disable-next-line vitest/prefer-mock-return-shorthand -- `mockReturnValue` would call `fn` here at setup, and one caller passes a `fn` that throws to exercise the failure path
         mockGetLocales.mockImplementation(() => [mockTestLocale({ languageTag: fn() })]),
     mockReset: () => mockGetLocales.mockReset(),
     mockReturnValue: (tag: string) => mockGetLocales.mockReturnValue([mockTestLocale({ languageTag: tag })]),
@@ -27,7 +28,7 @@ const realAddEventListener = AppState.addEventListener;
 
 function watchAppState() {
     const listeners: ((status: AppStateStatus) => void)[] = [];
-    const remove = jest.fn();
+    const remove = vi.fn();
 
     // Assigned rather than spied: restoring spies one at a time left a later test running an earlier one's mock.
     AppState.addEventListener = ((event: string, listener: unknown) => {

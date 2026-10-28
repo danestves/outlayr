@@ -1,4 +1,3 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -8,6 +7,7 @@ import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import type { AppStateStatus } from "react-native";
 import type { PurchasesPackage } from "react-native-purchases";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { entitlementAtom, revenueCatAtom, revenueCatSessionAtom } from "@/contexts/revenuecat-context";
 import { WatchAppState } from "@/lib/app-events";
@@ -39,15 +39,15 @@ const appState = watchable<AppStateStatus>();
 
 const sdk = {
     configureRevenueCat: () => true,
-    eligibleForTrial: jest.fn<(productIds: readonly string[]) => Effect.Effect<Set<string>, PurchasesError>>(),
-    getPackages: jest.fn<() => Effect.Effect<PurchasesPackage[], PurchasesError>>(),
-    identifyUser: jest.fn<(accountId: string) => Effect.Effect<boolean, PurchasesError>>(),
-    logOutUser: jest.fn<() => Effect.Effect<boolean, PurchasesError>>(),
-    mirrorEntitlement: jest.fn<() => Effect.Effect<boolean>>(),
-    purchaseAndCheckPro: jest.fn<(pack: PurchasesPackage) => Effect.Effect<boolean, PurchasesError>>(),
-    refreshProEntitlement: jest.fn<() => Effect.Effect<boolean, PurchasesError>>(),
-    restoreAndCheckPro: jest.fn<() => Effect.Effect<boolean, PurchasesError>>(),
-    setCustomerProfile: jest.fn<(profile: { email: string; name: string }) => Effect.Effect<void, PurchasesError>>(),
+    eligibleForTrial: vi.fn<(productIds: readonly string[]) => Effect.Effect<Set<string>, PurchasesError>>(),
+    getPackages: vi.fn<() => Effect.Effect<PurchasesPackage[], PurchasesError>>(),
+    identifyUser: vi.fn<(accountId: string) => Effect.Effect<boolean, PurchasesError>>(),
+    logOutUser: vi.fn<() => Effect.Effect<boolean, PurchasesError>>(),
+    mirrorEntitlement: vi.fn<() => Effect.Effect<boolean>>(),
+    purchaseAndCheckPro: vi.fn<(pack: PurchasesPackage) => Effect.Effect<boolean, PurchasesError>>(),
+    refreshProEntitlement: vi.fn<() => Effect.Effect<boolean, PurchasesError>>(),
+    restoreAndCheckPro: vi.fn<() => Effect.Effect<boolean, PurchasesError>>(),
+    setCustomerProfile: vi.fn<(profile: { email: string; name: string }) => Effect.Effect<void, PurchasesError>>(),
     watchEntitlement: customerInfo.watch,
 };
 
@@ -61,7 +61,7 @@ const scheduleTask = (task: () => void) => {
     };
 };
 
-const flush = () => jest.advanceTimersByTimeAsync(50);
+const flush = () => vi.advanceTimersByTimeAsync(50);
 
 function held<A>() {
     const { promise, reject, resolve } = Promise.withResolvers<A>();
@@ -118,8 +118,8 @@ describe("revenueCat", () => {
     };
 
     beforeEach(() => {
-        jest.useFakeTimers();
-        jest.resetAllMocks();
+        vi.useFakeTimers();
+        vi.resetAllMocks();
         customerInfo.listeners.clear();
         appState.listeners.clear();
         leaveSession = undefined;
@@ -136,7 +136,7 @@ describe("revenueCat", () => {
 
     afterEach(() => {
         registry.dispose();
-        jest.useRealTimers();
+        vi.useRealTimers();
     });
 
     it("follows customer info updates once the account's sign-in has landed", async () => {
@@ -253,7 +253,7 @@ describe("revenueCat", () => {
         sdk.purchaseAndCheckPro.mockReturnValueOnce(Effect.promise(() => purchaseHeld.promise));
         const purchase = call((revenueCat) => revenueCat.purchase("user-7", PACK));
         await flush();
-        expect(sdk.purchaseAndCheckPro).toHaveBeenCalledTimes(1);
+        expect(sdk.purchaseAndCheckPro).toHaveBeenCalledOnce();
 
         signIn(null);
         await flush();
@@ -261,7 +261,7 @@ describe("revenueCat", () => {
 
         purchaseHeld.resolve(true);
         await flush();
-        expect(sdk.logOutUser).toHaveBeenCalledTimes(1);
+        expect(sdk.logOutUser).toHaveBeenCalledOnce();
         await expect(purchase).rejects.toThrow("identity");
     });
 
@@ -317,8 +317,7 @@ describe("revenueCat", () => {
         signInHeld.resolve(false);
         await flush();
 
-        expect(sdk.setCustomerProfile).toHaveBeenCalledTimes(1);
-        expect(sdk.setCustomerProfile).toHaveBeenCalledWith({ email: "user-11@example.com", name: "Ana" });
+        expect(sdk.setCustomerProfile).toHaveBeenCalledExactlyOnceWith({ email: "user-11@example.com", name: "Ana" });
     });
 
     it("is pending from the first read until the mirror answers for a Pro customer", async () => {

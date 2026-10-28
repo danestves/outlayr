@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { act, renderHook, waitFor } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { act, renderHook, waitFor } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import { Alert } from "react-native";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { testLocalData as mockTestLocalData } from "@/contexts/test-local-data";
 import type { ImportPlan } from "@/data/transfer-core";
@@ -14,21 +15,24 @@ import { importDraftStore } from "@/lib/import-draft-store";
 
 import { buildReviewRows, useImportReview } from "./use-import-review";
 
-const mockGoBack = jest.fn();
-const mockUseNavigation = jest.fn((_parent?: string) => ({
+const mockGoBack = vi.fn();
+const mockUseNavigation = vi.fn((_parent?: string) => ({
     goBack: mockGoBack,
 }));
 
-jest.mock("expo-router", () => ({
+vi.mock("@/lib/import-logo-attach", () => ({
+    attachImportLogos: (entries: ImportPlan["entries"]) => Effect.succeed(entries),
+}));
+vi.mock("expo-router", () => ({
     useNavigation: (parent?: string) => mockUseNavigation(parent),
 }));
-jest.mock<Partial<typeof import("@/i18n/context")>>("@/i18n/context", () => ({
+vi.mock<Partial<typeof import("@/i18n/context")>>(import("@/i18n/context"), () => ({
     useTranslation: () => (key: string, params?: Record<string, unknown>) =>
         params ? `${key}:${JSON.stringify(params)}` : key,
 }));
 
 const dbHolder: { current: Database | null } = { current: null };
-jest.mock("@/contexts/local-data-context", () => ({
+vi.mock("@/contexts/local-data-context", () => ({
     useDatabase: () => dbHolder.current,
     useLocalData: () => mockTestLocalData({ db: dbHolder.current }),
 }));
@@ -226,7 +230,7 @@ describe("useImportReview", () => {
         const db = dbHolder.current as Database;
         await seedCategories(db);
         withReview();
-        const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+        const alertSpy = vi.spyOn(Alert, "alert").mockImplementation(() => {});
 
         const { result } = await renderHook(() => useImportReview());
         await waitFor(() => expect(result.current.plan.entries).toHaveLength(2));
@@ -255,7 +259,7 @@ describe("useImportReview", () => {
         const db = dbHolder.current as Database;
         await seedCategories(db);
         withReview();
-        const applySpy = jest.spyOn(transferCore, "applyImport");
+        const applySpy = vi.spyOn(transferCore, "applyImport");
 
         const { result } = await renderHook(() => useImportReview());
         await waitFor(() => expect(result.current.plan.entries).toHaveLength(2));
@@ -267,7 +271,7 @@ describe("useImportReview", () => {
             await Promise.resolve();
         });
 
-        expect(applySpy).toHaveBeenCalledTimes(1);
+        expect(applySpy).toHaveBeenCalledOnce();
         await expect(db.select().from(transactions)).resolves.toHaveLength(2);
         applySpy.mockRestore();
     });
@@ -275,7 +279,7 @@ describe("useImportReview", () => {
     it("onCommit failure keeps the sheet's selections intact and reports the failure, without navigating", async () => {
         await seedCategories(dbHolder.current as Database);
         withReview();
-        const applySpy = jest
+        const applySpy = vi
             .spyOn(transferCore, "applyImport")
             .mockReturnValueOnce(
                 Effect.fail(new transferCore.CsvTransferError({ cause: new Error("disk full"), operation: "import" }))

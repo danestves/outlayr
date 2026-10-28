@@ -1,15 +1,16 @@
-import { describe, expect, it, jest } from "@jest/globals";
-import { renderHook } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { renderHook } from "@testing-library/react";
+import { describe, expect, it, vi } from "vite-plus/test";
 
-jest.mock<Partial<typeof import("@/i18n/device-language")>>("@/i18n/device-language", () => ({
-    useDeviceLanguageTag: jest.fn<typeof import("@/i18n/device-language").useDeviceLanguageTag>(),
+vi.mock<Partial<typeof import("@/i18n/device-language")>>(import("@/i18n/device-language"), () => ({
+    useDeviceLanguageTag: vi.fn<typeof import("@/i18n/device-language").useDeviceLanguageTag>(),
 }));
 
 import { useDeviceLanguageTag } from "@/i18n/device-language";
 
 import { useLocaleTag } from "./use-locale-tag";
 
-const mockUseDeviceLanguageTag = jest.mocked(useDeviceLanguageTag);
+const mockUseDeviceLanguageTag = vi.mocked(useDeviceLanguageTag);
 
 describe("useLocaleTag", () => {
     it("returns the device's own language tag", async () => {

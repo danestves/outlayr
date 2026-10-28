@@ -1,5 +1,5 @@
-import { describe, expect, it } from "@jest/globals";
 import type { PurchasesPackage } from "react-native-purchases";
+import { describe, expect, it } from "vite-plus/test";
 
 import { readPlans } from "./pro-plans";
 

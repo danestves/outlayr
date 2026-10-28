@@ -1,5 +1,5 @@
-import { describe, expect, it } from "@jest/globals";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
+import { describe, expect, it } from "vite-plus/test";
 
 import { draftAtom, EMPTY_DRAFT, identityScopeFamily } from "./identity-draft-context";
 

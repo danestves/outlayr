@@ -1,22 +1,22 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import * as Effect from "effect/Effect";
 import type { LocalAuthenticationResult } from "expo-local-authentication";
 import { AppState } from "react-native";
 import type { AppStateStatus } from "react-native";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { requestUnlock } from "./app-lock";
 
 let answer: (result: LocalAuthenticationResult) => void = () => undefined;
-const mockAuthenticate = jest.fn(
+const mockAuthenticate = vi.fn(
     () =>
         new Promise<LocalAuthenticationResult>((resolve) => {
             answer = resolve;
         })
 );
-const mockCancel = jest.fn(async () => {
+const mockCancel = vi.fn(async () => {
     answer({ error: "user_cancel", success: false });
 });
-jest.mock("expo-local-authentication", () => ({
+vi.mock("expo-local-authentication", () => ({
     authenticateAsync: () => mockAuthenticate(),
     cancelAuthenticate: () => mockCancel(),
 }));
@@ -33,19 +33,19 @@ function changeTo(phase: AppStateStatus) {
 }
 
 beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     listeners.clear();
     mockAuthenticate.mockClear();
     mockCancel.mockClear();
-    jest.spyOn(AppState, "addEventListener").mockImplementation((_type, listener) => {
+    vi.spyOn(AppState, "addEventListener").mockImplementation((_type, listener) => {
         listeners.add(listener);
         return { remove: () => listeners.delete(listener) };
     });
 });
 
 afterEach(() => {
-    jest.useRealTimers();
-    jest.restoreAllMocks();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
 });
 
 describe("requestUnlock on Android", () => {
@@ -53,11 +53,11 @@ describe("requestUnlock on Android", () => {
         startIn("background");
 
         const unlock = Effect.runPromise(requestUnlock("Unlock Outlayr"));
-        await jest.advanceTimersByTimeAsync(5000);
+        await vi.advanceTimersByTimeAsync(5000);
         expect(mockAuthenticate).not.toHaveBeenCalled();
 
         changeTo("active");
-        await jest.advanceTimersByTimeAsync(0);
+        await vi.advanceTimersByTimeAsync(0);
         answer({ success: true });
 
         await expect(unlock).resolves.toStrictEqual({ success: true });
@@ -67,13 +67,13 @@ describe("requestUnlock on Android", () => {
         startIn("active");
 
         const unlock = Effect.runPromise(requestUnlock("Unlock Outlayr"));
-        await jest.advanceTimersByTimeAsync(0);
+        await vi.advanceTimersByTimeAsync(0);
         changeTo("background");
         changeTo("active");
-        await jest.advanceTimersByTimeAsync(1);
-        await jest.advanceTimersByTimeAsync(1000);
+        await vi.advanceTimersByTimeAsync(1);
+        await vi.advanceTimersByTimeAsync(1000);
 
-        expect(mockCancel).toHaveBeenCalledTimes(1);
+        expect(mockCancel).toHaveBeenCalledOnce();
         await expect(unlock).resolves.toStrictEqual({ error: "user_cancel", success: false });
     });
 
@@ -81,12 +81,12 @@ describe("requestUnlock on Android", () => {
         startIn("active");
 
         const unlock = Effect.runPromise(requestUnlock("Unlock Outlayr"));
-        await jest.advanceTimersByTimeAsync(0);
+        await vi.advanceTimersByTimeAsync(0);
         changeTo("background");
         changeTo("active");
-        await jest.advanceTimersByTimeAsync(500);
+        await vi.advanceTimersByTimeAsync(500);
         answer({ success: true });
-        await jest.advanceTimersByTimeAsync(1000);
+        await vi.advanceTimersByTimeAsync(1000);
 
         expect(mockCancel).not.toHaveBeenCalled();
         await expect(unlock).resolves.toStrictEqual({ success: true });

@@ -1,5 +1,5 @@
-import { describe, expect, it } from "@jest/globals";
 import * as Effect from "effect/Effect";
+import { describe, expect, it } from "vite-plus/test";
 
 import { migratedDatabase } from "@/db/test-database";
 

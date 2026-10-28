@@ -1,8 +1,8 @@
-import { beforeEach, describe, expect, it } from "@jest/globals";
 import { startOfDay } from "@outlayr/money/calendar";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { asc, eq, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { exchangeRates, transactions } from "@/db/schema";

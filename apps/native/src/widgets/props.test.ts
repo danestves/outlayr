@@ -1,6 +1,6 @@
-import { describe, expect, it } from "@jest/globals";
 import BetterSqlite3 from "better-sqlite3";
 import * as Effect from "effect/Effect";
+import { describe, expect, it } from "vite-plus/test";
 
 import type { SpendDb } from "@/data/budget-spent";
 import { appMeta, budgets, categories, mainBudget, transactions } from "@/db/schema";

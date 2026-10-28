@@ -1,4 +1,3 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import { firstOfMonth, startOfDay } from "@outlayr/money/calendar";
 import { eq } from "drizzle-orm";
@@ -6,6 +5,7 @@ import * as Effect from "effect/Effect";
 import { toast } from "panelui-native/components/toast";
 import type { ToastOptions } from "panelui-native/components/toast";
 import { isValidElement } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { NoticeSlipProps } from "@/components/notice-slip";
 import type { Database } from "@/db/client";
@@ -18,7 +18,7 @@ import { commitDeferredDelete, createDeferredDeleteRegistry, UNDO_WINDOW_MS } fr
 import { transfersRepo } from "./transfers-core";
 
 function slipOf(options: ToastOptions | string | undefined): NoticeSlipProps | null {
-    const slip = typeof options === "string" ? null : options?.component?.({ hide: jest.fn(), id: "toast" });
+    const slip = typeof options === "string" ? null : options?.component?.({ hide: vi.fn(), id: "toast" });
     return isValidElement<NoticeSlipProps>(slip) ? slip.props : null;
 }
 
@@ -56,12 +56,12 @@ function logRow(db: Database, id: string): Promise<unknown> {
 
 describe("createDeferredDeleteRegistry", () => {
     beforeEach(() => {
-        jest.useFakeTimers({ doNotFake: ["nextTick", "setImmediate"] });
+        vi.useFakeTimers({ toFake: ["clearInterval", "clearTimeout", "Date", "setInterval", "setTimeout"] });
     });
 
     afterEach(() => {
-        jest.useRealTimers();
-        jest.restoreAllMocks();
+        vi.useRealTimers();
+        vi.restoreAllMocks();
     });
 
     it("holds the write for the undo window, then commits it", async () => {
@@ -74,7 +74,7 @@ describe("createDeferredDeleteRegistry", () => {
         const [held] = await db.select().from(transactions).where(eq(transactions.id, "tx-1"));
         expect(held.deletedAt).toBeNull();
 
-        jest.advanceTimersByTime(UNDO_WINDOW_MS);
+        vi.advanceTimersByTime(UNDO_WINDOW_MS);
         await settle();
 
         const [written] = await db.select().from(transactions).where(eq(transactions.id, "tx-1"));
@@ -86,12 +86,12 @@ describe("createDeferredDeleteRegistry", () => {
         const db = migratedDatabase();
         await logRow(db, "tx-1");
         const registry = registryFor(db);
-        const show = jest.spyOn(toast, "show").mockReturnValue("toast-1");
+        const show = vi.spyOn(toast, "show").mockReturnValue("toast-1");
 
         registry.requestDelete("row", "tx-1");
         slipOf(show.mock.calls[0]?.[0])?.onAction?.();
 
-        jest.advanceTimersByTime(UNDO_WINDOW_MS * 2);
+        vi.advanceTimersByTime(UNDO_WINDOW_MS * 2);
         await settle();
 
         const [row] = await db.select().from(transactions).where(eq(transactions.id, "tx-1"));
@@ -171,7 +171,7 @@ describe("createDeferredDeleteRegistry", () => {
         expect(registry.pendingId("row")).toBe("tx-1");
         expect(registry.pendingId("account")).toBe(account);
 
-        jest.advanceTimersByTime(UNDO_WINDOW_MS);
+        vi.advanceTimersByTime(UNDO_WINDOW_MS);
         await settle();
 
         const [row] = await db.select().from(transactions).where(eq(transactions.id, "tx-1"));
@@ -182,10 +182,10 @@ describe("createDeferredDeleteRegistry", () => {
 
     it("says so when the write loses, and does not say it twice", async () => {
         const registry = registryFor(null);
-        const show = jest.spyOn(toast, "show").mockReturnValue("toast-1");
+        const show = vi.spyOn(toast, "show").mockReturnValue("toast-1");
 
         registry.requestDelete("account", "acc-1");
-        jest.advanceTimersByTime(UNDO_WINDOW_MS);
+        vi.advanceTimersByTime(UNDO_WINDOW_MS);
         await settle();
 
         const failures = show.mock.calls.filter(([notice]) => slipOf(notice)?.tone.kind === "failure");
@@ -197,8 +197,8 @@ describe("createDeferredDeleteRegistry", () => {
         await logRow(db, "tx-1");
         await logRow(db, "tx-2");
         const registry = registryFor(db);
-        const show = jest.spyOn(toast, "show").mockReturnValue("toast-1");
-        const hide = jest.spyOn(toast, "hide").mockImplementation(() => {});
+        const show = vi.spyOn(toast, "show").mockReturnValue("toast-1");
+        const hide = vi.spyOn(toast, "hide").mockImplementation(() => {});
 
         registry.requestDelete("row", "tx-1");
         registry.requestDelete("row", "tx-2");

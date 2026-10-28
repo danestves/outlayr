@@ -26,7 +26,7 @@ export npm_config_loglevel=error
 field() { python3 -c "import json,sys; d=json.loads(sys.stdin.read(),strict=False); print($1)"; }
 app_files() {
     grep -E '^(apps/native/|packages/(env|money)/|pnpm-lock\.yaml$)' |
-        grep -vE '\.test\.tsx?$|__tests__/|\.md$|^apps/native/(docs|jest|scripts)/|^apps/native/jest\.config\.js$' |
+        grep -vE '\.test\.tsx?$|__tests__/|\.md$|^apps/native/(docs|test|scripts)/' |
         grep -vE "$foreign" || true
 }
 tmp=$(mktemp -d)

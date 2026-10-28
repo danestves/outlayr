@@ -1,9 +1,9 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { buildRateTable } from "@outlayr/money/valuation";
 import * as Cause from "effect/Cause";
 import * as Layer from "effect/Layer";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { savingsGoalsQuery } from "@/data/savings-goals-core";
 import type { Database } from "@/db/client";
@@ -32,7 +32,7 @@ async function create(account: typeof accounts.$inferSelect | undefined, dismiss
 
 describe("createGoalFromAccountCommand", () => {
     it("refuses an account it cannot read, leaving the sheet open and nothing written", async () => {
-        const dismiss = jest.fn();
+        const dismiss = vi.fn();
 
         const result = await create(undefined, dismiss);
 
@@ -52,12 +52,12 @@ describe("createGoalFromAccountCommand", () => {
             updatedAt: OPENED,
         });
         const [account] = await db.select().from(accounts);
-        const dismiss = jest.fn();
+        const dismiss = vi.fn();
 
         const result = await create(account, dismiss);
 
         expect(AsyncResult.isSuccess(result)).toBe(true);
-        expect(dismiss).toHaveBeenCalledTimes(1);
+        expect(dismiss).toHaveBeenCalledOnce();
         const [saved] = await savingsGoalsQuery(db);
         expect(saved.startAmount).toBe(120);
     });

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "vite-plus/test";
 
 import { CATEGORY_ICON_GROUPS, iconKeysMatching } from "./category-icon-catalog";
 

@@ -1,24 +1,25 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { act, renderHook } from "@testing-library/react-native";
+// @vitest-environment jsdom
+import { act, renderHook } from "@testing-library/react";
 import { Alert } from "react-native";
 import type { AlertButton } from "react-native";
+import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { useDiscardGuard } from "./use-discard-guard";
 
 type Prevented = (options: { data: { action: { type: string } }; repeat: () => void }) => void;
 
-const mockBack = jest.fn();
-const mockDisablePrevention = jest.fn();
-const mockPreventRemove = jest.fn<(prevent: boolean, callback: Prevented) => void>();
+const mockBack = vi.fn();
+const mockDisablePrevention = vi.fn();
+const mockPreventRemove = vi.fn<(prevent: boolean, callback: Prevented) => void>();
 
-jest.mock("expo-router", () => ({
+vi.mock("expo-router", () => ({
     usePreventRemove: (prevent: boolean, callback: Prevented) => {
         mockPreventRemove(prevent, callback);
         return mockDisablePrevention;
     },
     useRouter: () => ({ back: mockBack }),
 }));
-jest.mock("@/i18n/context", () => ({ useTranslation: () => (key: string) => key }));
+vi.mock("@/i18n/context", () => ({ useTranslation: () => (key: string) => key }));
 
 const ACTION = { type: "GO_BACK" };
 
@@ -29,12 +30,12 @@ function lastGuard(): { callback: Prevented; prevent: boolean } {
 
 describe("useDiscardGuard", () => {
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     it("asks before dropping an edit and leaves only on Discard", async () => {
-        const alert = jest.spyOn(Alert, "alert").mockReturnValue(undefined);
-        const repeat = jest.fn();
+        const alert = vi.spyOn(Alert, "alert").mockReturnValue(undefined);
+        const repeat = vi.fn();
         const { result } = await renderHook(() => useDiscardGuard());
 
         await act(async () => {
@@ -49,12 +50,12 @@ describe("useDiscardGuard", () => {
         await act(async () => {
             buttons.find((button) => button.style === "destructive")?.onPress?.();
         });
-        expect(repeat).toHaveBeenCalledTimes(1);
+        expect(repeat).toHaveBeenCalledOnce();
         expect(lastGuard().prevent).toBe(false);
     });
 
     it("does not ask when the screen leaves after a save", async () => {
-        const alert = jest.spyOn(Alert, "alert").mockReturnValue(undefined);
+        const alert = vi.spyOn(Alert, "alert").mockReturnValue(undefined);
         const { result } = await renderHook(() => useDiscardGuard());
         await act(async () => {
             result.current.setDirty(true);
@@ -64,8 +65,8 @@ describe("useDiscardGuard", () => {
             result.current.leave();
         });
 
-        expect(mockDisablePrevention).toHaveBeenCalledTimes(1);
-        expect(mockBack).toHaveBeenCalledTimes(1);
+        expect(mockDisablePrevention).toHaveBeenCalledOnce();
+        expect(mockBack).toHaveBeenCalledOnce();
         expect(mockDisablePrevention.mock.invocationCallOrder[0]).toBeLessThan(mockBack.mock.invocationCallOrder[0]);
         expect(alert).not.toHaveBeenCalled();
     });
@@ -79,6 +80,6 @@ describe("useDiscardGuard", () => {
         });
 
         expect(calls).toStrictEqual([true, false]);
-        expect(mockBack).toHaveBeenCalledTimes(1);
+        expect(mockBack).toHaveBeenCalledOnce();
     });
 });

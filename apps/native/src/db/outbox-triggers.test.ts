@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it } from "@jest/globals";
 import BetterSqlite3 from "better-sqlite3";
+import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import { META_KEYS } from "@/data/app-meta-core";
 import { SYNCED_META_KEYS, SYNCED_TABLES } from "@/data/sync-outbox-core";

@@ -1,9 +1,9 @@
-import { beforeAll, beforeEach, describe, expect, it } from "@jest/globals";
 import { BUDGET_TYPE, startOfPeriod } from "@outlayr/money/budget-window";
 import { firstOfMonth, startOfDay } from "@outlayr/money/calendar";
 import { buildRateTable, limitIn } from "@outlayr/money/valuation";
 import { and, eq, getTableColumns, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import { beforeAll, beforeEach, describe, expect, it } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { appMeta, budgets, categories, exchangeRates, mainBudget, outbox, transactions } from "@/db/schema";
