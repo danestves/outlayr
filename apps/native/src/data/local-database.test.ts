@@ -11,6 +11,7 @@ import { applyMigrations, testDatabase, withAsyncTransactions } from "@/db/test-
 import bundle from "../../drizzle/migrations";
 
 const BUNDLE_NAMES = Object.keys(bundle.migrations).sort();
+const LAST_LEGACY_MIGRATION = "20261025034640_0037_transaction_attachments";
 
 interface LogRow {
     id: number | null;
@@ -62,8 +63,10 @@ const keptByUser = (sqlite: BetterSqlite3.Database) =>
     sqlite.prepare(`SELECT value FROM appMeta WHERE key = 'kept-by-user'`).pluck().get();
 
 describe("legacy migration names", () => {
-    it("name exactly the migrations the app bundles, each stamped with its own second", () => {
-        expect([...LEGACY_MIGRATION_NAMES.values()].sort()).toStrictEqual(BUNDLE_NAMES);
+    it("name exactly the migrations the 0.45 migrator shipped, each stamped with its own second", () => {
+        expect([...LEGACY_MIGRATION_NAMES.values()].sort()).toStrictEqual(
+            BUNDLE_NAMES.filter((name) => name <= LAST_LEGACY_MIGRATION)
+        );
         for (const [when, name] of LEGACY_MIGRATION_NAMES) {
             expect(name.slice(0, 14)).toBe(new Date(when).toISOString().replaceAll(/[-:T]/g, "").slice(0, 14));
         }
