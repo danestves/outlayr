@@ -55892,6 +55892,531 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "toFbh",
+          "name": "Voice entry · signed in",
+          "layout": "vertical",
+          "gap": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "Qr1DQ",
+              "name": "Label",
+              "fill": "#6b6557",
+              "content": "Voice entry · signed in (no speech heard)",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "fB2gC",
+              "name": "Variants",
+              "gap": 32,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Y93UCk",
+                  "name": "Voice entry · signed in · iOS · light",
+                  "theme": {
+                    "platform": "ios",
+                    "mode": "light"
+                  },
+                  "clip": true,
+                  "width": 402,
+                  "height": 874,
+                  "fill": "$sheet-backdrop",
+                  "cornerRadius": 48,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "IlNG6",
+                      "type": "ref",
+                      "ref": "RZCb5",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "frame",
+                      "id": "OO1fX",
+                      "x": 0,
+                      "y": 62,
+                      "name": "Sheet",
+                      "clip": true,
+                      "width": 402,
+                      "height": 812,
+                      "fill": "$background",
+                      "cornerRadius": [
+                        38,
+                        38,
+                        0,
+                        0
+                      ],
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 24,
+                          "id": "k2E9Y",
+                          "x": 340,
+                          "y": 14,
+                          "name": "Close (native glass)",
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "assets/chrome/scan-close-ios-light.png",
+                            "mode": "cover"
+                          },
+                          "width": 48,
+                          "height": 48
+                        },
+                        {
+                          "type": "text",
+                          "id": "n6TA2S",
+                          "x": 0,
+                          "y": 457.4,
+                          "name": "Message",
+                          "fill": "$muted",
+                          "textGrowth": "fixed-width",
+                          "width": 402,
+                          "content": "Didn't hear anything.",
+                          "textAlign": "center",
+                          "fontFamily": "$font-body",
+                          "fontSize": 17,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 48,
+                          "id": "Z9qTu",
+                          "x": 153,
+                          "y": 323,
+                          "name": "Thinking orb (Skia shader)",
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "assets/chrome/voice-orb-small-ios-light.png",
+                            "mode": "cover"
+                          },
+                          "width": 96,
+                          "height": 96
+                        },
+                        {
+                          "type": "frame",
+                          "id": "nralA",
+                          "x": 20.1,
+                          "y": 734.2,
+                          "name": "Say it again",
+                          "width": 361.8,
+                          "height": 43.7,
+                          "fill": "$accent",
+                          "cornerRadius": 21.85,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "EzvT3",
+                              "name": "Label",
+                              "fill": "$accent-foreground",
+                              "content": "Say it again",
+                              "fontFamily": "$font-body",
+                              "fontSize": 16,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "UhQHc",
+                      "x": 134,
+                      "y": 861,
+                      "name": "Home indicator",
+                      "fill": "$foreground",
+                      "width": 134,
+                      "height": 5
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "qJQEc",
+                  "name": "Voice entry · signed in · iOS · dark",
+                  "theme": {
+                    "platform": "ios",
+                    "mode": "dark"
+                  },
+                  "clip": true,
+                  "width": 402,
+                  "height": 874,
+                  "fill": "$sheet-backdrop",
+                  "cornerRadius": 48,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "D9NYG",
+                      "type": "ref",
+                      "ref": "RZCb5",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "frame",
+                      "id": "v2r9M",
+                      "x": 0,
+                      "y": 62,
+                      "name": "Sheet",
+                      "clip": true,
+                      "width": 402,
+                      "height": 812,
+                      "fill": "$background",
+                      "cornerRadius": [
+                        38,
+                        38,
+                        0,
+                        0
+                      ],
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 24,
+                          "id": "Bzzyk",
+                          "x": 340,
+                          "y": 14,
+                          "name": "Close (native glass)",
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "assets/chrome/scan-close-ios-dark.png",
+                            "mode": "cover"
+                          },
+                          "width": 48,
+                          "height": 48
+                        },
+                        {
+                          "type": "text",
+                          "id": "KhyQ9",
+                          "x": 0,
+                          "y": 457.4,
+                          "name": "Message",
+                          "fill": "$muted",
+                          "textGrowth": "fixed-width",
+                          "width": 402,
+                          "content": "Didn't hear anything.",
+                          "textAlign": "center",
+                          "fontFamily": "$font-body",
+                          "fontSize": 17,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 48,
+                          "id": "p7oQ9k",
+                          "x": 153,
+                          "y": 323,
+                          "name": "Thinking orb (Skia shader)",
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "assets/chrome/voice-orb-small-ios-dark.png",
+                            "mode": "cover"
+                          },
+                          "width": 96,
+                          "height": 96
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Pb0We",
+                          "x": 20.1,
+                          "y": 734.2,
+                          "name": "Say it again",
+                          "width": 361.8,
+                          "height": 43.7,
+                          "fill": "$accent",
+                          "cornerRadius": 21.85,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "pclrs",
+                              "name": "Label",
+                              "fill": "$accent-foreground",
+                              "content": "Say it again",
+                              "fontFamily": "$font-body",
+                              "fontSize": 16,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "Q9kZB",
+                      "x": 134,
+                      "y": 861,
+                      "name": "Home indicator",
+                      "fill": "$foreground",
+                      "width": 134,
+                      "height": 5
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "BGuMo",
+                  "name": "Voice entry · signed in · Android · light",
+                  "theme": {
+                    "platform": "android",
+                    "mode": "light"
+                  },
+                  "clip": true,
+                  "width": 412,
+                  "height": 915,
+                  "fill": "$m3-surface",
+                  "cornerRadius": 28,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "PhPLJ",
+                      "type": "ref",
+                      "ref": "BCCA1",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0,
+                      "descendants": {
+                        "zoDwt": {
+                          "fill": "$m3-on-surface"
+                        },
+                        "nAgO5": {
+                          "fill": "$m3-on-surface"
+                        },
+                        "jkg37": {
+                          "fill": "$m3-on-surface"
+                        },
+                        "KlPea": {
+                          "fill": "$m3-on-surface"
+                        }
+                      }
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "oysRL",
+                      "x": 0,
+                      "y": 56,
+                      "name": "Close (native)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/modal-close-android-light.png",
+                        "mode": "cover"
+                      },
+                      "width": 56,
+                      "height": 52
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "XVx9U",
+                      "x": 154,
+                      "y": 901,
+                      "name": "Gesture handle",
+                      "fill": "$m3-on-surface",
+                      "width": 104,
+                      "height": 4
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 48,
+                      "id": "WVJrh",
+                      "x": 157.5,
+                      "y": 411.6,
+                      "name": "Thinking orb (Skia shader)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/voice-orb-small-android-light.png",
+                        "mode": "cover"
+                      },
+                      "width": 96,
+                      "height": 96
+                    },
+                    {
+                      "type": "text",
+                      "id": "H6R7y",
+                      "x": 0,
+                      "y": 539,
+                      "name": "Message",
+                      "fill": "$m3-on-surface",
+                      "textGrowth": "fixed-width",
+                      "width": 412,
+                      "content": "Didn't hear anything.",
+                      "textAlign": "center",
+                      "fontFamily": "$font-body",
+                      "fontSize": 17,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ovsft",
+                      "x": 20.2,
+                      "y": 847.3,
+                      "name": "Say it again",
+                      "width": 371.6,
+                      "height": 43.9,
+                      "fill": "$m3-primary",
+                      "cornerRadius": 21.95,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "NLEOk",
+                          "name": "Label",
+                          "fill": "$m3-on-primary",
+                          "content": "Say it again",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "s8RznJ",
+                  "name": "Voice entry · signed in · Android · dark",
+                  "theme": {
+                    "platform": "android",
+                    "mode": "dark"
+                  },
+                  "clip": true,
+                  "width": 412,
+                  "height": 915,
+                  "fill": "$m3-surface",
+                  "cornerRadius": 28,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "PrzT7",
+                      "type": "ref",
+                      "ref": "BCCA1",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0,
+                      "descendants": {
+                        "zoDwt": {
+                          "fill": "$m3-on-surface"
+                        },
+                        "nAgO5": {
+                          "fill": "$m3-on-surface"
+                        },
+                        "jkg37": {
+                          "fill": "$m3-on-surface"
+                        },
+                        "KlPea": {
+                          "fill": "$m3-on-surface"
+                        }
+                      }
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "Tlhrb",
+                      "x": 0,
+                      "y": 56,
+                      "name": "Close (native)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/modal-close-android-dark.png",
+                        "mode": "cover"
+                      },
+                      "width": 56,
+                      "height": 52
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "hsGNF",
+                      "x": 154,
+                      "y": 901,
+                      "name": "Gesture handle",
+                      "fill": "$m3-on-surface",
+                      "width": 104,
+                      "height": 4
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 48,
+                      "id": "h4HbVL",
+                      "x": 157.5,
+                      "y": 411.6,
+                      "name": "Thinking orb (Skia shader)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/voice-orb-small-android-dark.png",
+                        "mode": "cover"
+                      },
+                      "width": 96,
+                      "height": 96
+                    },
+                    {
+                      "type": "text",
+                      "id": "xew1O",
+                      "x": 0,
+                      "y": 539,
+                      "name": "Message",
+                      "fill": "$m3-on-surface",
+                      "textGrowth": "fixed-width",
+                      "width": 412,
+                      "content": "Didn't hear anything.",
+                      "textAlign": "center",
+                      "fontFamily": "$font-body",
+                      "fontSize": 17,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "GTBO3",
+                      "x": 20.2,
+                      "y": 847.3,
+                      "name": "Say it again",
+                      "width": 371.6,
+                      "height": 43.9,
+                      "fill": "$m3-primary",
+                      "cornerRadius": 21.95,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "lxoMD",
+                          "name": "Label",
+                          "fill": "$m3-on-primary",
+                          "content": "Say it again",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
       ]
     },
