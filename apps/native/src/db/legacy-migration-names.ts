@@ -37,4 +37,5 @@ export const LEGACY_MIGRATION_NAMES: ReadonlyMap<number, string> = new Map([
     [1_792_900_000_002, "20261025034640_0035_installment_fees"],
     [1_792_900_000_003, "20261025034640_0036_outside_moves"],
     [1_792_900_000_004, "20261025034640_0037_transaction_attachments"],
+    [1_793_219_884_000, "20261028203804_0038_budget_category_index_partial"],
 ]);
