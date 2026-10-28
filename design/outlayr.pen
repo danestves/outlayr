@@ -54001,6 +54001,1475 @@
         },
         {
           "type": "frame",
+          "id": "wiYKL",
+          "name": "Receipt scan · signed in",
+          "layout": "vertical",
+          "gap": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "LO3S5",
+              "name": "Label",
+              "fill": "#6b6557",
+              "content": "Receipt scan · signed in",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "ulBPj",
+              "name": "Variants",
+              "gap": 32,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "neIlA",
+                  "name": "Receipt scan · signed in · iOS · light",
+                  "theme": {
+                    "platform": "ios",
+                    "mode": "light"
+                  },
+                  "clip": true,
+                  "width": 402,
+                  "height": 874,
+                  "fill": "$sheet-backdrop",
+                  "cornerRadius": 48,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "cQooN",
+                      "type": "ref",
+                      "ref": "RZCb5",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "frame",
+                      "id": "g05UaW",
+                      "x": 0,
+                      "y": 62,
+                      "name": "Sheet",
+                      "clip": true,
+                      "width": 402,
+                      "height": 812,
+                      "fill": "$background",
+                      "cornerRadius": [
+                        38,
+                        38,
+                        0,
+                        0
+                      ],
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 24,
+                          "id": "OnWvf",
+                          "x": 340,
+                          "y": 14,
+                          "name": "Close (native glass)",
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "assets/chrome/scan-close-ios-light.png",
+                            "mode": "cover"
+                          },
+                          "width": 48,
+                          "height": 48
+                        },
+                        {
+                          "type": "frame",
+                          "id": "WsNE5",
+                          "x": 87.8,
+                          "y": 206,
+                          "name": "Viewfinder",
+                          "width": 226,
+                          "height": 275,
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "path",
+                              "id": "gKPrF",
+                              "x": 0,
+                              "y": 0,
+                              "name": "Corner TL",
+                              "geometry": "M1 27l0-14q0-12 12-12l14 0",
+                              "viewBox": [
+                                0,
+                                0,
+                                28,
+                                28
+                              ],
+                              "width": 28,
+                              "height": 28,
+                              "stroke": "$tint",
+                              "strokeWidth": 2.4,
+                              "strokeLinecap": "round"
+                            },
+                            {
+                              "type": "path",
+                              "id": "WkGA2",
+                              "x": 198,
+                              "y": 0,
+                              "name": "Corner TR",
+                              "geometry": "M1 1l14 0q12 0 12 12l0 14",
+                              "viewBox": [
+                                0,
+                                0,
+                                28,
+                                28
+                              ],
+                              "width": 28,
+                              "height": 28,
+                              "stroke": "$tint",
+                              "strokeWidth": 2.4,
+                              "strokeLinecap": "round"
+                            },
+                            {
+                              "type": "path",
+                              "id": "bcaAD",
+                              "x": 0,
+                              "y": 247,
+                              "name": "Corner BL",
+                              "geometry": "M1 1l0 14q0 12 12 12l14 0",
+                              "viewBox": [
+                                0,
+                                0,
+                                28,
+                                28
+                              ],
+                              "width": 28,
+                              "height": 28,
+                              "stroke": "$tint",
+                              "strokeWidth": 2.4,
+                              "strokeLinecap": "round"
+                            },
+                            {
+                              "type": "path",
+                              "id": "uM7Bq",
+                              "x": 198,
+                              "y": 247,
+                              "name": "Corner BR",
+                              "geometry": "M27 1l0 14q0 12-12 12l-14 0",
+                              "viewBox": [
+                                0,
+                                0,
+                                28,
+                                28
+                              ],
+                              "width": 28,
+                              "height": 28,
+                              "stroke": "$tint",
+                              "strokeWidth": 2.4,
+                              "strokeLinecap": "round"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "CfNbb",
+                              "x": 25,
+                              "y": 25,
+                              "name": "Receipt",
+                              "width": 176,
+                              "height": 224,
+                              "fill": "$surface",
+                              "cornerRadius": 4,
+                              "stroke": "$border",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 2.5,
+                                  "id": "Kszt2",
+                                  "x": 48,
+                                  "y": 22,
+                                  "name": "Store",
+                                  "fill": "$skeleton",
+                                  "width": 80,
+                                  "height": 5
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 2.5,
+                                  "id": "wBEIq",
+                                  "x": 62,
+                                  "y": 37,
+                                  "name": "Date",
+                                  "fill": "$skeleton",
+                                  "width": 52,
+                                  "height": 5
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 2.5,
+                                  "id": "pLkcU",
+                                  "x": 16,
+                                  "y": 62,
+                                  "name": "Line 1",
+                                  "fill": "$skeleton",
+                                  "width": 144,
+                                  "height": 5
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 2.5,
+                                  "id": "dnR2w",
+                                  "x": 16,
+                                  "y": 75,
+                                  "name": "Line 2",
+                                  "fill": "$skeleton",
+                                  "width": 124,
+                                  "height": 5
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 2.5,
+                                  "id": "GwPbS",
+                                  "x": 16,
+                                  "y": 89,
+                                  "name": "Line 3",
+                                  "fill": "$skeleton",
+                                  "width": 132,
+                                  "height": 5
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 2.5,
+                                  "id": "d8iwl",
+                                  "x": 16,
+                                  "y": 102,
+                                  "name": "Line 4",
+                                  "fill": "$skeleton",
+                                  "width": 101,
+                                  "height": 5
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3.5,
+                                  "id": "Dc4Nc",
+                                  "x": 88,
+                                  "y": 125,
+                                  "name": "Total",
+                                  "opacity": 0.85,
+                                  "fill": "$muted",
+                                  "width": 72,
+                                  "height": 7
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "z8QCF",
+                          "x": 0,
+                          "y": 501.70000000000005,
+                          "name": "Title",
+                          "fill": "$foreground",
+                          "textGrowth": "fixed-width",
+                          "width": 402,
+                          "content": "Scan a receipt",
+                          "lineHeight": 1.3,
+                          "textAlign": "center",
+                          "fontFamily": "$font-body",
+                          "fontSize": 20,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "LUlQa",
+                          "x": 40.2,
+                          "y": 535.8,
+                          "name": "Body",
+                          "fill": "$muted",
+                          "textGrowth": "fixed-width",
+                          "width": 322,
+                          "content": "A photo of the ticket is enough. The total, the store, the date and every line, read for you.",
+                          "lineHeight": 1.45,
+                          "textAlign": "center",
+                          "fontFamily": "$font-body",
+                          "fontSize": 15,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "aHxGi",
+                          "x": 20.1,
+                          "y": 734.2,
+                          "name": "Library",
+                          "width": 176,
+                          "height": 43.7,
+                          "fill": "$surface-tertiary",
+                          "cornerRadius": 21.85,
+                          "gap": 8,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "TFViN",
+                              "name": "Icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "image",
+                              "library": "Material Symbols Rounded",
+                              "weight": 400,
+                              "fill": "$foreground"
+                            },
+                            {
+                              "type": "text",
+                              "id": "UOjHe",
+                              "name": "Label",
+                              "fill": "$foreground",
+                              "content": "Library",
+                              "fontFamily": "$font-body",
+                              "fontSize": 16,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "H7zrtq",
+                          "x": 205.8,
+                          "y": 734.2,
+                          "name": "Take a photo",
+                          "width": 176,
+                          "height": 43.7,
+                          "fill": "$accent",
+                          "cornerRadius": 21.85,
+                          "gap": 8,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "oyQuq",
+                              "name": "Icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "photo_camera",
+                              "library": "Material Symbols Rounded",
+                              "weight": 400,
+                              "fill": "$accent-foreground"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Eg7GW",
+                              "name": "Label",
+                              "fill": "$accent-foreground",
+                              "content": "Take a photo",
+                              "fontFamily": "$font-body",
+                              "fontSize": 16,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "lRg8Q",
+                      "x": 134,
+                      "y": 861,
+                      "name": "Home indicator",
+                      "fill": "$foreground",
+                      "width": 134,
+                      "height": 5
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "HXtKc",
+                  "name": "Receipt scan · signed in · iOS · dark",
+                  "theme": {
+                    "platform": "ios",
+                    "mode": "dark"
+                  },
+                  "clip": true,
+                  "width": 402,
+                  "height": 874,
+                  "fill": "$sheet-backdrop",
+                  "cornerRadius": 48,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "VD1Iw",
+                      "type": "ref",
+                      "ref": "RZCb5",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "frame",
+                      "id": "OwSjn",
+                      "x": 0,
+                      "y": 62,
+                      "name": "Sheet",
+                      "clip": true,
+                      "width": 402,
+                      "height": 812,
+                      "fill": "$background",
+                      "cornerRadius": [
+                        38,
+                        38,
+                        0,
+                        0
+                      ],
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 24,
+                          "id": "BA4dh",
+                          "x": 340,
+                          "y": 14,
+                          "name": "Close (native glass)",
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "assets/chrome/scan-close-ios-dark.png",
+                            "mode": "cover"
+                          },
+                          "width": 48,
+                          "height": 48
+                        },
+                        {
+                          "type": "frame",
+                          "id": "X16uF",
+                          "x": 87.8,
+                          "y": 206,
+                          "name": "Viewfinder",
+                          "width": 226,
+                          "height": 275,
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "path",
+                              "id": "Vv0XN",
+                              "x": 0,
+                              "y": 0,
+                              "name": "Corner TL",
+                              "geometry": "M1 27l0-14q0-12 12-12l14 0",
+                              "viewBox": [
+                                0,
+                                0,
+                                28,
+                                28
+                              ],
+                              "width": 28,
+                              "height": 28,
+                              "stroke": "$tint",
+                              "strokeWidth": 2.4,
+                              "strokeLinecap": "round"
+                            },
+                            {
+                              "type": "path",
+                              "id": "O7djs",
+                              "x": 198,
+                              "y": 0,
+                              "name": "Corner TR",
+                              "geometry": "M1 1l14 0q12 0 12 12l0 14",
+                              "viewBox": [
+                                0,
+                                0,
+                                28,
+                                28
+                              ],
+                              "width": 28,
+                              "height": 28,
+                              "stroke": "$tint",
+                              "strokeWidth": 2.4,
+                              "strokeLinecap": "round"
+                            },
+                            {
+                              "type": "path",
+                              "id": "eUpTY",
+                              "x": 0,
+                              "y": 247,
+                              "name": "Corner BL",
+                              "geometry": "M1 1l0 14q0 12 12 12l14 0",
+                              "viewBox": [
+                                0,
+                                0,
+                                28,
+                                28
+                              ],
+                              "width": 28,
+                              "height": 28,
+                              "stroke": "$tint",
+                              "strokeWidth": 2.4,
+                              "strokeLinecap": "round"
+                            },
+                            {
+                              "type": "path",
+                              "id": "cKPIR",
+                              "x": 198,
+                              "y": 247,
+                              "name": "Corner BR",
+                              "geometry": "M27 1l0 14q0 12-12 12l-14 0",
+                              "viewBox": [
+                                0,
+                                0,
+                                28,
+                                28
+                              ],
+                              "width": 28,
+                              "height": 28,
+                              "stroke": "$tint",
+                              "strokeWidth": 2.4,
+                              "strokeLinecap": "round"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "jp8p0",
+                              "x": 25,
+                              "y": 25,
+                              "name": "Receipt",
+                              "width": 176,
+                              "height": 224,
+                              "fill": "$surface",
+                              "cornerRadius": 4,
+                              "stroke": "$border",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 2.5,
+                                  "id": "L8fZR",
+                                  "x": 48,
+                                  "y": 22,
+                                  "name": "Store",
+                                  "fill": "$skeleton",
+                                  "width": 80,
+                                  "height": 5
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 2.5,
+                                  "id": "IXUa9",
+                                  "x": 62,
+                                  "y": 37,
+                                  "name": "Date",
+                                  "fill": "$skeleton",
+                                  "width": 52,
+                                  "height": 5
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 2.5,
+                                  "id": "LQjFj",
+                                  "x": 16,
+                                  "y": 62,
+                                  "name": "Line 1",
+                                  "fill": "$skeleton",
+                                  "width": 144,
+                                  "height": 5
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 2.5,
+                                  "id": "Acu5y",
+                                  "x": 16,
+                                  "y": 75,
+                                  "name": "Line 2",
+                                  "fill": "$skeleton",
+                                  "width": 124,
+                                  "height": 5
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 2.5,
+                                  "id": "v9u8k",
+                                  "x": 16,
+                                  "y": 89,
+                                  "name": "Line 3",
+                                  "fill": "$skeleton",
+                                  "width": 132,
+                                  "height": 5
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 2.5,
+                                  "id": "E1Cbk",
+                                  "x": 16,
+                                  "y": 102,
+                                  "name": "Line 4",
+                                  "fill": "$skeleton",
+                                  "width": 101,
+                                  "height": 5
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": 3.5,
+                                  "id": "xJyiu",
+                                  "x": 88,
+                                  "y": 125,
+                                  "name": "Total",
+                                  "opacity": 0.85,
+                                  "fill": "$muted",
+                                  "width": 72,
+                                  "height": 7
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "fbv4k",
+                          "x": 0,
+                          "y": 501.70000000000005,
+                          "name": "Title",
+                          "fill": "$foreground",
+                          "textGrowth": "fixed-width",
+                          "width": 402,
+                          "content": "Scan a receipt",
+                          "lineHeight": 1.3,
+                          "textAlign": "center",
+                          "fontFamily": "$font-body",
+                          "fontSize": 20,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Y0Lcg",
+                          "x": 40.2,
+                          "y": 535.8,
+                          "name": "Body",
+                          "fill": "$muted",
+                          "textGrowth": "fixed-width",
+                          "width": 322,
+                          "content": "A photo of the ticket is enough. The total, the store, the date and every line, read for you.",
+                          "lineHeight": 1.45,
+                          "textAlign": "center",
+                          "fontFamily": "$font-body",
+                          "fontSize": 15,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "K9kD2",
+                          "x": 20.1,
+                          "y": 734.2,
+                          "name": "Library",
+                          "width": 176,
+                          "height": 43.7,
+                          "fill": "$surface-tertiary",
+                          "cornerRadius": 21.85,
+                          "gap": 8,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "CXXUl",
+                              "name": "Icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "image",
+                              "library": "Material Symbols Rounded",
+                              "weight": 400,
+                              "fill": "$foreground"
+                            },
+                            {
+                              "type": "text",
+                              "id": "o0XFsY",
+                              "name": "Label",
+                              "fill": "$foreground",
+                              "content": "Library",
+                              "fontFamily": "$font-body",
+                              "fontSize": 16,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ZG5BK",
+                          "x": 205.8,
+                          "y": 734.2,
+                          "name": "Take a photo",
+                          "width": 176,
+                          "height": 43.7,
+                          "fill": "$accent",
+                          "cornerRadius": 21.85,
+                          "gap": 8,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "lsqWT",
+                              "name": "Icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "photo_camera",
+                              "library": "Material Symbols Rounded",
+                              "weight": 400,
+                              "fill": "$accent-foreground"
+                            },
+                            {
+                              "type": "text",
+                              "id": "GDSEm",
+                              "name": "Label",
+                              "fill": "$accent-foreground",
+                              "content": "Take a photo",
+                              "fontFamily": "$font-body",
+                              "fontSize": 16,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "u3d1bW",
+                      "x": 134,
+                      "y": 861,
+                      "name": "Home indicator",
+                      "fill": "$foreground",
+                      "width": 134,
+                      "height": 5
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "DTmly",
+                  "name": "Receipt scan · signed in · Android · light",
+                  "theme": {
+                    "platform": "android",
+                    "mode": "light"
+                  },
+                  "clip": true,
+                  "width": 412,
+                  "height": 915,
+                  "fill": "$m3-surface",
+                  "cornerRadius": 28,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "DXPoK",
+                      "type": "ref",
+                      "ref": "BCCA1",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0,
+                      "descendants": {
+                        "zoDwt": {
+                          "fill": "$m3-on-surface"
+                        },
+                        "nAgO5": {
+                          "fill": "$m3-on-surface"
+                        },
+                        "jkg37": {
+                          "fill": "$m3-on-surface"
+                        },
+                        "KlPea": {
+                          "fill": "$m3-on-surface"
+                        }
+                      }
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "ZumN0",
+                      "x": 0,
+                      "y": 56,
+                      "name": "Close (native)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/modal-close-android-light.png",
+                        "mode": "cover"
+                      },
+                      "width": 56,
+                      "height": 52
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "x2txi",
+                      "x": 154,
+                      "y": 901,
+                      "name": "Gesture handle",
+                      "fill": "$m3-on-surface",
+                      "width": 104,
+                      "height": 4
+                    },
+                    {
+                      "type": "frame",
+                      "id": "mH3g1",
+                      "x": 94.5,
+                      "y": 291.5,
+                      "name": "Viewfinder",
+                      "width": 222,
+                      "height": 271,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "path",
+                          "id": "itGdv",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Corner TL",
+                          "geometry": "M1 27l0-14q0-12 12-12l14 0",
+                          "viewBox": [
+                            0,
+                            0,
+                            28,
+                            28
+                          ],
+                          "width": 28,
+                          "height": 28,
+                          "stroke": "$m3-primary",
+                          "strokeWidth": 2.4,
+                          "strokeLinecap": "round"
+                        },
+                        {
+                          "type": "path",
+                          "id": "n9Lvo",
+                          "x": 194,
+                          "y": 0,
+                          "name": "Corner TR",
+                          "geometry": "M1 1l14 0q12 0 12 12l0 14",
+                          "viewBox": [
+                            0,
+                            0,
+                            28,
+                            28
+                          ],
+                          "width": 28,
+                          "height": 28,
+                          "stroke": "$m3-primary",
+                          "strokeWidth": 2.4,
+                          "strokeLinecap": "round"
+                        },
+                        {
+                          "type": "path",
+                          "id": "P1jEsz",
+                          "x": 0,
+                          "y": 243,
+                          "name": "Corner BL",
+                          "geometry": "M1 1l0 14q0 12 12 12l14 0",
+                          "viewBox": [
+                            0,
+                            0,
+                            28,
+                            28
+                          ],
+                          "width": 28,
+                          "height": 28,
+                          "stroke": "$m3-primary",
+                          "strokeWidth": 2.4,
+                          "strokeLinecap": "round"
+                        },
+                        {
+                          "type": "path",
+                          "id": "Z3CzLZ",
+                          "x": 194,
+                          "y": 243,
+                          "name": "Corner BR",
+                          "geometry": "M27 1l0 14q0 12-12 12l-14 0",
+                          "viewBox": [
+                            0,
+                            0,
+                            28,
+                            28
+                          ],
+                          "width": 28,
+                          "height": 28,
+                          "stroke": "$m3-primary",
+                          "strokeWidth": 2.4,
+                          "strokeLinecap": "round"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "aPPlu",
+                          "x": 22,
+                          "y": 24,
+                          "name": "Receipt",
+                          "width": 177,
+                          "height": 224,
+                          "fill": "$m3-surface-container",
+                          "cornerRadius": 4,
+                          "stroke": "$m3-outline-variant",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 2.5,
+                              "id": "qmdD8",
+                              "x": 48,
+                              "y": 22,
+                              "name": "Store",
+                              "opacity": 0.8,
+                              "fill": "$m3-tile",
+                              "width": 80,
+                              "height": 5
+                            },
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 2.5,
+                              "id": "a4ruJ",
+                              "x": 62,
+                              "y": 37,
+                              "name": "Date",
+                              "opacity": 0.8,
+                              "fill": "$m3-tile",
+                              "width": 52,
+                              "height": 5
+                            },
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 2.5,
+                              "id": "IHEn4",
+                              "x": 16,
+                              "y": 62,
+                              "name": "Line 1",
+                              "opacity": 0.8,
+                              "fill": "$m3-tile",
+                              "width": 144,
+                              "height": 5
+                            },
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 2.5,
+                              "id": "OvQUt",
+                              "x": 16,
+                              "y": 75,
+                              "name": "Line 2",
+                              "opacity": 0.8,
+                              "fill": "$m3-tile",
+                              "width": 124,
+                              "height": 5
+                            },
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 2.5,
+                              "id": "p8eRFz",
+                              "x": 16,
+                              "y": 89,
+                              "name": "Line 3",
+                              "opacity": 0.8,
+                              "fill": "$m3-tile",
+                              "width": 132,
+                              "height": 5
+                            },
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 2.5,
+                              "id": "P9CO7",
+                              "x": 16,
+                              "y": 102,
+                              "name": "Line 4",
+                              "opacity": 0.8,
+                              "fill": "$m3-tile",
+                              "width": 101,
+                              "height": 5
+                            },
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 3.5,
+                              "id": "QuLEu",
+                              "x": 88,
+                              "y": 125,
+                              "name": "Total",
+                              "opacity": 0.7,
+                              "fill": "$m3-on-surface-variant",
+                              "width": 72,
+                              "height": 7
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "oOkYb",
+                      "x": 0,
+                      "y": 585.6,
+                      "name": "Title",
+                      "fill": "$m3-on-surface",
+                      "textGrowth": "fixed-width",
+                      "width": 412,
+                      "content": "Scan a receipt",
+                      "lineHeight": 1.3,
+                      "textAlign": "center",
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "x1KGH",
+                      "x": 40.4,
+                      "y": 619.5,
+                      "name": "Body",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 331.7,
+                      "content": "A photo of the ticket is enough. The total, the store, the date and every line, read for you.",
+                      "lineHeight": 1.45,
+                      "textAlign": "center",
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "jglPc",
+                      "x": 20.2,
+                      "y": 847.3,
+                      "name": "Library",
+                      "width": 180.9,
+                      "height": 43.9,
+                      "fill": "$m3-surface-container-high",
+                      "cornerRadius": 21.95,
+                      "gap": 8,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "TA1gp",
+                          "name": "Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "image",
+                          "library": "Material Symbols Rounded",
+                          "weight": 400,
+                          "fill": "$m3-on-surface"
+                        },
+                        {
+                          "type": "text",
+                          "id": "o0DFnx",
+                          "name": "Label",
+                          "fill": "$m3-on-surface",
+                          "content": "Library",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "reGWP",
+                      "x": 211.4,
+                      "y": 847.3,
+                      "name": "Take a photo",
+                      "width": 180.9,
+                      "height": 43.9,
+                      "fill": "$m3-primary",
+                      "cornerRadius": 21.95,
+                      "gap": 8,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "g2dxIx",
+                          "name": "Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "photo_camera",
+                          "library": "Material Symbols Rounded",
+                          "weight": 400,
+                          "fill": "$m3-on-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "FYEQe",
+                          "name": "Label",
+                          "fill": "$m3-on-primary",
+                          "content": "Take a photo",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "eJbNq",
+                  "name": "Receipt scan · signed in · Android · dark",
+                  "theme": {
+                    "platform": "android",
+                    "mode": "dark"
+                  },
+                  "clip": true,
+                  "width": 412,
+                  "height": 915,
+                  "fill": "$m3-surface",
+                  "cornerRadius": 28,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "ZFrAg",
+                      "type": "ref",
+                      "ref": "BCCA1",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0,
+                      "descendants": {
+                        "zoDwt": {
+                          "fill": "$m3-on-surface"
+                        },
+                        "nAgO5": {
+                          "fill": "$m3-on-surface"
+                        },
+                        "jkg37": {
+                          "fill": "$m3-on-surface"
+                        },
+                        "KlPea": {
+                          "fill": "$m3-on-surface"
+                        }
+                      }
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "tW8OO",
+                      "x": 0,
+                      "y": 56,
+                      "name": "Close (native)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/modal-close-android-dark.png",
+                        "mode": "cover"
+                      },
+                      "width": 56,
+                      "height": 52
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "xYx6S",
+                      "x": 154,
+                      "y": 901,
+                      "name": "Gesture handle",
+                      "fill": "$m3-on-surface",
+                      "width": 104,
+                      "height": 4
+                    },
+                    {
+                      "type": "frame",
+                      "id": "OB9p5",
+                      "x": 94.5,
+                      "y": 291.5,
+                      "name": "Viewfinder",
+                      "width": 222,
+                      "height": 271,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "path",
+                          "id": "xFcxI",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Corner TL",
+                          "geometry": "M1 27l0-14q0-12 12-12l14 0",
+                          "viewBox": [
+                            0,
+                            0,
+                            28,
+                            28
+                          ],
+                          "width": 28,
+                          "height": 28,
+                          "stroke": "$m3-primary",
+                          "strokeWidth": 2.4,
+                          "strokeLinecap": "round"
+                        },
+                        {
+                          "type": "path",
+                          "id": "dV4l3",
+                          "x": 194,
+                          "y": 0,
+                          "name": "Corner TR",
+                          "geometry": "M1 1l14 0q12 0 12 12l0 14",
+                          "viewBox": [
+                            0,
+                            0,
+                            28,
+                            28
+                          ],
+                          "width": 28,
+                          "height": 28,
+                          "stroke": "$m3-primary",
+                          "strokeWidth": 2.4,
+                          "strokeLinecap": "round"
+                        },
+                        {
+                          "type": "path",
+                          "id": "xqH9Z",
+                          "x": 0,
+                          "y": 243,
+                          "name": "Corner BL",
+                          "geometry": "M1 1l0 14q0 12 12 12l14 0",
+                          "viewBox": [
+                            0,
+                            0,
+                            28,
+                            28
+                          ],
+                          "width": 28,
+                          "height": 28,
+                          "stroke": "$m3-primary",
+                          "strokeWidth": 2.4,
+                          "strokeLinecap": "round"
+                        },
+                        {
+                          "type": "path",
+                          "id": "WVYzk",
+                          "x": 194,
+                          "y": 243,
+                          "name": "Corner BR",
+                          "geometry": "M27 1l0 14q0 12-12 12l-14 0",
+                          "viewBox": [
+                            0,
+                            0,
+                            28,
+                            28
+                          ],
+                          "width": 28,
+                          "height": 28,
+                          "stroke": "$m3-primary",
+                          "strokeWidth": 2.4,
+                          "strokeLinecap": "round"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "pQwmp",
+                          "x": 22,
+                          "y": 24,
+                          "name": "Receipt",
+                          "width": 177,
+                          "height": 224,
+                          "fill": "$m3-surface-container",
+                          "cornerRadius": 4,
+                          "stroke": "$m3-outline-variant",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 2.5,
+                              "id": "Lb0U0",
+                              "x": 48,
+                              "y": 22,
+                              "name": "Store",
+                              "opacity": 0.8,
+                              "fill": "$m3-tile",
+                              "width": 80,
+                              "height": 5
+                            },
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 2.5,
+                              "id": "O7cqw",
+                              "x": 62,
+                              "y": 37,
+                              "name": "Date",
+                              "opacity": 0.8,
+                              "fill": "$m3-tile",
+                              "width": 52,
+                              "height": 5
+                            },
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 2.5,
+                              "id": "APSdQ",
+                              "x": 16,
+                              "y": 62,
+                              "name": "Line 1",
+                              "opacity": 0.8,
+                              "fill": "$m3-tile",
+                              "width": 144,
+                              "height": 5
+                            },
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 2.5,
+                              "id": "i3lhKB",
+                              "x": 16,
+                              "y": 75,
+                              "name": "Line 2",
+                              "opacity": 0.8,
+                              "fill": "$m3-tile",
+                              "width": 124,
+                              "height": 5
+                            },
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 2.5,
+                              "id": "fuEBx",
+                              "x": 16,
+                              "y": 89,
+                              "name": "Line 3",
+                              "opacity": 0.8,
+                              "fill": "$m3-tile",
+                              "width": 132,
+                              "height": 5
+                            },
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 2.5,
+                              "id": "EkPgC",
+                              "x": 16,
+                              "y": 102,
+                              "name": "Line 4",
+                              "opacity": 0.8,
+                              "fill": "$m3-tile",
+                              "width": 101,
+                              "height": 5
+                            },
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 3.5,
+                              "id": "dcLhw",
+                              "x": 88,
+                              "y": 125,
+                              "name": "Total",
+                              "opacity": 0.7,
+                              "fill": "$m3-on-surface-variant",
+                              "width": 72,
+                              "height": 7
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "ZMZnH",
+                      "x": 0,
+                      "y": 585.6,
+                      "name": "Title",
+                      "fill": "$m3-on-surface",
+                      "textGrowth": "fixed-width",
+                      "width": 412,
+                      "content": "Scan a receipt",
+                      "lineHeight": 1.3,
+                      "textAlign": "center",
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "buf90",
+                      "x": 40.4,
+                      "y": 619.5,
+                      "name": "Body",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 331.7,
+                      "content": "A photo of the ticket is enough. The total, the store, the date and every line, read for you.",
+                      "lineHeight": 1.45,
+                      "textAlign": "center",
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "HrWan",
+                      "x": 20.2,
+                      "y": 847.3,
+                      "name": "Library",
+                      "width": 180.9,
+                      "height": 43.9,
+                      "fill": "$m3-surface-container-high",
+                      "cornerRadius": 21.95,
+                      "gap": 8,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "G0digy",
+                          "name": "Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "image",
+                          "library": "Material Symbols Rounded",
+                          "weight": 400,
+                          "fill": "$m3-on-surface"
+                        },
+                        {
+                          "type": "text",
+                          "id": "xaWsi",
+                          "name": "Label",
+                          "fill": "$m3-on-surface",
+                          "content": "Library",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "EGeBf",
+                      "x": 211.4,
+                      "y": 847.3,
+                      "name": "Take a photo",
+                      "width": 180.9,
+                      "height": 43.9,
+                      "fill": "$m3-primary",
+                      "cornerRadius": 21.95,
+                      "gap": 8,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "nUQhb",
+                          "name": "Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "photo_camera",
+                          "library": "Material Symbols Rounded",
+                          "weight": 400,
+                          "fill": "$m3-on-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "wdyib",
+                          "name": "Label",
+                          "fill": "$m3-on-primary",
+                          "content": "Take a photo",
+                          "fontFamily": "$font-body",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
           "id": "I7tHj",
           "name": "Voice entry",
           "layout": "vertical",
