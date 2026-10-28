@@ -198,13 +198,17 @@ function AccountChoice({ photo }: { photo: ScanPhoto | null }) {
     const sheet = useRef<BottomSheetModal>(null);
     const liabilityRoute = useLiabilityCreateRoute();
     const liabilities = useBankAccounts(db).filter((account) => toAccountKind(account.kind) === "liability");
-    const [chosen, setChosen] = useState<Account | null>(null);
-    const account = chosen ?? (liabilities.length === 1 ? liabilities[0] : null);
+    const [account, setAccount] = useState<Account | null>(null);
+    // Latched, so a second liability arriving through sync mid-scan cannot unmount the flow.
+    if (account === null && liabilities.length === 1) {
+        setAccount(liabilities[0]);
+    }
 
     const addLiability: BarAction = {
         label: t("accounts.nav.newLiability"),
+        // Pushed over the scan: the editor's `router.back()` on save lands here, and the new liability is picked up.
         onPress: () =>
-            router.replace(
+            router.push(
                 liabilityRoute === "/paywall"
                     ? liabilityRoute
                     : { params: { kind: "liability" }, pathname: liabilityRoute }
@@ -235,9 +239,9 @@ function AccountChoice({ photo }: { photo: ScanPhoto | null }) {
                     allowNone={false}
                     db={db}
                     onCreate={addLiability.onPress}
-                    onSelect={setChosen}
+                    onSelect={setAccount}
                     ref={sheet}
-                    selectedId={chosen?.id ?? null}
+                    selectedId={account?.id ?? null}
                 />
             ) : null}
         </>
