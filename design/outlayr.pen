@@ -243704,7 +243704,7 @@
                       "type": "text",
                       "id": "TJCKV",
                       "x": 20,
-                      "y": 278,
+                      "y": 294,
                       "name": "Footer",
                       "fill": "$muted",
                       "textGrowth": "fixed-width",
@@ -243757,7 +243757,7 @@
                           "width": "fill_container",
                           "descendants": {
                             "rYABQ": {
-                              "icon": "person_remove",
+                              "icon": "person_cancel",
                               "fill": "$danger",
                               "enabled": true
                             },
@@ -243791,7 +243791,7 @@
                       "type": "text",
                       "id": "i3QsV",
                       "x": 20,
-                      "y": 446,
+                      "y": 462,
                       "name": "Footer",
                       "fill": "$muted",
                       "textGrowth": "fixed-width",
@@ -243844,7 +243844,7 @@
                           "width": "fill_container",
                           "descendants": {
                             "rYABQ": {
-                              "icon": "person_remove",
+                              "icon": "person_cancel",
                               "fill": "$danger",
                               "enabled": true
                             },
@@ -243878,7 +243878,7 @@
                       "type": "text",
                       "id": "WrjPK",
                       "x": 20,
-                      "y": 614,
+                      "y": 630,
                       "name": "Footer",
                       "fill": "$muted",
                       "textGrowth": "fixed-width",
@@ -243904,7 +243904,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "lEYue",
+                  "id": "uZMzr",
                   "name": "Account · signed in · iOS · dark",
                   "theme": {
                     "platform": "ios",
@@ -243918,7 +243918,7 @@
                   "layout": "none",
                   "children": [
                     {
-                      "id": "FD7an",
+                      "id": "yomeC",
                       "type": "ref",
                       "ref": "RZCb5",
                       "name": "Status Bar",
@@ -243927,7 +243927,7 @@
                     },
                     {
                       "type": "rectangle",
-                      "id": "tgyAl",
+                      "id": "b3ryf",
                       "x": 16,
                       "y": 62,
                       "name": "Back (native glass)",
@@ -243942,7 +243942,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "HpycZ",
+                      "id": "HOkYo",
                       "x": 0,
                       "y": 73,
                       "name": "Nav title",
@@ -243957,7 +243957,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "ZvdTC",
+                      "id": "VTISv",
                       "x": 20,
                       "y": 140,
                       "name": "Eyebrow",
@@ -243971,7 +243971,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "HMvu5",
+                      "id": "k1Xzp",
                       "x": 20,
                       "y": 162,
                       "name": "Email",
@@ -243984,7 +243984,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "BKx2f",
+                      "id": "RIFiM",
                       "x": 20,
                       "y": 211.5,
                       "name": "Eyebrow",
@@ -243998,7 +243998,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "tQWwf",
+                      "id": "M9fLH",
                       "x": 20,
                       "y": 233.2,
                       "name": "Sign Out row",
@@ -244017,7 +244017,7 @@
                       ],
                       "children": [
                         {
-                          "id": "Afg86",
+                          "id": "sRIqh",
                           "type": "ref",
                           "ref": "lmFWn",
                           "name": "Sign Out",
@@ -244056,9 +244056,9 @@
                     },
                     {
                       "type": "text",
-                      "id": "jbyGf",
+                      "id": "EnWwo",
                       "x": 20,
-                      "y": 278,
+                      "y": 294,
                       "name": "Footer",
                       "fill": "$muted",
                       "textGrowth": "fixed-width",
@@ -244071,7 +244071,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "BHai7",
+                      "id": "cdQMU",
                       "x": 20,
                       "y": 379.3,
                       "name": "Eyebrow",
@@ -244085,7 +244085,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "in1Tk",
+                      "id": "D5Exu3",
                       "x": 20,
                       "y": 401,
                       "name": "Delete account row",
@@ -244104,14 +244104,14 @@
                       ],
                       "children": [
                         {
-                          "id": "O2EA9",
+                          "id": "vcbL5",
                           "type": "ref",
                           "ref": "lmFWn",
                           "name": "Delete account",
                           "width": "fill_container",
                           "descendants": {
                             "rYABQ": {
-                              "icon": "person_remove",
+                              "icon": "person_cancel",
                               "fill": "$danger",
                               "enabled": true
                             },
@@ -244143,9 +244143,9 @@
                     },
                     {
                       "type": "text",
-                      "id": "z5zkyt",
+                      "id": "rFFOq",
                       "x": 20,
-                      "y": 446,
+                      "y": 462,
                       "name": "Footer",
                       "fill": "$muted",
                       "textGrowth": "fixed-width",
@@ -244158,7 +244158,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "ucMpt",
+                      "id": "EZrxR",
                       "x": 20,
                       "y": 548,
                       "name": "Eyebrow",
@@ -244172,7 +244172,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "o02PFb",
+                      "id": "O6JpoZ",
                       "x": 20,
                       "y": 569,
                       "name": "Delete account and erase this device row",
@@ -244191,14 +244191,14 @@
                       ],
                       "children": [
                         {
-                          "id": "zSQxd",
+                          "id": "MM4Pn",
                           "type": "ref",
                           "ref": "lmFWn",
                           "name": "Delete account and erase this device",
                           "width": "fill_container",
                           "descendants": {
                             "rYABQ": {
-                              "icon": "person_remove",
+                              "icon": "person_cancel",
                               "fill": "$danger",
                               "enabled": true
                             },
@@ -244230,9 +244230,9 @@
                     },
                     {
                       "type": "text",
-                      "id": "v4Zcm",
+                      "id": "uSpGt",
                       "x": 20,
-                      "y": 614,
+                      "y": 630,
                       "name": "Footer",
                       "fill": "$muted",
                       "textGrowth": "fixed-width",
@@ -244246,7 +244246,7 @@
                     {
                       "type": "rectangle",
                       "cornerRadius": 3,
-                      "id": "Qeyea",
+                      "id": "eGdXc",
                       "x": 134,
                       "y": 861,
                       "name": "Home indicator",
@@ -244422,7 +244422,7 @@
                           "height": 56
                         },
                         "P8ORXF": {
-                          "icon": "person_remove",
+                          "icon": "person_cancel",
                           "fill": "$danger",
                           "enabled": true
                         },
@@ -244484,7 +244484,7 @@
                           "height": 56
                         },
                         "P8ORXF": {
-                          "icon": "person_remove",
+                          "icon": "person_cancel",
                           "fill": "$danger",
                           "enabled": true
                         },
@@ -244523,7 +244523,7 @@
                 },
                 {
                   "type": "frame",
-                  "id": "f7FWAG",
+                  "id": "Wo5ER",
                   "name": "Account · signed in · Android · dark",
                   "theme": {
                     "platform": "android",
@@ -244537,7 +244537,7 @@
                   "layout": "none",
                   "children": [
                     {
-                      "id": "r0Bw3",
+                      "id": "tBXRC",
                       "type": "ref",
                       "ref": "BCCA1",
                       "name": "Status Bar",
@@ -244546,7 +244546,7 @@
                     },
                     {
                       "type": "rectangle",
-                      "id": "qvfJO",
+                      "id": "h9kJys",
                       "x": 0,
                       "y": 54,
                       "name": "Back (native)",
@@ -244561,7 +244561,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "MeMCU",
+                      "id": "K2PIV",
                       "x": 60,
                       "y": 61,
                       "name": "Title",
@@ -244573,7 +244573,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "jYBYt",
+                      "id": "fEY5j",
                       "x": 16,
                       "y": 131,
                       "name": "Eyebrow",
@@ -244587,7 +244587,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "qV7PN",
+                      "id": "D94cd",
                       "x": 16,
                       "y": 152,
                       "name": "Email",
@@ -244600,7 +244600,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "dE0Vy",
+                      "id": "vglpz",
                       "x": 16,
                       "y": 198.6,
                       "name": "Eyebrow",
@@ -244613,7 +244613,7 @@
                       "letterSpacing": 1.2
                     },
                     {
-                      "id": "TXRyb",
+                      "id": "Ust3S",
                       "type": "ref",
                       "ref": "GPzD9",
                       "name": "Sign Out",
@@ -244647,7 +244647,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "jlYQw",
+                      "id": "LRpmS",
                       "x": 16,
                       "y": 280,
                       "name": "Footer",
@@ -244662,7 +244662,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "Ti7UU",
+                      "id": "UJBGn",
                       "x": 16,
                       "y": 342.2,
                       "name": "Eyebrow",
@@ -244675,7 +244675,7 @@
                       "letterSpacing": 1.2
                     },
                     {
-                      "id": "UhMUJ",
+                      "id": "xBr6v",
                       "type": "ref",
                       "ref": "GPzD9",
                       "name": "Delete account",
@@ -244687,7 +244687,7 @@
                           "height": 56
                         },
                         "P8ORXF": {
-                          "icon": "person_remove",
+                          "icon": "person_cancel",
                           "fill": "$danger",
                           "enabled": true
                         },
@@ -244709,7 +244709,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "ICFZO",
+                      "id": "Y4xXw1",
                       "x": 16,
                       "y": 423,
                       "name": "Footer",
@@ -244724,7 +244724,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "B3oA12",
+                      "id": "YhrAL",
                       "x": 16,
                       "y": 485.9,
                       "name": "Eyebrow",
@@ -244737,7 +244737,7 @@
                       "letterSpacing": 1.2
                     },
                     {
-                      "id": "B0sFk",
+                      "id": "N0dMy",
                       "type": "ref",
                       "ref": "GPzD9",
                       "name": "Delete account and erase this device",
@@ -244749,7 +244749,7 @@
                           "height": 56
                         },
                         "P8ORXF": {
-                          "icon": "person_remove",
+                          "icon": "person_cancel",
                           "fill": "$danger",
                           "enabled": true
                         },
@@ -244771,7 +244771,7 @@
                     },
                     {
                       "type": "text",
-                      "id": "yJkxH",
+                      "id": "Ptc9t",
                       "x": 16,
                       "y": 567,
                       "name": "Footer",
@@ -246673,6 +246673,2146 @@
                           ]
                         }
                       ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "MRJU1",
+          "name": "Sync · off",
+          "layout": "vertical",
+          "gap": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "P1QgI",
+              "name": "Label",
+              "fill": "#6b6557",
+              "content": "Sync · off",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "ml5hV",
+              "name": "Variants",
+              "gap": 32,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "rhrjr",
+                  "name": "Sync · off · iOS · light",
+                  "theme": {
+                    "platform": "ios",
+                    "mode": "light"
+                  },
+                  "clip": true,
+                  "width": 402,
+                  "height": 874,
+                  "fill": "$background",
+                  "cornerRadius": 48,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "s7M0gA",
+                      "type": "ref",
+                      "ref": "RZCb5",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "iV4LW",
+                      "x": 16,
+                      "y": 62,
+                      "name": "Back (native glass)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/settings-back-ios-light.png",
+                        "mode": "cover"
+                      },
+                      "width": 44,
+                      "height": 44
+                    },
+                    {
+                      "type": "text",
+                      "id": "A7MWm",
+                      "x": 0,
+                      "y": 73,
+                      "name": "Nav title",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 402,
+                      "content": "Sync",
+                      "textAlign": "center",
+                      "fontFamily": "Inter",
+                      "fontSize": 17,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "hTYNU",
+                      "x": 20,
+                      "y": 139.8,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "THIS DEVICE",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "W0TmoK",
+                      "x": 20,
+                      "y": 161.7,
+                      "name": "Title",
+                      "fill": "$foreground",
+                      "content": "Not syncing",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "QNvOm",
+                      "x": 20,
+                      "y": 198.5,
+                      "name": "Detail",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 362,
+                      "content": "Nothing leaves this phone. Your ledger is complete here and works exactly as it does now.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "lRhvv",
+                      "x": 20,
+                      "y": 263,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "REPLICATION",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Zefkm",
+                      "x": 20,
+                      "y": 284.8,
+                      "name": "Rows",
+                      "width": 362,
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "top": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "layout": "vertical",
+                      "padding": [
+                        1,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "WO60S",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Account",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "account_circle",
+                              "fill": "$foreground",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Account",
+                              "fill": "$foreground"
+                            },
+                            "D7dG1": {
+                              "content": "pen.design@outlayr.local",
+                              "enabled": true
+                            },
+                            "INRhi": {
+                              "enabled": true
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": false,
+                              "fill": "$switch-off",
+                              "justifyContent": "start"
+                            }
+                          }
+                        },
+                        {
+                          "id": "tb9xR",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Sync this device",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "cloud",
+                              "fill": "$foreground",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Sync this device",
+                              "fill": "$foreground"
+                            },
+                            "D7dG1": {
+                              "content": "",
+                              "enabled": false
+                            },
+                            "INRhi": {
+                              "enabled": false
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": true,
+                              "fill": "$switch-off",
+                              "justifyContent": "start"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "h3EcIQ",
+                      "x": 20,
+                      "y": 402.7,
+                      "name": "Footer",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 362,
+                      "content": "Turning sync off keeps every transaction, budget and category on this phone; it only stops queueing them for your account. Turning it back on hands over everything logged in between.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "cCRYL",
+                      "x": 134,
+                      "y": 861,
+                      "name": "Home indicator",
+                      "fill": "$foreground",
+                      "width": 134,
+                      "height": 5
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "HMXp2",
+                  "name": "Sync · off · iOS · dark",
+                  "theme": {
+                    "platform": "ios",
+                    "mode": "dark"
+                  },
+                  "clip": true,
+                  "width": 402,
+                  "height": 874,
+                  "fill": "$background",
+                  "cornerRadius": 48,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "MbSck",
+                      "type": "ref",
+                      "ref": "RZCb5",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "Sicuv",
+                      "x": 16,
+                      "y": 62,
+                      "name": "Back (native glass)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/settings-back-ios-dark.png",
+                        "mode": "cover"
+                      },
+                      "width": 44,
+                      "height": 44
+                    },
+                    {
+                      "type": "text",
+                      "id": "JawEf",
+                      "x": 0,
+                      "y": 73,
+                      "name": "Nav title",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 402,
+                      "content": "Sync",
+                      "textAlign": "center",
+                      "fontFamily": "Inter",
+                      "fontSize": 17,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "uPCMy",
+                      "x": 20,
+                      "y": 139.8,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "THIS DEVICE",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "L6hYVN",
+                      "x": 20,
+                      "y": 161.7,
+                      "name": "Title",
+                      "fill": "$foreground",
+                      "content": "Not syncing",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "gveqv",
+                      "x": 20,
+                      "y": 198.5,
+                      "name": "Detail",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 362,
+                      "content": "Nothing leaves this phone. Your ledger is complete here and works exactly as it does now.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "XJI6w",
+                      "x": 20,
+                      "y": 263,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "REPLICATION",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "frame",
+                      "id": "TiG89",
+                      "x": 20,
+                      "y": 284.8,
+                      "name": "Rows",
+                      "width": 362,
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "top": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "layout": "vertical",
+                      "padding": [
+                        1,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "X1vYNq",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Account",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "account_circle",
+                              "fill": "$foreground",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Account",
+                              "fill": "$foreground"
+                            },
+                            "D7dG1": {
+                              "content": "pen.design@outlayr.local",
+                              "enabled": true
+                            },
+                            "INRhi": {
+                              "enabled": true
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": false,
+                              "fill": "$switch-off",
+                              "justifyContent": "start"
+                            }
+                          }
+                        },
+                        {
+                          "id": "pF1cN",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Sync this device",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "cloud",
+                              "fill": "$foreground",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Sync this device",
+                              "fill": "$foreground"
+                            },
+                            "D7dG1": {
+                              "content": "",
+                              "enabled": false
+                            },
+                            "INRhi": {
+                              "enabled": false
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": true,
+                              "fill": "$switch-off",
+                              "justifyContent": "start"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "IYG9U",
+                      "x": 20,
+                      "y": 402.7,
+                      "name": "Footer",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 362,
+                      "content": "Turning sync off keeps every transaction, budget and category on this phone; it only stops queueing them for your account. Turning it back on hands over everything logged in between.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "t7kih",
+                      "x": 134,
+                      "y": 861,
+                      "name": "Home indicator",
+                      "fill": "$foreground",
+                      "width": 134,
+                      "height": 5
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "lat74",
+                  "name": "Sync · off · Android · light",
+                  "theme": {
+                    "platform": "android",
+                    "mode": "light"
+                  },
+                  "clip": true,
+                  "width": 412,
+                  "height": 915,
+                  "fill": "$m3-surface",
+                  "cornerRadius": 28,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "Om737",
+                      "type": "ref",
+                      "ref": "BCCA1",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "yuQ75",
+                      "x": 0,
+                      "y": 54,
+                      "name": "Back (native)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/settings-back-android-light.png",
+                        "mode": "cover"
+                      },
+                      "width": 56,
+                      "height": 52
+                    },
+                    {
+                      "type": "text",
+                      "id": "Q15lo",
+                      "x": 60,
+                      "y": 61,
+                      "name": "Title",
+                      "fill": "$m3-on-surface",
+                      "content": "Sync",
+                      "fontFamily": "$font-body",
+                      "fontSize": 22,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Z1lqE",
+                      "x": 16,
+                      "y": 130,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "THIS DEVICE",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "xYDZy",
+                      "x": 16,
+                      "y": 151,
+                      "name": "Title",
+                      "fill": "$m3-on-surface",
+                      "content": "Not syncing",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "FRv84",
+                      "x": 16,
+                      "y": 184,
+                      "name": "Detail",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 380,
+                      "content": "Nothing leaves this phone. Your ledger is complete here and works exactly as it does now.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "IOQev",
+                      "x": 16,
+                      "y": 249.8,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "REPLICATION",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "id": "x6kZco",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Account",
+                      "x": 0,
+                      "y": 269,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 72
+                        },
+                        "P8ORXF": {
+                          "icon": "account_circle",
+                          "fill": "$m3-on-surface-variant",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Account",
+                          "fill": "$m3-on-surface"
+                        },
+                        "SOmnC": {
+                          "content": "pen.design@outlayr.local",
+                          "enabled": true
+                        },
+                        "NwABC": {
+                          "enabled": true
+                        },
+                        "J5h2o": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "xuSG9",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Sync this device",
+                      "x": 0,
+                      "y": 341.3,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 56
+                        },
+                        "P8ORXF": {
+                          "icon": "cloud",
+                          "fill": "$m3-on-surface-variant",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Sync this device",
+                          "fill": "$m3-on-surface"
+                        },
+                        "SOmnC": {
+                          "content": "",
+                          "enabled": false
+                        },
+                        "NwABC": {
+                          "enabled": false
+                        },
+                        "J5h2o": {
+                          "enabled": true,
+                          "fill": "$m3-surface-container-highest",
+                          "stroke": "$m3-outline",
+                          "strokeWidth": 2,
+                          "justifyContent": "start",
+                          "padding": [
+                            0,
+                            0,
+                            0,
+                            6
+                          ]
+                        },
+                        "ivrUo": {
+                          "width": 16,
+                          "height": 16,
+                          "fill": "$m3-outline"
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "P6OXm",
+                      "x": 16,
+                      "y": 404,
+                      "name": "Footer",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 380,
+                      "content": "Turning sync off keeps every transaction, budget and category on this phone; it only stops queueing them for your account. Turning it back on hands over everything logged in between.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "OqyGt",
+                  "name": "Sync · off · Android · dark",
+                  "theme": {
+                    "platform": "android",
+                    "mode": "dark"
+                  },
+                  "clip": true,
+                  "width": 412,
+                  "height": 915,
+                  "fill": "$m3-surface",
+                  "cornerRadius": 28,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "g40vzk",
+                      "type": "ref",
+                      "ref": "BCCA1",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "po7rb",
+                      "x": 0,
+                      "y": 54,
+                      "name": "Back (native)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/settings-back-android-dark.png",
+                        "mode": "cover"
+                      },
+                      "width": 56,
+                      "height": 52
+                    },
+                    {
+                      "type": "text",
+                      "id": "Y5EmL",
+                      "x": 60,
+                      "y": 61,
+                      "name": "Title",
+                      "fill": "$m3-on-surface",
+                      "content": "Sync",
+                      "fontFamily": "$font-body",
+                      "fontSize": 22,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "euvRe",
+                      "x": 16,
+                      "y": 130,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "THIS DEVICE",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "HwAQU",
+                      "x": 16,
+                      "y": 151,
+                      "name": "Title",
+                      "fill": "$m3-on-surface",
+                      "content": "Not syncing",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "T6ocEt",
+                      "x": 16,
+                      "y": 184,
+                      "name": "Detail",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 380,
+                      "content": "Nothing leaves this phone. Your ledger is complete here and works exactly as it does now.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "i2Z7X",
+                      "x": 16,
+                      "y": 249.8,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "REPLICATION",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "id": "nrm2z",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Account",
+                      "x": 0,
+                      "y": 269,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 72
+                        },
+                        "P8ORXF": {
+                          "icon": "account_circle",
+                          "fill": "$m3-on-surface-variant",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Account",
+                          "fill": "$m3-on-surface"
+                        },
+                        "SOmnC": {
+                          "content": "pen.design@outlayr.local",
+                          "enabled": true
+                        },
+                        "NwABC": {
+                          "enabled": true
+                        },
+                        "J5h2o": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "nCzNj",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Sync this device",
+                      "x": 0,
+                      "y": 341.3,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 56
+                        },
+                        "P8ORXF": {
+                          "icon": "cloud",
+                          "fill": "$m3-on-surface-variant",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Sync this device",
+                          "fill": "$m3-on-surface"
+                        },
+                        "SOmnC": {
+                          "content": "",
+                          "enabled": false
+                        },
+                        "NwABC": {
+                          "enabled": false
+                        },
+                        "J5h2o": {
+                          "enabled": true,
+                          "fill": "$m3-surface-container-highest",
+                          "stroke": "$m3-outline",
+                          "strokeWidth": 2,
+                          "justifyContent": "start",
+                          "padding": [
+                            0,
+                            0,
+                            0,
+                            6
+                          ]
+                        },
+                        "ivrUo": {
+                          "width": 16,
+                          "height": 16,
+                          "fill": "$m3-outline"
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "sL3CC",
+                      "x": 16,
+                      "y": 404,
+                      "name": "Footer",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 380,
+                      "content": "Turning sync off keeps every transaction, budget and category on this phone; it only stops queueing them for your account. Turning it back on hands over everything logged in between.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "jHA3t",
+          "name": "Sync · on",
+          "layout": "vertical",
+          "gap": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "x4rpB4",
+              "name": "Label",
+              "fill": "#6b6557",
+              "content": "Sync · on",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "Wy9bl",
+              "name": "Variants",
+              "gap": 32,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "JH0MA",
+                  "name": "Sync · on · iOS · light",
+                  "theme": {
+                    "platform": "ios",
+                    "mode": "light"
+                  },
+                  "clip": true,
+                  "width": 402,
+                  "height": 874,
+                  "fill": "$background",
+                  "cornerRadius": 48,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "Itkzo",
+                      "type": "ref",
+                      "ref": "RZCb5",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "ahBtN",
+                      "x": 16,
+                      "y": 62,
+                      "name": "Back (native glass)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/settings-back-ios-light.png",
+                        "mode": "cover"
+                      },
+                      "width": 44,
+                      "height": 44
+                    },
+                    {
+                      "type": "text",
+                      "id": "cCI7W",
+                      "x": 0,
+                      "y": 73,
+                      "name": "Nav title",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 402,
+                      "content": "Sync",
+                      "textAlign": "center",
+                      "fontFamily": "Inter",
+                      "fontSize": 17,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "HRruW",
+                      "x": 20,
+                      "y": 139.8,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "THIS DEVICE",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "D3hNyF",
+                      "x": 20,
+                      "y": 161.7,
+                      "name": "Title",
+                      "fill": "$foreground",
+                      "content": "Syncing",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "hRy2r",
+                      "x": 20,
+                      "y": 198.5,
+                      "name": "Detail",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 362,
+                      "content": "Every change you make here is queued for your account and reaches your other devices.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "wESAP",
+                      "x": 20,
+                      "y": 263,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "REPLICATION",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "frame",
+                      "id": "yi8JW",
+                      "x": 20,
+                      "y": 284.8,
+                      "name": "Rows",
+                      "width": 362,
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "top": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "layout": "vertical",
+                      "padding": [
+                        1,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "QDS6V",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Account",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "account_circle",
+                              "fill": "$foreground",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Account",
+                              "fill": "$foreground"
+                            },
+                            "D7dG1": {
+                              "content": "pen.design@outlayr.local",
+                              "enabled": true
+                            },
+                            "INRhi": {
+                              "enabled": true
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": false,
+                              "fill": "$switch-off",
+                              "justifyContent": "start"
+                            }
+                          }
+                        },
+                        {
+                          "id": "kIbvU",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Sync this device",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "cloud",
+                              "fill": "$foreground",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Sync this device",
+                              "fill": "$foreground"
+                            },
+                            "D7dG1": {
+                              "content": "",
+                              "enabled": false
+                            },
+                            "INRhi": {
+                              "enabled": false
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": true,
+                              "fill": "$tint",
+                              "justifyContent": "end"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "LaEyg",
+                      "x": 20,
+                      "y": 402.7,
+                      "name": "Footer",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 362,
+                      "content": "Turning sync off keeps every transaction, budget and category on this phone; it only stops queueing them for your account. Turning it back on hands over everything logged in between.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "G4ffk",
+                      "x": 20,
+                      "y": 508.7,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "STATUS",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "frame",
+                      "id": "C2RWfN",
+                      "x": 20,
+                      "y": 530.7,
+                      "name": "Status rows",
+                      "width": 362,
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "top": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "layout": "vertical",
+                      "padding": [
+                        1,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "auQ5Z",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Waiting to sync",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "cloud",
+                              "fill": "$foreground",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Waiting to sync",
+                              "fill": "$foreground"
+                            },
+                            "D7dG1": {
+                              "content": "0",
+                              "enabled": true
+                            },
+                            "INRhi": {
+                              "enabled": false
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": false,
+                              "fill": "$switch-off",
+                              "justifyContent": "start"
+                            }
+                          }
+                        },
+                        {
+                          "id": "R7L2u",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Last synced",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "calendar_clock",
+                              "fill": "$foreground",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Last synced",
+                              "fill": "$foreground"
+                            },
+                            "D7dG1": {
+                              "content": "TODAY 5:47 AM",
+                              "enabled": true
+                            },
+                            "INRhi": {
+                              "enabled": false
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": false,
+                              "fill": "$switch-off",
+                              "justifyContent": "start"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "i3VjY",
+                      "x": 134,
+                      "y": 861,
+                      "name": "Home indicator",
+                      "fill": "$foreground",
+                      "width": 134,
+                      "height": 5
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ZggnP",
+                  "name": "Sync · on · iOS · dark",
+                  "theme": {
+                    "platform": "ios",
+                    "mode": "dark"
+                  },
+                  "clip": true,
+                  "width": 402,
+                  "height": 874,
+                  "fill": "$background",
+                  "cornerRadius": 48,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "Bi5EU",
+                      "type": "ref",
+                      "ref": "RZCb5",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "XupdX",
+                      "x": 16,
+                      "y": 62,
+                      "name": "Back (native glass)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/settings-back-ios-dark.png",
+                        "mode": "cover"
+                      },
+                      "width": 44,
+                      "height": 44
+                    },
+                    {
+                      "type": "text",
+                      "id": "CCT7P",
+                      "x": 0,
+                      "y": 73,
+                      "name": "Nav title",
+                      "fill": "$foreground",
+                      "textGrowth": "fixed-width",
+                      "width": 402,
+                      "content": "Sync",
+                      "textAlign": "center",
+                      "fontFamily": "Inter",
+                      "fontSize": 17,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "cDqdF",
+                      "x": 20,
+                      "y": 139.8,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "THIS DEVICE",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "DrOJv",
+                      "x": 20,
+                      "y": 161.7,
+                      "name": "Title",
+                      "fill": "$foreground",
+                      "content": "Syncing",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "uoRvh",
+                      "x": 20,
+                      "y": 198.5,
+                      "name": "Detail",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 362,
+                      "content": "Every change you make here is queued for your account and reaches your other devices.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "rFGEq",
+                      "x": 20,
+                      "y": 263,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "REPLICATION",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "frame",
+                      "id": "SRk0X",
+                      "x": 20,
+                      "y": 284.8,
+                      "name": "Rows",
+                      "width": 362,
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "top": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "layout": "vertical",
+                      "padding": [
+                        1,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "HP9Gc",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Account",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "account_circle",
+                              "fill": "$foreground",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Account",
+                              "fill": "$foreground"
+                            },
+                            "D7dG1": {
+                              "content": "pen.design@outlayr.local",
+                              "enabled": true
+                            },
+                            "INRhi": {
+                              "enabled": true
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": false,
+                              "fill": "$switch-off",
+                              "justifyContent": "start"
+                            }
+                          }
+                        },
+                        {
+                          "id": "h0sWQ",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Sync this device",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "cloud",
+                              "fill": "$foreground",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Sync this device",
+                              "fill": "$foreground"
+                            },
+                            "D7dG1": {
+                              "content": "",
+                              "enabled": false
+                            },
+                            "INRhi": {
+                              "enabled": false
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": true,
+                              "fill": "$tint",
+                              "justifyContent": "end"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "NIfss",
+                      "x": 20,
+                      "y": 402.7,
+                      "name": "Footer",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": 362,
+                      "content": "Turning sync off keeps every transaction, budget and category on this phone; it only stops queueing them for your account. Turning it back on hands over everything logged in between.",
+                      "lineHeight": 1.375,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "OVp2C",
+                      "x": 20,
+                      "y": 508.7,
+                      "name": "Eyebrow",
+                      "fill": "$muted",
+                      "content": "STATUS",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "frame",
+                      "id": "uMUoZ",
+                      "x": 20,
+                      "y": 530.7,
+                      "name": "Status rows",
+                      "width": 362,
+                      "stroke": "$border",
+                      "strokeWidth": {
+                        "top": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "layout": "vertical",
+                      "padding": [
+                        1,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "id": "xRl26",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Waiting to sync",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "cloud",
+                              "fill": "$foreground",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Waiting to sync",
+                              "fill": "$foreground"
+                            },
+                            "D7dG1": {
+                              "content": "0",
+                              "enabled": true
+                            },
+                            "INRhi": {
+                              "enabled": false
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": false,
+                              "fill": "$switch-off",
+                              "justifyContent": "start"
+                            }
+                          }
+                        },
+                        {
+                          "id": "F4g3m4",
+                          "type": "ref",
+                          "ref": "lmFWn",
+                          "name": "Last synced",
+                          "width": "fill_container",
+                          "descendants": {
+                            "rYABQ": {
+                              "icon": "calendar_clock",
+                              "fill": "$foreground",
+                              "enabled": true
+                            },
+                            "DQo6j": {
+                              "content": "Last synced",
+                              "fill": "$foreground"
+                            },
+                            "D7dG1": {
+                              "content": "TODAY 5:47 AM",
+                              "enabled": true
+                            },
+                            "INRhi": {
+                              "enabled": false
+                            },
+                            "oqSlc": {
+                              "enabled": false
+                            },
+                            "z9OCos": {
+                              "enabled": false
+                            },
+                            "Eqipf": {
+                              "enabled": false,
+                              "fill": "$switch-off",
+                              "justifyContent": "start"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 3,
+                      "id": "qG4Uz",
+                      "x": 134,
+                      "y": 861,
+                      "name": "Home indicator",
+                      "fill": "$foreground",
+                      "width": 134,
+                      "height": 5
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "cyR9d",
+                  "name": "Sync · on · Android · light",
+                  "theme": {
+                    "platform": "android",
+                    "mode": "light"
+                  },
+                  "clip": true,
+                  "width": 412,
+                  "height": 915,
+                  "fill": "$m3-surface",
+                  "cornerRadius": 28,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "d7lYA5",
+                      "type": "ref",
+                      "ref": "BCCA1",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "CxJvQ",
+                      "x": 0,
+                      "y": 54,
+                      "name": "Back (native)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/settings-back-android-light.png",
+                        "mode": "cover"
+                      },
+                      "width": 56,
+                      "height": 52
+                    },
+                    {
+                      "type": "text",
+                      "id": "f2Zspn",
+                      "x": 60,
+                      "y": 61,
+                      "name": "Title",
+                      "fill": "$m3-on-surface",
+                      "content": "Sync",
+                      "fontFamily": "$font-body",
+                      "fontSize": 22,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "jHD52",
+                      "x": 16,
+                      "y": 130,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "THIS DEVICE",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "i5cAlz",
+                      "x": 16,
+                      "y": 151,
+                      "name": "Title",
+                      "fill": "$m3-on-surface",
+                      "content": "Syncing",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "cLICK",
+                      "x": 16,
+                      "y": 184,
+                      "name": "Detail",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 380,
+                      "content": "Every change you make here is queued for your account and reaches your other devices.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "g5Yy6R",
+                      "x": 16,
+                      "y": 249.8,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "REPLICATION",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "id": "E84E4D",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Account",
+                      "x": 0,
+                      "y": 269,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 72
+                        },
+                        "P8ORXF": {
+                          "icon": "account_circle",
+                          "fill": "$m3-on-surface-variant",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Account",
+                          "fill": "$m3-on-surface"
+                        },
+                        "SOmnC": {
+                          "content": "pen.design@outlayr.local",
+                          "enabled": true
+                        },
+                        "NwABC": {
+                          "enabled": true
+                        },
+                        "J5h2o": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "kxM76",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Sync this device",
+                      "x": 0,
+                      "y": 341.3,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 56
+                        },
+                        "P8ORXF": {
+                          "icon": "cloud",
+                          "fill": "$m3-on-surface-variant",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Sync this device",
+                          "fill": "$m3-on-surface"
+                        },
+                        "SOmnC": {
+                          "content": "",
+                          "enabled": false
+                        },
+                        "NwABC": {
+                          "enabled": false
+                        },
+                        "J5h2o": {
+                          "enabled": true
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "CkWct",
+                      "x": 16,
+                      "y": 404,
+                      "name": "Footer",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 380,
+                      "content": "Turning sync off keeps every transaction, budget and category on this phone; it only stops queueing them for your account. Turning it back on hands over everything logged in between.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "elEr4",
+                      "x": 16,
+                      "y": 506,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "STATUS",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "id": "RXZhU",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Waiting to sync",
+                      "x": 0,
+                      "y": 525,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 72
+                        },
+                        "P8ORXF": {
+                          "icon": "cloud",
+                          "fill": "$m3-on-surface-variant",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Waiting to sync",
+                          "fill": "$m3-on-surface"
+                        },
+                        "SOmnC": {
+                          "content": "0",
+                          "enabled": true
+                        },
+                        "NwABC": {
+                          "enabled": false
+                        },
+                        "J5h2o": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "s3iUnR",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Last synced",
+                      "x": 0,
+                      "y": 597,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 72
+                        },
+                        "P8ORXF": {
+                          "icon": "calendar_clock",
+                          "fill": "$m3-on-surface-variant",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Last synced",
+                          "fill": "$m3-on-surface"
+                        },
+                        "SOmnC": {
+                          "content": "TODAY 5:59 AM",
+                          "enabled": true
+                        },
+                        "NwABC": {
+                          "enabled": false
+                        },
+                        "J5h2o": {
+                          "enabled": false
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "E7p3BP",
+                  "name": "Sync · on · Android · dark",
+                  "theme": {
+                    "platform": "android",
+                    "mode": "dark"
+                  },
+                  "clip": true,
+                  "width": 412,
+                  "height": 915,
+                  "fill": "$m3-surface",
+                  "cornerRadius": 28,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "id": "c10AlP",
+                      "type": "ref",
+                      "ref": "BCCA1",
+                      "name": "Status Bar",
+                      "x": 0,
+                      "y": 0
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "g4nfEe",
+                      "x": 0,
+                      "y": 54,
+                      "name": "Back (native)",
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "assets/chrome/settings-back-android-dark.png",
+                        "mode": "cover"
+                      },
+                      "width": 56,
+                      "height": 52
+                    },
+                    {
+                      "type": "text",
+                      "id": "MenUN",
+                      "x": 60,
+                      "y": 61,
+                      "name": "Title",
+                      "fill": "$m3-on-surface",
+                      "content": "Sync",
+                      "fontFamily": "$font-body",
+                      "fontSize": 22,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "yn3jQ",
+                      "x": 16,
+                      "y": 130,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "THIS DEVICE",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "gR4kI",
+                      "x": 16,
+                      "y": 151,
+                      "name": "Title",
+                      "fill": "$m3-on-surface",
+                      "content": "Syncing",
+                      "lineHeight": 1.3,
+                      "fontFamily": "$font-body",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "D7CR8s",
+                      "x": 16,
+                      "y": 184,
+                      "name": "Detail",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 380,
+                      "content": "Every change you make here is queued for your account and reaches your other devices.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "iETBi",
+                      "x": 16,
+                      "y": 249.8,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "REPLICATION",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "id": "ntQis",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Account",
+                      "x": 0,
+                      "y": 269,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 72
+                        },
+                        "P8ORXF": {
+                          "icon": "account_circle",
+                          "fill": "$m3-on-surface-variant",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Account",
+                          "fill": "$m3-on-surface"
+                        },
+                        "SOmnC": {
+                          "content": "pen.design@outlayr.local",
+                          "enabled": true
+                        },
+                        "NwABC": {
+                          "enabled": true
+                        },
+                        "J5h2o": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "b6lHXN",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Sync this device",
+                      "x": 0,
+                      "y": 341.3,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 56
+                        },
+                        "P8ORXF": {
+                          "icon": "cloud",
+                          "fill": "$m3-on-surface-variant",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Sync this device",
+                          "fill": "$m3-on-surface"
+                        },
+                        "SOmnC": {
+                          "content": "",
+                          "enabled": false
+                        },
+                        "NwABC": {
+                          "enabled": false
+                        },
+                        "J5h2o": {
+                          "enabled": true
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "pHU7r",
+                      "x": 16,
+                      "y": 404,
+                      "name": "Footer",
+                      "fill": "$m3-on-surface-variant",
+                      "textGrowth": "fixed-width",
+                      "width": 380,
+                      "content": "Turning sync off keeps every transaction, budget and category on this phone; it only stops queueing them for your account. Turning it back on hands over everything logged in between.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "y34bE2",
+                      "x": 16,
+                      "y": 506,
+                      "name": "Eyebrow",
+                      "fill": "$m3-on-surface-variant",
+                      "content": "STATUS",
+                      "lineHeight": 1.364,
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "id": "xB6ML",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Waiting to sync",
+                      "x": 0,
+                      "y": 525,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 72
+                        },
+                        "P8ORXF": {
+                          "icon": "cloud",
+                          "fill": "$m3-on-surface-variant",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Waiting to sync",
+                          "fill": "$m3-on-surface"
+                        },
+                        "SOmnC": {
+                          "content": "0",
+                          "enabled": true
+                        },
+                        "NwABC": {
+                          "enabled": false
+                        },
+                        "J5h2o": {
+                          "enabled": false
+                        }
+                      }
+                    },
+                    {
+                      "id": "gVMmp",
+                      "type": "ref",
+                      "ref": "GPzD9",
+                      "name": "Last synced",
+                      "x": 0,
+                      "y": 597,
+                      "width": 412,
+                      "descendants": {
+                        "lPKxu": {
+                          "height": 72
+                        },
+                        "P8ORXF": {
+                          "icon": "calendar_clock",
+                          "fill": "$m3-on-surface-variant",
+                          "enabled": true
+                        },
+                        "Khqzx": {
+                          "content": "Last synced",
+                          "fill": "$m3-on-surface"
+                        },
+                        "SOmnC": {
+                          "content": "TODAY 5:59 AM",
+                          "enabled": true
+                        },
+                        "NwABC": {
+                          "enabled": false
+                        },
+                        "J5h2o": {
+                          "enabled": false
+                        }
+                      }
                     }
                   ]
                 }
