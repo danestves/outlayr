@@ -66,6 +66,7 @@ function makeDb() {
 			receipt text,
 			installmentId text,
 			restoredAt integer,
+			unreviewed integer NOT NULL DEFAULT 0,
 			updatedAt integer NOT NULL,
 			deletedAt integer
 		);

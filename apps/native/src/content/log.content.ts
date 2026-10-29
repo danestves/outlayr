@@ -66,6 +66,25 @@ const log = {
             fr: "Afficher les montants",
             pt: "Mostrar valores",
         }),
+        "log.autolog.confirmAll": t({
+            en: "Confirm all",
+            es: "Confirmar todo",
+            fr: "Tout confirmer",
+            pt: "Confirmar tudo",
+        }),
+        "log.autolog.new": t({
+            en: "{count} new",
+            es: "{count} nuevos",
+            fr: "{count} nouveaux",
+            pt: "{count} novos",
+        }),
+        "log.autolog.paused": t({
+            en: "Auto-log paused · {count} waiting",
+            es: "Registro automático en pausa · {count} en espera",
+            fr: "Saisie auto en pause · {count} en attente",
+            pt: "Registro automático pausado · {count} em espera",
+            "pt-PT": "Registo automático em pausa · {count} em espera",
+        }),
         "log.chip.earlier": t({
             en: "Earlier",
             es: "Anterior",

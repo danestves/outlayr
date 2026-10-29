@@ -107,6 +107,7 @@ describe("opening local data across the drizzle 1.0 upgrade", () => {
             "0037",
             "0038",
             "0039",
+            "0040",
         ]);
         expect(applied.every((row) => row.applied_at !== null)).toBe(true);
         expect(
@@ -126,7 +127,7 @@ describe("opening local data across the drizzle 1.0 upgrade", () => {
     });
 
     it("refuses a log row no migration produced and leaves the log as it was", async () => {
-        const sqlite = olderBuild("9999");
+        const sqlite = olderBuild("0037");
         sqlite.prepare(`INSERT INTO "__drizzle_migrations" ("hash", "created_at") VALUES ('', 1)`).run();
         const before = log(sqlite);
         const columnsBefore = sqlite.prepare(`SELECT name FROM pragma_table_info('__drizzle_migrations')`).all();

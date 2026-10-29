@@ -219,6 +219,7 @@ export function useOutsideMoveRows(
             recurringType: 0,
             sign: into ? "+" : "-",
             transferId: row.id,
+            unreviewed: false,
         };
     });
 }

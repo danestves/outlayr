@@ -68,6 +68,7 @@ export interface TransferLogRow {
     recurringType: number;
     sign?: "+" | "-";
     transferId: string;
+    unreviewed: false;
 }
 
 const UNKNOWN_ACCOUNT = "–";
@@ -137,6 +138,7 @@ export function toTransferLogRow(
         recurringEndDate: null,
         recurringType: 0,
         transferId: transfer.id,
+        unreviewed: false,
     };
 }
 

@@ -5,11 +5,13 @@ import { LinkRow, SettingsSection } from "@/components/list/list-row";
 import type { SettingsIconName } from "@/components/settings/settings-icons";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
+import { useDatabase } from "@/contexts/local-data-context";
+import { useAutologUsage } from "@/data/autolog-cap";
 import { formatSentenceDate } from "@/domain/dates";
 import { paywallHref } from "@/domain/paywall-trigger";
 import { formatWait, projectLimit } from "@/domain/usage-limits";
 import type { LimitBucket } from "@/domain/usage-limits";
-import { proSellable } from "@/hooks/use-pro-locked";
+import { proSellable, useProLocked } from "@/hooks/use-pro-locked";
 import { useTickingNow, useUsageLimits } from "@/hooks/use-usage-limits";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useLanguage, useTranslation } from "@/i18n/context";
@@ -26,6 +28,8 @@ function UsageLimitsView() {
     const router = useRouter();
     const limits = useUsageLimits();
     const now = useTickingNow(true);
+    const autolog = useAutologUsage(useDatabase());
+    const locked = useProLocked();
 
     if (!limits) {
         return <SettingsScreen>{null}</SettingsScreen>;
@@ -71,6 +75,16 @@ function UsageLimitsView() {
                         value={t("pro.entry.value")}
                     />
                 </View>
+            ) : null}
+
+            {locked ? (
+                <SettingsSection title={t("settings.usage.thisMonth")}>
+                    <LinkRow
+                        icon="Wallet01"
+                        title={t("settings.usage.autolog")}
+                        value={`${autolog.used} / ${autolog.cap}`}
+                    />
+                </SettingsSection>
             ) : null}
 
             <SettingsSection title={t("settings.usage.thisHour")}>

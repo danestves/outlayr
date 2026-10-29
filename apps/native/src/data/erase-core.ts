@@ -70,6 +70,7 @@ export const ERASED_TRANSACTION = {
     recurringType: RECURRING_TYPE.none,
     reminderLeadDays: null,
     transferId: null,
+    unreviewed: false,
 } as const;
 
 /** The two account ids stay: both are `notNull`, so blanking them would point the row at no account. */

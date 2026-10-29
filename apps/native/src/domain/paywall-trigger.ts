@@ -4,6 +4,7 @@ import * as Schema from "effect/Schema";
 export const PaywallTrigger = Schema.Literals([
     "accounts",
     "app_icon",
+    "autolog",
     "budgets",
     "captures",
     "currencies",

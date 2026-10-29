@@ -9,6 +9,7 @@ import * as Stream from "effect/Stream";
 
 import { getMeta, META_KEYS, setMeta } from "@/data/app-meta-core";
 import type { AppMetaError } from "@/data/app-meta-core";
+import { writeAutologAccess } from "@/data/autolog-cap-core";
 import {
     backfillBudgetUsd,
     backfillCanonicalUsd,
@@ -21,12 +22,15 @@ import { drainPendingWrites, fileWaitingPurchases, takeRepriced } from "@/data/p
 import { applyRecentRates, pullRatesIfDue } from "@/data/rates";
 import type { PullRatesFn, RateWireRow, RatesError } from "@/data/rates";
 import type { Database } from "@/db/client";
+import { autologAccessOf } from "@/domain/autolog-cap";
+import type { AutologAccess } from "@/domain/autolog-cap";
 import { formatAmount } from "@/domain/money";
 import { translateNow } from "@/i18n/runtime";
-import { ratesPuller, watchRecentRates } from "@/lib/convex";
+import { convex, ratesPuller, watchRecentRates } from "@/lib/convex";
 import { sendEnrichmentQueue } from "@/lib/enrichment-queue";
 import { armLogoBackfill, backfillLogos } from "@/lib/logo-backfill";
 import { notifyWarning } from "@/lib/notify";
+import { RevenueCat } from "@/lib/revenuecat-service";
 import { onWatchPendingWrite } from "@/lib/watch-link";
 
 import { appStates, launchAndForegrounds, listen, signals, WatchAppState, WatchTableWrites } from "./app-events";
@@ -76,16 +80,34 @@ export class SystemSurfaces extends Context.Service<
 >()("outlayr/lib/SystemSync/SystemSurfaces") {}
 
 export const SystemSources = Context.Reference<{
+    readonly access: Stream.Stream<AutologAccess>;
     readonly pullRates: PullRatesFn;
     readonly watchPendingWrites: Signal;
     readonly watchRecentRates: Watch<RateWireRow[]>;
 }>("outlayr/lib/SystemSync/SystemSources", {
     defaultValue: () => ({
+        access: Stream.empty,
         pullRates: ratesPuller(),
         watchPendingWrites: onWatchPendingWrite,
         watchRecentRates,
     }),
 });
+
+export const liveSources = Layer.effect(
+    SystemSources,
+    Effect.gen(function* liveSourcesMake() {
+        const revenueCat = yield* RevenueCat;
+        return {
+            access: revenueCat.entitlement.pipe(
+                Stream.map((entitlement) => autologAccessOf(entitlement, convex !== null)),
+                Stream.changes
+            ),
+            pullRates: ratesPuller(),
+            watchPendingWrites: onWatchPendingWrite,
+            watchRecentRates,
+        };
+    })
+);
 
 export class SystemSync extends Context.Service<
     SystemSync,
@@ -262,7 +284,19 @@ export const make = Effect.gen(function* make() {
         const flushes = backgrounds.pipe(
             Stream.runForEach(() => Effect.all([publishNow, reindexNow], { concurrency: "unbounded", discard: true }))
         );
-        const catchUps = Stream.merge(swept, signals(sources.watchPendingWrites)).pipe(
+        const unlocks = sources.access.pipe(
+            Stream.filter((access) => access !== "pending"),
+            Stream.mapEffect((access) =>
+                writeAutologAccess(db, access).pipe(
+                    Effect.catch((error) => Effect.logWarning("Autolog access not saved", error.cause)),
+                    Effect.as(access)
+                )
+            ),
+            Stream.filter((access) => access === "open")
+        );
+        const catchUps = Stream.mergeAll([swept, signals(sources.watchPendingWrites), unlocks], {
+            concurrency: "unbounded",
+        }).pipe(
             Stream.mapEffect(() => catchUp, { concurrency: "unbounded" }),
             Stream.runDrain
         );

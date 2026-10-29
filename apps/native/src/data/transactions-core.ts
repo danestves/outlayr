@@ -64,6 +64,7 @@ export const LOG_COLUMNS = {
     recurringEndDate: transactions.recurringEndDate,
     recurringType: transactions.recurringType,
     transferId: transactions.transferId,
+    unreviewed: transactions.unreviewed,
 } as const;
 
 function visibleAt(nowMs: number) {
@@ -437,6 +438,18 @@ export const transactionsRepo = {
         return id;
     }),
 
+    markReviewed: Effect.fn("Transactions.markReviewed")(function* markReviewed(db: Database, ids: readonly string[]) {
+        if (ids.length === 0) {
+            return;
+        }
+        yield* query("update", () =>
+            db
+                .update(transactions)
+                .set({ unreviewed: false })
+                .where(inArray(transactions.id, [...ids]))
+        );
+    }),
+
     /**
      * Re-anchors the schedule on a successor first, since the newest occurrence holds it. The tombstone retires to
      * `none`, which is how deleting the pending charge stops a subscription.
@@ -673,6 +686,7 @@ export const transactionsRepo = {
                             deletedAt: previous?.deletedAt ?? null,
                             imageKey: removesPhoto(previous, row) ? null : rest.imageKey,
                             reminderLeadDays: keptLead(row, previous, input),
+                            unreviewed: false,
                         })
                         .where(eq(transactions.id, id))
                 );
