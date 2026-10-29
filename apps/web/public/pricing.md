@@ -1,6 +1,6 @@
 # Outlayr pricing
 
-Outlayr is a mobile expense tracker on Android from Google Play, and coming soon to the App Store for iPhone. It is free to start, with no ads on any plan. Outlayr Pro raises the limits and adds sync.
+Outlayr is a mobile expense tracker on the App Store for iPhone and on Google Play for Android. It is free to start, with no ads on any plan. Outlayr Pro raises the limits and adds sync.
 
 | Plan | US price | Billing |
 |---|---|---|
