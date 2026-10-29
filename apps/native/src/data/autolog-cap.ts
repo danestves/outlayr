@@ -21,10 +21,12 @@ function useMetaText(db: Database, key: string): string | null {
 
 export function useAutologUsage(db: Database) {
     const usage = parseAutologUsage(useMetaText(db, META_KEYS.autologUsage));
-    const waiting = useMetaText(db, META_KEYS.autologWaiting);
+    const raw = useMetaText(db, META_KEYS.autologWaiting);
+    const queued = raw ? parseLegacyQueue(raw) : [];
     return {
         cap: FREE_AUTOLOG_PER_MONTH,
+        queued,
         used: monthUsage(usage, useNow()).used,
-        waiting: waiting ? parseLegacyQueue(waiting).length : 0,
+        waiting: queued.length,
     };
 }

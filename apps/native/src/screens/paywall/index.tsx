@@ -1,16 +1,20 @@
 import { useAtomValue } from "@effect/atom-react/Hooks";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
-import { useNavigation, useRouter } from "expo-router";
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
 import { BusyText } from "@/components/busy-text";
 import { MONO_LABEL_CLASS, MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
+import { useDatabase } from "@/contexts/local-data-context";
 import { useRevenueCat } from "@/contexts/revenuecat-context";
+import { useAutologUsage } from "@/data/autolog-cap";
 import { APP_ICONS } from "@/domain/app-icons";
+import { paywallTriggerOf } from "@/domain/paywall-trigger";
 import {
     FREE_ACCOUNTS,
+    FREE_AUTOLOG_PER_MONTH,
     FREE_BUDGETS,
     FREE_CURRENCIES,
     FREE_INSTALLMENT_APPS,
@@ -34,10 +38,15 @@ import { buyPlanCommand, confirmEntitlementCommand, restorePlanCommand } from "@
 import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
 
+import { AccountTop } from "./account-top";
+import { AlsoRows } from "./also-rows";
+import { AutologTop } from "./autolog-top";
 import { PaywallCta } from "./paywall-cta";
 import { PlanList } from "./plan-list";
 import { purchaseNext, restoreNext } from "./purchase-result";
 import { StoreTerms } from "./store-terms";
+import { alsoRowsFor, topBlockOf } from "./top-block";
+import type { TopBlock } from "./top-block";
 
 const UNLIMITED = "\u221E";
 
@@ -83,6 +92,7 @@ function Comparison() {
                 </MonoLabel>
             </View>
             <View className="border-foreground border-t">
+                <Row free={String(FREE_AUTOLOG_PER_MONTH)} label={t("pro.row.autolog")} pro={UNLIMITED} />
                 <Row free="20" label={t("pro.row.captures")} pro="500" />
                 <Row free={String(FREE_ACCOUNTS)} label={t("pro.row.accounts")} pro={UNLIMITED} />
                 <Row free={String(FREE_INSTALLMENT_APPS)} label={t("pro.row.installmentApps")} pro={UNLIMITED} />
@@ -99,6 +109,48 @@ function Comparison() {
             </View>
         </View>
     );
+}
+
+function SeeEverything() {
+    const t = useTranslation();
+    const [open, setOpen] = useState(false);
+    return (
+        <View className="pt-4">
+            <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ expanded: open }}
+                onPress={() => setOpen((shown) => !shown)}
+                testID="paywall-see-all"
+            >
+                <MonoLabel className="text-foreground">{t("pro.see.all")}</MonoLabel>
+            </Pressable>
+            {open ? <Comparison /> : null}
+        </View>
+    );
+}
+
+function TopBlockView({ autolog, block }: { autolog: ReturnType<typeof useAutologUsage>; block: TopBlock }) {
+    const t = useTranslation();
+    switch (block) {
+        case "autolog": {
+            return <AutologTop usage={autolog} />;
+        }
+        case "accounts":
+        case "currencies":
+        case "installment_apps": {
+            return <AccountTop trigger={block} />;
+        }
+        default: {
+            return (
+                <View className="pt-2">
+                    <MonoLabel>{t("pro.eyebrow")}</MonoLabel>
+                    <Text className="text-foreground text-title font-sans-semibold pt-2 tracking-tight">
+                        {t("pro.top.generic")}
+                    </Text>
+                </View>
+            );
+        }
+    }
 }
 
 const BUY_LABEL = {
@@ -185,6 +237,9 @@ export function Paywall() {
     const { isMirrored, isPro } = useRevenueCat();
     const largeText = useAccessibilityTextSize();
     const { accountId } = useAuthSession();
+    const { trigger: triggerParam } = useLocalSearchParams<{ trigger?: string }>();
+    const autolog = useAutologUsage(useDatabase());
+    const block = topBlockOf(paywallTriggerOf(triggerParam), autolog.used);
     const [busy, setBusy] = useState<"buy" | "confirm" | "restore" | null>(null);
     const [attempt, setAttempt] = useState(0);
     const loaded = useAtomValue(paywallPlansAtom({ accountId, attempt }));
@@ -284,6 +339,7 @@ export function Paywall() {
     const noCloud = !proSellable();
     const needsAccount = !noCloud && accountId === null;
     const canBuy = !(isPro || needsAccount || noCloud);
+    const logsWaiting = canBuy && block === "autolog" && autolog.waiting > 0;
 
     const footer = (
         <>
@@ -357,7 +413,7 @@ export function Paywall() {
                         busy={busy === "buy"}
                         busyLabel={t("pro.cta.unlocking")}
                         disabled={plan === null || busy !== null}
-                        label={ctaLabel(plan, t)}
+                        label={logsWaiting ? t("pro.cta.logAll", { count: autolog.waiting }) : ctaLabel(plan, t)}
                         onPress={buy}
                         testID="paywall-cta"
                     />
@@ -366,6 +422,11 @@ export function Paywall() {
                             {t(THEN_LABEL[plan.kind], { price: plan.priceString })}
                         </Text>
                     )}
+                    {block === "autolog" ? (
+                        <Pressable accessibilityRole="button" className="items-center pt-4" onPress={leave}>
+                            <MonoLabel className="text-foreground">{t("pro.cta.notNow")}</MonoLabel>
+                        </Pressable>
+                    ) : null}
                 </View>
             ) : null}
 
@@ -407,15 +468,23 @@ export function Paywall() {
                 contentContainerClassName={largeText ? "pb-4" : "pb-2"}
                 contentInsetAdjustmentBehavior="automatic"
             >
-                <View className="px-5">
-                    <View className="pt-2">
-                        <MonoLabel>{t("pro.eyebrow")}</MonoLabel>
-                        <Text className="text-foreground text-title font-sans-semibold pt-2 tracking-tight">
-                            {t("pro.title")}
-                        </Text>
+                {canBuy ? (
+                    <View className="px-5">
+                        <TopBlockView autolog={autolog} block={block} />
+                        <AlsoRows rows={alsoRowsFor(block)} />
+                        <SeeEverything />
                     </View>
-                    <Comparison />
-                </View>
+                ) : (
+                    <View className="px-5">
+                        <View className="pt-2">
+                            <MonoLabel>{t("pro.eyebrow")}</MonoLabel>
+                            <Text className="text-foreground text-title font-sans-semibold pt-2 tracking-tight">
+                                {t("pro.title")}
+                            </Text>
+                        </View>
+                        <Comparison />
+                    </View>
+                )}
                 {largeText ? footer : null}
             </ScrollView>
 
