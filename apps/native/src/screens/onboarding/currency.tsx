@@ -117,8 +117,8 @@ export function OnboardingCurrency() {
                         db,
                         hold: meta === "continue" ? untilRefocused() : Effect.void,
                         kind: meta,
-                        // The root guard does not swap on this write: the AI consent question is next.
-                        navigate: () => router.push("/onboarding/smart-features"),
+                        // The root guard does not swap on this write: the auto-log step is next.
+                        navigate: () => router.push("/onboarding/auto-log"),
                         onFailure: (error) => {
                             console.error("Failed to save the onboarding currency", error);
                             notifyFailure({
