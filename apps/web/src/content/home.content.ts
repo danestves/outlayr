@@ -121,10 +121,10 @@ const home = {
             },
             {
                 answer: t({
-                    en: "Yes. Outlayr is on Google Play for Android. The iPhone app, for iOS 18 or later, is coming soon to the App Store.",
-                    es: "Sí. Outlayr está en Google Play para Android. La app para iPhone, con iOS 18 o posterior, llegará pronto al App Store.",
+                    en: "Yes. Outlayr is on the App Store for iPhone with iOS 18 or later, and on Google Play for Android.",
+                    es: "Sí. Outlayr está en el App Store para iPhone con iOS 18 o posterior, y en Google Play para Android.",
                 }),
-                question: t({ en: "Is Outlayr on Android?", es: "¿Outlayr está en Android?" }),
+                question: t({ en: "Is Outlayr on iPhone and Android?", es: "¿Outlayr está en iPhone y Android?" }),
             },
             {
                 answer: RECEIPT_SCAN_ANSWER,

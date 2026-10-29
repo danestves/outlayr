@@ -24,8 +24,8 @@ const story = {
                 t({ en: "3 languages", es: "3 idiomas" }),
             ],
             status: t({
-                en: "Now on Google Play. Coming soon to the App Store.",
-                es: "Ya en Google Play. Pronto en el App Store.",
+                en: "Now on the App Store and Google Play.",
+                es: "Ya en el App Store y Google Play.",
             }),
         },
         how: {

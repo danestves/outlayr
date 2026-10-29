@@ -1,6 +1,6 @@
 # Outlayr
 
-> Outlayr is an open source mobile expense tracker, budget app, and subscription tracker, made by danestves LLC. You log a purchase by typing one sentence, saying it, or scanning the receipt. Budgets, savings goals, subscriptions, and insights update as you log. Available on Android from Google Play, and coming soon to the App Store for iPhone (iOS 18 or later). English, Spanish, Portuguese, and French.
+> Outlayr is an open source mobile expense tracker, budget app, and subscription tracker, made by danestves LLC. You log a purchase by typing one sentence, saying it, or scanning the receipt. Budgets, savings goals, subscriptions, and insights update as you log. Available on the App Store for iPhone (iOS 18 or later) and on Google Play for Android. English, Spanish, Portuguese, and French.
 
 Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr.com), a payments company.
 

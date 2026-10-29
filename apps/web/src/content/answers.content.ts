@@ -86,7 +86,7 @@ const OUTLAYR = {
         en: "Daily spending, budgets, and savings goals",
         es: "Gastos diarios, presupuestos y metas de ahorro",
     }),
-    platforms: t({ en: "Android. iPhone soon", es: "Android. Pronto en iPhone" }),
+    platforms: t({ en: "iPhone and Android", es: "iPhone y Android" }),
     price: t({
         en: "Free. Pro is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once in the US. Prices vary by country",
         es: "Gratis. Pro cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago en Estados Unidos. Los precios cambian según el país",
@@ -1016,8 +1016,8 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "It is if you spend in more than one currency, want all your history on the free plan, or would rather say or scan a purchase than fill in a form. Goodbudget fits better if you budget with envelopes, need a web or iPhone app today, or want US bank accounts to sync in Premium.",
-                            es: "Sí, si gastas en más de una moneda, quieres todo tu historial en el plan gratis o prefieres dictar o escanear una compra en vez de llenar un formulario. Goodbudget te conviene más si presupuestas con sobres, necesitas una app web o para iPhone hoy, o quieres que tus cuentas de bancos de EE. UU. se sincronicen en Premium.",
+                            en: "It is if you spend in more than one currency, want all your history on the free plan, or would rather say or scan a purchase than fill in a form. Goodbudget fits better if you budget with envelopes, need a web app today, or want US bank accounts to sync in Premium.",
+                            es: "Sí, si gastas en más de una moneda, quieres todo tu historial en el plan gratis o prefieres dictar o escanear una compra en vez de llenar un formulario. Goodbudget te conviene más si presupuestas con sobres, necesitas una app web hoy, o quieres que tus cuentas de bancos de EE. UU. se sincronicen en Premium.",
                         }),
                         question: t({
                             en: "Is Outlayr a good Goodbudget alternative?",
@@ -1054,10 +1054,7 @@ const answers = {
                     ],
                     rival: [
                         t({ en: "Budget with envelopes", es: "Presupuestas con sobres" }),
-                        t({
-                            en: "Need a web app or an iPhone app today",
-                            es: "Necesitas una app web o para iPhone hoy",
-                        }),
+                        NEED_WEB,
                         t({
                             en: "Want US bank accounts to sync on their own",
                             es: "Quieres que tus cuentas de bancos de EE. UU. se sincronicen solas",
@@ -1304,8 +1301,8 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "It is if you want each purchase converted at the rate from its day, recurring entries and reminders on the free plan, or would rather say or scan a purchase than fill in a form. Monefy fits better if you want to log in two taps, sync through your own Google Drive or Dropbox, or use an iPhone today.",
-                            es: "Sí, si quieres cada compra convertida con la tasa de su día, registros recurrentes y avisos en el plan gratis, o prefieres dictar o escanear una compra en vez de llenar un formulario. Monefy te conviene más si quieres registrar en dos toques, sincronizar con tu propio Google Drive o Dropbox, o usar un iPhone hoy.",
+                            en: "It is if you want each purchase converted at the rate from its day, recurring entries and reminders on the free plan, or would rather say or scan a purchase than fill in a form. Monefy fits better if you want to log in two taps or sync through your own Google Drive or Dropbox.",
+                            es: "Sí, si quieres cada compra convertida con la tasa de su día, registros recurrentes y avisos en el plan gratis, o prefieres dictar o escanear una compra en vez de llenar un formulario. Monefy te conviene más si quieres registrar en dos toques o sincronizar con tu propio Google Drive o Dropbox.",
                         }),
                         question: t({
                             en: "Is Outlayr a good Monefy alternative?",
@@ -1349,7 +1346,6 @@ const answers = {
                             en: "Want sync through your own Google Drive or Dropbox",
                             es: "Quieres sincronizar con tu propio Google Drive o Dropbox",
                         }),
-                        t({ en: "Use an iPhone today", es: "Usas un iPhone hoy" }),
                     ],
                 },
                 lead: t({
@@ -1471,8 +1467,8 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "It is if you want a free plan with no ads, recurring entries and reminders without paying, or voice and receipt captures that refill every 30 days. Money Lover fits better if you use an iPhone today, need a web app, or want linked bank accounts to sync on their own.",
-                            es: "Sí, si quieres un plan gratis sin anuncios, registros recurrentes y avisos sin pagar, o capturas de voz y de recibos que se renuevan cada 30 días. Money Lover te conviene más si usas un iPhone hoy, necesitas una app web o quieres que tus cuentas de banco vinculadas se sincronicen solas.",
+                            en: "It is if you want a free plan with no ads, recurring entries and reminders without paying, or voice and receipt captures that refill every 30 days. Money Lover fits better if you need a web app or want linked bank accounts to sync on their own.",
+                            es: "Sí, si quieres un plan gratis sin anuncios, registros recurrentes y avisos sin pagar, o capturas de voz y de recibos que se renuevan cada 30 días. Money Lover te conviene más si necesitas una app web o quieres que tus cuentas de banco vinculadas se sincronicen solas.",
                         }),
                         question: t({
                             en: "Is Outlayr a good Money Lover alternative?",
@@ -1513,7 +1509,7 @@ const answers = {
                             es: "Quieres capturas de voz y de recibos que se renuevan cada 30 días",
                         }),
                     ],
-                    rival: [t({ en: "Use an iPhone today", es: "Usas un iPhone hoy" }), NEED_WEB, SYNC_ACCOUNTS],
+                    rival: [NEED_WEB, SYNC_ACCOUNTS],
                 },
                 lead: t({
                     en: `${OUTLAYR_LEAD.en} ${RIVALS.moneyLover.en}`,
@@ -2790,8 +2786,8 @@ const answers = {
                             {
                                 label: LABELS.watch,
                                 text: t({
-                                    en: "Android only until the iPhone app is out, and no web app. The free plan holds 2 category budgets plus one for the month",
-                                    es: "Solo en Android hasta que salga la app para iPhone, y sin app web. El plan gratis permite 2 presupuestos por categoría más uno para el mes",
+                                    en: "No web app. The free plan holds 2 category budgets plus one for the month",
+                                    es: "Sin app web. El plan gratis permite 2 presupuestos por categoría más uno para el mes",
                                 }),
                             },
                         ],
@@ -3629,8 +3625,8 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "It depends on where you want it to run. Cashew and Flow are phone apps, and Cashew also runs on the web. Actual Budget runs on Windows, macOS, Linux, and the web, with envelope budgeting. Firefly III runs on your own server. Outlayr logs by sentence, voice, or receipt on Android, with iPhone coming. All five are free to start.",
-                            es: "Depende de dónde quieras usarla. Cashew y Flow son apps para el celular, y Cashew también funciona en la web. Actual Budget funciona en Windows, macOS, Linux y la web, con presupuesto por sobres. Firefly III funciona en tu propio servidor. Outlayr registra con una oración, tu voz o un recibo en Android, y pronto llegará a iPhone. Las cinco son gratis para empezar.",
+                            en: "It depends on where you want it to run. Cashew and Flow are phone apps, and Cashew also runs on the web. Actual Budget runs on Windows, macOS, Linux, and the web, with envelope budgeting. Firefly III runs on your own server. Outlayr logs by sentence, voice, or receipt on iPhone and Android. All five are free to start.",
+                            es: "Depende de dónde quieras usarla. Cashew y Flow son apps para el celular, y Cashew también funciona en la web. Actual Budget funciona en Windows, macOS, Linux y la web, con presupuesto por sobres. Firefly III funciona en tu propio servidor. Outlayr registra con una oración, tu voz o un recibo en iPhone y Android. Las cinco son gratis para empezar.",
                         }),
                         question: t({
                             en: "What is the best open source expense tracker?",
@@ -4418,8 +4414,8 @@ const answers = {
                     {
                         body: [
                             t({
-                                en: "Outlayr, the app we make, logs an expense when you type a sentence, say it, or scan the receipt, in 165 currencies at the rate of the day. It is free to start on Android, with iPhone coming soon. If you already keep a spreadsheet, you can import it as a CSV.",
-                                es: "Outlayr, la app que hacemos nosotros, registra un gasto cuando escribes una oración, la dictas o escaneas el recibo, en 165 monedas con la tasa del día. Es gratis para empezar en Android y pronto llegará a iPhone. Si ya llevas una hoja de cálculo, puedes importarla como CSV.",
+                                en: "Outlayr, the app we make, logs an expense when you type a sentence, say it, or scan the receipt, in 165 currencies at the rate of the day. It is free to start on iPhone and Android. If you already keep a spreadsheet, you can import it as a CSV.",
+                                es: "Outlayr, la app que hacemos nosotros, registra un gasto cuando escribes una oración, la dictas o escaneas el recibo, en 165 monedas con la tasa del día. Es gratis para empezar en iPhone y Android. Si ya llevas una hoja de cálculo, puedes importarla como CSV.",
                             }),
                         ],
                         id: "app",
@@ -4567,8 +4563,8 @@ const answers = {
                             {
                                 label: LABELS.watch,
                                 text: t({
-                                    en: "Android only until the iPhone app is out, and no web app. A Mint CSV comes in without accounts, tags, or splits",
-                                    es: "Solo en Android hasta que salga la app para iPhone, y sin app web. Un CSV de Mint entra sin cuentas, etiquetas ni divisiones",
+                                    en: "No web app. A Mint CSV comes in without accounts, tags, or splits",
+                                    es: "Sin app web. Un CSV de Mint entra sin cuentas, etiquetas ni divisiones",
                                 }),
                             },
                         ],
@@ -5674,8 +5670,8 @@ const answers = {
                             {
                                 label: LABELS.watch,
                                 text: t({
-                                    en: "Android only until the iPhone app is out, and no web app. A YNAB export comes in as a comma-separated CSV, without accounts or split lines",
-                                    es: "Solo en Android hasta que salga la app para iPhone, y sin app web. Una exportación de YNAB entra como CSV separado por comas, sin cuentas ni divisiones",
+                                    en: "No web app. A YNAB export comes in as a comma-separated CSV, without accounts or split lines",
+                                    es: "Sin app web. Una exportación de YNAB entra como CSV separado por comas, sin cuentas ni divisiones",
                                 }),
                             },
                         ],
