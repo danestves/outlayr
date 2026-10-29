@@ -45,6 +45,7 @@ const TRANSACTIONS_DDL = `
 		receipt text,
 		installmentId text,
 		restoredAt integer,
+			unreviewed integer NOT NULL DEFAULT 0,
 		updatedAt integer NOT NULL,
 		deletedAt integer
 	);
@@ -95,6 +96,7 @@ const INSTALLMENTS_DDL = `
 		id text PRIMARY KEY NOT NULL, transactionId text NOT NULL, imageKey text, imageUri text, name text,
 		sortOrder integer DEFAULT 0 NOT NULL, updatedAt integer NOT NULL, deletedAt integer
 	);
+	CREATE TABLE appMeta (key text PRIMARY KEY NOT NULL, value text);
 `;
 
 function makeDb(ddl = `${TRANSACTIONS_DDL}${TRANSFERS_DDL}${INSTALLMENTS_DDL}`): Database {

@@ -160,6 +160,7 @@ describe("the replicated column set", () => {
     const DEVICE_LOCAL = new Set([
         "transactions.imageUri",
         "transactions.reminderLeadDays",
+        "transactions.unreviewed",
         "transactionPhotos.imageUri",
         "transactionAttachments.imageUri",
         "accounts.imageUri",

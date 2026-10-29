@@ -1,9 +1,10 @@
-import { getTableColumns, isNull } from "drizzle-orm";
+import { eq, getTableColumns, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import {
+    appMeta,
     budgets,
     categories,
     installmentPlans,
@@ -16,6 +17,7 @@ import {
 } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
 
+import { META_KEYS } from "./app-meta-core";
 import { ERASED_TRANSACTION, eraseLedger } from "./erase-core";
 import { deletedTransactionsQuery } from "./transactions-core";
 
@@ -104,6 +106,16 @@ describe("eraseLedger", () => {
         expect(replicable).toHaveLength(1);
         expect(replicable[0].id).toBe("tx-1");
         expect(replicable[0].deletedAt).not.toBeNull();
+    });
+
+    it("drops auto-logged charges held over the free cap so going Pro can't bring them back", async () => {
+        await db.insert(appMeta).values({ key: META_KEYS.autologWaiting, value: "[]" });
+
+        await Effect.runPromise(eraseLedger(db, "transactions"));
+
+        await expect(db.select().from(appMeta).where(eq(appMeta.key, META_KEYS.autologWaiting))).resolves.toHaveLength(
+            0
+        );
     });
 
     it("keeps the rows it erased out of Recently Deleted", async () => {

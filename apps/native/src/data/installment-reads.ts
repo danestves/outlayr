@@ -147,5 +147,6 @@ export function useOutsidePaymentRows(
               recurringType: 0,
               sign: "+",
               transferId: row.id,
+              unreviewed: false,
           }));
 }

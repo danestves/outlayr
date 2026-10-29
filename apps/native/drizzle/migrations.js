@@ -40,6 +40,7 @@ import m0036 from './20261025034640_0036_outside_moves/migration.sql';
 import m0037 from './20261025034640_0037_transaction_attachments/migration.sql';
 import m0038 from './20261028203804_0038_budget_category_index_partial/migration.sql';
 import m0039 from './20261029042945_0039_receipt_items/migration.sql';
+import m0040 from './20261029054922_0040_autolog_review/migration.sql';
 
   export default {
     migrations: {
@@ -82,7 +83,8 @@ import m0039 from './20261029042945_0039_receipt_items/migration.sql';
       "20261025034640_0036_outside_moves": m0036,
       "20261025034640_0037_transaction_attachments": m0037,
       "20261028203804_0038_budget_category_index_partial": m0038,
-      "20261029042945_0039_receipt_items": m0039
+      "20261029042945_0039_receipt_items": m0039,
+      "20261029054922_0040_autolog_review": m0040
 }
   }
   

@@ -159,6 +159,7 @@ export const transactions = sqliteTable(
         transferId: text("transferId").references(() => transfers.id, {
             onDelete: "cascade",
         }),
+        unreviewed: integer("unreviewed", { mode: "boolean" }).notNull().default(false),
         updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).notNull(),
     },
     (table) => [

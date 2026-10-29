@@ -1,5 +1,5 @@
 import { Stack, useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { CloseToolbar } from "@/components/close-toolbar";
 import { notifyEditsNotRestored } from "@/components/edits-discarded-snackbar";
@@ -18,6 +18,8 @@ import { useRestingSheet } from "@/hooks/use-resting-sheet";
 import { useTranslation } from "@/i18n/context";
 import { createDraftStash } from "@/lib/draft-stash";
 import { EditTransfer } from "@/screens/transfers/edit";
+import { markReviewedCommand } from "@/state/review-commands";
+import { useAtomCommand } from "@/state/use-atom-command";
 
 export function EditTransaction({ id }: { id: string }) {
     const router = useRouter();
@@ -50,6 +52,14 @@ function TransactionSheet({ initial }: { initial: Transaction }) {
     const router = useRouter();
     const db = useDatabase();
     const readDraft = useRef<(() => TransactionFormDraft) | null>(null);
+    const markReviewed = useAtomCommand(markReviewedCommand);
+    const review = useEffectEvent(() => markReviewed({ db, ids: [initial.id] }));
+    // oxlint-disable-next-line outlayr/react-effect-budget -- opening an auto-logged entry is what reviews it, and no handler runs on open
+    useEffect(() => {
+        if (initial.unreviewed) {
+            review();
+        }
+    }, [initial.unreviewed]);
     const version = initial.updatedAt.getTime();
     // Only edits made on this version come back: older ones would overwrite whatever changed it.
     const [restore] = useState(() => {

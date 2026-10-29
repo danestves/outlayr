@@ -11,6 +11,7 @@ export const FREE_PEOPLE = 3;
 export const FREE_INSTALLMENT_APPS = 2;
 /** Live payoff plans: one paid off has ended and no longer counts. */
 export const FREE_PAYOFF_PLANS = 2;
+export const FREE_AUTOLOG_PER_MONTH = 30;
 
 interface CappedAccount {
     readonly currency: string;

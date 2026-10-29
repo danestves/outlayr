@@ -2,6 +2,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
+import * as Stream from "effect/Stream";
 import type { AppStateStatus } from "react-native";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
@@ -55,6 +56,7 @@ describe("background program", () => {
                         repair: () => Effect.succeed(0),
                     }),
                     Layer.succeed(SystemSync.SystemSources, {
+                        access: Stream.empty,
                         pullRates: asCloudCall(async () => ({ rows: [], windowStart: "2026-10-01" })),
                         watchPendingWrites: pendingWrites.watch,
                         watchRecentRates: recentRates.watch,

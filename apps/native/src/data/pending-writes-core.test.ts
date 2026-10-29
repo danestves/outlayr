@@ -1,14 +1,17 @@
-import { eq, isNull, ne } from "drizzle-orm";
+import { eq, isNull, ne, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import { beforeEach, describe, expect, it, vi, test } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { accounts, categories, transactions } from "@/db/schema";
 import { migratedDatabase, transactionalDatabase } from "@/db/test-database";
+import { withAutologEntry } from "@/domain/autolog-cap";
+import type { AutologUsage } from "@/domain/autolog-cap";
 import { DEFAULT_CURRENCY } from "@/domain/money";
 import type { PendingWrite } from "@/lib/pending-writes-core";
 
-import { getMeta, META_KEYS } from "./app-meta-core";
+import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import { readAutologWaiting, writeAutologAccess } from "./autolog-cap-core";
 import { cardFeeFor } from "./card-fees-core";
 import {
     appliedWriteIds,
@@ -929,7 +932,7 @@ describe("drainPendingWrites", () => {
     it("applies a job once when two drains overlap", async () => {
         const job = walletWrite("wallet-1");
         let released = 0;
-        const claim = () => ({ jobs: [job], names: ["claimed-1.jsonl"] });
+        const claim = () => (released === 0 ? { jobs: [job], names: ["claimed-1.jsonl"] } : { jobs: [], names: [] });
         const release = () => {
             released += 1;
         };
@@ -944,6 +947,24 @@ describe("drainPendingWrites", () => {
         expect(first).toBe(1);
         expect(second).toBe(1);
         expect(released).toBe(1);
+    });
+
+    it("runs another pass for a drain that arrives mid-pass", async () => {
+        const claim = vi
+            .fn<() => { jobs: PendingWrite[]; names: string[] }>()
+            .mockReturnValueOnce({ jobs: [walletWrite("wallet-1")], names: ["a.jsonl"] })
+            .mockReturnValueOnce({
+                jobs: [walletWrite("wallet-2", { dedupeKey: "wallet:expense:other:100" })],
+                names: ["b.jsonl"],
+            })
+            .mockReturnValue({ jobs: [], names: [] });
+
+        await Promise.all([
+            Effect.runPromise(drainPendingWrites(db, claim, () => undefined)),
+            Effect.runPromise(drainPendingWrites(db, claim, () => undefined)),
+        ]);
+
+        await expect(db.select().from(transactions)).resolves.toHaveLength(2);
     });
 
     it("drains again once the first pass has finished", async () => {
@@ -1077,5 +1098,91 @@ describe("appliedWriteIds", () => {
         await expect(Effect.runPromise(appliedWriteIds(db, later.getTime() - 86_400_000))).resolves.toStrictEqual([
             "new",
         ]);
+    });
+});
+
+describe("the free auto-log cap", () => {
+    let db: Database;
+
+    const fullMonth = () => {
+        let usage: AutologUsage = {};
+        for (let entry = 0; entry < 30; entry += 1) {
+            usage = withAutologEntry(usage, NOW.getTime(), "applied");
+        }
+        return JSON.stringify(usage);
+    };
+
+    const fare = (id: string, note: string, hoursLater: number) =>
+        walletWrite(id, {
+            date: NOW.getTime() + hoursLater * HOUR,
+            dedupeKey: `wallet:expense:${note.toLowerCase()}:640`,
+            note,
+        });
+
+    beforeEach(async () => {
+        db = makeDb();
+        await seedCategories(db);
+        await Effect.runPromise(writeAutologAccess(db, "free"));
+        await Effect.runPromise(setMeta(db, META_KEYS.autologUsage, fullMonth()));
+    });
+
+    it("holds a wallet entry over the cap whole, and still takes one the user made on purpose", async () => {
+        const held = fare("w1", "Blue Bottle", 0);
+        const shortcut = walletWrite("s1", { dedupeKey: null, note: "Kiosk" });
+
+        await Effect.runPromise(applyPendingWrites(db, [held, shortcut], NOW));
+
+        expect((await liveRows(db)).map((row) => row.note)).toStrictEqual(["Kiosk"]);
+        await expect(Effect.runPromise(readAutologWaiting(db))).resolves.toStrictEqual([held]);
+    });
+
+    it("holds a replayed entry once", async () => {
+        const held = fare("w1", "Blue Bottle", 0);
+
+        await Effect.runPromise(applyPendingWrites(db, [held], NOW));
+        await Effect.runPromise(applyPendingWrites(db, [held], NOW));
+
+        await expect(Effect.runPromise(readAutologWaiting(db))).resolves.toHaveLength(1);
+    });
+
+    it("applies what waited, oldest first and marked new, once the customer is Pro", async () => {
+        await Effect.runPromise(
+            applyPendingWrites(db, [fare("w1", "Blue Bottle", 0), fare("w2", "Philz", 1), fare("w3", "Verve", 2)], NOW)
+        );
+        await Effect.runPromise(writeAutologAccess(db, "open"));
+
+        await Effect.runPromise(
+            drainPendingWrites(
+                db,
+                () => ({ jobs: [], names: [] }),
+                () => undefined
+            )
+        );
+
+        const rows = await db
+            .select({ note: transactions.note, unreviewed: transactions.unreviewed })
+            .from(transactions)
+            .orderBy(sql`rowid`);
+        expect(rows).toStrictEqual([
+            { note: "Blue Bottle", unreviewed: true },
+            { note: "Philz", unreviewed: true },
+            { note: "Verve", unreviewed: true },
+        ]);
+        await expect(Effect.runPromise(readAutologWaiting(db))).resolves.toStrictEqual([]);
+    });
+
+    it("leaves what waited alone while the customer is free", async () => {
+        await Effect.runPromise(applyPendingWrites(db, [fare("w1", "Blue Bottle", 0)], NOW));
+
+        await Effect.runPromise(
+            drainPendingWrites(
+                db,
+                () => ({ jobs: [], names: [] }),
+                () => undefined
+            )
+        );
+
+        await expect(Effect.runPromise(readAutologWaiting(db))).resolves.toHaveLength(1);
+        await expect(liveRows(db)).resolves.toStrictEqual([]);
     });
 });

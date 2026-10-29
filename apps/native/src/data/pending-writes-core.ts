@@ -10,6 +10,8 @@ import * as Schema from "effect/Schema";
 import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
 import { transaction } from "@/db/transaction";
+import { countsAsAutolog, holdsAutolog } from "@/domain/autolog-cap";
+import type { AutologAccess } from "@/domain/autolog-cap";
 import { detectCurrency } from "@/domain/detect-currency";
 import type { CardAccountCandidate } from "@/domain/match-card-account";
 import { matchCardAccount } from "@/domain/match-card-account";
@@ -22,6 +24,14 @@ import { posthog } from "@/lib/posthog";
 
 import { accountsRepo, getAccountById } from "./accounts-core";
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import {
+    countAutologEntry,
+    holdAutologWrite,
+    readAutologAccess,
+    readAutologUsage,
+    readAutologWaiting,
+    writeAutologWaiting,
+} from "./autolog-cap-core";
 import type { SpendDb } from "./budget-spent";
 import { suggestedCardFee } from "./card-fees-core";
 import { MIN_KEY_LENGTH, queueEnrichment } from "./enrichment-queue-core";
@@ -437,7 +447,8 @@ export const pendingWriteTxId = Effect.fn("PendingWrites.pendingWriteTxId")(func
 export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(function* applyPendingWrites(
     db: Database,
     jobs: PendingWrite[],
-    now: Date = new Date()
+    now: Date = new Date(),
+    knownAccess?: AutologAccess
 ) {
     if (jobs.length === 0) {
         return 0;
@@ -445,6 +456,8 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
     const at = now.getTime();
     let ledger = yield* readLedger(db);
     let applied = 0;
+    const access = knownAccess ?? (yield* readAutologAccess(db));
+    let usage = yield* readAutologUsage(db);
 
     // Exactly-once depends on this job seeing the ledger row the previous job's SQLite transaction committed, so the
     // jobs must land one at a time.
@@ -484,6 +497,12 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
         const twin = fromAutomation(job) ? yield* sameCharge(db, job, account, currency, ledger) : null;
         const settled =
             fromAutomation(job) && !twin ? yield* settledOccurrence(db, job, account, currency, ledger, now) : null;
+        const autolog = autologSourceOf(queued);
+        const creates = !twin && !settled;
+        if (creates && holdsAutolog(usage, access, autolog, job.date)) {
+            usage = yield* holdAutologWrite(db, usage, queued, job.date);
+            continue;
+        }
         yield* transaction(
             db,
             // oxlint-disable-next-line no-loop-func -- run in place, so nothing outlives the iteration whose `job` and `categoryId` it reads
@@ -538,8 +557,14 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
                         income: job.income,
                         note: job.note,
                     }));
-                if (lookup && !twin && !settled) {
+                if (lookup && creates) {
                     yield* queueEnrichment(db, txId);
+                }
+                if (creates && countsAsAutolog(autolog)) {
+                    yield* attempt("write", () =>
+                        db.update(transactions).set({ unreviewed: true }).where(eq(transactions.id, txId))
+                    );
+                    usage = yield* countAutologEntry(db, usage, job.date);
                 }
                 const source = sourceOf(job) ?? undefined;
                 ledger = remember(
@@ -559,10 +584,10 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
             }),
             (cause) => new PendingWritesError({ cause, operation: "write" })
         );
-        if (!twin && !settled) {
+        if (creates) {
             posthog?.capture("transaction_saved", {
                 mode: "create",
-                source: autologSourceOf(queued),
+                source: autolog,
                 transaction_type: job.income ? "income" : "expense",
             });
         }
@@ -853,6 +878,7 @@ const firstCategory = Effect.fn("PendingWrites.firstCategory")(function* firstCa
 });
 
 let draining: Deferred.Deferred<number, DrainFailure> | null = null;
+let rerun = false;
 
 // One drain at a time: `claimPendingWrites` re-returns an unreleased claim (crash recovery), so overlapping drains
 // get the same jobs, both pass `alreadyApplied`, and insert twice. Mount and a cold launch's first "active" overlap.
@@ -862,11 +888,19 @@ export const drainPendingWrites = Effect.fn("PendingWrites.drainPendingWrites")(
     release: (claimed: ClaimedWrites) => void
 ) {
     if (draining !== null) {
+        rerun = true;
         return yield* Deferred.await(draining);
     }
     const pass = Deferred.makeUnsafe<number, DrainFailure>();
     draining = pass;
-    return yield* runDrain(db, claim, release).pipe(
+    return yield* Effect.gen(function* drainUntilSettled() {
+        let applied = 0;
+        do {
+            rerun = false;
+            applied += yield* runDrain(db, claim, release);
+        } while (rerun);
+        return applied;
+    }).pipe(
         Effect.onExit((exit) =>
             Effect.suspend(() => {
                 draining = null;
@@ -885,10 +919,15 @@ const runDrain = Effect.fn("PendingWrites.runDrain")(function* runDrain(
     release: (claimed: ClaimedWrites) => void
 ) {
     const claimed = yield* attemptSync("claim", claim);
-    if (claimed.names.length === 0) {
+    const access = yield* readAutologAccess(db);
+    const waiting = access === "open" ? yield* readAutologWaiting(db) : [];
+    if (claimed.names.length === 0 && waiting.length === 0) {
         return 0;
     }
-    const applied = yield* applyPendingWrites(db, claimed.jobs);
+    const applied = yield* applyPendingWrites(db, [...waiting, ...claimed.jobs], new Date(), access);
+    if (waiting.length > 0) {
+        yield* writeAutologWaiting(db, []);
+    }
     yield* attemptSync("release", () => {
         release(claimed);
     });

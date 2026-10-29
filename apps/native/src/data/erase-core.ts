@@ -1,11 +1,13 @@
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
-import { isNull } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
+import { META_KEYS } from "@/data/app-meta-core";
 import { TOMBSTONED_BUDGET, TOMBSTONED_MAIN_BUDGET } from "@/data/budgets-core";
 import type { Database } from "@/db/client";
 import {
+    appMeta,
     budgets,
     installmentPlans,
     installments,
@@ -70,6 +72,7 @@ export const ERASED_TRANSACTION = {
     recurringType: RECURRING_TYPE.none,
     reminderLeadDays: null,
     transferId: null,
+    unreviewed: false,
 } as const;
 
 /** The two account ids stay: both are `notNull`, so blanking them would point the row at no account. */
@@ -140,6 +143,7 @@ export const eraseLedger = Effect.fn("Erase.eraseLedger")(function* eraseLedger(
                     .set({ dateCreated: ERASED_DATE, deletedAt: now, updatedAt: now })
                     .where(isNull(installmentPlans.deletedAt))
             );
+            yield* query(scope, () => db.delete(appMeta).where(eq(appMeta.key, META_KEYS.autologWaiting)));
 
             if (scope !== "everything") {
                 return;

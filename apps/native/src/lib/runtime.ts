@@ -23,7 +23,12 @@ export const appRuntime = Atom.runtime(
         SyncEngine.layer.pipe(Layer.provide(SyncStore.layer)),
         BackgroundProgram.layer.pipe(
             Layer.provideMerge(
-                Layer.mergeAll(DailyReminderSync.layer, DueReminderSync.layer, RecurrenceSweep.layer, SystemSync.layer)
+                Layer.mergeAll(
+                    DailyReminderSync.layer,
+                    DueReminderSync.layer,
+                    RecurrenceSweep.layer,
+                    SystemSync.layer.pipe(Layer.provide(SystemSync.liveSources.pipe(Layer.provide(RevenueCat.layer))))
+                )
             )
         ),
         EnrichmentSync.layer.pipe(Layer.provide(outboundHttp)),

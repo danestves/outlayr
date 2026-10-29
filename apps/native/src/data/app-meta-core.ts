@@ -10,6 +10,9 @@ import type { SpendDb } from "./budget-spent";
 // Kept apart from `app-meta.ts` so it never value-imports `drizzle-orm/expo-sqlite`, which node tests cannot load.
 export const META_KEYS = {
     accountDeferred: "accountDeferred",
+    autologAccess: "autologAccess",
+    autologUsage: "autologUsage",
+    autologWaiting: "autologWaiting",
     currency: "currency",
     /** `bootstrap` seeds `currency` unconditionally, so only this tells a chosen code from the default. */
     currencyChosen: "currencyChosen",

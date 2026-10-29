@@ -382,6 +382,13 @@ const settingsAccount = {
             pt: "Processando…",
             "pt-PT": "A processar…",
         }),
+        "settings.usage.autolog": t({
+            en: "Auto-log",
+            es: "Registro automático",
+            fr: "Saisie auto",
+            pt: "Registro automático",
+            "pt-PT": "Registo automático",
+        }),
         "settings.usage.captures": t({
             en: "of {count} captures",
             es: "de {count} capturas",
@@ -439,6 +446,12 @@ const settingsAccount = {
             es: "En esta hora",
             fr: "Cette heure-ci",
             pt: "Nesta hora",
+        }),
+        "settings.usage.thisMonth": t({
+            en: "This month",
+            es: "Este mes",
+            fr: "Ce mois-ci",
+            pt: "Este mês",
         }),
         "settings.usage.toast.empty": t({
             en: "No captures left",

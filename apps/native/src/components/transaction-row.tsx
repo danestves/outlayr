@@ -251,6 +251,41 @@ interface TransactionRowProps {
     };
 }
 
+function RowTitle({
+    future,
+    note,
+    stacked,
+    unreviewed,
+}: {
+    future: boolean;
+    note: string;
+    stacked: boolean;
+    unreviewed: boolean;
+}) {
+    return (
+        <View className="flex-row items-center gap-1.5">
+            {unreviewed ? <View className="bg-tint size-2 rounded-full" /> : null}
+            <Text
+                className={cn(ROW_TYPE.title, "shrink", future ? "text-future" : "text-foreground")}
+                numberOfLines={stacked ? 2 : 1}
+            >
+                {note}
+            </Text>
+        </View>
+    );
+}
+
+function withGuessedCategory(
+    timeLabel: string,
+    { categoryName, unreviewed }: Pick<TransactionWithCategory, "categoryName" | "unreviewed">,
+    swapped: boolean
+): string {
+    if (!unreviewed || !categoryName) {
+        return timeLabel;
+    }
+    return swapped ? `${categoryName}?` : `${categoryName}? · ${timeLabel}`;
+}
+
 export function TransactionRow({
     transaction,
     currency,
@@ -298,7 +333,9 @@ export function TransactionRow({
         );
 
     const timeLabel = swapTimeLabel ? (transaction.categoryName ?? "") : formatTime(date, use24Hour, language);
-    const subtitle = future ? formatUpcomingDate(landsOn ?? date, language) : timeLabel;
+    const subtitle = future
+        ? formatUpcomingDate(landsOn ?? date, language)
+        : withGuessedCategory(timeLabel, transaction, swapTimeLabel);
 
     const amount = (
         <View className={stacked ? "items-start" : "items-end"}>
@@ -368,12 +405,12 @@ export function TransactionRow({
                 </View>
             )}
             <View className="flex-1 gap-0.5">
-                <Text
-                    className={cn(ROW_TYPE.title, future ? "text-future" : "text-foreground")}
-                    numberOfLines={stacked ? 2 : 1}
-                >
-                    {transaction.note}
-                </Text>
+                <RowTitle
+                    future={future}
+                    note={transaction.note}
+                    stacked={stacked}
+                    unreviewed={transaction.unreviewed}
+                />
                 {stacked ? amount : null}
                 <RowMeta
                     currency={currency}

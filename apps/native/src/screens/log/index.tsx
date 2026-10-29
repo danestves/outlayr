@@ -12,6 +12,7 @@ import { useDisplaySettings, useSettingBool, useSettingNumber } from "@/contexts
 import { useDatabase } from "@/contexts/local-data-context";
 import { useBankAccounts } from "@/data/accounts";
 import { useGlobalCurrency } from "@/data/app-meta";
+import { useAutologUsage } from "@/data/autolog-cap";
 import { goesWithPendingDelete } from "@/data/card-fees-core";
 import { useCategoryMeta } from "@/data/categories";
 import { useLogOverviewIn } from "@/data/debts";
@@ -40,16 +41,19 @@ import { cursorStart } from "@/domain/log-period-cursor";
 import type { CursorUnit } from "@/domain/log-period-cursor";
 import { scopeHasFigures, scopeTotals } from "@/domain/log-scope-figures";
 import { sparklineIsPositive, sparklineRange, sparklineSeries } from "@/domain/log-sparkline";
+import { paywallHref } from "@/domain/paywall-trigger";
 import { mergeByRecency } from "@/domain/transfer-log-rows";
 import type { TransferLogRow } from "@/domain/transfer-log-rows";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { useDayCardShare } from "@/lib/use-day-card-share";
 import { useTransactionRowActions } from "@/lib/use-transaction-row-actions";
+import { markReviewedCommand } from "@/state/review-commands";
 import { setNumberSettingCommand } from "@/state/settings-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 
 import { AccountsBlock } from "./components/accounts-block";
 import { AmountsEyeButton } from "./components/amounts-eye-button";
+import { LogAutologPaused } from "./components/log-autolog-paused";
 import { LogEmptyState } from "./components/log-empty-state";
 import { LogFilterChip } from "./components/log-filter-chip";
 import type { SparklineData } from "./components/log-insights";
@@ -133,6 +137,8 @@ function useTailGrouping<T extends DayGroupable>(currency: string, rates: RateTa
 export function Log() {
     const db = useDatabase();
     const setNumberSetting = useAtomCommand(setNumberSettingCommand);
+    const markReviewed = useAtomCommand(markReviewedCommand);
+    const { waiting } = useAutologUsage(db);
     const router = useRouter();
     const t = useTranslation();
     const { language } = useLanguage();
@@ -378,6 +384,9 @@ export function Log() {
                             />
                         )}
                         {filter === "all" ? <AccountsBlock {...accountsProps} /> : null}
+                        {filter === "all" && waiting > 0 ? (
+                            <LogAutologPaused onPress={() => router.push(paywallHref("autolog"))} waiting={waiting} />
+                        ) : null}
                         {showUpcomingSection ? (
                             <LogUpcoming
                                 transactions={upcomingRows}
@@ -392,9 +401,18 @@ export function Log() {
                         {emptyResult ? <LogNoResults /> : null}
                     </>
                 }
-                renderSectionHeader={({ section }) => (
-                    <DaySectionHeader section={section} first={section.first} onShare={() => shareDay(section)} />
-                )}
+                renderSectionHeader={({ section }) => {
+                    const newIds = section.data.flatMap((row) => (row.unreviewed ? [row.id] : []));
+                    return (
+                        <DaySectionHeader
+                            section={section}
+                            first={section.first}
+                            newCount={newIds.length}
+                            onConfirmNew={() => markReviewed({ db, ids: newIds })}
+                            onShare={() => shareDay(section)}
+                        />
+                    );
+                }}
                 renderItem={({ item }) => (
                     <SwipeableTransactionRow
                         transaction={item}

@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -115,7 +115,9 @@ export const replaceLocalFromAccount = Effect.fn("AdoptionEngine.replaceLocalFro
                     yield* setSyncCursor(db, 0);
                     // The write below covers the whole log under the merge that knows `restoredAt`.
                     yield* attempt("replace", () =>
-                        db.delete(appMeta).where(eq(appMeta.key, META_KEYS.syncRestoresReread))
+                        db
+                            .delete(appMeta)
+                            .where(inArray(appMeta.key, [META_KEYS.syncRestoresReread, META_KEYS.autologWaiting]))
                     );
                     if (rows.length > 0) {
                         yield* writePulledRows(db, { cursor, rows }, now, false);

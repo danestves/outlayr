@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { useDisplaySettings } from "@/contexts/display-settings-context";
 import { formatDayHeader } from "@/domain/dates";
@@ -9,15 +9,24 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import { ActionMenu } from "./action-menu";
 import { DayTotal } from "./amount-text";
 import { MonoLabel } from "./mono-label";
+import { Text } from "./text";
 import { cn } from "./tw";
 
 interface DaySectionHeaderProps {
     first?: boolean;
+    onConfirmNew?: () => void;
+    newCount?: number;
     onShare?: () => void;
     section: DaySection<unknown>;
 }
 
-export function DaySectionHeader({ section, first = false, onShare }: DaySectionHeaderProps) {
+export function DaySectionHeader({
+    section,
+    first = false,
+    newCount = 0,
+    onConfirmNew,
+    onShare,
+}: DaySectionHeaderProps) {
     const { showCents } = useDisplaySettings().state;
     // Consuming the language re-renders this on a change; `formatDayHeader`'s default is invisible to React.
     const { language } = useLanguage();
@@ -29,6 +38,16 @@ export function DaySectionHeader({ section, first = false, onShare }: DaySection
                 <MonoLabel>{formatDayHeader(section.day, undefined, language)}</MonoLabel>
                 <DayTotal showCents={showCents} totals={section.totals} />
             </View>
+            {newCount > 0 && onConfirmNew ? (
+                <View className="flex-row items-baseline justify-between gap-2">
+                    <MonoLabel className="text-tint">{t("log.autolog.new", { count: newCount })}</MonoLabel>
+                    <Pressable accessibilityRole="button" className="active:opacity-60" onPress={onConfirmNew}>
+                        <Text className="text-tint text-subtitle font-sans-semibold">
+                            {t("log.autolog.confirmAll")}
+                        </Text>
+                    </Pressable>
+                </View>
+            ) : null}
             {/* A 1.3 stroke with round caps, not a 1px border. */}
             <View className="bg-border" style={{ borderRadius: 0.65, height: 1.3 }} />
         </>

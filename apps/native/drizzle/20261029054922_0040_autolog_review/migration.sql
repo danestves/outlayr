@@ -1,0 +1,1 @@
+ALTER TABLE `transactions` ADD `unreviewed` integer DEFAULT false NOT NULL;
