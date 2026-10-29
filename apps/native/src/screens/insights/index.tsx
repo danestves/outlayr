@@ -52,6 +52,7 @@ import type { InsightsTotals } from "@/domain/insights-measure";
 import { quietAlternative } from "@/domain/insights-quiet";
 import { insightsVerdict } from "@/domain/insights-verdict";
 import { formatAmount } from "@/domain/money";
+import { recapRowVisible } from "@/domain/recap-month";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
 import { SILENT } from "@/state/atom-command";
@@ -70,6 +71,7 @@ import { InsightsQuiet } from "./components/insights-quiet";
 import { InsightsSample } from "./components/insights-sample";
 import { InsightsTransactionList } from "./components/insights-transaction-list";
 import { NetWorthCard } from "./components/net-worth-card";
+import { RecapRow } from "./components/recap-row";
 import { SpendingCalendar } from "./components/spending-calendar";
 import { heroMagnitudeFor, heroPositiveFor } from "./hero";
 import { MEASURE_KEY } from "./measure-label";
@@ -387,6 +389,7 @@ export function Insights() {
                 showsVerticalScrollIndicator={false}
             >
                 <View className="px-5">
+                    {recapRowVisible(new Date(nowMs)) ? <RecapRow nowMs={nowMs} /> : null}
                     <View className="flex-row flex-wrap gap-2">
                         <ScopeChip
                             accessibilityLabel={t("insights.window.shown")}

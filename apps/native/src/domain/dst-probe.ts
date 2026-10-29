@@ -11,6 +11,7 @@ import { nextClockTick } from "./clock";
 import { formatDayHeader } from "./dates";
 import { generateSchedule } from "./installments";
 import { daysBetween, localDayKey } from "./local-day";
+import { loggedDays } from "./month-days";
 import { goalProgress } from "./savings-goal";
 import { reminderFireAt } from "./subscription-reminder";
 
@@ -145,6 +146,20 @@ async function answer(): Promise<string> {
                     fire.getSeconds(),
                 ],
                 landingOffset: landing.getTimezoneOffset(),
+            });
+        }
+        case "logged-days": {
+            const { at, month }: { at: [number, number, number, number, number][]; month: [number, number] } =
+                JSON.parse(rest[0] ?? "{}");
+            const days = loggedDays(
+                new Date(month[0], month[1], 15),
+                at.map(([year, monthIndex, day, hour, minute]) =>
+                    new Date(year, monthIndex, day, hour, minute).getTime()
+                )
+            );
+            return JSON.stringify({
+                daysInMonth: days.length,
+                logged: days.flatMap((flag, index) => (flag ? [index + 1] : [])),
             });
         }
         case "installments": {
