@@ -1,6 +1,7 @@
 import { useAtomValue } from "@effect/atom-react/Hooks";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import { Button } from "panelui-native/components/button";
 import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
@@ -345,8 +346,18 @@ export function Paywall() {
     const footer = (
         <>
             {needsAccount ? (
-                <View className="items-center px-5 pt-5">
+                <View className="gap-4 px-5 pt-5">
                     <Text className="text-muted text-subtitle text-center">{t("pro.needsAccount")}</Text>
+                    <Button
+                        className="rounded-full"
+                        fullWidth
+                        onPress={() => router.push("/settings/account")}
+                        size="md"
+                        testID="paywall-sign-in"
+                        variant="primary"
+                    >
+                        {t("settings.account.signIn")}
+                    </Button>
                 </View>
             ) : null}
             {noCloud ? (
