@@ -545,6 +545,9 @@ export function useVoiceEntry<Context>({
     }, []);
 
     const settledPhase = settledPhaseOf(phase, messages);
+    if (settledPhase !== phase) {
+        setPhase(settledPhase);
+    }
 
     const turns = voiceTurnsOf(messages);
 
