@@ -12,6 +12,7 @@ export type PageRef =
 
 export const SITE_URL = "https://tryoutlayr.com";
 export const LEDGER_MCP_ORIGIN = "https://edge.tryoutlayr.com";
+export const APP_STORE_URL = "https://apps.apple.com/app/id6801652978";
 export const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.tryoutlayr.app";
 /** The app speaks more languages than this site, which stays English and Spanish. */
 export const APP_LANGUAGES = ["en", "es-419", "es-ES", "fr", "pt-BR", "pt-PT"] as const;

@@ -3,7 +3,16 @@ import type { JSX } from "react";
 
 import { LANGUAGES, pageUrl } from "./i18n";
 import type { Locale } from "./i18n";
-import { APP_LANGUAGES, LEGAL_DAYS, PLAY_STORE_URL, SITE_URL, SOURCE_URL, WIKIDATA_URL, X_URL } from "./site";
+import {
+    APP_LANGUAGES,
+    APP_STORE_URL,
+    LEGAL_DAYS,
+    PLAY_STORE_URL,
+    SITE_URL,
+    SOURCE_URL,
+    WIKIDATA_URL,
+    X_URL,
+} from "./site";
 
 type Json = string | number | boolean | null | readonly Json[] | { readonly [key: string]: Json | undefined };
 
@@ -95,13 +104,13 @@ export function mobileApp(locale: Locale, description: string, fields: { readonl
         "@type": "MobileApplication",
         applicationCategory: "FinanceApplication",
         description,
-        downloadUrl: [PLAY_STORE_URL],
+        downloadUrl: [APP_STORE_URL, PLAY_STORE_URL],
         inLanguage: APP_LANGUAGES,
         name: "Outlayr",
         offers: offers(locale),
-        operatingSystem: "Android",
+        operatingSystem: "iOS, Android",
         publisher: { "@id": ORGANIZATION_ID },
-        sameAs: [PLAY_STORE_URL, X_URL, SOURCE_URL, WIKIDATA_URL],
+        sameAs: [APP_STORE_URL, PLAY_STORE_URL, X_URL, SOURCE_URL, WIKIDATA_URL],
         url: pageUrl("/", locale),
         ...fields,
     };

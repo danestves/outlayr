@@ -56,8 +56,8 @@ const about = {
             {
                 label: t({ en: "Platforms", es: "Plataformas" }),
                 text: t({
-                    en: "Android. iPhone with iOS 18 or later is coming soon to the App Store.",
-                    es: "Android. Pronto llegará al App Store para iPhone con iOS 18 o posterior.",
+                    en: "iPhone with iOS 18 or later, and Android.",
+                    es: "iPhone con iOS 18 o posterior, y Android.",
                 }),
             },
             {

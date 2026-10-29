@@ -1,6 +1,6 @@
 # Outlayr
 
-Outlayr is an open source mobile expense tracker, budget app, and subscription tracker. Log a purchase by typing one sentence, saying it, or scanning the receipt. The ledger lives on the phone; sign-in, sync and server features are optional. On Android, coming soon to the App Store.
+Outlayr is an open source mobile expense tracker, budget app, and subscription tracker. Log a purchase by typing one sentence, saying it, or scanning the receipt. The ledger lives on the phone; sign-in, sync and server features are optional. On the App Store and Google Play.
 
 <a href="https://play.google.com/store/apps/details?id=com.tryoutlayr.app"><img alt="Get it on Google Play" height="40" src="./apps/web/public/badges/google-play.png"></a>
 

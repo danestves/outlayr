@@ -86,7 +86,7 @@ const OUTLAYR = {
         en: "Daily spending, budgets, and savings goals",
         es: "Gastos diarios, presupuestos y metas de ahorro",
     }),
-    platforms: t({ en: "Android. iPhone soon", es: "Android. Pronto en iPhone" }),
+    platforms: t({ en: "iPhone and Android", es: "iPhone y Android" }),
     price: t({
         en: "Free. Pro is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once in the US. Prices vary by country",
         es: "Gratis. Pro cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago en Estados Unidos. Los precios cambian según el país",
@@ -2790,8 +2790,8 @@ const answers = {
                             {
                                 label: LABELS.watch,
                                 text: t({
-                                    en: "Android only until the iPhone app is out, and no web app. The free plan holds 2 category budgets plus one for the month",
-                                    es: "Solo en Android hasta que salga la app para iPhone, y sin app web. El plan gratis permite 2 presupuestos por categoría más uno para el mes",
+                                    en: "No web app. The free plan holds 2 category budgets plus one for the month",
+                                    es: "Sin app web. El plan gratis permite 2 presupuestos por categoría más uno para el mes",
                                 }),
                             },
                         ],
@@ -3629,8 +3629,8 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "It depends on where you want it to run. Cashew and Flow are phone apps, and Cashew also runs on the web. Actual Budget runs on Windows, macOS, Linux, and the web, with envelope budgeting. Firefly III runs on your own server. Outlayr logs by sentence, voice, or receipt on Android, with iPhone coming. All five are free to start.",
-                            es: "Depende de dónde quieras usarla. Cashew y Flow son apps para el celular, y Cashew también funciona en la web. Actual Budget funciona en Windows, macOS, Linux y la web, con presupuesto por sobres. Firefly III funciona en tu propio servidor. Outlayr registra con una oración, tu voz o un recibo en Android, y pronto llegará a iPhone. Las cinco son gratis para empezar.",
+                            en: "It depends on where you want it to run. Cashew and Flow are phone apps, and Cashew also runs on the web. Actual Budget runs on Windows, macOS, Linux, and the web, with envelope budgeting. Firefly III runs on your own server. Outlayr logs by sentence, voice, or receipt on iPhone and Android. All five are free to start.",
+                            es: "Depende de dónde quieras usarla. Cashew y Flow son apps para el celular, y Cashew también funciona en la web. Actual Budget funciona en Windows, macOS, Linux y la web, con presupuesto por sobres. Firefly III funciona en tu propio servidor. Outlayr registra con una oración, tu voz o un recibo en iPhone y Android. Las cinco son gratis para empezar.",
                         }),
                         question: t({
                             en: "What is the best open source expense tracker?",
@@ -4418,8 +4418,8 @@ const answers = {
                     {
                         body: [
                             t({
-                                en: "Outlayr, the app we make, logs an expense when you type a sentence, say it, or scan the receipt, in 165 currencies at the rate of the day. It is free to start on Android, with iPhone coming soon. If you already keep a spreadsheet, you can import it as a CSV.",
-                                es: "Outlayr, la app que hacemos nosotros, registra un gasto cuando escribes una oración, la dictas o escaneas el recibo, en 165 monedas con la tasa del día. Es gratis para empezar en Android y pronto llegará a iPhone. Si ya llevas una hoja de cálculo, puedes importarla como CSV.",
+                                en: "Outlayr, the app we make, logs an expense when you type a sentence, say it, or scan the receipt, in 165 currencies at the rate of the day. It is free to start on iPhone and Android. If you already keep a spreadsheet, you can import it as a CSV.",
+                                es: "Outlayr, la app que hacemos nosotros, registra un gasto cuando escribes una oración, la dictas o escaneas el recibo, en 165 monedas con la tasa del día. Es gratis para empezar en iPhone y Android. Si ya llevas una hoja de cálculo, puedes importarla como CSV.",
                             }),
                         ],
                         id: "app",
@@ -4567,8 +4567,8 @@ const answers = {
                             {
                                 label: LABELS.watch,
                                 text: t({
-                                    en: "Android only until the iPhone app is out, and no web app. A Mint CSV comes in without accounts, tags, or splits",
-                                    es: "Solo en Android hasta que salga la app para iPhone, y sin app web. Un CSV de Mint entra sin cuentas, etiquetas ni divisiones",
+                                    en: "No web app. A Mint CSV comes in without accounts, tags, or splits",
+                                    es: "Sin app web. Un CSV de Mint entra sin cuentas, etiquetas ni divisiones",
                                 }),
                             },
                         ],
@@ -5674,8 +5674,8 @@ const answers = {
                             {
                                 label: LABELS.watch,
                                 text: t({
-                                    en: "Android only until the iPhone app is out, and no web app. A YNAB export comes in as a comma-separated CSV, without accounts or split lines",
-                                    es: "Solo en Android hasta que salga la app para iPhone, y sin app web. Una exportación de YNAB entra como CSV separado por comas, sin cuentas ni divisiones",
+                                    en: "No web app. A YNAB export comes in as a comma-separated CSV, without accounts or split lines",
+                                    es: "Sin app web. Una exportación de YNAB entra como CSV separado por comas, sin cuentas ni divisiones",
                                 }),
                             },
                         ],
