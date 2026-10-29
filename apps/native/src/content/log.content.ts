@@ -79,11 +79,17 @@ const log = {
             pt: "{count} novos",
         }),
         "log.autolog.paused": t({
-            en: "Auto-log paused · {count} waiting",
-            es: "Registro automático en pausa · {count} en espera",
-            fr: "Saisie auto en pause · {count} en attente",
-            pt: "Registro automático pausado · {count} em espera",
-            "pt-PT": "Registo automático em pausa · {count} em espera",
+            en: "Auto-log paused",
+            es: "Registro automático en pausa",
+            fr: "Saisie auto en pause",
+            pt: "Registro automático pausado",
+            "pt-PT": "Registo automático em pausa",
+        }),
+        "log.autolog.waiting": t({
+            en: "{count} waiting",
+            es: "{count} en espera",
+            fr: "{count} en attente",
+            pt: "{count} em espera",
         }),
         "log.chip.earlier": t({
             en: "Earlier",
