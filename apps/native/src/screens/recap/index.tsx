@@ -27,8 +27,8 @@ function changeTone(change: number | null): string {
     return change > 0 ? "text-danger" : "text-income";
 }
 
-const GRID_COLUMNS = 7;
-const GRID_GAP = 6;
+const GRID_COLUMNS = 16;
+const GRID_GAP = 4;
 const GUTTER = 20;
 
 function DaysGrid({ days, label }: { days: readonly boolean[]; label: string }) {
@@ -38,7 +38,7 @@ function DaysGrid({ days, label }: { days: readonly boolean[]; label: string }) 
         <View accessibilityLabel={label} accessible className="flex-row flex-wrap" style={{ gap: GRID_GAP }}>
             {days.map((logged, index) => (
                 <View
-                    className={cn("rounded-md", logged ? "bg-foreground" : "bg-border")}
+                    className={cn("rounded-sm", logged ? "bg-foreground" : "bg-border")}
                     key={index}
                     style={{ height: cell, width: cell }}
                 />

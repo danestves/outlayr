@@ -18,7 +18,12 @@ interface CardInputOptions {
     t: TranslateFn;
 }
 
-function headlineFor({ recap, language, t }: CardInputOptions): string {
+function headlineFor(options: CardInputOptions): string {
+    const line = headlineText(options);
+    return line.charAt(0).toLocaleUpperCase(options.language) + line.slice(1);
+}
+
+function headlineText({ recap, language, t }: CardInputOptions): string {
     const month = monthLongTitle(recap.start, language);
     const percent = recap.spentChange === null ? 0 : Math.round(Math.abs(recap.spentChange) * 100);
     if (recap.spentChange === null || percent === 0) {
