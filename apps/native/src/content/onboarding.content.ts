@@ -3,6 +3,46 @@ import type { Dictionary } from "intlayer";
 
 const onboarding = {
     content: {
+        "onboarding.autoLog.applePay.detail": t({
+            en: "Card taps log themselves",
+            es: "Cada pago con la tarjeta se registra solo",
+            fr: "Chaque paiement par carte s'enregistre seul",
+            pt: "Cada pagamento com o cartão se registra sozinho",
+            "pt-PT": "Cada pagamento com o cartão regista-se sozinho",
+        }),
+        "onboarding.autoLog.bank.detail": t({
+            en: "Purchases in your bank's notifications",
+            es: "Compras en las notificaciones de tu banco",
+            fr: "Achats dans les notifications de votre banque",
+            pt: "Compras nas notificações do seu banco",
+            "pt-PT": "Compras nas notificações do seu banco",
+        }),
+        "onboarding.autoLog.count": t({
+            en: "{on} of {total} on",
+            es: "{on} de {total} activados",
+            fr: "{on} sur {total} activés",
+            pt: "{on} de {total} ativados",
+        }),
+        "onboarding.autoLog.eyebrow": t({
+            en: "Auto-log",
+            es: "Registro automático",
+            fr: "Saisie automatique",
+            pt: "Registro automático",
+            "pt-PT": "Registo automático",
+        }),
+        "onboarding.autoLog.setUp": t({
+            en: "Set up",
+            es: "Configurar",
+            fr: "Configurer",
+            pt: "Configurar",
+        }),
+        "onboarding.autoLog.title": t({
+            en: "Let Outlayr do the typing",
+            es: "Deja que Outlayr escriba por ti",
+            fr: "Laissez Outlayr saisir pour vous",
+            pt: "Deixe o Outlayr digitar por você",
+            "pt-PT": "Deixe o Outlayr escrever por si",
+        }),
         "onboarding.cover.line": t({
             en: "A ledger you keep by hand. Every entry yours, on this device.",
             es: "Un registro que llevas a mano. Cada entrada es tuya, en este dispositivo.",

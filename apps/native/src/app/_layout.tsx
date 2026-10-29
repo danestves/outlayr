@@ -271,6 +271,7 @@ function RootStack() {
                 <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
                 {/* Transparent: the stock theme card differs from `--fr-ground`, so an opaque bar bands the top. */}
                 <Stack.Screen name="onboarding/currency" options={chrome.firstRunStep} />
+                <Stack.Screen name="onboarding/auto-log" options={chrome.firstRunStep} />
                 <Stack.Screen name="onboarding/smart-features" options={chrome.firstRunStep} />
                 <Stack.Screen name="onboarding/rhythm" options={chrome.firstRunStep} />
             </Stack.Protected>
