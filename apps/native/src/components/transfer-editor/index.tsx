@@ -42,7 +42,7 @@ import {
 import { quotedByBcv, rateNameKey, rateSourceWordKey, transactionWhenLabel } from "@/domain/transaction-form-labels";
 import type { FeeSide } from "@/domain/transfer-reconcile";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
-import { useAccountCreateRoute } from "@/hooks/use-pro-gate";
+import { useCreateAccount } from "@/hooks/use-pro-gate";
 import type { SheetRest } from "@/hooks/use-resting-sheet";
 import { useSheetSurface } from "@/hooks/use-sheet-surface";
 import { useLanguage, useTranslation } from "@/i18n/context";
@@ -224,7 +224,7 @@ export default function TransferEditor({
     const db = useDatabase();
     const registry = use(RegistryContext);
     const router = useRouter();
-    const accountCreateRoute = useAccountCreateRoute();
+    const createAccount = useCreateAccount();
     const t = useTranslation();
     const { language } = useLanguage();
     const colors = useColors();
@@ -383,7 +383,7 @@ export default function TransferEditor({
 
     const onFooter = () => {
         if ((step === "from" || step === "to") && draft.accounts.length === 0) {
-            router.push(accountCreateRoute);
+            createAccount();
             return;
         }
         if (saves) {

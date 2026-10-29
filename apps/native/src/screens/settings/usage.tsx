@@ -6,6 +6,7 @@ import type { SettingsIconName } from "@/components/settings/settings-icons";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { formatSentenceDate } from "@/domain/dates";
+import { paywallHref } from "@/domain/paywall-trigger";
 import { formatWait, projectLimit } from "@/domain/usage-limits";
 import type { LimitBucket } from "@/domain/usage-limits";
 import { proSellable } from "@/hooks/use-pro-locked";
@@ -65,7 +66,7 @@ function UsageLimitsView() {
                 <View className="border-border mt-4 border-t">
                     <LinkRow
                         icon="Sparkles"
-                        onPress={() => router.push("/paywall")}
+                        onPress={() => router.push(paywallHref("usage"))}
                         title={t("pro.entry.title")}
                         value={t("pro.entry.value")}
                     />

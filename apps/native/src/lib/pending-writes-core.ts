@@ -28,6 +28,16 @@ const PendingWrite = Schema.Struct({
 /** Written by `app-intents/LogTransactionIntent.swift`: the field names are the wire format. */
 export type PendingWrite = typeof PendingWrite.Type;
 
+export type AutologSource = "notification" | "shortcut" | "wallet" | "watch";
+
+export function autologSourceOf(write: PendingWrite): AutologSource {
+    if (write.categoryId) {
+        return "watch";
+    }
+    const kind = /^(wallet|notification):/.exec(write.dedupeKey ?? "")?.[1];
+    return kind === "wallet" || kind === "notification" ? kind : "shortcut";
+}
+
 export const QUEUE_DIRECTORY = "pending-writes";
 
 export const QUEUE_FILE = "queue.jsonl";

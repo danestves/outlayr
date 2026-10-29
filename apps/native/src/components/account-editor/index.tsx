@@ -52,7 +52,7 @@ import { numberToNumpad, numpadToNumber } from "@/domain/numpad";
 import { useAccountIdentity } from "@/hooks/use-account-identity";
 import { useKeyboardEvent } from "@/hooks/use-keyboard-height";
 import { useLocaleTag } from "@/hooks/use-locale-tag";
-import { useAccountSaveCapped, useCurrencyBlocked } from "@/hooks/use-pro-gate";
+import { useAccountSaveCapped, useCurrencyBlocked, useOpenPaywall } from "@/hooks/use-pro-gate";
 import { useRegionCode } from "@/hooks/use-region-code";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
@@ -103,6 +103,7 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
     const registry = use(RegistryContext);
     const editId = props.mode === "edit" ? props.id : null;
     const router = useRouter();
+    const openPaywall = useOpenPaywall();
     const currencyBlocked = useCurrencyBlocked(editId);
     const accountCapped = useAccountSaveCapped();
     const t = useTranslation();
@@ -187,7 +188,7 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
             // The form opens on the global currency, which is not capped, so an untouched field can still be the
             // second currency in the ledger.
             if (capped || currencyBlocked(input)) {
-                router.push("/paywall");
+                openPaywall(capped ? "accounts" : "currencies");
                 return;
             }
             return holdAfterSuccess(
@@ -435,7 +436,7 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
                 onSelect={(code) => {
                     currencySheetRef.current?.dismiss();
                     if (currencyBlocked({ currency: code, kind: formKind(person, liability), name })) {
-                        router.push("/paywall");
+                        openPaywall("currencies");
                         return;
                     }
                     form.setFieldValue("currency", code);

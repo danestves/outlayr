@@ -1,7 +1,6 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import * as Cause from "effect/Cause";
 import * as Result from "effect/Result";
-import { useRouter } from "expo-router";
 import { useLayoutEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 import { Keyboard } from "react-native";
@@ -22,7 +21,7 @@ import type { DebtVerb } from "@/domain/debts";
 import { addLocalMonths } from "@/domain/local-day";
 import { minorUnitsFor, roundToMinorUnits } from "@/domain/money";
 import { numpadToNumber } from "@/domain/numpad";
-import { useAccountCreateRoute, usePayoffPlanGate, usePeopleCapped } from "@/hooks/use-pro-gate";
+import { useCreateAccount, useOpenPaywall, usePayoffPlanGate, usePeopleCapped } from "@/hooks/use-pro-gate";
 import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
@@ -94,7 +93,7 @@ export interface NewDebtProps {
 
 export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialVerb }: NewDebtProps) {
     const db = useDatabase();
-    const router = useRouter();
+    const openPaywall = useOpenPaywall();
     const t = useTranslation();
     const haptics = useHaptics();
     const people = usePeople(db);
@@ -183,7 +182,7 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
 
     const save = () => {
         if (person === null && peopleCapped) {
-            router.push("/paywall");
+            openPaywall("people");
             return;
         }
         setBusy(true);
@@ -258,9 +257,8 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
 
 export function NewDebtSheets({ form }: { form: ReturnType<typeof useNewDebtForm> }) {
     const db = useDatabase();
-    const router = useRouter();
     const t = useTranslation();
-    const accountCreateRoute = useAccountCreateRoute();
+    const createAccount = useCreateAccount();
     const { accountSheet, amountSheet, categorySheet, currencySheet, person, theirSheet } = form;
 
     return (
@@ -288,7 +286,7 @@ export function NewDebtSheets({ form }: { form: ReturnType<typeof useNewDebtForm
                 noneLabel={person === null ? undefined : t("debts.field.outside")}
                 onCreate={() => {
                     accountSheet.current?.dismiss();
-                    router.push(accountCreateRoute);
+                    createAccount();
                 }}
                 onSelect={(picked: Account | null) => form.setAccountId(picked?.id ?? null)}
                 ref={accountSheet}

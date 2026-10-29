@@ -1,31 +1,22 @@
 import { Stack, useRouter } from "expo-router";
 
 import { toolbarIcon } from "@/components/toolbar-icons";
-import { useAccountCreateRoute, useLiabilityCreateRoute } from "@/hooks/use-pro-gate";
+import { useCreateAccount, useCreateLiability } from "@/hooks/use-pro-gate";
 import { useTranslation } from "@/i18n/context";
 
 export function useAddMenu() {
     const router = useRouter();
     const t = useTranslation();
-    const accountRoute = useAccountCreateRoute();
-    const liabilityRoute = useLiabilityCreateRoute();
+    const createAccount = useCreateAccount();
+    const createLiability = useCreateLiability();
 
     return (
         <Stack.Toolbar.Menu accessibilityLabel={t("accounts.add.prompt")}>
             <Stack.Toolbar.Icon {...toolbarIcon("add")} />
-            <Stack.Toolbar.MenuAction icon="building.columns" onPress={() => router.push(accountRoute)}>
+            <Stack.Toolbar.MenuAction icon="building.columns" onPress={createAccount}>
                 {t("accounts.add.account")}
             </Stack.Toolbar.MenuAction>
-            <Stack.Toolbar.MenuAction
-                icon="creditcard"
-                onPress={() =>
-                    router.push(
-                        liabilityRoute === "/paywall"
-                            ? liabilityRoute
-                            : { params: { kind: "liability" }, pathname: liabilityRoute }
-                    )
-                }
-            >
+            <Stack.Toolbar.MenuAction icon="creditcard" onPress={createLiability}>
                 {t("debts.add.liability")}
             </Stack.Toolbar.MenuAction>
             <Stack.Toolbar.MenuAction icon="person" onPress={() => router.push("/debts/new")}>

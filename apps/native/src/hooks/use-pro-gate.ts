@@ -5,6 +5,8 @@ import { use } from "react";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useBankAccounts, usePeople } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
+import { paywallHref } from "@/domain/paywall-trigger";
+import type { PaywallTrigger } from "@/domain/paywall-trigger";
 import {
     blocksSavedCurrency,
     FREE_PAYOFF_PLANS,
@@ -13,6 +15,7 @@ import {
     fullAccountCaps,
 } from "@/domain/pro-limits";
 import { useProLocked } from "@/hooks/use-pro-locked";
+import { posthog } from "@/lib/posthog";
 import { SILENT } from "@/state/atom-command";
 import { livePayoffPlanCountCommand } from "@/state/planning-commands";
 import { fireAtomCommand } from "@/state/use-atom-action";
@@ -32,13 +35,38 @@ export function useAccountSaveCapped(): (account: Named, before: Named | null) =
     return (account, before) => fillsFullCap(caps, account, before);
 }
 
-export function useAccountCreateRoute(): "/accounts/create" | "/paywall" {
-    return useAccountCaps().accounts ? "/paywall" : "/accounts/create";
+export function useOpenPaywall(): (limit: typeof PaywallTrigger.Type) => void {
+    const router = useRouter();
+    return (limit) => {
+        posthog?.capture("limit_hit", { limit });
+        router.push(paywallHref(limit));
+    };
 }
 
-export function useLiabilityCreateRoute(): "/accounts/create" | "/paywall" {
+export function useCreateAccount(): () => void {
+    const router = useRouter();
+    const openPaywall = useOpenPaywall();
+    const capped = useAccountCaps().accounts;
+    return () => {
+        if (capped) {
+            openPaywall("accounts");
+            return;
+        }
+        router.push("/accounts/create");
+    };
+}
+
+export function useCreateLiability(): () => void {
+    const router = useRouter();
+    const openPaywall = useOpenPaywall();
     const caps = useAccountCaps();
-    return caps.accounts && caps.installmentApps ? "/paywall" : "/accounts/create";
+    return () => {
+        if (caps.accounts && caps.installmentApps) {
+            openPaywall("accounts");
+            return;
+        }
+        router.push({ params: { kind: "liability" }, pathname: "/accounts/create" });
+    };
 }
 
 export function usePeopleCapped(): boolean {
@@ -51,7 +79,7 @@ type Priced = Pick<Account, "currency" | "kind" | "name">;
 // has ended.
 export function usePayoffPlanGate(): (accountId: string | null, open: () => void) => void {
     const db = useDatabase();
-    const router = useRouter();
+    const openPaywall = useOpenPaywall();
     const locked = useProLocked();
     const registry = use(RegistryContext);
     return (accountId, open) => {
@@ -68,7 +96,7 @@ export function usePayoffPlanGate(): (accountId: string | null, open: () => void
                 onFailure: open,
                 onSuccess: (count) => {
                     if (count >= FREE_PAYOFF_PLANS) {
-                        router.push("/paywall");
+                        openPaywall("payoff_plans");
                         return;
                     }
                     open();

@@ -38,6 +38,7 @@ import type { Database } from "@/db/client";
 import type { AuthGate } from "@/domain/auth-gate";
 import { formatChargeDate } from "@/domain/dates";
 import { formatAmount } from "@/domain/money";
+import { paywallHref } from "@/domain/paywall-trigger";
 import { serializeReceipt } from "@/domain/receipt-items";
 import { conversionOf, resolveReceipt, savableReceipt } from "@/domain/receipt-scan";
 import type { Conversion, ResolvedReceipt } from "@/domain/receipt-scan";
@@ -686,7 +687,7 @@ function ScanFlowScreen() {
         let primary: BarAction | null = libraryAction;
         let secondary: BarAction | null = null;
         if (phase.reason === "notEntitled" && !entitled) {
-            primary = { label: t("pro.action.see"), onPress: () => router.push("/paywall") };
+            primary = { label: t("pro.action.see"), onPress: () => router.push(paywallHref("captures")) };
         } else if (phase.reason === "notEntitled") {
             primary = phase.photo === null ? cameraAction : { label: t("receipt.action.retry"), onPress: retry };
             secondary = libraryAction;

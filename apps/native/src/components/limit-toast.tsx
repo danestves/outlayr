@@ -3,6 +3,7 @@ import Animated, { SlideInUp, SlideOutUp } from "react-native-reanimated";
 
 import { NoticeSlip } from "@/components/notice-slip";
 import { formatSentenceDate } from "@/domain/dates";
+import { paywallHref } from "@/domain/paywall-trigger";
 import { formatWait } from "@/domain/usage-limits";
 import type { CaptureFeature, LimitNotice } from "@/hooks/use-usage-limits";
 import { useLanguage, useTranslation } from "@/i18n/context";
@@ -62,7 +63,7 @@ export function LimitToast({
             <NoticeSlip
                 actionLabel={t(toPro ? "settings.usage.toast.pro" : "settings.usage.toast.usage")}
                 body={description ?? undefined}
-                onAction={() => router.push(toPro ? "/paywall" : "/settings/usage")}
+                onAction={() => router.push(toPro ? paywallHref("captures") : "/settings/usage")}
                 title={title}
                 tone={{ kind: notice.kind === "paused" || notice.kind === "capturesEmpty" ? "failure" : "warning" }}
             />
