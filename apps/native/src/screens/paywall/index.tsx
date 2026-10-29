@@ -338,7 +338,8 @@ export function Paywall() {
     // A build without a backend cannot deliver Pro, so it takes no money for it.
     const noCloud = !proSellable();
     const needsAccount = !noCloud && accountId === null;
-    const canBuy = !(isPro || needsAccount || noCloud);
+    const pitches = !(isPro || noCloud);
+    const canBuy = pitches && !needsAccount;
     const logsWaiting = canBuy && block === "autolog" && autolog.waiting > 0;
 
     const footer = (
@@ -468,7 +469,7 @@ export function Paywall() {
                 contentContainerClassName={largeText ? "pb-4" : "pb-2"}
                 contentInsetAdjustmentBehavior="automatic"
             >
-                {canBuy ? (
+                {pitches ? (
                     <View className="px-5">
                         <TopBlockView autolog={autolog} block={block} />
                         <AlsoRows rows={alsoRowsFor(block)} />
