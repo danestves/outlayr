@@ -149,6 +149,19 @@ const alerts = {
             pt: "Assinatura",
             "pt-PT": "Subscrição",
         }),
+        "reminder.recap.body": t({
+            en: "See how it went and what moved.",
+            es: "Mira cómo te fue y qué cambió.",
+            fr: "Voyez comment ça s'est passé et ce qui a bougé.",
+            pt: "Veja como foi e o que mudou.",
+        }),
+        "reminder.recap.title": t({
+            en: "Your {month} is ready",
+            es: "Tu {month} está listo",
+            fr: "Votre {month} est prêt",
+            pt: "Seu {month} está pronto",
+            "pt-PT": "O seu {month} está pronto",
+        }),
     },
     key: "alerts" as const,
 } satisfies Dictionary;

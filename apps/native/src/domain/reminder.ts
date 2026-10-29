@@ -1,4 +1,4 @@
-import { addDays, startOfDay } from "@outlayr/money/calendar";
+import { addDays, addMonths, firstOfMonth, startOfDay } from "@outlayr/money/calendar";
 
 import { CATALOGS, EN } from "@/i18n/catalog";
 import type { Language } from "@/i18n/languages";
@@ -7,9 +7,10 @@ import { translate } from "@/i18n/translate";
 import type { TranslationParams } from "@/i18n/translate";
 import type { DatedReminder } from "@/lib/reminders";
 
-import { formatTime } from "./dates";
+import { formatTime, monthLongTitle } from "./dates";
 import { daysBetween } from "./local-day";
 import { formatAmount } from "./money";
+import { recapMonthKey } from "./recap-month";
 
 export const REMINDER_MORNING = 1;
 export const REMINDER_EVENING = 2;
@@ -190,4 +191,25 @@ export function dailyReminderNotices({
             ];
         }
     );
+}
+
+export const RECAP_REMINDER_PREFIX = "outlayr.monthly-recap";
+
+export function monthlyRecapNotice(
+    month: Date,
+    time: TimeOfDay,
+    language: Language = runtimeLanguage()
+): DatedReminder {
+    const fireAt = addMonths(firstOfMonth(month), 1);
+    fireAt.setHours(time.hour, time.minute, 0, 0);
+    const key = recapMonthKey(month);
+    const say = (id: string, params?: TranslationParams) =>
+        translate(id, { catalog: CATALOGS[language], fallback: EN, params });
+    return {
+        body: say("reminder.recap.body"),
+        data: { month: key, open: "recap" },
+        fireAt,
+        id: `${RECAP_REMINDER_PREFIX}.${key}`,
+        title: say("reminder.recap.title", { month: monthLongTitle(month, language) }),
+    };
 }

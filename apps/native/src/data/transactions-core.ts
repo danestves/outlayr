@@ -184,6 +184,7 @@ export interface TransactionInput {
 const TransactionsOperation = Schema.Literals([
     "attachAccount",
     "create",
+    "hasEntries",
     "lastEntry",
     "remove",
     "restore",
@@ -728,6 +729,21 @@ export function getTransactionById(db: Database, id: string): Transaction | null
     const rows = db.select().from(transactions).where(eq(transactions.id, id)).limit(1).all();
     return rows[0] ?? null;
 }
+
+export const hasEntriesBetween = Effect.fn("Transactions.hasEntriesBetween")(function* hasEntriesBetween(
+    db: Database,
+    from: Date,
+    until: Date,
+    now: Date
+) {
+    const [row] = yield* query("hasEntries", () =>
+        db
+            .select({ total: count() })
+            .from(transactions)
+            .where(and(visibleAt(now.getTime()), gte(transactions.date, from), lt(transactions.date, until)))
+    );
+    return (row?.total ?? 0) > 0;
+});
 
 export const lastLoggedEntry = Effect.fn("Transactions.lastLoggedEntry")(function* lastLoggedEntry(
     db: Database,

@@ -2,6 +2,11 @@
 
 export const DAY_CARD_WIDTH = 360;
 
+/** Fixed light ink on paper: the card is viewed in Photos and Messages, where a dark export reads as a fault. */
+export const CARD_PAPER = "#FFFFFF";
+export const CARD_INK = "#17150F";
+export const CARD_MUTED = "#767676";
+
 const PADDING = 24;
 const LABEL_SIZE = 11;
 const TOTAL_SIZE = 34;
@@ -35,6 +40,15 @@ interface CardRule {
     y: number;
 }
 
+export interface CardBar {
+    color: string;
+    fraction: number;
+    height: number;
+    width: number;
+    x: number;
+    y: number;
+}
+
 interface DayCardRow {
     amount: string;
     meta: string;
@@ -48,6 +62,7 @@ export interface DayCardInput {
 }
 
 export interface DayCardLayout {
+    bars?: CardBar[];
     height: number;
     rules: CardRule[];
     texts: CardText[];
