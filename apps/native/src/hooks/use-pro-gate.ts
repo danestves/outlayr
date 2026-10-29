@@ -5,6 +5,7 @@ import { use } from "react";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useBankAccounts, usePeople } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
+import { isInstallmentAppAccount } from "@/domain/institution-map";
 import { paywallHref } from "@/domain/paywall-trigger";
 import type { PaywallTrigger } from "@/domain/paywall-trigger";
 import {
@@ -30,9 +31,17 @@ export function useAccountCaps(): ReturnType<typeof fullAccountCaps> {
 
 type Named = Pick<Account, "kind" | "name">;
 
-export function useAccountSaveCapped(): (account: Named, before: Named | null) => boolean {
+export function useAccountSaveCapped(): (
+    account: Named,
+    before: Named | null
+) => Extract<typeof PaywallTrigger.Type, "accounts" | "installment_apps"> | null {
     const caps = useAccountCaps();
-    return (account, before) => fillsFullCap(caps, account, before);
+    return (account, before) => {
+        if (!fillsFullCap(caps, account, before)) {
+            return null;
+        }
+        return isInstallmentAppAccount(account) ? "installment_apps" : "accounts";
+    };
 }
 
 export function useOpenPaywall(): (limit: typeof PaywallTrigger.Type) => void {

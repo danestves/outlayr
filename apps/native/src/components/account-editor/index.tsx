@@ -187,8 +187,8 @@ function AccountEditorReady(props: AccountEditorProps & { db: import("@/db/clien
             const capped = accountCapped(input, mode === "create" ? null : loaded);
             // The form opens on the global currency, which is not capped, so an untouched field can still be the
             // second currency in the ledger.
-            if (capped || currencyBlocked(input)) {
-                openPaywall(capped ? "accounts" : "currencies");
+            if (capped !== null || currencyBlocked(input)) {
+                openPaywall(capped ?? "currencies");
                 return;
             }
             return holdAfterSuccess(
