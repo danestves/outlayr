@@ -46,6 +46,7 @@ function makeDb() {
 			feeForId text,
 			feeRate real,
 			paidVia text,
+			receipt text,
 			installmentId text,
 			restoredAt integer,
 			updatedAt integer NOT NULL,
@@ -63,6 +64,7 @@ interface RowSeed {
     details?: string;
     id: string;
     note?: string;
+    receipt?: string;
 }
 
 async function seed(db: TestDb, rows: RowSeed[]): Promise<void> {
@@ -78,6 +80,7 @@ async function seed(db: TestDb, rows: RowSeed[]): Promise<void> {
             income: false,
             month: at(row.date.getFullYear(), row.date.getMonth() + 1, 1),
             note: row.note ?? "",
+            receipt: row.receipt ?? null,
             updatedAt: new Date(0),
         }))
     );
@@ -185,6 +188,41 @@ describe("search over the note's free text", () => {
         ]);
 
         await expect(search(db, "dentist")).resolves.toStrictEqual(["in-details"]);
+    });
+});
+
+describe("search over a synced receipt", () => {
+    it("counts the saved lines and survives data another device mangled", async () => {
+        const db = makeDb();
+        const lines = [{ name: "Pan", price: 1, quantity: 1 }];
+        await seed(db, [
+            { date: at(2025, 7, 14), id: "plain", note: "Card" },
+            { date: at(2025, 7, 14), id: "scanned", note: "Card", receipt: JSON.stringify({ items: lines }) },
+            { date: at(2025, 7, 14), id: "mangled", note: "Card", receipt: "{not json" },
+            { date: at(2025, 7, 14), id: "odd", note: "Card", receipt: '{"items":"Pan"}' },
+        ]);
+
+        const rows = await searchedTransactionsQuery(db, { categoryIds: [], nowMs: NOW, query: "card" });
+
+        expect(Object.fromEntries(rows.map((row) => [row.id, row.itemCount]))).toStrictEqual({
+            mangled: 0,
+            odd: 0,
+            plain: 0,
+            scanned: 1,
+        });
+    });
+
+    it("matches a row by a line's name, and skips data another device mangled", async () => {
+        const db = makeDb();
+        await seed(db, [
+            { date: at(2025, 7, 14), id: "scanned", receipt: JSON.stringify({ items: [{ name: "PAN CANILLA" }] }) },
+            { date: at(2025, 7, 14), id: "mangled", receipt: "{not json pan" },
+            { date: at(2025, 7, 14), id: "keys", receipt: JSON.stringify({ items: [{ name: "Leche", pan: 1 }] }) },
+        ]);
+
+        const rows = await searchedTransactionsQuery(db, { categoryIds: [], nowMs: NOW, query: "pan" });
+
+        expect(rows.map((row) => row.id)).toStrictEqual(["scanned"]);
     });
 });
 

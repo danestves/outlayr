@@ -1,14 +1,7 @@
 import { buildRateTable } from "@outlayr/money/valuation";
 import { describe, expect, it } from "vite-plus/test";
 
-import {
-    conversionOf,
-    DETAIL_LINES,
-    formatQuantity,
-    receiptDetails,
-    resolveReceipt,
-    savableReceipt,
-} from "./receipt-scan";
+import { conversionOf, formatQuantity, resolveReceipt, savableReceipt } from "./receipt-scan";
 
 const NOW = new Date(2026, 8, 5, 14, 30, 0);
 
@@ -123,32 +116,6 @@ describe("savableReceipt", () => {
         expect(savableReceipt(resolve({ ...DRAFT, categoryName: "Unknown" }))).toBeNull();
         expect(savableReceipt(resolve({ ...DRAFT, merchant: "  " }))).toBeNull();
         expect(savableReceipt(resolve({ ...DRAFT, currency: "JPY", total: 0.4 }))).toBeNull();
-    });
-});
-
-describe("receiptDetails", () => {
-    const price = (amount: number) => `€${amount.toFixed(2)}`;
-    const more = (count: number) => `and ${count} more lines`;
-
-    it("writes one line per item, with the quantity only when it is not one", () => {
-        expect(receiptDetails(resolve(DRAFT), price, more)).toBe("2× Leche entera 1L €1.90\nPan chapata €1.25");
-    });
-
-    it("is null for a receipt with no lines", () => {
-        expect(receiptDetails(resolve({ ...DRAFT, items: [] }), price, more)).toBeNull();
-    });
-
-    it("keeps the first lines of a long receipt and counts the rest", () => {
-        const items = Array.from({ length: DETAIL_LINES + 3 }, (_, index) => ({
-            name: `Item ${index}`,
-            price: 1,
-            quantity: 1,
-        }));
-        const details = receiptDetails(resolve({ ...DRAFT, items }), price, more) ?? "";
-        const lines = details.split("\n");
-
-        expect(lines).toHaveLength(DETAIL_LINES + 1);
-        expect(lines.at(-1)).toBe("and 3 more lines");
     });
 });
 

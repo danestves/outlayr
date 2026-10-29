@@ -134,6 +134,7 @@ interface RowMetaProps {
     fee: boolean;
     foreignCode: string | null;
     future: boolean;
+    itemCount: number | undefined;
     rateNeeded: boolean;
     restated: boolean;
     subtitle: string;
@@ -146,6 +147,7 @@ function RowMeta({
     fee,
     foreignCode,
     future,
+    itemCount,
     rateNeeded,
     restated,
     subtitle,
@@ -154,6 +156,7 @@ function RowMeta({
     const t = useTranslation();
     const colors = useColors();
     const showOriginal = restated && !use(AmountsHiddenContext);
+    const detailsLine = details || (itemCount ? t("receipt.items", { count: itemCount }) : null);
     return (
         <>
             <View className="flex-row flex-wrap items-center gap-1.25">
@@ -195,9 +198,9 @@ function RowMeta({
                     </View>
                 ) : null}
             </View>
-            {details ? (
+            {detailsLine ? (
                 <Text className={cn("text-footnote", future ? "text-subtle" : "text-muted")} numberOfLines={1}>
-                    {details}
+                    {detailsLine}
                 </Text>
             ) : null}
         </>
@@ -240,6 +243,7 @@ interface TransactionRowProps {
     transaction: TransactionWithCategory & {
         details?: string | null;
         ends?: TransferLogRow["ends"];
+        itemCount?: number;
         fees?: readonly { amount: number; currency: string | null; valued?: number | null }[];
         moved?: TransferMove;
         sign?: TransferLogRow["sign"];
@@ -377,6 +381,7 @@ export function TransactionRow({
                     fee={shown.feeIn || (transaction.moved?.fees.length ?? 0) > 0}
                     foreignCode={foreignCode}
                     future={future}
+                    itemCount={transaction.itemCount}
                     rateNeeded={rateNeeded}
                     restated={original !== null}
                     subtitle={subtitle}

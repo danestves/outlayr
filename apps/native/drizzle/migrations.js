@@ -39,6 +39,7 @@ import m0035 from './20261025034640_0035_installment_fees/migration.sql';
 import m0036 from './20261025034640_0036_outside_moves/migration.sql';
 import m0037 from './20261025034640_0037_transaction_attachments/migration.sql';
 import m0038 from './20261028203804_0038_budget_category_index_partial/migration.sql';
+import m0039 from './20261029042945_0039_receipt_items/migration.sql';
 
   export default {
     migrations: {
@@ -80,7 +81,8 @@ import m0038 from './20261028203804_0038_budget_category_index_partial/migration
       "20261025034640_0035_installment_fees": m0035,
       "20261025034640_0036_outside_moves": m0036,
       "20261025034640_0037_transaction_attachments": m0037,
-      "20261028203804_0038_budget_category_index_partial": m0038
+      "20261028203804_0038_budget_category_index_partial": m0038,
+      "20261029042945_0039_receipt_items": m0039
 }
   }
   

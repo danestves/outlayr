@@ -10,6 +10,7 @@ export default function NewTransactionScreen() {
         amount,
         attachment,
         note,
+        receipt,
         from,
         categoryId,
         accountId,
@@ -37,6 +38,7 @@ export default function NewTransactionScreen() {
         installmentDraft?: string;
         installments?: "1";
         note?: string;
+        receipt?: string;
         recurringCoefficient?: string;
         recurringType?: string;
     }>();
@@ -56,6 +58,7 @@ export default function NewTransactionScreen() {
             installmentDraft={installmentDraft}
             installments={installments}
             note={note}
+            receipt={receipt}
             recurringCoefficient={recurringCoefficient}
             recurringType={recurringType}
         />

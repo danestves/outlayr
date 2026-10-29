@@ -8,7 +8,7 @@ import { useDecoratedRows } from "./transactions";
 import type { TransactionWithCategory } from "./transactions";
 import type { Transaction } from "./transactions-core";
 
-export type SearchedTransaction = TransactionWithCategory & Pick<Transaction, "details">;
+export type SearchedTransaction = TransactionWithCategory & Pick<Transaction, "details"> & { itemCount: number };
 
 export function useSearchedTransactions(db: Database, query: string, nowMs: number): SearchedTransaction[] {
     const meta = useCategoryMeta(db);

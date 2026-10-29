@@ -89,29 +89,6 @@ export function savableReceipt(receipt: ResolvedReceipt): { categoryId: string }
     return { categoryId: receipt.categoryId };
 }
 
-export const DETAIL_LINES = 20;
-
-export function receiptDetails(
-    receipt: ResolvedReceipt,
-    formatPrice: (amount: number) => string,
-    moreLabel: (count: number) => string
-): string | null {
-    if (receipt.items.length === 0) {
-        return null;
-    }
-    const lines = receipt.items
-        .slice(0, DETAIL_LINES)
-        .map(
-            (item) =>
-                `${item.quantity === 1 ? "" : `${formatQuantity(item.quantity)}× `}${item.name} ${formatPrice(item.price)}`
-        );
-    const rest = receipt.items.length - DETAIL_LINES;
-    if (rest > 0) {
-        lines.push(moreLabel(rest));
-    }
-    return lines.join("\n");
-}
-
 export function formatQuantity(quantity: number): string {
     return String(Math.round(quantity * 1000) / 1000);
 }

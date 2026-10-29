@@ -62,12 +62,6 @@ const receipt = {
             fr: "Fermer",
             pt: "Fechar",
         }),
-        "receipt.details.more": t({
-            en: "and {count} more lines",
-            es: "y {count} líneas más",
-            fr: "et {count} autres lignes",
-            pt: "e mais {count}",
-        }),
         "receipt.failed.denied": t({
             en: "Outlayr needs the camera to scan a receipt.",
             es: "Outlayr necesita la cámara para escanear un recibo.",
@@ -168,6 +162,24 @@ const receipt = {
             pt: "Basta uma foto do recibo. Lemos para você o total, a loja, a data e cada item.",
             "pt-PT": "Basta uma foto do talão. Lemos por si o total, a loja, a data e cada item.",
         }),
+        "receipt.items.showAll": t({
+            en: "Show all {count}",
+            es: "Ver los {count}",
+            fr: "Afficher les {count}",
+            pt: "Ver os {count}",
+        }),
+        "receipt.items_one": t({
+            en: "1 item",
+            es: "1 artículo",
+            fr: "1 article",
+            pt: "1 item",
+        }),
+        "receipt.items_other": t({
+            en: "{count} items",
+            es: "{count} artículos",
+            fr: "{count} articles",
+            pt: "{count} itens",
+        }),
         "receipt.limit.last": t({
             en: "Last scan for now",
             es: "Último escaneo por ahora",
@@ -207,18 +219,6 @@ const receipt = {
             es: "Moneda leída del símbolo",
             fr: "Devise déduite du symbole",
             pt: "Moeda identificada pelo símbolo",
-        }),
-        "receipt.review.lines_one": t({
-            en: "1 line",
-            es: "1 línea",
-            fr: "1 ligne",
-            pt: "1 item",
-        }),
-        "receipt.review.lines_other": t({
-            en: "{count} lines",
-            es: "{count} líneas",
-            fr: "{count} lignes",
-            pt: "{count} itens",
         }),
         "receipt.review.noCategory": t({
             en: "No category yet",

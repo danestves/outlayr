@@ -139,6 +139,7 @@ export const transactions = sqliteTable(
         note: text("note").notNull().default(""),
         onceRecurring: integer("onceRecurring", { mode: "boolean" }).notNull().default(false),
         paidVia: text("paidVia"),
+        receipt: text("receipt"),
         /**
          * The schedule's day of month, so February's clamp cannot pull a 31st chain to the 28th for good. Replicated,
          * or peers derive different `occurrenceId`s and double the chain. Null rows fall back to their own day.
