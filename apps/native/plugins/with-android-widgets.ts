@@ -185,7 +185,7 @@ const entryRow = (noteDp: number) => `        <LinearLayout
                 android:layout_height="8dp"
                 android:layout_marginStart="8dp"
                 android:background="@drawable/widget_preview_bar" />
-            <Space
+            <FrameLayout
                 android:layout_width="0dp"
                 android:layout_height="1dp"
                 android:layout_weight="1" />
@@ -201,6 +201,9 @@ const column = (heightDp: number) => `            <FrameLayout
                 android:layout_weight="1"
                 android:layout_marginHorizontal="2dp"
                 android:background="@drawable/widget_preview_column" />`;
+
+const REMOTE_VIEWS_TAGS = new Set(["FrameLayout", "ImageView", "LinearLayout", "TextView"]);
+const XML_TAG = /<(\w+)/g;
 
 const PREVIEWS = new Map([
     [
@@ -417,6 +420,12 @@ async function writePreviews(res: string, widgets: readonly AndroidWidgetCopy[])
             const layout = PREVIEWS.get(widget.name);
             if (!layout) {
                 throw new Error(`No picker preview for the ${widget.name} widget`);
+            }
+            const unsupported = [...layout.matchAll(XML_TAG)].find(([, tag]) => !REMOTE_VIEWS_TAGS.has(tag ?? ""));
+            if (unsupported) {
+                throw new Error(
+                    `The ${widget.name} picker preview uses ${unsupported[1]}, which RemoteViews cannot inflate`
+                );
             }
             return writeFile(
                 path.join(res, "layout", `${previewLayoutName(widget.name)}.xml`),
