@@ -1,4 +1,3 @@
-import { firstOfMonth } from "@outlayr/money/calendar";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
@@ -43,7 +42,8 @@ export function parseAutologUsage(raw: string | null | undefined): AutologUsage 
 }
 
 export function autologMonthKey(at: number): string {
-    return String(firstOfMonth(new Date(at)).getTime());
+    const day = new Date(at);
+    return `${day.getFullYear()}-${day.getMonth() + 1}`;
 }
 
 export function monthUsage(usage: AutologUsage, at: number) {

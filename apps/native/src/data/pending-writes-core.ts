@@ -11,6 +11,7 @@ import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { countsAsAutolog, holdsAutolog } from "@/domain/autolog-cap";
+import type { AutologAccess } from "@/domain/autolog-cap";
 import { detectCurrency } from "@/domain/detect-currency";
 import type { CardAccountCandidate } from "@/domain/match-card-account";
 import { matchCardAccount } from "@/domain/match-card-account";
@@ -446,7 +447,8 @@ export const pendingWriteTxId = Effect.fn("PendingWrites.pendingWriteTxId")(func
 export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(function* applyPendingWrites(
     db: Database,
     jobs: PendingWrite[],
-    now: Date = new Date()
+    now: Date = new Date(),
+    knownAccess?: AutologAccess
 ) {
     if (jobs.length === 0) {
         return 0;
@@ -454,7 +456,7 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
     const at = now.getTime();
     let ledger = yield* readLedger(db);
     let applied = 0;
-    const access = yield* readAutologAccess(db);
+    const access = knownAccess ?? (yield* readAutologAccess(db));
     let usage = yield* readAutologUsage(db);
 
     // Exactly-once depends on this job seeing the ledger row the previous job's SQLite transaction committed, so the
@@ -876,6 +878,7 @@ const firstCategory = Effect.fn("PendingWrites.firstCategory")(function* firstCa
 });
 
 let draining: Deferred.Deferred<number, DrainFailure> | null = null;
+let rerun = false;
 
 // One drain at a time: `claimPendingWrites` re-returns an unreleased claim (crash recovery), so overlapping drains
 // get the same jobs, both pass `alreadyApplied`, and insert twice. Mount and a cold launch's first "active" overlap.
@@ -885,11 +888,19 @@ export const drainPendingWrites = Effect.fn("PendingWrites.drainPendingWrites")(
     release: (claimed: ClaimedWrites) => void
 ) {
     if (draining !== null) {
+        rerun = true;
         return yield* Deferred.await(draining);
     }
     const pass = Deferred.makeUnsafe<number, DrainFailure>();
     draining = pass;
-    return yield* runDrain(db, claim, release).pipe(
+    return yield* Effect.gen(function* drainUntilSettled() {
+        let applied = 0;
+        do {
+            rerun = false;
+            applied += yield* runDrain(db, claim, release);
+        } while (rerun);
+        return applied;
+    }).pipe(
         Effect.onExit((exit) =>
             Effect.suspend(() => {
                 draining = null;
@@ -908,11 +919,12 @@ const runDrain = Effect.fn("PendingWrites.runDrain")(function* runDrain(
     release: (claimed: ClaimedWrites) => void
 ) {
     const claimed = yield* attemptSync("claim", claim);
-    const waiting = (yield* readAutologAccess(db)) === "open" ? yield* readAutologWaiting(db) : [];
+    const access = yield* readAutologAccess(db);
+    const waiting = access === "open" ? yield* readAutologWaiting(db) : [];
     if (claimed.names.length === 0 && waiting.length === 0) {
         return 0;
     }
-    const applied = yield* applyPendingWrites(db, [...waiting, ...claimed.jobs]);
+    const applied = yield* applyPendingWrites(db, [...waiting, ...claimed.jobs], new Date(), access);
     if (waiting.length > 0) {
         yield* writeAutologWaiting(db, []);
     }

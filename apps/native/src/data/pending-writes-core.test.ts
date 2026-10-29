@@ -932,7 +932,7 @@ describe("drainPendingWrites", () => {
     it("applies a job once when two drains overlap", async () => {
         const job = walletWrite("wallet-1");
         let released = 0;
-        const claim = () => ({ jobs: [job], names: ["claimed-1.jsonl"] });
+        const claim = () => (released === 0 ? { jobs: [job], names: ["claimed-1.jsonl"] } : { jobs: [], names: [] });
         const release = () => {
             released += 1;
         };
@@ -947,6 +947,24 @@ describe("drainPendingWrites", () => {
         expect(first).toBe(1);
         expect(second).toBe(1);
         expect(released).toBe(1);
+    });
+
+    it("runs another pass for a drain that arrives mid-pass", async () => {
+        const claim = vi
+            .fn<() => { jobs: PendingWrite[]; names: string[] }>()
+            .mockReturnValueOnce({ jobs: [walletWrite("wallet-1")], names: ["a.jsonl"] })
+            .mockReturnValueOnce({
+                jobs: [walletWrite("wallet-2", { dedupeKey: "wallet:expense:other:100" })],
+                names: ["b.jsonl"],
+            })
+            .mockReturnValue({ jobs: [], names: [] });
+
+        await Promise.all([
+            Effect.runPromise(drainPendingWrites(db, claim, () => undefined)),
+            Effect.runPromise(drainPendingWrites(db, claim, () => undefined)),
+        ]);
+
+        await expect(db.select().from(transactions)).resolves.toHaveLength(2);
     });
 
     it("drains again once the first pass has finished", async () => {
