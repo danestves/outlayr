@@ -14,6 +14,8 @@ vi.mock("@/i18n/context", () => ({
     useTranslation: () => (key: string) => key,
 }));
 
+vi.mock("@/lib/posthog", () => ({ posthog: null, useScreenTracking: () => undefined }));
+
 Object.assign(globalThis, { __DEV__: true });
 
 vi.mock("expo-sqlite", async (importOriginal) => ({

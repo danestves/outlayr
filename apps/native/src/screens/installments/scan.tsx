@@ -18,8 +18,9 @@ import { getAccountById } from "@/data/accounts-core";
 import type { Account } from "@/data/accounts-core";
 import { useAiConsent } from "@/data/settings";
 import { encodeInstallmentSeed, scannedOrder } from "@/domain/installment-scan";
+import { paywallHref } from "@/domain/paywall-trigger";
 import { useLocaleTag } from "@/hooks/use-locale-tag";
-import { useLiabilityCreateRoute } from "@/hooks/use-pro-gate";
+import { useCreateLiability } from "@/hooks/use-pro-gate";
 import { useProEntitled } from "@/hooks/use-pro-locked";
 import { useImageScan } from "@/hooks/use-receipt-scan";
 import type { ScanFailure, ScanPhoto } from "@/hooks/use-receipt-scan";
@@ -145,7 +146,7 @@ function ScanFlow({ account, photo }: { account: Account; photo: ScanPhoto | nul
         } else {
             message = isLimitRefusal(phase.reason) ? null : t(FAILURES[phase.reason]);
             if (phase.reason === "notEntitled" && !entitled) {
-                primary = { label: t("pro.action.see"), onPress: () => router.push("/paywall") };
+                primary = { label: t("pro.action.see"), onPress: () => router.push(paywallHref("captures")) };
             } else if (phase.reason === "quotaExceeded") {
                 primary = null;
             } else if (phase.photo !== null && (phase.reason === "notEntitled" || RETRYABLE.has(phase.reason))) {
@@ -196,7 +197,7 @@ function AccountChoice({ photo }: { photo: ScanPhoto | null }) {
     const t = useTranslation();
     const db = useDatabase();
     const sheet = useRef<BottomSheetModal>(null);
-    const liabilityRoute = useLiabilityCreateRoute();
+    const createLiability = useCreateLiability();
     const liabilities = useBankAccounts(db).filter((account) => toAccountKind(account.kind) === "liability");
     const [account, setAccount] = useState<Account | null>(null);
     // Latched, so a second liability arriving through sync mid-scan cannot unmount the flow.
@@ -207,12 +208,7 @@ function AccountChoice({ photo }: { photo: ScanPhoto | null }) {
     const addLiability: BarAction = {
         label: t("accounts.nav.newLiability"),
         // Pushed over the scan: the editor's `router.back()` on save lands here, and the new liability is picked up.
-        onPress: () =>
-            router.push(
-                liabilityRoute === "/paywall"
-                    ? liabilityRoute
-                    : { params: { kind: "liability" }, pathname: liabilityRoute }
-            ),
+        onPress: createLiability,
     };
     let body = (
         <ScanShell bottom={<BottomBar primary={addLiability} secondary={null} />} onClose={() => router.back()}>

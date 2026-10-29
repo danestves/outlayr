@@ -101,7 +101,7 @@ import { transactionFormErrors } from "@/domain/transaction-form-validate";
 import { resolveTransactionIdentity } from "@/domain/transaction-identity";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useLocaleTag } from "@/hooks/use-locale-tag";
-import { useAccountCreateRoute } from "@/hooks/use-pro-gate";
+import { useCreateAccount } from "@/hooks/use-pro-gate";
 import { useRegionCode } from "@/hooks/use-region-code";
 import type { SheetRest } from "@/hooks/use-resting-sheet";
 import { useToggleFavouriteCurrency } from "@/hooks/use-toggle-favourite-currency";
@@ -958,7 +958,7 @@ export function TransactionForm({
     const containerHeight = useSharedValue(0);
     const heroRestTop = useDerivedValue(() => HERO_REST_TOP);
     const router = useRouter();
-    const accountCreateRoute = useAccountCreateRoute();
+    const createAccount = useCreateAccount();
 
     const [stage, setStage] = useState<StagePosition>({ forward: true, step: "amount" });
     const stageStep = stage.step;
@@ -2189,7 +2189,7 @@ export function TransactionForm({
                     (stageStep === "account" && allAccounts.length === 0 && !installmentsNarrowed
                         ? {
                               label: t("transaction.account.create"),
-                              onPress: () => router.push(accountCreateRoute),
+                              onPress: createAccount,
                               tone: "primary",
                           }
                         : stageFooter(amountNumber, merchant))

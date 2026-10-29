@@ -1,5 +1,4 @@
 import * as Cause from "effect/Cause";
-import { useRouter } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
 
@@ -14,6 +13,7 @@ import { useSyncStatus } from "@/data/use-sync-status";
 import { formatDayHeader, formatTime } from "@/domain/dates";
 import type { AdoptionActions } from "@/domain/ledger-adoption";
 import { effectiveCapabilityStatus, ownsSyncSwitch, syncPresentation, syncRunnable } from "@/domain/sync-status";
+import { useOpenPaywall } from "@/hooks/use-pro-gate";
 import { useProEntitled } from "@/hooks/use-pro-locked";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { useAuthSession } from "@/lib/auth-session";
@@ -35,7 +35,7 @@ const RESUME: AdoptionActions = {
 export function Sync() {
     const db = useDatabase();
     const t = useTranslation();
-    const router = useRouter();
+    const openPaywall = useOpenPaywall();
     const entitled = useProEntitled();
     const { language } = useLanguage();
     const { accountId } = useAuthSession();
@@ -67,7 +67,7 @@ export function Sync() {
 
     const toggle = (next: boolean) => {
         if (next && !entitled) {
-            router.push("/paywall");
+            openPaywall("sync");
             return;
         }
         setBusy(true);

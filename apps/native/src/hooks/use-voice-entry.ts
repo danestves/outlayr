@@ -26,6 +26,7 @@ import {
     voiceTurnsOf,
 } from "@/domain/voice-entry";
 import type { VoiceTurn, VoiceTurnMessage } from "@/domain/voice-entry";
+import { trackCapturesWall } from "@/hooks/use-usage-limits";
 import { duringHandoff } from "@/lib/app-handoff";
 import { VOICE_TURNS_QUERY, voiceThreadTransport } from "@/lib/convex";
 import type { SpeakRequest, StartThreadResult, VoiceDraft, VoiceQuote, VoiceThreadTransport } from "@/lib/convex";
@@ -380,7 +381,9 @@ const sendClip: <Context>(ports: VoicePorts<Context>, clip: ArrayBuffer, id: str
             return;
         }
     }
-    setPhase({ kind: "failed", reason: failureFor(settled.status), transcript: settled.transcript });
+    const reason = failureFor(settled.status);
+    trackCapturesWall(reason);
+    setPhase({ kind: "failed", reason, transcript: settled.transcript });
 });
 
 const openAndSend = Effect.fn("VoiceEntry.openAndSend")(function* openAndSend<Context>(ports: VoicePorts<Context>) {

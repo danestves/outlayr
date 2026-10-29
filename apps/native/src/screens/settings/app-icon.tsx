@@ -1,5 +1,4 @@
 import Constants from "expo-constants";
-import { useRouter } from "expo-router";
 import { View } from "react-native";
 
 import defaultPreview from "@/assets/images/app-icon-previews/default.png";
@@ -12,6 +11,7 @@ import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Image } from "@/components/styled";
 import { APP_ICONS, defaultRowDetail, RELEASE_PRIMARY_ICON } from "@/domain/app-icons";
 import type { AppIconSlug } from "@/domain/app-icons";
+import { useOpenPaywall } from "@/hooks/use-pro-gate";
 import { useProLocked } from "@/hooks/use-pro-locked";
 import { useTranslation } from "@/i18n/context";
 import { alternateIconsSupported, useAppIcon } from "@/lib/app-icon";
@@ -32,7 +32,7 @@ const PREVIEW_MATCHES_PRIMARY = PRIMARY_ICON === RELEASE_PRIMARY_ICON;
 
 export function AppIcon() {
     const t = useTranslation();
-    const router = useRouter();
+    const openPaywall = useOpenPaywall();
     const locked = useProLocked();
     const { active, choose } = useAppIcon();
 
@@ -61,7 +61,7 @@ export function AppIcon() {
                                     <Image className="h-11 w-11" contentFit="contain" source={PREVIEW[icon.slug]} />
                                 )
                             }
-                            onPress={() => (locked && icon.name !== null ? router.push("/paywall") : choose(icon.name))}
+                            onPress={() => (locked && icon.name !== null ? openPaywall("app_icon") : choose(icon.name))}
                             selected={active === icon.name}
                         />
                     );

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 import {
     adoptQueue,
+    autologSourceOf,
     claimPendingWrites,
     parseLegacyQueue,
     parseQueue,
@@ -137,5 +138,14 @@ describe("adoptQueue", () => {
         adoptQueue(files, parseLegacyQueue("not json"));
 
         expect([...disk.keys()]).toStrictEqual([]);
+    });
+});
+
+describe("autologSourceOf", () => {
+    it("tells the four entry points apart", () => {
+        expect(autologSourceOf(write("a", { dedupeKey: "wallet:expense:cafe:1240:visa" }))).toBe("wallet");
+        expect(autologSourceOf(write("b", { dedupeKey: "notification:expense:you paid" }))).toBe("notification");
+        expect(autologSourceOf(write("c", { categoryId: "cat-1" }))).toBe("watch");
+        expect(autologSourceOf(write("d"))).toBe("shortcut");
     });
 });

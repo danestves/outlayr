@@ -37,7 +37,7 @@ import type { Database } from "@/db/client";
 import { dominantCategory } from "@/domain/budget-dominant";
 import { budgetTimeLeftLabel } from "@/domain/budget-math";
 import { blocksNewBudget, FREE_BUDGETS } from "@/domain/pro-limits";
-import { useAccountCreateRoute, useProCapped } from "@/hooks/use-pro-gate";
+import { useCreateAccount, useOpenPaywall, useProCapped } from "@/hooks/use-pro-gate";
 import { useTranslation } from "@/i18n/context";
 import { budgetMenuItems } from "@/lib/budget-actions";
 import { notifyFailure } from "@/lib/notify";
@@ -72,7 +72,8 @@ const NO_BUDGETS: readonly CategoryBudgetView[] = [];
 export function Budgets() {
     const db = useDatabase();
     const router = useRouter();
-    const accountCreateRoute = useAccountCreateRoute();
+    const createAccount = useCreateAccount();
+    const openPaywall = useOpenPaywall();
     const [gridWidth, setGridWidth] = useState<number | null>(null);
     const t = useTranslation();
     const haptics = useHaptics();
@@ -194,7 +195,7 @@ export function Budgets() {
 
     const openLimit = (target: LimitTarget) => {
         if (blocksNewBudget(target.categoryId, budgetedCategoryIds, budgetsCapped)) {
-            router.push("/paywall");
+            openPaywall("budgets");
             return;
         }
         setLimitTarget(target);
@@ -260,7 +261,7 @@ export function Budgets() {
         const existing = allBudgets.find((budget) => budget.categoryId === target.categoryId);
         // Re-checked at write: entitlement or sync can change while the sheet is open.
         if (!existing && blocksNewBudget(target.categoryId, budgetedCategoryIds, budgetsCapped)) {
-            router.push("/paywall");
+            openPaywall("budgets");
             limitLatch.release();
             return;
         }
@@ -298,7 +299,7 @@ export function Budgets() {
                 db={db}
                 onCreate={() => {
                     accountSheetRef.current?.dismiss();
-                    router.push(accountCreateRoute);
+                    createAccount();
                 }}
                 onSelect={(picked) => {
                     accountSheetRef.current?.dismiss();

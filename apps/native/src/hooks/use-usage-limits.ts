@@ -4,6 +4,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { projectLimit } from "@/domain/usage-limits";
 import type { LimitBucket, UsageLimits } from "@/domain/usage-limits";
 import { USAGE_LIMITS_QUERY } from "@/lib/convex";
+import { posthog } from "@/lib/posthog";
 import { readSecondClock, subscribeSecondClock } from "@/lib/second-clock";
 
 const subscribeNever = () => () => undefined;
@@ -41,6 +42,12 @@ export function useTickingNow(active: boolean): number {
 
 export function isLimitRefusal(reason: string): reason is LimitRefusal {
     return reason === "notEntitled" || reason === "quotaExceeded" || reason === "rateLimited";
+}
+
+export function trackCapturesWall(reason: string): void {
+    if (reason === "notEntitled" || reason === "quotaExceeded") {
+        posthog?.capture("limit_hit", { limit: "captures" });
+    }
 }
 
 function atWrite(bucket: LimitBucket) {

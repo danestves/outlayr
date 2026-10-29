@@ -46,6 +46,7 @@ import type { AuthGate } from "@/domain/auth-gate";
 import { formatChargeDate } from "@/domain/dates";
 import type { HapticEvent } from "@/domain/haptics";
 import { amountParts, formatAmount, symbolPrefix } from "@/domain/money";
+import { paywallHref } from "@/domain/paywall-trigger";
 import type { LastEntry } from "@/domain/reminder";
 import {
     draftDelta,
@@ -797,7 +798,7 @@ function VoiceThreadScreen() {
     };
 
     const seePro = () => {
-        router.push("/paywall");
+        router.push(paywallHref("captures"));
     };
 
     const entitled = useProEntitled();

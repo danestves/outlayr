@@ -8,10 +8,12 @@ import { useCSSVariable } from "uniwind";
 
 import { canAdvance, IMPORT_STEPS } from "@/domain/import-flow";
 import type { ImportFlowState, ImportStep } from "@/domain/import-flow";
+import { paywallHref } from "@/domain/paywall-trigger";
 import { useImportReview } from "@/hooks/use-import-review";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import { importDraftStore, useImportDraft } from "@/lib/import-draft-store";
+import { posthog } from "@/lib/posthog";
 
 import { ResumeNotice } from "./resume-notice";
 import { SheetHeader } from "./sheet-header";
@@ -49,7 +51,8 @@ export function resolveLegalStep(flow: ImportFlowState, step: ImportStep): Impor
 }
 
 function openPaywall() {
-    router.push("/paywall");
+    posthog?.capture("limit_hit", { limit: "import" });
+    router.push(paywallHref("import"));
 }
 
 export interface ImportSheetHandle {

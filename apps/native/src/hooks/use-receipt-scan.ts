@@ -12,6 +12,7 @@ import type { ImagePickerResult } from "expo-image-picker";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { localIsoDate } from "@/domain/voice-entry";
+import { trackCapturesWall } from "@/hooks/use-usage-limits";
 import { duringHandoff } from "@/lib/app-handoff";
 import { receiptScanTransport } from "@/lib/convex";
 import type { ReceiptDraft, ReceiptScanFn, ScanRequest } from "@/lib/convex";
@@ -175,7 +176,9 @@ const readPhoto = Effect.fn("ReceiptScan.read")(function* readPhoto<Context, Dra
         ports.latest().onReview?.(settled.draft);
         return;
     }
-    ports.setPhase({ kind: "failed", photo, reason: failureFor(settled.status) });
+    const reason = failureFor(settled.status);
+    trackCapturesWall(reason);
+    ports.setPhase({ kind: "failed", photo, reason });
 });
 
 const pickPhotoFromCamera = Effect.fn("ReceiptScan.pickFromCamera")(function* pickPhotoFromCamera<Context, Draft>(

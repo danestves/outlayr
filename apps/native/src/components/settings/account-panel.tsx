@@ -19,6 +19,7 @@ import { useSyncStatus } from "@/data/use-sync-status";
 import { accountLabel } from "@/domain/account";
 import type { AccountState } from "@/domain/account";
 import { accountInitials } from "@/domain/account-initials";
+import { paywallHref } from "@/domain/paywall-trigger";
 import { syncedAgo, syncPaused, syncStatusLabel } from "@/domain/sync-status";
 import { projectLimit } from "@/domain/usage-limits";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
@@ -218,7 +219,7 @@ function PlanCell({ stacked }: { stacked: boolean }) {
             accessibilityLabel={isPro ? `${label}, ${value}` : `${label}, ${value}, ${goPro}`}
             divided={false}
             label={label}
-            onPress={() => router.push("/paywall")}
+            onPress={() => router.push(paywallHref("settings"))}
             stacked={stacked}
         >
             <CellValue>{value}</CellValue>

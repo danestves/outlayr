@@ -28,6 +28,7 @@ import { alternateIconsSupported } from "@/lib/app-icon";
 import { useAuthSession } from "@/lib/auth-session";
 import { legalUrl } from "@/lib/legal-url";
 import { paywallPlansAtom } from "@/lib/paywall-plans";
+import { posthog } from "@/lib/posthog";
 import { SILENT } from "@/state/atom-command";
 import { buyPlanCommand, confirmEntitlementCommand, restorePlanCommand } from "@/state/settings-flow-commands";
 import { useAtomAction } from "@/state/use-atom-action";
@@ -191,6 +192,7 @@ export function Paywall() {
     const failed = AsyncResult.isFailure(loaded);
     const [pick, setPick] = useState<PlanPick | null>(null);
     const selected = selectedKind(pick, plans);
+    const plan = plans?.find((candidate) => candidate.kind === selected) ?? null;
     const [failure, setFailure] = useState<TranslationKey | null>(null);
 
     const retry = () => {
@@ -219,9 +221,13 @@ export function Paywall() {
     const buyPlan = useAtomAction(
         buyPlanCommand,
         {
-            onFailure: () => setFailure("pro.failedBody"),
+            onFailure: () => {
+                posthog?.capture("purchase_finished", { outcome: "failed", plan: plan?.kind ?? null });
+                setFailure("pro.failedBody");
+            },
             onSettled: () => setBusy(null),
             onSuccess: ({ mirrored, outcome }) => {
+                posthog?.capture("purchase_finished", { outcome, plan: plan?.kind ?? null });
                 const next = purchaseNext(outcome, mirrored);
                 if (next.failure !== null) {
                     setFailure(next.failure);
@@ -257,14 +263,13 @@ export function Paywall() {
         confirmEntitlement(accountId);
     };
 
-    const plan = plans?.find((candidate) => candidate.kind === selected) ?? null;
-
     const buy = () => {
         if (plan === null) {
             return;
         }
         setBusy("buy");
         setFailure(null);
+        posthog?.capture("purchase_started", { plan: plan.kind });
         buyPlan({ accountId, offer: plan.offer });
     };
 

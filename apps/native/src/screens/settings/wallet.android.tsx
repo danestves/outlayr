@@ -15,6 +15,7 @@ import { parseLastWalletEntry } from "@/data/pending-writes-core";
 import { onOffLabel } from "@/data/settings-core";
 import { appMeta } from "@/db/schema";
 import { useTranslation } from "@/i18n/context";
+import { posthog } from "@/lib/posthog";
 import { purchaseListener } from "@/lib/purchase-listener";
 import type { PurchaseSender } from "@/lib/purchase-listener";
 import { usePurchaseListener } from "@/lib/use-purchase-listener";
@@ -47,6 +48,7 @@ export const Wallet: typeof IosWallet = () => {
             next.delete(packageName);
         }
         purchaseListener?.setApps([...next]);
+        posthog?.setPersonProperties({ autolog_enabled: next.size > 0 });
         refreshListener();
     };
 

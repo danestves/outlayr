@@ -16,7 +16,9 @@ import { matchCardAccount } from "@/domain/match-card-account";
 import { merchantKey } from "@/domain/merchant-resolver";
 import { DEFAULT_CURRENCY } from "@/domain/money";
 import { cleanMerchant, parseNotification } from "@/domain/parse-notification";
+import { autologSourceOf } from "@/lib/pending-writes-core";
 import type { ClaimedWrites, PendingWrite } from "@/lib/pending-writes-core";
+import { posthog } from "@/lib/posthog";
 
 import { accountsRepo, getAccountById } from "./accounts-core";
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
@@ -557,6 +559,13 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
             }),
             (cause) => new PendingWritesError({ cause, operation: "write" })
         );
+        if (!twin && !settled) {
+            posthog?.capture("transaction_saved", {
+                mode: "create",
+                source: autologSourceOf(queued),
+                transaction_type: job.income ? "income" : "expense",
+            });
+        }
         const opened =
             twin && !twin.accountId && account
                 ? yield* attemptSync("account", () => getAccountById(db, account.id))

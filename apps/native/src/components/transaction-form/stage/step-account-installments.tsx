@@ -3,7 +3,6 @@ import { HugeiconsIcon } from "@hugeicons/react-native";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 
@@ -27,7 +26,7 @@ import {
 import type { FoundInstallmentApp, InstallmentApp } from "@/domain/institution-map";
 import { useLongWait } from "@/hooks/use-long-wait";
 import { useMerchantMark } from "@/hooks/use-merchant-mark";
-import { useAccountCaps, useLiabilityCreateRoute } from "@/hooks/use-pro-gate";
+import { useAccountCaps, useCreateLiability, useOpenPaywall } from "@/hooks/use-pro-gate";
 import { useRegionCode } from "@/hooks/use-region-code";
 import { useTranslation } from "@/i18n/context";
 import { fetchMerchantImage } from "@/lib/logo-fetch";
@@ -81,12 +80,12 @@ const addInstallmentApp = Effect.fn("StepAccountInstallments.add")(function* add
 export function StepAccountInstallments({ accounts, onPick, searchable }: StepAccountInstallmentsProps) {
     const db = useDatabase();
     const runFlow = useAtomCommand(voidAppFlowCommand);
-    const router = useRouter();
     const t = useTranslation();
     const colors = useColors();
     const region = installmentRegion(useRegionCode());
     const caps = useAccountCaps();
-    const liabilityRoute = useLiabilityCreateRoute();
+    const createLiability = useCreateLiability();
+    const openPaywall = useOpenPaywall();
     const [adding, setAdding] = useState<string | null>(null);
     const [query, setQuery] = useState("");
     const slow = useLongWait(adding !== null);
@@ -118,7 +117,7 @@ export function StepAccountInstallments({ accounts, onPick, searchable }: StepAc
     const add = (app: InstallmentApp) => {
         before.current = null;
         if (caps.installmentApps) {
-            router.push("/paywall");
+            openPaywall("installment_apps");
             return;
         }
         setAdding(app.id);
@@ -134,9 +133,7 @@ export function StepAccountInstallments({ accounts, onPick, searchable }: StepAc
 
     const other = () => {
         before.current = new Set(accounts.map((account) => account.id));
-        router.push(
-            liabilityRoute === "/paywall" ? "/paywall" : { params: { kind: "liability" }, pathname: liabilityRoute }
-        );
+        createLiability();
     };
 
     const where = (app: FoundInstallmentApp) => {

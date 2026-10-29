@@ -1,7 +1,6 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import * as Cause from "effect/Cause";
 import * as Result from "effect/Result";
-import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
@@ -13,7 +12,7 @@ import { payDays } from "@/domain/local-day";
 import type { PayDays } from "@/domain/local-day";
 import { roundToMinorUnits } from "@/domain/money";
 import { numpadToNumber } from "@/domain/numpad";
-import { usePayoffPlanGate, usePeopleCapped } from "@/hooks/use-pro-gate";
+import { useOpenPaywall, usePayoffPlanGate, usePeopleCapped } from "@/hooks/use-pro-gate";
 import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
@@ -46,7 +45,7 @@ function isDirty(edits: { amountText: string; category: Category | null; name: s
 
 export function useOweForm({ onDirtyChange, onDone }: OweProps) {
     const db = useDatabase();
-    const router = useRouter();
+    const openPaywall = useOpenPaywall();
     const t = useTranslation();
     const haptics = useHaptics();
     const people = usePeople(db);
@@ -131,7 +130,7 @@ export function useOweForm({ onDirtyChange, onDone }: OweProps) {
             return;
         }
         if (person === null && peopleCapped) {
-            router.push("/paywall");
+            openPaywall("people");
             return;
         }
         setBusy(true);
