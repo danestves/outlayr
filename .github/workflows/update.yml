@@ -53,6 +53,7 @@ jobs:
             UPDATE_PLATFORM: ${{ inputs.platform }}
             APP_VERSION: ${{ inputs.version }}
             POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
+            pnpm_config_verify_deps_before_run: "false"
         defaults:
             run:
                 shell: bash
