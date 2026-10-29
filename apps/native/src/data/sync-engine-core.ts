@@ -295,6 +295,7 @@ const SPECS = {
             "feeForId",
             "feeRate",
             "paidVia",
+            "receipt",
             "installmentId",
         ],
         id: transactions.id,

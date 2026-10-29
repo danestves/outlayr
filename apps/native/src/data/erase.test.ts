@@ -42,6 +42,7 @@ const TRANSACTIONS_DDL = `
 		feeForId text,
 		feeRate real,
 		paidVia text,
+		receipt text,
 		installmentId text,
 		restoredAt integer,
 		updatedAt integer NOT NULL,

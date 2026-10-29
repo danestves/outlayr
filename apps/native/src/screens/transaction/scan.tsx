@@ -12,7 +12,7 @@ import { Shimmer } from "panelui-native/components/shimmer";
 import { useState } from "react";
 import type React from "react";
 import { ScrollView, Text, useWindowDimensions, View } from "react-native";
-import Animated, { FadeIn, FadeInDown, FadeOut } from "react-native-reanimated";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AiConsentGate } from "@/components/ai-consent";
@@ -21,6 +21,7 @@ import { ModalClose } from "@/components/modal-close";
 import { PhotoStage } from "@/components/receipt/photo-stage";
 import type { StageBox } from "@/components/receipt/photo-stage";
 import { ReceiptFrame } from "@/components/receipt/receipt-frame";
+import { ReceiptLines } from "@/components/receipt/receipt-lines";
 import { ThinkingOrb } from "@/components/thinking-orb/thinking-orb";
 import { useDatabase } from "@/contexts/local-data-context";
 import { getAccountById, rememberLastUsedAccount } from "@/data/accounts-core";
@@ -37,7 +38,8 @@ import type { Database } from "@/db/client";
 import type { AuthGate } from "@/domain/auth-gate";
 import { formatChargeDate } from "@/domain/dates";
 import { formatAmount } from "@/domain/money";
-import { conversionOf, formatQuantity, receiptDetails, resolveReceipt, savableReceipt } from "@/domain/receipt-scan";
+import { serializeReceipt } from "@/domain/receipt-items";
+import { conversionOf, resolveReceipt, savableReceipt } from "@/domain/receipt-scan";
 import type { Conversion, ResolvedReceipt } from "@/domain/receipt-scan";
 import { formatRateFigure, pairQuotedInverse, pairUnitSymbols, quotePairRate } from "@/domain/transaction-entry-rate";
 import { stillCurrent } from "@/domain/voice-entry";
@@ -75,8 +77,6 @@ const FRAME_WIDTH = 220;
 const FRAME_HEIGHT = 268;
 const MARK_SIZE = 24;
 const MARK_RADIUS = 7;
-const LINE_STAGGER_MS = 34;
-const LINE_STAGGER_MAX_MS = 560;
 const STATUS_SWEEP_MS = 1800;
 
 export const FAILURE_KEY = {
@@ -294,68 +294,6 @@ export function BottomBar({
     );
 }
 
-function LineRow({
-    currency,
-    index,
-    language,
-    line,
-    last,
-}: {
-    currency: string;
-    index: number;
-    language: Language;
-    line: ResolvedReceipt["items"][number];
-    last: boolean;
-}) {
-    const delay = Math.min(LINE_STAGGER_MAX_MS, 80 + index * LINE_STAGGER_MS);
-    return (
-        <Animated.View
-            className={`flex-row items-baseline gap-3 py-2.5 ${last ? "" : "border-separator border-b"}`}
-            entering={FadeInDown.delay(delay).duration(240)}
-        >
-            <Text className="text-foreground flex-1 font-sans text-base" numberOfLines={1}>
-                {line.quantity === 1 ? null : (
-                    <Text className="text-muted font-sans-medium tabular-nums">{formatQuantity(line.quantity)}× </Text>
-                )}
-                {line.name}
-            </Text>
-            <Text className="text-foreground font-sans-medium text-base tabular-nums">
-                {formatAmount(line.price, currency, true, language)}
-            </Text>
-        </Animated.View>
-    );
-}
-
-function SummaryRow({
-    delay,
-    emphasis = false,
-    label,
-    value,
-}: {
-    delay: number;
-    emphasis?: boolean;
-    label: string;
-    value: string;
-}) {
-    return (
-        <Animated.View
-            className="flex-row items-baseline gap-3 py-1.5"
-            entering={FadeInDown.delay(delay).duration(240)}
-        >
-            <Text
-                className={`flex-1 font-sans text-base ${emphasis ? "font-sans-semibold text-foreground" : "text-muted"}`}
-            >
-                {label}
-            </Text>
-            <Text
-                className={`text-base tabular-nums ${emphasis ? "font-sans-semibold text-foreground" : "text-muted font-sans"}`}
-            >
-                {value}
-            </Text>
-        </Animated.View>
-    );
-}
-
 function ConversionLine({
     conversion,
     language,
@@ -423,18 +361,6 @@ function ReviewSheet({
     const preposition = t(receipt.income ? "receipt.review.from" : "receipt.review.at");
     const amountClass = receipt.income ? "text-income" : "text-foreground";
     const money = (value: number) => formatAmount(value, receipt.currency, true, language);
-    const summary: { emphasis?: boolean; key: string; label: string; value: number }[] = [];
-    if (receipt.subtotal !== null) {
-        summary.push({ key: "subtotal", label: t("receipt.review.subtotal"), value: receipt.subtotal });
-    }
-    if (receipt.tax !== null) {
-        summary.push({ key: "tax", label: t("receipt.review.tax"), value: receipt.tax });
-    }
-    if (receipt.tip !== null) {
-        summary.push({ key: "tip", label: t("receipt.review.tip"), value: receipt.tip });
-    }
-    summary.push({ emphasis: true, key: "total", label: t("receipt.review.total"), value: receipt.amount });
-    const summaryDelay = Math.min(LINE_STAGGER_MAX_MS, 80 + receipt.items.length * LINE_STAGGER_MS) + 40;
 
     return (
         <View className="gap-6">
@@ -481,41 +407,15 @@ function ReviewSheet({
                 />
             </Animated.View>
 
-            {receipt.items.length > 0 ? (
-                <View>
-                    <Animated.View
-                        className="border-separator flex-row items-baseline border-b pb-2"
-                        entering={FadeIn.delay(60).duration(200)}
-                    >
-                        <Text className="text-muted text-footnote flex-1 font-sans">
-                            {t("receipt.review.lines", { count: receipt.items.length })}
-                        </Text>
-                        <Text className="text-subtle text-footnote font-sans">{receipt.currency}</Text>
-                    </Animated.View>
-                    {receipt.items.map((line, index) => (
-                        <LineRow
-                            currency={receipt.currency}
-                            index={index}
-                            key={`${index}-${line.name}`}
-                            language={language}
-                            last={index === receipt.items.length - 1}
-                            line={line}
-                        />
-                    ))}
-                </View>
-            ) : null}
-
-            <View className="border-separator border-t pt-2">
-                {summary.map((row, index) => (
-                    <SummaryRow
-                        delay={summaryDelay + index * LINE_STAGGER_MS}
-                        emphasis={row.emphasis}
-                        key={row.key}
-                        label={row.label}
-                        value={money(row.value)}
-                    />
-                ))}
-            </View>
+            <ReceiptLines
+                currency={receipt.currency}
+                items={receipt.items}
+                staggered
+                subtotal={receipt.subtotal}
+                tax={receipt.tax}
+                tip={receipt.tip}
+                total={receipt.amount}
+            />
         </View>
     );
 }
@@ -557,19 +457,14 @@ function pairRates(paid: RateTable, ledger: RateTable, paidCode: string): RateTa
     };
 }
 
-function receiptEntry(
-    db: Database,
-    draft: ResolvedReceipt,
-    categoryId: string,
-    details: TransactionInput["details"]
-): TransactionInput {
+function receiptEntry(db: Database, draft: ResolvedReceipt, categoryId: string): TransactionInput {
     return {
         accountId: draft.accountId,
         amount: draft.amount,
         categoryId,
         currency: draft.currency,
         date: draft.date,
-        details,
+        details: null,
         fee: draft.income
             ? null
             : suggestedCardFee(db, {
@@ -580,6 +475,7 @@ function receiptEntry(
               }),
         income: draft.income,
         note: draft.merchant,
+        receipt: serializeReceipt(draft),
     };
 }
 
@@ -636,7 +532,6 @@ function ScanFlowScreen() {
     const t = useTranslation();
     const colors = useColors();
     const haptics = useHaptics();
-    const { language } = useLanguage();
     const localeTag = useLocaleTag();
     const regionCode = useRegionCode();
     const currency = useGlobalCurrency(db);
@@ -670,13 +565,6 @@ function ScanFlowScreen() {
         receipt && stillCurrent(receipt, live) ? (savableReceipt(receipt)?.categoryId ?? null) : null;
     const categoryName = receipt?.categoryId ? (getCategoryById(db, receipt.categoryId)?.name ?? null) : null;
 
-    const detailsOf = (draft: ResolvedReceipt) =>
-        receiptDetails(
-            draft,
-            (amount) => formatAmount(amount, draft.currency, true, language),
-            (count) => t("receipt.details.more", { count })
-        );
-
     const close = () => {
         router.back();
     };
@@ -692,9 +580,9 @@ function ScanFlowScreen() {
             categoryId: draft.categoryId ?? undefined,
             currency: draft.currency,
             date: String(draft.date.getTime()),
-            details: detailsOf(draft) ?? undefined,
             income: draft.income ? "1" : "0",
             note: draft.merchant,
+            receipt: serializeReceipt(draft) ?? undefined,
         };
         router.replace({ params, pathname: "/transactions/create" });
     };
@@ -706,7 +594,7 @@ function ScanFlowScreen() {
             writeEntry(db, {
                 accountId: draft.accountId,
                 attachment,
-                entry: () => receiptEntry(db, draft, categoryId, detailsOf(draft)),
+                entry: () => receiptEntry(db, draft, categoryId),
                 income: draft.income,
                 onFailed: () => {
                     setSaving(false);

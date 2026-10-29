@@ -77,6 +77,7 @@ function makeDb() {
 			feeForId text,
 			feeRate real,
 			paidVia text,
+			receipt text,
 			installmentId text,
 			restoredAt integer,
 			updatedAt integer NOT NULL,

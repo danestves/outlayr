@@ -171,6 +171,7 @@ export interface TransactionInput {
     note: string;
     onceRecurring?: boolean;
     paidVia?: PaidVia | null;
+    receipt?: string | null;
     recurringCoefficient?: number;
     recurringEndDate?: Date | null;
     /** Cadence: none=0, daily=1, weekly=2, monthly=3, yearly=4. */
@@ -287,6 +288,7 @@ const toRow = Effect.fn("Transactions.toRow")(function* toRow(db: Database, id: 
         note,
         onceRecurring: recurring,
         paidVia: input.paidVia,
+        receipt: input.receipt,
         // Re-derived on every write, so an edited first payment re-anchors the chain.
         recurringAnchorDay: recurring ? input.date.getDate() : null,
         recurringCoefficient: recurring ? Math.max(1, input.recurringCoefficient ?? 1) : 1,

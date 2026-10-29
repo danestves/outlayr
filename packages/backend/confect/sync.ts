@@ -124,6 +124,7 @@ const TRANSACTION_LEGACY_OPTIONAL_NULLABLE_FIELDS = new Set<keyof typeof transac
     "feeForId",
     "feeRate",
     "paidVia",
+    "receipt",
     "installmentId",
 ]);
 

@@ -10,6 +10,7 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { getTransactionById } from "@/data/transactions-core";
 import { parseInstallmentSeed } from "@/domain/installment-scan";
 import { AMOUNT_CEILING } from "@/domain/numpad";
+import { parseReceipt } from "@/domain/receipt-items";
 import { logAgainDraft } from "@/domain/transaction-actions";
 import type { LogAgainDraft } from "@/domain/transaction-actions";
 import { useDiscardGuard } from "@/hooks/use-discard-guard";
@@ -31,6 +32,7 @@ interface EntryParams {
     installmentDraft?: LinkParam;
     installments?: LinkParam;
     note?: LinkParam;
+    receipt?: LinkParam;
     recurringCoefficient?: LinkParam;
     recurringType?: LinkParam;
 }
@@ -60,6 +62,7 @@ export function entrySeed({
     installmentDraft,
     installments,
     note,
+    receipt,
     recurringCoefficient,
     recurringType,
 }: EntryParams): TransactionSeed {
@@ -69,6 +72,7 @@ export function entrySeed({
     const seededCoefficient = plainNumber(recurringCoefficient);
     const seededCurrency = single(currency);
     const seededAttachment = single(attachment);
+    const seededReceipt = single(receipt);
     const cadence = SELECTABLE_RECURRING_TYPES.find((type) => type === seededType);
     return {
         accountId: single(accountId),
@@ -84,6 +88,7 @@ export function entrySeed({
         installmentDraft: parseInstallmentSeed(single(installmentDraft)),
         installments: installments === "1",
         note: single(note),
+        receipt: parseReceipt(seededReceipt) === null ? undefined : seededReceipt,
         recurrence:
             cadence === undefined
                 ? undefined

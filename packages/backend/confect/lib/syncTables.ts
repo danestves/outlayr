@@ -55,6 +55,7 @@ export const transactionFields = {
     note: Schema.String,
     onceRecurring: Schema.Boolean,
     paidVia: Schema.optional(Schema.NullOr(Schema.String)),
+    receipt: Schema.optional(Schema.NullOr(Schema.String)),
     /** Optional, not just nullable: an older build omits the key, and a required field rejects the whole batch. */
     recurringAnchorDay: Schema.optional(Schema.NullOr(Schema.Number)),
     recurringCoefficient: Schema.Number,

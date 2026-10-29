@@ -77,7 +77,7 @@ describe("legacy migration names", () => {
 
 describe("opening local data across the drizzle 1.0 upgrade", () => {
     it("adopts a log written by the 0.45 migrator without re-running anything", async () => {
-        const sqlite = olderBuild("9999");
+        const sqlite = olderBuild("0037");
 
         const exit = await open(sqlite);
 
@@ -106,6 +106,7 @@ describe("opening local data across the drizzle 1.0 upgrade", () => {
             "0036",
             "0037",
             "0038",
+            "0039",
         ]);
         expect(applied.every((row) => row.applied_at !== null)).toBe(true);
         expect(

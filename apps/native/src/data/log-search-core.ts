@@ -17,10 +17,15 @@ function contains(column: SQLiteColumn, query: string): SQL {
     return sql`${column} like ${`%${escapeLike(query)}%`} escape '\\'`;
 }
 
+function itemNamed(query: string): SQL {
+    return sql`case when json_valid(${transactions.receipt}) then exists (select 1 from json_each(${transactions.receipt}, '$.items') where json_extract(value, '$.name') like ${`%${escapeLike(query)}%`} escape '\\') else 0 end`;
+}
+
 // Widened here alone: search matches on the free-text note, and the Log's own read paints none.
 const SEARCH_COLUMNS = {
     ...LOG_COLUMNS,
     details: transactions.details,
+    itemCount: sql<number>`CASE WHEN json_valid(${transactions.receipt}) THEN coalesce(json_array_length(${transactions.receipt}, '$.items'), 0) ELSE 0 END`,
 } as const;
 
 export interface SearchCriteria {
@@ -52,6 +57,7 @@ export function searchedTransactionsQuery(db: SpendDb, criteria: SearchCriteria)
                 or(
                     contains(transactions.note, query),
                     contains(transactions.details, query),
+                    itemNamed(query),
                     categoryIds.length > 0 ? inArray(transactions.categoryId, categoryIds) : undefined,
                     Number.isFinite(amount) ? eq(transactions.amount, amount) : undefined
                 )

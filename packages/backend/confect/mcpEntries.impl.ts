@@ -190,6 +190,7 @@ const logEntry = FunctionImpl.make(
                 note: entry.note,
                 onceRecurring: false,
                 paidVia: null,
+                receipt: null,
                 recurringAnchorDay: null,
                 recurringCoefficient: 1,
                 recurringEndDate: null,

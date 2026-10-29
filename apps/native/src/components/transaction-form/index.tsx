@@ -25,6 +25,7 @@ import Animated, { useDerivedValue, useSharedValue } from "react-native-reanimat
 import { shallowEqual } from "@/components/form/shallow-equal";
 import { holdSubmitting, pressSubmit } from "@/components/form/submit-guard";
 import { SubscribeFields } from "@/components/form/subscribe-fields";
+import { ReceiptLines } from "@/components/receipt/receipt-lines";
 import { useAppSettings, useDisplaySettings, useSettingBool } from "@/contexts/display-settings-context";
 import {
     EMPTY_DRAFT,
@@ -67,6 +68,7 @@ import { isPaidVia, PAID_VIA, paidViaCharge, paidViaFee, rememberedPaidVia } fro
 import type { PaidVia } from "@/domain/paid-via";
 import { rateAge } from "@/domain/rate-age";
 import type { RateAge } from "@/domain/rate-age";
+import { parseReceipt } from "@/domain/receipt-items";
 import { isBalanced } from "@/domain/split";
 import type { Allocation } from "@/domain/split";
 import { isRealSplit } from "@/domain/split-draft";
@@ -165,6 +167,7 @@ const HERO_REST_TOP = 88;
 const CURRENCY_LIST_FRACTION = 0.34;
 
 const MERCHANT_SUGGESTION_LIMIT = 4;
+const RECEIPT_VISIBLE_LINES = 8;
 
 type StageStep =
     | "account"
@@ -285,6 +288,7 @@ export interface TransactionSeed {
     installmentDraft?: InstallmentSeed;
     installments?: boolean;
     note?: string;
+    receipt?: string;
     recurrence?: { coefficient: number; type: number };
 }
 
@@ -505,6 +509,7 @@ export function TransactionForm({
     // The note lives in a ref: lifting it to state would re-render the SwiftUI `Host` per keystroke. The merchant name
     // has two editors, so it is a form field, read only through `Subscribe` for the same reason.
     const notesRef = useRef(notesSeed);
+    const [storedReceipt] = useState(() => parseReceipt(initial?.receipt));
 
     const { draft: identity, setDraft: setIdentity } = useIdentityDraft();
     const [identitySource, setIdentitySourceState] = useState<FieldSource>(restore?.identitySource ?? "initial");
@@ -571,6 +576,7 @@ export function TransactionForm({
             }),
             fee: feeInputFor(value.merchant.trim() || (value.category?.name ?? ""), categoryId, amount),
             paidVia: paysBolivares ? (value.paidVia ?? suggestedPaidVia) : null,
+            receipt: seed?.receipt,
         });
         return saveEntry({
             accountId: value.account?.id ?? null,
@@ -2485,6 +2491,19 @@ export function TransactionForm({
                                     menu={attachmentDraft.menu}
                                     onPreview={attachmentDraft.preview}
                                     onRemove={attachmentDraft.remove}
+                                />
+                            </View>
+                        </FormScrollItem>
+                    ) : null}
+
+                    {storedReceipt !== null && initial && !resting ? (
+                        <FormScrollItem>
+                            <View style={{ width: contentWidth }}>
+                                <ReceiptLines
+                                    {...storedReceipt}
+                                    currency={initial.currency ?? globalCurrency}
+                                    total={initial.amount}
+                                    visibleLines={RECEIPT_VISIBLE_LINES}
                                 />
                             </View>
                         </FormScrollItem>

@@ -63,6 +63,7 @@ export const ERASED_TRANSACTION = {
     note: "",
     onceRecurring: false,
     paidVia: null,
+    receipt: null,
     recurringAnchorDay: null,
     recurringCoefficient: 1,
     recurringEndDate: null,
