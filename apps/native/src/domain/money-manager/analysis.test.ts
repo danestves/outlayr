@@ -62,5 +62,9 @@ describe("analyzeSnapshot", () => {
             .map((entry) => ({ ...entry, uid: "twin" }));
         const doubled = { ...base, entries: [...base.entries, ...twins] };
         expect(analyzeSnapshot(doubled, ledger).overlap?.matches).toBe(1);
+
+        const otherAccount = twins.map((entry) => ({ ...entry, accountUid: "cash" }));
+        const ambiguous = { ...base, entries: [...base.entries, ...otherAccount] };
+        expect(analyzeSnapshot(ambiguous, ledger).overlap?.matches).toBe(0);
     });
 });

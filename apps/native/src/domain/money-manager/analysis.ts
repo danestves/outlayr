@@ -21,27 +21,42 @@ export function ledgerMatchKey(day: string, amount: number, currency: string, in
     return `${day}|${rounded}|${currency.trim().toUpperCase()}|${income ? "in" : "out"}`;
 }
 
-// Each Outlayr entry vouches for one Money Manager entry, so two same-price coffees need two to be skipped.
+/**
+ * Each Outlayr entry vouches for one Money Manager entry, so two same-price coffees need two to be skipped. When
+ * fewer Outlayr entries share a key than Money Manager entries across different accounts, nothing says which one is
+ * the copy, so none is skipped: a duplicate can be deleted, a dropped entry is gone.
+ */
 export function matchedEntryUids(snapshot: MmSnapshot, ledger: OutlayrLedgerState, fromDay: string): Set<string> {
-    const unclaimed = new Map<string, number>();
+    const held = new Map<string, number>();
     for (const entry of ledger.entries) {
         const day = localDay(entry.date);
         if (day < fromDay) {
             continue;
         }
         const key = ledgerMatchKey(day, entry.amount, entry.currency, entry.income);
-        unclaimed.set(key, (unclaimed.get(key) ?? 0) + 1);
+        held.set(key, (held.get(key) ?? 0) + 1);
     }
-    const matched = new Set<string>();
+    const candidates = new Map<string, MmEntry[]>();
     for (const entry of snapshot.entries) {
-        if (entry.day < fromDay) {
+        const key = ledgerMatchKey(entry.day, entry.amount, entry.currency, entry.income);
+        if (entry.day < fromDay || !held.has(key)) {
             continue;
         }
-        const key = ledgerMatchKey(entry.day, entry.amount, entry.currency, entry.income);
-        const left = unclaimed.get(key) ?? 0;
-        if (left > 0) {
-            unclaimed.set(key, left - 1);
-            matched.add(entry.uid);
+        const list = candidates.get(key);
+        if (list == null) {
+            candidates.set(key, [entry]);
+        } else {
+            list.push(entry);
+        }
+    }
+    const matched = new Set<string>();
+    for (const [key, entries] of candidates) {
+        const count = held.get(key) ?? 0;
+        const oneAccount = new Set(entries.map((entry) => entry.accountUid)).size === 1;
+        if (count >= entries.length || oneAccount) {
+            for (const entry of entries.slice(0, count)) {
+                matched.add(entry.uid);
+            }
         }
     }
     return matched;

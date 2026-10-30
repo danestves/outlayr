@@ -63,4 +63,11 @@ describe("importCapsPassed", () => {
         ]);
         expect(importCapsPassed(plan([account("Cash", "USD", "a1")]), ledger)).toStrictEqual([]);
     });
+
+    it("holds installment apps to their own free cap", () => {
+        const app = (name: string): PlannedAccount => ({ ...account(name, "USD"), kind: "liability" });
+        expect(importCapsPassed(plan([app("Cashea"), app("Krece"), app("Lysto")]), EMPTY)).toStrictEqual([
+            { cap: "installmentApps", count: 3, free: 2 },
+        ]);
+    });
 });

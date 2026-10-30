@@ -37,6 +37,7 @@ const CAP_LABEL = {
     accounts: "accounts.title",
     budgets: "mmImport.nav.budgets",
     currencies: "mmImport.overview.currencies",
+    installmentApps: "pro.row.installmentApps",
 } as const satisfies Record<ImportCap, TranslationKey>;
 
 function dayDate(day: string): Date {
