@@ -118,11 +118,12 @@ export const MAX_ENTRIES = 50;
 export const SCAN_WINDOW = 500;
 
 export const DAY_MS = 86_400_000;
+const FARTHEST_WEST_MS = 10 * 3_600_000;
 const LATEST_PAYDAY = 28;
 
 export function utcOffsetOf(localMidnight: number): number {
     const sinceUtcMidnight = ((localMidnight % DAY_MS) + DAY_MS) % DAY_MS;
-    return sinceUtcMidnight <= DAY_MS / 2 ? 0 - sinceUtcMidnight : DAY_MS - sinceUtcMidnight;
+    return sinceUtcMidnight <= FARTHEST_WEST_MS ? 0 - sinceUtcMidnight : DAY_MS - sinceUtcMidnight;
 }
 
 export function monthWindow(nowMs: number, offsetMs: number, firstDayOfMonth: number, monthsAgo: number) {

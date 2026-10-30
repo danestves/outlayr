@@ -67,14 +67,12 @@ export const make = Effect.gen(function* make() {
                 )
             )
         );
-        const appStates = listen(watchAppState);
-        const settledWrites = Stream.merge(
-            unsentWrites.pipe(Stream.as(true)),
-            appStates.pipe(
-                Stream.filter((state) => state === "background"),
-                Stream.as(false)
-            )
-        ).pipe(Stream.debounce(SYNC_DEBOUNCE), Stream.filter(Boolean));
+        const foregrounds = listen(watchAppState, (state) => state === "active");
+        const backgrounds = listen(watchAppState, (state) => state === "background");
+        const settledWrites = Stream.merge(unsentWrites.pipe(Stream.as(true)), backgrounds.pipe(Stream.as(false))).pipe(
+            Stream.debounce(SYNC_DEBOUNCE),
+            Stream.filter(Boolean)
+        );
 
         const gate = Stream.merge(Stream.succeed(undefined), tableChanges(["appMeta"])).pipe(
             Stream.filterMapEffect(() => store.enabled(db).pipe(Effect.tapError(warn), Effect.result)),
@@ -95,7 +93,7 @@ export const make = Effect.gen(function* make() {
 
         const triggers: Stream.Stream<unknown>[] = [
             Stream.succeed(undefined),
-            appStates.pipe(Stream.filter((state) => state === "active")),
+            foregrounds,
             settledWrites,
             behindWatermark,
             gate.pipe(Stream.drop(1), Stream.filter(Boolean)),

@@ -30,6 +30,9 @@ describe("utcOffsetOf", () => {
         { midnight: "2026-10-09T04:00:00Z", offset: -4 * HOUR },
         { midnight: "2026-10-08T22:00:00Z", offset: 2 * HOUR },
         { midnight: "2026-10-09T00:00:00Z", offset: 0 },
+        { midnight: "2026-10-09T10:00:00Z", offset: -10 * HOUR },
+        { midnight: "2026-06-08T12:00:00Z", offset: 12 * HOUR },
+        { midnight: "2026-10-08T11:00:00Z", offset: 13 * HOUR },
     ])("reads $offset from a local midnight at $midnight", ({ midnight, offset }) => {
         expect(utcOffsetOf(at(midnight))).toBe(offset);
     });
@@ -543,6 +546,18 @@ describe("recent_transactions", () => {
 
         await expect(t.query(internal.mcpLedger.recentTransactions, { user })).resolves.toMatchObject([
             { date: "2026-10-08" },
+        ]);
+    });
+
+    it("keeps a late entry on its day after the clocks go back", async () => {
+        const t = await seeded({
+            transactions: [
+                entry("late", { amount: 12, date: at("2026-04-05T11:30:00Z"), day: at("2026-04-04T11:00:00Z") }),
+            ],
+        });
+
+        await expect(t.query(internal.mcpLedger.recentTransactions, { user })).resolves.toMatchObject([
+            { date: "2026-04-05" },
         ]);
     });
 });

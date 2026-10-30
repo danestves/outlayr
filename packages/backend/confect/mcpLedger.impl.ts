@@ -110,7 +110,7 @@ const recentTransactions = FunctionImpl.make(
             amount: row.amount,
             category: row.categoryId ? (categoryNames.get(row.categoryId) ?? null) : null,
             currency: row.currency,
-            date: localDate(row.date, utcOffsetOf(row.day)),
+            date: localDate(row.day, utcOffsetOf(row.day)),
             kind: entryKind(row.income),
             note: row.note,
         }));
