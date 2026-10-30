@@ -1,3 +1,4 @@
+import { categoryBudgetFigures } from "@outlayr/money/budget-figures";
 import { BUDGET_TYPE, startOfPeriod } from "@outlayr/money/budget-window";
 import { firstOfMonth, startOfDay } from "@outlayr/money/calendar";
 import { buildRateTable, limitIn } from "@outlayr/money/valuation";
@@ -10,7 +11,7 @@ import { appMeta, budgets, categories, exchangeRates, mainBudget, outbox, transa
 import { migratedDatabase } from "@/db/test-database";
 
 import { expenseContributionQuery } from "./budget-spent";
-import { categoryBudgetFigures, expenseContributionsFrom, overBudgetReadStart } from "./budgets";
+import { expenseContributionsFrom, overBudgetReadStart } from "./budgets";
 import type { Budget } from "./budgets";
 import { budgetsRepo, TOMBSTONED_BUDGET, TOMBSTONED_MAIN_BUDGET } from "./budgets-core";
 import { setSyncEnabled } from "./sync-outbox-core";
@@ -744,7 +745,11 @@ describe("the tab bar's bounded read", () => {
         const read = expenseContributionQuery(db, NOW, since === null ? null : new Date(since)).all();
         const contributions = expenseContributionsFrom(read, categoryMeta, DISPLAY, rates);
         const figures = rows.map((row) => {
-            const { amount, carry, spent } = categoryBudgetFigures(row, contributions, NOW, DISPLAY, rates);
+            const { amount, carry, spent } = categoryBudgetFigures(row, contributions, {
+                displayCurrency: DISPLAY,
+                now: NOW,
+                rates,
+            });
             return { amount, carry, spent };
         });
         return { figures, read: read.length };
