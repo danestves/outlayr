@@ -7,6 +7,8 @@ import { ConvexReactClient } from "convex/react";
 import Constants from "expo-constants";
 import { AFTER_FIRST_UNLOCK, getItem, setItem } from "expo-secure-store";
 
+import { runtimeLanguage } from "@/i18n/runtime";
+
 import { CONVEX_SITE_URL, CONVEX_URL, cloudConfiguration } from "./cloud-configuration";
 import { retryTokenFetch } from "./token-fetch";
 
@@ -48,7 +50,13 @@ function createCloudRuntime() {
     return {
         authClient: createAuthClient({
             baseURL: siteUrl,
-            fetchOptions: { customFetchImpl: retryTokenFetch(fetch) },
+            fetchOptions: {
+                customFetchImpl: retryTokenFetch(fetch),
+                onRequest: (context) => {
+                    context.headers.set("accept-language", runtimeLanguage());
+                    return context;
+                },
+            },
             // Every app switch would otherwise fetch the session; launch restores it, token refresh catches a revoke.
             sessionOptions: { refetchOnWindowFocus: false },
             plugins: [

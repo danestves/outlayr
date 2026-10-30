@@ -24,6 +24,7 @@ import { AppLockGate, useAppLockOpen } from "@/components/app-lock-gate";
 import { AuthCover, useAuthCovered } from "@/components/auth-cover";
 import { CelebrationConfetti } from "@/components/confetti";
 import { LocalDataError } from "@/components/local-data-error";
+import { PolicyNoticeSheet } from "@/components/policy-notice-sheet";
 import { Text } from "@/components/text";
 import { UpdateSheet } from "@/components/update-sheet";
 import { useDatabase, useLocalData } from "@/contexts/local-data-context";
@@ -197,6 +198,7 @@ function RootNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
                                     <Analytics />
                                     <UpdateSheet />
                                     <AiConsentSheet />
+                                    <PolicyNoticeSheet />
                                     <CelebrationConfetti />
                                 </AppLockGate>
                             </AuthCover>

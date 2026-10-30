@@ -1,3 +1,5 @@
+import { LANGUAGES } from "@outlayr/email/language";
+import type { Language } from "@outlayr/email/language";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as HttpClient from "effect/http/HttpClient";
@@ -9,11 +11,8 @@ import { emailConfig } from "./config";
 
 export const EMAIL_CODE_TTL_SECONDS = 10 * 60;
 
-const LANGUAGES = ["en", "es", "fr", "pt"] as const;
-
-type Language = (typeof LANGUAGES)[number];
-
 interface Email {
+    html?: string;
     subject: string;
     text: string;
 }
@@ -112,7 +111,7 @@ export class EmailError extends Schema.TaggedError<EmailError>()("EmailError", {
 
 const transport = (cause: unknown) => new EmailError({ cause, reason: "transport" });
 
-export const sendEmail = Effect.fn("Email.send")(function* sendEmail(to: string, { subject, text }: Email) {
+export const sendEmail = Effect.fn("Email.send")(function* sendEmail(to: string, { html, subject, text }: Email) {
     const config = yield* emailConfig;
     if (Option.isNone(config)) {
         return yield* new EmailError({ reason: "unconfigured" });
@@ -122,7 +121,7 @@ export const sendEmail = Effect.fn("Email.send")(function* sendEmail(to: string,
         `https://api.cloudflare.com/client/v4/accounts/${accountId}/email/sending/send`
     ).pipe(
         HttpClientRequest.bearerToken(token),
-        HttpClientRequest.bodyJson({ from: { address: from, name: "Outlayr" }, subject, text, to }),
+        HttpClientRequest.bodyJson({ from: { address: from, name: "Outlayr" }, html, subject, text, to }),
         Effect.catchTags({ HttpBodyError: transport })
     );
     const response = yield* HttpClient.execute(request).pipe(

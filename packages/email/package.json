@@ -1,0 +1,32 @@
+{
+    "name": "@outlayr/email",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "exports": {
+        "./language": "./src/language.ts",
+        "./policy-change": "./src/emails/policy-change.tsx",
+        "./pro": "./src/emails/pro.tsx",
+        "./welcome": "./src/emails/welcome.tsx"
+    },
+    "scripts": {
+        "check-types": "tsc --noEmit",
+        "preview": "email dev --dir src/emails --port 3010",
+        "test": "vp test run"
+    },
+    "dependencies": {
+        "@react-email/render": "2.2.0",
+        "react": "19.3.1",
+        "react-dom": "19.3.1"
+    },
+    "devDependencies": {
+        "@outlayr/config": "workspace:*",
+        "@react-email/ui": "6.11.2",
+        "@types/node": "^26.6.5",
+        "@types/react": "^19.2.18",
+        "@types/react-dom": "^19.2.7",
+        "react-email": "6.11.2",
+        "typescript": "catalog:",
+        "vite": "catalog:"
+    }
+}

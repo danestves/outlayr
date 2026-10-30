@@ -65,6 +65,17 @@ export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purg
         return { done: false, removed: rows.length };
     }
 
+    const mail = yield* Effect.promise(() =>
+        ctx.db
+            .query("mailState")
+            .withIndex("by_userId", (q) => q.eq("userId", userId))
+            .unique()
+    );
+    if (mail) {
+        yield* Effect.promise(() => ctx.db.delete(mail._id));
+    }
+    const mailRemoved = mail ? 1 : 0;
+
     // Last: it stamps `seq`, so removing it early restarts numbering under higher seqs.
     const state = yield* Effect.promise(() =>
         ctx.db
@@ -74,9 +85,9 @@ export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purg
     );
     if (state) {
         yield* Effect.promise(() => ctx.db.delete(state._id));
-        return { done: true, removed: 1 };
+        return { done: true, removed: mailRemoved + 1 };
     }
-    return { done: true, removed: 0 };
+    return { done: true, removed: mailRemoved };
 });
 
 /** No ownership check: every row that could name the object is going too. */

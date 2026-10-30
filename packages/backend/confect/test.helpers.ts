@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 import betterAuthTest from "@convex-dev/better-auth/test";
 import { PRO_ENTITLEMENT_ID } from "@outlayr/money/contract";
+import { RevenueCat } from "convex-revenuecat";
 import type { TestConvex } from "convex-test";
 import type { GenericSchema, SchemaDefinition } from "convex/server";
 import * as Effect from "effect/Effect";
@@ -11,11 +12,12 @@ import * as Layer from "effect/Layer";
 
 import { components } from "../convex/_generated/api";
 import "./lib/betterAuth";
-import { revenuecat } from "./revenuecat";
 
 // `safeGetAuthUser` needs both an unexpired `session` row (`identity.sessionId`) and a `user` row (`identity.subject`).
 
 const SESSION_TTL_MS = 86_400_000;
+
+const silentRevenuecat = new RevenueCat(components.revenuecat);
 
 type AnyTestConvex = TestConvex<SchemaDefinition<GenericSchema, boolean>>;
 
@@ -100,7 +102,7 @@ export async function seedProUser(t: AnyTestConvex, options?: SeedOptions): Prom
 
 export async function grantPro(t: AnyTestConvex, identity: Pick<SeededIdentity, "userId">): Promise<void> {
     await t.run((ctx) =>
-        revenuecat.syncSubscriber(ctx, {
+        silentRevenuecat.syncSubscriber(ctx, {
             appUserId: identity.userId,
             subscriber: {
                 entitlements: {

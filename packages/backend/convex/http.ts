@@ -7,6 +7,7 @@ import { authComponent, createAuth } from "../confect/lib/betterAuth";
 import { revenueCatWebhookAuth } from "../confect/lib/config";
 import { runEdgeSync } from "../confect/lib/runEdge";
 import { mcp } from "../confect/mcp";
+import { revenuecat } from "../confect/revenuecat";
 import { components } from "./_generated/api";
 import { httpAction } from "./_generated/server";
 
@@ -15,6 +16,7 @@ const http = httpRouter();
 authComponent.registerRoutes(http, createAuth, { cors: true });
 
 new RevenueCat(components.revenuecat, {
+    ...revenuecat.options,
     REVENUECAT_WEBHOOK_AUTH: Option.getOrUndefined(Option.map(runEdgeSync(revenueCatWebhookAuth), Redacted.value)),
 }).registerRoutes(http);
 

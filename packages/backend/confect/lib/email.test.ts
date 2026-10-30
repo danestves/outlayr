@@ -13,7 +13,11 @@ describe(sendEmail, () => {
     it("posts the message to the account's send endpoint with the bearer token", async () => {
         const http = stubHttp(() => Response.json({ success: true }));
 
-        await runEdge(sendEmail("owner@example.com", { subject: "Hi", text: "Body" }).pipe(Effect.provide(http.layer)));
+        await runEdge(
+            sendEmail("owner@example.com", { html: "<p>Body</p>", subject: "Hi", text: "Body" }).pipe(
+                Effect.provide(http.layer)
+            )
+        );
 
         expect(http.requests).toHaveLength(1);
         const [request] = http.requests;
@@ -24,6 +28,7 @@ describe(sendEmail, () => {
         expect(request?.headers.get("authorization")).toBe("Bearer test-cloudflare-email-token");
         expect(JSON.parse(request?.body ?? "")).toStrictEqual({
             from: { address: "no-reply@tryoutlayr.com", name: "Outlayr" },
+            html: "<p>Body</p>",
             subject: "Hi",
             text: "Body",
             to: "owner@example.com",

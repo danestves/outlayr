@@ -4,7 +4,7 @@ import type { GenericCtx } from "@convex-dev/better-auth";
 import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
 import { requireRunMutationCtx } from "@convex-dev/better-auth/utils";
 import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
-import { APIError, createAuthMiddleware } from "better-auth/api";
+import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { betterAuth } from "better-auth/minimal";
 import { emailOTP } from "better-auth/plugins";
 import * as Clock from "effect/Clock";
@@ -82,6 +82,16 @@ function createAuth(ctx: GenericCtx<DataModel>) {
         siteUrl,
     } = runEdgeSync(authSettings);
 
+    const recordMail = (name: "claimWelcome" | "rememberLanguage", userId: string, headers: Headers | undefined) =>
+        runEdge(
+            Effect.tryPromise(() =>
+                requireRunMutationCtx(ctx).runMutation(internal.mail[name], {
+                    language: emailLanguage(headers),
+                    userId,
+                })
+            ).pipe(Effect.ignoreCause({ log: true, message: `mail.${name} failed` }))
+        );
+
     return betterAuth({
         account: { encryptOAuthTokens: true, updateAccountOnSignIn: false },
         advanced: { trustedProxyHeaders: true },
@@ -91,6 +101,24 @@ function createAuth(ctx: GenericCtx<DataModel>) {
             protocol: new URL(siteUrl).protocol === "http:" ? "http" : "https",
         },
         database: authComponent.adapter(ctx),
+        databaseHooks: {
+            user: {
+                create: {
+                    after: async (user, endpoint) => {
+                        if (user.emailVerified) {
+                            await recordMail("claimWelcome", user.id, endpoint?.request?.headers ?? endpoint?.headers);
+                        }
+                    },
+                },
+                update: {
+                    after: async (user, endpoint) => {
+                        if (user.emailVerified && endpoint?.path === "/email-otp/verify-email") {
+                            await recordMail("claimWelcome", user.id, endpoint.request?.headers ?? endpoint.headers);
+                        }
+                    },
+                },
+            },
+        },
         // The app uses neither: codes only confirm an address or reset a password.
         disabledPaths: ["/forget-password/email-otp", "/send-verification-email", "/sign-in/email-otp"],
         emailAndPassword: {
@@ -109,6 +137,19 @@ function createAuth(ctx: GenericCtx<DataModel>) {
             sendOnSignIn: true,
         },
         hooks: {
+            after: createAuthMiddleware(async (endpoint) => {
+                if (endpoint.path !== "/convex/token") {
+                    return;
+                }
+                const session = await getSessionFromCtx(endpoint);
+                if (session) {
+                    await recordMail(
+                        "rememberLanguage",
+                        session.user.id,
+                        endpoint.request?.headers ?? endpoint.headers
+                    );
+                }
+            }),
             before: createAuthMiddleware((endpoint) =>
                 runEdge(
                     Effect.gen(function* before() {

@@ -46,7 +46,8 @@ export type NumberSettingKey =
     | "colorScheme"
     | "notificationOption"
     | "notificationHour"
-    | "notificationMinute";
+    | "notificationMinute"
+    | "policyNoticeSeen";
 
 export const SETTING_DEFAULTS = {
     accentColor: DEFAULT_ACCENT_VALUE,
@@ -75,6 +76,7 @@ export const SETTING_DEFAULTS = {
     notificationMinute: 0,
     notificationOption: 1,
     numberEntryType: 2,
+    policyNoticeSeen: 0,
     sentenceCoachSeen: false,
     shareAnalytics: analyticsOnByDefault(firstLocale()?.regionCode),
     showCents: true,

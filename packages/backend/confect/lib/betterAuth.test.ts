@@ -199,12 +199,14 @@ describe("email sign-in", () => {
         });
         const verified = await post("/email-otp/verify-email", { email: credentials.email, otp: codeIn(sent.at(-1)) });
 
-        expect(sent).toHaveLength(2);
         expect(sent[0]).toMatchObject({
             subject: expect.stringContaining("Your Outlayr code"),
             to: credentials.email,
         });
         expect(verified).toMatchObject({ status: 200, token: expect.any(String) });
+        await vi.waitFor(() =>
+            expect(sent.map(({ subject }) => subject).slice(2)).toStrictEqual(["Your Outlayr account is ready"])
+        );
     });
 
     it("answers a taken address like a new one and tells its owner instead", async () => {

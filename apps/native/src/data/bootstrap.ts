@@ -1,3 +1,4 @@
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import { getLocales } from "expo-localization";
@@ -9,6 +10,7 @@ import { DEFAULT_CURRENCY } from "@/domain/money";
 
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
 import { seedCategories } from "./categories-core";
+import { setNumberSetting } from "./settings-core";
 
 const BootstrapOperation = Schema.Literals(["locale", "seed"]);
 
@@ -42,6 +44,7 @@ export const bootstrapLocalData = Effect.fn("Bootstrap.bootstrapLocalData")(func
             yield* setMeta(db, META_KEYS.currency, DEFAULT_CURRENCY);
             yield* setMeta(db, META_KEYS.favouriteCurrencies, serialiseFavourites(favourites));
             yield* seedCategories(db);
+            yield* setNumberSetting(db, "policyNoticeSeen", yield* Clock.currentTimeMillis);
             yield* setMeta(db, META_KEYS.firstLaunch, "true");
         }),
         (cause) => new BootstrapError({ cause, operation: "seed" })
