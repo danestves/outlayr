@@ -359,7 +359,7 @@ describe("auth deletion", () => {
         });
     });
 
-    it("leaves no suggestion requests, usage counters or voice threads behind", async () => {
+    it("leaves no suggestion requests, usage counters, voice threads or mail state behind", async () => {
         stubUpstream(200);
         const t = convexTest(schema, modules);
         agentTest.register(t);
@@ -382,6 +382,13 @@ describe("auth deletion", () => {
                 status: "queued",
                 userId: owner.userId,
             });
+            await ctx.db.insert("mailState", {
+                language: "es",
+                notices: [],
+                proSentAt: 1,
+                userId: owner.userId,
+                welcomedAt: 1,
+            });
             await usage.limit(ctx, "capturesFree", { config: FREE_CAPTURE_CONFIG, count: 3, key });
             await usage.limit(ctx, "enrichmentQueue", { config: queue, count: 3, key: owner.userId });
             return await createThread(ctx, components.agent, { userId: key });
@@ -403,6 +410,7 @@ describe("auth deletion", () => {
         vi.useRealTimers();
 
         await expect(t.run(async (ctx) => await ctx.db.query("enrichmentJobs").collect())).resolves.toHaveLength(0);
+        await expect(t.run(async (ctx) => await ctx.db.query("mailState").collect())).resolves.toHaveLength(0);
         await expect(
             t.run(async (ctx) => await usage.getValue(ctx, "capturesFree", { config: FREE_CAPTURE_CONFIG, key }))
         ).resolves.toMatchObject({ value: FREE_CAPTURE_CONFIG.rate });

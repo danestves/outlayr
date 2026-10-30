@@ -1,6 +1,6 @@
 ---
 title: "Privacy Policy"
-description: "What Outlayr stores on your device, what reaches our servers, AI providers, and analytics, how long it is kept, and how to delete it. Effective 30 October 2026."
+description: "What Outlayr stores on your device, what reaches our servers, AI providers, and analytics, how long it is kept, and how to delete it. Effective 2 November 2026."
 intro: "This policy explains what Outlayr collects, where it goes, how long it stays, and what you can do about it."
 ---
 
@@ -8,6 +8,7 @@ intro: "This policy explains what Outlayr collects, where it goes, how long it s
 
 - Your ledger is stored on your device. You can use Outlayr without an account, and then your entries, amounts, and notes never leave the phone.
 - An account (Sign in with Apple, Google, or an email and password) turns on merchant suggestions, voice entry, receipt scans, and installment plan imports. With Outlayr Pro it also turns on sync, which keeps a copy of your ledger and photos on our servers until you delete your account.
+- With an account, we email you a welcome note, a note when Pro starts, and notice before this policy or our Terms change. No newsletters or marketing.
 - Voice entries, receipt scans, installment plan imports, and merchant suggestions are processed by Anthropic, and ElevenLabs turns voice recordings into text. We don’t store your recordings, scanned photos, or screenshots, and we never send either company your name, email, or account ID.
 - Nothing goes to Anthropic or ElevenLabs until you allow it. The app asks during setup, or after you sign in, and Speak an entry and Scan a receipt ask again until you do. Import from a screenshot, for installment plans, asks the first time you use it, even if you allowed the others. Withdraw it any time in **Settings › Send data to AI providers**. Once allowed, merchant suggestions and web lookups are on, and both can be turned off in **Settings › Smart fill**. Turning Smart fill on also allows sending data to AI providers.
 - The app sends usage analytics and crash reports to PostHog: which screens you open, when you save something, and errors. Never amounts, merchants, notes, or names. It starts off if your device’s region is in the EEA or UK, and on everywhere else. Change it in **Settings › Share analytics**. Our server also tells PostHog the size, cost, and speed of each request to Anthropic, never what it contained, and links it to your account only while Share analytics is on.
@@ -33,6 +34,7 @@ Every kind of data Outlayr handles, in one place. The sections below explain eac
 | Synced ledger, deleted entries, photos | Sync on (Pro) | Our servers | Until account deletion |
 | Email, name, provider ID, password hash | Sign-in | Our servers | Until account deletion |
 | Email address, 6-digit code | Email sign-in | Our servers, Cloudflare | Code: 10 minutes. Email: Cloudflare’s policy |
+| Email address, app language, which of our emails you got | Account emails | Our servers, Cloudflare | Until account deletion. Email: Cloudflare’s policy |
 | Sessions, IP address, device type | Sign-in | Our servers | Until sign-out or account deletion |
 | Merchant and category names | Smart fill | Our servers, Anthropic | Until answered |
 | Voice recording | Voice entry | Our servers, ElevenLabs | Not kept |
@@ -83,6 +85,16 @@ You can sign in with Apple, with Google, or with an email and password. We recei
 We create an Outlayr account ID, a random string, and link it to that identity. We also store the tokens needed to keep you signed in and to revoke access when you delete your account. Each sign-in creates a session, which can record your IP address and your device’s user agent. A session stops working after seven days without use, and signing out deletes it.
 
 Signing in doesn’t change the ledger on your device. Signing out ends the session on that device and leaves the ledger where it is.
+
+### Emails we send
+
+We send a few emails to the address on your account, in the app’s language:
+
+- A welcome note once your address is confirmed, which is right away with Apple or Google.
+- A note when Outlayr Pro starts, with your plan, its renewal date, and where to manage it.
+- Notice before this policy or our [Terms of Use](/terms) change.
+
+They come with your account, so there’s no unsubscribe link, and they stop when you delete it. We don’t send newsletters or marketing. To write them in your language, the app tells our server its language when you sign in and when it renews your session. We keep that language and a record of which of these emails you got until you delete your account.
 
 ## Sync and photos
 
@@ -206,7 +218,7 @@ Outlayr doesn’t ask for your location or contacts, or for permission to track 
 These companies help run Outlayr. Each receives only what its job needs.
 
 - **[Hetzner](https://www.hetzner.com/legal/privacy-policy)** hosts the servers in Helsinki, Finland, that run our database and server functions. They hold your account and synced data, and handle every request to our server.
-- **[Cloudflare](https://www.cloudflare.com/privacypolicy/)** stores the photos you attach to entries and accounts (Cloudflare R2), when photo backup is on, and sends the emails with sign-in codes, for which it receives your email address and the email’s contents.
+- **[Cloudflare](https://www.cloudflare.com/privacypolicy/)** stores the photos you attach to entries and accounts (Cloudflare R2), when photo backup is on, and sends our emails (sign-in codes, the welcome and Pro notes, and notice of changes), for which it receives your email address and the email’s contents.
 - **[Anthropic](https://www.anthropic.com/legal/privacy)** provides the Claude AI models behind suggestions, voice entry, receipt scans, installment plan imports, CSV import, and web lookups. It receives the content described in [Suggestions, voice, and receipts](#suggestions-voice-and-receipts).
 - **[ElevenLabs](https://elevenlabs.io/privacy-policy)** turns voice recordings into text. It receives the recording and your language.
 - **[RevenueCat](https://www.revenuecat.com/privacy)** tracks subscription status. It receives an anonymous ID, or your account ID, name, and email once you sign in, and your purchase records.
@@ -243,6 +255,7 @@ If you’re in the European Economic Area or the United Kingdom, we rely on thes
 | Purpose | Legal basis |
 | --- | --- |
 | Your account, sync, photo storage, voice entry, receipt scans, installment plan imports, CSV import, Pro, and AI assistant connections | Contract: we need this data to provide what you ask for. |
+| The welcome and Pro notes, and notice of changes to this policy or our Terms | Contract: they’re part of the account and subscription you asked for. |
 | Sending voice entries, receipt photos, installment plan screenshots, CSV descriptions, and merchant names to Anthropic and ElevenLabs | Your consent, given with Allow when the app asks and withdrawn in **Settings › Send data to AI providers**. |
 | Merchant suggestions, web lookups, the shared merchant list, and logos | Legitimate interests: making entries faster to file. Suggestions and web lookups reach Anthropic only once you allow it, and turning off Smart fill is how you object. |
 | Sessions, usage limits, error logs, update checks, and records of AI requests not linked to you | Legitimate interests: keeping Outlayr secure, working, and free of abuse. |
@@ -262,6 +275,7 @@ The [table above](#data-at-a-glance) lists how long each kind of data is kept. A
 - Recordings pass through our server to ElevenLabs, and receipt photos and installment plan screenshots to Anthropic. We don’t store any of them.
 - AI assistant connections (the assistant’s name and address, your approval, and its access keys) are kept until you delete your account. Access keys stop working after an hour, or after 30 days without renewal.
 - Merchant suggestion requests aren’t kept once answered. Ones queued in the background wait on our server until your device collects the answer.
+- Your app language and the record of which welcome, Pro, and change notices you got are deleted with your account.
 - Usage counters that enforce limits on scans, voice entries, and suggestions hold counts only, keyed to your account ID, and are deleted with your account.
 - Items in the shared merchant list aren’t linked to anyone. They’re refreshed after 30 or 90 days.
 - Analytics events linked to your account are deleted with it. Events from an install that never signed in carry only a random install ID and are kept under PostHog’s retention policy. Records of AI requests sent while Share analytics was off carry a random ID instead of your account ID, plus the conversation ID for voice entry, and are kept the same way.
@@ -353,7 +367,7 @@ Outlayr isn’t directed at children under 13, and we don’t knowingly collect 
 
 ## Changes
 
-When this policy changes, we’ll post the new version here and update the effective date above.
+When this policy changes, we’ll post the new version here and update the effective date above. Before a change takes effect, the app shows what changes, and if you have an account, we email you too.
 
 ## Contact
 

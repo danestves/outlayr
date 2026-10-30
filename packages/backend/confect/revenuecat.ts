@@ -12,13 +12,15 @@ import * as HttpIncomingMessage from "effect/http/HttpIncomingMessage";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-import { components } from "../convex/_generated/api";
+import { components, internal } from "../convex/_generated/api";
 import { revenueCatSecretKey } from "./lib/config";
 
 const REVENUECAT_TIMEOUT = Duration.seconds(10);
 const SUBSCRIBERS_URL = "https://api.revenuecat.com/v1/subscribers";
 
-export const revenuecat = new RevenueCat(components.revenuecat);
+export const revenuecat: RevenueCat = new RevenueCat(components.revenuecat, {
+    hooks: { onEntitlementActivated: internal.mail.claimPro },
+});
 
 export class ProRequired extends Schema.TaggedError<ProRequired>()("ProRequired", {
     message: Schema.String.pipe(Schema.withConstructorDefault(Effect.succeed("Outlayr Pro is required for this"))),

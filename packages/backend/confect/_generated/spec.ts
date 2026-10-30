@@ -10,7 +10,10 @@ import featureRequests from "../featureRequests.spec";
 import groundedLookup from "../groundedLookup.spec";
 import groundedSpend from "../groundedSpend.spec";
 import installmentScan from "../installmentScan.spec";
+import legal from "../legal.spec";
 import limits from "../limits.spec";
+import mail from "../mail.spec";
+import mailDelivery from "../mailDelivery.spec";
 import mcp from "../mcp.spec";
 import mcpEntries from "../mcpEntries.spec";
 import mcpLedger from "../mcpLedger.spec";
@@ -34,7 +37,10 @@ const spec: Spec.Spec<{
   readonly groundedLookup: GroupSpec.NamedAt<typeof groundedLookup, "groundedLookup">;
   readonly groundedSpend: GroupSpec.NamedAt<typeof groundedSpend, "groundedSpend">;
   readonly installmentScan: GroupSpec.NamedAt<typeof installmentScan, "installmentScan">;
+  readonly legal: GroupSpec.NamedAt<typeof legal, "legal">;
   readonly limits: GroupSpec.NamedAt<typeof limits, "limits">;
+  readonly mail: GroupSpec.NamedAt<typeof mail, "mail">;
+  readonly mailDelivery: GroupSpec.NamedAt<typeof mailDelivery, "mailDelivery">;
   readonly mcp: GroupSpec.NamedAt<typeof mcp, "mcp">;
   readonly mcpEntries: GroupSpec.NamedAt<typeof mcpEntries, "mcpEntries">;
   readonly mcpLedger: GroupSpec.NamedAt<typeof mcpLedger, "mcpLedger">;
@@ -57,7 +63,10 @@ const spec: Spec.Spec<{
   ["groundedLookup"]: groundedLookup,
   ["groundedSpend"]: groundedSpend,
   ["installmentScan"]: installmentScan,
+  ["legal"]: legal,
   ["limits"]: limits,
+  ["mail"]: mail,
+  ["mailDelivery"]: mailDelivery,
   ["mcp"]: mcp,
   ["mcpEntries"]: mcpEntries,
   ["mcpLedger"]: mcpLedger,

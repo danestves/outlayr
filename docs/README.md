@@ -20,4 +20,5 @@ Start with the [README](../README.md). Internal notes keep decisions, constraint
 ### Runbooks
 
 - [Measuring render work](./operations/perf-loop.md)
+- [Announcing a policy change](./operations/policy-change.md)
 - [App Store header and search art](../apps/screenshots/app-store-header/README.md)

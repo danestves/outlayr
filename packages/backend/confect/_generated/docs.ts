@@ -11,6 +11,7 @@ export type ExchangeRatesDoc = Document.Document<typeof schemaDefinition, "excha
 export type GroundedSpendDoc = Document.Document<typeof schemaDefinition, "groundedSpend">;
 export type InstallmentPlansDoc = Document.Document<typeof schemaDefinition, "installmentPlans">;
 export type InstallmentsDoc = Document.Document<typeof schemaDefinition, "installments">;
+export type MailStateDoc = Document.Document<typeof schemaDefinition, "mailState">;
 export type MainBudgetDoc = Document.Document<typeof schemaDefinition, "mainBudget">;
 export type MerchantKnowledgeDoc = Document.Document<typeof schemaDefinition, "merchantKnowledge">;
 export type OutsideMovesDoc = Document.Document<typeof schemaDefinition, "outsideMoves">;
@@ -38,6 +39,7 @@ export interface Docs {
   groundedSpend: GroundedSpendDoc;
   installmentPlans: InstallmentPlansDoc;
   installments: InstallmentsDoc;
+  mailState: MailStateDoc;
   mainBudget: MainBudgetDoc;
   merchantKnowledge: MerchantKnowledgeDoc;
   outsideMoves: OutsideMovesDoc;

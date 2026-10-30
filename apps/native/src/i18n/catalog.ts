@@ -25,6 +25,7 @@ type Installments = typeof import("@/content/installments.content").default;
 type Log = typeof import("@/content/log.content").default;
 type MoneyManagerImport = typeof import("@/content/money-manager-import.content").default;
 type Onboarding = typeof import("@/content/onboarding.content").default;
+type PolicyNotice = typeof import("@/content/policy-notice.content").default;
 type Pro = typeof import("@/content/pro.content").default;
 type Receipt = typeof import("@/content/receipt.content").default;
 type Search = typeof import("@/content/search.content").default;
@@ -60,6 +61,7 @@ export const DICTIONARY_KEYS = [
     "log",
     "money-manager-import",
     "onboarding",
+    "policy-notice",
     "pro",
     "receipt",
     "search",
@@ -95,6 +97,7 @@ type Content =
     | Log["content"]
     | MoneyManagerImport["content"]
     | Onboarding["content"]
+    | PolicyNotice["content"]
     | Pro["content"]
     | Receipt["content"]
     | Search["content"]
