@@ -1,5 +1,6 @@
 import { SectionList } from "@legendapp/list/section-list";
 import { addDays, addMonths, startOfDay } from "@outlayr/money/calendar";
+import { valueDatedRowsIn } from "@outlayr/money/valuation";
 import type { RateTable } from "@outlayr/money/valuation";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -42,8 +43,10 @@ import type { CursorUnit } from "@/domain/log-period-cursor";
 import { scopeHasFigures, scopeTotals } from "@/domain/log-scope-figures";
 import { sparklineIsPositive, sparklineRange, sparklineSeries } from "@/domain/log-sparkline";
 import { paywallHref } from "@/domain/paywall-trigger";
+import { barWindow, periodBars } from "@/domain/period-bars";
 import { mergeByRecency } from "@/domain/transfer-log-rows";
 import type { TransferLogRow } from "@/domain/transfer-log-rows";
+import { chargesBetween } from "@/domain/upcoming";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { useDayCardShare } from "@/lib/use-day-card-share";
 import { useTransactionRowActions } from "@/lib/use-transaction-row-actions";
@@ -100,6 +103,43 @@ function useSparkline(
         positive: sparklineIsPositive(measure, points),
         range: sparklineRange(period, now, firstWeekday),
     };
+}
+
+function usePeriodBars(
+    db: Database,
+    nowMs: number,
+    enabled: boolean,
+    measure: LogMeasure,
+    period: LogPeriod,
+    firstWeekday: number,
+    displayCurrency: string,
+    rates: RateTable,
+    schedules: readonly TransactionWithCategory[]
+) {
+    const now = new Date(nowMs);
+    const barPeriod = period === "week" || period === "month" ? period : null;
+    const window = barPeriod ? barWindow(barPeriod, now, firstWeekday) : null;
+    const rows = useSparklineRows(
+        db,
+        nowMs,
+        enabled && window !== null,
+        false,
+        window?.start ?? null,
+        displayCurrency,
+        rates
+    );
+
+    if (!enabled || !barPeriod || !window) {
+        return null;
+    }
+    const income = measure === "in";
+    const charges = income ? [] : chargesBetween(schedules, now, addDays(startOfDay(now), 1), window.end);
+    const due = valueDatedRowsIn(charges, displayCurrency, rates).map((amount, index) => ({
+        amount,
+        date: charges[index].date,
+    }));
+    const logged = rows.filter((row) => row.income === income);
+    return { period: barPeriod, rows: periodBars(barPeriod, now, firstWeekday, logged, due) };
 }
 
 function headListRows(
@@ -226,6 +266,17 @@ export function Log() {
         produced: insights.perCurrency.map((figures) => figures.currencyCode),
     });
     const sparkline = useSparkline(db, nowMs, logViewLineGraph, measure, period, firstWeekday, currency, rates);
+    const bars = usePeriodBars(
+        db,
+        nowMs,
+        filter === "all",
+        measure,
+        period,
+        firstWeekday,
+        currency,
+        rates,
+        upcoming.schedules
+    );
     const transferIds = new Set(transferRows.map((transfer) => transfer.id));
     const { pendingId, requestDelete } = useDeferredDelete("row");
     const pendingCuotas = usePendingCuotas(db, pendingId);
@@ -347,6 +398,8 @@ export function Log() {
                     <>
                         {filter === "all" ? (
                             <LogInsights
+                                bars={bars}
+                                nowMs={nowMs}
                                 insights={insights}
                                 measure={measure}
                                 onMeasure={onMeasure}
