@@ -1,4 +1,5 @@
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
+import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
@@ -8,7 +9,6 @@ import schema from "../convex/schema";
 import { normalizePlan, MAX_INSTALLMENTS } from "./installmentScan";
 import type { ModelOutput } from "./installmentScan";
 import { captureLimiter, FREE_CAPTURE_CONFIG } from "./lib/captures";
-import { AI_CONSENT_VERSION } from "./lib/models";
 import { MAX_IMAGE_BYTES } from "./receiptScan";
 import { authenticatedAs, seedAuthUser } from "./test.helpers";
 

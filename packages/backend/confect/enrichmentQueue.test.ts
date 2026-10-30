@@ -2,6 +2,8 @@
 
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
 import workpoolTest from "@convex-dev/workpool/test";
+import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
+import { knowledgeKeys } from "@outlayr/money/merchant-key";
 import { MockLanguageModelV3 } from "ai/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
@@ -12,8 +14,6 @@ import { api, internal } from "../convex/_generated/api";
 import type { Doc } from "../convex/_generated/dataModel";
 import schema from "../convex/schema";
 import { resolveJob } from "./enrichmentQueue";
-import { knowledgeKeys } from "./lib/merchantKey";
-import { AI_CONSENT_VERSION } from "./lib/models";
 import { authenticatedAs, seedAuthUser, seedProUser } from "./test.helpers";
 
 const modules = import.meta.glob("../convex/**/*.ts");

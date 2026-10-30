@@ -3,6 +3,7 @@ import { createElevenLabs } from "@ai-sdk/elevenlabs";
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import { createThread, getThreadMetadata, saveMessage } from "@convex-dev/agent";
 import { isRateLimitError } from "@convex-dev/rate-limiter";
+import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -21,7 +22,7 @@ import { CURRENCY_PATTERN, DATE_PATTERN, LANGUAGE_PATTERN, namesWithinBudget } f
 import type { LedgerContext } from "./lib/ledgerPrompt";
 import { fixedBurst, perUserBurst } from "./lib/limits";
 import { modelCallError } from "./lib/modelCall";
-import { AI_CONSENT_VERSION, ELEVENLABS_TRANSCRIPTION_MODEL_ID } from "./lib/models";
+import { ELEVENLABS_TRANSCRIPTION_MODEL_ID } from "./lib/models";
 import { isPro } from "./revenuecat";
 import {
     buildPrompt,

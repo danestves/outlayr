@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 import betterAuthTest from "@convex-dev/better-auth/test";
+import { PRO_ENTITLEMENT_ID } from "@outlayr/money/contract";
 import type { TestConvex } from "convex-test";
 import type { GenericSchema, SchemaDefinition } from "convex/server";
 import * as Effect from "effect/Effect";
@@ -10,7 +11,7 @@ import * as Layer from "effect/Layer";
 
 import { components } from "../convex/_generated/api";
 import "./lib/betterAuth";
-import { PRO_ENTITLEMENT_ID, revenuecat } from "./revenuecat";
+import { revenuecat } from "./revenuecat";
 
 // `safeGetAuthUser` needs both an unexpired `session` row (`identity.sessionId`) and a `user` row (`identity.subject`).
 

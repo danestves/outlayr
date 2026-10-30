@@ -1,4 +1,5 @@
 import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
+import { PRO_ENTITLEMENT_ID } from "@outlayr/money/contract";
 import { RevenueCat } from "convex-revenuecat";
 import type * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
@@ -13,8 +14,6 @@ import * as Schema from "effect/Schema";
 
 import { components } from "../convex/_generated/api";
 import { revenueCatSecretKey } from "./lib/config";
-
-export const PRO_ENTITLEMENT_ID = "pro";
 
 const REVENUECAT_TIMEOUT = Duration.seconds(10);
 const SUBSCRIBERS_URL = "https://api.revenuecat.com/v1/subscribers";

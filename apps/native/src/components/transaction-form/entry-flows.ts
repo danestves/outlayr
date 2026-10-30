@@ -1,3 +1,4 @@
+import { merchantKey } from "@outlayr/money/merchant-key";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -7,7 +8,6 @@ import { setBoolSetting } from "@/data/settings-core";
 import { tagIdsForQuery, tagsRepo } from "@/data/tags-core";
 import { getTransactionById } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
-import { merchantKey } from "@/domain/merchant-resolver";
 import { enableReminderStep } from "@/domain/reminder";
 import { freshEntries } from "@/lib/fresh-entries";
 import { outboundHttp } from "@/lib/http";

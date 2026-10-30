@@ -1,5 +1,3 @@
-// Duplicated from apps/native/src/domain/merchant-resolver.ts, since the backend must not depend on apps/native.
-// Keep them identical: the curated map and this shared cache must agree on what "the same query" is.
 export function merchantKey(raw: string): string {
     return raw
         .normalize("NFD")
@@ -63,7 +61,7 @@ export function descriptorKey(raw: string): string {
     const body = star !== -1 && PROCESSORS.has(merchantKey(raw.slice(0, star))) ? raw.slice(star + 1) : raw;
     const [first = "", ...rest] = merchantKey(body.replaceAll(GLUED_SUFFIX, "$1 $2")).split(" ");
     const kept = [first, ...rest.filter((token) => !REFERENCE_CODE.test(token))];
-    while (kept.length > 1 && LEGAL_SUFFIXES.has(kept[kept.length - 1] ?? "")) {
+    while (kept.length > 1 && LEGAL_SUFFIXES.has(kept.at(-1) ?? "")) {
         kept.pop();
     }
     return kept.join(" ");
@@ -71,7 +69,11 @@ export function descriptorKey(raw: string): string {
 
 const MIN_KEY_LENGTH = 3;
 
-export function knowledgeKeys(name: string, currency: string | undefined, merchantName?: string | null): string[] {
+export function knowledgeKeys(
+    name: string,
+    currency: string | null | undefined,
+    merchantName?: string | null
+): string[] {
     const keys = [merchantKey(name), descriptorKey(name), merchantKey(merchantName ?? "")]
         .filter((key) => key.length >= MIN_KEY_LENGTH)
         .map((key) => (currency ? `${key}${KNOWLEDGE_KEY_DELIMITER}${currency.toLowerCase()}` : key));

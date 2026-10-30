@@ -1,7 +1,9 @@
+import { merchantKey } from "@outlayr/money/merchant-key";
+
 import { getCachedEnrichment } from "@/domain/enrichment-cache";
 import type { EnrichmentCacheLookup } from "@/domain/enrichment-cache";
 import { scrubLabel } from "@/domain/import-ai-payload";
-import { merchantKey, resolveMerchant } from "@/domain/merchant-resolver";
+import { resolveMerchant } from "@/domain/merchant-resolver";
 
 export interface ReviewEntryIdentity {
     displayName: string;

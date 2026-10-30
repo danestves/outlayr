@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
+import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import { MockLanguageModelV4 } from "ai/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
@@ -9,7 +10,6 @@ import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { api } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import { EMPTY } from "./enrichment";
-import { AI_CONSENT_VERSION } from "./lib/models";
 import { authenticatedAs, seedProUser } from "./test.helpers";
 
 vi.mock(import("@ai-sdk/anthropic"), async (importOriginal) => {

@@ -1,5 +1,7 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
+import { knowledgeKeys } from "@outlayr/money/merchant-key";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -16,8 +18,6 @@ import { sanitizeRegionCode } from "./enrichment";
 import { traced } from "./lib/aiTracing";
 import { anthropicApiKey, claudeFastModelId } from "./lib/config";
 import { perUserBurst } from "./lib/limits";
-import { knowledgeKeys } from "./lib/merchantKey";
-import { AI_CONSENT_VERSION } from "./lib/models";
 import { isPro } from "./revenuecat";
 
 /** Read live so `npx convex env set ANTHROPIC_API_KEY=""` takes effect on the next call. */

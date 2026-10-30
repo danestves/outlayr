@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
+import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
@@ -10,7 +11,6 @@ import schema from "../convex/schema";
 import { captureLimiter, FREE_CAPTURE_CONFIG } from "./lib/captures";
 import { LANGUAGE_PATTERN } from "./lib/ledgerPrompt";
 import { perUserBurst } from "./lib/limits";
-import { AI_CONSENT_VERSION } from "./lib/models";
 import { runEdge } from "./lib/runEdge";
 import {
     buildPrompt,

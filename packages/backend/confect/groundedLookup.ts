@@ -1,4 +1,5 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
+import { knowledgeKeys } from "@outlayr/money/merchant-key";
 import { generateText, isStepCount } from "ai";
 import type { LanguageModel, ToolSet } from "ai";
 import * as Console from "effect/Console";
@@ -24,13 +25,12 @@ import { traced } from "./lib/aiTracing";
 import { anthropicApiKey, claudeGroundedModelId } from "./lib/config";
 import { describeTree } from "./lib/ledgerPrompt";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
-import { knowledgeKeys } from "./lib/merchantKey";
-import { CANONICAL_CATEGORY_NAMES, KEY_PATTERN, shouldPublish } from "./lib/merchantTrust";
+import { CANONICAL_CATEGORIES, KEY_PATTERN, shouldPublish } from "./lib/merchantTrust";
 import type { KnowledgeCandidate } from "./lib/merchantTrust";
 import { CLAUDE_FAST_MODEL_ID } from "./lib/models";
 import { budgetConfig, estimateMicros, measureMicros, WORST_CASE_SEARCH_CALLS } from "./lib/spend";
 
-const CANONICAL_NAMES_LIST = [...CANONICAL_CATEGORY_NAMES].join(", ");
+const CANONICAL_NAMES_LIST = [...CANONICAL_CATEGORIES].join(", ");
 
 // The model can name a denylisted image host as a merchant's domain, which would still reach the client's favicons.
 const FORBIDDEN_LOGO_ORIGINS = [/(^|\.)logo\.dev$/i, /(^|\.)itunes\.apple\.com$/i, /(^|\.)mzstatic\.com$/i];

@@ -1,5 +1,6 @@
 import { DAY, HOUR, RateLimiter } from "@convex-dev/rate-limiter";
 import { PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
+import { knowledgeKey } from "@outlayr/money/merchant-key";
 import { generateText, Output } from "ai";
 import type { LanguageModel } from "ai";
 import * as Clock from "effect/Clock";
@@ -12,7 +13,6 @@ import type { Suggestion } from "./enrichment.spec";
 import { describeTree } from "./lib/ledgerPrompt";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { fixedBurst } from "./lib/limits";
-import { knowledgeKey } from "./lib/merchantKey";
 import { modelCallError, modelSchema } from "./lib/modelCall";
 import { DOMAIN_PATTERN, MAX_DOMAIN_LENGTH, MAX_TAG_LENGTH, MAX_TAGS, PICTOGRAPHIC } from "./lib/sanitizeLimits";
 

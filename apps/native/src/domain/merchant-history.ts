@@ -1,4 +1,4 @@
-import { merchantKey } from "./merchant-resolver";
+import { merchantKey } from "@outlayr/money/merchant-key";
 
 export interface HistoricalEntry {
     categoryId: string;

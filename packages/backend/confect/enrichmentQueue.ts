@@ -1,5 +1,6 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { vOnCompleteValidator, Workpool } from "@convex-dev/workpool";
+import { knowledgeKey, knowledgeKeys } from "@outlayr/money/merchant-key";
 import { v } from "convex/values";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
@@ -17,8 +18,7 @@ import type { GroundedCallDeps } from "./groundedLookup";
 import { traced } from "./lib/aiTracing";
 import { anthropicApiKey, claudeFastModelId, claudeGroundedModelId } from "./lib/config";
 import type { EnrichmentResult } from "./lib/enrichmentResult";
-import { knowledgeKey, knowledgeKeys } from "./lib/merchantKey";
-import { CANONICAL_CATEGORY_NAMES, KEY_PATTERN } from "./lib/merchantTrust";
+import { CANONICAL_CATEGORIES, KEY_PATTERN } from "./lib/merchantTrust";
 import { runEdge, runTransactionEdge } from "./lib/runEdge";
 
 export const MIN_NAME_LENGTH = 3;
@@ -45,12 +45,7 @@ const share = Effect.fn("EnrichmentQueue.share")(function* share(
     modelId: string
 ) {
     const { categoryName, domain, merchantName } = answer;
-    if (
-        categoryName === null ||
-        domain === null ||
-        merchantName === null ||
-        !CANONICAL_CATEGORY_NAMES.has(categoryName)
-    ) {
+    if (categoryName === null || domain === null || merchantName === null || !CANONICAL_CATEGORIES.has(categoryName)) {
         return answer;
     }
     const resolvedAt = yield* Clock.currentTimeMillis;

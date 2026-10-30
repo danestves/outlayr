@@ -1,4 +1,5 @@
 import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
+import { merchantKey } from "@outlayr/money/merchant-key";
 import { generateText, Output } from "ai";
 import type { LanguageModel } from "ai";
 import * as Effect from "effect/Effect";
@@ -10,7 +11,6 @@ import { maybeScheduleGrounded } from "./enrichment";
 import type { GroundedScheduleCtx } from "./enrichment";
 import { describeTree } from "./lib/ledgerPrompt";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
-import { merchantKey } from "./lib/merchantKey";
 import { modelCallError, modelSchema } from "./lib/modelCall";
 
 export const MAX_LABELS = 200;

@@ -1,5 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { WorkId } from "@convex-dev/workpool";
+import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
@@ -12,7 +13,6 @@ import { MAX_ACK_IDS, MAX_RESULTS, MIN_NAME_LENGTH, pool, settled, work } from "
 import spec from "./enrichmentQueue.spec";
 import { optionalUserId, requireUserId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
-import { AI_CONSENT_VERSION } from "./lib/models";
 import { isPro } from "./revenuecat";
 
 const enqueue = FunctionImpl.make(

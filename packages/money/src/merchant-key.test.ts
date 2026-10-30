@@ -1,6 +1,20 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { descriptorKey, knowledgeKeys } from "./merchantKey";
+import { descriptorKey, knowledgeKeys, merchantKey } from "./merchant-key";
+
+describe(merchantKey, () => {
+    it("lowercases, trims, and collapses whitespace", () => {
+        expect(merchantKey("  NETFLIX   Inc  ")).toBe("netflix inc");
+    });
+
+    it("strips diacritics", () => {
+        expect(merchantKey("Café Amazon")).toBe("cafe amazon");
+    });
+
+    it("turns punctuation into word breaks", () => {
+        expect(merchantKey("AT&T*BILL")).toBe("at t bill");
+    });
+});
 
 describe(descriptorKey, () => {
     it.each([

@@ -1,3 +1,4 @@
+import { merchantKey } from "@outlayr/money/merchant-key";
 import { describe, expect, it } from "vite-plus/test";
 
 import {
@@ -8,7 +9,6 @@ import {
     isInstallmentAppAccount,
     resolveInstitutionDomain,
 } from "./institution-map";
-import { merchantKey } from "./merchant-resolver";
 
 describe("resolveInstitutionDomain", () => {
     it("folds punctuation and accents the way merchantKey does", () => {

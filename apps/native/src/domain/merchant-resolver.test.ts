@@ -1,20 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { descriptorKey, merchantKey, resolveMerchant } from "./merchant-resolver";
-
-describe("normalizing a raw name into a matching key", () => {
-    it("lowercases, trims, and collapses whitespace", () => {
-        expect(merchantKey("  NETFLIX   Inc  ")).toBe("netflix inc");
-    });
-
-    it("strips diacritics", () => {
-        expect(merchantKey("Café Amazon")).toBe("cafe amazon");
-    });
-
-    it("turns punctuation into word breaks", () => {
-        expect(merchantKey("AT&T*BILL")).toBe("at t bill");
-    });
-});
+import { resolveMerchant } from "./merchant-resolver";
 
 describe("resolving the six required named merchants", () => {
     it("resolves netflix", () => {
@@ -68,17 +54,5 @@ describe("fuzzy matching", () => {
 
     it("rejects a name with no curated candidate at all", () => {
         expect(resolveMerchant("xyzcorp random note 12345")).toBeNull();
-    });
-});
-
-describe("descriptorKey", () => {
-    it.each([
-        ["AIRBNB * HMASFW2JP2", "airbnb"],
-        ["NYX*VenetisABEET", "venetis"],
-        ["CARE4BAG AE", "care4bag"],
-        ["BLUE BOTTLE COFFEE #08761", "blue bottle coffee"],
-        ["FIUMICINO AEROPORTO SS", "fiumicino aeroporto ss"],
-    ])("%s decodes to %s, the same as the backend's copy", (raw, expected) => {
-        expect(descriptorKey(raw)).toBe(expected);
     });
 });

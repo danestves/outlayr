@@ -1,5 +1,6 @@
+import { merchantKey } from "@outlayr/money/merchant-key";
+
 import { MERCHANTS } from "./merchant-map";
-import { merchantKey } from "./merchant-resolver";
 
 const MIN_QUERY_LENGTH = 2;
 

@@ -1,8 +1,8 @@
+import { merchantKey } from "@outlayr/money/merchant-key";
 import { describe, expect, it } from "vite-plus/test";
 
 import { rememberedCategory } from "./merchant-history";
 import type { HistoricalEntry } from "./merchant-history";
-import { merchantKey } from "./merchant-resolver";
 
 function entry(note: string, categoryId: string, day: number): HistoricalEntry {
     return { categoryId, date: Date.UTC(2026, 0, day), note };

@@ -1,3 +1,5 @@
+import { CANONICAL_CATEGORY_NAMES } from "@outlayr/money/contract";
+import type { CanonicalCategoryName } from "@outlayr/money/contract";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { and, eq, isNull, max } from "drizzle-orm";
 import * as Effect from "effect/Effect";
@@ -94,7 +96,7 @@ export const SEEDED_CATEGORY_NAMES = {
         "Entertainment",
     ],
     income: ["Paycheck", "Freelance", "Business", "Gifts"],
-} as const satisfies Record<"expense" | "income", readonly string[]>;
+} as const satisfies { [Kind in "expense" | "income"]: readonly CanonicalCategoryName<Kind>[] };
 
 // Never change: a different namespace gives upgraded devices different ids for the same seeded categories.
 const SEEDED_CATEGORY_NAMESPACE = "04ed4302-1c98-46af-999e-930ae1b19e0e";
@@ -383,45 +385,51 @@ export interface SuggestedCategoryPresets {
     readonly income: readonly SuggestedCategoryPreset[];
 }
 
+type PresetStyle = Omit<SuggestedCategoryPreset, "name">;
+
+const EXPENSE_STYLES: Record<CanonicalCategoryName<"expense">, PresetStyle> = {
+    Groceries: { color: "#53915A", icon: "ShoppingCart01" },
+    "Dining Out": { color: "#A97332", icon: "Restaurant01" },
+    Coffee: { color: "#AE703A", icon: "Coffee02" },
+    Transport: { color: "#4D84BD", icon: "Bus01" },
+    Fuel: { color: "#B46A4D", icon: "Fuel01" },
+    Rent: { color: "#B26C43", icon: "Home01" },
+    Home: { color: "#728B41", icon: "Sofa01" },
+    Utilities: { color: "#937F2B", icon: "Flash" },
+    "Phone & Internet": { color: "#0590A7", icon: "Wifi01" },
+    Subscriptions: { color: "#7C76BC", icon: "Repeat" },
+    Healthcare: { color: "#1D947F", icon: "Health" },
+    Fitness: { color: "#B76662", icon: "Dumbbell01" },
+    Shopping: { color: "#B16482", icon: "ShoppingBag01" },
+    Fashion: { color: "#9B6BA8", icon: "Dress01" },
+    Entertainment: { color: "#936EAF", icon: "FilmRoll01" },
+    Travel: { color: "#2F8AB4", icon: "Airplane01" },
+    Education: { color: "#7179BE", icon: "Mortarboard01" },
+    Gifts: { color: "#B46477", icon: "Gift" },
+    Pets: { color: "#A3772D", icon: "Bone01" },
+    Family: { color: "#B66757", icon: "Kid" },
+    "Personal Care": { color: "#AD658C", icon: "HairDryer" },
+    Insurance: { color: "#667DBF", icon: "Shield01" },
+    Taxes: { color: "#5A81BF", icon: "Taxes" },
+};
+
+const INCOME_STYLES: Record<CanonicalCategoryName<"income">, PresetStyle> = {
+    Paycheck: { color: "#53915A", icon: "MoneyBag01" },
+    Freelance: { color: "#00948A", icon: "Laptop" },
+    "Part-Time": { color: "#3F87B9", icon: "Briefcase01" },
+    Business: { color: "#459365", icon: "Building01" },
+    Investments: { color: "#668E4B", icon: "ChartUp" },
+    Interest: { color: "#359470", icon: "PercentCircle" },
+    Bonus: { color: "#9C7B2A", icon: "Target01" },
+    Tips: { color: "#A3772D", icon: "Tips" },
+    Refund: { color: "#1E8DAE", icon: "Cashback" },
+    Gifts: { color: "#B6646C", icon: "GiftCard" },
+};
+
 export const SUGGESTED_CATEGORY_PRESETS: SuggestedCategoryPresets = {
-    expense: [
-        { color: "#53915A", icon: "ShoppingCart01", name: "Groceries" },
-        { color: "#A97332", icon: "Restaurant01", name: "Dining Out" },
-        { color: "#AE703A", icon: "Coffee02", name: "Coffee" },
-        { color: "#4D84BD", icon: "Bus01", name: "Transport" },
-        { color: "#B46A4D", icon: "Fuel01", name: "Fuel" },
-        { color: "#B26C43", icon: "Home01", name: "Rent" },
-        { color: "#728B41", icon: "Sofa01", name: "Home" },
-        { color: "#937F2B", icon: "Flash", name: "Utilities" },
-        { color: "#0590A7", icon: "Wifi01", name: "Phone & Internet" },
-        { color: "#7C76BC", icon: "Repeat", name: "Subscriptions" },
-        { color: "#1D947F", icon: "Health", name: "Healthcare" },
-        { color: "#B76662", icon: "Dumbbell01", name: "Fitness" },
-        { color: "#B16482", icon: "ShoppingBag01", name: "Shopping" },
-        { color: "#9B6BA8", icon: "Dress01", name: "Fashion" },
-        { color: "#936EAF", icon: "FilmRoll01", name: "Entertainment" },
-        { color: "#2F8AB4", icon: "Airplane01", name: "Travel" },
-        { color: "#7179BE", icon: "Mortarboard01", name: "Education" },
-        { color: "#B46477", icon: "Gift", name: "Gifts" },
-        { color: "#A3772D", icon: "Bone01", name: "Pets" },
-        { color: "#B66757", icon: "Kid", name: "Family" },
-        { color: "#AD658C", icon: "HairDryer", name: "Personal Care" },
-        { color: "#667DBF", icon: "Shield01", name: "Insurance" },
-        { color: "#5A81BF", icon: "Taxes", name: "Taxes" },
-    ],
-    income: [
-        { color: "#53915A", icon: "MoneyBag01", name: "Paycheck" },
-        { color: "#00948A", icon: "Laptop", name: "Freelance" },
-        { color: "#3F87B9", icon: "Briefcase01", name: "Part-Time" },
-        { color: "#459365", icon: "Building01", name: "Business" },
-        { color: "#668E4B", icon: "ChartUp", name: "Investments" },
-        { color: "#359470", icon: "PercentCircle", name: "Interest" },
-        { color: "#9C7B2A", icon: "Target01", name: "Bonus" },
-        { color: "#A3772D", icon: "Tips", name: "Tips" },
-        { color: "#1E8DAE", icon: "Cashback", name: "Refund" },
-        { color: "#B6646C", icon: "GiftCard", name: "Gifts" },
-    ],
-} as const;
+    expense: CANONICAL_CATEGORY_NAMES.expense.map((name) => ({ ...EXPENSE_STYLES[name], name })),
+    income: CANONICAL_CATEGORY_NAMES.income.map((name) => ({ ...INCOME_STYLES[name], name })),
+};
 
 export function presetsNotAdded(
     income: boolean,

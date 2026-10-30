@@ -1,8 +1,8 @@
+import { merchantKey } from "@outlayr/money/merchant-key";
 import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import { clearEnrichmentCache, setCachedEnrichment } from "./enrichment-cache";
 import { reviewEntryIdentity } from "./import-review-identity";
-import { merchantKey } from "./merchant-resolver";
 
 describe("reviewEntryIdentity", () => {
     beforeEach(() => {

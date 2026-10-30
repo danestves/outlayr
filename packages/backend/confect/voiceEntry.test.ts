@@ -3,6 +3,7 @@
 import { getThreadMetadata, saveMessage } from "@convex-dev/agent";
 import agentTest from "@convex-dev/agent/test";
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
+import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import { MockTranscriptionModelV4 } from "ai/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
@@ -14,7 +15,6 @@ import schema from "../convex/schema";
 import { captureLimiter, FREE_CAPTURE_CONFIG } from "./lib/captures";
 import { namesWithinBudget } from "./lib/ledgerPrompt";
 import { fixedBurst, perUserBurst } from "./lib/limits";
-import { AI_CONSENT_VERSION } from "./lib/models";
 import { runEdge } from "./lib/runEdge";
 import { authenticatedAs, seedAuthUser } from "./test.helpers";
 import {

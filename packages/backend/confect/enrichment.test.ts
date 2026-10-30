@@ -1,6 +1,8 @@
 /// <reference types="vite/client" />
 
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
+import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
+import { knowledgeKey, merchantKey } from "@outlayr/money/merchant-key";
 import { MockLanguageModelV4 } from "ai/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
@@ -22,8 +24,6 @@ import {
 } from "./enrichment";
 import { suggestArgs } from "./enrichment.spec";
 import { fixedBurst } from "./lib/limits";
-import { knowledgeKey, merchantKey } from "./lib/merchantKey";
-import { AI_CONSENT_VERSION } from "./lib/models";
 import { authenticatedAs, seedAuthUser } from "./test.helpers";
 
 const modules = import.meta.glob("../convex/**/*.ts");

@@ -1,3 +1,4 @@
+import { merchantKey } from "@outlayr/money/merchant-key";
 import { and, desc, eq, gte, inArray, isNull, ne, notExists, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -6,7 +7,7 @@ import type { Database } from "@/db/client";
 import { appMeta, transactions } from "@/db/schema";
 import { getCachedEnrichment } from "@/domain/enrichment-cache";
 import type { RemoteEnrichmentResult } from "@/domain/enrichment-cache";
-import { merchantKey, resolveMerchant } from "@/domain/merchant-resolver";
+import { resolveMerchant } from "@/domain/merchant-resolver";
 import type { LogoOutcome, MerchantImageRequest } from "@/lib/logo-fetch";
 
 import { META_KEYS } from "./app-meta-core";

@@ -1,5 +1,6 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
@@ -18,7 +19,6 @@ import {
     namesWithinBudget,
     REGION_PATTERN,
 } from "./lib/ledgerPrompt";
-import { AI_CONSENT_VERSION } from "./lib/models";
 import { admitScan, looksLikeJpeg, MAX_IMAGE_BYTES } from "./receiptScan";
 
 const scan = FunctionImpl.make(

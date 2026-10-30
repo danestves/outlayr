@@ -4,6 +4,7 @@
 
 import { createAnthropic } from "@ai-sdk/anthropic";
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
+import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import * as Effect from "effect/Effect";
@@ -12,7 +13,7 @@ import { describe, expect, it, vi } from "vite-plus/test";
 import { api } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import { classify } from "./csvImport";
-import { AI_CONSENT_VERSION, CLAUDE_FAST_MODEL_ID } from "./lib/models";
+import { CLAUDE_FAST_MODEL_ID } from "./lib/models";
 import { authenticatedAs, seedProUser } from "./test.helpers";
 
 const modules = import.meta.glob("../convex/**/*.ts");

@@ -1,5 +1,7 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
+import { knowledgeKeys } from "@outlayr/money/merchant-key";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -27,8 +29,6 @@ import spec from "./enrichment.spec";
 import { traced } from "./lib/aiTracing";
 import { optionalUserId } from "./lib/auth";
 import { anthropicApiKey, claudeFastModelId } from "./lib/config";
-import { knowledgeKeys } from "./lib/merchantKey";
-import { AI_CONSENT_VERSION } from "./lib/models";
 import { isPro } from "./revenuecat";
 
 /**
