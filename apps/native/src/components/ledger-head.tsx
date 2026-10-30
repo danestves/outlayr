@@ -20,7 +20,7 @@ export interface LedgerCell {
     label: string;
     /** Unsigned: the sign comes from `positive`, so 40 out and 40 in match. */
     magnitude: number;
-    onPress: () => void;
+    onPress?: () => void;
     positive: boolean;
 }
 
@@ -36,6 +36,8 @@ export function LedgerHead({ cells, code }: LedgerHeadProps) {
     const { language } = useLanguage();
     const hidden = use(AmountsHiddenContext);
     const stacked = useAccessibilityTextSize();
+    const spokenCell = (cell: LedgerCell) =>
+        `${cell.label}, ${hidden ? t("log.amounts.hidden") : `${cell.positive ? "+" : "-"}${formatAmount(cell.magnitude, code, showCents, language)}`}`;
     return (
         <View>
             <View className="bg-border h-px w-full" />
@@ -53,29 +55,39 @@ export function LedgerHead({ cells, code }: LedgerHeadProps) {
                                 }
                             />
                         ) : null}
-                        <RowPressable
-                            accessibilityHint={cell.accessibilityHint ?? t("log.ledger.showFigure")}
-                            accessibilityLabel={`${cell.label}, ${hidden ? t("log.amounts.hidden") : `${cell.positive ? "+" : "-"}${formatAmount(cell.magnitude, code, showCents, language)}`}`}
-                            accessibilityRole="button"
-                            className="gap-0.75 py-2.5"
-                            onPress={cell.onPress}
-                        >
-                            <MonoLabel>{cell.label}</MonoLabel>
-                            <FlowAmount
-                                amount={cell.magnitude}
-                                className={cn(
-                                    ROW_TYPE.cell,
-                                    "tabular-nums",
-                                    cell.income ? "text-income" : "text-foreground"
-                                )}
-                                code={code}
-                                prefix={`${cell.positive ? "+" : "-"}${symbolPrefix(currencySymbol(code))}`}
-                                showCents={showCents}
-                            />
-                        </RowPressable>
+                        {cell.onPress ? (
+                            <RowPressable
+                                accessibilityHint={cell.accessibilityHint ?? t("log.ledger.showFigure")}
+                                accessibilityLabel={spokenCell(cell)}
+                                accessibilityRole="button"
+                                className="gap-0.75 py-2.5"
+                                onPress={cell.onPress}
+                            >
+                                <LedgerFigure cell={cell} code={code} showCents={showCents} />
+                            </RowPressable>
+                        ) : (
+                            <View accessibilityLabel={spokenCell(cell)} accessible className="gap-0.75 py-2.5">
+                                <LedgerFigure cell={cell} code={code} showCents={showCents} />
+                            </View>
+                        )}
                     </View>
                 ))}
             </View>
         </View>
+    );
+}
+
+function LedgerFigure({ cell, code, showCents }: { cell: LedgerCell; code: string; showCents: boolean }) {
+    return (
+        <>
+            <MonoLabel>{cell.label}</MonoLabel>
+            <FlowAmount
+                amount={cell.magnitude}
+                className={cn(ROW_TYPE.cell, "tabular-nums", cell.income ? "text-income" : "text-foreground")}
+                code={code}
+                prefix={`${cell.positive ? "+" : "-"}${symbolPrefix(currencySymbol(code))}`}
+                showCents={showCents}
+            />
+        </>
     );
 }

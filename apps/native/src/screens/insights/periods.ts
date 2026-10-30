@@ -7,3 +7,7 @@ export const PERIODS = [
     { labelKey: "insights.period.month", period: "month", value: 2 },
     { labelKey: "insights.period.year", period: "year", value: 3 },
 ] as const satisfies readonly { labelKey: TranslationKey; period: InsightsPeriod; value: number }[];
+
+export function periodOf(stored: number): InsightsPeriod {
+    return PERIODS.find((option) => option.value === stored)?.period ?? "week";
+}

@@ -12,6 +12,10 @@ export default function InsightsLayout() {
                     <Stack.Header transparent />
                     <Stack.Screen.Title large>{t("insights.title")}</Stack.Screen.Title>
                 </Stack.Screen>
+                <Stack.Screen name="cash-flow">
+                    <Stack.Header transparent />
+                    <Stack.Screen.BackButton displayMode="minimal" />
+                </Stack.Screen>
             </Stack>
         </TabPauseProvider>
     );
