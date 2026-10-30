@@ -38,6 +38,7 @@ const BROWSER_ONLY_MODULES = new Set(["@revenuecat/purchases-js-hybrid-mappings"
 const FREE_ICONS = process.env.OUTLAYR_FREE_ICONS === "1";
 const DRIZZLE_EFFECT_SCHEMA = `${path.sep}drizzle-orm${path.sep}effect-schema${path.sep}`;
 const DRIZZLE_EFFECT_ROOT = path.resolve(__dirname, "src/lib/drizzle-effect-root.ts");
+const APP_ORIGIN = path.resolve(__dirname, "package.json");
 const upstreamResolveRequest = finalConfig.resolver.resolveRequest;
 finalConfig.resolver = {
     ...finalConfig.resolver,
@@ -56,6 +57,9 @@ finalConfig.resolver = {
         }
         if (moduleName === "effect" && context.originModulePath.includes(DRIZZLE_EFFECT_SCHEMA)) {
             return { filePath: DRIZZLE_EFFECT_ROOT, type: "sourceFile" };
+        }
+        if (moduleName === "convex" || moduleName.startsWith("convex/")) {
+            return resolve({ ...context, originModulePath: APP_ORIGIN }, moduleName, platform);
         }
         const resolution = resolve(context, moduleName, platform);
         if ((moduleName === "zod" || moduleName.startsWith("zod/")) && resolution.filePath?.endsWith(".cjs")) {
