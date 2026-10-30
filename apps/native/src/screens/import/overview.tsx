@@ -8,6 +8,7 @@ import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { formatTargetDate, formatTargetMonth } from "@/domain/dates";
+import { tc } from "@/domain/money-manager/count-labels";
 import { buildImportPlan } from "@/domain/money-manager/plan";
 import { importCapsPassed } from "@/domain/money-manager/pro-caps";
 import type { ImportCap } from "@/domain/money-manager/pro-caps";
@@ -23,7 +24,7 @@ import { useAtomAction } from "@/state/use-atom-action";
 
 import { ImportRow } from "./components/import-row";
 import { ImportHero, YearBars } from "./components/parts";
-import { categoryTally, grouped, money, tc } from "./labels";
+import { categoryTally, grouped, money } from "./labels";
 import { useImportPaths } from "./paths";
 
 const ATTENTION = "#B56858";

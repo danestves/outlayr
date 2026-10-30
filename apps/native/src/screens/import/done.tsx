@@ -11,6 +11,7 @@ import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { flyleafDate } from "@/domain/flyleaf";
+import { tc } from "@/domain/money-manager/count-labels";
 import type { MmBalanceCheck } from "@/domain/money-manager/types";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { moneyManagerSession, useMoneyManagerSession } from "@/lib/money-manager-session";
@@ -22,7 +23,7 @@ import { useColors } from "@/theme/use-colors";
 
 import { ImportRow } from "./components/import-row";
 import { ImportHero } from "./components/parts";
-import { money, tc } from "./labels";
+import { money } from "./labels";
 import { useImportPaths } from "./paths";
 import { useHardwareBack } from "./use-hardware-back";
 

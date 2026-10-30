@@ -4,6 +4,7 @@ import { View } from "react-native";
 import { CategoryIconTile } from "@/components/category-icon-tile";
 import { ChoiceRow, SettingsSection } from "@/components/list/list-row";
 import { SettingsScreen } from "@/components/settings/settings-screen";
+import { tc } from "@/domain/money-manager/count-labels";
 import type { AccountTarget, MmAccountGroup, MmAccountView } from "@/domain/money-manager/types";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
@@ -13,7 +14,7 @@ import type { MoneyManagerDraft } from "@/lib/money-manager-session";
 import { ChoiceSheet } from "./components/choice-sheet";
 import type { ChoiceSheetHandle } from "./components/choice-sheet";
 import { ImportRow } from "./components/import-row";
-import { accountTarget, money, tc } from "./labels";
+import { accountTarget, money } from "./labels";
 
 const GROUPS = [
     ["open", "mmImport.accounts.open"],

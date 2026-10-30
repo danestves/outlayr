@@ -6,6 +6,7 @@ import { ChoiceRow, SettingsSection } from "@/components/list/list-row";
 import { SegmentedRow } from "@/components/settings/segmented-row";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { CATEGORY_PALETTE, capitalizeCategoryName, SUGGESTED_CATEGORY_PRESETS } from "@/data/categories-core";
+import { tc } from "@/domain/money-manager/count-labels";
 import { defaultChoices } from "@/domain/money-manager/defaults";
 import type { CategoryTarget, MmCategoryView } from "@/domain/money-manager/types";
 import { useTranslation } from "@/i18n/context";
@@ -15,7 +16,7 @@ import type { MoneyManagerDraft } from "@/lib/money-manager-session";
 import { ChoiceSheet } from "./components/choice-sheet";
 import type { ChoiceSheetHandle } from "./components/choice-sheet";
 import { ImportRow } from "./components/import-row";
-import { categoryName, categoryTarget, tc } from "./labels";
+import { categoryName, categoryTarget } from "./labels";
 
 const MODES = ["match", "keep"] as const;
 
