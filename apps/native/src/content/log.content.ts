@@ -477,6 +477,31 @@ const log = {
             fr: "{name} coûte désormais {to}",
             pt: "{name} agora custa {to}",
         }),
+        "log.shelf.accounts_one": t({
+            en: "1 account",
+            es: "1 cuenta",
+            fr: "1 compte",
+            pt: "1 conta",
+        }),
+        "log.shelf.accounts_other": t({
+            en: "{count} accounts",
+            es: "{count} cuentas",
+            fr: "{count} comptes",
+            pt: "{count} contas",
+        }),
+        "log.shelf.weekAhead": t({
+            en: "Next 7 days",
+            es: "Próximos 7 días",
+            fr: "7 prochains jours",
+            pt: "Próximos 7 dias",
+        }),
+        "log.shelf.youOwe": t({
+            en: "You owe",
+            es: "Debes",
+            fr: "Vous devez",
+            pt: "Você deve",
+            "pt-PT": "Deve",
+        }),
         "log.upcoming.more": t({
             en: "and {count} more",
             es: "y {count} más",

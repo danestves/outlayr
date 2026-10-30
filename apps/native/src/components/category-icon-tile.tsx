@@ -83,7 +83,11 @@ export function CategoryIconTile({
     if (glyph) {
         content = glyph({ color: glyphColor, size: glyphSize });
     } else if (!icon && emoji) {
-        content = <Text style={{ fontSize: glyphSize, lineHeight: glyphSize * 1.2 }}>{emoji}</Text>;
+        content = (
+            <Text maxFontSizeMultiplier={1} style={{ fontSize: glyphSize, lineHeight: glyphSize * 1.2 }}>
+                {emoji}
+            </Text>
+        );
     } else {
         content = (
             <CategoryIcon
