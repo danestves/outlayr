@@ -37,6 +37,8 @@ import { BODY, ROW, rowLabel } from "@/components/transaction-form/style";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { hitArea, outline } from "@/lib/swift-ui-geometry";
 
+import type { AccountFields } from "./use-account-form";
+
 const SIGN_FONT = font({
     design: "rounded",
     textStyle: "body",
@@ -45,29 +47,11 @@ const SIGN_FONT = font({
 const SIGN_HIT = 44;
 const BALANCE_MIN_SCALE = 0.5;
 
-interface AccountEditorDetailsSectionProps {
-    balanceEditA11y: string;
-    balanceLabel: string;
-    balanceSignA11y: string;
-    balanceValue: string;
-    currencyCode: string;
-    currencyLabel: string;
+interface AccountEditorDetailsSectionProps extends AccountFields {
     hairline: ViewModifier[];
-    kindLabel: string;
-    liability: boolean;
     mutedColor: string;
     nameFieldRef: RefObject<TextFieldRef | null>;
-    nameLabel: string;
-    namePlaceholder: string;
     nameState: ReturnType<typeof useNativeState<string>>;
-    negative: boolean;
-    onBalancePress: () => void;
-    onCurrencyPress: () => void;
-    onNameChange: (name: string) => void;
-    onSubmitName: () => void;
-    /** Omitted for a person, which hides the row. */
-    onToggleLiability?: (next: boolean) => void;
-    onToggleSign: () => void;
     tintColor: string;
 }
 

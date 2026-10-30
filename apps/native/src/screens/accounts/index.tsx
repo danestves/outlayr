@@ -24,7 +24,6 @@ import {
     onTapGesture,
     tint,
 } from "@expo/ui/swift-ui/modifiers";
-import { toAccountKind } from "@outlayr/money/account-kind";
 import { isMultiCurrency } from "@outlayr/money/account-overview";
 import { Stack, useRouter } from "expo-router";
 import { View } from "react-native";
@@ -37,12 +36,8 @@ import { Tile } from "@/components/empty-state-parts";
 import { groupedList, groupedRows } from "@/components/native/styles";
 import { toolbarIcon } from "@/components/toolbar-icons";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
-import { useDatabase } from "@/contexts/local-data-context";
-import { useAccountBalance, useBankAccounts } from "@/data/accounts";
+import { useAccountBalance } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
-import { useGlobalCurrency } from "@/data/app-meta";
-import { useDebtsOverview } from "@/data/debts";
-import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useNow } from "@/data/use-now";
 import type { Database } from "@/db/client";
 import { formatSignedAmount } from "@/domain/account-display";
@@ -54,6 +49,7 @@ import type { ThemeColors } from "@/theme/use-colors";
 
 import { useAddMenu } from "./add-menu";
 import { DebtSections, LedgerTotals } from "./debt-sections";
+import { useAccountList } from "./use-account-list";
 
 const SUBTITLE = font({
     design: "rounded",
@@ -76,30 +72,12 @@ const CHEVRON = font({
 });
 
 export function Accounts() {
-    const db = useDatabase();
     const router = useRouter();
     const t = useTranslation();
     const colors = useColors();
-    const all = useBankAccounts(db);
-    const { pendingId, requestDelete } = useDeferredDelete("account");
-    const currency = useGlobalCurrency(db);
-    const debts = useDebtsOverview(db, useNow());
+    const { assets, currency, db, debts, deleteAccount, empty, openDetail, rows } = useAccountList();
     const addMenu = useAddMenu();
-    const rows = all.filter((account) => account.id !== pendingId);
-    const assets = rows.filter((account) => toAccountKind(account.kind) === "asset");
-    const empty = rows.length + debts.owedToYou.length + debts.youOwe.length + debts.settled.length === 0;
     const rowGround = groupedRows(colors);
-
-    const openDetail = (id: string) => {
-        router.push({
-            params: { accountId: id },
-            pathname: "/accounts/[accountId]",
-        });
-    };
-
-    const deleteAccount = (account: Account) => {
-        requestDelete(account.id, t("accounts.undo.body"));
-    };
 
     return (
         <>

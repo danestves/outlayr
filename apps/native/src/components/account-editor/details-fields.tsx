@@ -8,31 +8,14 @@ import { Text } from "@/components/text";
 import { withAlpha } from "@/theme/shade";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
+import type { AccountFields } from "./use-account-form";
+
 const SIGN_TARGET = 48;
 const PRESSED_ALPHA = 0.1;
 
-interface AccountDetailsFieldsProps {
-    balanceEditA11y: string;
-    balanceLabel: string;
-    balanceSignA11y: string;
-    /** Already formatted for the active language and currency, without its sign. */
-    balanceValue: string;
-    currencyCode: string;
-    currencyLabel: string;
-    kindLabel: string;
-    liability: boolean;
+interface AccountDetailsFieldsProps extends AccountFields {
     name: string;
     nameFieldRef?: Ref<TextInputInstance>;
-    nameLabel: string;
-    namePlaceholder: string;
-    negative: boolean;
-    onBalancePress: () => void;
-    onCurrencyPress: () => void;
-    onNameChange: (name: string) => void;
-    onSubmitName: () => void;
-    /** Omitted for a person, which hides the row. */
-    onToggleLiability?: (next: boolean) => void;
-    onToggleSign: () => void;
 }
 
 export function AccountDetailsFields({

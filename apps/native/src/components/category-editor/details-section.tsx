@@ -16,25 +16,15 @@ import type { RefObject } from "react";
 
 import { BODY, CAPTION, ROW, rowLabel } from "@/components/transaction-form/style";
 
-interface CategoryEditorDetailsSectionProps {
-    caption: string | null;
+import type { CategoryFields } from "./use-category-form";
+
+interface CategoryEditorDetailsSectionProps extends CategoryFields {
     dangerColor: string;
-    failure: string | null;
-    expenseLabel: string;
     hairline: ViewModifier[];
-    income: boolean;
-    incomeLabel: string;
     mutedColor: string;
     nameFieldRef: RefObject<TextFieldRef | null>;
-    nameLabel: string;
-    namePlaceholder: string;
     nameState: ReturnType<typeof useNativeState<string>>;
-    onIncomeChange: (income: boolean) => void;
-    onNameChange: (name: string) => void;
-    onSubmitName: () => void;
     tintColor: string;
-    typeLabel: string;
-    typePickerVisible: boolean;
 }
 
 // Every `Text` names `BODY`: outside a `Form` nothing applies the rounded face.

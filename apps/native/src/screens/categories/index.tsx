@@ -34,7 +34,7 @@ import {
 } from "@expo/ui/swift-ui/modifiers";
 import PlusSignIcon from "@hugeicons-pro/core-stroke-rounded/PlusSignIcon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
-import { Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
 import { PlatformColor, View } from "react-native";
 
 import { CategoryIconTile } from "@/components/category-icon-tile";
@@ -42,23 +42,15 @@ import { CHILD_TILE, Eyebrow, PARENT_TILE } from "@/components/category-list-chr
 import { CHILD_NAME, LABEL, PARENT_NAME } from "@/components/category-list-swift";
 import { groupedList, groupedRows } from "@/components/native/styles";
 import { toolbarIcon } from "@/components/toolbar-icons";
-import { useAppSettings } from "@/contexts/display-settings-context";
-import { useDatabase } from "@/contexts/local-data-context";
-import { useGlobalCurrency } from "@/data/app-meta";
-import { useCategoriesByNamespace, useCategoryTotals } from "@/data/categories";
-import { presetsNotAdded } from "@/data/categories-core";
 import type { Category, CategoryWithChildren, SuggestedCategoryPreset } from "@/data/categories-core";
-import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { formatAmount } from "@/domain/money";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { hitArea, outline } from "@/lib/swift-ui-geometry";
-import { addSuggestedCategoryCommand } from "@/state/categories-commands";
-import { setBoolSettingCommand } from "@/state/settings-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 import type { ThemeColors } from "@/theme/use-colors";
 
 import { CategoryGridOpen, EMPTY_MARK_TILE, EMPTY_MARK_WIDTH } from "./category-grid-open";
+import { useCategoryList } from "./use-category-list";
 
 /** `systemGray3`: iOS 26 dark `opaqueSeparator` sits below the `separator` rules it must clear. */
 const CONNECTOR = PlatformColor("systemGray3");
@@ -120,85 +112,24 @@ const EMPTY_TEXT = font({
     weight: "medium",
 });
 
-/** A deleted parent's children are re-parented to the top level, so promote them here. */
-function pendingRemoved(parents: CategoryWithChildren[], pendingId: string | null): CategoryWithChildren[] {
-    if (pendingId === null) {
-        return parents;
-    }
-    return parents.flatMap((parent) => {
-        if (parent.id === pendingId) {
-            return parent.children.map((child) => ({ ...child, children: [] }));
-        }
-        if (!parent.children.some((child) => child.id === pendingId)) {
-            return [parent];
-        }
-        return [{ ...parent, children: parent.children.filter((child) => child.id !== pendingId) }];
-    });
-}
-
 export function Categories({ income }: { income: boolean }) {
-    const db = useDatabase();
-    const addSuggestedCategory = useAtomCommand(addSuggestedCategoryCommand);
-    const setBoolSetting = useAtomCommand(setBoolSettingCommand);
-    const router = useRouter();
-    const t = useTranslation();
     const colors = useColors();
-    const currency = useGlobalCurrency(db);
-    const showSuggestions = useAppSettings().state.bool("categorySuggestions");
-    const namespace = useCategoriesByNamespace(db, income);
-    const { pendingId, requestDelete } = useDeferredDelete("category");
-    const parents = pendingRemoved(namespace, pendingId);
-    const totals = useCategoryTotals(db);
+    const {
+        addSuggested,
+        census,
+        currency,
+        deleteCategory,
+        goToEdit,
+        goToNewChild,
+        goToReorder,
+        parents,
+        showSuggestions,
+        suggestions,
+        toggleSuggestions,
+        totals,
+    } = useCategoryList(income);
+    const t = useTranslation();
     const rowGround = groupedRows(colors);
-
-    const suggestions = presetsNotAdded(
-        income,
-        namespace.flatMap((parent) => [parent, ...parent.children])
-    );
-
-    const goToNewChild = (parent: CategoryWithChildren) => {
-        router.push({
-            params: { categoryId: parent.id },
-            pathname: "/settings/categories/[categoryId]/subcategories/create",
-        });
-    };
-
-    const goToEdit = (category: Category) => {
-        if (category.parentId) {
-            router.push({
-                params: { categoryId: category.parentId, subcategoryId: category.id },
-                pathname: "/settings/categories/[categoryId]/subcategories/[subcategoryId]",
-            });
-            return;
-        }
-        router.push({
-            params: { categoryId: category.id },
-            pathname: "/settings/categories/[categoryId]",
-        });
-    };
-
-    const goToReorder = () => {
-        router.push({
-            params: { income: income ? "1" : "0" },
-            pathname: "/settings/categories/reorder",
-        });
-    };
-
-    const deleteCategory = (category: Category, hasChildren: boolean) => {
-        requestDelete(category.id, t(hasChildren ? "categories.undo.bodyWithChildren" : "categories.undo.body"));
-    };
-
-    const addSuggested = (preset: SuggestedCategoryPreset) => {
-        addSuggestedCategory({
-            db,
-            preset: {
-                color: preset.color,
-                icon: preset.icon,
-                income,
-                name: preset.name,
-            },
-        });
-    };
 
     return (
         <>
@@ -211,9 +142,7 @@ export function Categories({ income }: { income: boolean }) {
                     accessibilityLabel={t(
                         showSuggestions ? "categories.a11y.hideSuggestions" : "categories.a11y.showSuggestions"
                     )}
-                    onPress={() => {
-                        setBoolSetting({ db, key: "categorySuggestions", value: !showSuggestions });
-                    }}
+                    onPress={toggleSuggestions}
                 >
                     <Stack.Toolbar.Icon {...toolbarIcon(showSuggestions ? "suggestionsOn" : "suggestionsOff")} />
                 </Stack.Toolbar.Button>
@@ -232,7 +161,7 @@ export function Categories({ income }: { income: boolean }) {
                             <CategoriesEmpty colors={colors} income={income} />
                         </Section>
                     ) : (
-                        <Section header={<CensusLine colors={colors} parents={parents} />} modifiers={[rowGround]}>
+                        <Section header={<Eyebrow colors={colors}>{census}</Eyebrow>} modifiers={[rowGround]}>
                             {parents.map((parent, index) => (
                                 <ParentGroup
                                     closesTree={index === parents.length - 1}
@@ -276,17 +205,6 @@ export function Categories({ income }: { income: boolean }) {
             </Host>
         </>
     );
-}
-
-function CensusLine({ parents, colors }: { parents: CategoryWithChildren[]; colors: ThemeColors }) {
-    const t = useTranslation();
-    const children = parents.reduce((total, parent) => total + parent.children.length, 0);
-    // `parents.length` is never zero here: the empty state renders a headerless Section.
-    const clauses = [t("categories.census.categories", { count: parents.length })];
-    if (children > 0) {
-        clauses.push(t("categories.census.subcategories", { count: children }));
-    }
-    return <Eyebrow colors={colors}>{clauses.join(" · ")}</Eyebrow>;
 }
 
 type ConnectorKind = "branch" | "last";

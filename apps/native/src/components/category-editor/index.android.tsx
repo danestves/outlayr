@@ -1,75 +1,36 @@
 import { useAtomMount } from "@effect/atom-react/Hooks";
-import { RegistryContext } from "@effect/atom-react/RegistryContext";
 import CheckmarkCircle02Icon from "@hugeicons-pro/core-solid-rounded/CheckmarkCircle02Icon";
 import Delete02Icon from "@hugeicons-pro/core-stroke-rounded/Delete02Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
-import { useForm, useSelector } from "@tanstack/react-form";
 import { useRouter } from "expo-router";
-import { use, useEffect, useRef, useState } from "react";
-import { Keyboard, ScrollView, View } from "react-native";
+import { useRef } from "react";
+import { ScrollView, View } from "react-native";
 import type { TextInputInstance } from "react-native";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { holdAfterSuccess, pressSubmit } from "@/components/form/submit-guard";
 import { IdentityHero } from "@/components/identity-hero";
 import { SheetHeader, SheetHeaderIconButton, SheetHeaderTextButton } from "@/components/sheet-header";
 import { Text } from "@/components/text";
-import {
-    EMPTY_DRAFT,
-    useIdentityDraftScope,
-    useIdentitySeed,
-    identityPickerResetAtom,
-    useIdentityDraft,
-    useIdentityFlyUp,
-} from "@/contexts/identity-draft-context";
+import { identityPickerResetAtom } from "@/contexts/identity-draft-context";
 import { useDatabase } from "@/contexts/local-data-context";
-import { useCategoriesByNamespace } from "@/data/categories";
-import { CATEGORY_PALETTE, getCategoryById, isCategoryValidationError } from "@/data/categories-core";
 import type { Category } from "@/data/categories-core";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
-import type { Database } from "@/db/client";
-import { firstAvailableColor } from "@/domain/category-color";
-import { CATEGORY_ERROR_KEYS } from "@/domain/category-error";
 import { useKeyboardHeight } from "@/hooks/use-keyboard-height";
 import type { TranslatableKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
-import type { TranslateFn } from "@/i18n/context";
-import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
-import { runAtomCommand, SILENT } from "@/state/atom-command";
-import { countCategoryChildrenCommand, saveCategoryCommand } from "@/state/categories-commands";
+import { countCategoryChildrenCommand } from "@/state/categories-commands";
 import { useAtomAction } from "@/state/use-atom-action";
-import { useColors } from "@/theme/use-colors";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
 import { CategoryDetailsFields } from "./details-fields";
-import { categoryColorFollowsSiblings, categoryCreatesIncome, categoryIdentitySeed } from "./identity-seed";
-import type { CategoryEditorProps } from "./index";
+import { useCategoryForm } from "./use-category-form";
+import type { CategoryEditorProps } from "./use-category-form";
 
-const MAX_EXPENSE_CATEGORIES = 24;
 const HERO_TOP = 8;
 const HERO_BOTTOM = 24;
 const CAPTION_CLEARANCE = 24;
-const TOAST_MS = 2000;
-
-interface CategoryEditorSubject {
-    create: boolean;
-    income: boolean;
-    isSubcategory: boolean;
-    parent: Category | null;
-}
-
-function categoryEditorCopy(t: TranslateFn, { create, income, isSubcategory, parent }: CategoryEditorSubject) {
-    const namespacePlaceholderKey = income ? "categories.namePlaceholder.income" : "categories.namePlaceholder.expense";
-    const inheritsCaption = parent ? t("categories.inherits", { parent: parent.name }) : null;
-    const incomeCaption = income ? t("categories.incomeColorNote") : null;
-    const createCaption = isSubcategory ? inheritsCaption : incomeCaption;
-    return {
-        caption: create ? createCaption : null,
-        namePlaceholder: t(isSubcategory ? "categories.namePlaceholder.subcategory" : namespacePlaceholderKey),
-    };
-}
 
 function categoryTitleKey(mode: CategoryEditorProps["mode"], isSubcategory: boolean, stored: Category | null) {
     if (mode === "create") {
@@ -89,249 +50,40 @@ function categoryKindKey(edited: Category | null): TranslatableKey {
     return edited.income ? "categories.kind.income" : "categories.kind.expense";
 }
 
-/** An edit tolerates an empty symbol only where the stored category never carried one. */
-function categoryIsSaveable(
-    mode: CategoryEditorProps["mode"],
-    name: string,
-    symbolEmpty: boolean,
-    stored: Category | null
-): boolean {
-    if (name.trim() === "") {
-        return false;
-    }
-    if (!symbolEmpty) {
-        return true;
-    }
-    return mode === "edit" && stored != null && stored.icon == null && stored.emoji == null;
-}
-
 export default function CategoryEditor(props: CategoryEditorProps) {
     const db = useDatabase();
-    return <CategoryEditorReady db={db} {...props} />;
-}
-
-// Form logic mirrors `index.tsx` minus the SwiftUI pieces and the fly-up, and Delete mirrors
-// `category-edit-screen.tsx`: keep them in step.
-function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
-    // The parent spreads a fresh `props` every render, so effects key off these primitives, never `props`.
-    const { db, mode } = props;
-    const parentId = props.mode === "create" ? (props.parentId ?? null) : null;
-    const editId = props.mode === "edit" ? props.id : null;
-    const initialIncome = props.mode === "create" ? !!props.income : false;
     const router = useRouter();
     const t = useTranslation();
-    const colors = useColors();
     const m3 = useMaterialColors();
     const haptics = useHaptics();
-    const registry = use(RegistryContext);
     const insets = useSafeAreaInsets();
     const keyboardHeight = useKeyboardHeight();
     const { requestDelete } = useDeferredDelete("category");
-
-    useIdentityDraftScope();
-    const { draft, setDraft } = useIdentityDraft();
-    const { pickerOpen, setPickerOpen } = useIdentityFlyUp();
-
-    // Lazy `useState`, not `useMemo`: a re-read would re-fire the draft seed below and clobber the user's picks.
-    const [loaded] = useState<Category | null>(() =>
-        mode === "edit" && editId != null ? getCategoryById(db, editId) : null
-    );
-    const [parent] = useState<Category | null>(() =>
-        mode === "create" && parentId != null ? getCategoryById(db, parentId) : null
-    );
-
     const nameRef = useRef<TextInputInstance>(null);
-    const [failure, setFailure] = useState<string | null>(null);
-
-    const [initialValues] = useState(() => ({
-        income: parent?.income ?? initialIncome,
-        name: loaded?.name ?? "",
-    }));
-    const form = useForm({
-        defaultValues: initialValues,
-        onSubmit: ({ value }) => {
-            setFailure(null);
-            if (mode === "create") {
-                return addCategory(value);
-            }
-            if (loaded == null) {
-                return;
-            }
-            return holdAfterSuccess(
-                runAtomCommand(
-                    registry,
-                    saveCategoryCommand,
-                    {
-                        db,
-                        onFailure: reportSaveFailure,
-                        onSaved: () => {
-                            posthog?.capture("category_saved", {
-                                category_type: loaded.income ? "income" : "expense",
-                                is_subcategory: isSubcategory,
-                                mode: "edit",
-                            });
-                            haptics("success");
-                            router.back();
-                        },
-                        write: {
-                            id: loaded.id,
-                            mode: "edit",
-                            patch: {
-                                color: loaded.income ? undefined : (draft.color ?? CATEGORY_PALETTE[0]),
-                                emoji: draft.emoji ?? null,
-                                icon: draft.icon ?? null,
-                                name: value.name,
-                            },
-                        },
-                    },
-                    SILENT
-                )
-            );
-        },
-    });
-    const { name, income: formIncome } = useSelector(form.store, (s) => s.values);
-    const isSubmitting = useSelector(form.store, (s) => s.isSubmitting);
-
-    const [colorTouched, setColorTouched] = useState(false);
-    const [showToast, setShowToast] = useState(false);
-    const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    const expenseTree = useCategoriesByNamespace(db, false);
-
-    const allExpense = expenseTree.flatMap((node) => [node, ...node.children]);
-    const expenseCount = allExpense.length;
-    const usedColors = new Set<string>();
-    for (const category of allExpense) {
-        if (category.id === editId) {
-            continue;
-        }
-        if (category.color) {
-            usedColors.add(category.color);
-        }
-    }
+    const {
+        canSave,
+        draft,
+        fields,
+        income,
+        isSubcategory,
+        loaded,
+        name,
+        openPicker,
+        pickerOpen,
+        resetIdentity,
+        showToast,
+        submit,
+        symbolEmpty,
+        tint,
+    } = useCategoryForm(props, { ref: nameRef });
 
     useAtomMount(identityPickerResetAtom);
 
-    const [seed] = useState(() => categoryIdentitySeed(mode, loaded, parent));
-    useIdentitySeed(seed);
-
-    const isSubcategory = mode === "create" ? parentId != null : (loaded?.parentId ?? null) != null;
-    const atExpenseLimit = expenseCount >= MAX_EXPENSE_CATEGORIES;
-    const [openedAtLimit] = useState(atExpenseLimit);
-    const forcedIncome = categoryCreatesIncome(mode, parentId, openedAtLimit);
-    const income = mode === "create" ? formIncome || forcedIncome : (loaded?.income ?? false);
-
-    const seenExpenseCount = useRef(expenseCount);
-    // oxlint-disable-next-line outlayr/react-effect-budget -- closes the sheet when the live expense count, which a sync can move, crosses the cap
-    useEffect(() => {
-        const changed = expenseCount !== seenExpenseCount.current;
-        seenExpenseCount.current = expenseCount;
-        if (changed && mode === "create" && parentId == null && !income && expenseCount >= MAX_EXPENSE_CATEGORIES) {
-            router.back();
-        }
-    }, [expenseCount, mode, parentId, income, router]);
-
-    const nextColor = firstAvailableColor(usedColors);
-    const autoColor = categoryColorFollowsSiblings(mode, parentId, colorTouched);
-    const color = autoColor ? nextColor : draft.color;
-
-    const symbolEmpty = !(draft.icon || draft.emoji);
-    const tint = income ? colors.income : (color ?? CATEGORY_PALETTE[0]);
-    const typePickerVisible = mode === "create" && !isSubcategory && !atExpenseLimit;
-
-    const canSave = categoryIsSaveable(mode, name, symbolEmpty, loaded) && !isSubmitting;
-
-    const { caption, namePlaceholder } = categoryEditorCopy(t, {
-        create: mode === "create",
-        income,
-        isSubcategory,
-        parent,
-    });
-
     // While the picker is up, a tap that reaches this sheet past it must not save, delete, or open a second picker.
-    const openPicker = () => {
-        if (pickerOpen) {
-            return;
+    const pressHero = () => {
+        if (!pickerOpen) {
+            openPicker();
         }
-        Keyboard.dismiss();
-        // Freezes the auto-color so a color picked in the picker survives.
-        setColorTouched(true);
-        if (autoColor) {
-            setDraft({ ...EMPTY_DRAFT, color: nextColor });
-        }
-        setPickerOpen(true);
-        router.push({
-            params: {
-                editId: editId ?? "",
-                income: income ? "1" : "0",
-                subcategory: isSubcategory ? "1" : "0",
-            },
-            pathname: "/settings/category-symbol",
-        });
-    };
-
-    const addCategory = (value: { name: string }) => {
-        const pickedColor = color ?? CATEGORY_PALETTE[0];
-        const expenseColor = isSubcategory ? (parent?.color ?? pickedColor) : pickedColor;
-        return holdAfterSuccess(
-            runAtomCommand(
-                registry,
-                saveCategoryCommand,
-                {
-                    db,
-                    onFailure: reportSaveFailure,
-                    onSaved: () => {
-                        posthog?.capture("category_saved", {
-                            category_type: income ? "income" : "expense",
-                            is_subcategory: isSubcategory,
-                            mode: "create",
-                        });
-                        haptics("success");
-                        if (isSubcategory) {
-                            router.back();
-                            return;
-                        }
-                        form.setFieldValue("name", "");
-                        // Cleared, not advanced: with `colorTouched` released, the auto color is the first free slot
-                        // after this insert lands, where a value chosen now would come from the pre-insert set.
-                        setColorTouched(false);
-                        setDraft(EMPTY_DRAFT);
-                        flashAdded();
-                    },
-                    write: {
-                        category: {
-                            color: income ? colors.income : expenseColor,
-                            emoji: draft.emoji ?? null,
-                            icon: draft.icon ?? undefined,
-                            income,
-                            name: value.name,
-                            parentId,
-                        },
-                        mode: "create",
-                    },
-                },
-                SILENT
-            ),
-            isSubcategory
-        );
-    };
-
-    const reportSaveFailure = (cause: unknown) => {
-        haptics("error");
-        const code = isCategoryValidationError(cause) ? cause.code : null;
-        setFailure(code ? t(CATEGORY_ERROR_KEYS[code]) : t("categories.error.generic"));
-        if (code === "missingName" || code === "duplicateName") {
-            nameRef.current?.focus();
-        }
-    };
-
-    /** Back-to-back adds must not let the first timer clear the second flash. */
-    const flashAdded = () => {
-        if (toastTimer.current !== null) {
-            clearTimeout(toastTimer.current);
-        }
-        setShowToast(true);
-        toastTimer.current = setTimeout(() => setShowToast(false), TOAST_MS);
     };
 
     // No confirmation: the write is held for the undo window by a toast mounted at the app root, which outlives this
@@ -347,7 +99,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
 
     return (
         <View className="bg-m3-surface-container-low flex-1">
-            <SheetHeader title={t(categoryTitleKey(mode, isSubcategory, loaded))}>
+            <SheetHeader title={t(categoryTitleKey(props.mode, isSubcategory, loaded))}>
                 {loaded == null ? null : (
                     <SheetHeaderIconButton
                         accessibilityLabel={t("common.delete")}
@@ -357,11 +109,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
                         onPress={() => deleteCategory(loaded)}
                     />
                 )}
-                <SheetHeaderTextButton
-                    disabled={!canSave || pickerOpen}
-                    label={t("common.save")}
-                    onPress={() => pressSubmit(form)}
-                />
+                <SheetHeaderTextButton disabled={!canSave || pickerOpen} label={t("common.save")} onPress={submit} />
             </SheetHeader>
 
             <ScrollView
@@ -378,33 +126,15 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: Database }) {
                         emoji={draft.emoji}
                         icon={draft.icon}
                         income={income}
-                        onPress={openPicker}
-                        onReset={() => setDraft(EMPTY_DRAFT)}
+                        onPress={pressHero}
+                        onReset={resetIdentity}
                         photoUri={null}
                         variant="category"
                     />
                 </View>
 
                 <View className="px-4">
-                    <CategoryDetailsFields
-                        caption={caption}
-                        expenseLabel={t("common.expense")}
-                        failure={failure}
-                        income={income}
-                        incomeLabel={t("common.income")}
-                        name={name}
-                        nameFieldRef={nameRef}
-                        nameLabel={t("categories.field.name")}
-                        namePlaceholder={namePlaceholder}
-                        onIncomeChange={(next) => form.setFieldValue("income", next)}
-                        onNameChange={(next) => {
-                            setFailure(null);
-                            form.setFieldValue("name", next);
-                        }}
-                        onSubmitName={() => pressSubmit(form)}
-                        typeLabel={t("categories.field.type")}
-                        typePickerVisible={typePickerVisible}
-                    />
+                    <CategoryDetailsFields {...fields} name={name} nameFieldRef={nameRef} />
                 </View>
             </ScrollView>
 

@@ -30,3 +30,19 @@ export function categoryCreatesIncome(mode: "create" | "edit", parentId: string 
 export function categoryColorFollowsSiblings(mode: "create" | "edit", parentId: string | null, colorTouched: boolean) {
     return mode === "create" && parentId === null && !colorTouched;
 }
+
+/** An edit tolerates an empty symbol only where the stored category never carried one. */
+export function categoryIsSaveable(
+    mode: "create" | "edit",
+    name: string,
+    symbolEmpty: boolean,
+    stored: Pick<Category, "emoji" | "icon"> | null
+): boolean {
+    if (name.trim() === "") {
+        return false;
+    }
+    if (!symbolEmpty) {
+        return true;
+    }
+    return mode === "edit" && stored != null && stored.icon == null && stored.emoji == null;
+}

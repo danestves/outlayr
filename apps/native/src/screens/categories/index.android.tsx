@@ -2,7 +2,7 @@ import type { MenuComponentRef } from "@expo/ui/community/menu";
 import PlusSignCircleIcon from "@hugeicons-pro/core-solid-rounded/PlusSignCircleIcon";
 import PlusSignIcon from "@hugeicons-pro/core-stroke-rounded/PlusSignIcon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
-import { Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
 import { useRef } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
@@ -15,24 +15,16 @@ import { ScreenHeader } from "@/components/screen-header";
 import { SwipeToDelete } from "@/components/swipe-to-delete";
 import { Text } from "@/components/text";
 import { toolbarIcon } from "@/components/toolbar-icons";
-import { useAppSettings } from "@/contexts/display-settings-context";
-import { useDatabase } from "@/contexts/local-data-context";
-import { useGlobalCurrency } from "@/data/app-meta";
-import { useCategoriesByNamespace, useCategoryTotals } from "@/data/categories";
-import { presetsNotAdded } from "@/data/categories-core";
 import type { Category, CategoryWithChildren, SuggestedCategoryPreset } from "@/data/categories-core";
-import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { formatAmount } from "@/domain/money";
 import { useLanguage, useTranslation } from "@/i18n/context";
-import { addSuggestedCategoryCommand } from "@/state/categories-commands";
-import { setBoolSettingCommand } from "@/state/settings-commands";
-import { useAtomCommand } from "@/state/use-atom-command";
 import { withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";
 import type { ThemeColors } from "@/theme/use-colors";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
 import { CategoryGridOpen } from "./category-grid-open";
+import { useCategoryList } from "./use-category-list";
 
 const ROW_LEADING = 16;
 const STEM_X = ROW_LEADING + PARENT_TILE / 2;
@@ -43,85 +35,24 @@ const CHILD_TEXT_LEADING = CHILD_LEADING + CHILD_TILE + 12;
 const CONNECTOR_ALPHA = 0.6;
 const NO_EXTRAS: readonly ActionMenuItem[] = [];
 
-/** A deleted parent's children are re-parented to the top level, so promote them here. */
-function pendingRemoved(parents: CategoryWithChildren[], pendingId: string | null): CategoryWithChildren[] {
-    if (pendingId === null) {
-        return parents;
-    }
-    return parents.flatMap((parent) => {
-        if (parent.id === pendingId) {
-            return parent.children.map((child) => ({ ...child, children: [] }));
-        }
-        if (!parent.children.some((child) => child.id === pendingId)) {
-            return [parent];
-        }
-        return [{ ...parent, children: parent.children.filter((child) => child.id !== pendingId) }];
-    });
-}
-
 export function Categories({ income }: { income: boolean }) {
-    const db = useDatabase();
-    const addSuggestedCategory = useAtomCommand(addSuggestedCategoryCommand);
-    const setBoolSetting = useAtomCommand(setBoolSettingCommand);
-    const router = useRouter();
-    const t = useTranslation();
     const colors = useColors();
-    const currency = useGlobalCurrency(db);
-    const showSuggestions = useAppSettings().state.bool("categorySuggestions");
-    const namespace = useCategoriesByNamespace(db, income);
-    const { pendingId, requestDelete } = useDeferredDelete("category");
-    const parents = pendingRemoved(namespace, pendingId);
-    const totals = useCategoryTotals(db);
+    const {
+        addSuggested,
+        census,
+        currency,
+        deleteCategory,
+        goToEdit,
+        goToNewChild,
+        goToReorder,
+        parents,
+        showSuggestions,
+        suggestions,
+        toggleSuggestions,
+        totals,
+    } = useCategoryList(income);
+    const t = useTranslation();
     const fabClearance = useFabClearance();
-
-    const suggestions = presetsNotAdded(
-        income,
-        namespace.flatMap((parent) => [parent, ...parent.children])
-    );
-
-    const goToNewChild = (parent: CategoryWithChildren) => {
-        router.push({
-            params: { categoryId: parent.id },
-            pathname: "/settings/categories/[categoryId]/subcategories/create",
-        });
-    };
-
-    const goToEdit = (category: Category) => {
-        if (category.parentId) {
-            router.push({
-                params: { categoryId: category.parentId, subcategoryId: category.id },
-                pathname: "/settings/categories/[categoryId]/subcategories/[subcategoryId]",
-            });
-            return;
-        }
-        router.push({
-            params: { categoryId: category.id },
-            pathname: "/settings/categories/[categoryId]",
-        });
-    };
-
-    const goToReorder = () => {
-        router.push({
-            params: { income: income ? "1" : "0" },
-            pathname: "/settings/categories/reorder",
-        });
-    };
-
-    const deleteCategory = (category: Category, hasChildren: boolean) => {
-        requestDelete(category.id, t(hasChildren ? "categories.undo.bodyWithChildren" : "categories.undo.body"));
-    };
-
-    const addSuggested = (preset: SuggestedCategoryPreset) => {
-        addSuggestedCategory({
-            db,
-            preset: {
-                color: preset.color,
-                icon: preset.icon,
-                income,
-                name: preset.name,
-            },
-        });
-    };
 
     return (
         <>
@@ -132,9 +63,7 @@ export function Categories({ income }: { income: boolean }) {
                     accessibilityLabel={t(
                         showSuggestions ? "categories.a11y.hideSuggestions" : "categories.a11y.showSuggestions"
                     )}
-                    onPress={() => {
-                        setBoolSetting({ db, key: "categorySuggestions", value: !showSuggestions });
-                    }}
+                    onPress={toggleSuggestions}
                 >
                     <Stack.Toolbar.Icon {...toolbarIcon(showSuggestions ? "suggestionsOn" : "suggestionsOff")} />
                 </Stack.Toolbar.Button>
@@ -152,7 +81,7 @@ export function Categories({ income }: { income: boolean }) {
                 ) : (
                     <>
                         <View className="px-4 pt-2 pb-2">
-                            <CensusLine colors={colors} parents={parents} />
+                            <Eyebrow colors={colors}>{census}</Eyebrow>
                         </View>
                         {parents.map((parent, index) => (
                             <ParentGroup
@@ -188,16 +117,6 @@ export function Categories({ income }: { income: boolean }) {
             </ScrollView>
         </>
     );
-}
-
-function CensusLine({ parents, colors }: { parents: CategoryWithChildren[]; colors: ThemeColors }) {
-    const t = useTranslation();
-    const children = parents.reduce((total, parent) => total + parent.children.length, 0);
-    const clauses = [t("categories.census.categories", { count: parents.length })];
-    if (children > 0) {
-        clauses.push(t("categories.census.subcategories", { count: children }));
-    }
-    return <Eyebrow colors={colors}>{clauses.join(" · ")}</Eyebrow>;
 }
 
 function CategoriesEmpty({ income, colors }: { income: boolean; colors: ThemeColors }) {
