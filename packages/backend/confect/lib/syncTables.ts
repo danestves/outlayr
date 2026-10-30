@@ -253,6 +253,14 @@ export const FIELDS_BY_TABLE = {
     transfers: transferFields,
 } as const;
 
+type ImageKeyTable = {
+    [Table in SyncedTable]: "imageKey" extends keyof (typeof FIELDS_BY_TABLE)[Table] ? Table : never;
+}[SyncedTable];
+
+export const IMAGE_KEY_TABLES = SYNCED_TABLES.filter(
+    (table): table is ImageKeyTable => "imageKey" in FIELDS_BY_TABLE[table]
+);
+
 interface Versioned {
     deletedAt: number | null;
     deviceId: string;

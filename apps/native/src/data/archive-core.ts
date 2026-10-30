@@ -1,54 +1,15 @@
-import { inArray } from "drizzle-orm";
-import type { SQLiteTable } from "drizzle-orm/sqlite-core";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as EffectRecord from "effect/Record";
 import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
-import {
-    accounts,
-    appMeta,
-    budgets,
-    categories,
-    installmentPlans,
-    installments,
-    mainBudget,
-    outsideMoves,
-    outsidePayments,
-    savingsGoals,
-    tags,
-    transactionAttachments,
-    transactionPhotos,
-    transactionSplits,
-    transactions,
-    transactionTags,
-    transfers,
-} from "@/db/schema";
 import { transaction } from "@/db/transaction";
-import { ARCHIVE_FORMAT, ARCHIVE_TABLES, ARCHIVE_VERSION, decodeArchiveRow, encodeArchiveRow } from "@/domain/archive";
-import type { ArchiveDocument, ArchiveRow, ArchiveTable, TableRow } from "@/domain/archive";
+import { ARCHIVE_FORMAT, ARCHIVE_VERSION, decodeArchiveRow, encodeArchiveRow } from "@/domain/archive";
+import type { ArchiveDocument, TableRow } from "@/domain/archive";
 
 import { photoFileName } from "./photo-store-core";
-import { SYNCED_META_KEYS } from "./sync-outbox-core";
-
-const TABLES = {
-    accounts,
-    appMeta,
-    budgets,
-    categories,
-    installmentPlans,
-    installments,
-    mainBudget,
-    outsideMoves,
-    outsidePayments,
-    savingsGoals,
-    tags,
-    transactionAttachments,
-    transactionPhotos,
-    transactionSplits,
-    transactionTags,
-    transactions,
-    transfers,
-} satisfies Record<ArchiveTable, SQLiteTable>;
+import { SYNCED_SPECS, SYNCED_TABLES } from "./sync-tables";
 
 const ArchiveOperation = Schema.Literals(["build", "restore"]);
 
@@ -71,21 +32,14 @@ export const buildArchive = Effect.fn("Archive.buildArchive")(function* buildArc
     now: Date,
     photos: Record<string, string> = {}
 ) {
-    const entries = yield* Effect.all(
-        ARCHIVE_TABLES.map((table) =>
-            Effect.gen(function* readTable() {
-                // Only `SYNCED_META_KEYS`: the rest of `appMeta` is this phone's own, as in `replaceLocalFromAccount`.
-                const rows: TableRow[] =
-                    table === "appMeta"
-                        ? yield* query("build", () =>
-                              db
-                                  .select()
-                                  .from(appMeta)
-                                  .where(inArray(appMeta.key, [...SYNCED_META_KEYS]))
-                          )
-                        : yield* query("build", () => db.select().from(TABLES[table]));
-                return [table, rows.map((row) => encodeArchiveRow(row))] as const;
-            })
+    const tables = yield* Effect.all(
+        pipe(
+            SYNCED_SPECS,
+            EffectRecord.map((spec) =>
+                query("build", () => db.select().from(spec.table).where(spec.scope)).pipe(
+                    Effect.map((rows: TableRow[]) => rows.map((row) => encodeArchiveRow(row)))
+                )
+            )
         ),
         { concurrency: "unbounded" }
     );
@@ -93,8 +47,7 @@ export const buildArchive = Effect.fn("Archive.buildArchive")(function* buildArc
         exportedAt: now.getTime(),
         format: ARCHIVE_FORMAT,
         photos,
-        // SAFETY: the entries cover every `ARCHIVE_TABLES` member, the same union the type is keyed on.
-        tables: Object.fromEntries(entries) as Record<ArchiveTable, ArchiveRow[]>,
+        tables,
         version: ARCHIVE_VERSION,
     };
     return document;
@@ -117,14 +70,11 @@ export const restoreArchive = Effect.fn("Archive.restoreArchive")(function* rest
     yield* transaction(
         db,
         Effect.gen(function* replace() {
-            for (const table of [...ARCHIVE_TABLES].reverse()) {
-                yield* query("restore", () =>
-                    table === "appMeta"
-                        ? db.delete(appMeta).where(inArray(appMeta.key, [...SYNCED_META_KEYS]))
-                        : db.delete(TABLES[table])
-                );
+            for (const table of [...SYNCED_TABLES].reverse()) {
+                const spec = SYNCED_SPECS[table];
+                yield* query("restore", () => db.delete(spec.table).where(spec.scope));
             }
-            for (const table of ARCHIVE_TABLES) {
+            for (const table of SYNCED_TABLES) {
                 const rows = document.tables[table]
                     .map((row) => decodeArchiveRow(table, row))
                     .map((row) => (carried(row) ? { ...row, imageKey: null } : row));
@@ -134,7 +84,7 @@ export const restoreArchive = Effect.fn("Archive.restoreArchive")(function* rest
                 // Chunked against SQLite's 999 bound variables: a ledger is unbounded.
                 for (let from = 0; from < rows.length; from += ARCHIVE_INSERT_CHUNK) {
                     const slice = rows.slice(from, from + ARCHIVE_INSERT_CHUNK);
-                    yield* query("restore", () => db.insert(TABLES[table]).values(slice));
+                    yield* query("restore", () => db.insert(SYNCED_SPECS[table].table).values(slice));
                     written += slice.length;
                 }
             }

@@ -1,11 +1,10 @@
 import { eq, isNotNull } from "drizzle-orm";
-import type { AnySQLiteColumn, SQLiteTable } from "drizzle-orm/sqlite-core";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { accounts, transactionAttachments, transactions } from "@/db/schema";
-
 import type { SpendDb } from "./budget-spent";
+import { SYNCED_SPECS, SYNCED_TABLES } from "./sync-tables";
+import type { PhotoTable } from "./sync-tables";
 
 export const PHOTO_DIRECTORY = "transaction-photos";
 
@@ -26,34 +25,11 @@ const query = <A>(operation: typeof PhotoStoreOperation.Type, run: () => Promise
 const files = <A>(run: () => A) =>
     Effect.try({ catch: (cause) => new PhotoStoreError({ cause, operation: "files" }), try: run });
 
-export interface PhotoTable {
-    readonly id: AnySQLiteColumn;
-    readonly imageKey: AnySQLiteColumn;
-    readonly imageUri: AnySQLiteColumn;
-    readonly table: SQLiteTable;
-}
-
 // One directory holds every table's photos, so a walk that misses a table reads its files as orphans and purges them.
-export const PHOTO_TABLES: readonly PhotoTable[] = [
-    {
-        id: transactions.id,
-        imageKey: transactions.imageKey,
-        imageUri: transactions.imageUri,
-        table: transactions,
-    },
-    {
-        id: accounts.id,
-        imageKey: accounts.imageKey,
-        imageUri: accounts.imageUri,
-        table: accounts,
-    },
-    {
-        id: transactionAttachments.id,
-        imageKey: transactionAttachments.imageKey,
-        imageUri: transactionAttachments.imageUri,
-        table: transactionAttachments,
-    },
-];
+export const PHOTO_TABLES: readonly PhotoTable[] = SYNCED_TABLES.flatMap((table) => {
+    const { photos } = SYNCED_SPECS[table];
+    return photos && !photos.dormant ? [photos] : [];
+});
 
 // A photo is written when picked but referenced only on save, so a purge with no grace deletes it under an open editor.
 export const PHOTO_PURGE_GRACE_MS = 24 * 60 * 60 * 1000;

@@ -3,84 +3,12 @@ import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
-import {
-    accounts,
-    appMeta,
-    budgets,
-    categories,
-    installmentPlans,
-    installments,
-    outsideMoves,
-    outsidePayments,
-    mainBudget,
-    outbox,
-    savingsGoals,
-    tags,
-    transactionAttachments,
-    transactionPhotos,
-    transactionSplits,
-    transactions,
-    transactionTags,
-    transfers,
-} from "@/db/schema";
+import { appMeta, outbox } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
 
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
-import type { BoolSettingKey, NumberSettingKey } from "./settings-core";
-
-export const SYNCED_TABLES = [
-    "categories",
-    "transactions",
-    "budgets",
-    "mainBudget",
-    "savingsGoals",
-    "tags",
-    "transactionTags",
-    "transactionPhotos",
-    "transactionSplits",
-    "accounts",
-    "transfers",
-    "installmentPlans",
-    "installments",
-    "outsidePayments",
-    "outsideMoves",
-    "transactionAttachments",
-    "appMeta",
-] as const;
-
-/**
- * Allow-list of account-level `appMeta` keys, so a new key stays device-local by default. Mirrored in the
- * `appMeta` triggers' `WHEN` clause; `outbox-triggers.test.ts` fails if the two disagree.
- */
-export const SYNCED_META_KEYS = [
-    META_KEYS.currency,
-    META_KEYS.currencyChosen,
-    "showCents",
-    "incomeTracking",
-    "showUpcoming",
-    "showUpcomingSoon",
-    "logViewLineGraph",
-    "animatedCharts",
-    "categorySuggestions",
-    "aiEnrichment",
-    "groundedLookup",
-    "swapTimeLabel",
-    "confetti",
-    "budgetViewStyle",
-    "use24HourClock",
-    "firstWeekday",
-    "firstDayOfMonth",
-    "haptics",
-    "logInsightsTimeFrame",
-    "logInsightsType",
-    "insightsTimeFrame",
-    "insightsMeasure",
-    "accentColor",
-    META_KEYS.timeZone,
-    // Not synced: `colorScheme` and `numberEntryType` suit each device; `biometricLock`, `notification*`, `sync*`,
-    // `ledgerAdoption`, `firstLaunch`, `onboardingComplete` and `recurrenceRepaired` describe this install.
-] as const satisfies readonly (BoolSettingKey | NumberSettingKey | (typeof META_KEYS)[keyof typeof META_KEYS])[];
+import { SYNCED_SPECS, SYNCED_TABLES } from "./sync-tables";
 
 /** 999 bound variables per statement, three columns per queue entry. */
 const ENQUEUE_CHUNK = 300;
@@ -212,30 +140,10 @@ export const enqueueAllForSync = Effect.fn("SyncOutbox.enqueueAllForSync")(funct
         }
     });
 
-    yield* collect("categories", () => db.select({ localId: categories.id }).from(categories));
-    yield* collect("transactions", () => db.select({ localId: transactions.id }).from(transactions));
-    yield* collect("budgets", () => db.select({ localId: budgets.id }).from(budgets));
-    yield* collect("mainBudget", () => db.select({ localId: mainBudget.id }).from(mainBudget));
-    yield* collect("savingsGoals", () => db.select({ localId: savingsGoals.id }).from(savingsGoals));
-    yield* collect("tags", () => db.select({ localId: tags.id }).from(tags));
-    yield* collect("transactionTags", () => db.select({ localId: transactionTags.id }).from(transactionTags));
-    yield* collect("transactionPhotos", () => db.select({ localId: transactionPhotos.id }).from(transactionPhotos));
-    yield* collect("transactionSplits", () => db.select({ localId: transactionSplits.id }).from(transactionSplits));
-    yield* collect("accounts", () => db.select({ localId: accounts.id }).from(accounts));
-    yield* collect("transfers", () => db.select({ localId: transfers.id }).from(transfers));
-    yield* collect("installmentPlans", () => db.select({ localId: installmentPlans.id }).from(installmentPlans));
-    yield* collect("installments", () => db.select({ localId: installments.id }).from(installments));
-    yield* collect("outsidePayments", () => db.select({ localId: outsidePayments.id }).from(outsidePayments));
-    yield* collect("outsideMoves", () => db.select({ localId: outsideMoves.id }).from(outsideMoves));
-    yield* collect("transactionAttachments", () =>
-        db.select({ localId: transactionAttachments.id }).from(transactionAttachments)
-    );
-    yield* collect("appMeta", () =>
-        db
-            .select({ localId: appMeta.key })
-            .from(appMeta)
-            .where(inArray(appMeta.key, [...SYNCED_META_KEYS]))
-    );
+    for (const table of SYNCED_TABLES) {
+        const { id, scope, table: synced } = SYNCED_SPECS[table];
+        yield* collect(table, () => db.select({ localId: id }).from(synced).where(scope));
+    }
 
     yield* transaction(
         db,
@@ -271,21 +179,14 @@ export const resetSyncForAccountSwitch = Effect.fn("SyncOutbox.resetSyncForAccou
         yield* transaction(
             db,
             Effect.gen(function* write() {
-                yield* query("reset", () =>
-                    db.update(transactions).set({ imageKey: null }).where(isNotNull(transactions.imageUri))
-                );
-                yield* query("reset", () =>
-                    db.update(accounts).set({ imageKey: null }).where(isNotNull(accounts.imageUri))
-                );
-                yield* query("reset", () =>
-                    db.update(transactionPhotos).set({ imageKey: null }).where(isNotNull(transactionPhotos.imageUri))
-                );
-                yield* query("reset", () =>
-                    db
-                        .update(transactionAttachments)
-                        .set({ imageKey: null })
-                        .where(isNotNull(transactionAttachments.imageUri))
-                );
+                for (const table of SYNCED_TABLES) {
+                    const { photos } = SYNCED_SPECS[table];
+                    if (photos) {
+                        yield* query("reset", () =>
+                            db.update(photos.table).set({ imageKey: null }).where(isNotNull(photos.imageUri))
+                        );
+                    }
+                }
                 yield* query("reset", () => db.delete(outbox));
                 yield* query("reset", () =>
                     db

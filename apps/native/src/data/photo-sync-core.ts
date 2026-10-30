@@ -6,7 +6,8 @@ import type { CloudError } from "@/lib/cloud-error";
 
 import type { SpendDb } from "./budget-spent";
 import { PHOTO_TABLES, photoFileName, photoUriFor } from "./photo-store-core";
-import type { PhotoFiles, PhotoTable } from "./photo-store-core";
+import type { PhotoFiles } from "./photo-store-core";
+import type { PhotoTable } from "./sync-tables";
 
 // Bytes land BEFORE the key is recorded: a key naming an object never PUT fails on every device forever, while bytes
 // with no key are reused next pass. The key lands BEFORE the local path, which is device-local and derived from it.

@@ -12,9 +12,9 @@ import type { Watch } from "@/lib/app-events";
 import { watchSyncWatermark } from "@/lib/convex";
 
 import { subscribeToTableChanges } from "./database-changes";
-import { SYNCED_TABLES } from "./sync-outbox-core";
 import { SyncStore } from "./sync-store";
 import type { SyncError } from "./sync-store";
+import { SYNCED_TABLES } from "./sync-tables";
 
 const SYNC_DEBOUNCE = Duration.seconds(2);
 

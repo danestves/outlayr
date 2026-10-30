@@ -22,10 +22,6 @@ export const PHOTO_QUOTA_BYTES = 2 * 1024 * 1024 * 1024;
 // A retry reuses its key, so a device crashing repeatedly on one photo occupies one slot.
 export const UNCONFIRMED_UPLOAD_LIMIT = 50;
 
-// Must match apps/native/src/data/photo-store-core.ts: a table left out reads as unreferenced and its bytes are
-// freed while a row still points at them.
-export const IMAGE_KEY_TABLES = ["transactions", "accounts", "transactionPhotos", "transactionAttachments"] as const;
-
 export class NotAPhotoName extends Schema.TaggedError<NotAPhotoName>()("NotAPhotoName", { name: Schema.String }) {
     override get message(): string {
         return `Not a photo file name: ${this.name}`;

@@ -13,11 +13,10 @@ import {
     transactionTags,
 } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
-import { ARCHIVE_TABLES, parseArchive, serializeArchive } from "@/domain/archive";
+import { parseArchive, serializeArchive } from "@/domain/archive";
 
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
 import { buildArchive, restoreArchive } from "./archive-core";
-import { SYNCED_TABLES } from "./sync-outbox-core";
 
 const CATEGORY = {
     id: "c1",
@@ -77,10 +76,6 @@ describe("archiving a ledger", () => {
         expect(account.initialBalanceDate.getTime()).toBe(1_700_000_000_000);
         const [row] = await fresh.select().from(transactions);
         expect(row.accountId).toBe("a1");
-    });
-
-    it("carries every table the account replicates", () => {
-        expect([...ARCHIVE_TABLES].sort()).toStrictEqual([...SYNCED_TABLES].sort());
     });
 
     it("round-trips goals, tags, splits and photos with the entry they hang off", async () => {
