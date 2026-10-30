@@ -59,8 +59,9 @@ import { LogFilterChip } from "./components/log-filter-chip";
 import type { SparklineData } from "./components/log-insights";
 import { LogInsights } from "./components/log-insights";
 import { LogNoResults } from "./components/log-no-results";
+import { LogShelf } from "./components/log-shelf";
 import { LogToolbar } from "./components/log-toolbar";
-import { LogUpcoming } from "./components/log-upcoming";
+import { UpcomingList } from "./components/log-upcoming";
 import { SwipeableTransactionRow } from "./components/swipeable-transaction-row";
 import { logEntriesEqual } from "./entries-equal";
 import { filterScopeLabel } from "./labels";
@@ -236,7 +237,6 @@ export function Log() {
     const upcomingRows = showUpcomingSection
         ? upcoming.rows.filter((row) => !goesWithPendingDelete(row, pendingId))
         : [];
-    const upcomingSchedules = upcoming.schedules.filter((row) => row.id !== pendingId);
     const today = startOfDay(new Date(nowMs)).getTime();
     const view = { ...cardOptions, language };
 
@@ -383,19 +383,30 @@ export function Log() {
                                 displayCurrency={currency}
                             />
                         )}
-                        {filter === "all" ? <AccountsBlock {...accountsProps} /> : null}
+                        {filter === "all" ? (
+                            <LogShelf
+                                upcoming={upcomingRows}
+                                accounts={accountRows}
+                                overview={accountsOverview}
+                                debts={debts}
+                                currency={currency}
+                                rates={rates}
+                                showCents={showCents}
+                                nowMs={nowMs}
+                                onOpenUpcoming={() => router.push("/settings/upcoming")}
+                                onOpenAccounts={() => router.push("/accounts")}
+                                onOpenDebts={() => router.push("/accounts")}
+                            />
+                        ) : null}
                         {filter === "all" && waiting > 0 ? (
                             <LogAutologPaused onPress={() => router.push(paywallHref("autolog"))} waiting={waiting} />
                         ) : null}
-                        {showUpcomingSection ? (
-                            <LogUpcoming
+                        {filter === "upcoming" ? (
+                            <UpcomingList
                                 transactions={upcomingRows}
-                                schedules={upcomingSchedules}
                                 currency={currency}
                                 rates={rates}
-                                expanded={filter === "upcoming"}
                                 onPress={openRow}
-                                onOpenAll={() => router.push("/settings/upcoming")}
                                 menuItems={(transaction) => rowMenu(transaction, true)}
                                 nowMs={nowMs}
                             />

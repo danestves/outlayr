@@ -90,6 +90,13 @@ export function formatDueDay(date: Date, from: Date, language: Language = runtim
     return `${name.charAt(0).toUpperCase()}${name.slice(1)}`;
 }
 
+export function formatDueMark(date: Date, from: Date, language: Language = runtimeLanguage()): string {
+    const days = daysBetween(startOfDay(from).getTime(), startOfDay(date).getTime());
+    return days < 7
+        ? dateName(`dates.weekday.${date.getDay()}`, language).toUpperCase()
+        : formatUpcomingDate(date, language);
+}
+
 export function formatWeekdayDay(date: Date, language: Language = runtimeLanguage()): string {
     return `${dateName(`dates.weekday.${date.getDay()}`, language)} ${date.getDate()}`;
 }
