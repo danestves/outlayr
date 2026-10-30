@@ -263,7 +263,7 @@ The [table above](#data-at-a-glance) lists how long each kind of data is kept. A
 - Merchant suggestion requests aren’t kept once answered. Ones queued in the background wait on our server until your device collects the answer.
 - Usage counters that enforce limits on scans, voice entries, and suggestions hold counts only, keyed to your account ID, and are deleted with your account.
 - Items in the shared merchant list aren’t linked to anyone. They’re refreshed after 30 or 90 days.
-- Analytics events linked to your account are deleted with it. Events from an install that never signed in carry only a random install ID and are kept under PostHog’s retention policy. Records of AI requests sent while Share analytics was off carry only a random ID and are kept the same way.
+- Analytics events linked to your account are deleted with it. Events from an install that never signed in carry only a random install ID and are kept under PostHog’s retention policy. Records of AI requests sent while Share analytics was off carry a random ID instead of your account ID, plus the conversation ID for voice entry, and are kept the same way.
 - Website events carry a random browser ID, or a code that changes daily if you declined cookies, and are kept under PostHog’s retention policy.
 - Our providers, including Anthropic, ElevenLabs, Apple, Google, and Expo, keep the data they receive under their own retention policies.
 

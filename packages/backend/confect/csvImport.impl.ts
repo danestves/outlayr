@@ -83,6 +83,7 @@ const csvImport = FunctionImpl.make(
         }
         // Before the model call, so a provider failure still learns the unknown merchants.
         yield* scheduleImportGrounded(ctx, identity.tokenIdentifier, {
+            distinctId: args.shareAnalytics === true ? identity.subject : undefined,
             groundedLookup: args.groundedLookup === true,
             labels: remaining,
             regionCode: sanitizeRegionCode(args.regionCode),

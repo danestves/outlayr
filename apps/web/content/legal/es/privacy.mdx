@@ -263,7 +263,7 @@ La [tabla de arriba](#datos-de-un-vistazo) indica cuánto tiempo se conserva cad
 - Las solicitudes de sugerencias de comercios no se conservan una vez respondidas. Las que quedan en cola en segundo plano esperan en nuestro servidor hasta que tu dispositivo recoja la respuesta.
 - Los contadores de uso que aplican los límites de escaneos, entradas por voz y sugerencias guardan solo cantidades, asociadas a tu ID de cuenta, y se eliminan con tu cuenta.
 - Los elementos de la lista compartida de comercios no están vinculados a nadie. Se actualizan después de 30 o 90 días.
-- Los eventos de analíticas vinculados a tu cuenta se eliminan con ella. Los eventos de una instalación que nunca inició sesión llevan solo un ID de instalación aleatorio y se conservan según la política de conservación de PostHog. Los registros de solicitudes de IA enviados con Compartir analíticas desactivado llevan solo un ID aleatorio y se conservan de la misma forma.
+- Los eventos de analíticas vinculados a tu cuenta se eliminan con ella. Los eventos de una instalación que nunca inició sesión llevan solo un ID de instalación aleatorio y se conservan según la política de conservación de PostHog. Los registros de solicitudes de IA enviados con Compartir analíticas desactivado llevan un ID aleatorio en lugar de tu ID de cuenta, más el ID de la conversación en la entrada por voz, y se conservan de la misma forma.
 - Los eventos del sitio web llevan un ID aleatorio del navegador, o un código que cambia cada día si rechazaste las cookies, y se conservan según la política de conservación de PostHog.
 - Nuestros proveedores, incluidos Anthropic, ElevenLabs, Apple, Google y Expo, conservan los datos que reciben según sus propias políticas de conservación.
 

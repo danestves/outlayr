@@ -100,6 +100,7 @@ export const classify = Effect.fn("CsvImport.classify")(
 export const GROUNDED_IMPORT_MAX = 10;
 
 export interface ImportGroundedArgs {
+    distinctId?: string;
     groundedLookup: boolean;
     labels: readonly string[];
     regionCode?: string;
@@ -134,6 +135,7 @@ export const scheduleImportGrounded = Effect.fn("CsvImport.scheduleImportGrounde
         // maybeScheduleGrounded spends one token of the shared groundedPerUser rate limit per call; running them in
         // parallel races that counter and admits a different number of labels
         const ok = yield* maybeScheduleGrounded(ctx, tokenIdentifier, {
+            distinctId: args.distinctId,
             groundedLookup: true,
             income: false,
             name: label,
