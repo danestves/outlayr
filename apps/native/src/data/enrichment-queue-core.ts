@@ -1,3 +1,4 @@
+import type { EnrichmentResult } from "@outlayr/backend/confect/lib/enrichmentResult";
 import { merchantKey } from "@outlayr/money/merchant-key";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
@@ -14,15 +15,7 @@ import { ensureCategoryByName, presetForName } from "./categories-core";
 import { rememberMerchant } from "./merchant-book-core";
 import { tagIdsForQuery, tagsRepo } from "./tags-core";
 
-export interface EnrichmentAnswer {
-    categoryName: string | null;
-    domain: string | null;
-    emoji: string | null;
-    isNewCategory: boolean;
-    merchantName: string | null;
-    parentCategoryName: string | null;
-    tags: readonly string[];
-}
+export type EnrichmentAnswer = typeof EnrichmentResult.Type;
 
 export interface AnsweredJob {
     localId: string;
@@ -241,11 +234,7 @@ export const applyEnrichmentAnswer = Effect.fn("EnrichmentQueue.applyEnrichmentA
     if (answer == null || before == null) {
         return;
     }
-    yield* rememberMerchant(db, job.name, before.currency, {
-        ...answer,
-        emoji: answer.emoji,
-        tags: [...answer.tags],
-    });
+    yield* rememberMerchant(db, job.name, before.currency, answer);
     const renamed =
         before.note === job.name &&
         answer.merchantName != null &&

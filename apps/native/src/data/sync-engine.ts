@@ -9,7 +9,7 @@ import type { Database } from "@/db/client";
 import { isBehindWatermark } from "@/domain/sync-wakeup";
 import { listen, WatchAppState } from "@/lib/app-events";
 import type { Watch } from "@/lib/app-events";
-import { watchSyncWatermark } from "@/lib/convex";
+import { watchSyncWatermark } from "@/lib/cloud-sync";
 
 import { subscribeToTableChanges } from "./database-changes";
 import { SyncStore } from "./sync-store";

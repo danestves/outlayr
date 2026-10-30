@@ -14,7 +14,7 @@ import type { Database } from "@/db/client";
 import { adoptionActions, adoptionPlan } from "@/domain/ledger-adoption";
 import type { AdoptionActions } from "@/domain/ledger-adoption";
 import { adoptionEngine } from "@/lib/adoption-engine";
-import { photoTransport } from "@/lib/convex";
+import { photoTransport } from "@/lib/cloud-photos";
 import { appRuntime } from "@/lib/runtime";
 
 import { createRuntimeCommand } from "./atom-command";

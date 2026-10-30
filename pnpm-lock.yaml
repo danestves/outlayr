@@ -193,6 +193,9 @@ importers:
       '@noble/hashes':
         specifier: ^2.4.0
         version: 2.4.0
+      '@outlayr/backend':
+        specifier: workspace:*
+        version: link:../../packages/backend
       '@outlayr/money':
         specifier: workspace:*
         version: link:../../packages/money

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import type { InstallmentPlanDraft, InstallmentPlanRow } from "@/lib/convex";
+import type { InstallmentPlanDraft, InstallmentPlanRow } from "@/lib/cloud-ai";
 
 import { draftSchedule } from "./installment-draft";
 import { encodeInstallmentSeed, parseInstallmentSeed, scannedOrder } from "./installment-scan";

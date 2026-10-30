@@ -12,8 +12,8 @@ import { persistLogo } from "@/lib/persist-logo";
 
 import { launchAndForegrounds, listen, WatchAppState } from "./app-events";
 import type { Watch } from "./app-events";
+import { enrichmentQueueTransport, watchEnrichmentResults } from "./cloud-enrichment-queue";
 import type { CloudError } from "./cloud-error";
-import { enrichmentQueueTransport, watchEnrichmentResults } from "./convex";
 import { sendEnrichmentQueue } from "./enrichment-queue";
 import { discardLogo } from "./logo-backfill";
 import { fetchMerchantImage } from "./logo-fetch";

@@ -20,12 +20,25 @@ const LOGO = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 1, 2, 3]);
 const REMOTE: RemoteEnrichmentResult = {
     categoryName: "Groceries",
     domain: "intermarche.com",
+    emoji: null,
+    grounding: false,
     isNewCategory: false,
+    merchantName: null,
+    parentCategoryName: null,
     tags: [],
 };
 
 /** A classified name the model could not place: a real miss, unlike the all-null shape. */
-const NOTHING: RemoteEnrichmentResult = { categoryName: "Shopping", domain: null, isNewCategory: false, tags: [] };
+const NOTHING: RemoteEnrichmentResult = {
+    categoryName: "Shopping",
+    domain: null,
+    emoji: null,
+    grounding: false,
+    isNewCategory: false,
+    merchantName: null,
+    parentCategoryName: null,
+    tags: [],
+};
 
 async function seedRow(
     db: Database,
@@ -383,7 +396,16 @@ describe("attachMissingLogos", () => {
 
     it("neither caches an empty answer for the form nor believes it for long", async () => {
         await seedRow(db, "a", "Intermarche");
-        const empty: RemoteEnrichmentResult = { categoryName: null, domain: null, isNewCategory: false, tags: [] };
+        const empty: RemoteEnrichmentResult = {
+            categoryName: null,
+            domain: null,
+            emoji: null,
+            grounding: false,
+            isNewCategory: false,
+            merchantName: null,
+            parentCategoryName: null,
+            tags: [],
+        };
         const enrich = vi.fn<NonNullable<LogoBackfillDeps["enrich"]>>(() =>
             Effect.tryPromise(async () => ({
                 groundedLookup: true,

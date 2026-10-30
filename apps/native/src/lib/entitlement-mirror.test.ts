@@ -4,11 +4,11 @@ import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { CloudError } from "./cloud-error";
 import { mirrorEntitlement } from "./entitlement-mirror";
 
-const mockCloudAction = vi.fn<(path: string, args: Record<string, never>) => Effect.Effect<boolean, CloudError>>();
+const mockCloudAction = vi.fn<(action: unknown, args: Record<string, never>) => Effect.Effect<boolean, CloudError>>();
 
 let mockConvex: object | null = {};
 vi.mock("@/lib/convex", () => ({
-    cloudAction: (path: string, args: Record<string, never>) => mockCloudAction(path, args),
+    cloudAction: (action: unknown, args: Record<string, never>) => mockCloudAction(action, args),
     get convex() {
         return mockConvex;
     },

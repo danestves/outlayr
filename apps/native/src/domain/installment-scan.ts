@@ -4,7 +4,7 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 
-import type { InstallmentPlanDraft } from "@/lib/convex";
+import type { InstallmentPlanDraft } from "@/lib/cloud-ai";
 
 import { draftSchedule, EVERY_OPTIONS, EVERY_ORDER, MAX_INSTALLMENT_COUNT } from "./installment-draft";
 import type { EveryOption, InstallmentDraft } from "./installment-draft";

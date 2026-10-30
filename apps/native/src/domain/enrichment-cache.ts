@@ -1,13 +1,6 @@
-export interface RemoteEnrichmentResult {
-    readonly categoryName: string | null;
-    readonly domain: string | null;
-    readonly emoji?: string | null;
-    /** A grounded lookup was scheduled server-side; do not cache this as final. */
-    readonly grounding?: boolean;
-    readonly isNewCategory: boolean;
-    readonly parentCategoryName?: string | null;
-    readonly tags: readonly string[];
-}
+import type { Suggestion } from "@outlayr/backend/confect/enrichment.spec";
+
+export type RemoteEnrichmentResult = Suggestion;
 
 export type EnrichmentCacheLookup = { hit: true; value: RemoteEnrichmentResult | null } | { hit: false };
 

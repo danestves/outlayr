@@ -28,15 +28,15 @@ import {
 import type { VoiceTurn, VoiceTurnMessage } from "@/domain/voice-entry";
 import { trackCapturesWall } from "@/hooks/use-usage-limits";
 import { duringHandoff } from "@/lib/app-handoff";
-import { VOICE_TURNS_QUERY, voiceThreadTransport } from "@/lib/convex";
+import { VOICE_TURNS_QUERY, voiceThreadTransport } from "@/lib/cloud-ai";
 import type {
+    SpeakRefusal,
     SpeakRequest,
-    SpeakStatus,
-    StartThreadResult,
+    ThreadRefusal,
     VoiceDraft,
     VoiceQuote,
     VoiceThreadTransport,
-} from "@/lib/convex";
+} from "@/lib/cloud-ai";
 import { useLatest } from "@/lib/use-latest";
 import { timedCaptureCommand, VOICE_SPEAK_TIMEOUT } from "@/state/capture-commands";
 import { fromCommand, voidFlowCommand } from "@/state/entry-commands";
@@ -110,15 +110,21 @@ export interface UseVoiceEntryResult<Context> {
 
 const FAILURE_FOR = {
     invalid: "provider",
+    invalidResponse: "provider",
     notConfigured: "notConfigured",
     notEntitled: "notEntitled",
-    ok: "provider",
     providerError: "provider",
     quotaExceeded: "quotaExceeded",
     rateLimited: "rateLimited",
     unauthenticated: "unauthenticated",
     unclear: "silent",
-} as const satisfies Record<SpeakStatus, VoiceFailure>;
+} as const satisfies Record<SpeakRefusal, VoiceFailure>;
+
+const THREAD_FAILURE_FOR = {
+    invalidResponse: "provider",
+    rateLimited: "rateLimited",
+    unauthenticated: "unauthenticated",
+} as const satisfies Record<ThreadRefusal, VoiceFailure>;
 
 const readAndDiscard = Effect.fn("VoiceEntry.readAndDiscard")(function* readAndDiscard(uri: string) {
     const file = new File(uri);
@@ -307,24 +313,21 @@ const openThread = Effect.fn("VoiceEntry.openThread")(function* openThread<Conte
         }
         return null;
     }
-    const opened: StartThreadResult = started.value;
+    const opened = started.value;
     if (disposedRef.current) {
-        if (opened.threadId !== null) {
+        if (opened.ok) {
             yield* api.end(opened.threadId).pipe(Effect.catchCause(() => Effect.void));
         }
         return null;
     }
-    threadRef.current = opened.threadId;
-    setThreadId(opened.threadId);
-    if (opened.threadId === null) {
+    const threadId = opened.ok ? opened.threadId : null;
+    threadRef.current = threadId;
+    setThreadId(threadId);
+    if (!opened.ok) {
         abandonTake(ports);
-        setPhase({
-            kind: "failed",
-            reason: opened.status === "rateLimited" ? "rateLimited" : "unauthenticated",
-            transcript: null,
-        });
+        setPhase({ kind: "failed", reason: THREAD_FAILURE_FOR[opened.reason], transcript: null });
     }
-    return opened.threadId;
+    return threadId;
 });
 
 const sendClip: <Context>(ports: VoicePorts<Context>, clip: ArrayBuffer, id: string) => Effect.Effect<void> = Effect.fn(
@@ -353,14 +356,11 @@ const sendClip: <Context>(ports: VoicePorts<Context>, clip: ArrayBuffer, id: str
         setPhase({ kind: "failed", reason: "timeout", transcript: null });
         return;
     }
-    if (settled.status === "ok") {
-        const { order } = settled;
-        if (order !== null) {
-            setPhase({ context: sentContext, kind: "thinking", order });
-            return;
-        }
+    if (settled.ok) {
+        setPhase({ context: sentContext, kind: "thinking", order: settled.order });
+        return;
     }
-    if (settled.status === "invalid") {
+    if (settled.reason === "invalid") {
         const resent = resentRef.current === clip;
         if (!resent) {
             // The server sweeps threads idle for an hour: resend this clip once on a fresh thread.
@@ -374,7 +374,7 @@ const sendClip: <Context>(ports: VoicePorts<Context>, clip: ArrayBuffer, id: str
             return;
         }
     }
-    const reason = FAILURE_FOR[settled.status];
+    const reason = FAILURE_FOR[settled.reason];
     trackCapturesWall(reason);
     setPhase({ kind: "failed", reason, transcript: settled.transcript });
 });

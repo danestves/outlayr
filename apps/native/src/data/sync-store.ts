@@ -4,7 +4,7 @@ import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
-import { syncTransport } from "@/lib/convex";
+import { syncTransport } from "@/lib/cloud-sync";
 
 import { runSync } from "./sync-engine-core";
 import type { SyncCoreError } from "./sync-engine-core";

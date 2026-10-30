@@ -1,7 +1,6 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import Image01Icon from "@hugeicons-pro/core-stroke-rounded/Image01Icon";
 import { toAccountKind } from "@outlayr/money/account-kind";
-import * as Effect from "effect/Effect";
 import { useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
 import { useRef, useState } from "react";
@@ -29,8 +28,8 @@ import { isLimitRefusal, useLimitNotice } from "@/hooks/use-usage-limits";
 import type { TranslatableKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import { useAuthSession } from "@/lib/auth-session";
-import { installmentScanTransport } from "@/lib/convex";
-import type { InstallmentPlanDraft } from "@/lib/convex";
+import { installmentScanTransport } from "@/lib/cloud-ai";
+import type { InstallmentPlanDraft } from "@/lib/cloud-ai";
 import {
     BottomBar,
     FAILURE_KEY,
@@ -96,7 +95,7 @@ function ScanFlow({ account, photo }: { account: Account; photo: ScanPhoto | nul
                 language: localeTag,
                 regionCode,
                 today,
-            }).pipe(Effect.map(({ plan, status }) => ({ draft: plan, status }))),
+            }),
     });
     const limit = useLimitNotice(
         "receiptScan",

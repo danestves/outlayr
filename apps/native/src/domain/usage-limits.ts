@@ -1,20 +1,9 @@
-export interface LimitBucket {
-    capacity: number;
-    kind: "token bucket" | "fixed window";
-    period: number;
-    rate: number;
-    ts: number;
-    value: number;
-}
+import type { api } from "@outlayr/backend/convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
 
-export interface UsageLimits {
-    captures: LimitBucket;
-    csvImport: LimitBucket | null;
-    enrichment: LimitBucket;
-    pro: boolean;
-    receiptScan: LimitBucket;
-    voiceEntry: LimitBucket;
-}
+export type UsageLimits = NonNullable<FunctionReturnType<typeof api.limits.mine>>;
+
+export type LimitBucket = UsageLimits["captures"];
 
 export interface LimitProjection {
     capacity: number;

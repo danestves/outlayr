@@ -28,7 +28,7 @@ const decodeRateWireRows = Schema.decodeUnknownEffect(Schema.Array(RateWireRow))
 
 export interface PullRatesPage {
     nextCursor?: number | null;
-    rows: RateWireRow[];
+    rows: readonly RateWireRow[];
     windowStart: string;
 }
 

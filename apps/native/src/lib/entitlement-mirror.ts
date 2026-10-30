@@ -1,3 +1,4 @@
+import { api } from "@outlayr/backend/convex/_generated/api";
 import * as Effect from "effect/Effect";
 
 import { cloudAction, convex } from "@/lib/convex";
@@ -10,7 +11,7 @@ export const mirrorEntitlement = Effect.fn("EntitlementMirror.mirror")(function*
     if (convex === null) {
         return true;
     }
-    return yield* cloudAction<Record<string, never>, boolean>("revenuecat:syncFromStore", {}).pipe(
+    return yield* cloudAction(api.revenuecat.syncFromStore, {}).pipe(
         Effect.catchTags({ CloudError: () => Effect.succeed(false) })
     );
 });

@@ -15,8 +15,9 @@ import type { ResolutionOutcome, UnavailableReason } from "@/domain/import-flow"
 import type { MappingDraft } from "@/domain/import-mapping";
 import { cachedLabelEnrichment } from "@/domain/import-review-identity";
 import { resolveMerchant } from "@/domain/merchant-resolver";
-import { csvImportTransport } from "@/lib/convex";
-import type { CategoryBranch, CsvImportFn, CsvImportStatus, LabelSuggestion } from "@/lib/convex";
+import { csvImportTransport } from "@/lib/cloud-ai";
+import type { CsvImportFn, CsvImportRefusal, LabelSuggestion } from "@/lib/cloud-ai";
+import type { CategoryBranch } from "@/lib/convex";
 import { importDraftStore } from "@/lib/import-draft-store";
 import type { ImportDraftStore } from "@/lib/import-draft-store";
 
@@ -59,7 +60,7 @@ const REASON_BY_STATUS = {
     providerError: "providerError",
     rateLimited: "rateLimited",
     unauthenticated: "unauthenticated",
-} satisfies Record<Exclude<CsvImportStatus, "ok">, UnavailableReason>;
+} satisfies Record<CsvImportRefusal, UnavailableReason>;
 
 function settleWith(
     links: ReadonlyMap<string, string>,
@@ -212,7 +213,11 @@ function linkSuggestions(
             setCachedEnrichment(merchantKey(suggestion.label), {
                 categoryName: suggestion.categoryName,
                 domain: suggestion.domain,
+                emoji: null,
+                grounding: false,
                 isNewCategory: false,
+                merchantName: null,
+                parentCategoryName: null,
                 tags: [],
             });
         }
@@ -297,12 +302,12 @@ const resolveImport = Effect.fn("CsvImport.resolve")(function* resolveImport(
         );
     }
 
-    const { status, suggestions } = answer.success;
-    if (status !== "ok") {
-        return settleWith(resolvedLinks, fromModelSet, "unavailable", REASON_BY_STATUS[status]);
+    const reply = answer.success;
+    if (!reply.ok) {
+        return settleWith(resolvedLinks, fromModelSet, "unavailable", REASON_BY_STATUS[reply.reason]);
     }
 
-    linkSuggestions(suggestions ?? [], request.categoryIdByKey, rawByScrubbed, resolvedLinks, fromModelSet);
+    linkSuggestions(reply.suggestions, request.categoryIdByKey, rawByScrubbed, resolvedLinks, fromModelSet);
 
     return settleWith(resolvedLinks, fromModelSet, "applied", null);
 });
