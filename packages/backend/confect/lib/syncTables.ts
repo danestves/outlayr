@@ -253,6 +253,16 @@ export const FIELDS_BY_TABLE = {
     transfers: transferFields,
 } as const;
 
+type ImageKeyTable = {
+    [Table in SyncedTable]: "imageKey" extends keyof (typeof FIELDS_BY_TABLE)[Table] ? Table : never;
+}[SyncedTable];
+
+// Must match the photo tables in apps/native/src/data/sync-tables.ts: a table left out reads as unreferenced and its
+// bytes are freed while a row still points at them.
+export const IMAGE_KEY_TABLES = SYNCED_TABLES.filter(
+    (table): table is ImageKeyTable => "imageKey" in FIELDS_BY_TABLE[table]
+);
+
 interface Versioned {
     deletedAt: number | null;
     deviceId: string;

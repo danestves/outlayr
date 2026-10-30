@@ -20,8 +20,8 @@ import {
 import { requireUserId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
 import { isPhotoName, ownsPhotoKey, photoKeyFor, photoOwnerFromKey } from "./lib/photoKeys";
+import { IMAGE_KEY_TABLES } from "./lib/syncTables";
 import {
-    IMAGE_KEY_TABLES,
     NotAPhotoName,
     PHOTO_QUOTA_BYTES,
     PHOTO_URL_BATCH_LIMIT,
