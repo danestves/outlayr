@@ -35,6 +35,11 @@ describe("amountHeroFontSize", () => {
         expect(amountHeroFontSize(Number.MAX_SAFE_INTEGER, 2, IPHONE_CONTENT_WIDTH)).toBe(AMOUNT_HERO_MIN_SIZE);
     });
 
+    it("shrinks below the hero minimum to a lower floor in a narrow cell", () => {
+        expect(amountHeroFontSize(12_345.67, 2, 147, 14)).toBeLessThan(AMOUNT_HERO_MIN_SIZE);
+        expect(amountHeroFontSize(Number.MAX_SAFE_INTEGER, 2, 147, 14)).toBe(14);
+    });
+
     it("falls back to the floor before the width is known", () => {
         expect(amountHeroFontSize(4500, 2, 0)).toBe(AMOUNT_HERO_MIN_SIZE);
     });

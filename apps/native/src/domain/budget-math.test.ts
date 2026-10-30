@@ -14,7 +14,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 import { EN } from "@/i18n/catalog";
 
-import { budgetDetailPace, budgetPeriodPhrase, budgetRail, budgetWindowLabel } from "./budget-math";
+import { budgetDetailPace, budgetPeriodPhrase, budgetWindowLabel } from "./budget-math";
 
 const d = (y: number, m: number, day: number, h = 0, min = 0): Date => new Date(y, m - 1, day, h, min, 0, 0);
 
@@ -101,31 +101,6 @@ describe("advanceBudgetWindow", () => {
         const start = d(2025, 1, 1);
         advanceBudgetWindow(start, BUDGET_TYPE.day, d(2025, 1, 10));
         expect(start).toStrictEqual(d(2025, 1, 1));
-    });
-});
-
-describe("budgetRail", () => {
-    it("fills the leftover share of the limit while under budget", () => {
-        const rail = budgetRail(192.5, 400);
-        expect(rail.over).toBe(false);
-        expect(rail.fill).toBe(0.51875);
-    });
-
-    it("empties the track at exactly the limit without calling it over", () => {
-        expect(budgetRail(400, 400)).toStrictEqual({ fill: 0, over: false });
-    });
-
-    it("reports the limit's share of the spending when over", () => {
-        expect(budgetRail(1000, 250).fill).toBe(0.25);
-    });
-
-    it("clamps a refund past zero spend to a full track", () => {
-        expect(budgetRail(-50, 400)).toStrictEqual({ fill: 1, over: false });
-    });
-
-    it("draws nothing for a zero limit rather than dividing to NaN", () => {
-        expect(budgetRail(0, 0)).toStrictEqual({ fill: 0, over: false });
-        expect(budgetRail(100, 0)).toStrictEqual({ fill: 0, over: true });
     });
 });
 
@@ -248,30 +223,17 @@ describe("time left across a spring-forward", () => {
 
 describe("budgetDetailPace", () => {
     const budget = {
-        amount: 300,
         leftover: 200,
         overBudget: false,
-        type: BUDGET_TYPE.month,
         window: { end: d(2025, 4, 1), start: d(2025, 3, 1) },
     };
 
-    it("reports a marker and a daily rate for a live window", () => {
-        // 16 of 31 days gone leaves 15/31 of the window and $200 over 16 days.
-        expect(budgetDetailPace(budget, d(2025, 3, 16), 0)).toStrictEqual({
-            behind: false,
-            closed: false,
-            paceRemaining: 15 / 31,
-            perDay: 12.5,
-        });
+    it("reports a daily rate for a live window", () => {
+        expect(budgetDetailPace(budget, d(2025, 3, 16), 0)).toStrictEqual({ closed: false, perDay: 12.5 });
     });
 
-    it("withholds both on a closed window, where a rate would say nothing", () => {
-        expect(budgetDetailPace(budget, d(2025, 3, 16), -1)).toStrictEqual({
-            behind: false,
-            closed: true,
-            paceRemaining: null,
-            perDay: null,
-        });
+    it("withholds the rate on a closed window, where it would say nothing", () => {
+        expect(budgetDetailPace(budget, d(2025, 3, 16), -1)).toStrictEqual({ closed: true, perDay: null });
     });
 
     it("withholds the daily rate once the budget is over", () => {

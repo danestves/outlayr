@@ -70,23 +70,11 @@ const budgets = {
             fr: "Aucune dépense sur cette période pour l'instant.",
             pt: "Ainda não há gastos neste período.",
         }),
-        "budgets.detail.leftEachDay": t({
-            en: "{amount} left each day",
-            es: "{amount} disponible por día",
-            fr: "Reste {amount} par jour",
-            pt: "{amount} disponível por dia",
-        }),
         "budgets.detail.leftPeriod": t({
             en: "left {period}",
             es: "disponible {period}",
             fr: "restant {period}",
             pt: "disponível {period}",
-        }),
-        "budgets.detail.limit": t({
-            en: "{amount} limit",
-            es: "límite de {amount}",
-            fr: "Limite de {amount}",
-            pt: "limite de {amount}",
         }),
         "budgets.detail.overBudget": t({
             en: "over budget",
@@ -105,12 +93,6 @@ const budgets = {
             es: "{percent}% gastado",
             fr: "{percent} % dépensé",
             pt: "{percent}% gasto",
-        }),
-        "budgets.detail.spent": t({
-            en: "{amount} spent",
-            es: "{amount} gastado",
-            fr: "Dépensé : {amount}",
-            pt: "{amount} gastos",
         }),
         "budgets.detail.transactions": t({
             en: "TRANSACTIONS",
@@ -241,6 +223,12 @@ const budgets = {
             fr: "{count} dépenses",
             pt: "{count} despesas",
         }),
+        "budgets.grid.new": t({
+            en: "New budget",
+            es: "Nuevo presupuesto",
+            fr: "Nouveau budget",
+            pt: "Novo orçamento",
+        }),
         "budgets.hero.a11yLeft": t({
             en: "{name}, {amount} left {period}",
             es: "{name}, {amount} disponible {period}",
@@ -345,6 +333,12 @@ const budgets = {
             es: "Presupuesto",
             fr: "Budget",
             pt: "Orçamento",
+        }),
+        "budgets.ofLimit": t({
+            en: "of {limit}",
+            es: "de {limit}",
+            fr: "sur {limit}",
+            pt: "de {limit}",
         }),
         "budgets.perDay": t({
             en: "{amount}/day",

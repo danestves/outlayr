@@ -37,6 +37,7 @@ import type { Database } from "@/db/client";
 import { dominantCategory } from "@/domain/budget-dominant";
 import { budgetTimeLeftLabel } from "@/domain/budget-math";
 import { blocksNewBudget, FREE_BUDGETS } from "@/domain/pro-limits";
+import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useCreateAccount, useOpenPaywall, useProCapped } from "@/hooks/use-pro-gate";
 import { useTranslation } from "@/i18n/context";
 import { budgetMenuItems } from "@/lib/budget-actions";
@@ -52,7 +53,7 @@ import { createBudgetCommand, createMainBudgetCommand, patchBudgetCommand } from
 import { useAtomAction } from "@/state/use-atom-action";
 
 import { BudgetBurndownHero } from "./components/budget-burndown-hero";
-import { BudgetCard } from "./components/budget-card";
+import { BudgetCard, NewBudgetCell } from "./components/budget-card";
 import { BudgetEmptyState } from "./components/budget-empty-state";
 import type { LimitCommit, LimitTarget } from "./components/budget-limit-body";
 import { BudgetLimitSheet } from "./components/budget-limit-sheet";
@@ -64,10 +65,8 @@ import { UnbudgetedRail } from "./components/unbudgeted-rail";
 import { useCommitLatch } from "./components/use-commit-latch";
 import { pairs } from "./pairs";
 
-const CARD_GUTTER = 12;
 const ROW_REORDER = LinearTransition.duration(420).easing(Easing.out(Easing.cubic));
 const ROW_EXIT = FadeOut.duration(200);
-const NO_BUDGETS: readonly CategoryBudgetView[] = [];
 
 export function Budgets() {
     const db = useDatabase();
@@ -78,7 +77,8 @@ export function Budgets() {
     const t = useTranslation();
     const haptics = useHaptics();
     const currency = useGlobalCurrency(db);
-    const asRows = useSettingBool("budgetViewStyle");
+    const largeText = useAccessibilityTextSize();
+    const asRows = useSettingBool("budgetViewStyle") || largeText;
     const nowMs = useNow();
     const allGoals = useSavingsGoals(db, nowMs);
     const accounts = useAccounts(db);
@@ -95,7 +95,7 @@ export function Budgets() {
     const budgets = allBudgets.filter((budget) => budget.id !== pendingId);
     const mainBurndown = useBurndown(contributions, nowMs, main, null);
     const dominant = useDominant(db, contributions, main, nowMs);
-    const burndowns = useBurndowns(contributions, nowMs, asRows ? NO_BUDGETS : budgets);
+    const burndowns = useBurndowns(contributions, nowMs, budgets);
     const firstDayOfMonth = useSettingNumber("firstDayOfMonth");
     const firstWeekday = useSettingNumber("firstWeekday");
     const calendar = { firstDayOfMonth, firstWeekday };
@@ -272,7 +272,7 @@ export function Budgets() {
         }
     };
 
-    const cardWidth = gridWidth === null ? null : (gridWidth - CARD_GUTTER) / 2;
+    const cardWidth = gridWidth === null ? null : gridWidth / 2;
 
     const menuItems = (budget: CategoryBudgetView) =>
         budgetMenuItems({
@@ -377,6 +377,7 @@ export function Budgets() {
                                     <Animated.View exiting={ROW_EXIT} key={budget.id} layout={ROW_REORDER}>
                                         <BudgetRow
                                             budget={budget}
+                                            burndown={burndowns.get(budget.id) ?? null}
                                             contributions={contributions}
                                             currency={currency}
                                             heroTimeLeft={heroTimeLeft}
@@ -390,35 +391,37 @@ export function Budgets() {
                             </View>
                         ) : (
                             // Measured, not flexed: a context menu's self-sizing host collapses a `flex-1` card.
-                            <View className="gap-3" onLayout={(event) => setGridWidth(event.nativeEvent.layout.width)}>
-                                {pairs(ranked).map(([left, right]) => (
-                                    <View className="flex-row gap-3" key={left.id}>
-                                        <BudgetCard
-                                            budget={left}
-                                            burndown={burndowns.get(left.id) ?? null}
-                                            contributions={contributions}
-                                            currency={currency}
-                                            heroTimeLeft={heroTimeLeft}
-                                            menuItems={menuItems(left)}
-                                            nowMs={nowMs}
-                                            onPress={(id) => router.push(`/budgets/${id}`)}
-                                            width={cardWidth}
-                                        />
-                                        {right ? (
-                                            <BudgetCard
-                                                budget={right}
-                                                burndown={burndowns.get(right.id) ?? null}
-                                                contributions={contributions}
-                                                currency={currency}
-                                                heroTimeLeft={heroTimeLeft}
-                                                menuItems={menuItems(right)}
-                                                nowMs={nowMs}
-                                                onPress={(id) => router.push(`/budgets/${id}`)}
-                                                width={cardWidth}
-                                            />
-                                        ) : (
-                                            <View className="flex-1" />
-                                        )}
+                            <View onLayout={(event) => setGridWidth(event.nativeEvent.layout.width)}>
+                                {pairs([...ranked, null]).map((pair) => (
+                                    <View className="border-border flex-row border-t" key={pair[0]?.id ?? "new"}>
+                                        {pair.map((budget, index) => {
+                                            if (budget === undefined) {
+                                                return <View className="flex-1" key="empty" />;
+                                            }
+                                            if (budget === null) {
+                                                return (
+                                                    <NewBudgetCell
+                                                        key="new"
+                                                        onPress={presentCategoryPicker}
+                                                        right={index === 1}
+                                                        width={cardWidth}
+                                                    />
+                                                );
+                                            }
+                                            return (
+                                                <BudgetCard
+                                                    budget={budget}
+                                                    currency={currency}
+                                                    heroTimeLeft={heroTimeLeft}
+                                                    key={budget.id}
+                                                    menuItems={menuItems(budget)}
+                                                    nowMs={nowMs}
+                                                    onPress={(id) => router.push(`/budgets/${id}`)}
+                                                    right={index === 1}
+                                                    width={cardWidth}
+                                                />
+                                            );
+                                        })}
                                     </View>
                                 ))}
                             </View>

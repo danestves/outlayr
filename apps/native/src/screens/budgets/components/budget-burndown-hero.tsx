@@ -15,6 +15,7 @@ import { useDisplaySettings } from "@/contexts/display-settings-context";
 import type { MainBudgetView } from "@/data/budgets";
 import type { Burndown } from "@/domain/budget-burndown";
 import { budgetPeriodPhrase, budgetTimeLeftLabel, leftPerDay } from "@/domain/budget-math";
+import { burndownVerdict } from "@/domain/budget-verdict";
 import { monthAbbrev } from "@/domain/dates";
 import { formatAmount } from "@/domain/money";
 import { useLanguage, useTranslation } from "@/i18n/context";
@@ -73,8 +74,6 @@ export function BudgetBurndownHero({
     const over = balance < 0;
     const scrubLabel = scrubbed ? formatDayMonth(dayDate(budget.window.start, scrubbed.day), language) : null;
 
-    const projected = burndown?.projectedBalance ?? null;
-    const endsShort = projected != null && projected < 0;
     const balanceLabel = formatAmount(Math.abs(balance), currency, showCents, language);
     const perDay = budget.leftover < 0 ? null : leftPerDay(budget.leftover, budget.window, now);
     const measures: MeasureStripCell[] = [
@@ -187,47 +186,23 @@ export function BudgetBurndownHero({
                 </View>
             </GestureDetector>
 
-            {scrubbed || isDay ? null : (
-                <HeroVerdict burndown={burndown} currency={currency} dominant={dominant} periodEndsShort={endsShort} />
-            )}
+            {scrubbed || isDay ? null : <HeroVerdict burndown={burndown} currency={currency} dominant={dominant} />}
         </View>
     );
 }
 
-function HeroVerdict({
+export function HeroVerdict({
     burndown,
     currency,
     dominant,
-    periodEndsShort,
 }: {
     burndown: Burndown | null;
     currency: string;
     dominant?: { name: string; share: number } | null;
-    periodEndsShort: boolean;
 }) {
     const t = useTranslation();
     const { language } = useLanguage();
-    if (!burndown) {
-        return null;
-    }
-
-    let sentence: string | null = null;
-    if (burndown.runwayDate && burndown.runwayDay != null) {
-        const ranOut = formatDayMonth(burndown.runwayDate, language);
-        const early = burndown.totalDays - burndown.runwayDay;
-        sentence =
-            early > 0
-                ? t("budgets.hero.verdictRanOutEarly", {
-                      date: ranOut,
-                      days: t("budgets.days", { count: early }),
-                  })
-                : t("budgets.hero.verdictRanOutFinal", { date: ranOut });
-    } else if (periodEndsShort && burndown.projectedBalance != null) {
-        sentence = t("budgets.hero.verdictEndsShort", {
-            amount: formatAmount(Math.abs(burndown.projectedBalance), currency, false, language),
-        });
-    }
-
+    const sentence = burndown ? burndownVerdict(burndown, currency, language, t) : null;
     if (!sentence) {
         return null;
     }

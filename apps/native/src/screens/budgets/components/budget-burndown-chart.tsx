@@ -27,48 +27,42 @@ interface BudgetBurndownChartProps {
     limit: number;
     /** The scrubbed day, 1-indexed, or null when the finger lifts. */
     onScrub?: (day: number | null) => void;
-    /**
-     * Pins the axis to ±limit so a column of rows shares one unit, and drops the pan, which claims the touch on
-     * landing and would stop the row registering a tap.
-     */
     thumbnail?: boolean;
     width: number;
 }
 
 const PAD = { bottom: 10, left: 4, right: 4, top: 10 } as const;
+const THUMB_PAD = { bottom: 4, left: 4, right: 4, top: 4 } as const;
+
+type Pad = typeof PAD | typeof THUMB_PAD;
 
 interface Plot {
+    plotBottom: number;
     plotLeft: number;
     plotRight: number;
+    plotTop: number;
     span: number;
     x: (day: number) => number;
     y: (value: number) => number;
     zeroY: number;
 }
 
-function makePlot(burndown: Burndown, limit: number, width: number, height: number, domain: "auto" | "limit"): Plot {
-    const plotLeft = PAD.left;
-    const plotRight = width - PAD.right;
+function makePlot(burndown: Burndown, limit: number, width: number, height: number, pad: Pad): Plot {
+    const plotLeft = pad.left;
+    const plotRight = width - pad.right;
     const span = Math.max(1, burndown.totalDays - 1);
 
-    let rawTop: number;
-    let rawBottom: number;
-    if (domain === "limit") {
-        rawTop = Math.max(1, limit);
-        rawBottom = -rawTop;
-    } else {
-        const balances = burndown.points.map((p) => p.balance);
-        const candidates = [limit, 0, ...balances];
-        if (burndown.projectedBalance != null) {
-            candidates.push(burndown.projectedBalance);
-        }
-        rawTop = Math.max(...candidates);
-        rawBottom = Math.min(...candidates);
+    const candidates = [limit, 0, ...burndown.points.map((p) => p.balance)];
+    if (burndown.projectedBalance != null) {
+        candidates.push(burndown.projectedBalance);
     }
+    const rawTop = Math.max(...candidates);
+    const rawBottom = Math.min(...candidates);
     const range = Math.max(1, rawTop - rawBottom);
 
-    const plotTop = PAD.top;
-    const plotHeight = height - PAD.top - PAD.bottom;
+    const plotTop = pad.top;
+    const plotBottom = height - pad.bottom;
+    const plotHeight = plotBottom - plotTop;
 
     const y = (value: number) => {
         const clamped = Math.min(rawTop, Math.max(rawBottom, value));
@@ -76,8 +70,10 @@ function makePlot(burndown: Burndown, limit: number, width: number, height: numb
     };
 
     return {
+        plotBottom,
         plotLeft,
         plotRight,
+        plotTop,
         span,
         x: (day) => plotLeft + ((day - 1) / span) * (plotRight - plotLeft),
         y,
@@ -103,13 +99,13 @@ function deficitPathD(burndown: Burndown, plot: Plot, last: Burndown["points"][n
     return `M ${crossX} ${plot.zeroY} L ${crossX} ${plot.y(last.balance)} L ${plot.x(last.day)} ${plot.y(last.balance)} ${tail} Z`;
 }
 
-function scrubRule(x: number, height: number) {
+function scrubRule(x: number, plot: Plot) {
     const over = CHART_SCRUB.ruleOvershoot;
-    return `M ${x} ${PAD.top - over} L ${x} ${height - PAD.bottom + over}`;
+    return `M ${x} ${plot.plotTop - over} L ${x} ${plot.plotBottom + over}`;
 }
 
-function makeGeometry(burndown: Burndown, limit: number, width: number, height: number, domain: "auto" | "limit") {
-    const plot = makePlot(burndown, limit, width, height, domain);
+function makeGeometry(burndown: Burndown, limit: number, width: number, height: number, pad: Pad) {
+    const plot = makePlot(burndown, limit, width, height, pad);
     const last = burndown.points.at(-1);
     const actualD = actualPathD(burndown, limit, plot);
 
@@ -147,16 +143,15 @@ interface BurndownMarkerProps {
     animated: boolean;
     colors: ReturnType<typeof useColors>;
     draw: SharedValue<number>;
-    height: number;
     marker: Burndown["points"][number];
     plot: Plot;
     pointCount: number;
     scrubbing: boolean;
 }
 
-function BurndownMarker({ animated, colors, draw, height, marker, plot, pointCount, scrubbing }: BurndownMarkerProps) {
+function BurndownMarker({ animated, colors, draw, marker, plot, pointCount, scrubbing }: BurndownMarkerProps) {
     const settles = animated && !scrubbing;
-    const rule = useChartPath(scrubRule(plot.x(marker.day), height), settles, pointCount);
+    const rule = useChartPath(scrubRule(plot.x(marker.day), plot), settles, pointCount);
     const cx = useChartDraw(settles, plot.x(marker.day), plot.x(marker.day), pointCount);
     const cy = useChartDraw(settles, plot.y(marker.balance), plot.y(marker.balance), pointCount);
     return (
@@ -253,7 +248,6 @@ export function BudgetBurndownChart({
     thumbnail = false,
 }: BudgetBurndownChartProps) {
     const interactive = !thumbnail;
-    const domain = thumbnail ? "limit" : "auto";
     const colors = useColors();
     const t = useTranslation();
     const reduceMotion = useReducedMotion();
@@ -264,7 +258,7 @@ export function BudgetBurndownChart({
     const activeDay = useSharedValue(-1);
     const draw = useChartDraw(animatedCharts);
 
-    const geometry = makeGeometry(burndown, limit, width, height, domain);
+    const geometry = makeGeometry(burndown, limit, width, height, thumbnail ? THUMB_PAD : PAD);
 
     const { plot, last } = geometry;
     const pointCount = burndown.points.length;
@@ -386,7 +380,6 @@ export function BudgetBurndownChart({
                         animated={animatedCharts}
                         colors={colors}
                         draw={draw}
-                        height={height}
                         marker={marker}
                         plot={plot}
                         scrubbing={scrubbed != null}
