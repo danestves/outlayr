@@ -1,7 +1,3 @@
-/**
- * Sent with every AI request; the server refuses any other. Bump it whenever the providers in
- * `packages/backend/confect/lib/models.ts` change, with the `aiConsentV2` setting key, so the question is asked again.
- */
 export const AI_CONSENT_VERSION = 2;
 
 export const PRO_ENTITLEMENT_ID = "pro";
