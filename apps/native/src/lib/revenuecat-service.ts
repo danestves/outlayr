@@ -103,10 +103,8 @@ export interface Session {
     readonly name: string | undefined;
 }
 
-/** `pending` is bounded by the requests themselves, so a gate can hold on it without risking a hold that never ends. */
 export type Entitlement =
     | { readonly kind: "unconfigured" }
-    /** Until the first identity sync answers, so no gate reads a guess. */
     | { readonly kind: "unresolved"; readonly pending: boolean }
     | { readonly kind: "free"; readonly pending: boolean }
     | {
