@@ -122,10 +122,6 @@ interface TransactionFormShared {
 type TransactionFormProps = TransactionFormShared &
     (
         | {
-              /**
-               * May carry category and identity, unlike `TransactionSeed`: it came off a row the user already
-               * confirmed. No date or schedule, so the copy lands today as a one-off.
-               */
               copyOf?: LogAgainDraft;
               mode: "create";
               seed?: TransactionSeed;
