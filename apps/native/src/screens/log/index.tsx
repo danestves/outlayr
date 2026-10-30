@@ -254,7 +254,7 @@ export function Log() {
     // LegendList's SectionList keeps `extraData` to itself, so what rows read rides on each section.
     const listSections = sections.map((section, index) => ({
         ...section,
-        first: index === 0 && upcomingRows.length === 0,
+        first: index === 0,
         today,
         view,
     }));
@@ -393,7 +393,9 @@ export function Log() {
                                 schedules={upcomingSchedules}
                                 currency={currency}
                                 rates={rates}
+                                expanded={filter === "upcoming"}
                                 onPress={openRow}
+                                onOpenAll={() => router.push("/settings/upcoming")}
                                 menuItems={(transaction) => rowMenu(transaction, true)}
                                 nowMs={nowMs}
                             />

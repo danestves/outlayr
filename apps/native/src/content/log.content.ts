@@ -477,6 +477,19 @@ const log = {
             fr: "{name} coûte désormais {to}",
             pt: "{name} agora custa {to}",
         }),
+        "log.upcoming.more": t({
+            en: "and {count} more",
+            es: "y {count} más",
+            fr: "et {count} de plus",
+            pt: "e mais {count}",
+        }),
+        "log.upcoming.openHint": t({
+            en: "Opens every upcoming entry",
+            es: "Abre todos los próximos registros",
+            fr: "Ouvre toutes les opérations à venir",
+            pt: "Abre todos os próximos lançamentos",
+            "pt-PT": "Abre todos os próximos registos",
+        }),
         "log.upcoming.perMonth": t({
             en: "PER MONTH",
             es: "AL MES",

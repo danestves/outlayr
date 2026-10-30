@@ -781,12 +781,12 @@ const settings = {
             "pt-PT": "Nada agendado para depois de hoje.",
         }),
         "settings.upcoming.footer": t({
-            en: "Transactions dated in the future sit at the top of the Log, above today. Hiding them there never hides them here.",
-            es: "Las transacciones con fecha futura aparecen al inicio del registro, encima de hoy. Ocultarlas ahí nunca las oculta aquí.",
-            fr: "Les opérations datées dans le futur s'affichent en haut du Journal, au-dessus d'aujourd'hui. Les y masquer ne les masque jamais ici.",
-            pt: "Os lançamentos com data futura ficam no topo da aba Lançamentos, acima de hoje. Ocultá-los lá nunca os oculta aqui.",
+            en: "The next few sit at the top of the Log, above today. Hiding them there never hides them here.",
+            es: "Los próximos aparecen al inicio del registro, encima de hoy. Ocultarlos ahí nunca los oculta aquí.",
+            fr: "Les prochaines s'affichent en haut du Journal, au-dessus d'aujourd'hui. Les y masquer ne les masque jamais ici.",
+            pt: "Os próximos ficam no topo da aba Lançamentos, acima de hoje. Ocultá-los lá nunca os oculta aqui.",
             "pt-PT":
-                "Os registos com data futura ficam no topo do separador Registos, acima de hoje. Ocultá-los lá nunca os oculta aqui.",
+                "Os próximos ficam no topo do separador Registos, acima de hoje. Ocultá-los lá nunca os oculta aqui.",
         }),
         "settings.upcoming.limitToSoon": t({
             en: "Limit to 14-Day Outlook",
