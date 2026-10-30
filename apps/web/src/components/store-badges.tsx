@@ -14,6 +14,13 @@ const GOOGLE_PLAY_BADGE = {
     es: { height: 192, src: "/badges/google-play-es.png", width: 646 },
 } as const satisfies Record<Locale, { height: number; src: string; width: number }>;
 
+const PRODUCT_HUNT_URL =
+    "https://www.producthunt.com/products/outlayr?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-outlayr";
+const PRODUCT_HUNT_THEMES = [
+    { className: "light-only", theme: "light" },
+    { className: "dark-only", theme: "dark" },
+] as const;
+
 type Placement = "answer" | "closing" | "hero" | "intro" | "story";
 
 export function StoreBadges({ placement }: { placement: Placement }) {
@@ -51,6 +58,25 @@ export function StoreBadges({ placement }: { placement: Placement }) {
                     width={120}
                 />
             </a>
+            {placement === "hero" && (
+                <a
+                    className="fluid shrink-0 hover:-translate-y-0.5 active:translate-y-px"
+                    href={PRODUCT_HUNT_URL}
+                    onClick={() => capture("product_hunt_badge_clicked", { placement })}
+                >
+                    {PRODUCT_HUNT_THEMES.map(({ className, theme }) => (
+                        <img
+                            alt={badges.productHunt.value}
+                            className={`${className} h-12 w-auto`}
+                            height={54}
+                            key={theme}
+                            loading="lazy"
+                            src={`/badges/product-hunt.svg?theme=${theme}`}
+                            width={250}
+                        />
+                    ))}
+                </a>
+            )}
         </div>
     );
 }
