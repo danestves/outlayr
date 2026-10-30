@@ -55,7 +55,7 @@ const upsertRates = FunctionImpl.make(
                 .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
 
             if (existing) {
-                if (args.source !== "cotizave" && existing.source === "cotizave") {
+                if (entry.rateType === "official" && existing.source === "cotizave" && args.source !== "cotizave") {
                     continue;
                 }
                 yield* writer.table("exchangeRates").patch(existing._id, {

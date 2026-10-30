@@ -10,18 +10,20 @@ const modules = import.meta.glob("../convex/**/*.ts");
 const MISSING_KEY_PATTERN = /COTIZAVE_API_KEY/;
 
 function liveRatesPayload() {
+    const rates: Record<string, unknown>[] = [
+        { base: "USD", id: "ve-bcv", market: "reference", mid: 652.9726, type: "reference" },
+        { base: "EUR", id: "ve-euro", market: "eur_reference", mid: 747.3271407, type: "reference" },
+        { id: "ve-paralelo", market: "parallel", mid: 736.97975, type: "parallel" },
+        { ask: 739.2, bid: 737.9, id: "ve-binance", market: "binance", mid: 738.55, type: "p2p" },
+        { id: "ve-bybit", market: "bybit", mid: 737.475, type: "p2p" },
+        { id: "ve-zelle" },
+    ];
     return {
         base: "USD",
         country: "VE",
         currency: "VES",
         fetched_at: "2026-07-03T18:22:36Z",
-        rates: [
-            { market: "reference", mid: 652.9726, type: "reference" },
-            { market: "eur_reference", mid: 747.3271407, type: "reference" },
-            { market: "parallel", mid: 736.97975, type: "parallel" },
-            { ask: 737.9, bid: 739.2, market: "binance", mid: 738.55, type: "p2p" },
-            { market: "bybit", mid: 737.475, type: "p2p" },
-        ],
+        rates,
     };
 }
 
@@ -41,7 +43,7 @@ afterEach(() => {
 });
 
 describe("cotizave.fetchRates", () => {
-    it("stores three VES rows from reference/eur_reference/binance mids", async () => {
+    it("stores the BCV and euro mids", async () => {
         vi.useFakeTimers({ toFake: ["Date"] });
         vi.setSystemTime(new Date("2026-07-03T18:22:36Z"));
         const t = convexTest(schema, modules);
@@ -50,10 +52,9 @@ describe("cotizave.fetchRates", () => {
         await t.action(internal.cotizave.fetchRates, {});
 
         const rows = await t.run((ctx) => ctx.db.query("exchangeRates").collect());
-        expect(rows).toHaveLength(3);
+        expect(rows).toHaveLength(2);
         const official = rows.find((row) => row.rateType === "official");
         const eur = rows.find((row) => row.rateType === "eur_reference");
-        const binance = rows.find((row) => row.rateType === "binance");
         expect(official).toMatchObject({
             date: "2026-07-03",
             quote: "VES",
@@ -63,11 +64,6 @@ describe("cotizave.fetchRates", () => {
         expect(eur).toMatchObject({
             quote: "VES",
             rate: 747.3271407,
-            source: "cotizave",
-        });
-        expect(binance).toMatchObject({
-            quote: "VES",
-            rate: 738.55,
             source: "cotizave",
         });
     });
@@ -125,10 +121,6 @@ describe("cotizave.fetchRates", () => {
         const byType = new Map(rows.map((row) => [row.rateType, row]));
         expect(byType.get("official")).toMatchObject({
             rate: 652.9726,
-            source: "cotizave",
-        });
-        expect(byType.get("binance")).toMatchObject({
-            rate: 738.55,
             source: "cotizave",
         });
         expect(byType.get("eur_reference")).toMatchObject({
@@ -232,7 +224,7 @@ describe("cotizave.fetchRates", () => {
         await t.action(internal.cotizave.fetchRates, {});
 
         const rows = await t.run((ctx) => ctx.db.query("exchangeRates").collect());
-        expect(rows).toHaveLength(3);
+        expect(rows).toHaveLength(2);
         expect(rows.every((row) => row.date === "2026-01-02")).toBeTruthy();
     });
 });

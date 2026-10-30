@@ -65,7 +65,7 @@ You don’t need an account to use Outlayr. Without one, none of your ledger is 
 
 ### What the app sends even without an account
 
-- **Exchange rates.** The app downloads market rates from our server. The request needs no account and carries no ledger data. Our server reads the rates from public sources (Frankfurter and CotizaVE), which receive nothing about you.
+- **Exchange rates.** The app downloads market rates from our server. The request needs no account and carries no ledger data. Our server reads the rates from Open Exchange Rates, CotizaVE, and Binance, which receive nothing about you.
 - **Logos.** To show a logo for a merchant or bank, the app asks Logo.dev for it by web address (for example, netflix.com), and Google’s favicon service if Logo.dev has none. The request comes from your device, so those services see your IP address. It never includes amounts, notes, or who you are. Logos are then cached on the phone.
 - **App updates.** When the app starts, it asks Expo, the platform we use to ship updates, whether a newer version of the app’s code is available. The request includes a random ID created for this install (not linked to your account), the app version, and your IP address. If an update failed to start last time, it also includes a short error message.
 - **Purchase status.** The app checks with RevenueCat whether you have Outlayr Pro, using a random anonymous ID until you sign in, and your account ID, name, and email after. See [Outlayr Pro](#outlayr-pro).
@@ -210,7 +210,7 @@ These companies help run Outlayr. Each receives only what its job needs.
 - **[Expo](https://expo.dev/privacy)** delivers app updates. It receives a random install ID, the app version, your IP address, and update error messages.
 - **[PostHog](https://posthog.com/privacy)** provides usage analytics and crash reports, from servers in the United States. It receives the events described in [What the app sends even without an account](#what-the-app-sends-even-without-an-account), a random install ID, and your account ID once you sign in. It also receives this website’s analytics, described in [This website](#this-website).
 
-Frankfurter and CotizaVE publish the exchange rates our server reads. They receive nothing about you.
+Open Exchange Rates, CotizaVE, and Binance publish the exchange rates our server reads. They receive nothing about you.
 
 ## No ads or tracking
 

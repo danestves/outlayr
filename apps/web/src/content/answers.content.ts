@@ -4854,8 +4854,8 @@ const answers = {
                     {
                         body: [
                             t({
-                                en: "Outlayr is a multi-currency expense tracker that keeps the rate it used next to every entry. Rates for its 165 currencies come from Open Exchange Rates and refresh every hour. Bolívar rates come from Cotizave, which publishes the Banco Central de Venezuela (BCV) rate for the dollar and the euro and the USDT rate on Binance, and they refresh every 72 minutes.",
-                                es: "Outlayr es una app para controlar gastos en varias monedas que guarda la tasa que usó junto a cada registro. Las tasas de sus 165 monedas vienen de Open Exchange Rates y se actualizan cada hora. Las del bolívar vienen de Cotizave, que publica la tasa del Banco Central de Venezuela (BCV) para el dólar y el euro y la tasa del USDT en Binance, y se actualizan cada 72 minutos.",
+                                en: "Outlayr is a multi-currency expense tracker that keeps the rate it used next to every entry. Rates for its 165 currencies come from Open Exchange Rates and refresh every hour. The Banco Central de Venezuela (BCV) rates for the dollar and the euro come from Cotizave, and the USDT rate in bolívares comes from Binance P2P and refreshes every 30 minutes.",
+                                es: "Outlayr es una app para controlar gastos en varias monedas que guarda la tasa que usó junto a cada registro. Las tasas de sus 165 monedas vienen de Open Exchange Rates y se actualizan cada hora. Las tasas del Banco Central de Venezuela (BCV) para el dólar y el euro vienen de Cotizave, y la del USDT en bolívares viene de Binance P2P y se actualiza cada 30 minutos.",
                             }),
                             t({
                                 en: "Each rate shows how fresh it is, like As of 09:05 for one fetched today, or 3 days old when the newest rate is older than the day of the entry. If there is no rate yet for that day, Outlayr says so, and the entry counts in dollars once it has one.",

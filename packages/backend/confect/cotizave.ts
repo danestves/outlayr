@@ -9,7 +9,7 @@ import * as Schema from "effect/Schema";
 
 import type { MarketRateType } from "./lib/currencies";
 
-const COTIZAVE_URL = "https://api.cotizave.com/v1/fx/rates";
+const COTIZAVE_URL = "https://api.cotizave.com/v2/fx/ve/rates";
 const RATES_TIMEOUT = Duration.seconds(20);
 
 const VES_QUOTE = "VES";
@@ -17,7 +17,6 @@ const VES_QUOTE = "VES";
 /** `reference` is the BCV official rate. */
 // A Map: `.get` on an untrusted market name answers undefined without widening the key type.
 const MARKET_RATE_TYPES = new Map<string, MarketRateType>([
-    ["binance", "binance"],
     ["eur_reference", "eur_reference"],
     ["reference", "official"],
 ]);

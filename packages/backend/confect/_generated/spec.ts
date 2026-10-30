@@ -1,5 +1,6 @@
 import { GroupSpec, Spec } from "@confect/core";
 import accountDeletion from "../accountDeletion.spec";
+import binance from "../binance.spec";
 import cotizave from "../cotizave.spec";
 import csvImport from "../csvImport.spec";
 import enrichment from "../enrichment.spec";
@@ -22,6 +23,7 @@ import voiceEntry from "../voiceEntry.spec";
 
 const spec: Spec.Spec<{
   readonly accountDeletion: GroupSpec.NamedAt<typeof accountDeletion, "accountDeletion">;
+  readonly binance: GroupSpec.NamedAt<typeof binance, "binance">;
   readonly cotizave: GroupSpec.NamedAt<typeof cotizave, "cotizave">;
   readonly csvImport: GroupSpec.NamedAt<typeof csvImport, "csvImport">;
   readonly enrichment: GroupSpec.NamedAt<typeof enrichment, "enrichment">;
@@ -43,6 +45,7 @@ const spec: Spec.Spec<{
   readonly voiceEntry: GroupSpec.NamedAt<typeof voiceEntry, "voiceEntry">;
 }> = Spec.fromGroups({
   ["accountDeletion"]: accountDeletion,
+  ["binance"]: binance,
   ["cotizave"]: cotizave,
   ["csvImport"]: csvImport,
   ["enrichment"]: enrichment,
