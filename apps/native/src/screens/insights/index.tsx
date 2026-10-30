@@ -276,12 +276,13 @@ export function Insights() {
     const breakdown = breakdownFor(result.breakdown, result.rows, result.categoriesById, lockedBucket, measure, nowMs);
 
     const filteredEntry = filterId ? (breakdown.find((entry) => entry.id === filterId) ?? null) : null;
+    const activeFilterId = filteredEntry?.id ?? null;
 
     const subBreakdown = withoutLoneDirect(
         subBreakdownFor(
             result.rows,
             result.categoriesById,
-            filterId,
+            activeFilterId,
             lockedBucket,
             period,
             measure,
@@ -289,7 +290,7 @@ export function Insights() {
             offset,
             calendar
         ),
-        filterId
+        activeFilterId
     );
 
     const chartMeasure = filteredEntry && measure === "net" ? "spent" : measure;
@@ -359,7 +360,7 @@ export function Insights() {
         }
     };
 
-    const listQuery = windowQuery(lockedBucket, filterId, measure, nowMs, result.start, result.end);
+    const listQuery = windowQuery(lockedBucket, activeFilterId, measure, nowMs, result.start, result.end);
 
     const listTransactions = useWindowTransactions(db, listQuery);
     // Held here: the list unmounts with the selection and the hook flushes its pending write on unmount.
@@ -465,7 +466,7 @@ export function Insights() {
                 <BreakdownSection
                     code={currency}
                     entries={breakdown}
-                    filterId={filterId}
+                    filterId={activeFilterId}
                     lockedBucket={lockedBucket}
                     measure={measure}
                     onFilter={setFilterId}
