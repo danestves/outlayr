@@ -181,7 +181,7 @@ export function monthWindow(nowMs: number, offsetMs: number, firstDayOfMonth: nu
     };
 }
 
-// ponytail: one fixed offset, so a window across a DST change is cut an hour off; sync the IANA zone to fix.
+// ponytail: monthWindow takes the offset at now, so a month across a DST change is cut an hour off; use offsetAt.
 export const wall = (instant: number, offsetMs: number) => new Date(instant + offsetMs);
 export const wallDay = (date: Date) => date.toISOString().slice(0, 10);
 export const localDate = (instant: number, offsetMs: number) => wallDay(wall(instant, offsetMs));
