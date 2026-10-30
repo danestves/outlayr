@@ -29,7 +29,7 @@ function tierOf(width: number, height: number): Tier {
     if (width >= 110 && height >= 110) {
         return "big";
     }
-    if (width >= 150 && height >= 56) {
+    if (width >= 170 && height >= 56) {
         return "wide";
     }
     if (width >= 110 && height >= 56) {

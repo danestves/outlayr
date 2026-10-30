@@ -3,14 +3,14 @@ import { currencyTotals } from "@outlayr/money/currency-totals";
 import { landingDate } from "@outlayr/money/recurrence";
 import type { RateTable } from "@outlayr/money/valuation";
 import { use } from "react";
-import type { ReactNode } from "react";
-import { Pressable, ScrollView, useWindowDimensions, View } from "react-native";
+import { ScrollView, useWindowDimensions, View } from "react-native";
 
 import { AmountsHiddenContext } from "@/components/amount-text";
 import { CategoryIconTile } from "@/components/category-icon-tile";
 import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
+import { Widget, WIDGET_SIZE } from "@/components/widget-card";
 import type { Account } from "@/data/accounts-core";
 import { DUE_WINDOW_DAYS } from "@/data/debts-due";
 import type { TransactionWithCategory } from "@/data/transactions";
@@ -26,70 +26,13 @@ import { useColors } from "@/theme/use-colors";
 
 import type { DebtsSummary } from "./accounts-block";
 
-const SQUARE = 160;
 const GAP = 10;
 const GUTTER = 20;
 const NEXT_SHOWN = 3;
 const LOGOS_SHOWN = 4;
 const LOGO_SIZE = 24;
-const WIDGET_SHADOW = { boxShadow: "0 1px 4px rgba(23, 21, 15, 0.08)" } as const;
 
 type WidgetWidth = number | "100%";
-
-interface WidgetProps {
-    accessibilityHint?: string;
-    accessibilityLabel: string;
-    children?: ReactNode;
-    figure: string;
-    figureClass?: string;
-    onPress: () => void;
-    title: string;
-    unit: string;
-    width: WidgetWidth;
-}
-
-function Widget({
-    title,
-    figure,
-    figureClass = "text-foreground",
-    unit,
-    children,
-    onPress,
-    accessibilityLabel,
-    accessibilityHint,
-    width,
-}: WidgetProps) {
-    return (
-        <Pressable
-            accessibilityHint={accessibilityHint}
-            accessibilityLabel={accessibilityLabel}
-            accessibilityRole="button"
-            className="bg-card justify-between gap-3 rounded-[22px] p-3.5 active:opacity-70"
-            onPress={onPress}
-            style={[WIDGET_SHADOW, { minHeight: SQUARE, width }]}
-        >
-            <View className="gap-1.75">
-                <MonoLabel numberOfLines={1}>{`${title}  ›`}</MonoLabel>
-                <View>
-                    {figure ? (
-                        <Text
-                            adjustsFontSizeToFit
-                            className={cn("font-sans-semibold text-title tabular-nums", figureClass)}
-                            minimumFontScale={0.6}
-                            numberOfLines={1}
-                        >
-                            {figure}
-                        </Text>
-                    ) : null}
-                    <Text className="font-sans-medium text-footnote text-subtle" numberOfLines={2}>
-                        {unit}
-                    </Text>
-                </View>
-            </View>
-            {children}
-        </Pressable>
-    );
-}
 
 interface UpcomingWidgetProps {
     currency: string;
@@ -326,7 +269,7 @@ export function LogShelf({
     if (stacked) {
         width = "100%";
     } else if (scrolls) {
-        width = SQUARE;
+        width = WIDGET_SIZE;
     }
 
     const widgets = (
@@ -366,7 +309,7 @@ export function LogShelf({
             horizontal
             scrollEnabled={scrolls}
             showsHorizontalScrollIndicator={false}
-            snapToInterval={scrolls ? SQUARE + GAP : undefined}
+            snapToInterval={scrolls ? WIDGET_SIZE + GAP : undefined}
             style={{ marginHorizontal: -GUTTER }}
         >
             {widgets}
