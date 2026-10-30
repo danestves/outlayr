@@ -1,3 +1,5 @@
+import { isPickableCurrency } from "@outlayr/money/currency";
+
 export interface CategoryBranch {
     children: readonly string[];
     name: string;
@@ -40,6 +42,15 @@ export function namesWithinBudget(tree: readonly CategoryBranch[], accounts: rea
         total += 1 + branch.children.length;
     }
     return total <= MAX_TOTAL_NAMES && accounts.every(short);
+}
+
+// An unknown code ("RMB") would match no rate row, and folding it into the ledger's currency would be the
+// wrong denomination, so it is flagged instead.
+export function draftCurrency(read: string | null, ledgerCurrency: string) {
+    const code = read?.trim().toUpperCase() ?? null;
+    const foreign = code !== null && code !== ledgerCurrency;
+    const unresolved = foreign && !isPickableCurrency(code);
+    return { currency: foreign && !unresolved ? code : null, unresolved };
 }
 
 export function describeTree(tree: readonly CategoryBranch[]): string {

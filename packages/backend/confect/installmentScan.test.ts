@@ -69,7 +69,7 @@ describe("normalizePlan", () => {
     it("orders the rows, dates them in this year and resolves names in the ledger's spelling", () => {
         expect(normalizePlan(MODEL_ANSWER, CONTEXT)).toStrictEqual({
             accountName: "Cashea",
-            currency: "USD",
+            currency: null,
             provider: "Cashea",
             rows: [
                 { amount: 67.6, dueDate: "2026-06-08", fee: 0, paid: true, sequence: 0 },

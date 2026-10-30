@@ -1,5 +1,5 @@
 import { DAY, HOUR, RateLimiter } from "@convex-dev/rate-limiter";
-import { PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
+import { isPickableCurrency } from "@outlayr/money/currency";
 import { knowledgeKey } from "@outlayr/money/merchant-key";
 import { generateText, Output } from "ai";
 import type { LanguageModel } from "ai";
@@ -138,15 +138,13 @@ export function sanitizeRegionCode(region: string | undefined): string | undefin
     return REGION_CODE_PATTERN.test(trimmed) ? trimmed : undefined;
 }
 
-const KNOWN_CURRENCIES: ReadonlySet<string> = new Set(PICKABLE_CURRENCY_CODES);
-
 /** Client-submitted and it partitions the knowledge cache and per-key gate, so only pickable codes pass. */
 export function sanitizeCurrencyCode(currency: string | undefined): string | undefined {
     if (currency === undefined) {
         return;
     }
     const trimmed = currency.trim().toUpperCase();
-    return KNOWN_CURRENCIES.has(trimmed) ? trimmed : undefined;
+    return isPickableCurrency(trimmed) ? trimmed : undefined;
 }
 
 export const DESCRIPTOR_LINE =
