@@ -2,7 +2,8 @@
 
 A change to the Privacy Policy or the Terms of Use reaches people three ways: the site, a sheet
 in the app, and an email to every confirmed account. The sheet and the email read the same
-notice from `POLICY_NOTICES`, so the app needs no update.
+notice from `POLICY_NOTICES`, so a new notice needs no app release. App versions from before the
+sheet show nothing until they update.
 
 1. Edit the document in `apps/web/content/legal/en` and `apps/web/content/legal/es`, including
    the effective date in its `description`, and set the same day in `LEGAL_DAYS` in
@@ -18,6 +19,8 @@ notice from `POLICY_NOTICES`, so the app needs no update.
    vp exec convex run --prod mailDelivery:notifyPolicy '{"document":"privacy"}'
    ```
 
-   It sends 50 at a time and schedules the next page itself; the counts it prints cover the
-   first page only. Running it again sends only to accounts that have not received this notice,
-   so a rerun retries the failures. Follow the rest in the Convex logs (`[mail] not sent`).
+   Use `"document":"terms"` for the Terms of Use. It sends 50 at a time and schedules the next
+   page itself; the counts it prints cover the first page only. Running it again sends only to accounts that have not received this notice,
+   so a rerun retries the failures. Rerun only once no `notifyPolicy` is left under Schedules in the
+   dashboard, or two runs can email the same account twice. Follow the rest in the Convex logs
+   (`[mail] not sent`).
