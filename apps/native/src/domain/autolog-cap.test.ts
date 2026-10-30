@@ -48,13 +48,12 @@ describe("holdsAutolog", () => {
 });
 
 describe("autologAccessOf", () => {
-    const resolvedFree = { isConfigured: true, isPro: false, isResolved: true };
-
     it("caps only a customer the store has confirmed is free", () => {
-        expect(autologAccessOf(resolvedFree, true)).toBe("free");
-        expect(autologAccessOf({ ...resolvedFree, isResolved: false }, true)).toBe("pending");
-        expect(autologAccessOf({ ...resolvedFree, isPro: true }, true)).toBe("open");
-        expect(autologAccessOf(resolvedFree, false)).toBe("open");
-        expect(autologAccessOf({ ...resolvedFree, isConfigured: false }, true)).toBe("open");
+        expect(autologAccessOf({ kind: "free", pending: false }, true)).toBe("free");
+        expect(autologAccessOf({ kind: "unresolved", pending: true }, true)).toBe("pending");
+        expect(autologAccessOf({ kind: "unresolved", pending: false }, true)).toBe("pending");
+        expect(autologAccessOf({ kind: "pro", mirrored: false, pending: true }, true)).toBe("open");
+        expect(autologAccessOf({ kind: "free", pending: false }, false)).toBe("open");
+        expect(autologAccessOf({ kind: "unconfigured" }, true)).toBe("open");
     });
 });

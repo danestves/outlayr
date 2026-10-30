@@ -141,15 +141,15 @@ describe("revenueCat", () => {
 
     it("follows customer info updates once the account's sign-in has landed", async () => {
         await start("user-1");
-        expect(entitlement()).toMatchObject({ isPro: false, isResolved: true });
+        expect(entitlement()).toStrictEqual({ kind: "free", pending: false });
 
         customerInfo.emit(true);
         await flush();
-        expect(entitlement().isPro).toBe(true);
+        expect(entitlement()).toMatchObject({ kind: "pro" });
 
         customerInfo.emit(false);
         await flush();
-        expect(entitlement().isPro).toBe(false);
+        expect(entitlement()).toStrictEqual({ kind: "free", pending: false });
     });
 
     it("fails the run with the SDK's error when configuring throws, so the error boundary sees it", async () => {
@@ -166,7 +166,7 @@ describe("revenueCat", () => {
             throw new Error("the run did not fail");
         }
         expect(Cause.squash(run.cause)).toBe(thrown);
-        expect(entitlement()).toMatchObject({ isConfigured: false, isPro: false });
+        expect(entitlement()).toStrictEqual({ kind: "unconfigured" });
     });
 
     it("ignores customer info while the sign-in has failed, and retries the sign-in on foreground", async () => {
@@ -178,20 +178,20 @@ describe("revenueCat", () => {
 
         customerInfo.emit(true);
         await flush();
-        expect(entitlement()).toMatchObject({ isPending: false, isPro: false, isResolved: false });
+        expect(entitlement()).toStrictEqual({ kind: "unresolved", pending: false });
 
         appState.emit("active");
         await flush();
 
         expect(sdk.identifyUser).toHaveBeenCalledTimes(2);
         expect(sdk.identifyUser).toHaveBeenLastCalledWith("user-2");
-        expect(entitlement()).toMatchObject({ isPro: true, isResolved: true });
+        expect(entitlement()).toMatchObject({ kind: "pro" });
     });
 
     it("drops the previous customer's Pro at the switch and discards every late answer about it", async () => {
         sdk.identifyUser.mockReturnValueOnce(Effect.succeed(true));
         await start("user-3");
-        expect(entitlement().isPro).toBe(true);
+        expect(entitlement()).toMatchObject({ kind: "pro" });
         const refresh = held<boolean>();
         sdk.refreshProEntitlement.mockReturnValueOnce(Effect.promise(() => refresh.promise));
         const read = call((revenueCat) => revenueCat.refresh("user-3"));
@@ -201,18 +201,18 @@ describe("revenueCat", () => {
         sdk.identifyUser.mockReturnValueOnce(Effect.promise(() => signInOther.promise));
         signIn("user-4");
         await flush();
-        expect(entitlement()).toMatchObject({ isPending: true, isPro: false, isResolved: false });
+        expect(entitlement()).toStrictEqual({ kind: "unresolved", pending: true });
 
         refresh.resolve(true);
         customerInfo.emit(true);
         await flush();
         await expect(read).rejects.toThrow("identity");
-        expect(entitlement().isPro).toBe(false);
+        expect(entitlement()).toStrictEqual({ kind: "unresolved", pending: true });
 
         signInOther.resolve(false);
         await flush();
         expect(sdk.identifyUser).toHaveBeenLastCalledWith("user-4");
-        expect(entitlement()).toMatchObject({ isPending: false, isPro: false, isResolved: true });
+        expect(entitlement()).toStrictEqual({ kind: "free", pending: false });
     });
 
     it("signs in only after a pending sign-out has finished, and keeps the newer result", async () => {
@@ -228,7 +228,7 @@ describe("revenueCat", () => {
         signOut.resolve(false);
         await flush();
         expect(sdk.identifyUser).toHaveBeenCalledWith("user-5");
-        expect(entitlement().isPro).toBe(true);
+        expect(entitlement()).toMatchObject({ kind: "pro" });
     });
 
     it("signs an account back in when it returns while its sign-out is still pending", async () => {
@@ -244,7 +244,7 @@ describe("revenueCat", () => {
         await flush();
 
         expect(sdk.identifyUser).toHaveBeenCalledTimes(2);
-        expect(entitlement()).toMatchObject({ isPro: true, isResolved: true });
+        expect(entitlement()).toMatchObject({ kind: "pro" });
     });
 
     it("holds a sign-out behind a purchase in flight, and rejects the purchase it outdated", async () => {
@@ -288,7 +288,7 @@ describe("revenueCat", () => {
         await flush();
 
         await expect(purchase).rejects.toMatchObject({ _tag: "RevenueCatError", cause: storeError });
-        expect(entitlement().isPro).toBe(false);
+        expect(entitlement()).toStrictEqual({ kind: "free", pending: false });
         const packages = call((revenueCat) => revenueCat.getPackages("user-9"));
         await flush();
         await expect(packages).resolves.toStrictEqual([]);
@@ -305,7 +305,7 @@ describe("revenueCat", () => {
         await flush();
 
         await expect(purchase).resolves.toBe("pro");
-        expect(entitlement().isPro).toBe(true);
+        expect(entitlement()).toMatchObject({ kind: "pro" });
     });
 
     it("sends the profile only once RevenueCat has logged in as that account", async () => {
@@ -326,13 +326,13 @@ describe("revenueCat", () => {
         sdk.identifyUser.mockReturnValueOnce(Effect.succeed(true));
 
         const started = start("user-12");
-        expect(entitlement().isPending).toBe(true);
+        expect(entitlement()).toStrictEqual({ kind: "unresolved", pending: true });
         await started;
-        expect(entitlement()).toMatchObject({ isMirrored: false, isPending: true, isPro: true });
+        expect(entitlement()).toStrictEqual({ kind: "pro", mirrored: false, pending: true });
 
         mirror.resolve(true);
         await flush();
-        expect(entitlement()).toMatchObject({ isMirrored: true, isPending: false });
+        expect(entitlement()).toStrictEqual({ kind: "pro", mirrored: true, pending: false });
     });
 
     it("stops pending when the mirror refuses, rather than waiting on an answer that came", async () => {
@@ -341,18 +341,18 @@ describe("revenueCat", () => {
 
         await start("user-13");
 
-        expect(entitlement()).toMatchObject({ isMirrored: false, isPending: false, isPro: true });
+        expect(entitlement()).toStrictEqual({ kind: "pro", mirrored: false, pending: false });
     });
 
     it("stops pending for a Free account that replaces one whose mirror never landed", async () => {
         sdk.mirrorEntitlement.mockReturnValueOnce(Effect.promise(() => held<boolean>().promise));
         sdk.identifyUser.mockReturnValueOnce(Effect.succeed(true));
         await start("user-14");
-        expect(entitlement().isPending).toBe(true);
+        expect(entitlement()).toStrictEqual({ kind: "pro", mirrored: false, pending: true });
 
         signIn("user-15");
         await flush();
 
-        expect(entitlement()).toMatchObject({ isPending: false, isPro: false });
+        expect(entitlement()).toStrictEqual({ kind: "free", pending: false });
     });
 });

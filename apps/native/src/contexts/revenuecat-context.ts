@@ -10,13 +10,7 @@ import { RevenueCat } from "@/lib/revenuecat-service";
 import type { Entitlement, Session } from "@/lib/revenuecat-service";
 import { appRuntime } from "@/lib/runtime";
 
-const NOT_CONFIGURED: Entitlement = {
-    isConfigured: false,
-    isMirrored: false,
-    isPending: false,
-    isPro: false,
-    isResolved: true,
-};
+const NOT_CONFIGURED: Entitlement = { kind: "unconfigured" };
 
 export const entitlementAtom = appRuntime
     .atom(Stream.unwrap(RevenueCat.pipe(Effect.map((revenueCat) => revenueCat.entitlement))))

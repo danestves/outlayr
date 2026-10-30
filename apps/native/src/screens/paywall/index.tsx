@@ -235,7 +235,9 @@ export function Paywall() {
     const colors = useColors();
     const router = useRouter();
     const navigation = useNavigation();
-    const { isMirrored, isPro } = useRevenueCat();
+    const entitlement = useRevenueCat();
+    const isPro = entitlement.kind === "pro";
+    const isMirrored = isPro && entitlement.mirrored;
     const largeText = useAccessibilityTextSize();
     const { accountId } = useAuthSession();
     const { trigger: triggerParam } = useLocalSearchParams<{ trigger?: string }>();

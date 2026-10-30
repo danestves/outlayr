@@ -210,7 +210,7 @@ function PlanCell({ stacked }: { stacked: boolean }) {
     const router = useRouter();
     const t = useTranslation();
     const icons = usePanelIcons();
-    const { isPro } = useRevenueCat();
+    const isPro = useRevenueCat().kind === "pro";
     const label = t("settings.panel.plan");
     const value = isPro ? t("pro.col.pro") : t("pro.col.free");
     const goPro = t("settings.panel.goPro");
