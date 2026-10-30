@@ -64,7 +64,9 @@ const notifyPolicy = FunctionImpl.make(
     spec,
     "notifyPolicy",
     Effect.fn("Mail.notifyPolicy")(function* notifyPolicy({ cursor, document }) {
-        const notice = POLICY_NOTICES.find((candidate) => candidate.document === document);
+        const notice = POLICY_NOTICES.toSorted((a, b) => b.effectiveAtMs - a.effectiveAtMs).find(
+            (candidate) => candidate.document === document
+        );
         if (notice === undefined) {
             return yield* Effect.die(new Error(`There is no ${document} notice in POLICY_NOTICES`));
         }
