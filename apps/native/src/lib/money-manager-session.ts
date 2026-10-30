@@ -63,6 +63,14 @@ function createSession() {
 
     return {
         begin: (draft: MoneyManagerDraft) => commit({ ...EMPTY, draft }),
+        /** False when an import is already running or done: a second tap would write the backup twice. */
+        claimApply: (total: number) => {
+            if (state.progress !== null || state.result !== null) {
+                return false;
+            }
+            commit({ ...state, failed: false, progress: { done: 0, total } });
+            return true;
+        },
         fail: (failure: NonNullable<MoneyManagerSession["failure"]>) => commit({ ...state, failure }),
         finish: (result: MoneyManagerResult) => commit({ ...state, progress: null, result }),
         getSnapshot: () => state,

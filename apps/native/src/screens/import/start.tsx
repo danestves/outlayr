@@ -8,6 +8,8 @@ import { formatTargetDate, monthAbbrev } from "@/domain/dates";
 import type { MmOverlap, StartChoice } from "@/domain/money-manager/types";
 import { useTranslation } from "@/i18n/context";
 import { moneyManagerSession, useMoneyManagerSession } from "@/lib/money-manager-session";
+import { withAlpha } from "@/theme/shade";
+import { useColors } from "@/theme/use-colors";
 
 import { grouped } from "./labels";
 
@@ -20,6 +22,7 @@ function dayDate(day: string): Date {
 
 /** The last three months only: three years of Money Manager would squeeze the overlap to a sliver. */
 function Timeline({ lastDay, overlap }: { lastDay: string; overlap: MmOverlap }) {
+    const colors = useColors();
     const end = dayDate(lastDay);
     const axisStart = new Date(end.getFullYear(), end.getMonth() - (AXIS_MONTHS - 1), 1, 12);
     const axisEnd = new Date(end.getFullYear(), end.getMonth() + 1, 1, 12);
@@ -36,8 +39,12 @@ function Timeline({ lastDay, overlap }: { lastDay: string; overlap: MmOverlap })
         <View className="gap-2 pt-4" importantForAccessibility="no-hide-descendants">
             <View className="relative h-24">
                 <View
-                    className="bg-tint/15 absolute top-0 bottom-0 rounded"
-                    style={{ left: `${overlapFrom * 100}%`, width: `${(lastAt - overlapFrom) * 100}%` }}
+                    className="absolute top-0 bottom-0 rounded"
+                    style={{
+                        backgroundColor: withAlpha(colors.tint, 0.15),
+                        left: `${overlapFrom * 100}%`,
+                        width: `${(lastAt - overlapFrom) * 100}%`,
+                    }}
                 />
                 <MonoLabel className="pt-1">MONEY MANAGER</MonoLabel>
                 <View className="bg-foreground mt-1.5 h-2.5 rounded-full" style={{ width: `${lastAt * 100}%` }} />

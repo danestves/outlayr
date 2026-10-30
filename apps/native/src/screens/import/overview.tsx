@@ -89,6 +89,9 @@ function Overview({ draft }: { draft: MoneyManagerDraft }) {
     };
 
     const runImport = () => {
+        if (!moneyManagerSession.claimApply(total)) {
+            return;
+        }
         apply({ db, draft });
         router.push(paths.importing);
     };

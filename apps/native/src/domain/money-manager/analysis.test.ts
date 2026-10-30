@@ -55,5 +55,12 @@ describe("analyzeSnapshot", () => {
         };
         const { overlap } = analyzeSnapshot(snapshot(), ledger);
         expect(overlap).toStrictEqual({ matches: 1, mmEntries: 7, outlayrEntries: 1, outlayrFirstDay: "2024-03-04" });
+
+        const base = snapshot();
+        const twins = base.entries
+            .filter((entry) => entry.uid === "e-transport")
+            .map((entry) => ({ ...entry, uid: "twin" }));
+        const doubled = { ...base, entries: [...base.entries, ...twins] };
+        expect(analyzeSnapshot(doubled, ledger).overlap?.matches).toBe(1);
     });
 });

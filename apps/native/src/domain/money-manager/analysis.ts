@@ -21,21 +21,26 @@ export function ledgerMatchKey(day: string, amount: number, currency: string, in
     return `${day}|${rounded}|${currency.trim().toUpperCase()}|${income ? "in" : "out"}`;
 }
 
+// Each Outlayr entry vouches for one Money Manager entry, so two same-price coffees need two to be skipped.
 export function matchedEntryUids(snapshot: MmSnapshot, ledger: OutlayrLedgerState, fromDay: string): Set<string> {
-    const keys = new Set<string>();
+    const unclaimed = new Map<string, number>();
     for (const entry of ledger.entries) {
         const day = localDay(entry.date);
         if (day < fromDay) {
             continue;
         }
-        keys.add(ledgerMatchKey(day, entry.amount, entry.currency, entry.income));
+        const key = ledgerMatchKey(day, entry.amount, entry.currency, entry.income);
+        unclaimed.set(key, (unclaimed.get(key) ?? 0) + 1);
     }
     const matched = new Set<string>();
     for (const entry of snapshot.entries) {
         if (entry.day < fromDay) {
             continue;
         }
-        if (keys.has(ledgerMatchKey(entry.day, entry.amount, entry.currency, entry.income))) {
+        const key = ledgerMatchKey(entry.day, entry.amount, entry.currency, entry.income);
+        const left = unclaimed.get(key) ?? 0;
+        if (left > 0) {
+            unclaimed.set(key, left - 1);
             matched.add(entry.uid);
         }
     }

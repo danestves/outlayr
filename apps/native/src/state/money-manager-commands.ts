@@ -60,7 +60,8 @@ export const applyMoneyManagerImportCommand = createCommand({
         const record = yield* applyMoneyManagerImport(input.db, plan, (done, total) =>
             moneyManagerSession.setProgress({ done, total })
         );
-        const checks = yield* verifyImportedBalances(input.db, record);
+        // The rows are committed by now; a failed check only hides the balances, a retry would import twice.
+        const checks = yield* verifyImportedBalances(input.db, record).pipe(Effect.orElseSucceed(() => []));
         moneyManagerSession.finish({ checks, record });
         return record;
     }),
