@@ -71,7 +71,7 @@ export function StoreBadges({ placement }: { placement: Placement }) {
                             height={54}
                             key={theme}
                             loading="lazy"
-                            src={`https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1297830&theme=${theme}`}
+                            src={`/badges/product-hunt.svg?theme=${theme}`}
                             width={250}
                         />
                     ))}
