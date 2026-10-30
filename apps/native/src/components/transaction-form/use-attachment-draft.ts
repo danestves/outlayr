@@ -7,6 +7,7 @@ import {
     UIImagePickerPreferredAssetRepresentationMode,
 } from "expo-image-picker";
 import { useState } from "react";
+import { Keyboard } from "react-native";
 
 import type { ActionMenuItem } from "@/components/action-menu";
 import { attachmentKind, attachmentsForQuery, MAX_ATTACHMENTS } from "@/data/attachments-core";
@@ -22,6 +23,8 @@ import { photoFiles } from "@/lib/photo-storage";
 import type { AttachmentIntake } from "@/lib/photo-storage";
 import { entryMedia, voidFlowCommand } from "@/state/entry-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
+
+import type { SentenceVerb } from "./sentence/fact-glyphs";
 
 const DOCUMENT_TYPES = ["application/pdf", "image/jpeg", "image/png"];
 
@@ -213,5 +216,17 @@ export function useAttachmentDraft({ db, initial, mode, onEdit, onFailure, resto
         );
     };
 
-    return { attachments, menu, preview, remove };
+    const verb: SentenceVerb = {
+        accessibilityLabel: attachments.length === 0 ? t("transaction.attachments.add") : undefined,
+        active: attachments.length > 0,
+        key: "attach",
+        label:
+            attachments.length === 0
+                ? t("transaction.sentence.add.attach")
+                : t("transaction.sentence.set.attach", { count: attachments.length }),
+        menu,
+        onPress: Keyboard.dismiss,
+    };
+
+    return { attachments, menu, preview, remove, verb };
 }
