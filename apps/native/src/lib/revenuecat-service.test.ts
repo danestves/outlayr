@@ -202,6 +202,24 @@ describe("revenueCat", () => {
         expect(entitlement()).toMatchObject({ kind: "pro" });
     });
 
+    it.each([
+        ["a foreground refresh", () => appState.emit("active")],
+        ["a customer info update", () => customerInfo.emit(false)],
+    ])("resolves on %s an account whose sign-out and sign-in both failed", async (_, answer) => {
+        await start("user-18");
+        sdk.logOutUser.mockReturnValueOnce(Effect.fail(new PurchasesError({ cause: new Error("network") })));
+        sdk.identifyUser.mockReturnValueOnce(Effect.fail(new PurchasesError({ cause: new Error("network") })));
+
+        signIn(null);
+        signIn("user-18");
+        await flush();
+        expect(entitlement()).toStrictEqual({ kind: "unresolved", pending: false });
+
+        answer();
+        await flush();
+        expect(entitlement()).toStrictEqual({ kind: "free", pending: false });
+    });
+
     it("drops the previous customer's Pro at the switch and discards every late answer about it", async () => {
         sdk.identifyUser.mockReturnValueOnce(Effect.succeed(true));
         await start("user-3");

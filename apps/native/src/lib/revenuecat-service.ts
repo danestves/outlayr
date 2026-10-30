@@ -207,6 +207,12 @@ const withPro = (state: State, pro: boolean): State => {
     };
 };
 
+const withRead = (state: State, account: string | null | undefined, pro: boolean): State => {
+    const next = withPro(state, pro);
+    const answersRequested = account !== undefined && state.applied === account && state.requested === account;
+    return answersRequested ? { ...next, isResolved: true } : next;
+};
+
 const currentSession = (state: State): Session | undefined => state.sessions.at(-1)?.session;
 
 const profileTarget = (state: State) => {
@@ -428,7 +434,9 @@ export const make = Effect.gen(function* make() {
     });
 
     const refresh = Effect.fn("RevenueCat.refresh")(function* refresh(account: string | null) {
-        return yield* forSession(account, call("refresh", sdk.refreshProEntitlement), withPro);
+        return yield* forSession(account, call("refresh", sdk.refreshProEntitlement), (state, pro) =>
+            withRead(state, account, pro)
+        );
     });
 
     const purchaseOutcome = (pack: PurchasesPackage) =>
@@ -449,7 +457,9 @@ export const make = Effect.gen(function* make() {
             Stream.runForEach((pro) =>
                 transition((state) => [
                     undefined,
-                    state.pendingRequest === null && state.applied === state.requested ? withPro(state, pro) : state,
+                    state.pendingRequest === null && state.applied === state.requested
+                        ? withRead(state, state.applied, pro)
+                        : state,
                 ])
             )
         );
