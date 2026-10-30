@@ -118,7 +118,7 @@ export function LinkRow({
 export function ToggleRow({ icon, title, detail, value, onValueChange, testID }: ComponentProps<typeof IosToggleRow>) {
     return (
         <MaterialListItem
-            accessibilityLabel={title}
+            accessibilityLabel={detail ? `${title}, ${detail}` : title}
             accessibilityRole="switch"
             accessibilityState={{ checked: value }}
             icon={icon}

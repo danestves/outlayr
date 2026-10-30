@@ -1,7 +1,8 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { Platform, ScrollView, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import Animated from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppSymbol } from "@/components/app-symbol";
 import { InlineFailure } from "@/components/form/inline-failure";
@@ -32,6 +33,7 @@ export function SuggestFeature() {
     const { state: settings } = useAppSettings();
     const haptics = useHaptics();
     const colors = useColors();
+    const insets = useSafeAreaInsets();
     const [wish, setWish] = useState("");
     const [reason, setReason] = useState("");
     const [notify, setNotify] = useState(false);
@@ -85,64 +87,76 @@ export function SuggestFeature() {
     ].join(" ");
 
     return (
-        <ScrollView
-            automaticallyAdjustKeyboardInsets
-            className="ios:bg-background flex-1"
-            contentContainerClassName="gap-6 px-5 pt-8 pb-10"
-            keyboardShouldPersistTaps="handled"
+        <KeyboardAvoidingView
+            behavior="padding"
+            className="flex-1"
+            enabled={Platform.OS === "android"}
+            keyboardVerticalOffset={insets.top}
         >
-            <MonoLabel accessibilityRole="header">{t("settings.row.suggest")}</MonoLabel>
-            {sent ? (
-                <Animated.View className="gap-3" entering={revealEntering()}>
-                    <View className="flex-row items-center gap-2">
-                        <AppSymbol name="checkmark.circle.fill" size={20} tintColor={colors.income} type="monochrome" />
-                        <Text className="text-foreground text-title font-sans-semibold">
-                            {t("settings.suggest.sent")}
-                        </Text>
-                    </View>
-                    <Text className="text-muted text-body">{t("settings.suggest.echo", { sentence })}</Text>
-                    <StepCta className="mt-4" label={t("common.done")} onPress={() => router.back()} />
-                </Animated.View>
-            ) : (
-                <>
-                    <SentenceField
-                        autoFocus
-                        editable={!busy}
-                        onChangeText={setWish}
-                        prompt={t("settings.suggest.wish")}
-                        value={wish}
-                    />
-                    <SentenceField
-                        editable={!busy}
-                        onChangeText={setReason}
-                        prompt={t("settings.suggest.reason")}
-                        value={reason}
-                    />
-                    {profile ? (
-                        <ToggleRow
-                            detail={profile.email}
-                            icon="Mail01"
-                            onValueChange={setNotify}
-                            title={t("settings.suggest.notify")}
-                            value={notify}
+            <ScrollView
+                automaticallyAdjustKeyboardInsets
+                className="ios:bg-background flex-1"
+                contentContainerClassName="gap-6 px-5 pt-8 pb-10"
+                keyboardShouldPersistTaps="handled"
+            >
+                <MonoLabel accessibilityRole="header">{t("settings.row.suggest")}</MonoLabel>
+                {sent ? (
+                    <Animated.View className="gap-3" entering={revealEntering()}>
+                        <View className="flex-row items-center gap-2">
+                            <AppSymbol
+                                name="checkmark.circle.fill"
+                                size={20}
+                                tintColor={colors.income}
+                                type="monochrome"
+                            />
+                            <Text className="text-foreground text-title font-sans-semibold">
+                                {t("settings.suggest.sent")}
+                            </Text>
+                        </View>
+                        <Text className="text-muted text-body">{t("settings.suggest.echo", { sentence })}</Text>
+                        <StepCta className="mt-4" label={t("common.done")} onPress={() => router.back()} />
+                    </Animated.View>
+                ) : (
+                    <>
+                        <SentenceField
+                            autoFocus
+                            editable={!busy}
+                            onChangeText={setWish}
+                            prompt={t("settings.suggest.wish")}
+                            value={wish}
                         />
-                    ) : null}
-                    <View>
-                        <Text className="text-muted text-footnote">{t("settings.suggest.privacy")}</Text>
-                    </View>
-                    <View>
-                        <InlineFailure message={failure} />
-                        <StepCta
-                            busy={busy}
-                            busyLabel={slow ? t("settings.suggest.sending") : undefined}
-                            disabled={wish.trim() === ""}
-                            label={t("settings.suggest.send")}
-                            onPress={send}
+                        <SentenceField
+                            editable={!busy}
+                            onChangeText={setReason}
+                            prompt={t("settings.suggest.reason")}
+                            value={reason}
                         />
-                    </View>
-                </>
-            )}
-        </ScrollView>
+                        {profile ? (
+                            <ToggleRow
+                                detail={profile.email}
+                                icon="Mail01"
+                                onValueChange={setNotify}
+                                title={t("settings.suggest.notify")}
+                                value={notify}
+                            />
+                        ) : null}
+                        <View>
+                            <Text className="text-muted text-footnote">{t("settings.suggest.privacy")}</Text>
+                        </View>
+                        <View>
+                            <InlineFailure message={failure} />
+                            <StepCta
+                                busy={busy}
+                                busyLabel={slow ? t("settings.suggest.sending") : undefined}
+                                disabled={wish.trim() === ""}
+                                label={t("settings.suggest.send")}
+                                onPress={send}
+                            />
+                        </View>
+                    </>
+                )}
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 }
 

@@ -21,13 +21,13 @@ const submit = FunctionImpl.make(
             return "invalid" as const;
         }
 
-        if (user) {
-            const perUser = yield* Effect.promise(() =>
-                rateLimiter.limit(ctx, "featureRequestsPerUser", { key: user._id })
-            );
-            if (!perUser.ok) {
-                return "rateLimited" as const;
-            }
+        const caller = yield* Effect.promise(() =>
+            user
+                ? rateLimiter.limit(ctx, "featureRequestsPerUser", { key: user._id })
+                : rateLimiter.limit(ctx, "featureRequestsAnonymous")
+        );
+        if (!caller.ok) {
+            return "rateLimited" as const;
         }
         const global = yield* Effect.promise(() => rateLimiter.limit(ctx, "featureRequestsGlobal"));
         if (!global.ok) {

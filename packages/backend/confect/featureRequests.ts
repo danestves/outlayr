@@ -1,15 +1,12 @@
 import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as HttpClient from "effect/http/HttpClient";
-import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as Option from "effect/Option";
-import * as Redacted from "effect/Redacted";
 import type * as Schema from "effect/Schema";
 
 import { components } from "../convex/_generated/api";
 import type { SubmitStatus, submitArgs } from "./featureRequests.spec";
-import { postHogProjectToken } from "./lib/config";
+import { capturePostHogEvent } from "./lib/posthog";
 
 export const SURVEY_ID = "01a18b43-8c63-0000-163a-cbe3b5a67a1d";
 export const QUESTIONS = {
@@ -20,7 +17,6 @@ export const QUESTIONS = {
 
 export const MAX_TEXT = 1000;
 const MAX_CONTEXT = 64;
-const CAPTURE_URL = "https://us.i.posthog.com/i/v0/e/";
 const CAPTURE_TIMEOUT = Duration.seconds(5);
 
 type SubmitArgs = Schema.Struct<typeof submitArgs>["Type"];
@@ -44,6 +40,7 @@ export interface Account {
 }
 
 export const rateLimiter = new RateLimiter(components.rateLimiter, {
+    featureRequestsAnonymous: { kind: "fixed window", period: HOUR, rate: 50 },
     featureRequestsGlobal: { kind: "fixed window", period: HOUR, rate: 100, shards: 10 },
     featureRequestsPerUser: { capacity: 5, kind: "token bucket", period: HOUR, rate: 10 },
 });
@@ -61,7 +58,7 @@ export function surveyEvent(args: SubmitArgs, account: Account | null) {
     ) {
         return null;
     }
-    const linked = account !== null && args.linkAccount;
+    const linked = account !== null && (args.linkAccount || args.notify);
     const answers = [
         [QUESTIONS.wish.id, wish],
         [QUESTIONS.reason.id, reason],
@@ -90,15 +87,12 @@ export function surveyEvent(args: SubmitArgs, account: Account | null) {
 
 export const captureSurveyEvent = Effect.fn("FeatureRequests.capture")(
     function* captureSurveyEvent(event: NonNullable<ReturnType<typeof surveyEvent>>) {
-        const token = yield* postHogProjectToken;
-        if (Option.isNone(token)) {
+        const response = yield* capturePostHogEvent(event, CAPTURE_TIMEOUT);
+        if (Option.isNone(response)) {
             return "notConfigured" satisfies SubmitStatus;
         }
-        const request = yield* HttpClientRequest.post(CAPTURE_URL).pipe(
-            HttpClientRequest.bodyJson({ api_key: Redacted.value(token.value), ...event })
-        );
-        const response = yield* HttpClient.execute(request).pipe(Effect.timeout(CAPTURE_TIMEOUT));
-        return response.status >= 200 && response.status < 300 ? "ok" : "providerError";
+        const { status } = response.value;
+        return status >= 200 && status < 300 ? "ok" : "providerError";
     },
     Effect.catchTags({
         HttpBodyError: () => Effect.succeed("providerError" as const),

@@ -51,22 +51,28 @@ function setup() {
 }
 
 describe("submitting a feature request", () => {
-    it("attaches the session's email under the account's person when asked", async () => {
+    it("files the request under the account's person when analytics are on or an email is attached", async () => {
         const t = setup();
         const owner = await seedAuthUser(t);
+        const asOwner = authenticatedAs(t, owner);
 
-        await expect(authenticatedAs(t, owner).action(api.featureRequests.submit, ARGS)).resolves.toBe("ok");
+        await expect(
+            asOwner.action(api.featureRequests.submit, { ...ARGS, linkAccount: false, notify: true })
+        ).resolves.toBe("ok");
+        await asOwner.action(api.featureRequests.submit, { ...ARGS, linkAccount: true, notify: false });
 
-        expect(captured).toHaveLength(1);
-        const [event] = captured;
-        expect(event).toMatchObject({ distinct_id: owner.userId, event: "survey sent" });
-        expect(event?.properties).toMatchObject({
+        expect(captured).toHaveLength(2);
+        const [withEmail, analyticsOn] = captured;
+        expect(withEmail).toMatchObject({ distinct_id: owner.userId, event: "survey sent" });
+        expect(withEmail?.properties).toMatchObject({
             [response(QUESTIONS.email.id)]: owner.email,
             [response(QUESTIONS.wish.id)]: ARGS.wish,
             $survey_submission_id: ARGS.submissionId,
         });
-        expect(event?.properties).not.toHaveProperty(response(QUESTIONS.reason.id));
-        expect(event?.properties).not.toHaveProperty("$process_person_profile");
+        expect(withEmail?.properties).not.toHaveProperty(response(QUESTIONS.reason.id));
+        expect(withEmail?.properties).not.toHaveProperty("$process_person_profile");
+        expect(analyticsOn).toMatchObject({ distinct_id: owner.userId });
+        expect(analyticsOn?.properties).not.toHaveProperty(response(QUESTIONS.email.id));
     });
 
     it("keeps signed-out and analytics-off requests off any person and email", async () => {
@@ -86,5 +92,17 @@ describe("submitting a feature request", () => {
             expect(event.properties).toMatchObject({ $process_person_profile: false });
             expect(event.properties).not.toHaveProperty(response(QUESTIONS.email.id));
         }
+    });
+
+    it("caps signed-out requests on their own, so they can't lock out signed-in users", async () => {
+        const t = setup();
+        const owner = await seedAuthUser(t);
+
+        for (let index = 0; index < 50; index += 1) {
+            await t.action(api.featureRequests.submit, { ...ARGS, submissionId: `anonymous-${index}` });
+        }
+
+        await expect(t.action(api.featureRequests.submit, ARGS)).resolves.toBe("rateLimited");
+        await expect(authenticatedAs(t, owner).action(api.featureRequests.submit, ARGS)).resolves.toBe("ok");
     });
 });
