@@ -1,4 +1,5 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
+import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import * as Cause from "effect/Cause";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
@@ -47,7 +48,12 @@ export function BudgetDetail({ db, id, onDone }: { db: Database; id: string; onD
     const nowMs = useNow();
     const [periodOffset, setPeriodOffset] = useState(0);
     const { budget, transactions, periodsBack, contributions } = useCategoryBudget(db, id, nowMs, periodOffset);
-    const burndown = useBurndown(contributions, nowMs, budget, budget?.categoryId ?? null);
+    const burndown = useBurndown(
+        contributions,
+        nowMs,
+        budget?.type === BUDGET_TYPE.day ? null : budget,
+        budget?.categoryId ?? null
+    );
     const { requestDelete } = useDeferredDelete("budget");
     const limitSheetRef = useRef<BottomSheetModal>(null);
     const firstDayOfMonth = useSettingNumber("firstDayOfMonth");

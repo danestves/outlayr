@@ -1,5 +1,5 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
-import { windowEndMs } from "@outlayr/money/budget-window";
+import { BUDGET_TYPE, windowEndMs } from "@outlayr/money/budget-window";
 import * as Cause from "effect/Cause";
 import { Color, Stack, useRouter } from "expo-router";
 import { useRef, useState } from "react";
@@ -58,7 +58,7 @@ export function OverallBudgetDetail({ db, onDone }: { db: Database; onDone: () =
     const calendar = { firstDayOfMonth, firstWeekday };
     const contributions = useExpenseContributions(db, nowMs);
     const budget = useMainBudget(db, nowMs, contributions, periodOffset);
-    const burndown = useBurndown(contributions, nowMs, budget, null);
+    const burndown = useBurndown(contributions, nowMs, budget?.type === BUDGET_TYPE.day ? null : budget, null);
     const transactions = useBudgetContributions(
         db,
         null,
