@@ -174,7 +174,8 @@ function BudgetSummary({
     const scrubbed = scrubDay == null ? null : (burndown?.points[scrubDay - 1] ?? null);
     const balance = scrubbed ? scrubbed.balance : leftover;
     const over = scrubbed ? balance < 0 : overBudget;
-    const spentPct = amount > 0 ? Math.round((spent / amount) * 100) : 0;
+    const shownSpent = scrubbed ? scrubbed.spent : spent;
+    const spentPct = amount > 0 ? Math.round((shownSpent / amount) * 100) : 0;
     let label: string;
     if (closed) {
         label = over ? t("budgets.detail.overBudget") : t("budgets.detail.unspent");
@@ -187,7 +188,11 @@ function BudgetSummary({
     const scrubLabel = scrubDate ? `${scrubDate.getDate()} ${monthAbbrev(scrubDate, language)}` : null;
     const measures: MeasureStripCell[] = [
         { figure: formatAmount(amount, currency, false, language), key: "limit", label: t("budgets.measure.limit") },
-        { figure: formatAmount(spent, currency, false, language), key: "spent", label: t("budgets.measure.spent") },
+        {
+            figure: formatAmount(shownSpent, currency, false, language),
+            key: "spent",
+            label: t("budgets.measure.spent"),
+        },
     ];
     if (leftPerDayAmount != null) {
         measures.push({

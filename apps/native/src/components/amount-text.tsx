@@ -21,6 +21,7 @@ import { cn, tv } from "./tw";
 
 const BASELINE_STRUT = "\u200B";
 const HERO_GUTTER = 40;
+const FIT_WIDTH_FLOOR = 14;
 
 export const AmountsHiddenContext = createContext(false);
 
@@ -130,12 +131,13 @@ export function fittedHeroSize(
     amount: number,
     minorUnits: number,
     width: number,
-    fontScale: number
+    fontScale: number,
+    floor?: number
 ): number {
     if (width <= 0) {
         return size;
     }
-    const drawn = amountHeroFontSize(amount, minorUnits, width - SYMBOL_ALLOWANCE * (fontScale - 1));
+    const drawn = amountHeroFontSize(amount, minorUnits, width - SYMBOL_ALLOWANCE * (fontScale - 1), floor);
     return Math.min(size, Math.floor(drawn / fontScale));
 }
 
@@ -175,7 +177,10 @@ export function HeroNumber({
     const resolvedSign = sign ?? (amount < 0 ? "-" : "+");
     const hero = brandFace ? HERO_TYPE : PLAIN_HERO;
     const scaled = size * hero.scale;
-    const fitted = fittedHeroSize(scaled, amount, parts.minorUnits, fitWidth ?? windowWidth - HERO_GUTTER, fontScale);
+    const fitted =
+        fitWidth === undefined
+            ? fittedHeroSize(scaled, amount, parts.minorUnits, windowWidth - HERO_GUTTER, fontScale)
+            : fittedHeroSize(scaled, amount, parts.minorUnits, fitWidth, fontScale, FIT_WIDTH_FLOOR);
     const small = (Math.round(scaled * 0.5) * fitted) / scaled;
     const whole = Math.trunc(roundMoney(Math.abs(amount), parts.minorUnits));
     return (
