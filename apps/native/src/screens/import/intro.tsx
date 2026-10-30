@@ -2,7 +2,6 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
 
-import { SourceLogo } from "@/components/import-flow/parts";
 import { SettingsAction } from "@/components/settings/settings-action";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
@@ -14,6 +13,7 @@ import { SILENT } from "@/state/atom-command";
 import { loadMoneyManagerBackupCommand } from "@/state/money-manager-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 
+import { SourceLogo } from "./components/parts";
 import { useImportPaths } from "./paths";
 
 const STEPS = [

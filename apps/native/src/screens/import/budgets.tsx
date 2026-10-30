@@ -1,10 +1,10 @@
 import { CategoryIconTile } from "@/components/category-icon-tile";
-import { ImportRow } from "@/components/import-flow/import-row";
 import { SettingsSection } from "@/components/list/list-row";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { useTranslation } from "@/i18n/context";
 import { moneyManagerSession, useMoneyManagerSession } from "@/lib/money-manager-session";
 
+import { ImportRow } from "./components/import-row";
 import { categoryLook, categoryName, money } from "./labels";
 
 export function MoneyManagerBudgets() {

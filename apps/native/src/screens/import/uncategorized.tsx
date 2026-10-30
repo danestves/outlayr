@@ -1,17 +1,18 @@
 import { View } from "react-native";
 
-import { ImportRow } from "@/components/import-flow/import-row";
-import { ImportHero } from "@/components/import-flow/parts";
 import { ChoiceRow, SettingsSection } from "@/components/list/list-row";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { formatTargetDate } from "@/domain/dates";
+import { tc } from "@/domain/money-manager/count-labels";
 import type { UncategorizedChoice } from "@/domain/money-manager/types";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import { moneyManagerSession, useMoneyManagerSession } from "@/lib/money-manager-session";
 
-import { accountTitle, grouped, money, tc } from "./labels";
+import { ImportRow } from "./components/import-row";
+import { ImportHero } from "./components/parts";
+import { accountTitle, grouped, money } from "./labels";
 
 const PREVIEW_PAIRS = 3;
 

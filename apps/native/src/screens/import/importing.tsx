@@ -4,17 +4,18 @@ import { useRouter } from "expo-router";
 import { Progress } from "panelui-native/components/progress";
 import { View } from "react-native";
 
-import { ImportHero } from "@/components/import-flow/parts";
 import { SettingsAction } from "@/components/settings/settings-action";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
+import { tc } from "@/domain/money-manager/count-labels";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import { useMoneyManagerSession } from "@/lib/money-manager-session";
 import { useColors } from "@/theme/use-colors";
 
-import { grouped, tc } from "./labels";
+import { ImportHero } from "./components/parts";
+import { grouped } from "./labels";
 import { useHardwareBack } from "./use-hardware-back";
 
 type Stage = "done" | "now" | "next";

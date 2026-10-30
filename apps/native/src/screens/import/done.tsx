@@ -5,14 +5,13 @@ import { useState } from "react";
 import { Alert, Pressable, View } from "react-native";
 
 import { CategoryIconTile } from "@/components/category-icon-tile";
-import { ImportRow } from "@/components/import-flow/import-row";
-import { ImportHero } from "@/components/import-flow/parts";
 import { SettingsSection } from "@/components/list/list-row";
 import { SettingsAction } from "@/components/settings/settings-action";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { flyleafDate } from "@/domain/flyleaf";
+import { tc } from "@/domain/money-manager/count-labels";
 import type { MmBalanceCheck } from "@/domain/money-manager/types";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { moneyManagerSession, useMoneyManagerSession } from "@/lib/money-manager-session";
@@ -22,7 +21,9 @@ import { undoMoneyManagerImportCommand } from "@/state/money-manager-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
 
-import { money, tc } from "./labels";
+import { ImportRow } from "./components/import-row";
+import { ImportHero } from "./components/parts";
+import { money } from "./labels";
 import { useImportPaths } from "./paths";
 import { useHardwareBack } from "./use-hardware-back";
 
