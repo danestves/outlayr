@@ -1,12 +1,12 @@
 import { View } from "react-native";
 
-import { ImportRow } from "@/components/import-flow/import-row";
 import { SettingsSection } from "@/components/list/list-row";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { useTranslation } from "@/i18n/context";
 import { moneyManagerSession, useMoneyManagerSession } from "@/lib/money-manager-session";
 
+import { ImportRow } from "./components/import-row";
 import { accountTitle, money } from "./labels";
 
 export function MoneyManagerBalances() {

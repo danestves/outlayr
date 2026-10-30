@@ -2,8 +2,6 @@ import { useRouter } from "expo-router";
 import { View } from "react-native";
 
 import { CategoryIconTile } from "@/components/category-icon-tile";
-import { ImportRow } from "@/components/import-flow/import-row";
-import { ImportHero, YearBars } from "@/components/import-flow/parts";
 import { SettingsSection } from "@/components/list/list-row";
 import { SettingsAction } from "@/components/settings/settings-action";
 import { SettingsScreen } from "@/components/settings/settings-screen";
@@ -23,6 +21,8 @@ import { SILENT } from "@/state/atom-command";
 import { applyMoneyManagerImportCommand } from "@/state/money-manager-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 
+import { ImportRow } from "./components/import-row";
+import { ImportHero, YearBars } from "./components/parts";
 import { categoryTally, grouped, money, tc } from "./labels";
 import { useImportPaths } from "./paths";
 

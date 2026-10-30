@@ -1,9 +1,10 @@
-import type { ImportRowProps } from "@/components/import-flow/import-row";
 import { SUGGESTED_CATEGORY_PRESETS } from "@/data/categories-core";
 import { formatSignedAmount } from "@/domain/account-display";
 import { formatFixed } from "@/domain/money";
 import type { TranslateFn } from "@/i18n/context";
 import type { MoneyManagerDraft } from "@/lib/money-manager-session";
+
+import type { ImportRowProps } from "./components/import-row";
 
 type Target = NonNullable<ImportRowProps["target"]>;
 

@@ -2,9 +2,6 @@ import { useRef, useState } from "react";
 import { View } from "react-native";
 
 import { CategoryIconTile } from "@/components/category-icon-tile";
-import { ChoiceSheet } from "@/components/import-flow/choice-sheet";
-import type { ChoiceSheetHandle } from "@/components/import-flow/choice-sheet";
-import { ImportRow } from "@/components/import-flow/import-row";
 import { ChoiceRow, SettingsSection } from "@/components/list/list-row";
 import { SegmentedRow } from "@/components/settings/segmented-row";
 import { SettingsScreen } from "@/components/settings/settings-screen";
@@ -15,6 +12,9 @@ import { useTranslation } from "@/i18n/context";
 import { moneyManagerSession, useMoneyManagerSession } from "@/lib/money-manager-session";
 import type { MoneyManagerDraft } from "@/lib/money-manager-session";
 
+import { ChoiceSheet } from "./components/choice-sheet";
+import type { ChoiceSheetHandle } from "./components/choice-sheet";
+import { ImportRow } from "./components/import-row";
 import { categoryName, categoryTarget, tc } from "./labels";
 
 const MODES = ["match", "keep"] as const;

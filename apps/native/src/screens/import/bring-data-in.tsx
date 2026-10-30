@@ -3,8 +3,6 @@ import { useRef } from "react";
 import { Linking } from "react-native";
 
 import { CategoryIconTile } from "@/components/category-icon-tile";
-import { ImportRow } from "@/components/import-flow/import-row";
-import { SourceLogo } from "@/components/import-flow/parts";
 import { ImportSheet } from "@/components/import-sheet/import-sheet";
 import type { ImportSheetHandle } from "@/components/import-sheet/import-sheet";
 import { SettingsSection } from "@/components/list/list-row";
@@ -15,6 +13,8 @@ import { importDraftStore } from "@/lib/import-draft-store";
 import { supportMailURL } from "@/lib/support-link";
 import { useColors } from "@/theme/use-colors";
 
+import { ImportRow } from "./components/import-row";
+import { SourceLogo } from "./components/parts";
 import { useImportPaths } from "./paths";
 
 export function BringDataIn() {
