@@ -41,7 +41,6 @@ export function useCategoryList(income: boolean) {
     const parents = pendingRemoved(namespace, pendingId);
     const totals = useCategoryTotals(db);
 
-    // Never shown for zero parents: the empty state renders a headerless Section.
     const children = parents.reduce((total, parent) => total + parent.children.length, 0);
     const census = [t("categories.census.categories", { count: parents.length })];
     if (children > 0) {

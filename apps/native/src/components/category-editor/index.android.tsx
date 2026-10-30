@@ -50,7 +50,6 @@ function categoryKindKey(edited: Category | null): TranslatableKey {
     return edited.income ? "categories.kind.income" : "categories.kind.expense";
 }
 
-// Delete mirrors `category-edit-screen.tsx`: keep them in step.
 export default function CategoryEditor(props: CategoryEditorProps) {
     const db = useDatabase();
     const router = useRouter();

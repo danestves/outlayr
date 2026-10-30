@@ -27,7 +27,6 @@ function sheetTitle(props: AccountEditorProps) {
     return props.liability === true ? "accounts.nav.newLiability" : "accounts.nav.new";
 }
 
-// No fly-up: it needs the sheet to grow under the picker, and an Android sheet ignores re-declared detents once up.
 export default function AccountEditor(props: AccountEditorProps) {
     const t = useTranslation();
     const insets = useSafeAreaInsets();
