@@ -1,7 +1,7 @@
 import { isPickableCurrency } from "@outlayr/money/currency";
 import { SELECTABLE_RECURRING_TYPES } from "@outlayr/money/recurrence";
 
-import type { TransactionSeed } from "@/components/transaction-form";
+import type { TransactionSeed } from "@/components/transaction-form/form-values";
 import { encodeInstallmentSeed, parseInstallmentSeed } from "@/domain/installment-scan";
 import { AMOUNT_CEILING } from "@/domain/numpad";
 import { parseReceipt } from "@/domain/receipt-items";

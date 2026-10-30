@@ -84,6 +84,7 @@ export interface UseTransactionEnrichmentResult {
     lookupNow: () => void;
     onNameChange: (next: string) => void;
     pending: boolean;
+    userAsked: () => boolean;
 }
 
 const DEBOUNCE_MS = 600;
@@ -494,6 +495,9 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
     const nameRef = useRef(initialName ?? "");
     const forceRef = useRef(false);
     const forcingRef = useRef(false);
+    // The user asked for this merchant's lookup and has not retyped the name: guards that keep suggestions off filled
+    // fields lift, and the save carries the answer to the merchant's other rows.
+    const userAskedRef = useRef(false);
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const groundedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const recheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -555,6 +559,7 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
     };
 
     const onNameChange = (next: string) => {
+        userAskedRef.current = false;
         nameRef.current = next;
         if (!latest.current.enabled) {
             return;
@@ -565,6 +570,7 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
     };
 
     const lookupNow = () => {
+        userAskedRef.current = true;
         if (!latest.current.enabled || forcingRef.current) {
             return;
         }
@@ -623,22 +629,24 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         }
         onNameChange(nameRef.current);
     });
-    // oxlint-disable-next-line outlayr/react-effect-budget -- re-arms the lookup timers and request ticket held in refs when the currency or income a lookup is filed under changes
+    // oxlint-disable-next-line outlayr/react-effect-budget -- re-arms the lookup timers and request ticket held in refs, and ends a user-asked lookup, when the currency or income a lookup is filed under changes
     useEffect(() => {
         const currencyChanged = seenCurrencyRef.current !== currency;
         const incomeChanged = seenIncomeRef.current !== income;
         seenCurrencyRef.current = currency;
         seenIncomeRef.current = income;
-        if (!enabled) {
-            return;
-        }
-        if (currencyChanged) {
+        if (enabled && currencyChanged) {
             restartForCurrency();
         }
-        if (incomeChanged) {
+        if (enabled && incomeChanged) {
             restartForIncome();
+        }
+        // The hook re-asks on a currency or side change; that ask is the form's, not the user's, so the override ends
+        // here.
+        if (currencyChanged || incomeChanged) {
+            userAskedRef.current = false;
         }
     }, [currency, enabled, income]);
 
-    return { lookupNow, onNameChange, pending: pending || forcing };
+    return { lookupNow, onNameChange, pending: pending || forcing, userAsked: () => userAskedRef.current };
 }

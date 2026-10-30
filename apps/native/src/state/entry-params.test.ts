@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import type { TransactionSeed } from "@/components/transaction-form";
+import type { TransactionSeed } from "@/components/transaction-form/form-values";
 import { scannedOrder } from "@/domain/installment-scan";
 import { applyNumpadKey, numpadToNumber } from "@/domain/numpad";
 
