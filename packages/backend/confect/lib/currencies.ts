@@ -9,6 +9,6 @@ export type MarketRateType = MoneyMarketRateType;
 
 export const entryRateType = v.union(v.literal("official"), v.literal("eur_reference"), v.literal("custom"));
 
-export const RateSource = Schema.Literals(["frankfurter", "cotizave", "openexchangerates"]);
+export const RateSource = Schema.Literals(["frankfurter", "cotizave", "openexchangerates", "binance"]);
 
 export type RateSource = typeof RateSource.Type;

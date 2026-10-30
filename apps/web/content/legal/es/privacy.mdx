@@ -65,7 +65,7 @@ No necesitas una cuenta para usar Outlayr. Sin una, no se nos envía nada de tu 
 
 ### Lo que la app envía incluso sin cuenta
 
-- **Tasas de cambio.** La app descarga las tasas de cambio del mercado desde nuestro servidor. La solicitud no requiere cuenta y no lleva datos de tu registro. Nuestro servidor obtiene las tasas de cambio de fuentes públicas (Frankfurter y CotizaVE), que no reciben nada sobre ti.
+- **Tasas de cambio.** La app descarga las tasas de cambio del mercado desde nuestro servidor. La solicitud no requiere cuenta y no lleva datos de tu registro. Nuestro servidor obtiene las tasas de cambio de Open Exchange Rates, CotizaVE y Binance, que no reciben nada sobre ti.
 - **Logos.** Para mostrar el logo de un comercio o de un banco, la app se lo pide a Logo.dev por su dirección web (por ejemplo, netflix.com), y al servicio de favicons de Google si Logo.dev no lo tiene. La solicitud sale de tu dispositivo, así que esos servicios ven tu dirección IP. Nunca incluye montos, notas ni quién eres. Después, los logos se guardan en caché en el celular.
 - **Actualizaciones de la app.** Cuando la app se inicia, le pregunta a Expo, la plataforma que usamos para publicar actualizaciones, si hay una versión más reciente del código de la app. La solicitud incluye un ID aleatorio creado para esta instalación (no vinculado a tu cuenta), la versión de la app y tu dirección IP. Si una actualización no pudo iniciarse la última vez, también incluye un breve mensaje de error.
 - **Estado de compra.** La app consulta con RevenueCat si tienes Outlayr Pro, usando un ID anónimo aleatorio hasta que inicies sesión, y después tu ID de cuenta, nombre y correo electrónico. Consulta [Outlayr Pro](#outlayr-pro).
@@ -210,7 +210,7 @@ Estas empresas nos ayudan a operar Outlayr. Cada una recibe solo lo que su funci
 - **[Expo](https://expo.dev/privacy)** distribuye las actualizaciones de la app. Recibe un ID de instalación aleatorio, la versión de la app, tu dirección IP y los mensajes de error de las actualizaciones.
 - **[PostHog](https://posthog.com/privacy)** proporciona las analíticas de uso y los reportes de fallas, desde servidores en Estados Unidos. Recibe los eventos descritos en [Lo que la app envía incluso sin cuenta](#lo-que-la-app-envía-incluso-sin-cuenta), un ID de instalación aleatorio y tu ID de cuenta cuando inicias sesión. También recibe las analíticas de este sitio web, descritas en [Este sitio web](#este-sitio-web).
 
-Frankfurter y CotizaVE publican las tasas de cambio que lee nuestro servidor. No reciben nada sobre ti.
+Open Exchange Rates, CotizaVE y Binance publican las tasas de cambio que lee nuestro servidor. No reciben nada sobre ti.
 
 ## Sin anuncios ni rastreo
 

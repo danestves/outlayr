@@ -9,6 +9,7 @@
  */
 
 import type * as accountDeletion from "../accountDeletion.js";
+import type * as binance from "../binance.js";
 import type * as cotizave from "../cotizave.js";
 import type * as crons from "../crons.js";
 import type * as csvImport from "../csvImport.js";
@@ -39,6 +40,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   accountDeletion: typeof accountDeletion;
+  binance: typeof binance;
   cotizave: typeof cotizave;
   crons: typeof crons;
   csvImport: typeof csvImport;
