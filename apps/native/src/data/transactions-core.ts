@@ -179,6 +179,7 @@ export interface TransactionInput {
     recurringType?: number;
     /** Days of notice for the due-date reminder; null is off, 0 is the day itself. */
     reminderLeadDays?: number | null;
+    unreviewed?: boolean;
 }
 
 const TransactionsOperation = Schema.Literals([
@@ -300,6 +301,7 @@ const toRow = Effect.fn("Transactions.toRow")(function* toRow(db: Database, id: 
         // Frozen at write; converting at read time would change last month's spending every morning.
         ...canonical,
         deletedAt: null,
+        unreviewed: input.unreviewed ?? false,
         updatedAt: now,
     };
     return row;

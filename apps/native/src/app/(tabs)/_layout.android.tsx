@@ -5,12 +5,14 @@ import { useOverBudgetCount } from "@/data/budgets";
 import { useNow } from "@/data/use-now";
 import { useTranslation } from "@/i18n/context";
 import { NAV_LABEL_FONT, NAV_LABEL_SIZE } from "@/navigation/material-chrome";
+import { useResumedImport } from "@/screens/import/use-resumed-import";
 import { withAlpha } from "@/theme/shade";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
 const PRESSED_ALPHA = 0.1;
 
 export default function TabLayout() {
+    useResumedImport();
     const m3 = useMaterialColors();
     const t = useTranslation();
     const db = useDatabase();

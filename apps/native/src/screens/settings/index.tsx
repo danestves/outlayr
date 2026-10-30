@@ -1,11 +1,9 @@
-import Constants from "expo-constants";
 import { useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Linking, Platform, View } from "react-native";
 
 import { AiConsentPromptSheet } from "@/components/ai-consent";
-import { ImportSheet } from "@/components/import-sheet/import-sheet";
-import type { ImportSheetHandle } from "@/components/import-sheet/import-sheet";
+import { UndoImportRow } from "@/components/import-flow/undo-import-row";
 import { LinkRow, SettingsSection, ToggleRow } from "@/components/list/list-row";
 import { AccentSwatches } from "@/components/settings/accent-swatches";
 import { AccountPanel } from "@/components/settings/account-panel";
@@ -41,12 +39,11 @@ import { translateNow } from "@/i18n/runtime";
 import { expectHandoff, openInAppBrowser } from "@/lib/app-handoff";
 import { alternateIconsSupported, useAppIcon } from "@/lib/app-icon";
 import { APP_BUILD, APP_VERSION } from "@/lib/app-version";
-import { importDraftStore } from "@/lib/import-draft-store";
 import { hasSystemLanguageSettings } from "@/lib/language-settings";
 import { legalUrl } from "@/lib/legal-url";
 import { notifyFailure } from "@/lib/notify";
+import { SUPPORT_EMAIL, supportDiagnostics } from "@/lib/support-link";
 import { supportMailto } from "@/lib/support-mailto";
-import type { SupportDiagnostics } from "@/lib/support-mailto";
 import { SILENT } from "@/state/atom-command";
 import { appAtomRegistry } from "@/state/atom-registry";
 import { openLanguageSettingsCommand } from "@/state/link-commands";
@@ -58,7 +55,6 @@ import { useIsDark } from "@/theme/use-is-dark";
 
 import { useIntegrationsOn } from "./integrations-on";
 
-const SUPPORT_EMAIL = "support@tryoutlayr.com";
 const SAMPLE_AMOUNT = 1284.5;
 // Matches the 1284 the `settings.numberEntry.type1Note` copy says to type.
 const CENTS_LAST_KEYS = 1284;
@@ -72,7 +68,6 @@ export function Settings() {
     const saveAiConsent = useAtomAction(saveAiConsentCommand);
     const router = useRouter();
     const t = useTranslation();
-    const importSheetRef = useRef<ImportSheetHandle>(null);
     const [lockPending, setLockPending] = useState<boolean | null>(null);
     const [consentFor, setConsentFor] = useState<"smartFill" | "sendToAi" | null>(null);
     const toggleAppLock = useAtomAction(toggleAppLockCommand, {
@@ -348,12 +343,10 @@ export function Settings() {
             <SettingsSection title={t("settings.section.data")}>
                 <DataActions
                     onExport={() => router.push("/settings/export")}
-                    onImport={() => {
-                        importDraftStore.setStep(importDraftStore.getResumeStep());
-                        importSheetRef.current?.present();
-                    }}
+                    onImport={() => router.push("/import")}
                     onRestore={() => router.push("/settings/restore")}
                 />
+                <UndoImportRow />
                 <LinkRow
                     icon="History"
                     onPress={() => router.push("/settings/deleted")}
@@ -375,7 +368,6 @@ export function Settings() {
                 onTerms={() => openInAppBrowser(legalUrl("terms", language))}
                 version={`Outlayr ${APP_VERSION} (${APP_BUILD})`}
             />
-            <ImportSheet ref={importSheetRef} />
             <AiConsentPromptSheet
                 onAnswer={(allowed) => {
                     if (allowed) {
@@ -405,15 +397,4 @@ function AppIconRow() {
             value={t(appIconLabel(active))}
         />
     );
-}
-
-function supportDiagnostics(version: string, build: string): SupportDiagnostics {
-    return {
-        appBuild: build,
-        appName: Constants.expoConfig?.name ?? "Outlayr",
-        appVersion: version,
-        deviceName: Constants.deviceName ?? "",
-        osName: Platform.select({ android: "Android", ios: "iOS" }) ?? Platform.OS,
-        osVersion: String(Platform.Version),
-    };
 }

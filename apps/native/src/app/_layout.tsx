@@ -33,7 +33,14 @@ import { useAccountDeferred, useOnboardingSettled } from "@/data/onboarding";
 import { useSeededClockPreference } from "@/data/settings";
 import { DeferredDeleteProvider } from "@/data/use-deferred-delete";
 import { rootStackGroup } from "@/domain/auth-gate";
-import { GROUP_ENTRY, MODAL_SCREENS, SHEET_SCREENS, TITLED_SCREENS } from "@/domain/root-stack";
+import {
+    GROUP_ENTRY,
+    IMPORT_SCREENS,
+    MODAL_SCREENS,
+    ONBOARDING_IMPORT_SCREENS,
+    SHEET_SCREENS,
+    TITLED_SCREENS,
+} from "@/domain/root-stack";
 import { localShellReady, routeSettled } from "@/domain/splash-gate";
 import { LanguageProvider, useTranslation } from "@/i18n/context";
 import { translateNow } from "@/i18n/runtime";
@@ -249,6 +256,10 @@ function RootStack() {
     const { height: windowHeight } = useWindowDimensions();
     const pickerDetent = identityPickerDetent(windowHeight);
     const chrome = useStackChrome();
+    const importOptions = (screen: (typeof IMPORT_SCREENS)[number]) =>
+        screen.locked
+            ? { ...chrome.titled(t(screen.titleKey)), gestureEnabled: false, headerBackVisible: false }
+            : chrome.titled(t(screen.titleKey));
     const lockOpen = useAppLockOpen();
     const covered = useAuthCovered();
     useSeededClockPreference(db);
@@ -274,6 +285,9 @@ function RootStack() {
                 <Stack.Screen name="onboarding/auto-log" options={chrome.firstRunStep} />
                 <Stack.Screen name="onboarding/smart-features" options={chrome.firstRunStep} />
                 <Stack.Screen name="onboarding/rhythm" options={chrome.firstRunStep} />
+                {ONBOARDING_IMPORT_SCREENS.map((screen) => (
+                    <Stack.Screen key={screen.name} name={screen.name} options={importOptions(screen)} />
+                ))}
             </Stack.Protected>
 
             {/* Behind onboarding: only the currency step writes `currencyChosen`, and canonicalization declines every
@@ -298,6 +312,9 @@ function RootStack() {
 
                 {TITLED_SCREENS.map((screen) => (
                     <Stack.Screen key={screen.name} name={screen.name} options={chrome.titled(t(screen.titleKey))} />
+                ))}
+                {IMPORT_SCREENS.map((screen) => (
+                    <Stack.Screen key={screen.name} name={screen.name} options={importOptions(screen)} />
                 ))}
                 <Stack.Screen name="accounts/reorder" options={chrome.pushed} />
                 <Stack.Screen name="accounts/[accountId]/index" options={chrome.pushed} />

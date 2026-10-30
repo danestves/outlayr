@@ -4,6 +4,7 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { useOverBudgetCount } from "@/data/budgets";
 import { useNow } from "@/data/use-now";
 import { useTranslation } from "@/i18n/context";
+import { useResumedImport } from "@/screens/import/use-resumed-import";
 import { useColors } from "@/theme/use-colors";
 
 const LABEL_STYLE = {
@@ -12,6 +13,7 @@ const LABEL_STYLE = {
 } as const;
 
 export default function TabLayout() {
+    useResumedImport();
     const { tint } = useColors();
     const t = useTranslation();
     const db = useDatabase();

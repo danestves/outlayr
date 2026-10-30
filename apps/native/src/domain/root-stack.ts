@@ -85,6 +85,37 @@ export const MODAL_SCREENS: readonly {
     { name: "transactions/transfers/create", titleKey: "transfers.title" },
 ];
 
+/**
+ * Registered in both the ledger and the onboarding groups (prefixed `onboarding/` there): a guard group can only push
+ * its own routes, and the import runs from Settings and from the first-run cover alike. `locked` screens write or
+ * have written the ledger, so they offer no way back.
+ */
+export const IMPORT_SCREENS: readonly {
+    name: string;
+    titleKey: TranslationKey;
+    locked?: boolean;
+}[] = [
+    { name: "import/index", titleKey: "mmImport.nav.bringDataIn" },
+    { name: "import/money-manager/index", titleKey: "mmImport.nav.moneyManager" },
+    { name: "import/money-manager/open", titleKey: "mmImport.nav.moneyManager" },
+    { name: "import/money-manager/overview", titleKey: "mmImport.nav.moneyManager" },
+    { name: "import/money-manager/accounts", titleKey: "accounts.title" },
+    { name: "import/money-manager/categories", titleKey: "nav.categories" },
+    { name: "import/money-manager/uncategorized", titleKey: "mmImport.nav.uncategorized" },
+    { name: "import/money-manager/balances", titleKey: "mmImport.nav.balances" },
+    { name: "import/money-manager/budgets", titleKey: "mmImport.nav.budgets" },
+    { name: "import/money-manager/start", titleKey: "mmImport.nav.start" },
+    { name: "import/money-manager/importing", locked: true, titleKey: "mmImport.nav.importing" },
+    { name: "import/money-manager/done", locked: true, titleKey: "mmImport.nav.moneyManager" },
+    { name: "import/money-manager/wrong-file", titleKey: "mmImport.nav.moneyManager" },
+];
+
+/** First run walks the same import screens under `onboarding/`, so they stay inside the onboarding guard. */
+export const ONBOARDING_IMPORT_SCREENS = IMPORT_SCREENS.map((screen) => ({
+    ...screen,
+    name: `onboarding/${screen.name}`,
+}));
+
 export const ROOT_STACK_SCREEN_NAMES = {
     adopt: ["auth/adopt"],
     ledger: [
@@ -94,6 +125,7 @@ export const ROOT_STACK_SCREEN_NAMES = {
         ...TITLED_SCREENS.map((screen) => screen.name),
         ...SHEET_SCREENS.map((sheet) => sheet.name),
         ...MODAL_SCREENS.map((modal) => modal.name),
+        ...IMPORT_SCREENS.map((screen) => screen.name),
         "accounts/reorder",
         "accounts/[accountId]/index",
         "installments/[planId]",
@@ -114,6 +146,7 @@ export const ROOT_STACK_SCREEN_NAMES = {
         "onboarding/auto-log",
         "onboarding/smart-features",
         "onboarding/rhythm",
+        ...ONBOARDING_IMPORT_SCREENS.map((screen) => screen.name),
     ],
     "sign-in": ["auth/sign-in", "auth/email"],
 } satisfies Readonly<Record<RootStackGroup, readonly string[]>>;
