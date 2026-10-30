@@ -5,23 +5,13 @@ import type { TextInputInstance } from "react-native";
 import { OutlinedDropdownField } from "@/components/material/outlined-dropdown-field";
 import { OutlinedTextField } from "@/components/material/outlined-field";
 
+import type { CategoryFields } from "./use-category-form";
+
 type CategoryType = "expense" | "income";
 
-interface CategoryDetailsFieldsProps {
-    caption: string | null;
-    failure: string | null;
-    expenseLabel: string;
-    income: boolean;
-    incomeLabel: string;
+interface CategoryDetailsFieldsProps extends CategoryFields {
     name: string;
     nameFieldRef?: Ref<TextInputInstance>;
-    nameLabel: string;
-    namePlaceholder: string;
-    onIncomeChange: (income: boolean) => void;
-    onNameChange: (name: string) => void;
-    onSubmitName: () => void;
-    typeLabel: string;
-    typePickerVisible: boolean;
 }
 
 export function CategoryDetailsFields({

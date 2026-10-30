@@ -1,13 +1,11 @@
-import { RegistryContext } from "@effect/atom-react/RegistryContext";
 import { Host } from "@expo/ui";
 import { ScrollView, useNativeState, VStack } from "@expo/ui/swift-ui";
 import type { TextFieldRef } from "@expo/ui/swift-ui";
 import { animation, blur, opacity, overlay, padding, scrollDismissesKeyboard } from "@expo/ui/swift-ui/modifiers";
-import { useForm, useSelector } from "@tanstack/react-form";
 import { Stack, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { use, useEffect, useRef, useState } from "react";
-import { Keyboard, View } from "react-native";
+import { useRef, useState } from "react";
+import { View } from "react-native";
 import Animated, { FadeInDown, FadeOutDown, useDerivedValue, useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -25,234 +23,55 @@ import {
     HERO_BOTTOM_PADDING,
     HERO_TOP_PADDING,
 } from "@/components/editor-style";
-import { holdAfterSuccess, pressSubmit } from "@/components/form/submit-guard";
 import { IdentityCurtain } from "@/components/identity-curtain";
 import { HERO_RING, IdentityFlyUpLayer } from "@/components/identity-fly-up";
 import { Text } from "@/components/text";
-import {
-    EMPTY_DRAFT,
-    useIdentityDraft,
-    useIdentityDraftScope,
-    useIdentityFlyUp,
-    useIdentitySeed,
-} from "@/contexts/identity-draft-context";
-import { useDatabase } from "@/contexts/local-data-context";
-import { useCategoriesByNamespace } from "@/data/categories";
-import { CATEGORY_PALETTE, getCategoryById, isCategoryValidationError } from "@/data/categories-core";
-import type { Category } from "@/data/categories-core";
-import { firstAvailableColor } from "@/domain/category-color";
-import { CATEGORY_ERROR_KEYS } from "@/domain/category-error";
 import { useTranslation } from "@/i18n/context";
-import type { TranslateFn } from "@/i18n/context";
-import { posthog } from "@/lib/posthog";
 import { CATEGORY_DETENT, LARGE_ONLY, SUBCATEGORY_DETENT } from "@/lib/sheet-detents";
-import { useHaptics } from "@/lib/use-haptics";
-import { runAtomCommand, SILENT } from "@/state/atom-command";
-import { saveCategoryCommand } from "@/state/categories-commands";
 import { glowFromEmoji } from "@/theme/glow";
 import { withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";
 
 import { CategoryEditorDetailsSection } from "./details-section";
-import { categoryColorFollowsSiblings, categoryCreatesIncome, categoryIdentitySeed } from "./identity-seed";
-
-const MAX_EXPENSE_CATEGORIES = 24;
-
-export type CategoryEditorProps =
-    | { mode: "create"; income?: boolean; parentId?: string | null }
-    | { mode: "edit"; id: string };
-
-interface CategoryEditorSubject {
-    create: boolean;
-    income: boolean;
-    isSubcategory: boolean;
-    parent: Category | null;
-}
-
-interface CategoryEditorCopy {
-    caption: string | null;
-    ctaLabel: string;
-    namePlaceholder: string;
-}
-
-function categoryEditorCopy(
-    t: TranslateFn,
-    { create, income, isSubcategory, parent }: CategoryEditorSubject
-): CategoryEditorCopy {
-    const namespacePlaceholderKey = income ? "categories.namePlaceholder.income" : "categories.namePlaceholder.expense";
-    const inheritsCaption = parent ? t("categories.inherits", { parent: parent.name }) : null;
-    const incomeCaption = income ? t("categories.incomeColorNote") : null;
-    const createCaption = isSubcategory ? inheritsCaption : incomeCaption;
-    const addLabelKey = isSubcategory ? "categories.addSubcategory" : "categories.addCategory";
-    const saveLabelKey = isSubcategory ? "categories.saveSubcategory" : "categories.saveCategory";
-    return {
-        caption: create ? createCaption : null,
-        ctaLabel: t(create ? addLabelKey : saveLabelKey),
-        namePlaceholder: t(isSubcategory ? "categories.namePlaceholder.subcategory" : namespacePlaceholderKey),
-    };
-}
-
-/** An edit tolerates an empty symbol only where the stored category never carried one. */
-function categoryIsSaveable(
-    mode: CategoryEditorProps["mode"],
-    name: string,
-    symbolEmpty: boolean,
-    stored: Category | null
-): boolean {
-    if (name.trim() === "") {
-        return false;
-    }
-    if (!symbolEmpty) {
-        return true;
-    }
-    return mode === "edit" && stored != null && stored.icon == null && stored.emoji == null;
-}
+import { useCategoryForm } from "./use-category-form";
+import type { CategoryEditorProps } from "./use-category-form";
 
 export default function CategoryEditor(props: CategoryEditorProps) {
-    const db = useDatabase();
-    return <CategoryEditorReady db={db} {...props} />;
-}
-
-function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/client").Database }) {
-    // The parent spreads a fresh `props` every render, so effects key off these primitives, never `props`.
-    const { db, mode } = props;
-    const parentId = props.mode === "create" ? (props.parentId ?? null) : null;
-    const editId = props.mode === "edit" ? props.id : null;
-    const initialIncome = props.mode === "create" ? !!props.income : false;
     const router = useRouter();
     const t = useTranslation();
     const colors = useColors();
-    const haptics = useHaptics();
-    const registry = use(RegistryContext);
     const insets = useSafeAreaInsets();
     const [ctaHeight, setCtaHeight] = useState(CTA_HEIGHT);
-
-    useIdentityDraftScope();
-    const { draft, setDraft } = useIdentityDraft();
-    const { pickerOpen, setPickerOpen, floatProgress } = useIdentityFlyUp();
-
-    // Lazy `useState`, not `useMemo`: a re-read would re-fire the draft seed below and clobber the user's picks.
-    const [loaded] = useState<Category | null>(() =>
-        mode === "edit" && editId != null ? getCategoryById(db, editId) : null
-    );
-    const [parent] = useState<Category | null>(() =>
-        mode === "create" && parentId != null ? getCategoryById(db, parentId) : null
-    );
-
-    const nameState = useNativeState(loaded?.name ?? "");
     const nameRef = useRef<TextFieldRef>(null);
-    const [failure, setFailure] = useState<string | null>(null);
+    const {
+        canSave,
+        ctaLabel,
+        draft,
+        fields,
+        floatProgress,
+        income,
+        isSubcategory,
+        isSubmitting,
+        name,
+        openPicker,
+        pickerOpen,
+        resetIdentity,
+        showToast,
+        submit,
+        symbolEmpty,
+        tint,
+    } = useCategoryForm(props, { clear: () => nameState.set(""), ref: nameRef });
+    const nameState = useNativeState(name);
 
-    const [initialValues] = useState(() => ({
-        income: parent?.income ?? initialIncome,
-        name: loaded?.name ?? "",
-    }));
-    const form = useForm({
-        defaultValues: initialValues,
-        onSubmit: ({ value }) => {
-            setFailure(null);
-            if (mode === "create") {
-                return addCategory(value);
-            }
-            if (loaded == null) {
-                return;
-            }
-            return holdAfterSuccess(
-                runAtomCommand(
-                    registry,
-                    saveCategoryCommand,
-                    {
-                        db,
-                        onFailure: reportSaveFailure,
-                        onSaved: () => {
-                            posthog?.capture("category_saved", {
-                                category_type: loaded.income ? "income" : "expense",
-                                is_subcategory: isSubcategory,
-                                mode: "edit",
-                            });
-                            haptics("success");
-                            router.back();
-                        },
-                        write: {
-                            id: loaded.id,
-                            mode: "edit",
-                            patch: {
-                                color: loaded.income ? undefined : (draft.color ?? CATEGORY_PALETTE[0]),
-                                emoji: draft.emoji ?? null,
-                                icon: draft.icon ?? null,
-                                name: value.name,
-                            },
-                        },
-                    },
-                    SILENT
-                )
-            );
-        },
-    });
-    const { name, income: formIncome } = useSelector(form.store, (s) => s.values);
-    const isSubmitting = useSelector(form.store, (s) => s.isSubmitting);
-
-    const [colorTouched, setColorTouched] = useState(false);
-    const [showToast, setShowToast] = useState(false);
-    const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     // A shared value: only the fly-up reads it, from the UI thread, so measuring costs the form no render.
     const containerHeight = useSharedValue(0);
     const heroRestTop = useDerivedValue(() => HEADER_HEIGHT + HERO_TOP_PADDING);
     // Measured, not derived: it turns on the caption's rendered line height, and the caption comes and goes.
     const [heroBand, setHeroBand] = useState(HEADER_HEIGHT + HERO_TOP_PADDING + HERO_RING + HERO_BOTTOM_PADDING);
 
-    const expenseTree = useCategoriesByNamespace(db, false);
-
-    const allExpense = expenseTree.flatMap((node) => [node, ...node.children]);
-    const expenseCount = allExpense.length;
-    const usedColors = new Set<string>();
-    for (const category of allExpense) {
-        if (category.id === editId) {
-            continue;
-        }
-        if (category.color) {
-            usedColors.add(category.color);
-        }
-    }
-
-    const [seed] = useState(() => categoryIdentitySeed(mode, loaded, parent));
-    useIdentitySeed(seed);
-
-    const isSubcategory = mode === "create" ? parentId != null : (loaded?.parentId ?? null) != null;
-    const atExpenseLimit = expenseCount >= MAX_EXPENSE_CATEGORIES;
-    const [openedAtLimit] = useState(atExpenseLimit);
-    const forcedIncome = categoryCreatesIncome(mode, parentId, openedAtLimit);
-    const income = mode === "create" ? formIncome || forcedIncome : (loaded?.income ?? false);
-
-    const seenExpenseCount = useRef(expenseCount);
-    // oxlint-disable-next-line outlayr/react-effect-budget -- closes the sheet when the live expense count, which a sync can move, crosses the cap
-    useEffect(() => {
-        const changed = expenseCount !== seenExpenseCount.current;
-        seenExpenseCount.current = expenseCount;
-        if (changed && mode === "create" && parentId == null && !income && expenseCount >= MAX_EXPENSE_CATEGORIES) {
-            router.back();
-        }
-    }, [expenseCount, mode, parentId, income, router]);
-
-    const nextColor = firstAvailableColor(usedColors);
-    const autoColor = categoryColorFollowsSiblings(mode, parentId, colorTouched);
-    const color = autoColor ? nextColor : draft.color;
-
-    const symbolEmpty = !(draft.icon || draft.emoji);
     const captionClearance = symbolEmpty ? CAPTION_CLEARANCE : 0;
-    const tint = income ? colors.income : (color ?? CATEGORY_PALETTE[0]);
     const symbolHues = draft.emoji ? [...glowFromEmoji(draft.emoji).slice(0, 2), tint] : [tint];
     const curtainHues = symbolEmpty ? null : symbolHues;
-    const typePickerVisible = mode === "create" && !isSubcategory && !atExpenseLimit;
-
-    const canSave = categoryIsSaveable(mode, name, symbolEmpty, loaded) && !isSubmitting;
-
-    const { caption, ctaLabel, namePlaceholder } = categoryEditorCopy(t, {
-        create: mode === "create",
-        income,
-        isSubcategory,
-        parent,
-    });
 
     // Not a shared wrapper stack: a `Form` one level deeper is proposed no height and collapses with every row.
     const underPicker = [
@@ -260,89 +79,6 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
         blur(pickerOpen ? FORM_BLUR_RADIUS : 0),
         animation(pickerOpen ? FLY_UP : FLY_BACK, pickerOpen),
     ];
-
-    const openPicker = () => {
-        Keyboard.dismiss();
-        // Freezes the auto-color so a color picked in the picker survives.
-        setColorTouched(true);
-        if (autoColor) {
-            setDraft({ ...EMPTY_DRAFT, color: nextColor });
-        }
-        setPickerOpen(true);
-        router.push({
-            params: {
-                editId: editId ?? "",
-                income: income ? "1" : "0",
-                subcategory: isSubcategory ? "1" : "0",
-            },
-            pathname: "/settings/category-symbol",
-        });
-    };
-
-    const addCategory = (value: { name: string }) => {
-        const pickedColor = color ?? CATEGORY_PALETTE[0];
-        const expenseColor = isSubcategory ? (parent?.color ?? pickedColor) : pickedColor;
-        return holdAfterSuccess(
-            runAtomCommand(
-                registry,
-                saveCategoryCommand,
-                {
-                    db,
-                    onFailure: reportSaveFailure,
-                    onSaved: () => {
-                        posthog?.capture("category_saved", {
-                            category_type: income ? "income" : "expense",
-                            is_subcategory: isSubcategory,
-                            mode: "create",
-                        });
-                        haptics("success");
-                        if (isSubcategory) {
-                            router.back();
-                            return;
-                        }
-                        nameState.set("");
-                        form.setFieldValue("name", "");
-                        // Cleared, not advanced: with `colorTouched` released, the auto color is the first free slot
-                        // after this insert lands, where a value chosen now would come from the pre-insert set.
-                        setColorTouched(false);
-                        setDraft(EMPTY_DRAFT);
-                        flashAdded();
-                    },
-                    write: {
-                        category: {
-                            color: income ? colors.income : expenseColor,
-                            emoji: draft.emoji ?? null,
-                            icon: draft.icon ?? undefined,
-                            income,
-                            name: value.name,
-                            parentId,
-                        },
-                        mode: "create",
-                    },
-                },
-                SILENT
-            ),
-            isSubcategory
-        );
-    };
-
-    const reportSaveFailure = (cause: unknown) => {
-        haptics("error");
-        const code = isCategoryValidationError(cause) ? cause.code : null;
-        setFailure(code ? t(CATEGORY_ERROR_KEYS[code]) : t("categories.error.generic"));
-        if (code === "missingName" || code === "duplicateName") {
-            nameRef.current?.focus();
-        }
-    };
-
-    /** Back-to-back adds must not let the first timer clear the second flash. */
-    const flashAdded = () => {
-        if (toastTimer.current !== null) {
-            clearTimeout(toastTimer.current);
-        }
-        setShowToast(true);
-        toastTimer.current = setTimeout(() => setShowToast(false), 2000);
-    };
 
     return (
         <View
@@ -386,27 +122,13 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
                     >
                         <VStack modifiers={[padding({ horizontal: 20, top: FORM_TOP_MARGIN })]} spacing={0}>
                             <CategoryEditorDetailsSection
-                                caption={caption}
+                                {...fields}
                                 dangerColor={colors.danger}
-                                expenseLabel={t("common.expense")}
-                                failure={failure}
                                 hairline={[overlay({ color: withAlpha(colors.foreground, 0.08) })]}
-                                income={income}
-                                incomeLabel={t("common.income")}
                                 mutedColor={colors.muted}
                                 nameFieldRef={nameRef}
-                                nameLabel={t("categories.field.name")}
-                                namePlaceholder={namePlaceholder}
                                 nameState={nameState}
-                                onIncomeChange={(next) => form.setFieldValue("income", next)}
-                                onNameChange={(next) => {
-                                    setFailure(null);
-                                    form.setFieldValue("name", next);
-                                }}
-                                onSubmitName={() => pressSubmit(form)}
                                 tintColor={colors.foreground}
-                                typeLabel={t("categories.field.type")}
-                                typePickerVisible={typePickerVisible}
                             />
                         </VStack>
                     </ScrollView>
@@ -423,7 +145,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
                 income={income}
                 onLayout={(e) => setHeroBand(e.nativeEvent.layout.height)}
                 onPress={openPicker}
-                onReset={() => setDraft(EMPTY_DRAFT)}
+                onReset={resetIdentity}
                 photoUri={null}
                 variant="category"
             />
@@ -435,12 +157,7 @@ function CategoryEditorReady(props: CategoryEditorProps & { db: import("@/db/cli
                 style={{ opacity: pickerOpen ? 0 : 1 }}
             >
                 <View onLayout={(event) => setCtaHeight(event.nativeEvent.layout.height)}>
-                    <EditorCta
-                        busy={isSubmitting}
-                        canSave={canSave}
-                        label={ctaLabel}
-                        onPress={() => pressSubmit(form)}
-                    />
+                    <EditorCta busy={isSubmitting} canSave={canSave} label={ctaLabel} onPress={submit} />
                 </View>
             </View>
 
