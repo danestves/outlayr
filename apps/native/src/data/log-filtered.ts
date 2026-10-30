@@ -138,7 +138,7 @@ export function useUpcomingTransactions(
     const decorated = useDecoratedRows(db, rows);
 
     const at = new Date(nowMs);
-    const schedules = [...decorated].sort((a, b) => landingDate(b, at).getTime() - landingDate(a, at).getTime());
+    const schedules = [...decorated].sort((a, b) => landingDate(a, at).getTime() - landingDate(b, at).getTime());
     if (!limited) {
         return { rows: schedules, schedules };
     }

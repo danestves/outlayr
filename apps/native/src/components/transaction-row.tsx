@@ -137,6 +137,7 @@ interface RowMetaProps {
     itemCount: number | undefined;
     rateNeeded: boolean;
     restated: boolean;
+    stacked: boolean;
     subtitle: string;
     unplaced: boolean;
 }
@@ -150,6 +151,7 @@ function RowMeta({
     itemCount,
     rateNeeded,
     restated,
+    stacked,
     subtitle,
     unplaced,
 }: RowMetaProps) {
@@ -163,7 +165,7 @@ function RowMeta({
                 <Text
                     accessibilityLabel={fee ? t("log.row.feeIncluded", { subtitle }) : undefined}
                     className={cn(ROW_TYPE.subtitle, future ? "text-subtle" : "text-muted")}
-                    numberOfLines={1}
+                    numberOfLines={stacked ? 2 : 1}
                 >
                     {subtitle}
                 </Text>
@@ -232,7 +234,6 @@ interface TransactionRowProps {
     currency: string;
     /** A scheduled entry whose stored date is past is still upcoming: its next occurrence is. */
     future?: boolean;
-    landsOn?: Date;
     menuItems?: readonly ActionMenuItem[];
     /** Pass it where rows swipe: assistive technology cannot pan, so delete must also be an accessibility action. */
     onDelete?: (id: string) => void;
@@ -249,6 +250,7 @@ interface TransactionRowProps {
         sign?: TransferLogRow["sign"];
         valued?: number | null;
     };
+    upcomingLabel?: string;
 }
 
 function RowTitle({
@@ -294,7 +296,7 @@ export function TransactionRow({
     menuItems,
     onDelete,
     future: forcedFuture,
-    landsOn,
+    upcomingLabel,
 }: TransactionRowProps) {
     const { showCents, swapTimeLabel, use24Hour } = useDisplaySettings().state;
     const colors = useColors();
@@ -334,7 +336,7 @@ export function TransactionRow({
 
     const timeLabel = swapTimeLabel ? (transaction.categoryName ?? "") : formatTime(date, use24Hour, language);
     const subtitle = future
-        ? formatUpcomingDate(landsOn ?? date, language)
+        ? (upcomingLabel ?? formatUpcomingDate(date, language))
         : withGuessedCategory(timeLabel, transaction, swapTimeLabel);
 
     const amount = (
@@ -421,6 +423,7 @@ export function TransactionRow({
                     itemCount={transaction.itemCount}
                     rateNeeded={rateNeeded}
                     restated={original !== null}
+                    stacked={stacked}
                     subtitle={subtitle}
                     unplaced={unplaced}
                 />
