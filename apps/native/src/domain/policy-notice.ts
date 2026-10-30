@@ -10,10 +10,14 @@ export const PolicyNotice = Schema.Struct({
 
 export type PolicyNotice = typeof PolicyNotice.Type;
 
-export function pendingNotice(notices: readonly PolicyNotice[], seenAt: number): PolicyNotice | null {
+export function pendingNotice(
+    notices: readonly PolicyNotice[],
+    seenAt: Readonly<Record<PolicyNotice["document"], number>>
+): PolicyNotice | null {
     return notices.reduce<PolicyNotice | null>(
         (oldest, notice) =>
-            notice.effectiveAtMs > seenAt && (oldest === null || notice.effectiveAtMs < oldest.effectiveAtMs)
+            notice.effectiveAtMs > seenAt[notice.document] &&
+            (oldest === null || notice.effectiveAtMs < oldest.effectiveAtMs)
                 ? notice
                 : oldest,
         null

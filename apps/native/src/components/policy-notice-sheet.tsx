@@ -43,7 +43,10 @@ export function PolicyNoticeSheet() {
     const onTabs = useSegments()[0] === "(tabs)";
     const lockOpen = useAppLockOpen();
     const covered = useAuthCovered();
-    const notice = pendingNotice(useAtomValue(policyNoticesAtom), useNumberSetting(db, "policyNoticeSeen"));
+    const notice = pendingNotice(useAtomValue(policyNoticesAtom), {
+        privacy: useNumberSetting(db, "privacyNoticeSeen"),
+        terms: useNumberSetting(db, "termsNoticeSeen"),
+    });
     const [shown, setShown] = useState(notice);
     if (notice && notice !== shown) {
         setShown(notice);
@@ -58,7 +61,7 @@ export function PolicyNoticeSheet() {
         return null;
     }
 
-    const acknowledge = () => setSeen({ db, key: "policyNoticeSeen", value: shown.effectiveAtMs });
+    const acknowledge = () => setSeen({ db, key: `${shown.document}NoticeSeen`, value: shown.effectiveAtMs });
     const changes = shown.changes[noticeLanguage(language)];
     const open = notice !== null && onTabs && lockOpen && !covered;
 

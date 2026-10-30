@@ -44,7 +44,9 @@ export const bootstrapLocalData = Effect.fn("Bootstrap.bootstrapLocalData")(func
             yield* setMeta(db, META_KEYS.currency, DEFAULT_CURRENCY);
             yield* setMeta(db, META_KEYS.favouriteCurrencies, serialiseFavourites(favourites));
             yield* seedCategories(db);
-            yield* setNumberSetting(db, "policyNoticeSeen", yield* Clock.currentTimeMillis);
+            const installedAt = yield* Clock.currentTimeMillis;
+            yield* setNumberSetting(db, "privacyNoticeSeen", installedAt);
+            yield* setNumberSetting(db, "termsNoticeSeen", installedAt);
             yield* setMeta(db, META_KEYS.firstLaunch, "true");
         }),
         (cause) => new BootstrapError({ cause, operation: "seed" })

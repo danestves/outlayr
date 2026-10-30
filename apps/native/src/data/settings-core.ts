@@ -47,7 +47,8 @@ export type NumberSettingKey =
     | "notificationOption"
     | "notificationHour"
     | "notificationMinute"
-    | "policyNoticeSeen";
+    | "privacyNoticeSeen"
+    | "termsNoticeSeen";
 
 export const SETTING_DEFAULTS = {
     accentColor: DEFAULT_ACCENT_VALUE,
@@ -76,7 +77,7 @@ export const SETTING_DEFAULTS = {
     notificationMinute: 0,
     notificationOption: 1,
     numberEntryType: 2,
-    policyNoticeSeen: 0,
+    privacyNoticeSeen: 0,
     sentenceCoachSeen: false,
     shareAnalytics: analyticsOnByDefault(firstLocale()?.regionCode),
     showCents: true,
@@ -85,6 +86,7 @@ export const SETTING_DEFAULTS = {
     showUpcomingSoon: false,
     subscriptionReminders: false,
     swapTimeLabel: false,
+    termsNoticeSeen: 0,
     use24HourClock: false,
 } as const satisfies Record<BoolSettingKey | NumberSettingKey, boolean | number>;
 
