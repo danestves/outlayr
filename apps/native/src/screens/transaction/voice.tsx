@@ -78,6 +78,7 @@ import { posthog } from "@/lib/posthog";
 import { syncSubscriptionReminders } from "@/lib/subscription-reminder-sync";
 import { useHaptics } from "@/lib/use-haptics";
 import { openAppSettings, voidFlowCommand } from "@/state/entry-commands";
+import { entryHref } from "@/state/entry-params";
 import { logged } from "@/state/entry-save";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
@@ -702,20 +703,20 @@ function VoiceThreadScreen() {
     const openForm = (draft: ResolvedVoiceEntry) => {
         // An account sync removed is a question for the form, not a seed to swap for the last used.
         const accountLive = draft.accountId === null || live.accountIds.has(draft.accountId);
-        const params = {
-            accountId: accountLive ? (draft.accountId ?? undefined) : undefined,
-            accountUnresolved: draft.accountUnresolved || !accountLive ? "1" : undefined,
-            amount: String(draft.amount),
-            categoryId: draft.categoryId ?? undefined,
-            currency: draft.currency,
-            date: String(draft.date.getTime()),
-            details: draft.details ?? undefined,
-            income: draft.income ? "1" : "0",
-            note: draft.merchant,
-            recurringCoefficient: draft.recurrence ? String(draft.recurrence.coefficient) : undefined,
-            recurringType: draft.recurrence ? String(draft.recurrence.type) : undefined,
-        };
-        router.replace({ params, pathname: "/transactions/create" });
+        router.replace(
+            entryHref({
+                accountId: accountLive ? (draft.accountId ?? undefined) : undefined,
+                accountUnresolved: draft.accountUnresolved || !accountLive,
+                amount: draft.amount,
+                categoryId: draft.categoryId ?? undefined,
+                currency: draft.currency,
+                date: draft.date,
+                details: draft.details ?? undefined,
+                income: draft.income,
+                note: draft.merchant,
+                recurrence: draft.recurrence ?? undefined,
+            })
+        );
     };
 
     // A leg sync removed is a question for the editor, not a seed to swap for another account.

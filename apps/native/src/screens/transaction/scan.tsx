@@ -59,6 +59,7 @@ import { persistAttachmentBytes } from "@/lib/photo-storage";
 import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
 import { openAppSettings, voidFlowCommand } from "@/state/entry-commands";
+import { entryHref } from "@/state/entry-params";
 import { logged } from "@/state/entry-save";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
@@ -559,19 +560,20 @@ function ScanFlowScreen() {
     const openForm = (draft: ResolvedReceipt, attachment: string | null) => {
         // An account sync removed is a question for the form, not a seed to swap for the last used.
         const accountLive = draft.accountId === null || live.accountIds.has(draft.accountId);
-        const params = {
-            accountId: accountLive ? (draft.accountId ?? undefined) : undefined,
-            accountUnresolved: draft.accountUnresolved || !accountLive ? "1" : undefined,
-            amount: String(draft.amount),
-            attachment: attachment === null ? undefined : photoFileName(attachment),
-            categoryId: draft.categoryId ?? undefined,
-            currency: draft.currency,
-            date: String(draft.date.getTime()),
-            income: draft.income ? "1" : "0",
-            note: draft.merchant,
-            receipt: serializeReceipt(draft) ?? undefined,
-        };
-        router.replace({ params, pathname: "/transactions/create" });
+        router.replace(
+            entryHref({
+                accountId: accountLive ? (draft.accountId ?? undefined) : undefined,
+                accountUnresolved: draft.accountUnresolved || !accountLive,
+                amount: draft.amount,
+                attachment: attachment === null ? undefined : photoFileName(attachment),
+                categoryId: draft.categoryId ?? undefined,
+                currency: draft.currency,
+                date: draft.date,
+                income: draft.income,
+                note: draft.merchant,
+                receipt: serializeReceipt(draft) ?? undefined,
+            })
+        );
     };
 
     const save = (draft: ResolvedReceipt, categoryId: string, image: ArrayBuffer) => {

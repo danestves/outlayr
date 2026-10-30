@@ -1,16 +1,10 @@
-import { describe, expect, it, vi } from "vite-plus/test";
+import { describe, expect, it } from "vite-plus/test";
 
+import type { TransactionSeed } from "@/components/transaction-form";
+import { scannedOrder } from "@/domain/installment-scan";
 import { applyNumpadKey, numpadToNumber } from "@/domain/numpad";
 
-import { entrySeed } from "./new";
-
-vi.mock("expo-router", () => ({}));
-vi.mock("@/contexts/local-data-context", () => ({}));
-vi.mock("@/data/transactions-core", () => ({}));
-vi.mock("@/i18n/context", () => ({}));
-vi.mock("@/hooks/use-discard-guard", () => ({}));
-vi.mock("@/components/close-toolbar", () => ({}));
-vi.mock("@/components/transaction-form", () => ({}));
+import { entryHref, entrySeed } from "./entry-params";
 
 describe("entrySeed", () => {
     it("keeps what a sound link states", () => {
@@ -75,5 +69,45 @@ describe("entrySeed", () => {
             coefficient: 1,
             type: 2,
         });
+    });
+
+    it("reads back every field a screen hands the form", () => {
+        const order = scannedOrder(
+            {
+                accountName: "Cashea",
+                currency: "USD",
+                provider: "Cashea",
+                rows: [
+                    { amount: 67.6, dueDate: "2026-06-08", fee: 0, paid: true, sequence: 0 },
+                    { amount: 33.8, dueDate: "2026-06-22", fee: 0, paid: false, sequence: 1 },
+                    { amount: 33.8, dueDate: "2026-07-06", fee: 0, paid: false, sequence: 2 },
+                ],
+            },
+            "USD"
+        );
+        const seed: TransactionSeed = {
+            accountId: "acc-1",
+            accountUnresolved: true,
+            amount: 135.2,
+            attachment: "0b9c2a4e-5f0d-4c7a-9a1e-3d2f6b8c1e7a.jpg",
+            categoryId: "cat-1",
+            currency: "EUR",
+            date: new Date(1_790_000_000_000),
+            details: "Lunch with the team",
+            income: true,
+            installmentDraft: order === null ? undefined : { draft: order.draft, fees: order.fees },
+            installments: true,
+            note: "Bistro",
+            receipt: JSON.stringify({
+                items: [{ name: "Bread", price: 3, quantity: 1 }],
+                subtotal: 3,
+                tax: null,
+                tip: null,
+            }),
+            recurrence: { coefficient: 2, type: 3 },
+        };
+
+        expect(seed.installmentDraft).toBeDefined();
+        expect(entrySeed(entryHref(seed).params)).toStrictEqual(seed);
     });
 });
