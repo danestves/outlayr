@@ -1,7 +1,6 @@
 import { merchantKey } from "@outlayr/money/merchant-key";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 
 import { applyMerchantToSiblings } from "@/data/merchant-siblings-core";
 import { setBoolSetting } from "@/data/settings-core";
@@ -9,75 +8,39 @@ import { tagIdsForQuery, tagsRepo } from "@/data/tags-core";
 import { getTransactionById } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 import { enableReminderStep } from "@/domain/reminder";
-import { freshEntries } from "@/lib/fresh-entries";
 import { outboundHttp } from "@/lib/http";
 import { fetchMerchantImage } from "@/lib/logo-fetch";
-import { posthog } from "@/lib/posthog";
 import { Reminders } from "@/lib/reminders";
 import { askForReview } from "@/lib/review-prompt";
-import { carriedLogo, discardStoredPhoto, entryMedia, fromCommand } from "@/state/entry-commands";
-import { savedEntryPlan } from "@/state/entry-plan";
-import { commitSavedEntry, logged } from "@/state/entry-save";
-import type { SavedEntryPlan } from "@/state/entry-save";
-import { PendingCategoryError, saveTransactionCommand } from "@/state/transaction-save-command";
-import type { TransactionSaveInput } from "@/state/transaction-save-command";
+import { carriedLogo, discardStoredPhoto, entryMedia } from "@/state/entry-commands";
+import { commitEntry } from "@/state/entry-commit";
+import type { EntryCommit } from "@/state/entry-commit";
+import { logged } from "@/state/entry-save";
 
 export interface SaveEntryInput {
-    accountId: string | null;
-    carry: (savedId: string) => SavedEntryPlan["carry"];
-    db: Database;
-    hasSplit: boolean;
-    income: boolean;
-    isSubscription: boolean;
-    mode: "create" | "edit";
+    commit: EntryCommit;
     onMissingCategory: () => void;
     onSaveFailed: () => void;
     onSaved: () => boolean;
     onScheduleFailed: () => void;
-    queueLookup: boolean;
-    save: TransactionSaveInput;
 }
 
 export const saveEntry = Effect.fn("TransactionForm.saveEntry")(function* saveEntry(input: SaveEntryInput) {
-    const saved = yield* fromCommand(saveTransactionCommand, input.save).pipe(Effect.exit);
-    if (Exit.isFailure(saved)) {
-        const failure = Cause.squash(saved.cause);
-        if (failure instanceof PendingCategoryError) {
-            yield* Effect.logError("Failed to create the pending category", failure);
+    const outcome = yield* commitEntry(input.commit);
+    if (outcome.kind === "failed") {
+        if (outcome.missingCategory) {
             input.onMissingCategory();
-            return false;
+        } else {
+            input.onSaveFailed();
         }
-        yield* Effect.logError("Failed to save transaction", failure);
-        input.onSaveFailed();
         return false;
     }
-    const savedId = saved.value;
-    if (input.mode === "create") {
-        freshEntries.mark(savedId);
-    }
-    posthog?.capture("transaction_saved", {
-        has_split: input.hasSplit,
-        is_subscription: input.isSubscription,
-        mode: input.mode,
-        source: "form",
-        transaction_type: input.income ? "income" : "expense",
-    });
-    const { scheduleFailed } = yield* commitSavedEntry(
-        savedEntryPlan({
-            accountId: input.accountId,
-            backfill: input.isSubscription,
-            carry: input.carry(savedId),
-            db: input.db,
-            id: savedId,
-            queueLookup: input.queueLookup,
-        })
-    );
-    if (scheduleFailed) {
+    if (outcome.scheduleFailed) {
         input.onScheduleFailed();
         return true;
     }
     if (input.onSaved()) {
-        yield* Effect.forkDetach(logged("Failed to ask for a review")(askForReview(input.db)));
+        yield* Effect.forkDetach(logged("Failed to ask for a review")(askForReview(input.commit.db)));
     }
     return true;
 });

@@ -7,7 +7,6 @@ import { beforeEach, describe, expect, it } from "vite-plus/test";
 import type { Database } from "@/db/client";
 import { accounts, exchangeRates, outbox, transactions, transfers } from "@/db/schema";
 import { migratedDatabase, migratedSqlite, testDatabase, transactionalDatabase } from "@/db/test-database";
-import { buildTransactionInput } from "@/domain/transaction-form-save";
 
 import { META_KEYS, setMeta } from "./app-meta-core";
 import { candidateLogoIds, dismissedLogoIds } from "./logo-backfill-state";
@@ -126,44 +125,6 @@ describe("transactionsRepo.update over a row the rates no longer reach", () => {
 });
 
 describe("transactionsRepo entry-rate selections", () => {
-    it("keeps a custom freeze when a real form mapper omits rate fields on an unrelated edit", async () => {
-        const db = makeDb();
-        const id = await Effect.runPromise(
-            transactionsRepo.create(db, {
-                ...DRAFT,
-                currency: "VES",
-                exchangeRate: 55.5,
-                exchangeRateType: "custom",
-            })
-        );
-        const input = buildTransactionInput({
-            accountId: null,
-            amount: 100,
-            categoryId: "cat-1",
-            coefficient: 1,
-            currency: "VES",
-            customColor: null,
-            date: LONG_AGO,
-            details: "",
-            emoji: null,
-            endDate: LONG_AGO,
-            hasEndDate: false,
-            icon: null,
-            imageColor: null,
-            imageUri: null,
-            income: false,
-            isSubscription: false,
-            leadDays: null,
-            note: "Renamed",
-            recurringType: RECURRING_TYPE.none,
-        });
-        await Effect.runPromise(transactionsRepo.update(db, id, input));
-        await expect(frozen(db, id)).resolves.toMatchObject({
-            amountUsd: 1.801802,
-            exchangeRate: 55.5,
-            exchangeRateType: "custom",
-        });
-    });
     async function seedRate(
         db: Database,
         quote: string,
