@@ -101,7 +101,6 @@ export type PullFn = (args: {
 
 export type LocalValue = Date | WireValue;
 
-// A runtime table name erases drizzle's row type; every read is keyed by a name checked against `SYNCED_SPECS`.
 type Row = Record<string, LocalValue>;
 interface AnyWriter {
     insert: (table: SQLiteTable) => {
