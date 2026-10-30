@@ -644,11 +644,11 @@ const settings = {
             fr: "Fond d'écran",
             pt: "Papel de parede",
         }),
-        "settings.time.dayOfMonth": t({
-            en: "{day} of month",
-            es: "día {day} del mes",
-            fr: "Le {day} du mois",
-            pt: "dia {day} do mês",
+        "settings.time.formatSection": t({
+            en: "Format",
+            es: "Formato",
+            fr: "Format",
+            pt: "Formato",
         }),
         "settings.time.monday": t({
             en: "Monday",
@@ -656,18 +656,17 @@ const settings = {
             fr: "Lundi",
             pt: "Segunda-feira",
         }),
-        "settings.time.monthSection": t({
-            en: "Start of month",
-            es: "Inicio del mes",
-            fr: "Début du mois",
-            pt: "Início do mês",
+        "settings.time.month": t({
+            en: "Month",
+            es: "Mes",
+            fr: "Mois",
+            pt: "Mês",
         }),
-        "settings.time.reopenNote": t({
-            en: "Close and reopen the app for the month start to take full effect.",
-            es: "Cierra y vuelve a abrir la app para que el nuevo inicio de mes se aplique por completo.",
-            fr: "Fermez puis rouvrez l'app pour que le nouveau début de mois s'applique partout.",
-            pt: "Feche e abra o app de novo para que o novo início do mês valha por completo.",
-            "pt-PT": "Feche e volte a abrir a app para que o novo início do mês tenha efeito total.",
+        "settings.time.monthNote": t({
+            en: "This month: {range}",
+            es: "Este mes: {range}",
+            fr: "Ce mois-ci : {range}",
+            pt: "Este mês: {range}",
         }),
         "settings.time.startsSection": t({
             en: "Starts on",
@@ -681,11 +680,17 @@ const settings = {
             fr: "Dimanche",
             pt: "Domingo",
         }),
-        "settings.time.weekSection": t({
-            en: "Start of week",
-            es: "Inicio de la semana",
-            fr: "Début de la semaine",
-            pt: "Início da semana",
+        "settings.time.week": t({
+            en: "Week",
+            es: "Semana",
+            fr: "Semaine",
+            pt: "Semana",
+        }),
+        "settings.time.weekNote": t({
+            en: "This week: {range}",
+            es: "Esta semana: {range}",
+            fr: "Cette semaine : {range}",
+            pt: "Esta semana: {range}",
         }),
         "settings.upcoming.displayOnLog": t({
             en: "Show on the Log",
