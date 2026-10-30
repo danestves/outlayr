@@ -668,13 +668,6 @@ const settings = {
             fr: "Ce mois-ci : {range}",
             pt: "Este mês: {range}",
         }),
-        "settings.time.reopenNote": t({
-            en: "Close and reopen the app for the month start to take full effect.",
-            es: "Cierra y vuelve a abrir la app para que el nuevo inicio de mes se aplique por completo.",
-            fr: "Fermez puis rouvrez l'app pour que le nouveau début de mois s'applique partout.",
-            pt: "Feche e abra o app de novo para que o novo início do mês valha por completo.",
-            "pt-PT": "Feche e volte a abrir a app para que o novo início do mês tenha efeito total.",
-        }),
         "settings.time.startsSection": t({
             en: "Starts on",
             es: "Empieza en",

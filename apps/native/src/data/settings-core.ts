@@ -126,9 +126,13 @@ export const WEEKDAY_OPTIONS: readonly ChoiceOption[] = [
     { label: "settings.time.monday", value: 2 },
 ];
 
-export const MONTH_DAY_ROWS = [0, 7, 14, 21].map((first) =>
-    Array.from({ length: 7 }, (_, offset) => first + offset + 1)
-);
+const LAST_MONTH_START_DAY = 28;
+
+export function monthDayRows(columns: 4 | 7): number[][] {
+    return Array.from({ length: LAST_MONTH_START_DAY / columns }, (_row, row) =>
+        Array.from({ length: columns }, (_cell, offset) => row * columns + offset + 1)
+    );
+}
 
 export const NUMBER_ENTRY_OPTIONS: readonly NotedChoiceOption[] = [
     {

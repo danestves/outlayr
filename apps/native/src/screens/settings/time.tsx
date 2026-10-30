@@ -21,10 +21,13 @@ const CLOCK_OPTIONS: readonly { label: TranslationKey; value: number }[] = [
     { label: "clock.twentyFourHour", value: 1 },
 ];
 
+const NO_BREAK_SPACE = " ";
+
 function currentRangeLabel(type: number, calendar: CalendarSettings, language: Language) {
     const start = startOfPeriod(new Date(), type, calendar);
     const last = addDays(periodEnd(start, type), -1);
-    return `${formatSentenceDate(start, language)} – ${formatSentenceDate(last, language)}`;
+    const unbroken = (date: Date) => formatSentenceDate(date, language).replaceAll(" ", NO_BREAK_SPACE);
+    return `${unbroken(start)}${NO_BREAK_SPACE}– ${unbroken(last)}`;
 }
 
 export function TimeFrames() {
@@ -41,7 +44,7 @@ export function TimeFrames() {
 
     return (
         <SettingsScreen>
-            <SettingsSection footer={t("settings.time.reopenNote")} title={t("settings.time.startsSection")}>
+            <SettingsSection title={t("settings.time.startsSection")}>
                 <SegmentedRow
                     icon="Calendar01"
                     onChange={(next) => {

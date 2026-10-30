@@ -4,9 +4,11 @@ import { RowShell } from "@/components/list/row-shell";
 import type { SettingsIconName } from "@/components/settings/settings-icons";
 import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
-import { MONTH_DAY_ROWS, ordinalDay } from "@/data/settings-core";
-import { LARGEST_STANDARD_FONT_SCALE } from "@/hooks/use-accessibility-text-size";
+import { monthDayRows, ordinalDay } from "@/data/settings-core";
+import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useLanguage } from "@/i18n/context";
+
+const LARGEST_DIGIT_SCALE = 2.5;
 
 export interface MonthDayGridProps {
     onChange: (day: number) => void;
@@ -21,10 +23,11 @@ export interface MonthRowProps extends MonthDayGridProps {
 
 export function MonthDayGrid({ onChange, value }: MonthDayGridProps) {
     const { language } = useLanguage();
+    const largeText = useAccessibilityTextSize();
     return (
         <View className="w-full">
-            {MONTH_DAY_ROWS.map((days) => (
-                <View className="h-11 flex-row" key={days[0]}>
+            {monthDayRows(largeText ? 4 : 7).map((days) => (
+                <View className={cn("flex-row", !largeText && "h-11")} key={days[0]}>
                     {days.map((day) => {
                         const selected = day === value;
                         const label = ordinalDay(day, language);
@@ -33,13 +36,17 @@ export function MonthDayGrid({ onChange, value }: MonthDayGridProps) {
                                 accessibilityLabel={label}
                                 accessibilityRole="button"
                                 accessibilityState={{ selected }}
-                                className="flex-1 items-center justify-center active:opacity-60"
+                                className={cn(
+                                    "flex-1 items-center justify-center active:opacity-60",
+                                    largeText && "aspect-square p-1"
+                                )}
                                 key={day}
                                 onPress={() => onChange(day)}
                             >
                                 <View
                                     className={cn(
-                                        "size-[38px] items-center justify-center rounded-full",
+                                        "items-center justify-center rounded-full",
+                                        largeText ? "flex-1 self-stretch" : "size-[38px]",
                                         selected && "bg-foreground"
                                     )}
                                 >
@@ -48,7 +55,7 @@ export function MonthDayGrid({ onChange, value }: MonthDayGridProps) {
                                             "text-body tabular-nums",
                                             selected ? "text-background font-sans-bold" : "text-foreground"
                                         )}
-                                        maxFontSizeMultiplier={LARGEST_STANDARD_FONT_SCALE}
+                                        maxFontSizeMultiplier={LARGEST_DIGIT_SCALE}
                                     >
                                         {day}
                                     </Text>
