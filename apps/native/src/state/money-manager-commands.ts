@@ -46,6 +46,7 @@ export const loadMoneyManagerBackupCommand = createCommand({
             fileName: source.name,
             ledger,
             snapshot: reading.snapshot,
+            source,
         });
         return { kind: "ready" } satisfies BackupLoad;
     }),

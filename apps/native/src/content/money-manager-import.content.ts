@@ -674,6 +674,44 @@ const moneyManagerImport = {
             pt: "Você pode desfazer em Ajustes › Dados.",
             "pt-PT": "Pode desfazer em Definições › Dados.",
         }),
+        "mmImport.pro.continue": t({
+            en: "Continue with Pro",
+            es: "Continuar con Pro",
+            fr: "Continuer avec Pro",
+            pt: "Continuar com o Pro",
+        }),
+        "mmImport.pro.freeKeeps": t({
+            en: "Free keeps {shown}",
+            es: "Gratis incluye {shown}",
+            fr: "La version gratuite en garde {shown}",
+            pt: "O grátis inclui {shown}",
+        }),
+        "mmImport.pro.later": t({
+            en: "Finish setup first",
+            es: "Termina la configuración",
+            fr: "Terminer la configuration",
+            pt: "Concluir a configuração",
+        }),
+        "mmImport.pro.laterNote": t({
+            en: "Pro needs an account, which comes at the end of setup. This backup opens again once you're in.",
+            es: "Pro necesita una cuenta, que llega al final de la configuración. Este respaldo se abre de nuevo cuando entres.",
+            fr: "Pro demande un compte, proposé à la fin de la configuration. Cette sauvegarde se rouvre une fois dedans.",
+            pt: "O Pro precisa de uma conta, que vem no fim da configuração. Este backup abre de novo quando você entrar.",
+            "pt-PT":
+                "O Pro precisa de uma conta, que vem no fim da configuração. Esta cópia abre de novo quando entrar.",
+        }),
+        "mmImport.pro.note": t({
+            en: "Everything comes over as soon as Pro is on.",
+            es: "Todo llega en cuanto actives Pro.",
+            fr: "Tout arrive dès que Pro est activé.",
+            pt: "Tudo chega assim que o Pro estiver ativo.",
+        }),
+        "mmImport.pro.section": t({
+            en: "Needs Pro",
+            es: "Requiere Pro",
+            fr: "Nécessite Pro",
+            pt: "Requer o Pro",
+        }),
         "mmImport.sources.apps": t({
             en: "From another app",
             es: "Desde otra app",

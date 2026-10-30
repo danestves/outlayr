@@ -11,6 +11,11 @@ import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { formatTargetDate, formatTargetMonth } from "@/domain/dates";
 import { buildImportPlan } from "@/domain/money-manager/plan";
+import { importCapsPassed } from "@/domain/money-manager/pro-caps";
+import type { ImportCap } from "@/domain/money-manager/pro-caps";
+import { useOpenPaywall } from "@/hooks/use-pro-gate";
+import { useProLocked } from "@/hooks/use-pro-locked";
+import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import { moneyManagerSession, useMoneyManagerSession } from "@/lib/money-manager-session";
 import type { MoneyManagerDraft } from "@/lib/money-manager-session";
@@ -28,6 +33,12 @@ const BUDGETS = "#339475";
 const CURRENCIES = "#A17830";
 const CALENDAR = "#6C7BBD";
 
+const CAP_LABEL = {
+    accounts: "accounts.title",
+    budgets: "mmImport.nav.budgets",
+    currencies: "mmImport.overview.currencies",
+} as const satisfies Record<ImportCap, TranslationKey>;
+
 function dayDate(day: string): Date {
     return new Date(`${day}T12:00:00`);
 }
@@ -44,7 +55,9 @@ function Overview({ draft }: { draft: MoneyManagerDraft }) {
     const db = useDatabase();
     const router = useRouter();
     const t = useTranslation();
-    const { paths } = useImportPaths();
+    const { onboarding, paths } = useImportPaths();
+    const locked = useProLocked();
+    const openPaywall = useOpenPaywall();
     const { analysis, choices } = draft;
     const plan = buildImportPlan(draft.snapshot, analysis, choices, draft.ledger);
     const total = plan.entries.length + plan.transfers.length;
@@ -86,6 +99,19 @@ function Overview({ draft }: { draft: MoneyManagerDraft }) {
             return tc(t, "mmImport.overview.startSkipMatches", analysis.overlap.matches);
         }
         return t("mmImport.overview.startAll");
+    };
+
+    const passed = locked ? importCapsPassed(plan, draft.ledger) : [];
+    const [firstPassed] = passed;
+
+    const goPro = () => {
+        if (onboarding) {
+            moneyManagerSession.resumeInLedger(draft.source);
+            router.push("/onboarding/currency");
+            return;
+        }
+        // The account caps' own paywall counts what the ledger holds today, which says nothing about this backup.
+        openPaywall("import");
     };
 
     const runImport = () => {
@@ -227,15 +253,38 @@ function Overview({ draft }: { draft: MoneyManagerDraft }) {
                 </SettingsSection>
             ) : null}
 
+            {firstPassed ? (
+                <SettingsSection
+                    footer={t(onboarding ? "mmImport.pro.laterNote" : "mmImport.pro.note")}
+                    title={t("mmImport.pro.section")}
+                >
+                    {passed.map(({ cap, count, free }) => (
+                        <ImportRow
+                            detail={t("mmImport.pro.freeKeeps", { shown: grouped(free) })}
+                            key={cap}
+                            testID={`mm-overview-pro-${cap}`}
+                            title={t(CAP_LABEL[cap])}
+                            value={grouped(count)}
+                        />
+                    ))}
+                </SettingsSection>
+            ) : null}
+
             <View className="gap-3 pt-10">
                 <SettingsAction
                     busy={false}
                     busyLabel=""
                     disabled={total === 0}
-                    label={tc(t, "mmImport.overview.import", total)}
-                    onPress={runImport}
+                    label={
+                        firstPassed
+                            ? t(onboarding ? "mmImport.pro.later" : "mmImport.pro.continue")
+                            : tc(t, "mmImport.overview.import", total)
+                    }
+                    onPress={firstPassed ? goPro : runImport}
                 />
-                <Text className="text-muted text-footnote text-center">{t("mmImport.overview.undo")}</Text>
+                {firstPassed ? null : (
+                    <Text className="text-muted text-footnote text-center">{t("mmImport.overview.undo")}</Text>
+                )}
             </View>
         </SettingsScreen>
     );

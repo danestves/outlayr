@@ -17,6 +17,7 @@ export interface MoneyManagerDraft {
     choices: MmChoices;
     fileName: string;
     ledger: OutlayrLedgerState;
+    source: BackupSource;
     snapshot: MmSnapshot;
 }
 
@@ -35,6 +36,8 @@ export interface MoneyManagerSession {
     pending: BackupSource | null;
     progress: { done: number; total: number } | null;
     result: MoneyManagerResult | null;
+    /** A backup first run set aside until the ledger, where Pro can be bought. */
+    resume: BackupSource | null;
 }
 
 const EMPTY: MoneyManagerSession = {
@@ -44,6 +47,7 @@ const EMPTY: MoneyManagerSession = {
     pending: null,
     progress: null,
     result: null,
+    resume: null,
 };
 
 /**
@@ -76,6 +80,8 @@ function createSession() {
         getSnapshot: () => state,
         handOver: (pending: BackupSource) => commit({ ...state, pending }),
         markFailed: () => commit({ ...state, failed: true, progress: null }),
+        /** Buying Pro needs an account, which first run only offers at its end, so the ledger reopens the backup. */
+        resumeInLedger: (source: BackupSource) => commit({ ...state, resume: source }),
         reset: () => commit(EMPTY),
         setProgress: (progress: MoneyManagerSession["progress"]) => commit({ ...state, failed: false, progress }),
         subscribe: (listener: () => void) => {
@@ -83,6 +89,14 @@ function createSession() {
             return () => {
                 listeners.delete(listener);
             };
+        },
+        /** Moves a backup first run set aside into `pending`, where the open screen reads it. */
+        takeResume: () => {
+            const { resume } = state;
+            if (resume !== null) {
+                commit({ ...state, pending: resume, resume: null });
+            }
+            return resume !== null;
         },
         takePending: () => {
             const { pending } = state;
