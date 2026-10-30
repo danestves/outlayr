@@ -51,6 +51,8 @@ export const META_KEYS = {
     /** The outbox triggers read it, so a ledger that never syncs never queues a row. */
     syncEnabled: "syncEnabled",
     syncedAt: "syncedAt",
+    timeZone: "timeZone",
+    timeZoneMirrored: "timeZoneMirrored",
     walletCards: "walletCards",
     /** Epoch ms, mirrored from the App Group on foreground. */
     walletLastRunAt: "walletLastRunAt",

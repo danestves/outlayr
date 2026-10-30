@@ -1182,15 +1182,16 @@ export function TransactionForm({
 
     const categoriesForNamespace = useCategoriesByNamespace(db, income);
     // Shape only: the names and what sits under what. No figures leave here.
-    const named = categoriesForNamespace.filter((candidate) => candidate.name != null);
-    // SAFETY: `named` is filtered to non-null names above; the column is nullable.
-    const categoryTree = named
-        .filter((candidate) => candidate.parentId == null)
-        .map((parent) => ({
-            // SAFETY on both lines: `named` is filtered to non-null names above.
-            children: named.filter((child) => child.parentId === parent.id).map((child) => child.name as string),
-            name: parent.name as string,
-        }));
+    const categoryTree = categoriesForNamespace.flatMap((parent) =>
+        parent.name == null
+            ? []
+            : [
+                  {
+                      children: parent.children.map((child) => child.name).filter((name) => name != null),
+                      name: parent.name,
+                  },
+              ]
+    );
 
     const resolveHistory = (key: string, forIncome: boolean) => rememberedCategoryFor(db, key, forIncome);
 
@@ -1200,9 +1201,9 @@ export function TransactionForm({
     const resolveLocal = (suggestion: EnrichmentSuggestion): EnrichmentSuggestion => {
         let { categoryId, pendingCategory: suggestedCategory } = suggestion;
         if (categoryId == null && suggestedCategory != null) {
-            const matchedCategory = categoriesForNamespace.find(
-                (candidate) => candidate.name === suggestedCategory?.name
-            );
+            const matchedCategory = categoriesForNamespace
+                .flatMap((parent) => [parent, ...parent.children])
+                .find((candidate) => candidate.name === suggestedCategory?.name);
             if (matchedCategory != null) {
                 categoryId = matchedCategory.id;
                 suggestedCategory = null;

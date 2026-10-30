@@ -1,3 +1,4 @@
+import type { MarketRateType } from "@outlayr/money/rates";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as HttpClient from "effect/http/HttpClient";
@@ -6,8 +7,6 @@ import * as HttpIncomingMessage from "effect/http/HttpIncomingMessage";
 import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
-
-import type { MarketRateType } from "./lib/currencies";
 
 const COTIZAVE_URL = "https://api.cotizave.com/v2/fx/ve/rates";
 const RATES_TIMEOUT = Duration.seconds(20);

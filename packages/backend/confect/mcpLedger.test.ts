@@ -30,8 +30,19 @@ describe("utcOffsetOf", () => {
         { midnight: "2026-10-09T04:00:00Z", offset: -4 * HOUR },
         { midnight: "2026-10-08T22:00:00Z", offset: 2 * HOUR },
         { midnight: "2026-10-09T00:00:00Z", offset: 0 },
+        { midnight: "2026-10-09T10:00:00Z", offset: -10 * HOUR },
+        { midnight: "2026-06-08T12:00:00Z", offset: 12 * HOUR },
+        { midnight: "2026-10-08T11:00:00Z", offset: 13 * HOUR },
     ])("reads $offset from a local midnight at $midnight", ({ midnight, offset }) => {
         expect(utcOffsetOf(at(midnight))).toBe(offset);
+    });
+
+    it.each([
+        { east: 13 * HOUR, midnight: "2026-10-09T11:00:00Z", west: -11 * HOUR },
+        { east: 14 * HOUR, midnight: "2026-10-09T10:00:00Z", west: -10 * HOUR },
+    ])("tells $west from $east at $midnight by the zone's offset", ({ east, midnight, west }) => {
+        expect(utcOffsetOf(at(midnight), west)).toBe(west);
+        expect(utcOffsetOf(at(midnight), east)).toBe(east);
     });
 });
 
@@ -111,6 +122,7 @@ interface Seed {
     categories?: Row<"categories">[];
     currency?: string;
     mainBudget?: Row<"mainBudget">[];
+    timeZone?: string;
     transactions?: Row<"transactions">[];
     transfers?: Row<"transfers">[];
 }
@@ -134,15 +146,10 @@ async function seeded(seed: Seed) {
             rateType: "eur_reference",
             source: "cotizave",
         });
-        if (seed.currency) {
-            await ctx.db.insert("appMeta", {
-                deviceId: "device",
-                key: "currency",
-                seq: 0,
-                updatedAt: 0,
-                userId: USER,
-                value: seed.currency,
-            });
+        for (const [key, value] of Object.entries({ currency: seed.currency, timeZone: seed.timeZone })) {
+            if (value) {
+                await ctx.db.insert("appMeta", { deviceId: "device", key, seq: 0, updatedAt: 0, userId: USER, value });
+            }
         }
         for (const row of seed.accounts ?? []) {
             await ctx.db.insert("accounts", row);
@@ -509,6 +516,30 @@ describe("budget_status", () => {
         ]);
     });
 
+    it("files each entry on its own side of a DST change in the stored zone", async () => {
+        vi.setSystemTime(at("2026-11-05T15:00:00Z"));
+        const newYork = (localId: string, amount: number, iso: string, offsetMs: number) =>
+            entry(localId, { amount, date: at(iso), day: midnightOf(at(iso), offsetMs) });
+        const { categoryId: _, ...overall } = budget("overall", {
+            amount: 100,
+            startDate: at("2026-09-01T04:00:00Z"),
+            type: BUDGET_TYPE.month,
+        });
+        const t = await seeded({
+            mainBudget: [overall],
+            timeZone: "America/New_York",
+            transactions: [
+                newYork("halloween-night", 60, "2026-11-01T02:00:00Z", -4 * HOUR),
+                newYork("after-midnight", 25, "2026-11-01T04:30:00Z", -4 * HOUR),
+                newYork("election-day", 10, "2026-11-04T17:00:00Z", -5 * HOUR),
+            ],
+        });
+
+        const result = await t.query(internal.mcpLedger.budgetStatus, { user });
+
+        expect(result.overall).toMatchObject({ from: "2026-11-01", spent: 35, to: "2026-11-30" });
+    });
+
     it("cuts windows at the user's midnight, not UTC's", async () => {
         const madrid = 2 * HOUR;
         const madridEntry = (iso: string, fields: Partial<Row<"transactions">> & { amount: number; date: number }) =>
@@ -531,6 +562,50 @@ describe("budget_status", () => {
             spent: earlyOctober.amount,
             to: "2026-10-31",
         });
+    });
+});
+
+describe("recent_transactions", () => {
+    const niueDate = at("2026-10-09T20:00:00Z");
+    const niueEntry = () => entry("niue", { amount: 12, date: niueDate, day: midnightOf(niueDate, -11 * HOUR) });
+
+    it("dates a Niue entry by the stored zone, where the fold alone reads Tonga", async () => {
+        const t = await seeded({ timeZone: "Pacific/Niue", transactions: [niueEntry()] });
+
+        await expect(t.query(internal.mcpLedger.recentTransactions, { user })).resolves.toMatchObject([
+            { date: "2026-10-09" },
+        ]);
+    });
+
+    it("falls back to the fold when the stored zone is unknown", async () => {
+        const t = await seeded({ timeZone: "Atlantis/Lost_City", transactions: [niueEntry()] });
+
+        await expect(t.query(internal.mcpLedger.recentTransactions, { user })).resolves.toMatchObject([
+            { date: "2026-10-10" },
+        ]);
+    });
+
+    it("dates an evening entry on the user's day, not UTC's", async () => {
+        const date = at("2026-10-09T02:00:00Z");
+        const t = await seeded({
+            transactions: [entry("evening", { amount: 12, date, day: midnightOf(date, CARACAS) })],
+        });
+
+        await expect(t.query(internal.mcpLedger.recentTransactions, { user })).resolves.toMatchObject([
+            { date: "2026-10-08" },
+        ]);
+    });
+
+    it("keeps a late entry on its day after the clocks go back", async () => {
+        const t = await seeded({
+            transactions: [
+                entry("late", { amount: 12, date: at("2026-04-05T11:30:00Z"), day: at("2026-04-04T11:00:00Z") }),
+            ],
+        });
+
+        await expect(t.query(internal.mcpLedger.recentTransactions, { user })).resolves.toMatchObject([
+            { date: "2026-04-05" },
+        ]);
     });
 });
 

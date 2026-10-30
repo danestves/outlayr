@@ -27,6 +27,7 @@ import { transaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
 
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import type { BoolSettingKey, NumberSettingKey } from "./settings-core";
 
 export const SYNCED_TABLES = [
     "categories",
@@ -76,9 +77,10 @@ export const SYNCED_META_KEYS = [
     "insightsTimeFrame",
     "insightsMeasure",
     "accentColor",
+    META_KEYS.timeZone,
     // Not synced: `colorScheme` and `numberEntryType` suit each device; `biometricLock`, `notification*`, `sync*`,
     // `ledgerAdoption`, `firstLaunch`, `onboardingComplete` and `recurrenceRepaired` describe this install.
-] as const;
+] as const satisfies readonly (BoolSettingKey | NumberSettingKey | (typeof META_KEYS)[keyof typeof META_KEYS])[];
 
 /** 999 bound variables per statement, three columns per queue entry. */
 const ENQUEUE_CHUNK = 300;

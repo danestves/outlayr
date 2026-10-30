@@ -1,4 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import { utcDateString } from "@outlayr/money/dates";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -9,7 +10,6 @@ import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
 import { MutationRunner } from "./_generated/services";
 import { openExchangeRatesAppId } from "./lib/config";
-import { utcDateString } from "./lib/currencies";
 import { outboundHttp } from "./lib/http";
 import { MS_PER_SECOND, officialRates, requestLatest } from "./openexchangerates";
 import type { OpenExchangeRatesError } from "./openexchangerates";

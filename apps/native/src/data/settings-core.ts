@@ -252,6 +252,17 @@ export const seedClockPreference = Effect.fn("Settings.seedClockPreference")(fun
     yield* setBoolSetting(db, "use24HourClock", deviceUses24Hour);
 });
 
+export const mirrorTimeZone = Effect.fn("Settings.mirrorTimeZone")(function* mirrorTimeZone(
+    db: Database,
+    deviceTimeZone: string | null
+) {
+    if (deviceTimeZone == null || (yield* getMeta(db, META_KEYS.timeZoneMirrored)) === deviceTimeZone) {
+        return;
+    }
+    yield* setMeta(db, META_KEYS.timeZone, deviceTimeZone);
+    yield* setMeta(db, META_KEYS.timeZoneMirrored, deviceTimeZone);
+});
+
 export function ordinalDay(day: number, language: Language = "en"): string {
     if (language !== "en") {
         return String(day);

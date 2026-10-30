@@ -7,7 +7,8 @@ import type { InstallmentPlanDraft, InstallmentScanResult } from "./installmentS
 import { pickKnown, trimTo } from "./lib/ledgerPrompt";
 import type { LedgerContext } from "./lib/ledgerPrompt";
 import { modelCallError, modelSchema } from "./lib/modelCall";
-import { KNOWN_CURRENCIES, MAX_AMOUNT, REQUEST_TIMEOUT_MS } from "./receiptScan";
+import { MAX_AMOUNT } from "./lib/sanitizeLimits";
+import { KNOWN_CURRENCIES, REQUEST_TIMEOUT_MS } from "./receiptScan";
 import type { ScanStatus } from "./receiptScan.spec";
 
 export const MAX_INSTALLMENTS = 48;

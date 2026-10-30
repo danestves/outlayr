@@ -12,7 +12,7 @@ import { OVERALL_BUDGET_ID } from "@/data/budgets-core";
 import { aggregateInsightsWindows, loadContributions, windowLabel } from "@/data/insights";
 import type { InsightsCalendar, InsightsContribution, InsightsPeriod, WindowTotals } from "@/data/insights";
 import { writeIdsByTransaction } from "@/data/pending-writes-core";
-import { parseBoolSetting, parseIntSetting } from "@/data/settings-core";
+import { parseBoolSetting, parseIntSetting, SETTING_DEFAULTS } from "@/data/settings-core";
 import { loadValuation } from "@/data/valuation-source";
 import type { Valuation } from "@/data/valuation-source";
 import {
@@ -259,13 +259,13 @@ const loadSettings = Effect.fn("Widgets.loadSettings")(function* loadSettings(db
     );
     return {
         calendar: {
-            firstDayOfMonth: parseIntSetting(monthDayRaw, 1),
-            firstWeekday: parseIntSetting(weekdayRaw, 1),
+            firstDayOfMonth: parseIntSetting(monthDayRaw, SETTING_DEFAULTS.firstDayOfMonth),
+            firstWeekday: parseIntSetting(weekdayRaw, SETTING_DEFAULTS.firstWeekday),
         } satisfies InsightsCalendar,
         currency: currencyRaw ?? DEFAULT_CURRENCY,
-        period: PERIODS.get(parseIntSetting(periodRaw, 1)) ?? ("week" as const),
-        showCents: parseBoolSetting(showCentsRaw, true),
-        use24HourClock: parseBoolSetting(clockRaw, false),
+        period: PERIODS.get(parseIntSetting(periodRaw, SETTING_DEFAULTS.insightsTimeFrame)) ?? ("week" as const),
+        showCents: parseBoolSetting(showCentsRaw, SETTING_DEFAULTS.showCents),
+        use24HourClock: parseBoolSetting(clockRaw, SETTING_DEFAULTS.use24HourClock),
     };
 });
 

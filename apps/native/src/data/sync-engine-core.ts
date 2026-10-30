@@ -675,8 +675,6 @@ export const writePulledRows = Effect.fn("SyncCore.writePulledRows")(function* w
         }))
     );
     for (const [table, entries] of cleared) {
-        // These deletes run inside one SQLite transaction, which admits a single writer, so they cannot
-        // overlap.
         for (const chunk of chunkRows(
             entries.map((entry) => entry.localId),
             ID_CHUNK
@@ -725,8 +723,6 @@ const resolveBudgetCategory = Effect.fn("SyncCore.resolveBudgetCategory")(functi
             continue;
         }
         if (keepsTheSlot(row, { id: rival.id, updatedAt: rival.updatedAt.getTime() })) {
-            // This runs inside the apply transaction, which admits a single writer, so the rival tombstones cannot
-            // overlap.
             yield* query("write", () =>
                 db
                     .update(budgets)
@@ -769,8 +765,6 @@ const resolveTagLink = Effect.fn("SyncCore.resolveTagLink")(function* resolveTag
             continue;
         }
         if (keepsTheSlot(row, { id: rival.id, updatedAt: rival.updatedAt.getTime() })) {
-            // This runs inside the apply transaction, which admits a single writer, so the rival tombstones cannot
-            // overlap.
             yield* query("write", () =>
                 db
                     .update(transactionTags)
@@ -875,7 +869,6 @@ const reconcileMainBudget = Effect.fn("SyncCore.reconcileMainBudget")(function* 
             : best
     );
 
-    // This runs inside the apply transaction, which admits a single writer, so the tombstones cannot overlap.
     for (const row of live) {
         if (row.id === survivor.id) {
             continue;
@@ -948,7 +941,6 @@ const walkLog = Effect.fn("SyncCore.walkLog")(function* walkLog(
             Effect.mapError(failedAt("pull"))
         );
 
-    // Each page is fetched from the cursor the previous page returned, so the walk is inherently sequential.
     for (;;) {
         const page = yield* fetchPage(cursor);
         if (page.rows.length === 0) {
@@ -1032,7 +1024,6 @@ const repairUnsyncedRestores = Effect.fn("SyncCore.repairUnsyncedRestores")(func
     yield* transaction(
         db,
         Effect.gen(function* write() {
-            // One SQLite transaction admits a single writer, so these reads and updates cannot overlap.
             for (const [name, table] of Object.entries(RESTORABLE)) {
                 // SAFETY: `RESTORABLE` is keyed by the synced table names it holds.
                 const tableName = name as keyof typeof RESTORABLE;

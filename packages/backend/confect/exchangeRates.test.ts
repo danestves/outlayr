@@ -1,3 +1,4 @@
+import type { MarketRateType } from "@outlayr/money/rates";
 /// <reference types="vite/client" />
 import { convexTest } from "convex-test";
 import type { TestConvex } from "convex-test";
@@ -6,7 +7,7 @@ import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { api, internal } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import { nextPruneStep, RATES_WINDOW_DAYS } from "./exchangeRates";
-import type { MarketRateType, RateSource } from "./lib/currencies";
+import type { RateSource } from "./lib/currencies";
 
 const modules = import.meta.glob("../convex/**/*.ts");
 

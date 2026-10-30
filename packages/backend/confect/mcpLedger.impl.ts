@@ -21,6 +21,7 @@ import {
     customName,
     DAY_MS,
     entryKind,
+    fixedOffset,
     groupCells,
     localDate,
     MAX_ENTRIES,
@@ -30,6 +31,7 @@ import {
     utcOffsetOf,
     wall,
     wallDay,
+    zoneOffsets,
 } from "./mcpLedger";
 import type { LegEntry } from "./mcpLedger";
 import spec from "./mcpLedger.spec";
@@ -43,7 +45,16 @@ export const setting = Effect.fn("McpLedger.setting")(function* setting(userId: 
     return row?.value ?? null;
 });
 
+export const storedZone = Effect.fn("McpLedger.storedZone")(function* storedZone(userId: string) {
+    const timeZone = yield* setting(userId, "timeZone");
+    return timeZone === null ? null : zoneOffsets(timeZone);
+});
+
 const zoneOffset = Effect.fn("McpLedger.zoneOffset")(function* zoneOffset(userId: string, now: number) {
+    const zone = yield* storedZone(userId);
+    if (zone !== null) {
+        return zone;
+    }
     const reader = yield* DatabaseReader;
     const latest = yield* reader
         .table("transactions")
@@ -53,7 +64,7 @@ const zoneOffset = Effect.fn("McpLedger.zoneOffset")(function* zoneOffset(userId
             "desc"
         )
         .first();
-    return Option.match(latest, { onNone: () => 0, onSome: (row) => utcOffsetOf(row.day) });
+    return fixedOffset(Option.match(latest, { onNone: () => 0, onSome: (row) => utcOffsetOf(row.day) }));
 });
 
 const ratesIn = Effect.fn("McpLedger.ratesIn")(function* ratesIn(...codes: string[]) {
@@ -87,6 +98,7 @@ const recentTransactions = FunctionImpl.make(
     Effect.fn("McpLedger.recentTransactions")(function* recentTransactions({ user, limit = 20 }) {
         const reader = yield* DatabaseReader;
         const { userId } = user;
+        const zone = yield* storedZone(userId);
         const rows = yield* reader
             .table("transactions")
             .index("by_user_and_seq", (q) => q.eq("userId", userId), "desc")
@@ -110,7 +122,7 @@ const recentTransactions = FunctionImpl.make(
             amount: row.amount,
             category: row.categoryId ? (categoryNames.get(row.categoryId) ?? null) : null,
             currency: row.currency,
-            date: new Date(row.date).toISOString().slice(0, 10),
+            date: localDate(row.day, utcOffsetOf(row.day, zone?.(row.day))),
             kind: entryKind(row.income),
             note: row.note,
         }));
@@ -127,7 +139,7 @@ const spendingSummary = FunctionImpl.make(
         const currency = (yield* setting(userId, "currency")) ?? "USD";
         const firstDayOfMonth = Number(yield* setting(userId, "firstDayOfMonth")) || 1;
         const now = yield* Clock.currentTimeMillis;
-        const offsetMs = yield* zoneOffset(userId, now);
+        const offsetMs = (yield* zoneOffset(userId, now))(now);
         const window = monthWindow(now, offsetMs, firstDayOfMonth, Math.max(0, Math.trunc(monthsAgo)));
         // Whole UTC days around the window: a valuation cell is one UTC day, and a cell cut at the edge values
         // differently.
@@ -193,7 +205,7 @@ const accountBalances = FunctionImpl.make(
         const { userId } = user;
         const now = yield* Clock.currentTimeMillis;
         const currency = (yield* setting(userId, "currency")) ?? "USD";
-        const [accountRows, transactionRows, transferRows, planRows, outsideRows, moves, offsetMs] = yield* Effect.all(
+        const [accountRows, transactionRows, transferRows, planRows, outsideRows, moves, offsetAt] = yield* Effect.all(
             [
                 reader
                     .table("accounts")
@@ -310,7 +322,7 @@ const accountBalances = FunctionImpl.make(
                     account,
                     groupCells(
                         ledger.get(account.localId) ?? [],
-                        (entry) => `${entry.leg}|${localDate(entry.date.getTime(), offsetMs)}`
+                        (entry) => `${entry.leg}|${localDate(entry.date.getTime(), offsetAt(entry.date.getTime()))}`
                     ),
                     rates
                 );
@@ -341,7 +353,7 @@ const budgetStatus = FunctionImpl.make(
         const { userId } = user;
         const now = yield* Clock.currentTimeMillis;
         const currency = (yield* setting(userId, "currency")) ?? "USD";
-        const [mainRows, budgetRows, transactionRows, categories, rates, offsetMs] = yield* Effect.all(
+        const [mainRows, budgetRows, transactionRows, categories, rates, offsetAt] = yield* Effect.all(
             [
                 reader
                     .table("mainBudget")
@@ -372,10 +384,10 @@ const budgetStatus = FunctionImpl.make(
         const contributions: ExpenseContribution[] = expenses.map((row, index) => ({
             amount: values[index] ?? 0,
             categoryId: row.categoryId,
-            date: wall(row.date, offsetMs),
+            date: wall(row.date, offsetAt(row.date)),
             parentId: row.categoryId ? (categories.get(row.categoryId)?.parentId ?? null) : null,
         }));
-        const clock = { currency, now: wall(now, offsetMs), offsetMs, rates };
+        const clock = { currency, now: wall(now, offsetAt(now)), offsetAt, rates };
         const main = mainRows.find((row) => row.deletedAt === null);
         return {
             categories: budgetRows
@@ -423,7 +435,7 @@ const upcomingCharges = FunctionImpl.make(
         const { userId } = user;
         const now = yield* Clock.currentTimeMillis;
         const currency = (yield* setting(userId, "currency")) ?? "USD";
-        const [recurring, future, categories, rates, offsetMs] = yield* Effect.all(
+        const [recurring, future, categories, rates, offsetAt] = yield* Effect.all(
             [
                 reader
                     .table("transactions")
@@ -443,14 +455,15 @@ const upcomingCharges = FunctionImpl.make(
             ],
             { concurrency: "unbounded" }
         );
-        const today = wall(now, offsetMs);
+        const today = wall(now, offsetAt(now));
         // A future recurring entry is in both reads.
         const scheduled = [...new Map([...recurring, ...future].map((row) => [row._id, row])).values()].sort(bySeq);
         const perMonth = monthlySubscriptionCost(
             scheduled.map((row) => ({
                 ...row,
                 date: new Date(row.date),
-                recurringEndDate: row.recurringEndDate === null ? null : wall(row.recurringEndDate, offsetMs),
+                recurringEndDate:
+                    row.recurringEndDate === null ? null : wall(row.recurringEndDate, offsetAt(row.recurringEndDate)),
             })),
             currency,
             rates,
@@ -462,7 +475,7 @@ const upcomingCharges = FunctionImpl.make(
                 .map((row) => ({
                     landsOn: landingDate(
                         {
-                            date: wall(row.date, offsetMs),
+                            date: wall(row.date, offsetAt(row.date)),
                             recurringAnchorDay: row.recurringAnchorDay ?? null,
                             recurringCoefficient: row.recurringCoefficient,
                             recurringType: row.recurringType,
@@ -476,7 +489,10 @@ const upcomingCharges = FunctionImpl.make(
                     amount: row.amount,
                     category: row.categoryId ? (categories.get(row.categoryId)?.name ?? null) : null,
                     currency: row.currency,
-                    endsOn: row.recurringEndDate === null ? null : localDate(row.recurringEndDate, offsetMs),
+                    endsOn:
+                        row.recurringEndDate === null
+                            ? null
+                            : localDate(row.recurringEndDate, offsetAt(row.recurringEndDate)),
                     kind: entryKind(row.income),
                     nextCharge: wallDay(landsOn),
                     note: row.note,

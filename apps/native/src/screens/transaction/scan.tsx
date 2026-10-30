@@ -1,7 +1,6 @@
 import Camera01Icon from "@hugeicons-pro/core-stroke-rounded/Camera01Icon";
 import Image01Icon from "@hugeicons-pro/core-stroke-rounded/Image01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
-import { addDays, startOfDay } from "@outlayr/money/calendar";
 import type { RateTable } from "@outlayr/money/valuation";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -36,7 +35,7 @@ import type { TransactionInput } from "@/data/transactions-core";
 import { useValuationIn } from "@/data/use-valuation";
 import type { Database } from "@/db/client";
 import type { AuthGate } from "@/domain/auth-gate";
-import { formatChargeDate } from "@/domain/dates";
+import { formatRelativeDay } from "@/domain/dates";
 import { formatAmount } from "@/domain/money";
 import { paywallHref } from "@/domain/paywall-trigger";
 import { serializeReceipt } from "@/domain/receipt-items";
@@ -53,7 +52,6 @@ import { useRegionCode } from "@/hooks/use-region-code";
 import { isLimitRefusal, useLimitNotice } from "@/hooks/use-usage-limits";
 import type { TranslatableKey } from "@/i18n/catalog";
 import { useLanguage, useTranslation } from "@/i18n/context";
-import type { TranslateFn } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
 import { useAuthSession } from "@/lib/auth-session";
 import { freshEntries } from "@/lib/fresh-entries";
@@ -97,18 +95,6 @@ export const FAILURE_KEY = {
 
 /** A failure the same photo may survive: nothing was wrong with the picture. */
 export const RETRYABLE: ReadonlySet<ScanFailure> = new Set(["offline", "provider", "rateLimited", "timeout"]);
-
-function dayLabel(date: Date, now: Date, t: TranslateFn, language: Language): string {
-    const target = startOfDay(date).getTime();
-    const today = startOfDay(now);
-    if (target === today.getTime()) {
-        return t("common.today");
-    }
-    if (target === addDays(today, -1).getTime()) {
-        return t("common.yesterday");
-    }
-    return formatChargeDate(date, now, language);
-}
 
 function fitPhoto(photo: ScanPhoto, maxWidth: number, maxHeight: number): StageBox {
     const aspect = photo.width > 0 && photo.height > 0 ? photo.width / photo.height : 0.7;
@@ -358,7 +344,7 @@ function ReviewSheet({
     const { language } = useLanguage();
     const mark = useMerchantMark(receipt.merchant.trim().length > 0 ? receipt.merchant : null, receipt.domain);
     const conversion = conversionOf(receipt, ledgerCurrency, rates);
-    const day = dayLabel(receipt.date, new Date(), t, language);
+    const day = formatRelativeDay(receipt.date, new Date(), language);
     const preposition = t(receipt.income ? "receipt.review.from" : "receipt.review.at");
     const amountClass = receipt.income ? "text-income" : "text-foreground";
     const money = (value: number) => formatAmount(value, receipt.currency, true, language);

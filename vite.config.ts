@@ -71,7 +71,7 @@ const HAPTICS_IMPORT = {
 };
 const SECURE_STORE_IMPORT = {
     message:
-        "Secure storage is the SecureStorage service. Call it through @/state/secure-storage-commands; only lib/cloud-runtime.ts keeps the synchronous API better-auth's storage adapter needs.",
+        "Secure storage is the SecureStorage service in @/lib/secure-storage; reach it with `yield* SecureStorage`. Only lib/cloud-runtime.ts keeps the synchronous API better-auth's storage adapter needs.",
     name: "expo-secure-store",
 };
 const ICON_BARREL_IMPORTS = ["solid", "stroke"].map((weight) => ({
@@ -214,12 +214,6 @@ export default defineConfig({
                 files: ["apps/native/src/domain/uuid5.ts", "apps/native/src/domain/confetti.ts"],
                 rules: {
                     "no-bitwise": "off",
-                },
-            },
-            {
-                files: ["apps/native/src/data/budgets.ts"],
-                rules: {
-                    "oxc/no-barrel-file": "off",
                 },
             },
             {

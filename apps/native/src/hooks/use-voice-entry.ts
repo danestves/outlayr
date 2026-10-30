@@ -29,7 +29,14 @@ import type { VoiceTurn, VoiceTurnMessage } from "@/domain/voice-entry";
 import { trackCapturesWall } from "@/hooks/use-usage-limits";
 import { duringHandoff } from "@/lib/app-handoff";
 import { VOICE_TURNS_QUERY, voiceThreadTransport } from "@/lib/convex";
-import type { SpeakRequest, StartThreadResult, VoiceDraft, VoiceQuote, VoiceThreadTransport } from "@/lib/convex";
+import type {
+    SpeakRequest,
+    SpeakStatus,
+    StartThreadResult,
+    VoiceDraft,
+    VoiceQuote,
+    VoiceThreadTransport,
+} from "@/lib/convex";
 import { useLatest } from "@/lib/use-latest";
 import { timedCaptureCommand, VOICE_SPEAK_TIMEOUT } from "@/state/capture-commands";
 import { fromCommand, voidFlowCommand } from "@/state/entry-commands";
@@ -101,31 +108,17 @@ export interface UseVoiceEntryResult<Context> {
     turns: VoiceTurn[];
 }
 
-function failureFor(status: string): VoiceFailure {
-    switch (status) {
-        case "unclear": {
-            return "silent";
-        }
-        case "notConfigured": {
-            return "notConfigured";
-        }
-        case "unauthenticated": {
-            return "unauthenticated";
-        }
-        case "rateLimited": {
-            return "rateLimited";
-        }
-        case "notEntitled": {
-            return "notEntitled";
-        }
-        case "quotaExceeded": {
-            return "quotaExceeded";
-        }
-        default: {
-            return "provider";
-        }
-    }
-}
+const FAILURE_FOR = {
+    invalid: "provider",
+    notConfigured: "notConfigured",
+    notEntitled: "notEntitled",
+    ok: "provider",
+    providerError: "provider",
+    quotaExceeded: "quotaExceeded",
+    rateLimited: "rateLimited",
+    unauthenticated: "unauthenticated",
+    unclear: "silent",
+} as const satisfies Record<SpeakStatus, VoiceFailure>;
 
 const readAndDiscard = Effect.fn("VoiceEntry.readAndDiscard")(function* readAndDiscard(uri: string) {
     const file = new File(uri);
@@ -381,7 +374,7 @@ const sendClip: <Context>(ports: VoicePorts<Context>, clip: ArrayBuffer, id: str
             return;
         }
     }
-    const reason = failureFor(settled.status);
+    const reason = FAILURE_FOR[settled.status];
     trackCapturesWall(reason);
     setPhase({ kind: "failed", reason, transcript: settled.transcript });
 });

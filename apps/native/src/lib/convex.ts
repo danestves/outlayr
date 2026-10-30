@@ -320,7 +320,7 @@ export interface ProposedDraft {
     quotes?: VoiceQuote[];
 }
 
-type SpeakStatus =
+export type SpeakStatus =
     | "ok"
     | "unauthenticated"
     | "notConfigured"
@@ -463,7 +463,7 @@ export interface ReceiptDraft {
     total: number;
 }
 
-type ScanStatus =
+export type ScanStatus =
     | "ok"
     | "unauthenticated"
     | "notConfigured"

@@ -6,6 +6,7 @@ import * as Queue from "effect/Queue";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
+import { getCalendars } from "expo-localization";
 
 import { getMeta, META_KEYS, setMeta } from "@/data/app-meta-core";
 import type { AppMetaError } from "@/data/app-meta-core";
@@ -21,6 +22,7 @@ import { subscribeToSettingChanges } from "@/data/database-changes";
 import { drainPendingWrites, fileWaitingPurchases, takeRepriced } from "@/data/pending-writes-core";
 import { applyRecentRates, pullRatesIfDue } from "@/data/rates";
 import type { PullRatesFn, RateWireRow, RatesError } from "@/data/rates";
+import { mirrorTimeZone } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import { autologAccessOf } from "@/domain/autolog-cap";
 import type { AutologAccess } from "@/domain/autolog-cap";
@@ -51,6 +53,7 @@ const SystemStep = Schema.Literals([
     "purchases",
     "repriced",
     "wallet",
+    "zone",
 ]);
 
 const FAILED: Record<typeof SystemStep.Type, string> = {
@@ -63,6 +66,7 @@ const FAILED: Record<typeof SystemStep.Type, string> = {
     purchases: "Waiting purchases failed to file",
     repriced: "Repriced subscriptions failed to announce",
     wallet: "Wallet run stamp failed",
+    zone: "Time zone mirror failed",
 };
 
 export class SystemSyncError extends Schema.TaggedError<SystemSyncError>()("SystemSyncError", {
@@ -245,7 +249,11 @@ export const make = Effect.gen(function* make() {
                 )
             )
         );
-        const catchUp = Effect.all([mirrorRun, drainRun], { concurrency: "unbounded", discard: true }).pipe(
+        const zoneRun = Effect.suspend(() => mirrorTimeZone(db, getCalendars()[0].timeZone)).pipe(
+            failedStep("zone"),
+            Effect.catchTags({ SystemSyncError: (error) => warn(error) })
+        );
+        const catchUp = Effect.all([mirrorRun, zoneRun, drainRun], { concurrency: "unbounded", discard: true }).pipe(
             Effect.uninterruptible
         );
 

@@ -1,5 +1,4 @@
 import { useAtomValue } from "@effect/atom-react/Hooks";
-import { startOfDay } from "@outlayr/money/calendar";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
@@ -43,7 +42,7 @@ import type { TransactionInput } from "@/data/transactions-core";
 import { transfersRepo } from "@/data/transfers-core";
 import type { Database } from "@/db/client";
 import type { AuthGate } from "@/domain/auth-gate";
-import { formatChargeDate } from "@/domain/dates";
+import { formatRelativeDay } from "@/domain/dates";
 import type { HapticEvent } from "@/domain/haptics";
 import { amountParts, formatAmount, symbolPrefix } from "@/domain/money";
 import { paywallHref } from "@/domain/paywall-trigger";
@@ -72,7 +71,6 @@ import { useVoiceEntry } from "@/hooks/use-voice-entry";
 import type { VoiceFailure, VoicePhase } from "@/hooks/use-voice-entry";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
-import type { Language } from "@/i18n/languages";
 import { useAuthSession } from "@/lib/auth-session";
 import type { VoiceDraft, VoiceQuote } from "@/lib/convex";
 import { freshEntries } from "@/lib/fresh-entries";
@@ -151,20 +149,6 @@ function orbStateOf(phase: VoicePhase): VoiceOrbState {
             return "idle";
         }
     }
-}
-
-const ONE_DAY_MS = 86_400_000;
-
-function spokenDayLabel(date: Date, now: Date, t: TranslateFn, language: Language): string {
-    const target = startOfDay(date).getTime();
-    const today = startOfDay(now).getTime();
-    if (target === today) {
-        return t("common.today");
-    }
-    if (target === today - ONE_DAY_MS) {
-        return t("common.yesterday");
-    }
-    return formatChargeDate(date, now, language);
 }
 
 function VoiceShell({
@@ -248,7 +232,7 @@ function ReviewLine({
     const t = useTranslation();
     const { language } = useLanguage();
     const amount = formatAmount(draft.amount, draft.currency, true, language);
-    const day = spokenDayLabel(draft.date, new Date(), t, language);
+    const day = formatRelativeDay(draft.date, new Date(), language);
     const preposition = t(draft.income ? "voice.review.from" : "voice.review.at");
     const mark = useMerchantMark(draft.merchant, draft.domain);
 
@@ -307,7 +291,7 @@ function TransferReviewLine({ draft }: { draft: ResolvedVoiceTransfer }) {
     const { language } = useLanguage();
     const colors = useColors();
     const amount = formatAmount(draft.amount, draft.currency, true, language);
-    const day = spokenDayLabel(draft.date, new Date(), t, language);
+    const day = formatRelativeDay(draft.date, new Date(), language);
     const missing = t("voice.review.noAccount");
 
     return (

@@ -118,11 +118,57 @@ export const MAX_ENTRIES = 50;
 export const SCAN_WINDOW = 500;
 
 export const DAY_MS = 86_400_000;
+const FARTHEST_WEST_MS = 10 * 3_600_000;
 const LATEST_PAYDAY = 28;
 
-export function utcOffsetOf(localMidnight: number): number {
+export type OffsetAt = (instant: number) => number;
+
+export const fixedOffset =
+    (offsetMs: number): OffsetAt =>
+    () =>
+        offsetMs;
+
+export function zoneOffsets(timeZone: string): OffsetAt | null {
+    let format: Intl.DateTimeFormat;
+    try {
+        format = new Intl.DateTimeFormat("en-US", {
+            day: "numeric",
+            hour: "numeric",
+            hourCycle: "h23",
+            minute: "numeric",
+            month: "numeric",
+            second: "numeric",
+            timeZone,
+            year: "numeric",
+        });
+    } catch {
+        return null;
+    }
+    return (instant) => {
+        const parts = new Map(format.formatToParts(instant).map((part) => [part.type, Number(part.value)]));
+        const part = (type: Intl.DateTimeFormatPartTypes) => parts.get(type) ?? 0;
+        const wallMs = Date.UTC(
+            part("year"),
+            part("month") - 1,
+            part("day"),
+            part("hour"),
+            part("minute"),
+            part("second")
+        );
+        return wallMs - Math.floor(instant / 1000) * 1000;
+    };
+}
+
+export const fromWall = (wallMs: number, offsetAt: OffsetAt) => wallMs - offsetAt(wallMs - offsetAt(wallMs));
+
+export function utcOffsetOf(localMidnight: number, hintMs?: number): number {
     const sinceUtcMidnight = ((localMidnight % DAY_MS) + DAY_MS) % DAY_MS;
-    return sinceUtcMidnight <= DAY_MS / 2 ? 0 - sinceUtcMidnight : DAY_MS - sinceUtcMidnight;
+    const west = 0 - sinceUtcMidnight;
+    const east = DAY_MS - sinceUtcMidnight;
+    if (hintMs === west || hintMs === east) {
+        return hintMs;
+    }
+    return sinceUtcMidnight <= FARTHEST_WEST_MS ? west : east;
 }
 
 export function monthWindow(nowMs: number, offsetMs: number, firstDayOfMonth: number, monthsAgo: number) {
@@ -135,7 +181,7 @@ export function monthWindow(nowMs: number, offsetMs: number, firstDayOfMonth: nu
     };
 }
 
-// ponytail: one fixed offset, so a window across a DST change is cut an hour off; sync the IANA zone to fix.
+// ponytail: monthWindow takes the offset at now, so a month across a DST change is cut an hour off; use offsetAt.
 export const wall = (instant: number, offsetMs: number) => new Date(instant + offsetMs);
 export const wallDay = (date: Date) => date.toISOString().slice(0, 10);
 export const localDate = (instant: number, offsetMs: number) => wallDay(wall(instant, offsetMs));
@@ -175,7 +221,7 @@ interface StoredBudget {
 interface BudgetClock {
     currency: string;
     now: Date;
-    offsetMs: number;
+    offsetAt: OffsetAt;
     rates: RateTable;
 }
 
@@ -186,15 +232,23 @@ export function budgetStanding(
     clock: BudgetClock
 ) {
     const window = advanceBudgetWindow(
-        budget.startDate === null ? clock.now : wall(budget.startDate, clock.offsetMs),
+        budget.startDate === null ? clock.now : wall(budget.startDate, clock.offsetAt(budget.startDate)),
         budget.type,
         clock.now
     );
     const spent = spentThrough(window.start, new Date(windowEndMs(window, clock.now.getTime())));
-    const limit = limitIn(budget, new Date(window.start.getTime() - clock.offsetMs), clock.currency, clock.rates);
+    const limit = limitIn(
+        budget,
+        new Date(fromWall(window.start.getTime(), clock.offsetAt)),
+        clock.currency,
+        clock.rates
+    );
     const carry = carries
         ? rolloverCarry({
-              anchor: budget.dateCreated === null ? window.start : wall(budget.dateCreated, clock.offsetMs),
+              anchor:
+                  budget.dateCreated === null
+                      ? window.start
+                      : wall(budget.dateCreated, clock.offsetAt(budget.dateCreated)),
               current: window,
               limit,
               spentIn: (start, end) => spentThrough(start, lastMsBefore(end)),
