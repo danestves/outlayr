@@ -12,10 +12,10 @@ import {
     getSyncCursor,
     isSyncEnabled,
     outboxPendingCount,
-    SYNCED_META_KEYS,
     setSyncCursor,
     setSyncEnabled,
 } from "./sync-outbox-core";
+import { SYNCED_META_KEYS } from "./sync-tables";
 
 async function addTransaction(db: Database, id: string): Promise<void> {
     await db.insert(transactions).values({

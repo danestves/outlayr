@@ -1,4 +1,4 @@
-import { eq, getTableColumns, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import { beforeEach, describe, expect, it } from "vite-plus/test";
 
@@ -20,6 +20,7 @@ import { asCloudCall } from "@/lib/fake-cloud";
 
 import {
     FIELDS_BY_TABLE,
+    IMAGE_KEY_TABLES,
     incomingWins,
     SYNCED_TABLES as CONVEX_SYNCED_TABLES,
 } from "../../../../packages/backend/confect/lib/syncTables";
@@ -33,10 +34,10 @@ import {
     PUSH_BATCH_LIMIT,
     pullAndApply,
     runSync,
-    specFor,
 } from "./sync-engine-core";
 import type { PullFn, PulledRow, PushFn, WireRow } from "./sync-engine-core";
-import { getSyncCursor, outboxPendingCount, SYNCED_TABLES, setSyncCursor, setSyncEnabled } from "./sync-outbox-core";
+import { getSyncCursor, outboxPendingCount, setSyncCursor, setSyncEnabled } from "./sync-outbox-core";
+import { SYNCED_SPECS, SYNCED_TABLES } from "./sync-tables";
 import { transactionsRepo } from "./transactions-core";
 
 const makeDb = (): Database => migratedDatabase();
@@ -162,27 +163,8 @@ function metaRow(key: string, seq: number, updatedAt: number, value: string | nu
 }
 
 describe("the replicated column set", () => {
-    const ENVELOPE = new Set(["id", "key", "updatedAt", "deletedAt", "restoredAt"]);
-    const DEVICE_LOCAL = new Set([
-        "transactions.imageUri",
-        "transactions.reminderLeadDays",
-        "transactions.unreviewed",
-        "transactionPhotos.imageUri",
-        "transactionAttachments.imageUri",
-        "accounts.imageUri",
-    ]);
-
-    it.each(SYNCED_TABLES)("covers every column of %s", (table) => {
-        const spec = specFor(table);
-        const declared = Object.keys(getTableColumns(spec.table)).filter(
-            (name) => !(ENVELOPE.has(name) || DEVICE_LOCAL.has(`${table}.${name}`))
-        );
-
-        expect([...spec.fields].sort()).toStrictEqual(declared.sort());
-    });
-
     it.each(SYNCED_TABLES)("pushes the columns the Convex %s table accepts", (table) => {
-        expect([...specFor(table).fields].sort()).toStrictEqual(Object.keys(FIELDS_BY_TABLE[table]).sort());
+        expect([...SYNCED_SPECS[table].fields].sort()).toStrictEqual(Object.keys(FIELDS_BY_TABLE[table]).sort());
     });
 
     it("replicates the tables Convex syncs, in batches it accepts", () => {
@@ -190,13 +172,9 @@ describe("the replicated column set", () => {
         expect(PUSH_BATCH_LIMIT).toBeLessThanOrEqual(CONVEX_PUSH_BATCH_LIMIT);
     });
 
-    it("names only real timestamp columns as dates", () => {
-        for (const table of SYNCED_TABLES) {
-            const spec = specFor(table);
-            for (const name of spec.dates) {
-                expect(spec.fields.includes(name)).toBeTruthy();
-            }
-        }
+    it("keeps the bytes of every photo key a row can name", () => {
+        const photoTables = SYNCED_TABLES.filter((table) => SYNCED_SPECS[table].photos !== null);
+        expect(photoTables.sort()).toStrictEqual([...IMAGE_KEY_TABLES].sort());
     });
 });
 

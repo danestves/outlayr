@@ -8,9 +8,11 @@ import { transaction } from "@/db/transaction";
 
 import { META_KEYS } from "./app-meta-core";
 import { refreshLogoCandidate } from "./logo-backfill-state";
-import { PULL_PAGE_LIMIT, PUSH_BATCH_LIMIT, specFor, withForeignKeysOff, writePulledRows } from "./sync-engine-core";
-import type { LocalValue, PulledRow, PullFn, PushFn, SyncedTable, WireRow } from "./sync-engine-core";
-import { getOrCreateDeviceId, SYNCED_META_KEYS, SYNCED_TABLES, setSyncCursor } from "./sync-outbox-core";
+import { PULL_PAGE_LIMIT, PUSH_BATCH_LIMIT, withForeignKeysOff, writePulledRows } from "./sync-engine-core";
+import type { LocalValue, PulledRow, PullFn, PushFn, WireRow } from "./sync-engine-core";
+import { getOrCreateDeviceId, setSyncCursor } from "./sync-outbox-core";
+import { SYNCED_SPECS, SYNCED_TABLES } from "./sync-tables";
+import type { SyncedTable } from "./sync-tables";
 
 const AdoptionEngineOperation = Schema.Literals(["pull", "push", "read", "replace", "lift"]);
 
@@ -72,7 +74,7 @@ export const accountLedgerState = Effect.fn("AdoptionEngine.accountLedgerState")
 });
 
 const localRows = Effect.fn("AdoptionEngine.localRows")(function* localRows(db: Database, table: SyncedTable) {
-    const spec = specFor(table);
+    const spec = SYNCED_SPECS[table];
     // SAFETY: the runtime table name erases the row type; this file reads rows by column name as `Row`.
     const rows = (yield* attempt("read", () => db.select().from(spec.table))) as Row[];
     const idName = spec.id.name;
@@ -102,14 +104,8 @@ export const replaceLocalFromAccount = Effect.fn("AdoptionEngine.replaceLocalFro
                     // `transaction` holds one SQLite connection, so the wipe's statements are issued on it one at a
                     // time.
                     for (const table of SYNCED_TABLES) {
-                        const spec = specFor(table);
-                        if (table === "appMeta") {
-                            yield* attempt("replace", () =>
-                                db.delete(spec.table).where(inArray(spec.id, [...SYNCED_META_KEYS]))
-                            );
-                            continue;
-                        }
-                        yield* attempt("replace", () => db.delete(spec.table));
+                        const spec = SYNCED_SPECS[table];
+                        yield* attempt("replace", () => db.delete(spec.table).where(spec.scope));
                     }
                     yield* setSyncCursor(db, 0);
                     // The write below covers the whole log under the merge that knows `restoredAt`.
@@ -153,7 +149,7 @@ export const discardAccountLedger = Effect.fn("AdoptionEngine.discardAccountLedg
     for (const table of SYNCED_TABLES) {
         const local = localByTable.get(table) ?? new Map<string, Row>();
         for (const row of log.values()) {
-            if (row.table !== table || row.deletedAt !== null || table === "appMeta") {
+            if (row.table !== table || row.deletedAt !== null || SYNCED_SPECS[table].clock === "none") {
                 continue;
             }
             const mine = local.get(row.localId);
@@ -188,7 +184,7 @@ export const discardAccountLedger = Effect.fn("AdoptionEngine.discardAccountLedg
             db,
             Effect.gen(function* lift() {
                 for (const [table, rows] of lifts) {
-                    const spec = specFor(table);
+                    const spec = SYNCED_SPECS[table];
                     for (const row of rows) {
                         // A lifted transaction's logo candidate stamp follows the new clock, before the write.
                         if (table === "transactions") {

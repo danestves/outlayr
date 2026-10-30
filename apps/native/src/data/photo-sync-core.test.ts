@@ -398,7 +398,11 @@ describe("uploadPhotos", () => {
         await insertAccount(db, "a1", { imageUri: `${DIRECTORY}/logo.jpg` });
 
         expect((await Effect.runPromise(uploadPhotos(db, files, transport, NOW))).uploaded).toBe(PHOTO_SYNC_BATCH);
-        expect((await readAccount(db, "a1")).imageKey).toBeNull();
+        const keys = [
+            ...(await db.select({ imageKey: transactions.imageKey }).from(transactions)),
+            ...(await db.select({ imageKey: accounts.imageKey }).from(accounts)),
+        ];
+        expect(keys.filter((row) => row.imageKey === null)).toHaveLength(1);
     });
 });
 

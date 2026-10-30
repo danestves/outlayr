@@ -7,40 +7,24 @@ import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import {
-    accounts,
     appMeta,
     budgets,
-    categories,
     installmentPlans,
     installments,
-    outsideMoves,
     outsidePayments,
     mainBudget,
     outbox,
-    savingsGoals,
-    tags,
-    transactionAttachments,
-    transactionPhotos,
-    transactionSplits,
     transactions,
     transactionTags,
-    transfers,
 } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { chunkRows } from "@/lib/chunk";
 import type { CloudError } from "@/lib/cloud-error";
 
 import { getMeta, META_KEYS } from "./app-meta-core";
-import {
-    getOrCreateDeviceId,
-    getSyncCursor,
-    isSyncEnabled,
-    setSyncCursor,
-    SYNCED_META_KEYS,
-    SYNCED_TABLES,
-} from "./sync-outbox-core";
-
-export type SyncedTable = (typeof SYNCED_TABLES)[number];
+import { getOrCreateDeviceId, getSyncCursor, isSyncEnabled, setSyncCursor } from "./sync-outbox-core";
+import { SYNCED_SPECS, SYNCED_TABLES } from "./sync-tables";
+import type { SyncedTable, SyncedTableSpec } from "./sync-tables";
 
 const SyncCoreStage = Schema.Literals(["read", "write", "push", "pull", "foreignKeys", "transaction"]);
 
@@ -67,7 +51,7 @@ const rowSchemaFor = (table: SyncedTable): Schema.Codec<unknown, unknown> => {
     if (known) {
         return known;
     }
-    const synced: SQLiteTable = SPECS[table].table;
+    const synced: SQLiteTable = SYNCED_SPECS[table].table;
     const built = createInsertSchema(synced, finiteNumbers(synced));
     rowSchemas.set(table, built);
     return built;
@@ -115,224 +99,9 @@ export type PullFn = (args: {
     tables?: readonly SyncedTable[];
 }) => Effect.Effect<{ rows: PulledRow[]; cursor: number; hasMore: boolean }, CloudError>;
 
-interface TableSpec {
-    dates: readonly string[];
-    /**
-     * Fallback when the wire omits a column (added after replication began) or sends null for a NOT NULL one.
-     * Without it `toLocalFields` writes null, and a NOT NULL column then fails the whole pull transaction.
-     */
-    defaults?: Readonly<Record<string, WireValue>>;
-    /**
-     * Must name exactly the columns of the Convex table in `packages/backend/confect/lib/syncTables.ts`. A missing
-     * column replicates as silently absent, so `sync-engine-core.test.ts` checks this list against the schema.
-     */
-    fields: readonly string[];
-    id: SQLiteColumn;
-    table: SQLiteTable;
-}
-
-const SPECS = {
-    accounts: {
-        dates: ["initialBalanceDate", "dateCreated"],
-        defaults: { kind: "asset" },
-        fields: [
-            "name",
-            "currency",
-            "initialBalance",
-            "initialBalanceUsd",
-            "initialBalanceDate",
-            "icon",
-            "emoji",
-            "customColor",
-            "imageColor",
-            "imageKey",
-            "sortOrder",
-            "dateCreated",
-            "kind",
-        ],
-        id: accounts.id,
-        table: accounts,
-    },
-    appMeta: {
-        dates: [],
-        fields: ["value"],
-        id: appMeta.key,
-        table: appMeta,
-    },
-    budgets: {
-        dates: ["startDate", "dateCreated"],
-        fields: [
-            "name",
-            "amount",
-            "type",
-            "startDate",
-            "dateCreated",
-            "currency",
-            "amountUsd",
-            "green",
-            "rollover",
-            "categoryId",
-        ],
-        id: budgets.id,
-        table: budgets,
-    },
-    categories: {
-        dates: ["dateCreated"],
-        fields: ["name", "color", "icon", "emoji", "income", "sortOrder", "dateCreated", "parentId"],
-        id: categories.id,
-        table: categories,
-    },
-    installmentPlans: {
-        dates: ["dateCreated"],
-        fields: ["accountId", "transactionId", "dateCreated"],
-        id: installmentPlans.id,
-        table: installmentPlans,
-    },
-    installments: {
-        dates: ["dueDate"],
-        fields: ["planId", "sequence", "dueDate", "amount"],
-        id: installments.id,
-        table: installments,
-    },
-    outsidePayments: {
-        dates: ["date"],
-        fields: ["planId", "date", "amount", "amountUsd"],
-        id: outsidePayments.id,
-        table: outsidePayments,
-    },
-    outsideMoves: {
-        dates: ["date"],
-        fields: ["accountId", "date", "amount", "amountUsd", "note"],
-        id: outsideMoves.id,
-        table: outsideMoves,
-    },
-    mainBudget: {
-        dates: ["startDate", "dateCreated"],
-        fields: ["name", "amount", "type", "startDate", "dateCreated", "currency", "amountUsd", "green", "rollover"],
-        id: mainBudget.id,
-        table: mainBudget,
-    },
-    savingsGoals: {
-        dates: ["targetDate", "dateCreated"],
-        // Start amounts default to 0, never null: null means unconvertible and would withhold the goal's progress.
-        // `targetDate: 0` only lets a dateless goal be written as a tombstone (see `writeRow`).
-        defaults: { startAmount: 0, startAmountUsd: 0, targetDate: 0 },
-        fields: [
-            "name",
-            "accountId",
-            "startAmount",
-            "startAmountUsd",
-            "exchangeRate",
-            "targetAmount",
-            "targetAmountUsd",
-            "currency",
-            "targetDate",
-            "sortOrder",
-            "dateCreated",
-        ],
-        id: savingsGoals.id,
-        table: savingsGoals,
-    },
-    tags: {
-        dates: [],
-        fields: ["name", "color", "sortOrder"],
-        id: tags.id,
-        table: tags,
-    },
-    transactionAttachments: {
-        dates: [],
-        fields: ["transactionId", "imageKey", "name", "sortOrder"],
-        id: transactionAttachments.id,
-        table: transactionAttachments,
-    },
-    transactionPhotos: {
-        dates: [],
-        fields: ["transactionId", "imageKey", "imageColor", "sortOrder"],
-        id: transactionPhotos.id,
-        table: transactionPhotos,
-    },
-    transactionSplits: {
-        dates: [],
-        fields: ["transactionId", "categoryId", "amount", "sortOrder"],
-        id: transactionSplits.id,
-        table: transactionSplits,
-    },
-    transactionTags: {
-        dates: [],
-        fields: ["transactionId", "tagId"],
-        id: transactionTags.id,
-        table: transactionTags,
-    },
-    transactions: {
-        dates: ["date", "day", "month", "recurringEndDate"],
-        fields: [
-            "amount",
-            "income",
-            "currency",
-            "note",
-            "details",
-            "date",
-            "day",
-            "month",
-            "icon",
-            "emoji",
-            "customColor",
-            "imageColor",
-            // No `imageUri`: a peer cannot resolve the device-local path, nulls it, and pushes that null back over the
-            // original photo. `imageKey` replicates; the bytes travel via `photos.ts`.
-            "imageKey",
-            "onceRecurring",
-            "recurringType",
-            "recurringCoefficient",
-            "recurringEndDate",
-            "recurringAnchorDay",
-            "categoryId",
-            "accountId",
-            "amountUsd",
-            "exchangeRate",
-            "exchangeRateType",
-            "transferId",
-            "feeForId",
-            "feeRate",
-            "paidVia",
-            "receipt",
-            "installmentId",
-        ],
-        id: transactions.id,
-        table: transactions,
-    },
-    transfers: {
-        dates: ["date", "day", "month", "dateCreated"],
-        fields: [
-            "fromAccountId",
-            "toAccountId",
-            "fromAmount",
-            "fromCurrency",
-            "fromAmountUsd",
-            "toAmount",
-            "toCurrency",
-            "toAmountUsd",
-            "exchangeRate",
-            "exchangeRateType",
-            "date",
-            "day",
-            "month",
-            "note",
-            "dateCreated",
-            "installmentPlanId",
-        ],
-        id: transfers.id,
-        table: transfers,
-    },
-} satisfies Record<SyncedTable, TableSpec>;
-
-export function specFor(table: SyncedTable): TableSpec {
-    return SPECS[table];
-}
-
 export type LocalValue = Date | WireValue;
 
-// A runtime table name erases drizzle's row type; every read is keyed by a name checked against `SPECS`.
+// A runtime table name erases drizzle's row type; every read is keyed by a name checked against `SYNCED_SPECS`.
 type Row = Record<string, LocalValue>;
 interface AnyWriter {
     insert: (table: SQLiteTable) => {
@@ -348,7 +117,7 @@ interface AnyWriter {
 }
 
 function anyWriter(db: Database): AnyWriter {
-    // SAFETY: drizzle's per-table generics share no type; only insert/select run, on tables looked up in `SPECS`.
+    // SAFETY: drizzle's per-table generics share no type; only insert/select run, on tables from `SYNCED_SPECS`.
     return db as unknown as AnyWriter;
 }
 
@@ -360,7 +129,7 @@ function toWireValue(value: LocalValue | undefined): WireValue {
     return value instanceof Date ? value.getTime() : (value ?? null);
 }
 
-function toWireFields(spec: TableSpec, row: Row): WireFields {
+function toWireFields(spec: SyncedTableSpec, row: Row): WireFields {
     return Object.fromEntries(
         spec.fields.map((name) => {
             const value = row[name];
@@ -376,12 +145,12 @@ function toLocalDate(value: WireValue): Date | null {
     return isWireEpoch(value) ? new Date(value) : null;
 }
 
-function toLocalFields(spec: TableSpec, fields: WireFields): Row {
+function toLocalFields(spec: SyncedTableSpec, fields: WireFields): Row {
     const columns = getTableColumns(spec.table);
     return Object.fromEntries(
         spec.fields.map((name) => {
             const carried = Object.hasOwn(fields, name) && (fields[name] !== null || !columns[name].notNull);
-            const value = carried ? fields[name] : (spec.defaults?.[name] ?? null);
+            const value = carried ? fields[name] : (spec.defaults[name] ?? null);
             return [name, spec.dates.includes(name) ? toLocalDate(value) : value];
         })
     );
@@ -392,7 +161,7 @@ const rowsById = Effect.fn("SyncCore.rowsById")(function* rowsById(
     table: SyncedTable,
     ids: readonly string[]
 ) {
-    const spec = SPECS[table];
+    const spec = SYNCED_SPECS[table];
     const batches = yield* Effect.all(
         chunkRows(ids, ID_CHUNK).map((chunk) =>
             query("read", () =>
@@ -416,9 +185,9 @@ const rowsById = Effect.fn("SyncCore.rowsById")(function* rowsById(
 function groupByTable<T extends { tableName: string; localId: string }>(entries: readonly T[]): Map<SyncedTable, T[]> {
     const grouped = new Map<SyncedTable, T[]>();
     for (const entry of entries) {
-        // SAFETY: checked against `SPECS` on the next line.
+        // SAFETY: checked against `SYNCED_SPECS` on the next line.
         const table = entry.tableName as SyncedTable;
-        if (!(table in SPECS)) {
+        if (!Object.hasOwn(SYNCED_SPECS, table)) {
             continue;
         }
         const bucket = grouped.get(table) ?? [];
@@ -488,21 +257,21 @@ export const drainOutbox = Effect.fn("SyncCore.drainOutbox")(function* drainOutb
 
         const rows: WireRow[] = [];
         for (const entry of queued) {
-            // SAFETY: an unknown table misses `loaded`, which `groupByTable` keyed by `SPECS` names.
+            // SAFETY: an unknown table misses `loaded`, which `groupByTable` keyed by `SYNCED_SPECS` names.
             const table = entry.tableName as SyncedTable;
             const row = loaded.get(table)?.get(entry.localId);
             if (!row) {
                 continue;
             }
-            const spec = SPECS[table];
+            const spec = SYNCED_SPECS[table];
             const restoredAt = toEpoch(row.restoredAt);
             rows.push({
-                deletedAt: table === "appMeta" ? null : toEpoch(row.deletedAt),
+                deletedAt: toEpoch(row.deletedAt),
                 fields: toWireFields(spec, row),
                 localId: entry.localId,
                 ...(restoredAt !== null && { restoredAt }),
                 table,
-                updatedAt: table === "appMeta" ? (toEpoch(entry.enqueuedAt) ?? 0) : (toEpoch(row.updatedAt) ?? 0),
+                updatedAt: toEpoch(spec.clock === "row" ? row.updatedAt : entry.enqueuedAt) ?? 0,
             });
         }
 
@@ -594,10 +363,11 @@ const nothingApplied = (): ApplyResult => ({ applied: 0, tables: [] });
 
 /** A meta key this build no longer syncs is not applied, or a peer could reverse this device's choice. */
 function isReplicated(row: PulledRow): boolean {
-    if (!(row.table in SPECS)) {
+    if (!Object.hasOwn(SYNCED_SPECS, row.table)) {
         return false;
     }
-    return row.table !== "appMeta" || SYNCED_META_KEYS.some((key) => key === row.localId);
+    const { syncedIds } = SYNCED_SPECS[row.table];
+    return syncedIds === undefined || syncedIds.includes(row.localId);
 }
 
 export const writePulledRows = Effect.fn("SyncCore.writePulledRows")(function* writePulledRows(
@@ -642,9 +412,9 @@ export const writePulledRows = Effect.fn("SyncCore.writePulledRows")(function* w
             local === undefined
                 ? null
                 : {
-                      deletedAt: row.table === "appMeta" ? null : toEpoch(local.deletedAt),
+                      deletedAt: toEpoch(local.deletedAt),
                       restoredAt: toEpoch(local.restoredAt),
-                      updatedAt: row.table === "appMeta" ? null : (toEpoch(local.updatedAt) ?? 0),
+                      updatedAt: SYNCED_SPECS[row.table].clock === "row" ? (toEpoch(local.updatedAt) ?? 0) : null,
                   };
         const isPending = pending.has(`${row.table}\0${row.localId}`);
         if (incomingWinsLocally(row, localVersion, isPending)) {
@@ -795,23 +565,7 @@ const writeRow = Effect.fn("SyncCore.writeRow")(function* writeRow(
     local: Row | undefined,
     now: Date
 ) {
-    const spec = SPECS[row.table];
-
-    if (row.table === "appMeta") {
-        // Not `setMeta`: it cannot store null, and a null value must not arrive as an empty string.
-        // SAFETY: `syncTables.ts` declares `appMeta.value` as a nullable string.
-        const value = (row.fields.value ?? null) as string | null;
-        if (changesNothing(local, { key: row.localId, value })) {
-            return "unchanged" as const;
-        }
-        yield* query("write", () =>
-            db
-                .insert(appMeta)
-                .values({ key: row.localId, value })
-                .onConflictDoUpdate({ set: { value }, target: appMeta.key })
-        );
-        return "verbatim" as const;
-    }
+    const spec = SYNCED_SPECS[row.table];
 
     const lostCategory = row.table === "budgets" && (yield* resolveBudgetCategory(db, row, now));
     // A NOT NULL `targetDate` an older peer cleared is written as a queued tombstone, converging both on deleted.
@@ -822,11 +576,13 @@ const writeRow = Effect.fn("SyncCore.writeRow")(function* writeRow(
     const values = {
         ...toLocalFields(spec, row.fields),
         [spec.id.name]: row.localId,
-        deletedAt: rewritten ? now : toLocalDate(row.deletedAt),
-        // Dropped by drizzle on a table without the column.
-        restoredAt: toLocalDate(row.restoredAt ?? null),
-        updatedAt: rewritten ? now : new Date(row.updatedAt),
     } satisfies Row;
+    if (spec.clock === "row") {
+        values.deletedAt = rewritten ? now : toLocalDate(row.deletedAt);
+        // Dropped by drizzle on a table without the column.
+        values.restoredAt = toLocalDate(row.restoredAt ?? null);
+        values.updatedAt = rewritten ? now : new Date(row.updatedAt);
+    }
     if (lostCategory) {
         values.categoryId = null;
     }

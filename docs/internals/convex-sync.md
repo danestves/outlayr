@@ -148,7 +148,7 @@ runs against the local SQLite replica.
 | `transactionTags` one live link per `(transactionId, tagId)` (`transactionTags_pair_idx`, partial on `deletedAt IS NULL`) | ⚠️ same | Two devices tagging the same entry offline each mint their own link id. Reconciled client-side at the write — see §4. Before `0029` made the index partial, a tombstoned link still held the slot and the second link wedged every later pull. |
 | `imageUri` (`:57`) | ❌ **never** — device-local | A `file://` path whose container uuid changes on every app update. Replicating it lost photos: the receiver could not resolve the path, its launch reconciliation nulled the column, and the resulting push tie-broke on `deviceId` back onto the *originating* device. Removed from the wire in S11. |
 | `imageKey` | ✅ verbatim | The photo's R2 object key. Not a url — `r2.getUrl` signs one with a 15-minute default lifetime, so a stored url rots; every read re-mints from the key. The bytes travel out of band (`packages/backend/confect/photos.ts`, `apps/native/src/data/photo-sync-core.ts`), never in a `push` batch. |
-| `appMeta` key/value (`:166-169`) | partly | No `updatedAt`/`deletedAt` locally. Only `SYNCED_META_KEYS` (`src/data/sync-outbox-core.ts`) sync: the currency and how the ledger reads, which belong to the person. `colorScheme` stays local because an OLED phone at night and a tablet in daylight want different answers; `numberEntryType` because a phone typed one-handed and a tablet typed with both do (syncing it let a second device reverse a choice). `biometricLock` and `notification*` describe a permission this handset holds; `sync*` and `ledgerAdoption` are this device's replication identity; `firstLaunch`, `onboardingComplete` and `recurrenceRepaired` record this install's first run. `timeZone` is the one synced key a device writes on its own: the MCP tools need it to date entries. Each device writes it only when its own zone changes, tracked in the device-local `timeZoneMirrored`, so a zone pulled from another device is never written back and two devices in different zones don't trade it on every foreground. |
+| `appMeta` key/value (`:166-169`) | partly | No `updatedAt`/`deletedAt` locally. Only `SYNCED_META_KEYS` (`src/data/sync-tables.ts`) sync: the currency and how the ledger reads, which belong to the person. `colorScheme` stays local because an OLED phone at night and a tablet in daylight want different answers; `numberEntryType` because a phone typed one-handed and a tablet typed with both do (syncing it let a second device reverse a choice). `biometricLock` and `notification*` describe a permission this handset holds; `sync*` and `ledgerAdoption` are this device's replication identity; `firstLaunch`, `onboardingComplete` and `recurrenceRepaired` record this install's first run. `timeZone` is the one synced key a device writes on its own: the MCP tools need it to date entries. Each device writes it only when its own zone changes, tracked in the device-local `timeZoneMirrored`, so a zone pulled from another device is never written back and two devices in different zones don't trade it on every foreground. |
 | `exchangeRates` local replica (`:180-194`) | ❌ never | One-way server→device, wiped and replaced by `src/data/rates.ts`. Not user data. Do not sync it. |
 
 ---
@@ -238,9 +238,11 @@ and on the `nextSeq` subscription firing. Never on the write path itself.
 A JPEG cannot ride the `push`/`pullSince` stream: it would blow the mutation size limit
 and stall every other table behind it. So a photo is split.
 
-- **The pointer** is `transactionPhotos.imageKey` — its own replicated table now, superseding
-  the single `transactions.imageUri`/`imageKey` pair, which survives for older rows — an
-  ordinary replicated column that converges by the same last-write-wins rule as everything else. It is a **key, not a url** —
+- **The pointer** is the `imageKey` column on the row that owns the photo (`transactions`,
+  `accounts`, `transactionAttachments`), an ordinary replicated column that converges by the
+  same last-write-wins rule as everything else. `transactionPhotos` holds a copy migration 0011
+  backfilled once; nothing reads or writes it yet, so the device's photo pass skips it
+  (`dormantPhotos` in `src/data/sync-tables.ts`) while the server still counts its keys. It is a **key, not a url** —
   `r2.getUrl` mints a SigV4-signed url with a 15-minute default lifetime and re-signs on
   every call, so a stored url is a reference that rots. Reads re-mint.
 - **The bytes** move device ↔ R2 directly over signed PUT/GET urls. Only the three small

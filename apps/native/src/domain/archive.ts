@@ -1,56 +1,16 @@
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as Option from "effect/Option";
+import * as EffectRecord from "effect/Record";
 import * as Schema from "effect/Schema";
+
+import { SYNCED_SPECS, SYNCED_TABLES } from "@/data/sync-tables";
+import type { SyncedTable } from "@/data/sync-tables";
 
 /** Rises when a file carries something an older build would drop on restore. */
 export const ARCHIVE_VERSION = 5;
 
 export const ARCHIVE_FORMAT = "outlayr.archive";
-
-/** In restore order: with foreign keys enforced, a row written before the one it points at fails. */
-export const ARCHIVE_TABLES = [
-    "categories",
-    "accounts",
-    "transfers",
-    "transactions",
-    "budgets",
-    "mainBudget",
-    "savingsGoals",
-    "tags",
-    "transactionTags",
-    "transactionPhotos",
-    "transactionSplits",
-    // After `transactions`: an order points at its purchase entry.
-    "installmentPlans",
-    "installments",
-    "outsidePayments",
-    "outsideMoves",
-    "transactionAttachments",
-    "appMeta",
-] as const;
-
-export type ArchiveTable = (typeof ARCHIVE_TABLES)[number];
-
-/** Written as epoch ms: `JSON.stringify` would turn a `Date` into an ISO string that restores as text. */
-const ARCHIVE_DATE_COLUMNS = {
-    accounts: ["initialBalanceDate", "dateCreated", "updatedAt", "deletedAt"],
-    appMeta: [],
-    budgets: ["startDate", "dateCreated", "updatedAt", "deletedAt"],
-    categories: ["dateCreated", "updatedAt", "deletedAt"],
-    installmentPlans: ["dateCreated", "updatedAt", "deletedAt", "restoredAt"],
-    installments: ["dueDate", "updatedAt", "deletedAt", "restoredAt"],
-    mainBudget: ["startDate", "dateCreated", "updatedAt", "deletedAt"],
-    outsideMoves: ["date", "updatedAt", "deletedAt", "restoredAt"],
-    outsidePayments: ["date", "updatedAt", "deletedAt", "restoredAt"],
-    savingsGoals: ["dateCreated", "targetDate", "updatedAt", "deletedAt"],
-    tags: ["updatedAt", "deletedAt"],
-    transactionAttachments: ["updatedAt", "deletedAt"],
-    transactionPhotos: ["updatedAt", "deletedAt"],
-    transactionSplits: ["updatedAt", "deletedAt"],
-    transactionTags: ["updatedAt", "deletedAt", "restoredAt"],
-    transactions: ["date", "day", "month", "recurringEndDate", "updatedAt", "deletedAt", "restoredAt"],
-    transfers: ["date", "day", "month", "dateCreated", "updatedAt", "deletedAt"],
-} satisfies Record<ArchiveTable, readonly string[]>;
 
 type ArchiveValue = boolean | number | string | null;
 
@@ -62,7 +22,7 @@ export interface ArchiveDocument {
     exportedAt: number;
     format: typeof ARCHIVE_FORMAT;
     photos: Record<string, string>;
-    tables: Record<ArchiveTable, ArchiveRow[]>;
+    tables: Record<SyncedTable, ArchiveRow[]>;
     version: number;
 }
 
@@ -71,8 +31,8 @@ export function archiveFileName(now: Date): string {
     return `outlayr-archive-${stamp}.json`;
 }
 
+/** Written as epoch ms: `JSON.stringify` would turn a `Date` into an ISO string that restores as text. */
 export function encodeArchiveRow(row: TableRow): ArchiveRow {
-    // Every `Date`, not just the listed ones, or an unlisted one would restore as text.
     return Object.fromEntries(
         Object.entries(row).map(([column, value]) => [column, value instanceof Date ? value.getTime() : value])
     );
@@ -81,11 +41,11 @@ export function encodeArchiveRow(row: TableRow): ArchiveRow {
 const isInstant = Schema.is(Schema.Finite);
 
 /** A non-finite date decodes to null, not `new Date(NaN)`, which throws the moment anything formats it. */
-export function decodeArchiveRow(table: ArchiveTable, row: ArchiveRow): TableRow {
-    const dateColumns: readonly string[] = ARCHIVE_DATE_COLUMNS[table];
+export function decodeArchiveRow(table: SyncedTable, row: ArchiveRow): TableRow {
+    const { dates } = SYNCED_SPECS[table];
     return Object.fromEntries(
         Object.entries(row).map(([column, value]) => {
-            if (!dateColumns.includes(column)) {
+            if (!dates.includes(column)) {
                 return [column, value];
             }
             return [column, isInstant(value) ? new Date(value) : null];
@@ -139,29 +99,14 @@ export function parseArchive(text: string): ArchiveDocument | null {
         exportedAt: parsed.value.exportedAt,
         format: ARCHIVE_FORMAT,
         photos: parsed.value.photos,
-        tables: {
-            accounts: tables.accounts ?? [],
-            appMeta: tables.appMeta ?? [],
-            budgets: tables.budgets ?? [],
-            categories: tables.categories ?? [],
-            installmentPlans: tables.installmentPlans ?? [],
-            installments: tables.installments ?? [],
-            mainBudget: tables.mainBudget ?? [],
-            outsideMoves: tables.outsideMoves ?? [],
-            outsidePayments: tables.outsidePayments ?? [],
-            savingsGoals: tables.savingsGoals ?? [],
-            tags: tables.tags ?? [],
-            transactionAttachments: tables.transactionAttachments ?? [],
-            transactionPhotos: tables.transactionPhotos ?? [],
-            transactionSplits: tables.transactionSplits ?? [],
-            transactionTags: tables.transactionTags ?? [],
-            transactions: tables.transactions ?? [],
-            transfers: tables.transfers ?? [],
-        },
+        tables: pipe(
+            SYNCED_SPECS,
+            EffectRecord.map((_spec, table) => tables[table] ?? [])
+        ),
         version: parsed.value.version,
     };
 }
 
 export function archiveRowCount(document: ArchiveDocument): number {
-    return ARCHIVE_TABLES.reduce((total, table) => total + document.tables[table].length, 0);
+    return SYNCED_TABLES.reduce((total, table) => total + document.tables[table].length, 0);
 }
