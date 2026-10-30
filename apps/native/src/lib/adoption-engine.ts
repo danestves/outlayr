@@ -1,7 +1,7 @@
 import { accountLedgerState, discardAccountLedger, replaceLocalFromAccount } from "@/data/adoption-engine-core";
 import type { AdoptionEngine } from "@/data/ledger-adoption";
 import type { Database } from "@/db/client";
-import { syncTransport } from "@/lib/convex";
+import { syncTransport } from "@/lib/cloud-sync";
 
 /**
  * Null resolves every adoption to `defer`: no row is touched and no marker is written, so reconciliation waits for

@@ -1,3 +1,4 @@
+import { api } from "@outlayr/backend/convex/_generated/api";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -13,12 +14,6 @@ import type { ProviderBinding } from "./provider-revocation";
 import { SecureStorage } from "./secure-storage";
 
 export const deletionResumeSecretKey = "outlayr.account-deletion-resume";
-
-type DeletionPhase = "authDeleting" | "billingErased" | "complete" | "prepared" | "providersRevoked" | "purged";
-
-interface DeletionStatus {
-    phase: DeletionPhase;
-}
 
 export interface StoredDeletionPreparation extends DeletionPreparation {
     provider: ProviderBinding["provider"];
@@ -62,7 +57,7 @@ export const resumeProviderRevocation = Effect.fn("DeletionResume.resumeProvider
             return yield* new DeletionResumeError({ reason: "reauthenticate" });
         }
         if (preparation.provider === "password") {
-            yield* cloudMutation("accountDeletion:recordCredentialOnly", { resumeSecret: preparation.resumeSecret });
+            yield* cloudMutation(api.accountDeletion.recordCredentialOnly, { resumeSecret: preparation.resumeSecret });
             return;
         }
         if (preparation.provider === "google") {
@@ -72,7 +67,7 @@ export const resumeProviderRevocation = Effect.fn("DeletionResume.resumeProvider
                 deletionResumeSecretKey,
                 JSON.stringify({ ...preparation, googleLocalReceipt: preparation.receiptChallenge })
             );
-            yield* cloudMutation("accountDeletion:submitGoogleLocalReceipt", {
+            yield* cloudMutation(api.accountDeletion.submitGoogleLocalReceipt, {
                 receiptChallenge: preparation.receiptChallenge,
                 resumeSecret: preparation.resumeSecret,
             });
@@ -93,7 +88,7 @@ export const resumeProviderRevocation = Effect.fn("DeletionResume.resumeProvider
         if (response.error) {
             return yield* new DeletionResumeError({ reason: "apple" });
         }
-        yield* cloudMutation("accountDeletion:recordAppleRevocation", { resumeSecret: preparation.resumeSecret });
+        yield* cloudMutation(api.accountDeletion.recordAppleRevocation, { resumeSecret: preparation.resumeSecret });
     }
 );
 
@@ -123,10 +118,7 @@ export const resumePersistedCloudDeletion = Effect.fn("DeletionResume.resumePers
         posthog?.reset();
         const poll = Effect.fn("DeletionResume.poll")(function* poll() {
             const at = yield* Clock.currentTimeMillis;
-            return yield* cloudQuery<{ at: number; resumeSecret: string }, DeletionStatus | null>(
-                "accountDeletion:poll",
-                { at, resumeSecret: preparation.resumeSecret }
-            );
+            return yield* cloudQuery(api.accountDeletion.poll, { at, resumeSecret: preparation.resumeSecret });
         });
         const status = yield* poll();
         if (status === null) {
@@ -134,14 +126,8 @@ export const resumePersistedCloudDeletion = Effect.fn("DeletionResume.resumePers
         }
         if (status.phase !== "complete") {
             yield* resumeCloudDeletion(status.phase, preparation, {
-                advanceDeletion: (resumeSecret) =>
-                    cloudMutation<{ resumeSecret: string }, DeletionStatus>("accountDeletion:advance", {
-                        resumeSecret,
-                    }),
-                eraseBilling: (resumeSecret) =>
-                    cloudAction<{ resumeSecret: string }, DeletionStatus>("accountDeletion:eraseBilling", {
-                        resumeSecret,
-                    }),
+                advanceDeletion: (resumeSecret) => cloudMutation(api.accountDeletion.advance, { resumeSecret }),
+                eraseBilling: (resumeSecret) => cloudAction(api.accountDeletion.eraseBilling, { resumeSecret }),
                 revokeProvider: () => resumeProviderRevocation(preparation),
             });
             const completed = yield* poll();

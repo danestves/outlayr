@@ -7,7 +7,8 @@ import { readBoolSetting, readRemoteEnrichment } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import { firstLocale } from "@/i18n/device-language";
 
-import { enrichmentQueueTransport, isCloudAuthenticated } from "./convex";
+import { enrichmentQueueTransport } from "./cloud-enrichment-queue";
+import { isCloudAuthenticated } from "./convex";
 
 const lane = Semaphore.makeUnsafe(1);
 

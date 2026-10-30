@@ -1,3 +1,4 @@
+import { getFunctionName } from "convex/server";
 import * as Effect from "effect/Effect";
 import { deleteItemAsync, getItemAsync, setItemAsync } from "expo-secure-store";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
@@ -35,6 +36,9 @@ function cloudMocks() {
     return mockedConvex;
 }
 
+const calledMutations = () =>
+    cloudMocks().cloudMutation.mock.calls.map(([mutation, args]) => [getFunctionName(mutation), args]);
+
 describe("resumePersistedCloudDeletion", () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -59,18 +63,15 @@ describe("resumePersistedCloudDeletion", () => {
 
     it("resumes a cloud marker through the sessionless provider receipt and deletion job", async () => {
         await Effect.runPromise(run({ clearOnComplete: false, required: true }));
-        const { cloudMutation } = cloudMocks();
-
         expect(mockRevokeGoogleProviderSubject).toHaveBeenCalledWith("provider-subject");
         expect(setItemAsync).toHaveBeenCalledWith(
             "outlayr.account-deletion-resume",
             expect.stringContaining("googleLocalReceipt")
         );
-        expect(cloudMutation).toHaveBeenCalledWith("accountDeletion:submitGoogleLocalReceipt", {
-            receiptChallenge: "challenge",
-            resumeSecret: "secret",
-        });
-        expect(cloudMutation).toHaveBeenCalledWith("accountDeletion:advance", { resumeSecret: "secret" });
+        expect(calledMutations()).toStrictEqual([
+            ["accountDeletion:submitGoogleLocalReceipt", { receiptChallenge: "challenge", resumeSecret: "secret" }],
+            ["accountDeletion:advance", { resumeSecret: "secret" }],
+        ]);
         expect(deleteItemAsync).not.toHaveBeenCalled();
     });
 
@@ -87,9 +88,7 @@ describe("resumePersistedCloudDeletion", () => {
         await Effect.runPromise(run({ clearOnComplete: false, required: true }));
 
         expect(mockRevokeGoogleProviderSubject).not.toHaveBeenCalled();
-        expect(cloudMocks().cloudMutation).toHaveBeenCalledWith("accountDeletion:recordCredentialOnly", {
-            resumeSecret: "secret",
-        });
+        expect(calledMutations()).toContainEqual(["accountDeletion:recordCredentialOnly", { resumeSecret: "secret" }]);
     });
 
     it("fails closed when a cloud marker has no usable resume secret", async () => {

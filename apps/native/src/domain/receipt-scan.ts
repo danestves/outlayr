@@ -2,7 +2,7 @@ import { utcDateString } from "@outlayr/money/dates";
 import { roundMoney } from "@outlayr/money/round";
 import type { RateTable } from "@outlayr/money/valuation";
 
-import type { ReceiptDraft, ReceiptItem } from "@/lib/convex";
+import type { ReceiptDraft, ReceiptItem } from "@/lib/cloud-ai";
 
 import { minorUnitsFor } from "./money";
 import { spokenDateToLocal, uniqueMatch } from "./voice-entry";

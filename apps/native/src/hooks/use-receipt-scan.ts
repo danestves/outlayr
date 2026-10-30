@@ -14,8 +14,8 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { localIsoDate } from "@/domain/voice-entry";
 import { trackCapturesWall } from "@/hooks/use-usage-limits";
 import { duringHandoff } from "@/lib/app-handoff";
-import { receiptScanTransport } from "@/lib/convex";
-import type { ReceiptDraft, ReceiptScanFn, ScanRequest, ScanStatus } from "@/lib/convex";
+import { receiptScanTransport } from "@/lib/cloud-ai";
+import type { ReceiptDraft, ReceiptScanFn, ScanOutcome, ScanRefusal, ScanRequest } from "@/lib/cloud-ai";
 import { launchPick, pendingPick } from "@/lib/pending-pick";
 import type { PickOwner } from "@/lib/pending-pick";
 import { useLatest } from "@/lib/use-latest";
@@ -52,12 +52,7 @@ type ScanPhase<Context, Draft> =
     | { context: Context; draft: Draft; image: ArrayBuffer; kind: "review"; photo: ScanPhoto }
     | { kind: "failed"; photo: ScanPhoto | null; reason: ScanFailure };
 
-interface ScanReply<Draft> {
-    draft: Draft | null;
-    status: ScanStatus;
-}
-
-type ScanSend<Draft> = (image: ArrayBuffer, today: string) => Effect.Effect<ScanReply<Draft>, unknown>;
+type ScanSend<Draft> = (image: ArrayBuffer, today: string) => Effect.Effect<ScanOutcome<Draft>, unknown>;
 
 interface UseImageScanArgs<Context, Draft> {
     context: Context;
@@ -87,13 +82,12 @@ const FAILURE_FOR = {
     invalidResponse: "provider",
     notConfigured: "notConfigured",
     notEntitled: "notEntitled",
-    ok: "provider",
     providerError: "provider",
     quotaExceeded: "quotaExceeded",
     rateLimited: "rateLimited",
     unauthenticated: "unauthenticated",
     unclear: "unclear",
-} as const satisfies Record<ScanStatus, ScanFailure>;
+} as const satisfies Record<ScanRefusal, ScanFailure>;
 
 export function photoFrom(result: ImagePickerResult): ScanPhoto | null {
     const asset = result.canceled ? undefined : result.assets[0];
@@ -119,7 +113,7 @@ interface ScanPorts<Context, Draft> {
     isCurrent: (take: number) => boolean;
     latest: () => { context: Context; onReview?: (draft: Draft) => void; send: ScanSend<Draft> };
     owner: PickOwner;
-    scanCommand: ReturnType<typeof timedCaptureCommand<ScanReply<Draft>>>;
+    scanCommand: ReturnType<typeof timedCaptureCommand<ScanOutcome<Draft>>>;
     setPhase: (phase: ScanPhase<Context, Draft>) => void;
 }
 
@@ -158,12 +152,12 @@ const readPhoto = Effect.fn("ReceiptScan.read")(function* readPhoto<Context, Dra
         ports.setPhase({ kind: "failed", photo, reason: "timeout" });
         return;
     }
-    if (settled.status === "ok" && settled.draft !== null) {
+    if (settled.ok) {
         ports.setPhase({ context: sentContext, draft: settled.draft, image: bytes, kind: "review", photo });
         ports.latest().onReview?.(settled.draft);
         return;
     }
-    const reason = FAILURE_FOR[settled.status];
+    const reason = FAILURE_FOR[settled.reason];
     trackCapturesWall(reason);
     ports.setPhase({ kind: "failed", photo, reason });
 });
@@ -225,8 +219,7 @@ export function useReceiptScan<Context>({ context, request, transport }: UseRece
     return useImageScan<Context, ReceiptDraft>({
         context,
         owner: "receipt-scan",
-        send: (image, today) =>
-            api({ ...request, image, today }).pipe(Effect.map(({ receipt, status }) => ({ draft: receipt, status }))),
+        send: (image, today) => api({ ...request, image, today }),
     });
 }
 
@@ -244,7 +237,7 @@ export function useImageScan<Context, Draft>({
     const takeRef = useRef(0);
     const scanAbortRef = useRef<AbortController | null>(null);
     const [scanCommand] = useState(() =>
-        timedCaptureCommand<ScanReply<Draft>>({ operation: "scan", timeout: RECEIPT_SCAN_TIMEOUT })
+        timedCaptureCommand<ScanOutcome<Draft>>({ operation: "scan", timeout: RECEIPT_SCAN_TIMEOUT })
     );
     const runFlow = useAtomCommand(voidFlowCommand);
     const start = (flow: Effect.Effect<void, never>) => {

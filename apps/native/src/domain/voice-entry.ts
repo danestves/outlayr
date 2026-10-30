@@ -2,15 +2,8 @@ import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import type { RecurringType } from "@outlayr/money/recurrence";
 import { roundMoney } from "@outlayr/money/round";
 
-import type {
-    ProposedDraft,
-    VoiceDraft,
-    VoiceQuote,
-    VoiceQuoteField,
-    VoiceRecurrence,
-    VoiceRecurrenceUnit,
-} from "@/lib/convex";
-import { PROPOSE_DRAFT_TOOL } from "@/lib/convex";
+import { PROPOSE_DRAFT_TOOL } from "@/lib/cloud-ai";
+import type { ProposedDraft, VoiceDraft, VoiceQuote, VoiceRecurrence } from "@/lib/cloud-ai";
 
 import { minorUnitsFor } from "./money";
 
@@ -100,7 +93,7 @@ const RECURRING_TYPE_OF = {
     month: RECURRING_TYPE.monthly,
     week: RECURRING_TYPE.weekly,
     year: RECURRING_TYPE.yearly,
-} as const satisfies Record<VoiceRecurrenceUnit, RecurringType>;
+} as const satisfies Record<VoiceRecurrence["unit"], RecurringType>;
 
 export function resolveRecurrence(recurrence: VoiceRecurrence | null): ResolvedRecurrence | null {
     return recurrence === null ? null : { coefficient: recurrence.every, type: RECURRING_TYPE_OF[recurrence.unit] };
@@ -371,7 +364,7 @@ export function draftDelta(previous: VoiceDraft, next: VoiceDraft): VoiceDraftFi
 }
 
 export interface HeardSegment {
-    field: VoiceQuoteField | null;
+    field: VoiceQuote["field"] | null;
     start: number;
     text: string;
 }
@@ -381,7 +374,7 @@ export function heardSegments(sentence: string, quotes: readonly VoiceQuote[]): 
     const folded = sentence.toLowerCase();
     const caseless = folded.length === sentence.length;
     const haystack = caseless ? folded : sentence;
-    const spans: { end: number; field: VoiceQuoteField; start: number }[] = [];
+    const spans: { end: number; field: VoiceQuote["field"]; start: number }[] = [];
     for (const quote of quotes) {
         const needle = caseless ? quote.text.trim().toLowerCase() : quote.text.trim();
         if (needle.length === 0) {

@@ -6,7 +6,7 @@ import * as Atom from "effect/reactivity/Atom";
 
 import type { Database } from "@/db/client";
 import { armChosenReminder } from "@/lib/chosen-reminder";
-import { photoTransport } from "@/lib/convex";
+import { photoTransport } from "@/lib/cloud-photos";
 import { DailyReminderSteps } from "@/lib/daily-reminder-sync";
 import { DueReminderPasses } from "@/lib/due-reminder-sync";
 import { EnrichmentSync } from "@/lib/enrichment-sync";

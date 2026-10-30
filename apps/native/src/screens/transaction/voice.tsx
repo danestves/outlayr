@@ -69,7 +69,7 @@ import type { VoiceFailure, VoicePhase } from "@/hooks/use-voice-entry";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
 import { useAuthSession } from "@/lib/auth-session";
-import type { VoiceDraft, VoiceQuote } from "@/lib/convex";
+import type { VoiceDraft, VoiceQuote } from "@/lib/cloud-ai";
 import { freshEntries } from "@/lib/fresh-entries";
 import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";

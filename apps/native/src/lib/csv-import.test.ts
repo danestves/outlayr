@@ -8,7 +8,7 @@ import { describe, expect, it, vi } from "vite-plus/test";
 import { categoryKey } from "@/data/transfer-core";
 import type { ColumnMapping, ParsedImportFile } from "@/data/transfer-core";
 import type { ImportFlowEvent } from "@/domain/import-flow";
-import type { CsvImportFn, CsvImportResult } from "@/lib/convex";
+import type { CsvImportFn, CsvImportOutcome } from "@/lib/cloud-ai";
 
 import * as CsvImport from "./csv-import";
 import { createImportDraftStore } from "./import-draft-store";
@@ -64,12 +64,12 @@ function requestFor(parsed: ParsedImportFile, overrides: Partial<CsvImport.Resol
 }
 
 function held() {
-    const { promise, resolve } = Promise.withResolvers<CsvImportResult>();
+    const { promise, resolve } = Promise.withResolvers<CsvImportOutcome>();
     return { promise, resolve };
 }
 
-const answered = (label: string): CsvImportResult => ({
-    status: "ok",
+const answered = (label: string): CsvImportOutcome => ({
+    ok: true,
     suggestions: [{ categoryName: "Food", domain: null, label }],
 });
 
@@ -176,9 +176,7 @@ describe("csvImport", () => {
     it("settles a provider failure as providerError", async () => {
         const parsed = parsedFile("Zq Cafe");
         const store = openDraft(parsed);
-        const transport = vi
-            .fn<CsvImportFn>()
-            .mockReturnValue(Effect.succeed({ status: "providerError", suggestions: null }));
+        const transport = vi.fn<CsvImportFn>().mockReturnValue(Effect.succeed({ ok: false, reason: "providerError" }));
 
         await withService(
             transport,

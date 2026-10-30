@@ -33,9 +33,9 @@ vi.mock<Partial<typeof import("@/state/entry-commands")>>(import("@/state/entry-
     const actual = await importOriginal<typeof import("@/state/entry-commands")>();
     return { ...actual, entryMedia: { ...actual.entryMedia, prepareReceiptImage: () => Effect.never } };
 });
-vi.mock<Partial<typeof import("@/lib/convex")>>(import("@/lib/convex"), async (importOriginal) => ({
-    ...(await importOriginal<typeof import("@/lib/convex")>()),
-    receiptScanTransport: () => () => Effect.succeed({ receipt: null, status: "ok" }),
+vi.mock<Partial<typeof import("@/lib/cloud-ai")>>(import("@/lib/cloud-ai"), async (importOriginal) => ({
+    ...(await importOriginal<typeof import("@/lib/cloud-ai")>()),
+    receiptScanTransport: () => () => Effect.succeed({ ok: false, reason: "invalidResponse" }),
 }));
 
 describe("useReceiptScan on Android", () => {

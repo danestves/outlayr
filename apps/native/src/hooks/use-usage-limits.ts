@@ -1,14 +1,14 @@
+import { api } from "@outlayr/backend/convex/_generated/api";
 import { useQueries } from "convex/react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { projectLimit } from "@/domain/usage-limits";
 import type { LimitBucket, UsageLimits } from "@/domain/usage-limits";
-import { USAGE_LIMITS_QUERY } from "@/lib/convex";
 import { posthog } from "@/lib/posthog";
 import { readSecondClock, subscribeSecondClock } from "@/lib/second-clock";
 
 const subscribeNever = () => () => undefined;
-const USAGE_LIMITS_REQUEST = { limits: { args: {}, query: USAGE_LIMITS_QUERY } };
+const USAGE_LIMITS_REQUEST = { limits: { args: {}, query: api.limits.mine } };
 const LAST_NOTICE_MS = 6000;
 
 export type CaptureFeature = "receiptScan" | "voiceEntry";
