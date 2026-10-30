@@ -1,16 +1,38 @@
-import { View } from "react-native";
+import { Image } from "expo-image";
+import { StyleSheet, View } from "react-native";
 
-import { CategoryIconTile } from "@/components/category-icon-tile";
+import moneyManagerLogo from "@/assets/images/import-sources/money-manager.jpg";
 import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
+import { useColors } from "@/theme/use-colors";
 
-/** A neutral tile, not the app's own icon: that artwork is Orange Dog's to ship. */
-const SOURCE_ICON = "Wallet03";
-const SOURCE_COLOR = "#339475";
+// The apps' own store icons, so people recognize where their data comes from.
+const SOURCE_LOGOS = {
+    moneyManager: moneyManagerLogo,
+} as const;
 
-export function MoneyManagerTile({ size = 32 }: { size?: number }) {
-    return <CategoryIconTile color={SOURCE_COLOR} icon={SOURCE_ICON} size={size} type="solid" />;
+export type ImportSource = keyof typeof SOURCE_LOGOS;
+
+/** iOS app icon corner, so a store icon reads as the app it is. */
+const ICON_CORNER = 0.225;
+
+export function SourceLogo({ size = 32, source }: { size?: number; source: ImportSource }) {
+    const colors = useColors();
+    return (
+        <Image
+            accessible={false}
+            source={SOURCE_LOGOS[source]}
+            style={{
+                borderColor: colors.border,
+                borderCurve: "continuous",
+                borderRadius: size * ICON_CORNER,
+                borderWidth: StyleSheet.hairlineWidth,
+                height: size,
+                width: size,
+            }}
+        />
+    );
 }
 
 interface ImportHeroProps {

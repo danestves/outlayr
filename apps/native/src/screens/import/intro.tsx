@@ -2,7 +2,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
 
-import { MoneyManagerTile } from "@/components/import-flow/parts";
+import { SourceLogo } from "@/components/import-flow/parts";
 import { SettingsAction } from "@/components/settings/settings-action";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
@@ -53,7 +53,7 @@ export function MoneyManagerIntro() {
     return (
         <SettingsScreen>
             <View className="flex-row items-center gap-3.5 pt-6">
-                <MoneyManagerTile size={56} />
+                <SourceLogo size={56} source="moneyManager" />
                 <View className="flex-1 gap-0.5">
                     <Text className="font-sans-bold text-foreground text-title tracking-tight">
                         {t("mmImport.intro.title")}

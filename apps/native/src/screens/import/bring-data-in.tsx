@@ -4,7 +4,7 @@ import { Linking } from "react-native";
 
 import { CategoryIconTile } from "@/components/category-icon-tile";
 import { ImportRow } from "@/components/import-flow/import-row";
-import { MoneyManagerTile } from "@/components/import-flow/parts";
+import { SourceLogo } from "@/components/import-flow/parts";
 import { ImportSheet } from "@/components/import-sheet/import-sheet";
 import type { ImportSheetHandle } from "@/components/import-sheet/import-sheet";
 import { SettingsSection } from "@/components/list/list-row";
@@ -43,7 +43,7 @@ export function BringDataIn() {
             <SettingsSection title={t("mmImport.sources.apps")}>
                 <ImportRow
                     detail={t("mmImport.sources.moneyManagerDetail")}
-                    leading={<MoneyManagerTile />}
+                    leading={<SourceLogo source="moneyManager" />}
                     onPress={() => router.push(paths.intro)}
                     testID="import-source-money-manager"
                     title={t("mmImport.nav.moneyManager")}
