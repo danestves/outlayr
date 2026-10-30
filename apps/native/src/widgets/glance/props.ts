@@ -56,7 +56,7 @@ export function androidWidgetProps(figures: AndroidWidgetFigures): AndroidWidget
         const t = (key: TranslatableKey, params?: TranslationParams) => translateIn(language, key, params);
         const money = (value: number) => formatAmount(value, figures.currency, figures.showCents, language);
         const whole = (value: number) => formatAmount(value, figures.currency, false, language);
-        const over = budget !== null && budget.spent > budget.limit;
+        const over = budget?.overBudget ?? false;
         const span = budget ? budget.window.end.getTime() - budget.window.start.getTime() : 0;
         const periodCaption = (period: EntriesPeriod) =>
             period === "today" ? t("common.today") : capitalize(t(PERIOD_EYEBROW[period]));
@@ -202,9 +202,9 @@ export function androidWidgetProps(figures: AndroidWidgetFigures): AndroidWidget
             },
             budget: budget
                 ? {
-                      fraction: budget.limit > 0 ? Math.min(1, Math.max(0, budget.spent / budget.limit)) : 0,
+                      fraction: budget.amount > 0 ? Math.min(1, Math.max(0, budget.spent / budget.amount)) : 0,
                       label: over ? t("log.widget.overBudget") : t("log.widget.budgetLeft"),
-                      left: money(Math.abs(budget.limit - budget.spent)),
+                      left: money(Math.abs(budget.leftover)),
                       over,
                       pace:
                           span > 0

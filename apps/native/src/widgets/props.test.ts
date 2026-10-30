@@ -294,6 +294,48 @@ describe("the Budget widget's selections", () => {
         expect(props.Budget.views.worst.name).toBe("Food");
     });
 
+    it("gives a rollover budget the limit it carried forward, as the Budgets screen does", async () => {
+        const db = makeDb();
+        await db.insert(categories).values({ id: "cat-1", income: false, name: "Food", updatedAt: NOW });
+        await db.insert(budgets).values({
+            amount: 100,
+            categoryId: "cat-1",
+            dateCreated: new Date(2026, 5, 1),
+            id: "b-food",
+            rollover: true,
+            startDate: new Date(2026, 5, 1),
+            type: 3,
+            updatedAt: NOW,
+        });
+        const june = new Date(2026, 5, 10);
+        await db.insert(transactions).values([
+            {
+                amount: 40,
+                categoryId: "cat-1",
+                date: june,
+                day: june,
+                id: "t1",
+                income: false,
+                month: june,
+                updatedAt: NOW,
+            },
+            {
+                amount: 120,
+                categoryId: "cat-1",
+                date: NOW,
+                day: NOW,
+                id: "t2",
+                income: false,
+                month: NOW,
+                updatedAt: NOW,
+            },
+        ]);
+
+        const props = await buildWidgetProps(db, NOW);
+
+        expect(props.Budget.views.worst).toMatchObject({ limit: "$160", over: false, remaining: "$40.00" });
+    });
+
     it("leaves the automatic view on the worst budget when there is no overall one", async () => {
         const props = await buildWidgetProps(await withBudgets(false), NOW);
 
