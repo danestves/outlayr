@@ -21,8 +21,8 @@ import { query } from "../convex/_generated/server";
 import type { ActionCtx, MutationCtx, QueryCtx } from "../convex/_generated/server";
 import {
     clampDate,
-    CURRENCY_PATTERN,
     describeTree,
+    draftCurrency,
     MAX_NAME_LENGTH,
     normalizeDomain,
     pickKnown,
@@ -34,8 +34,6 @@ import { runTransactionEdge } from "./lib/runEdge";
 import { MAX_AMOUNT } from "./lib/sanitizeLimits";
 import type { SpeakResult, SpeakStatus } from "./voiceEntry.spec";
 
-// A Convex value tops out at 1MB; a minute of AAC at the client's 48kbps mono preset is ~360KB.
-export const MAX_AUDIO_BYTES = 900_000;
 const MAX_MERCHANT_LENGTH = 80;
 const MAX_DETAILS_LENGTH = 200;
 const MAX_PAST_DAYS = 366;
@@ -195,11 +193,7 @@ export function normalizeDraft(output: ModelOutput, args: LedgerContext): VoiceD
         return null;
     }
     const knownCategories = args.categoryTree.flatMap((branch) => [branch.name, ...branch.children]);
-    const spokenCurrency = output.currency?.trim().toUpperCase() ?? null;
-    const currency =
-        spokenCurrency != null && CURRENCY_PATTERN.test(spokenCurrency) && spokenCurrency !== args.currency
-            ? spokenCurrency
-            : null;
+    const { currency } = draftCurrency(output.currency, args.currency);
     const base = {
         amount,
         currency,

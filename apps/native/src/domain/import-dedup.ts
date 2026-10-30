@@ -1,7 +1,7 @@
 import { startOfDay } from "@outlayr/money/calendar";
+import { merchantKey } from "@outlayr/money/merchant-key";
 
 import type { ImportEntry } from "@/data/transfer-core";
-import { merchantKey } from "@/domain/merchant-resolver";
 
 export interface ExistingRow {
     amount: number;

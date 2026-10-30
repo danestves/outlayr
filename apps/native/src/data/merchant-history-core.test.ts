@@ -1,10 +1,10 @@
+import { merchantKey } from "@outlayr/money/merchant-key";
 import * as Effect from "effect/Effect";
 import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { accounts, categories, transactions } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
-import { merchantKey } from "@/domain/merchant-resolver";
 
 import {
     HISTORY_WINDOW,

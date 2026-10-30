@@ -8,13 +8,13 @@ import { readFile } from "node:fs/promises";
 
 import agentTest from "@convex-dev/agent/test";
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
+import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vite-plus/test";
 
 import { api } from "../convex/_generated/api";
 import schema from "../convex/schema";
-import { AI_CONSENT_VERSION } from "./lib/models";
 import { authenticatedAs, seedProUser } from "./test.helpers";
 import { PROPOSE_DRAFT_TOOL } from "./voiceEntry";
 import type { ProposedDraft } from "./voiceEntry";

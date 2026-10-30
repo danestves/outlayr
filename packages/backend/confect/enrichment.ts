@@ -1,5 +1,6 @@
 import { DAY, HOUR, RateLimiter } from "@convex-dev/rate-limiter";
-import { PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
+import { isPickableCurrency } from "@outlayr/money/currency";
+import { knowledgeKey } from "@outlayr/money/merchant-key";
 import { generateText, Output } from "ai";
 import type { LanguageModel } from "ai";
 import * as Clock from "effect/Clock";
@@ -9,10 +10,9 @@ import * as Schema from "effect/Schema";
 import { components, internal } from "../convex/_generated/api";
 import type { ActionCtx, MutationCtx } from "../convex/_generated/server";
 import type { Suggestion } from "./enrichment.spec";
-import { describeTree } from "./lib/ledgerPrompt";
+import { describeTree, LANGUAGE_PATTERN } from "./lib/ledgerPrompt";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { fixedBurst } from "./lib/limits";
-import { knowledgeKey } from "./lib/merchantKey";
 import { modelCallError, modelSchema } from "./lib/modelCall";
 import { DOMAIN_PATTERN, MAX_DOMAIN_LENGTH, MAX_TAG_LENGTH, MAX_TAGS, PICTOGRAPHIC } from "./lib/sanitizeLimits";
 
@@ -138,7 +138,10 @@ export function sanitizeRegionCode(region: string | undefined): string | undefin
     return REGION_CODE_PATTERN.test(trimmed) ? trimmed : undefined;
 }
 
-const KNOWN_CURRENCIES: ReadonlySet<string> = new Set(PICKABLE_CURRENCY_CODES);
+export function sanitizeLocale(locale: string | undefined): string | undefined {
+    const trimmed = locale?.trim();
+    return trimmed !== undefined && LANGUAGE_PATTERN.test(trimmed) ? trimmed : undefined;
+}
 
 /** Client-submitted and it partitions the knowledge cache and per-key gate, so only pickable codes pass. */
 export function sanitizeCurrencyCode(currency: string | undefined): string | undefined {
@@ -146,7 +149,7 @@ export function sanitizeCurrencyCode(currency: string | undefined): string | und
         return;
     }
     const trimmed = currency.trim().toUpperCase();
-    return KNOWN_CURRENCIES.has(trimmed) ? trimmed : undefined;
+    return isPickableCurrency(trimmed) ? trimmed : undefined;
 }
 
 export const DESCRIPTOR_LINE =

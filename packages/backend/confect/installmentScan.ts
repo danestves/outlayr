@@ -4,11 +4,11 @@ import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 import type { InstallmentPlanDraft, InstallmentScanResult } from "./installmentScan.spec";
-import { pickKnown, trimTo } from "./lib/ledgerPrompt";
+import { draftCurrency, pickKnown, trimTo } from "./lib/ledgerPrompt";
 import type { LedgerContext } from "./lib/ledgerPrompt";
 import { modelCallError, modelSchema } from "./lib/modelCall";
 import { MAX_AMOUNT } from "./lib/sanitizeLimits";
-import { KNOWN_CURRENCIES, REQUEST_TIMEOUT_MS } from "./receiptScan";
+import { REQUEST_TIMEOUT_MS } from "./receiptScan";
 import type { ScanStatus } from "./receiptScan.spec";
 
 export const MAX_INSTALLMENTS = 48;
@@ -129,10 +129,9 @@ export function normalizePlan(output: ModelOutput, context: PlanContext): typeof
             sequence: row.sequence,
         });
     }
-    const currency = output.currency?.trim().toUpperCase() ?? null;
     return {
         accountName: pickKnown(output.accountName, context.accounts),
-        currency: currency !== null && KNOWN_CURRENCIES.has(currency) ? currency : null,
+        currency: draftCurrency(output.currency, context.currency).currency,
         provider: trimTo(output.provider, MAX_PROVIDER_LENGTH),
         rows: planned,
     };

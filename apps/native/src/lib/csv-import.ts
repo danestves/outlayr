@@ -1,3 +1,4 @@
+import { merchantKey } from "@outlayr/money/merchant-key";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FiberHandle from "effect/FiberHandle";
@@ -13,7 +14,7 @@ import { buildClassificationPayload, scrubLabel } from "@/domain/import-ai-paylo
 import type { ResolutionOutcome, UnavailableReason } from "@/domain/import-flow";
 import type { MappingDraft } from "@/domain/import-mapping";
 import { cachedLabelEnrichment } from "@/domain/import-review-identity";
-import { merchantKey, resolveMerchant } from "@/domain/merchant-resolver";
+import { resolveMerchant } from "@/domain/merchant-resolver";
 import { csvImportTransport } from "@/lib/convex";
 import type { CategoryBranch, CsvImportFn, CsvImportStatus, LabelSuggestion } from "@/lib/convex";
 import { importDraftStore } from "@/lib/import-draft-store";

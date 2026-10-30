@@ -1,3 +1,4 @@
+import { merchantKey } from "@outlayr/money/merchant-key";
 import { and, desc, eq, isNotNull, isNull, ne, or } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -6,7 +7,6 @@ import type { Database } from "@/db/client";
 import { accounts, transactions } from "@/db/schema";
 import { rememberedCategory } from "@/domain/merchant-history";
 import type { HistoricalEntry } from "@/domain/merchant-history";
-import { merchantKey } from "@/domain/merchant-resolver";
 
 export class MerchantHistoryError extends Schema.TaggedError<MerchantHistoryError>()("MerchantHistoryError", {
     cause: Schema.Defect(),

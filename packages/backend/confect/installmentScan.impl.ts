@@ -1,25 +1,21 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
+import * as Schema from "effect/Schema";
 
 import databaseSchema from "./_generated/schema";
 import { Auth } from "./_generated/services";
 import { failure, readInstallmentPlan } from "./installmentScan";
-import spec from "./installmentScan.spec";
+import spec, { InstallmentScanInput } from "./installmentScan.spec";
 import { traced } from "./lib/aiTracing";
 import { anthropicApiKey, claudeModelId } from "./lib/config";
-import {
-    CURRENCY_PATTERN,
-    DATE_PATTERN,
-    LANGUAGE_PATTERN,
-    namesWithinBudget,
-    REGION_PATTERN,
-} from "./lib/ledgerPrompt";
-import { AI_CONSENT_VERSION } from "./lib/models";
-import { admitScan, looksLikeJpeg, MAX_IMAGE_BYTES } from "./receiptScan";
+import { admitScan } from "./receiptScan";
+
+const isInstallmentScanInput = Schema.is(InstallmentScanInput);
 
 const scan = FunctionImpl.make(
     databaseSchema,
@@ -39,15 +35,7 @@ const scan = FunctionImpl.make(
             return failure("notConfigured");
         }
 
-        if (
-            args.image.byteLength > MAX_IMAGE_BYTES ||
-            !looksLikeJpeg(args.image) ||
-            !namesWithinBudget([], args.accounts) ||
-            !DATE_PATTERN.test(args.today) ||
-            !CURRENCY_PATTERN.test(args.currency) ||
-            (args.language !== undefined && !LANGUAGE_PATTERN.test(args.language)) ||
-            (args.regionCode !== undefined && !REGION_PATTERN.test(args.regionCode))
-        ) {
+        if (!isInstallmentScanInput(args)) {
             return failure("invalid");
         }
 

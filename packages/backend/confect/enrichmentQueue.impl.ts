@@ -1,5 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { WorkId } from "@convex-dev/workpool";
+import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
@@ -7,12 +8,11 @@ import { internal } from "../convex/_generated/api";
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
 import { Auth, DatabaseReader, DatabaseWriter, MutationCtx, QueryCtx, QueryRunner } from "./_generated/services";
-import { MAX_NAME_LENGTH, rateLimiter, sanitizeCurrencyCode, sanitizeRegionCode } from "./enrichment";
+import { MAX_NAME_LENGTH, rateLimiter, sanitizeCurrencyCode, sanitizeLocale, sanitizeRegionCode } from "./enrichment";
 import { MAX_ACK_IDS, MAX_RESULTS, MIN_NAME_LENGTH, pool, settled, work } from "./enrichmentQueue";
 import spec from "./enrichmentQueue.spec";
 import { optionalUserId, requireUserId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
-import { AI_CONSENT_VERSION } from "./lib/models";
 import { isPro } from "./revenuecat";
 
 const enqueue = FunctionImpl.make(
@@ -60,7 +60,7 @@ const enqueue = FunctionImpl.make(
                 grounded,
                 income: args.income,
                 localId: args.localId,
-                locale: args.locale,
+                locale: sanitizeLocale(args.locale),
                 name,
                 regionCode: sanitizeRegionCode(args.regionCode),
                 shareAnalytics: args.shareAnalytics,

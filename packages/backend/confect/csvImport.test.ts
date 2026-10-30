@@ -1,6 +1,8 @@
 /// <reference types="vite/client" />
 
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
+import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
+import { merchantKey } from "@outlayr/money/merchant-key";
 import { MockLanguageModelV3 } from "ai/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
@@ -12,8 +14,6 @@ import schema from "../convex/schema";
 import { classify, GROUNDED_IMPORT_MAX, rateLimiter, scheduleImportGrounded } from "./csvImport";
 import { csvImportArgs } from "./csvImport.spec";
 import { perUserBurst } from "./lib/limits";
-import { merchantKey } from "./lib/merchantKey";
-import { AI_CONSENT_VERSION } from "./lib/models";
 import { runEdge } from "./lib/runEdge";
 import { authenticatedAs, grantPro, seedAuthUser } from "./test.helpers";
 

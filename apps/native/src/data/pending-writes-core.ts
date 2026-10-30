@@ -1,4 +1,5 @@
 import { firstOfMonth, startOfDay } from "@outlayr/money/calendar";
+import { merchantKey } from "@outlayr/money/merchant-key";
 import { anchorDayOf, nextDate, RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { and, between, desc, eq, gt, inArray, isNull, like, or, sql } from "drizzle-orm";
 import * as Cause from "effect/Cause";
@@ -15,7 +16,6 @@ import type { AutologAccess } from "@/domain/autolog-cap";
 import { detectCurrency } from "@/domain/detect-currency";
 import type { CardAccountCandidate } from "@/domain/match-card-account";
 import { matchCardAccount } from "@/domain/match-card-account";
-import { merchantKey } from "@/domain/merchant-resolver";
 import { DEFAULT_CURRENCY } from "@/domain/money";
 import { cleanMerchant, parseNotification } from "@/domain/parse-notification";
 import { autologSourceOf } from "@/lib/pending-writes-core";

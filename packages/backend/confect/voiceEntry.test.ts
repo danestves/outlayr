@@ -3,6 +3,7 @@
 import { getThreadMetadata, saveMessage } from "@convex-dev/agent";
 import agentTest from "@convex-dev/agent/test";
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
+import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import { MockTranscriptionModelV4 } from "ai/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
@@ -11,15 +12,14 @@ import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { api, components } from "../convex/_generated/api";
 import schema from "../convex/schema";
+import { MAX_AUDIO_BYTES } from "./lib/captureArgs";
 import { captureLimiter, FREE_CAPTURE_CONFIG } from "./lib/captures";
 import { namesWithinBudget } from "./lib/ledgerPrompt";
 import { fixedBurst, perUserBurst } from "./lib/limits";
-import { AI_CONSENT_VERSION } from "./lib/models";
 import { runEdge } from "./lib/runEdge";
 import { authenticatedAs, seedAuthUser } from "./test.helpers";
 import {
     buildPrompt,
-    MAX_AUDIO_BYTES,
     normalizeDraft,
     normalizeQuotes,
     PROPOSE_DRAFT_TOOL,
@@ -205,10 +205,11 @@ describe("normalizeDraft", () => {
         expect(normalizeDraft({ ...MODEL_ANSWER, date: "tomorrow" }, BASE_ARGS)?.date).toBe("2026-09-03");
     });
 
-    it("the ledger's own currency reads as null; another code is kept upper-cased; junk is dropped", () => {
+    it("the ledger's own currency reads as null; a catalog code is kept upper-cased; junk and unknown codes are dropped", () => {
         expect(normalizeDraft({ ...MODEL_ANSWER, currency: "usd" }, BASE_ARGS)?.currency).toBeNull();
         expect(normalizeDraft({ ...MODEL_ANSWER, currency: "eur" }, BASE_ARGS)?.currency).toBe("EUR");
         expect(normalizeDraft({ ...MODEL_ANSWER, currency: "dollars" }, BASE_ARGS)?.currency).toBeNull();
+        expect(normalizeDraft({ ...MODEL_ANSWER, currency: "rmb" }, BASE_ARGS)?.currency).toBeNull();
     });
 
     it("no amount, found:false, or an amount past the ledger's ceiling is null — the tool's word for unclear", () => {

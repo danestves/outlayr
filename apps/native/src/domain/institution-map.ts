@@ -1,6 +1,6 @@
 import { toAccountKind } from "@outlayr/money/account-kind";
+import { merchantKey } from "@outlayr/money/merchant-key";
 
-import { merchantKey } from "./merchant-resolver";
 import { buildPatternIndex, containsTokenSequence } from "./pattern-index";
 
 // Account names only: in `resolveMerchant` these would suppress the model call for a payee named "Chase".

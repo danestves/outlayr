@@ -1,5 +1,7 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
+import { knowledgeKeys } from "@outlayr/money/merchant-key";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -21,14 +23,13 @@ import {
     rateLimiter,
     runSuggest,
     sanitizeCurrencyCode,
+    sanitizeLocale,
     sanitizeRegionCode,
 } from "./enrichment";
 import spec from "./enrichment.spec";
 import { traced } from "./lib/aiTracing";
 import { optionalUserId } from "./lib/auth";
 import { anthropicApiKey, claudeFastModelId } from "./lib/config";
-import { knowledgeKeys } from "./lib/merchantKey";
-import { AI_CONSENT_VERSION } from "./lib/models";
 import { isPro } from "./revenuecat";
 
 /**
@@ -75,6 +76,7 @@ const suggest = FunctionImpl.make(
 
         const regionCode = sanitizeRegionCode(args.regionCode);
         const currency = sanitizeCurrencyCode(args.currency);
+        const locale = sanitizeLocale(args.locale);
 
         const { runQuery } = yield* QueryRunner;
         // Tier 1.5 spends no rate limit and runs before the API key check, so a hit works without the key.
@@ -122,7 +124,7 @@ const suggest = FunctionImpl.make(
                                 distinctId: args.shareAnalytics === true ? identity.subject : undefined,
                                 groundedLookup: args.groundedLookup,
                                 income: args.income,
-                                locale: args.locale,
+                                locale,
                                 name: trimmedName,
                                 regionCode,
                             })
@@ -140,7 +142,7 @@ const suggest = FunctionImpl.make(
                 categoryTree: args.categoryTree,
                 currency,
                 income: args.income,
-                locale: args.locale,
+                locale,
                 name: trimmedName,
                 regionCode,
             }

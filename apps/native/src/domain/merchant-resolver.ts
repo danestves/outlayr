@@ -1,3 +1,5 @@
+import { merchantKey } from "@outlayr/money/merchant-key";
+
 import { MERCHANT_INDEX } from "./merchant-map";
 import type { MerchantEntry, MerchantTag } from "./merchant-map";
 import { containsTokenSequence } from "./pattern-index";
@@ -6,16 +8,6 @@ export interface MerchantMatch {
     readonly categoryName: string;
     readonly domain: string | null;
     readonly tags: readonly MerchantTag[];
-}
-
-export function merchantKey(raw: string): string {
-    return raw
-        .normalize("NFD")
-        .replaceAll(/\p{Diacritic}/gu, "")
-        .toLocaleLowerCase()
-        .replaceAll(/[^\p{L}\p{N}]+/gu, " ")
-        .trim()
-        .replaceAll(/\s+/g, " ");
 }
 
 function resolveAlias(key: string): MerchantEntry | null {
@@ -100,54 +92,4 @@ export function resolveMerchant(rawName: string): MerchantMatch | null {
     }
 
     return null;
-}
-
-const PROCESSORS: ReadonlySet<string> = new Set([
-    "google",
-    "iz",
-    "nyx",
-    "paypal",
-    "pos",
-    "pp",
-    "sp",
-    "sq",
-    "squ",
-    "sumup",
-    "tst",
-    "zettle",
-    "ztl",
-]);
-
-const LEGAL_SUFFIXES: ReadonlySet<string> = new Set([
-    "abee",
-    "abeet",
-    "ae",
-    "ag",
-    "bv",
-    "epe",
-    "gmbh",
-    "ike",
-    "inc",
-    "llc",
-    "ltd",
-    "sa",
-    "sas",
-    "sl",
-    "spa",
-    "srl",
-]);
-
-const REFERENCE_CODE = /^(?=[a-z]*\d)[a-z0-9]{5,}$|^\d+$/;
-
-const GLUED_SUFFIX = /(\p{Ll})(\p{Lu}{2,})/gu;
-
-export function descriptorKey(raw: string): string {
-    const star = raw.indexOf("*");
-    const body = star !== -1 && PROCESSORS.has(merchantKey(raw.slice(0, star))) ? raw.slice(star + 1) : raw;
-    const [first = "", ...rest] = merchantKey(body.replaceAll(GLUED_SUFFIX, "$1 $2")).split(" ");
-    const kept = [first, ...rest.filter((token) => !REFERENCE_CODE.test(token))];
-    while (kept.length > 1 && LEGAL_SUFFIXES.has(kept.at(-1) ?? "")) {
-        kept.pop();
-    }
-    return kept.join(" ");
 }

@@ -1,3 +1,4 @@
+import { merchantKey } from "@outlayr/money/merchant-key";
 import { and, desc, eq, inArray, isNull, ne, or } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -6,7 +7,6 @@ import type { Database } from "@/db/client";
 import { transactions, transactionTags } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
-import { merchantKey } from "@/domain/merchant-resolver";
 
 import { forgetLogoDismissal, refreshLogoCandidate } from "./logo-backfill-state";
 import { restoreStamp } from "./sync-engine-core";

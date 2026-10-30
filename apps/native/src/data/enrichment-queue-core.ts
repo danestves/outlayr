@@ -1,3 +1,4 @@
+import { merchantKey } from "@outlayr/money/merchant-key";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -5,7 +6,6 @@ import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
-import { merchantKey } from "@/domain/merchant-resolver";
 import type { CloudError } from "@/lib/cloud-error";
 import type { LogoOutcome, MerchantImageRequest } from "@/lib/logo-fetch";
 

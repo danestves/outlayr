@@ -1,6 +1,7 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import * as Schema from "effect/Schema";
 
+import { CurrencyCode, IsoDay, JpegImage, LanguageTag, RegionCode, withinNameBudget } from "./lib/captureArgs";
 import { ScanStatus } from "./receiptScan.spec";
 
 export const installmentScanArgs = {
@@ -13,6 +14,15 @@ export const installmentScanArgs = {
     shareAnalytics: Schema.optional(Schema.Boolean),
     today: Schema.String,
 };
+
+export const InstallmentScanInput = Schema.Struct({
+    ...installmentScanArgs,
+    currency: CurrencyCode,
+    image: JpegImage,
+    language: Schema.optional(LanguageTag),
+    regionCode: Schema.optional(RegionCode),
+    today: IsoDay,
+}).check(withinNameBudget);
 
 const PlanRow = Schema.Struct({
     amount: Schema.Number,

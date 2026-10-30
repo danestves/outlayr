@@ -1,6 +1,7 @@
 import { addDays, firstOfMonth, startOfDay } from "@outlayr/money/calendar";
 import { canonicalUsd } from "@outlayr/money/canonical-usd";
 import type { CanonicalUsd } from "@outlayr/money/canonical-usd";
+import { merchantKey } from "@outlayr/money/merchant-key";
 import type { EntryRateType } from "@outlayr/money/rates";
 import { isTransactionRateNeeded } from "@outlayr/money/rates";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
@@ -12,7 +13,6 @@ import type { Database } from "@/db/client";
 import { accounts, categories, installments, transactions, transfers } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
-import { merchantKey } from "@/domain/merchant-resolver";
 import { DEFAULT_CURRENCY } from "@/domain/money";
 import type { PaidVia } from "@/domain/paid-via";
 import type { LastEntry } from "@/domain/reminder";

@@ -1,25 +1,21 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
+import * as Schema from "effect/Schema";
 
 import databaseSchema from "./_generated/schema";
 import { Auth, MutationCtx } from "./_generated/services";
 import { traced } from "./lib/aiTracing";
 import { admitCapture } from "./lib/captures";
 import { anthropicApiKey, claudeFastModelId } from "./lib/config";
-import {
-    CURRENCY_PATTERN,
-    DATE_PATTERN,
-    LANGUAGE_PATTERN,
-    namesWithinBudget,
-    REGION_PATTERN,
-} from "./lib/ledgerPrompt";
-import { AI_CONSENT_VERSION } from "./lib/models";
-import { admitScan, failure, looksLikeJpeg, MAX_IMAGE_BYTES, rateLimiter, readReceipt } from "./receiptScan";
-import spec from "./receiptScan.spec";
+import { admitScan, failure, rateLimiter, readReceipt } from "./receiptScan";
+import spec, { ReceiptScanInput } from "./receiptScan.spec";
+
+const isReceiptScanInput = Schema.is(ReceiptScanInput);
 
 const admit = FunctionImpl.make(
     databaseSchema,
@@ -61,16 +57,7 @@ const scan = FunctionImpl.make(
             return failure("notConfigured");
         }
 
-        if (
-            args.image.byteLength === 0 ||
-            args.image.byteLength > MAX_IMAGE_BYTES ||
-            !looksLikeJpeg(args.image) ||
-            !namesWithinBudget(args.categoryTree, args.accounts) ||
-            !DATE_PATTERN.test(args.today) ||
-            !CURRENCY_PATTERN.test(args.currency) ||
-            (args.language !== undefined && !LANGUAGE_PATTERN.test(args.language)) ||
-            (args.regionCode !== undefined && !REGION_PATTERN.test(args.regionCode))
-        ) {
+        if (!isReceiptScanInput(args)) {
             return failure("invalid");
         }
 

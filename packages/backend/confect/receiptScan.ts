@@ -1,5 +1,4 @@
 import { HOUR, isRateLimitError, RateLimiter } from "@convex-dev/rate-limiter";
-import { PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
 import { generateText, Output } from "ai";
 import type { LanguageModel } from "ai";
 import type { UserIdentity } from "convex/server";
@@ -9,7 +8,7 @@ import * as Schema from "effect/Schema";
 import { components } from "../convex/_generated/api";
 import refs from "./_generated/refs";
 import { ActionCtx, MutationRunner } from "./_generated/services";
-import { clampDate, describeTree, normalizeDomain, pickKnown, trimTo } from "./lib/ledgerPrompt";
+import { clampDate, describeTree, draftCurrency, normalizeDomain, pickKnown, trimTo } from "./lib/ledgerPrompt";
 import type { LedgerContext } from "./lib/ledgerPrompt";
 import { perUserBurst } from "./lib/limits";
 import { modelCallError, modelSchema } from "./lib/modelCall";
@@ -17,9 +16,6 @@ import { MAX_AMOUNT } from "./lib/sanitizeLimits";
 import type { ReceiptDraft, ReceiptItem, ScanResult, ScanStatus } from "./receiptScan.spec";
 import { isPro } from "./revenuecat";
 
-// A Convex value tops out at 1MB and the photo travels as one; the client re-encodes to fit.
-export const MAX_IMAGE_BYTES = 900_000;
-const JPEG_MAGIC = [0xff, 0xd8, 0xff] as const;
 const MAX_MERCHANT_LENGTH = 80;
 const MAX_ITEM_NAME_LENGTH = 80;
 const MAX_PAYMENT_LENGTH = 40;
@@ -61,8 +57,6 @@ export type ModelOutput = typeof ModelOutput.Type;
 
 const modelOutputSchema = modelSchema(ModelOutput);
 
-export const KNOWN_CURRENCIES: ReadonlySet<string> = new Set(PICKABLE_CURRENCY_CODES);
-
 // Unsharded, a global counter is one hot document that throws OCC write conflicts under concurrency.
 export const rateLimiter = new RateLimiter(components.rateLimiter, {
     receiptScanGlobal: {
@@ -72,11 +66,6 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
         shards: 10,
     },
 });
-
-export function looksLikeJpeg(image: ArrayBuffer): boolean {
-    const head = new Uint8Array(image, 0, Math.min(JPEG_MAGIC.length, image.byteLength));
-    return head.length === JPEG_MAGIC.length && JPEG_MAGIC.every((byte, index) => head[index] === byte);
-}
 
 export function buildPrompt(args: LedgerContext): string {
     return [
@@ -147,12 +136,7 @@ export function normalizeDraft(output: ModelOutput, args: LedgerContext): typeof
         return null;
     }
     const knownCategories = args.categoryTree.flatMap((branch) => [branch.name, ...branch.children]);
-    const printedCurrency = output.currency?.trim().toUpperCase() ?? null;
-    // An unknown code ("RMB") would match no rate row, and folding it into the ledger's currency would be the
-    // wrong denomination, so it is flagged instead.
-    const foreign = printedCurrency != null && printedCurrency !== args.currency;
-    const currencyUnresolved = foreign && !KNOWN_CURRENCIES.has(printedCurrency);
-    const currency = foreign && !currencyUnresolved ? printedCurrency : null;
+    const { currency, unresolved: currencyUnresolved } = draftCurrency(output.currency, args.currency);
     return {
         accountName: pickKnown(output.accountName, args.accounts),
         categoryName: pickKnown(output.categoryName, knownCategories),

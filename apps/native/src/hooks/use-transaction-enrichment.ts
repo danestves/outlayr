@@ -1,3 +1,4 @@
+import { merchantKey } from "@outlayr/money/merchant-key";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
@@ -7,7 +8,7 @@ import type { RefObject } from "react";
 import { findCategoryPreset, presetForName } from "@/data/categories-core";
 import { getCachedEnrichment, setCachedEnrichment } from "@/domain/enrichment-cache";
 import type { RemoteEnrichmentResult } from "@/domain/enrichment-cache";
-import { merchantKey, resolveMerchant } from "@/domain/merchant-resolver";
+import { resolveMerchant } from "@/domain/merchant-resolver";
 import type { MerchantMatch } from "@/domain/merchant-resolver";
 import { translateNow } from "@/i18n/runtime";
 import type { CloudError } from "@/lib/cloud-error";

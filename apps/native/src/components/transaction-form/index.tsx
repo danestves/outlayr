@@ -1,5 +1,6 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { toAccountKind } from "@outlayr/money/account-kind";
+import { merchantKey } from "@outlayr/money/merchant-key";
 import { ENTRY_RATE_TYPES } from "@outlayr/money/rates";
 import type { EntryRateType } from "@outlayr/money/rates";
 import { ensureRecurringType, RECURRING_TYPE } from "@outlayr/money/recurrence";
@@ -60,7 +61,6 @@ import type { FeeDraft } from "@/domain/card-fee";
 import { computeCurtainHues } from "@/domain/curtain-hues";
 import { formatSentenceDate } from "@/domain/dates";
 import type { InstallmentSeed } from "@/domain/installment-scan";
-import { merchantKey } from "@/domain/merchant-resolver";
 import { suggestMerchants } from "@/domain/merchant-suggest";
 import { formatAmount, minorUnitsFor, numberLocale, roundToMinorUnits, symbolIsShared } from "@/domain/money";
 import { numberToNumpad, numpadToNumber } from "@/domain/numpad";

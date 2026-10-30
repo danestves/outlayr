@@ -1,9 +1,10 @@
+import { merchantKey } from "@outlayr/money/merchant-key";
 import { describe, expect, it } from "vite-plus/test";
 
 import { capitalizeCategoryName, SUGGESTED_CATEGORY_PRESETS } from "@/data/categories-core";
 
 import { MERCHANT_INDEX, MERCHANTS } from "./merchant-map";
-import { merchantKey, resolveMerchant } from "./merchant-resolver";
+import { resolveMerchant } from "./merchant-resolver";
 import { normalizeTagName, TAG_NAME_LIMIT } from "./tags";
 
 const VALID_CATEGORY_NAMES = new Set(

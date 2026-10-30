@@ -1,3 +1,4 @@
+import { PRO_ENTITLEMENT_ID } from "@outlayr/money/contract";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import { Platform } from "react-native";
@@ -12,7 +13,6 @@ const API_KEY = Platform.select({
     android: ENV.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY,
     ios: ENV.EXPO_PUBLIC_REVENUECAT_IOS_KEY,
 });
-export const PRO_ENTITLEMENT_ID = "pro";
 
 let configured = false;
 

@@ -1,16 +1,15 @@
+import { knowledgeKeys } from "@outlayr/money/merchant-key";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import type { RemoteEnrichmentResult } from "@/domain/enrichment-cache";
-import { descriptorKey, merchantKey } from "@/domain/merchant-resolver";
 
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
 
 export const BOOK_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 export const MAX_BOOK_ENTRIES = 500;
-const MIN_KEY_LENGTH = 3;
 
 const Book = Schema.Record(
     Schema.String,
@@ -35,14 +34,6 @@ export interface RememberedAnswer extends RemoteEnrichmentResult {
     readonly merchantName: string | null;
 }
 
-function bookKeys(name: string, currency: string | null | undefined, merchantName?: string | null): string[] {
-    const suffix = currency ? `|${currency.toLowerCase()}` : "";
-    const keys = [merchantKey(name), descriptorKey(name), merchantKey(merchantName ?? "")]
-        .filter((key) => key.length >= MIN_KEY_LENGTH)
-        .map((key) => `${key}${suffix}`);
-    return [...new Set(keys)];
-}
-
 const readBook = Effect.fn("MerchantBook.readBook")(function* readBook(db: Database) {
     const raw = yield* getMeta(db, META_KEYS.merchantBook);
     const book: Book = Option.getOrElse(decodeBook(raw ?? "{}"), () => ({}));
@@ -56,7 +47,7 @@ export const rememberMerchant = Effect.fn("MerchantBook.rememberMerchant")(funct
     answer: RememberedAnswer,
     now: number = Date.now()
 ) {
-    const keys = bookKeys(name, currency, answer.merchantName);
+    const keys = knowledgeKeys(name, currency, answer.merchantName);
     if (keys.length === 0 || (answer.categoryName == null && answer.domain == null && answer.merchantName == null)) {
         return;
     }
@@ -88,7 +79,7 @@ export const recallMerchant = Effect.fn("MerchantBook.recallMerchant")(function*
     now: number = Date.now()
 ) {
     const book = yield* readBook(db);
-    for (const key of bookKeys(name, currency)) {
+    for (const key of knowledgeKeys(name, currency)) {
         const entry = book[key];
         if (entry != null && entry.expiresAt > now) {
             const answer: RemoteEnrichmentResult = entry.answer;

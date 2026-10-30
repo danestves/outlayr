@@ -1,6 +1,7 @@
+import { merchantKey } from "@outlayr/money/merchant-key";
+
 import { cardFeeAmount } from "./card-fee";
 import type { CardFee } from "./card-fee";
-import { merchantKey } from "./merchant-resolver";
 
 export const PAID_VIA = ["pagoMovil", "transfer", "sameBankTransfer", "card", "cash"] as const;
 

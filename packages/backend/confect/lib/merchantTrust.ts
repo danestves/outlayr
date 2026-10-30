@@ -1,3 +1,5 @@
+import { CANONICAL_CATEGORY_NAMES } from "@outlayr/money/contract";
+
 import { DOMAIN_PATTERN, MAX_DOMAIN_LENGTH, MAX_TAG_LENGTH, MAX_TAGS, PICTOGRAPHIC } from "./sanitizeLimits";
 
 export const KEY_PATTERN = /^[a-z0-9 ]{3,64}(\|[a-z]{3})?$/;
@@ -6,40 +8,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const MODEL_TTL_MS = 30 * DAY_MS;
 export const WEB_TTL_MS = 90 * DAY_MS;
 
-// Duplicated from apps/native/src/data/categories-core.ts because the backend must not depend on apps/native.
-export const CANONICAL_CATEGORY_NAMES: ReadonlySet<string> = new Set([
-    "Groceries",
-    "Dining Out",
-    "Coffee",
-    "Transport",
-    "Fuel",
-    "Rent",
-    "Home",
-    "Utilities",
-    "Phone & Internet",
-    "Subscriptions",
-    "Healthcare",
-    "Fitness",
-    "Shopping",
-    "Fashion",
-    "Entertainment",
-    "Travel",
-    "Education",
-    "Gifts",
-    "Pets",
-    "Family",
-    "Personal Care",
-    "Insurance",
-    "Taxes",
-    "Paycheck",
-    "Freelance",
-    "Part-Time",
-    "Business",
-    "Investments",
-    "Interest",
-    "Bonus",
-    "Tips",
-    "Refund",
+export const CANONICAL_CATEGORIES: ReadonlySet<string> = new Set([
+    ...CANONICAL_CATEGORY_NAMES.expense,
+    ...CANONICAL_CATEGORY_NAMES.income,
 ]);
 
 export interface KnowledgeCandidate {
@@ -95,7 +66,7 @@ export function shouldPublish(candidate: KnowledgeCandidate, sources: readonly {
     if (!sources.some((source) => corroborates(domain, source.url))) {
         return false;
     }
-    if (candidate.categoryName === null || !CANONICAL_CATEGORY_NAMES.has(candidate.categoryName)) {
+    if (candidate.categoryName === null || !CANONICAL_CATEGORIES.has(candidate.categoryName)) {
         return false;
     }
     if (!KEY_PATTERN.test(candidate.key)) {

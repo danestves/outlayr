@@ -1,6 +1,7 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import * as Schema from "effect/Schema";
 
+import { AudioClip, CurrencyCode, IsoDay, LanguageTag, withinNameBudget } from "./lib/captureArgs";
 import { CaptureAdmission } from "./receiptScan.spec";
 import type { listTurns } from "./voiceEntry";
 
@@ -18,6 +19,14 @@ export const voiceEntryArgs = {
     /** `YYYY-MM-DD` in the device's local calendar. */
     today: Schema.String,
 };
+
+export const VoiceEntryInput = Schema.Struct({
+    ...voiceEntryArgs,
+    audio: AudioClip,
+    currency: CurrencyCode,
+    language: Schema.optional(LanguageTag),
+    today: IsoDay,
+}).check(withinNameBudget);
 
 export const SpeakStatus = Schema.Literals([
     "ok",
