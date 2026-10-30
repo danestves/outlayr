@@ -1,66 +1,12 @@
 import { useLocalSearchParams } from "expo-router";
 
 import { NewTransaction } from "@/screens/transaction/new";
+import type { EntryParams } from "@/state/entry-params";
 
 export default function NewTransactionScreen() {
     // Only `income`/`amount`/`note` may arrive from outside the bundle (quick action, Siri). The rest come from the
     // voice screen, which resolved them on this ledger, or `from`, a ledger row being logged again.
-    const {
-        income,
-        amount,
-        attachment,
-        note,
-        receipt,
-        from,
-        categoryId,
-        accountId,
-        accountUnresolved,
-        currency,
-        date,
-        details,
-        installmentDraft,
-        installments,
-        recurringCoefficient,
-        recurringType,
-    } = useLocalSearchParams<{
-        accountId?: string;
-        /** "1" when the voice draft named an account the ledger could not place. */
-        accountUnresolved?: string;
-        amount?: string;
-        attachment?: string;
-        categoryId?: string;
-        currency?: string;
-        /** Epoch milliseconds. */
-        date?: string;
-        details?: string;
-        from?: string;
-        income?: string;
-        installmentDraft?: string;
-        installments?: "1";
-        note?: string;
-        receipt?: string;
-        recurringCoefficient?: string;
-        recurringType?: string;
-    }>();
+    const params = useLocalSearchParams<Partial<Record<keyof EntryParams | "from", string>>>();
 
-    return (
-        <NewTransaction
-            accountId={accountId}
-            accountUnresolved={accountUnresolved}
-            amount={amount}
-            attachment={attachment}
-            categoryId={categoryId}
-            currency={currency}
-            date={date}
-            details={details}
-            from={from}
-            income={income}
-            installmentDraft={installmentDraft}
-            installments={installments}
-            note={note}
-            receipt={receipt}
-            recurringCoefficient={recurringCoefficient}
-            recurringType={recurringType}
-        />
-    );
+    return <NewTransaction {...params} />;
 }

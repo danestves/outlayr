@@ -17,7 +17,7 @@ import { useBankAccounts } from "@/data/accounts";
 import { getAccountById } from "@/data/accounts-core";
 import type { Account } from "@/data/accounts-core";
 import { useAiConsent } from "@/data/settings";
-import { encodeInstallmentSeed, scannedOrder } from "@/domain/installment-scan";
+import { scannedOrder } from "@/domain/installment-scan";
 import { paywallHref } from "@/domain/paywall-trigger";
 import { useLocaleTag } from "@/hooks/use-locale-tag";
 import { useCreateLiability } from "@/hooks/use-pro-gate";
@@ -41,6 +41,7 @@ import {
     useStageBox,
 } from "@/screens/transaction/scan";
 import type { BarAction } from "@/screens/transaction/scan";
+import { entryHref } from "@/state/entry-params";
 import { useColors } from "@/theme/use-colors";
 
 import { handedOffPhoto } from "./use-screenshot-import";
@@ -74,17 +75,16 @@ function ScanFlow({ account, photo }: { account: Account; photo: ScanPhoto | nul
         onReview: (draft) => {
             const { order } = reviewedOrder(draft, account);
             if (order !== null) {
-                router.replace({
-                    params: {
+                router.replace(
+                    entryHref({
                         accountId: account.id,
-                        amount: String(order.price),
+                        amount: order.price,
                         currency: account.currency,
-                        date: String(order.purchaseDay.getTime()),
-                        installmentDraft: encodeInstallmentSeed(order),
-                        installments: "1",
-                    },
-                    pathname: "/transactions/create",
-                });
+                        date: order.purchaseDay,
+                        installmentDraft: order,
+                        installments: true,
+                    })
+                );
             }
         },
         owner: "installment-scan",

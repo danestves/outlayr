@@ -53,7 +53,7 @@ import { rememberedCategoryFor } from "@/data/merchant-history-core";
 import { remoteEnrichmentOn } from "@/data/settings-core";
 import { useTagIdsFor, useTags } from "@/data/tags";
 import { transactionRateSuggestions } from "@/data/transaction-entry-rates";
-import type { Transaction, TransactionInput } from "@/data/transactions-core";
+import type { Transaction } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 import { rowAmountLabel } from "@/domain/amount-label";
 import { cardFeeAmount, cardFeeBase, cardFeeOf, feeDraftOf, formatFeeRate, NO_FEE } from "@/domain/card-fee";
@@ -96,7 +96,6 @@ import {
     rateSourceWordKey,
     transactionWhenLabel,
 } from "@/domain/transaction-form-labels";
-import { buildTransactionInput } from "@/domain/transaction-form-save";
 import { transactionFormErrors } from "@/domain/transaction-form-validate";
 import { resolveTransactionIdentity } from "@/domain/transaction-identity";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
@@ -548,54 +547,68 @@ export function TransactionForm({
             return null;
         }
 
-        const buildEntry = (categoryId: string | null): TransactionInput => ({
-            ...buildTransactionInput({
-                accountId: value.account?.id ?? null,
-                // Rounded to the currency's units at save: switching currency mid-entry leaves the typed digits
-                // alone, so 12.34 typed in USD would show as ¥12 while the row kept 12.34.
-                amount,
-                categoryId,
-                coefficient: value.coefficient,
-                currency: value.txCurrency,
-                customColor: identity.color,
-                date: value.date,
-                details: notesRef.current,
-                emoji: identity.emoji,
-                endDate: value.endDate,
-                exchangeRate: value.exchangeRateType == null ? null : entryRateOf(value.rateEntry, entryCurrency),
-                exchangeRateType: value.exchangeRateType,
-                hasEndDate: value.hasEndDate,
-                icon: identity.icon,
-                imageColor: identity.photoColor,
-                imageUri: identity.photoUri,
-                income: value.income,
-                isSubscription: value.isSubscription,
-                leadDays: value.leadDays,
-                note: value.merchant,
-                recurringType: value.recurringType,
-            }),
-            fee: feeInputFor(value.merchant.trim() || (value.category?.name ?? ""), categoryId, amount),
-            paidVia: paysBolivares ? (value.paidVia ?? suggestedPaidVia) : null,
-            receipt: seed?.receipt,
-        });
         return saveEntry({
-            accountId: value.account?.id ?? null,
-            carry: (savedId) => {
-                const answered = lookupAnsweredRef.current;
-                const carriesLookup =
-                    mode === "edit" &&
-                    forcedLookupRef.current &&
-                    answered?.key === merchantKey(value.merchant) &&
-                    answered.currency === entryCurrency;
-                return carriesLookup
-                    ? carryLookupToSiblings(savedId, value.income, value.merchant, value.txCurrency)
-                    : null;
+            commit: {
+                attachments,
+                carry: (savedId) => {
+                    const answered = lookupAnsweredRef.current;
+                    const carriesLookup =
+                        mode === "edit" &&
+                        forcedLookupRef.current &&
+                        answered?.key === merchantKey(value.merchant) &&
+                        answered.currency === entryCurrency;
+                    return carriesLookup
+                        ? carryLookupToSiblings(savedId, value.income, value.merchant, value.txCurrency)
+                        : null;
+                },
+                db,
+                draft: {
+                    accountId: value.account?.id ?? null,
+                    // Rounded to the currency's units at save: switching currency mid-entry leaves the typed digits
+                    // alone, so 12.34 typed in USD would show as ¥12 while the row kept 12.34.
+                    amount,
+                    categoryId: value.category?.id ?? null,
+                    currency: value.txCurrency,
+                    customColor: identity.color,
+                    date: value.date,
+                    details: notesRef.current,
+                    emoji: identity.emoji,
+                    exchangeRate: value.exchangeRateType == null ? null : entryRateOf(value.rateEntry, entryCurrency),
+                    exchangeRateType: value.exchangeRateType,
+                    fee: (categoryId) =>
+                        feeInputFor(value.merchant.trim() || (value.category?.name ?? ""), categoryId, amount),
+                    icon: identity.icon,
+                    imageColor: identity.photoColor,
+                    imageUri: identity.photoUri,
+                    income: value.income,
+                    merchant: value.merchant,
+                    paidVia: paysBolivares ? (value.paidVia ?? suggestedPaidVia) : null,
+                    receipt: seed?.receipt,
+                    schedule: value.isSubscription
+                        ? {
+                              coefficient: value.coefficient,
+                              endDate: value.hasEndDate ? value.endDate : null,
+                              leadDays: value.leadDays,
+                              type: value.recurringType,
+                          }
+                        : null,
+                },
+                initial: mode === "edit" ? initial : undefined,
+                installments: (entry, writeExtras) => installmentOrder.save(entry, amount, writeExtras),
+                pendingCategory:
+                    value.category || !value.pendingCategory
+                        ? undefined
+                        : { siblings: categoriesForNamespace, value: value.pendingCategory },
+                source: "form",
+                splits: {
+                    allocations: isRealSplit(splitAllocations) ? splitAllocations : [],
+                    decimals: minorUnitsFor(entryCurrency),
+                },
+                tags:
+                    tagsSource === "initial"
+                        ? undefined
+                        : { pendingNames: value.pendingTagNames, tagIds: value.tagIds },
             },
-            db,
-            hasSplit: isRealSplit(splitAllocations),
-            income: value.income,
-            isSubscription: value.isSubscription,
-            mode,
             onMissingCategory: () => flagMissingCategory(),
             onSaveFailed: () => {
                 // Say so: un-dimming the CTA in silence reads as a missed tap. Pinned under the header, since a toast
@@ -620,28 +633,6 @@ export function TransactionForm({
                     title: t("transaction.save.scheduleFailedTitle"),
                 });
                 onDone();
-            },
-            queueLookup: mode === "create" && queueable(value.merchant),
-            save: {
-                attachments,
-                buildEntry,
-                categoryId: value.category?.id ?? null,
-                db,
-                decimals: minorUnitsFor(entryCurrency),
-                initial,
-                installments: (entry, writeExtras) => installmentOrder.save(entry, amount, writeExtras),
-                mode,
-                pendingCategory:
-                    value.category || !value.pendingCategory
-                        ? null
-                        : {
-                              income: value.income,
-                              siblings: categoriesForNamespace,
-                              value: value.pendingCategory,
-                          },
-                splits: isRealSplit(splitAllocations) ? splitAllocations : [],
-                tags: tagsSource === "initial" ? null : { pendingNames: value.pendingTagNames, tagIds: value.tagIds },
-                total: amount,
             },
         });
     };
