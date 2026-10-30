@@ -10,11 +10,16 @@ import { RevenueCat } from "@/lib/revenuecat-service";
 import type { Entitlement, Session } from "@/lib/revenuecat-service";
 import { appRuntime } from "@/lib/runtime";
 
-const NOT_CONFIGURED: Entitlement = { kind: "unconfigured" };
-
-export const entitlementAtom = appRuntime
+const entitlementStreamAtom = appRuntime
     .atom(Stream.unwrap(RevenueCat.pipe(Effect.map((revenueCat) => revenueCat.entitlement))))
-    .pipe(Atom.withLabel("revenuecat:entitlement"));
+    .pipe(Atom.withLabel("revenuecat:entitlement-stream"));
+
+export const entitlementAtom = entitlementStreamAtom.pipe(
+    Atom.map((result): Entitlement =>
+        AsyncResult.isSuccess(result) ? result.value : { kind: "unresolved", pending: AsyncResult.isInitial(result) }
+    ),
+    Atom.withLabel("revenuecat:entitlement")
+);
 
 export const revenueCatAtom = appRuntime
     .atom(RevenueCat.pipe(Effect.flatMap((revenueCat) => revenueCat.run())))
@@ -37,6 +42,5 @@ export function RevenueCatSession() {
 }
 
 export function useRevenueCat(): Entitlement {
-    const result = useAtomValue(entitlementAtom);
-    return AsyncResult.isSuccess(result) ? result.value : NOT_CONFIGURED;
+    return useAtomValue(entitlementAtom);
 }

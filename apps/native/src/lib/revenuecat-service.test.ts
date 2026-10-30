@@ -83,7 +83,7 @@ describe("revenueCat", () => {
         );
     };
 
-    const start = (accountId: string | null, client = sdk) => {
+    const start = (accountId: string | null, client = sdk, rest: Layer.Layer<never> = Layer.empty) => {
         const layer = Layer.mergeAll(
             RevenueCat.layer.pipe(
                 Layer.provide(
@@ -93,7 +93,8 @@ describe("revenueCat", () => {
                     )
                 )
             ),
-            Logger.layer([])
+            Logger.layer([]),
+            rest
         );
         registry = AtomRegistry.make({ initialValues: [[appRuntime.layer, layer]], scheduleTask });
         registry.mount(entitlementAtom);
@@ -102,13 +103,7 @@ describe("revenueCat", () => {
         return flush();
     };
 
-    const entitlement = () => {
-        const result = registry.get(entitlementAtom);
-        if (!AsyncResult.isSuccess(result)) {
-            throw new Error("the entitlement atom has no value");
-        }
-        return result.value;
-    };
+    const entitlement = () => registry.get(entitlementAtom);
 
     const call = <A, E>(operation: (revenueCat: RevenueCat.RevenueCat["Service"]) => Effect.Effect<A, E>) => {
         const services = Effect.runSync(AtomRegistry.getResult(registry, appRuntime));
@@ -150,6 +145,25 @@ describe("revenueCat", () => {
         customerInfo.emit(false);
         await flush();
         expect(entitlement()).toStrictEqual({ kind: "free", pending: false });
+    });
+
+    it("holds gates while the rest of the runtime is still building, then reads the store's answer", async () => {
+        const opening = held<undefined>();
+        await start("user-16", sdk, Layer.effectDiscard(Effect.promise(() => opening.promise)));
+        expect(entitlement()).toStrictEqual({ kind: "unresolved", pending: true });
+
+        opening.resolve(undefined);
+        await flush();
+        expect(entitlement()).toStrictEqual({ kind: "free", pending: false });
+    });
+
+    it("releases the hold when the runtime fails to build, so a gate never waits forever", async () => {
+        const opening = held<undefined>();
+        await start("user-17", sdk, Layer.effectDiscard(Effect.promise(() => opening.promise)));
+
+        opening.reject(new Error("database failed to open"));
+        await flush();
+        expect(entitlement()).toStrictEqual({ kind: "unresolved", pending: false });
     });
 
     it("fails the run with the SDK's error when configuring throws, so the error boundary sees it", async () => {
