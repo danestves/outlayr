@@ -13,8 +13,7 @@ import type { TranslateFn } from "@/i18n/context";
 import { withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";
 
-import { CategoryBreakdownRow } from "./category-breakdown-row";
-import { CategoryProportionBar } from "./category-proportion-bar";
+import { CategoryBlocks } from "./category-blocks";
 import { InsightsBarChart } from "./insights-bar-chart";
 
 const noop = () => undefined;
@@ -36,8 +35,10 @@ function marchBuckets(values: number[]): InsightsBucket[] {
     }));
 }
 
-const DINING = { color: "#FF8A00", icon: "Restaurant01" } as const;
-const GROCERIES = { color: "#34C759", icon: "ShoppingCart01" } as const;
+const DINING = { color: "#A97332", icon: "Restaurant01" } as const;
+const GROCERIES = { color: "#53915A", icon: "ShoppingCart01" } as const;
+const SHOPPING = { color: "#B16482", icon: "ShoppingBag01" } as const;
+const TRANSPORT = { color: "#4D84BD", icon: "Bus01" } as const;
 
 const SAMPLE_BUCKETS: InsightsBucket[] = marchBuckets(DAILY_SPEND);
 
@@ -78,6 +79,26 @@ const sampleBreakdown = (t: TranslateFn): CategoryBreakdownEntry[] => [
         icon: GROCERIES.icon,
         id: "groceries",
         name: t("insights.sample.groceries"),
+    },
+    {
+        amount: 286.1,
+        color: SHOPPING.color,
+        delta: 0.08,
+        emoji: null,
+        fraction: 0.155,
+        icon: SHOPPING.icon,
+        id: "shopping",
+        name: t("insights.sample.shopping"),
+    },
+    {
+        amount: 214.3,
+        color: TRANSPORT.color,
+        delta: -0.2,
+        emoji: null,
+        fraction: 0.116,
+        icon: TRANSPORT.icon,
+        id: "transport",
+        name: t("insights.sample.transport"),
     },
 ];
 
@@ -145,11 +166,29 @@ export function InsightsSample({ onAddTransaction }: InsightsSampleProps) {
                         })}
                     </Text>
 
-                    <View className="pt-3">
+                    <View className="pt-6">
+                        <View className="flex-row items-baseline justify-between gap-3 pb-3">
+                            <MonoLabel>{t("insights.whereItWent")}</MonoLabel>
+                            <MonoLabel>
+                                {t("insights.movers.versus", { label: t("insights.sample.priorLabel") })}
+                            </MonoLabel>
+                        </View>
+                        <CategoryBlocks
+                            code="USD"
+                            entries={breakdown}
+                            measure="spent"
+                            onSelect={noop}
+                            selectedId={null}
+                            showCents
+                        />
+                    </View>
+
+                    <View className="pt-6">
                         <LedgerHead cells={sampleCells(t)} code="USD" />
                     </View>
 
-                    <View className="pt-4">
+                    <View className="pt-7">
+                        <MonoLabel className="pb-3">{t("insights.chart.byDay")}</MonoLabel>
                         <InsightsBarChart
                             average={59}
                             buckets={SAMPLE_BUCKETS}
@@ -161,29 +200,6 @@ export function InsightsSample({ onAddTransaction }: InsightsSampleProps) {
                             period="month"
                             selectedIndex={null}
                         />
-                    </View>
-
-                    <View className="pt-6">
-                        <View className="flex-row items-baseline justify-between gap-3 pb-3">
-                            <MonoLabel>{t("insights.categories")}</MonoLabel>
-                            <MonoLabel>
-                                {t("insights.movers.versus", { label: t("insights.sample.priorLabel") })}
-                            </MonoLabel>
-                        </View>
-                        <View className="pb-1">
-                            <CategoryProportionBar entries={breakdown} onSelect={noop} selectedId={null} />
-                        </View>
-                        <View className="pt-1.5">
-                            {breakdown.map((entry) => (
-                                <CategoryBreakdownRow
-                                    code="USD"
-                                    entry={entry}
-                                    key={entry.id}
-                                    measure="spent"
-                                    showCents
-                                />
-                            ))}
-                        </View>
                     </View>
                 </View>
             </ScrollView>

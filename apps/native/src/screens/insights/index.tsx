@@ -36,12 +36,10 @@ import type {
     InsightsPeriod,
 } from "@/data/insights";
 import { useWindowTransactions } from "@/data/insights-transactions";
-import { useSpendingCalendar } from "@/data/spending-calendar";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useInsights } from "@/data/use-insights";
 import type { UseInsightsResult } from "@/data/use-insights";
 import { useNow } from "@/data/use-now";
-import { debtsOverview } from "@/domain/debts";
 import {
     insightsMeasureAlternatives,
     insightsMeasureFromStored,
@@ -64,17 +62,15 @@ import { useAtomAction } from "@/state/use-atom-action";
 import { withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";
 
-import { CategoryBreakdownRow } from "./components/category-breakdown-row";
-import { CategoryProportionBar } from "./components/category-proportion-bar";
+import { CategoryBlocks } from "./components/category-blocks";
 import { InsightsBarChart } from "./components/insights-bar-chart";
 import { InsightsNetChart } from "./components/insights-net-chart";
 import { InsightsPeriodMenu } from "./components/insights-period-menu";
 import { InsightsQuiet } from "./components/insights-quiet";
 import { InsightsSample } from "./components/insights-sample";
 import { InsightsTransactionList } from "./components/insights-transaction-list";
-import { NetWorthCard } from "./components/net-worth-card";
+import { NetWorthLine } from "./components/net-worth-line";
 import { RecapRow } from "./components/recap-row";
-import { SpendingCalendar } from "./components/spending-calendar";
 import { WindowStepper } from "./components/window-stepper";
 import { heroMagnitudeFor, heroPositiveFor } from "./hero";
 import { MEASURE_KEY } from "./measure-label";
@@ -232,12 +228,7 @@ export function Insights() {
     const currency = useGlobalCurrency(db);
     const { showCents } = useDisplaySettings().state;
     const nowMs = useNow();
-    const { overview: ledger, series: netWorth } = useNetWorth(db, nowMs);
-    const split = ledger === null ? null : debtsOverview(ledger.rows, currency);
-    const debts =
-        split !== null && split.youOwe.length + split.owedToYou.length + split.settled.length > 0
-            ? { owedToYou: split.owedToYouTotal, youOwe: split.youOweTotal }
-            : null;
+    const { series: netWorth } = useNetWorth(db, nowMs);
 
     const incomeTracking = useSettingBool("incomeTracking");
     const storedPeriod = useSettingNumber("insightsTimeFrame");
@@ -256,7 +247,6 @@ export function Insights() {
     const [filterId, setFilterId] = useState<string | null>(null);
 
     const result = useInsights(db, nowMs, period, measure, offset, calendar);
-    const spendingCalendar = useSpendingCalendar(db, nowMs);
 
     // Cleared on change, not in an effect, so no frame pairs the old selection with the new window.
     const windowKey = `${offset}|${period}|${measure}`;
@@ -397,6 +387,20 @@ export function Insights() {
         />
     );
 
+    const list = listQuery ? (
+        <View className="px-5 pt-6">
+            <InsightsTransactionList
+                currency={currency}
+                grouped={listGrouped}
+                key={`${listQuery.start.getTime()}:${listQuery.end.getTime()}:${listQuery.categoryId}:${listQuery.income}`}
+                onPress={openTransaction}
+                onRequestDelete={requestDelete}
+                pendingDeleteId={pendingId}
+                transactions={listTransactions}
+            />
+        </View>
+    ) : null;
+
     return (
         <>
             <InsightsPeriodMenu onSelect={selectPeriod} period={period} />
@@ -456,23 +460,6 @@ export function Insights() {
                     {!scoped && verdict.sentence ? (
                         <Text className="text-footnote text-muted pt-0.5">{verdict.sentence}</Text>
                     ) : null}
-
-                    {incomeTracking && !scoped ? (
-                        <View className="pt-3">
-                            <LedgerHead
-                                cells={insightsMeasureAlternatives(measure).map((alternative): LedgerCell => ({
-                                    income: insightsMeasureIsIncome(alternative),
-                                    label: t(MEASURE_KEY[alternative]),
-                                    magnitude: insightsMeasureMagnitude(alternative, totals),
-                                    onPress: () => promote(alternative),
-                                    positive: insightsMeasureIsPositive(alternative, totals),
-                                }))}
-                                code={currency}
-                            />
-                        </View>
-                    ) : null}
-
-                    <View className="pt-4">{chart}</View>
                 </View>
 
                 <BreakdownSection
@@ -488,37 +475,40 @@ export function Insights() {
                     subEntries={subBreakdown}
                 />
 
-                {listQuery ? (
-                    <View className="px-5 pt-6">
-                        <InsightsTransactionList
-                            currency={currency}
-                            grouped={listGrouped}
-                            key={`${listQuery.start.getTime()}:${listQuery.end.getTime()}:${listQuery.categoryId}:${listQuery.income}`}
-                            onPress={openTransaction}
-                            onRequestDelete={requestDelete}
-                            pendingDeleteId={pendingId}
-                            transactions={listTransactions}
-                        />
-                    </View>
-                ) : null}
+                {lockedBucket ? null : list}
 
-                <NetWorthCard
+                <View className="px-5">
+                    {incomeTracking && !scoped ? (
+                        <View className="pt-6">
+                            <LedgerHead
+                                cells={insightsMeasureAlternatives(measure).map((alternative): LedgerCell => ({
+                                    income: insightsMeasureIsIncome(alternative),
+                                    label: t(MEASURE_KEY[alternative]),
+                                    magnitude: insightsMeasureMagnitude(alternative, totals),
+                                    onPress: () => promote(alternative),
+                                    positive: insightsMeasureIsPositive(alternative, totals),
+                                }))}
+                                code={currency}
+                            />
+                        </View>
+                    ) : null}
+
+                    <View className="pt-7">
+                        <MonoLabel className="pb-3" numberOfLines={1}>
+                            {t(period === "year" ? "insights.chart.byMonth" : "insights.chart.byDay")}
+                        </MonoLabel>
+                        {chart}
+                    </View>
+                </View>
+
+                {lockedBucket ? list : null}
+
+                <NetWorthLine
                     currency={currency}
-                    debts={debts}
-                    onOpenDebts={() => router.push("/accounts")}
+                    onOpen={() => router.push("/accounts")}
                     series={netWorth}
                     showCents={showCents}
                 />
-
-                <View className="px-5 pt-6">
-                    <SpendingCalendar
-                        currency={currency}
-                        entries={spendingCalendar}
-                        firstWeekday={firstWeekday}
-                        now={new Date(nowMs)}
-                        showCents={showCents}
-                    />
-                </View>
             </ScrollView>
         </>
     );
@@ -614,7 +604,7 @@ interface BreakdownSectionProps {
     filterId: string | null;
     lockedBucket: InsightsBucket | null;
     measure: InsightsMeasure;
-    onFilter: Dispatch<SetStateAction<string | null>>;
+    onFilter: (id: string | null) => void;
     period: InsightsPeriod;
     priorLabel: string;
     showCents: boolean;
@@ -637,9 +627,8 @@ function BreakdownSection({
     if (entries.length === 0) {
         return null;
     }
-    const heading = lockedBucket
-        ? `${t("insights.categories")} · ${bucketDateLabel(period, lockedBucket.start)}`
-        : t("insights.categories");
+    const title = t(measure === "income" ? "insights.whereItCameFrom" : "insights.whereItWent");
+    const heading = lockedBucket ? `${title} · ${bucketDateLabel(period, lockedBucket.start)}` : title;
     const compared = entries.some((entry) => entry.delta != null);
 
     return (
@@ -650,30 +639,15 @@ function BreakdownSection({
                     <MonoLabel numberOfLines={1}>{t("insights.movers.versus", { label: priorLabel })}</MonoLabel>
                 ) : null}
             </View>
-            <View className="pb-1">
-                <CategoryProportionBar entries={entries} onSelect={onFilter} selectedId={filterId} />
-            </View>
-            <View className="pt-1.5">
-                {entries.map((entry) => (
-                    <View key={entry.id}>
-                        <CategoryBreakdownRow
-                            code={code}
-                            dimmed={filterId != null && filterId !== entry.id}
-                            entry={entry}
-                            measure={measure}
-                            onClear={() => onFilter(null)}
-                            onPress={() => onFilter((current) => (current === entry.id ? null : entry.id))}
-                            selected={filterId === entry.id}
-                            showCents={showCents}
-                        />
-                        <SubBreakdown
-                            code={code}
-                            entries={filterId === entry.id ? subEntries : []}
-                            showCents={showCents}
-                        />
-                    </View>
-                ))}
-            </View>
+            <CategoryBlocks
+                code={code}
+                entries={entries}
+                measure={measure}
+                onSelect={onFilter}
+                selectedId={filterId}
+                showCents={showCents}
+            />
+            <SubBreakdown code={code} entries={subEntries} showCents={showCents} />
         </View>
     );
 }
@@ -691,7 +665,7 @@ function SubBreakdown({
         return null;
     }
     return (
-        <View className="gap-2 pt-2 pb-3 pl-4">
+        <View className="gap-2 pt-3">
             {entries.map((child) => (
                 <ChildRow code={code} entry={child} key={child.id} showCents={showCents} />
             ))}
