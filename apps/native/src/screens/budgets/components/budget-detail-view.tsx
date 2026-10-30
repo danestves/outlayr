@@ -22,6 +22,7 @@ import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useNow } from "@/data/use-now";
 import { useValuation } from "@/data/use-valuation";
 import type { Burndown } from "@/domain/budget-burndown";
+import { leftPerDay } from "@/domain/budget-math";
 import { monthAbbrev } from "@/domain/dates";
 import { groupByDay } from "@/domain/day-sections";
 import { formatAmount } from "@/domain/money";
@@ -186,6 +187,8 @@ function BudgetSummary({
         ? new Date(window.start.getFullYear(), window.start.getMonth(), window.start.getDate() + scrubbed.day - 1)
         : null;
     const scrubLabel = scrubDate ? `${scrubDate.getDate()} ${monthAbbrev(scrubDate, language)}` : null;
+    const perDay =
+        leftPerDayAmount != null && scrubDate ? Math.max(0, leftPerDay(balance, window, scrubDate)) : leftPerDayAmount;
     const measures: MeasureStripCell[] = [
         { figure: formatAmount(amount, currency, false, language), key: "limit", label: t("budgets.measure.limit") },
         {
@@ -194,9 +197,9 @@ function BudgetSummary({
             label: t("budgets.measure.spent"),
         },
     ];
-    if (leftPerDayAmount != null) {
+    if (perDay != null) {
         measures.push({
-            figure: formatAmount(leftPerDayAmount, currency, leftPerDayAmount < 10, language),
+            figure: formatAmount(perDay, currency, perDay < 10, language),
             key: "perDay",
             label: t("budgets.measure.perDay"),
         });
