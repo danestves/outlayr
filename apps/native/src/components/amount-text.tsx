@@ -147,6 +147,7 @@ interface HeroNumberProps {
     /** Android sets the figure in Instrument Serif (`HERO_TYPE`); iOS is unchanged. */
     brandFace?: boolean;
     code: string;
+    fitWidth?: number;
     showCents?: boolean;
     sign?: "+" | "-" | "";
     size?: number;
@@ -159,6 +160,7 @@ export function HeroNumber({
     amount,
     brandFace = false,
     code,
+    fitWidth,
     sign,
     toneClass = "text-foreground",
     size = 40,
@@ -173,7 +175,7 @@ export function HeroNumber({
     const resolvedSign = sign ?? (amount < 0 ? "-" : "+");
     const hero = brandFace ? HERO_TYPE : PLAIN_HERO;
     const scaled = size * hero.scale;
-    const fitted = fittedHeroSize(scaled, amount, parts.minorUnits, windowWidth - HERO_GUTTER, fontScale);
+    const fitted = fittedHeroSize(scaled, amount, parts.minorUnits, fitWidth ?? windowWidth - HERO_GUTTER, fontScale);
     const small = (Math.round(scaled * 0.5) * fitted) / scaled;
     const whole = Math.trunc(roundMoney(Math.abs(amount), parts.minorUnits));
     return (

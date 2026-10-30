@@ -18,12 +18,11 @@ const settingsFeatureLab = {
             pt: "Orçamentos em linhas",
         }),
         "settings.featureLab.budgetRowsNote": t({
-            en: "Off lays the budgets out as a two-up grid of cards instead of a list.",
-            es: "Si lo desactivas, los presupuestos se muestran en una cuadrícula de tarjetas de dos en dos en vez de una lista.",
-            fr: "Désactivé, les budgets s'affichent en grille de tuiles sur deux colonnes au lieu d'une liste.",
-            pt: "Se desativado, os orçamentos aparecem em uma grade de cartões, dois por linha, em vez de uma lista.",
-            "pt-PT":
-                "Se desativado, os orçamentos aparecem numa grelha de cartões, dois por linha, em vez de uma lista.",
+            en: "Off lays the budgets out as a two-up grid instead of a list.",
+            es: "Si lo desactivas, los presupuestos se muestran en una cuadrícula de dos en dos en vez de una lista.",
+            fr: "Désactivé, les budgets s'affichent en grille sur deux colonnes au lieu d'une liste.",
+            pt: "Se desativado, os orçamentos aparecem em uma grade, dois por linha, em vez de uma lista.",
+            "pt-PT": "Se desativado, os orçamentos aparecem numa grelha, dois por linha, em vez de uma lista.",
         }),
         "settings.featureLab.budgetsSection": t({
             en: "Budgets",

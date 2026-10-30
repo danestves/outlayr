@@ -223,6 +223,12 @@ const budgets = {
             fr: "{count} dépenses",
             pt: "{count} despesas",
         }),
+        "budgets.grid.new": t({
+            en: "New budget",
+            es: "Nuevo presupuesto",
+            fr: "Nouveau budget",
+            pt: "Novo orçamento",
+        }),
         "budgets.hero.a11yLeft": t({
             en: "{name}, {amount} left {period}",
             es: "{name}, {amount} disponible {period}",
@@ -327,6 +333,12 @@ const budgets = {
             es: "Presupuesto",
             fr: "Budget",
             pt: "Orçamento",
+        }),
+        "budgets.ofLimit": t({
+            en: "of {limit}",
+            es: "de {limit}",
+            fr: "sur {limit}",
+            pt: "de {limit}",
         }),
         "budgets.perDay": t({
             en: "{amount}/day",
