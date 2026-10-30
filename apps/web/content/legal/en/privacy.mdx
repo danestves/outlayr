@@ -1,6 +1,6 @@
 ---
 title: "Privacy Policy"
-description: "What Outlayr stores on your device, what reaches our servers, AI providers, and analytics, how long it is kept, and how to delete it. Effective 26 October 2026."
+description: "What Outlayr stores on your device, what reaches our servers, AI providers, and analytics, how long it is kept, and how to delete it. Effective 30 October 2026."
 intro: "This policy explains what Outlayr collects, where it goes, how long it stays, and what you can do about it."
 ---
 
@@ -10,7 +10,7 @@ intro: "This policy explains what Outlayr collects, where it goes, how long it s
 - An account (Sign in with Apple, Google, or an email and password) turns on merchant suggestions, voice entry, receipt scans, and installment plan imports. With Outlayr Pro it also turns on sync, which keeps a copy of your ledger and photos on our servers until you delete your account.
 - Voice entries, receipt scans, installment plan imports, and merchant suggestions are processed by Anthropic, and ElevenLabs turns voice recordings into text. We don’t store your recordings, scanned photos, or screenshots, and we never send either company your name, email, or account ID.
 - Nothing goes to Anthropic or ElevenLabs until you allow it. The app asks during setup, or after you sign in, and Speak an entry and Scan a receipt ask again until you do. Import from a screenshot, for installment plans, asks the first time you use it, even if you allowed the others. Withdraw it any time in **Settings › Send data to AI providers**. Once allowed, merchant suggestions and web lookups are on, and both can be turned off in **Settings › Smart fill**. Turning Smart fill on also allows sending data to AI providers.
-- The app sends usage analytics and crash reports to PostHog: which screens you open, when you save something, and errors. Never amounts, merchants, notes, or names. It starts off if your device’s region is in the EEA or UK, and on everywhere else. Change it in **Settings › Share analytics**.
+- The app sends usage analytics and crash reports to PostHog: which screens you open, when you save something, and errors. Never amounts, merchants, notes, or names. It starts off if your device’s region is in the EEA or UK, and on everywhere else. Change it in **Settings › Share analytics**. Our server also tells PostHog the size, cost, and speed of each request to Anthropic, never what it contained, and links it to your account only while Share analytics is on.
 - This website uses PostHog too, with a cookie. If you’re in the EEA or UK, it asks first. Change your answer in the footer under **Cookies**.
 - You can connect an AI assistant such as Claude to your account. Once you approve it, it can read what your devices synced, and with Outlayr Pro add entries. What it reads is handled under that assistant’s privacy policy.
 - No ads and no tracking across other companies’ apps. We don’t sell or share your personal information.
@@ -44,6 +44,7 @@ Every kind of data Outlayr handles, in one place. The sections below explain eac
 | Purchase records, user ID, name, email | App opens, Pro | RevenueCat, Apple or Google, our servers | Until account deletion |
 | Install ID, app version, errors | Update checks | Expo | Expo’s policy |
 | Screens, saves, errors, install ID, device model | App use | PostHog | Until account deletion, or PostHog’s policy if you never sign in |
+| Feature, model, tokens, cost, speed, and errors of each AI request | Suggestions, voice, scans, imports | PostHog | With Share analytics on, until account deletion. Otherwise PostHog’s policy |
 | Pages, clicks, scrolling, errors, page speed, visit recordings | Website visits | PostHog | PostHog’s policy |
 | Entries, balances, budgets, upcoming charges | AI assistant you approve | The assistant’s company | Their policies |
 | Assistant name and address, your approval, access keys | AI assistant you approve | Our servers | Until account deletion |
@@ -150,6 +151,10 @@ Anthropic is the US company that makes the Claude AI models. ElevenLabs makes th
 
 If a request to Anthropic fails, our server’s error log can include the merchant name involved, so we can find the problem.
 
+### Records of AI requests
+
+After each request to Anthropic, our server sends PostHog a record of it: the feature, the model, how many tokens it used and what it cost, how long it took, whether it failed, and the names of the model’s tools it used, such as web search. Voice entry records also carry an ID for the conversation, so its turns stay together. A record never includes what you said, the photo or screenshot, or any text sent to or received from Anthropic. If **Settings › Share analytics** is on for the device making the request, the record carries your account ID, so we can see what AI features cost for each account. If it’s off, the record carries a random ID that isn’t linked to you.
+
 ## Apple Pay and Shortcuts
 
 On iPhone, Outlayr can log card purchases for you through Apple’s Shortcuts app. You install our shortcut from an iCloud link in **Settings › Apple Pay** and turn on the automation yourself.
@@ -208,13 +213,13 @@ These companies help run Outlayr. Each receives only what its job needs.
 - **[Google](https://policies.google.com/privacy)** provides Sign in with Google and Google Play payments, under its own policy, and is a fallback source for logos, for which it receives a web address and your IP address.
 - **Logo.dev** provides merchant and bank logos. It receives a web address and your IP address.
 - **[Expo](https://expo.dev/privacy)** delivers app updates. It receives a random install ID, the app version, your IP address, and update error messages.
-- **[PostHog](https://posthog.com/privacy)** provides usage analytics and crash reports, from servers in the United States. It receives the events described in [What the app sends even without an account](#what-the-app-sends-even-without-an-account), a random install ID, and your account ID once you sign in. It also receives this website’s analytics, described in [This website](#this-website).
+- **[PostHog](https://posthog.com/privacy)** provides usage analytics and crash reports, from servers in the United States. It receives the events described in [What the app sends even without an account](#what-the-app-sends-even-without-an-account), a random install ID, and your account ID once you sign in, plus the [records of AI requests](#records-of-ai-requests) our server sends. It also receives this website’s analytics, described in [This website](#this-website).
 
 Open Exchange Rates, CotizaVE, and Binance publish the exchange rates our server reads. They receive nothing about you.
 
 ## No ads or tracking
 
-Outlayr contains no advertising software. Its only analytics are the PostHog events described [above](#what-the-app-sends-even-without-an-account), which we use to fix crashes and learn which features to improve. Outlayr doesn’t use your device’s advertising identifier and doesn’t track you across other companies’ apps or websites.
+Outlayr contains no advertising software. Its only analytics are the PostHog events described [above](#what-the-app-sends-even-without-an-account) and the [records of AI requests](#records-of-ai-requests), which we use to fix crashes, learn which features to improve, and keep AI costs in check. Outlayr doesn’t use your device’s advertising identifier and doesn’t track you across other companies’ apps or websites.
 
 We don’t sell your personal information, share it for targeted advertising, or use it to build a profile of you. We don’t use your data to train AI models.
 
@@ -239,8 +244,8 @@ If you’re in the European Economic Area or the United Kingdom, we rely on thes
 | Your account, sync, photo storage, voice entry, receipt scans, installment plan imports, CSV import, Pro, and AI assistant connections | Contract: we need this data to provide what you ask for. |
 | Sending voice entries, receipt photos, installment plan screenshots, CSV descriptions, and merchant names to Anthropic and ElevenLabs | Your consent, given with Allow when the app asks and withdrawn in **Settings › Send data to AI providers**. |
 | Merchant suggestions, web lookups, the shared merchant list, and logos | Legitimate interests: making entries faster to file. Suggestions and web lookups reach Anthropic only once you allow it, and turning off Smart fill is how you object. |
-| Sessions, usage limits, error logs, and update checks | Legitimate interests: keeping Outlayr secure, working, and free of abuse. |
-| Usage analytics and crash reports | Your consent. Share analytics starts off when your device’s region is in the EEA or UK. Turning it on gives consent, and turning it off withdraws it. |
+| Sessions, usage limits, error logs, update checks, and records of AI requests not linked to you | Legitimate interests: keeping Outlayr secure, working, and free of abuse. |
+| Usage analytics, crash reports, and records of AI requests linked to your account | Your consent. Share analytics starts off when your device’s region is in the EEA or UK. Turning it on gives consent, and turning it off withdraws it. |
 | Website analytics | Your consent for the cookie and visit recordings, asked on your first visit. Declining withdraws it. A declined visit is still counted without a cookie, under our legitimate interest in knowing how many people visit. |
 | Camera, microphone, photos, biometric lock, notifications, and notification access | Your permission, given when your device asks and withdrawn in its settings. |
 | Answering lawful requests and keeping records the law requires | Legal obligation. |
@@ -258,7 +263,7 @@ The [table above](#data-at-a-glance) lists how long each kind of data is kept. A
 - Merchant suggestion requests aren’t kept once answered. Ones queued in the background wait on our server until your device collects the answer.
 - Usage counters that enforce limits on scans, voice entries, and suggestions hold counts only, keyed to your account ID, and are deleted with your account.
 - Items in the shared merchant list aren’t linked to anyone. They’re refreshed after 30 or 90 days.
-- Analytics events linked to your account are deleted with it. Events from an install that never signed in carry only a random install ID and are kept under PostHog’s retention policy.
+- Analytics events linked to your account are deleted with it. Events from an install that never signed in carry only a random install ID and are kept under PostHog’s retention policy. Records of AI requests sent while Share analytics was off carry only a random ID and are kept the same way.
 - Website events carry a random browser ID, or a code that changes daily if you declined cookies, and are kept under PostHog’s retention policy.
 - Our providers, including Anthropic, ElevenLabs, Apple, Google, and Expo, keep the data they receive under their own retention policies.
 

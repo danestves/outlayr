@@ -1,6 +1,6 @@
 ---
 title: "Política de privacidad"
-description: "Qué guarda Outlayr en tu celular, qué llega a nuestros servidores, a la IA y a las analíticas, y cómo borrarlo. Vigente desde el 26 de octubre de 2026."
+description: "Qué guarda Outlayr en tu celular, qué llega a nuestros servidores, a la IA y a las analíticas, y cómo borrarlo. Vigente desde el 30 de octubre de 2026."
 intro: "Esta política explica qué recopila Outlayr, adónde va, cuánto tiempo se conserva y qué puedes hacer al respecto. Esta traducción se ofrece para tu comodidad. Si hay alguna diferencia con la versión en inglés, prevalece la versión en inglés."
 ---
 
@@ -10,7 +10,7 @@ intro: "Esta política explica qué recopila Outlayr, adónde va, cuánto tiempo
 - Una cuenta (Iniciar sesión con Apple, Acceder con Google, o un correo y una contraseña) activa las sugerencias de comercios, la entrada por voz, el escaneo de recibos y la importación de planes de cuotas. Con Outlayr Pro también activa la sincronización, que guarda una copia de tu registro y tus fotos en nuestros servidores hasta que elimines tu cuenta.
 - Las entradas por voz, los escaneos de recibos, las importaciones de planes de cuotas y las sugerencias de comercios los procesa Anthropic, y ElevenLabs convierte las grabaciones de voz en texto. No guardamos tus grabaciones, las fotos escaneadas ni las capturas, y nunca le enviamos a ninguna de las dos empresas tu nombre, tu correo electrónico ni tu ID de cuenta.
 - Nada va a Anthropic ni a ElevenLabs hasta que lo permitas. La app lo pregunta durante la configuración inicial, o después de que inicias sesión, y Dictar un registro y Escanear un recibo vuelven a preguntar hasta que lo permitas. Importar desde una captura, para planes de cuotas, pregunta la primera vez que lo usas, aunque ya hayas permitido lo demás. Retira tu permiso cuando quieras en **Configuración › Enviar datos a proveedores de IA**. Una vez permitido, las sugerencias de comercios y las búsquedas web quedan activadas, y ambas se pueden desactivar en **Configuración › Autocompletado**. Activar Autocompletado también permite enviar datos a proveedores de IA.
-- La app envía analíticas de uso y reportes de fallas a PostHog: qué pantallas abres, cuándo guardas algo y los errores. Nunca montos, comercios, notas ni nombres. Empieza desactivado si la región de tu dispositivo está en el EEE o el Reino Unido, y activado en el resto del mundo. Cámbialo en **Configuración › Compartir analíticas**.
+- La app envía analíticas de uso y reportes de fallas a PostHog: qué pantallas abres, cuándo guardas algo y los errores. Nunca montos, comercios, notas ni nombres. Empieza desactivado si la región de tu dispositivo está en el EEE o el Reino Unido, y activado en el resto del mundo. Cámbialo en **Configuración › Compartir analíticas**. Nuestro servidor también le informa a PostHog el tamaño, el costo y la velocidad de cada solicitud a Anthropic, nunca su contenido, y solo la vincula a tu cuenta mientras Compartir analíticas está activado.
 - Este sitio web también usa PostHog, con una cookie. Si estás en el EEE o el Reino Unido, te pregunta primero. Cambia tu respuesta en el pie de página, en **Cookies**.
 - Puedes conectar a tu cuenta un asistente de IA como Claude. Una vez que lo apruebas, puede leer lo que tus dispositivos sincronizaron y, con Outlayr Pro, agregar entradas. Lo que lee se rige por la política de privacidad de ese asistente.
 - Sin anuncios y sin rastreo en apps de otras empresas. No vendemos ni compartimos tu información personal.
@@ -44,6 +44,7 @@ Todos los tipos de datos que maneja Outlayr, en un solo lugar. Las secciones sig
 | Registros de compra, ID de usuario, nombre, correo electrónico | Al abrir la app, Pro | RevenueCat, Apple o Google, nuestros servidores | Hasta la eliminación de la cuenta |
 | ID de instalación, versión de la app, errores | Búsqueda de actualizaciones | Expo | Según la política de Expo |
 | Pantallas, guardados, errores, ID de instalación, modelo del dispositivo | Uso de la app | PostHog | Hasta la eliminación de la cuenta, o según la política de PostHog si nunca inicias sesión |
+| Función, modelo, tokens, costo, velocidad y errores de cada solicitud de IA | Sugerencias, voz, escaneos, importaciones | PostHog | Con Compartir analíticas activado, hasta la eliminación de la cuenta. Si no, según la política de PostHog |
 | Páginas, clics, desplazamiento, errores, velocidad de carga, grabaciones de visitas | Visitas al sitio web | PostHog | Según la política de PostHog |
 | Entradas, saldos, presupuestos, próximos cobros | Asistente de IA que apruebas | La empresa del asistente | Según sus políticas |
 | Nombre y dirección del asistente, tu aprobación, claves de acceso | Asistente de IA que apruebas | Nuestros servidores | Hasta la eliminación de la cuenta |
@@ -150,6 +151,10 @@ Anthropic es la empresa estadounidense que crea los modelos de IA Claude. Eleven
 
 Si una solicitud a Anthropic falla, el registro de errores de nuestro servidor puede incluir el nombre del comercio involucrado, para que podamos encontrar el problema.
 
+### Registros de solicitudes de IA
+
+Después de cada solicitud a Anthropic, nuestro servidor le envía a PostHog un registro de ella: la función, el modelo, cuántos tokens usó y cuánto costó, cuánto tardó, si falló y los nombres de las herramientas del modelo que usó, como la búsqueda web. Los registros de la entrada por voz también llevan un ID de la conversación, para que sus turnos queden juntos. Un registro nunca incluye lo que dijiste, la foto o la captura, ni ningún texto enviado a Anthropic o recibido de ella. Si **Configuración › Compartir analíticas** está activado en el dispositivo que hace la solicitud, el registro lleva tu ID de cuenta, para que podamos ver cuánto cuestan las funciones de IA en cada cuenta. Si está desactivado, el registro lleva un ID aleatorio que no está vinculado a ti.
+
 ## Apple Pay y Atajos
 
 En iPhone, Outlayr puede registrar tus compras con tarjeta a través de la app Atajos de Apple. Instalas nuestro atajo desde un enlace de iCloud en **Configuración › Apple Pay** y tú mismo activas la automatización.
@@ -208,13 +213,13 @@ Estas empresas nos ayudan a operar Outlayr. Cada una recibe solo lo que su funci
 - **[Google](https://policies.google.com/privacy)** proporciona Acceder con Google y los pagos de Google Play, según su propia política, y es una fuente alternativa de logos, para lo cual recibe una dirección web y tu dirección IP.
 - **Logo.dev** proporciona logos de comercios y bancos. Recibe una dirección web y tu dirección IP.
 - **[Expo](https://expo.dev/privacy)** distribuye las actualizaciones de la app. Recibe un ID de instalación aleatorio, la versión de la app, tu dirección IP y los mensajes de error de las actualizaciones.
-- **[PostHog](https://posthog.com/privacy)** proporciona las analíticas de uso y los reportes de fallas, desde servidores en Estados Unidos. Recibe los eventos descritos en [Lo que la app envía incluso sin cuenta](#lo-que-la-app-envía-incluso-sin-cuenta), un ID de instalación aleatorio y tu ID de cuenta cuando inicias sesión. También recibe las analíticas de este sitio web, descritas en [Este sitio web](#este-sitio-web).
+- **[PostHog](https://posthog.com/privacy)** proporciona las analíticas de uso y los reportes de fallas, desde servidores en Estados Unidos. Recibe los eventos descritos en [Lo que la app envía incluso sin cuenta](#lo-que-la-app-envía-incluso-sin-cuenta), un ID de instalación aleatorio y tu ID de cuenta cuando inicias sesión, además de los [registros de solicitudes de IA](#registros-de-solicitudes-de-ia) que envía nuestro servidor. También recibe las analíticas de este sitio web, descritas en [Este sitio web](#este-sitio-web).
 
 Open Exchange Rates, CotizaVE y Binance publican las tasas de cambio que lee nuestro servidor. No reciben nada sobre ti.
 
 ## Sin anuncios ni rastreo
 
-Outlayr no contiene software de publicidad. Sus únicas analíticas son los eventos de PostHog descritos [arriba](#lo-que-la-app-envía-incluso-sin-cuenta), que usamos para corregir fallas y saber qué funciones mejorar. Outlayr no usa el identificador de publicidad de tu dispositivo y no te rastrea en apps ni sitios web de otras empresas.
+Outlayr no contiene software de publicidad. Sus únicas analíticas son los eventos de PostHog descritos [arriba](#lo-que-la-app-envía-incluso-sin-cuenta) y los [registros de solicitudes de IA](#registros-de-solicitudes-de-ia), que usamos para corregir fallas, saber qué funciones mejorar y controlar lo que cuesta la IA. Outlayr no usa el identificador de publicidad de tu dispositivo y no te rastrea en apps ni sitios web de otras empresas.
 
 No vendemos tu información personal, no la compartimos para publicidad dirigida ni la usamos para crear un perfil tuyo. No usamos tus datos para entrenar modelos de IA.
 
@@ -239,8 +244,8 @@ Si estás en el Espacio Económico Europeo o en el Reino Unido, estas son las ba
 | Tu cuenta, la sincronización, el almacenamiento de fotos, la entrada por voz, el escaneo de recibos, la importación de planes de cuotas, la importación de CSV, Pro y las conexiones con asistentes de IA | Contrato: necesitamos estos datos para darte lo que pides. |
 | El envío a Anthropic y ElevenLabs de entradas por voz, fotos de recibos, capturas de planes de cuotas, descripciones de CSV y nombres de comercios | Tu consentimiento, dado con Permitir cuando la app lo pregunta y retirado en **Configuración › Enviar datos a proveedores de IA**. |
 | Las sugerencias de comercios, las búsquedas web, la lista compartida de comercios y los logos | Intereses legítimos: agilizar el registro de entradas. Las sugerencias y las búsquedas web solo llegan a Anthropic una vez que lo permites, y desactivar Autocompletado es la forma de oponerte. |
-| Las sesiones, los límites de uso, los registros de errores y las búsquedas de actualizaciones | Intereses legítimos: mantener Outlayr seguro, en funcionamiento y libre de abusos. |
-| Las analíticas de uso y los reportes de fallas | Tu consentimiento. Compartir analíticas empieza desactivado cuando la región de tu dispositivo está en el EEE o el Reino Unido. Activarlo es dar tu consentimiento, y desactivarlo es retirarlo. |
+| Las sesiones, los límites de uso, los registros de errores, las búsquedas de actualizaciones y los registros de solicitudes de IA no vinculados a ti | Intereses legítimos: mantener Outlayr seguro, en funcionamiento y libre de abusos. |
+| Las analíticas de uso, los reportes de fallas y los registros de solicitudes de IA vinculados a tu cuenta | Tu consentimiento. Compartir analíticas empieza desactivado cuando la región de tu dispositivo está en el EEE o el Reino Unido. Activarlo es dar tu consentimiento, y desactivarlo es retirarlo. |
 | Las analíticas del sitio web | Tu consentimiento para la cookie y las grabaciones de visitas, que pedimos en tu primera visita. Rechazarla es retirarlo. Una visita rechazada se cuenta igual sin cookie, por nuestro interés legítimo en saber cuántas personas nos visitan. |
 | La cámara, el micrófono, las fotos, el bloqueo biométrico, las notificaciones y el acceso a notificaciones | Tu consentimiento, que das cuando tu dispositivo te pide permiso y retiras en su configuración. |
 | Atender requerimientos legales y conservar los registros que exige la ley | Obligación legal. |
@@ -258,7 +263,7 @@ La [tabla de arriba](#datos-de-un-vistazo) indica cuánto tiempo se conserva cad
 - Las solicitudes de sugerencias de comercios no se conservan una vez respondidas. Las que quedan en cola en segundo plano esperan en nuestro servidor hasta que tu dispositivo recoja la respuesta.
 - Los contadores de uso que aplican los límites de escaneos, entradas por voz y sugerencias guardan solo cantidades, asociadas a tu ID de cuenta, y se eliminan con tu cuenta.
 - Los elementos de la lista compartida de comercios no están vinculados a nadie. Se actualizan después de 30 o 90 días.
-- Los eventos de analíticas vinculados a tu cuenta se eliminan con ella. Los eventos de una instalación que nunca inició sesión llevan solo un ID de instalación aleatorio y se conservan según la política de conservación de PostHog.
+- Los eventos de analíticas vinculados a tu cuenta se eliminan con ella. Los eventos de una instalación que nunca inició sesión llevan solo un ID de instalación aleatorio y se conservan según la política de conservación de PostHog. Los registros de solicitudes de IA enviados con Compartir analíticas desactivado llevan solo un ID aleatorio y se conservan de la misma forma.
 - Los eventos del sitio web llevan un ID aleatorio del navegador, o un código que cambia cada día si rechazaste las cookies, y se conservan según la política de conservación de PostHog.
 - Nuestros proveedores, incluidos Anthropic, ElevenLabs, Apple, Google y Expo, conservan los datos que reciben según sus propias políticas de conservación.
 

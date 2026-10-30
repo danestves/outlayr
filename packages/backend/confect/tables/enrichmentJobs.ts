@@ -14,6 +14,7 @@ export default Table.make(() =>
         name: Schema.String,
         regionCode: Schema.optional(Schema.String),
         result: Schema.optional(EnrichmentResult),
+        shareAnalytics: Schema.optional(Schema.Boolean),
         status: Schema.Literals(["queued", "done", "failed"]),
         userId: Schema.String,
     })

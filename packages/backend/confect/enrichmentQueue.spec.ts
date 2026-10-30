@@ -21,6 +21,7 @@ export default GroupSpec.make()
                     "locale",
                     "name",
                     "regionCode",
+                    "shareAnalytics",
                 ]),
             }),
             name: "enqueue",

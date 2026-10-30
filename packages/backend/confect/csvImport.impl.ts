@@ -94,7 +94,9 @@ const csvImport = FunctionImpl.make(
 
         const modelId = yield* claudeFastModelId;
         const classified = yield* classify(
-            traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "csv_import"),
+            traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "csv_import", {
+                distinctId: args.shareAnalytics === true ? identity.subject : undefined,
+            }),
             {
                 categoryTree: args.categoryTree,
                 labels: remaining,

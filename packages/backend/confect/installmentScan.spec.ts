@@ -10,6 +10,7 @@ export const installmentScanArgs = {
     image: Schema.instanceOf(ArrayBuffer),
     language: Schema.optional(Schema.String),
     regionCode: Schema.optional(Schema.String),
+    shareAnalytics: Schema.optional(Schema.Boolean),
     today: Schema.String,
 };
 

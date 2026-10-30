@@ -63,6 +63,7 @@ const enqueue = FunctionImpl.make(
                 locale: args.locale,
                 name,
                 regionCode: sanitizeRegionCode(args.regionCode),
+                shareAnalytics: args.shareAnalytics,
                 status: "queued",
                 userId,
             });

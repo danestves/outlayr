@@ -77,6 +77,7 @@ export const resolveJob = Effect.fn("EnrichmentQueue.resolveJob")(function* reso
     deps: ResolveDeps = {}
 ) {
     const key = knowledgeKey(row.name, row.currency);
+    const distinctId = row.shareAnalytics === true ? row.userId : undefined;
     const now = yield* Clock.currentTimeMillis;
     const cached = yield* Effect.promise(() =>
         ctx.runQuery(internal.merchantKnowledge.lookup, {
@@ -95,6 +96,7 @@ export const resolveJob = Effect.fn("EnrichmentQueue.resolveJob")(function* reso
             {
                 categoryTree: row.categoryTree,
                 currency: row.currency,
+                distinctId,
                 income: row.income,
                 key,
                 locale: row.locale,
@@ -119,7 +121,9 @@ export const resolveJob = Effect.fn("EnrichmentQueue.resolveJob")(function* reso
         if (Option.isNone(apiKey)) {
             return null;
         }
-        model = traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(fastModelId), "background_suggest");
+        model = traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(fastModelId), "background_suggest", {
+            distinctId,
+        });
     }
     const { grounding: _grounding, ...fast } = yield* runSuggest(model, {
         categoryTree: row.categoryTree,

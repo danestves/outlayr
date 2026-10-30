@@ -6,6 +6,7 @@ export default GroupSpec.make().addFunction(
         name: "run",
         args: () => ({
             currency: Schema.optional(Schema.String),
+            distinctId: Schema.optional(Schema.String),
             income: Schema.Boolean,
             key: Schema.String,
             locale: Schema.optional(Schema.String),

@@ -58,7 +58,9 @@ const scan = FunctionImpl.make(
 
         const modelId = yield* claudeModelId;
         return yield* readInstallmentPlan(
-            traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "installment_scan"),
+            traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "installment_scan", {
+                distinctId: args.shareAnalytics === true ? identity.subject : undefined,
+            }),
             args.image,
             {
                 accounts: args.accounts,

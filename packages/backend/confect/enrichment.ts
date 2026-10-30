@@ -289,6 +289,7 @@ export const GROUNDED_LOOKUP_META_KEY = "groundedLookup";
 
 export interface GroundedScheduleArgs {
     currency?: string;
+    distinctId?: string;
     groundedLookup: boolean;
     income: boolean;
     locale?: string;
@@ -339,6 +340,7 @@ export const maybeScheduleGrounded = Effect.fn("Enrichment.maybeScheduleGrounded
     yield* Effect.promise(() =>
         ctx.scheduler.runAfter(0, internal.groundedLookup.run, {
             currency: args.currency,
+            distinctId: args.distinctId,
             income: args.income,
             key,
             locale: args.locale,
