@@ -8,7 +8,7 @@ import { ScreenHeader } from "@/components/screen-header";
 import { Text } from "@/components/text";
 import { useSettingNumber } from "@/contexts/display-settings-context";
 import { useGlobalCurrency } from "@/data/app-meta";
-import { useCategoryBudget } from "@/data/budgets";
+import { useBurndown, useCategoryBudget } from "@/data/budgets";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useNow } from "@/data/use-now";
 import type { Database } from "@/db/client";
@@ -47,6 +47,7 @@ export function BudgetDetail({ db, id, onDone }: { db: Database; id: string; onD
     const nowMs = useNow();
     const [periodOffset, setPeriodOffset] = useState(0);
     const { budget, transactions, periodsBack, contributions } = useCategoryBudget(db, id, nowMs, periodOffset);
+    const burndown = useBurndown(contributions, nowMs, budget, budget?.categoryId ?? null);
     const { requestDelete } = useDeferredDelete("budget");
     const limitSheetRef = useRef<BottomSheetModal>(null);
     const firstDayOfMonth = useSettingNumber("firstDayOfMonth");
@@ -72,12 +73,13 @@ export function BudgetDetail({ db, id, onDone }: { db: Database; id: string; onD
         commitLimitWrite({ db, id: budget.id, patch: { ...(limitChanged && { amount: limit }), type } });
     };
 
-    const { closed, behind, perDay, paceRemaining } = budgetDetailPace(budget, new Date(nowMs), periodOffset);
+    const { closed, perDay } = budgetDetailPace(budget, new Date(nowMs), periodOffset);
 
     return (
         <>
             <BudgetDetailView
                 amount={budget.amount}
+                burndown={burndown}
                 closed={closed}
                 currency={currency}
                 editor={
@@ -108,8 +110,6 @@ export function BudgetDetail({ db, id, onDone }: { db: Database; id: string; onD
                 leftPerDayAmount={perDay}
                 onPressTransaction={(txId) => router.push(`/transactions/${txId}`)}
                 overBudget={budget.overBudget}
-                paceBehind={behind}
-                paceRemaining={paceRemaining}
                 period={closed ? budgetWindowLabel(budget.window, budget.type) : t(budgetPeriodPhrase(budget.type))}
                 spent={budget.spent}
                 stepper={
@@ -123,8 +123,8 @@ export function BudgetDetail({ db, id, onDone }: { db: Database; id: string; onD
                         />
                     ) : null
                 }
-                tint={budget.color}
                 transactions={transactions}
+                window={budget.window}
             />
 
             <BudgetLimitSheet

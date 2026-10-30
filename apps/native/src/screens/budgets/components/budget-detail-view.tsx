@@ -1,4 +1,6 @@
 import { SectionList } from "@legendapp/list/section-list";
+import type { BudgetWindow } from "@outlayr/money/budget-window";
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { View } from "react-native";
 import Svg, { Path } from "react-native-svg";
@@ -6,6 +8,8 @@ import Svg, { Path } from "react-native-svg";
 import { HeroNumber } from "@/components/amount-text";
 import { DaySectionHeader } from "@/components/day-section-header";
 import { EmptyState, useMark } from "@/components/empty-state";
+import { MeasureStrip } from "@/components/import-sheet/measure-strip";
+import type { MeasureStripCell } from "@/components/import-sheet/measure-strip";
 import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { TransactionRow } from "@/components/transaction-row";
@@ -17,6 +21,8 @@ import type { TransactionWithCategory } from "@/data/transactions";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useNow } from "@/data/use-now";
 import { useValuation } from "@/data/use-valuation";
+import type { Burndown } from "@/domain/budget-burndown";
+import { monthAbbrev } from "@/domain/dates";
 import { groupByDay } from "@/domain/day-sections";
 import { formatAmount } from "@/domain/money";
 import { coverageNote, coverageOf } from "@/domain/valuation-coverage";
@@ -25,11 +31,13 @@ import { useTransactionRowActions } from "@/lib/use-transaction-row-actions";
 import { MARK_CEILING } from "@/theme/empty-state-ink";
 import { useColors } from "@/theme/use-colors";
 
-import { BudgetProgressBar } from "./budget-progress-bar";
+import { BudgetBurndownChart } from "./budget-burndown-chart";
+import { HeroVerdict } from "./budget-burndown-hero";
 import { InlineEditorKeyboard } from "./inline-editor-keyboard";
 
 interface BudgetDetailViewProps {
     amount: number;
+    burndown: Burndown | null;
     closed?: boolean;
     currency: string;
     editor?: ReactNode;
@@ -37,34 +45,31 @@ interface BudgetDetailViewProps {
     leftPerDayAmount?: number | null;
     onPressTransaction: (id: string) => void;
     overBudget: boolean;
-    paceBehind?: boolean;
-    /** Fraction of the period remaining; null hides the pace marker. */
-    paceRemaining?: number | null;
     period: string;
     spent: number;
     stepper?: ReactNode;
-    tint?: string | null;
     transactions: TransactionWithCategory[];
+    window: BudgetWindow;
 }
 
-const RAIL_BLEED = 8;
+const CHART_BLEED = 8;
+const CHART_HEIGHT = 150;
 
 export function BudgetDetailView({
     period,
     spent,
     amount,
+    burndown,
     editor,
     leftover,
     overBudget,
     currency,
     transactions,
     onPressTransaction,
-    paceRemaining = null,
-    paceBehind = false,
     leftPerDayAmount = null,
     closed = false,
     stepper = null,
-    tint = null,
+    window,
 }: BudgetDetailViewProps) {
     const t = useTranslation();
     const db = useDatabase();
@@ -97,16 +102,15 @@ export function BudgetDetailView({
                         period={period}
                         spent={spent}
                         amount={amount}
+                        burndown={burndown}
                         leftover={leftover}
                         overBudget={overBudget}
                         currency={currency}
-                        paceRemaining={paceRemaining}
-                        paceBehind={paceBehind}
                         leftPerDayAmount={leftPerDayAmount}
                         closed={closed}
                         note={note}
                         stepper={stepper}
-                        tint={tint}
+                        window={window}
                     />
                 }
                 ListEmptyComponent={
@@ -137,99 +141,104 @@ function BudgetSummary({
     period,
     spent,
     amount,
+    burndown,
     editor,
     leftover,
     overBudget,
     currency,
-    paceRemaining,
-    paceBehind,
     leftPerDayAmount,
     closed,
     note,
     stepper,
-    tint,
+    window,
 }: {
     period: string;
     spent: number;
     amount: number;
+    burndown: Burndown | null;
     leftover: number;
     overBudget: boolean;
     currency: string;
-    paceRemaining: number | null;
-    paceBehind: boolean;
     leftPerDayAmount: number | null;
     closed: boolean;
     editor: ReactNode;
     note: string | null;
     stepper: ReactNode;
-    tint: string | null;
+    window: BudgetWindow;
 }) {
     const { showCents } = useDisplaySettings().state;
     const t = useTranslation();
     const { language } = useLanguage();
+    const [measured, setMeasured] = useState(0);
+    const [scrubDay, setScrubDay] = useState<number | null>(null);
+    const scrubbed = scrubDay == null ? null : (burndown?.points[scrubDay - 1] ?? null);
+    const balance = scrubbed ? scrubbed.balance : leftover;
+    const over = scrubbed ? balance < 0 : overBudget;
     const spentPct = amount > 0 ? Math.round((spent / amount) * 100) : 0;
-    const difference = Math.abs(leftover);
-    const figureTone = overBudget ? "text-over-budget" : "text-foreground";
     let label: string;
     if (closed) {
-        label = overBudget ? t("budgets.detail.overBudget") : t("budgets.detail.unspent");
+        label = over ? t("budgets.detail.overBudget") : t("budgets.detail.unspent");
     } else {
-        label = overBudget ? t("budgets.detail.overPeriod", { period }) : t("budgets.detail.leftPeriod", { period });
+        label = over ? t("budgets.detail.overPeriod", { period }) : t("budgets.detail.leftPeriod", { period });
+    }
+    const scrubDate = scrubbed
+        ? new Date(window.start.getFullYear(), window.start.getMonth(), window.start.getDate() + scrubbed.day - 1)
+        : null;
+    const scrubLabel = scrubDate ? `${scrubDate.getDate()} ${monthAbbrev(scrubDate, language)}` : null;
+    const measures: MeasureStripCell[] = [
+        { figure: formatAmount(amount, currency, false, language), key: "limit", label: t("budgets.measure.limit") },
+        { figure: formatAmount(spent, currency, false, language), key: "spent", label: t("budgets.measure.spent") },
+    ];
+    if (leftPerDayAmount != null) {
+        measures.push({
+            figure: formatAmount(leftPerDayAmount, currency, leftPerDayAmount < 10, language),
+            key: "perDay",
+            label: t("budgets.measure.perDay"),
+        });
     }
 
     return (
-        <View>
+        <View onLayout={(event) => setMeasured(event.nativeEvent.layout.width)}>
             <View className="flex-row items-baseline justify-between">
-                <MonoLabel>{period}</MonoLabel>
+                <MonoLabel>{scrubLabel ?? period}</MonoLabel>
                 <MonoLabel>{t("budgets.detail.percentSpent", { percent: spentPct })}</MonoLabel>
             </View>
 
             <View className="pt-2">
                 <HeroNumber
-                    amount={difference}
+                    amount={Math.abs(balance)}
                     code={currency}
                     sign=""
-                    toneClass={figureTone}
+                    toneClass={over ? "text-over-budget" : "text-foreground"}
                     size={48}
                     showCents={showCents}
                 />
             </View>
-            <Text className="text-footnote text-muted pt-0.5">{label}</Text>
-            {leftPerDayAmount == null ? null : (
-                <Text className="text-footnote text-muted pt-0.5 tabular-nums">
-                    {t("budgets.detail.leftEachDay", {
-                        amount: formatAmount(leftPerDayAmount, currency, showCents, language),
-                    })}
-                </Text>
-            )}
+            <Text className="text-footnote text-muted pt-0.5">
+                {scrubLabel ? t("budgets.hero.onDate", { date: scrubLabel, label }) : label}
+            </Text>
 
-            <View className="pt-5" style={{ marginHorizontal: -RAIL_BLEED }}>
-                <BudgetProgressBar
-                    spent={spent}
-                    limit={amount}
-                    paceRemaining={paceRemaining}
-                    paceBehind={paceBehind}
-                    height={8}
-                    tint={tint}
-                />
+            {burndown && measured > 0 ? (
+                <View className="pt-4" style={{ marginHorizontal: -CHART_BLEED }}>
+                    <BudgetBurndownChart
+                        burndown={burndown}
+                        height={CHART_HEIGHT}
+                        limit={amount}
+                        onScrub={setScrubDay}
+                        width={measured + CHART_BLEED * 2}
+                    />
+                </View>
+            ) : null}
+
+            <View className="pt-3.5">
+                <MeasureStrip cells={measures} />
             </View>
 
-            <View className="flex-row items-baseline justify-between pt-2.5">
-                <MonoLabel>
-                    {t("budgets.detail.spent", {
-                        amount: formatAmount(spent, currency, showCents, language),
-                    })}
-                </MonoLabel>
-                <MonoLabel>
-                    {t("budgets.detail.limit", {
-                        amount: formatAmount(amount, currency, showCents, language),
-                    })}
-                </MonoLabel>
-            </View>
+            {scrubbed ? null : <HeroVerdict burndown={burndown} currency={currency} />}
 
             {note ? <Text className="text-footnote text-muted pt-3">{note}</Text> : null}
 
-            {stepper ? <View className="border-border mt-6 border-t pt-3">{stepper}</View> : null}
+            {stepper ? <View className="border-border border-b py-3">{stepper}</View> : null}
 
             {editor}
 

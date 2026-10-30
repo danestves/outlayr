@@ -1,6 +1,6 @@
 import type { ExpenseContribution } from "@outlayr/money/budget-spent";
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Pressable, View } from "react-native";
 import type { AccessibilityActionEvent } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -14,8 +14,10 @@ import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
 import type { CategoryBudgetView } from "@/data/budgets";
+import type { Burndown } from "@/domain/budget-burndown";
 import { buildDaySlots, dayVerdictSentence } from "@/domain/budget-day-slots";
 import { leftPerDay } from "@/domain/budget-math";
+import { burndownVerdict } from "@/domain/budget-verdict";
 import { formatAmount } from "@/domain/money";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useOverBudgetMoment } from "@/hooks/use-over-budget-moment";
@@ -23,11 +25,12 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import { useHaptics } from "@/lib/use-haptics";
 
 import { timeLeftUnlessHeroShows } from "../time-left";
+import { BudgetBurndownChart } from "./budget-burndown-chart";
 import { BudgetDaySlots, drawsDaySlots } from "./budget-day-slots";
-import { BudgetProgressBar } from "./budget-progress-bar";
 
 interface BudgetRowProps {
     budget: CategoryBudgetView;
+    burndown: Burndown | null;
     contributions: readonly ExpenseContribution[];
     currency: string;
     heroTimeLeft: string | null;
@@ -40,8 +43,11 @@ interface BudgetRowProps {
 /** Custom, so it surfaces in the rotor's Actions rather than replacing a tap. */
 const DELETE_ACTION = "delete";
 
+const SPARK_HEIGHT = 40;
+
 export function BudgetRow({
     budget,
+    burndown,
     currency,
     onPress,
     menuItems,
@@ -56,6 +62,7 @@ export function BudgetRow({
     const { language } = useLanguage();
     const stacked = useAccessibilityTextSize();
     const swipeRef = useRef<SwipeableMethods>(null);
+    const [sparkWidth, setSparkWidth] = useState(0);
     const over = budget.overBudget;
     const crossedStyle = useOverBudgetMoment(budget.id, over, budget.window.start);
     const now = new Date(nowMs);
@@ -69,6 +76,7 @@ export function BudgetRow({
           })
         : null;
     const dayVerdict = daySlots ? dayVerdictSentence(daySlots, budget.name, t) : null;
+    const verdict = dayVerdict ?? (burndown && !isDay ? burndownVerdict(burndown, currency, language, t) : null);
     const difference = Math.abs(budget.leftover);
     const perDay = leftPerDay(budget.leftover, budget.window, now);
     const meta = [
@@ -164,11 +172,25 @@ export function BudgetRow({
                                 tint={budget.color}
                                 window={budget.window}
                             />
-                        ) : (
-                            <BudgetProgressBar limit={budget.amount} spent={budget.spent} tint={budget.color} />
+                        ) : null}
+                        {isDay || !burndown ? null : (
+                            <View
+                                onLayout={(event) => setSparkWidth(event.nativeEvent.layout.width)}
+                                style={{ height: SPARK_HEIGHT }}
+                            >
+                                {sparkWidth > 0 ? (
+                                    <BudgetBurndownChart
+                                        burndown={burndown}
+                                        height={SPARK_HEIGHT}
+                                        limit={budget.amount}
+                                        thumbnail
+                                        width={sparkWidth}
+                                    />
+                                ) : null}
+                            </View>
                         )}
                         <MonoLabel numberOfLines={stacked ? undefined : 1}>{meta}</MonoLabel>
-                        {dayVerdict ? <Text className="text-foreground text-label">{dayVerdict}</Text> : null}
+                        {verdict ? <Text className="text-foreground text-label">{verdict}</Text> : null}
                     </Pressable>
                 </ActionMenu>
             </Animated.View>

@@ -149,65 +149,20 @@ export function leftPerDay(leftover: number, window: BudgetWindow, now: Date): n
     return leftover / Math.max(1, daysLeftInWindow(window, now));
 }
 
-export function isBehindPace(remaining: number, amount: number, leftover: number): boolean {
-    return remaining * amount > leftover;
-}
-
-/** The 0.95 ceiling keeps the marker clear of the arc's ends. */
-export function shouldShowPaceMarker(type: number, remaining: number, over: boolean): boolean {
-    return type !== BUDGET_TYPE.day && !over && remaining > 0 && remaining < 0.95;
-}
-
-export interface BudgetRail {
-    fill: number;
-    over: boolean;
-}
-
-/**
- * Over budget the track becomes the spending and the fill the limit's share of it,
- * so the rail shows how far past the limit spending went instead of sitting empty.
- */
-export function budgetRail(spent: number, limit: number): BudgetRail {
-    const over = spent > limit;
-    if (over) {
-        return { fill: clampFill(limit / spent), over };
-    }
-    // A limit of zero has no track to fill, and would divide to NaN.
-    return { fill: limit > 0 ? clampFill(1 - spent / limit) : 0, over };
-}
-
-function clampFill(value: number): number {
-    if (!Number.isFinite(value)) {
-        return 0;
-    }
-    return Math.max(0, Math.min(1, value));
-}
-
 export interface BudgetDetailPace {
-    behind: boolean;
     closed: boolean;
     /** Null when the window is closed or already over, where a rate says nothing. */
     perDay: number | null;
-    /** Null when no marker should be drawn. */
-    paceRemaining: number | null;
 }
 
-/**
- * The category and overall budget screens both read this, so one can't show a pace
- * marker the other withholds.
- */
 export function budgetDetailPace(
-    budget: { amount: number; leftover: number; overBudget: boolean; type: number; window: BudgetWindow },
+    budget: { leftover: number; overBudget: boolean; window: BudgetWindow },
     now: Date,
     periodOffset: number
 ): BudgetDetailPace {
     const closed = periodOffset < 0;
-    const pace = budgetPace(budget.window, now);
-    const showMarker = !closed && shouldShowPaceMarker(budget.type, pace.remaining, budget.overBudget);
     return {
-        behind: !closed && isBehindPace(pace.remaining, budget.amount, budget.leftover),
         closed,
-        paceRemaining: showMarker ? pace.remaining : null,
         perDay: closed || budget.overBudget ? null : leftPerDay(budget.leftover, budget.window, now),
     };
 }

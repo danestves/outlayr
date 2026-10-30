@@ -70,23 +70,11 @@ const budgets = {
             fr: "Aucune dépense sur cette période pour l'instant.",
             pt: "Ainda não há gastos neste período.",
         }),
-        "budgets.detail.leftEachDay": t({
-            en: "{amount} left each day",
-            es: "{amount} disponible por día",
-            fr: "Reste {amount} par jour",
-            pt: "{amount} disponível por dia",
-        }),
         "budgets.detail.leftPeriod": t({
             en: "left {period}",
             es: "disponible {period}",
             fr: "restant {period}",
             pt: "disponível {period}",
-        }),
-        "budgets.detail.limit": t({
-            en: "{amount} limit",
-            es: "límite de {amount}",
-            fr: "Limite de {amount}",
-            pt: "limite de {amount}",
         }),
         "budgets.detail.overBudget": t({
             en: "over budget",
@@ -105,12 +93,6 @@ const budgets = {
             es: "{percent}% gastado",
             fr: "{percent} % dépensé",
             pt: "{percent}% gasto",
-        }),
-        "budgets.detail.spent": t({
-            en: "{amount} spent",
-            es: "{amount} gastado",
-            fr: "Dépensé : {amount}",
-            pt: "{amount} gastos",
         }),
         "budgets.detail.transactions": t({
             en: "TRANSACTIONS",

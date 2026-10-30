@@ -67,7 +67,6 @@ import { pairs } from "./pairs";
 const CARD_GUTTER = 12;
 const ROW_REORDER = LinearTransition.duration(420).easing(Easing.out(Easing.cubic));
 const ROW_EXIT = FadeOut.duration(200);
-const NO_BUDGETS: readonly CategoryBudgetView[] = [];
 
 export function Budgets() {
     const db = useDatabase();
@@ -95,7 +94,7 @@ export function Budgets() {
     const budgets = allBudgets.filter((budget) => budget.id !== pendingId);
     const mainBurndown = useBurndown(contributions, nowMs, main, null);
     const dominant = useDominant(db, contributions, main, nowMs);
-    const burndowns = useBurndowns(contributions, nowMs, asRows ? NO_BUDGETS : budgets);
+    const burndowns = useBurndowns(contributions, nowMs, budgets);
     const firstDayOfMonth = useSettingNumber("firstDayOfMonth");
     const firstWeekday = useSettingNumber("firstWeekday");
     const calendar = { firstDayOfMonth, firstWeekday };
@@ -377,6 +376,7 @@ export function Budgets() {
                                     <Animated.View exiting={ROW_EXIT} key={budget.id} layout={ROW_REORDER}>
                                         <BudgetRow
                                             budget={budget}
+                                            burndown={burndowns.get(budget.id) ?? null}
                                             contributions={contributions}
                                             currency={currency}
                                             heroTimeLeft={heroTimeLeft}
