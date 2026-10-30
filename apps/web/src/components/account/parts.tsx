@@ -94,7 +94,7 @@ export function CodeField({ onChange, value }: { onChange: (code: string) => voi
                 inputMode="numeric"
                 maxLength={CODE_LENGTH}
                 onBlur={() => setFocused(false)}
-                onChange={(event) => onChange(event.target.value.replace(NON_DIGITS, "").slice(0, CODE_LENGTH))}
+                onChange={(event) => onChange(event.target.value.replaceAll(NON_DIGITS, "").slice(0, CODE_LENGTH))}
                 onFocus={() => setFocused(true)}
                 value={value}
             />

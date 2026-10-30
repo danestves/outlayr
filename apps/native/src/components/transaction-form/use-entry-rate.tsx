@@ -5,6 +5,7 @@ import { useDisplaySettings } from "@/contexts/display-settings-context";
 import { useRatesRead } from "@/data/live-query";
 import { transactionRateSuggestions } from "@/data/transaction-entry-rates";
 import type { Transaction } from "@/data/transactions-core";
+import { useNow } from "@/data/use-now";
 import type { Database } from "@/db/client";
 import { formatSentenceDate } from "@/domain/dates";
 import { formatAmount, minorUnitsFor, numberLocale } from "@/domain/money";
@@ -59,6 +60,7 @@ export function useEntryRate({
     rateShake,
     stage,
 }: EntryRateOptions) {
+    const nowMs = useNow();
     const t = useTranslation();
     const { language } = useLanguage();
     const { use24Hour } = useDisplaySettings().state;
@@ -171,7 +173,7 @@ export function useEntryRate({
             entryDate: date,
             fetchedAt: official ? rateSuggestions.officialFetchedAt : rateSuggestions.eurReferenceFetchedAt,
             language,
-            now: new Date(),
+            now: new Date(nowMs),
             rateDate: suggested ? suggestedDate : null,
             use24Hour,
         });

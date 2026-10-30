@@ -411,7 +411,7 @@ function CodeField({ onChange, value }: { onChange: (code: string) => void; valu
                     className="absolute inset-0 text-transparent"
                     keyboardType="number-pad"
                     maxLength={CODE_LENGTH}
-                    onChangeText={(text) => onChange(text.replace(NON_DIGITS, "").slice(0, CODE_LENGTH))}
+                    onChangeText={(text) => onChange(text.replaceAll(NON_DIGITS, "").slice(0, CODE_LENGTH))}
                     selectionColor="transparent"
                     textContentType="oneTimeCode"
                     value={value}

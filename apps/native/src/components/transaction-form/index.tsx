@@ -25,6 +25,7 @@ import { useFavouriteCurrencies } from "@/data/favourite-currencies";
 import { useRecentMerchants } from "@/data/merchant-history";
 import { useTagIdsFor, useTags } from "@/data/tags";
 import type { Transaction } from "@/data/transactions-core";
+import { useNow } from "@/data/use-now";
 import type { Database } from "@/db/client";
 import { rowAmountLabel } from "@/domain/amount-label";
 import { computeCurtainHues } from "@/domain/curtain-hues";
@@ -136,6 +137,7 @@ function entrySources(props: TransactionFormProps) {
 }
 
 export function TransactionForm(props: TransactionFormProps) {
+    const nowMs = useNow();
     const { db, draftRef, mode, onDelete, onDirtyChange, onDone, rest, restore } = props;
     const { copyOf, initial, seed } = entrySources(props);
     const resting = rest !== undefined;
@@ -679,7 +681,7 @@ export function TransactionForm(props: TransactionFormProps) {
         date,
         interval: schedule.interval,
         language,
-        now: new Date(),
+        now: new Date(nowMs),
     });
 
     const moduleSteps = { ...cardFee.steps, ...rate.steps, ...schedule.steps };
@@ -786,7 +788,7 @@ export function TransactionForm(props: TransactionFormProps) {
                     body: (
                         <StepWhen
                             date={date}
-                            now={new Date()}
+                            now={new Date(nowMs)}
                             onPick={() => enterStep("date")}
                             onSelect={(next) => {
                                 rate.handleDateChange(next);

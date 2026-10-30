@@ -8,7 +8,7 @@ export function readConvexUrl(key: string, raw: string | undefined, exampleHost:
     if (raw === undefined || raw === "") {
         return undefined;
     }
-    const url = raw.trim().replace(TAB_OR_NEWLINE, "");
+    const url = raw.trim().replaceAll(TAB_OR_NEWLINE, "");
     const hostname = URL.parse(url)?.hostname;
     if (hostname === undefined) {
         throw new Error(`${key}: Invalid URL`);
