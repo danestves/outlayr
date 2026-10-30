@@ -29,7 +29,14 @@ import { describe, expect, it } from "vite-plus/test";
 
 import type { RootStackGroup } from "@/domain/auth-gate";
 
-import { MODAL_SCREENS, ROOT_STACK_SCREEN_NAMES, SHEET_SCREENS, TITLED_SCREENS } from "./root-stack";
+import {
+    IMPORT_SCREENS,
+    MODAL_SCREENS,
+    ONBOARDING_IMPORT_SCREENS,
+    ROOT_STACK_SCREEN_NAMES,
+    SHEET_SCREENS,
+    TITLED_SCREENS,
+} from "./root-stack";
 
 const GROUPS: readonly RootStackGroup[] = ["onboarding", "sign-in", "adopt", "ledger"];
 
@@ -115,7 +122,9 @@ interface RenderedScreen {
 type NamedList = readonly { name: string }[];
 
 const DYNAMIC_SCREEN_LISTS: Record<string, NamedList> = {
+    IMPORT_SCREENS,
     MODAL_SCREENS,
+    ONBOARDING_IMPORT_SCREENS,
     SHEET_SCREENS,
     TITLED_SCREENS,
 };

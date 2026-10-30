@@ -30,6 +30,8 @@ export const META_KEYS = {
     logoDismissals: "logoDismissals",
     logoPlates: "logoPlates",
     merchantBook: "merchantBook",
+    /** Device-local: undo must not delete another device's rows. */
+    moneyManagerImport: "moneyManagerImport",
     /** `firstLaunch` cannot stand in: bootstrap writes it before any screen exists. */
     onboardingComplete: "onboardingComplete",
     onboardingGateMigrated: "onboardingGateMigrated",

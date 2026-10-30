@@ -76,7 +76,7 @@ export const ERASED_TRANSACTION = {
 } as const;
 
 /** The two account ids stay: both are `notNull`, so blanking them would point the row at no account. */
-const ERASED_TRANSFER = {
+export const ERASED_TRANSFER = {
     date: ERASED_DATE,
     dateCreated: ERASED_DATE,
     day: ERASED_DATE,

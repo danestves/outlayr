@@ -1,0 +1,99 @@
+import { useSyncExternalStore } from "react";
+
+import type {
+    MmAnalysis,
+    MmArchiveError,
+    MmBalanceCheck,
+    MmChoices,
+    MmImportRecord,
+    MmSnapshot,
+    OutlayrLedgerState,
+} from "@/domain/money-manager/types";
+
+import type { BackupSource } from "./money-manager-file";
+
+export interface MoneyManagerDraft {
+    analysis: MmAnalysis;
+    choices: MmChoices;
+    fileName: string;
+    ledger: OutlayrLedgerState;
+    snapshot: MmSnapshot;
+}
+
+export interface MoneyManagerResult {
+    checks: readonly MmBalanceCheck[];
+    record: MmImportRecord;
+}
+
+export interface MoneyManagerSession {
+    draft: MoneyManagerDraft | null;
+    /** The last write rolled back; nothing landed. */
+    failed: boolean;
+    /** The last file that could not be read, for the wrong-file screen. */
+    failure: { error: MmArchiveError; fileName: string } | null;
+    /** A backup handed over by "Open in" or the share sheet, waiting for a screen to read it. */
+    pending: BackupSource | null;
+    progress: { done: number; total: number } | null;
+    result: MoneyManagerResult | null;
+}
+
+const EMPTY: MoneyManagerSession = {
+    draft: null,
+    failed: false,
+    failure: null,
+    pending: null,
+    progress: null,
+    result: null,
+};
+
+/**
+ * Module state, not context: the flow spans pushed screens in two route groups, and the native intent that hands
+ * over a backup runs outside React.
+ */
+function createSession() {
+    let state = EMPTY;
+    const listeners = new Set<() => void>();
+
+    const commit = (next: MoneyManagerSession) => {
+        state = next;
+        for (const listener of listeners) {
+            listener();
+        }
+    };
+
+    return {
+        begin: (draft: MoneyManagerDraft) => commit({ ...EMPTY, draft }),
+        fail: (failure: NonNullable<MoneyManagerSession["failure"]>) => commit({ ...state, failure }),
+        finish: (result: MoneyManagerResult) => commit({ ...state, progress: null, result }),
+        getSnapshot: () => state,
+        handOver: (pending: BackupSource) => commit({ ...state, pending }),
+        markFailed: () => commit({ ...state, failed: true, progress: null }),
+        reset: () => commit(EMPTY),
+        setProgress: (progress: MoneyManagerSession["progress"]) => commit({ ...state, failed: false, progress }),
+        subscribe: (listener: () => void) => {
+            listeners.add(listener);
+            return () => {
+                listeners.delete(listener);
+            };
+        },
+        takePending: () => {
+            const { pending } = state;
+            if (pending !== null) {
+                commit({ ...state, pending: null });
+            }
+            return pending;
+        },
+        updateChoices: (update: (choices: MmChoices) => MmChoices) => {
+            if (state.draft === null) {
+                return;
+            }
+            commit({ ...state, draft: { ...state.draft, choices: update(state.draft.choices) } });
+        },
+    };
+}
+
+export const moneyManagerSession = createSession();
+
+export function useMoneyManagerSession(): MoneyManagerSession {
+    return useSyncExternalStore(moneyManagerSession.subscribe, moneyManagerSession.getSnapshot);
+}

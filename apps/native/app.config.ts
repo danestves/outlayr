@@ -248,6 +248,11 @@ function googleIosUrlScheme(clientId: string | undefined): string {
     return `com.googleusercontent.apps.${clientId.replace(GOOGLE_CLIENT_SUFFIX, "")}`;
 }
 
+const MONEY_MANAGER_BACKUP_TYPE = "com.tryoutlayr.money-manager-backup";
+// Android's pathPattern stops at the first dot it can match, so each extra dot in the path needs its own pattern; it
+// is ignored without a host, hence the `host: "*"` beside it.
+const MONEY_MANAGER_BACKUP_PATHS = [".*\\.mmbackup", ".*\\..*\\.mmbackup", ".*\\..*\\..*\\.mmbackup"];
+
 const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
     ...config,
     android: {
@@ -264,6 +269,17 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
             "android.permission.READ_MEDIA_IMAGES",
             "android.permission.READ_MEDIA_VIDEO",
             "com.google.android.c2dm.permission.RECEIVE",
+        ],
+        // "Open with Outlayr" for a `.mmbackup` from a file manager. Matched on the extension, not the generic MIME
+        // type, so Outlayr does not offer itself for every binary file.
+        intentFilters: [
+            {
+                action: "VIEW",
+                category: ["DEFAULT", "BROWSABLE"],
+                data: MONEY_MANAGER_BACKUP_PATHS.flatMap((pathPattern) =>
+                    ["content", "file"].map((scheme) => ({ host: "*", mimeType: "*/*", pathPattern, scheme }))
+                ),
+            },
         ],
         package: "com.tryoutlayr.app",
         versionCode: buildNumber ? Number(buildNumber) : undefined,
@@ -293,7 +309,24 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
         },
         icon: isProduction ? "./assets/Outlayr.icon" : "./assets/OutlayrTesting.icon",
         infoPlist: {
+            // Puts Outlayr in the share sheet for a Money Manager backup; the import reads and vets the file itself.
+            CFBundleDocumentTypes: [
+                {
+                    CFBundleTypeName: "Money Manager backup",
+                    LSHandlerRank: "Alternate",
+                    LSItemContentTypes: [MONEY_MANAGER_BACKUP_TYPE],
+                },
+            ],
             ITSAppUsesNonExemptEncryption: false,
+            LSSupportsOpeningDocumentsInPlace: false,
+            UTImportedTypeDeclarations: [
+                {
+                    UTTypeConformsTo: ["public.data"],
+                    UTTypeDescription: "Money Manager backup",
+                    UTTypeIdentifier: MONEY_MANAGER_BACKUP_TYPE,
+                    UTTypeTagSpecification: { "public.filename-extension": ["mmbackup"] },
+                },
+            ],
         },
         usesAppleSignIn: true,
     },

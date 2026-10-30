@@ -34,9 +34,10 @@ const STEP_TITLE = {
     source: "import.titleSource",
 } satisfies Record<ImportStep, TranslationKey>;
 
+// The source is picked on the Bring data in screen before the sheet opens, so the file step has nothing behind it.
 const STEP_BACK = {
     done: null,
-    file: "source",
+    file: null,
     resolve: "file",
     review: "file",
     source: null,
