@@ -83,6 +83,7 @@ const csvImport = FunctionImpl.make(
         }
         // Before the model call, so a provider failure still learns the unknown merchants.
         yield* scheduleImportGrounded(ctx, identity.tokenIdentifier, {
+            distinctId: args.shareAnalytics === true ? identity.subject : undefined,
             groundedLookup: args.groundedLookup === true,
             labels: remaining,
             regionCode: sanitizeRegionCode(args.regionCode),
@@ -94,7 +95,9 @@ const csvImport = FunctionImpl.make(
 
         const modelId = yield* claudeFastModelId;
         const classified = yield* classify(
-            traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "csv_import"),
+            traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "csv_import", {
+                distinctId: args.shareAnalytics === true ? identity.subject : undefined,
+            }),
             {
                 categoryTree: args.categoryTree,
                 labels: remaining,

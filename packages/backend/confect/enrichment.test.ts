@@ -86,6 +86,7 @@ describe("suggest args validation", () => {
                 "locale",
                 "name",
                 "regionCode",
+                "shareAnalytics",
             ].sort()
         );
     });

@@ -11,6 +11,7 @@ export const receiptScanArgs = {
     language: Schema.optional(Schema.String),
     /** ISO 3166-1 alpha-2, to break a currency symbol's tie ("$" in Mexico is pesos). */
     regionCode: Schema.optional(Schema.String),
+    shareAnalytics: Schema.optional(Schema.Boolean),
     /** `YYYY-MM-DD` in the device's local calendar. */
     today: Schema.String,
 };

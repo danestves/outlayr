@@ -68,7 +68,7 @@ const BASE_ARGS = {
 describe("csv import args validation", () => {
     it("carries exactly the privacy-boundary fields — labels, tree, consent, region", () => {
         expect(Object.keys(csvImportArgs).sort()).toStrictEqual(
-            ["aiConsent", "categoryTree", "groundedLookup", "labels", "regionCode"].sort()
+            ["aiConsent", "categoryTree", "groundedLookup", "labels", "regionCode", "shareAnalytics"].sort()
         );
     });
 });

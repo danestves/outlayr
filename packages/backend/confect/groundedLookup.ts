@@ -44,6 +44,7 @@ function isForbiddenLogoOrigin(domain: string): boolean {
 export interface GroundedRunArgs {
     categoryTree?: readonly CategoryBranch[];
     currency?: string;
+    distinctId?: string;
     income: boolean;
     key: string;
     locale?: string;
@@ -244,7 +245,7 @@ export const groundedAnswer: (
         }
         const anthropic = createAnthropic({ apiKey: Redacted.value(apiKey.value) });
         modelId = yield* claudeGroundedModelId;
-        const grounding = traced(anthropic(modelId), "grounded_lookup");
+        const grounding = traced(anthropic(modelId), "grounded_lookup", { distinctId: args.distinctId });
         deps = {
             grounding,
             groundingTools: { web_search: anthropic.tools.webSearch_20250305({ maxUses: WORST_CASE_SEARCH_CALLS }) },

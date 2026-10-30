@@ -20,20 +20,26 @@ interface Generation {
         outputTokens: { total: number | undefined };
     };
     stopReason?: string;
-    webSearches?: number;
+    toolCalls?: { toolName: string; providerExecuted?: boolean }[];
     error?: unknown;
 }
 
-export type GenerationProperties = Record<string, string | number | boolean | undefined> & { $ai_trace_id: string };
+export type GenerationProperties = Record<string, string | number | boolean | null | undefined>;
+
+export interface TraceScope {
+    distinctId?: string;
+    sessionId?: string;
+}
 
 export function tracingMiddleware(
     feature: string,
-    send: (properties: GenerationProperties) => Promise<void>
+    send: (distinctId: string, properties: GenerationProperties) => Promise<void>,
+    { distinctId, sessionId }: TraceScope = {}
 ): LanguageModelMiddleware {
     const traceId = crypto.randomUUID();
     const record = (modelId: string, startedAt: number, generation: Generation) => {
-        const { error, usage } = generation;
-        return send({
+        const { error, toolCalls = [], usage } = generation;
+        return send(distinctId ?? traceId, {
             $ai_cache_creation_input_tokens: usage?.inputTokens.cacheWrite,
             $ai_cache_read_input_tokens: usage?.inputTokens.cacheRead,
             $ai_error: error instanceof Error ? error.name : undefined,
@@ -44,11 +50,16 @@ export function tracingMiddleware(
             $ai_model: modelId,
             $ai_output_tokens: usage?.outputTokens.total,
             $ai_provider: "anthropic",
+            $ai_session_id: sessionId ?? null,
             $ai_span_name: feature,
             $ai_stop_reason: generation.stopReason,
+            $ai_tool_call_count: toolCalls.length || undefined,
+            $ai_tools_called: toolCalls.map((call) => call.toolName).join(",") || undefined,
             $ai_trace_id: traceId,
-            $ai_web_search_count: generation.webSearches || undefined,
-            $process_person_profile: false,
+            $ai_web_search_count:
+                toolCalls.filter((call) => call.providerExecuted === true && call.toolName === "web_search").length ||
+                undefined,
+            $process_person_profile: distinctId !== undefined,
         });
     };
 
@@ -59,13 +70,8 @@ export function tracingMiddleware(
                 const result = await doGenerate();
                 await record(result.response?.modelId ?? model.modelId, startedAt, {
                     stopReason: result.finishReason.unified,
+                    toolCalls: result.content.filter((part) => part.type === "tool-call"),
                     usage: result.usage,
-                    webSearches: result.content.filter(
-                        (part) =>
-                            part.type === "tool-call" &&
-                            part.providerExecuted === true &&
-                            part.toolName === "web_search"
-                    ).length,
                 });
                 return result;
             } catch (error) {
@@ -95,6 +101,8 @@ export function tracingMiddleware(
                             } else if (part.type === "finish") {
                                 generation.usage = part.usage;
                                 generation.stopReason = part.finishReason.unified;
+                            } else if (part.type === "tool-call") {
+                                (generation.toolCalls ??= []).push(part);
                             } else if (part.type === "error") {
                                 generation.error = part.error;
                             }
@@ -107,19 +115,17 @@ export function tracingMiddleware(
     };
 }
 
-export function traced(model: Exclude<LanguageModel, string>, feature: string) {
-    return wrapLanguageModel({ middleware: tracingMiddleware(feature, capture), model });
+export function traced(model: Exclude<LanguageModel, string>, feature: string, scope?: TraceScope) {
+    return wrapLanguageModel({ middleware: tracingMiddleware(feature, capture, scope), model });
 }
 
 export const captureGeneration = Effect.fn("AiTracing.capture")(function* captureGeneration(
+    distinctId: string,
     properties: GenerationProperties
 ) {
-    yield* capturePostHogEvent(
-        { distinct_id: properties.$ai_trace_id, event: "$ai_generation", properties },
-        CAPTURE_TIMEOUT
-    );
+    yield* capturePostHogEvent({ distinct_id: distinctId, event: "$ai_generation", properties }, CAPTURE_TIMEOUT);
 }, Effect.ignore());
 
-function capture(properties: GenerationProperties): Promise<void> {
-    return runEdge(captureGeneration(properties).pipe(Effect.provide(outboundHttp)));
+function capture(distinctId: string, properties: GenerationProperties): Promise<void> {
+    return runEdge(captureGeneration(distinctId, properties).pipe(Effect.provide(outboundHttp)));
 }

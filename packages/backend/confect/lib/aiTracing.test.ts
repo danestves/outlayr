@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { stubHttp } from "../test.helpers";
 import { captureGeneration, tracingMiddleware } from "./aiTracing";
-import type { GenerationProperties } from "./aiTracing";
+import type { GenerationProperties, TraceScope } from "./aiTracing";
 import { runEdge } from "./runEdge";
 
 afterEach(() => {
@@ -19,20 +19,26 @@ const usage = {
     outputTokens: { reasoning: undefined, text: 50, total: 50 },
 };
 
-function tracedMock(model: MockLanguageModelV4) {
+function tracedMock(model: MockLanguageModelV4, scope?: TraceScope) {
     const sent: GenerationProperties[] = [];
+    const distinctIds: string[] = [];
     const traced = wrapLanguageModel({
-        middleware: tracingMiddleware("receipt_scan", async (properties) => {
-            sent.push(properties);
-        }),
+        middleware: tracingMiddleware(
+            "receipt_scan",
+            async (distinctId, properties) => {
+                distinctIds.push(distinctId);
+                sent.push(properties);
+            },
+            scope
+        ),
         model,
     });
-    return { sent, traced };
+    return { distinctIds, sent, traced };
 }
 
 describe("tracingMiddleware", () => {
-    it("bills uncached input apart from cache reads and writes, and counts web searches", async () => {
-        const { sent, traced } = tracedMock(
+    it("bills uncached input apart from cache reads and writes, counts web searches, and stays anonymous", async () => {
+        const { distinctIds, sent, traced } = tracedMock(
             new MockLanguageModelV4({
                 doGenerate: async () => ({
                     content: [
@@ -61,15 +67,20 @@ describe("tracingMiddleware", () => {
                 $ai_input_tokens: 100,
                 $ai_is_error: false,
                 $ai_output_tokens: 50,
+                $ai_session_id: null,
                 $ai_span_name: "receipt_scan",
+                $ai_tool_call_count: 1,
+                $ai_tools_called: "web_search",
                 $ai_web_search_count: 1,
+                $process_person_profile: false,
             }),
         ]);
+        expect(distinctIds).toStrictEqual([sent[0]?.$ai_trace_id]);
         expect(sent[0]).not.toHaveProperty("$ai_input");
     });
 
-    it("captures a stream's usage once the stream finishes", async () => {
-        const { sent, traced } = tracedMock(
+    it("captures a stream's usage and tool calls under its session and account once the stream finishes", async () => {
+        const { distinctIds, sent, traced } = tracedMock(
             new MockLanguageModelV4({
                 doStream: async () => ({
                     stream: new ReadableStream({
@@ -77,6 +88,12 @@ describe("tracingMiddleware", () => {
                             controller.enqueue({ id: "t", type: "text-start" });
                             controller.enqueue({ delta: "ok", id: "t", type: "text-delta" });
                             controller.enqueue({ id: "t", type: "text-end" });
+                            controller.enqueue({
+                                input: "{}",
+                                toolCallId: "1",
+                                toolName: "proposeDraft",
+                                type: "tool-call",
+                            });
                             controller.enqueue({
                                 finishReason: { raw: "end_turn", unified: "stop" },
                                 type: "finish",
@@ -86,14 +103,23 @@ describe("tracingMiddleware", () => {
                         },
                     }),
                 }),
-            })
+            }),
+            { distinctId: "user-1", sessionId: "thread-1" }
         );
 
         await streamText({ model: traced, prompt: "voice" }).consumeStream();
 
         expect(sent).toStrictEqual([
-            expect.objectContaining({ $ai_input_tokens: 100, $ai_output_tokens: 50, $ai_stop_reason: "stop" }),
+            expect.objectContaining({
+                $ai_input_tokens: 100,
+                $ai_output_tokens: 50,
+                $ai_session_id: "thread-1",
+                $ai_stop_reason: "stop",
+                $ai_tools_called: "proposeDraft",
+                $process_person_profile: true,
+            }),
         ]);
+        expect(distinctIds).toStrictEqual(["user-1"]);
     });
 
     it("records a failed call and rethrows its error", async () => {
@@ -119,7 +145,7 @@ describe(captureGeneration, () => {
         vi.stubEnv("POSTHOG_PROJECT_TOKEN", "phc_test");
         const http = stubHttp(() => Response.json({ status: 1 }));
 
-        await runEdge(captureGeneration(properties).pipe(Effect.provide(http.layer)));
+        await runEdge(captureGeneration("trace-1", properties).pipe(Effect.provide(http.layer)));
 
         expect(http.requests).toHaveLength(1);
         const [request] = http.requests;
@@ -136,7 +162,7 @@ describe(captureGeneration, () => {
         vi.stubEnv("POSTHOG_PROJECT_TOKEN", "");
         const http = stubHttp(() => Response.json({}));
 
-        await runEdge(captureGeneration(properties).pipe(Effect.provide(http.layer)));
+        await runEdge(captureGeneration("trace-1", properties).pipe(Effect.provide(http.layer)));
 
         expect(http.requests).toHaveLength(0);
     });
@@ -148,6 +174,8 @@ describe(captureGeneration, () => {
             HttpClient.make(() => Effect.fail(new Error("offline") as never))
         );
 
-        await expect(runEdge(captureGeneration(properties).pipe(Effect.provide(failing)))).resolves.toBeUndefined();
+        await expect(
+            runEdge(captureGeneration("trace-1", properties).pipe(Effect.provide(failing)))
+        ).resolves.toBeUndefined();
     });
 });

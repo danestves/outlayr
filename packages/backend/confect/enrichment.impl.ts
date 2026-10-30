@@ -119,6 +119,7 @@ const suggest = FunctionImpl.make(
                       pro
                           ? maybeScheduleGrounded(ctx, identity.tokenIdentifier, {
                                 currency,
+                                distinctId: args.shareAnalytics === true ? identity.subject : undefined,
                                 groundedLookup: args.groundedLookup,
                                 income: args.income,
                                 locale: args.locale,
@@ -132,7 +133,9 @@ const suggest = FunctionImpl.make(
 
         const modelId = yield* claudeFastModelId;
         const result = yield* runSuggest(
-            traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "category_suggest"),
+            traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "category_suggest", {
+                distinctId: args.shareAnalytics === true ? identity.subject : undefined,
+            }),
             {
                 categoryTree: args.categoryTree,
                 currency,

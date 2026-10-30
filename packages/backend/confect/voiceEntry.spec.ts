@@ -13,6 +13,7 @@ export const voiceEntryArgs = {
     categoryTree: Schema.Array(Schema.Struct({ children: Schema.Array(Schema.String), name: Schema.String })),
     currency: Schema.String,
     language: Schema.optional(Schema.String),
+    shareAnalytics: Schema.optional(Schema.Boolean),
     threadId: Schema.String,
     /** `YYYY-MM-DD` in the device's local calendar. */
     today: Schema.String,

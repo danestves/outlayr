@@ -81,7 +81,9 @@ const scan = FunctionImpl.make(
 
         const modelId = yield* claudeFastModelId;
         return yield* readReceipt(
-            traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "receipt_scan"),
+            traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "receipt_scan", {
+                distinctId: args.shareAnalytics === true ? identity.subject : undefined,
+            }),
             args.image,
             {
                 accounts: args.accounts,

@@ -22,6 +22,7 @@ import type { UsageLimits } from "@/domain/usage-limits";
 import { CloudError } from "./cloud-error";
 import { cloudRuntime } from "./cloud-runtime";
 import type { CloudRuntime } from "./cloud-runtime";
+import { posthog } from "./posthog";
 
 export const convex = cloudRuntime?.convex ?? null;
 
@@ -86,6 +87,10 @@ export function cloudMutation<Args, Result>(path: string, args: Args): Effect.Ef
 export function cloudAction<Args, Result>(path: string, args: Args): Effect.Effect<Result, CloudError> {
     // SAFETY: as in `cloudQuery`.
     return callCloud("action", path, (client) => client.action(path as never, args as never) as Promise<Result>);
+}
+
+function aiConsentArgs() {
+    return { aiConsent: AI_CONSENT_VERSION, shareAnalytics: posthog?.optedOut === false };
 }
 
 /** Rounded to the UTC day so identical args let Convex answer every page and device from its query cache. */
@@ -178,7 +183,7 @@ export function enrichmentTransport(): EnrichmentFn | null {
         return null;
     }
     return (args) =>
-        cloudAction<unknown, RemoteEnrichmentResult>("enrichment:suggest", { ...args, aiConsent: AI_CONSENT_VERSION });
+        cloudAction<unknown, RemoteEnrichmentResult>("enrichment:suggest", { ...args, ...aiConsentArgs() });
 }
 
 const decodeAnsweredJobs = Schema.decodeUnknownOption(
@@ -211,7 +216,7 @@ export interface EnrichmentQueueTransport {
 export function enrichmentQueueTransport(): EnrichmentQueueTransport {
     return {
         ack: (localIds) => cloudMutation("enrichmentQueue:ack", { localIds }),
-        enqueue: (request) => cloudMutation("enrichmentQueue:enqueue", { ...request, aiConsent: AI_CONSENT_VERSION }),
+        enqueue: (request) => cloudMutation("enrichmentQueue:enqueue", { ...request, ...aiConsentArgs() }),
     };
 }
 
@@ -266,7 +271,7 @@ export interface CsvImportRequest {
 export type CsvImportFn = (args: CsvImportRequest) => Effect.Effect<CsvImportResult, CloudError>;
 
 export function csvImportTransport(): CsvImportFn {
-    return (args) => cloudAction("csvImport:csvImport", { ...args, aiConsent: AI_CONSENT_VERSION });
+    return (args) => cloudAction("csvImport:csvImport", { ...args, ...aiConsentArgs() });
 }
 
 interface VoiceDraftBase {
@@ -370,8 +375,7 @@ export interface VoiceThreadTransport {
 export function voiceThreadTransport(): VoiceThreadTransport {
     return {
         end: (threadId) => cloudMutation<unknown, null>("voiceEntry:endThread", { threadId }),
-        speak: (args) =>
-            cloudAction<unknown, SpeakResult>("voiceEntry:speak", { ...args, aiConsent: AI_CONSENT_VERSION }),
+        speak: (args) => cloudAction<unknown, SpeakResult>("voiceEntry:speak", { ...args, ...aiConsentArgs() }),
         start: () => cloudMutation<unknown, StartThreadResult>("voiceEntry:startThread", {}),
     };
 }
@@ -490,7 +494,7 @@ export interface ScanRequest {
 export type ReceiptScanFn = (args: ScanRequest) => Effect.Effect<ScanResult, CloudError>;
 
 export function receiptScanTransport(): ReceiptScanFn {
-    return (args) => cloudAction<unknown, ScanResult>("receiptScan:scan", { ...args, aiConsent: AI_CONSENT_VERSION });
+    return (args) => cloudAction<unknown, ScanResult>("receiptScan:scan", { ...args, ...aiConsentArgs() });
 }
 
 export interface InstallmentPlanRow {
@@ -519,5 +523,5 @@ export type InstallmentScanFn = (args: InstallmentScanRequest) => Effect.Effect<
 
 export function installmentScanTransport(): InstallmentScanFn {
     return (args) =>
-        cloudAction<unknown, InstallmentScanResult>("installmentScan:scan", { ...args, aiConsent: AI_CONSENT_VERSION });
+        cloudAction<unknown, InstallmentScanResult>("installmentScan:scan", { ...args, ...aiConsentArgs() });
 }

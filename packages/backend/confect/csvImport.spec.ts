@@ -9,6 +9,7 @@ export const csvImportArgs = {
     groundedLookup: Schema.optional(Schema.Boolean),
     labels: Schema.Array(Schema.String),
     regionCode: Schema.optional(Schema.String),
+    shareAnalytics: Schema.optional(Schema.Boolean),
 };
 
 export const LabelSuggestion = Schema.Struct({

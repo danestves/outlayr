@@ -220,7 +220,10 @@ const speak = FunctionImpl.make(
         };
         const modelId = yield* claudeModelId;
         const agent = voiceAgent(
-            traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "voice_entry"),
+            traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "voice_entry", {
+                distinctId: args.shareAnalytics === true ? identity.subject : undefined,
+                sessionId: args.threadId,
+            }),
             context,
             heard.text
         );

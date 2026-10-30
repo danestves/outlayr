@@ -17,6 +17,7 @@ export const suggestArgs = {
     name: Schema.String,
     /** The device region, which `locale` cannot stand in for. */
     regionCode: Schema.optional(Schema.String),
+    shareAnalytics: Schema.optional(Schema.Boolean),
 };
 
 export const Suggestion = Schema.Struct({
