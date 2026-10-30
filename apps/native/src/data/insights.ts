@@ -174,6 +174,28 @@ export function periodTotal(buckets: readonly InsightsBucket[]): number {
     return buckets.reduce((total, bucket) => total + bucket.value, 0);
 }
 
+export function categoryBuckets(
+    buckets: readonly InsightsBucket[],
+    rows: readonly InsightsContribution[],
+    categoryId: string,
+    income: boolean,
+    now: Date
+): InsightsBucket[] {
+    const nowMs = now.getTime();
+    const values = buckets.map(() => 0);
+    for (const row of rows) {
+        const t = row.date.getTime();
+        if (row.income !== income || t > nowMs || (row.parentId ?? row.categoryId) !== categoryId) {
+            continue;
+        }
+        const index = buckets.findIndex((bucket) => t >= bucket.start.getTime() && t < bucket.end.getTime());
+        if (index !== -1) {
+            values[index] += row.amount;
+        }
+    }
+    return buckets.map((bucket, index) => ({ ...bucket, value: values[index] }));
+}
+
 function windowBounds(
     period: InsightsPeriod,
     now: Date,

@@ -611,13 +611,6 @@ const debts = {
             fr: "Vendu à crédit",
             pt: "Vendi a prazo",
         }),
-        "debts.youOweAmount": t({
-            en: "You owe {amount}",
-            es: "Debes {amount}",
-            fr: "Vous devez {amount}",
-            pt: "Você deve {amount}",
-            "pt-PT": "Deve {amount}",
-        }),
     },
     key: "debts" as const,
 } satisfies Dictionary;

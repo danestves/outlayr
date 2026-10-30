@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Text as RNText, View } from "react-native";
+import { Text as RNText, StyleSheet, View } from "react-native";
 import type { LayoutChangeEvent } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue } from "react-native-reanimated";
@@ -24,6 +24,7 @@ const BAR_AREA = 150;
 const LABEL_H = 18;
 const LABEL_W = 32;
 const HEADROOM = 0.1;
+const BAR_FOOT_RADIUS = 2;
 
 interface InsightsBarChartProps {
     average: number;
@@ -161,11 +162,21 @@ export function InsightsBarChart({
                                 onActivate={() => onCommit(selectedIndex === index ? null : index)}
                                 plot={plot}
                                 selected={selectedIndex === index}
-                                trackColor={colors.railTrack}
                                 value={values[index]}
                             />
                         ))}
                     </View>
+                    <View
+                        pointerEvents="none"
+                        style={{
+                            backgroundColor: colors.border,
+                            height: StyleSheet.hairlineWidth,
+                            left: 0,
+                            position: "absolute",
+                            right: 0,
+                            top: BAR_AREA,
+                        }}
+                    />
 
                     {scrubIndex != null && width > 0 ? (
                         <View
@@ -267,12 +278,18 @@ interface BarProps {
     onActivate: () => void;
     plot: Plot;
     selected: boolean;
-    trackColor: string;
     value: number;
 }
 
-function Bar({ value, plot, color, trackColor, animated, dimmed, future, label, selected, onActivate }: BarProps) {
-    const target = value > 0 ? Math.max(CHART_BAR.minHeight, (value / plot.span) * BAR_AREA) : 0;
+function barTarget(value: number, plot: Plot, future: boolean): number {
+    if (future) {
+        return CHART_BAR.minHeight;
+    }
+    return value > 0 ? Math.max(CHART_BAR.minHeight, (value / plot.span) * BAR_AREA) : 0;
+}
+
+function Bar({ value, plot, color, animated, dimmed, future, label, selected, onActivate }: BarProps) {
+    const target = barTarget(value, plot, future);
     const height = useChartDraw(animated, target);
 
     const fillStyle = useAnimatedStyle(() => ({
@@ -287,8 +304,6 @@ function Bar({ value, plot, color, trackColor, animated, dimmed, future, label, 
             accessible
             onAccessibilityTap={future ? undefined : onActivate}
             style={{
-                backgroundColor: trackColor,
-                borderRadius: CHART_BAR.radius,
                 flex: 1,
                 height: BAR_AREA,
                 opacity: barOpacity(future, dimmed),
@@ -298,7 +313,10 @@ function Bar({ value, plot, color, trackColor, animated, dimmed, future, label, 
                 style={[
                     {
                         backgroundColor: color,
-                        borderRadius: CHART_BAR.radius,
+                        borderBottomLeftRadius: BAR_FOOT_RADIUS,
+                        borderBottomRightRadius: BAR_FOOT_RADIUS,
+                        borderTopLeftRadius: CHART_BAR.radius,
+                        borderTopRightRadius: CHART_BAR.radius,
                         bottom: 0,
                         left: 0,
                         position: "absolute",

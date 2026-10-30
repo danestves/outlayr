@@ -19,6 +19,9 @@ import { useGlobalCurrency } from "@/data/app-meta";
 import {
     bucketDateLabel,
     categoryBreakdownWithin,
+    categoryBuckets,
+    elapsedSlots,
+    periodTotal,
     runningTotals,
     subcategoryBreakdown,
     subcategoryBreakdownWithin,
@@ -33,12 +36,10 @@ import type {
     InsightsPeriod,
 } from "@/data/insights";
 import { useWindowTransactions } from "@/data/insights-transactions";
-import { useSpendingCalendar } from "@/data/spending-calendar";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useInsights } from "@/data/use-insights";
 import type { UseInsightsResult } from "@/data/use-insights";
 import { useNow } from "@/data/use-now";
-import { debtsOverview } from "@/domain/debts";
 import {
     insightsMeasureAlternatives,
     insightsMeasureFromStored,
@@ -61,18 +62,16 @@ import { useAtomAction } from "@/state/use-atom-action";
 import { withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";
 
-import { CategoryBreakdownRow } from "./components/category-breakdown-row";
-import { CategoryProportionBar } from "./components/category-proportion-bar";
+import { CategoryBlocks } from "./components/category-blocks";
 import { InsightsBarChart } from "./components/insights-bar-chart";
-import { InsightsMovers } from "./components/insights-movers";
 import { InsightsNetChart } from "./components/insights-net-chart";
 import { InsightsPeriodMenu } from "./components/insights-period-menu";
 import { InsightsQuiet } from "./components/insights-quiet";
 import { InsightsSample } from "./components/insights-sample";
 import { InsightsTransactionList } from "./components/insights-transaction-list";
-import { NetWorthCard } from "./components/net-worth-card";
+import { NetWorthLine } from "./components/net-worth-line";
 import { RecapRow } from "./components/recap-row";
-import { SpendingCalendar } from "./components/spending-calendar";
+import { WindowStepper } from "./components/window-stepper";
 import { heroMagnitudeFor, heroPositiveFor } from "./hero";
 import { MEASURE_KEY } from "./measure-label";
 import { PERIODS } from "./periods";
@@ -133,6 +132,10 @@ function subBreakdownFor(
         );
     }
     return subcategoryBreakdown(rows, categoriesById, filterId, period, measure, new Date(nowMs), offset, calendar);
+}
+
+function withoutLoneDirect(entries: CategoryBreakdownEntry[], filterId: string | null): CategoryBreakdownEntry[] {
+    return entries.length === 1 && entries[0].id === filterId ? [] : entries;
 }
 
 /** A bare date would read as that day's own net, not the running position. */
@@ -225,12 +228,7 @@ export function Insights() {
     const currency = useGlobalCurrency(db);
     const { showCents } = useDisplaySettings().state;
     const nowMs = useNow();
-    const { overview: ledger, series: netWorth } = useNetWorth(db, nowMs);
-    const split = ledger === null ? null : debtsOverview(ledger.rows, currency);
-    const debts =
-        split !== null && split.youOwe.length + split.owedToYou.length + split.settled.length > 0
-            ? { owedToYou: split.owedToYouTotal, youOwe: split.youOweTotal }
-            : null;
+    const { series: netWorth } = useNetWorth(db, nowMs);
 
     const incomeTracking = useSettingBool("incomeTracking");
     const storedPeriod = useSettingNumber("insightsTimeFrame");
@@ -249,7 +247,6 @@ export function Insights() {
     const [filterId, setFilterId] = useState<string | null>(null);
 
     const result = useInsights(db, nowMs, period, measure, offset, calendar);
-    const spendingCalendar = useSpendingCalendar(db, nowMs);
 
     // Cleared on change, not in an effect, so no frame pairs the old selection with the new window.
     const windowKey = `${offset}|${period}|${measure}`;
@@ -275,34 +272,47 @@ export function Insights() {
 
     const lockedBucket = bucketAt(result.buckets, lockedIndex);
     const scrubBucket = bucketAt(result.buckets, scrubIndex);
-    const readBucket = scrubBucket ?? lockedBucket;
 
     const breakdown = breakdownFor(result.breakdown, result.rows, result.categoriesById, lockedBucket, measure, nowMs);
 
     const filteredEntry = filterId ? (breakdown.find((entry) => entry.id === filterId) ?? null) : null;
+    const activeFilterId = filteredEntry?.id ?? null;
 
-    const subBreakdown = subBreakdownFor(
-        result.rows,
-        result.categoriesById,
-        filterId,
-        lockedBucket,
-        period,
-        measure,
-        nowMs,
-        offset,
-        calendar
+    const subBreakdown = withoutLoneDirect(
+        subBreakdownFor(
+            result.rows,
+            result.categoriesById,
+            activeFilterId,
+            lockedBucket,
+            period,
+            measure,
+            nowMs,
+            offset,
+            calendar
+        ),
+        activeFilterId
     );
+
+    const chartMeasure = filteredEntry && measure === "net" ? "spent" : measure;
+    const chartBuckets = filteredEntry
+        ? categoryBuckets(result.buckets, result.rows, filteredEntry.id, measure === "income", new Date(nowMs))
+        : result.buckets;
+    const chartAverage = filteredEntry
+        ? periodTotal(chartBuckets) / elapsedSlots(period, new Date(nowMs), offset, calendar)
+        : result.measureAverage;
+
+    const readIndex = scrubIndex ?? lockedIndex;
+    const readBucket = bucketAt(chartBuckets, readIndex);
 
     const totals = { income: result.income, spent: result.spent };
     const scoped = readBucket != null || filteredEntry != null;
 
     // All zero is not empty: the window may be busy in the other direction.
-    const chartIsEmpty = result.buckets.every((bucket) => bucket.value === 0);
+    const chartIsEmpty = chartBuckets.every((bucket) => bucket.value === 0);
     const quietAlt = chartIsEmpty ? quietAlternative(measure, totals) : null;
 
-    const isNet = measure === "net";
-    const readIndex = scrubIndex ?? lockedIndex;
-    const running = isNet ? runningTotals(result.buckets) : [];
+    const isNet = chartMeasure === "net";
+    const running = isNet ? runningTotals(chartBuckets) : [];
     const readBalance = balanceAt(running, readIndex, isNet);
 
     const heroMagnitude = heroMagnitudeFor(filteredEntry, readBalance, readBucket, measure, totals);
@@ -350,7 +360,7 @@ export function Insights() {
         }
     };
 
-    const listQuery = windowQuery(lockedBucket, filterId, measure, nowMs, result.start, result.end);
+    const listQuery = windowQuery(lockedBucket, activeFilterId, measure, nowMs, result.start, result.end);
 
     const listTransactions = useWindowTransactions(db, listQuery);
     // Held here: the list unmounts with the selection and the hook flushes its pending write on unmount.
@@ -364,11 +374,11 @@ export function Insights() {
 
     const chart = (
         <ChartSlot
-            average={result.measureAverage}
-            buckets={result.buckets}
+            average={chartAverage}
+            buckets={chartBuckets}
             code={currency}
             isEmpty={chartIsEmpty}
-            measure={measure}
+            measure={chartMeasure}
             nowMs={nowMs}
             onCommit={setLockedIndex}
             onScrub={setScrubIndex}
@@ -377,6 +387,20 @@ export function Insights() {
             selectedIndex={lockedIndex}
         />
     );
+
+    const list = listQuery ? (
+        <View className="px-5 pt-6">
+            <InsightsTransactionList
+                currency={currency}
+                grouped={listGrouped}
+                key={`${listQuery.start.getTime()}:${listQuery.end.getTime()}:${listQuery.categoryId}:${listQuery.income}`}
+                onPress={openTransaction}
+                onRequestDelete={requestDelete}
+                pendingDeleteId={pendingId}
+                transactions={listTransactions}
+            />
+        </View>
+    ) : null;
 
     return (
         <>
@@ -391,11 +415,12 @@ export function Insights() {
                 <View className="px-5">
                     {recapRowVisible(new Date(nowMs)) ? <RecapRow nowMs={nowMs} /> : null}
                     <View className="flex-row flex-wrap gap-2">
-                        <ScopeChip
-                            accessibilityLabel={t("insights.window.shown")}
+                        <WindowStepper
                             actions={windowActions}
-                            menuTitle={t("insights.window.title")}
+                            canStepBack={!result.atEarliest}
+                            canStepForward={!result.atCurrent}
                             onAction={onWindowAction}
+                            onStep={step}
                             title={result.label}
                         />
                         {lockedBucket ? (
@@ -436,9 +461,26 @@ export function Insights() {
                     {!scoped && verdict.sentence ? (
                         <Text className="text-footnote text-muted pt-0.5">{verdict.sentence}</Text>
                     ) : null}
+                </View>
 
+                <BreakdownSection
+                    code={currency}
+                    entries={breakdown}
+                    filterId={activeFilterId}
+                    lockedBucket={lockedBucket}
+                    measure={measure}
+                    onFilter={setFilterId}
+                    period={period}
+                    priorLabel={result.priorLabel}
+                    showCents={showCents}
+                    subEntries={subBreakdown}
+                />
+
+                {lockedBucket ? null : list}
+
+                <View className="px-5">
                     {incomeTracking && !scoped ? (
-                        <View className="pt-3">
+                        <View className="pt-6">
                             <LedgerHead
                                 cells={insightsMeasureAlternatives(measure).map((alternative): LedgerCell => ({
                                     income: insightsMeasureIsIncome(alternative),
@@ -452,63 +494,22 @@ export function Insights() {
                         </View>
                     ) : null}
 
-                    <View className="pt-4">{chart}</View>
-
-                    {scoped ? null : (
-                        <View className="pt-6">
-                            <InsightsMovers
-                                code={currency}
-                                measure={measure}
-                                movers={result.movers}
-                                priorLabel={result.priorLabel}
-                            />
-                        </View>
-                    )}
+                    <View className="pt-7">
+                        <MonoLabel className="pb-3" numberOfLines={1}>
+                            {t(period === "year" ? "insights.chart.byMonth" : "insights.chart.byDay")}
+                        </MonoLabel>
+                        {chart}
+                    </View>
                 </View>
 
-                <BreakdownSection
-                    code={currency}
-                    entries={breakdown}
-                    filterId={filterId}
-                    lockedBucket={lockedBucket}
-                    measure={measure}
-                    onFilter={setFilterId}
-                    period={period}
-                    showCents={showCents}
-                    subEntries={subBreakdown}
-                />
+                {lockedBucket ? list : null}
 
-                <NetWorthCard
+                <NetWorthLine
                     currency={currency}
-                    debts={debts}
-                    onOpenDebts={() => router.push("/accounts")}
+                    onOpen={() => router.push("/accounts")}
                     series={netWorth}
                     showCents={showCents}
                 />
-
-                <View className="px-5 pt-6">
-                    <SpendingCalendar
-                        currency={currency}
-                        entries={spendingCalendar}
-                        firstWeekday={firstWeekday}
-                        now={new Date(nowMs)}
-                        showCents={showCents}
-                    />
-                </View>
-
-                {listQuery ? (
-                    <View className="px-5 pt-6">
-                        <InsightsTransactionList
-                            currency={currency}
-                            grouped={listGrouped}
-                            key={`${listQuery.start.getTime()}:${listQuery.end.getTime()}:${listQuery.categoryId}:${listQuery.income}`}
-                            onPress={openTransaction}
-                            onRequestDelete={requestDelete}
-                            pendingDeleteId={pendingId}
-                            transactions={listTransactions}
-                        />
-                    </View>
-                ) : null}
             </ScrollView>
         </>
     );
@@ -604,8 +605,9 @@ interface BreakdownSectionProps {
     filterId: string | null;
     lockedBucket: InsightsBucket | null;
     measure: InsightsMeasure;
-    onFilter: Dispatch<SetStateAction<string | null>>;
+    onFilter: (id: string | null) => void;
     period: InsightsPeriod;
+    priorLabel: string;
     showCents: boolean;
     subEntries: CategoryBreakdownEntry[];
 }
@@ -618,6 +620,7 @@ function BreakdownSection({
     measure,
     onFilter,
     period,
+    priorLabel,
     showCents,
     subEntries,
 }: BreakdownSectionProps) {
@@ -625,39 +628,27 @@ function BreakdownSection({
     if (entries.length === 0) {
         return null;
     }
-    const heading = lockedBucket
-        ? `${t("insights.categories")} · ${bucketDateLabel(period, lockedBucket.start)}`
-        : t("insights.categories");
+    const title = t(measure === "income" ? "insights.whereItCameFrom" : "insights.whereItWent");
+    const heading = lockedBucket ? `${title} · ${bucketDateLabel(period, lockedBucket.start)}` : title;
+    const compared = entries.some((entry) => entry.delta != null);
 
     return (
         <View className="px-5 pt-6">
-            <View className="pb-3">
-                <MonoLabel>{heading}</MonoLabel>
+            <View className="flex-row items-baseline justify-between gap-3 pb-3">
+                <MonoLabel numberOfLines={1}>{heading}</MonoLabel>
+                {compared ? (
+                    <MonoLabel numberOfLines={1}>{t("insights.movers.versus", { label: priorLabel })}</MonoLabel>
+                ) : null}
             </View>
-            <View className="pb-1">
-                <CategoryProportionBar entries={entries} onSelect={onFilter} selectedId={filterId} />
-            </View>
-            <View className="pt-2">
-                {entries.map((entry) => (
-                    <View key={entry.id}>
-                        <CategoryBreakdownRow
-                            code={code}
-                            dimmed={filterId != null && filterId !== entry.id}
-                            entry={entry}
-                            measure={measure}
-                            onClear={() => onFilter(null)}
-                            onPress={() => onFilter((current) => (current === entry.id ? null : entry.id))}
-                            selected={filterId === entry.id}
-                            showCents={showCents}
-                        />
-                        <SubBreakdown
-                            code={code}
-                            entries={filterId === entry.id ? subEntries : []}
-                            showCents={showCents}
-                        />
-                    </View>
-                ))}
-            </View>
+            <CategoryBlocks
+                code={code}
+                entries={entries}
+                measure={measure}
+                onSelect={onFilter}
+                selectedId={filterId}
+                showCents={showCents}
+            />
+            <SubBreakdown code={code} entries={subEntries} showCents={showCents} />
         </View>
     );
 }
@@ -675,7 +666,7 @@ function SubBreakdown({
         return null;
     }
     return (
-        <View className="gap-2 pt-2 pb-3 pl-4">
+        <View className="gap-2 pt-3">
             {entries.map((child) => (
                 <ChildRow code={code} entry={child} key={child.id} showCents={showCents} />
             ))}

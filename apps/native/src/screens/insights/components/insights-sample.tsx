@@ -6,17 +6,15 @@ import type { LedgerCell } from "@/components/ledger-head";
 import { MonoLabel } from "@/components/mono-label";
 import { LinearGradient } from "@/components/styled";
 import { Text } from "@/components/text";
-import type { CategoryBreakdownEntry, CategoryMover, InsightsBucket } from "@/data/insights";
+import type { CategoryBreakdownEntry, InsightsBucket } from "@/data/insights";
 import { formatAmount } from "@/domain/money";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
 import { withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";
 
-import { CategoryBreakdownRow } from "./category-breakdown-row";
-import { CategoryProportionBar } from "./category-proportion-bar";
+import { CategoryBlocks } from "./category-blocks";
 import { InsightsBarChart } from "./insights-bar-chart";
-import { InsightsMovers } from "./insights-movers";
 
 const noop = () => undefined;
 
@@ -37,8 +35,10 @@ function marchBuckets(values: number[]): InsightsBucket[] {
     }));
 }
 
-const DINING = { color: "#FF8A00", icon: "Restaurant01" } as const;
-const GROCERIES = { color: "#34C759", icon: "ShoppingCart01" } as const;
+const DINING = { color: "#A97332", icon: "Restaurant01" } as const;
+const GROCERIES = { color: "#53915A", icon: "ShoppingCart01" } as const;
+const SHOPPING = { color: "#B16482", icon: "ShoppingBag01" } as const;
+const TRANSPORT = { color: "#4D84BD", icon: "Bus01" } as const;
 
 const SAMPLE_BUCKETS: InsightsBucket[] = marchBuckets(DAILY_SPEND);
 
@@ -59,32 +59,11 @@ const sampleCells = (t: TranslateFn): LedgerCell[] => [
     },
 ];
 
-const sampleMovers = (t: TranslateFn): CategoryMover[] => [
-    {
-        color: DINING.color,
-        delta: 180,
-        emoji: null,
-        fraction: 0.34,
-        icon: DINING.icon,
-        id: "dining",
-        name: t("insights.sample.dining"),
-    },
-    {
-        color: GROCERIES.color,
-        delta: -95.4,
-        emoji: null,
-        fraction: -0.12,
-        icon: GROCERIES.icon,
-        id: "groceries",
-        name: t("insights.sample.groceries"),
-    },
-];
-
 const sampleBreakdown = (t: TranslateFn): CategoryBreakdownEntry[] => [
     {
         amount: 699.4,
         color: DINING.color,
-        delta: null,
+        delta: 0.34,
         emoji: null,
         fraction: 0.38,
         icon: DINING.icon,
@@ -94,12 +73,32 @@ const sampleBreakdown = (t: TranslateFn): CategoryBreakdownEntry[] => [
     {
         amount: 478.5,
         color: GROCERIES.color,
-        delta: null,
+        delta: -0.12,
         emoji: null,
         fraction: 0.26,
         icon: GROCERIES.icon,
         id: "groceries",
         name: t("insights.sample.groceries"),
+    },
+    {
+        amount: 286.1,
+        color: SHOPPING.color,
+        delta: 0.08,
+        emoji: null,
+        fraction: 0.155,
+        icon: SHOPPING.icon,
+        id: "shopping",
+        name: t("insights.sample.shopping"),
+    },
+    {
+        amount: 214.3,
+        color: TRANSPORT.color,
+        delta: -0.2,
+        emoji: null,
+        fraction: 0.116,
+        icon: TRANSPORT.icon,
+        id: "transport",
+        name: t("insights.sample.transport"),
     },
 ];
 
@@ -167,11 +166,29 @@ export function InsightsSample({ onAddTransaction }: InsightsSampleProps) {
                         })}
                     </Text>
 
-                    <View className="pt-3">
+                    <View className="pt-6">
+                        <View className="flex-row items-baseline justify-between gap-3 pb-3">
+                            <MonoLabel>{t("insights.whereItWent")}</MonoLabel>
+                            <MonoLabel>
+                                {t("insights.movers.versus", { label: t("insights.sample.priorLabel") })}
+                            </MonoLabel>
+                        </View>
+                        <CategoryBlocks
+                            code="USD"
+                            entries={breakdown}
+                            measure="spent"
+                            onSelect={noop}
+                            selectedId={null}
+                            showCents
+                        />
+                    </View>
+
+                    <View className="pt-6">
                         <LedgerHead cells={sampleCells(t)} code="USD" />
                     </View>
 
-                    <View className="pt-4">
+                    <View className="pt-7">
+                        <MonoLabel className="pb-3">{t("insights.chart.byDay")}</MonoLabel>
                         <InsightsBarChart
                             average={59}
                             buckets={SAMPLE_BUCKETS}
@@ -183,35 +200,6 @@ export function InsightsSample({ onAddTransaction }: InsightsSampleProps) {
                             period="month"
                             selectedIndex={null}
                         />
-                    </View>
-
-                    <View className="pt-6">
-                        <InsightsMovers
-                            code="USD"
-                            measure="spent"
-                            movers={sampleMovers(t)}
-                            priorLabel={t("insights.sample.priorLabel")}
-                        />
-                    </View>
-
-                    <View className="pt-6">
-                        <View className="pb-3">
-                            <MonoLabel>{t("insights.categories")}</MonoLabel>
-                        </View>
-                        <View className="pb-1">
-                            <CategoryProportionBar entries={breakdown} onSelect={noop} selectedId={null} />
-                        </View>
-                        <View className="pt-2">
-                            {breakdown.map((entry) => (
-                                <CategoryBreakdownRow
-                                    code="USD"
-                                    entry={entry}
-                                    key={entry.id}
-                                    measure="spent"
-                                    showCents
-                                />
-                            ))}
-                        </View>
                     </View>
                 </View>
             </ScrollView>
