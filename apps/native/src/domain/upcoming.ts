@@ -31,10 +31,10 @@ interface ScheduleRow extends CurrencyEntry {
     recurringType: number;
 }
 
-export function chargesInWeekAhead(rows: readonly ScheduleRow[], now: Date): CurrencyEntry[] {
-    const start = startOfDay(now).getTime();
-    const end = addDays(startOfDay(now), WEEK_AHEAD_DAYS).getTime();
-    const charges: CurrencyEntry[] = [];
+export function chargesBetween<T extends ScheduleRow>(rows: readonly T[], now: Date, from: Date, to: Date): T[] {
+    const start = from.getTime();
+    const end = to.getTime();
+    const charges: T[] = [];
     for (const row of rows) {
         if (row.income) {
             continue;
@@ -44,17 +44,15 @@ export function chargesInWeekAhead(rows: readonly ScheduleRow[], now: Date): Cur
         let at: Date | null = landingDate(row, now);
         while (at !== null && at.getTime() < stop) {
             if (at.getTime() >= start) {
-                charges.push({
-                    amount: row.amount,
-                    amountUsd: row.amountUsd ?? null,
-                    currency: row.currency ?? null,
-                    date: at,
-                    income: false,
-                });
+                charges.push({ ...row, date: at });
             }
             const next: Date | null = nextDate(at, row.recurringType, row.recurringCoefficient ?? 1, anchorDayOf(row));
             at = next !== null && next.getTime() > at.getTime() ? next : null;
         }
     }
     return charges;
+}
+
+export function chargesInWeekAhead<T extends ScheduleRow>(rows: readonly T[], now: Date): T[] {
+    return chargesBetween(rows, now, startOfDay(now), addDays(startOfDay(now), WEEK_AHEAD_DAYS));
 }
