@@ -89,7 +89,7 @@ const domain = {
             pt: "faltam {count}h",
         }),
         "clock.deviceNote": t({
-            en: "Starts on whatever your device uses; changing it here takes over.",
+            en: "Follows your device until you pick one",
             es: "Usa la configuración de tu dispositivo hasta que la cambies aquí.",
             "es-ES": "Usa los ajustes de tu dispositivo hasta que lo cambies aquí.",
             fr: "Suit le réglage de votre appareil jusqu'à ce que vous le changiez ici.",

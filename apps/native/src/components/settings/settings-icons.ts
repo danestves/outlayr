@@ -5,11 +5,13 @@ import BanknoteIcon from "@hugeicons-pro/core-stroke-rounded/BanknoteIcon";
 import BellIcon from "@hugeicons-pro/core-stroke-rounded/BellIcon";
 import Calculator01Icon from "@hugeicons-pro/core-stroke-rounded/Calculator01Icon";
 import Calendar01Icon from "@hugeicons-pro/core-stroke-rounded/Calendar01Icon";
+import Calendar03Icon from "@hugeicons-pro/core-stroke-rounded/Calendar03Icon";
 import CalendarClockIcon from "@hugeicons-pro/core-stroke-rounded/CalendarClockIcon";
 import Camera01Icon from "@hugeicons-pro/core-stroke-rounded/Camera01Icon";
 import ChartBarIncreasingIcon from "@hugeicons-pro/core-stroke-rounded/ChartBarIncreasingIcon";
 import ChartLineData01Icon from "@hugeicons-pro/core-stroke-rounded/ChartLineData01Icon";
 import ChartLineIcon from "@hugeicons-pro/core-stroke-rounded/ChartLineIcon";
+import Clock01Icon from "@hugeicons-pro/core-stroke-rounded/Clock01Icon";
 import CloudIcon from "@hugeicons-pro/core-stroke-rounded/CloudIcon";
 import Coins01Icon from "@hugeicons-pro/core-stroke-rounded/Coins01Icon";
 import ComputerPhoneSyncIcon from "@hugeicons-pro/core-stroke-rounded/ComputerPhoneSyncIcon";
@@ -67,9 +69,11 @@ const REGISTRY = {
     Bank: BankIcon,
     Calculator01: Calculator01Icon,
     Calendar01: Calendar01Icon,
+    Calendar03: Calendar03Icon,
     CalendarClock: CalendarClockIcon,
     Camera01: Camera01Icon,
     ChartLineData01: ChartLineData01Icon,
+    Clock01: Clock01Icon,
     Cloud: CloudIcon,
     CreditCard: CreditCardIcon,
     Currency: CurrencyIcon,
