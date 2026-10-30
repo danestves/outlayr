@@ -139,4 +139,21 @@ describe("commitEntry", () => {
 
         await expect(lookupOutbox(db)).resolves.toBeNull();
     });
+
+    it.each(["form", "voice", "scan"] as const)(
+        "queues a %s entry for the merchant lookup and syncs reminders",
+        async (source) => {
+            const { db } = ledger();
+            await Effect.runPromise(setBoolSetting(db, "aiConsentV2", true));
+            const synced = Promise.withResolvers<readonly string[]>();
+
+            const outcome = await commit({ db, draft: DRAFT, source }, { cancelled: synced.resolve });
+
+            if (outcome.kind !== "saved") {
+                throw new Error("The entry did not save");
+            }
+            await expect(lookupOutbox(db)).resolves.toBe(JSON.stringify([outcome.id]));
+            await expect(synced.promise).resolves.toStrictEqual(["outlayr.sub-due.gone"]);
+        }
+    );
 });

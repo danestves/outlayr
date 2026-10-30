@@ -3,7 +3,6 @@ import Image01Icon from "@hugeicons-pro/core-stroke-rounded/Image01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import type { RateTable } from "@outlayr/money/valuation";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import { Image } from "expo-image";
 import { useNavigation, useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
@@ -23,15 +22,10 @@ import { ReceiptFrame } from "@/components/receipt/receipt-frame";
 import { ReceiptLines } from "@/components/receipt/receipt-lines";
 import { ThinkingOrb } from "@/components/thinking-orb/thinking-orb";
 import { useDatabase } from "@/contexts/local-data-context";
-import { getAccountById, rememberLastUsedAccount } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
-import { attachmentsRepo } from "@/data/attachments-core";
-import { suggestedCardFee } from "@/data/card-fees-core";
 import { getCategoryById } from "@/data/categories-core";
 import { photoFileName } from "@/data/photo-store-core";
 import { useAiConsent } from "@/data/settings";
-import { transactionsRepo } from "@/data/transactions-core";
-import type { TransactionInput } from "@/data/transactions-core";
 import { useValuationIn } from "@/data/use-valuation";
 import type { Database } from "@/db/client";
 import type { AuthGate } from "@/domain/auth-gate";
@@ -54,13 +48,11 @@ import type { TranslatableKey } from "@/i18n/catalog";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
 import { useAuthSession } from "@/lib/auth-session";
-import { freshEntries } from "@/lib/fresh-entries";
 import { persistAttachmentBytes } from "@/lib/photo-storage";
-import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
 import { openAppSettings, voidFlowCommand } from "@/state/entry-commands";
+import { commitEntry } from "@/state/entry-commit";
 import { entryHref } from "@/state/entry-params";
-import { logged } from "@/state/entry-save";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
@@ -445,28 +437,6 @@ function pairRates(paid: RateTable, ledger: RateTable, paidCode: string): RateTa
     };
 }
 
-function receiptEntry(db: Database, draft: ResolvedReceipt, categoryId: string): TransactionInput {
-    return {
-        accountId: draft.accountId,
-        amount: draft.amount,
-        categoryId,
-        currency: draft.currency,
-        date: draft.date,
-        details: null,
-        fee: draft.income
-            ? null
-            : suggestedCardFee(db, {
-                  account: draft.accountId ? getAccountById(db, draft.accountId) : null,
-                  categoryId,
-                  currency: draft.currency,
-                  merchant: draft.merchant,
-              }),
-        income: draft.income,
-        note: draft.merchant,
-        receipt: serializeReceipt(draft),
-    };
-}
-
 function keptScan(image: ArrayBuffer): string | null {
     try {
         return persistAttachmentBytes(new Uint8Array(image));
@@ -477,38 +447,37 @@ function keptScan(image: ArrayBuffer): string | null {
 }
 
 interface WriteEntryInput {
-    accountId: string | null;
     attachment: string | null;
-    entry: () => TransactionInput;
-    income: boolean;
+    categoryId: string;
+    draft: ResolvedReceipt;
     onFailed: () => void;
     onSaved: () => void;
 }
 
 const writeEntry = Effect.fn("ReceiptScan.writeEntry")(function* writeEntry(db: Database, input: WriteEntryInput) {
-    const { attachment } = input;
-    const attachments = attachment === null ? [] : [{ id: null, imageKey: null, imageUri: attachment, name: null }];
-    const created = yield* Effect.suspend(() =>
-        transactionsRepo.create(db, input.entry(), {
-            inSameTransaction: (id) => attachmentsRepo.writeFor(db, id, attachments),
-        })
-    ).pipe(Effect.exit);
-    if (Exit.isFailure(created)) {
+    const { attachment, draft } = input;
+    const outcome = yield* commitEntry({
+        attachments: attachment === null ? [] : [{ id: null, imageKey: null, imageUri: attachment, name: null }],
+        db,
+        draft: {
+            accountId: draft.accountId,
+            amount: draft.amount,
+            categoryId: input.categoryId,
+            currency: draft.currency,
+            date: draft.date,
+            details: null,
+            income: draft.income,
+            merchant: draft.merchant,
+            receipt: serializeReceipt(draft),
+            schedule: null,
+        },
+        source: "scan",
+    });
+    if (outcome.kind === "failed") {
         // The row did not land; the form has the failure strip this screen lacks.
         input.onFailed();
         return;
     }
-    freshEntries.mark(created.value);
-    if (input.accountId) {
-        yield* logged("Failed to remember the account")(rememberLastUsedAccount(db, input.accountId));
-    }
-    posthog?.capture("transaction_saved", {
-        has_split: false,
-        is_subscription: false,
-        mode: "create",
-        source: "scan",
-        transaction_type: input.income ? "income" : "expense",
-    });
     input.onSaved();
 });
 
@@ -581,10 +550,9 @@ function ScanFlowScreen() {
         const attachment = keptScan(image);
         void runFlow(
             writeEntry(db, {
-                accountId: draft.accountId,
                 attachment,
-                entry: () => receiptEntry(db, draft, categoryId),
-                income: draft.income,
+                categoryId,
+                draft,
                 onFailed: () => {
                     setSaving(false);
                     if (navigation.isFocused()) {

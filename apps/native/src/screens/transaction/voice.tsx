@@ -31,14 +31,11 @@ import { ModalClose } from "@/components/modal-close";
 import { VoiceOrb } from "@/components/voice/voice-orb";
 import type { VoiceOrbState } from "@/components/voice/voice-orb";
 import { useDatabase } from "@/contexts/local-data-context";
-import { getAccountById, getLastUsedAccount, rememberLastUsedAccount } from "@/data/accounts-core";
+import { getLastUsedAccount } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
-import { suggestedCardFee } from "@/data/card-fees-core";
 import { getCategoryById } from "@/data/categories-core";
-import { backfillRecurring } from "@/data/recurrence-backfill";
 import { useAiConsent } from "@/data/settings";
-import { lastLoggedEntry, transactionsRepo } from "@/data/transactions-core";
-import type { TransactionInput } from "@/data/transactions-core";
+import { lastLoggedEntry } from "@/data/transactions-core";
 import { transfersRepo } from "@/data/transfers-core";
 import type { Database } from "@/db/client";
 import type { AuthGate } from "@/domain/auth-gate";
@@ -75,11 +72,10 @@ import { useAuthSession } from "@/lib/auth-session";
 import type { VoiceDraft, VoiceQuote } from "@/lib/convex";
 import { freshEntries } from "@/lib/fresh-entries";
 import { posthog } from "@/lib/posthog";
-import { syncSubscriptionReminders } from "@/lib/subscription-reminder-sync";
 import { useHaptics } from "@/lib/use-haptics";
 import { openAppSettings, voidFlowCommand } from "@/state/entry-commands";
+import { commitEntry } from "@/state/entry-commit";
 import { entryHref } from "@/state/entry-params";
-import { logged } from "@/state/entry-save";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
@@ -559,30 +555,6 @@ function failedActions(
     };
 }
 
-function voiceEntry(db: Database, draft: ResolvedVoiceEntry, categoryId: string): TransactionInput {
-    return {
-        accountId: draft.accountId,
-        amount: draft.amount,
-        categoryId,
-        currency: draft.currency,
-        date: draft.date,
-        details: draft.details,
-        fee: draft.income
-            ? null
-            : suggestedCardFee(db, {
-                  account: draft.accountId ? getAccountById(db, draft.accountId) : null,
-                  categoryId,
-                  currency: draft.currency,
-                  merchant: draft.merchant,
-              }),
-        income: draft.income,
-        note: draft.merchant,
-        onceRecurring: draft.recurrence !== null,
-        recurringCoefficient: draft.recurrence?.coefficient,
-        recurringType: draft.recurrence?.type,
-    };
-}
-
 interface WriteDone {
     onFailed: () => void;
     onSaved: () => void;
@@ -594,32 +566,29 @@ const writeEntry = Effect.fn("VoiceThread.writeEntry")(function* writeEntry(
     categoryId: string,
     done: WriteDone
 ) {
-    const created = yield* Effect.suspend(() =>
-        transactionsRepo.create(db, voiceEntry(db, draft, categoryId), { inSameTransaction: undefined })
-    ).pipe(Effect.exit);
-    if (Exit.isFailure(created)) {
+    const { recurrence } = draft;
+    const outcome = yield* commitEntry({
+        db,
+        draft: {
+            accountId: draft.accountId,
+            amount: draft.amount,
+            categoryId,
+            currency: draft.currency,
+            date: draft.date,
+            details: draft.details,
+            income: draft.income,
+            merchant: draft.merchant,
+            schedule:
+                recurrence === null
+                    ? null
+                    : { coefficient: recurrence.coefficient, endDate: null, leadDays: null, type: recurrence.type },
+        },
+        source: "voice",
+    });
+    if (outcome.kind === "failed") {
         // The row did not land; the form has the failure strip this screen lacks.
         done.onFailed();
         return;
-    }
-    const id = created.value;
-    freshEntries.mark(id);
-    posthog?.capture("transaction_saved", {
-        has_split: false,
-        is_subscription: draft.recurrence !== null,
-        mode: "create",
-        source: "voice",
-        transaction_type: draft.income ? "income" : "expense",
-    });
-    // The row is committed: nothing below may reopen a form that would write it twice.
-    if (draft.recurrence) {
-        // As the form does after its own save: past charges land now.
-        yield* logged("Failed to back-fill the spoken subscription")(backfillRecurring(db, id));
-        // Scheduled now: the next resume may come after the due date.
-        yield* Effect.forkDetach(logged("Failed to sync subscription reminders")(syncSubscriptionReminders(db)));
-    }
-    if (draft.accountId) {
-        yield* logged("Failed to remember the account")(rememberLastUsedAccount(db, draft.accountId));
     }
     done.onSaved();
 });
