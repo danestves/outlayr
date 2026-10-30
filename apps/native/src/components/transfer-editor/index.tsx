@@ -25,6 +25,7 @@ import { useDisplaySettings, useSettingNumber } from "@/contexts/display-setting
 import { useDatabase } from "@/contexts/local-data-context";
 import { usePeople } from "@/data/accounts";
 import type { SavedTransfer, TransferInput } from "@/data/transfers-core";
+import { useNow } from "@/data/use-now";
 import { formatSignedAmount } from "@/domain/account-display";
 import { rowAmountLabel } from "@/domain/amount-label";
 import { formatSentenceDate } from "@/domain/dates";
@@ -221,6 +222,7 @@ export default function TransferEditor({
     saved,
     seed,
 }: TransferEditorProps) {
+    const nowMs = useNow();
     const db = useDatabase();
     const registry = use(RegistryContext);
     const router = useRouter();
@@ -826,7 +828,7 @@ export default function TransferEditor({
                                 date: draft.date,
                                 interval: null,
                                 language,
-                                now: new Date(),
+                                now: new Date(nowMs),
                             }),
                         }}
                     />

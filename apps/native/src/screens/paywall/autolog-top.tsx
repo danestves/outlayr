@@ -6,6 +6,7 @@ import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useGlobalCurrency } from "@/data/app-meta";
 import type { useAutologUsage } from "@/data/autolog-cap";
+import { useNow } from "@/data/use-now";
 import { formatDayHeader } from "@/domain/dates";
 import { detectCurrency } from "@/domain/detect-currency";
 import { useLanguage, useTranslation } from "@/i18n/context";
@@ -17,11 +18,12 @@ import { meterSegments } from "./top-block";
 const SHOWN_WAITING = 3;
 
 function WaitingRow({ fallbackCurrency, write }: { fallbackCurrency: string; write: PendingWrite }) {
+    const nowMs = useNow();
     const t = useTranslation();
     const { language } = useLanguage();
     const code = write.currency?.trim().toUpperCase() || detectCurrency(write.amountText) || fallbackCurrency;
     const source = t(`pro.top.autolog.source.${autologSourceOf(write)}`);
-    const day = formatDayHeader(new Date(write.date), new Date(), language);
+    const day = formatDayHeader(new Date(write.date), new Date(nowMs), language);
     return (
         <View className="border-border flex-row items-center gap-3 border-b py-2.5">
             <View className="flex-1">

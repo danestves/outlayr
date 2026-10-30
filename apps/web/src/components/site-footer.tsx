@@ -11,6 +11,8 @@ import type { LocalizedTo } from "./localized-link";
 import { LogoMark } from "./logo-mark";
 import { ThemeSwitch } from "./theme-switch";
 
+const YEAR = new Date().getUTCFullYear();
+
 const LINK = "fluid text-muted hover:text-foreground -my-1.5 inline-block py-1.5";
 
 function Column({ children, title }: { children: ReactNode; title: ReactNode }) {
@@ -108,7 +110,7 @@ export function SiteFooter() {
                 </div>
                 <div className="border-border mt-12 flex flex-col gap-6 border-t pt-8 md:flex-row md:items-center md:justify-between">
                     <p className="text-muted text-xs">
-                        © {new Date().getUTCFullYear()}{" "}
+                        © {YEAR}{" "}
                         <a className="fluid hover:text-foreground" href={COMPANY_URL}>
                             {COMPANY}
                         </a>

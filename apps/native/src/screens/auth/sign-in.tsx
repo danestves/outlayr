@@ -12,6 +12,7 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { useReminderChosen } from "@/data/onboarding";
 import { deferAccount } from "@/data/onboarding-core";
+import { useNow } from "@/data/use-now";
 import { flyleafDate } from "@/domain/flyleaf";
 import { clampTimeOfDay, formatTimeOfDay, reminderTime } from "@/domain/reminder";
 import { useLanguage, useTranslation } from "@/i18n/context";
@@ -57,6 +58,7 @@ function FlyleafLine({ template, value, quiet }: { template: string; value: stri
 }
 
 function FlyleafCard() {
+    const nowMs = useNow();
     const db = useDatabase();
     const t = useTranslation();
     const { language } = useLanguage();
@@ -70,7 +72,7 @@ function FlyleafCard() {
 
     return (
         <View className="border-fr-rule bg-fr-card w-64 gap-1 rounded-3xl border px-5 py-4">
-            <FlyleafLine quiet template={t("auth.signIn.begun")} value={flyleafDate(new Date(), language)} />
+            <FlyleafLine quiet template={t("auth.signIn.begun")} value={flyleafDate(new Date(nowMs), language)} />
             <FlyleafLine
                 template={t("auth.signIn.kept")}
                 value={`${currency} ${currencyDisplayFor(currency).symbol}`}

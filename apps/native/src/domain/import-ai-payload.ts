@@ -6,7 +6,7 @@ export const MAX_LABELS = 200;
 const LONG_DIGIT_RUN = /\p{Nd}{4,}/gu;
 
 export function scrubLabel(raw: string): string {
-    return raw.replace(LONG_DIGIT_RUN, "").replaceAll(/\s+/g, " ").trim();
+    return raw.replaceAll(LONG_DIGIT_RUN, "").replaceAll(/\s+/g, " ").trim();
 }
 
 export interface ClassificationPayload {

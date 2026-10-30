@@ -11,6 +11,7 @@ import { MonoLabel } from "@/components/mono-label";
 import { ScreenHeader } from "@/components/screen-header";
 import { revealEntering } from "@/components/sentence/sentence-motion";
 import { Text } from "@/components/text";
+import { useNow } from "@/data/use-now";
 import { formatTargetDate } from "@/domain/dates";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { CompactDatePicker } from "@/screens/budgets/components/compact-date-picker";
@@ -26,6 +27,7 @@ export function PayInstallment({ all, planId }: { all: boolean; planId: string }
 }
 
 function PayForm(props: PayFormProps) {
+    const nowMs = useNow();
     const { account, sources } = props;
     const t = useTranslation();
     const insets = useSafeAreaInsets();
@@ -137,7 +139,7 @@ function PayForm(props: PayFormProps) {
                                                 setDate(picked);
                                             }}
                                             onDismiss={() => setPickingDate(false)}
-                                            range={{ end: new Date() }}
+                                            range={{ end: new Date(nowMs) }}
                                             value={date}
                                         />
                                     </Animated.View>

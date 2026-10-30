@@ -3,11 +3,13 @@ import { useEffect } from "react";
 
 import { FirstRun } from "@/components/first-run";
 import { OutlayrMark } from "@/components/outlayr-mark";
+import { useNow } from "@/data/use-now";
 import { flyleafDate } from "@/domain/flyleaf";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { useMoneyManagerSession } from "@/lib/money-manager-session";
 
 export function OnboardingWelcome() {
+    const nowMs = useNow();
     const router = useRouter();
     const t = useTranslation();
     const { language } = useLanguage();
@@ -30,7 +32,7 @@ export function OnboardingWelcome() {
             body={t("onboarding.cover.line")}
             cover
             eyebrow={t("onboarding.welcome.begun", {
-                date: flyleafDate(new Date(), language),
+                date: flyleafDate(new Date(nowMs), language),
             })}
             object={<OutlayrMark size={92} />}
             skip={{ label: t("mmImport.welcome.switching"), onPress: () => router.push("/onboarding/import") }}

@@ -5,6 +5,7 @@ import { MaterialListItem } from "@/components/list/material-list-item";
 import { MaterialHost } from "@/components/material-host";
 import type { ReminderTimeRowProps } from "@/components/settings/reminder-time-row";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
+import { useNow } from "@/data/use-now";
 import { formatTimeOfDay } from "@/domain/reminder";
 import { useLanguage, useTranslation } from "@/i18n/context";
 
@@ -13,12 +14,13 @@ export type { ReminderTimeRowProps } from "@/components/settings/reminder-time-r
 // Android's picker is a dialog that stays up while mounted, so it mounts only while open: mounted with the row it
 // would trap the screen. `MaterialHost` gives it the app's scheme, not the handset's.
 export function ReminderTimeRow({ onChange, value }: ReminderTimeRowProps) {
+    const nowMs = useNow();
     const t = useTranslation();
     const { language } = useLanguage();
     const { use24Hour } = useDisplaySettings().state;
     const [open, setOpen] = useState(false);
 
-    const pickerValue = new Date();
+    const pickerValue = new Date(nowMs);
     pickerValue.setHours(value.hour, value.minute, 0, 0);
 
     return (

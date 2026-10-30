@@ -18,7 +18,7 @@ export function interpolate(template: string, params: TranslationParams | undefi
         return template;
     }
     // `null` renders empty; `undefined` keeps the placeholder visible so a wiring mistake shows.
-    return template.replace(PLACEHOLDER, (match, name: string, offset: number) => {
+    return template.replaceAll(PLACEHOLDER, (match, name: string, offset: number) => {
         const value = params[name];
         if (value === undefined) {
             return match;

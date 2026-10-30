@@ -37,6 +37,7 @@ import { getCategoryById } from "@/data/categories-core";
 import { useAiConsent } from "@/data/settings";
 import { lastLoggedEntry } from "@/data/transactions-core";
 import { transfersRepo } from "@/data/transfers-core";
+import { useNow } from "@/data/use-now";
 import type { Database } from "@/db/client";
 import type { AuthGate } from "@/domain/auth-gate";
 import { formatRelativeDay } from "@/domain/dates";
@@ -226,10 +227,11 @@ function ReviewLine({
     categoryName: string | null;
     draft: ResolvedVoiceEntry;
 }) {
+    const nowMs = useNow();
     const t = useTranslation();
     const { language } = useLanguage();
     const amount = formatAmount(draft.amount, draft.currency, true, language);
-    const day = formatRelativeDay(draft.date, new Date(), language);
+    const day = formatRelativeDay(draft.date, new Date(nowMs), language);
     const preposition = t(draft.income ? "voice.review.from" : "voice.review.at");
     const mark = useMerchantMark(draft.merchant, draft.domain);
 
@@ -284,11 +286,12 @@ function ReviewLine({
 }
 
 function TransferReviewLine({ draft }: { draft: ResolvedVoiceTransfer }) {
+    const nowMs = useNow();
     const t = useTranslation();
     const { language } = useLanguage();
     const colors = useColors();
     const amount = formatAmount(draft.amount, draft.currency, true, language);
-    const day = formatRelativeDay(draft.date, new Date(), language);
+    const day = formatRelativeDay(draft.date, new Date(nowMs), language);
     const missing = t("voice.review.noAccount");
 
     return (

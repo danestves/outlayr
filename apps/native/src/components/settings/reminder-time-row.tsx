@@ -2,6 +2,7 @@ import { DateTimePicker } from "@expo/ui/community/datetime-picker";
 import { View } from "react-native";
 
 import { Text } from "@/components/text";
+import { useNow } from "@/data/use-now";
 import type { TimeOfDay } from "@/domain/reminder";
 import { useTranslation } from "@/i18n/context";
 import { useColors } from "@/theme/use-colors";
@@ -12,10 +13,11 @@ export interface ReminderTimeRowProps {
 }
 
 export function ReminderTimeRow({ onChange, value }: ReminderTimeRowProps) {
+    const nowMs = useNow();
     const colors = useColors();
     const t = useTranslation();
 
-    const pickerValue = new Date();
+    const pickerValue = new Date(nowMs);
     pickerValue.setHours(value.hour, value.minute, 0, 0);
 
     return (

@@ -10,6 +10,7 @@ import { OutlinedDateField } from "@/components/material/outlined-date-field";
 import { OutlinedSelectField } from "@/components/material/outlined-field";
 import { SheetHeader } from "@/components/sheet-header";
 import { Text } from "@/components/text";
+import { useNow } from "@/data/use-now";
 import { useTranslation } from "@/i18n/context";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
@@ -31,6 +32,7 @@ export function PayInstallment({ all, planId }: { all: boolean; planId: string }
 }
 
 function PayForm(props: PayFormProps) {
+    const nowMs = useNow();
     const { account, sources } = props;
     const t = useTranslation();
     const m3 = useMaterialColors();
@@ -121,7 +123,7 @@ function PayForm(props: PayFormProps) {
                             ground={m3.surfaceContainerLow}
                             label={t("installments.pay.date")}
                             onChange={setDate}
-                            range={{ end: new Date() }}
+                            range={{ end: new Date(nowMs) }}
                             value={date}
                         />
                         <View className="pt-2">

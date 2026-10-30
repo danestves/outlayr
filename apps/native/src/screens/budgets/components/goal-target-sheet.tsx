@@ -156,7 +156,7 @@ function GoalTargetBody({
         amount,
         {
             startAmount: target.balance ?? 0,
-            startDate: new Date(),
+            startDate: new Date(nowMs),
             targetDate: date,
         },
         minorUnits

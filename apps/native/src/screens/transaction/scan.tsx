@@ -26,6 +26,7 @@ import { useGlobalCurrency } from "@/data/app-meta";
 import { getCategoryById } from "@/data/categories-core";
 import { photoFileName } from "@/data/photo-store-core";
 import { useAiConsent } from "@/data/settings";
+import { useNow } from "@/data/use-now";
 import { useValuationIn } from "@/data/use-valuation";
 import type { Database } from "@/db/client";
 import type { AuthGate } from "@/domain/auth-gate";
@@ -333,11 +334,12 @@ function ReviewSheet({
     receipt: ResolvedReceipt;
     tint: string;
 }) {
+    const nowMs = useNow();
     const t = useTranslation();
     const { language } = useLanguage();
     const mark = useMerchantMark(receipt.merchant.trim().length > 0 ? receipt.merchant : null, receipt.domain);
     const conversion = conversionOf(receipt, ledgerCurrency, rates);
-    const day = formatRelativeDay(receipt.date, new Date(), language);
+    const day = formatRelativeDay(receipt.date, new Date(nowMs), language);
     const preposition = t(receipt.income ? "receipt.review.from" : "receipt.review.at");
     const amountClass = receipt.income ? "text-income" : "text-foreground";
     const money = (value: number) => formatAmount(value, receipt.currency, true, language);
