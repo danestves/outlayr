@@ -1,5 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { Language } from "@outlayr/email/language";
+import { PRO_ENTITLEMENT_ID } from "@outlayr/money/contract";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -14,7 +15,6 @@ import { DatabaseReader, DatabaseWriter, QueryCtx, Scheduler } from "./_generate
 import type mailState from "./_generated/tables/mailState";
 import { authComponent } from "./lib/betterAuth";
 import spec from "./mail.spec";
-import { PRO_ENTITLEMENT_ID } from "@outlayr/money/contract";
 
 const NOTICE_PAGE = 50;
 const ANONYMOUS_PREFIX = "$RCAnonymousID:";

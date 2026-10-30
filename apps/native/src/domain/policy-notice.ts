@@ -1,14 +1,4 @@
-import * as Schema from "effect/Schema";
-
-const Changes = Schema.Array(Schema.Struct({ detail: Schema.optional(Schema.String), label: Schema.String }));
-
-export const PolicyNotice = Schema.Struct({
-    changes: Schema.Struct({ en: Changes, es: Changes, fr: Changes, pt: Changes }),
-    document: Schema.Literals(["privacy", "terms"]),
-    effectiveAtMs: Schema.Number,
-});
-
-export type PolicyNotice = typeof PolicyNotice.Type;
+import type { PolicyNotice } from "@outlayr/backend/confect/legal";
 
 export function pendingNotice(
     notices: readonly PolicyNotice[],

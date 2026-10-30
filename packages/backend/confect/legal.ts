@@ -10,7 +10,9 @@ export const PolicyNotice = Schema.Struct({
     effectiveAtMs: Schema.Number,
 });
 
-export const POLICY_NOTICES: readonly (typeof PolicyNotice.Type)[] = [
+export type PolicyNotice = typeof PolicyNotice.Type;
+
+export const POLICY_NOTICES: readonly PolicyNotice[] = [
     {
         changes: {
             en: [

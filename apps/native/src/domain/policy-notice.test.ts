@@ -1,7 +1,7 @@
+import type { PolicyNotice } from "@outlayr/backend/confect/legal";
 import { expect, test } from "vite-plus/test";
 
 import { pendingNotice } from "./policy-notice";
-import type { PolicyNotice } from "./policy-notice";
 
 const notice = (effectiveAtMs: number, document: PolicyNotice["document"] = "privacy"): PolicyNotice => ({
     changes: { en: [], es: [], fr: [], pt: [] },

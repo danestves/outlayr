@@ -1,13 +1,10 @@
-import { makeFunctionReference } from "convex/server";
+import { PolicyNotice } from "@outlayr/backend/confect/legal";
+import { api } from "@outlayr/backend/convex/_generated/api";
 import * as Option from "effect/Option";
 import * as Atom from "effect/reactivity/Atom";
 import * as Schema from "effect/Schema";
 
-import { PolicyNotice } from "@/domain/policy-notice";
-
 import { cloudRuntime } from "./cloud-runtime";
-
-const NOTICES_QUERY = makeFunctionReference<"query", Record<string, never>, unknown>("legal:notices");
 
 const decodeNotices = Schema.decodeUnknownOption(Schema.Array(PolicyNotice));
 
@@ -17,7 +14,7 @@ export const policyNoticesAtom = Atom.make((get): readonly PolicyNotice[] => {
     if (cloudRuntime === null) {
         return NO_NOTICES;
     }
-    const watch = cloudRuntime.convex.watchQuery(NOTICES_QUERY, {});
+    const watch = cloudRuntime.convex.watchQuery(api.legal.notices, {});
     const read = () => {
         try {
             return Option.getOrElse(decodeNotices(watch.localQueryResult()), () => NO_NOTICES);
