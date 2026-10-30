@@ -8,19 +8,12 @@ import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { api } from "../convex/_generated/api";
 import schema from "../convex/schema";
+import { looksLikeJpeg, MAX_IMAGE_BYTES } from "./lib/captureArgs";
 import { captureLimiter, FREE_CAPTURE_CONFIG } from "./lib/captures";
 import { LANGUAGE_PATTERN } from "./lib/ledgerPrompt";
 import { perUserBurst } from "./lib/limits";
 import { runEdge } from "./lib/runEdge";
-import {
-    buildPrompt,
-    looksLikeJpeg,
-    MAX_IMAGE_BYTES,
-    MAX_ITEMS,
-    normalizeDraft,
-    normalizeItems,
-    rateLimiter,
-} from "./receiptScan";
+import { buildPrompt, MAX_ITEMS, normalizeDraft, normalizeItems, rateLimiter } from "./receiptScan";
 import type { ModelOutput } from "./receiptScan";
 import { authenticatedAs, seedAuthUser } from "./test.helpers";
 

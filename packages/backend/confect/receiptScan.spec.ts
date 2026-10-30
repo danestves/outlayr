@@ -1,6 +1,8 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import * as Schema from "effect/Schema";
 
+import { CurrencyCode, IsoDay, JpegImage, LanguageTag, RegionCode, withinNameBudget } from "./lib/captureArgs";
+
 // A privacy boundary: the photo plus only what the model needs in this ledger's terms. No ids, balances or history.
 export const receiptScanArgs = {
     accounts: Schema.Array(Schema.String),
@@ -15,6 +17,15 @@ export const receiptScanArgs = {
     /** `YYYY-MM-DD` in the device's local calendar. */
     today: Schema.String,
 };
+
+export const ReceiptScanInput = Schema.Struct({
+    ...receiptScanArgs,
+    currency: CurrencyCode,
+    image: JpegImage,
+    language: Schema.optional(LanguageTag),
+    regionCode: Schema.optional(RegionCode),
+    today: IsoDay,
+}).check(withinNameBudget);
 
 export const ScanStatus = Schema.Literals([
     "ok",

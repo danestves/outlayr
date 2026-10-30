@@ -34,8 +34,6 @@ import { runTransactionEdge } from "./lib/runEdge";
 import { MAX_AMOUNT } from "./lib/sanitizeLimits";
 import type { SpeakResult, SpeakStatus } from "./voiceEntry.spec";
 
-// A Convex value tops out at 1MB; a minute of AAC at the client's 48kbps mono preset is ~360KB.
-export const MAX_AUDIO_BYTES = 900_000;
 const MAX_MERCHANT_LENGTH = 80;
 const MAX_DETAILS_LENGTH = 200;
 const MAX_PAST_DAYS = 366;

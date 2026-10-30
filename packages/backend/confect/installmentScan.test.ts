@@ -8,8 +8,8 @@ import { api } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import { normalizePlan, MAX_INSTALLMENTS } from "./installmentScan";
 import type { ModelOutput } from "./installmentScan";
+import { MAX_IMAGE_BYTES } from "./lib/captureArgs";
 import { captureLimiter, FREE_CAPTURE_CONFIG } from "./lib/captures";
-import { MAX_IMAGE_BYTES } from "./receiptScan";
 import { authenticatedAs, seedAuthUser } from "./test.helpers";
 
 const modules = import.meta.glob("../convex/**/*.ts");

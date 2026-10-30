@@ -12,6 +12,7 @@ import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { api, components } from "../convex/_generated/api";
 import schema from "../convex/schema";
+import { MAX_AUDIO_BYTES } from "./lib/captureArgs";
 import { captureLimiter, FREE_CAPTURE_CONFIG } from "./lib/captures";
 import { namesWithinBudget } from "./lib/ledgerPrompt";
 import { fixedBurst, perUserBurst } from "./lib/limits";
@@ -19,7 +20,6 @@ import { runEdge } from "./lib/runEdge";
 import { authenticatedAs, seedAuthUser } from "./test.helpers";
 import {
     buildPrompt,
-    MAX_AUDIO_BYTES,
     normalizeDraft,
     normalizeQuotes,
     PROPOSE_DRAFT_TOOL,

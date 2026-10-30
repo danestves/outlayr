@@ -16,9 +16,6 @@ import { MAX_AMOUNT } from "./lib/sanitizeLimits";
 import type { ReceiptDraft, ReceiptItem, ScanResult, ScanStatus } from "./receiptScan.spec";
 import { isPro } from "./revenuecat";
 
-// A Convex value tops out at 1MB and the photo travels as one; the client re-encodes to fit.
-export const MAX_IMAGE_BYTES = 900_000;
-const JPEG_MAGIC = [0xff, 0xd8, 0xff] as const;
 const MAX_MERCHANT_LENGTH = 80;
 const MAX_ITEM_NAME_LENGTH = 80;
 const MAX_PAYMENT_LENGTH = 40;
@@ -69,11 +66,6 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
         shards: 10,
     },
 });
-
-export function looksLikeJpeg(image: ArrayBuffer): boolean {
-    const head = new Uint8Array(image, 0, Math.min(JPEG_MAGIC.length, image.byteLength));
-    return head.length === JPEG_MAGIC.length && JPEG_MAGIC.every((byte, index) => head[index] === byte);
-}
 
 export function buildPrompt(args: LedgerContext): string {
     return [

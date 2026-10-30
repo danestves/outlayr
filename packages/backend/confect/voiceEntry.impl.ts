@@ -10,6 +10,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
+import * as Schema from "effect/Schema";
 
 import { components } from "../convex/_generated/api";
 import refs from "./_generated/refs";
@@ -18,7 +19,6 @@ import { ActionCtx, Auth, MutationCtx, MutationRunner, Scheduler } from "./_gene
 import { traced } from "./lib/aiTracing";
 import { admitCapture } from "./lib/captures";
 import { anthropicApiKey, claudeModelId, elevenLabsApiKey } from "./lib/config";
-import { CURRENCY_PATTERN, DATE_PATTERN, LANGUAGE_PATTERN, namesWithinBudget } from "./lib/ledgerPrompt";
 import type { LedgerContext } from "./lib/ledgerPrompt";
 import { fixedBurst, perUserBurst } from "./lib/limits";
 import { modelCallError } from "./lib/modelCall";
@@ -29,7 +29,6 @@ import {
     CONTEXT_TURNS,
     failure,
     listTurns,
-    MAX_AUDIO_BYTES,
     ownsThread,
     PARSE_TIMEOUT_MS,
     rateLimiter,
@@ -37,7 +36,9 @@ import {
     transcribeClip,
     voiceAgent,
 } from "./voiceEntry";
-import spec from "./voiceEntry.spec";
+import spec, { VoiceEntryInput } from "./voiceEntry.spec";
+
+const isVoiceEntryInput = Schema.is(VoiceEntryInput);
 
 const startThread = FunctionImpl.make(
     databaseSchema,
@@ -165,14 +166,7 @@ const speak = FunctionImpl.make(
             return failure("notConfigured");
         }
 
-        if (
-            args.audio.byteLength === 0 ||
-            args.audio.byteLength > MAX_AUDIO_BYTES ||
-            !namesWithinBudget(args.categoryTree, args.accounts) ||
-            !DATE_PATTERN.test(args.today) ||
-            !CURRENCY_PATTERN.test(args.currency) ||
-            (args.language !== undefined && !LANGUAGE_PATTERN.test(args.language))
-        ) {
+        if (!isVoiceEntryInput(args)) {
             return failure("invalid");
         }
 
