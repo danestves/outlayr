@@ -147,6 +147,40 @@ describe("log_entry", () => {
         });
     });
 
+    it("lands an entry on its own midnights across a DST change in the stored zone", async () => {
+        const t = convexTest(schema, modules);
+        const owner = await ledger(t);
+        await authenticatedAs(t, owner).mutation(api.sync.push, {
+            deviceId: "phone",
+            rows: [
+                {
+                    deletedAt: null,
+                    fields: { value: "America/New_York" },
+                    localId: "timeZone",
+                    table: "appMeta",
+                    updatedAt: 1,
+                },
+            ],
+        });
+        const before = await authenticatedAs(t, owner).query(api.sync.currentSeq, {});
+
+        const entry = await log(t, owner, {
+            amount: 3,
+            category: "Coffee",
+            currency: "USD",
+            date: "2025-11-05",
+            kind: "expense",
+        });
+
+        expect(entry.date).toBe("2025-11-05");
+        const page = await authenticatedAs(t, owner).query(api.sync.pullSince, { cursor: before - 1 });
+        expect(page.rows[0]?.fields).toMatchObject({
+            date: at("2025-11-05T17:00:00Z"),
+            day: at("2025-11-05T05:00:00Z"),
+            month: at("2025-11-01T04:00:00Z"),
+        });
+    });
+
     it("refuses a caller without Pro and writes nothing", async () => {
         const t = convexTest(schema, modules);
         revenuecatTest.register(t);

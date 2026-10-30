@@ -30,8 +30,8 @@ import {
     UnknownCurrency,
 } from "./mcpEntries";
 import spec from "./mcpEntries.spec";
-import { localDate, utcOffsetOf } from "./mcpLedger";
-import { setting } from "./mcpLedger.impl";
+import { fixedOffset, localDate, utcOffsetOf } from "./mcpLedger";
+import { setting, storedZone } from "./mcpLedger.impl";
 import { isPro } from "./revenuecat";
 
 const filedBefore = Effect.fn("McpEntries.filedBefore")(function* filedBefore(
@@ -60,6 +60,15 @@ const filedBefore = Effect.fn("McpEntries.filedBefore")(function* filedBefore(
         )
         .reduce<TransactionsDoc | null>((best, row) => (best === null || row.date > best.date ? row : best), null);
     return newest?.categoryId ?? null;
+});
+
+const newestRowOffset = Effect.fn("McpEntries.newestRowOffset")(function* newestRowOffset(userId: string) {
+    const reader = yield* DatabaseReader;
+    const latest = yield* reader
+        .table("transactions")
+        .index("by_user_and_seq", (q) => q.eq("userId", userId), "desc")
+        .first();
+    return fixedOffset(Option.match(latest, { onNone: () => 0, onSome: (row) => utcOffsetOf(row.day) }));
 });
 
 const logEntry = FunctionImpl.make(
@@ -120,15 +129,9 @@ const logEntry = FunctionImpl.make(
             }
             const account = args.account ? yield* named(accounts, args.account, "account") : null;
 
-            const latest = yield* reader
-                .table("transactions")
-                .index("by_user_and_seq", (q) => q.eq("userId", userId), "desc")
-                .first();
-            // ponytail: one offset from the newest row; an entry across a DST change lands an hour
-            // off its midnight. Sync the IANA zone in appMeta to fix.
-            const offsetMs = Option.match(latest, { onNone: () => 0, onSome: (row) => utcOffsetOf(row.day) });
+            const offsetAt = (yield* storedZone(userId)) ?? (yield* newestRowOffset(userId));
             const now = yield* Clock.currentTimeMillis;
-            const date = yield* entryInstant(args.date, now, offsetMs);
+            const date = yield* entryInstant(args.date, now, offsetAt);
             const { idempotencyKey } = args;
             const localId = idempotencyKey ? yield* keyedLocalId(userId, idempotencyKey) : crypto.randomUUID();
             const entry = {
@@ -136,7 +139,7 @@ const logEntry = FunctionImpl.make(
                 amount,
                 category: category.name,
                 currency,
-                date: localDate(date, offsetMs),
+                date: localDate(date, offsetAt(date)),
                 kind: args.kind,
                 note: note || (category.name ?? ""),
             };
@@ -149,7 +152,7 @@ const logEntry = FunctionImpl.make(
                 if (logged.amount !== amount || logged.currency !== currency || logged.income !== income) {
                     return yield* new IdempotencyKeyReused();
                 }
-                return { ...entry, date: localDate(logged.date, offsetMs), note: logged.note };
+                return { ...entry, date: localDate(logged.date, offsetAt(logged.date)), note: logged.note };
             }
 
             const lookup: RateLookup = (quote, rateType, day) =>
@@ -171,7 +174,7 @@ const logEntry = FunctionImpl.make(
             });
             yield* writer.table("transactions").insert({
                 ...valuation,
-                ...localMidnights(date, offsetMs),
+                ...localMidnights(date, offsetAt),
                 accountId: account?.localId ?? null,
                 amount,
                 categoryId: category.localId,

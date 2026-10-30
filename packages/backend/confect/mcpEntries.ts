@@ -3,7 +3,8 @@ import * as Schema from "effect/Schema";
 
 import { MAX_AMOUNT } from "./lib/sanitizeLimits";
 import { sha256Hex } from "./lib/sha256Hex";
-import { EntryKind, localDate } from "./mcpLedger";
+import { EntryKind, fromWall, localDate } from "./mcpLedger";
+import type { OffsetAt } from "./mcpLedger";
 
 export const MCP_DEVICE_ID = "mcp";
 
@@ -128,24 +129,24 @@ export function named<T extends { name: string | null }>(
 export function entryInstant(
     date: string | undefined,
     now: number,
-    offsetMs: number
+    offsetAt: OffsetAt
 ): Effect.Effect<number, InvalidDate> {
     const wanted = date?.trim();
-    if (!wanted || wanted === localDate(now, offsetMs)) {
+    if (!wanted || wanted === localDate(now, offsetAt(now))) {
         return Effect.succeed(now);
     }
     const noon = Date.parse(`${wanted}T12:00:00Z`);
     if (!ISO_DATE.test(wanted) || Number.isNaN(noon) || localDate(noon, 0) !== wanted) {
         return Effect.fail(new InvalidDate({ date: wanted }));
     }
-    return Effect.succeed(noon - offsetMs);
+    return Effect.succeed(fromWall(noon, offsetAt));
 }
 
-export function localMidnights(instant: number, offsetMs: number) {
-    const local = new Date(instant + offsetMs);
+export function localMidnights(instant: number, offsetAt: OffsetAt) {
+    const local = new Date(instant + offsetAt(instant));
     return {
-        day: Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate()) - offsetMs,
-        month: Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), 1) - offsetMs,
+        day: fromWall(Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate()), offsetAt),
+        month: fromWall(Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), 1), offsetAt),
     };
 }
 

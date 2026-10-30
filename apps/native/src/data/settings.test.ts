@@ -5,10 +5,11 @@ import type { Database } from "@/db/client";
 import { migratedDatabase } from "@/db/test-database";
 import { amountParts, formatAmount } from "@/domain/money";
 
-import { META_KEYS, setMeta } from "./app-meta-core";
+import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
 import { selectSettings, settingsSnapshot } from "./settings";
 import type { BoolSettingKey } from "./settings-core";
 import {
+    mirrorTimeZone,
     ordinalDay,
     parseBoolSetting,
     parseIntSetting,
@@ -44,6 +45,21 @@ describe("the 12/24-hour clock", () => {
         await Effect.runPromise(setBoolSetting(db, "use24HourClock", false));
         await Effect.runPromise(seedClockPreference(db, true));
         await expect(Effect.runPromise(readBoolSetting(db, "use24HourClock"))).resolves.toBe(false);
+    });
+});
+
+describe("the mirrored time zone", () => {
+    it("rewrites on a change of this device's zone, never over another device's pulled zone", async () => {
+        const db = makeDb();
+        const stored = () => Effect.runPromise(getMeta(db, META_KEYS.timeZone));
+        await Effect.runPromise(mirrorTimeZone(db, "America/Caracas"));
+        await Effect.runPromise(setMeta(db, META_KEYS.timeZone, "Pacific/Niue"));
+
+        await Effect.runPromise(mirrorTimeZone(db, "America/Caracas"));
+        await expect(stored()).resolves.toBe("Pacific/Niue");
+
+        await Effect.runPromise(mirrorTimeZone(db, "Europe/Madrid"));
+        await expect(stored()).resolves.toBe("Europe/Madrid");
     });
 });
 
