@@ -1,4 +1,5 @@
 import { HOUR, isRateLimitError, RateLimiter } from "@convex-dev/rate-limiter";
+import { PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
 import { generateText, Output } from "ai";
 import type { LanguageModel } from "ai";
 import type { UserIdentity } from "convex/server";
@@ -8,11 +9,11 @@ import * as Schema from "effect/Schema";
 import { components } from "../convex/_generated/api";
 import refs from "./_generated/refs";
 import { ActionCtx, MutationRunner } from "./_generated/services";
-import { PICKABLE_CURRENCY_CODES } from "./lib/currencies";
 import { clampDate, describeTree, normalizeDomain, pickKnown, trimTo } from "./lib/ledgerPrompt";
 import type { LedgerContext } from "./lib/ledgerPrompt";
 import { perUserBurst } from "./lib/limits";
 import { modelCallError, modelSchema } from "./lib/modelCall";
+import { MAX_AMOUNT } from "./lib/sanitizeLimits";
 import type { ReceiptDraft, ReceiptItem, ScanResult, ScanStatus } from "./receiptScan.spec";
 import { isPro } from "./revenuecat";
 
@@ -24,8 +25,6 @@ const MAX_ITEM_NAME_LENGTH = 80;
 const MAX_PAYMENT_LENGTH = 40;
 export const MAX_ITEMS = 60;
 const MAX_PAST_DAYS = 366 * 3;
-// The ledger's 13-digit ceiling (apps/native/src/domain/numpad.ts) keeps cent arithmetic inside float64's safe range.
-export const MAX_AMOUNT = 9_999_999_999_999;
 // Under the client's 30s abort.
 export const REQUEST_TIMEOUT_MS = 22_000;
 

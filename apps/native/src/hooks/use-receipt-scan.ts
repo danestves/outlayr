@@ -15,7 +15,7 @@ import { localIsoDate } from "@/domain/voice-entry";
 import { trackCapturesWall } from "@/hooks/use-usage-limits";
 import { duringHandoff } from "@/lib/app-handoff";
 import { receiptScanTransport } from "@/lib/convex";
-import type { ReceiptDraft, ReceiptScanFn, ScanRequest } from "@/lib/convex";
+import type { ReceiptDraft, ReceiptScanFn, ScanRequest, ScanStatus } from "@/lib/convex";
 import { launchPick, pendingPick } from "@/lib/pending-pick";
 import type { PickOwner } from "@/lib/pending-pick";
 import { useLatest } from "@/lib/use-latest";
@@ -54,7 +54,7 @@ type ScanPhase<Context, Draft> =
 
 interface ScanReply<Draft> {
     draft: Draft | null;
-    status: string;
+    status: ScanStatus;
 }
 
 type ScanSend<Draft> = (image: ArrayBuffer, today: string) => Effect.Effect<ScanReply<Draft>, unknown>;
@@ -82,31 +82,18 @@ export interface UseImageScanResult<Context, Draft> {
     takePhoto: () => void;
 }
 
-function failureFor(status: string): ScanFailure {
-    switch (status) {
-        case "unclear": {
-            return "unclear";
-        }
-        case "notConfigured": {
-            return "notConfigured";
-        }
-        case "unauthenticated": {
-            return "unauthenticated";
-        }
-        case "rateLimited": {
-            return "rateLimited";
-        }
-        case "notEntitled": {
-            return "notEntitled";
-        }
-        case "quotaExceeded": {
-            return "quotaExceeded";
-        }
-        default: {
-            return "provider";
-        }
-    }
-}
+const FAILURE_FOR = {
+    invalid: "provider",
+    invalidResponse: "provider",
+    notConfigured: "notConfigured",
+    notEntitled: "notEntitled",
+    ok: "provider",
+    providerError: "provider",
+    quotaExceeded: "quotaExceeded",
+    rateLimited: "rateLimited",
+    unauthenticated: "unauthenticated",
+    unclear: "unclear",
+} as const satisfies Record<ScanStatus, ScanFailure>;
 
 export function photoFrom(result: ImagePickerResult): ScanPhoto | null {
     const asset = result.canceled ? undefined : result.assets[0];
@@ -176,7 +163,7 @@ const readPhoto = Effect.fn("ReceiptScan.read")(function* readPhoto<Context, Dra
         ports.latest().onReview?.(settled.draft);
         return;
     }
-    const reason = failureFor(settled.status);
+    const reason = FAILURE_FOR[settled.status];
     trackCapturesWall(reason);
     ports.setPhase({ kind: "failed", photo, reason });
 });

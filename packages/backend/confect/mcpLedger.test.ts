@@ -534,6 +534,19 @@ describe("budget_status", () => {
     });
 });
 
+describe("recent_transactions", () => {
+    it("dates an evening entry on the user's day, not UTC's", async () => {
+        const date = at("2026-10-09T02:00:00Z");
+        const t = await seeded({
+            transactions: [entry("evening", { amount: 12, date, day: midnightOf(date, CARACAS) })],
+        });
+
+        await expect(t.query(internal.mcpLedger.recentTransactions, { user })).resolves.toMatchObject([
+            { date: "2026-10-08" },
+        ]);
+    });
+});
+
 describe("upcoming_charges", () => {
     it("lands each schedule on the user's calendar and costs the month like the Upcoming list", async () => {
         const local = (iso: string) => at(iso) - CARACAS;

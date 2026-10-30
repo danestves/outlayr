@@ -1,4 +1,5 @@
 import { DAY, HOUR, RateLimiter } from "@convex-dev/rate-limiter";
+import { PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
 import { generateText, Output } from "ai";
 import type { LanguageModel } from "ai";
 import * as Clock from "effect/Clock";
@@ -8,7 +9,6 @@ import * as Schema from "effect/Schema";
 import { components, internal } from "../convex/_generated/api";
 import type { ActionCtx, MutationCtx } from "../convex/_generated/server";
 import type { Suggestion } from "./enrichment.spec";
-import { PICKABLE_CURRENCY_CODES } from "./lib/currencies";
 import { describeTree } from "./lib/ledgerPrompt";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { fixedBurst } from "./lib/limits";

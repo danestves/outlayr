@@ -24,7 +24,7 @@ export interface UseAccountIdentityArgs {
     onClear: () => void;
     onLogo: (logo: AccountLogo) => void;
     regionCode?: string;
-    remoteEnabled?: boolean;
+    remoteEnabled: boolean;
     transport?: EnrichmentFn | null;
 }
 
@@ -38,7 +38,7 @@ const resolveLocal = (suggestion: EnrichmentSuggestion) => suggestion;
 export function useAccountIdentity(args: UseAccountIdentityArgs): UseAccountIdentityResult {
     const {
         enabled,
-        remoteEnabled = true,
+        remoteEnabled,
         groundedLookup = true,
         locale,
         regionCode,

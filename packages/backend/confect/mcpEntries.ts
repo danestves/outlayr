@@ -1,8 +1,9 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
+import { MAX_AMOUNT } from "./lib/sanitizeLimits";
 import { sha256Hex } from "./lib/sha256Hex";
-import { EntryKind } from "./mcpLedger";
+import { EntryKind, localDate } from "./mcpLedger";
 
 export const MCP_DEVICE_ID = "mcp";
 
@@ -57,10 +58,14 @@ export class UnknownCurrency extends Schema.TaggedError<UnknownCurrency>()("Unkn
 }
 
 export class InvalidAmount extends Schema.TaggedError<InvalidAmount>()("InvalidAmount", {
-    reason: Schema.Literals(["notANumber", "zero"]),
+    reason: Schema.Literals(["notANumber", "tooLarge", "zero"]),
 }) {
     override get message(): string {
-        return this.reason === "zero" ? "amount must not be zero." : "amount must be a number.";
+        return {
+            notANumber: "amount must be a number.",
+            tooLarge: `amount must be at most ${MAX_AMOUNT.toLocaleString("en-US")}.`,
+            zero: "amount must not be zero.",
+        }[this.reason];
     }
 }
 
@@ -103,8 +108,6 @@ export class IdempotencyKeyReused extends Schema.TaggedError<IdempotencyKeyReuse
         Schema.withConstructorDefault(Effect.succeed("This idempotencyKey was already used for a different entry."))
     ),
 }) {}
-
-export const localDate = (instant: number, offsetMs: number) => new Date(instant + offsetMs).toISOString().slice(0, 10);
 
 export function named<T extends { name: string | null }>(
     rows: readonly T[],

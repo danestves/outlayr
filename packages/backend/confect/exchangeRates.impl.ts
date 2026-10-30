@@ -1,4 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import { utcDateString } from "@outlayr/money/dates";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -24,7 +25,6 @@ import {
     RECENT_ROWS_LIMIT,
 } from "./exchangeRates";
 import spec from "./exchangeRates.spec";
-import { utcDateString } from "./lib/currencies";
 
 const toRateWire = ({ date, fetchedAt, quote, rate, rateType, source }: ExchangeRatesDoc) => ({
     date,

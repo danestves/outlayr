@@ -38,7 +38,6 @@ import type { TransactionWithCategory } from "./transactions";
 import { useValuation } from "./use-valuation";
 
 export { type BudgetSeverity, compareBudgetSeverity } from "@/domain/budget-severity";
-export * from "./budgets-core";
 
 export type Budget = typeof budgets.$inferSelect;
 

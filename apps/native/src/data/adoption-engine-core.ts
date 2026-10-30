@@ -42,7 +42,6 @@ function rowKey(table: SyncedTable, localId: string): string {
 const readAccountLog = Effect.fn("AdoptionEngine.readAccountLog")(function* readAccountLog(pull: PullFn) {
     const latest = new Map<string, PulledRow>();
     let cursor = 0;
-    // Each page's cursor is the next request's argument, so the pages cannot be fetched ahead.
     for (;;) {
         const page = yield* pullPage(pull, cursor);
         for (const row of page.rows) {
@@ -190,7 +189,6 @@ export const discardAccountLedger = Effect.fn("AdoptionEngine.discardAccountLedg
             Effect.gen(function* lift() {
                 for (const [table, rows] of lifts) {
                     const spec = specFor(table);
-                    // `transaction` holds one SQLite connection, so the lifts are issued on it one at a time.
                     for (const row of rows) {
                         // A lifted transaction's logo candidate stamp follows the new clock, before the write.
                         if (table === "transactions") {

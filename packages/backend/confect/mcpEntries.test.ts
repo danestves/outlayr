@@ -156,6 +156,15 @@ describe("log_entry", () => {
         await expect(t.run((ctx) => ctx.db.query("transactions").collect())).resolves.toHaveLength(0);
     });
 
+    it("refuses an amount past the ledger's 13-digit ceiling", async () => {
+        const t = convexTest(schema, modules);
+        const owner = await ledger(t);
+
+        await expect(log(t, owner, { amount: 1e300, category: "Coffee", kind: "expense" })).rejects.toThrow(
+            "amount must be at most 9,999,999,999,999."
+        );
+    });
+
     it("matches categories on the entry's own side and lists them on a miss", async () => {
         const t = convexTest(schema, modules);
         const owner = await ledger(t);

@@ -30,6 +30,7 @@ import { useAccountBalance } from "@/data/accounts";
 import { getAccountById } from "@/data/accounts-core";
 import type { Account } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
+import { remoteEnrichmentOn } from "@/data/settings-core";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import type { Database } from "@/db/client";
 import { formatAmount, minorUnitsFor, roundToMinorUnits } from "@/domain/money";
@@ -90,7 +91,7 @@ function AccountEditorReady(props: AccountEditorProps & { db: Database }) {
     const insets = useSafeAreaInsets();
     const keyboardHeight = useKeyboardHeight();
     const globalCurrency = useGlobalCurrency(db);
-    const aiEnrichment = useAppSettings().state.bool("aiEnrichment");
+    const remoteEnrichment = remoteEnrichmentOn(useAppSettings().state.bool);
     const groundedLookup = useAppSettings().state.bool("groundedLookup");
     const locale = useLocaleTag();
     const regionCode = useRegionCode();
@@ -239,7 +240,7 @@ function AccountEditorReady(props: AccountEditorProps & { db: Database }) {
             }));
         },
         regionCode,
-        remoteEnabled: aiEnrichment,
+        remoteEnabled: remoteEnrichment,
     });
 
     const onNameChange = (next: string) => {

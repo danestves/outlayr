@@ -31,6 +31,7 @@ import {
 import type { LedgerContext } from "./lib/ledgerPrompt";
 import { modelCallError, modelSchema } from "./lib/modelCall";
 import { runTransactionEdge } from "./lib/runEdge";
+import { MAX_AMOUNT } from "./lib/sanitizeLimits";
 import type { SpeakResult, SpeakStatus } from "./voiceEntry.spec";
 
 // A Convex value tops out at 1MB; a minute of AAC at the client's 48kbps mono preset is ~360KB.
@@ -41,8 +42,6 @@ const MAX_PAST_DAYS = 366;
 const MAX_RECURRENCE_EVERY = 99;
 const MAX_QUOTE_LENGTH = 60;
 const MAX_QUOTES = 8;
-// The ledger's 13-digit ceiling (apps/native/src/domain/numpad.ts) keeps cent arithmetic inside float64's safe range.
-const MAX_AMOUNT = 9_999_999_999_999;
 const MAX_FUTURE_DAYS = 1;
 // Both calls run in sequence inside the client's 25s abort.
 const TRANSCRIBE_TIMEOUT_MS = 10_000;

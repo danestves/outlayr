@@ -38,16 +38,23 @@ export function weekdayInitial(date: Date, language: Language = runtimeLanguage(
 }
 
 /** TODAY / YESTERDAY / "FRI, 24 JUL", with "'25" appended before the current year. */
-export function formatDayHeader(day: Date, now: Date = new Date(), language: Language = runtimeLanguage()): string {
-    const today = startOfDay(now).getTime();
+function relativeDayName(day: Date, now: Date, language: Language): string | null {
     const target = startOfDay(day).getTime();
-    if (target === today) {
-        return dateName("common.today", language).toUpperCase();
+    if (target === startOfDay(now).getTime()) {
+        return dateName("common.today", language);
     }
     if (target === startOfDay(addDays(now, -1)).getTime()) {
-        return dateName("common.yesterday", language).toUpperCase();
+        return dateName("common.yesterday", language);
     }
-    return formatDateHeader(day, now, language);
+    return null;
+}
+
+export function formatDayHeader(day: Date, now: Date = new Date(), language: Language = runtimeLanguage()): string {
+    return relativeDayName(day, now, language)?.toUpperCase() ?? formatDateHeader(day, now, language);
+}
+
+export function formatRelativeDay(date: Date, now: Date = new Date(), language: Language = runtimeLanguage()): string {
+    return relativeDayName(date, now, language) ?? formatChargeDate(date, now, language);
 }
 
 export function formatDateHeader(day: Date, now: Date = new Date(), language: Language = runtimeLanguage()): string {

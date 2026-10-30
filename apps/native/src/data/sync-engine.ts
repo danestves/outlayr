@@ -2,13 +2,13 @@ import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Queue from "effect/Queue";
 import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 
 import type { Database } from "@/db/client";
 import { isBehindWatermark } from "@/domain/sync-wakeup";
-import { WatchAppState } from "@/lib/app-events";
+import { listen, WatchAppState } from "@/lib/app-events";
+import type { Watch } from "@/lib/app-events";
 import { watchSyncWatermark } from "@/lib/convex";
 
 import { subscribeToTableChanges } from "./database-changes";
@@ -17,8 +17,6 @@ import { SyncStore } from "./sync-store";
 import type { SyncError } from "./sync-store";
 
 const SYNC_DEBOUNCE = Duration.seconds(2);
-
-type Watch<A> = (listener: (value: A) => void) => () => void;
 
 export const WatchWatermark = Context.Reference<Watch<number>>("outlayr/data/SyncEngine/WatchWatermark", {
     defaultValue: () => watchSyncWatermark,
@@ -31,20 +29,6 @@ export const WatchWatermark = Context.Reference<Watch<number>>("outlayr/data/Syn
 export class SyncEngine extends Context.Service<SyncEngine, { readonly run: (db: Database) => Effect.Effect<void> }>()(
     "outlayr/data/SyncEngine"
 ) {}
-
-const listen = <A>(watch: Watch<A>): Stream.Stream<A> =>
-    Stream.callback<A>(
-        (queue) =>
-            Effect.acquireRelease(
-                Effect.sync(() =>
-                    watch((value) => {
-                        Queue.offerUnsafe(queue, value);
-                    })
-                ),
-                (unwatch) => Effect.sync(unwatch)
-            ),
-        { bufferSize: 1, strategy: "sliding" }
-    );
 
 const tableChanges = (tables: readonly string[]) =>
     listen<string>((listener) => {

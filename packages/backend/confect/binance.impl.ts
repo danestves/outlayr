@@ -1,4 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import { utcDateString } from "@outlayr/money/dates";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -11,7 +12,6 @@ import { MutationRunner } from "./_generated/services";
 import { bestMerchantBid, requestSellAds } from "./binance";
 import type { BinanceError } from "./binance";
 import spec from "./binance.spec";
-import { utcDateString } from "./lib/currencies";
 import { outboundHttp } from "./lib/http";
 
 const logFetchFailure = (error: BinanceError) =>

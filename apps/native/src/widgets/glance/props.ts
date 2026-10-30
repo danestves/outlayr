@@ -1,5 +1,5 @@
 import { toAccountKind } from "@outlayr/money/account-kind";
-import { startOfDay } from "@outlayr/money/calendar";
+import { addDays, startOfDay } from "@outlayr/money/calendar";
 import * as Effect from "effect/Effect";
 
 import { settledBalanceAt } from "@/data/accounts";
@@ -30,7 +30,6 @@ export type AndroidWidgetFigures = Omit<Effect.Success<ReturnType<typeof loadWid
 const PERIODS: readonly InsightsPeriod[] = ["week", "month", "year"];
 const ENTRY_PERIODS: readonly EntriesPeriod[] = ["today", ...PERIODS];
 const MEASURES: readonly EntriesMeasure[] = ["spent", "income", "net"];
-const DAY_MS = 86_400_000;
 const SLICES_SHOWN = 3;
 
 const ownBalance = Effect.fn("Widgets.ownBalance")(function* ownBalance(db: Database, valuation: Valuation, now: Date) {
@@ -52,6 +51,7 @@ const capitalize = (text: string) => text.charAt(0).toLocaleUpperCase() + text.s
 export function androidWidgetProps(figures: AndroidWidgetFigures): AndroidWidgetProps {
     const { budget, now } = figures;
     const today = startOfDay(now).getTime();
+    const yesterday = startOfDay(addDays(now, -1)).getTime();
     const copy = (language: Language) => {
         const t = (key: TranslatableKey, params?: TranslationParams) => translateIn(language, key, params);
         const money = (value: number) => formatAmount(value, figures.currency, figures.showCents, language);
@@ -65,7 +65,7 @@ export function androidWidgetProps(figures: AndroidWidgetFigures): AndroidWidget
             if (day === today) {
                 return formatTime(date, figures.use24HourClock, language);
             }
-            return day === today - DAY_MS ? t("common.yesterday") : formatUpcomingDate(date, language);
+            return day === yesterday ? t("common.yesterday") : formatUpcomingDate(date, language);
         };
 
         const ledgerHeaders = buildLedgerHeaders(figures.contributions, now, figures.calendar, whole);

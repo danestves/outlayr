@@ -18,13 +18,19 @@ import {
 import { migratedDatabase, transactionalDatabase } from "@/db/test-database";
 import { asCloudCall } from "@/lib/fake-cloud";
 
-import { incomingWins } from "../../../../packages/backend/confect/lib/syncTables";
+import {
+    FIELDS_BY_TABLE,
+    incomingWins,
+    SYNCED_TABLES as CONVEX_SYNCED_TABLES,
+} from "../../../../packages/backend/confect/lib/syncTables";
+import { PUSH_BATCH_LIMIT as CONVEX_PUSH_BATCH_LIMIT } from "../../../../packages/backend/confect/sync";
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
 import {
     applyPulledRows,
     drainOutbox,
     ID_CHUNK,
     incomingWinsLocally,
+    PUSH_BATCH_LIMIT,
     pullAndApply,
     runSync,
     specFor,
@@ -173,6 +179,15 @@ describe("the replicated column set", () => {
         );
 
         expect([...spec.fields].sort()).toStrictEqual(declared.sort());
+    });
+
+    it.each(SYNCED_TABLES)("pushes the columns the Convex %s table accepts", (table) => {
+        expect([...specFor(table).fields].sort()).toStrictEqual(Object.keys(FIELDS_BY_TABLE[table]).sort());
+    });
+
+    it("replicates the tables Convex syncs, in batches it accepts", () => {
+        expect([...SYNCED_TABLES].sort()).toStrictEqual([...CONVEX_SYNCED_TABLES].sort());
+        expect(PUSH_BATCH_LIMIT).toBeLessThanOrEqual(CONVEX_PUSH_BATCH_LIMIT);
     });
 
     it("names only real timestamp columns as dates", () => {

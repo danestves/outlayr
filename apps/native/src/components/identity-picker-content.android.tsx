@@ -34,6 +34,7 @@ import { CATEGORY_PALETTE } from "@/data/categories-core";
 import { CATEGORY_EMOJI_GROUPS, CATEGORY_ICON_GROUPS, iconKeysMatching } from "@/domain/category-icon-catalog";
 import type { TranslateFn } from "@/i18n/context";
 import { useTranslation } from "@/i18n/context";
+import { chunkRows } from "@/lib/chunk";
 import { useHaptics } from "@/lib/use-haptics";
 import { SILENT } from "@/state/atom-command";
 import { pickHandoffPhotoCommand } from "@/state/identity-commands";
@@ -58,18 +59,10 @@ type GridRow =
     | { key: string; kind: "header"; title: string }
     | { key: string; kind: "cells"; items: readonly string[] };
 
-function chunk<T>(items: readonly T[], size: number): T[][] {
-    const rows: T[][] = [];
-    for (let index = 0; index < items.length; index += size) {
-        rows.push(items.slice(index, index + size));
-    }
-    return rows;
-}
-
 function gridRows(groups: readonly { title: string; items: readonly string[] }[]): GridRow[] {
     return groups.flatMap((group) => [
         { key: `h:${group.title}`, kind: "header" as const, title: group.title },
-        ...chunk(group.items, SYMBOL_COLUMNS).map((items, index) => ({
+        ...chunkRows(group.items, SYMBOL_COLUMNS).map((items, index) => ({
             items,
             key: `${group.title}:${index}`,
             kind: "cells" as const,
@@ -82,7 +75,7 @@ function glyphRows(tab: IdentityTab, query: string, t: TranslateFn): GridRow[] {
         return gridRows(CATEGORY_EMOJI_GROUPS.map((group) => ({ items: group.emoji, title: t(group.titleKey) })));
     }
     if (query.trim() !== "") {
-        return chunk(iconKeysMatching(query), SYMBOL_COLUMNS).map((items, index) => ({
+        return chunkRows(iconKeysMatching(query), SYMBOL_COLUMNS).map((items, index) => ({
             items,
             key: `q:${index}`,
             kind: "cells" as const,

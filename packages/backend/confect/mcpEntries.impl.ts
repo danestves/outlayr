@@ -12,6 +12,7 @@ import type { TransactionsDoc } from "./_generated/docs";
 import databaseSchema from "./_generated/schema";
 import { DatabaseReader, DatabaseWriter, MutationCtx } from "./_generated/services";
 import { dieAsConvexError } from "./lib/convexError";
+import { MAX_AMOUNT } from "./lib/sanitizeLimits";
 import { refuseWhileDeleting, seqCounter } from "./lib/syncGuards";
 import {
     CategoryRequired,
@@ -22,7 +23,6 @@ import {
     IdempotencyKeyReused,
     InvalidAmount,
     keyedLocalId,
-    localDate,
     localMidnights,
     MCP_DEVICE_ID,
     MEMORY_WINDOW,
@@ -30,7 +30,7 @@ import {
     UnknownCurrency,
 } from "./mcpEntries";
 import spec from "./mcpEntries.spec";
-import { utcOffsetOf } from "./mcpLedger";
+import { localDate, utcOffsetOf } from "./mcpLedger";
 import { setting } from "./mcpLedger.impl";
 import { isPro } from "./revenuecat";
 
@@ -88,6 +88,9 @@ const logEntry = FunctionImpl.make(
             const amount = roundMoney(Math.abs(args.amount), decimalsFor(currency));
             if (amount === 0) {
                 return yield* new InvalidAmount({ reason: "zero" });
+            }
+            if (amount > MAX_AMOUNT) {
+                return yield* new InvalidAmount({ reason: "tooLarge" });
             }
 
             const [categoryRows, accountRows] = yield* Effect.all(

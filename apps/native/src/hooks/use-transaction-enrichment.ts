@@ -68,7 +68,7 @@ export interface UseTransactionEnrichmentArgs {
     locale?: string;
     onSuggest: (suggestion: EnrichmentSuggestion) => void;
     regionCode?: string;
-    remoteEnabled?: boolean;
+    remoteEnabled: boolean;
     resolveHistory?: (key: string, income: boolean) => Effect.Effect<string | null, unknown>;
     resolveLocal: (suggestion: EnrichmentSuggestion) => EnrichmentSuggestion;
     recallMerchant?: (
@@ -480,7 +480,7 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         resolveDomain,
         recallMerchant,
         onSuggest,
-        remoteEnabled = true,
+        remoteEnabled,
         locale,
         regionCode,
         groundedLookup = true,

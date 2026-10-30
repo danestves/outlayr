@@ -56,6 +56,7 @@ import {
 import { CATEGORY_PALETTE } from "@/data/categories-core";
 import { CATEGORY_EMOJI_GROUPS, CATEGORY_ICON_GROUPS, iconKeysMatching } from "@/domain/category-icon-catalog";
 import { useTranslation } from "@/i18n/context";
+import { chunkRows } from "@/lib/chunk";
 import { outline } from "@/lib/swift-ui-geometry";
 import { useHaptics } from "@/lib/use-haptics";
 import { SILENT } from "@/state/atom-command";
@@ -94,14 +95,6 @@ const CAPTION2 = font({ design: "rounded", textStyle: "caption2" });
 /** App-icon squircle for the photo well (radius ≈ 0.226 · size, matching the hero). */
 const PHOTO_WELL = 132;
 const PHOTO_WELL_RADIUS = 30;
-
-function chunk<T>(items: readonly T[], size: number): T[][] {
-    const rows: T[][] = [];
-    for (let index = 0; index < items.length; index += size) {
-        rows.push(items.slice(index, index + size));
-    }
-    return rows;
-}
 
 /** The enclosing `<Host>` and the sheet chrome belong to the route. */
 const NO_USED_COLORS: string[] = [];
@@ -331,7 +324,7 @@ function IconRows({
 }) {
     return (
         <VStack alignment="leading" spacing={SYMBOL_GAP}>
-            {chunk(keys, SYMBOL_COLUMNS).map((row, index) => (
+            {chunkRows(keys, SYMBOL_COLUMNS).map((row, index) => (
                 <HStack key={String(index)} spacing={SYMBOL_GAP}>
                     {row.map((key) => (
                         <RNHostView key={key} matchContents>
@@ -365,7 +358,7 @@ function EmojiRows({
 }) {
     return (
         <VStack alignment="leading" spacing={SYMBOL_GAP}>
-            {chunk(emojis, SYMBOL_COLUMNS).map((row, index) => (
+            {chunkRows(emojis, SYMBOL_COLUMNS).map((row, index) => (
                 <HStack key={String(index)} spacing={SYMBOL_GAP}>
                     {row.map((emoji) => (
                         <RNHostView key={emoji} matchContents>
