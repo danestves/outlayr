@@ -2,13 +2,30 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import type * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as HttpIncomingMessage from "effect/http/HttpIncomingMessage";
 import * as Option from "effect/Option";
+import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
-import { postHogConfig } from "./config";
+import { postHogConfig, postHogProjectToken } from "./config";
 
 const POSTHOG_TIMEOUT = Duration.seconds(10);
+const CAPTURE_URL = "https://us.i.posthog.com/i/v0/e/";
+
+export const capturePostHogEvent = Effect.fn("PostHog.capture")(function* capturePostHogEvent(
+    event: { distinct_id: string; event: string; properties: object },
+    timeout: Duration.Input
+) {
+    const token = yield* postHogProjectToken;
+    if (Option.isNone(token)) {
+        return Option.none<HttpClientResponse.HttpClientResponse>();
+    }
+    const request = yield* HttpClientRequest.post(CAPTURE_URL).pipe(
+        HttpClientRequest.bodyJson({ api_key: Redacted.value(token.value), ...event })
+    );
+    return Option.some(yield* HttpClient.execute(request).pipe(Effect.timeout(timeout)));
+});
 
 export class PostHogError extends Schema.TaggedError<PostHogError>()("PostHogError", {
     cause: Schema.optional(Schema.Defect()),

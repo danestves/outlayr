@@ -134,6 +134,7 @@ export const ROOT_STACK_SCREEN_NAMES = {
         "settings/licenses/[name]",
         "settings/category-symbol",
         "settings/email",
+        "settings/suggest",
         "transactions/[id]",
         "transactions/transfers/[id]",
         "transactions/voice",

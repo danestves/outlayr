@@ -115,14 +115,15 @@ export function LinkRow({
  * The switch has no handler: a tap on it also reaches the row's Pressable, and two handlers would run the
  * change twice (the app lock would ask for a fingerprint twice).
  */
-export function ToggleRow({ icon, title, value, onValueChange, testID }: ComponentProps<typeof IosToggleRow>) {
+export function ToggleRow({ icon, title, detail, value, onValueChange, testID }: ComponentProps<typeof IosToggleRow>) {
     return (
         <MaterialListItem
-            accessibilityLabel={title}
+            accessibilityLabel={detail ? `${title}, ${detail}` : title}
             accessibilityRole="switch"
             accessibilityState={{ checked: value }}
             icon={icon}
             onPress={() => onValueChange(!value)}
+            supporting={[detail]}
             testID={testID}
             title={title}
             trailing={

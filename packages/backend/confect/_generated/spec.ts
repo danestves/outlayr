@@ -6,6 +6,7 @@ import csvImport from "../csvImport.spec";
 import enrichment from "../enrichment.spec";
 import enrichmentQueue from "../enrichmentQueue.spec";
 import exchangeRates from "../exchangeRates.spec";
+import featureRequests from "../featureRequests.spec";
 import groundedLookup from "../groundedLookup.spec";
 import groundedSpend from "../groundedSpend.spec";
 import installmentScan from "../installmentScan.spec";
@@ -29,6 +30,7 @@ const spec: Spec.Spec<{
   readonly enrichment: GroupSpec.NamedAt<typeof enrichment, "enrichment">;
   readonly enrichmentQueue: GroupSpec.NamedAt<typeof enrichmentQueue, "enrichmentQueue">;
   readonly exchangeRates: GroupSpec.NamedAt<typeof exchangeRates, "exchangeRates">;
+  readonly featureRequests: GroupSpec.NamedAt<typeof featureRequests, "featureRequests">;
   readonly groundedLookup: GroupSpec.NamedAt<typeof groundedLookup, "groundedLookup">;
   readonly groundedSpend: GroupSpec.NamedAt<typeof groundedSpend, "groundedSpend">;
   readonly installmentScan: GroupSpec.NamedAt<typeof installmentScan, "installmentScan">;
@@ -51,6 +53,7 @@ const spec: Spec.Spec<{
   ["enrichment"]: enrichment,
   ["enrichmentQueue"]: enrichmentQueue,
   ["exchangeRates"]: exchangeRates,
+  ["featureRequests"]: featureRequests,
   ["groundedLookup"]: groundedLookup,
   ["groundedSpend"]: groundedSpend,
   ["installmentScan"]: installmentScan,

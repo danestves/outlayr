@@ -2,24 +2,12 @@ import { APICallError, wrapLanguageModel } from "ai";
 import type { LanguageModel, LanguageModelMiddleware } from "ai";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as HttpClient from "effect/http/HttpClient";
-import * as HttpClientRequest from "effect/http/HttpClientRequest";
-import * as Option from "effect/Option";
-import * as Redacted from "effect/Redacted";
-import * as Schema from "effect/Schema";
 
-import { postHogProjectToken } from "./config";
 import { outboundHttp } from "./http";
+import { capturePostHogEvent } from "./posthog";
 import { runEdge } from "./runEdge";
 
-const CAPTURE_URL = "https://us.i.posthog.com/i/v0/e/";
 const CAPTURE_TIMEOUT = Duration.seconds(3);
-
-class AiTracingError extends Schema.TaggedError<AiTracingError>()("AiTracingError", {
-    cause: Schema.optional(Schema.Defect()),
-}) {}
-
-const transport = (cause: unknown) => new AiTracingError({ cause });
 
 interface Generation {
     usage?: {
@@ -36,7 +24,7 @@ interface Generation {
     error?: unknown;
 }
 
-export type GenerationProperties = Record<string, string | number | boolean | undefined>;
+export type GenerationProperties = Record<string, string | number | boolean | undefined> & { $ai_trace_id: string };
 
 export function tracingMiddleware(
     feature: string,
@@ -126,24 +114,11 @@ export function traced(model: Exclude<LanguageModel, string>, feature: string) {
 export const captureGeneration = Effect.fn("AiTracing.capture")(function* captureGeneration(
     properties: GenerationProperties
 ) {
-    const token = yield* postHogProjectToken;
-    if (Option.isNone(token)) {
-        return;
-    }
-    const request = yield* HttpClientRequest.post(CAPTURE_URL).pipe(
-        HttpClientRequest.bodyJson({
-            api_key: Redacted.value(token.value),
-            distinct_id: properties.$ai_trace_id,
-            event: "$ai_generation",
-            properties,
-        }),
-        Effect.catchTags({ HttpBodyError: transport })
+    yield* capturePostHogEvent(
+        { distinct_id: properties.$ai_trace_id, event: "$ai_generation", properties },
+        CAPTURE_TIMEOUT
     );
-    yield* HttpClient.execute(request).pipe(
-        Effect.timeout(CAPTURE_TIMEOUT),
-        Effect.catchTags({ HttpClientError: transport, TimeoutError: transport })
-    );
-}, Effect.ignore);
+}, Effect.ignore());
 
 function capture(properties: GenerationProperties): Promise<void> {
     return runEdge(captureGeneration(properties).pipe(Effect.provide(outboundHttp)));

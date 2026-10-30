@@ -115,3 +115,27 @@ export const deleteAccountCommand = createRuntimeCommand(appRuntime, {
     }),
     label: "cloud:delete-account",
 });
+
+export interface FeatureRequest {
+    appVersion: string;
+    linkAccount: boolean;
+    locale: string;
+    notify: boolean;
+    osName: string;
+    osVersion: string;
+    reason: string;
+    submissionId: string;
+    wish: string;
+}
+
+export type FeatureRequestStatus = "ok" | "invalid" | "rateLimited" | "notConfigured" | "providerError";
+
+const FEATURE_REQUEST_TIMEOUT_MS = 15_000;
+
+export const submitFeatureRequestCommand = createCommand({
+    execute: (request: FeatureRequest) =>
+        cloudAction<FeatureRequest, FeatureRequestStatus>("featureRequests:submit", request).pipe(
+            Effect.timeout(FEATURE_REQUEST_TIMEOUT_MS)
+        ),
+    label: "cloud:feature-request",
+});
