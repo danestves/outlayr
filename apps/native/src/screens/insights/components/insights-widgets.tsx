@@ -1,13 +1,12 @@
 import { LineChart } from "panelui-native/components/line-chart";
 import { use } from "react";
-import type { ReactNode } from "react";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 
 import { AmountsHiddenContext } from "@/components/amount-text";
 import { CategoryIconTile } from "@/components/category-icon-tile";
 import { MonoLabel } from "@/components/mono-label";
-import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
+import { Widget } from "@/components/widget-card";
 import type { CategoryBreakdownEntry, InsightsMeasure } from "@/data/insights";
 import { formatSignedAmount } from "@/domain/account-display";
 import { formatDayMonth } from "@/domain/dates";
@@ -25,75 +24,8 @@ import { useColors } from "@/theme/use-colors";
 
 import { MEASURE_KEY } from "../measure-label";
 
-const WIDGET_SHADOW = { boxShadow: "0 1px 4px rgba(23, 21, 15, 0.08)" } as const;
-const WIDGET_HEIGHT = 160;
 const TILES_SHOWN = 3;
 const SPARK_RATIO = 5;
-
-export function WidgetCard({ children, className }: { children: ReactNode; className?: string }) {
-    return (
-        <View className={cn("bg-card rounded-[22px] p-3.5", className)} style={WIDGET_SHADOW}>
-            {children}
-        </View>
-    );
-}
-
-interface WidgetProps {
-    accessibilityHint?: string;
-    accessibilityLabel: string;
-    children?: ReactNode;
-    className?: string;
-    figure: string;
-    figureClass?: string;
-    onPress: () => void;
-    title: string;
-    unit: string;
-    unitClass?: string;
-}
-
-function Widget({
-    accessibilityHint,
-    accessibilityLabel,
-    children,
-    className,
-    figure,
-    figureClass = "text-foreground",
-    onPress,
-    title,
-    unit,
-    unitClass = "text-subtle",
-}: WidgetProps) {
-    return (
-        <Pressable
-            accessibilityHint={accessibilityHint}
-            accessibilityLabel={accessibilityLabel}
-            accessibilityRole="button"
-            className={cn("bg-card justify-between gap-3 rounded-[22px] p-3.5 active:opacity-70", className)}
-            onPress={onPress}
-            style={[WIDGET_SHADOW, { minHeight: WIDGET_HEIGHT }]}
-        >
-            <View className="gap-1.75">
-                <MonoLabel numberOfLines={1}>{`${title}  ›`}</MonoLabel>
-                <View>
-                    <Text
-                        adjustsFontSizeToFit
-                        className={cn("font-sans-semibold text-title tabular-nums", figureClass)}
-                        minimumFontScale={0.6}
-                        numberOfLines={1}
-                    >
-                        {figure}
-                    </Text>
-                    {unit ? (
-                        <Text className={cn("font-sans-medium text-footnote", unitClass)} numberOfLines={2}>
-                            {unit}
-                        </Text>
-                    ) : null}
-                </View>
-            </View>
-            {children}
-        </Pressable>
-    );
-}
 
 function useMoney(code: string, showCents: boolean) {
     const { language } = useLanguage();
