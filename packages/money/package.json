@@ -8,6 +8,7 @@
         "./account-kind": "./src/account-kind.ts",
         "./account-overview": "./src/account-overview.ts",
         "./assert": "./src/assert.ts",
+        "./budget-figures": "./src/budget-figures.ts",
         "./budget-rollover": "./src/budget-rollover.ts",
         "./budget-spent": "./src/budget-spent.ts",
         "./budget-window": "./src/budget-window.ts",

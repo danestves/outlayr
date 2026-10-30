@@ -29,7 +29,9 @@ const JUNE_11 = new Date(2026, 5, 11, 12);
 const figures: AndroidWidgetFigures = {
     balance: { currency: "EUR", total: 1240.5 },
     budget: {
-        limit: 100,
+        amount: 100,
+        leftover: -30,
+        overBudget: true,
         spent: 130,
         type: BUDGET_TYPE.month,
         window: { end: new Date(2026, 6, 1), start: new Date(2026, 5, 1) },

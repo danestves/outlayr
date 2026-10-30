@@ -1,7 +1,8 @@
-import { advanceBudgetWindow } from "@outlayr/money/budget-window";
+import { categoryBudgetFigures, overallBudgetFigures } from "@outlayr/money/budget-figures";
+import type { BudgetFigures } from "@outlayr/money/budget-figures";
 import { startOfDay } from "@outlayr/money/calendar";
 import { utcDateString } from "@outlayr/money/dates";
-import { isExact, limitIn } from "@outlayr/money/valuation";
+import { isExact } from "@outlayr/money/valuation";
 import { and, asc, desc, isNull, lte } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -343,7 +344,7 @@ export const buildWidgetProps = Effect.fn("Widgets.buildProps")(function* buildW
             chrome: WIDGET_PALETTE,
             todayCount: countExpenses(contributions, startOfDay(now), now),
             todayLabel: translateNow("common.today").toUpperCase(),
-            todaySpent: money(sumExpenses(contributions, startOfDay(now), now, null)),
+            todaySpent: money(sumExpenses(contributions, startOfDay(now), now)),
             url: DEEP_LINKS.newExpense,
         },
         intentBudgets: buildIntentBudgets(budgets, categoriesById, money, whole),
@@ -365,23 +366,8 @@ const budgetFigures = Effect.fn("Widgets.budgetFigures")(function* budgetFigures
     contributions: readonly Contribution[],
     valuation: Valuation
 ) {
-    const measure = (
-        row: {
-            amount: number;
-            amountUsd: number | null;
-            currency: string | null;
-            startDate: Date | null;
-            type: number;
-        },
-        categoryId: string | null
-    ) => {
-        const window = advanceBudgetWindow(row.startDate ?? now, row.type, now);
-        return {
-            limit: limitIn(row, window.start, valuation.displayCurrency, valuation.rates),
-            spent: sumExpenses(contributions, window.start, now, categoryId),
-            window,
-        };
-    };
+    const at = { displayCurrency: valuation.displayCurrency, now, rates: valuation.rates };
+    const expenses = contributions.filter((row) => !row.income);
 
     const [main] = yield* attempt("budgets", () =>
         db.select().from(mainBudgetTable).where(isNull(mainBudgetTable.deletedAt)).limit(1)
@@ -391,21 +377,16 @@ const budgetFigures = Effect.fn("Widgets.budgetFigures")(function* budgetFigures
     );
 
     return {
-        categories: categoryRows.map((row) => ({ row, ...measure(row, row.categoryId) })),
-        main: main ? { row: main, ...measure(main, null) } : null,
+        categories: categoryRows.map((row) => ({ row, ...categoryBudgetFigures(row, expenses, at) })),
+        main: main ? { row: main, ...overallBudgetFigures(main, expenses, at) } : null,
     };
 });
 
-type BudgetFigures = Effect.Success<ReturnType<typeof budgetFigures>>;
+type WidgetBudgets = Effect.Success<ReturnType<typeof budgetFigures>>;
 
 /** The Budgets screen's own comparator: over-budget first, and the zero limit guarded (`spent / 0` is `Infinity`). */
-function worstBudget(categories: BudgetFigures["categories"]) {
-    const [worst] = [...categories].sort((a, b) =>
-        compareBudgetSeverity(
-            { amount: a.limit, overBudget: a.spent > a.limit, spent: a.spent },
-            { amount: b.limit, overBudget: b.spent > b.limit, spent: b.spent }
-        )
-    );
+function worstBudget(categories: WidgetBudgets["categories"]) {
+    const [worst] = [...categories].sort(compareBudgetSeverity);
     return worst;
 }
 
@@ -421,19 +402,26 @@ export const loadWidgetFigures = Effect.fn("Widgets.loadFigures")(function* load
     return {
         ...settings,
         budget: budget
-            ? { limit: budget.limit, spent: budget.spent, type: budget.row.type, window: budget.window }
+            ? {
+                  amount: budget.amount,
+                  leftover: budget.leftover,
+                  overBudget: budget.overBudget,
+                  spent: budget.spent,
+                  type: budget.row.type,
+                  window: budget.window,
+              }
             : null,
         categoriesById,
         contributions,
         entries,
         todayCount: countExpenses(contributions, startOfDay(now), now),
-        todaySpent: sumExpenses(contributions, startOfDay(now), now, null),
+        todaySpent: sumExpenses(contributions, startOfDay(now), now),
         valuation,
     };
 });
 
 function buildBudget(
-    figures: BudgetFigures,
+    figures: WidgetBudgets,
     now: Date,
     categoriesById: ReadonlyMap<string, CategoryRow>,
     money: Money,
@@ -447,14 +435,12 @@ function buildBudget(
 
     let overall = empty;
     if (figures.main) {
-        const { row, limit, spent, window } = figures.main;
+        const { row } = figures.main;
         overall = present(
             row.name?.trim() ? row.name.trim() : translateNow("budgets.scope.everything"),
             true,
-            limit,
-            spent,
+            figures.main,
             row.type,
-            window,
             DEEP_LINKS.overallBudget
         );
     }
@@ -469,10 +455,8 @@ function buildBudget(
                 ? ranked.row.name.trim()
                 : (rankedCategory?.name ?? translateNow("budgets.name.default")),
             false,
-            ranked.limit,
-            ranked.spent,
+            ranked,
             ranked.row.type,
-            ranked.window,
             `${DEEP_LINKS.budgets}/${ranked.row.id}`
         );
     }
@@ -485,13 +469,10 @@ function buildBudget(
     function present(
         name: string,
         isOverall: boolean,
-        amount: number,
-        spent: number,
+        { amount, leftover, overBudget: over, spent, window }: BudgetFigures,
         type: number,
-        window: { start: Date; end: Date },
         url: string
     ): BudgetViewProps {
-        const over = spent > amount;
         const span = window.end.getTime() - window.start.getTime();
         const fraction = amount > 0 ? spent / amount : 0;
         return {
@@ -505,7 +486,7 @@ function buildBudget(
             periodLabel: translateNow(budgetPeriodPhrase(type)).toUpperCase(),
             present: true,
             rangeLabel: rangeLabel(window.start, window.end),
-            remaining: money(Math.abs(amount - spent)),
+            remaining: money(Math.abs(leftover)),
             remainingCaption: translateNow(over ? "budgets.suffix.over" : "budgets.suffix.left").toUpperCase(),
             spent: whole(spent),
             spentFraction: clamp01(fraction),
@@ -515,45 +496,49 @@ function buildBudget(
 }
 
 function buildIntentBudgets(
-    figures: BudgetFigures,
+    figures: WidgetBudgets,
     categoriesById: ReadonlyMap<string, CategoryRow>,
     money: Money,
     whole: Money
 ): IntentBudgetProps[] {
-    const view = (id: string, name: string, amount: number, spent: number, type: number): IntentBudgetProps => ({
+    const view = (
+        id: string,
+        name: string,
+        { amount, leftover, overBudget, spent }: BudgetFigures,
+        type: number
+    ): IntentBudgetProps => ({
         id,
         limit: whole(amount),
         name,
         percent: `${Math.round((amount > 0 ? spent / amount : 0) * 100)}%`,
         periodLabel: translateNow(budgetPeriodPhrase(type)),
-        remaining: money(Math.abs(amount - spent)),
-        remainingCaption: translateNow(spent > amount ? "budgets.suffix.over" : "budgets.suffix.left"),
+        remaining: money(Math.abs(leftover)),
+        remainingCaption: translateNow(overBudget ? "budgets.suffix.over" : "budgets.suffix.left"),
         spent: whole(spent),
     });
 
     const out: IntentBudgetProps[] = [];
 
     if (figures.main) {
-        const { row, limit, spent } = figures.main;
+        const { row } = figures.main;
         out.push(
             view(
                 OVERALL_BUDGET_ID,
                 row.name?.trim() ? row.name.trim() : translateNow("budgets.scope.everything"),
-                limit,
-                spent,
+                figures.main,
                 row.type
             )
         );
     }
 
-    for (const { row, limit, spent } of figures.categories) {
+    for (const budget of figures.categories) {
+        const { row } = budget;
         const meta = row.categoryId ? categoriesById.get(row.categoryId) : undefined;
         out.push(
             view(
                 row.id,
                 row.name?.trim() ? row.name.trim() : (meta?.name ?? translateNow("budgets.name.default")),
-                limit,
-                spent,
+                budget,
                 row.type
             )
         );
@@ -575,19 +560,13 @@ function sumIncome(rows: readonly Contribution[], start: Date, now: Date): numbe
     return total;
 }
 
-function sumExpenses(rows: readonly Contribution[], start: Date, now: Date, categoryId: string | null): number {
+function sumExpenses(rows: readonly Contribution[], start: Date, now: Date): number {
     const startMs = start.getTime();
     const nowMs = now.getTime();
     let total = 0;
     for (const row of rows) {
-        if (row.income) {
-            continue;
-        }
         const t = row.date.getTime();
-        if (t < startMs || t > nowMs) {
-            continue;
-        }
-        if (categoryId == null || row.categoryId === categoryId || row.parentId === categoryId) {
+        if (!row.income && t >= startMs && t <= nowMs) {
             total += row.amount;
         }
     }
@@ -728,7 +707,7 @@ export function buildLedgerHeaders(
         month: measures(translateNow("insights.period.month").toUpperCase(), totalsOf("month")),
         today: measures(translateNow("common.today").toUpperCase(), {
             income: sumIncome(contributions, startToday, now),
-            spent: sumExpenses(contributions, startToday, now, null),
+            spent: sumExpenses(contributions, startToday, now),
         }),
         week: measures(translateNow("insights.period.week").toUpperCase(), totalsOf("week")),
         year: measures(translateNow("insights.period.year").toUpperCase(), totalsOf("year")),

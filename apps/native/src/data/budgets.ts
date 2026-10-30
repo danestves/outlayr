@@ -1,6 +1,6 @@
 import { useAtomMount } from "@effect/atom-react/Hooks";
-import { carryWindows, effectiveLimit, rolloverCarryFrom } from "@outlayr/money/budget-rollover";
-import { spentForCategory, spentForMain } from "@outlayr/money/budget-spent";
+import { categoryBudgetFigures, overallBudgetFigures } from "@outlayr/money/budget-figures";
+import { carryWindows } from "@outlayr/money/budget-rollover";
 import type { ExpenseContribution } from "@outlayr/money/budget-spent";
 import {
     advanceBudgetWindow,
@@ -13,7 +13,7 @@ import {
 } from "@outlayr/money/budget-window";
 import type { BudgetWindow } from "@outlayr/money/budget-window";
 import { utcDateString } from "@outlayr/money/dates";
-import { limitIn, sumValuedIn, valueDatedRowsIn } from "@outlayr/money/valuation";
+import { sumValuedIn, valueDatedRowsIn } from "@outlayr/money/valuation";
 import type { DatedValuable, RateTable } from "@outlayr/money/valuation";
 import { and, asc, desc, eq, getTableColumns, gte, inArray, isNull, lte } from "drizzle-orm";
 import * as Effect from "effect/Effect";
@@ -192,35 +192,17 @@ export function useMainBudget(
     }
     const now = new Date(nowMs);
     const current = advanceBudgetWindow(row.startDate ?? now, row.type, now);
-    const window = shiftWindow(current.start, row.type, periodOffset);
-    const spent = spentForMain(contributions, window.start, new Date(windowEndMs(window, nowMs)));
-    const limit = limitIn(row, window.start, displayCurrency, rates);
-    // Anchored on the viewed window, so stepping back to March shows what March inherited.
-    const carry = row.rollover
-        ? rolloverCarryFrom(contributions, null, {
-              anchor: row.dateCreated ?? window.start,
-              current: window,
-              limit,
-              type: row.type,
-          }).credit
-        : 0;
-    const amount = effectiveLimit(limit, carry);
+    const figures = overallBudgetFigures(row, contributions, { displayCurrency, now, periodOffset, rates });
     return {
-        amount,
-        anchor: row.startDate ?? window.start,
-        carry,
+        ...figures,
+        anchor: row.startDate ?? figures.window.start,
         currency: row.currency,
         customName: row.name?.trim() ? row.name.trim() : null,
         id: row.id,
-        leftover: amount - spent,
-        limit,
         name: row.name?.trim() ? row.name.trim() : translateNow("budgets.scope.everything"),
-        overBudget: spent > amount,
         periodsBack: periodsBackTo(current.start, row.type, earliestDate(contributions)),
         rollover: row.rollover,
-        spent,
         type: row.type,
-        window,
     };
 }
 
@@ -266,6 +248,7 @@ export function useBurndowns(
     }, [contributions, budgetList, nowMs]);
 }
 
+/** Reads no row before {@link overBudgetReadStart}. */
 export function usePerCategoryBudgets(
     db: Database,
     nowMs: number,
@@ -285,18 +268,11 @@ export function usePerCategoryBudgets(
 
     const now = new Date(nowMs);
     return rows.map((row) => {
-        const { amount, carry, limit, spent, window } = categoryBudgetFigures(
-            row,
-            contributions,
-            now,
-            displayCurrency,
-            rates
-        );
+        const figures = categoryBudgetFigures(row, contributions, { displayCurrency, now, rates });
         const meta = row.categoryId ? categoryMeta.get(row.categoryId) : undefined;
         return {
-            amount,
-            anchor: row.startDate ?? window.start,
-            carry,
+            ...figures,
+            anchor: row.startDate ?? figures.window.start,
             categoryId: row.categoryId,
             color: meta?.color ?? "#767676",
             currency: row.currency,
@@ -304,39 +280,11 @@ export function usePerCategoryBudgets(
             emoji: meta?.emoji ?? null,
             icon: meta?.icon ?? null,
             id: row.id,
-            leftover: amount - spent,
-            limit,
             name: row.name?.trim() ? row.name.trim() : (meta?.name ?? "Budget"),
-            overBudget: spent > amount,
             rollover: row.rollover,
-            spent,
             type: row.type,
-            window,
         };
     });
-}
-
-/** Reads no row before {@link overBudgetReadStart}. */
-export function categoryBudgetFigures(
-    row: Budget,
-    contributions: readonly ExpenseContribution[],
-    now: Date,
-    displayCurrency: string,
-    rates: RateTable
-) {
-    const window = advanceBudgetWindow(row.startDate ?? now, row.type, now);
-    const spent = row.categoryId ? spentForCategory(contributions, row.categoryId, window.start, now) : 0;
-    const limit = limitIn(row, window.start, displayCurrency, rates);
-    const carry =
-        row.rollover && row.categoryId
-            ? rolloverCarryFrom(contributions, row.categoryId, {
-                  anchor: row.dateCreated ?? window.start,
-                  current: window,
-                  limit,
-                  type: row.type,
-              }).credit
-            : 0;
-    return { amount: effectiveLimit(limit, carry), carry, limit, spent, window };
 }
 
 // Moved back to its UTC midnight: valuation converts a currency's rows a UTC day at a time, and a row's value depends
@@ -407,23 +355,17 @@ export function useCategoryBudget(db: Database, id: string, nowMs: number, perio
 
     let budget: CategoryBudgetView | null = null;
     if (row && window) {
-        const spent = sumValuedIn(windowTransactions, displayCurrency, rates);
+        const figures = categoryBudgetFigures(row, contributions, {
+            displayCurrency,
+            now: new Date(nowMs),
+            periodOffset,
+            rates,
+            spent: sumValuedIn(windowTransactions, displayCurrency, rates),
+        });
         const meta = row.categoryId ? categoryMeta.get(row.categoryId) : undefined;
-        const limit = limitIn(row, window.start, displayCurrency, rates);
-        const carry =
-            row.rollover && row.categoryId
-                ? rolloverCarryFrom(contributions, row.categoryId, {
-                      anchor: row.dateCreated ?? window.start,
-                      current: window,
-                      limit,
-                      type: row.type,
-                  }).credit
-                : 0;
-        const amount = effectiveLimit(limit, carry);
         budget = {
-            amount,
-            anchor: row.startDate ?? window.start,
-            carry,
+            ...figures,
+            anchor: row.startDate ?? figures.window.start,
             categoryId: row.categoryId,
             color: meta?.color ?? "#767676",
             currency: row.currency,
@@ -431,14 +373,9 @@ export function useCategoryBudget(db: Database, id: string, nowMs: number, perio
             emoji: meta?.emoji ?? null,
             icon: meta?.icon ?? null,
             id: row.id,
-            leftover: amount - spent,
-            limit,
             name: row.name?.trim() ? row.name.trim() : (meta?.name ?? "Budget"),
-            overBudget: spent > amount,
             rollover: row.rollover,
-            spent,
             type: row.type,
-            window,
         };
     }
 
