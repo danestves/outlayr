@@ -23,6 +23,7 @@ import {
     rateLimiter,
     runSuggest,
     sanitizeCurrencyCode,
+    sanitizeLocale,
     sanitizeRegionCode,
 } from "./enrichment";
 import spec from "./enrichment.spec";
@@ -75,6 +76,7 @@ const suggest = FunctionImpl.make(
 
         const regionCode = sanitizeRegionCode(args.regionCode);
         const currency = sanitizeCurrencyCode(args.currency);
+        const locale = sanitizeLocale(args.locale);
 
         const { runQuery } = yield* QueryRunner;
         // Tier 1.5 spends no rate limit and runs before the API key check, so a hit works without the key.
@@ -122,7 +124,7 @@ const suggest = FunctionImpl.make(
                                 distinctId: args.shareAnalytics === true ? identity.subject : undefined,
                                 groundedLookup: args.groundedLookup,
                                 income: args.income,
-                                locale: args.locale,
+                                locale,
                                 name: trimmedName,
                                 regionCode,
                             })
@@ -140,7 +142,7 @@ const suggest = FunctionImpl.make(
                 categoryTree: args.categoryTree,
                 currency,
                 income: args.income,
-                locale: args.locale,
+                locale,
                 name: trimmedName,
                 regionCode,
             }

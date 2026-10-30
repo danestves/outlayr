@@ -10,7 +10,7 @@ import * as Schema from "effect/Schema";
 import { components, internal } from "../convex/_generated/api";
 import type { ActionCtx, MutationCtx } from "../convex/_generated/server";
 import type { Suggestion } from "./enrichment.spec";
-import { describeTree } from "./lib/ledgerPrompt";
+import { describeTree, LANGUAGE_PATTERN } from "./lib/ledgerPrompt";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { fixedBurst } from "./lib/limits";
 import { modelCallError, modelSchema } from "./lib/modelCall";
@@ -136,6 +136,11 @@ export function sanitizeRegionCode(region: string | undefined): string | undefin
     }
     const trimmed = region.trim().toUpperCase();
     return REGION_CODE_PATTERN.test(trimmed) ? trimmed : undefined;
+}
+
+export function sanitizeLocale(locale: string | undefined): string | undefined {
+    const trimmed = locale?.trim();
+    return trimmed !== undefined && LANGUAGE_PATTERN.test(trimmed) ? trimmed : undefined;
 }
 
 /** Client-submitted and it partitions the knowledge cache and per-key gate, so only pickable codes pass. */
