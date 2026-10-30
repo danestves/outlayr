@@ -36,6 +36,7 @@ import LayoutTable01Icon from "@hugeicons-pro/core-stroke-rounded/LayoutTable01I
 import LegalDocument01Icon from "@hugeicons-pro/core-stroke-rounded/LegalDocument01Icon";
 import LicenseIcon from "@hugeicons-pro/core-stroke-rounded/LicenseIcon";
 import LifebuoyIcon from "@hugeicons-pro/core-stroke-rounded/LifebuoyIcon";
+import LightbulbIcon from "@hugeicons-pro/core-stroke-rounded/LightbulbIcon";
 import Logout01Icon from "@hugeicons-pro/core-stroke-rounded/Logout01Icon";
 import Mail01Icon from "@hugeicons-pro/core-stroke-rounded/Mail01Icon";
 import Mic01Icon from "@hugeicons-pro/core-stroke-rounded/Mic01Icon";
@@ -120,6 +121,7 @@ const REGISTRY = {
     Languages: LanguagesIcon,
     DashboardSquare01: DashboardSquare01Icon,
     Lifebuoy: LifebuoyIcon,
+    Lightbulb: LightbulbIcon,
     Plug: PlugIcon,
     ScanFace: ScanFaceIcon,
     Smartphone: SmartphoneIcon,

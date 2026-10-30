@@ -331,6 +331,11 @@ export function Settings() {
                     title={t("settings.row.featureLab")}
                 />
                 <LinkRow
+                    icon="Lightbulb"
+                    onPress={() => router.push("/settings/suggest")}
+                    title={t("settings.row.suggest")}
+                />
+                <LinkRow
                     icon="Lifebuoy"
                     onPress={() => {
                         expectHandoff();

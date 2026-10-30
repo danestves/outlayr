@@ -135,19 +135,21 @@ export function LinkRow({ icon, title, value, detail, destructive, external, noC
 export function ToggleRow({
     icon,
     title,
+    detail,
     value,
     onValueChange,
     testID,
 }: {
     icon: SettingsIconName;
     title: string;
+    detail?: string;
     value: boolean;
     onValueChange: (value: boolean) => void;
     testID?: string;
 }) {
     const colors = useColors();
     return (
-        <RowShell icon={icon} title={title}>
+        <RowShell detail={detail} icon={icon} title={title}>
             <Switch
                 accessibilityLabel={title}
                 onValueChange={onValueChange}

@@ -52,7 +52,7 @@ import { LedgerAdoptionProvider, useLedgerAdoption } from "@/lib/ledger-adoption
 import { useScreenTracking } from "@/lib/posthog";
 import { useAnalyticsConsent } from "@/lib/posthog-consent";
 import { usePostHogIdentity } from "@/lib/posthog-identity";
-import { identityPickerDetent } from "@/lib/sheet-detents";
+import { identityPickerDetent, LARGE_ONLY } from "@/lib/sheet-detents";
 import { useSubscriptionReminderTaps } from "@/lib/use-subscription-reminder-taps";
 import { useWalletPushTaps } from "@/lib/use-wallet-push-taps";
 import { useStackChrome } from "@/navigation/stack-chrome";
@@ -330,6 +330,10 @@ function RootStack() {
                     />
                 ))}
                 <Stack.Screen name="settings/category-symbol" options={chrome.pickerSheet(pickerDetent)} />
+                <Stack.Screen
+                    name="settings/suggest"
+                    options={{ ...chrome.pickerSheet(1), sheetAllowedDetents: LARGE_ONLY }}
+                />
                 <Stack.Screen name="settings/email" options={chrome.firstRunStep} />
 
                 {MODAL_SCREENS.map((modal) => (

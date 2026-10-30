@@ -16,6 +16,7 @@ import type * as csvImport from "../csvImport.js";
 import type * as enrichment from "../enrichment.js";
 import type * as enrichmentQueue from "../enrichmentQueue.js";
 import type * as exchangeRates from "../exchangeRates.js";
+import type * as featureRequests from "../featureRequests.js";
 import type * as groundedLookup from "../groundedLookup.js";
 import type * as groundedSpend from "../groundedSpend.js";
 import type * as http from "../http.js";
@@ -47,6 +48,7 @@ declare const fullApi: ApiFromModules<{
   enrichment: typeof enrichment;
   enrichmentQueue: typeof enrichmentQueue;
   exchangeRates: typeof exchangeRates;
+  featureRequests: typeof featureRequests;
   groundedLookup: typeof groundedLookup;
   groundedSpend: typeof groundedSpend;
   http: typeof http;
