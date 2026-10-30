@@ -47,6 +47,7 @@ const site = {
         badges: {
             appStore: t({ en: "Download on the App Store", es: "Descárgalo en el App Store" }),
             googlePlay: t({ en: "Get it on Google Play", es: "Disponible en Google Play" }),
+            productHunt: t({ en: "Outlayr on Product Hunt", es: "Outlayr en Product Hunt" }),
         },
         consent: {
             allow: t({ en: "Allow", es: "Permitir" }),
