@@ -205,10 +205,11 @@ describe("normalizeDraft", () => {
         expect(normalizeDraft({ ...MODEL_ANSWER, date: "tomorrow" }, BASE_ARGS)?.date).toBe("2026-09-03");
     });
 
-    it("the ledger's own currency reads as null; another code is kept upper-cased; junk is dropped", () => {
+    it("the ledger's own currency reads as null; a catalog code is kept upper-cased; junk and unknown codes are dropped", () => {
         expect(normalizeDraft({ ...MODEL_ANSWER, currency: "usd" }, BASE_ARGS)?.currency).toBeNull();
         expect(normalizeDraft({ ...MODEL_ANSWER, currency: "eur" }, BASE_ARGS)?.currency).toBe("EUR");
         expect(normalizeDraft({ ...MODEL_ANSWER, currency: "dollars" }, BASE_ARGS)?.currency).toBeNull();
+        expect(normalizeDraft({ ...MODEL_ANSWER, currency: "rmb" }, BASE_ARGS)?.currency).toBeNull();
     });
 
     it("no amount, found:false, or an amount past the ledger's ceiling is null — the tool's word for unclear", () => {

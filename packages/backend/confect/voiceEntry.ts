@@ -21,8 +21,8 @@ import { query } from "../convex/_generated/server";
 import type { ActionCtx, MutationCtx, QueryCtx } from "../convex/_generated/server";
 import {
     clampDate,
-    CURRENCY_PATTERN,
     describeTree,
+    draftCurrency,
     MAX_NAME_LENGTH,
     normalizeDomain,
     pickKnown,
@@ -195,11 +195,7 @@ export function normalizeDraft(output: ModelOutput, args: LedgerContext): VoiceD
         return null;
     }
     const knownCategories = args.categoryTree.flatMap((branch) => [branch.name, ...branch.children]);
-    const spokenCurrency = output.currency?.trim().toUpperCase() ?? null;
-    const currency =
-        spokenCurrency != null && CURRENCY_PATTERN.test(spokenCurrency) && spokenCurrency !== args.currency
-            ? spokenCurrency
-            : null;
+    const { currency } = draftCurrency(output.currency, args.currency);
     const base = {
         amount,
         currency,
