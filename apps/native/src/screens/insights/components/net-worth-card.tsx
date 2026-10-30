@@ -2,6 +2,7 @@ import { LineChart } from "panelui-native/components/line-chart";
 import { Pressable, View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 
+import { HeroNumber } from "@/components/amount-text";
 import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { useSettingBool } from "@/contexts/display-settings-context";
@@ -11,7 +12,8 @@ import { numberLocale } from "@/domain/money";
 import type { NetWorthSeriesPoint } from "@/domain/net-worth-series";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { CHART_DRAW, compactMagnitude } from "@/theme/chart";
-import { useColors } from "@/theme/use-colors";
+
+import { useChartInk } from "./chart-ink";
 
 const Y_TICKS = 2;
 
@@ -47,7 +49,7 @@ function worthDomain(values: readonly number[]): [number, number] {
 export function NetWorthCard({ series, currency, debts, onOpenDebts, showCents }: NetWorthCardProps) {
     const t = useTranslation();
     const { language } = useLanguage();
-    const colors = useColors();
+    const ink = useChartInk();
     const reduceMotion = useReducedMotion();
     const animated = useSettingBool("animatedCharts") && !reduceMotion;
 
@@ -65,22 +67,23 @@ export function NetWorthCard({ series, currency, debts, onOpenDebts, showCents }
         amount: formatSignedAmount(latest.value, currency, showCents, language),
         date: formatDayMonth(latest.date, language),
     });
-    const tooltipDate = (datum: { date?: string | number | null; exact?: string | number | null }): string => {
-        const date = formatDayMonth(String(datum.date ?? ""), language);
-        return datum.exact === 0 ? `${date} · ${t("accounts.chart.approximate")}` : date;
-    };
+    const axisDate = (datum: { date?: string | number | null }): string =>
+        formatDayMonth(String(datum.date ?? ""), language);
+    const tooltipDate = (datum: { date?: string | number | null; exact?: string | number | null }): string =>
+        datum.exact === 0 ? `${axisDate(datum)} · ${t("accounts.chart.approximate")}` : axisDate(datum);
 
     return (
         <View className="w-full gap-1.5 px-5 pt-6">
             <View accessibilityLabel={summary} accessibilityRole="image" accessible testID="net-worth-summary">
                 <MonoLabel>{t("insights.netWorth.heading")}</MonoLabel>
-                <Text
-                    adjustsFontSizeToFit
-                    className="text-foreground text-hero font-mono tabular-nums"
-                    numberOfLines={1}
-                >
-                    {formatSignedAmount(latest.value, currency, showCents, language)}
-                </Text>
+                <HeroNumber
+                    amount={latest.value}
+                    brandFace
+                    code={currency}
+                    showCents={showCents}
+                    sign={latest.value < 0 ? "-" : ""}
+                    size={32}
+                />
                 <Text className={`text-footnote ${change < 0 ? "text-expense" : "text-income"}`}>
                     {t("insights.netWorth.change", {
                         amount: formatSignedAmount(change, currency, showCents, language),
@@ -116,9 +119,9 @@ export function NetWorthCard({ series, currency, debts, onOpenDebts, showCents }
                     yDomain={domain}
                 >
                     <LineChart.Grid rows={Y_TICKS} />
-                    <LineChart.Area color={colors.tint} dataKey="value" opacity={0.12} />
-                    <LineChart.Line color={colors.tint} dataKey="value" strokeWidth={2.5} />
-                    <LineChart.XAxis format={tooltipDate} ticks={3} />
+                    <LineChart.Area color={ink} dataKey="value" opacity={0.08} />
+                    <LineChart.Line color={ink} dataKey="value" strokeWidth={2} />
+                    <LineChart.XAxis format={axisDate} ticks={3} />
                     <LineChart.YAxis
                         format={(value) =>
                             compactMagnitude(value, numberLocale(language).decimal, (domain[1] - domain[0]) / Y_TICKS)

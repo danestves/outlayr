@@ -13,14 +13,14 @@ export function heroMagnitudeFor(
     measure: InsightsMeasure,
     totals: InsightsTotals
 ): number {
-    if (filteredEntry) {
-        return filteredEntry.amount;
-    }
     if (readBalance != null) {
         return Math.abs(readBalance);
     }
     if (readBucket) {
         return Math.abs(readBucket.value);
+    }
+    if (filteredEntry) {
+        return filteredEntry.amount;
     }
     return insightsMeasureMagnitude(measure, totals);
 }

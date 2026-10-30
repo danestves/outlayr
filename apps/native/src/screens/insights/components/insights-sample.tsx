@@ -6,7 +6,7 @@ import type { LedgerCell } from "@/components/ledger-head";
 import { MonoLabel } from "@/components/mono-label";
 import { LinearGradient } from "@/components/styled";
 import { Text } from "@/components/text";
-import type { CategoryBreakdownEntry, CategoryMover, InsightsBucket } from "@/data/insights";
+import type { CategoryBreakdownEntry, InsightsBucket } from "@/data/insights";
 import { formatAmount } from "@/domain/money";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
@@ -16,7 +16,6 @@ import { useColors } from "@/theme/use-colors";
 import { CategoryBreakdownRow } from "./category-breakdown-row";
 import { CategoryProportionBar } from "./category-proportion-bar";
 import { InsightsBarChart } from "./insights-bar-chart";
-import { InsightsMovers } from "./insights-movers";
 
 const noop = () => undefined;
 
@@ -59,32 +58,11 @@ const sampleCells = (t: TranslateFn): LedgerCell[] => [
     },
 ];
 
-const sampleMovers = (t: TranslateFn): CategoryMover[] => [
-    {
-        color: DINING.color,
-        delta: 180,
-        emoji: null,
-        fraction: 0.34,
-        icon: DINING.icon,
-        id: "dining",
-        name: t("insights.sample.dining"),
-    },
-    {
-        color: GROCERIES.color,
-        delta: -95.4,
-        emoji: null,
-        fraction: -0.12,
-        icon: GROCERIES.icon,
-        id: "groceries",
-        name: t("insights.sample.groceries"),
-    },
-];
-
 const sampleBreakdown = (t: TranslateFn): CategoryBreakdownEntry[] => [
     {
         amount: 699.4,
         color: DINING.color,
-        delta: null,
+        delta: 0.34,
         emoji: null,
         fraction: 0.38,
         icon: DINING.icon,
@@ -94,7 +72,7 @@ const sampleBreakdown = (t: TranslateFn): CategoryBreakdownEntry[] => [
     {
         amount: 478.5,
         color: GROCERIES.color,
-        delta: null,
+        delta: -0.12,
         emoji: null,
         fraction: 0.26,
         icon: GROCERIES.icon,
@@ -186,22 +164,16 @@ export function InsightsSample({ onAddTransaction }: InsightsSampleProps) {
                     </View>
 
                     <View className="pt-6">
-                        <InsightsMovers
-                            code="USD"
-                            measure="spent"
-                            movers={sampleMovers(t)}
-                            priorLabel={t("insights.sample.priorLabel")}
-                        />
-                    </View>
-
-                    <View className="pt-6">
-                        <View className="pb-3">
+                        <View className="flex-row items-baseline justify-between gap-3 pb-3">
                             <MonoLabel>{t("insights.categories")}</MonoLabel>
+                            <MonoLabel>
+                                {t("insights.movers.versus", { label: t("insights.sample.priorLabel") })}
+                            </MonoLabel>
                         </View>
                         <View className="pb-1">
                             <CategoryProportionBar entries={breakdown} onSelect={noop} selectedId={null} />
                         </View>
-                        <View className="pt-2">
+                        <View className="pt-1.5">
                             {breakdown.map((entry) => (
                                 <CategoryBreakdownRow
                                     code="USD"

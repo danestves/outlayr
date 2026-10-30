@@ -19,6 +19,9 @@ import { useGlobalCurrency } from "@/data/app-meta";
 import {
     bucketDateLabel,
     categoryBreakdownWithin,
+    categoryBuckets,
+    elapsedSlots,
+    periodTotal,
     runningTotals,
     subcategoryBreakdown,
     subcategoryBreakdownWithin,
@@ -64,7 +67,6 @@ import { useColors } from "@/theme/use-colors";
 import { CategoryBreakdownRow } from "./components/category-breakdown-row";
 import { CategoryProportionBar } from "./components/category-proportion-bar";
 import { InsightsBarChart } from "./components/insights-bar-chart";
-import { InsightsMovers } from "./components/insights-movers";
 import { InsightsNetChart } from "./components/insights-net-chart";
 import { InsightsPeriodMenu } from "./components/insights-period-menu";
 import { InsightsQuiet } from "./components/insights-quiet";
@@ -73,6 +75,7 @@ import { InsightsTransactionList } from "./components/insights-transaction-list"
 import { NetWorthCard } from "./components/net-worth-card";
 import { RecapRow } from "./components/recap-row";
 import { SpendingCalendar } from "./components/spending-calendar";
+import { WindowStepper } from "./components/window-stepper";
 import { heroMagnitudeFor, heroPositiveFor } from "./hero";
 import { MEASURE_KEY } from "./measure-label";
 import { PERIODS } from "./periods";
@@ -133,6 +136,10 @@ function subBreakdownFor(
         );
     }
     return subcategoryBreakdown(rows, categoriesById, filterId, period, measure, new Date(nowMs), offset, calendar);
+}
+
+function withoutLoneDirect(entries: CategoryBreakdownEntry[], filterId: string | null): CategoryBreakdownEntry[] {
+    return entries.length === 1 && entries[0].id === filterId ? [] : entries;
 }
 
 /** A bare date would read as that day's own net, not the running position. */
@@ -275,34 +282,46 @@ export function Insights() {
 
     const lockedBucket = bucketAt(result.buckets, lockedIndex);
     const scrubBucket = bucketAt(result.buckets, scrubIndex);
-    const readBucket = scrubBucket ?? lockedBucket;
 
     const breakdown = breakdownFor(result.breakdown, result.rows, result.categoriesById, lockedBucket, measure, nowMs);
 
     const filteredEntry = filterId ? (breakdown.find((entry) => entry.id === filterId) ?? null) : null;
 
-    const subBreakdown = subBreakdownFor(
-        result.rows,
-        result.categoriesById,
-        filterId,
-        lockedBucket,
-        period,
-        measure,
-        nowMs,
-        offset,
-        calendar
+    const subBreakdown = withoutLoneDirect(
+        subBreakdownFor(
+            result.rows,
+            result.categoriesById,
+            filterId,
+            lockedBucket,
+            period,
+            measure,
+            nowMs,
+            offset,
+            calendar
+        ),
+        filterId
     );
+
+    const chartMeasure = filteredEntry && measure === "net" ? "spent" : measure;
+    const chartBuckets = filteredEntry
+        ? categoryBuckets(result.buckets, result.rows, filteredEntry.id, measure === "income", new Date(nowMs))
+        : result.buckets;
+    const chartAverage = filteredEntry
+        ? periodTotal(chartBuckets) / elapsedSlots(period, new Date(nowMs), offset, calendar)
+        : result.measureAverage;
+
+    const readIndex = scrubIndex ?? lockedIndex;
+    const readBucket = bucketAt(chartBuckets, readIndex);
 
     const totals = { income: result.income, spent: result.spent };
     const scoped = readBucket != null || filteredEntry != null;
 
     // All zero is not empty: the window may be busy in the other direction.
-    const chartIsEmpty = result.buckets.every((bucket) => bucket.value === 0);
+    const chartIsEmpty = chartBuckets.every((bucket) => bucket.value === 0);
     const quietAlt = chartIsEmpty ? quietAlternative(measure, totals) : null;
 
-    const isNet = measure === "net";
-    const readIndex = scrubIndex ?? lockedIndex;
-    const running = isNet ? runningTotals(result.buckets) : [];
+    const isNet = chartMeasure === "net";
+    const running = isNet ? runningTotals(chartBuckets) : [];
     const readBalance = balanceAt(running, readIndex, isNet);
 
     const heroMagnitude = heroMagnitudeFor(filteredEntry, readBalance, readBucket, measure, totals);
@@ -364,11 +383,11 @@ export function Insights() {
 
     const chart = (
         <ChartSlot
-            average={result.measureAverage}
-            buckets={result.buckets}
+            average={chartAverage}
+            buckets={chartBuckets}
             code={currency}
             isEmpty={chartIsEmpty}
-            measure={measure}
+            measure={chartMeasure}
             nowMs={nowMs}
             onCommit={setLockedIndex}
             onScrub={setScrubIndex}
@@ -391,11 +410,12 @@ export function Insights() {
                 <View className="px-5">
                     {recapRowVisible(new Date(nowMs)) ? <RecapRow nowMs={nowMs} /> : null}
                     <View className="flex-row flex-wrap gap-2">
-                        <ScopeChip
-                            accessibilityLabel={t("insights.window.shown")}
+                        <WindowStepper
                             actions={windowActions}
-                            menuTitle={t("insights.window.title")}
+                            canStepBack={!result.atEarliest}
+                            canStepForward={!result.atCurrent}
                             onAction={onWindowAction}
+                            onStep={step}
                             title={result.label}
                         />
                         {lockedBucket ? (
@@ -453,17 +473,6 @@ export function Insights() {
                     ) : null}
 
                     <View className="pt-4">{chart}</View>
-
-                    {scoped ? null : (
-                        <View className="pt-6">
-                            <InsightsMovers
-                                code={currency}
-                                measure={measure}
-                                movers={result.movers}
-                                priorLabel={result.priorLabel}
-                            />
-                        </View>
-                    )}
                 </View>
 
                 <BreakdownSection
@@ -474,9 +483,24 @@ export function Insights() {
                     measure={measure}
                     onFilter={setFilterId}
                     period={period}
+                    priorLabel={result.priorLabel}
                     showCents={showCents}
                     subEntries={subBreakdown}
                 />
+
+                {listQuery ? (
+                    <View className="px-5 pt-6">
+                        <InsightsTransactionList
+                            currency={currency}
+                            grouped={listGrouped}
+                            key={`${listQuery.start.getTime()}:${listQuery.end.getTime()}:${listQuery.categoryId}:${listQuery.income}`}
+                            onPress={openTransaction}
+                            onRequestDelete={requestDelete}
+                            pendingDeleteId={pendingId}
+                            transactions={listTransactions}
+                        />
+                    </View>
+                ) : null}
 
                 <NetWorthCard
                     currency={currency}
@@ -495,20 +519,6 @@ export function Insights() {
                         showCents={showCents}
                     />
                 </View>
-
-                {listQuery ? (
-                    <View className="px-5 pt-6">
-                        <InsightsTransactionList
-                            currency={currency}
-                            grouped={listGrouped}
-                            key={`${listQuery.start.getTime()}:${listQuery.end.getTime()}:${listQuery.categoryId}:${listQuery.income}`}
-                            onPress={openTransaction}
-                            onRequestDelete={requestDelete}
-                            pendingDeleteId={pendingId}
-                            transactions={listTransactions}
-                        />
-                    </View>
-                ) : null}
             </ScrollView>
         </>
     );
@@ -606,6 +616,7 @@ interface BreakdownSectionProps {
     measure: InsightsMeasure;
     onFilter: Dispatch<SetStateAction<string | null>>;
     period: InsightsPeriod;
+    priorLabel: string;
     showCents: boolean;
     subEntries: CategoryBreakdownEntry[];
 }
@@ -618,6 +629,7 @@ function BreakdownSection({
     measure,
     onFilter,
     period,
+    priorLabel,
     showCents,
     subEntries,
 }: BreakdownSectionProps) {
@@ -628,16 +640,20 @@ function BreakdownSection({
     const heading = lockedBucket
         ? `${t("insights.categories")} · ${bucketDateLabel(period, lockedBucket.start)}`
         : t("insights.categories");
+    const compared = entries.some((entry) => entry.delta != null);
 
     return (
         <View className="px-5 pt-6">
-            <View className="pb-3">
-                <MonoLabel>{heading}</MonoLabel>
+            <View className="flex-row items-baseline justify-between gap-3 pb-3">
+                <MonoLabel numberOfLines={1}>{heading}</MonoLabel>
+                {compared ? (
+                    <MonoLabel numberOfLines={1}>{t("insights.movers.versus", { label: priorLabel })}</MonoLabel>
+                ) : null}
             </View>
             <View className="pb-1">
                 <CategoryProportionBar entries={entries} onSelect={onFilter} selectedId={filterId} />
             </View>
-            <View className="pt-2">
+            <View className="pt-1.5">
                 {entries.map((entry) => (
                     <View key={entry.id}>
                         <CategoryBreakdownRow

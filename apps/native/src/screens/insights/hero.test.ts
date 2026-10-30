@@ -41,6 +41,18 @@ describe("insights hero", () => {
         expect(positive(null, "net")).toBe(true);
     });
 
+    it("reads the scrubbed bar of a filtered category, not the category's window total", () => {
+        const bucket: InsightsBucket = {
+            end: new Date("2026-07-16"),
+            label: "15",
+            start: new Date("2026-07-15"),
+            value: 64,
+        };
+
+        expect(heroMagnitudeFor(GROCERIES, null, bucket, "spent", PROFITABLE_MONTH)).toBe(64);
+        expect(heroPositiveFor(GROCERIES, null, bucket, false, "spent", PROFITABLE_MONTH)).toBe(false);
+    });
+
     it("reads a scrubbed running balance ahead of the window", () => {
         const bucket: InsightsBucket = {
             end: new Date("2026-08-01"),

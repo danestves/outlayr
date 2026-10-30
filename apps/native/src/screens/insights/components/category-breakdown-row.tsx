@@ -44,12 +44,11 @@ export function CategoryBreakdownRow({
     const income = measure === "income";
     const toneClass = income ? "text-income" : "text-foreground";
     const sign = income ? "+" : "-";
-    const fill = income ? colors.income : entry.color;
     const pct = Math.round(entry.fraction * 100);
 
     const name = (
         <Text
-            className={cn(ROW_TYPE.name, "text-foreground", !stacked && "flex-1")}
+            className={cn(ROW_TYPE.subtitle, "text-foreground", !stacked && "flex-1")}
             numberOfLines={stacked ? undefined : 1}
         >
             {entry.name}
@@ -57,7 +56,7 @@ export function CategoryBreakdownRow({
     );
     const figures = (
         <>
-            <Text className={cn("tabular-nums", ROW_TYPE.cell, toneClass)} numberOfLines={1}>
+            <Text className={cn("tabular-nums", ROW_TYPE.subtitle, toneClass)} numberOfLines={1}>
                 {sign}
                 {formatAmount(entry.amount, code, showCents, language)}
             </Text>
@@ -67,12 +66,14 @@ export function CategoryBreakdownRow({
                     accessibilityElementsHidden
                     accessibilityLabel={t("insights.category.clearFilter")}
                     accessibilityRole="button"
-                    className="bg-surface size-[26px] items-center justify-center rounded-full active:opacity-70"
+                    className="min-w-[46px] items-end justify-center active:opacity-70"
                     hitSlop={9}
                     importantForAccessibility="no-hide-descendants"
                     onPress={onClear}
                 >
-                    <HugeiconsIcon color={colors.muted} icon={Cancel01Icon} size={13} strokeWidth={2.5} />
+                    <View className="bg-background size-[22px] items-center justify-center rounded-full">
+                        <HugeiconsIcon color={colors.muted} icon={Cancel01Icon} size={11} strokeWidth={2.5} />
+                    </View>
                 </Pressable>
             ) : (
                 <DeltaCell delta={entry.delta} measure={measure} />
@@ -83,35 +84,24 @@ export function CategoryBreakdownRow({
     const body = (
         <View
             className={cn(
-                "gap-2.5",
+                "flex-row items-center gap-2.5",
                 dimmed && "opacity-40",
-                selected ? "bg-surface-secondary rounded-xl p-2.5" : "py-3"
+                selected ? "bg-surface-secondary -mx-2.5 rounded-xl px-2.5 py-1.5" : "py-1.5"
             )}
             style={selected ? { borderColor: colors.border, borderWidth: 1.3 } : undefined}
         >
-            <View className="flex-row items-center gap-3">
-                <CategoryIconTile color={entry.color} emoji={entry.emoji} icon={entry.icon} size={34} />
-                {stacked ? (
-                    <View className="flex-1 gap-1">
-                        {name}
-                        <View className="flex-row flex-wrap items-center gap-x-3 gap-y-1">{figures}</View>
-                    </View>
-                ) : (
-                    <>
-                        {name}
-                        {figures}
-                    </>
-                )}
-            </View>
-            <View className="bg-rail-track h-1 w-full overflow-hidden rounded-full">
-                <View
-                    className="h-full rounded-full"
-                    style={{
-                        backgroundColor: fill,
-                        width: `${Math.max(0, Math.min(1, entry.fraction)) * 100}%`,
-                    }}
-                />
-            </View>
+            <CategoryIconTile color={entry.color} emoji={entry.emoji} icon={entry.icon} size={26} />
+            {stacked ? (
+                <View className="flex-1 gap-0.5">
+                    {name}
+                    <View className="flex-row flex-wrap items-center gap-x-2.5">{figures}</View>
+                </View>
+            ) : (
+                <>
+                    {name}
+                    {figures}
+                </>
+            )}
         </View>
     );
 

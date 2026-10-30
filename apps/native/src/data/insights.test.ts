@@ -10,6 +10,7 @@ import {
     aggregateInsightsWindows,
     bucketDateLabel,
     bucketRanges,
+    categoryBuckets,
     elapsedSlots,
     loadContributions,
     monthPeriodStart,
@@ -371,6 +372,15 @@ describe("category composition", () => {
         const spent = windows("month", "spent").categories;
         const net = windows("month", "net").categories;
         expect(net.map((r) => [r.id, r.amount])).toStrictEqual(spent.map((r) => [r.id, r.amount]));
+    });
+});
+
+describe("categoryBuckets", () => {
+    it("re-sums the chart's slots for one category, subcategories included", () => {
+        const food = categoryBuckets(windows("month", "spent").buckets, contributions, "food", false, NOW);
+        expect(periodTotal(food)).toBe(35);
+        expect(food[4].value).toBe(20);
+        expect(food[9].value).toBe(0);
     });
 });
 
