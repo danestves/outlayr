@@ -2,6 +2,7 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import type { AutologSource } from "@/lib/pending-writes-core";
+import type { Entitlement } from "@/lib/revenuecat-service";
 
 import { FREE_AUTOLOG_PER_MONTH } from "./pro-limits";
 
@@ -9,17 +10,11 @@ export const AutologAccess = Schema.Literals(["free", "open", "pending"]);
 
 export type AutologAccess = typeof AutologAccess.Type;
 
-interface EntitlementState {
-    isConfigured: boolean;
-    isPro: boolean;
-    isResolved: boolean;
-}
-
-export function autologAccessOf(entitlement: EntitlementState, sellable: boolean): AutologAccess {
-    if (!sellable || !entitlement.isConfigured || entitlement.isPro) {
+export function autologAccessOf(entitlement: Entitlement, sellable: boolean): AutologAccess {
+    if (!sellable || entitlement.kind === "unconfigured" || entitlement.kind === "pro") {
         return "open";
     }
-    return entitlement.isResolved ? "free" : "pending";
+    return entitlement.kind === "free" ? "free" : "pending";
 }
 
 const MonthUsage = Schema.Struct({ held: Schema.Boolean, used: Schema.Finite });

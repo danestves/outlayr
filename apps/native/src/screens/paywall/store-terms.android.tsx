@@ -16,8 +16,8 @@ export type { StoreTermsProps } from "./store-terms";
 
 /** Null with nothing to manage: no subscription, or the lifetime purchase. */
 function useManagementUrl(): string | null {
-    const { isConfigured } = useRevenueCat();
-    return AsyncResult.getOrElse(useAtomValue(managementUrlAtom(isConfigured)), () => null);
+    const configured = useRevenueCat().kind !== "unconfigured";
+    return AsyncResult.getOrElse(useAtomValue(managementUrlAtom(configured)), () => null);
 }
 
 export function StoreTerms({ plan }: StoreTermsProps) {

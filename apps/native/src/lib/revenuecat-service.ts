@@ -103,16 +103,16 @@ export interface Session {
     readonly name: string | undefined;
 }
 
-export interface Entitlement {
-    readonly isConfigured: boolean;
-    /** Whether the account carries the entitlement the SERVER gates on. */
-    readonly isMirrored: boolean;
-    /** Bounded by the requests themselves, so a gate can hold on it without risking a hold that never ends. */
-    readonly isPending: boolean;
-    readonly isPro: boolean;
-    /** False until the first identity sync answers, so no gate reads a guess. */
-    readonly isResolved: boolean;
-}
+export type Entitlement =
+    | { readonly kind: "unconfigured" }
+    | { readonly kind: "unresolved"; readonly pending: boolean }
+    | { readonly kind: "free"; readonly pending: boolean }
+    | {
+          readonly kind: "pro";
+          /** Whether the account carries the entitlement the SERVER gates on. */
+          readonly mirrored: boolean;
+          readonly pending: boolean;
+      };
 
 interface MirrorRequest {
     readonly account: string | null;
@@ -124,7 +124,6 @@ interface State {
     readonly applied: string | null | undefined;
     readonly identityPending: boolean;
     readonly identityTicket: number;
-    readonly isConfigured: boolean;
     readonly isMirrored: boolean;
     readonly isPro: boolean;
     readonly isResolved: boolean;
@@ -160,12 +159,11 @@ export class RevenueCat extends Context.Service<
     }
 >()("outlayr/lib/RevenueCat") {}
 
-const initialState = (isConfigured: boolean): State => ({
+const initialState: State = {
     applied: undefined,
     // Starts closed: the identity sync is requested on mount, so a waiter must not see a gap first.
-    identityPending: isConfigured,
+    identityPending: true,
     identityTicket: 0,
-    isConfigured,
     isMirrored: false,
     isPro: false,
     isResolved: false,
@@ -178,17 +176,17 @@ const initialState = (isConfigured: boolean): State => ({
     pendingRequest: null,
     requested: undefined,
     sessions: [],
-});
+};
 
-const entitlementOf = (state: State): Entitlement => ({
-    isConfigured: state.isConfigured,
-    isMirrored: state.isMirrored,
+const entitlementOf = (state: State): Entitlement => {
     // `isPro && !mirrorAnswered` covers the render before the mirror request starts, or a gate reads the gap as
     // "not entitled".
-    isPending: state.identityPending || state.mirrorInFlight !== null || (state.isPro && !state.mirrorAnswered),
-    isPro: state.isPro,
-    isResolved: state.isResolved,
-});
+    const pending = state.identityPending || state.mirrorInFlight !== null || (state.isPro && !state.mirrorAnswered);
+    if (state.isPro) {
+        return { kind: "pro", mirrored: state.isMirrored, pending };
+    }
+    return { kind: state.isResolved ? "free" : "unresolved", pending };
+};
 
 // Every entitlement write goes through here: losing Pro invalidates the server mirror, and a mirror still in
 // flight must not land its answer afterwards.
@@ -207,6 +205,12 @@ const withPro = (state: State, pro: boolean): State => {
         mirrorTicket: state.mirrorTicket + 1,
         mirroredFor: null,
     };
+};
+
+const withRead = (state: State, account: string | null | undefined, pro: boolean): State => {
+    const next = withPro(state, pro);
+    const answersRequested = account !== undefined && state.applied === account && state.requested === account;
+    return answersRequested ? { ...next, isResolved: true } : next;
 };
 
 const currentSession = (state: State): Session | undefined => state.sessions.at(-1)?.session;
@@ -247,13 +251,31 @@ const listen = <A>(watch: Watch<A>): Stream.Stream<A> =>
         )
     );
 
+const unconfigured = (sdk: typeof revenueCatSdk, run: Effect.Effect<void>) =>
+    RevenueCat.of({
+        eligibleForTrial: () => Effect.succeed(new Set<string>()),
+        entitlement: Stream.succeed<Entitlement>({ kind: "unconfigured" }),
+        follow: () => Effect.void,
+        getPackages: () => Effect.succeed([]),
+        mirror: () => sdk.mirrorEntitlement(),
+        purchase: () => Effect.succeed("cancelled"),
+        refresh: () => Effect.succeed(false),
+        restore: () => Effect.succeed(false),
+        run: () => run,
+    });
+
 export const make = Effect.gen(function* make() {
     const sdk = yield* RevenueCatSdk;
     const watchAppState = yield* WatchAppState;
     const scope = yield* Effect.scope;
     const configured = yield* Effect.result(Effect.try({ catch: failedAt("configure"), try: sdk.configureRevenueCat }));
-    const isConfigured = Result.isSuccess(configured) && configured.success;
-    const ref = yield* SubscriptionRef.make(initialState(isConfigured));
+    if (Result.isFailure(configured)) {
+        return unconfigured(sdk, Effect.die(configured.failure.cause));
+    }
+    if (!configured.success) {
+        return unconfigured(sdk, Effect.never);
+    }
+    const ref = yield* SubscriptionRef.make(initialState);
     const lane = yield* Queue.unbounded<Effect.Effect<unknown>>();
 
     const call = <A>(operation: typeof Operation.Type, run: () => Effect.Effect<A, PurchasesError>) =>
@@ -386,7 +408,7 @@ export const make = Effect.gen(function* make() {
 
     const mirrorOnce = Effect.fn("RevenueCat.mirrorOnce")(function* mirrorOnce(account: string | null) {
         const state = yield* SubscriptionRef.get(ref);
-        if (!state.isConfigured || !state.isPro || account === null || state.mirroredFor === account) {
+        if (!state.isPro || account === null || state.mirroredFor === account) {
             return;
         }
         yield* mirror(account).pipe(Effect.catchTags({ RevenueCatError: warn }));
@@ -412,10 +434,9 @@ export const make = Effect.gen(function* make() {
     });
 
     const refresh = Effect.fn("RevenueCat.refresh")(function* refresh(account: string | null) {
-        if (!isConfigured) {
-            return false;
-        }
-        return yield* forSession(account, call("refresh", sdk.refreshProEntitlement), withPro);
+        return yield* forSession(account, call("refresh", sdk.refreshProEntitlement), (state, pro) =>
+            withRead(state, account, pro)
+        );
     });
 
     const purchaseOutcome = (pack: PurchasesPackage) =>
@@ -432,17 +453,13 @@ export const make = Effect.gen(function* make() {
         );
 
     const run = Effect.fn("RevenueCat.run")(function* run() {
-        if (Result.isFailure(configured)) {
-            return yield* Effect.die(configured.failure.cause);
-        }
-        if (!isConfigured) {
-            return yield* Effect.never;
-        }
         const entitlementUpdates = listen(sdk.watchEntitlement).pipe(
             Stream.runForEach((pro) =>
                 transition((state) => [
                     undefined,
-                    state.pendingRequest === null && state.applied === state.requested ? withPro(state, pro) : state,
+                    state.pendingRequest === null && state.applied === state.requested
+                        ? withRead(state, state.applied, pro)
+                        : state,
                 ])
             )
         );
@@ -476,9 +493,6 @@ export const make = Effect.gen(function* make() {
     });
 
     const follow = Effect.fn("RevenueCat.follow")(function* follow(session: Session) {
-        if (!isConfigured) {
-            return;
-        }
         const entry = { session };
         yield* Effect.acquireRelease(
             transition((state) => [undefined, { ...state, sessions: [...state.sessions, entry] }]),
@@ -493,9 +507,6 @@ export const make = Effect.gen(function* make() {
 
     return RevenueCat.of({
         eligibleForTrial: Effect.fn("RevenueCat.eligibleForTrial")(function* trialEligibility(account, productIds) {
-            if (!isConfigured) {
-                return new Set<string>();
-            }
             return yield* forSession(
                 account,
                 call("trial", () => sdk.eligibleForTrial(productIds))
@@ -504,25 +515,16 @@ export const make = Effect.gen(function* make() {
         entitlement: SubscriptionRef.changes(ref).pipe(Stream.map(entitlementOf), Stream.changes),
         follow,
         getPackages: Effect.fn("RevenueCat.getPackages")(function* packages(account) {
-            if (!isConfigured) {
-                return [];
-            }
             return yield* forSession(account, call("offerings", sdk.getPackages));
         }),
         mirror,
         purchase: Effect.fn("RevenueCat.purchase")(function* purchase(account, pack) {
-            if (!isConfigured) {
-                return "cancelled";
-            }
             return yield* forSession(account, purchaseOutcome(pack), (state, outcome) =>
                 withPro(state, outcome === "pro")
             );
         }),
         refresh,
         restore: Effect.fn("RevenueCat.restore")(function* restore(account) {
-            if (!isConfigured) {
-                return false;
-            }
             return yield* forSession(account, call("restore", sdk.restoreAndCheckPro), withPro);
         }),
         run,
