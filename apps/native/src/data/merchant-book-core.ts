@@ -30,9 +30,7 @@ type Book = typeof Book.Type;
 
 const decodeBook = Schema.decodeUnknownOption(Schema.fromJsonString(Book));
 
-export interface RememberedAnswer extends RemoteEnrichmentResult {
-    readonly merchantName: string | null;
-}
+export type RememberedAnswer = Omit<RemoteEnrichmentResult, "grounding">;
 
 const readBook = Effect.fn("MerchantBook.readBook")(function* readBook(db: Database) {
     const raw = yield* getMeta(db, META_KEYS.merchantBook);
@@ -56,9 +54,9 @@ export const rememberMerchant = Effect.fn("MerchantBook.rememberMerchant")(funct
         answer: {
             categoryName: answer.categoryName,
             domain: answer.domain,
-            emoji: answer.emoji ?? null,
+            emoji: answer.emoji,
             isNewCategory: answer.isNewCategory,
-            parentCategoryName: answer.parentCategoryName ?? null,
+            parentCategoryName: answer.parentCategoryName,
             tags: [...answer.tags],
         },
         expiresAt: now + BOOK_TTL_MS,
@@ -82,7 +80,7 @@ export const recallMerchant = Effect.fn("MerchantBook.recallMerchant")(function*
     for (const key of knowledgeKeys(name, currency)) {
         const entry = book[key];
         if (entry != null && entry.expiresAt > now) {
-            const answer: RemoteEnrichmentResult = entry.answer;
+            const answer: RemoteEnrichmentResult = { ...entry.answer, grounding: false, merchantName: null };
             return answer;
         }
     }

@@ -16,7 +16,11 @@ describe("getCachedEnrichment", () => {
         const value = {
             categoryName: "Entertainment",
             domain: "spotify.com",
+            emoji: null,
+            grounding: false,
             isNewCategory: false,
+            merchantName: null,
+            parentCategoryName: null,
             tags: ["Music", "Streaming"],
         };
         setCachedEnrichment("spotify", value);
@@ -65,7 +69,11 @@ describe("setCachedEnrichment eviction", () => {
         setCachedEnrichment("merchant-0", {
             categoryName: "Shopping",
             domain: null,
+            emoji: null,
+            grounding: false,
             isNewCategory: false,
+            merchantName: null,
+            parentCategoryName: null,
             tags: [],
         });
         expect(getCachedEnrichment("merchant-0")).toStrictEqual({
@@ -73,7 +81,11 @@ describe("setCachedEnrichment eviction", () => {
             value: {
                 categoryName: "Shopping",
                 domain: null,
+                emoji: null,
+                grounding: false,
                 isNewCategory: false,
+                merchantName: null,
+                parentCategoryName: null,
                 tags: [],
             },
         });
@@ -89,7 +101,11 @@ describe("currency scope", () => {
         const eur: RemoteEnrichmentResult = {
             categoryName: "Groceries",
             domain: "carrefour.fr",
+            emoji: null,
+            grounding: false,
             isNewCategory: false,
+            merchantName: null,
+            parentCategoryName: null,
             tags: [],
         };
         setCachedEnrichment("carrefour", eur, "EUR");

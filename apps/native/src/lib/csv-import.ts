@@ -212,7 +212,11 @@ function linkSuggestions(
             setCachedEnrichment(merchantKey(suggestion.label), {
                 categoryName: suggestion.categoryName,
                 domain: suggestion.domain,
+                emoji: null,
+                grounding: false,
                 isNewCategory: false,
+                merchantName: null,
+                parentCategoryName: null,
                 tags: [],
             });
         }

@@ -22,7 +22,11 @@ describe("reviewEntryIdentity", () => {
         setCachedEnrichment(merchantKey("Blue Bottle Coffee"), {
             categoryName: "Food & Drink",
             domain: "bluebottlecoffee.com",
+            emoji: null,
+            grounding: false,
             isNewCategory: false,
+            merchantName: null,
+            parentCategoryName: null,
             tags: [],
         });
         expect(reviewEntryIdentity("BLUE BOTTLE COFFEE #08761").domain).toBe("bluebottlecoffee.com");
@@ -32,7 +36,11 @@ describe("reviewEntryIdentity", () => {
         setCachedEnrichment(merchantKey("Depot 55110"), {
             categoryName: "Shopping",
             domain: "depot.example",
+            emoji: null,
+            grounding: false,
             isNewCategory: false,
+            merchantName: null,
+            parentCategoryName: null,
             tags: [],
         });
         expect(reviewEntryIdentity("Depot 55110").domain).toBe("depot.example");
