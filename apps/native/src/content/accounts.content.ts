@@ -205,12 +205,6 @@ const accounts = {
             fr: "Ouvre tous les comptes",
             pt: "Abre todas as contas",
         }),
-        "accounts.overview.owed": t({
-            en: "Owed",
-            es: "Deuda",
-            fr: "Dû",
-            pt: "Dívida",
-        }),
         "accounts.reorderTitle": t({
             en: "Reorder Accounts",
             es: "Reordenar cuentas",

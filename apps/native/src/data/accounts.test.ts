@@ -258,9 +258,13 @@ describe("useLogOverviewIn", () => {
         expect(result.current.banks?.rows.map((row) => row.id)).toStrictEqual(["keep"]);
     });
 
-    it("leaves people out of the Log's total and values them for its Debts row", async () => {
+    it("leaves people, cards and loans out of the Log's accounts total and values them for its Debts figure", async () => {
         mockUseLiveQuery
-            .mockReturnValueOnce([account("zinli", 100), { ...account("pedro", -50), kind: "person" }])
+            .mockReturnValueOnce([
+                account("zinli", 100),
+                { ...account("pedro", -50), kind: "person" },
+                { ...account("cashea", -30), kind: "liability" },
+            ])
             .mockReturnValueOnce([])
             .mockReturnValueOnce([])
             .mockReturnValueOnce([])
@@ -269,8 +273,9 @@ describe("useLogOverviewIn", () => {
         const { result } = renderHook(() => useLogOverviewIn(makeDb(), valuation, JUNE_1.getTime()));
 
         expect(result.current.banks?.total).toBe(100);
+        expect(result.current.banks?.count).toBe(1);
         expect(result.current.banks?.rows.map((row) => row.id)).toStrictEqual(["zinli"]);
-        expect(result.current.debts.youOweTotal).toBe(50);
+        expect(result.current.debts.youOweTotal).toBe(80);
     });
 
     it("leaves a future-dated row out of the total until its date", async () => {

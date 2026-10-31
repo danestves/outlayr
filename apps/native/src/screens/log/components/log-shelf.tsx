@@ -144,7 +144,7 @@ function AccountsWidget({ accounts, overview, currency, showCents, onOpen, width
     const total = hidden ? maskedAmount(currency) : formatSignedAmount(overview.total, currency, showCents, language);
     const count = t("log.shelf.accounts", { count: overview.count });
     const unit = overview.exact ? count : `${count} · ${currency}?`;
-    const held = overview.rows.filter((row) => row.kind !== "liability" && row.balance > 0);
+    const held = overview.rows.filter((row) => row.balance > 0);
     const lead = held.slice(0, 3);
     const rest = held.slice(3).reduce((sum, row) => sum + row.balance, 0);
     const shown = overview.rows.slice(0, LOGOS_SHOWN);
