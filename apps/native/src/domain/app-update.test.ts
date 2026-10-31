@@ -6,13 +6,13 @@ import { describeUpdate } from "./app-update";
 
 const AT = new Date("2026-09-14T20:00:00Z");
 
-function update(whatsNew?: string): UpdateInfo {
+function update(whatsNew?: string, whatsNewByLanguage?: Record<string, string>): UpdateInfo {
     return {
         createdAt: AT,
         manifest: {
             assets: [],
             createdAt: AT.toISOString(),
-            extra: { expoClient: { extra: { whatsNew }, name: "Outlayr", slug: "outlayr" } },
+            extra: { expoClient: { extra: { whatsNew, whatsNewByLanguage }, name: "Outlayr", slug: "outlayr" } },
             id: "u-1",
             launchAsset: { url: "https://x" },
             metadata: {},
@@ -25,11 +25,17 @@ function update(whatsNew?: string): UpdateInfo {
 
 describe("describeUpdate", () => {
     it("reads one note per distinct line of the publish message", () => {
-        expect(describeUpdate(update("A\n  B  \n\nA"))).toStrictEqual({ at: AT, id: "u-1", notes: ["A", "B"] });
+        expect(describeUpdate(update("A\n  B  \n\nA"), "en")).toStrictEqual({ at: AT, id: "u-1", notes: ["A", "B"] });
+    });
+
+    it("reads the notes in the app's language, and English when the update has none in it", () => {
+        const localized = update("Faster", { en: "Faster", "es-ES": "Más rápido\nMejor" });
+        expect(describeUpdate(localized, "es-ES")?.notes).toStrictEqual(["Más rápido", "Mejor"]);
+        expect(describeUpdate(localized, "es")?.notes).toStrictEqual(["Faster"]);
     });
 
     it("announces an update that carried no message", () => {
-        expect(describeUpdate(update())?.notes).toStrictEqual([]);
+        expect(describeUpdate(update(), "en")?.notes).toStrictEqual([]);
     });
 
     it("has nothing to say for a rollback", () => {
@@ -39,7 +45,7 @@ describe("describeUpdate", () => {
             type: UpdateInfoType.ROLLBACK,
             updateId: undefined,
         };
-        expect(describeUpdate(rollback)).toBeNull();
-        expect(describeUpdate(undefined)).toBeNull();
+        expect(describeUpdate(rollback, "en")).toBeNull();
+        expect(describeUpdate(undefined, "en")).toBeNull();
     });
 });
