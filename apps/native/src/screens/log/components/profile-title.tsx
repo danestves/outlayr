@@ -7,6 +7,7 @@ import { View } from "react-native";
 
 import { AccountTile } from "@/components/account-tile";
 import { Text } from "@/components/text";
+import { useDatabase } from "@/contexts/local-data-context";
 import { useProfiles } from "@/data/profiles";
 import { useOpenPaywall } from "@/hooks/use-pro-gate";
 import { useProLocked } from "@/hooks/use-pro-locked";
@@ -34,6 +35,7 @@ const PERSONAL_IDENTITY = {
 } as const;
 
 export function ProfileTitle() {
+    const db = useDatabase();
     const t = useTranslation();
     const colors = useColors();
     const router = useRouter();
@@ -86,7 +88,7 @@ export function ProfileTitle() {
                     openPaywall("profiles");
                     return;
                 }
-                switchProfile(target);
+                switchProfile({ from: db, profileId: target });
             }}
             shouldOpenOnLongPress={false}
         >

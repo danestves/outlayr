@@ -17,7 +17,7 @@ import { Platform } from "react-native";
 import { closeProfileRegistry } from "@/data/profile-registry";
 import { PERSONAL_DATABASE } from "@/domain/profiles";
 
-import { writeActiveProfile } from "./active-profile";
+import { resetActiveProfile } from "./active-profile";
 import { cancelLogoBackfill } from "./logo-backfill";
 import { QUEUE_DIRECTORY } from "./pending-writes-core";
 import { clearStoredPhotos } from "./photo-storage";
@@ -175,7 +175,7 @@ const clearSqliteFiles = Effect.fn("DeviceStores.clearSqliteFiles")(function* cl
             }
         });
     }
-    yield* clearSync("sqlite", () => writeActiveProfile(undefined));
+    yield* clearSync("sqlite", resetActiveProfile);
 });
 
 function clearCache(): void {

@@ -23,5 +23,9 @@ export function writeActiveProfile(profileId: string | undefined): void {
     } else {
         file.write(profileId);
     }
-    active = { id: profileId };
+}
+
+export function resetActiveProfile(): void {
+    writeActiveProfile(undefined);
+    active = { id: undefined };
 }

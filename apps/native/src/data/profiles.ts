@@ -1,6 +1,7 @@
 import { isNull } from "drizzle-orm";
 import { migrate } from "drizzle-orm/expo-sqlite/migrator";
 import * as Effect from "effect/Effect";
+import { File, Paths } from "expo-file-system";
 
 import { closeDatabase, openDatabase } from "@/db/client";
 import type { Database } from "@/db/client";
@@ -24,6 +25,21 @@ export function useProfiles(): Profile[] {
 
 const failed = (operation: "create") => (cause: unknown) => new ProfilesError({ cause, operation });
 
+export const prepareProfileLedger = Effect.fn("Profiles.prepareLedger")(function* prepareProfileLedger(
+    id: string,
+    from: Database,
+    currency: string | undefined
+) {
+    const ledger = yield* Effect.try({ catch: failed("create"), try: () => openDatabase(databaseNameFor(id)) });
+    yield* Effect.gen(function* seed() {
+        yield* Effect.tryPromise({ catch: failed("create"), try: () => migrate(ledger, migrationsBundle) });
+        yield* bootstrapLocalData(ledger);
+        yield* seedProfileLedger(from, ledger, currency);
+    }).pipe(Effect.ensuring(closeDatabase(ledger).pipe(Effect.ignore)));
+});
+
+export const profileLedgerExists = (id: string) => new File(Paths.document, "SQLite", databaseNameFor(id)).exists;
+
 export const createProfile = Effect.fn("Profiles.create")(function* createProfile(input: {
     currency: string;
     from: Database;
@@ -31,12 +47,7 @@ export const createProfile = Effect.fn("Profiles.create")(function* createProfil
     name: string;
 }) {
     const id = newId();
-    const ledger = yield* Effect.try({ catch: failed("create"), try: () => openDatabase(databaseNameFor(id)) });
-    yield* Effect.gen(function* seed() {
-        yield* Effect.tryPromise({ catch: failed("create"), try: () => migrate(ledger, migrationsBundle) });
-        yield* bootstrapLocalData(ledger);
-        yield* seedProfileLedger(input.from, ledger, input.currency);
-    }).pipe(Effect.ensuring(closeDatabase(ledger).pipe(Effect.ignore)));
+    yield* prepareProfileLedger(id, input.from, input.currency);
     yield* insertProfile(profileRegistry(), { ...input.identity, id, name: input.name });
     return id;
 });

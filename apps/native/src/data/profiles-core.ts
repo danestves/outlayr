@@ -8,6 +8,7 @@ import { transaction } from "@/db/transaction";
 
 import { META_KEYS, setMeta } from "./app-meta-core";
 import { SETTING_DEFAULTS } from "./settings-core";
+import { SYNCED_META_KEYS } from "./sync-tables";
 
 export type Profile = typeof profiles.$inferSelect;
 
@@ -30,6 +31,8 @@ export const CARRIED_META_KEYS: readonly string[] = [
     META_KEYS.timeZone,
 ];
 
+const DEVICE_META_KEYS = CARRIED_META_KEYS.filter((key) => !SYNCED_META_KEYS.some((synced) => synced === key));
+
 const ProfilesOperation = Schema.Literals(["create", "seed", "update", "delete", "switch"]);
 
 export class ProfilesError extends Schema.TaggedError<ProfilesError>()("ProfilesError", {
@@ -47,13 +50,14 @@ const query = <A>(operation: typeof ProfilesOperation.Type, run: () => PromiseLi
 export const seedProfileLedger = Effect.fn("Profiles.seedLedger")(function* seedProfileLedger(
     from: Database,
     to: Database,
-    currency: string
+    currency: string | undefined
 ) {
+    const keys = currency === undefined ? DEVICE_META_KEYS : CARRIED_META_KEYS;
     const carried = yield* query("seed", () =>
         from
             .select()
             .from(appMeta)
-            .where(inArray(appMeta.key, [...CARRIED_META_KEYS]))
+            .where(inArray(appMeta.key, [...keys]))
     );
     yield* transaction(
         to,
@@ -63,8 +67,10 @@ export const seedProfileLedger = Effect.fn("Profiles.seedLedger")(function* seed
                     yield* setMeta(to, key, value);
                 }
             }
-            yield* setMeta(to, META_KEYS.currency, currency);
-            yield* setMeta(to, META_KEYS.currencyChosen, "true");
+            if (currency !== undefined) {
+                yield* setMeta(to, META_KEYS.currency, currency);
+                yield* setMeta(to, META_KEYS.currencyChosen, "true");
+            }
         }),
         (cause) => new ProfilesError({ cause, operation: "seed" })
     );

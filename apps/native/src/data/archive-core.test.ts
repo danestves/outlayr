@@ -5,6 +5,7 @@ import type { Database } from "@/db/client";
 import {
     accounts,
     categories,
+    profiles,
     savingsGoals,
     tags,
     transactionPhotos,
@@ -76,6 +77,28 @@ describe("archiving a ledger", () => {
         expect(account.initialBalanceDate.getTime()).toBe(1_700_000_000_000);
         const [row] = await fresh.select().from(transactions);
         expect(row.accountId).toBe("a1");
+    });
+
+    it("keeps this device's profiles through a restore, and leaves them out of the file", async () => {
+        const work = {
+            customColor: null,
+            dateCreated: new Date(1_700_000_000_000),
+            emoji: null,
+            icon: null,
+            id: "work",
+            imageColor: null,
+            imageUri: null,
+            name: "Work",
+            updatedAt: new Date(1_700_000_000_000),
+        };
+        await db.insert(profiles).values(work);
+        const document = await Effect.runPromise(buildArchive(db, new Date()));
+        expect(document.tables.profiles).toStrictEqual([]);
+
+        const restored = migratedDatabase();
+        await restored.insert(profiles).values(work);
+        await Effect.runPromise(restoreArchive(restored, document));
+        expect((await restored.select().from(profiles)).map((row) => row.name)).toStrictEqual(["Work"]);
     });
 
     it("round-trips goals, tags, splits and photos with the entry they hang off", async () => {
