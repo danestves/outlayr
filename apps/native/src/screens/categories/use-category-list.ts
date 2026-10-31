@@ -95,7 +95,8 @@ export function useCategoryList(income: boolean) {
         showSuggestions,
         suggestions: presetsNotAdded(
             income,
-            namespace.flatMap((parent) => [parent, ...parent.children])
+            namespace.flatMap((parent) => [parent, ...parent.children]),
+            t
         ),
         toggleSuggestions: () => {
             setBoolSetting({ db, key: "categorySuggestions", value: !showSuggestions });

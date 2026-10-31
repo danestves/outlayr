@@ -38,7 +38,7 @@ export function UpdateSheet() {
     const colors = useColors();
     const sheetInsets = useSheetInsets();
     const { availableUpdate, downloadedUpdate } = useUpdates();
-    const update = describeUpdate(availableUpdate);
+    const update = describeUpdate(availableUpdate, language);
     const onTabs = useSegments()[0] === "(tabs)";
     const lockOpen = useAppLockOpen();
     const covered = useAuthCovered();

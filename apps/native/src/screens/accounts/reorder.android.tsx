@@ -6,8 +6,9 @@ import { Eyebrow, PARENT_TILE } from "@/components/category-list-chrome";
 import { ReorderList } from "@/components/reorder-list";
 import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
-import { useBankAccounts } from "@/data/accounts";
+import { useBankAccountsInOrder } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
+import { useNow } from "@/data/use-now";
 import { useTranslation } from "@/i18n/context";
 import { reorderAccountsCommand } from "@/state/accounts-commands";
 import { useColors } from "@/theme/use-colors";
@@ -16,7 +17,7 @@ export function AccountReorder() {
     const db = useDatabase();
     const t = useTranslation();
     const colors = useColors();
-    const rows = useBankAccounts(db);
+    const rows = useBankAccountsInOrder(db, useNow());
 
     return (
         <ScrollView className="bg-m3-surface flex-1">

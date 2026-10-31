@@ -36,6 +36,7 @@ function makeDb(): SpendDb {
 			sortOrder integer NOT NULL DEFAULT 0,
 			dateCreated integer,
 			parentId text,
+			preset text, customName integer NOT NULL DEFAULT 0,
 			updatedAt integer NOT NULL,
 			deletedAt integer
 		);

@@ -13,6 +13,7 @@ export const META_KEYS = {
     autologAccess: "autologAccess",
     autologUsage: "autologUsage",
     autologWaiting: "autologWaiting",
+    categoryLanguage: "categoryLanguage",
     currency: "currency",
     /** `bootstrap` seeds `currency` unconditionally, so only this tells a chosen code from the default. */
     currencyChosen: "currencyChosen",

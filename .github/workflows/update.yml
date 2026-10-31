@@ -13,9 +13,9 @@ on:
                     - preview
                 default: preview
                 required: true
-            message:
+            notes:
                 type: string
-                description: Release notes for the What's new sheet, one per line (-f message=$'First\nSecond').
+                description: What's new sheet notes as a JSON object of app language to lines, every language required ({"en":"First\nSecond","es":"..."}).
                 required: true
             platform:
                 type: choice
@@ -49,7 +49,7 @@ jobs:
         env:
             EAS_BUILD_PROFILE: ${{ inputs.channel }}
             RELEASE_CHANNEL: ${{ inputs.channel }}
-            UPDATE_MESSAGE: ${{ inputs.message }}
+            UPDATE_NOTES: ${{ inputs.notes }}
             UPDATE_PLATFORM: ${{ inputs.platform }}
             APP_VERSION: ${{ inputs.version }}
             POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
@@ -78,8 +78,9 @@ jobs:
                     echo "::error::The EOO_TOKEN secret is not set."
                     exit 1
                   fi
+                  message=$(jq -er .en <<<"$UPDATE_NOTES")
                   npx -y eoas@3.2.6 publish --branch "$RELEASE_CHANNEL" --platform "$UPDATE_PLATFORM" \
-                    --message "$UPDATE_MESSAGE" --emitMetadata --nonInteractive
+                    --message "$message" --emitMetadata --nonInteractive
                   cat dist/xprem-update-metadata.json
 
             - name: Upload source maps to PostHog

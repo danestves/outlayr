@@ -11,6 +11,12 @@ import { budgetPlans, budgets, categories, transactions } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
 import { uuidV5 } from "@/domain/uuid5";
+import type { TranslatableKey } from "@/i18n/catalog";
+import { languageFromTag } from "@/i18n/languages";
+import type { Language } from "@/i18n/languages";
+import { translateIn, translateNow } from "@/i18n/runtime";
+
+import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
 
 export type Category = typeof categories.$inferSelect;
 
@@ -25,6 +31,7 @@ const CategoriesOperation = Schema.Literals([
     "setParent",
     "update",
     "ensure",
+    "localize",
 ]);
 
 export class CategoriesError extends Schema.TaggedError<CategoriesError>()("CategoriesError", {
@@ -108,7 +115,10 @@ export function seededCategoryId(name: string, income: boolean): string {
 
 // Inspects the table, not the `firstLaunch` marker: `bootstrap.ts` writes that after this returns, so a crash between
 // them would seed a second full set.
-export const seedCategories = Effect.fn("Categories.seedCategories")(function* seedCategories(db: Database) {
+export const seedCategories = Effect.fn("Categories.seedCategories")(function* seedCategories(
+    db: Database,
+    language: Language
+) {
     const seeded = yield* query("seed", () => db.select({ id: categories.id }).from(categories).limit(1));
     if (seeded.length > 0) {
         return;
@@ -132,8 +142,9 @@ export const seedCategories = Effect.fn("Categories.seedCategories")(function* s
                 icon: preset.icon,
                 id: seededCategoryId(preset.name, namespace === "income"),
                 income: namespace === "income",
-                name: preset.name,
+                name: translateIn(language, PRESET_LABELS[name]),
                 parentId: null,
+                preset: name,
                 sortOrder: order,
                 updatedAt: now,
             };
@@ -141,6 +152,86 @@ export const seedCategories = Effect.fn("Categories.seedCategories")(function* s
     });
     yield* query("seed", () => db.insert(categories).values(rows));
 });
+
+type LabelledRow = Pick<Category, "customName" | "dateCreated" | "id" | "income" | "name" | "preset" | "updatedAt">;
+
+export interface PresetLabelUpdate {
+    id: string;
+    set: Partial<Pick<Category, "customName" | "dateCreated" | "name" | "preset" | "updatedAt">>;
+}
+
+export function presetLabelUpdates(
+    rows: readonly LabelledRow[],
+    language: Language,
+    previous: Language | null,
+    now: Date
+): PresetLabelUpdate[] {
+    const seeded = new Map<string, CategoryPreset>(
+        (["expense", "income"] as const).flatMap((namespace) =>
+            SEEDED_CATEGORY_NAMES[namespace].map(
+                (name) => [seededCategoryId(name, namespace === "income"), name] as const
+            )
+        )
+    );
+    return rows.flatMap((row): PresetLabelUpdate[] => {
+        const stored = presetFor(row.preset, row.income);
+        const preset = stored ?? seeded.get(row.id) ?? presetFor(row.name, row.income);
+        if (preset == null) {
+            return [];
+        }
+        const target = translateIn(language, PRESET_LABELS[preset]);
+        const sources = [preset, ...(previous == null ? [] : [translateIn(previous, PRESET_LABELS[preset])])].map(
+            capitalizeCategoryName
+        );
+        const current = row.name == null ? null : capitalizeCategoryName(row.name);
+        const customName = row.customName || (stored == null && current !== capitalizeCategoryName(preset));
+        if (!customName && current != null && current !== capitalizeCategoryName(target) && sources.includes(current)) {
+            const pristine = row.dateCreated?.getTime() === row.updatedAt.getTime();
+            return [
+                { id: row.id, set: { name: target, preset, updatedAt: now, ...(pristine && { dateCreated: now }) } },
+            ];
+        }
+        return row.preset === preset && row.customName === customName
+            ? []
+            : [{ id: row.id, set: { customName, preset } }];
+    });
+}
+
+export const localizePresetCategories = Effect.fn("Categories.localizePresetCategories")(
+    function* localizePresetCategories(db: Database, language: Language) {
+        const stored = yield* getMeta(db, META_KEYS.categoryLanguage);
+        const rows = yield* query("localize", () =>
+            db
+                .select({
+                    customName: categories.customName,
+                    dateCreated: categories.dateCreated,
+                    id: categories.id,
+                    income: categories.income,
+                    name: categories.name,
+                    preset: categories.preset,
+                    updatedAt: categories.updatedAt,
+                })
+                .from(categories)
+                .where(isNull(categories.deletedAt))
+        );
+        const updates = presetLabelUpdates(rows, language, languageFromTag(stored), new Date());
+        if (updates.length === 0 && stored === language) {
+            return;
+        }
+        yield* transaction(
+            db,
+            Effect.gen(function* write() {
+                for (const update of updates) {
+                    yield* query("localize", () =>
+                        db.update(categories).set(update.set).where(eq(categories.id, update.id))
+                    );
+                }
+                yield* setMeta(db, META_KEYS.categoryLanguage, language);
+            }),
+            (cause) => new CategoriesError({ cause, operation: "localize" })
+        );
+    }
+);
 
 export interface CategoryWithChildren extends Category {
     children: Category[];
@@ -165,6 +256,7 @@ export interface CategoryInput {
     income: boolean;
     name: string;
     parentId?: string | null;
+    preset?: CategoryPreset | null;
 }
 
 const nextSortOrder = Effect.fn("Categories.nextSortOrder")(function* nextSortOrder(
@@ -387,6 +479,60 @@ export interface SuggestedCategoryPresets {
 
 type PresetStyle = Omit<SuggestedCategoryPreset, "name">;
 
+export type CategoryPreset = CanonicalCategoryName<"expense" | "income">;
+
+const PRESET_LABELS = {
+    Bonus: "categories.preset.bonus",
+    Business: "categories.preset.business",
+    Coffee: "categories.preset.coffee",
+    "Dining Out": "categories.preset.diningOut",
+    Education: "categories.preset.education",
+    Entertainment: "categories.preset.entertainment",
+    Family: "categories.preset.family",
+    Fashion: "categories.preset.fashion",
+    Fitness: "categories.preset.fitness",
+    Freelance: "categories.preset.freelance",
+    Fuel: "categories.preset.fuel",
+    Gifts: "categories.preset.gifts",
+    Groceries: "categories.preset.groceries",
+    Healthcare: "categories.preset.healthcare",
+    Home: "categories.preset.home",
+    Insurance: "categories.preset.insurance",
+    Interest: "categories.preset.interest",
+    Investments: "categories.preset.investments",
+    "Part-Time": "categories.preset.partTime",
+    Paycheck: "categories.preset.paycheck",
+    "Personal Care": "categories.preset.personalCare",
+    Pets: "categories.preset.pets",
+    "Phone & Internet": "categories.preset.phoneInternet",
+    Refund: "categories.preset.refund",
+    Rent: "categories.preset.rent",
+    Shopping: "categories.preset.shopping",
+    Subscriptions: "categories.preset.subscriptions",
+    Taxes: "categories.preset.taxes",
+    Tips: "categories.preset.tips",
+    Transport: "categories.preset.transport",
+    Travel: "categories.preset.travel",
+    Utilities: "categories.preset.utilities",
+} as const satisfies Record<CategoryPreset, TranslatableKey>;
+
+export function presetFor(name: string | null | undefined, income: boolean): CategoryPreset | null {
+    if (name == null) {
+        return null;
+    }
+    const key = capitalizeCategoryName(name);
+    const pool: readonly CategoryPreset[] = CANONICAL_CATEGORY_NAMES[income ? "income" : "expense"];
+    return pool.find((preset) => capitalizeCategoryName(preset) === key) ?? null;
+}
+
+function isCategoryPreset(name: string): name is CategoryPreset {
+    return Object.hasOwn(PRESET_LABELS, name);
+}
+
+export function presetLabel(name: string, translate: (key: TranslatableKey) => string = translateNow): string {
+    return isCategoryPreset(name) ? translate(PRESET_LABELS[name]) : name;
+}
+
 const EXPENSE_STYLES: Record<CanonicalCategoryName<"expense">, PresetStyle> = {
     Groceries: { color: "#53915A", icon: "ShoppingCart01" },
     "Dining Out": { color: "#A97332", icon: "Restaurant01" },
@@ -433,9 +579,11 @@ export const SUGGESTED_CATEGORY_PRESETS: SuggestedCategoryPresets = {
 
 export function presetsNotAdded(
     income: boolean,
-    existing: readonly Pick<Category, "icon" | "name">[]
+    existing: readonly Pick<Category, "icon" | "name" | "preset">[],
+    translate: (key: TranslatableKey) => string = translateNow
 ): SuggestedCategoryPreset[] {
     const pool = income ? SUGGESTED_CATEGORY_PRESETS.income : SUGGESTED_CATEGORY_PRESETS.expense;
+    const usedPresets = new Set(existing.map((row) => row.preset));
     const usedNames = new Set(
         existing
             .map((row) => row.name)
@@ -445,7 +593,15 @@ export function presetsNotAdded(
     const usedIcons = new Set(
         existing.map((row) => row.icon).filter((icon): icon is string => icon != null && icon !== "")
     );
-    return pool.filter((preset) => !(usedNames.has(capitalizeCategoryName(preset.name)) || usedIcons.has(preset.icon)));
+    return pool.filter(
+        (preset) =>
+            !(
+                usedPresets.has(preset.name) ||
+                usedNames.has(capitalizeCategoryName(preset.name)) ||
+                usedNames.has(capitalizeCategoryName(presetLabel(preset.name, translate))) ||
+                usedIcons.has(preset.icon)
+            )
+    );
 }
 
 export const suggestedCategoriesNotAdded = Effect.fn("Categories.suggestedCategoriesNotAdded")(
@@ -460,11 +616,13 @@ export const categoriesRepo = {
         db: Database,
         input: { name: string; icon: string; color: string; income: boolean }
     ) {
+        const preset = presetFor(input.name, input.income);
+        const name = preset == null ? capitalizeCategoryName(input.name) : presetLabel(preset);
         const { error, order } = yield* validateCategoryCreate(db, {
             emoji: null,
             icon: input.icon,
             income: input.income,
-            name: input.name,
+            name,
         });
         if (error != null) {
             return null;
@@ -480,8 +638,9 @@ export const categoriesRepo = {
                 icon: input.icon,
                 id,
                 income: input.income,
-                name: capitalizeCategoryName(input.name),
+                name,
                 parentId: null,
+                preset,
                 sortOrder: order,
                 updatedAt: now,
             })
@@ -505,14 +664,16 @@ export const categoriesRepo = {
         yield* query("create", () =>
             db.insert(categories).values({
                 color: input.color,
+                customName: input.preset == null,
                 dateCreated: now,
                 deletedAt: null,
                 emoji: input.emoji || null,
                 icon: input.icon || null,
                 id,
                 income: input.income,
-                name: capitalizeCategoryName(input.name),
+                name: input.preset == null ? capitalizeCategoryName(input.name) : input.name.trim(),
                 parentId,
+                preset: input.preset ?? null,
                 sortOrder: order,
                 updatedAt: now,
             })
@@ -649,7 +810,11 @@ export const categoriesRepo = {
             updatedAt: new Date(),
         };
         if (patch.name !== undefined) {
-            updates.name = capitalizeCategoryName(patch.name);
+            const cleanName = capitalizeCategoryName(patch.name);
+            if (existing.name == null || capitalizeCategoryName(existing.name) !== cleanName) {
+                updates.name = cleanName;
+                updates.customName = true;
+            }
         }
         if (patch.icon !== undefined) {
             updates.icon = patch.icon || null;
@@ -696,9 +861,15 @@ export const ensureCategoryByName = Effect.fn("Categories.ensureCategoryByName")
     color: string,
     nested?: { emoji?: string | null; parentId?: string | null }
 ) {
-    const cleanName = capitalizeCategoryName(name);
+    const preset = presetFor(name, income);
+    const cleanName = preset == null ? capitalizeCategoryName(name) : presetLabel(preset);
+    const keys = new Set([capitalizeCategoryName(name), capitalizeCategoryName(cleanName)]);
     const siblings = yield* namespaceSiblings("ensure", db, income);
-    const existing = siblings.find((row) => row.name != null && capitalizeCategoryName(row.name) === cleanName);
+    const existing = siblings.find(
+        (row) =>
+            (preset != null && row.preset === preset) ||
+            (row.name != null && keys.has(capitalizeCategoryName(row.name)))
+    );
     if (existing != null) {
         return existing.id;
     }
@@ -712,5 +883,6 @@ export const ensureCategoryByName = Effect.fn("Categories.ensureCategoryByName")
         income,
         name: cleanName,
         parentId: nested?.parentId ?? null,
+        preset,
     });
 });

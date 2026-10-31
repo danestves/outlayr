@@ -20,6 +20,7 @@ import type { Account } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
 import type { AttachmentDraft } from "@/data/attachments-core";
 import { useCategoriesByNamespace } from "@/data/categories";
+import { presetLabel } from "@/data/categories-core";
 import type { Category } from "@/data/categories-core";
 import { useFavouriteCurrencies } from "@/data/favourite-currencies";
 import { useRecentMerchants } from "@/data/merchant-history";
@@ -45,6 +46,7 @@ import type { SheetRest } from "@/hooks/use-resting-sheet";
 import { useToggleFavouriteCurrency } from "@/hooks/use-toggle-favourite-currency";
 import type { PendingCategory } from "@/hooks/use-transaction-enrichment";
 import { useLanguage, useTranslation } from "@/i18n/context";
+import type { TranslateFn } from "@/i18n/context";
 import { celebration } from "@/lib/celebration";
 import { notifyFailure, notifySaved } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
@@ -521,7 +523,7 @@ export function TransactionForm(props: TransactionFormProps) {
     const heroRestTop = useDerivedValue(() => HERO_REST_TOP);
     const announceSaved = (value: TransactionFormValues, amount: number) => {
         const chosen = value.category ?? value.pendingCategory;
-        const categoryName = chosen?.name ?? "";
+        const categoryName = value.category?.name ?? presetLabel(value.pendingCategory?.name ?? "", t);
         const merchant = value.merchant.trim();
         const body = [merchant ? categoryName : "", value.account?.name ?? ""].filter(Boolean).join(" · ");
         const entryCode = value.txCurrency ?? globalCurrency;
@@ -633,7 +635,7 @@ export function TransactionForm(props: TransactionFormProps) {
     const showCoach = mode === "create" && !coachSeen;
     const dismissCoach = () => setSetting("sentenceCoachSeen", true);
 
-    const categorySlot = categorySlotOf({ category, pendingCategory, searching: lookup.categoryPending }, colors);
+    const categorySlot = categorySlotOf({ category, pendingCategory, searching: lookup.categoryPending }, colors, t);
 
     const answersFor = (amountNumber: number, merchant: string): GuidedAnswers => ({
         account:
@@ -1097,9 +1099,10 @@ function categorySlotOf(
         pendingCategory,
         searching,
     }: { category: Category | null; pendingCategory: PendingCategory | null; searching: boolean },
-    colors: ReturnType<typeof useColors>
+    colors: ReturnType<typeof useColors>,
+    t: TranslateFn
 ) {
-    const label = category?.name ?? pendingCategory?.name ?? null;
+    const label = category?.name ?? (pendingCategory == null ? null : presetLabel(pendingCategory.name, t));
     if (searching) {
         return { label, tile: <ThinkingOrb state="searching" /> };
     }

@@ -8,6 +8,7 @@ import { and, desc, eq, isNull } from "drizzle-orm";
 
 import type { Database } from "@/db/client";
 import { outsideMoves, savingsGoals } from "@/db/schema";
+import { displayOrder } from "@/domain/account-order";
 import { debtsOverview } from "@/domain/debts";
 import type { DebtsOverview } from "@/domain/debts";
 import type { PlottedCell } from "@/domain/goal-balance-series";
@@ -27,6 +28,7 @@ import { payoffEndedOn, payoffLines } from "./payoff-plans";
 import type { PayoffLine } from "./payoff-plans";
 import { savingsGoalsQuery } from "./savings-goals-core";
 import type { SavingsGoal } from "./savings-goals-core";
+import { useBoolSetting } from "./settings";
 import { useDeferredDelete } from "./use-deferred-delete";
 import type { Valuation } from "./valuation-source";
 
@@ -60,7 +62,7 @@ function debtsIn(
 export function useDebtsOverview(
     db: Database,
     nowMs: number
-): DebtsScreenOverview & { payoff: ReadonlyMap<string, PayoffLine> } {
+): DebtsScreenOverview & { overview: AccountsOverview | null; payoff: ReadonlyMap<string, PayoffLine> } {
     const all = useAccounts(db);
     const { pendingId } = useDeferredDelete("account");
     const accounts = all.filter((account) => account.id !== pendingId);
@@ -73,6 +75,7 @@ export function useDebtsOverview(
     const live = goals.filter((goal) => goal.id !== pendingGoalId && isPayoffPlan(goal));
     return {
         ...debtsIn(accounts, overview, plans, valuation, nowMs),
+        overview,
         payoff: payoffLines(live, overview?.rows ?? [], valuation, nowMs, payoffEndings(live, accounts, cells, rates)),
     };
 }
@@ -150,9 +153,11 @@ export function useLogOverviewIn(
     const { displayCurrency } = valuation;
     const { overview, rates } = useOverviewOf(db, rows, displayCurrency, nowMs);
     const plans = useInstallmentPlans(db, nowMs);
+    const byHand = useBoolSetting(db, "accountsByHand");
+    const assets = (overview?.rows ?? []).filter((row) => row.kind === "asset");
     return {
         // Assets only, matching the Accounts screen's total: cards and loans are already counted under Debts.
-        banks: summarizeOverview((overview?.rows ?? []).filter((row) => row.kind === "asset")),
+        banks: summarizeOverview(displayOrder(assets, byHand, (row) => row.balance)),
         debts: debtsIn(rows, overview, plans, { displayCurrency, rates }, nowMs),
     };
 }

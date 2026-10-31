@@ -9,8 +9,9 @@ import { Eyebrow, PARENT_TILE } from "@/components/category-list-chrome";
 import { LABEL, PARENT_NAME } from "@/components/category-list-swift";
 import { groupedList, groupedRows } from "@/components/native/styles";
 import { useDatabase } from "@/contexts/local-data-context";
-import { useBankAccounts } from "@/data/accounts";
+import { useBankAccountsInOrder } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
+import { useNow } from "@/data/use-now";
 import { applyMove } from "@/domain/reorder";
 import { useTranslation } from "@/i18n/context";
 import { reorderAccountsCommand } from "@/state/accounts-commands";
@@ -27,7 +28,7 @@ export function AccountReorder() {
     );
     const t = useTranslation();
     const colors = useColors();
-    const rows = useBankAccounts(db);
+    const rows = useBankAccountsInOrder(db, useNow());
 
     const reorder = (source: number[], destination: number) => {
         const ordered = applyMove(

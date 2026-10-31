@@ -6,6 +6,7 @@ export const categories = sqliteTable(
     "categories",
     {
         color: text("color").default("#FFFFFF"),
+        customName: integer("customName", { mode: "boolean" }).notNull().default(false),
         dateCreated: integer("dateCreated", { mode: "timestamp_ms" }),
         deletedAt: integer("deletedAt", { mode: "timestamp_ms" }),
         emoji: text("emoji"),
@@ -14,6 +15,7 @@ export const categories = sqliteTable(
         income: integer("income", { mode: "boolean" }).notNull().default(false),
         name: text("name"),
         parentId: text("parentId").references((): AnySQLiteColumn => categories.id, { onDelete: "set null" }),
+        preset: text("preset"),
         sortOrder: integer("sortOrder").notNull().default(0),
         updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).notNull(),
     },

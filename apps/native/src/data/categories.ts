@@ -16,6 +16,7 @@ export interface CategoryMetaRow {
     icon: string | null;
     name: string | null;
     parentId: string | null;
+    preset: string | null;
 }
 
 // Never join these onto a transaction or budget query: `useLiveQuery` listens to one table, so a joined `parentId`
@@ -30,6 +31,7 @@ export function useCategoryMeta(db: Database): Map<string, CategoryMetaRow> {
                 id: categories.id,
                 name: categories.name,
                 parentId: categories.parentId,
+                preset: categories.preset,
             })
             .from(categories)
             .where(isNull(categories.deletedAt))
@@ -43,6 +45,7 @@ export function useCategoryMeta(db: Database): Map<string, CategoryMetaRow> {
                 icon: row.icon,
                 name: row.name,
                 parentId: row.parentId,
+                preset: row.preset,
             });
         }
         return byId;

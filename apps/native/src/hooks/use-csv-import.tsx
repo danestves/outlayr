@@ -54,13 +54,16 @@ function buildCategoryTree(meta: ReadonlyMap<string, CategoryMetaRow>) {
 
 function buildCategoryIdByKey(meta: ReadonlyMap<string, CategoryMetaRow>): Map<string, string> {
     const byKey = new Map<string, string>();
-    for (const [id, row] of meta) {
-        if (row.name == null) {
-            continue;
-        }
-        const key = categoryKey(row.name);
-        if (!byKey.has(key)) {
-            byKey.set(key, id);
+    for (const field of ["name", "preset"] as const) {
+        for (const [id, row] of meta) {
+            const value = row[field];
+            if (value == null) {
+                continue;
+            }
+            const key = categoryKey(value);
+            if (!byKey.has(key)) {
+                byKey.set(key, id);
+            }
         }
     }
     return byKey;

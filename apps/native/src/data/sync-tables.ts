@@ -56,6 +56,7 @@ export const SYNCED_META_KEYS = [
     "insightsMeasure",
     "accentColor",
     META_KEYS.timeZone,
+    "accountsByHand",
     // Not synced: `colorScheme` and `numberEntryType` suit each device; `biometricLock`, `notification*`, `sync*`,
     // `ledgerAdoption`, `firstLaunch`, `onboardingComplete` and `recurrenceRepaired` describe this install.
 ] as const satisfies readonly (BoolSettingKey | NumberSettingKey | (typeof META_KEYS)[keyof typeof META_KEYS])[];
@@ -127,7 +128,7 @@ function synced<T extends SQLiteTable, Id extends SQLiteColumn>(
 
 /** In restore order: with foreign keys enforced, a row written before the one it points at fails. */
 export const SYNCED_SPECS = {
-    categories: synced(categories, categories.id),
+    categories: synced(categories, categories.id, { defaults: { customName: false } }),
     accounts: synced(accounts, accounts.id, { defaults: { kind: "asset" }, deviceLocal: ["imageUri"] }),
     transfers: synced(transfers, transfers.id),
     transactions: synced(transactions, transactions.id, {

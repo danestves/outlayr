@@ -1,5 +1,7 @@
 import type { AccountKind } from "@outlayr/money/account-kind";
 
+import type { CategoryPreset } from "@/data/categories-core";
+
 /**
  * Money Manager (Orange Dog, `.mmbackup`) rows, in major units and resolved currencies.
  * Deleted rows are kept, flagged.
@@ -94,6 +96,7 @@ export interface OutlayrLedgerState {
         parentId: string | null;
         icon: string | null;
         color: string | null;
+        preset: string | null;
     }[];
     budgetCategoryIds: readonly string[];
     /** Live entries; `date` is epoch ms. */
@@ -236,6 +239,7 @@ export interface PlannedCategory {
     /** Another planned category's key, or an existing Outlayr category id. */
     parent: { key: string } | { categoryId: string } | null;
     existingId: string | null;
+    preset?: CategoryPreset | null;
 }
 
 export interface PlannedBudget {

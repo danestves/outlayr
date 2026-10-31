@@ -5,10 +5,13 @@ import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 
 import { bootstrapLocalData } from "@/data/bootstrap";
+import { localizePresetCategories } from "@/data/categories-core";
 import { settleLegacyOnboarding } from "@/data/onboarding-core";
 import { openDatabase } from "@/db/client";
 import type { Database } from "@/db/client";
 import { adoptLegacyMigrationLog } from "@/db/legacy-migration-log";
+import { deviceLanguage } from "@/i18n/device-language";
+import { warnAndContinue } from "@/lib/warn-and-continue";
 
 import migrationsBundle from "../../drizzle/migrations";
 
@@ -43,6 +46,9 @@ export const make = Effect.gen(function* make() {
         yield* Effect.try({ catch: failedAt("migrate"), try: () => adoptLegacyMigrationLog(db) });
         yield* Effect.tryPromise({ catch: failedAt("migrate"), try: () => migrate(db, migrationsBundle) });
         yield* bootstrapLocalData(db).pipe(Effect.mapError((error) => failedAt("bootstrap")(error.cause)));
+        yield* localizePresetCategories(db, deviceLanguage()).pipe(
+            warnAndContinue("Failed to localize the preset categories")
+        );
         // Ahead of `ready`, so the onboarding guard's first read already sees post-backfill appMeta.
         yield* settleLegacyOnboarding(db).pipe(Effect.mapError((error) => failedAt("settle")(error.cause)));
         return db;

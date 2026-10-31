@@ -43,7 +43,7 @@ The script is read-only. It prints:
 | --- | --- |
 | `NOTHING TO SHIP` | Report and stop. If the fingerprint differs, say that the next app change will need a build. |
 | `BACKEND ONLY` | Dispatch `deploy-backend.yml`. The app bundle doesn't import `packages/backend`, so there's nothing to publish. |
-| `OTA` | Write the message (step 3), then dispatch `update.yml` with the build's version it prints. |
+| `OTA` | Write the notes (step 3), then dispatch `update.yml` with the build's version it prints. |
 | `BUILD` | Dispatch `eas-build.yml` with the command it prints, which carries the version, then ship the binary (step 4). The printed fingerprint diff names the native source that forced it. |
 | `FIRST BUILD` | **Stop and ask.** No GitHub store build exists on this channel, so this binary would move testers onto a different backend, and every earlier EAS build stops receiving OTAs from this one on. Run `gh variable get EXPO_PUBLIC_CONVEX_URL --env $channel` and name the backend the binary would call. Check the setup below. |
 
@@ -65,11 +65,19 @@ Before an `OTA` or `BUILD`, run `node --import tsx scripts/licenses.ts --check` 
 
 ## 3. Message
 
-The in-app What's new sheet shows `message` verbatim, split on `\n`:
+The in-app What's new sheet shows the notes for the app's language verbatim, split on `\n`. Write them to an `ota/` folder as `en.txt`, `es.txt`, `es-ES.txt`, `fr.txt`, `pt.txt` and `pt-PT.txt`, each for its market like the store notes below. Builds older than the per-language notes show `en.txt`.
 
 - One line per change a user would notice, written in their words: "Typing in the transaction form no longer stutters".
-- No bullet marks, semicolons, or em dashes. English only.
+- No bullet marks, semicolons, or em dashes.
 - Leave out chores, tests, refactors, backend-only work, and changes only the other platform shows.
+
+Collect them into one JSON object and check it before dispatching. The publish refuses a set missing any app language, but only after the backend has deployed:
+
+```sh
+notes=$(jq -n --rawfile en ota/en.txt --rawfile es ota/es.txt --rawfile es-ES ota/es-ES.txt \
+  --rawfile fr ota/fr.txt --rawfile pt ota/pt.txt --rawfile pt-PT ota/pt-PT.txt '$ARGS.named')
+UPDATE_NOTES="$notes" npx expo config --type public >/dev/null
+```
 
 Store notes cover the same changes in every app language, as plain text with a little personality. Write them to a `notes/` folder as `en.txt`, `es.txt`, `es-ES.txt`, `fr.txt`, `pt.txt` and `pt-PT.txt`. Each is written for its market, not translated word for word: `es-ES` says "ticket" and "importe", `pt-PT` says "talão" and "registo", matching the app.
 
@@ -102,10 +110,10 @@ Budgets
 
 ## 4. Dispatch and wait
 
-From `apps/native`, run the command the verdict printed (with the message filled in for an OTA) in a background shell. Every verdict dispatches a GitHub run, which `gh workflow run` prints the URL of; watch it to the end:
+From `apps/native`, run the command the verdict printed (with `$notes` from step 3 for an OTA) in a background shell. Every verdict dispatches a GitHub run, which `gh workflow run` prints the URL of; watch it to the end:
 
 ```sh
-gh workflow run update.yml -f channel=$channel -f platform=ios -f version=1.2.4 -f message=$'First change\nSecond change'
+gh workflow run update.yml -f channel=$channel -f platform=ios -f version=1.2.4 -f notes="$notes"
 gh run watch <run id> --exit-status
 ```
 
