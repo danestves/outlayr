@@ -5,11 +5,17 @@ import { CategoryIconTile } from "@/components/category-icon-tile";
 import { ChoiceRow, SettingsSection } from "@/components/list/list-row";
 import { SegmentedRow } from "@/components/settings/segmented-row";
 import { SettingsScreen } from "@/components/settings/settings-screen";
-import { CATEGORY_PALETTE, capitalizeCategoryName, SUGGESTED_CATEGORY_PRESETS } from "@/data/categories-core";
+import {
+    CATEGORY_PALETTE,
+    capitalizeCategoryName,
+    presetLabel,
+    SUGGESTED_CATEGORY_PRESETS,
+} from "@/data/categories-core";
 import { tc } from "@/domain/money-manager/count-labels";
 import { defaultChoices } from "@/domain/money-manager/defaults";
 import type { CategoryTarget, MmCategoryView } from "@/domain/money-manager/types";
 import { useTranslation } from "@/i18n/context";
+import type { TranslateFn } from "@/i18n/context";
 import { moneyManagerSession, useMoneyManagerSession } from "@/lib/money-manager-session";
 import type { MoneyManagerDraft } from "@/lib/money-manager-session";
 
@@ -124,9 +130,9 @@ interface Candidate {
 }
 
 /** Outlayr's live categories first, then the presets it does not have yet, by name. */
-function candidates(draft: MoneyManagerDraft, income: boolean): Candidate[] {
+function candidates(draft: MoneyManagerDraft, income: boolean, t: TranslateFn): Candidate[] {
     const live = draft.ledger.categories.filter((category) => category.income === income && category.parentId === null);
-    const taken = new Set(live.map((category) => capitalizeCategoryName(category.name)));
+    const taken = new Set(live.flatMap((category) => [capitalizeCategoryName(category.name), category.preset]));
     const pool = income ? SUGGESTED_CATEGORY_PRESETS.income : SUGGESTED_CATEGORY_PRESETS.expense;
     return [
         ...live.map((category) => ({
@@ -137,12 +143,19 @@ function candidates(draft: MoneyManagerDraft, income: boolean): Candidate[] {
             target: { categoryId: category.id, kind: "existing" } satisfies CategoryTarget,
         })),
         ...pool
-            .filter((preset) => !taken.has(capitalizeCategoryName(preset.name)))
+            .filter(
+                (preset) =>
+                    !(
+                        taken.has(preset.name) ||
+                        taken.has(capitalizeCategoryName(preset.name)) ||
+                        taken.has(capitalizeCategoryName(presetLabel(preset.name, t)))
+                    )
+            )
             .map((preset) => ({
                 color: preset.color,
                 icon: preset.icon,
                 key: `preset:${preset.name}`,
-                label: preset.name,
+                label: presetLabel(preset.name, t),
                 target: { kind: "preset", presetName: preset.name } satisfies CategoryTarget,
             })),
     ];
@@ -206,7 +219,7 @@ function CategoryChoices({
                 />
             </SettingsSection>
             <SettingsSection title={t("mmImport.categorySheet.other")}>
-                {candidates(draft, category.income).map((candidate) => (
+                {candidates(draft, category.income, t).map((candidate) => (
                     <ChoiceRow
                         key={candidate.key}
                         label={candidate.label}

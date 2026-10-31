@@ -1,4 +1,4 @@
-import { CATEGORY_PALETTE, SUGGESTED_CATEGORY_PRESETS } from "@/data/categories-core";
+import { CATEGORY_PALETTE, presetFor, presetLabel, SUGGESTED_CATEGORY_PRESETS } from "@/data/categories-core";
 
 import { matchedEntryUids } from "./analysis";
 import { nearestPaletteColor, normalizeLabel, outlayrIconFor, suggestAccountKind } from "./matching";
@@ -136,8 +136,9 @@ function ensurePreset(name: string, income: boolean, planned: Map<string, Planne
             icon: preset?.icon ?? OTHER_ICON,
             income,
             key,
-            name,
+            name: presetLabel(name),
             parent: null,
+            preset: presetFor(name, income),
         });
     }
     return key;

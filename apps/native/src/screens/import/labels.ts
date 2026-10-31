@@ -1,4 +1,4 @@
-import { SUGGESTED_CATEGORY_PRESETS } from "@/data/categories-core";
+import { presetLabel, SUGGESTED_CATEGORY_PRESETS } from "@/data/categories-core";
 import { formatSignedAmount } from "@/domain/account-display";
 import { formatFixed } from "@/domain/money";
 import type { TranslateFn } from "@/i18n/context";
@@ -50,7 +50,7 @@ export function categoryName(
         return draft.ledger.categories.find((category) => category.id === parent.categoryId)?.name ?? "";
     }
     if ("presetName" in parent) {
-        return parent.presetName;
+        return presetLabel(parent.presetName);
     }
     const target = draft.choices.categories[parent.mmUid];
     if (target?.kind === "existing" || target?.kind === "preset") {

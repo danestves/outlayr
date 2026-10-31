@@ -14,6 +14,7 @@ import {
     SEEDED_CATEGORY_NAMES,
     SUGGESTED_CATEGORY_PRESETS,
     seedCategories,
+    seededCategoryId,
     suggestedCategoriesNotAdded,
 } from "./categories-core";
 
@@ -305,6 +306,15 @@ describe("categoriesRepo.update", () => {
     let db: Database;
     beforeEach(() => {
         db = makeDb();
+    });
+
+    it("keeps a translated preset's casing when an edit leaves its name alone", async () => {
+        await Effect.runPromise(seedCategories(db, "es"));
+        const id = seededCategoryId("Phone & Internet", false);
+
+        await Effect.runPromise(categoriesRepo.update(db, id, { color: "#EC7A58", name: "Teléfono e internet" }));
+
+        expect(getCategoryById(db, id)?.name).toBe("Teléfono e internet");
     });
 
     it("renames, recolors, and title-cases without touching other fields", async () => {
@@ -881,7 +891,7 @@ describe("seedCategories idempotency", () => {
     });
 
     it("seeds one full set on a fresh store", async () => {
-        await Effect.runPromise(seedCategories(db));
+        await Effect.runPromise(seedCategories(db, "en"));
 
         const rows = await db.select().from(categories);
         expect(rows.length > 0).toBeTruthy();
@@ -889,10 +899,10 @@ describe("seedCategories idempotency", () => {
     });
 
     it("does not seed a second set when run again", async () => {
-        await Effect.runPromise(seedCategories(db));
+        await Effect.runPromise(seedCategories(db, "en"));
         const first = await db.select().from(categories);
 
-        await Effect.runPromise(seedCategories(db));
+        await Effect.runPromise(seedCategories(db, "en"));
         const second = await db.select().from(categories);
 
         // bootstrap writes the firstLaunch marker only after seeding returns, so a
@@ -911,17 +921,31 @@ describe("seedCategories idempotency", () => {
             })
         );
 
-        await Effect.runPromise(seedCategories(db));
+        await Effect.runPromise(seedCategories(db, "en"));
 
         const rows = await db.select().from(categories);
         expect(rows).toHaveLength(1);
         expect(rows[0]?.id).toBe(id);
     });
 
+    it("names the seeds in the device language under the ids the English set uses", async () => {
+        const spanish = makeDb();
+        await Effect.runPromise(seedCategories(db, "en"));
+        await Effect.runPromise(seedCategories(spanish, "es"));
+
+        const byId = async (target: Database) =>
+            new Map((await target.select().from(categories)).map((row) => [row.id, row.name]));
+        const english = await byId(db);
+        const translated = await byId(spanish);
+
+        expect([...translated.keys()].sort()).toStrictEqual([...english.keys()].sort());
+        expect(translated.get(seededCategoryId("Groceries", false))).toBe("Supermercado");
+    });
+
     it("mints the same ids on two independent installs", async () => {
         const other = makeDb();
-        await Effect.runPromise(seedCategories(db));
-        await Effect.runPromise(seedCategories(other));
+        await Effect.runPromise(seedCategories(db, "en"));
+        await Effect.runPromise(seedCategories(other, "en"));
 
         const identify = async (target: Database) => {
             const rows = await target.select().from(categories);

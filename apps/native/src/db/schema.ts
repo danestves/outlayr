@@ -14,6 +14,7 @@ export const categories = sqliteTable(
         income: integer("income", { mode: "boolean" }).notNull().default(false),
         name: text("name"),
         parentId: text("parentId").references((): AnySQLiteColumn => categories.id, { onDelete: "set null" }),
+        preset: text("preset"),
         sortOrder: integer("sortOrder").notNull().default(0),
         updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).notNull(),
     },

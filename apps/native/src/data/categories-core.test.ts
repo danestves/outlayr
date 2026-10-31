@@ -5,11 +5,17 @@ import { beforeEach, describe, expect, it } from "vite-plus/test";
 import type { Database } from "@/db/client";
 import { categories } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
+import { translateIn } from "@/i18n/runtime";
 
 import {
     categoriesRepo,
     ensureCategoryByName,
     pickFreeCategoryIcon,
+    presetLabelUpdates,
+    presetsNotAdded,
+    SEEDED_CATEGORY_NAMES,
+    seedCategories,
+    seededCategoryId,
     SUGGESTED_CATEGORY_PRESETS,
 } from "./categories-core";
 import type { Category } from "./categories-core";
@@ -53,6 +59,15 @@ describe("ensureCategoryByName", () => {
         await expect(liveCategories(db, false)).resolves.toHaveLength(1);
     });
 
+    it("files a merchant-map name under the ledger's translated preset instead of adding it again", async () => {
+        await Effect.runPromise(seedCategories(db, "es"));
+
+        const id = await Effect.runPromise(ensureCategoryByName(db, "Groceries", false, "ShoppingCart01", "#53915A"));
+
+        expect(id).toBe(seededCategoryId("Groceries", false));
+        await expect(liveCategories(db, false)).resolves.toHaveLength(SEEDED_CATEGORY_NAMES.expense.length);
+    });
+
     it("treats expense and income as separate namespaces", async () => {
         const expenseId = await Effect.runPromise(ensureCategoryByName(db, "Gifts", false, "Gift", "#FF375F"));
         const incomeId = await Effect.runPromise(ensureCategoryByName(db, "Gifts", true, "GiftCard", "#E5484D"));
@@ -80,6 +95,7 @@ describe("pickFreeCategoryIcon", () => {
             income: false,
             name: "Entertainment",
             parentId: null,
+            preset: null,
             sortOrder: 0,
             updatedAt: new Date(0),
         };
@@ -91,5 +107,56 @@ describe("pickFreeCategoryIcon", () => {
             (preset) => preset.icon
         );
         expect(allPresetIcons).toContain(result);
+    });
+});
+
+describe("presetLabelUpdates", () => {
+    const seededAt = new Date(1000);
+    const now = new Date(5000);
+    const groceries = (overrides: Partial<Category> = {}) => ({
+        dateCreated: seededAt,
+        id: seededCategoryId("Groceries", false),
+        income: false,
+        name: "Groceries",
+        preset: null,
+        updatedAt: seededAt,
+        ...overrides,
+    });
+
+    it("translates an untouched English seed and keeps it reading as untouched", () => {
+        expect(presetLabelUpdates([groceries()], "es", null, now)).toStrictEqual([
+            {
+                id: seededCategoryId("Groceries", false),
+                set: { dateCreated: now, name: "Supermercado", preset: "Groceries", updatedAt: now },
+            },
+        ]);
+    });
+
+    it("marks a renamed seed with its preset without renaming or restamping it", () => {
+        const renamed = groceries({ name: "Food", updatedAt: new Date(2000) });
+
+        expect(presetLabelUpdates([renamed], "es", null, now)).toStrictEqual([
+            { id: renamed.id, set: { preset: "Groceries" } },
+        ]);
+    });
+
+    it("translates only from English or this device's previous language", () => {
+        const fromPeer = groceries({ name: "Courses", preset: "Groceries", updatedAt: new Date(2000) });
+        const fromSelf = groceries({ name: "Supermercado", preset: "Groceries", updatedAt: new Date(2000) });
+
+        expect(presetLabelUpdates([fromPeer], "es", "es", now)).toStrictEqual([]);
+        expect(presetLabelUpdates([fromSelf], "fr", "es", now)).toStrictEqual([
+            { id: fromSelf.id, set: { name: "Courses", preset: "Groceries", updatedAt: now } },
+        ]);
+    });
+});
+
+describe("presetsNotAdded", () => {
+    it("hides a preset the ledger already has under another name", () => {
+        const remaining = presetsNotAdded(false, [{ icon: "Pizza01", name: "Comida", preset: "Groceries" }], (key) =>
+            translateIn("es", key)
+        );
+
+        expect(remaining.map((preset) => preset.name)).not.toContain("Groceries");
     });
 });

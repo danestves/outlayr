@@ -15,6 +15,7 @@ function category(id: string, name: string, parentId: string | null): Category {
         income: false,
         name,
         parentId,
+        preset: null,
         sortOrder: 0,
         updatedAt: new Date(0),
     };

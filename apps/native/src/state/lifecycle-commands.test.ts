@@ -42,7 +42,7 @@ describe("reconcileAdoptionCommand", () => {
 
     beforeEach(async () => {
         db = migratedDatabase();
-        await Effect.runPromise(seedCategories(db));
+        await Effect.runPromise(seedCategories(db, "en"));
         mockEngine = null;
     });
 

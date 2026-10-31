@@ -124,6 +124,7 @@ describe("buildImportPlan", () => {
                     income: false,
                     name: "Groceries",
                     parentId: null,
+                    preset: null,
                 },
             ],
         };

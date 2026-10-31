@@ -51,7 +51,7 @@ function makeDb(options?: { withRealTransactions?: boolean }): Database {
 		CREATE TABLE categories (
 			id text PRIMARY KEY NOT NULL, name text, color text DEFAULT '#FFFFFF',
 			icon text, emoji text, income integer NOT NULL DEFAULT 0,
-			sortOrder integer NOT NULL DEFAULT 0, dateCreated integer, parentId text,
+			sortOrder integer NOT NULL DEFAULT 0, dateCreated integer, parentId text, preset text,
 			updatedAt integer NOT NULL, deletedAt integer
 		);
 		CREATE TABLE transactions (

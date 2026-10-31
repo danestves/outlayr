@@ -27,6 +27,7 @@ export const categoryFields = {
     income: Schema.Boolean,
     name: Schema.NullOr(Schema.String),
     parentId: Schema.NullOr(Schema.String),
+    preset: Schema.optional(Schema.NullOr(Schema.String)),
     sortOrder: Schema.Number,
 };
 

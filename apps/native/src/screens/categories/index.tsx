@@ -42,6 +42,7 @@ import { CHILD_TILE, Eyebrow, PARENT_TILE } from "@/components/category-list-chr
 import { CHILD_NAME, LABEL, PARENT_NAME } from "@/components/category-list-swift";
 import { groupedList, groupedRows } from "@/components/native/styles";
 import { toolbarIcon } from "@/components/toolbar-icons";
+import { presetLabel } from "@/data/categories-core";
 import type { Category, CategoryWithChildren, SuggestedCategoryPreset } from "@/data/categories-core";
 import { formatAmount } from "@/domain/money";
 import { useLanguage, useTranslation } from "@/i18n/context";
@@ -431,6 +432,7 @@ function SuggestedRow({
     colors: ThemeColors;
     onAdd: (preset: SuggestedCategoryPreset) => void;
 }) {
+    const t = useTranslation();
     return (
         <Button modifiers={[buttonStyle("plain")]} onPress={() => onAdd(preset)}>
             <HStack spacing={10}>
@@ -446,7 +448,7 @@ function SuggestedRow({
                     </View>
                 </RNHostView>
                 <SwiftText modifiers={[SUGGESTED_NAME, lineLimit(1), foregroundStyle(colors.muted)]}>
-                    {preset.name}
+                    {presetLabel(preset.name, t)}
                 </SwiftText>
                 <Spacer />
                 <Image color={colors.muted} modifiers={[SUGGESTED_PLUS]} systemName="plus.circle.fill" />
