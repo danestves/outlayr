@@ -1,4 +1,4 @@
-import { isNotNull } from "drizzle-orm";
+import { isNotNull, isNull } from "drizzle-orm";
 import { migrate } from "drizzle-orm/expo-sqlite/migrator";
 import * as Effect from "effect/Effect";
 import { deleteDatabaseAsync } from "expo-sqlite";
@@ -50,6 +50,7 @@ export const closeProfileRegistry = Effect.fn("ProfileRegistry.close")(function*
 export function deviceHasProfiles(): boolean {
     return (
         activeProfileId() !== undefined ||
-        profileRegistry().select({ id: profiles.id }).from(profiles).limit(1).all().length > 0
+        profileRegistry().select({ id: profiles.id }).from(profiles).where(isNull(profiles.deletedAt)).limit(1).all()
+            .length > 0
     );
 }

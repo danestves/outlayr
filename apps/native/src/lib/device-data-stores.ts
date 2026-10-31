@@ -164,6 +164,7 @@ const clearSqliteFiles = Effect.fn("DeviceStores.clearSqliteFiles")(function* cl
                       .filter((name) => PROFILE_DATABASE.test(name))
                 : [],
     });
+    yield* clearSync("sqlite", resetActiveProfile);
     for (const name of new Set([PERSONAL_DATABASE, ...names])) {
         yield* clearAsync("sqlite", () => deleteDatabaseAsync(name));
         yield* clearSync("sqlite", () => {
@@ -175,7 +176,6 @@ const clearSqliteFiles = Effect.fn("DeviceStores.clearSqliteFiles")(function* cl
             }
         });
     }
-    yield* clearSync("sqlite", resetActiveProfile);
 });
 
 function clearCache(): void {

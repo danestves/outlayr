@@ -2,6 +2,7 @@ import { isNull } from "drizzle-orm";
 import { migrate } from "drizzle-orm/expo-sqlite/migrator";
 import * as Effect from "effect/Effect";
 import { File, Paths } from "expo-file-system";
+import { deleteDatabaseAsync } from "expo-sqlite";
 
 import { closeDatabase, openDatabase } from "@/db/client";
 import type { Database } from "@/db/client";
@@ -35,7 +36,10 @@ export const prepareProfileLedger = Effect.fn("Profiles.prepareLedger")(function
         yield* Effect.tryPromise({ catch: failed("create"), try: () => migrate(ledger, migrationsBundle) });
         yield* bootstrapLocalData(ledger);
         yield* seedProfileLedger(from, ledger, currency);
-    }).pipe(Effect.ensuring(closeDatabase(ledger).pipe(Effect.ignore)));
+    }).pipe(
+        Effect.ensuring(closeDatabase(ledger).pipe(Effect.ignore)),
+        Effect.onError(() => Effect.promise(() => deleteDatabaseAsync(databaseNameFor(id))).pipe(Effect.ignore))
+    );
 });
 
 export const profileLedgerExists = (id: string) => new File(Paths.document, "SQLite", databaseNameFor(id)).exists;

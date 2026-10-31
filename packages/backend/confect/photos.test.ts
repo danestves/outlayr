@@ -397,6 +397,39 @@ describe("releaseUnreferenced", () => {
         ).resolves.toStrictEqual({ released: false });
     });
 
+    it("keeps an object another profile still names when released from Personal", async () => {
+        const t = harness();
+        const owner = await seedProUser(t);
+        const key = photoKeyFor(owner.userId, PHOTO);
+        await push(t, owner, [
+            {
+                deletedAt: null,
+                fields: {
+                    customColor: null,
+                    dateCreated: 100,
+                    emoji: null,
+                    icon: null,
+                    imageColor: null,
+                    imageKey: null,
+                    name: "Work",
+                    sortOrder: 0,
+                },
+                localId: PROFILE_WORK,
+                table: "profiles",
+                updatedAt: 100,
+            },
+        ]);
+        await authenticatedAs(t, owner).mutation(api.sync.push, {
+            deviceId: DEVICE,
+            profileId: PROFILE_WORK,
+            rows: [transactionRow("t1", { imageKey: key })],
+        });
+
+        await expect(
+            authenticatedAs(t, owner).mutation(api.photos.releaseUnreferenced, { key })
+        ).resolves.toStrictEqual({ released: false });
+    });
+
     it("does not see another account's row as a reference", async () => {
         const t = harness();
         const owner = await seedProUser(t);

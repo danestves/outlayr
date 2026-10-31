@@ -16,11 +16,12 @@ const profiles = {
             pt: "Criar perfil",
         }),
         "profiles.delete.body": t({
-            en: "Its entries, accounts and budgets are deleted. This can't be undone.",
-            es: "Se eliminan sus movimientos, cuentas y presupuestos. No se puede deshacer.",
-            fr: "Ses opérations, comptes et budgets sont supprimés. C'est irréversible.",
-            pt: "Os lançamentos, contas e orçamentos são apagados. Não dá para desfazer.",
-            "pt-PT": "Os registos, contas e orçamentos são apagados. Não é possível anular.",
+            en: "Its entries, accounts and budgets leave your devices. The synced copy stays until you delete your account.",
+            es: "Sus movimientos, cuentas y presupuestos salen de tus dispositivos. La copia sincronizada se queda hasta que elimines tu cuenta.",
+            fr: "Ses opérations, comptes et budgets quittent vos appareils. La copie synchronisée reste jusqu'à la suppression de votre compte.",
+            pt: "Os lançamentos, contas e orçamentos saem dos seus aparelhos. A cópia sincronizada fica até você excluir sua conta.",
+            "pt-PT":
+                "Os registos, contas e orçamentos saem dos seus dispositivos. A cópia sincronizada fica até eliminar a sua conta.",
         }),
         "profiles.delete.title": t({
             en: "Delete this profile?",

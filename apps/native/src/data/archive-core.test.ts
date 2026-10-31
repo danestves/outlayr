@@ -166,7 +166,7 @@ describe("archiving a ledger", () => {
         expect(photo.imageKey).toBe("photos/u1/p1.jpg");
     });
 
-    it("forgets the key of a photo the file carries, and keeps one it does not", async () => {
+    it("carries only the photos its rows name, and forgets the key of each one it carries", async () => {
         await db.insert(categories).values(CATEGORY);
         await db
             .insert(transactions)
@@ -175,7 +175,10 @@ describe("archiving a ledger", () => {
                 transactionRow("elsewhere", { imageKey: "photos/u1/b.jpg", imageUri: "file:///old/b.jpg" }),
             ]);
 
-        const document = await Effect.runPromise(buildArchive(db, new Date(), { "a.jpg": "AAEC" }));
+        const document = await Effect.runPromise(
+            buildArchive(db, new Date(), { "a.jpg": "AAEC", "other-profile.jpg": "AAED" })
+        );
+        expect(document.photos).toStrictEqual({ "a.jpg": "AAEC" });
         const parsed = parseArchive(serializeArchive(document));
         if (!parsed) {
             throw new Error("expected the archive to parse");
