@@ -1,4 +1,5 @@
 import ArrowDataTransferHorizontalIcon from "@hugeicons-pro/core-stroke-rounded/ArrowDataTransferHorizontalIcon";
+import BankIcon from "@hugeicons-pro/core-stroke-rounded/BankIcon";
 import FileImportIcon from "@hugeicons-pro/core-stroke-rounded/FileImportIcon";
 import Mic01Icon from "@hugeicons-pro/core-stroke-rounded/Mic01Icon";
 import PlusSignIcon from "@hugeicons-pro/core-stroke-rounded/PlusSignIcon";
@@ -21,6 +22,7 @@ import { cn } from "@/components/tw";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useBankAccounts } from "@/data/accounts";
 import { LARGEST_STANDARD_FONT_SCALE } from "@/hooks/use-accessibility-text-size";
+import { useCreateAccount } from "@/hooks/use-pro-gate";
 import { useTranslation } from "@/i18n/context";
 import { importDraftStore } from "@/lib/import-draft-store";
 import { useHaptics } from "@/lib/use-haptics";
@@ -156,7 +158,12 @@ export function FloatingAddButton() {
     });
     const { fontScale, height: windowHeight, width: windowWidth } = useWindowDimensions();
     const importSheetRef = useRef<ImportSheetHandle>(null);
-    const select = ({ href }: AddAction) => {
+    const createAccount = useCreateAccount();
+    const select = ({ href, key }: AddAction) => {
+        if (key === "account") {
+            createAccount();
+            return;
+        }
         if (href === null) {
             importDraftStore.setStep(importDraftStore.getResumeStep());
             importSheetRef.current?.present();
@@ -192,6 +199,7 @@ export function FloatingAddButton() {
         { href: "/transactions/voice", icon: Mic01Icon, key: "voice", label: t("log.add.voice") },
         { href: "/transactions/scan", icon: ScanIcon, key: "scan", label: t("log.add.scan") },
         { href: null, icon: FileImportIcon, key: "import", label: t("log.add.import") },
+        { href: null, icon: BankIcon, key: "account", label: t("log.add.account") },
     ];
     const width = labelWidth(fontScale, windowWidth);
     const { kept, lines } = fitDial(ranked.length, room, fontScale, width);
