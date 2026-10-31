@@ -3,6 +3,13 @@ import type { Dictionary } from "intlayer";
 
 const log = {
     content: {
+        "log.add.account": t({
+            en: "Add an account",
+            es: "Agregar una cuenta",
+            "es-ES": "Añadir una cuenta",
+            fr: "Ajouter un compte",
+            pt: "Adicionar uma conta",
+        }),
         "log.add.import": t({
             en: "Import a CSV",
             es: "Importar un CSV",
