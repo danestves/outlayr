@@ -1,3 +1,5 @@
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import { useGlobalSearchParams, useSegments } from "expo-router";
 import PostHog from "posthog-react-native";
 import { useEffect } from "react";
@@ -18,7 +20,6 @@ export const posthog =
                   $os_name: Platform.select({ android: "Android", ios: "iOS" }),
               }),
               defaultOptIn: SETTING_DEFAULTS.shareAnalytics,
-              disableRemoteFeatureFlags: true,
               errorTracking: { autocapture: { uncaughtExceptions: true, unhandledRejections: true } },
           })
         : null;
@@ -27,9 +28,27 @@ if (purchaseListener) {
     posthog?.setPersonProperties({ autolog_enabled: purchaseListener.apps().length > 0 });
 }
 
+const PAYWALL_FLAG = "paywall-redesign";
+
+export const PaywallVariant = Schema.Literals(["control", "redesign"]);
+
+const readVariant = Schema.decodeUnknownOption(PaywallVariant);
+
+/**
+ * Control until the flag loads and for anyone opted out, so an unmeasured user keeps the shipped paywall. The read
+ * is the experiment's exposure event, so call it once per paywall shown. Dev builds have no client: `?variant=` picks.
+ */
+export function paywallVariant(devOverride?: string | string[]): typeof PaywallVariant.Type {
+    let flag: unknown = devOverride;
+    if (!__DEV__) {
+        flag = posthog === null || posthog.optedOut ? undefined : posthog.getFeatureFlag(PAYWALL_FLAG);
+    }
+    return Option.getOrElse(readVariant(flag), () => "control");
+}
+
 export function useScreenTracking() {
     const screen = useSegments().join("/");
-    const { trigger: triggerParam } = useGlobalSearchParams<{ trigger?: string }>();
+    const { trigger: triggerParam, variant } = useGlobalSearchParams<{ trigger?: string; variant?: string }>();
     const trigger = screen === "paywall" ? paywallTriggerOf(triggerParam) : null;
     // oxlint-disable-next-line outlayr/react-effect-budget -- reports the current screen to the PostHog client
     useEffect(() => {
@@ -37,7 +56,7 @@ export function useScreenTracking() {
             posthog?.screen(screen);
         }
         if (trigger !== null) {
-            posthog?.capture("paywall_viewed", { trigger });
+            posthog?.capture("paywall_viewed", { trigger, variant: paywallVariant(variant) });
         }
-    }, [screen, trigger]);
+    }, [screen, trigger, variant]);
 }

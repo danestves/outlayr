@@ -5,6 +5,7 @@ import { Platform } from "react-native";
 import Purchases, { INTRO_ELIGIBILITY_STATUS, LOG_LEVEL } from "react-native-purchases";
 import type { CustomerInfo, PurchasesPackage } from "react-native-purchases";
 
+import { proStatusOf } from "@/domain/pro-status";
 import { ENV } from "@/env";
 import { duringHandoff } from "@/lib/app-handoff";
 import type { AccountProfile } from "@/lib/auth-session";
@@ -62,6 +63,14 @@ export const refreshProEntitlement = Effect.fn("RevenueCat.refreshProEntitlement
 export const managementUrl = Effect.fn("RevenueCat.managementUrl")(function* managementUrl() {
     const customerInfo = yield* sdkCall(() => Purchases.getCustomerInfo());
     return customerInfo.managementURL;
+});
+
+export const proTerm = Effect.fn("RevenueCat.proTerm")(function* proTerm() {
+    const customerInfo = yield* sdkCall(() => Purchases.getCustomerInfo());
+    return {
+        manageUrl: customerInfo.managementURL,
+        status: proStatusOf(customerInfo.entitlements.active[PRO_ENTITLEMENT_ID]),
+    };
 });
 
 export const identifyUser = Effect.fn("RevenueCat.identifyUser")(function* identifyUser(userId: string) {

@@ -13,24 +13,31 @@ import { useTranslation } from "@/i18n/context";
 
 const SHOWN_ACCOUNTS = 4;
 
-type AccountTrigger = Extract<typeof PaywallTrigger.Type, "accounts" | "currencies" | "installment_apps">;
+export type AccountTrigger = Extract<typeof PaywallTrigger.Type, "accounts" | "currencies" | "installment_apps">;
 
-export function AccountTop({ trigger }: { trigger: AccountTrigger }) {
+/** The accounts the limit counts, and the line that says how close to it the user is. */
+export function useAccountLimit(trigger: AccountTrigger) {
     const t = useTranslation();
     const rows = useAccounts(useDatabase()).filter((account) => !isPerson(account));
     const installmentApps = trigger === "installment_apps";
     const listed = rows.filter((account) => isInstallmentAppAccount(account) === installmentApps);
+    const title =
+        trigger === "currencies"
+            ? t("pro.top.currencies.title")
+            : t(installmentApps ? "pro.top.installments" : "pro.top.accounts", {
+                  count: listed.length,
+                  limit: installmentApps ? FREE_INSTALLMENT_APPS : FREE_ACCOUNTS,
+              });
+    return { listed, title };
+}
+
+export function AccountTop({ trigger }: { trigger: AccountTrigger }) {
+    const t = useTranslation();
+    const { listed, title } = useAccountLimit(trigger);
     return (
         <View className="pt-2">
             <MonoLabel>{t("pro.eyebrow")}</MonoLabel>
-            <Text className="text-foreground text-title font-sans-semibold pt-2 tracking-tight">
-                {trigger === "currencies"
-                    ? t("pro.top.currencies.title")
-                    : t(installmentApps ? "pro.top.installments" : "pro.top.accounts", {
-                          count: listed.length,
-                          limit: installmentApps ? FREE_INSTALLMENT_APPS : FREE_ACCOUNTS,
-                      })}
-            </Text>
+            <Text className="text-foreground text-title font-sans-semibold pt-2 tracking-tight">{title}</Text>
             <View className="border-border mt-4 border-t">
                 {listed.slice(0, SHOWN_ACCOUNTS).map((account) => (
                     <View className="border-border flex-row items-center gap-3 border-b py-2.5" key={account.id}>
