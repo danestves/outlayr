@@ -55,7 +55,6 @@ export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purg
                 .withIndex("by_user_and_seq", (q) => q.eq("userId", userId))
                 .take(PURGE_BATCH)
         );
-        // A profile's rows are stored under `userId:<profileId>` (`syncOwner`), which only a range reaches.
         const rows =
             own.length > 0
                 ? own

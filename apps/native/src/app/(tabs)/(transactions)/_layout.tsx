@@ -8,9 +8,8 @@ export default function LogLayout() {
     return (
         <TabPauseProvider>
             <Stack>
-                <Stack.Screen name="index">
+                <Stack.Screen name="index" options={{ headerBackTitle: t("log.title"), title: "" }}>
                     <Stack.Header transparent />
-                    <Stack.Screen.Title large>{t("log.title")}</Stack.Screen.Title>
                 </Stack.Screen>
             </Stack>
         </TabPauseProvider>
