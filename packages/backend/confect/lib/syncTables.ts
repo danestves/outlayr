@@ -21,6 +21,7 @@ export const replicated = {
 
 export const categoryFields = {
     color: Schema.NullOr(Schema.String),
+    customName: Schema.optional(Schema.Boolean),
     dateCreated: Schema.NullOr(Schema.Number),
     emoji: Schema.NullOr(Schema.String),
     icon: Schema.NullOr(Schema.String),

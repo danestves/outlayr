@@ -1,7 +1,7 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "f376f0c4-d122-4b3d-b1c4-750de52c411b",
+  "id": "cdd15c95-b9e5-4b25-85d0-7d852a4938ad",
   "prevIds": [
     "bd439efe-d350-4a1c-bd26-f2f549241232"
   ],
@@ -493,6 +493,16 @@
       "notNull": false,
       "autoincrement": false,
       "default": "'#FFFFFF'",
+      "generated": null,
+      "entityType": "columns"
+    },
+    {
+      "table": "categories",
+      "name": "customName",
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "false",
       "generated": null,
       "entityType": "columns"
     },

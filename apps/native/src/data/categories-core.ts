@@ -153,11 +153,11 @@ export const seedCategories = Effect.fn("Categories.seedCategories")(function* s
     yield* query("seed", () => db.insert(categories).values(rows));
 });
 
-type LabelledRow = Pick<Category, "dateCreated" | "id" | "income" | "name" | "preset" | "updatedAt">;
+type LabelledRow = Pick<Category, "customName" | "dateCreated" | "id" | "income" | "name" | "preset" | "updatedAt">;
 
 export interface PresetLabelUpdate {
     id: string;
-    set: Partial<Pick<Category, "dateCreated" | "name" | "preset" | "updatedAt">>;
+    set: Partial<Pick<Category, "customName" | "dateCreated" | "name" | "preset" | "updatedAt">>;
 }
 
 export function presetLabelUpdates(
@@ -173,8 +173,9 @@ export function presetLabelUpdates(
             )
         )
     );
-    return rows.flatMap((row) => {
-        const preset = presetFor(row.preset, row.income) ?? seeded.get(row.id) ?? presetFor(row.name, row.income);
+    return rows.flatMap((row): PresetLabelUpdate[] => {
+        const stored = presetFor(row.preset, row.income);
+        const preset = stored ?? seeded.get(row.id) ?? presetFor(row.name, row.income);
         if (preset == null) {
             return [];
         }
@@ -183,13 +184,16 @@ export function presetLabelUpdates(
             capitalizeCategoryName
         );
         const current = row.name == null ? null : capitalizeCategoryName(row.name);
-        if (current != null && current !== capitalizeCategoryName(target) && sources.includes(current)) {
+        const customName = row.customName || (stored == null && current !== capitalizeCategoryName(preset));
+        if (!customName && current != null && current !== capitalizeCategoryName(target) && sources.includes(current)) {
             const pristine = row.dateCreated?.getTime() === row.updatedAt.getTime();
             return [
                 { id: row.id, set: { name: target, preset, updatedAt: now, ...(pristine && { dateCreated: now }) } },
             ];
         }
-        return row.preset === preset ? [] : [{ id: row.id, set: { preset } }];
+        return row.preset === preset && row.customName === customName
+            ? []
+            : [{ id: row.id, set: { customName, preset } }];
     });
 }
 
@@ -199,6 +203,7 @@ export const localizePresetCategories = Effect.fn("Categories.localizePresetCate
         const rows = yield* query("localize", () =>
             db
                 .select({
+                    customName: categories.customName,
                     dateCreated: categories.dateCreated,
                     id: categories.id,
                     income: categories.income,
@@ -659,6 +664,7 @@ export const categoriesRepo = {
         yield* query("create", () =>
             db.insert(categories).values({
                 color: input.color,
+                customName: input.preset == null,
                 dateCreated: now,
                 deletedAt: null,
                 emoji: input.emoji || null,
@@ -805,10 +811,10 @@ export const categoriesRepo = {
         };
         if (patch.name !== undefined) {
             const cleanName = capitalizeCategoryName(patch.name);
-            updates.name =
-                existing.name != null && capitalizeCategoryName(existing.name) === cleanName
-                    ? existing.name
-                    : cleanName;
+            if (existing.name == null || capitalizeCategoryName(existing.name) !== cleanName) {
+                updates.name = cleanName;
+                updates.customName = true;
+            }
         }
         if (patch.icon !== undefined) {
             updates.icon = patch.icon || null;

@@ -11,6 +11,7 @@ import {
     categoriesRepo,
     getCategoryById,
     isCategoryValidationError,
+    localizePresetCategories,
     SEEDED_CATEGORY_NAMES,
     SUGGESTED_CATEGORY_PRESETS,
     seedCategories,
@@ -125,6 +126,16 @@ describe("categoriesRepo.create validation", () => {
         expect(row?.icon).toBe("Coffee02");
         expect(row?.color).toBe("#279AF4");
         expect(row?.income).toBe(false);
+    });
+
+    it("keeps a typed default name in English when the app is in another language", async () => {
+        const id = await Effect.runPromise(
+            categoriesRepo.create(db, { color: "#279AF4", icon: "Coffee02", income: false, name: "Groceries" })
+        );
+
+        await Effect.runPromise(localizePresetCategories(db, "es"));
+
+        expect(getCategoryById(db, id)?.name).toBe("Groceries");
     });
 });
 
@@ -315,6 +326,17 @@ describe("categoriesRepo.update", () => {
         await Effect.runPromise(categoriesRepo.update(db, id, { color: "#EC7A58", name: "Teléfono e internet" }));
 
         expect(getCategoryById(db, id)?.name).toBe("Teléfono e internet");
+    });
+
+    it("never relabels a rename, even back to the English default", async () => {
+        await Effect.runPromise(seedCategories(db, "es"));
+        await Effect.runPromise(localizePresetCategories(db, "es"));
+        const id = seededCategoryId("Groceries", false);
+
+        await Effect.runPromise(categoriesRepo.update(db, id, { name: "Groceries" }));
+        await Effect.runPromise(localizePresetCategories(db, "fr"));
+
+        expect(getCategoryById(db, id)?.name).toBe("Groceries");
     });
 
     it("renames, recolors, and title-cases without touching other fields", async () => {

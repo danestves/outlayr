@@ -6,6 +6,7 @@ export const categories = sqliteTable(
     "categories",
     {
         color: text("color").default("#FFFFFF"),
+        customName: integer("customName", { mode: "boolean" }).notNull().default(false),
         dateCreated: integer("dateCreated", { mode: "timestamp_ms" }),
         deletedAt: integer("deletedAt", { mode: "timestamp_ms" }),
         emoji: text("emoji"),

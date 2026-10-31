@@ -87,6 +87,7 @@ describe("pickFreeCategoryIcon", () => {
     it("falls back to the first unused preset icon when the preferred icon collides", () => {
         const taken: Category = {
             color: "#AF52DE",
+            customName: false,
             dateCreated: new Date(0),
             deletedAt: null,
             emoji: null,
@@ -114,6 +115,7 @@ describe("presetLabelUpdates", () => {
     const seededAt = new Date(1000);
     const now = new Date(5000);
     const groceries = (overrides: Partial<Category> = {}) => ({
+        customName: false,
         dateCreated: seededAt,
         id: seededCategoryId("Groceries", false),
         income: false,
@@ -136,8 +138,14 @@ describe("presetLabelUpdates", () => {
         const renamed = groceries({ name: "Food", updatedAt: new Date(2000) });
 
         expect(presetLabelUpdates([renamed], "es", null, now)).toStrictEqual([
-            { id: renamed.id, set: { preset: "Groceries" } },
+            { id: renamed.id, set: { customName: true, preset: "Groceries" } },
         ]);
+    });
+
+    it("never translates a name the user chose, even the English one", () => {
+        const chosen = groceries({ customName: true, preset: "Groceries", updatedAt: new Date(2000) });
+
+        expect(presetLabelUpdates([chosen], "es", null, now)).toStrictEqual([]);
     });
 
     it("translates only from English or this device's previous language", () => {
