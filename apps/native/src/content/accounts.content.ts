@@ -224,12 +224,6 @@ const accounts = {
             pt: "Salvar conta",
             "pt-PT": "Guardar conta",
         }),
-        "accounts.section.liabilities": t({
-            en: "Cards & loans",
-            es: "Tarjetas y préstamos",
-            fr: "Cartes et prêts",
-            pt: "Cartões e empréstimos",
-        }),
         "accounts.section.people": t({
             en: "People",
             es: "Personas",

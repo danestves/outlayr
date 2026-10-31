@@ -1,3 +1,5 @@
+import PlusSignIcon from "@hugeicons-pro/core-stroke-rounded/PlusSignIcon";
+import { HugeiconsIcon } from "@hugeicons/react-native";
 import type { AccountsOverview, OverviewRow } from "@outlayr/money/account-overview";
 import { currencyTotals } from "@outlayr/money/currency-totals";
 import { landingDate } from "@outlayr/money/recurrence";
@@ -8,6 +10,7 @@ import { ScrollView, useWindowDimensions, View } from "react-native";
 import { AmountsHiddenContext } from "@/components/amount-text";
 import { CategoryIconTile } from "@/components/category-icon-tile";
 import { MonoLabel } from "@/components/mono-label";
+import { TapMenu } from "@/components/tap-menu";
 import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
 import { Widget, WIDGET_SIZE } from "@/components/widget-card";
@@ -22,6 +25,7 @@ import { resolveTransactionIdentity } from "@/domain/transaction-identity";
 import { chargesInWeekAhead } from "@/domain/upcoming";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useLanguage, useTranslation } from "@/i18n/context";
+import { useNewDebtItems } from "@/screens/debts/use-new-debt-items";
 import { useColors } from "@/theme/use-colors";
 
 import type { DebtsSummary } from "./accounts-block";
@@ -31,8 +35,7 @@ const GUTTER = 20;
 const NEXT_SHOWN = 3;
 const LOGOS_SHOWN = 4;
 const LOGO_SIZE = 24;
-
-type WidgetWidth = number | "100%";
+const START_GLYPH = 12;
 
 interface UpcomingWidgetProps {
     currency: string;
@@ -41,7 +44,7 @@ interface UpcomingWidgetProps {
     rates: RateTable;
     rows: readonly TransactionWithCategory[];
     showCents: boolean;
-    width: WidgetWidth;
+    width: number;
 }
 
 function UpcomingWidget({ rows, currency, rates, nowMs, showCents, onOpen, width }: UpcomingWidgetProps) {
@@ -109,7 +112,7 @@ interface AccountsWidgetProps {
     onOpen: () => void;
     overview: AccountsOverview | null;
     showCents: boolean;
-    width: WidgetWidth;
+    width: number;
 }
 
 function AccountsWidget({ accounts, overview, currency, showCents, onOpen, width }: AccountsWidgetProps) {
@@ -197,6 +200,41 @@ function AccountsWidget({ accounts, overview, currency, showCents, onOpen, width
     );
 }
 
+function NoDebtsWidget({ currency, showCents, width }: { currency: string; showCents: boolean; width: number }) {
+    const t = useTranslation();
+    const { language } = useLanguage();
+    const colors = useColors();
+    const hidden = use(AmountsHiddenContext);
+    const items = useNewDebtItems();
+    const title = t("debts.title");
+    const figure = hidden ? maskedAmount(currency) : formatAmount(0, currency, showCents, language);
+    const unit = t("debts.empty.owedToYou");
+
+    return (
+        <TapMenu accessibilityLabel={title} items={items}>
+            <Widget
+                accessibilityLabel={`${title}, ${figure}, ${unit}`}
+                figure={figure}
+                figureClass="text-subtle"
+                title={title}
+                unit={unit}
+                width={width}
+            >
+                <View className="gap-1">
+                    {[t("debts.verb.lent"), t("debts.verb.borrowed")].map((start) => (
+                        <View className="flex-row items-center gap-1.5" key={start}>
+                            <HugeiconsIcon color={colors.tint} icon={PlusSignIcon} size={START_GLYPH} />
+                            <Text className="font-sans-medium text-footnote text-tint" numberOfLines={1}>
+                                {start}
+                            </Text>
+                        </View>
+                    ))}
+                </View>
+            </Widget>
+        </TapMenu>
+    );
+}
+
 function DebtsWidget({
     debts,
     showCents,
@@ -206,7 +244,7 @@ function DebtsWidget({
     debts: DebtsSummary;
     onOpen: () => void;
     showCents: boolean;
-    width: WidgetWidth;
+    width: number;
 }) {
     const t = useTranslation();
     const { language } = useLanguage();
@@ -263,11 +301,10 @@ export function LogShelf({
 }: LogShelfProps) {
     const stacked = useAccessibilityTextSize();
     const { width: screen } = useWindowDimensions();
-    const count = (upcoming.length > 0 ? 1 : 0) + 1 + (debts === null ? 0 : 1);
-    const scrolls = !stacked && count > 2;
-    let width: WidgetWidth = (screen - 2 * GUTTER - GAP) / 2;
+    const scrolls = !stacked && upcoming.length > 0;
+    let width = (screen - 2 * GUTTER - GAP) / 2;
     if (stacked) {
-        width = "100%";
+        width = screen - 2 * GUTTER;
     } else if (scrolls) {
         width = WIDGET_SIZE;
     }
@@ -285,6 +322,11 @@ export function LogShelf({
                     width={width}
                 />
             ) : null}
+            {debts === null ? (
+                <NoDebtsWidget currency={currency} showCents={showCents} width={width} />
+            ) : (
+                <DebtsWidget debts={debts} onOpen={onOpenDebts} showCents={showCents} width={width} />
+            )}
             <AccountsWidget
                 accounts={accounts}
                 currency={currency}
@@ -293,9 +335,6 @@ export function LogShelf({
                 showCents={showCents}
                 width={width}
             />
-            {debts === null ? null : (
-                <DebtsWidget debts={debts} onOpen={onOpenDebts} showCents={showCents} width={width} />
-            )}
         </>
     );
 

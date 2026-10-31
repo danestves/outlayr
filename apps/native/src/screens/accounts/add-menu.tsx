@@ -1,14 +1,14 @@
-import { Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
 
 import { toolbarIcon } from "@/components/toolbar-icons";
-import { useCreateAccount, useCreateLiability } from "@/hooks/use-pro-gate";
+import { useCreateAccount } from "@/hooks/use-pro-gate";
 import { useTranslation } from "@/i18n/context";
+import { useNewDebtItems } from "@/screens/debts/use-new-debt-items";
 
 export function useAddMenu() {
-    const router = useRouter();
     const t = useTranslation();
     const createAccount = useCreateAccount();
-    const createLiability = useCreateLiability();
+    const debtItems = useNewDebtItems();
 
     return (
         <Stack.Toolbar.Menu accessibilityLabel={t("accounts.add.prompt")}>
@@ -16,21 +16,13 @@ export function useAddMenu() {
             <Stack.Toolbar.MenuAction icon="building.columns" onPress={createAccount}>
                 {t("accounts.add.account")}
             </Stack.Toolbar.MenuAction>
-            <Stack.Toolbar.MenuAction icon="creditcard" onPress={createLiability}>
-                {t("debts.add.liability")}
-            </Stack.Toolbar.MenuAction>
-            <Stack.Toolbar.MenuAction icon="person" onPress={() => router.push("/debts/new")}>
-                {t("debts.add.person")}
-            </Stack.Toolbar.MenuAction>
-            <Stack.Toolbar.MenuAction icon="hammer" onPress={() => router.push("/debts/owe")}>
-                {t("debts.add.owe")}
-            </Stack.Toolbar.MenuAction>
-            <Stack.Toolbar.MenuAction
-                icon="cart"
-                onPress={() => router.push({ params: { installments: "1" }, pathname: "/transactions/create" })}
-            >
-                {t("accounts.add.installments")}
-            </Stack.Toolbar.MenuAction>
+            <Stack.Toolbar.Menu inline title={t("debts.title")}>
+                {debtItems.map((item) => (
+                    <Stack.Toolbar.MenuAction icon={item.icon} key={item.id} onPress={item.onPress}>
+                        {item.label}
+                    </Stack.Toolbar.MenuAction>
+                ))}
+            </Stack.Toolbar.Menu>
         </Stack.Toolbar.Menu>
     );
 }

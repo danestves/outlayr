@@ -24,7 +24,7 @@ interface WidgetProps {
     className?: string;
     figure: string;
     figureClass?: string;
-    onPress: () => void;
+    onPress?: () => void;
     title: string;
     unit: string;
     unitClass?: string;
