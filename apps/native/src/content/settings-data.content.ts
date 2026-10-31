@@ -331,6 +331,19 @@ const settingsData = {
             pt: "Arquivo CSV",
             "pt-PT": "Ficheiro CSV",
         }),
+        "settings.import.sourceNotionSubtitle": t({
+            en: "A database exported as Markdown & CSV.",
+            es: "Una base de datos exportada como Markdown y CSV.",
+            fr: "Une base de données exportée en Markdown et CSV.",
+            pt: "Um banco de dados exportado como Markdown e CSV.",
+            "pt-PT": "Uma base de dados exportada como Markdown e CSV.",
+        }),
+        "settings.import.sourceNotionTitle": t({
+            en: "Notion",
+            es: "Notion",
+            fr: "Notion",
+            pt: "Notion",
+        }),
         "settings.restore.action": t({
             en: "Restore from an archive",
             es: "Restaurar desde un archivo",

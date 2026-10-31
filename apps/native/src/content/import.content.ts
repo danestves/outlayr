@@ -9,6 +9,12 @@ const importSheet = {
             fr: "Choisir un CSV",
             pt: "Escolher CSV",
         }),
+        "import.chooseNotionExport": t({
+            en: "Choose export",
+            es: "Elegir exportación",
+            fr: "Choisir l'export",
+            pt: "Escolher exportação",
+        }),
         "import.chooseDifferentFile": t({
             en: "Choose a different file",
             es: "Elegir otro archivo",
@@ -206,6 +212,14 @@ const importSheet = {
             fr: "Nous n'avons pas trouvé les bonnes colonnes",
             pt: "Não encontramos as colunas certas",
             "pt-PT": "Não encontrámos as colunas certas",
+        }),
+        "import.notionExportSteps": t({
+            en: "In Notion, open the database and tap ••• › Export › Markdown & CSV, then choose the zip here.",
+            es: "En Notion, abre la base de datos y toca ••• › Exportar › Markdown y CSV. Luego elige aquí el zip.",
+            fr: "Dans Notion, ouvrez la base de données et touchez ••• › Exporter › Markdown et CSV, puis choisissez le zip ici.",
+            pt: "No Notion, abra o banco de dados e toque em ••• › Exportar › Markdown e CSV. Depois escolha o zip aqui.",
+            "pt-PT":
+                "No Notion, abra a base de dados e toque em ••• › Exportar › Markdown e CSV. Depois escolha o zip aqui.",
         }),
         "import.openFeatureLab": t({
             en: "Open Feature Lab",

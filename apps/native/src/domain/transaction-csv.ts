@@ -139,7 +139,32 @@ const DATE_FORMATS = [
     "yyyyMMdd",
     "ddMMyyyy",
     "MMddyyyy",
+    "MMMM d, yyyy",
+    "d MMMM yyyy",
 ] as const;
+
+const MONTH_NAMES = [
+    ["january", "jan", "enero", "ene", "janeiro"],
+    ["february", "feb", "febrero", "fevereiro", "fev"],
+    ["march", "mar", "marzo", "marco"],
+    ["april", "apr", "abril", "abr"],
+    ["may", "mayo", "maio", "mai"],
+    ["june", "jun", "junio", "junho"],
+    ["july", "jul", "julio", "julho"],
+    ["august", "aug", "agosto", "ago"],
+    ["september", "sep", "sept", "septiembre", "setiembre", "set", "setembro"],
+    ["october", "oct", "octubre", "outubro", "out"],
+    ["november", "nov", "noviembre", "novembro"],
+    ["december", "dec", "diciembre", "dic", "dezembro", "dez"],
+] as const;
+const MONTH_BY_NAME = new Map<string, number>(
+    MONTH_NAMES.flatMap((names, index) => names.map((name) => [name, index + 1] as const))
+);
+const MONTH_FIRST_LONG =
+    /^(?<month>\p{L}+)\.?\s+(?<day>\d{1,2}),\s*(?<year>\d{4})(?:\s+(?<hours>\d{1,2}):(?<minutes>\d{2})\s*(?:(?<meridiem>[ap])\.?\s?m\.?)?)?$/iu;
+const DAY_FIRST_LONG =
+    /^(?<day>\d{1,2})\s+(?:de\s+)?(?<month>\p{L}+)\.?\s+(?:de\s+)?(?<year>\d{4})(?:\s+(?<hours>\d{1,2}):(?<minutes>\d{2})\s*(?:(?<meridiem>[ap])\.?\s?m\.?)?)?$/iu;
+const COMBINING_MARKS = /\p{M}/gu;
 
 const TOKENS = ["yyyy", "MM", "dd", "HH", "mm", "ss"] as const;
 type Token = (typeof TOKENS)[number];
@@ -191,6 +216,37 @@ function patternFor(format: string): FormatPattern | null {
     return PATTERN_CACHE.get(format) ?? null;
 }
 
+function localDate(year: number, month: number, day: number, hours = 0, minutes = 0, seconds = 0): Date | null {
+    if (hours > 23 || minutes > 59 || seconds > 59) {
+        return null;
+    }
+    const date = new Date(year, month - 1, day, hours, minutes, seconds, 0);
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+        return null;
+    }
+    return date;
+}
+
+function monthNumber(name: string): number | null {
+    return MONTH_BY_NAME.get(name.normalize("NFD").replaceAll(COMBINING_MARKS, "").toLowerCase()) ?? null;
+}
+
+function parseLongDate(value: string, format: string): Date | null {
+    const groups = (format === "d MMMM yyyy" ? DAY_FIRST_LONG : MONTH_FIRST_LONG).exec(value)?.groups;
+    const month = groups == null ? null : monthNumber(groups.month ?? "");
+    if (groups == null || month == null) {
+        return null;
+    }
+    let hours = Number(groups.hours ?? 0);
+    if (groups.meridiem != null) {
+        if (hours < 1 || hours > 12) {
+            return null;
+        }
+        hours = (hours % 12) + (groups.meridiem.toLowerCase() === "p" ? 12 : 0);
+    }
+    return localDate(Number(groups.year), month, Number(groups.day), hours, Number(groups.minutes ?? 0));
+}
+
 // Date-only values land on local midnight, matching `startOfDay`; 31 February answers null rather than rolling over.
 export function parseCsvDate(value: string, format: string): Date | null {
     const trimmed = value.trim();
@@ -204,6 +260,10 @@ export function parseCsvDate(value: string, format: string): Date | null {
         }
         const parsed = new Date(trimmed.replace(" ", "T"));
         return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    if (format === "MMMM d, yyyy" || format === "d MMMM yyyy") {
+        return parseLongDate(trimmed, format);
     }
 
     const pattern = patternFor(format);
@@ -227,11 +287,7 @@ export function parseCsvDate(value: string, format: string): Date | null {
         parts[token] = Number.parseInt(match[index + 1] ?? "", 10);
     }
 
-    const date = new Date(parts.yyyy, parts.MM - 1, parts.dd, parts.HH, parts.mm, parts.ss, 0);
-    if (date.getFullYear() !== parts.yyyy || date.getMonth() !== parts.MM - 1 || date.getDate() !== parts.dd) {
-        return null;
-    }
-    return date;
+    return localDate(parts.yyyy, parts.MM, parts.dd, parts.HH, parts.mm, parts.ss);
 }
 
 // `dd/MM` versus `MM/dd` is settled by a component above twelve anywhere in the column.
@@ -264,11 +320,24 @@ export function deduceDateFormat(values: readonly string[]): string | null {
     return viable[0] ?? null;
 }
 
-const INCOME_WORDS = new Set(["income", "credit", "cr", "in", "deposit"]);
-const EXPENSE_WORDS = new Set(["expense", "debit", "dr", "out", "withdrawal"]);
+const INCOME_WORDS = new Set(["income", "credit", "cr", "in", "deposit", "ingreso", "ingresos", "entrada", "receita"]);
+const EXPENSE_WORDS = new Set([
+    "expense",
+    "debit",
+    "dr",
+    "out",
+    "withdrawal",
+    "gasto",
+    "gastos",
+    "egreso",
+    "egresos",
+    "salida",
+    "despesa",
+    "saida",
+]);
 
 export function parseCsvType(value: string): boolean | null {
-    const word = value.trim().toLowerCase();
+    const word = value.trim().normalize("NFD").replaceAll(COMBINING_MARKS, "").toLowerCase();
     if (INCOME_WORDS.has(word)) {
         return true;
     }
