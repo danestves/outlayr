@@ -86,6 +86,12 @@ const debts = {
             fr: "Ajouter une dette",
             pt: "Adicionar uma dívida",
         }),
+        "debts.card.inFavor": t({
+            en: "In your favor",
+            es: "Saldo a favor",
+            fr: "En votre faveur",
+            pt: "Saldo a favor",
+        }),
         "debts.due.overdue_one": t({
             en: "{count} payment · {name} overdue since {date}",
             es: "{count} pago · {name} con atraso desde el {date}",

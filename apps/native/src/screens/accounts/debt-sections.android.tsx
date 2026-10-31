@@ -260,7 +260,7 @@ const SUBTITLE_TONE = {
 function DebtRow({ currency, format, onOpen, plan, row, subtitle, tone }: DebtRowProps) {
     const m3 = useMaterialColors();
     const { account } = row;
-    const amount = format(row.amount);
+    const amount = format(Math.abs(row.amount));
 
     return (
         <Pressable

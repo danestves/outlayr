@@ -34,13 +34,16 @@ export function debtSubtitle(
     { currency, language, showCents, t }: Wording
 ): DebtSubtitle {
     const otherCurrency = item.account.currency === currency ? null : item.account.currency;
+    const withCurrency = (text: string) => (otherCurrency === null ? text : `${text} · ${otherCurrency}`);
     if (item.kind === "person" && item.amount !== 0) {
         const owesYou = item.balance > 0;
-        const direction = t(owesYou ? "debts.person.owesYou" : "debts.person.youOwe");
         return {
-            text: otherCurrency === null ? direction : `${direction} · ${otherCurrency}`,
+            text: withCurrency(t(owesYou ? "debts.person.owesYou" : "debts.person.youOwe")),
             tone: owesYou ? "income" : "muted",
         };
+    }
+    if (item.amount < 0) {
+        return { text: withCurrency(t("debts.card.inFavor")), tone: "income" };
     }
     const tone = item.id === debts.due?.next.accountId ? "due" : "muted";
     const orders = debts.installments.get(item.id);
