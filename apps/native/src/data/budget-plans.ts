@@ -14,7 +14,9 @@ import type { MonthKey, PlanFlow, YearPlanInput, YearProjection } from "@/domain
 import { budgetPlansQuery } from "./budget-plans-core";
 import { useLiveQuery } from "./live-query";
 import { useUpcomingTransactions } from "./log-filtered";
+import { keptTransactions } from "./pending-deletes";
 import { useSavingsGoals } from "./savings-goals";
+import { usePendingDeletes } from "./use-deferred-delete";
 import { useValuation } from "./use-valuation";
 
 /** Entries with no category still count toward the month; they get a row but no plan of their own. */
@@ -86,6 +88,7 @@ export function useYearPlan(db: Database, nowMs: number, year: number): YearPlan
     const categoryRows = useLiveQuery(categories, () =>
         db.select().from(categories).where(isNull(categories.deletedAt))
     );
+    const pending = usePendingDeletes();
     const logged = useLiveQuery(
         transactions,
         () =>
@@ -105,10 +108,11 @@ export function useYearPlan(db: Database, nowMs: number, year: number): YearPlan
                     and(
                         isNull(transactions.deletedAt),
                         gte(transactions.date, new Date(lookback)),
-                        lte(transactions.date, now)
+                        lte(transactions.date, now),
+                        keptTransactions(db, pending)
                     )
                 ),
-        [lookback, nowMs],
+        [lookback, nowMs, pending],
         nowMs
     );
     const planRows = useLiveQuery(budgetPlans, () => budgetPlansQuery(db, monthKey(year, 0), monthKey(year, 11)), [
