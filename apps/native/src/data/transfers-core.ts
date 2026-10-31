@@ -283,7 +283,7 @@ export function lastTransfer(db: Database): SavedTransfer | null {
     return row === undefined ? null : savedTransfer(db, row.id);
 }
 
-function touchesAccount(accountId: string) {
+export function touchesAccount(accountId: string) {
     return or(eq(transfers.fromAccountId, accountId), eq(transfers.toAccountId, accountId));
 }
 

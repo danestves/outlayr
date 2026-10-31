@@ -3,12 +3,20 @@ import type { SQLiteAsyncDatabase } from "drizzle-orm/sqlite-core";
 
 import { transactions } from "@/db/schema";
 
+import { keptTransactions, NO_PENDING_DELETES } from "./pending-deletes";
+import type { PendingDeletes } from "./pending-deletes";
+
 // Both drivers are `"sync"`, which keeps `.all()` typed as rows so `useLiveQuery` can read in render.
 export type SpendDb = SQLiteAsyncDatabase<"sync", unknown>;
 
 // No per-budget SQL: windows and category rules apply in JS over this one result, because `useLiveQuery` adds a
 // listener per call and per-budget queries would re-run the same full scan on every insert.
-export function expenseContributionQuery(db: SpendDb, now: Date, since: Date | null = null) {
+export function expenseContributionQuery(
+    db: SpendDb,
+    now: Date,
+    since: Date | null = null,
+    pending: PendingDeletes = NO_PENDING_DELETES
+) {
     return db
         .select({
             amount: transactions.amount,
@@ -25,7 +33,8 @@ export function expenseContributionQuery(db: SpendDb, now: Date, since: Date | n
                 eq(transactions.income, false),
                 isNull(transactions.deletedAt),
                 since ? gte(transactions.date, since) : undefined,
-                lte(transactions.date, now)
+                lte(transactions.date, now),
+                keptTransactions(db, pending)
             )
         )
         .orderBy(asc(transactions.date));

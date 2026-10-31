@@ -35,6 +35,7 @@ import { useCategoryMeta } from "./categories";
 import { useLiveQuery } from "./live-query";
 import { useDecoratedRows } from "./transactions";
 import type { TransactionWithCategory } from "./transactions";
+import { usePendingDeletes } from "./use-deferred-delete";
 import { useValuation } from "./use-valuation";
 
 export { type BudgetSeverity, compareBudgetSeverity } from "@/domain/budget-severity";
@@ -158,10 +159,11 @@ export function useExpenseContributions(
     nowMs: number,
     sinceMs: number | null = null
 ): ExpenseContribution[] {
+    const pending = usePendingDeletes();
     const data = useLiveQuery(
         transactions,
-        () => expenseContributionQuery(db, new Date(nowMs), sinceMs === null ? null : new Date(sinceMs)),
-        [nowMs, sinceMs],
+        () => expenseContributionQuery(db, new Date(nowMs), sinceMs === null ? null : new Date(sinceMs), pending),
+        [nowMs, sinceMs, pending],
         nowMs
     );
 

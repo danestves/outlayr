@@ -4,6 +4,9 @@ import { and, count, eq, gte, isNotNull, isNull, lte, sql, sum } from "drizzle-o
 import type { SpendDb } from "@/data/budget-spent";
 import { transactions } from "@/db/schema";
 
+import { keptTransactions, NO_PENDING_DELETES } from "./pending-deletes";
+import type { PendingDeletes } from "./pending-deletes";
+
 // The same key `utcDateString` derives in JS, so SQL and the Log's day sections look rates up on the same day.
 export const UTC_DAY = sql<string>`strftime('%Y-%m-%d', ${transactions.date} / 1000, 'unixepoch')`;
 
@@ -65,7 +68,7 @@ export function toCurrencyCells(rows: readonly CellRow[]): CurrencyCell[] {
 }
 
 // Aggregated in SQL: the Log's `"all"` period has no lower bound, so a plain select would fetch every row each re-run.
-export function logCellQuery(db: SpendDb, start: Date | null, now: Date) {
+export function logCellQuery(db: SpendDb, start: Date | null, now: Date, pending: PendingDeletes = NO_PENDING_DELETES) {
     return db
         .select(CELL_COLUMNS)
         .from(transactions)
@@ -73,27 +76,47 @@ export function logCellQuery(db: SpendDb, start: Date | null, now: Date) {
             and(
                 isNull(transactions.deletedAt),
                 start ? gte(transactions.date, start) : undefined,
-                lte(transactions.date, now)
+                lte(transactions.date, now),
+                keptTransactions(db, pending)
             )
         )
         .groupBy(transactions.currency, transactions.income, UTC_DAY);
 }
 
-export function settledAccountCellQuery(db: SpendDb, accountId: string, now: Date) {
+export function settledAccountCellQuery(
+    db: SpendDb,
+    accountId: string,
+    now: Date,
+    pending: PendingDeletes = NO_PENDING_DELETES
+) {
     return db
         .select({ ...CELL_COLUMNS, plotDay: LOCAL_DAY })
         .from(transactions)
-        .where(and(isNull(transactions.deletedAt), eq(transactions.accountId, accountId), lte(transactions.date, now)))
+        .where(
+            and(
+                isNull(transactions.deletedAt),
+                eq(transactions.accountId, accountId),
+                lte(transactions.date, now),
+                keptTransactions(db, pending)
+            )
+        )
         .groupBy(transactions.currency, transactions.income, UTC_DAY, LOCAL_DAY);
 }
 
 // Bounded before grouping: a cell carries only a day key, so an entry scheduled for 23:00 today is indistinguishable
 // from one made at 09:00.
-export function settledAccountsCellQuery(db: SpendDb, now: Date) {
+export function settledAccountsCellQuery(db: SpendDb, now: Date, pending: PendingDeletes = NO_PENDING_DELETES) {
     return db
         .select({ accountId: transactions.accountId, ...CELL_COLUMNS, plotDay: LOCAL_DAY })
         .from(transactions)
-        .where(and(isNull(transactions.deletedAt), isNotNull(transactions.accountId), lte(transactions.date, now)))
+        .where(
+            and(
+                isNull(transactions.deletedAt),
+                isNotNull(transactions.accountId),
+                lte(transactions.date, now),
+                keptTransactions(db, pending)
+            )
+        )
         .groupBy(transactions.accountId, transactions.currency, transactions.income, UTC_DAY, LOCAL_DAY);
 }
 

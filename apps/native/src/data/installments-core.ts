@@ -18,6 +18,8 @@ import { getAccountById } from "./accounts-core";
 import { feeCategoryFor } from "./card-fees-core";
 import { frozenUsdAmount } from "./frozen-usd";
 import { tombstonePlans } from "./installment-cascade";
+import { keptTransfers, NO_PENDING_DELETES } from "./pending-deletes";
+import type { PendingDeletes } from "./pending-deletes";
 import { localRateLookup } from "./rates";
 import { transactionsRepo } from "./transactions-core";
 import type { TransactionInput } from "./transactions-core";
@@ -577,7 +579,7 @@ export function liveInstallmentsQuery(db: Database) {
 }
 
 // Only transfers still arriving on the order's account count, so one re-pointed in the editor stops paying it.
-export function planPaymentsQuery(db: Database) {
+export function planPaymentsQuery(db: Database, pending: PendingDeletes = NO_PENDING_DELETES) {
     return db
         .select({ paid: sql<number>`sum(${transfers.toAmount})`, planId: installmentPlans.id })
         .from(transfers)
@@ -588,7 +590,7 @@ export function planPaymentsQuery(db: Database) {
                 eq(installmentPlans.accountId, transfers.toAccountId)
             )
         )
-        .where(and(isNull(transfers.deletedAt), isNotNull(transfers.installmentPlanId)))
+        .where(and(isNull(transfers.deletedAt), isNotNull(transfers.installmentPlanId), keptTransfers(db, pending)))
         .groupBy(installmentPlans.id);
 }
 
