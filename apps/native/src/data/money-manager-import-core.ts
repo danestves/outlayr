@@ -106,6 +106,7 @@ export const readLedgerState = Effect.fn("MoneyManagerImport.readLedgerState")(f
                     income: categories.income,
                     name: categories.name,
                     parentId: categories.parentId,
+                    preset: categories.preset,
                 })
                 .from(categories)
                 .where(isNull(categories.deletedAt)),
@@ -144,6 +145,7 @@ export const readLedgerState = Effect.fn("MoneyManagerImport.readLedgerState")(f
             income: row.income,
             name: row.name ?? "",
             parentId: row.parentId,
+            preset: row.preset,
         })),
         currency,
         currencyChosen,
@@ -255,6 +257,7 @@ export const applyMoneyManagerImport = Effect.fn("MoneyManagerImport.apply")(fun
                         income: category.income,
                         name: category.name,
                         parentId: parent,
+                        preset: category.preset,
                     })
                     .pipe(Effect.mapError(fail("apply")));
                 categoryKeys.set(category.key, id);

@@ -15,6 +15,7 @@ import { ScreenHeader } from "@/components/screen-header";
 import { SwipeToDelete } from "@/components/swipe-to-delete";
 import { Text } from "@/components/text";
 import { toolbarIcon } from "@/components/toolbar-icons";
+import { presetLabel } from "@/data/categories-core";
 import type { Category, CategoryWithChildren, SuggestedCategoryPreset } from "@/data/categories-core";
 import { formatAmount } from "@/domain/money";
 import { useLanguage, useTranslation } from "@/i18n/context";
@@ -311,9 +312,11 @@ function SuggestedRow({
     onAdd: (preset: SuggestedCategoryPreset) => void;
 }) {
     const m3 = useMaterialColors();
+    const t = useTranslation();
+    const label = presetLabel(preset.name, t);
     return (
         <Pressable
-            accessibilityLabel={preset.name}
+            accessibilityLabel={label}
             accessibilityRole="button"
             android_ripple={{ color: withAlpha(m3.onSurface, 0.1) }}
             className="border-m3-outline-variant bg-m3-surface min-h-14 flex-row items-center gap-4 border-b px-4"
@@ -321,7 +324,7 @@ function SuggestedRow({
         >
             <CategoryIconTile color={preset.color} future icon={preset.icon} size={PARENT_TILE} type="solid" />
             <Text className="text-body text-m3-on-surface-variant flex-1" numberOfLines={1}>
-                {preset.name}
+                {label}
             </Text>
             <HugeiconsIcon color={m3.onSurfaceVariant} icon={PlusSignCircleIcon} size={22} />
         </Pressable>

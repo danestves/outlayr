@@ -8,7 +8,7 @@ import { migratedDatabase } from "@/db/test-database";
 
 import { AdoptionEngineError } from "./adoption-engine-core";
 import { AppMetaError, getMeta, META_KEYS, setMeta } from "./app-meta-core";
-import { seedCategories } from "./categories-core";
+import { localizePresetCategories, seedCategories } from "./categories-core";
 import {
     adoptedAccount,
     AdoptionEngineMissingError,
@@ -51,11 +51,17 @@ let db: Database;
 
 beforeEach(async () => {
     db = migratedDatabase();
-    await Effect.runPromise(seedCategories(db));
+    await Effect.runPromise(seedCategories(db, "en"));
 });
 
 describe("local ledger state", () => {
     it("reads a freshly seeded install as empty", async () => {
+        await expect(Effect.runPromise(localLedgerState(db))).resolves.toBe("empty");
+    });
+
+    it("still reads a seeded install as empty once its categories are translated", async () => {
+        await Effect.runPromise(localizePresetCategories(db, "es"));
+
         await expect(Effect.runPromise(localLedgerState(db))).resolves.toBe("empty");
     });
 

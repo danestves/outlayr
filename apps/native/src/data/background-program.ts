@@ -5,13 +5,17 @@ import * as Queue from "effect/Queue";
 import * as Stream from "effect/Stream";
 
 import type { Database } from "@/db/client";
+import { deviceLanguage } from "@/i18n/device-language";
+import { launchAndForegrounds, WatchAppState } from "@/lib/app-events";
 import { DailyReminderSync } from "@/lib/daily-reminder-sync";
 import type { DailyReminderSteps } from "@/lib/daily-reminder-sync";
 import { DueReminderSync } from "@/lib/due-reminder-sync";
 import type { DueReminderPasses } from "@/lib/due-reminder-sync";
 import { SystemSync } from "@/lib/system-sync";
 import type { SystemSurfaces } from "@/lib/system-sync";
+import { warnAndContinue } from "@/lib/warn-and-continue";
 
+import { localizePresetCategories } from "./categories-core";
 import { RecurrenceSweep } from "./recurrence-sweep";
 
 export class BackgroundProgram extends Context.Service<
@@ -28,6 +32,7 @@ export const make = Effect.gen(function* make() {
     const dueReminders = yield* DueReminderSync;
     const sweep = yield* RecurrenceSweep;
     const system = yield* SystemSync;
+    const watchAppState = yield* WatchAppState;
 
     const run = Effect.fn("BackgroundProgram.run")(function* run(db: Database) {
         const swept = yield* Queue.sliding<undefined>(1);
@@ -41,6 +46,13 @@ export const make = Effect.gen(function* make() {
                 // After the sweep, so a subscription that advanced this foreground is in the table when the widgets
                 // rebuild.
                 system.run(db, Stream.fromQueue(swept)),
+                launchAndForegrounds(watchAppState).pipe(
+                    Stream.runForEach(() =>
+                        localizePresetCategories(db, deviceLanguage()).pipe(
+                            warnAndContinue("Failed to localize the preset categories")
+                        )
+                    )
+                ),
             ],
             { concurrency: "unbounded", discard: true }
         );

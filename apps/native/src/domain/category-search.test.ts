@@ -7,6 +7,7 @@ import { categorySearchKey, expandedForSelectedCategory, searchCategoryTree } fr
 function category(id: string, name: string, parentId: string | null): Category {
     return {
         color: "#34C759",
+        customName: false,
         dateCreated: new Date(0),
         deletedAt: null,
         emoji: null,
@@ -15,6 +16,7 @@ function category(id: string, name: string, parentId: string | null): Category {
         income: false,
         name,
         parentId,
+        preset: null,
         sortOrder: 0,
         updatedAt: new Date(0),
     };

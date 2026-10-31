@@ -1,3 +1,5 @@
+import { presetLabel } from "@/data/categories-core";
+
 import { iconFamilyPreset, normalizeLabel, presetForMoneyManager } from "./matching";
 import type { AccountTarget, CategoryTarget, MmAnalysis, MmChoices, MmSnapshot, OutlayrLedgerState } from "./types";
 
@@ -45,7 +47,10 @@ function matchCategories(snapshot: MmSnapshot, analysis: MmAnalysis, ledger: Out
         if (preset != null) {
             const presetRow = ledger.categories.find(
                 (category) =>
-                    category.income === view.income && normalizeLabel(category.name) === normalizeLabel(preset)
+                    category.income === view.income &&
+                    (category.preset === preset ||
+                        normalizeLabel(category.name) === normalizeLabel(preset) ||
+                        normalizeLabel(category.name) === normalizeLabel(presetLabel(preset)))
             );
             choices.set(
                 view.uid,
@@ -90,7 +95,7 @@ function familyOwner(
         }
         if (target.kind === "existing") {
             const row = ledger.categories.find((item) => item.id === target.categoryId);
-            if (row != null && normalizeLabel(row.name) === familyLabel) {
+            if (row != null && (row.preset === family || normalizeLabel(row.name) === familyLabel)) {
                 return { categoryId: row.id };
             }
         }

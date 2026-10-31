@@ -111,7 +111,10 @@ export function useMerchantLookup({
         if (categoryId == null && suggestedCategory != null) {
             const matchedCategory = categories
                 .flatMap((parent) => [parent, ...parent.children])
-                .find((candidate) => candidate.name === suggestedCategory?.name);
+                .find(
+                    (candidate) =>
+                        candidate.name === suggestedCategory?.name || candidate.preset === suggestedCategory?.name
+                );
             if (matchedCategory != null) {
                 categoryId = matchedCategory.id;
                 suggestedCategory = null;
