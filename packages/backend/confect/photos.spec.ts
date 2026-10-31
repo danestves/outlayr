@@ -2,6 +2,7 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import * as Schema from "effect/Schema";
 
 import { Id } from "./_generated/id";
+import { ProfileId } from "./sync";
 
 const PhotoUrl = Schema.Struct({ key: Schema.String, url: Schema.String });
 
@@ -51,7 +52,7 @@ export default GroupSpec.make()
     .addFunction(
         FunctionSpec.publicMutation({
             name: "releaseUnreferenced",
-            args: () => ({ key: Schema.String }),
+            args: () => ({ key: Schema.String, profileId: Schema.optional(ProfileId) }),
             returns: () => Schema.Struct({ released: Schema.Boolean }),
         })
     );

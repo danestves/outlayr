@@ -49,12 +49,22 @@ export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purg
     // The loop stops at the first table that still holds rows; hoisting would read every synced table on every
     // pass, past PURGE_BATCH's budget.
     for (const table of SYNCED_TABLES) {
-        const rows = yield* Effect.promise(() =>
+        const own = yield* Effect.promise(() =>
             ctx.db
                 .query(table)
                 .withIndex("by_user_and_seq", (q) => q.eq("userId", userId))
                 .take(PURGE_BATCH)
         );
+        // A profile's rows are stored under `userId:<profileId>` (`syncOwner`), which only a range reaches.
+        const rows =
+            own.length > 0
+                ? own
+                : yield* Effect.promise(() =>
+                      ctx.db
+                          .query(table)
+                          .withIndex("by_user_and_seq", (q) => q.gt("userId", `${userId}:`).lt("userId", `${userId};`))
+                          .take(PURGE_BATCH)
+                  );
         if (rows.length === 0) {
             continue;
         }
@@ -63,6 +73,20 @@ export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purg
             { concurrency: "unbounded", discard: true }
         );
         return { done: false, removed: rows.length };
+    }
+
+    const profileStates = yield* Effect.promise(() =>
+        ctx.db
+            .query("syncState")
+            .withIndex("by_user", (q) => q.gt("userId", `${userId}:`).lt("userId", `${userId};`))
+            .take(PURGE_BATCH)
+    );
+    if (profileStates.length > 0) {
+        yield* Effect.all(
+            profileStates.map((row) => Effect.promise(() => ctx.db.delete(row._id))),
+            { concurrency: "unbounded", discard: true }
+        );
+        return { done: false, removed: profileStates.length };
     }
 
     const mail = yield* Effect.promise(() =>

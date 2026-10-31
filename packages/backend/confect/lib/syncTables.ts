@@ -207,6 +207,17 @@ export const budgetPlanFields = {
     month: Schema.Number,
 };
 
+export const profileFields = {
+    customColor: Schema.NullOr(Schema.String),
+    dateCreated: Schema.Number,
+    emoji: Schema.NullOr(Schema.String),
+    icon: Schema.NullOr(Schema.String),
+    imageColor: Schema.NullOr(Schema.String),
+    imageKey: Schema.NullOr(Schema.String),
+    name: Schema.String,
+    sortOrder: Schema.Number,
+};
+
 export const outsideMoveFields = {
     accountId: Schema.String,
     amount: Schema.Number,
@@ -234,6 +245,7 @@ const TOMBSTONED_TABLES = [
     "outsidePayments",
     "outsideMoves",
     "transactionAttachments",
+    "profiles",
 ] as const;
 
 // Pull order. `appMeta` goes last: its identity is a key, so nothing keys off its position.
@@ -252,6 +264,7 @@ export const FIELDS_BY_TABLE = {
     mainBudget: mainBudgetFields,
     outsideMoves: outsideMoveFields,
     outsidePayments: outsidePaymentFields,
+    profiles: profileFields,
     savingsGoals: savingsGoalFields,
     tags: tagFields,
     transactionAttachments: transactionAttachmentFields,

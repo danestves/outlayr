@@ -27,6 +27,9 @@ type TestClient = TestConvex<typeof schema>;
 type PushRows = FunctionArgs<typeof api.sync.push>["rows"];
 type Arm<T extends PushRows[number]["table"]> = Extract<PushRows[number], { table: T }>;
 
+const PROFILE_WORK = "0b8f3c3e-6a51-4c4e-9f3b-2a7d5e1c9a10";
+const PROFILE_FAMILY = "5d2a9e47-1c3b-4f8a-b6d0-7e9c2f4a8b31";
+
 const DEVICE_A = "device-aaaa";
 const DEVICE_B = "device-bbbb";
 
@@ -180,6 +183,90 @@ describe("push authorization", () => {
     });
 });
 
+describe("profiles", () => {
+    it("keeps each profile's rows and counter apart from Personal and from each other", async () => {
+        const t = harness();
+        const owner = await seedProUser(t);
+        const client = authenticatedAs(t, owner);
+
+        await pushAs(t, owner, DEVICE_A, [transactionRow("personal-row", 100)]);
+        await client.mutation(api.sync.push, {
+            deviceId: DEVICE_A,
+            profileId: PROFILE_WORK,
+            rows: [transactionRow("work-row", 200), transactionRow("work-row-2", 201)],
+        });
+
+        const personal = await pullAs(t, owner, 0);
+        const work = await client.query(api.sync.pullSince, { cursor: 0, profileId: PROFILE_WORK });
+        const family = await client.query(api.sync.pullSince, { cursor: 0, profileId: PROFILE_FAMILY });
+
+        expect(personal.rows.map((row) => row.localId)).toStrictEqual(["personal-row"]);
+        expect(work.rows.map((row) => row.localId)).toStrictEqual(["work-row", "work-row-2"]);
+        expect(family.rows).toHaveLength(0);
+        await expect(client.query(api.sync.currentSeq, {})).resolves.toBe(2);
+        await expect(client.query(api.sync.currentSeq, { profileId: PROFILE_WORK })).resolves.toBe(3);
+    });
+
+    it("does not let another account read a profile by guessing its id", async () => {
+        const t = harness();
+        const owner = await seedProUser(t);
+        const stranger = await seedProUser(t);
+
+        await authenticatedAs(t, owner).mutation(api.sync.push, {
+            deviceId: DEVICE_A,
+            profileId: PROFILE_WORK,
+            rows: [transactionRow("work-row", 200)],
+        });
+
+        const page = await authenticatedAs(t, stranger).query(api.sync.pullSince, {
+            cursor: 0,
+            profileId: PROFILE_WORK,
+        });
+        expect(page.rows).toHaveLength(0);
+    });
+
+    it("refuses a profile id that is not a UUID, so it cannot reach into another owner's range", async () => {
+        const t = harness();
+        const owner = await seedProUser(t);
+
+        await expect(
+            authenticatedAs(t, owner).mutation(api.sync.push, {
+                deviceId: DEVICE_A,
+                profileId: "x:../other",
+                rows: [transactionRow("t1", 100)],
+            })
+        ).rejects.toThrow();
+    });
+
+    it("purges every profile's rows and counters with the account", async () => {
+        const t = harness();
+        const owner = await seedProUser(t);
+        const client = authenticatedAs(t, owner);
+        const bystander = await seedProUser(t);
+
+        await pushAs(t, owner, DEVICE_A, [transactionRow("personal-row", 100)]);
+        await client.mutation(api.sync.push, {
+            deviceId: DEVICE_A,
+            profileId: PROFILE_WORK,
+            rows: [transactionRow("work-row", 200)],
+        });
+        await pushAs(t, bystander, DEVICE_B, [transactionRow("bystander-row", 300)]);
+
+        const { resumeSecret } = await client.mutation(api.accountDeletion.prepare, {});
+        await t.mutation(api.accountDeletion.recordAppleRevocation, { resumeSecret });
+        // One batch per call, as the client drives it.
+        let status = await t.mutation(api.accountDeletion.advance, { resumeSecret });
+        for (let step = 0; status.phase !== "purged" && step < 10; step += 1) {
+            status = await t.mutation(api.accountDeletion.advance, { resumeSecret });
+        }
+
+        const transactions = await t.run((ctx) => ctx.db.query("transactions").collect());
+        const states = await t.run((ctx) => ctx.db.query("syncState").collect());
+        expect(transactions.map((row) => row.localId)).toStrictEqual(["bystander-row"]);
+        expect(states.map((row) => row.userId)).toStrictEqual([bystander.userId]);
+    });
+});
+
 describe("push table coverage", () => {
     it("accepts and round-trips a row from every table the outbox drains", async () => {
         const t = harness();
@@ -265,6 +352,22 @@ describe("push table coverage", () => {
                 table: "budgetPlans",
                 updatedAt: 10,
             },
+            {
+                deletedAt: null,
+                fields: {
+                    customColor: null,
+                    dateCreated: 11,
+                    emoji: null,
+                    icon: "work",
+                    imageColor: null,
+                    imageKey: null,
+                    name: "Work",
+                    sortOrder: 1,
+                },
+                localId: PROFILE_WORK,
+                table: "profiles",
+                updatedAt: 11,
+            },
         ];
 
         await pushAs(t, owner, DEVICE_A, rows);
@@ -276,6 +379,7 @@ describe("push table coverage", () => {
             "installments",
             "outsideMoves",
             "outsidePayments",
+            "profiles",
             "tags",
             "transactionAttachments",
             "transactionPhotos",
