@@ -247,9 +247,12 @@ function TrimBody({
                                 accessibilityState={{ selected: month.key === through }}
                                 className={cn(
                                     "h-[38px] items-center justify-center rounded-[19px] border px-3.5",
-                                    month.key === through ? "border-tint bg-tint/10" : "border-border"
+                                    month.key === through ? "border-tint" : "border-border"
                                 )}
                                 key={month.key}
+                                style={
+                                    month.key === through ? { backgroundColor: withAlpha(colors.tint, 0.1) } : undefined
+                                }
                                 onPress={() => {
                                     haptics("selection");
                                     setThrough(month.key);
