@@ -57,6 +57,8 @@ import { BudgetCard, NewBudgetCell } from "./components/budget-card";
 import { BudgetEmptyState } from "./components/budget-empty-state";
 import type { LimitCommit, LimitTarget } from "./components/budget-limit-body";
 import { BudgetLimitSheet } from "./components/budget-limit-sheet";
+import { useBudgetPeriodMenu } from "./components/budget-period-menu";
+import type { BudgetsView } from "./components/budget-period-menu";
 import { BudgetRow } from "./components/budget-row";
 import { GoalTargetSheet } from "./components/goal-target-sheet";
 import type { GoalCommit, GoalTarget } from "./components/goal-target-sheet";
@@ -64,6 +66,7 @@ import { SavingsGoalsSection } from "./components/savings-goals-section";
 import { UnbudgetedRail } from "./components/unbudgeted-rail";
 import { useCommitLatch } from "./components/use-commit-latch";
 import { pairs } from "./pairs";
+import { YearView } from "./plan/year-view";
 
 const ROW_REORDER = LinearTransition.duration(420).easing(Easing.out(Easing.cubic));
 const ROW_EXIT = FadeOut.duration(200);
@@ -74,6 +77,8 @@ export function Budgets() {
     const createAccount = useCreateAccount();
     const openPaywall = useOpenPaywall();
     const [gridWidth, setGridWidth] = useState<number | null>(null);
+    const [view, setView] = useState<BudgetsView>("month");
+    const periodMenu = useBudgetPeriodMenu({ onSelect: setView, view });
     const t = useTranslation();
     const haptics = useHaptics();
     const currency = useGlobalCurrency(db);
@@ -314,9 +319,10 @@ export function Budgets() {
         </>
     );
 
-    if (isEmpty) {
+    if (isEmpty && view === "month") {
         return (
             <>
+                <Stack.Toolbar placement="right">{periodMenu}</Stack.Toolbar>
                 <View className="bg-background flex-1 justify-center">
                     <BudgetEmptyState
                         calendar={calendar}
@@ -346,7 +352,8 @@ export function Budgets() {
                 contentInsetAdjustmentBehavior="automatic"
                 style={{ flex: 1 }}
             >
-                {main ? (
+                {view === "year" ? <YearView db={db} nowMs={nowMs} /> : null}
+                {view === "month" && main ? (
                     <BudgetBurndownHero
                         budget={main}
                         burndown={mainBurndown}
@@ -358,7 +365,7 @@ export function Budgets() {
                     />
                 ) : null}
 
-                {budgets.length ? (
+                {view === "month" && budgets.length ? (
                     <View className="pt-6">
                         <View className="flex-row flex-wrap items-baseline justify-between gap-x-3 pb-2">
                             <MonoLabel>{main ? t("budgets.list.categories") : t("budgets.list.budgets")}</MonoLabel>
@@ -429,45 +436,50 @@ export function Budgets() {
                     </View>
                 ) : null}
 
-                <UnbudgetedRail
-                    currency={currency}
-                    everythingTypical={rail.everything}
-                    onPress={(scope) =>
-                        openLimit(
-                            scope
-                                ? {
-                                      categoryId: scope.categoryId,
-                                      color: scope.color,
-                                      emoji: scope.emoji,
-                                      icon: scope.icon,
-                                      limit: null,
-                                      name: scope.name,
-                                      type: BUDGET_TYPE.month,
-                                      window: rail.window,
-                                  }
-                                : {
-                                      categoryId: null,
-                                      limit: null,
-                                      name: t("budgets.scope.everything").toLocaleLowerCase(),
-                                      type: BUDGET_TYPE.month,
-                                      window: rail.window,
-                                  }
-                        )
-                    }
-                    offerEverything={mainRow === null}
-                    periodPhrase={t("budgets.periodPhrase.month")}
-                    scopes={rail.scopes}
-                />
+                {view === "month" ? (
+                    <>
+                        <UnbudgetedRail
+                            currency={currency}
+                            everythingTypical={rail.everything}
+                            onPress={(scope) =>
+                                openLimit(
+                                    scope
+                                        ? {
+                                              categoryId: scope.categoryId,
+                                              color: scope.color,
+                                              emoji: scope.emoji,
+                                              icon: scope.icon,
+                                              limit: null,
+                                              name: scope.name,
+                                              type: BUDGET_TYPE.month,
+                                              window: rail.window,
+                                          }
+                                        : {
+                                              categoryId: null,
+                                              limit: null,
+                                              name: t("budgets.scope.everything").toLocaleLowerCase(),
+                                              type: BUDGET_TYPE.month,
+                                              window: rail.window,
+                                          }
+                                )
+                            }
+                            offerEverything={mainRow === null}
+                            periodPhrase={t("budgets.periodPhrase.month")}
+                            scopes={rail.scopes}
+                        />
 
-                <SavingsGoalsSection
-                    currency={currency}
-                    goals={goals}
-                    onAdd={() => accountSheetRef.current?.present()}
-                    onPress={(id) => router.push(`/budgets/goals/${id}`)}
-                />
+                        <SavingsGoalsSection
+                            currency={currency}
+                            goals={goals}
+                            onAdd={() => accountSheetRef.current?.present()}
+                            onPress={(id) => router.push(`/budgets/goals/${id}`)}
+                        />
+                    </>
+                ) : null}
             </ScrollView>
 
             <Stack.Toolbar placement="right">
+                {periodMenu}
                 <Stack.Toolbar.Button accessibilityLabel={t("budgets.rail.another")} onPress={presentCategoryPicker}>
                     <Stack.Toolbar.Icon {...toolbarIcon("add")} />
                 </Stack.Toolbar.Button>

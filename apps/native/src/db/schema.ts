@@ -410,6 +410,28 @@ export const outsideMoves = sqliteTable(
     (table) => [index("outsideMoves_accountId_idx").on(table.accountId)]
 );
 
+/** `month` is a `yyyymm` key, not a timestamp. Null `amount` clears the month in place instead of tombstoning it. */
+export const budgetPlans = sqliteTable(
+    "budgetPlans",
+    {
+        amount: real("amount"),
+        categoryId: text("categoryId")
+            .notNull()
+            .references(() => categories.id, { onDelete: "cascade" }),
+        currency: text("currency"),
+        deletedAt: integer("deletedAt", { mode: "timestamp_ms" }),
+        id: text("id").primaryKey(),
+        month: integer("month").notNull(),
+        restoredAt: integer("restoredAt", { mode: "timestamp_ms" }),
+        updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).notNull(),
+    },
+    (table) => [
+        index("budgetPlans_categoryId_idx").on(table.categoryId),
+        index("budgetPlans_month_idx").on(table.month),
+        index("budgetPlans_deletedAt_idx").on(table.deletedAt),
+    ]
+);
+
 export const tags = sqliteTable(
     "tags",
     {

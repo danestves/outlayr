@@ -200,6 +200,13 @@ export const outsidePaymentFields = {
     planId: Schema.String,
 };
 
+export const budgetPlanFields = {
+    amount: Schema.NullOr(Schema.Number),
+    categoryId: Schema.String,
+    currency: Schema.NullOr(Schema.String),
+    month: Schema.Number,
+};
+
 export const outsideMoveFields = {
     accountId: Schema.String,
     amount: Schema.Number,
@@ -213,6 +220,7 @@ const TOMBSTONED_TABLES = [
     "transactions",
     "budgets",
     "mainBudget",
+    "budgetPlans",
     "savingsGoals",
     "tags",
     "transactionTags",
@@ -236,6 +244,7 @@ export type SyncedTable = (typeof SYNCED_TABLES)[number];
 export const FIELDS_BY_TABLE = {
     accounts: accountFields,
     appMeta: appMetaFields,
+    budgetPlans: budgetPlanFields,
     budgets: budgetFields,
     categories: categoryFields,
     installmentPlans: installmentPlanFields,

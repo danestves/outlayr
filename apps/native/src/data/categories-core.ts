@@ -7,7 +7,7 @@ import * as Schema from "effect/Schema";
 
 import { TOMBSTONED_BUDGET } from "@/data/budgets-core";
 import type { Database } from "@/db/client";
-import { budgets, categories, transactions } from "@/db/schema";
+import { budgetPlans, budgets, categories, transactions } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
 import { uuidV5 } from "@/domain/uuid5";
@@ -545,6 +545,12 @@ export const categoriesRepo = {
                         .update(budgets)
                         .set({ ...TOMBSTONED_BUDGET, deletedAt: now, updatedAt: now })
                         .where(and(eq(budgets.categoryId, id), isNull(budgets.deletedAt)))
+                );
+                yield* query("remove", () =>
+                    db
+                        .update(budgetPlans)
+                        .set({ deletedAt: now, updatedAt: now })
+                        .where(and(eq(budgetPlans.categoryId, id), isNull(budgetPlans.deletedAt)))
                 );
                 yield* query("remove", () =>
                     db

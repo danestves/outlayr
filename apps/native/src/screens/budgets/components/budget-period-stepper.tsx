@@ -11,7 +11,9 @@ import { useTranslation } from "@/i18n/context";
 import { useColors } from "@/theme/use-colors";
 
 interface BudgetPeriodStepperProps {
+    label?: string;
     maxBack: number;
+    maxForward?: number;
     /** 0 is the running window; negative counts closed windows behind it. */
     offset: number;
     onStep: (offset: number) => void;
@@ -19,7 +21,15 @@ interface BudgetPeriodStepperProps {
     window: BudgetWindow;
 }
 
-export function BudgetPeriodStepper({ window, type, offset, maxBack, onStep }: BudgetPeriodStepperProps) {
+export function BudgetPeriodStepper({
+    window,
+    type,
+    offset,
+    label,
+    maxBack,
+    maxForward = 0,
+    onStep,
+}: BudgetPeriodStepperProps) {
     const t = useTranslation();
     return (
         <View className="flex-row items-center justify-between">
@@ -31,11 +41,11 @@ export function BudgetPeriodStepper({ window, type, offset, maxBack, onStep }: B
                 <ArrowGlyph back />
             </StepButton>
 
-            <MonoLabel className="text-foreground">{budgetWindowLabel(window, type)}</MonoLabel>
+            <MonoLabel className="text-foreground">{label ?? budgetWindowLabel(window, type)}</MonoLabel>
 
             <StepButton
                 accessibilityLabel={t("budgets.stepper.next")}
-                disabled={offset >= 0}
+                disabled={offset >= maxForward}
                 onPress={() => onStep(offset + 1)}
             >
                 <ArrowGlyph />

@@ -6,6 +6,7 @@ import * as EffectRecord from "effect/Record";
 import {
     accounts,
     appMeta,
+    budgetPlans,
     budgets,
     categories,
     installmentPlans,
@@ -136,6 +137,8 @@ export const SYNCED_SPECS = {
     }),
     budgets: synced(budgets, budgets.id),
     mainBudget: synced(mainBudget, mainBudget.id),
+    // After `categories`: a plan is one category's amount for one month.
+    budgetPlans: synced(budgetPlans, budgetPlans.id),
     savingsGoals: synced(savingsGoals, savingsGoals.id, {
         // Start amounts default to 0, never null: null means unconvertible and would withhold the goal's progress.
         // `targetDate: 0` only lets a dateless goal be written as a tombstone (see `writeRow`).

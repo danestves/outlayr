@@ -3,7 +3,7 @@ import * as Effect from "effect/Effect";
 import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
-import { budgets, categories, transactions } from "@/db/schema";
+import { budgetPlans, budgets, categories, transactions } from "@/db/schema";
 import { migratedDatabase, transactionalDatabase } from "@/db/test-database";
 
 import {
@@ -819,6 +819,20 @@ describe("categoriesRepo.remove cascade", () => {
         const replicable = await db.select().from(budgets).where(eq(budgets.id, "b1"));
         expect(replicable).toHaveLength(1);
         expect(replicable[0].deletedAt).not.toBeNull();
+    });
+
+    it("tombstones the category's monthly plans so peers drop them too", async () => {
+        const id = await Effect.runPromise(
+            categoriesRepo.create(db, { color: "#279AF4", icon: "Coffee02", income: false, name: "Coffee" })
+        );
+        await db
+            .insert(budgetPlans)
+            .values({ amount: 80, categoryId: id, currency: "USD", id: "p1", month: 202_611, updatedAt: new Date() });
+
+        await Effect.runPromise(categoriesRepo.remove(db, id));
+
+        const [plan] = await db.select().from(budgetPlans).where(eq(budgetPlans.id, "p1"));
+        expect(plan.deletedAt).not.toBeNull();
     });
 
     it("lets the category hold a budget again after the cascade", async () => {

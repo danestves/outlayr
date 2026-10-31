@@ -42,6 +42,7 @@ import m0038 from './20261028203804_0038_budget_category_index_partial/migration
 import m0039 from './20261029042945_0039_receipt_items/migration.sql';
 import m0040 from './20261029054922_0040_autolog_review/migration.sql';
 import m0041 from './20261030152735_0041_time_zone_synced/migration.sql';
+import m0042 from './20261030234316_0042_budget_plans/migration.sql';
 
   export default {
     migrations: {
@@ -86,7 +87,8 @@ import m0041 from './20261030152735_0041_time_zone_synced/migration.sql';
       "20261028203804_0038_budget_category_index_partial": m0038,
       "20261029042945_0039_receipt_items": m0039,
       "20261029054922_0040_autolog_review": m0040,
-      "20261030152735_0041_time_zone_synced": m0041
+      "20261030152735_0041_time_zone_synced": m0041,
+      "20261030234316_0042_budget_plans": m0042
 }
   }
   

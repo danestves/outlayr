@@ -258,12 +258,20 @@ describe("push table coverage", () => {
                 table: "transactionAttachments",
                 updatedAt: 9,
             },
+            {
+                deletedAt: null,
+                fields: { amount: null, categoryId: "cat-1", currency: null, month: 202_703 },
+                localId: "bp-1",
+                table: "budgetPlans",
+                updatedAt: 10,
+            },
         ];
 
         await pushAs(t, owner, DEVICE_A, rows);
 
         const page = await pullAs(t, owner, 0);
         expect(page.rows.map((row) => row.table).sort()).toStrictEqual([
+            "budgetPlans",
             "installmentPlans",
             "installments",
             "outsideMoves",

@@ -111,8 +111,8 @@ categories are the user's to clean up. Do not attempt automatic de-duplication b
 ## 2. Schema
 
 Written for real in `packages/backend/confect/tables/`; the list of record is
-`SYNCED_TABLES` in `packages/backend/confect/lib/syncTables.ts`. Seventeen replicated tables
-(`categories`, `transactions`, `budgets`, `mainBudget`, `savingsGoals`, `tags`,
+`SYNCED_TABLES` in `packages/backend/confect/lib/syncTables.ts`. Eighteen replicated tables
+(`categories`, `transactions`, `budgets`, `mainBudget`, `budgetPlans`, `savingsGoals`, `tags`,
 `transactionTags`, `transactionPhotos`, `transactionSplits`, `accounts`, `transfers`,
 `installmentPlans`, `installments`, `outsidePayments`, `outsideMoves`, `transactionAttachments`, `appMeta`), one control table (`syncState`), and the pre-existing server-owned
 `exchangeRates` unchanged.

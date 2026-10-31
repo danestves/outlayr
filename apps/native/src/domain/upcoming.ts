@@ -32,13 +32,20 @@ interface ScheduleRow extends CurrencyEntry {
 }
 
 export function chargesBetween<T extends ScheduleRow>(rows: readonly T[], now: Date, from: Date, to: Date): T[] {
+    return occurrencesBetween(
+        rows.filter((row) => !row.income),
+        now,
+        from,
+        to
+    );
+}
+
+/** Income and expenses alike, each occurrence dated where it lands in `[from, to)`. */
+export function occurrencesBetween<T extends ScheduleRow>(rows: readonly T[], now: Date, from: Date, to: Date): T[] {
     const start = from.getTime();
     const end = to.getTime();
     const charges: T[] = [];
     for (const row of rows) {
-        if (row.income) {
-            continue;
-        }
         const stop =
             row.recurringEndDate == null ? end : Math.min(end, addDays(startOfDay(row.recurringEndDate), 1).getTime());
         let at: Date | null = landingDate(row, now);

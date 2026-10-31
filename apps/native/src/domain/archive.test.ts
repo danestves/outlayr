@@ -20,6 +20,7 @@ function emptyDocument(): ArchiveDocument {
         tables: {
             accounts: [],
             appMeta: [],
+            budgetPlans: [],
             budgets: [],
             categories: [],
             installmentPlans: [],

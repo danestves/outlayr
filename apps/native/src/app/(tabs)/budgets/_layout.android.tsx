@@ -14,6 +14,7 @@ export default function BudgetsLayout() {
                 <Stack.Screen name="index" options={{ title: t("budgets.title") }} />
                 {/* Declared before `[id]` so the static segment wins the match. */}
                 <Stack.Screen name="overall" />
+                <Stack.Screen name="plan/[month]" />
                 <Stack.Screen name="[id]" />
                 <Stack.Screen name="goals/[id]" />
             </Stack>

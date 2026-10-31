@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from "vite-plus/test";
 import type { Database } from "@/db/client";
 import {
     appMeta,
+    budgetPlans,
     budgets,
     categories,
     installmentPlans,
@@ -85,6 +86,14 @@ async function seed(db: Database): Promise<void> {
         name: "Everything",
         startDate: AUTHORED,
         type: 3,
+        updatedAt: AUTHORED,
+    });
+    await db.insert(budgetPlans).values({
+        amount: 120,
+        categoryId: "cat-1",
+        currency: "EUR",
+        id: "plan-1",
+        month: 202_703,
         updatedAt: AUTHORED,
     });
 }
@@ -238,6 +247,8 @@ describe("eraseLedger", () => {
         expect(liveBudgets).toHaveLength(1);
         const liveMain = await db.select().from(mainBudget).where(isNull(mainBudget.deletedAt));
         expect(liveMain).toHaveLength(1);
+        const livePlans = await db.select().from(budgetPlans).where(isNull(budgetPlans.deletedAt));
+        expect(livePlans).toHaveLength(1);
     });
 
     it("strips everything personal off budget tombstones", async () => {
@@ -265,6 +276,11 @@ describe("eraseLedger", () => {
         expect(main.currency).toBeNull();
         expect(main.amountUsd).toBeNull();
         expect(main.green).toBe(false);
+
+        const [plan] = await db.select().from(budgetPlans);
+        expect(plan.deletedAt).not.toBeNull();
+        expect(plan.amount).toBeNull();
+        expect(plan.currency).toBeNull();
     });
 
     it("frees the category so a new budget can be attached to it", async () => {
