@@ -26,8 +26,8 @@ const tools = {
                 title: t({ en: "Free Money Calculators · Outlayr", es: "Calculadoras de dinero gratis · Outlayr" }),
             },
             title: t({
-                en: "Free money calculators for everyday math.",
-                es: "Calculadoras de dinero gratis para cada día.",
+                en: "Free money calculators for everyday math",
+                es: "Calculadoras de dinero gratis para cada día",
             }),
         },
         labels: {

@@ -9,11 +9,12 @@ below comes from them or from the app's own palette. Do not invent new ones.
 - One family: Geist (`font-sans`). Geist Mono (`font-mono`) only for figures, labels and data.
 - Tailwind's default scale only (`text-xs` … `text-9xl`). No arbitrary sizes.
 - Weights 400, 500, 600, 700. Never 800 or 900. No italics anywhere.
-- Page heroes: `hero-text` gradient, `max-w-[680px]`, `tracking-tighter`, meaningful line breaks.
+- Page heroes: solid `text-foreground`, `max-w-[680px]`, `tracking-tighter`, meaningful line breaks.
 - Section headings: `text-4xl md:text-5xl font-semibold tracking-tight`.
 - Body: `text-base`/`text-lg`, `text-muted` for secondary copy, measure under 65ch.
-- Mono labels: `font-mono text-xs uppercase tracking-widest text-muted`.
+- Mono labels: `font-mono text-xs text-muted`, sentence case. Uppercase stays only inside components that render the app.
 - Copy: sentence case, no hyphens inside sentences, no exclamation marks, no AI clichés.
+- Headings, labels and buttons end without a period. Multi-sentence paragraphs keep theirs.
 
 ## Color
 
@@ -34,8 +35,7 @@ Tokens live in `src/index.css` and switch on `html[data-theme="dark"]`.
 `app-rule`, `app-fill`, `app-track`, `app-tint`, `app-income`, `app-spend`, `app-chip`). Use them
 only inside components that render the app.
 
-Backgrounds are flat. The only gradient is the hero heading text. A fixed grain layer sits over
-everything (`body::before`).
+Backgrounds are flat, with no gradients and no texture layer.
 
 ## Space and shape
 
@@ -46,7 +46,7 @@ everything (`body::before`).
 - Radius: Tailwind values. A shape inside another with a gap under 32px uses
   `inner = outer − gap` when that is above 2px (`rounded-3xl p-2` → `rounded-2xl`).
 - Cards are `bg-surface rounded-3xl` with no border and no shadow. Elevation is only for
-  floating glass (`glass` utility).
+  floating glass (`glass` utility). A card that is a link steps to `bg-border/50` on hover.
 
 ## Motion
 
@@ -59,7 +59,6 @@ everything (`body::before`).
   hydration and its largest text lands sooner.
 - Tagline words: wrap each word in `<span data-word>`; it lights from 30% to 100% as it crosses
   a line 60% down the viewport.
-- Spotlight borders: `data-spot` on a rounded card.
 - One global `IntersectionObserver` (`src/lib/motion.ts`) drives all of it. Never listen to
   `scroll`. Animate only `opacity` and `transform`; blur is desktop only so phones hold 60fps.
 - Everything collapses to static under `prefers-reduced-motion`.
@@ -68,8 +67,9 @@ everything (`body::before`).
 
 - Nav: the floating glass island (`site-header.tsx`), a morphing hamburger and a full-screen
   blurred menu on phones. No store badge in the nav.
-- Store CTAs: `StoreBadges`, the Google Play badge plus the official Apple badge shown disabled
-  with "Coming soon" until App Store review passes. Never a custom store button.
+- Store CTAs: `StoreBadges`, the official Google Play and App Store badges and nothing else.
+  Never a custom store button.
 - Icons: `Icon` from `src/components/icon.tsx` (Phosphor regular paths). Add new ones from
   `@phosphor-icons/core` the same way. No other icon set.
-- Footer: logo and tagline, three short link columns, language links, theme and cookie selects.
+- Footer: logo, tagline and the directory listings as plain text links, three short link columns,
+  language links, theme and cookie selects. No third-party badge images.

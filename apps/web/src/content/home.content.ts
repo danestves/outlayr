@@ -83,7 +83,7 @@ const home = {
                 }),
             },
         ],
-        extrasTitle: t({ en: "Also in the app.", es: "También en la app." }),
+        extrasTitle: t({ en: "Also in the app", es: "También en la app" }),
         faq: [
             {
                 answer: t({
@@ -163,9 +163,9 @@ const home = {
             },
             { answer: OPEN_SOURCE_ANSWER, question: OPEN_SOURCE_QUESTION },
         ],
-        faqTitle: t({ en: "Questions, answered.", es: "Preguntas y respuestas." }),
+        faqTitle: t({ en: "Questions, answered", es: "Preguntas y respuestas" }),
         hero: {
-            title: t({ en: "Track every expense in one sentence.", es: "Registra cada gasto en una oración." }),
+            title: t({ en: "Track every expense in one sentence", es: "Registra cada gasto en una oración" }),
             videoLabel: t({
                 en: "Logging a $42.00 grocery purchase at Costco in Outlayr, from the add menu to the Log.",
                 es: "Cómo se registra en Outlayr una compra de súper de $42.00 en Costco, desde el menú para agregar hasta el Registro.",
@@ -223,7 +223,7 @@ const home = {
                     en: "Set a limit per category or one for the whole month, and carry over what you didn’t spend. The chart shows where this pace ends, not just what’s left.",
                     es: "Pon un límite por categoría o uno para todo el mes, y acumula lo que no gastaste. El gráfico muestra a dónde te lleva este ritmo, no solo lo que queda.",
                 }),
-                title: t({ en: "Spot the overspend early.", es: "Descubre a tiempo si te vas a pasar." }),
+                title: t({ en: "Spot the overspend early", es: "Descubre a tiempo si te vas a pasar" }),
             },
             {
                 alt: t({
@@ -234,7 +234,7 @@ const home = {
                     en: "Spending by day and by category, income against spending, and net worth over time. Start the month on payday and every chart follows.",
                     es: "Gastos por día y por categoría, ingresos frente a gastos y tu patrimonio a lo largo del tiempo. Empieza el mes el día de pago y todos los gráficos se ajustan.",
                 }),
-                title: t({ en: "See what moved since last week.", es: "Mira qué cambió desde la semana pasada." }),
+                title: t({ en: "See what moved since last week", es: "Mira qué cambió desde la semana pasada" }),
             },
             {
                 alt: ACCOUNTS_SCREEN_ALT,
@@ -242,7 +242,7 @@ const home = {
                     en: "Cash, cards, savings, and debts side by side. A transfer moves money between them without counting as spending.",
                     es: "Efectivo, tarjetas, ahorros y deudas, todo junto. Una transferencia mueve dinero entre tus cuentas sin contar como gasto.",
                 }),
-                title: t({ en: "Every account, every currency.", es: "Cada cuenta, cada moneda." }),
+                title: t({ en: "Every account, every currency", es: "Cada cuenta, cada moneda" }),
             },
             {
                 alt: t({
@@ -254,8 +254,8 @@ const home = {
                     es: "La renta, los servicios y el streaming se registran solos en su día. Próximos muestra los siguientes cobros y cuánto suman al mes, y cada uno puede avisarte antes de cobrarte.",
                 }),
                 title: t({
-                    en: "What your subscriptions cost a month.",
-                    es: "Lo que te cuestan tus suscripciones al mes.",
+                    en: "What your subscriptions cost a month",
+                    es: "Lo que te cuestan tus suscripciones al mes",
                 }),
             },
         ],

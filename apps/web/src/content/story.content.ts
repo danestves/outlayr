@@ -12,8 +12,8 @@ const story = {
         features: {
             label: t({ en: "What you get", es: "Lo que obtienes" }),
             title: t({
-                en: "Everything the month needs, from one sentence.",
-                es: "Todo lo que el mes necesita, desde una oración.",
+                en: "Everything the month needs, from one sentence",
+                es: "Todo lo que el mes necesita, desde una oración",
             }),
         },
         hero: {
@@ -23,10 +23,6 @@ const story = {
                 t({ en: "165 currencies", es: "165 monedas" }),
                 t({ en: "3 languages", es: "3 idiomas" }),
             ],
-            status: t({
-                en: "Now on the App Store and Google Play.",
-                es: "Ya en el App Store y Google Play.",
-            }),
         },
         how: {
             label: t({ en: "How it works", es: "Cómo funciona" }),
@@ -65,7 +61,7 @@ const story = {
                     title: t({ en: "See where it is going", es: "Mira a dónde va" }),
                 },
             ],
-            title: t({ en: "Three steps. You only do the first.", es: "Tres pasos. Tú solo haces el primero." }),
+            title: t({ en: "Three steps. You only do the first", es: "Tres pasos. Tú solo haces el primero" }),
             tryIt: t({ en: "Try it here", es: "Pruébalo aquí" }),
             ways: [
                 t({ en: "Type", es: "Escribe" }),
@@ -92,8 +88,8 @@ const story = {
             price: t({ en: "$7", es: "US$7" }),
             trial: t({ en: "7 days free on yearly", es: "7 días gratis en el plan anual" }),
             title: t({
-                en: "Free to start. Pro when you want more.",
-                es: "Gratis para empezar. Pro cuando quieras más.",
+                en: "Free to start. Pro when you want more",
+                es: "Gratis para empezar. Pro cuando quieras más",
             }),
             zero: t({ en: "$0", es: "US$0" }),
         },
@@ -119,8 +115,8 @@ const story = {
                 es: "Para el tercer café, el formulario gana y dejas de registrar. Outlayr lee una oración, así que registrar toma lo mismo que mandar un mensaje.",
             }),
             formTitle: t({
-                en: "And most trackers want six fields for one coffee.",
-                es: "Y la mayoría de las apps te pide seis campos por un café.",
+                en: "And most trackers want six fields for one coffee",
+                es: "Y la mayoría de las apps te pide seis campos por un café",
             }),
             inOutlayr: t({ en: "In Outlayr", es: "En Outlayr" }),
             label: t({ en: "The problem", es: "El problema" }),
@@ -135,7 +131,7 @@ const story = {
                 { tag: "account", text: t({ en: "Chase", es: "BBVA" }) },
                 { tag: "date", text: t({ en: "today", es: "hoy" }) },
             ],
-            title: t({ en: "Your money lives in ten places.", es: "Tu dinero vive en diez lugares." }),
+            title: t({ en: "Your money lives in ten places", es: "Tu dinero vive en diez lugares" }),
             usual: t({ en: "The usual way", es: "Lo de siempre" }),
         },
         screens: {
@@ -180,7 +176,7 @@ const story = {
                 en: "It reaches our servers only when you turn on sync or use a feature that needs them, like receipt scanning.",
                 es: "Solo llega a nuestros servidores si activas la sincronización o usas una función que los necesita, como escanear recibos.",
             }),
-            title: t({ en: "Your ledger stays on your phone.", es: "Tus registros se quedan en tu celular." }),
+            title: t({ en: "Your ledger stays on your phone", es: "Tus registros se quedan en tu celular" }),
         },
     },
     key: "story",

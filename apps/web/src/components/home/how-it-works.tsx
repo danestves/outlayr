@@ -8,7 +8,11 @@ import { CONTAINER } from "@/lib/layout";
 import { Film } from "./media";
 import { HEADING, LABEL } from "./problem";
 
-const FILMS = ["capture", "sorted", "month"] as const;
+const FILMS = [
+    { aspect: "aspect-[16/10]", name: "capture" },
+    { aspect: "aspect-square", name: "sorted" },
+    { aspect: "aspect-square", name: "month" },
+] as const;
 const WAYS: IconName[] = ["text-aa", "microphone", "receipt", "file-csv"];
 
 export function HowItWorks() {
@@ -60,7 +64,11 @@ export function HowItWorks() {
                         </div>
                         <div className="lg:col-span-7" data-reveal>
                             <div className="bg-surface overflow-hidden rounded-3xl">
-                                <Film label={step.film.value} name={FILMS[index] ?? "capture"} />
+                                <Film
+                                    aspect={FILMS[index]?.aspect}
+                                    label={step.film.value}
+                                    name={FILMS[index]?.name ?? "capture"}
+                                />
                             </div>
                         </div>
                     </li>

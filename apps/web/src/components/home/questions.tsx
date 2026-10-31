@@ -57,12 +57,9 @@ export function Closing() {
     const { hero } = useIntlayer("home");
     const { closingLead } = useIntlayer("story");
     return (
-        <section className={`${CONTAINER} py-24`}>
+        <section className={`${CONTAINER} pt-24`}>
             <div className="bg-surface rounded-3xl px-6 py-16 md:px-16 md:py-24">
-                <h2
-                    className="hero-text max-w-[680px] pb-2 text-5xl font-semibold tracking-tighter md:text-7xl"
-                    data-reveal
-                >
+                <h2 className="max-w-[680px] pb-2 text-5xl font-semibold tracking-tighter md:text-7xl" data-reveal>
                     {hero.title}
                 </h2>
                 <p className="text-muted mt-6 max-w-[680px] text-lg delay-100 md:text-xl" data-reveal>

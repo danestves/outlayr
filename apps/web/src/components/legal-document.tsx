@@ -81,7 +81,7 @@ export function LegalDocument({
     return (
         <Page lead={intro} meta={dated({ date: legalDate(slug, LANGUAGES[locale].date) })} title={title}>
             <details className="group bg-surface mt-12 rounded-3xl lg:hidden print:hidden">
-                <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 px-6 py-4 font-mono text-xs tracking-widest uppercase [&::-webkit-details-marker]:hidden">
+                <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 px-6 py-4 font-mono text-xs [&::-webkit-details-marker]:hidden">
                     {legal.contents}
                     <Icon className="fluid text-muted text-base group-open:rotate-90" name="caret-right" />
                 </summary>

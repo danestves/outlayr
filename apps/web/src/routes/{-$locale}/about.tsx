@@ -13,7 +13,7 @@ import { FOUNDER, SUPPORT_EMAIL } from "@/lib/site";
 
 const SECTION = "py-24";
 const HEADING = "text-4xl font-semibold tracking-tight md:text-5xl";
-const LABEL = "font-mono text-xs tracking-widest uppercase";
+const LABEL = "font-mono text-xs";
 const FACT_SPANS = [
     "lg:col-span-4",
     "lg:col-span-5",
@@ -108,18 +108,16 @@ function Facts() {
             </h2>
             <dl className="mt-16 grid gap-4 md:grid-cols-2 lg:grid-cols-12">
                 <div
-                    className="bg-foreground text-background flex flex-col gap-8 rounded-3xl p-6 md:col-span-2 md:p-8 lg:col-span-8"
+                    className="bg-foreground text-background relative flex flex-col gap-8 rounded-3xl p-6 md:col-span-2 md:p-8 lg:col-span-8"
                     data-reveal
-                    data-spot
                 >
                     <dt className={`${LABEL} opacity-60`}>{data.label}</dt>
                     <dd className="text-xl font-medium tracking-tight md:text-2xl">{data.text}</dd>
                 </div>
                 {facts.map((fact, index) => (
                     <div
-                        className={`bg-surface flex flex-col gap-8 rounded-3xl p-6 md:p-8 ${FACT_SPANS[index] ?? "lg:col-span-6"} ${index % 2 === 0 ? "delay-100" : ""}`}
+                        className={`bg-surface relative flex flex-col gap-8 rounded-3xl p-6 md:p-8 ${FACT_SPANS[index] ?? "lg:col-span-6"} ${index % 2 === 0 ? "delay-100" : ""}`}
                         data-reveal
-                        data-spot
                         key={fact.label.value}
                     >
                         <dt className={`${LABEL} text-muted`}>{fact.label}</dt>
@@ -138,9 +136,8 @@ function Maker() {
     const { maker } = useIntlayer("about");
     return (
         <div
-            className="bg-surface flex scroll-mt-24 flex-col gap-8 rounded-3xl p-6 md:col-span-2 md:p-8 lg:col-span-12"
+            className="bg-surface relative flex scroll-mt-24 flex-col gap-8 rounded-3xl p-6 md:col-span-2 md:p-8 lg:col-span-12"
             data-reveal
-            data-spot
             id="maker"
         >
             <dt className={`${LABEL} text-muted`}>{maker.label}</dt>
@@ -260,7 +257,7 @@ function Contact() {
     return (
         <section className="pt-24">
             <div className="bg-surface rounded-3xl px-6 py-16 md:px-16 md:py-24" data-reveal>
-                <h2 className="hero-text max-w-[680px] pb-2 text-5xl font-semibold tracking-tighter md:text-7xl">
+                <h2 className="max-w-[680px] pb-2 text-5xl font-semibold tracking-tighter md:text-7xl">
                     {contact.title}
                 </h2>
                 <p className="text-muted mt-6 max-w-[680px] text-lg md:text-xl">{contact.lead}</p>

@@ -41,13 +41,6 @@ export default defineConfig({
                 "/app/**": A_DAY,
                 "/apple-touch-icon.png": A_DAY,
                 "/badges/**": A_DAY,
-                "/badges/product-hunt.svg": {
-                    headers: {
-                        ...SECURITY_HEADERS,
-                        "cache-control": "public, max-age=600",
-                        "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'",
-                    },
-                },
                 "/favicon-dark.png": A_DAY,
                 "/favicon-light.png": A_DAY,
                 "/favicon.ico": A_DAY,

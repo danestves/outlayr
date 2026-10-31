@@ -47,7 +47,6 @@ const site = {
         badges: {
             appStore: t({ en: "Download on the App Store", es: "Descárgalo en el App Store" }),
             googlePlay: t({ en: "Get it on Google Play", es: "Disponible en Google Play" }),
-            productHunt: t({ en: "Outlayr on Product Hunt", es: "Outlayr en Product Hunt" }),
         },
         consent: {
             allow: t({ en: "Allow", es: "Permitir" }),
@@ -73,6 +72,11 @@ const site = {
             email: t({ en: "Email", es: "Correo" }),
             guides: t({ en: "Guides", es: "Guías" }),
             language: t({ en: "Language", es: "Idioma" }),
+            listings: {
+                alternativeTo: t({ en: "Listed on AlternativeTo", es: "En AlternativeTo" }),
+                peerPush: t({ en: "Trending on PeerPush", es: "Tendencia en PeerPush" }),
+                productHunt: t({ en: "On Product Hunt", es: "En Product Hunt" }),
+            },
             nav: t({ en: "Footer", es: "Pie de página" }),
             privacy: t({ en: "Privacy", es: "Privacidad" }),
             source: t({ en: "Source code", es: "Código fuente" }),
@@ -111,7 +115,7 @@ const site = {
                 support: t({ en: "Support", es: "Soporte" }),
                 terms: t({ en: "Terms of Use", es: "Términos de uso" }),
             },
-            title: t({ en: "Nothing is filed under this address.", es: "No hay nada archivado en esta dirección." }),
+            title: t({ en: "Nothing is filed under this address", es: "No hay nada archivado en esta dirección" }),
         },
         theme: {
             dark: t({ en: "Dark", es: "Oscuro" }),

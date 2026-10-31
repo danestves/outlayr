@@ -1,6 +1,6 @@
 import { useIntlayer, useLocale } from "react-intlayer";
 
-import { BudgetCard, InsightsCard } from "@/components/app-ui/app-ui";
+import { BudgetCard } from "@/components/app-ui/app-ui";
 import { COFFEE_SHOP } from "@/components/demo/capture-panels";
 import { formatMoney } from "@/components/demo/money";
 import { useNames } from "@/components/demo/use-names";
@@ -23,12 +23,8 @@ export function Hero() {
         <section className="relative" id="top">
             <div className={`${CONTAINER} grid items-center gap-16 pt-24 pb-24 lg:grid-cols-12`}>
                 <div className="mt-8 md:mt-16 lg:col-span-7">
-                    <p className="text-muted mb-6 flex items-center gap-2 text-sm" data-reveal>
-                        <span className="bg-tint size-2 rounded-sm" />
-                        {story.hero.status}
-                    </p>
                     <h1
-                        className="hero-text max-w-[680px] pb-2 text-5xl font-semibold tracking-tighter delay-100 md:text-7xl"
+                        className="max-w-[680px] pb-2 text-5xl font-semibold tracking-tighter delay-100 md:text-7xl"
                         data-reveal
                     >
                         {hero.title}
@@ -82,14 +78,9 @@ export function Hero() {
                                 }}
                             />
                         </Phone>
-                        <div className="glass drift absolute top-16 -left-12 w-4/5 rounded-2xl p-2 sm:-left-24">
+                        <div className="glass absolute top-16 -left-12 w-4/5 rounded-2xl p-2 sm:-left-24">
                             <div className="overflow-hidden rounded-lg">
                                 <BudgetCard size="sm" />
-                            </div>
-                        </div>
-                        <div className="glass drift-down absolute -right-12 bottom-24 w-4/5 rounded-2xl p-2 sm:-right-24">
-                            <div className="overflow-hidden rounded-lg">
-                                <InsightsCard compact size="sm" />
                             </div>
                         </div>
                     </div>

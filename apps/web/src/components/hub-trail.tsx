@@ -9,7 +9,7 @@ export function HubTrail({ hub }: { hub: keyof typeof HUBS }) {
     const { footer } = useIntlayer("site");
     return (
         <LocalizedLink
-            className="fluid text-muted hover:text-foreground group inline-flex items-center gap-2 font-mono text-xs tracking-widest uppercase"
+            className="fluid text-muted hover:text-foreground group inline-flex items-center gap-2 font-mono text-xs"
             to={hub}
         >
             <Icon className="fluid group-hover:-translate-x-0.5" name="arrow-left" />

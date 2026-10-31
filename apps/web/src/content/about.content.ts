@@ -163,7 +163,7 @@ const about = {
             en: "Subscriptions, expenses, income, every account. Outlayr takes the messy layers of your money and gives you back control.",
             es: "Suscripciones, gastos, ingresos, cada cuenta. Outlayr toma las capas desordenadas de tu dinero y te devuelve el control.",
         }),
-        title: t({ en: "Your money comes in layers.", es: "Tu dinero viene en capas." }),
+        title: t({ en: "Your money comes in layers", es: "Tu dinero viene en capas" }),
     },
     key: "about",
 } satisfies Dictionary;

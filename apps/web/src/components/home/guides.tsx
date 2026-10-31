@@ -21,7 +21,7 @@ export function Guides() {
     const { allGuides } = useIntlayer("about");
     const { locale } = useLocale();
     return (
-        <section aria-labelledby="home-guides" className={`${CONTAINER} py-24`}>
+        <section aria-labelledby="home-guides" className={`${CONTAINER} pt-24`}>
             <div className="border-foreground flex items-baseline justify-between gap-6 border-b pb-3" data-reveal>
                 <h2 className={LABEL} id="home-guides">
                     {footer.guides}
