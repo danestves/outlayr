@@ -27,6 +27,7 @@ type PushRows = FunctionArgs<typeof api.sync.push>["rows"];
 
 const DEVICE = "device-aaaa";
 const PHOTO = "k7q2x9f1.jpg";
+const PROFILE_WORK = "0b8f3c3e-6a51-4c4e-9f3b-2a7d5e1c9a10";
 
 function transactionRow(
     localId: string,
@@ -374,6 +375,24 @@ describe("releaseUnreferenced", () => {
         await expect(
             authenticatedAs(t, owner).mutation(api.photos.releaseUnreferenced, {
                 key,
+            })
+        ).resolves.toStrictEqual({ released: false });
+    });
+
+    it("keeps an object a profile's row names when released from that profile", async () => {
+        const t = harness();
+        const owner = await seedProUser(t);
+        const key = photoKeyFor(owner.userId, PHOTO);
+        await authenticatedAs(t, owner).mutation(api.sync.push, {
+            deviceId: DEVICE,
+            profileId: PROFILE_WORK,
+            rows: [transactionRow("t1", { imageKey: key })],
+        });
+
+        await expect(
+            authenticatedAs(t, owner).mutation(api.photos.releaseUnreferenced, {
+                key,
+                profileId: PROFILE_WORK,
             })
         ).resolves.toStrictEqual({ released: false });
     });

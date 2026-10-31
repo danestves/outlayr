@@ -12,6 +12,7 @@ export const PaywallTrigger = Schema.Literals([
     "installment_apps",
     "payoff_plans",
     "people",
+    "profiles",
     "settings",
     "sync",
     "unknown",

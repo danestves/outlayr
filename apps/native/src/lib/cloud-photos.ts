@@ -5,7 +5,9 @@ import * as HttpIncomingMessage from "effect/http/HttpIncomingMessage";
 import * as Schema from "effect/Schema";
 
 import type { PhotoTransport } from "@/data/photo-sync-core";
+import { profileArgs } from "@/domain/profiles";
 
+import { activeProfileId } from "./active-profile";
 import { CloudError } from "./cloud-error";
 import { cloudAction, cloudMutation } from "./convex";
 
@@ -61,7 +63,11 @@ export const photoTransport = Effect.fn("Cloud.photoTransport")(function* photoT
         get,
         put,
         readUrls: (keys) => cloudMutation("photos:readUrls", { keys: [...keys] }),
-        release: (key) => cloudMutation<unknown, unknown>("photos:releaseUnreferenced", { key }).pipe(Effect.asVoid),
+        release: (key) =>
+            cloudMutation<unknown, unknown>("photos:releaseUnreferenced", {
+                key,
+                ...profileArgs(activeProfileId()),
+            }).pipe(Effect.asVoid),
         requestUpload: (name) => cloudMutation("photos:requestUpload", { name }),
     } satisfies PhotoTransport;
 });
