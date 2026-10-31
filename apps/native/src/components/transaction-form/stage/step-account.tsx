@@ -7,6 +7,8 @@ import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import type { Account } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
+import { useBoolSetting } from "@/data/settings";
+import { pickerOrder } from "@/domain/account-order";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useTranslation } from "@/i18n/context";
 
@@ -42,7 +44,9 @@ export function StepAccount({
 }: StepAccountProps) {
     const t = useTranslation();
     const largeText = useAccessibilityTextSize();
-    const ledgerCurrency = useGlobalCurrency(useDatabase());
+    const db = useDatabase();
+    const ledgerCurrency = useGlobalCurrency(db);
+    const byHand = useBoolSetting(db, "accountsByHand");
 
     if (accounts.length === 0 && people.length === 0) {
         return (
@@ -65,7 +69,7 @@ export function StepAccount({
             trailing: foreign ? <Text className="text-label text-tint font-mono">{account.currency}</Text> : undefined,
         };
     };
-    const options = accounts.map(optionFor);
+    const options = pickerOrder(accounts, byHand).map(optionFor);
     if (allowNone) {
         options.unshift({ id: NONE_OPTION, label: t("transaction.account.none") });
     }

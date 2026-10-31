@@ -12,6 +12,7 @@ import { migratedDatabase } from "@/db/test-database";
 import { accountsRepo, getAccountById, getLastUsedAccount, rememberLastUsedAccount } from "./accounts-core";
 import { settledAccountCellQuery, toCurrencyCells } from "./cell-query";
 import { candidateLogoIds } from "./logo-backfill-state";
+import { readBoolSetting } from "./settings-core";
 import { deletedTransactionsQuery, transactionsRepo } from "./transactions-core";
 
 const makeDb = () => migratedDatabase({ foreignKeys: false });
@@ -389,7 +390,7 @@ describe("accountsRepo lifecycle", () => {
         expect(goal?.deletedAt).toStrictEqual(expect.any(Date));
     });
 
-    it("reorder assigns each id its array index and stamps updatedAt", async () => {
+    it("reorder assigns each id its array index and pins the hand order over the balance sort", async () => {
         const a = await Effect.runPromise(accountsRepo.create(db, { currency: "USD", name: "A" }));
         const b = await Effect.runPromise(accountsRepo.create(db, { currency: "USD", name: "B" }));
         const c = await Effect.runPromise(accountsRepo.create(db, { currency: "USD", name: "C" }));
@@ -399,6 +400,7 @@ describe("accountsRepo lifecycle", () => {
         const rows = await Effect.runPromise(accountsRepo.listActive(db));
         expect(rows.map((row) => row.id)).toStrictEqual([c, a, b]);
         expect(rows.map((row) => row.sortOrder)).toStrictEqual([0, 1, 2]);
+        await expect(Effect.runPromise(readBoolSetting(db, "accountsByHand"))).resolves.toBe(true);
     });
 });
 

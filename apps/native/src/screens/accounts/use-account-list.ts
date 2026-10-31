@@ -6,8 +6,10 @@ import { useBankAccounts } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { useDebtsOverview } from "@/data/debts";
+import { useBoolSetting } from "@/data/settings";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useNow } from "@/data/use-now";
+import { displayOrder } from "@/domain/account-order";
 import { useTranslation } from "@/i18n/context";
 
 export function useAccountList() {
@@ -19,9 +21,12 @@ export function useAccountList() {
     const currency = useGlobalCurrency(db);
     const debts = useDebtsOverview(db, useNow());
     const rows = all.filter((account) => account.id !== pendingId);
+    const byHand = useBoolSetting(db, "accountsByHand");
+    const balances = new Map(debts.overview?.rows.map((row) => [row.id, row.balance]));
+    const assets = rows.filter((account) => toAccountKind(account.kind) === "asset");
 
     return {
-        assets: rows.filter((account) => toAccountKind(account.kind) === "asset"),
+        assets: displayOrder(assets, byHand, (account) => balances.get(account.id) ?? 0),
         currency,
         db,
         debts,

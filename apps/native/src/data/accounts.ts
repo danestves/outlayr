@@ -11,15 +11,18 @@ import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { accounts, outsideMoves, outsidePayments, transactions, transfers } from "@/db/schema";
+import { displayOrder } from "@/domain/account-order";
 import type { PlottedCell } from "@/domain/goal-balance-series";
 import { roundToMinorUnits } from "@/domain/money";
 import { netWorthSeries } from "@/domain/net-worth-series";
 import type { NetWorthSeriesPoint } from "@/domain/net-worth-series";
 
 import type { Account } from "./accounts-core";
+import { useGlobalCurrency } from "./app-meta";
 import { settledAccountCellQuery, settledAccountsCellQuery, toCurrencyCell } from "./cell-query";
 import type { CellRow } from "./cell-query";
 import { useLiveQuery } from "./live-query";
+import { useBoolSetting } from "./settings";
 import { useDecoratedRows } from "./transactions";
 import type { TransactionWithCategory } from "./transactions";
 import { accountTransactionsQuery } from "./transactions-core";
@@ -49,6 +52,14 @@ export function useAccounts(db: Database): Account[] {
 export function useBankAccounts(db: Database): Account[] {
     const all = useAccounts(db);
     return all.filter((account) => !isPerson(account));
+}
+
+export function useBankAccountsInOrder(db: Database, nowMs: number): Account[] {
+    const rows = useBankAccounts(db);
+    const byHand = useBoolSetting(db, "accountsByHand");
+    const { overview } = useOverviewOf(db, rows, useGlobalCurrency(db), nowMs);
+    const balances = new Map(overview?.rows.map((row) => [row.id, row.balance]));
+    return displayOrder(rows, byHand, (account) => balances.get(account.id) ?? 0);
 }
 
 export function usePeople(db: Database): Account[] {

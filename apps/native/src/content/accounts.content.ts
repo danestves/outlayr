@@ -224,6 +224,12 @@ const accounts = {
             fr: "Personnes",
             pt: "Pessoas",
         }),
+        "accounts.sortByBalance": t({
+            en: "Sort by Balance",
+            es: "Ordenar por saldo",
+            fr: "Trier par solde",
+            pt: "Ordenar por saldo",
+        }),
         "accounts.title": t({
             en: "Accounts",
             es: "Cuentas",
