@@ -96,6 +96,9 @@ const upsert = Effect.fn("Sync.upsert")(function* upsert(
         case "mainBudget": {
             return yield* writeRow("mainBudget", existing, { ...envelope, ...fields });
         }
+        case "budgetPlans": {
+            return yield* writeRow("budgetPlans", existing, { ...envelope, ...fields });
+        }
         case "tags": {
             return yield* writeRow("tags", existing, { ...envelope, ...fields });
         }

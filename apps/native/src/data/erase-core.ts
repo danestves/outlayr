@@ -8,6 +8,7 @@ import { TOMBSTONED_BUDGET, TOMBSTONED_MAIN_BUDGET } from "@/data/budgets-core";
 import type { Database } from "@/db/client";
 import {
     appMeta,
+    budgetPlans,
     budgets,
     installmentPlans,
     installments,
@@ -159,6 +160,12 @@ export const eraseLedger = Effect.fn("Erase.eraseLedger")(function* eraseLedger(
                     .update(mainBudget)
                     .set({ ...TOMBSTONED_MAIN_BUDGET, deletedAt: now, updatedAt: now })
                     .where(isNull(mainBudget.deletedAt))
+            );
+            yield* query(scope, () =>
+                db
+                    .update(budgetPlans)
+                    .set({ amount: null, currency: null, deletedAt: now, updatedAt: now })
+                    .where(isNull(budgetPlans.deletedAt))
             );
         }),
         (cause) => new EraseLedgerError({ cause, scope })

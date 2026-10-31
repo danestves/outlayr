@@ -31,6 +31,7 @@ describe("the migration that adds outside moves", () => {
             "transfers",
             "outsideMoves",
             "transactionAttachments",
+            "budgetPlans",
         ]);
     });
 });
