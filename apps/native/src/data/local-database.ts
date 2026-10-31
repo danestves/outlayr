@@ -14,6 +14,7 @@ import { deviceLanguage } from "@/i18n/device-language";
 import { warnAndContinue } from "@/lib/warn-and-continue";
 
 import migrationsBundle from "../../drizzle/migrations";
+import { openProfileRegistry } from "./profile-registry";
 
 const LocalDatabaseStage = Schema.Literals(["open", "migrate", "bootstrap", "settle"]);
 
@@ -45,6 +46,7 @@ export const make = Effect.gen(function* make() {
         const db = yield* Effect.try({ catch: failedAt("open"), try: openConnection });
         yield* Effect.try({ catch: failedAt("migrate"), try: () => adoptLegacyMigrationLog(db) });
         yield* Effect.tryPromise({ catch: failedAt("migrate"), try: () => migrate(db, migrationsBundle) });
+        yield* openProfileRegistry(db).pipe(Effect.mapError(failedAt("migrate")));
         yield* bootstrapLocalData(db).pipe(Effect.mapError((error) => failedAt("bootstrap")(error.cause)));
         yield* localizePresetCategories(db, deviceLanguage()).pipe(
             warnAndContinue("Failed to localize the preset categories")

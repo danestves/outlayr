@@ -47,6 +47,16 @@ export const SHEET_SCREENS: readonly {
         titleKey: "accounts.nav.edit",
     },
     {
+        detent: ACCOUNT_DETENT,
+        name: "profiles/new",
+        titleKey: "profiles.new",
+    },
+    {
+        detent: ACCOUNT_DETENT,
+        name: "profiles/edit",
+        titleKey: "profiles.edit",
+    },
+    {
         detent: INSTALLMENT_PAY_DETENT,
         name: "installments/pay",
         titleKey: "installments.pay.title",

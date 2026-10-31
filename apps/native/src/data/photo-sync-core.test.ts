@@ -96,6 +96,13 @@ function makeDb(): SpendDb {
 			updatedAt integer NOT NULL,
 			deletedAt integer
 		);
+		CREATE TABLE profiles (
+			id text PRIMARY KEY NOT NULL,
+			imageKey text,
+			imageUri text,
+			updatedAt integer NOT NULL,
+			deletedAt integer
+		);
 	`);
     return testSpendDb(sqlite);
 }

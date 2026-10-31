@@ -86,7 +86,8 @@ export interface PhotoReconciliation {
 export const reconcilePhotos = Effect.fn("PhotoStore.reconcilePhotos")(function* reconcilePhotos(
     db: SpendDb,
     photoFiles: PhotoFiles,
-    nowMs: number
+    nowMs: number,
+    keepOrphans = false
 ) {
     const { directoryUri } = photoFiles;
     const stored = new Map((yield* files(() => photoFiles.list())).map((photo) => [photo.name, photo.modifiedAt]));
@@ -150,7 +151,7 @@ export const reconcilePhotos = Effect.fn("PhotoStore.reconcilePhotos")(function*
     }
 
     for (const [name, modifiedAt] of stored) {
-        if (referenced.has(name) || nowMs - modifiedAt < PHOTO_PURGE_GRACE_MS) {
+        if (keepOrphans || referenced.has(name) || nowMs - modifiedAt < PHOTO_PURGE_GRACE_MS) {
             continue;
         }
         yield* files(() => photoFiles.remove(name));
