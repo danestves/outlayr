@@ -1,14 +1,46 @@
 import "dotenv/config";
+import * as Schema from "effect/Schema";
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
 import type { AndroidShortcut } from "./plugins/with-android-shortcuts";
 import type { AndroidWidgetCopy } from "./plugins/with-android-widgets";
+import type { Language } from "./src/i18n/languages";
 
 const buildProfile = process.env.EAS_BUILD_PROFILE;
 const isProduction = buildProfile === "production";
 
 // Set by `.github/workflows/eas-build.yml`. Local builds fall back to Expo's 1.
 const buildNumber = process.env.BUILD_NUMBER;
+
+const notes = Schema.NonEmptyString;
+
+const decodeUpdateNotes = Schema.decodeUnknownSync(
+    Schema.fromJsonString(
+        Schema.Struct({
+            en: notes,
+            es: notes,
+            "es-ES": notes,
+            fr: notes,
+            pt: notes,
+            "pt-PT": notes,
+        } satisfies Record<Language, Schema.NonEmptyString>)
+    )
+);
+
+function readUpdateNotes(json: string | undefined) {
+    if (!json) {
+        return null;
+    }
+    try {
+        return decodeUpdateNotes(json);
+    } catch (error) {
+        throw new Error(`UPDATE_NOTES needs What's new lines for every app language. ${String(error)}`, {
+            cause: error,
+        });
+    }
+}
+
+const updateNotes = readUpdateNotes(process.env.UPDATE_NOTES);
 
 const PROJECT_ID = "f076a9e9-ec12-464d-85eb-772c4d0efce5";
 
@@ -297,7 +329,8 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
             projectId: PROJECT_ID,
         },
         primaryAppIcon: isProduction ? "Outlayr" : "OutlayrTesting",
-        whatsNew: process.env.UPDATE_MESSAGE ?? null,
+        whatsNew: updateNotes?.en ?? null,
+        whatsNewByLanguage: updateNotes,
     },
     ios: {
         appleTeamId: "8ZB3YXDU7V",

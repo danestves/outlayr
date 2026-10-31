@@ -205,5 +205,5 @@ elif grep -q 'differs from fingerprint' <<<"$fingerprint"; then
     ship
 else
     echo "VERDICT: OTA"
-    echo "gh workflow run update.yml -f channel=$channel -f platform=$platform -f version=$build_version -f message=\$'...'"
+    echo "gh workflow run update.yml -f channel=$channel -f platform=$platform -f version=$build_version -f notes=\"\$notes\""
 fi
