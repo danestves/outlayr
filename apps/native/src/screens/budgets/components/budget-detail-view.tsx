@@ -187,6 +187,7 @@ function BudgetSummary({
         ? new Date(window.start.getFullYear(), window.start.getMonth(), window.start.getDate() + scrubbed.day - 1)
         : null;
     const scrubLabel = scrubDate ? `${scrubDate.getDate()} ${monthAbbrev(scrubDate, language)}` : null;
+    const footnote = scrubLabel ? t("budgets.hero.onDate", { date: scrubLabel, label }) : label;
     const perDay =
         leftPerDayAmount != null && scrubDate ? Math.max(0, leftPerDay(balance, window, scrubDate)) : leftPerDayAmount;
     const measures: MeasureStripCell[] = [
@@ -222,9 +223,7 @@ function BudgetSummary({
                     showCents={showCents}
                 />
             </View>
-            <Text className="text-footnote text-muted pt-0.5">
-                {scrubLabel ? t("budgets.hero.onDate", { date: scrubLabel, label }) : label}
-            </Text>
+            <Text className="text-footnote text-muted pt-0.5">{footnote}</Text>
 
             {burndown && measured > 0 ? (
                 <View className="pt-4" style={{ marginHorizontal: -CHART_BLEED }}>
@@ -233,6 +232,7 @@ function BudgetSummary({
                         height={CHART_HEIGHT}
                         limit={amount}
                         onScrub={setScrubDay}
+                        scrubValue={`${formatAmount(Math.abs(balance), currency, showCents, language)} ${footnote}`}
                         width={measured + CHART_BLEED * 2}
                     />
                 </View>

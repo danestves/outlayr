@@ -1,0 +1,9 @@
+{
+    "platforms": ["apple", "android"],
+    "apple": {
+        "modules": ["ScreenReaderFocusModule"]
+    },
+    "android": {
+        "modules": ["expo.modules.screenreaderfocus.ScreenReaderFocusModule"]
+    }
+}

@@ -7,11 +7,13 @@ import {
 } from "@shopify/react-native-skia";
 import { useState } from "react";
 import { View } from "react-native";
+import type { AccessibilityActionEvent } from "react-native";
 import { GestureDetector, usePanGesture } from "react-native-gesture-handler";
 import { useDerivedValue, useReducedMotion, useSharedValue } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 
+import { ScreenReaderFocus } from "@/components/screen-reader-focus";
 import { useSettingBool } from "@/contexts/display-settings-context";
 import type { Burndown } from "@/domain/budget-burndown";
 import { useChartDraw, useChartPath } from "@/hooks/use-chart-draw";
@@ -27,6 +29,7 @@ interface BudgetBurndownChartProps {
     limit: number;
     /** The scrubbed day, 1-indexed, or null when the finger lifts. */
     onScrub?: (day: number | null) => void;
+    scrubValue?: string;
     thumbnail?: boolean;
     width: number;
 }
@@ -35,6 +38,8 @@ const PAD = { bottom: 10, left: 4, right: 4, top: 10 } as const;
 const THUMB_PAD = { bottom: 4, left: 4, right: 4, top: 4 } as const;
 
 type Pad = typeof PAD | typeof THUMB_PAD;
+
+const STEP_ACTIONS = [{ name: "increment" }, { name: "decrement" }];
 
 interface Plot {
     plotBottom: number;
@@ -245,6 +250,7 @@ export function BudgetBurndownChart({
     width,
     height = 150,
     onScrub,
+    scrubValue,
     thumbnail = false,
 }: BudgetBurndownChartProps) {
     const interactive = !thumbnail;
@@ -281,15 +287,40 @@ export function BudgetBurndownChart({
     const belowZero = useDerivedValue(() => ({ height: height - zeroY.get(), width, x: 0, y: zeroY.get() }));
     const scrubbed = scrubDay == null ? null : burndown.points[scrubDay - 1];
     const marker = scrubbed ?? last;
+    const lastDay = burndown.points.length;
     const pan = useScrubPan({
         activeDay,
         interactive,
-        lastDay: burndown.points.length,
+        lastDay,
         onScrub,
         plot,
         scrubX,
         setScrubDay,
     });
+
+    const pick = (day: number | null) => {
+        setScrubDay(day);
+        onScrub?.(day);
+    };
+
+    const step = ({ nativeEvent }: AccessibilityActionEvent) => {
+        const from = scrubDay ?? lastDay;
+        const delta = nativeEvent.actionName === "increment" ? 1 : -1;
+        const day = Math.min(lastDay, Math.max(1, from + delta));
+        if (day !== from) {
+            pick(day);
+        }
+    };
+
+    const stepper =
+        scrubValue === undefined
+            ? null
+            : {
+                  accessibilityActions: STEP_ACTIONS,
+                  accessibilityRole: "adjustable" as const,
+                  accessibilityValue: { text: scrubValue },
+                  onAccessibilityAction: step,
+              };
 
     const canvas = (
         <View
@@ -300,6 +331,7 @@ export function BudgetBurndownChart({
             collapsable={false}
             importantForAccessibility={interactive ? undefined : "no-hide-descendants"}
             style={{ height, width }}
+            {...stepper}
         >
             {/* Skia's canvas swallows touches, so the wrapper's pan detector needs it to opt out. */}
             <Canvas pointerEvents="none" style={{ height, width }}>
@@ -391,5 +423,14 @@ export function BudgetBurndownChart({
     );
 
     // A disabled detector still claims the touch, leaving the thumbnail a dead zone for the row's swipe.
-    return interactive ? <GestureDetector gesture={pan}>{canvas}</GestureDetector> : canvas;
+    const chart = interactive ? <GestureDetector gesture={pan}>{canvas}</GestureDetector> : canvas;
+    if (!stepper) {
+        return chart;
+    }
+    const onFocusChange = (focused: boolean) => {
+        if (!focused) {
+            pick(null);
+        }
+    };
+    return <ScreenReaderFocus onFocusChange={onFocusChange}>{chart}</ScreenReaderFocus>;
 }
