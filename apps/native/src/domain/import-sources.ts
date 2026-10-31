@@ -1,17 +1,14 @@
 import File01Icon from "@hugeicons-pro/core-stroke-rounded/File01Icon";
-import Notion01Icon from "@hugeicons-pro/core-stroke-rounded/Notion01Icon";
 import type { IconSvgElement } from "@hugeicons/react-native";
 
 import type { TranslationKey } from "@/i18n/catalog";
 
 export type ImportSourceId = "csv" | "notion";
 
-export interface ImportSource {
-    readonly icon: IconSvgElement;
-    readonly id: ImportSourceId;
+export type ImportSource = {
     readonly subtitleKey: TranslationKey;
     readonly titleKey: TranslationKey;
-}
+} & ({ readonly icon: IconSvgElement; readonly id: "csv" } | { readonly id: "notion" });
 
 export const IMPORT_SOURCES: readonly ImportSource[] = [
     {
@@ -21,7 +18,6 @@ export const IMPORT_SOURCES: readonly ImportSource[] = [
         titleKey: "settings.import.sourceCsvTitle",
     },
     {
-        icon: Notion01Icon,
         id: "notion",
         subtitleKey: "settings.import.sourceNotionSubtitle",
         titleKey: "settings.import.sourceNotionTitle",

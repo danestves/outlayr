@@ -1,5 +1,3 @@
-import Notion01Icon from "@hugeicons-pro/core-stroke-rounded/Notion01Icon";
-import { HugeiconsIcon } from "@hugeicons/react-native";
 import { useRouter } from "expo-router";
 import { useRef } from "react";
 import { Linking } from "react-native";
@@ -19,10 +17,6 @@ import { useColors } from "@/theme/use-colors";
 import { ImportRow } from "./components/import-row";
 import { SourceLogo } from "./components/parts";
 import { useImportPaths } from "./paths";
-
-function notionGlyph({ color, size }: { color: string; size: number }) {
-    return <HugeiconsIcon color={color} icon={Notion01Icon} size={size} strokeWidth={1.9} />;
-}
 
 export function BringDataIn() {
     const router = useRouter();
@@ -60,7 +54,7 @@ export function BringDataIn() {
                 />
                 <ImportRow
                     detail={t("mmImport.sources.notionDetail")}
-                    leading={<CategoryIconTile color={colors.foreground} glyph={notionGlyph} icon={null} size={32} />}
+                    leading={<SourceLogo source="notion" />}
                     onPress={() => openFileImport("notion")}
                     testID="import-source-notion"
                     title={t("mmImport.sources.notion")}

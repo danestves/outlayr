@@ -2,6 +2,7 @@ import { Image } from "expo-image";
 import { StyleSheet, View } from "react-native";
 
 import moneyManagerLogo from "@/assets/images/import-sources/money-manager.jpg";
+import notionLogo from "@/assets/images/import-sources/notion.jpg";
 import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
@@ -10,6 +11,7 @@ import { useColors } from "@/theme/use-colors";
 // The apps' own store icons, so people recognize where their data comes from.
 const SOURCE_LOGOS = {
     moneyManager: moneyManagerLogo,
+    notion: notionLogo,
 } as const;
 
 export type ImportSource = keyof typeof SOURCE_LOGOS;
