@@ -33,6 +33,7 @@ import {
     settledTransfersQuery,
     toTransferCell,
 } from "./transfer-cells";
+import { usePendingDeletes } from "./use-deferred-delete";
 import { useValuation, useValuationIn } from "./use-valuation";
 import { loadValuationIn } from "./valuation-source";
 import type { Valuation } from "./valuation-source";
@@ -63,34 +64,35 @@ export function useBalanceRates(db: Database, code: string, accountRows: readonl
 export function useSettledAccountCells(db: Database, accountId: string, nowMs: number): PlottedCell[] {
     // Bounded in SQL (see `settledAccountsCellQuery`): a grouped cell keeps only its day key.
     const settledAt = new Date(nowMs);
+    const pending = usePendingDeletes();
     const rows = useLiveQuery(
         transactions,
-        () => settledAccountCellQuery(db, accountId, settledAt),
-        [accountId, settledAt],
+        () => settledAccountCellQuery(db, accountId, settledAt, pending),
+        [accountId, settledAt, pending],
         nowMs
     );
     const outbound = useLiveQuery(
         transfers,
-        () => settledTransferOutboundQuery(db, accountId, settledAt),
-        [accountId, settledAt],
+        () => settledTransferOutboundQuery(db, accountId, settledAt, pending),
+        [accountId, settledAt, pending],
         nowMs
     );
     const inbound = useLiveQuery(
         transfers,
-        () => settledTransferInboundQuery(db, accountId, settledAt),
-        [accountId, settledAt],
+        () => settledTransferInboundQuery(db, accountId, settledAt, pending),
+        [accountId, settledAt, pending],
         nowMs
     );
     const outside = useLiveQuery(
         outsidePayments,
-        () => settledOutsidePaymentQuery(db, accountId, settledAt),
-        [accountId, settledAt],
+        () => settledOutsidePaymentQuery(db, accountId, settledAt, pending),
+        [accountId, settledAt, pending],
         nowMs
     );
     const moves = useLiveQuery(
         outsideMoves,
-        () => settledOutsideMoveQuery(db, accountId, settledAt),
-        [accountId, settledAt],
+        () => settledOutsideMoveQuery(db, accountId, settledAt, pending),
+        [accountId, settledAt, pending],
         nowMs
     );
     return plottedCells(rows, outbound, inbound, [...outside, ...moves]);
@@ -169,10 +171,31 @@ export function useAccountBalance(
 
 function useSettledCells(db: Database, settledAt: Date): SettledCell[] {
     const clock = settledAt.getTime();
-    const cellRows = useLiveQuery(transactions, () => settledAccountsCellQuery(db, settledAt), [settledAt], clock);
-    const legs = useLiveQuery(transfers, () => settledTransfersQuery(db, settledAt), [settledAt], clock);
-    const outside = useLiveQuery(outsidePayments, () => settledOutsidePaymentsQuery(db, settledAt), [settledAt], clock);
-    const moves = useLiveQuery(outsideMoves, () => settledOutsideMovesQuery(db, settledAt), [settledAt], clock);
+    const pending = usePendingDeletes();
+    const cellRows = useLiveQuery(
+        transactions,
+        () => settledAccountsCellQuery(db, settledAt, pending),
+        [settledAt, pending],
+        clock
+    );
+    const legs = useLiveQuery(
+        transfers,
+        () => settledTransfersQuery(db, settledAt, pending),
+        [settledAt, pending],
+        clock
+    );
+    const outside = useLiveQuery(
+        outsidePayments,
+        () => settledOutsidePaymentsQuery(db, settledAt, pending),
+        [settledAt, pending],
+        clock
+    );
+    const moves = useLiveQuery(
+        outsideMoves,
+        () => settledOutsideMovesQuery(db, settledAt, pending),
+        [settledAt, pending],
+        clock
+    );
     const outbound = legs.filter((leg) => leg.leg === "out");
     const inbound = legs.filter((leg) => leg.leg === "in");
     return [

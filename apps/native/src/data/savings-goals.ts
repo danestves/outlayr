@@ -29,6 +29,7 @@ import {
     settledTransfersOutboundQuery,
     toTransferCell,
 } from "./transfer-cells";
+import { usePendingDeletes } from "./use-deferred-delete";
 
 export interface SavingsGoalWithProgress {
     /** False when `saved` fell back to a face value, so it can't be compared with the target. */
@@ -51,34 +52,35 @@ export function useSavingsGoals(db: Database, nowMs: number): SavingsGoalWithPro
     // Bounded at `now` in SQL: a cell carries only a day key, so a later-today entry would read as money already saved.
     const settledAt = new Date(nowMs);
     const enabled = all.some((goal) => !isPayoffPlan(goal));
+    const pending = usePendingDeletes();
     const cellRows = useLiveQuery(
         transactions,
-        () => (enabled ? settledAccountsCellQuery(db, settledAt) : NO_READ),
-        [enabled, settledAt],
+        () => (enabled ? settledAccountsCellQuery(db, settledAt, pending) : NO_READ),
+        [enabled, settledAt, pending],
         nowMs
     );
     const outbound = useLiveQuery(
         transfers,
-        () => (enabled ? settledTransfersOutboundQuery(db, settledAt) : NO_READ),
-        [enabled, settledAt],
+        () => (enabled ? settledTransfersOutboundQuery(db, settledAt, pending) : NO_READ),
+        [enabled, settledAt, pending],
         nowMs
     );
     const inbound = useLiveQuery(
         transfers,
-        () => (enabled ? settledTransfersInboundQuery(db, settledAt) : NO_READ),
-        [enabled, settledAt],
+        () => (enabled ? settledTransfersInboundQuery(db, settledAt, pending) : NO_READ),
+        [enabled, settledAt, pending],
         nowMs
     );
     const outside = useLiveQuery(
         outsidePayments,
-        () => (enabled ? settledOutsidePaymentsQuery(db, settledAt) : NO_READ),
-        [enabled, settledAt],
+        () => (enabled ? settledOutsidePaymentsQuery(db, settledAt, pending) : NO_READ),
+        [enabled, settledAt, pending],
         nowMs
     );
     const moves = useLiveQuery(
         outsideMoves,
-        () => (enabled ? settledOutsideMovesQuery(db, settledAt) : NO_READ),
-        [enabled, settledAt],
+        () => (enabled ? settledOutsideMovesQuery(db, settledAt, pending) : NO_READ),
+        [enabled, settledAt, pending],
         nowMs
     );
     const displayCurrency = useGlobalCurrency(db);

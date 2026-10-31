@@ -14,13 +14,17 @@ import {
 } from "./installments-core";
 import type { PlanWithStanding, UpcomingInstallment } from "./installments-core";
 import { useLiveQuery } from "./live-query";
+import { planGoesWithPendingDelete } from "./pending-deletes";
+import { usePendingDeletes } from "./use-deferred-delete";
 
 // `nowMs` is the screen's `useNow()` reading: overdue is measured against the day, and a result keyed on the data
 // alone would keep yesterday's verdict past midnight.
 export function useInstallmentPlans(db: Database, nowMs: number, accountId?: string): PlanWithStanding[] {
-    const plans = useLiveQuery(installmentPlans, () => livePlansQuery(db, accountId), [accountId]);
+    const pending = usePendingDeletes();
+    const all = useLiveQuery(installmentPlans, () => livePlansQuery(db, accountId), [accountId]);
+    const plans = all.filter((plan) => !planGoesWithPendingDelete(plan, pending));
     const rows = useLiveQuery(installments, () => liveInstallmentsQuery(db));
-    const payments = useLiveQuery(transfers, () => planPaymentsQuery(db));
+    const payments = useLiveQuery(transfers, () => planPaymentsQuery(db, pending), [pending]);
     const outside = useLiveQuery(outsidePayments, () => liveOutsidePaymentsQuery(db));
     const purchases = useLiveQuery(transactions, () => planPurchasesQuery(db));
     const fees = useLiveQuery(transactions, () => planFeesQuery(db));

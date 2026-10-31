@@ -10,6 +10,8 @@ import type { LogFigures } from "@/domain/log-measure";
 
 import { logCellQuery, toCurrencyCells } from "./cell-query";
 import { NO_READ, useLiveQuery } from "./live-query";
+import { keptTransactions } from "./pending-deletes";
+import { usePendingDeletes } from "./use-deferred-delete";
 
 export type LogPeriod = "day" | "week" | "month" | "year" | "all";
 
@@ -72,6 +74,7 @@ export function useSparklineRows(
         exchangeRateType: transactions.exchangeRateType,
         income: transactions.income,
     };
+    const pending = usePendingDeletes();
     const rows = useLiveQuery(
         transactions,
         () => {
@@ -85,12 +88,13 @@ export function useSparklineRows(
                     and(
                         isNull(transactions.deletedAt),
                         lte(transactions.date, new Date(nowMs)),
-                        cumulative || !floor ? undefined : gte(transactions.date, floor)
+                        cumulative || !floor ? undefined : gte(transactions.date, floor),
+                        keptTransactions(db, pending)
                     )
                 )
                 .orderBy(asc(transactions.date));
         },
-        [nowMs, enabled, cumulative, floor?.getTime() ?? null],
+        [nowMs, enabled, cumulative, floor?.getTime() ?? null, pending],
         nowMs
     );
 
@@ -120,7 +124,13 @@ export function useLogInsights(
     const now = new Date(nowMs);
     const start = logPeriodStart(period, now, firstWeekday);
 
-    const rows = useLiveQuery(transactions, () => logCellQuery(db, start, now), [nowMs, period, firstWeekday], nowMs);
+    const pending = usePendingDeletes();
+    const rows = useLiveQuery(
+        transactions,
+        () => logCellQuery(db, start, now, pending),
+        [nowMs, period, firstWeekday, pending],
+        nowMs
+    );
 
     const ordered = cellFigures(toCurrencyCells(rows), globalCurrency, rates);
 

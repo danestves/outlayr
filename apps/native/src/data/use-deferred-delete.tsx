@@ -14,6 +14,7 @@ import { fireAtomCommand } from "@/state/use-atom-action";
 
 import { commitDeferredDelete, createDeferredDeleteRegistry } from "./deferred-delete-registry";
 import type { DeferredDeleteKind } from "./deferred-delete-registry";
+import type { PendingDeletes } from "./pending-deletes";
 
 // At module scope because a held delete outlives its screen; the database is read when its window closes.
 const registry = createDeferredDeleteRegistry({
@@ -61,3 +62,10 @@ export function useDeferredDelete(kind: DeferredDeleteKind): DeferredDelete {
 
 /** For a JS reload, which tears the runtime down without the AppState change that flushes. An effect: yield it. */
 export const flushDeferredDeletes = registry.flushAll;
+
+export function usePendingDeletes(): PendingDeletes {
+    const account = useDeferredDelete("account").pendingId;
+    const category = useDeferredDelete("category").pendingId;
+    const row = useDeferredDelete("row").pendingId;
+    return { account, category, row };
+}
