@@ -2,6 +2,8 @@ import * as Effect from "effect/Effect";
 
 import { accountsRepo } from "@/data/accounts-core";
 import type { Account } from "@/data/accounts-core";
+import { setPlanMonths } from "@/data/budget-plans-core";
+import type { SetPlanMonthsInput } from "@/data/budget-plans-core";
 import { budgetsRepo } from "@/data/budgets-core";
 import type { CreateBudgetInput, CreateMainBudgetInput, PatchBudgetInput } from "@/data/budgets-core";
 import type { Category } from "@/data/categories-core";
@@ -137,6 +139,11 @@ export const patchBudgetCommand = planningCommand(
     "patch-budget",
     (input: { db: Database; id: string; patch: PatchBudgetInput }) =>
         budgetsRepo.patchBudget(input.db, input.id, input.patch)
+);
+
+export const setPlanMonthsCommand = planningCommand(
+    "set-plan-months",
+    (input: { db: Database; plan: SetPlanMonthsInput }) => setPlanMonths(input.db, input.plan)
 );
 
 export const patchMainBudgetCommand = planningCommand(
