@@ -3,7 +3,7 @@ import { reloadAsync } from "expo-updates";
 import { DevSettings } from "react-native";
 
 import { profileRegistry } from "@/data/profile-registry";
-import { createProfile, deleteProfile } from "@/data/profiles";
+import { createProfile, deleteProfile, prepareProfileLedger, profileLedgerExists } from "@/data/profiles";
 import { ProfilesError, updateProfile } from "@/data/profiles-core";
 import type { ProfileIdentity } from "@/data/profiles-core";
 import { flushDeferredDeletes } from "@/data/use-deferred-delete";
@@ -30,7 +30,15 @@ const switchTo = Effect.fn("Profiles.switchTo")(function* switchTo(profileId: st
 });
 
 export const switchProfileCommand = createRuntimeCommand(appRuntime, {
-    execute: (profileId: string | undefined) => switchTo(profileId),
+    execute: Effect.fn("Profiles.switch")(function* switchProfile(input: {
+        from: Database;
+        profileId: string | undefined;
+    }) {
+        if (input.profileId !== undefined && !profileLedgerExists(input.profileId)) {
+            yield* prepareProfileLedger(input.profileId, input.from, undefined);
+        }
+        yield* switchTo(input.profileId);
+    }),
     label: "profiles:switch",
 });
 

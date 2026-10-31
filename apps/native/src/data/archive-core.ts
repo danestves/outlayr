@@ -35,10 +35,12 @@ export const buildArchive = Effect.fn("Archive.buildArchive")(function* buildArc
     const tables = yield* Effect.all(
         pipe(
             SYNCED_SPECS,
-            EffectRecord.map((spec) =>
-                query("build", () => db.select().from(spec.table).where(spec.scope)).pipe(
-                    Effect.map((rows: TableRow[]) => rows.map((row) => encodeArchiveRow(row)))
-                )
+            EffectRecord.map((spec, table) =>
+                table === "profiles"
+                    ? Effect.succeed([])
+                    : query("build", () => db.select().from(spec.table).where(spec.scope)).pipe(
+                          Effect.map((rows: TableRow[]) => rows.map((row) => encodeArchiveRow(row)))
+                      )
             )
         ),
         { concurrency: "unbounded" }
@@ -57,6 +59,7 @@ export const buildArchive = Effect.fn("Archive.buildArchive")(function* buildArc
 // keep rows the archive deleted. Deletes run in reverse table order and inserts forward, so no row points at an
 // unwritten parent.
 const isImageUri = Schema.is(Schema.String);
+const LEDGER_TABLES = SYNCED_TABLES.filter((table) => table !== "profiles");
 
 export const restoreArchive = Effect.fn("Archive.restoreArchive")(function* restoreArchive(
     db: Database,
@@ -70,11 +73,11 @@ export const restoreArchive = Effect.fn("Archive.restoreArchive")(function* rest
     yield* transaction(
         db,
         Effect.gen(function* replace() {
-            for (const table of [...SYNCED_TABLES].reverse()) {
+            for (const table of [...LEDGER_TABLES].reverse()) {
                 const spec = SYNCED_SPECS[table];
                 yield* query("restore", () => db.delete(spec.table).where(spec.scope));
             }
-            for (const table of SYNCED_TABLES) {
+            for (const table of LEDGER_TABLES) {
                 const rows = document.tables[table]
                     .map((row) => decodeArchiveRow(table, row))
                     .map((row) => (carried(row) ? { ...row, imageKey: null } : row));

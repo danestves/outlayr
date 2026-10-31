@@ -33,4 +33,23 @@ describe("seedProfileLedger", () => {
         await expect(read(META_KEYS.syncCursor)).resolves.toBeNull();
         await expect(read(META_KEYS.lastTransactionAccount)).resolves.toBeNull();
     });
+
+    it("opens a profile another phone made past onboarding, leaving its synced settings to the pull", async () => {
+        const personal = migratedDatabase();
+        const work = migratedDatabase();
+        await Effect.runPromise(
+            Effect.gen(function* seed() {
+                yield* bootstrapLocalData(personal);
+                yield* setMeta(personal, META_KEYS.onboardingComplete, "true");
+                yield* setMeta(personal, "showCents", "0");
+                yield* bootstrapLocalData(work);
+                yield* seedProfileLedger(personal, work, undefined);
+            })
+        );
+
+        const read = (key: string) => Effect.runPromise(getMeta(work, key));
+        await expect(read(META_KEYS.onboardingComplete)).resolves.toBe("true");
+        await expect(read("showCents")).resolves.toBeNull();
+        await expect(read(META_KEYS.currencyChosen)).resolves.toBeNull();
+    });
 });
