@@ -116,10 +116,10 @@ async function figures(db: Database, pending: PendingDeletes) {
         balances: others(await settledAccountsCellQuery(db, NOW, pending)),
         contributions: await expenseContributionQuery(db, NOW, null, pending),
         log: await logCellQuery(db, null, NOW, pending),
-        moves: others(await settledOutsideMovesQuery(db, NOW, pending)),
-        outside: others(await settledOutsidePaymentsQuery(db, NOW, pending)),
+        moves: await settledOutsideMovesQuery(db, NOW, pending),
+        outside: await settledOutsidePaymentsQuery(db, NOW, pending),
         plans: await planPaymentsQuery(db, pending),
-        transfers: others(await settledTransfersQuery(db, NOW, pending)),
+        transfers: await settledTransfersQuery(db, NOW, pending),
     };
 }
 
@@ -131,6 +131,7 @@ const CASES: [string, DeferredDeleteKind, string][] = [
     ["a purchase and its Cashea plan", "row", "purchase"],
     ["a person and everything recorded with them", "account", "carlos"],
     ["a bank account, whose entries stay", "account", "bank"],
+    ["a card or loan and its Cashea plan", "account", "cashea"],
     ["a category and its entries", "category", "fun"],
 ];
 
