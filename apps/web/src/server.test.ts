@@ -11,7 +11,7 @@ const { default: server } = await import("./server");
 
 const PAGE = `<html><head><title>Outlayr</title></head><body>
 <nav>Menu</nav>
-<main><h1>Track every expense.</h1><span aria-hidden="true">Decoration</span><img class="dark-only" alt="Dark shot" src="/a.webp"/><dl class="grid"><dt class="label">Currencies</dt><dd>165, at the rate of the day</dd></dl><ul><li><div data-spot><p data-kicker>Calculators</p><h3><a href="/tools/split">Split expenses calculator</a></h3></div></li></ul></main>
+<main><h1>Track every expense.</h1><span aria-hidden="true">Decoration</span><img class="dark-only" alt="Dark shot" src="/a.webp"/><dl class="grid"><dt class="label">Currencies</dt><dd>165, at the rate of the day</dd></dl><ul><li><div><p data-kicker>Calculators</p><h3><a href="/tools/split">Split expenses calculator</a></h3></div></li></ul></main>
 <footer>Legal</footer>
 </body></html>`;
 

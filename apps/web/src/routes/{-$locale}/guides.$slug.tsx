@@ -44,7 +44,7 @@ function plateImage(slug: GuideSlug, locale: Locale) {
     return plate === null || hasKey(PANELS, plate) ? null : screenSources(plate, locale);
 }
 
-const LABEL = "text-muted font-mono text-xs tracking-widest uppercase";
+const LABEL = "text-muted font-mono text-xs";
 
 export const Route = createFileRoute("/{-$locale}/guides/$slug")({
     component: Guide,

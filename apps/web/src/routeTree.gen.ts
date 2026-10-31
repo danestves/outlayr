@@ -20,7 +20,6 @@ import { Route as DotwellKnownApiCatalogRouteImport } from './routes/[.]well-kno
 import { Route as DotwellKnownHttpMessageSignaturesDirectoryRouteImport } from './routes/[.]well-known.http-message-signatures-directory'
 import { Route as AccountConnectRouteImport } from './routes/_account/connect'
 import { Route as AccountLoginRouteImport } from './routes/_account/login'
-import { Route as BadgesProductHuntDotsvgRouteImport } from './routes/badges.product-hunt[.]svg'
 import { Route as Char123LocaleChar125IndexRouteImport } from './routes/{-$locale}/index'
 import { Route as Char123LocaleChar125SplatRouteImport } from './routes/{-$locale}/$'
 import { Route as Char123LocaleChar125AboutRouteImport } from './routes/{-$locale}/about'
@@ -93,11 +92,6 @@ const AccountLoginRoute = AccountLoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => AccountRoute,
-} as any)
-const BadgesProductHuntDotsvgRoute = BadgesProductHuntDotsvgRouteImport.update({
-  id: '/badges/product-hunt.svg',
-  path: '/badges/product-hunt.svg',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const Char123LocaleChar125IndexRoute =
   Char123LocaleChar125IndexRouteImport.update({
@@ -201,7 +195,6 @@ export interface FileRoutesByFullPath {
   '/.well-known/http-message-signatures-directory': typeof DotwellKnownHttpMessageSignaturesDirectoryRoute
   '/connect': typeof AccountConnectRoute
   '/login': typeof AccountLoginRoute
-  '/badges/product-hunt.svg': typeof BadgesProductHuntDotsvgRoute
   '/{-$locale}/$': typeof Char123LocaleChar125SplatRoute
   '/{-$locale}/about': typeof Char123LocaleChar125AboutRoute
   '/{-$locale}/delete-account': typeof Char123LocaleChar125DeleteAccountRoute
@@ -229,7 +222,6 @@ export interface FileRoutesByTo {
   '/.well-known/http-message-signatures-directory': typeof DotwellKnownHttpMessageSignaturesDirectoryRoute
   '/connect': typeof AccountConnectRoute
   '/login': typeof AccountLoginRoute
-  '/badges/product-hunt.svg': typeof BadgesProductHuntDotsvgRoute
   '/{-$locale}/$': typeof Char123LocaleChar125SplatRoute
   '/{-$locale}/about': typeof Char123LocaleChar125AboutRoute
   '/{-$locale}/delete-account': typeof Char123LocaleChar125DeleteAccountRoute
@@ -259,7 +251,6 @@ export interface FileRoutesById {
   '/.well-known/http-message-signatures-directory': typeof DotwellKnownHttpMessageSignaturesDirectoryRoute
   '/_account/connect': typeof AccountConnectRoute
   '/_account/login': typeof AccountLoginRoute
-  '/badges/product-hunt.svg': typeof BadgesProductHuntDotsvgRoute
   '/{-$locale}/$': typeof Char123LocaleChar125SplatRoute
   '/{-$locale}/about': typeof Char123LocaleChar125AboutRoute
   '/{-$locale}/delete-account': typeof Char123LocaleChar125DeleteAccountRoute
@@ -290,7 +281,6 @@ export interface FileRouteTypes {
     | '/.well-known/http-message-signatures-directory'
     | '/connect'
     | '/login'
-    | '/badges/product-hunt.svg'
     | '/{-$locale}/$'
     | '/{-$locale}/about'
     | '/{-$locale}/delete-account'
@@ -318,7 +308,6 @@ export interface FileRouteTypes {
     | '/.well-known/http-message-signatures-directory'
     | '/connect'
     | '/login'
-    | '/badges/product-hunt.svg'
     | '/{-$locale}/$'
     | '/{-$locale}/about'
     | '/{-$locale}/delete-account'
@@ -347,7 +336,6 @@ export interface FileRouteTypes {
     | '/.well-known/http-message-signatures-directory'
     | '/_account/connect'
     | '/_account/login'
-    | '/badges/product-hunt.svg'
     | '/{-$locale}/$'
     | '/{-$locale}/about'
     | '/{-$locale}/delete-account'
@@ -375,7 +363,6 @@ export interface RootRouteChildren {
   DotwellKnownAiCatalogDotjsonRoute: typeof DotwellKnownAiCatalogDotjsonRoute
   DotwellKnownApiCatalogRoute: typeof DotwellKnownApiCatalogRoute
   DotwellKnownHttpMessageSignaturesDirectoryRoute: typeof DotwellKnownHttpMessageSignaturesDirectoryRoute
-  BadgesProductHuntDotsvgRoute: typeof BadgesProductHuntDotsvgRoute
   DotwellKnownMcpServerCardDotjsonRoute: typeof DotwellKnownMcpServerCardDotjsonRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
@@ -458,13 +445,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/login'
       preLoaderRoute: typeof AccountLoginRouteImport
       parentRoute: typeof AccountRoute
-    }
-    '/badges/product-hunt.svg': {
-      id: '/badges/product-hunt.svg'
-      path: '/badges/product-hunt.svg'
-      fullPath: '/badges/product-hunt.svg'
-      preLoaderRoute: typeof BadgesProductHuntDotsvgRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/{-$locale}/': {
       id: '/{-$locale}/'
@@ -638,7 +618,6 @@ const rootRouteChildren: RootRouteChildren = {
   DotwellKnownApiCatalogRoute: DotwellKnownApiCatalogRoute,
   DotwellKnownHttpMessageSignaturesDirectoryRoute:
     DotwellKnownHttpMessageSignaturesDirectoryRoute,
-  BadgesProductHuntDotsvgRoute: BadgesProductHuntDotsvgRoute,
   DotwellKnownMcpServerCardDotjsonRoute: DotwellKnownMcpServerCardDotjsonRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }

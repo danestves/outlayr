@@ -21,12 +21,12 @@ export function Page({
         <main className={`${CONTAINER} pt-24 pb-24`} id="main" ref={scanMotion}>
             <header className="mt-16">
                 {meta ? (
-                    <p className="text-muted mb-6 font-mono text-xs tracking-widest uppercase" data-reveal>
+                    <p className="text-muted mb-6 font-mono text-xs" data-reveal>
                         {meta}
                     </p>
                 ) : null}
                 <h1
-                    className="hero-text max-w-[680px] pb-2 text-4xl font-semibold tracking-tighter delay-100 md:text-6xl"
+                    className="max-w-[680px] pb-2 text-4xl font-semibold tracking-tighter delay-100 md:text-6xl"
                     data-reveal
                 >
                     {title}

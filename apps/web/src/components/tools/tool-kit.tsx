@@ -9,7 +9,7 @@ import { capture } from "@/lib/analytics";
 import { formatAmount } from "@/lib/calculators";
 import type { Cadence } from "@/lib/calculators";
 
-export const LABEL = "text-muted font-mono text-xs tracking-widest uppercase";
+export const LABEL = "text-muted font-mono text-xs";
 export const BARE = "w-full min-w-0 bg-transparent focus-visible:outline-none";
 const SELECT = `select ${BARE} cursor-pointer pr-6`;
 const MAX_ROWS = 5;

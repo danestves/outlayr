@@ -64,7 +64,7 @@ export function FactList({
         <dl className="border-border mt-8 border-t delay-150" data-reveal>
             {facts.map((fact) => (
                 <div className="border-border grid gap-2 border-b py-4 sm:grid-cols-4 sm:gap-6" key={fact.label.value}>
-                    <dt className="text-muted font-mono text-xs tracking-widest uppercase sm:pt-1">{fact.label}</dt>
+                    <dt className="text-muted font-mono text-xs sm:pt-1">{fact.label}</dt>
                     <dd className="sm:col-span-3">
                         <Figures text={fact.text.value} />
                         {fact.source ? <Source href={fact.source.value} /> : null}
@@ -132,9 +132,8 @@ function useRelated(refs: readonly PageRef[]): AnswerItem[] {
     });
 }
 
-const LABEL = "text-muted font-mono text-xs font-normal tracking-widest uppercase";
-const HEAD =
-    "text-lg font-semibold md:text-muted md:font-mono md:text-xs md:font-normal md:tracking-widest md:uppercase";
+const LABEL = "text-muted font-mono text-xs font-normal";
+const HEAD = "text-lg font-semibold md:text-muted md:font-mono md:text-xs md:font-normal";
 
 export function CompareTable({
     columns,
@@ -215,7 +214,7 @@ function Contents({ sections }: { sections: readonly ArticleSection[] }) {
     });
     return (
         <nav aria-label={labels.contents.value} className={`${ASIDE} hidden lg:block`}>
-            <p className="text-muted font-mono text-xs tracking-widest uppercase">{labels.contents}</p>
+            <p className="text-muted font-mono text-xs">{labels.contents}</p>
             <ol className="mt-4">
                 {sections.map((section) => (
                     <li key={section.id}>
@@ -267,7 +266,7 @@ export function Article({
                         <HubTrail hub={hub} />
                     </p>
                     <h1
-                        className="hero-text mt-6 max-w-[680px] pb-2 text-4xl font-semibold tracking-tighter delay-100 md:text-6xl"
+                        className="mt-6 max-w-[680px] pb-2 text-4xl font-semibold tracking-tighter delay-100 md:text-6xl"
                         data-reveal
                     >
                         {title}
@@ -275,7 +274,7 @@ export function Article({
                     <p className="text-muted mt-6 max-w-[680px] text-lg delay-200 md:text-xl" data-reveal>
                         {lead}
                     </p>
-                    <p className="text-muted mt-8 font-mono text-xs tracking-widest uppercase delay-300" data-reveal>
+                    <p className="text-muted mt-8 font-mono text-xs delay-300" data-reveal>
                         <LocalizedLink className="fluid hover:text-foreground" hash="maker" to="/about">
                             {labels.byline}
                         </LocalizedLink>
@@ -319,7 +318,7 @@ export function Article({
                 className="bg-surface mt-24 rounded-3xl px-6 py-16 md:px-16 md:py-24"
             >
                 <h2
-                    className="hero-text max-w-[680px] pb-2 text-4xl font-semibold tracking-tighter md:text-6xl"
+                    className="max-w-[680px] pb-2 text-4xl font-semibold tracking-tighter md:text-6xl"
                     data-reveal
                     id="get-outlayr"
                 >

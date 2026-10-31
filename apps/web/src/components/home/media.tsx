@@ -181,7 +181,7 @@ export function LoopVideo({
             )}
             <button
                 aria-label={paused ? play.value : pause.value}
-                className="glass fluid absolute right-4 bottom-4 flex size-10 items-center justify-center rounded-full hover:scale-105 active:scale-[0.98]"
+                className="glass fluid absolute right-4 bottom-4 flex size-10 items-center justify-center rounded-full active:scale-[0.98]"
                 onClick={toggle}
                 type="button"
             >
@@ -191,7 +191,7 @@ export function LoopVideo({
     );
 }
 
-export function Film({ label, name }: { label: string; name: string }) {
+export function Film({ aspect = "aspect-square", label, name }: { aspect?: string; label: string; name: string }) {
     const { locale } = useLocale();
     const cut = locale === "es" ? "-es" : "";
     const clip = (variant: Variant, kind: string) => videoUrl(`${name}-${variant}${cut}${kind}`);
@@ -202,7 +202,7 @@ export function Film({ label, name }: { label: string; name: string }) {
     return (
         <LoopVideo
             av1={{ dark: clip("dark", ".av1.mp4"), light: clip("light", ".av1.mp4") }}
-            className="bg-surface relative aspect-square"
+            className={`bg-surface relative ${aspect}`}
             label={label}
             poster={{
                 height: 1080,

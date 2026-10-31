@@ -17,8 +17,6 @@
     --color-tint: #c2371b;
     --color-income: #00714a;
     --color-spend: #c0402e;
-    --color-hero-from: #000000;
-    --color-hero-to: #666666;
 
     --color-app-bg: #f1f0ea;
     --color-app-group: #f7f6f0;
@@ -50,8 +48,6 @@
         --color-tint: #e2643f;
         --color-income: #3fd99b;
         --color-spend: #e06a57;
-        --color-hero-from: #ffffff;
-        --color-hero-to: #9b9b9b;
 
         --color-app-bg: #17150f;
         --color-app-group: #2a251b;
@@ -79,20 +75,6 @@
 
     body {
         overflow-x: clip;
-    }
-
-    body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        z-index: 60;
-        pointer-events: none;
-        opacity: 0.05;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    }
-
-    :root[data-theme="dark"] body::before {
-        opacity: 0.03;
     }
 
     h1,
@@ -149,13 +131,6 @@
             inset 0 1px 0 rgb(255 255 255 / 0.06),
             0 24px 48px -24px rgb(0 0 0 / 0.6);
     }
-}
-
-@utility hero-text {
-    background-image: linear-gradient(to right, var(--color-hero-from), var(--color-hero-to));
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
 }
 
 @utility tabular {
@@ -221,37 +196,6 @@
 
     [data-word].is-on {
         opacity: 1;
-    }
-
-    [data-spot] {
-        position: relative;
-        isolation: isolate;
-    }
-
-    [data-spot]::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        z-index: 1;
-        padding: 1px;
-        border-radius: inherit;
-        background: radial-gradient(
-            22rem circle at var(--spot-x, 50%) var(--spot-y, 50%),
-            var(--color-tint),
-            transparent 65%
-        );
-        mask:
-            linear-gradient(#000 0 0) content-box,
-            linear-gradient(#000 0 0);
-        mask-composite: exclude;
-        -webkit-mask-composite: xor;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 700ms var(--ease-fluid);
-    }
-
-    [data-spot]:hover::before {
-        opacity: 0.8;
     }
 
     .select {
@@ -714,18 +658,6 @@
         }
     }
 
-    @keyframes drift {
-        to {
-            translate: 0 -4rem;
-        }
-    }
-
-    @keyframes drift-down {
-        to {
-            translate: 0 3rem;
-        }
-    }
-
     @keyframes strip {
         from {
             translate: 8% 0;
@@ -742,19 +674,6 @@
                 animation: strip linear both;
                 animation-timeline: view();
                 animation-range: cover;
-            }
-
-            @media (min-width: 48rem) {
-                .drift,
-                .drift-down {
-                    animation: drift linear both;
-                    animation-timeline: scroll(root);
-                    animation-range: 0 90vh;
-                }
-
-                .drift-down {
-                    animation-name: drift-down;
-                }
             }
         }
     }
@@ -915,10 +834,6 @@
     }
 
     @media print {
-        body::before {
-            display: none;
-        }
-
         .legal-body div:has(> table) {
             overflow: visible;
             background: none;

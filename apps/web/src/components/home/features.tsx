@@ -19,9 +19,8 @@ function Card({
 }) {
     return (
         <article
-            className={`bg-surface flex flex-col gap-8 overflow-hidden rounded-3xl p-6 md:p-8 ${className}`}
+            className={`bg-surface relative flex flex-col gap-8 overflow-hidden rounded-3xl p-6 md:p-8 ${className}`}
             data-reveal
-            data-spot
         >
             <div className="max-w-md">
                 <h3 className="text-2xl font-semibold tracking-tight">{title}</h3>

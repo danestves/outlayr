@@ -39,9 +39,8 @@ export function Pricing() {
                     </ul>
                 </div>
                 <div
-                    className="bg-foreground text-background flex flex-col rounded-3xl p-6 delay-100 md:p-8"
+                    className="bg-foreground text-background relative flex flex-col rounded-3xl p-6 delay-100 md:p-8"
                     data-reveal
-                    data-spot
                 >
                     <div className="min-h-40">
                         <h3 className="flex flex-wrap items-center gap-x-3 gap-y-1 text-lg font-semibold">

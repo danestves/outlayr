@@ -20,13 +20,10 @@ const SPANS = ["lg:col-span-7", "lg:col-span-5", "lg:col-span-5", "lg:col-span-7
 export function AnswerCard({ heading: Heading, item }: { heading: "h2" | "h3"; item: AnswerItem }) {
     const { locale } = useLocale();
     return (
-        <div
-            className="fluid bg-surface group flex h-full flex-col justify-between gap-8 rounded-3xl p-6 md:min-h-56 md:gap-12 md:p-8"
-            data-spot
-        >
+        <div className="fluid bg-surface hover:bg-border/50 group relative flex h-full flex-col justify-between gap-8 rounded-3xl p-6 md:min-h-56 md:gap-12 md:p-8">
             <div>
                 {item.kicker ? (
-                    <p className="text-muted mb-4 font-mono text-xs tracking-widest uppercase" data-kicker>
+                    <p className="text-muted mb-4 font-mono text-xs" data-kicker>
                         {item.kicker}
                     </p>
                 ) : null}

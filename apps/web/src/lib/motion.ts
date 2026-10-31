@@ -1,13 +1,3 @@
-function spotlight(event: PointerEvent) {
-    const card = event.target instanceof Element ? event.target.closest("[data-spot]") : null;
-    if (!(card instanceof HTMLElement)) {
-        return;
-    }
-    const box = card.getBoundingClientRect();
-    card.style.setProperty("--spot-x", `${event.clientX - box.left}px`);
-    card.style.setProperty("--spot-y", `${event.clientY - box.top}px`);
-}
-
 const COUNT_MS = 1200;
 
 function write(element: Element, value: string) {
@@ -90,17 +80,12 @@ export function startMotion() {
         scan();
         mutations.observe(document.body, { childList: true, subtree: true });
     };
-    const finePointer = matchMedia("(pointer: fine)").matches;
-    if (finePointer) {
-        document.addEventListener("pointermove", spotlight, { passive: true });
-    }
     return () => {
         scanner = null;
         reveals.disconnect();
         lives.disconnect();
         words.disconnect();
         mutations.disconnect();
-        document.removeEventListener("pointermove", spotlight);
     };
 }
 

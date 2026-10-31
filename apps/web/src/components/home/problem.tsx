@@ -7,7 +7,7 @@ import { CONTAINER } from "@/lib/layout";
 
 import { Film } from "./media";
 
-export const LABEL = "text-muted font-mono text-xs tracking-widest uppercase";
+export const LABEL = "text-muted font-mono text-xs";
 export const HEADING = "text-4xl font-semibold tracking-tight md:text-5xl";
 
 const FIELD_WIDTHS = ["w-16", "w-24", "w-20", "w-12", "w-16", "w-24"] as const;

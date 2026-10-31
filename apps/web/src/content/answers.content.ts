@@ -733,7 +733,7 @@ const answers = {
                 site: "copilot.money",
                 source: "https://www.copilot.money/faq",
                 summary: t(RIVALS.copilot),
-                title: t({ en: "Outlayr as a Copilot alternative.", es: "Outlayr como alternativa a Copilot." }),
+                title: t({ en: "Outlayr as a Copilot alternative", es: "Outlayr como alternativa a Copilot" }),
             },
             everydollar: {
                 faq: [
@@ -860,8 +860,8 @@ const answers = {
                 source: "https://www.ramseysolutions.com/money/everydollar",
                 summary: t(RIVALS.everydollar),
                 title: t({
-                    en: "Outlayr as an EveryDollar alternative.",
-                    es: "Outlayr como alternativa a EveryDollar.",
+                    en: "Outlayr as an EveryDollar alternative",
+                    es: "Outlayr como alternativa a EveryDollar",
                 }),
             },
             fintonic: {
@@ -1010,7 +1010,7 @@ const answers = {
                 site: "fintonic.com",
                 source: "https://www.fintonic.com/es-ES/inicio/",
                 summary: t(RIVALS.fintonic),
-                title: t({ en: "Outlayr as a Fintonic alternative.", es: "Outlayr como alternativa a Fintonic." }),
+                title: t({ en: "Outlayr as a Fintonic alternative", es: "Outlayr como alternativa a Fintonic" }),
             },
             goodbudget: {
                 faq: [
@@ -1165,8 +1165,8 @@ const answers = {
                 source: "https://goodbudget.com/help/billing/subscribe-to-goodbudget/",
                 summary: t(RIVALS.goodbudget),
                 title: t({
-                    en: "Outlayr as a Goodbudget alternative.",
-                    es: "Outlayr como alternativa a Goodbudget.",
+                    en: "Outlayr as a Goodbudget alternative",
+                    es: "Outlayr como alternativa a Goodbudget",
                 }),
             },
             monarch: {
@@ -1295,7 +1295,7 @@ const answers = {
                 site: "monarch.com",
                 source: "https://www.monarch.com/pricing",
                 summary: t(RIVALS.monarch),
-                title: t({ en: "Outlayr as a Monarch alternative.", es: "Outlayr como alternativa a Monarch." }),
+                title: t({ en: "Outlayr as a Monarch alternative", es: "Outlayr como alternativa a Monarch" }),
             },
             monefy: {
                 faq: [
@@ -1461,7 +1461,7 @@ const answers = {
                 site: "monefy.com",
                 source: "https://www.monefy.com/",
                 summary: t(RIVALS.monefy),
-                title: t({ en: "Outlayr as a Monefy alternative.", es: "Outlayr como alternativa a Monefy." }),
+                title: t({ en: "Outlayr as a Monefy alternative", es: "Outlayr como alternativa a Monefy" }),
             },
             "money-lover": {
                 faq: [
@@ -1618,8 +1618,8 @@ const answers = {
                 source: "https://moneylover.zendesk.com/hc/en-us",
                 summary: t(RIVALS.moneyLover),
                 title: t({
-                    en: "Outlayr as a Money Lover alternative.",
-                    es: "Outlayr como alternativa a Money Lover.",
+                    en: "Outlayr as a Money Lover alternative",
+                    es: "Outlayr como alternativa a Money Lover",
                 }),
             },
             pocketguard: {
@@ -1745,8 +1745,8 @@ const answers = {
                 source: "https://pocketguard.com/pricing/",
                 summary: t(RIVALS.pocketguard),
                 title: t({
-                    en: "Outlayr as a PocketGuard alternative.",
-                    es: "Outlayr como alternativa a PocketGuard.",
+                    en: "Outlayr as a PocketGuard alternative",
+                    es: "Outlayr como alternativa a PocketGuard",
                 }),
             },
             "rocket-money": {
@@ -1896,8 +1896,8 @@ const answers = {
                 source: "https://www.rocketmoney.com/learn/personal-finance/how-much-does-rocket-money-cost",
                 summary: t(RIVALS.rocketMoney),
                 title: t({
-                    en: "Outlayr as a Rocket Money alternative.",
-                    es: "Outlayr como alternativa a Rocket Money.",
+                    en: "Outlayr as a Rocket Money alternative",
+                    es: "Outlayr como alternativa a Rocket Money",
                 }),
             },
             spendee: {
@@ -2013,7 +2013,7 @@ const answers = {
                 site: "spendee.com",
                 source: "https://www.spendee.com/pricing",
                 summary: t(RIVALS.spendee),
-                title: t({ en: "Outlayr as a Spendee alternative.", es: "Outlayr como alternativa a Spendee." }),
+                title: t({ en: "Outlayr as a Spendee alternative", es: "Outlayr como alternativa a Spendee" }),
             },
             wallet: {
                 faq: [
@@ -2122,8 +2122,8 @@ const answers = {
                 source: "https://budgetbakers.com/en/products/wallet/",
                 summary: t(RIVALS.wallet),
                 title: t({
-                    en: "Outlayr as an alternative to Wallet by BudgetBakers.",
-                    es: "Outlayr como alternativa a Wallet by BudgetBakers.",
+                    en: "Outlayr as an alternative to Wallet by BudgetBakers",
+                    es: "Outlayr como alternativa a Wallet by BudgetBakers",
                 }),
             },
             ynab: {
@@ -2252,7 +2252,7 @@ const answers = {
                 site: "ynab.com",
                 source: "https://www.ynab.com/pricing",
                 summary: t(RIVALS.ynab),
-                title: t({ en: "Outlayr vs YNAB.", es: "Outlayr vs YNAB." }),
+                title: t({ en: "Outlayr vs YNAB", es: "Outlayr vs YNAB" }),
             },
         },
         guides: {
@@ -2552,8 +2552,8 @@ const answers = {
                     ],
                 },
                 title: t({
-                    en: "Log an expense by typing or saying one sentence.",
-                    es: "Registra un gasto escribiendo o dictando una oración.",
+                    en: "Log an expense by typing or saying one sentence",
+                    es: "Registra un gasto escribiendo o dictando una oración",
                 }),
             },
             "apple-pay-expense-tracker": {
@@ -2755,8 +2755,8 @@ const answers = {
                     },
                 ],
                 title: t({
-                    en: "Log Apple Pay purchases as you pay.",
-                    es: "Registra tus compras con Apple Pay al pagar.",
+                    en: "Log Apple Pay purchases as you pay",
+                    es: "Registra tus compras con Apple Pay al pagar",
                 }),
             },
             "best-budget-apps": {
@@ -2956,8 +2956,8 @@ const answers = {
                 ] satisfies PageRef[],
                 sources: LIST_SOURCES,
                 title: t({
-                    en: "The best budget apps, by how you budget.",
-                    es: "Las mejores apps de presupuesto, según cómo presupuestas.",
+                    en: "The best budget apps, by how you budget",
+                    es: "Las mejores apps de presupuesto, según cómo presupuestas",
                 }),
             },
             "best-expense-tracker-apps": {
@@ -3331,8 +3331,8 @@ const answers = {
                     es: "Los datos de las otras apps enlazan a la página donde se leyeron",
                 }),
                 title: t({
-                    en: "The best expense tracker apps, by what you need.",
-                    es: "La mejor app para controlar gastos, según lo que necesitas.",
+                    en: "The best expense tracker apps, by what you need",
+                    es: "La mejor app para controlar gastos, según lo que necesitas",
                 }),
             },
             "best-open-source-expense-tracker-apps": {
@@ -3684,8 +3684,8 @@ const answers = {
                     es: "Los datos de las otras apps enlazan a la página donde se leyeron",
                 }),
                 title: t({
-                    en: "The best open source expense trackers, by what you need.",
-                    es: "La mejor app de gastos de código abierto, según lo que necesitas.",
+                    en: "The best open source expense trackers, by what you need",
+                    es: "La mejor app de gastos de código abierto, según lo que necesitas",
                 }),
             },
             "best-subscription-tracker-apps": {
@@ -4056,8 +4056,8 @@ const answers = {
                     es: "Los datos de las otras apps enlazan a la página donde se leyeron",
                 }),
                 title: t({
-                    en: "The best subscription tracker apps, by what you need.",
-                    es: "Las mejores apps para controlar suscripciones, según lo que necesitas.",
+                    en: "The best subscription tracker apps, by what you need",
+                    es: "Las mejores apps para controlar suscripciones, según lo que necesitas",
                 }),
             },
             "budget-planner": {
@@ -4245,8 +4245,8 @@ const answers = {
                     },
                 ],
                 title: t({
-                    en: "Plan a budget and see where this pace ends.",
-                    es: "Arma tu presupuesto y ve a dónde te lleva este ritmo.",
+                    en: "Plan a budget and see where this pace ends",
+                    es: "Arma tu presupuesto y ve a dónde te lleva este ritmo",
                 }),
             },
             "how-to-track-expenses": {
@@ -4517,8 +4517,8 @@ const answers = {
                     ],
                 },
                 title: t({
-                    en: "How to track your personal expenses.",
-                    es: "Cómo llevar el control de tus gastos personales.",
+                    en: "How to track your personal expenses",
+                    es: "Cómo llevar el control de tus gastos personales",
                 }),
             },
             "mint-alternative": {
@@ -4755,8 +4755,8 @@ const answers = {
                     },
                 ],
                 title: t({
-                    en: "Mint alternatives, and how to bring your Mint CSV.",
-                    es: "Alternativas a Mint, y cómo traer tu CSV de Mint.",
+                    en: "Mint alternatives, and how to bring your Mint CSV",
+                    es: "Alternativas a Mint, y cómo traer tu CSV de Mint",
                 }),
             },
             "multi-currency-expense-tracker": {
@@ -4944,8 +4944,8 @@ const answers = {
                     },
                 ],
                 title: t({
-                    en: "Track expenses in any currency, at home or on a trip.",
-                    es: "Controla tus gastos en cualquier moneda, en casa o de viaje.",
+                    en: "Track expenses in any currency, at home or on a trip",
+                    es: "Controla tus gastos en cualquier moneda, en casa o de viaje",
                 }),
             },
             "receipt-scanner": {
@@ -5140,7 +5140,7 @@ const answers = {
                         title: t({ en: "Save", es: "Guarda" }),
                     },
                 ],
-                title: t({ en: "Scan a receipt into an expense.", es: "Convierte un recibo en un gasto." }),
+                title: t({ en: "Scan a receipt into an expense", es: "Convierte un recibo en un gasto" }),
             },
             "subscription-tracker": {
                 facts: [
@@ -5293,8 +5293,8 @@ const answers = {
                     },
                 ],
                 title: t({
-                    en: "A subscription tracker that reminds you before each charge.",
-                    es: "Un control de suscripciones que te avisa antes de cada cobro.",
+                    en: "A subscription tracker that reminds you before each charge",
+                    es: "Un control de suscripciones que te avisa antes de cada cobro",
                 }),
             },
             "expense-tracker-template": {
@@ -5487,8 +5487,8 @@ const answers = {
                     ],
                 },
                 title: t({
-                    en: "Free expense tracker template for Excel.",
-                    es: "Plantilla de control de gastos en Excel, gratis.",
+                    en: "Free expense tracker template for Excel",
+                    es: "Plantilla de control de gastos en Excel, gratis",
                 }),
             },
             "voice-expense-tracker": {
@@ -5623,8 +5623,8 @@ const answers = {
                     },
                 ],
                 title: t({
-                    en: "Say an expense and Outlayr logs it.",
-                    es: "Dicta un gasto y Outlayr lo registra.",
+                    en: "Say an expense and Outlayr logs it",
+                    es: "Dicta un gasto y Outlayr lo registra",
                 }),
             },
             "ynab-alternatives": {
@@ -5820,8 +5820,8 @@ const answers = {
                 related: ["/compare/ynab", "/guides/best-budget-apps", "/compare/goodbudget"] satisfies PageRef[],
                 sources: LIST_SOURCES,
                 title: t({
-                    en: "YNAB alternatives, by what you need.",
-                    es: "Alternativas a YNAB, según lo que necesitas.",
+                    en: "YNAB alternatives, by what you need",
+                    es: "Alternativas a YNAB, según lo que necesitas",
                 }),
             },
         },
@@ -5841,7 +5841,7 @@ const answers = {
                         es: "Outlayr vs YNAB, Monarch, Copilot y más: comparativas",
                     }),
                 },
-                title: t({ en: "Outlayr next to the apps you know.", es: "Outlayr junto a las apps que conoces." }),
+                title: t({ en: "Outlayr next to the apps you know", es: "Outlayr junto a las apps que conoces" }),
             },
             guides: {
                 lead: t({
@@ -5855,8 +5855,8 @@ const answers = {
                     }),
                 },
                 title: t({
-                    en: "Expense tracking guides, step by step.",
-                    es: "Guías para controlar tus gastos, paso a paso.",
+                    en: "Expense tracking guides, step by step",
+                    es: "Guías para controlar tus gastos, paso a paso",
                 }),
             },
         },
@@ -5884,7 +5884,7 @@ const answers = {
                     en: "Free to start. No ads on any plan.",
                     es: "Gratis para empezar. Sin anuncios en ningún plan.",
                 }),
-                title: t({ en: "Track every expense in one sentence.", es: "Registra cada gasto en una oración." }),
+                title: t({ en: "Track every expense in one sentence", es: "Registra cada gasto en una oración" }),
             },
             exportsChecked: insert(
                 t({
