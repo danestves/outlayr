@@ -114,14 +114,19 @@ export const commitDeferredDelete = Effect.fn("DeferredDelete.commit")(function*
 export interface DeferredDeleteRegistry {
     flushAll: Effect.Effect<void>;
     pendingId: (kind: DeferredDeleteKind) => string | null;
-    requestDelete: (kind: DeferredDeleteKind, id: string, body?: string) => void;
+    requestDelete: (kind: DeferredDeleteKind, id: string, notice?: UndoNotice) => void;
     subscribe: (kind: DeferredDeleteKind, listener: () => void) => () => void;
+}
+
+export interface UndoNotice {
+    body?: string;
+    title?: string;
 }
 
 interface Slot {
     controller: DeferredDeleteController;
     listeners: Set<() => void>;
-    setBody: (next: string | undefined) => void;
+    setNotice: (next: UndoNotice | undefined) => void;
 }
 
 export interface DeferredDeleteSources {
@@ -143,7 +148,7 @@ export function createDeferredDeleteRegistry({
     function build(kind: DeferredDeleteKind): Slot {
         const spec = SPECS[kind];
         const listeners = new Set<() => void>();
-        let body: string | undefined;
+        let notice: UndoNotice | undefined;
         let toastId: string | null = null;
         let toastFor: string | null = null;
 
@@ -175,10 +180,10 @@ export function createDeferredDeleteRegistry({
                             ? null
                             : notifyUndoable({
                                   actionLabel: translateNow("common.undo"),
-                                  body,
+                                  body: notice?.body,
                                   duration: UNDO_WINDOW_MS,
                                   onActionPress: () => controller.undo(),
-                                  title: translateNow(spec.undoTitle),
+                                  title: notice?.title ?? translateNow(spec.undoTitle),
                               });
                 }
                 if (next.failedId !== null) {
@@ -205,8 +210,8 @@ export function createDeferredDeleteRegistry({
         return {
             controller,
             listeners,
-            setBody: (next) => {
-                body = next;
+            setNotice: (next) => {
+                notice = next;
             },
         };
     }
@@ -229,9 +234,9 @@ export function createDeferredDeleteRegistry({
             )
         ),
         pendingId: (kind) => slots.get(kind)?.controller.snapshot.pendingId ?? null,
-        requestDelete: (kind, id, body) => {
+        requestDelete: (kind, id, notice) => {
             const slot = slotFor(kind);
-            slot.setBody(body);
+            slot.setNotice(notice);
             slot.controller.requestDelete(id);
         },
         subscribe: (kind, listener) => {

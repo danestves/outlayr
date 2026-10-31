@@ -390,6 +390,13 @@ const debts = {
             pt: "Tudo o que foi registrado com essa pessoa também é apagado.",
             "pt-PT": "Tudo o que foi registado com essa pessoa também é apagado.",
         }),
+        "debts.person.deleted": t({
+            en: "Deleted {name}",
+            es: "Se eliminó a {name}",
+            fr: "Vous avez supprimé {name}",
+            pt: "Você apagou {name}",
+            "pt-PT": "Apagou {name}",
+        }),
         "debts.person.empty": t({
             en: "What moves between you two will gather here.",
             es: "Aquí vas a ver lo que se mueva entre ustedes.",

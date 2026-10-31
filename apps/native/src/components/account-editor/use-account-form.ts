@@ -30,6 +30,7 @@ import { useRegionCode } from "@/hooks/use-region-code";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
+import { personDeleteNotice } from "@/screens/debts/debts-wording";
 import { saveAccountCommand } from "@/state/accounts-commands";
 import { runAtomCommand, SILENT } from "@/state/atom-command";
 import { useColors } from "@/theme/use-colors";
@@ -269,7 +270,10 @@ export function useAccountForm(props: AccountEditorProps) {
         loaded == null
             ? null
             : () => {
-                  requestDelete(loaded.id, t("accounts.undo.body"));
+                  requestDelete(
+                      loaded.id,
+                      person ? personDeleteNotice(t, loaded.name) : { body: t("accounts.undo.body") }
+                  );
                   haptics("warning");
                   router.back();
               };

@@ -91,7 +91,9 @@ export default function CategoryEditor(props: CategoryEditorProps) {
     const countChildren = useAtomAction(countCategoryChildrenCommand, {
         onSuccess: ({ children, id: deleted }) => {
             haptics("warning");
-            requestDelete(deleted, t(children > 0 ? "categories.undo.bodyWithChildren" : "categories.undo.body"));
+            requestDelete(deleted, {
+                body: t(children > 0 ? "categories.undo.bodyWithChildren" : "categories.undo.body"),
+            });
             router.back();
         },
     });

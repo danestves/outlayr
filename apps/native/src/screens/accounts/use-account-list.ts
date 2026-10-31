@@ -26,7 +26,7 @@ export function useAccountList() {
         db,
         debts,
         deleteAccount: (account: Account) => {
-            requestDelete(account.id, t("accounts.undo.body"));
+            requestDelete(account.id, { body: t("accounts.undo.body") });
         },
         empty: rows.length + debts.owedToYou.length + debts.youOwe.length + debts.settled.length === 0,
         openDetail: (id: string) => {
