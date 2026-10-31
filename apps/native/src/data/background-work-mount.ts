@@ -24,6 +24,7 @@ import { BackgroundProgram } from "./background-program";
 import { reconcilePhotos } from "./photo-store-core";
 import { PhotoPasses, PhotoSync } from "./photo-sync";
 import { runPhotoSync } from "./photo-sync-core";
+import { deviceHasProfiles } from "./profile-registry";
 
 const backgroundSurfaces = Layer.mergeAll(
     Layer.succeed(DailyReminderSteps, DailyReminderSteps.of({ arm: armChosenReminder, sync: reconcileDailyReminder })),
@@ -39,7 +40,7 @@ const photoPasses = Layer.effect(
     Effect.gen(function* photoPassesMake() {
         const http = yield* HttpClient.HttpClient;
         return PhotoPasses.of({
-            reconcile: (db, nowMs) => reconcilePhotos(db, photoFiles, nowMs),
+            reconcile: (db, nowMs) => reconcilePhotos(db, photoFiles, nowMs, deviceHasProfiles()),
             replateLogos,
             sync: (db) =>
                 photoTransport().pipe(

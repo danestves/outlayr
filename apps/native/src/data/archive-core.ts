@@ -25,6 +25,8 @@ export class ArchiveError extends Schema.TaggedError<ArchiveError>()("ArchiveErr
 const query = <A>(operation: typeof ArchiveOperation.Type, run: () => PromiseLike<A>) =>
     Effect.tryPromise({ catch: (cause) => new ArchiveError({ cause, operation }), try: run });
 
+const isImageUri = Schema.is(Schema.String);
+
 // Tombstones travel: a deletion the archive dropped would come back live the moment a peer pushed again, and the
 // undo window restores from them too.
 export const buildArchive = Effect.fn("Archive.buildArchive")(function* buildArchive(
@@ -35,18 +37,25 @@ export const buildArchive = Effect.fn("Archive.buildArchive")(function* buildArc
     const tables = yield* Effect.all(
         pipe(
             SYNCED_SPECS,
-            EffectRecord.map((spec) =>
-                query("build", () => db.select().from(spec.table).where(spec.scope)).pipe(
-                    Effect.map((rows: TableRow[]) => rows.map((row) => encodeArchiveRow(row)))
-                )
+            EffectRecord.map((spec, table) =>
+                table === "profiles"
+                    ? Effect.succeed([])
+                    : query("build", () => db.select().from(spec.table).where(spec.scope)).pipe(
+                          Effect.map((rows: TableRow[]) => rows.map((row) => encodeArchiveRow(row)))
+                      )
             )
         ),
         { concurrency: "unbounded" }
     );
+    const named = new Set(
+        Object.values(tables)
+            .flat()
+            .flatMap((row) => (isImageUri(row.imageUri) ? [photoFileName(row.imageUri)] : []))
+    );
     const document: ArchiveDocument = {
         exportedAt: now.getTime(),
         format: ARCHIVE_FORMAT,
-        photos,
+        photos: Object.fromEntries(Object.entries(photos).filter(([name]) => named.has(name))),
         tables,
         version: ARCHIVE_VERSION,
     };
@@ -56,7 +65,7 @@ export const buildArchive = Effect.fn("Archive.buildArchive")(function* buildArc
 // A replace in one transaction: a restore that emptied the tables and failed would leave nothing, and a merge would
 // keep rows the archive deleted. Deletes run in reverse table order and inserts forward, so no row points at an
 // unwritten parent.
-const isImageUri = Schema.is(Schema.String);
+const LEDGER_TABLES = SYNCED_TABLES.filter((table) => table !== "profiles");
 
 export const restoreArchive = Effect.fn("Archive.restoreArchive")(function* restoreArchive(
     db: Database,
@@ -70,11 +79,11 @@ export const restoreArchive = Effect.fn("Archive.restoreArchive")(function* rest
     yield* transaction(
         db,
         Effect.gen(function* replace() {
-            for (const table of [...SYNCED_TABLES].reverse()) {
+            for (const table of [...LEDGER_TABLES].reverse()) {
                 const spec = SYNCED_SPECS[table];
                 yield* query("restore", () => db.delete(spec.table).where(spec.scope));
             }
-            for (const table of SYNCED_TABLES) {
+            for (const table of LEDGER_TABLES) {
                 const rows = document.tables[table]
                     .map((row) => decodeArchiveRow(table, row))
                     .map((row) => (carried(row) ? { ...row, imageKey: null } : row));

@@ -14,6 +14,7 @@ import {
     outsideMoveFields,
     outsidePaymentFields,
     mainBudgetFields,
+    profileFields,
     replicated,
     SYNCED_TABLES,
     savingsGoalFields,
@@ -68,6 +69,7 @@ export const PushRow = Schema.Union([
     pushArm("installments", installmentFields),
     pushArm("outsidePayments", outsidePaymentFields),
     pushArm("outsideMoves", outsideMoveFields),
+    pushArm("profiles", profileFields),
     Schema.Struct({
         deletedAt: Schema.Null,
         fields: Schema.Struct(appMetaFields),
@@ -80,6 +82,14 @@ export const PushRow = Schema.Union([
 export type PushRow = typeof PushRow.Type;
 
 export const SyncedTableName = Schema.Literals(SYNCED_TABLES);
+
+const PROFILE_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+export const ProfileId = Schema.String.check(Schema.isPattern(PROFILE_ID_PATTERN));
+
+export function syncOwner(userId: string, profileId: string | undefined): string {
+    return profileId === undefined ? userId : `${userId}:${profileId}`;
+}
 
 export const PulledRow = Schema.Struct({
     deletedAt: Schema.NullOr(Schema.Number),

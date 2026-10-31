@@ -4,11 +4,12 @@ import * as Equal from "effect/Equal";
 import * as Schema from "effect/Schema";
 import { openDatabaseSync } from "expo-sqlite";
 
-const DATABASE_NAME = "outlayr.db";
+import { databaseNameFor } from "@/domain/profiles";
+import { activeProfileId } from "@/lib/active-profile";
 
 /** `enableChangeListener` powers `useLiveQuery`. Migrations run in `LocalDatabase.open`, not here. */
-export function openDatabase() {
-    const sqlite = openDatabaseSync(DATABASE_NAME, {
+export function openDatabase(name = databaseNameFor(activeProfileId())) {
+    const sqlite = openDatabaseSync(name, {
         enableChangeListener: true,
     });
 

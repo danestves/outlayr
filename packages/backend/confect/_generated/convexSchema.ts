@@ -19,6 +19,7 @@ import outsideMoves from "./tables/outsideMoves";
 import outsidePayments from "./tables/outsidePayments";
 import photoObjects from "./tables/photoObjects";
 import photoSizes from "./tables/photoSizes";
+import profiles from "./tables/profiles";
 import savingsGoals from "./tables/savingsGoals";
 import syncState from "./tables/syncState";
 import tags from "./tables/tags";
@@ -48,6 +49,7 @@ export default $defineSchema({
   outsidePayments: $Table.tableDefinition(outsidePayments),
   photoObjects: $Table.tableDefinition(photoObjects),
   photoSizes: $Table.tableDefinition(photoSizes),
+  profiles: $Table.tableDefinition(profiles),
   savingsGoals: $Table.tableDefinition(savingsGoals),
   syncState: $Table.tableDefinition(syncState),
   tags: $Table.tableDefinition(tags),

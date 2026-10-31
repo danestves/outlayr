@@ -84,6 +84,13 @@ function makeDb(): SpendDb {
 			updatedAt integer NOT NULL,
 			deletedAt integer
 		);
+		CREATE TABLE profiles (
+			id text PRIMARY KEY NOT NULL,
+			imageKey text,
+			imageUri text,
+			updatedAt integer NOT NULL,
+			deletedAt integer
+		);
 	`);
     return testSpendDb(sqlite);
 }
@@ -262,6 +269,15 @@ describe("reconcilePhotos", () => {
         const files = new FakeFiles([["just-picked.jpg", NOW - 1000]]);
 
         const result = await Effect.runPromise(reconcilePhotos(db, files, NOW));
+
+        expect(files.removed).toStrictEqual([]);
+        expect(result.purged).toBe(0);
+    });
+
+    it("keeps a settled file this ledger does not name when another profile's ledger may", async () => {
+        const files = new FakeFiles([["work-receipt.jpg", SETTLED]]);
+
+        const result = await Effect.runPromise(reconcilePhotos(db, files, NOW, true));
 
         expect(files.removed).toStrictEqual([]);
         expect(result.purged).toBe(0);
