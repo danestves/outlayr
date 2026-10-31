@@ -1,18 +1,10 @@
-import { useAtomValue } from "@effect/atom-react/Hooks";
-import * as AsyncResult from "effect/reactivity/AsyncResult";
-import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import { Button } from "panelui-native/components/button";
 import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
-import { BusyText } from "@/components/busy-text";
-import { MONO_LABEL_CLASS, MonoLabel } from "@/components/mono-label";
+import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
-import { useDatabase } from "@/contexts/local-data-context";
-import { useRevenueCat } from "@/contexts/revenuecat-context";
-import { useAutologUsage } from "@/data/autolog-cap";
+import type { useAutologUsage } from "@/data/autolog-cap";
 import { APP_ICONS } from "@/domain/app-icons";
-import { paywallTriggerOf } from "@/domain/paywall-trigger";
 import {
     FREE_ACCOUNTS,
     FREE_AUTOLOG_PER_MONTH,
@@ -21,33 +13,23 @@ import {
     FREE_INSTALLMENT_APPS,
     FREE_PAYOFF_PLANS,
 } from "@/domain/pro-limits";
-import type { Plan, PlanKind } from "@/domain/pro-plans";
 import { LARGEST_STANDARD_FONT_SCALE, useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
-import { useLongWait } from "@/hooks/use-long-wait";
-import { proSellable } from "@/hooks/use-pro-locked";
-import type { TranslationKey } from "@/i18n/catalog";
-import { useLanguage, useTranslation } from "@/i18n/context";
-import type { TranslateFn } from "@/i18n/context";
-import { openInAppBrowser } from "@/lib/app-handoff";
+import { useTranslation } from "@/i18n/context";
 import { alternateIconsSupported } from "@/lib/app-icon";
-import { useAuthSession } from "@/lib/auth-session";
-import { legalUrl } from "@/lib/legal-url";
-import { paywallPlansAtom } from "@/lib/paywall-plans";
-import { posthog } from "@/lib/posthog";
-import { SILENT } from "@/state/atom-command";
-import { buyPlanCommand, confirmEntitlementCommand, restorePlanCommand } from "@/state/settings-flow-commands";
-import { useAtomAction } from "@/state/use-atom-action";
-import { useColors } from "@/theme/use-colors";
 
 import { AccountTop } from "./account-top";
 import { AlsoRows } from "./also-rows";
 import { AutologTop } from "./autolog-top";
+import { LegalRow } from "./legal-row";
 import { PaywallCta } from "./paywall-cta";
+import { ctaLabel, thenLabel } from "./plan-copy";
 import { PlanList } from "./plan-list";
-import { purchaseNext, restoreNext } from "./purchase-result";
+import { PlanPicker } from "./plan-picker";
+import { PurchaseFailure, SaleBlockers, UnconfirmedNotice } from "./sale-notices";
 import { StoreTerms } from "./store-terms";
-import { alsoRowsFor, topBlockOf } from "./top-block";
+import { alsoRowsFor } from "./top-block";
 import type { TopBlock } from "./top-block";
+import { usePaywallFlow } from "./use-paywall-flow";
 
 const UNLIMITED = "\u221E";
 
@@ -65,10 +47,6 @@ function Row({ label, free, pro }: { free: string; label: string; pro: string })
             <Text className="text-income text-footnote w-[74px] text-right font-mono tabular-nums">{pro}</Text>
         </View>
     );
-}
-
-function LegalDot() {
-    return <Text className="text-muted text-micro">·</Text>;
 }
 
 function Comparison() {
@@ -154,231 +132,44 @@ function TopBlockView({ autolog, block }: { autolog: ReturnType<typeof useAutolo
     }
 }
 
-const BUY_LABEL = {
-    annual: "pro.cta.buyYearly",
-    lifetime: "pro.cta.buy",
-    monthly: "pro.cta.buyMonthly",
-} as const satisfies Record<PlanKind, TranslationKey>;
-
-const THEN_LABEL = {
-    annual: "pro.cta.thenYearly",
-    lifetime: "pro.cta.then",
-    monthly: "pro.cta.thenMonthly",
-} as const satisfies Record<PlanKind, TranslationKey>;
-
-function ctaLabel(plan: Plan | null, t: TranslateFn): string {
-    if (plan === null) {
-        return t("pro.cta.continue");
-    }
-    if (plan.trialDays === null) {
-        return t(BUY_LABEL[plan.kind], { price: plan.priceString });
-    }
-    return t("pro.cta.start", { days: plan.trialDays });
-}
-
-function PlanPicker({
-    plans,
-    selected,
-    empty,
-    onSelect,
-    onRetry,
-}: {
-    empty: boolean;
-    onRetry: () => void;
-    onSelect: (kind: PlanKind) => void;
-    plans: readonly Plan[] | null;
-    selected: PlanKind | null;
-}) {
-    const t = useTranslation();
-    const colors = useColors();
-    const slow = useLongWait(plans === null && !empty);
-
-    if (empty) {
-        return (
-            <View className="items-center gap-3 pt-8">
-                <Text className="text-muted text-subtitle text-center">{t("pro.unavailable")}</Text>
-                <Pressable accessibilityRole="button" onPress={onRetry} testID="paywall-retry">
-                    <MonoLabel className="text-foreground">{t("pro.retry")}</MonoLabel>
-                </Pressable>
-            </View>
-        );
-    }
-    if (plans === null) {
-        return (
-            <View className="items-center pt-8">
-                {slow ? (
-                    <BusyText className="text-subtitle" color={colors.foreground}>
-                        {t("pro.plan.loading")}
-                    </BusyText>
-                ) : null}
-            </View>
-        );
-    }
-    return <PlanList onSelect={onSelect} plans={plans} selected={selected} />;
-}
-
-interface PlanPick {
-    kind: PlanKind;
-    plans: readonly Plan[];
-}
-
-function selectedKind(pick: PlanPick | null, plans: readonly Plan[] | null): PlanKind | null {
-    if (pick !== null && pick.plans === plans) {
-        return pick.kind;
-    }
-    return plans?.find((candidate) => candidate.kind === "annual")?.kind ?? plans?.[0]?.kind ?? null;
-}
-
 export function Paywall() {
     const t = useTranslation();
-    const { language } = useLanguage();
-    const colors = useColors();
-    const router = useRouter();
-    const navigation = useNavigation();
-    const entitlement = useRevenueCat();
-    const isPro = entitlement.kind === "pro";
-    const isMirrored = isPro && entitlement.mirrored;
     const largeText = useAccessibilityTextSize();
-    const { accountId } = useAuthSession();
-    const { trigger: triggerParam } = useLocalSearchParams<{ trigger?: string }>();
-    const autolog = useAutologUsage(useDatabase());
-    const block = topBlockOf(paywallTriggerOf(triggerParam), autolog.used);
-    const [busy, setBusy] = useState<"buy" | "confirm" | "restore" | null>(null);
-    const [attempt, setAttempt] = useState(0);
-    const loaded = useAtomValue(paywallPlansAtom({ accountId, attempt }));
-    const plans = AsyncResult.isSuccess(loaded) ? loaded.value : null;
-    const failed = AsyncResult.isFailure(loaded);
-    const [pick, setPick] = useState<PlanPick | null>(null);
-    const selected = selectedKind(pick, plans);
-    const plan = plans?.find((candidate) => candidate.kind === selected) ?? null;
-    const [failure, setFailure] = useState<TranslationKey | null>(null);
-
-    const retry = () => {
-        setAttempt((count) => count + 1);
-    };
-
-    const leave = () => {
-        if (navigation.isFocused()) {
-            router.back();
-        }
-    };
-
-    /** For a customer the store calls Pro whose account has not been told yet. */
-    const confirmEntitlement = useAtomAction(
-        confirmEntitlementCommand,
-        {
-            onSettled: () => setBusy(null),
-            onSuccess: (mirrored) => {
-                if (!mirrored) {
-                    setFailure("pro.syncPendingBody");
-                }
-            },
-        },
-        SILENT
-    );
-    const buyPlan = useAtomAction(
-        buyPlanCommand,
-        {
-            onFailure: () => {
-                posthog?.capture("purchase_finished", { outcome: "failed", plan: plan?.kind ?? null });
-                setFailure("pro.failedBody");
-            },
-            onSettled: () => setBusy(null),
-            onSuccess: ({ mirrored, outcome }) => {
-                posthog?.capture("purchase_finished", { outcome, plan: plan?.kind ?? null });
-                const next = purchaseNext(outcome, mirrored);
-                if (next.failure !== null) {
-                    setFailure(next.failure);
-                }
-                if (next.leave) {
-                    leave();
-                }
-            },
-        },
-        SILENT
-    );
-    const restorePlan = useAtomAction(
-        restorePlanCommand,
-        {
-            onFailure: () => setFailure("pro.restoreFailedBody"),
-            onSettled: () => setBusy(null),
-            onSuccess: ({ mirrored, restored }) => {
-                const next = restoreNext(restored, mirrored);
-                if (next.failure !== null) {
-                    setFailure(next.failure);
-                }
-                if (next.leave) {
-                    leave();
-                }
-            },
-        },
-        SILENT
-    );
-
-    const confirm = () => {
-        setBusy("confirm");
-        setFailure(null);
-        confirmEntitlement(accountId);
-    };
-
-    const buy = () => {
-        if (plan === null) {
-            return;
-        }
-        setBusy("buy");
-        setFailure(null);
-        posthog?.capture("purchase_started", { plan: plan.kind });
-        buyPlan({ accountId, offer: plan.offer });
-    };
-
-    const restore = () => {
-        setBusy("restore");
-        setFailure(null);
-        restorePlan(accountId);
-    };
-
-    const empty = failed || (plans !== null && plans.length === 0);
-    // A build without a backend cannot deliver Pro, so it takes no money for it.
-    const noCloud = !proSellable();
-    const needsAccount = !noCloud && accountId === null;
-    const pitches = !(isPro || noCloud);
-    const canBuy = pitches && !needsAccount;
-    const logsWaiting = canBuy && block === "autolog" && autolog.waiting > 0;
+    const {
+        autolog,
+        block,
+        busy,
+        buy,
+        canBuy,
+        confirm,
+        empty,
+        failure,
+        isMirrored,
+        isPro,
+        leave,
+        logsWaiting,
+        needsAccount,
+        noCloud,
+        pitches,
+        plan,
+        plans,
+        restore,
+        retry,
+        select,
+        selected,
+    } = usePaywallFlow("control");
+    const then = thenLabel(plan, t);
 
     const footer = (
         <>
-            {needsAccount ? (
-                <View className="gap-4 px-5 pt-5">
-                    <Text className="text-muted text-subtitle text-center">{t("pro.needsAccount")}</Text>
-                    <Button
-                        className="rounded-full"
-                        fullWidth
-                        onPress={() => router.push("/settings/account")}
-                        size="md"
-                        testID="paywall-sign-in"
-                        variant="primary"
-                    >
-                        {t("settings.account.signIn")}
-                    </Button>
-                </View>
-            ) : null}
-            {noCloud ? (
-                <View className="items-center px-5 pt-5">
-                    <Text className="text-muted text-subtitle text-center" testID="paywall-no-cloud">
-                        {t("pro.needsCloud")}
-                    </Text>
-                </View>
-            ) : null}
+            <SaleBlockers needsAccount={needsAccount} noCloud={noCloud} />
             {canBuy ? (
                 <View className="px-5">
                     <PlanPicker
                         empty={empty}
+                        Choices={PlanList}
                         onRetry={retry}
-                        onSelect={(kind) => {
-                            if (plans !== null) {
-                                setPick({ kind, plans });
-                            }
-                        }}
+                        onSelect={select}
                         plans={plans}
                         selected={selected}
                     />
@@ -390,36 +181,12 @@ export function Paywall() {
                     {isMirrored ? (
                         <Text className="text-income text-subtitle text-center">{t("pro.alreadyActive")}</Text>
                     ) : (
-                        <>
-                            <Text className="text-muted text-subtitle text-center" testID="paywall-unconfirmed">
-                                {t("pro.unconfirmed")}
-                            </Text>
-                            <Pressable
-                                accessibilityRole="button"
-                                disabled={busy !== null}
-                                onPress={confirm}
-                                testID="paywall-confirm"
-                            >
-                                {busy === "confirm" ? (
-                                    <BusyText className={MONO_LABEL_CLASS} color={colors.foreground}>
-                                        {t("pro.checking")}
-                                    </BusyText>
-                                ) : (
-                                    <MonoLabel className="text-foreground">{t("pro.retry")}</MonoLabel>
-                                )}
-                            </Pressable>
-                        </>
+                        <UnconfirmedNotice checking={busy === "confirm"} disabled={busy !== null} onConfirm={confirm} />
                     )}
                 </View>
             ) : null}
 
-            {failure === null ? null : (
-                <View className="px-5 pt-3">
-                    <Text className="text-danger text-footnote text-center" testID="paywall-failure">
-                        {t(failure)}
-                    </Text>
-                </View>
-            )}
+            {failure === null ? null : <PurchaseFailure message={t(failure)} />}
 
             {canBuy ? (
                 <View className="px-5 pt-5">
@@ -431,10 +198,8 @@ export function Paywall() {
                         onPress={buy}
                         testID="paywall-cta"
                     />
-                    {plan === null || plan.trialDays === null ? null : (
-                        <Text className="text-muted text-micro pt-2 text-center font-mono">
-                            {t(THEN_LABEL[plan.kind], { price: plan.priceString })}
-                        </Text>
+                    {then === null ? null : (
+                        <Text className="text-muted text-micro pt-2 text-center font-mono">{then}</Text>
                     )}
                     {block === "autolog" ? (
                         <Pressable accessibilityRole="button" className="items-center pt-4" onPress={leave}>
@@ -444,37 +209,14 @@ export function Paywall() {
                 </View>
             ) : null}
 
-            <View className="flex-row items-center justify-center gap-4 px-5 pt-4">
-                {needsAccount ? null : (
-                    <>
-                        <Pressable
-                            accessibilityRole="button"
-                            disabled={busy !== null}
-                            onPress={restore}
-                            testID="paywall-restore"
-                        >
-                            {busy === "restore" ? (
-                                <BusyText className={MONO_LABEL_CLASS} color={colors.foreground}>
-                                    {t("pro.legal.restoring")}
-                                </BusyText>
-                            ) : (
-                                <MonoLabel>{t("pro.legal.restore")}</MonoLabel>
-                            )}
-                        </Pressable>
-                        <LegalDot />
-                    </>
-                )}
-                <Pressable accessibilityRole="link" onPress={() => openInAppBrowser(legalUrl("terms", language))}>
-                    <MonoLabel>{t("pro.legal.terms")}</MonoLabel>
-                </Pressable>
-                <LegalDot />
-                <Pressable accessibilityRole="link" onPress={() => openInAppBrowser(legalUrl("privacy", language))}>
-                    <MonoLabel>{t("pro.legal.privacy")}</MonoLabel>
-                </Pressable>
-            </View>
+            <LegalRow
+                canRestore={!needsAccount}
+                disabled={busy !== null}
+                onRestore={restore}
+                restoring={busy === "restore"}
+            />
         </>
     );
-
     return (
         <View className="bg-background flex-1">
             <ScrollView

@@ -54,6 +54,7 @@ import { useScreenTracking } from "@/lib/posthog";
 import { useAnalyticsConsent } from "@/lib/posthog-consent";
 import { usePostHogIdentity } from "@/lib/posthog-identity";
 import { identityPickerDetent, LARGE_ONLY } from "@/lib/sheet-detents";
+import { TrialReminderSync } from "@/lib/trial-reminder";
 import { useSubscriptionReminderTaps } from "@/lib/use-subscription-reminder-taps";
 import { useWalletPushTaps } from "@/lib/use-wallet-push-taps";
 import { useStackChrome } from "@/navigation/stack-chrome";
@@ -98,6 +99,7 @@ function CloudRuntimeProvider({ children }: { children: ReactNode }) {
     return (
         <AuthSessionProvider>
             <RevenueCatSession />
+            <TrialReminderSync />
             <ActivatedCloudRuntime>{children}</ActivatedCloudRuntime>
         </AuthSessionProvider>
     );
