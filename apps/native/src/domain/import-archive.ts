@@ -1,5 +1,7 @@
 import { strFromU8, unzipSync } from "fflate";
 
+import { guessMapping } from "@/data/transfer-core";
+
 import { formatCsvRow, parseCsv } from "./csv";
 import { HARD_PARSE_REJECT_CHARS } from "./import-diagnosis";
 
@@ -44,6 +46,37 @@ function csvEntries(
     );
 }
 
+interface Table {
+    header: string[];
+    income: boolean;
+    rows: string[][];
+}
+
+const INCOME_TABLE = /\b(?:income|ingresos?|receitas?|entradas?|revenue|earnings)\b/i;
+const JOINED_HEADER = ["Date", "Amount", "Category", "Note", "Type", "Currency"];
+
+function tableName(path: string): string {
+    return (path.split("/").at(-1) ?? path).replace(CSV_EXTENSION, "");
+}
+
+function cellAt(row: readonly string[], index: number | null): string {
+    return index == null ? "" : (row[index] ?? "");
+}
+
+function joinLedgers(tables: readonly Table[]): string[][] {
+    return tables.flatMap(({ header, income, rows }) => {
+        const mapping = guessMapping(header);
+        return rows.map((row) => [
+            cellAt(row, mapping.date),
+            cellAt(row, mapping.amount),
+            cellAt(row, mapping.category ?? mapping.note),
+            cellAt(row, mapping.note),
+            mapping.type == null && income ? "Income" : cellAt(row, mapping.type),
+            cellAt(row, mapping.currency),
+        ]);
+    });
+}
+
 export function csvFromArchive(bytes: Uint8Array): string | null {
     let files: { name: string; text: string }[];
     try {
@@ -56,7 +89,7 @@ export function csvFromArchive(bytes: Uint8Array): string | null {
     }
 
     const names = new Set(files.map(({ name }) => name.toLowerCase()));
-    const groups = new Map<string, string[][]>();
+    const groups = new Map<string, Table>();
     for (const file of files) {
         const name = file.name.toLowerCase();
         if (!name.endsWith(ALL_ROWS_SUFFIX) && names.has(name.replace(CSV_EXTENSION, ALL_ROWS_SUFFIX))) {
@@ -66,17 +99,27 @@ export function csvFromArchive(bytes: Uint8Array): string | null {
         if (header == null) {
             continue;
         }
-        const key = formatCsvRow(header);
-        const group = groups.get(key) ?? [];
-        group.push(...rows);
+        const income = INCOME_TABLE.test(tableName(file.name));
+        const key = `${income}:${formatCsvRow(header)}`;
+        const group = groups.get(key) ?? { header, income, rows: [] };
+        group.rows.push(...rows);
         groups.set(key, group);
     }
 
-    let best: [string, string[][]] | null = null;
-    for (const group of groups) {
-        if (best == null || group[1].length > best[1].length) {
-            best = group;
+    const tables = [...groups.values()];
+    const ledgers = tables.filter(({ header }) => {
+        const mapping = guessMapping(header);
+        return mapping.date != null && mapping.amount != null;
+    });
+    if (ledgers.length > 1) {
+        return [JOINED_HEADER, ...joinLedgers(ledgers)].map(formatCsvRow).join("\n");
+    }
+
+    let best: Table | null = null;
+    for (const table of ledgers.length === 1 ? ledgers : tables) {
+        if (best == null || table.rows.length > best.rows.length) {
+            best = table;
         }
     }
-    return best == null ? null : [best[0], ...best[1].map(formatCsvRow)].join("\n");
+    return best == null ? null : [best.header, ...best.rows].map(formatCsvRow).join("\n");
 }
