@@ -21,7 +21,7 @@ export function writeActiveProfile(profileId: string | undefined): void {
             file.delete();
         }
     } else {
-        file.write(profileId);
+        file.writeSync(profileId);
     }
 }
 

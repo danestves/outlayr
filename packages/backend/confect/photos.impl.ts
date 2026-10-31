@@ -324,8 +324,19 @@ const releaseUnreferenced = FunctionImpl.make(
             if (!ownsPhotoKey(userId, args.key)) {
                 return yield* new PhotoNotOwned();
             }
-            if (yield* isReferenced(syncOwner(userId, args.profileId), args.key)) {
-                return { released: false };
+            const profiles = yield* reader
+                .table("profiles")
+                .index("by_user_and_localId", (q) => q.eq("userId", userId))
+                .collect();
+            const owners = new Set([
+                userId,
+                syncOwner(userId, args.profileId),
+                ...profiles.map((profile) => syncOwner(userId, profile.localId)),
+            ]);
+            for (const owner of owners) {
+                if (yield* isReferenced(owner, args.key)) {
+                    return { released: false };
+                }
             }
             const mapping = yield* reader
                 .table("photoObjects")
