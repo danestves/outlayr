@@ -56,6 +56,7 @@ export const SYNCED_META_KEYS = [
     "insightsMeasure",
     "accentColor",
     META_KEYS.timeZone,
+    "accountsByHand",
     // Not synced: `colorScheme` and `numberEntryType` suit each device; `biometricLock`, `notification*`, `sync*`,
     // `ledgerAdoption`, `firstLaunch`, `onboardingComplete` and `recurrenceRepaired` describe this install.
 ] as const satisfies readonly (BoolSettingKey | NumberSettingKey | (typeof META_KEYS)[keyof typeof META_KEYS])[];

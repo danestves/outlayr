@@ -14,6 +14,7 @@ import { getMetaSync, META_KEYS, setMeta } from "./app-meta-core";
 import { frozenUsdAmount } from "./frozen-usd";
 import { tombstonePlansOnAccount } from "./installment-cascade";
 import { refreshLogoCandidates } from "./logo-backfill-state";
+import { setBoolSetting } from "./settings-core";
 import { tombstoneTransfersTouchingAccount } from "./transfers-core";
 
 export type Account = typeof accounts.$inferSelect;
@@ -142,6 +143,7 @@ export const accountsRepo = {
                         db.update(accounts).set({ sortOrder: index, updatedAt: now }).where(eq(accounts.id, id))
                     );
                 }
+                yield* setBoolSetting(db, "accountsByHand", true);
             }),
             (cause) => new AccountsError({ cause, operation: "reorder" })
         );

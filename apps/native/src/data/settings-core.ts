@@ -11,6 +11,7 @@ import type { Language } from "@/i18n/languages";
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
 
 export type BoolSettingKey =
+    | "accountsByHand"
     | "showCents"
     | "incomeTracking"
     | "animatedCharts"
@@ -52,6 +53,7 @@ export type NumberSettingKey =
 
 export const SETTING_DEFAULTS = {
     accentColor: DEFAULT_ACCENT_VALUE,
+    accountsByHand: false,
     aiConsentV2: false,
     aiConsentPlanScan: false,
     aiEnrichment: true,
