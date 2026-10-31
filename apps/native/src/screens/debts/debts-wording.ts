@@ -2,6 +2,7 @@ import { isPerson } from "@outlayr/money/account-kind";
 
 import type { DebtsScreenOverview } from "@/data/debts";
 import { DUE_WINDOW_DAYS } from "@/data/debts-due";
+import type { UndoNotice } from "@/data/deferred-delete-registry";
 import type { PayoffLine } from "@/data/payoff-plans";
 import { formatDayMonth, formatSentenceDate } from "@/domain/dates";
 import { daysBetween, startOfLocalDay } from "@/domain/local-day";
@@ -16,6 +17,10 @@ interface Wording {
     language: Language;
     showCents: boolean;
     t: TranslateFn;
+}
+
+export function personDeleteNotice(t: TranslateFn, name: string): UndoNotice {
+    return { body: t("debts.person.deleteBody"), title: t("debts.person.deleted", { name }) };
 }
 
 export interface DebtSubtitle {

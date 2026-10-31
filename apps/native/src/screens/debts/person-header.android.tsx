@@ -31,6 +31,7 @@ import { useAtomAction } from "@/state/use-atom-action";
 import { withAlpha } from "@/theme/shade";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
+import { personDeleteNotice } from "./debts-wording";
 import { payoffMenuActions } from "./payoff-menu-actions";
 import type { PayoffPlanControls } from "./use-payoff-plan";
 
@@ -119,7 +120,7 @@ export function PersonToolbar({ account, db, plan }: { account: Account; db: Dat
                     {payoffMenuActions(plan, t("debts.plan.payBackBy"), t)}
                     <Stack.Toolbar.MenuAction
                         destructive
-                        onPress={() => requestDelete(account.id, t("debts.person.deleteBody"))}
+                        onPress={() => requestDelete(account.id, personDeleteNotice(t, account.name))}
                     >
                         {t("common.delete")}
                     </Stack.Toolbar.MenuAction>

@@ -18,6 +18,7 @@ import { updateAccountCommand } from "@/state/accounts-commands";
 import { SILENT } from "@/state/atom-command";
 import { useAtomAction } from "@/state/use-atom-action";
 
+import { personDeleteNotice } from "./debts-wording";
 import { payoffMenuActions } from "./payoff-menu-actions";
 import type { PayoffPlanControls } from "./use-payoff-plan";
 
@@ -110,7 +111,7 @@ export function PersonToolbar({ account, db, plan }: { account: Account; db: Dat
                 <Stack.Toolbar.MenuAction
                     destructive
                     icon="trash"
-                    onPress={() => requestDelete(account.id, t("debts.person.deleteBody"))}
+                    onPress={() => requestDelete(account.id, personDeleteNotice(t, account.name))}
                 >
                     {t("common.delete")}
                 </Stack.Toolbar.MenuAction>

@@ -13,7 +13,7 @@ import { launchDeferredDeleteCommand } from "@/state/deferred-delete-commands";
 import { fireAtomCommand } from "@/state/use-atom-action";
 
 import { commitDeferredDelete, createDeferredDeleteRegistry } from "./deferred-delete-registry";
-import type { DeferredDeleteKind } from "./deferred-delete-registry";
+import type { DeferredDeleteKind, UndoNotice } from "./deferred-delete-registry";
 import type { PendingDeletes } from "./pending-deletes";
 
 // At module scope because a held delete outlives its screen; the database is read when its window closes.
@@ -42,8 +42,8 @@ export function DeferredDeleteProvider({ children }: { children: ReactNode }) {
 
 export interface DeferredDelete {
     pendingId: string | null;
-    /** `body` is a translated toast line for a consequence the title cannot state. */
-    requestDelete: (id: string, body?: string) => void;
+    /** `notice.body` is a translated toast line for a consequence the title cannot state. */
+    requestDelete: (id: string, notice?: UndoNotice) => void;
 }
 
 /** The caller filters on `pendingId`; a second delete of the same kind flushes the first. */
@@ -53,8 +53,8 @@ export function useDeferredDelete(kind: DeferredDeleteKind): DeferredDelete {
         () => registry.pendingId(kind)
     );
 
-    const requestDelete = (id: string, body?: string) => {
-        registry.requestDelete(kind, id, body);
+    const requestDelete = (id: string, notice?: UndoNotice) => {
+        registry.requestDelete(kind, id, notice);
     };
 
     return { pendingId, requestDelete };

@@ -62,7 +62,9 @@ export function useCategoryList(income: boolean) {
         census: census.join(" · "),
         currency,
         deleteCategory: (category: Category, hasChildren: boolean) => {
-            requestDelete(category.id, t(hasChildren ? "categories.undo.bodyWithChildren" : "categories.undo.body"));
+            requestDelete(category.id, {
+                body: t(hasChildren ? "categories.undo.bodyWithChildren" : "categories.undo.body"),
+            });
         },
         goToEdit: (category: Category) => {
             if (category.parentId) {
