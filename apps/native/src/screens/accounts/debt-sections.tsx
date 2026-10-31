@@ -270,7 +270,7 @@ function DebtRow({ colors, currency, format, onOpen, plan, row, subtitle, subtit
                 accessibilityElement("combine"),
                 accessibilityAddTraits(["isButton"]),
                 accessibilityLabel(label),
-                accessibilityValue(format(row.amount)),
+                accessibilityValue(format(Math.abs(row.amount))),
             ]}
             spacing={12}
         >
@@ -306,7 +306,7 @@ function DebtRow({ colors, currency, format, onOpen, plan, row, subtitle, subtit
                 <SwiftText modifiers={[APPROX, foregroundStyle(colors.subtle)]}>{`${currency}?`}</SwiftText>
             )}
             <SwiftText modifiers={[AMOUNT, monospacedDigit(), lineLimit(1), foregroundStyle(LABEL)]}>
-                {format(row.amount)}
+                {format(Math.abs(row.amount))}
             </SwiftText>
             <Image color={colors.muted} modifiers={[CHEVRON]} systemName="chevron.right" />
         </HStack>
