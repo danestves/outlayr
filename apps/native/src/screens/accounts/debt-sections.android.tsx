@@ -1,13 +1,16 @@
+import type { MenuComponentRef } from "@expo/ui/community/menu";
 import ArrowDown01Icon from "@hugeicons-pro/core-stroke-rounded/ArrowDown01Icon";
 import ArrowUp01Icon from "@hugeicons-pro/core-stroke-rounded/ArrowUp01Icon";
+import PlusSignIcon from "@hugeicons-pro/core-stroke-rounded/PlusSignIcon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import { useRouter } from "expo-router";
-import { use, useState } from "react";
+import { use, useRef, useState } from "react";
 import { Pressable, View } from "react-native";
 
 import { AccountTile } from "@/components/account-tile";
 import { AmountsHiddenContext } from "@/components/amount-text";
 import { Eyebrow, PARENT_TILE } from "@/components/category-list-chrome";
+import { RowMenu } from "@/components/row-menu";
 import { Text } from "@/components/text";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
 import type { DebtsScreenOverview, useDebtsOverview } from "@/data/debts";
@@ -17,7 +20,8 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import { debtSubtitle, dueStripWording, payoffRowWording } from "@/screens/debts/debts-wording";
 import type { DebtSubtitle } from "@/screens/debts/debts-wording";
 import { PayoffBar } from "@/screens/debts/payoff-line";
-import { withAlpha } from "@/theme/shade";
+import { useNewDebtItems } from "@/screens/debts/use-new-debt-items";
+import { TILE_WASH_OPACITY, withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
@@ -29,6 +33,9 @@ interface SectionsProps {
 }
 
 const PRESSED_ALPHA = 0.1;
+const TILE_RADIUS = 10;
+const ADD_GLYPH = 18;
+const TEXT_LEADING = 16 + PARENT_TILE + 16;
 
 export function LedgerTotals({ currency, debts }: SectionsProps) {
     const t = useTranslation();
@@ -90,26 +97,24 @@ export function DebtSections({ currency, debts }: SectionsProps) {
         );
     };
 
-    const section = (title: string, rows: readonly DebtListRow[]) =>
-        rows.length === 0 ? null : (
-            <>
-                <View className="px-4 pt-4 pb-2">
-                    <Eyebrow colors={colors}>{title}</Eyebrow>
-                </View>
-                {rows.map(row)}
-            </>
-        );
+    const header = (title: string) => (
+        <View className="px-4 pt-4 pb-2">
+            <Eyebrow colors={colors}>{title}</Eyebrow>
+        </View>
+    );
+    const people = [...debts.youOwe.filter((item) => item.kind === "person"), ...debts.owedToYou];
 
     return (
         <>
-            {section(
-                t("accounts.section.liabilities"),
-                debts.youOwe.filter((item) => item.kind === "liability")
+            {header(t("debts.title"))}
+            {debts.youOwe.filter((item) => item.kind === "liability").map(row)}
+            <AddDebtRow />
+            {people.length === 0 ? null : (
+                <>
+                    {header(t("accounts.section.people"))}
+                    {people.map(row)}
+                </>
             )}
-            {section(t("accounts.section.people"), [
-                ...debts.youOwe.filter((item) => item.kind === "person"),
-                ...debts.owedToYou,
-            ])}
             {debts.settled.length > 0 ? (
                 <>
                     <SettledToggle
@@ -121,6 +126,46 @@ export function DebtSections({ currency, debts }: SectionsProps) {
                 </>
             ) : null}
         </>
+    );
+}
+
+function AddDebtRow() {
+    const t = useTranslation();
+    const m3 = useMaterialColors();
+    const items = useNewDebtItems();
+    const menu = useRef<MenuComponentRef>(null);
+    const prompt = t("debts.add.prompt");
+    const hint = t("debts.add.hint");
+
+    return (
+        <Pressable
+            accessibilityLabel={`${prompt}, ${hint}`}
+            accessibilityRole="button"
+            android_ripple={{ color: withAlpha(m3.onSurface, PRESSED_ALPHA) }}
+            className="border-m3-outline-variant bg-m3-surface min-h-18 flex-row items-center gap-4 border-b px-4 py-2"
+            onPress={() => menu.current?.show()}
+        >
+            <View
+                className="items-center justify-center"
+                style={{
+                    backgroundColor: withAlpha(m3.primary, TILE_WASH_OPACITY),
+                    borderRadius: TILE_RADIUS,
+                    height: PARENT_TILE,
+                    width: PARENT_TILE,
+                }}
+            >
+                <HugeiconsIcon color={m3.primary} icon={PlusSignIcon} size={ADD_GLYPH} />
+            </View>
+            <View className="flex-1">
+                <Text className="text-body text-m3-primary" numberOfLines={1}>
+                    {prompt}
+                </Text>
+                <Text className="text-caption text-m3-on-surface-variant" numberOfLines={1}>
+                    {hint}
+                </Text>
+            </View>
+            <RowMenu items={items} leading={TEXT_LEADING} ref={menu} />
+        </Pressable>
     );
 }
 

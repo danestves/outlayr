@@ -1,9 +1,10 @@
-import { HStack, Image, RNHostView, Section, Spacer, Text as SwiftText, VStack } from "@expo/ui/swift-ui";
+import { Button, HStack, Image, Menu, RNHostView, Section, Spacer, Text as SwiftText, VStack } from "@expo/ui/swift-ui";
 import {
     accessibilityAddTraits,
     accessibilityElement,
     accessibilityLabel,
     accessibilityValue,
+    background,
     font,
     foregroundStyle,
     frame,
@@ -28,6 +29,8 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import { hitArea, outline } from "@/lib/swift-ui-geometry";
 import { debtSubtitle, dueStripWording, payoffRowWording } from "@/screens/debts/debts-wording";
 import { PayoffBar } from "@/screens/debts/payoff-line";
+import { useNewDebtItems } from "@/screens/debts/use-new-debt-items";
+import { TILE_WASH_OPACITY, withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";
 import type { ThemeColors } from "@/theme/use-colors";
 
@@ -45,6 +48,8 @@ const AMOUNT = font({ design: "rounded", textStyle: "subheadline", weight: "medi
 const APPROX = font({ design: "rounded", textStyle: "caption", weight: "semibold" });
 const CHEVRON = font({ design: "rounded", textStyle: "footnote", weight: "semibold" });
 const PLAN_DATE = font({ design: "rounded", textStyle: "footnote" });
+const ADD_GLYPH = font({ design: "rounded", textStyle: "body", weight: "semibold" });
+const TILE_RADIUS = 10;
 
 export function LedgerTotals({ currency, debts }: SectionsProps) {
     const t = useTranslation();
@@ -128,14 +133,10 @@ export function DebtSections({ currency, debts }: SectionsProps) {
 
     return (
         <>
-            {cards.length > 0 ? (
-                <Section
-                    header={<Eyebrow colors={colors}>{t("accounts.section.liabilities")}</Eyebrow>}
-                    modifiers={[rowGround]}
-                >
-                    {cards.map(row)}
-                </Section>
-            ) : null}
+            <Section header={<Eyebrow colors={colors}>{t("debts.title")}</Eyebrow>} modifiers={[rowGround]}>
+                {cards.map(row)}
+                <AddDebtRow colors={colors} />
+            </Section>
             {people.length > 0 ? (
                 <Section
                     header={<Eyebrow colors={colors}>{t("accounts.section.people")}</Eyebrow>}
@@ -169,6 +170,45 @@ export function DebtSections({ currency, debts }: SectionsProps) {
                 </Section>
             ) : null}
         </>
+    );
+}
+
+function AddDebtRow({ colors }: { colors: ThemeColors }) {
+    const t = useTranslation();
+    const items = useNewDebtItems();
+
+    return (
+        <Menu
+            label={
+                <HStack modifiers={[hitArea(outline.rectangle())]} spacing={12}>
+                    <Image
+                        color={colors.tint}
+                        modifiers={[
+                            ADD_GLYPH,
+                            frame({ height: PARENT_TILE, width: PARENT_TILE }),
+                            background(
+                                withAlpha(colors.tint, TILE_WASH_OPACITY),
+                                outline.roundedRectangle({ cornerRadius: TILE_RADIUS })
+                            ),
+                        ]}
+                        systemName="plus"
+                    />
+                    <VStack alignment="leading" spacing={1}>
+                        <SwiftText modifiers={[PARENT_NAME, lineLimit(1), foregroundStyle(colors.tint)]}>
+                            {t("debts.add.prompt")}
+                        </SwiftText>
+                        <SwiftText modifiers={[SUBTITLE, lineLimit(1), foregroundStyle(colors.muted)]}>
+                            {t("debts.add.hint")}
+                        </SwiftText>
+                    </VStack>
+                    <Spacer />
+                </HStack>
+            }
+        >
+            {items.map((item) => (
+                <Button key={item.id} label={item.label} onPress={item.onPress} systemImage={item.icon} />
+            ))}
+        </Menu>
     );
 }
 
