@@ -1,14 +1,24 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import * as Clock from "effect/Clock";
 import * as Config from "effect/Config";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 
 import { components } from "../convex/_generated/api";
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
-import { Auth, DatabaseReader, DatabaseWriter, MutationCtx, MutationRunner, QueryRunner } from "./_generated/services";
+import {
+    Auth,
+    DatabaseReader,
+    DatabaseWriter,
+    MutationCtx,
+    MutationRunner,
+    QueryRunner,
+    Scheduler,
+} from "./_generated/services";
 import {
     AUTH_DELETE_PAGE,
     CLEANUP_BATCH,
@@ -31,6 +41,7 @@ import { dieAsConvexError } from "./lib/convexError";
 import { outboundHttp } from "./lib/http";
 import { erasePostHogPerson } from "./lib/posthog";
 import { sha256Hex } from "./lib/sha256Hex";
+import { NOTION_PROVIDER_ID } from "./notion";
 import { eraseUpstreamCustomer, revenuecat } from "./revenuecat";
 
 const refusedAsConvexError = Effect.catchTags({ DeletionRefused: dieAsConvexError });
@@ -202,7 +213,12 @@ const recordCredentialOnly = FunctionImpl.make(
                     where: [{ field: "userId", operator: "eq", value: userId }],
                 })
             );
-            if (accounts.page.some((account: { providerId: string }) => account.providerId !== "credential")) {
+            if (
+                accounts.page.some(
+                    (account: { providerId: string }) =>
+                        account.providerId !== "credential" && account.providerId !== NOTION_PROVIDER_ID
+                )
+            ) {
                 return yield* new DeletionRefused({ reason: "providerLinked" });
             }
             yield* writer
@@ -256,6 +272,30 @@ const deleteAuthRows = Effect.fn("AccountDeletion.deleteAuthRows")(function* del
         )) as { continueCursor: string; isDone: boolean };
         done = page.isDone;
         cursor = page.continueCursor;
+    }
+});
+
+const hasAccessToken = Schema.is(Schema.Struct({ accessToken: Schema.NonEmptyString }));
+
+const revokeNotion = Effect.fn("AccountDeletion.revokeNotion")(function* revokeNotion(userId: string) {
+    const ctx = yield* MutationCtx;
+    const scheduler = yield* Scheduler;
+    const accounts = yield* Effect.promise(() =>
+        ctx.runQuery(components.betterAuth.adapter.findMany, {
+            model: "account",
+            paginationOpts: { cursor: null, numItems: AUTH_DELETE_PAGE },
+            where: [
+                { field: "userId", operator: "eq", value: userId },
+                { field: "providerId", operator: "eq", value: NOTION_PROVIDER_ID },
+            ],
+        })
+    );
+    for (const account of accounts.page) {
+        if (hasAccessToken(account)) {
+            yield* scheduler.runAfter(Duration.zero, refs.internal.notion.revoke, {
+                accessToken: account.accessToken,
+            });
+        }
     }
 });
 
@@ -317,6 +357,7 @@ const advance = FunctionImpl.make(
             yield* forgetUsage(userId, job.tokenIdentifier);
             yield* revokeAgentConnections(userId);
             yield* deleteAuthRows("session", userId);
+            yield* revokeNotion(userId);
             yield* deleteAuthRows("account", userId);
             // SAFETY: the component types its references against its own generated api, which this app does not
             // import.

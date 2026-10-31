@@ -214,6 +214,7 @@ const home = {
             t({ en: "Sync across devices", es: "Sincronizar dispositivos" }),
             t({ en: "Receipt photo backup", es: "Respaldo de fotos" }),
             t({ en: "AI matching on import", es: "Coincidencia con IA al importar" }),
+            t({ en: "Notion connection", es: "Conexión con Notion" }),
             t({ en: "Web merchant lookup", es: "Búsqueda web de comercios" }),
         ],
         tour: [

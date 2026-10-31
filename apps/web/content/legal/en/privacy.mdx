@@ -1,6 +1,6 @@
 ---
 title: "Privacy Policy"
-description: "What Outlayr stores on your device, what reaches our servers, AI providers, and analytics, how long it is kept, and how to delete it. Effective 2 November 2026."
+description: "What Outlayr stores on your device, what reaches our servers, AI providers, and analytics, how long it is kept, and how to delete it. Effective 16 November 2026."
 intro: "This policy explains what Outlayr collects, where it goes, how long it stays, and what you can do about it."
 ---
 
@@ -13,6 +13,7 @@ intro: "This policy explains what Outlayr collects, where it goes, how long it s
 - Nothing goes to Anthropic or ElevenLabs until you allow it. The app asks during setup, or after you sign in, and Speak an entry and Scan a receipt ask again until you do. Import from a screenshot, for installment plans, asks the first time you use it, even if you allowed the others. Withdraw it any time in **Settings › Send data to AI providers**. Once allowed, merchant suggestions and web lookups are on, and both can be turned off in **Settings › Smart fill**. Turning Smart fill on also allows sending data to AI providers.
 - The app sends usage analytics and crash reports to PostHog: which screens you open, when you save something, and errors. Never amounts, merchants, notes, or names. It starts off if your device’s region is in the EEA or UK, and on everywhere else. Change it in **Settings › Share analytics**. Our server also tells PostHog the size, cost, and speed of each request to Anthropic, never what it contained, and links it to your account only while Share analytics is on.
 - This website uses PostHog too, with a cookie. If you’re in the EEA or UK, it asks first. Change your answer in the footer under **Cookies**.
+- With Outlayr Pro you can connect Notion to import expenses from your Notion databases. We keep Notion’s access key encrypted on our servers so you can import again, until you disconnect Notion or delete your account. What we read from Notion passes through our server to your phone and isn’t stored.
 - You can connect an AI assistant such as Claude to your account. Once you approve it, it can read what your devices synced, and with Outlayr Pro add entries. What it reads is handled under that assistant’s privacy policy.
 - No ads and no tracking across other companies’ apps. We don’t sell or share your personal information.
 - You can delete your account and everything synced to it from the app at any time: **Settings › Account › Delete account**.
@@ -42,6 +43,8 @@ Every kind of data Outlayr handles, in one place. The sections below explain eac
 | Receipt photo | Receipt scan | Our servers, Anthropic | Not kept |
 | Installment plan screenshot | Installment plan import | Our servers, Anthropic | Not kept |
 | File descriptions | CSV import | Our servers, Anthropic (Pro) | Not kept |
+| Notion access key (encrypted), Notion user ID | Connect Notion (Pro) | Our servers | Until you disconnect Notion or delete your account |
+| Names, columns, and rows of the Notion databases you pick | Notion import (Pro) | Notion, our servers, your device | Not kept on our servers |
 | Web address, IP address | Logos | Logo.dev, Google | Their policies |
 | Purchase records, user ID, name, email | App opens, Pro | RevenueCat, Apple or Google, our servers | Until account deletion |
 | Install ID, app version, errors | Update checks | Expo | Expo’s policy |
@@ -117,6 +120,21 @@ When you delete an entry on a synced device, our servers keep a deletion record 
 ### Turning sync off
 
 Turning sync off stops that device from sending changes. It doesn’t remove what’s already on our servers. To remove it, [delete your account](#deleting-and-exporting).
+
+## Connecting Notion
+
+With Outlayr Pro, you can connect a Notion workspace and import expenses from its databases. Notion asks which pages to share with Outlayr, and Outlayr can read only those. It can’t change, add, or delete anything in Notion.
+
+When you connect, Notion gives our server an access key and your Notion user ID. We keep the key encrypted on our servers, linked to your account, so you can import again later without connecting again. We never see your Notion password, and we don’t keep your Notion name or email.
+
+When you import, our server uses the key to read the databases you pick: their names, column names, and rows, and the names of the rows they link to. It sends them to your phone, which builds the import there. Nothing read from Notion is stored on our servers, and your phone keeps only the entries you import.
+
+- **Disconnect** in **Settings › Import › Notion** at any time. Our server asks Notion to revoke the key and deletes it.
+- Removing Outlayr from your Notion settings revokes the key too. We delete it the next time the app tries to use it.
+- If Pro ends, the key stays until you disconnect, but importing again needs Pro.
+- Deleting your account revokes and deletes the key.
+
+Notion Labs, Inc. handles your workspace under [its own privacy policy](https://www.notion.com/trust/privacy-policy). It learns that your workspace is connected to Outlayr, and when our server reads from it.
 
 ## Suggestions, voice, and receipts
 
@@ -254,7 +272,7 @@ If you’re in the European Economic Area or the United Kingdom, we rely on thes
 
 | Purpose | Legal basis |
 | --- | --- |
-| Your account, sync, photo storage, voice entry, receipt scans, installment plan imports, CSV import, Pro, and AI assistant connections | Contract: we need this data to provide what you ask for. |
+| Your account, sync, photo storage, voice entry, receipt scans, installment plan imports, CSV import, the Notion connection, Pro, and AI assistant connections | Contract: we need this data to provide what you ask for. |
 | The welcome and Pro notes, and notice of changes to this policy or our Terms | Contract: they’re part of the account and subscription you asked for. |
 | Sending voice entries, receipt photos, installment plan screenshots, CSV descriptions, and merchant names to Anthropic and ElevenLabs | Your consent, given with Allow when the app asks and withdrawn in **Settings › Send data to AI providers**. |
 | Merchant suggestions, web lookups, the shared merchant list, and logos | Legitimate interests: making entries faster to file. Suggestions and web lookups reach Anthropic only once you allow it, and turning off Smart fill is how you object. |
@@ -273,6 +291,7 @@ The [table above](#data-at-a-glance) lists how long each kind of data is kept. A
 - Synced data, including deletion records for entries you deleted, and backed-up photos are kept until you delete your account.
 - Voice conversations are deleted when you close the voice screen, or one hour after your last message.
 - Recordings pass through our server to ElevenLabs, and receipt photos and installment plan screenshots to Anthropic. We don’t store any of them.
+- The Notion access key and your Notion user ID are kept until you disconnect Notion or delete your account. Rows read from Notion aren’t kept on our servers.
 - AI assistant connections (the assistant’s name and address, your approval, and its access keys) are kept until you delete your account. Access keys stop working after an hour, or after 30 days without renewal.
 - Merchant suggestion requests aren’t kept once answered. Ones queued in the background wait on our server until your device collects the answer.
 - Your app language and the record of which welcome, Pro, and change notices you got are deleted with your account.
@@ -280,7 +299,7 @@ The [table above](#data-at-a-glance) lists how long each kind of data is kept. A
 - Items in the shared merchant list aren’t linked to anyone. They’re refreshed after 30 or 90 days.
 - Analytics events linked to your account are deleted with it. Events from an install that never signed in carry only a random install ID and are kept under PostHog’s retention policy. Records of AI requests sent while Share analytics was off carry a random ID instead of your account ID, plus the conversation ID for voice entry, and are kept the same way.
 - Website events carry a random browser ID, or a code that changes daily if you declined cookies, and are kept under PostHog’s retention policy.
-- Our providers, including Anthropic, ElevenLabs, Apple, Google, and Expo, keep the data they receive under their own retention policies.
+- Our providers, including Anthropic, ElevenLabs, Apple, Google, and Expo, and Notion if you connect it, keep the data they receive under their own retention policies.
 
 ## Deleting and exporting
 
@@ -289,10 +308,11 @@ The [table above](#data-at-a-glance) lists how long each kind of data is kept. A
 Open **Settings › Account › Delete account**. You may be asked to sign in again to confirm. Deletion then runs in this order:
 
 - Outlayr’s access to your Apple or Google sign-in is revoked. For Apple, our server asks Apple to revoke it. For Google, the app does.
+- If you connected Notion, our server asks Notion to revoke Outlayr’s access key.
 - Your synced ledger, deletion records, backed-up photos, and pending suggestion requests are deleted from our servers.
 - Your customer record at RevenueCat and our copy of your subscription status are deleted.
 - Your profile at PostHog and every analytics event linked to it are deleted.
-- Your usage counters, open voice conversations, sessions, AI assistant access, sign-in links, and account are deleted.
+- Your usage counters, open voice conversations, sessions, AI assistant access, sign-in links, Notion access key, and account are deleted.
 
 It starts right away and runs from your device. If it’s interrupted, open Settings › Account again and the app picks up where it stopped. If you can’t use the app, write to [support@tryoutlayr.com](mailto:support@tryoutlayr.com). [Delete your account](/delete-account) has these steps on one page.
 
@@ -351,7 +371,7 @@ Because we don’t sell or share, there is nothing for a Global Privacy Control 
 
 - Traffic between the app, our servers, and our providers travels over encrypted HTTPS connections.
 - Every request for your data is tied to your signed-in session, and our server decides whose data a request can touch. One account can’t read or write another’s ledger or photos.
-- Sign-in refresh tokens are encrypted before we store them.
+- Sign-in refresh tokens and the Notion access key are encrypted before we store them.
 - Requests to Anthropic and ElevenLabs carry no name, email, or account ID.
 - You can lock Outlayr behind your device’s biometric lock (Face ID or Touch ID on iPhone).
 
@@ -359,7 +379,7 @@ No system is perfectly secure. If you find a security problem, write to [support
 
 ## International transfers
 
-Our servers are in Helsinki, Finland, in the European Union. danestves LLC is a US company, and Anthropic, ElevenLabs, RevenueCat, Expo, PostHog, Cloudflare, Logo.dev, Apple, and Google process the data they receive mainly in the United States, whose laws may protect it differently from your own. Write to [support@tryoutlayr.com](mailto:support@tryoutlayr.com) for details of the safeguards that apply.
+Our servers are in Helsinki, Finland, in the European Union. danestves LLC is a US company, and Anthropic, ElevenLabs, RevenueCat, Expo, PostHog, Cloudflare, Logo.dev, Apple, Google, and Notion process the data they receive mainly in the United States, whose laws may protect it differently from your own. Write to [support@tryoutlayr.com](mailto:support@tryoutlayr.com) for details of the safeguards that apply.
 
 ## Children
 

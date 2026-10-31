@@ -19,7 +19,7 @@ import { fixedBurst } from "./lib/limits";
 import { runEdge } from "./lib/runEdge";
 import { sha256Hex } from "./lib/sha256Hex";
 import { isPro } from "./revenuecat";
-import { authenticatedAs, grantPro, seedAuthUser } from "./test.helpers";
+import { authenticatedAs, grantPro, linkNotionAccount, seedAuthUser } from "./test.helpers";
 
 const modules = import.meta.glob("../convex/**/*.ts");
 
@@ -312,6 +312,14 @@ describe("deleting a password account", () => {
         });
     });
 
+    it("goes on to the purge when the only other link is a Notion import connection", async () => {
+        const { resumeSecret, t } = await preparedFor(linkNotionAccount);
+
+        await expect(t.mutation(api.accountDeletion.recordCredentialOnly, { resumeSecret })).resolves.toMatchObject({
+            phase: "providersRevoked",
+        });
+    });
+
     it("refuses an account that also signs in with Apple", async () => {
         const { resumeSecret, t } = await preparedFor(linkAppleAccount);
 
@@ -357,6 +365,27 @@ describe("auth deletion", () => {
         await expect(t.query(api.accountDeletion.poll, { resumeSecret })).resolves.toMatchObject({
             phase: "complete",
         });
+    });
+
+    it("revokes a linked Notion token at Notion, since erasing the row alone leaves the access open", async () => {
+        const fetchMock = stubUpstream(200);
+        vi.stubEnv("NOTION_CLIENT_ID", "notion-client");
+        vi.stubEnv("NOTION_CLIENT_SECRET", "notion-secret");
+        const { owner, resumeSecret, t } = await purgedJob();
+        await linkNotionAccount(t, owner.userId, "notion-live-token");
+        await t.action(api.accountDeletion.eraseBilling, { resumeSecret });
+        await t.mutation(api.accountDeletion.advance, { resumeSecret });
+        vi.useFakeTimers();
+        await t.mutation(api.accountDeletion.advance, { resumeSecret });
+        await t.finishAllScheduledFunctions(vi.runAllTimers);
+        vi.useRealTimers();
+
+        const revoke = fetchMock.mock.calls.find(([input]) => String(input).endsWith("/v1/oauth/revoke"));
+        expect(revoke).toBeDefined();
+        const init = revoke?.[1];
+        expect(new Headers(init?.headers).get("authorization")).toBe(`Basic ${btoa("notion-client:notion-secret")}`);
+        expect(JSON.parse(String(init?.body))).toStrictEqual({ token: "notion-live-token" });
+        await expect(authRows(t, "account", owner.userId)).resolves.toHaveLength(0);
     });
 
     it("leaves no suggestion requests, usage counters, voice threads or mail state behind", async () => {

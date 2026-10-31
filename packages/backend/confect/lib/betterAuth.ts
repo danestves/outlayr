@@ -5,6 +5,7 @@ import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
 import { requireRunMutationCtx } from "@convex-dev/better-auth/utils";
 import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
 import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
+import { symmetricDecrypt } from "better-auth/crypto";
 import { betterAuth } from "better-auth/minimal";
 import { emailOTP } from "better-auth/plugins";
 import * as Clock from "effect/Clock";
@@ -44,6 +45,8 @@ const emailLimiter = new RateLimiter(components.rateLimiter, {
 
 const decodeEmailBody = Schema.decodeUnknownOption(Schema.Struct({ email: Schema.String }));
 
+const decodeProviderBody = Schema.decodeUnknownOption(Schema.Struct({ provider: Schema.String }));
+
 export const authComponent = createClient<DataModel>(components.betterAuth);
 
 /** Apple's client secret is an ES256 JWT valid six months at most, so it is minted per request. */
@@ -79,6 +82,7 @@ function createAuth(ctx: GenericCtx<DataModel>) {
         email: emailConfig,
         google: googleConfig,
         nativeAppUrl,
+        notion: notionConfig,
         siteUrl,
     } = runEdgeSync(authSettings);
 
@@ -93,7 +97,11 @@ function createAuth(ctx: GenericCtx<DataModel>) {
         );
 
     return betterAuth({
-        account: { encryptOAuthTokens: true, updateAccountOnSignIn: false },
+        account: {
+            accountLinking: { allowDifferentEmails: true, trustedProviders: ["notion"] },
+            encryptOAuthTokens: true,
+            updateAccountOnSignIn: false,
+        },
         advanced: { trustedProxyHeaders: true },
         baseURL: {
             allowedHosts: allowedHosts(siteUrl, convexSiteUrl),
@@ -153,6 +161,14 @@ function createAuth(ctx: GenericCtx<DataModel>) {
             before: createAuthMiddleware((endpoint) =>
                 runEdge(
                     Effect.gen(function* before() {
+                        if (
+                            endpoint.path === "/sign-in/social" &&
+                            Option.exists(decodeProviderBody(endpoint.body), ({ provider }) => provider === "notion")
+                        ) {
+                            return yield* Effect.fail(
+                                new APIError("FORBIDDEN", { message: "Notion is not a sign-in method" })
+                            );
+                        }
                         const body = decodeEmailBody(endpoint.body);
                         if (EMAIL_LIMITED_PATHS.has(endpoint.path) && Option.isSome(body)) {
                             const key = yield* sha256Hex(body.value.email.trim().toLowerCase());
@@ -256,6 +272,16 @@ function createAuth(ctx: GenericCtx<DataModel>) {
                       clientId: [],
                       clientSecret: "",
                   },
+            notion: {
+                clientId: Option.match(notionConfig, { onNone: () => "", onSome: ({ clientId }) => clientId }),
+                clientSecret: Option.match(notionConfig, {
+                    onNone: () => "",
+                    onSome: ({ clientSecret }) => Redacted.value(clientSecret),
+                }),
+                disableImplicitSignUp: true,
+                disableSignUp: true,
+                enabled: Option.isSome(notionConfig),
+            },
         },
         trustedOrigins: [siteUrl, nativeAppUrl, "exp://", "https://appleid.apple.com"],
         user: {
@@ -266,4 +292,14 @@ function createAuth(ctx: GenericCtx<DataModel>) {
     });
 }
 
-export { createAuth };
+async function linkedAccessToken(ctx: GenericCtx<DataModel>, providerId: string, userId: string): Promise<string> {
+    const tokens = await createAuth(ctx).api.getAccessToken({ body: { providerId, userId } });
+    return tokens.accessToken;
+}
+
+async function decryptStoredToken(ctx: GenericCtx<DataModel>, data: string): Promise<string> {
+    const { secretConfig } = await createAuth(ctx).$context;
+    return symmetricDecrypt({ data, key: secretConfig });
+}
+
+export { createAuth, decryptStoredToken, linkedAccessToken };

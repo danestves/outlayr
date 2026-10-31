@@ -47,9 +47,9 @@ function csvEntries(
 }
 
 interface Table {
-    header: string[];
+    header: readonly string[];
     income: boolean;
-    rows: string[][];
+    rows: readonly (readonly string[])[];
 }
 
 const INCOME_TABLE = /\b(?:income|ingresos?|receitas?|entradas?|revenue|earnings)\b/i;
@@ -89,7 +89,7 @@ export function csvFromArchive(bytes: Uint8Array): string | null {
     }
 
     const names = new Set(files.map(({ name }) => name.toLowerCase()));
-    const groups = new Map<string, Table>();
+    const groups = new Map<string, { header: string[]; income: boolean; rows: string[][] }>();
     for (const file of files) {
         const name = file.name.toLowerCase();
         if (!name.endsWith(ALL_ROWS_SUFFIX) && names.has(name.replace(CSV_EXTENSION, ALL_ROWS_SUFFIX))) {
@@ -106,7 +106,16 @@ export function csvFromArchive(bytes: Uint8Array): string | null {
         groups.set(key, group);
     }
 
-    const tables = [...groups.values()];
+    return csvFromTables([...groups.values()]);
+}
+
+export function csvFromNotionTables(
+    tables: readonly { header: readonly string[]; rows: readonly (readonly string[])[]; title: string }[]
+): string | null {
+    return csvFromTables(tables.map(({ header, rows, title }) => ({ header, income: INCOME_TABLE.test(title), rows })));
+}
+
+function csvFromTables(tables: readonly Table[]): string | null {
     const ledgers = tables.filter(({ header }) => {
         const mapping = guessMapping(header);
         return mapping.date != null && mapping.amount != null;

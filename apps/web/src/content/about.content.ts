@@ -91,8 +91,8 @@ const about = {
             {
                 label: "Outlayr Pro",
                 text: t({
-                    en: "500 captures every 30 days, unlimited accounts, installment apps, people, payoff plans, category budgets, and account currencies, sync across devices, receipt photo backup, AI matching on CSV import, web merchant lookup, and 5 app icons.",
-                    es: "500 capturas cada 30 días, cuentas, apps de cuotas, personas, planes de pago, presupuestos por categoría y monedas sin límite, sincronización entre dispositivos, respaldo de las fotos de tus recibos, asignación con IA al importar un CSV, búsqueda web de comercios y 5 íconos de la app.",
+                    en: "500 captures every 30 days, unlimited accounts, installment apps, people, payoff plans, category budgets, and account currencies, sync across devices, receipt photo backup, AI matching on CSV import, a Notion connection, web merchant lookup, and 5 app icons.",
+                    es: "500 capturas cada 30 días, cuentas, apps de cuotas, personas, planes de pago, presupuestos por categoría y monedas sin límite, sincronización entre dispositivos, respaldo de las fotos de tus recibos, asignación con IA al importar un CSV, conexión con Notion, búsqueda web de comercios y 5 íconos de la app.",
                 }),
             },
             {

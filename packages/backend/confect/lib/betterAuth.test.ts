@@ -145,6 +145,24 @@ describe("auth", () => {
     });
 });
 
+describe("Notion", () => {
+    it("links as an import source but never opens a session", async () => {
+        vi.stubEnv("NOTION_CLIENT_ID", "notion-client");
+        vi.stubEnv("NOTION_CLIENT_SECRET", "notion-secret");
+        const t = convexTest(schema, modules);
+        betterAuthTest.register(t);
+        rateLimiterTest.register(t);
+
+        const response = await t.fetch("/api/auth/sign-in/social", {
+            body: JSON.stringify({ callbackURL: "/", provider: "notion" }),
+            headers: { "content-type": "application/json", origin: "http://localhost:3000" },
+            method: "POST",
+        });
+
+        expect(response.status).toBe(403);
+    });
+});
+
 interface SentEmail {
     subject: string;
     text: string;
