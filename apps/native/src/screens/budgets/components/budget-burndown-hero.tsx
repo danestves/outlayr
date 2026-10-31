@@ -164,6 +164,7 @@ export function BudgetBurndownHero({
                                 height={CHART_HEIGHT}
                                 limit={budget.amount}
                                 onScrub={setScrubDay}
+                                scrubValue={`${balanceLabel} ${footnote}`}
                                 width={chartWidth}
                             />
                         </View>
