@@ -151,7 +151,8 @@ export function useLogOverviewIn(
     const { overview, rates } = useOverviewOf(db, rows, displayCurrency, nowMs);
     const plans = useInstallmentPlans(db, nowMs);
     return {
-        banks: summarizeOverview((overview?.rows ?? []).filter((row) => row.kind !== "person")),
+        // Assets only, matching the Accounts screen's total: cards and loans are already counted under Debts.
+        banks: summarizeOverview((overview?.rows ?? []).filter((row) => row.kind === "asset")),
         debts: debtsIn(rows, overview, plans, { displayCurrency, rates }, nowMs),
     };
 }

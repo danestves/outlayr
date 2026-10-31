@@ -131,9 +131,6 @@ function rowSubtitle(
     displayCurrency: string,
     t: ReturnType<typeof useTranslation>
 ): string | null {
-    if (row.kind === "liability") {
-        return t("accounts.overview.owed");
-    }
     if (row.multiCurrency) {
         return t("accounts.multiCurrency");
     }
@@ -152,22 +149,15 @@ interface AccountRowProps {
 function AccountRow({ account, row, currency, showCents, language, onPress }: AccountRowProps) {
     const t = useTranslation();
     const colors = useColors();
-    const owed = row.kind === "liability";
     const subtitle = rowSubtitle(row, account.currency, currency, t);
-    // Stated as owed, not a negative holding: the entries below are negative expenses.
     const hidden = use(AmountsHiddenContext);
-    const figure = hidden
-        ? maskedAmount(currency)
-        : formatSignedAmount(owed ? -row.balance : row.balance, currency, showCents, language);
+    const figure = hidden ? maskedAmount(currency) : formatSignedAmount(row.balance, currency, showCents, language);
     const tileColor = account.imageColor ?? account.customColor ?? colors.foreground;
     const stacked = useAccessibilityTextSize();
     const balance = (
         <>
             {row.exact ? null : <MonoLabel className="text-subtle">{`${currency}?`}</MonoLabel>}
-            <Text
-                className={cn(ROW_TYPE.balance, "tabular-nums", owed ? "text-muted" : "text-foreground")}
-                numberOfLines={1}
-            >
+            <Text className={cn(ROW_TYPE.balance, "text-foreground tabular-nums")} numberOfLines={1}>
                 {figure}
             </Text>
         </>
