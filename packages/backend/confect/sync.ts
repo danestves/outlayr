@@ -85,11 +85,8 @@ export const SyncedTableName = Schema.Literals(SYNCED_TABLES);
 
 const PROFILE_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
-/** A non-Personal profile's device-made UUID. Personal sends none and keeps the plain user id. */
 export const ProfileId = Schema.String.check(Schema.isPattern(PROFILE_ID_PATTERN));
 
-// The user half comes from the session, so a profile id only ever namespaces rows the caller already owns, and
-// every `userId` index scopes a profile without a new one. `purgeUserBatch` walks the `userId:` range.
 export function syncOwner(userId: string, profileId: string | undefined): string {
     return profileId === undefined ? userId : `${userId}:${profileId}`;
 }

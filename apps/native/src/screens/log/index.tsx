@@ -65,6 +65,7 @@ import { LogNoResults } from "./components/log-no-results";
 import { LogShelf } from "./components/log-shelf";
 import { LogToolbar } from "./components/log-toolbar";
 import { UpcomingList } from "./components/log-upcoming";
+import { ProfileTitle } from "./components/profile-title";
 import { SwipeableTransactionRow } from "./components/swipeable-transaction-row";
 import { logEntriesEqual } from "./entries-equal";
 import { filterScopeLabel } from "./labels";
@@ -353,19 +354,17 @@ export function Log() {
     if (listRows.length === 0 && tailRows.length === 0 && filter === "all") {
         return (
             <AmountsHiddenContext value={amountsHidden}>
-                {accountsOverview || debts ? (
-                    // A scroll view for the automatic inset: flat content starts under the transparent large title.
-                    <ScrollView
-                        className="bg-background"
-                        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20 }}
-                        contentInsetAdjustmentBehavior="automatic"
-                    >
+                <ScrollView
+                    className="bg-background"
+                    contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20 }}
+                    contentInsetAdjustmentBehavior="automatic"
+                >
+                    <ProfileTitle />
+                    {accountsOverview || debts ? (
                         <AccountsBlock {...accountsProps} trailing={<AmountsEyeButton />} />
-                        <LogEmptyState />
-                    </ScrollView>
-                ) : (
+                    ) : null}
                     <LogEmptyState />
-                )}
+                </ScrollView>
                 <FloatingAddButton />
             </AmountsHiddenContext>
         );
@@ -396,6 +395,7 @@ export function Log() {
                 }}
                 ListHeaderComponent={
                     <>
+                        <ProfileTitle />
                         {filter === "all" ? (
                             <LogInsights
                                 bars={bars}

@@ -432,6 +432,26 @@ export const budgetPlans = sqliteTable(
     ]
 );
 
+export const profiles = sqliteTable(
+    "profiles",
+    {
+        customColor: text("customColor"),
+        dateCreated: integer("dateCreated", { mode: "timestamp_ms" }).notNull(),
+        deletedAt: integer("deletedAt", { mode: "timestamp_ms" }),
+        emoji: text("emoji"),
+        icon: text("icon"),
+        id: text("id").primaryKey(),
+        imageColor: text("imageColor"),
+        imageKey: text("imageKey"),
+        imageUri: text("imageUri"),
+        name: text("name").notNull(),
+        restoredAt: integer("restoredAt", { mode: "timestamp_ms" }),
+        sortOrder: integer("sortOrder").notNull().default(0),
+        updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).notNull(),
+    },
+    (table) => [index("profiles_deletedAt_idx").on(table.deletedAt)]
+);
+
 export const tags = sqliteTable(
     "tags",
     {

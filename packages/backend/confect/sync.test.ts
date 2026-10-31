@@ -254,7 +254,6 @@ describe("profiles", () => {
 
         const { resumeSecret } = await client.mutation(api.accountDeletion.prepare, {});
         await t.mutation(api.accountDeletion.recordAppleRevocation, { resumeSecret });
-        // One batch per call, as the client drives it.
         let status = await t.mutation(api.accountDeletion.advance, { resumeSecret });
         for (let step = 0; status.phase !== "purged" && step < 10; step += 1) {
             status = await t.mutation(api.accountDeletion.advance, { resumeSecret });
