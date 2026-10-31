@@ -19,6 +19,7 @@ import outsideMoves from "./tables/outsideMoves";
 import outsidePayments from "./tables/outsidePayments";
 import photoObjects from "./tables/photoObjects";
 import photoSizes from "./tables/photoSizes";
+import profiles from "./tables/profiles";
 import savingsGoals from "./tables/savingsGoals";
 import syncState from "./tables/syncState";
 import tags from "./tables/tags";
@@ -49,6 +50,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly outsidePayments: typeof outsidePayments;
   readonly photoObjects: typeof photoObjects;
   readonly photoSizes: typeof photoSizes;
+  readonly profiles: typeof profiles;
   readonly savingsGoals: typeof savingsGoals;
   readonly syncState: typeof syncState;
   readonly tags: typeof tags;
@@ -78,6 +80,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   outsidePayments,
   photoObjects,
   photoSizes,
+  profiles,
   savingsGoals,
   syncState,
   tags,

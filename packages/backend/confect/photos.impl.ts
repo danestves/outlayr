@@ -37,6 +37,7 @@ import {
 } from "./photos";
 import spec from "./photos.spec";
 import { requirePro } from "./revenuecat";
+import { syncOwner } from "./sync";
 
 const storageIdFor = Effect.fn("Photos.storageIdFor")(function* storageIdFor(key: string) {
     const reader = yield* DatabaseReader;
@@ -323,7 +324,7 @@ const releaseUnreferenced = FunctionImpl.make(
             if (!ownsPhotoKey(userId, args.key)) {
                 return yield* new PhotoNotOwned();
             }
-            if (yield* isReferenced(userId, args.key)) {
+            if (yield* isReferenced(syncOwner(userId, args.profileId), args.key)) {
                 return { released: false };
             }
             const mapping = yield* reader

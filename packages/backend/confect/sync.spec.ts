@@ -1,13 +1,17 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import * as Schema from "effect/Schema";
 
-import { PulledRow, PushRow, SyncedTableName } from "./sync";
+import { ProfileId, PulledRow, PushRow, SyncedTableName } from "./sync";
 
 export default GroupSpec.make()
     .addFunction(
         FunctionSpec.publicMutation({
             name: "push",
-            args: () => ({ deviceId: Schema.String, rows: Schema.Array(PushRow) }),
+            args: () => ({
+                deviceId: Schema.String,
+                profileId: Schema.optional(ProfileId),
+                rows: Schema.Array(PushRow),
+            }),
             returns: () => Schema.Struct({ accepted: Schema.Number, nextSeq: Schema.Number, skipped: Schema.Number }),
         })
     )
@@ -17,6 +21,7 @@ export default GroupSpec.make()
             args: () => ({
                 cursor: Schema.Number,
                 limit: Schema.optional(Schema.Number),
+                profileId: Schema.optional(ProfileId),
                 tables: Schema.optional(Schema.Array(SyncedTableName)),
             }),
             returns: () =>
@@ -26,7 +31,7 @@ export default GroupSpec.make()
     .addFunction(
         FunctionSpec.publicQuery({
             name: "currentSeq",
-            args: () => ({}),
+            args: () => ({ profileId: Schema.optional(ProfileId) }),
             returns: () => Schema.Number,
         })
     );
