@@ -40,6 +40,11 @@ const reconcile = Effect.fn("TrialReminder.reconcile")(function* reconcile(ask: 
 
 const inFlight = Semaphore.makeUnsafe(1);
 
+const cancelTrialReminder = Effect.fn("TrialReminder.cancel")(function* cancelTrialReminder() {
+    const reminders = yield* Reminders;
+    yield* reminders.cancel([TRIAL_REMINDER_ID]);
+});
+
 /**
  * Two days before a free trial turns paid, as the paywall's timeline promises. `ask` is for the moment the trial
  * starts: that is the one time the permission prompt has a reason the user just read.
@@ -52,7 +57,11 @@ export const syncTrialReminder = Effect.fn("TrialReminder.sync")(function* syncT
 export const trialReminderAtom = Atom.family((isPro: boolean) =>
     Atom.make((get) => {
         if (!isPro) {
-            return Effect.void;
+            // A refund or an account switch leaves no trial for the scheduled reminder to warn about.
+            return cancelTrialReminder().pipe(
+                inFlight.withPermits(1),
+                warnAndContinue("[outlayr] trial reminder cancel failed")
+            );
         }
         get.addFinalizer(
             onCustomerInfoUpdated(() => {
