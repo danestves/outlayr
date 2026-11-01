@@ -1,6 +1,8 @@
 import { strToU8, zipSync } from "fflate";
 import { describe, expect, it } from "vite-plus/test";
 
+import { guessMapping } from "@/data/transfer-core";
+
 import { parseCsv } from "./csv";
 import { csvFromArchive, isZip } from "./import-archive";
 import { HARD_PARSE_REJECT_CHARS } from "./import-diagnosis";
@@ -44,12 +46,43 @@ describe("csvFromArchive", () => {
         ).toStrictEqual(["Books", "Groceries", "Rent"]);
     });
 
-    it("picks the largest table when the databases differ", () => {
+    it("keeps an income table apart from an expense table with the same columns", () => {
         const bytes = zip({
-            "Finance Tracker/Expenses 3c.csv": 'Name,Date,Amount\nA,"October 1, 2026",1\nB,"October 2, 2026",2\n',
-            "Finance Tracker/Income 4d.csv": 'Source,Date,Amount\nPaycheck,"October 15, 2026",3150\n',
+            "Money/Expenses 1a.csv": 'Name,Date,Amount\nRent,"October 1, 2026",1600\n',
+            "Money/Income 2b.csv": 'Name,Date,Amount\nPaycheck,"October 15, 2026",3150\n',
         });
-        expect(rowsOf(bytes).map((row) => row[0])).toStrictEqual(["A", "B"]);
+        const [header, ...rows] = parseCsv(csvFromArchive(bytes) ?? "");
+        const type = guessMapping(header ?? []).type ?? -1;
+        expect(rows.map((row) => [row[1], row[type]])).toStrictEqual([
+            ["1600", ""],
+            ["3150", "Income"],
+        ]);
+    });
+
+    it("joins a template's expense and income tables and leaves its lookup tables out", () => {
+        const bytes = zip({
+            "Finance Tracker/Accounts 5e.csv":
+                "Name,Type,Balance\nAmex Gold,Credit card,0\nChecking,Bank,0\nSavings,Bank,0\n",
+            "Finance Tracker/Categories 6f.csv": "Name,Budget\nGroceries,400\nDining,150\nRent,1600\nFun,90\n",
+            "Finance Tracker/Expenses 3c.csv":
+                'Name,Date,Amount,Category\nTrader Joe\'s,"October 3, 2026",$86.42,Groceries\nRefund,"October 4, 2026",-$20.00,Refunds\n',
+            "Finance Tracker/Income 4d.csv": 'Source,Date,Amount\nPaycheck,"October 15, 2026","$3,150.00"\n',
+        });
+        const [header, ...rows] = parseCsv(csvFromArchive(bytes) ?? "");
+        expect(guessMapping(header ?? [])).toMatchObject({ amount: 1, category: 2, date: 0, note: 3, type: 4 });
+        expect(rows).toStrictEqual([
+            ["October 3, 2026", "$86.42", "Groceries", "Trader Joe's", "", ""],
+            ["October 4, 2026", "-$20.00", "Refunds", "Refund", "", ""],
+            ["October 15, 2026", "$3,150.00", "Paycheck", "Paycheck", "Income", ""],
+        ]);
+    });
+
+    it("takes the one ledger over a bigger table that is not one", () => {
+        const bytes = zip({
+            "Workspace/Gastos 1a.csv": 'Concepto,Fecha,Monto\nCafé,"October 2, 2026",2.50\n',
+            "Workspace/Reading list 2b.csv": "Title,Author\nDune,Herbert\nEmma,Austen\n",
+        });
+        expect(rowsOf(bytes)).toStrictEqual([["Café", "October 2, 2026", "2.50"]]);
     });
 
     it("reads a workspace export that nests its part zips", () => {
