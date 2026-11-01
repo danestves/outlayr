@@ -60,6 +60,11 @@ const ImportRecord = Schema.Struct({
     categoryIds: Schema.mutable(Schema.Array(Schema.String)),
     expectedBalances: Schema.Record(Schema.String, Schema.Number),
     importedAt: Schema.Number,
+    renamedCategories: Schema.optionalKey(
+        Schema.mutable(
+            Schema.Array(Schema.Struct({ id: Schema.String, imported: Schema.String, previous: Schema.String }))
+        )
+    ),
     transactionIds: Schema.mutable(Schema.Array(Schema.String)),
     transferIds: Schema.mutable(Schema.Array(Schema.String)),
 });
@@ -101,6 +106,7 @@ export const readLedgerState = Effect.fn("MoneyManagerImport.readLedgerState")(f
             db
                 .select({
                     color: categories.color,
+                    customName: categories.customName,
                     icon: categories.icon,
                     id: categories.id,
                     income: categories.income,
@@ -140,6 +146,7 @@ export const readLedgerState = Effect.fn("MoneyManagerImport.readLedgerState")(f
         budgetCategoryIds: budgetRows.flatMap((row) => (row.categoryId == null ? [] : [row.categoryId])),
         categories: categoryRows.map((row) => ({
             color: row.color,
+            customName: row.customName,
             icon: row.icon,
             id: row.id,
             income: row.income,
@@ -179,6 +186,32 @@ export function parseImportRecord(raw: string | null | undefined): MmImportRecor
         expectedBalances: { ...decoded.expectedBalances },
     } satisfies MmImportRecord;
 }
+
+const renameMatchedCategories = Effect.fn("MoneyManagerImport.renameMatchedCategories")(
+    function* renameMatchedCategories(db: Database, planned: readonly PlannedCategory[]) {
+        const renamed: NonNullable<MmImportRecord["renamedCategories"]> = [];
+        for (const category of planned) {
+            const id = category.existingId;
+            if (id == null || category.renamesExisting !== true) {
+                continue;
+            }
+            const [row] = yield* Effect.tryPromise({
+                catch: fail("apply"),
+                try: () => db.select({ name: categories.name }).from(categories).where(eq(categories.id, id)).limit(1),
+            });
+            yield* Effect.tryPromise({
+                catch: fail("apply"),
+                try: () =>
+                    db
+                        .update(categories)
+                        .set({ customName: true, name: category.name, updatedAt: new Date() })
+                        .where(eq(categories.id, id)),
+            });
+            renamed.push({ id, imported: category.name, previous: row?.name ?? "" });
+        }
+        return renamed;
+    }
+);
 
 export const applyMoneyManagerImport = Effect.fn("MoneyManagerImport.apply")(function* applyMoneyManagerImport(
     db: Database,
@@ -231,6 +264,7 @@ export const applyMoneyManagerImport = Effect.fn("MoneyManagerImport.apply")(fun
                     categoryKeys.set(category.key, category.existingId);
                 }
             }
+            const renamedCategories = yield* renameMatchedCategories(db, plan.categories);
             for (const category of plan.categories) {
                 if (category.existingId != null) {
                     continue;
@@ -365,6 +399,7 @@ export const applyMoneyManagerImport = Effect.fn("MoneyManagerImport.apply")(fun
                 categoryIds,
                 expectedBalances,
                 importedAt: Date.now(),
+                renamedCategories,
                 transactionIds,
                 transferIds,
             } satisfies MmImportRecord;
@@ -421,6 +456,20 @@ export const undoMoneyManagerImport = Effect.fn("MoneyManagerImport.undo")(funct
             const removedBudgets = yield* tombstoneBudgets(db, record.budgetIds, now);
             const removedCategories = yield* tombstoneUnusedCategories(db, record.categoryIds, now);
             const removedAccounts = yield* tombstoneUnusedAccounts(db, record.accountIds, now);
+            for (const renamed of record.renamedCategories ?? []) {
+                yield* undoQuery(() =>
+                    db
+                        .update(categories)
+                        .set({ customName: false, name: renamed.previous, updatedAt: now })
+                        .where(
+                            and(
+                                eq(categories.id, renamed.id),
+                                eq(categories.name, renamed.imported),
+                                isNull(categories.deletedAt)
+                            )
+                        )
+                );
+            }
             yield* undoQuery(() => db.delete(appMeta).where(eq(appMeta.key, META_KEYS.moneyManagerImport)));
             return {
                 accounts: removedAccounts,

@@ -1,6 +1,7 @@
 import { presetLabel, SUGGESTED_CATEGORY_PRESETS } from "@/data/categories-core";
 import { formatSignedAmount } from "@/domain/account-display";
 import { formatFixed } from "@/domain/money";
+import { keptCategoryNames, matchedKey } from "@/domain/money-manager/plan";
 import type { TranslateFn } from "@/i18n/context";
 import type { MoneyManagerDraft } from "@/lib/money-manager-session";
 
@@ -44,19 +45,29 @@ export function accountTarget(draft: MoneyManagerDraft, uid: string, t: Translat
 
 export function categoryName(
     draft: MoneyManagerDraft,
-    parent: { categoryId: string } | { presetName: string } | { mmUid: string }
+    parent: { categoryId: string } | { presetName: string } | { mmUid: string },
+    income: boolean
 ): string {
-    if ("categoryId" in parent) {
-        return draft.ledger.categories.find((category) => category.id === parent.categoryId)?.name ?? "";
+    if ("mmUid" in parent) {
+        const target = draft.choices.categories[parent.mmUid];
+        if (target?.kind === "existing" || target?.kind === "preset") {
+            return categoryName(draft, target, income);
+        }
+        return draft.analysis.categories.find((category) => category.uid === parent.mmUid)?.title ?? "";
     }
-    if ("presetName" in parent) {
-        return presetLabel(parent.presetName);
+    const target =
+        "categoryId" in parent
+            ? { categoryId: parent.categoryId, kind: "existing" as const }
+            : { kind: "preset" as const, presetName: parent.presetName };
+    const key = matchedKey(target, income);
+    const kept = key == null ? undefined : keptCategoryNames(draft.analysis, draft.choices, draft.ledger).get(key);
+    if (kept != null) {
+        return kept;
     }
-    const target = draft.choices.categories[parent.mmUid];
-    if (target?.kind === "existing" || target?.kind === "preset") {
-        return categoryName(draft, target.kind === "existing" ? { categoryId: target.categoryId } : target);
+    if (target.kind === "existing") {
+        return draft.ledger.categories.find((category) => category.id === target.categoryId)?.name ?? "";
     }
-    return draft.analysis.categories.find((category) => category.uid === parent.mmUid)?.title ?? "";
+    return presetLabel(target.presetName);
 }
 
 export function categoryTarget(draft: MoneyManagerDraft, uid: string, t: TranslateFn): Target {
@@ -68,11 +79,15 @@ export function categoryTarget(draft: MoneyManagerDraft, uid: string, t: Transla
         return { label: t(unused ? "mmImport.target.noEntries" : "mmImport.target.leftOut"), loud: !unused };
     }
     if (target.kind === "existing" || target.kind === "preset") {
-        return { how: t("mmImport.target.howMatched"), label: categoryName(draft, target), tone: "matched" };
+        return {
+            how: t("mmImport.target.howMatched"),
+            label: categoryName(draft, target, view?.income ?? false),
+            tone: "matched",
+        };
     }
     if (target.kind === "sub") {
         return {
-            how: t("mmImport.target.howIn", { parent: categoryName(draft, target.parent) }),
+            how: t("mmImport.target.howIn", { parent: categoryName(draft, target.parent, view?.income ?? false) }),
             label: title,
             tone: "nested",
         };

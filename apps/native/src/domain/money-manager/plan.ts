@@ -1,4 +1,10 @@
-import { CATEGORY_PALETTE, presetFor, presetLabel, SUGGESTED_CATEGORY_PRESETS } from "@/data/categories-core";
+import {
+    CATEGORY_PALETTE,
+    capitalizeCategoryName,
+    presetFor,
+    presetLabel,
+    SUGGESTED_CATEGORY_PRESETS,
+} from "@/data/categories-core";
 
 import { matchedEntryUids } from "./analysis";
 import { nearestPaletteColor, normalizeLabel, outlayrIconFor, suggestAccountKind } from "./matching";
@@ -7,6 +13,7 @@ import type {
     MmAnalysis,
     MmChoices,
     MmEntry,
+    MmCategoryView,
     MmImportPlan,
     MmSnapshot,
     MmTransfer,
@@ -123,6 +130,79 @@ function categoryChoiceKey(
         return ensureExisting(choice.categoryId, income, planned);
     }
     return `mm:${uid}`;
+}
+
+export function matchedKey(target: CategoryTarget, income: boolean): string | null {
+    if (target.kind === "preset") {
+        return presetKey(target.presetName, income);
+    }
+    return target.kind === "existing" ? `existing:${target.categoryId}` : null;
+}
+
+function plannedLabels(choices: MmChoices, ledger: OutlayrLedgerState, income: boolean, own: string): Set<string> {
+    const labels = ledger.categories
+        .filter((category) => category.income === income && `existing:${category.id}` !== own)
+        .map((category) => category.name);
+    for (const target of Object.values(choices.categories)) {
+        if (target.kind === "preset" && presetKey(target.presetName, income) !== own) {
+            labels.push(presetLabel(target.presetName));
+        }
+        if (target.kind === "sub" && "presetName" in target.parent) {
+            labels.push(presetLabel(target.parent.presetName));
+        }
+    }
+    return new Set(labels.map(capitalizeCategoryName));
+}
+
+function untouchedPreset(row: OutlayrLedgerState["categories"][number] | undefined): boolean {
+    return (
+        row?.preset != null &&
+        !row.customName &&
+        capitalizeCategoryName(row.name) === capitalizeCategoryName(presetLabel(row.preset))
+    );
+}
+
+export function keptCategoryNames(
+    analysis: MmAnalysis,
+    choices: MmChoices,
+    ledger: OutlayrLedgerState
+): Map<string, string> {
+    const sources = new Map<string, MmCategoryView[]>();
+    for (const view of analysis.categories) {
+        const target = choices.categories[view.uid];
+        const key = target == null ? null : matchedKey(target, view.income);
+        if (key != null) {
+            sources.set(key, [...(sources.get(key) ?? []), view]);
+        }
+    }
+    const kept = new Map<string, string>();
+    for (const [key, views] of sources) {
+        const [view] = views;
+        if (view == null || views.length > 1) {
+            continue;
+        }
+        const name = capitalizeCategoryName(view.title);
+        if (name === "") {
+            continue;
+        }
+        if (key.startsWith("existing:")) {
+            const row = ledger.categories.find((category) => `existing:${category.id}` === key);
+            if (!untouchedPreset(row) || capitalizeCategoryName(row?.name ?? "") === name) {
+                continue;
+            }
+        }
+        const others = analysis.categories.filter(
+            (other) =>
+                other.uid !== view.uid &&
+                other.income === view.income &&
+                choices.categories[other.uid]?.kind !== "skip" &&
+                capitalizeCategoryName(other.title) === name
+        );
+        if (others.length === 0 && !plannedLabels(choices, ledger, view.income, key).has(name)) {
+            kept.set(key, name);
+        }
+    }
+    return kept;
 }
 
 function ensurePreset(name: string, income: boolean, planned: Map<string, PlannedCategory>): string {
@@ -310,16 +390,23 @@ function planCategories(
 ): Map<string, PlannedCategory> {
     const planned = new Map<string, PlannedCategory>();
     const categoryByUid = new Map(snapshot.categories.map((category) => [category.uid, category]));
+    const kept = keptCategoryNames(analysis, choices, ledger);
     for (const view of analysis.categories) {
         const choice = choices.categories[view.uid];
         const source = categoryByUid.get(view.uid);
         if (choice == null || choice.kind === "skip" || source == null) {
             continue;
         }
-        if (choice.kind === "preset") {
-            ensurePreset(choice.presetName, view.income, planned);
-        } else if (choice.kind === "existing") {
-            ensureExisting(choice.categoryId, view.income, planned, ledger);
+        if (choice.kind === "preset" || choice.kind === "existing") {
+            const key =
+                choice.kind === "preset"
+                    ? ensurePreset(choice.presetName, view.income, planned)
+                    : ensureExisting(choice.categoryId, view.income, planned, ledger);
+            const name = kept.get(key);
+            const category = planned.get(key);
+            if (name != null && category != null) {
+                planned.set(key, { ...category, name, ...(category.existingId != null && { renamesExisting: true }) });
+            }
         } else if (choice.kind === "new") {
             const key = `mm:${view.uid}`;
             planned.set(key, {

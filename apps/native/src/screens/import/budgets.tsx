@@ -24,7 +24,7 @@ export function MoneyManagerBudgets() {
                     const look = categoryLook(draft, category.uid);
                     const name =
                         target?.kind === "existing" || target?.kind === "preset"
-                            ? categoryName(draft, target)
+                            ? categoryName(draft, target, category.income)
                             : category.title;
                     return (
                         <ImportRow

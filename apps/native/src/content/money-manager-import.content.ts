@@ -177,10 +177,10 @@ const moneyManagerImport = {
             pt: "Todas chegam com os próprios nomes.",
         }),
         "mmImport.categories.matchNote": t({
-            en: "Each one is matched to one of Outlayr's by meaning.",
-            es: "Cada una se empareja por significado con una de Outlayr.",
-            fr: "Chacune est associée par son sens à une catégorie d'Outlayr.",
-            pt: "Cada uma é combinada pelo significado com uma do Outlayr.",
+            en: "Each one is matched to one of Outlayr's by meaning and keeps its name, unless several land on the same one.",
+            es: "Cada una se empareja por significado con una de Outlayr y conserva su nombre, salvo que varias caigan en la misma.",
+            fr: "Chacune est associée par son sens à une catégorie d'Outlayr et garde son nom, sauf si plusieurs tombent sur la même.",
+            pt: "Cada uma é combinada pelo significado com uma do Outlayr e mantém o nome, a menos que várias caiam na mesma.",
         }),
         "mmImport.categories.mine": t({
             en: "Mine",

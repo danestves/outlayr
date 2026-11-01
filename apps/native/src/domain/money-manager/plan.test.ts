@@ -83,10 +83,10 @@ describe("buildImportPlan", () => {
         expect(plan.entries).toHaveLength(9);
         expect(plan.transfers).toHaveLength(2);
         expect(plan.categories.map((category) => category.name)).toStrictEqual([
-            "Groceries",
-            "Transport",
+            "Mercado",
+            "Transporte",
             "Parking",
-            "Paycheck",
+            "Sueldo",
             "Allowance",
         ]);
         expect(plan.categories.find((category) => category.name === "Parking")?.parent).toStrictEqual({
@@ -119,6 +119,7 @@ describe("buildImportPlan", () => {
             categories: [
                 {
                     color: "#53915A",
+                    customName: false,
                     icon: "ShoppingCart01",
                     id: "g1",
                     income: false,
@@ -132,6 +133,40 @@ describe("buildImportPlan", () => {
         const plan = buildImportPlan(snap, analysis, defaultChoices(snap, analysis, budgeted), budgeted);
         expect(plan.budgets).toStrictEqual([{ amount: 100, categoryKey: "mm:allowance" }]);
         expect(keepModeCategories(snap, analysis, EMPTY).mercado).toStrictEqual({ kind: "new" });
+    });
+
+    it("renames an untouched preset category to the one Money Manager name landing on it", () => {
+        const snap = opened();
+        const seeded = (customName: boolean): OutlayrLedgerState => ({
+            ...EMPTY,
+            categories: [
+                {
+                    color: "#53915A",
+                    customName,
+                    icon: "ShoppingCart01",
+                    id: "g1",
+                    income: false,
+                    name: "Groceries",
+                    parentId: null,
+                    preset: "Groceries",
+                },
+            ],
+        });
+        const plan = (ledger: OutlayrLedgerState, merge = false) => {
+            const analysis = analyzeSnapshot(snap, ledger);
+            const choices = defaultChoices(snap, analysis, ledger);
+            if (merge) {
+                choices.categories.transporte = { categoryId: "g1", kind: "existing" };
+            }
+            return buildImportPlan(snap, analysis, choices, ledger).categories.find(
+                (category) => category.existingId === "g1"
+            );
+        };
+
+        expect(plan(seeded(false))).toMatchObject({ name: "Mercado", renamesExisting: true });
+        expect(plan(seeded(true))).toMatchObject({ name: "Groceries" });
+        expect(plan(seeded(true))?.renamesExisting).toBeUndefined();
+        expect(plan(seeded(false), true)?.renamesExisting).toBeUndefined();
     });
 
     it("uses noon when the write timestamp falls on another local day", () => {
