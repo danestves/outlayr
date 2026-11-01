@@ -13,7 +13,7 @@ import { parseCsvAmount, parseCsvDate, parseCsvType, transactionsToCsv } from "@
 import type { DecimalSeparator } from "@/domain/transaction-csv";
 
 import { getMeta, META_KEYS } from "./app-meta-core";
-import { capitalizeCategoryName, ensureCategoryByName, presetForName } from "./categories-core";
+import { capitalizeCategoryName, ensureCategoryByName, formatCategoryName, presetForName } from "./categories-core";
 import { transactionsRepo } from "./transactions-core";
 
 const CsvTransferOperation = Schema.Literals(["export", "import"]);
@@ -376,6 +376,7 @@ function planCategories(
     links: ReadonlyMap<string, string>
 ) {
     const balances = new Map<string, number>();
+    const names = new Map<string, string>();
     const idByKey = new Map<string, string>();
     const labelsAreDescriptions = mapping.category === mapping.note;
     if (labelsAreDescriptions) {
@@ -387,19 +388,22 @@ function planCategories(
         if (key === "" || links.has(key)) {
             continue;
         }
-        const name = capitalizeCategoryName(raw);
+        const folded = capitalizeCategoryName(raw);
+        if (!names.has(folded)) {
+            names.set(folded, formatCategoryName(raw));
+        }
         const declared = mapping.type == null ? null : parseCsvType(row[mapping.type] ?? "");
-        let balance = balances.get(name) ?? 0;
+        let balance = balances.get(folded) ?? 0;
         if (declared != null) {
             balance += declared ? 1 : -1;
         }
-        balances.set(name, balance);
-        idByKey.set(key, `${PLANNED_ID_PREFIX}${name}`);
+        balances.set(folded, balance);
+        idByKey.set(key, `${PLANNED_ID_PREFIX}${folded}`);
     }
-    const plannedCategories: PlannedCategory[] = [...balances].map(([name, balance]) => ({
-        id: `${PLANNED_ID_PREFIX}${name}`,
+    const plannedCategories: PlannedCategory[] = [...balances].map(([folded, balance]) => ({
+        id: `${PLANNED_ID_PREFIX}${folded}`,
         income: balance > 0,
-        name,
+        name: names.get(folded) ?? folded,
     }));
     return { categories: plannedCategories, idByKey };
 }

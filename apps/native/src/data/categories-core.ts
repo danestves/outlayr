@@ -330,6 +330,11 @@ export function capitalizeCategoryName(raw: string): string {
         .join(" ");
 }
 
+export function formatCategoryName(raw: string): string {
+    const name = raw.trim().split(WHITESPACE_RUN).join(" ");
+    return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
 // U+FE0F is stripped so the text and emoji presentations of one glyph collide.
 function emojiComparisonKey(emoji: string): string {
     return emoji.trim().split(String.fromCodePoint(0xfe_0f)).join("");
@@ -620,7 +625,7 @@ export const categoriesRepo = {
         input: { name: string; icon: string; color: string; income: boolean }
     ) {
         const preset = presetFor(input.name, input.income);
-        const name = preset == null ? capitalizeCategoryName(input.name) : presetLabel(preset);
+        const name = preset == null ? formatCategoryName(input.name) : presetLabel(preset);
         const { error, order } = yield* validateCategoryCreate(db, {
             emoji: null,
             icon: input.icon,
@@ -674,7 +679,7 @@ export const categoriesRepo = {
                 icon: input.icon || null,
                 id,
                 income: input.income,
-                name: input.preset == null ? capitalizeCategoryName(input.name) : input.name.trim(),
+                name: input.preset == null ? formatCategoryName(input.name) : input.name.trim(),
                 parentId,
                 preset: input.preset ?? null,
                 sortOrder: order,
@@ -813,8 +818,8 @@ export const categoriesRepo = {
             updatedAt: new Date(),
         };
         if (patch.name !== undefined) {
-            const cleanName = capitalizeCategoryName(patch.name);
-            if (existing.name == null || capitalizeCategoryName(existing.name) !== cleanName) {
+            const cleanName = formatCategoryName(patch.name);
+            if (existing.name !== cleanName) {
                 updates.name = cleanName;
                 updates.customName = true;
             }
@@ -865,7 +870,7 @@ export const ensureCategoryByName = Effect.fn("Categories.ensureCategoryByName")
     nested?: { emoji?: string | null; parentId?: string | null }
 ) {
     const preset = presetFor(name, income);
-    const cleanName = preset == null ? capitalizeCategoryName(name) : presetLabel(preset);
+    const cleanName = preset == null ? formatCategoryName(name) : presetLabel(preset);
     const keys = new Set([capitalizeCategoryName(name), capitalizeCategoryName(cleanName)]);
     const siblings = yield* namespaceSiblings("ensure", db, income);
     const existing = siblings.find(

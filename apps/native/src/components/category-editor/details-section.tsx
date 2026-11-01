@@ -61,7 +61,7 @@ export function CategoryEditorDetailsSection({
                         BODY,
                         foregroundStyle(tintColor),
                         multilineTextAlignment("trailing"),
-                        textInputAutocapitalization("words"),
+                        textInputAutocapitalization("sentences"),
                         submitLabel("done"),
                         onSubmit(onSubmitName),
                     ]}

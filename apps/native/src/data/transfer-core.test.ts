@@ -450,7 +450,7 @@ describe("buildImportPlan", () => {
         const plan = buildImportPlan(unlinked, { ...MAPPING, type: 4 }, "yyyy-MM-dd", ".", links, income);
         expect(plan.skipped).toStrictEqual([]);
         expect(plan.newCategories.map(({ name, income: side }) => ({ name, side }))).toStrictEqual([
-            { name: "Otros Ingresos", side: true },
+            { name: "Otros ingresos", side: true },
             { name: "Iglesia", side: false },
         ]);
         const [others, church] = plan.newCategories;
