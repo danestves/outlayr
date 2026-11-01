@@ -25,7 +25,9 @@ export function GrowToContent({ children, maxHeight }: { children: ReactNode; ma
         }
         let start: number | null = null;
         const step = (now: number) => {
-            start ??= now;
+            if (start === null) {
+                start = now;
+            }
             const progress = Math.min(1, (now - start) / RESIZE_MS);
             shown.current = from + (target - from) * ease(progress);
             setHeight(shown.current);
