@@ -23,7 +23,7 @@ import {
 import { stageTransfer } from "@/data/transfers-core";
 import { loadValuationIn } from "@/data/valuation-source";
 import type { Database } from "@/db/client";
-import { accounts, appMeta, budgets, categories, transactions, transfers } from "@/db/schema";
+import { accounts, appMeta, budgetPlans, budgets, categories, transactions, transfers } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { DEFAULT_CURRENCY } from "@/domain/money";
 import type {
@@ -578,7 +578,19 @@ const tombstoneUnusedCategories = Effect.fn("MoneyManagerImport.tombstoneUnusedC
                     .from(transactions)
                     .where(and(isNull(transactions.deletedAt), inArray(transactions.categoryId, chunk)))
             );
-            for (const row of rows) {
+            const budgeted = yield* undoQuery(() =>
+                db
+                    .select({ categoryId: budgets.categoryId })
+                    .from(budgets)
+                    .where(and(isNull(budgets.deletedAt), inArray(budgets.categoryId, chunk)))
+            );
+            const planned = yield* undoQuery(() =>
+                db
+                    .select({ categoryId: budgetPlans.categoryId })
+                    .from(budgetPlans)
+                    .where(and(isNull(budgetPlans.deletedAt), inArray(budgetPlans.categoryId, chunk)))
+            );
+            for (const row of [...rows, ...budgeted, ...planned]) {
                 if (row.categoryId != null) {
                     keep.add(row.categoryId);
                 }

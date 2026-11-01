@@ -1,3 +1,4 @@
+import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import BetterSqlite3 from "better-sqlite3";
 import { and, eq, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
@@ -5,11 +6,12 @@ import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { categories, exchangeRates, transactions } from "@/db/schema";
-import { testDatabase } from "@/db/test-database";
+import { testDatabase, transactionalDatabase } from "@/db/test-database";
 import { parseCsv } from "@/domain/csv";
 import { resolveImportMapping } from "@/domain/import-mapping";
 import { CSV_HEADER, parseCsvDate } from "@/domain/transaction-csv";
 
+import { budgetsRepo } from "./budgets-core";
 import { candidateLogoIds } from "./logo-backfill-state";
 import { TransactionsError, transactionsRepo } from "./transactions-core";
 import {
@@ -937,7 +939,7 @@ describe("applyImport", () => {
 describe("undoCsvImport", () => {
     let db: Database;
     beforeEach(async () => {
-        db = makeDb();
+        db = transactionalDatabase();
         await seed(db);
         await seedTransactions(db);
     });
@@ -990,6 +992,18 @@ describe("undoCsvImport", () => {
                 .from(categories)
                 .where(and(eq(categories.id, travel?.id ?? ""), isNull(categories.deletedAt)))
         ).resolves.toHaveLength(1);
+    });
+
+    it("keeps a created category the user has since budgeted", async () => {
+        await importRows();
+        const [travel] = await db.select().from(categories).where(eq(categories.name, "Travel"));
+        await Effect.runPromise(
+            budgetsRepo.createBudget(db, { amount: 200, categoryId: travel?.id ?? "", type: BUDGET_TYPE.month })
+        );
+
+        const counts = await Effect.runPromise(undoCsvImport(db));
+
+        expect(counts).toMatchObject({ categories: 0 });
     });
 
     it("does nothing once the import has been undone", async () => {
