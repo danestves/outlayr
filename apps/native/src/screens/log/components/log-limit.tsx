@@ -13,34 +13,28 @@ import { formatAmount, maskedAmount } from "@/domain/money";
 import { useLanguage, useTranslation } from "@/i18n/context";
 
 /** The overall budget under the Log total, only when it runs monthly. Amounts are in the ledger's currency. */
-export function LogLimit({
-    budget,
-    currency,
-    nowMs,
-    onPress,
-}: {
+interface LogLimitProps {
     budget: MainBudgetView | null;
     currency: string;
+    figureCurrency?: string;
     nowMs: number;
     onPress: () => void;
-}) {
+}
+
+export function LogLimit({ budget, ...props }: LogLimitProps) {
     if (budget?.type !== BUDGET_TYPE.month) {
         return null;
     }
-    return <MonthLimit budget={budget} currency={currency} nowMs={nowMs} onPress={onPress} />;
+    return <MonthLimit budget={budget} {...props} />;
 }
 
 function MonthLimit({
     budget,
     currency,
+    figureCurrency = currency,
     nowMs,
     onPress,
-}: {
-    budget: MainBudgetView;
-    currency: string;
-    nowMs: number;
-    onPress: () => void;
-}) {
+}: Omit<LogLimitProps, "budget"> & { budget: MainBudgetView }) {
     const t = useTranslation();
     const { language } = useLanguage();
     const { showCents } = useDisplaySettings().state;
@@ -51,13 +45,14 @@ function MonthLimit({
 
     const over = budget.overBudget;
     const ahead = over ? 0 : overPace(budget.spent, budget.amount, budget.window, now);
-    const filled = Math.min(1, budget.spent / (budget.amount || 1));
+    const filled = over ? 1 : Math.min(1, Math.max(0, budget.spent / (budget.amount || 1)));
     const status = over
         ? t("log.limit.over", { amount: money(-budget.leftover) })
         : `${t("log.limit.left", { amount: money(budget.leftover) })} · ${t("budgets.perDay", {
               amount: money(leftPerDay(budget.leftover, budget.window, now), false),
           })}`;
-    const limit = money(budget.amount, false);
+    const limit =
+        figureCurrency === currency ? money(budget.amount, false) : `${money(budget.amount, false)} ${currency}`;
 
     return (
         <Pressable

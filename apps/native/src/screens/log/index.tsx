@@ -259,7 +259,7 @@ export function Log() {
     const showUpcomingSection = filter === "upcoming" || (filter === "all" && showUpcoming);
     const upcoming = useUpcomingTransactions(db, nowMs, showUpcomingSoon, showUpcomingSection);
     const insights = useLogInsights(db, nowMs, period, firstWeekday, currency, rates);
-    const mainBudget = useCurrentMainBudget(db, nowMs);
+    const mainBudget = useCurrentMainBudget(db, nowMs, period === "month");
     const currencyOptions = logCurrencyOptions({
         // `rates` holds only the on-screen currency (#237); USD passes via the frozen `amountUsd`.
         convertible: (code) => code === "USD" || valued.has(code),

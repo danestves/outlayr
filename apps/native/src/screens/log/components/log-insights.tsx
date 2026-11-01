@@ -102,7 +102,7 @@ export function LogInsights({
                 </GlassContainer>
             </View>
 
-            {limit && period === "month" ? <LogLimit {...limit} /> : null}
+            {limit && period === "month" ? <LogLimit {...limit} figureCurrency={figures.currencyCode} /> : null}
 
             {bars ? (
                 <LogPeriodBars

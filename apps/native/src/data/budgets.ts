@@ -313,12 +313,12 @@ function budgetReadStart(row: Pick<Budget, "dateCreated" | "rollover" | "startDa
 }
 
 /** The overall budget with only the expenses its current window and carry read, for screens that show just that. */
-export function useCurrentMainBudget(db: Database, nowMs: number): MainBudgetView | null {
+export function useCurrentMainBudget(db: Database, nowMs: number, enabled = true): MainBudgetView | null {
     const rows = useLiveQuery(mainBudget, () =>
         db.select().from(mainBudget).where(isNull(mainBudget.deletedAt)).limit(1)
     );
     const [row] = rows;
-    const sinceMs = row ? Date.parse(utcDateString(budgetReadStart(row, new Date(nowMs)))) : nowMs + 1;
+    const sinceMs = row && enabled ? Date.parse(utcDateString(budgetReadStart(row, new Date(nowMs)))) : nowMs + 1;
     const contributions = useExpenseContributions(db, nowMs, sinceMs);
     return useMainBudget(db, nowMs, contributions);
 }
