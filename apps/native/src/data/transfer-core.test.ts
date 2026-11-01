@@ -443,7 +443,7 @@ describe("buildImportPlan", () => {
     it("plans one category per unlinked value, on the side most of its typed rows take", () => {
         const unlinked = [
             ["otros ingresos", "Gift", "2026-07-28", "50", "Income"],
-            ["Otros Ingresos ", "Refund", "2026-07-27", "20", "Income"],
+            ["Otros  Ingresos ", "Refund", "2026-07-27", "20", "Income"],
             ["otros ingresos", "Fee", "2026-07-26", "5", "Expense"],
             ["Iglesia", "Tithe", "2026-07-25", "30", ""],
         ];

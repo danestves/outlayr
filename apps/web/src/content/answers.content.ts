@@ -4674,8 +4674,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Logging, budgets, goals, and subscriptions are free, and so is importing your Mint CSV: a Mint category that matches one of yours by name links, and any other comes in as a new category. Matching those other Mint category names to yours with AI needs Outlayr Pro, which is $7.99 a month, $49.99 a year, or $129.99 once in the United States.",
-                            es: "Registrar, los presupuestos, las metas y las suscripciones son gratis, igual que importar tu CSV de Mint: una categoría de Mint que coincide por nombre con una de las tuyas se vincula, y cualquier otra entra como categoría nueva. Asignar esos otros nombres de categoría de Mint a los tuyos con IA requiere Outlayr Pro, que en Estados Unidos cuesta US$7.99 al mes, US$49.99 al año o US$129.99 en un solo pago.",
+                            en: "Logging, budgets, goals, and subscriptions are free, and so is importing your Mint CSV: a Mint category that matches one of yours by name links, and on the free plan any other comes in as a new category. Matching those other names to yours with AI needs Outlayr Pro, which is $7.99 a month, $49.99 a year, or $129.99 once in the United States.",
+                            es: "Registrar, los presupuestos, las metas y las suscripciones son gratis, igual que importar tu CSV de Mint: una categoría de Mint que coincide por nombre con una de las tuyas se vincula, y en el plan gratis cualquier otra entra como categoría nueva. Asignar esos otros nombres a los tuyos con IA requiere Outlayr Pro, que en Estados Unidos cuesta US$7.99 al mes, US$49.99 al año o US$129.99 en un solo pago.",
                         }),
                         question: t({
                             en: "Is Outlayr free like Mint was?",
@@ -4709,8 +4709,8 @@ const answers = {
                                 es: "Una columna Type con palabras como debit y credit, o expense e income, mantiene cada fila como gasto o ingreso. Sin ella, los montos entran en positivo y cada fila sigue lo que diga su categoría. Las cuentas, las etiquetas y las divisiones no entran, así que las filas importadas no tienen cuenta.",
                             }),
                             t({
-                                en: "Rows that look already imported are flagged before you save, new categories are listed, and rows Outlayr cannot read are listed as skipped, with the reason.",
-                                es: "Las filas que parecen ya importadas se marcan antes de guardar, las categorías nuevas aparecen en una lista, y las que Outlayr no puede leer aparecen como omitidas, con el motivo.",
+                                en: "Rows that look already imported are flagged before you save, new categories are listed, and rows with an unreadable date or amount, or no category, are listed as skipped, with the reason.",
+                                es: "Las filas que parecen ya importadas se marcan antes de guardar, las categorías nuevas aparecen en una lista, y las filas con una fecha o un monto ilegible, o sin categoría, aparecen como omitidas, con el motivo.",
                             }),
                         ],
                         id: "mint-csv",
@@ -5368,16 +5368,16 @@ const answers = {
                     {
                         label: t({ en: "Plans", es: "Planes" }),
                         text: t({
-                            en: "Every row imports on any plan: a category that matches one of yours by name links, and any other becomes a new category. Outlayr Pro matches the rest to yours with AI, up to 5,000 rows and 2 MB a file",
-                            es: "Todas las filas se importan en cualquier plan: una categoría que coincide por nombre con una de las tuyas se vincula, y cualquier otra se crea como categoría nueva. Outlayr Pro asigna el resto a las tuyas con IA, hasta 5,000 filas y 2 MB por archivo",
+                            en: "Every readable row with a category imports on any plan: a category that matches one of yours by name links. Outlayr Pro matches the others to yours with AI, up to 5,000 rows and 2 MB a file, and any still unmatched becomes a new category",
+                            es: "Toda fila legible con categoría se importa en cualquier plan: una categoría que coincide por nombre con una de las tuyas se vincula. Outlayr Pro asigna las demás a las tuyas con IA, hasta 5,000 filas y 2 MB por archivo, y cualquiera que siga sin coincidir se crea como categoría nueva",
                         }),
                     },
                 ],
                 faq: [
                     {
                         answer: t({
-                            en: "Yes, the Excel workbook and the CSV. Use them in any spreadsheet app for as long as you like. Importing into Outlayr is free too: a category that matches one of yours by name links, and any other becomes a new category; the English file uses the categories a new Outlayr ledger starts with. Outlayr Pro matches other category names to yours with AI.",
-                            es: "Sí, tanto el libro de Excel como el CSV. Úsalos en cualquier hoja de cálculo el tiempo que quieras. Importarlos a Outlayr también es gratis: una categoría que coincide por nombre con una de las tuyas se vincula, y cualquier otra se crea como categoría nueva. Outlayr Pro asigna los demás nombres de categoría a los tuyos con IA.",
+                            en: "Yes, the Excel workbook and the CSV. Use them in any spreadsheet app for as long as you like. Importing into Outlayr is free too: a category that matches one of yours by name links, and any other becomes a new category; the English file uses the categories a new Outlayr ledger starts with. With Outlayr Pro, AI first matches other category names to yours.",
+                            es: "Sí, tanto el libro de Excel como el CSV. Úsalos en cualquier hoja de cálculo el tiempo que quieras. Importarlos a Outlayr también es gratis: una categoría que coincide por nombre con una de las tuyas se vincula, y cualquier otra se crea como categoría nueva. Con Outlayr Pro, la IA primero asigna los demás nombres de categoría a los tuyos.",
                         }),
                         question: t({ en: "Is the template free?", es: "¿La plantilla es gratis?" }),
                     },

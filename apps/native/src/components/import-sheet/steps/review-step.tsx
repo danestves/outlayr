@@ -229,16 +229,23 @@ const NEW_CATEGORY_TILE_RADIUS = 6;
 interface NewCategoriesHeaderProps {
     categories: readonly PlannedCategory[];
     entryRows: readonly EntryReviewRow[];
+    excluded: ReadonlySet<number>;
     expanded: boolean;
     onToggle: () => void;
     tiles: ReadonlyMap<string, ReviewCategoryTile>;
 }
 
-function NewCategoriesHeader({ categories, entryRows, expanded, onToggle, tiles }: NewCategoriesHeaderProps) {
+function NewCategoriesHeader({ categories, entryRows, excluded, expanded, onToggle, tiles }: NewCategoriesHeaderProps) {
     const t = useTranslation();
     const rowCounts = new Map<string, number>();
     for (const row of entryRows) {
-        rowCounts.set(row.entry.categoryId, (rowCounts.get(row.entry.categoryId) ?? 0) + 1);
+        if (!excluded.has(row.index)) {
+            rowCounts.set(row.entry.categoryId, (rowCounts.get(row.entry.categoryId) ?? 0) + 1);
+        }
+    }
+    const created = categories.filter((category) => rowCounts.has(category.id));
+    if (created.length === 0) {
+        return null;
     }
     return (
         <View>
@@ -251,12 +258,12 @@ function NewCategoriesHeader({ categories, entryRows, expanded, onToggle, tiles 
             >
                 <Text className="text-footnote text-muted">
                     {t(expanded ? "import.reviewNewCategoriesHide" : "import.reviewNewCategoriesShow", {
-                        count: categories.length,
+                        count: created.length,
                     })}
                 </Text>
             </Pressable>
             {expanded
-                ? categories.map((category) => {
+                ? created.map((category) => {
                       const tile = tiles.get(category.id);
                       return (
                           <View className="border-border flex-row items-center gap-3 border-b py-2" key={category.id}>
@@ -377,6 +384,7 @@ function ReviewList({ entryRows, review, sections, skippedRows }: ReviewListProp
             <NewCategoriesHeader
                 categories={review.plan.newCategories}
                 entryRows={entryRows}
+                excluded={review.excluded}
                 expanded={showNewCategories}
                 onToggle={onToggleNewCategories}
                 tiles={review.categoryTile}

@@ -374,31 +374,34 @@ function planCategories(
     rows: readonly (readonly string[])[],
     mapping: ColumnMapping,
     links: ReadonlyMap<string, string>
-): Map<string, PlannedCategory> {
-    const tallies = new Map<string, { name: string; balance: number }>();
+) {
+    const balances = new Map<string, number>();
+    const idByKey = new Map<string, string>();
     const labelsAreDescriptions = mapping.category === mapping.note;
     if (labelsAreDescriptions) {
-        return new Map();
+        return { categories: [], idByKey };
     }
     for (const row of rows) {
-        const name = (row[mapping.category] ?? "").trim();
-        const key = categoryKey(name);
+        const raw = row[mapping.category] ?? "";
+        const key = categoryKey(raw);
         if (key === "" || links.has(key)) {
             continue;
         }
-        const tally = tallies.get(key) ?? { balance: 0, name: capitalizeCategoryName(name) };
+        const name = capitalizeCategoryName(raw);
         const declared = mapping.type == null ? null : parseCsvType(row[mapping.type] ?? "");
+        let balance = balances.get(name) ?? 0;
         if (declared != null) {
-            tally.balance += declared ? 1 : -1;
+            balance += declared ? 1 : -1;
         }
-        tallies.set(key, tally);
+        balances.set(name, balance);
+        idByKey.set(key, `${PLANNED_ID_PREFIX}${name}`);
     }
-    return new Map(
-        [...tallies].map(([key, { name, balance }]) => [
-            key,
-            { id: `${PLANNED_ID_PREFIX}${key}`, income: balance > 0, name },
-        ])
-    );
+    const plannedCategories: PlannedCategory[] = [...balances].map(([name, balance]) => ({
+        id: `${PLANNED_ID_PREFIX}${name}`,
+        income: balance > 0,
+        name,
+    }));
+    return { categories: plannedCategories, idByKey };
 }
 
 /**
@@ -419,10 +422,9 @@ export function buildImportPlan(
     let latest: Date | null = null;
 
     const planned = planCategories(rows, mapping, links);
-    const allLinks = new Map(links);
+    const allLinks = new Map([...links, ...planned.idByKey]);
     const allIncome = new Map(categoryIncome);
-    for (const [key, category] of planned) {
-        allLinks.set(key, category.id);
+    for (const category of planned.categories) {
         allIncome.set(category.id, category.income);
     }
 
@@ -449,7 +451,7 @@ export function buildImportPlan(
         earliest,
         entries,
         latest,
-        newCategories: [...planned.values()].filter((category) => used.has(category.id)),
+        newCategories: planned.categories.filter((category) => used.has(category.id)),
         skipped,
     };
 }
