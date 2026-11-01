@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vite-plus/test";
 
-import { clockAdvances, nextClockTick } from "./clock";
+import { clockAdvances, nextClockTick, nextClockWake } from "./clock";
 
 const HOUR_MS = 3_600_000;
 
@@ -84,6 +84,28 @@ describe("next clock tick", () => {
         );
 
         expect(misses).toStrictEqual([]);
+    });
+});
+
+describe("next clock wake", () => {
+    const now = new Date(2025, 6, 15, 14, 0, 0).getTime();
+
+    it("wakes when a row later today lands, ahead of midnight", () => {
+        const threePm = new Date(2025, 6, 15, 15, 0, 0).getTime();
+
+        expect(nextClockWake(now, threePm)).toBe(HOUR_MS);
+    });
+
+    it("keeps midnight when the next row is tomorrow or later, so no timer outruns a day", () => {
+        const nextMonth = new Date(2025, 7, 15, 15, 0, 0).getTime();
+
+        expect(nextClockWake(now, nextMonth)).toBe(nextClockTick(now));
+    });
+
+    it("keeps midnight with no row, or a row already past, so a stale time cannot spin the timer", () => {
+        expect(nextClockWake(now, null)).toBe(nextClockTick(now));
+        expect(nextClockWake(now, now)).toBe(nextClockTick(now));
+        expect(nextClockWake(now, now - HOUR_MS)).toBe(nextClockTick(now));
     });
 });
 

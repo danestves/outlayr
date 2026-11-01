@@ -9,6 +9,14 @@ export function nextClockTick(nowMs: number): number {
     return delay > 0 ? delay : DAY_MS;
 }
 
+export function nextClockWake(nowMs: number, nextRowMs: number | null): number {
+    const midnight = nextClockTick(nowMs);
+    if (nextRowMs == null || nextRowMs <= nowMs) {
+        return midnight;
+    }
+    return Math.min(midnight, nextRowMs - nowMs);
+}
+
 const CLOCK_REGRESSION_TOLERANCE_MS = 60_000;
 
 /**
