@@ -3,7 +3,7 @@ import { useSyncExternalStore } from "react";
 import { AppState } from "react-native";
 
 import { outsideMoves, outsidePayments, transactions, transfers } from "@/db/schema";
-import { clockAdvances, nextClockTick } from "@/domain/clock";
+import { clockAdvances, nextClockWake } from "@/domain/clock";
 
 import { subscribeToTableChanges } from "./database-changes";
 import { useTabPaused } from "./tab-pause";
@@ -17,7 +17,8 @@ const BOUNDED_TABLES: string[] = [
 const MOUNT_RESTATE_AFTER_MS = 60_000;
 
 let readingMs = Date.now();
-let midnightTimer: ReturnType<typeof setTimeout> | null = null;
+let clockTimer: ReturnType<typeof setTimeout> | null = null;
+let nextRowSource: ((afterMs: number) => number | null) | null = null;
 let teardown: (() => void)[] = [];
 const subscribers = new Set<() => void>();
 
@@ -32,30 +33,56 @@ function publish(candidateMs: number): void {
     }
 }
 
-function armMidnight(): void {
-    if (midnightTimer != null) {
-        clearTimeout(midnightTimer);
+function nextRowAfter(nowMs: number): number | null {
+    try {
+        return nextRowSource?.(nowMs) ?? null;
+    } catch (error) {
+        console.warn("[outlayr] reading the next dated row failed", error);
+        return null;
     }
-    midnightTimer = setTimeout(() => {
-        midnightTimer = null;
-        publish(Date.now());
-        armMidnight();
-    }, nextClockTick(Date.now()));
+}
+
+function armClock(): void {
+    if (clockTimer != null) {
+        clearTimeout(clockTimer);
+    }
+    const nowMs = Date.now();
+    clockTimer = setTimeout(
+        () => {
+            clockTimer = null;
+            publish(Date.now());
+            armClock();
+        },
+        nextClockWake(nowMs, nextRowAfter(nowMs))
+    );
+}
+
+export function bindNextRowSource(read: (afterMs: number) => number | null): () => void {
+    nextRowSource = read;
+    if (clockTimer != null) {
+        armClock();
+    }
+    return () => {
+        if (nextRowSource === read) {
+            nextRowSource = null;
+        }
+    };
 }
 
 function start(): void {
-    armMidnight();
+    armClock();
 
     const phase = AppState.addEventListener("change", (state) => {
         if (state === "active") {
             publish(Date.now());
-            // JS timers stall in the background, so the pending one may target a midnight that already went by.
-            armMidnight();
+            // JS timers stall in the background, so the pending one may target a time that already went by.
+            armClock();
         }
     });
     const changes = BOUNDED_TABLES.map((tableName) =>
         subscribeToTableChanges(tableName, () => {
             publish(Date.now());
+            armClock();
         })
     );
 
@@ -63,9 +90,9 @@ function start(): void {
 }
 
 function stop(): void {
-    if (midnightTimer != null) {
-        clearTimeout(midnightTimer);
-        midnightTimer = null;
+    if (clockTimer != null) {
+        clearTimeout(clockTimer);
+        clockTimer = null;
     }
     for (const off of teardown) {
         off();
@@ -99,7 +126,8 @@ export function readNow(): number {
 
 /**
  * The one "now" every date-bounded read shares: a screen freezing its own `Date.now()` at mount hides rows saved
- * after it. Moves on a write to any `BOUNDED_TABLES` table, on returning to the foreground, and at local midnight.
+ * after it. Moves on a write to any `BOUNDED_TABLES` table, on returning to the foreground, at local midnight, and
+ * when the time of a dated row passes.
  */
 export function useNow(): number {
     return useSyncExternalStore(useTabPaused(subscribe), readNow);

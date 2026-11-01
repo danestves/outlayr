@@ -21,6 +21,7 @@ import { SystemSurfaces } from "@/lib/system-sync";
 import { publishWidgets } from "@/widgets/publish";
 
 import { BackgroundProgram } from "./background-program";
+import { clockWakeAtom } from "./clock-wake";
 import { reconcilePhotos } from "./photo-store-core";
 import { PhotoPasses, PhotoSync } from "./photo-sync";
 import { runPhotoSync } from "./photo-sync-core";
@@ -92,6 +93,7 @@ export const photoSyncAtom = Atom.family((db: Database) =>
 export function BackgroundProgramMount({ db }: { db: Database }) {
     useAtomMount(backgroundProgramAtom(db));
     useAtomMount(photoReconcileAtom(db));
+    useAtomMount(clockWakeAtom(db));
     return null;
 }
 

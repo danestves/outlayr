@@ -121,8 +121,8 @@ function standingFor(
     { now, startAmount, startDate, targetDate }: GoalSpan,
     decimals: number
 ): GoalStanding | null {
-    // Whole local days: `useNow` only ticks at midnight, on writes and on resume, so an instant-level
-    // standing would drift while the screen stays open.
+    // Whole local days: `useNow` restates at midnight, on writes, on resume and as dated rows land, so an
+    // instant-level standing would drift while the screen stays open.
     const from = startOfLocalDay((now ?? new Date()).getTime());
     const opened = startOfLocalDay(startDate.getTime());
     const totalDays = daysBetween(opened, startOfLocalDay(targetDate.getTime()));
