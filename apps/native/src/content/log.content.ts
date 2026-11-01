@@ -223,18 +223,41 @@ const log = {
             fr: "Modifier les favorites…",
             pt: "Editar favoritas…",
         }),
-        "log.insights.currencyShown": t({
-            en: "Currency shown",
-            es: "Moneda mostrada",
-            fr: "Devise affichée",
-            pt: "Moeda exibida",
-            "pt-PT": "Moeda apresentada",
-        }),
         "log.ledger.showFigure": t({
             en: "Show this figure",
             es: "Mostrar esta cifra",
             fr: "Afficher ce montant",
             pt: "Mostrar este valor",
+        }),
+        "log.limit.a11y": t({
+            en: "Monthly limit {limit}, {status}. Opens the budget",
+            es: "Límite mensual {limit}, {status}. Abre el presupuesto",
+            fr: "Limite mensuelle {limit}, {status}. Ouvre le budget",
+            pt: "Limite mensal {limit}, {status}. Abre o orçamento",
+        }),
+        "log.limit.label": t({
+            en: "Monthly limit · {limit}",
+            es: "Límite mensual · {limit}",
+            fr: "Limite mensuelle · {limit}",
+            pt: "Limite mensal · {limit}",
+        }),
+        "log.limit.left": t({
+            en: "{amount} left",
+            es: "{amount} disponible",
+            fr: "{amount} restant",
+            pt: "{amount} disponível",
+        }),
+        "log.limit.over": t({
+            en: "{amount} over",
+            es: "{amount} de más",
+            fr: "{amount} de dépassement",
+            pt: "{amount} a mais",
+        }),
+        "log.limit.overPace": t({
+            en: "{amount} over pace",
+            es: "{amount} sobre el ritmo",
+            fr: "{amount} au-dessus du rythme",
+            pt: "{amount} acima do ritmo",
         }),
         "log.measure.in": t({
             en: "In",

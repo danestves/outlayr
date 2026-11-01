@@ -1,13 +1,11 @@
-import ArrowDown01Icon from "@hugeicons-pro/core-solid-rounded/ArrowDown01Icon";
-import { HugeiconsIcon } from "@hugeicons/react-native";
 import { GlassContainer } from "expo-glass-effect";
 import { use } from "react";
+import type { ComponentProps } from "react";
 import { View } from "react-native";
 
 import { AmountsHiddenContext } from "@/components/amount-text";
 import { LedgerHead } from "@/components/ledger-head";
 import { MonoLabel } from "@/components/mono-label";
-import { TapMenu } from "@/components/tap-menu";
 import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
@@ -19,24 +17,24 @@ import { formatAmount, maskedAmount } from "@/domain/money";
 import type { BarPeriod, PeriodBar } from "@/domain/period-bars";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useLanguage, useTranslation } from "@/i18n/context";
-import { useColors } from "@/theme/use-colors";
 
 import { measureCells, MEASURE_WORD_KEY, PERIOD_PHRASE_KEY } from "../labels";
 import { AmountsEyeButton } from "./amounts-eye-button";
-import { DisplayCurrencyChip } from "./display-currency-chip";
 import { LogHeroNumber } from "./log-hero-number";
+import { LogLimit } from "./log-limit";
 import { LogPeriodBars } from "./log-period-bars";
+import { LogScopeMenu } from "./log-scope-menu";
 import { LogSparkline } from "./log-sparkline";
 
 const LOG_CONTROLS = { alignItems: "center", flexDirection: "row", gap: 8 } as const;
 const LOG_CONTROLS_UNDER_HERO = { ...LOG_CONTROLS, alignSelf: "flex-end" } as const;
-const MEASURES: readonly LogMeasure[] = ["net", "in", "out"];
 
 interface LogInsightsProps {
     bars?: { period: BarPeriod; rows: PeriodBar[] } | null;
     currencyOptions: readonly string[];
     displayCurrency: string;
     insights: LogInsightsData;
+    limit?: ComponentProps<typeof LogLimit> | null;
     measure: LogMeasure;
     nowMs: number;
     /** Null puts the screen back in the ledger's own currency. */
@@ -66,32 +64,29 @@ export function LogInsights({
     onManageCurrencies,
     nowMs,
     bars = null,
+    limit = null,
     sparkline = null,
 }: LogInsightsProps) {
     const { showCents } = useDisplaySettings().state;
     const t = useTranslation();
     const largeText = useAccessibilityTextSize();
-    const colors = useColors();
     // Falls back to the dominant bucket only when nothing could be placed in `displayCurrency`.
     const figures = insights.perCurrency.find((f) => f.currencyCode === displayCurrency) ?? insights.dominant;
     const alsoThisPeriod = insights.perCurrency.filter((f) => f.currencyCode !== figures.currencyCode);
 
     return (
         <View className="pt-3.5 pb-1.5">
-            <TapMenu
-                accessibilityLabel={t(MEASURE_WORD_KEY[measure])}
-                items={MEASURES.map((option) => ({
-                    icon: option === measure ? "checkmark" : undefined,
-                    id: option,
-                    label: t(MEASURE_WORD_KEY[option]),
-                    onPress: () => onMeasure(option),
-                }))}
-            >
-                <View className="flex-row items-center gap-1 self-start">
-                    <MonoLabel>{`${t(MEASURE_WORD_KEY[measure])} · ${t(PERIOD_PHRASE_KEY[period])}`}</MonoLabel>
-                    <HugeiconsIcon color={colors.muted} icon={ArrowDown01Icon} size={12} />
-                </View>
-            </TapMenu>
+            <LogScopeMenu
+                currencies={currencyOptions}
+                // The figures' own currency, which may be a fallback from the request.
+                currency={figures.currencyCode}
+                label={`${t(MEASURE_WORD_KEY[measure])} · ${t(PERIOD_PHRASE_KEY[period])} · ${figures.currencyCode}`}
+                measure={measure}
+                // The ledger's own currency leads, so choosing it clears the override.
+                onCurrency={(code) => onDisplayCurrency(code === currencyOptions[0] ? null : code)}
+                onManageCurrencies={onManageCurrencies}
+                onMeasure={onMeasure}
+            />
 
             <View className={largeText ? "gap-2 pt-1" : "flex-row items-center gap-2 pt-1"}>
                 <View className={largeText ? undefined : "flex-1"}>
@@ -104,18 +99,10 @@ export function LogInsights({
                 </View>
                 <GlassContainer style={largeText ? LOG_CONTROLS_UNDER_HERO : LOG_CONTROLS}>
                     <AmountsEyeButton />
-                    <DisplayCurrencyChip
-                        // The figures' own currency, which may be a fallback from the request.
-                        code={figures.currencyCode}
-                        onManage={onManageCurrencies}
-                        onSelect={(code) =>
-                            // The ledger's own currency leads, so choosing it clears the override.
-                            onDisplayCurrency(code === currencyOptions[0] ? null : code)
-                        }
-                        options={currencyOptions}
-                    />
                 </GlassContainer>
             </View>
+
+            {limit && period === "month" ? <LogLimit {...limit} figureCurrency={figures.currencyCode} /> : null}
 
             {bars ? (
                 <LogPeriodBars

@@ -166,3 +166,8 @@ export function budgetDetailPace(
         perDay: closed || budget.overBudget ? null : leftPerDay(budget.leftover, budget.window, now),
     };
 }
+
+/** How far spending runs ahead of an even spread of `amount` across the window; 0 when on or under pace. */
+export function overPace(spent: number, amount: number, window: BudgetWindow, now: Date): number {
+    return Math.max(0, spent - amount * budgetPace(window, now).elapsed);
+}

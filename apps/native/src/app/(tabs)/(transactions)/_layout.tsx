@@ -10,7 +10,7 @@ export default function LogLayout() {
             <Stack>
                 <Stack.Screen name="index">
                     <Stack.Header transparent />
-                    <Stack.Screen.Title large>{t("log.title")}</Stack.Screen.Title>
+                    <Stack.Screen.Title>{t("log.title")}</Stack.Screen.Title>
                 </Stack.Screen>
             </Stack>
         </TabPauseProvider>

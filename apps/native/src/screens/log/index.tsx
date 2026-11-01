@@ -14,6 +14,7 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { useBankAccounts } from "@/data/accounts";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { useAutologUsage } from "@/data/autolog-cap";
+import { useCurrentMainBudget } from "@/data/budgets";
 import { goesWithPendingDelete } from "@/data/card-fees-core";
 import { useCategoryMeta } from "@/data/categories";
 import { useLogOverviewIn } from "@/data/debts";
@@ -258,6 +259,7 @@ export function Log() {
     const showUpcomingSection = filter === "upcoming" || (filter === "all" && showUpcoming);
     const upcoming = useUpcomingTransactions(db, nowMs, showUpcomingSoon, showUpcomingSection);
     const insights = useLogInsights(db, nowMs, period, firstWeekday, currency, rates);
+    const mainBudget = useCurrentMainBudget(db, nowMs, period === "month");
     const currencyOptions = logCurrencyOptions({
         // `rates` holds only the on-screen currency (#237); USD passes via the frozen `amountUsd`.
         convertible: (code) => code === "USD" || valued.has(code),
@@ -401,6 +403,12 @@ export function Log() {
                                 bars={bars}
                                 nowMs={nowMs}
                                 insights={insights}
+                                limit={{
+                                    budget: mainBudget,
+                                    currency: globalCurrency,
+                                    nowMs,
+                                    onPress: () => router.push("/budgets/overall"),
+                                }}
                                 measure={measure}
                                 onMeasure={onMeasure}
                                 period={period}

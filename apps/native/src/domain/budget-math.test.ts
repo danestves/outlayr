@@ -14,7 +14,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 import { EN } from "@/i18n/catalog";
 
-import { budgetDetailPace, budgetPeriodPhrase, budgetWindowLabel } from "./budget-math";
+import { budgetDetailPace, budgetPeriodPhrase, budgetWindowLabel, overPace } from "./budget-math";
 
 const d = (y: number, m: number, day: number, h = 0, min = 0): Date => new Date(y, m - 1, day, h, min, 0, 0);
 
@@ -240,5 +240,17 @@ describe("budgetDetailPace", () => {
         const over = { ...budget, leftover: -50, overBudget: true };
 
         expect(budgetDetailPace(over, d(2025, 3, 16), 0).perDay).toBeNull();
+    });
+});
+
+describe("overPace", () => {
+    const window = { end: d(2025, 5, 1), start: d(2025, 4, 1) };
+
+    it("measures spending against an even spread up to now", () => {
+        expect(overPace(600, 1000, window, d(2025, 4, 16))).toBeCloseTo(100);
+    });
+
+    it("is zero while spending trails the spread", () => {
+        expect(overPace(400, 1000, window, d(2025, 4, 16))).toBe(0);
     });
 });
