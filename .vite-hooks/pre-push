@@ -5,10 +5,5 @@
 # the first rather than a competing writer.
 #
 # The dispatcher runs this under `sh -e`, so the first failure stops the push.
-#
-# core.hooksPath skips git-lfs's own hook, so design/captures would push as
-# pointers with no objects. It reads the ref list from stdin, so it goes first.
-command -v git-lfs >/dev/null 2>&1 || { echo "git-lfs is required to push design/captures: brew install git-lfs"; exit 2; }
-git lfs pre-push "$@"
 vp run -r --cache check-types
 vp run --filter '@outlayr/*' --cache test --changed=origin/main --maxWorkers=25%
