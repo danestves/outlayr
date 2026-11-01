@@ -950,7 +950,7 @@ describe("undoCsvImport", () => {
         ["Food", "Bakery", "2026-07-26", "12.50"],
     ];
     const importRows = () =>
-        Effect.runPromise(applyImport(db, buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income)));
+        Effect.runPromise(applyImport(db, buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income, true)));
     const liveNotes = async () =>
         (await db.select().from(transactions).where(isNull(transactions.deletedAt))).map((row) => row.note).toSorted();
 
