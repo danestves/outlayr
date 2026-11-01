@@ -1,9 +1,10 @@
+import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import BetterSqlite3 from "better-sqlite3";
 import { and, eq, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vite-plus/test";
 
-import { accounts, categories, transactions } from "@/db/schema";
+import { accounts, budgets, categories, transactions } from "@/db/schema";
 import { transactionalDatabase } from "@/db/test-database";
 import { analyzeSnapshot } from "@/domain/money-manager/analysis";
 import { readMoneyManagerArchive } from "@/domain/money-manager/archive";
@@ -15,6 +16,7 @@ import type { SqlAll } from "@/domain/money-manager/snapshot";
 import type { OutlayrLedgerState } from "@/domain/money-manager/types";
 
 import { getMeta, META_KEYS } from "./app-meta-core";
+import { budgetsRepo } from "./budgets-core";
 import {
     applyMoneyManagerImport,
     lastMoneyManagerImport,
@@ -161,6 +163,29 @@ describe("applyMoneyManagerImport", () => {
 
         await Effect.runPromise(undoMoneyManagerImport(db));
         await expect(seeded()).resolves.toStrictEqual([{ customName: false, name: "Groceries" }]);
+    });
+
+    it("keeps an imported category on undo once the user has budgeted it", async () => {
+        const db = transactionalDatabase();
+        const record = await Effect.runPromise(applyMoneyManagerImport(db, planFromFixture()));
+        const imported = await db.select({ categoryId: budgets.categoryId }).from(budgets);
+        const budgeted = new Set(imported.map((row) => row.categoryId));
+        const free = record.categoryIds.find((id) => !budgeted.has(id));
+        if (free == null) {
+            throw new Error("every imported category already has a budget");
+        }
+        await Effect.runPromise(
+            budgetsRepo.createBudget(db, { amount: 80, categoryId: free, type: BUDGET_TYPE.month })
+        );
+
+        const counts = await Effect.runPromise(undoMoneyManagerImport(db));
+
+        expect(counts.categories).toBe(record.categoryIds.length - 1);
+        const live = await db
+            .select({ id: categories.id })
+            .from(categories)
+            .where(and(eq(categories.id, free), isNull(categories.deletedAt)));
+        expect(live).toHaveLength(1);
     });
 
     it("rolls the whole import back when a category cannot be saved", async () => {
