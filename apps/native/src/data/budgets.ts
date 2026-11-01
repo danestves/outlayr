@@ -297,14 +297,30 @@ export function overBudgetReadStart(rows: readonly Budget[], now: Date): number 
         if (!row.categoryId) {
             continue;
         }
-        const window = advanceBudgetWindow(row.startDate ?? now, row.type, now);
-        const carried = row.rollover
-            ? carryWindows({ anchor: row.dateCreated ?? window.start, current: window, type: row.type }).windows.at(-1)
-            : undefined;
-        const from = (carried ?? window).start.getTime();
+        const from = budgetReadStart(row, now);
         earliest = earliest === null ? from : Math.min(earliest, from);
     }
     return earliest === null ? null : Date.parse(utcDateString(earliest));
+}
+
+/** The current window's start, or the oldest window a rollover carries from. */
+function budgetReadStart(row: Pick<Budget, "dateCreated" | "rollover" | "startDate" | "type">, now: Date): number {
+    const window = advanceBudgetWindow(row.startDate ?? now, row.type, now);
+    const carried = row.rollover
+        ? carryWindows({ anchor: row.dateCreated ?? window.start, current: window, type: row.type }).windows.at(-1)
+        : undefined;
+    return (carried ?? window).start.getTime();
+}
+
+/** The overall budget with only the expenses its current window and carry read, for screens that show just that. */
+export function useCurrentMainBudget(db: Database, nowMs: number): MainBudgetView | null {
+    const rows = useLiveQuery(mainBudget, () =>
+        db.select().from(mainBudget).where(isNull(mainBudget.deletedAt)).limit(1)
+    );
+    const [row] = rows;
+    const sinceMs = row ? Date.parse(utcDateString(budgetReadStart(row, new Date(nowMs)))) : nowMs + 1;
+    const contributions = useExpenseContributions(db, nowMs, sinceMs);
+    return useMainBudget(db, nowMs, contributions);
 }
 
 export function useOverBudgetCount(db: Database, nowMs: number): number {
