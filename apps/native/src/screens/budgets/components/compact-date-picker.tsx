@@ -14,15 +14,16 @@ export interface CompactDatePickerProps {
     /** Inclusive; either end may be open. */
     range: { end?: Date; start?: Date };
     value: Date;
+    withTime?: boolean;
 }
 
-export function CompactDatePicker({ height = 40, onChange, range, value }: CompactDatePickerProps) {
+export function CompactDatePicker({ height = 40, onChange, range, value, withTime = false }: CompactDatePickerProps) {
     const locale = useDatePickerLocale();
     return (
         <Host style={{ height }}>
             <HStack modifiers={[frame({ maxHeight: Number.POSITIVE_INFINITY })]}>
                 <DatePicker
-                    displayedComponents={["date"]}
+                    displayedComponents={withTime ? ["date", "hourAndMinute"] : ["date"]}
                     modifiers={[datePickerStyle("compact"), labelsHidden(), locale]}
                     onDateChange={onChange}
                     range={range}

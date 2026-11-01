@@ -187,7 +187,7 @@ export function NewDebt(props: NewDebtProps) {
                                     <SwiftText modifiers={[BODY, rowLabel]}>{t("debts.field.date")}</SwiftText>
                                     <Spacer />
                                     <DatePicker
-                                        displayedComponents={["date"]}
+                                        displayedComponents={["date", "hourAndMinute"]}
                                         modifiers={[datePickerStyle("compact"), labelsHidden(), dateLocale]}
                                         onDateChange={form.setDate}
                                         range={{ end: new Date(form.nowMs) }}

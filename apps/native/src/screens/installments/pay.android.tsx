@@ -125,6 +125,7 @@ function PayForm(props: PayFormProps) {
                             onChange={setDate}
                             range={{ end: new Date(nowMs) }}
                             value={date}
+                            withTime
                         />
                         <View className="pt-2">
                             <InlineFailure message={failure} />
