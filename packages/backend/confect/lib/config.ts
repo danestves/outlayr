@@ -58,6 +58,11 @@ const googleCredentials = Config.all({
 
 export const googleConfig = googleCredentials.pipe(Config.map(Option.all));
 
+export const notionConfig = Config.all({
+    clientId: text("NOTION_CLIENT_ID"),
+    clientSecret: secret("NOTION_CLIENT_SECRET"),
+}).pipe(Config.map(Option.all));
+
 export const emailConfig = Config.all({
     accountId: text("CLOUDFLARE_ACCOUNT_ID"),
     from: text("EMAIL_FROM"),
@@ -105,5 +110,6 @@ export const authSettings = Config.all({
     email: emailConfig,
     google: googleConfig,
     nativeAppUrl,
+    notion: notionConfig,
     siteUrl,
 });

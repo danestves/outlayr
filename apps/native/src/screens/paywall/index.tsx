@@ -81,6 +81,7 @@ function Comparison() {
                 <Row free={t("pro.value.off")} label={t("pro.row.devices")} pro={t("pro.value.on")} />
                 <Row free={t("pro.value.off")} label={t("pro.row.photos")} pro={t("pro.value.on")} />
                 <Row free={t("pro.value.off")} label={t("pro.row.import")} pro={t("pro.value.on")} />
+                <Row free={t("pro.value.off")} label={t("pro.row.notion")} pro={t("pro.value.on")} />
                 <Row free={t("pro.value.off")} label={t("pro.row.lookup")} pro={t("pro.value.web")} />
                 {alternateIconsSupported ? (
                     <Row free="1" label={t("pro.row.icons")} pro={String(APP_ICONS.length)} />

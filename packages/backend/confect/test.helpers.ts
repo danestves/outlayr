@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 import betterAuthTest from "@convex-dev/better-auth/test";
 import { PRO_ENTITLEMENT_ID } from "@outlayr/money/contract";
+import { symmetricEncrypt } from "better-auth/crypto";
 import { RevenueCat } from "convex-revenuecat";
 import type { TestConvex } from "convex-test";
 import type { GenericSchema, SchemaDefinition } from "convex/server";
@@ -11,7 +12,7 @@ import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
 
 import { components } from "../convex/_generated/api";
-import "./lib/betterAuth";
+import { createAuth } from "./lib/betterAuth";
 
 // `safeGetAuthUser` needs both an unexpired `session` row (`identity.sessionId`) and a `user` row (`identity.subject`).
 
@@ -115,6 +116,27 @@ export async function grantPro(t: AnyTestConvex, identity: Pick<SeededIdentity, 
             },
         })
     );
+}
+
+export async function linkNotionAccount(t: AnyTestConvex, userId: string, accessToken = "notion-token"): Promise<void> {
+    ensureAuthComponentRegistered(t);
+    const now = Date.now();
+    await t.run(async (ctx) => {
+        const { secretConfig } = await createAuth(ctx).$context;
+        await ctx.runMutation(components.betterAuth.adapter.create, {
+            input: {
+                data: {
+                    accessToken: await symmetricEncrypt({ data: accessToken, key: secretConfig }),
+                    accountId: "notion-user",
+                    createdAt: now,
+                    providerId: "notion",
+                    updatedAt: now,
+                    userId,
+                },
+                model: "account",
+            },
+        });
+    });
 }
 
 export interface RecordedRequest {

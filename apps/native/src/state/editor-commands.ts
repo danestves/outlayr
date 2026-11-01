@@ -28,7 +28,7 @@ export const createTagCommand = createCommand({
 
 export type ChosenImportFile = { error: FileStepError } | { event: ImportFlowEvent };
 
-function readPickedImport(picked: PickedFile): ChosenImportFile {
+export function readPickedImport(picked: PickedFile): ChosenImportFile {
     if (picked.text.length > HARD_PARSE_REJECT_CHARS) {
         return { error: { cause: "tooLarge" } };
     }

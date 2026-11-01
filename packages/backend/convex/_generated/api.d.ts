@@ -29,6 +29,7 @@ import type * as mcp from "../mcp.js";
 import type * as mcpEntries from "../mcpEntries.js";
 import type * as mcpLedger from "../mcpLedger.js";
 import type * as merchantKnowledge from "../merchantKnowledge.js";
+import type * as notion from "../notion.js";
 import type * as openexchangerates from "../openexchangerates.js";
 import type * as photos from "../photos.js";
 import type * as receiptScan from "../receiptScan.js";
@@ -64,6 +65,7 @@ declare const fullApi: ApiFromModules<{
   mcpEntries: typeof mcpEntries;
   mcpLedger: typeof mcpLedger;
   merchantKnowledge: typeof merchantKnowledge;
+  notion: typeof notion;
   openexchangerates: typeof openexchangerates;
   photos: typeof photos;
   receiptScan: typeof receiptScan;

@@ -1,6 +1,6 @@
 ---
 title: "Política de privacidad"
-description: "Qué guarda Outlayr en tu celular, qué llega a nuestros servidores, a la IA y a las analíticas, y cómo borrarlo. Vigente desde el 2 de noviembre de 2026."
+description: "Qué guarda Outlayr en tu celular, qué llega a nuestros servidores, a la IA y a las analíticas, y cómo borrarlo. Vigente desde el 16 de noviembre de 2026."
 intro: "Esta política explica qué recopila Outlayr, adónde va, cuánto tiempo se conserva y qué puedes hacer al respecto. Esta traducción se ofrece para tu comodidad. Si hay alguna diferencia con la versión en inglés, prevalece la versión en inglés."
 ---
 
@@ -13,6 +13,7 @@ intro: "Esta política explica qué recopila Outlayr, adónde va, cuánto tiempo
 - Nada va a Anthropic ni a ElevenLabs hasta que lo permitas. La app lo pregunta durante la configuración inicial, o después de que inicias sesión, y Dictar un registro y Escanear un recibo vuelven a preguntar hasta que lo permitas. Importar desde una captura, para planes de cuotas, pregunta la primera vez que lo usas, aunque ya hayas permitido lo demás. Retira tu permiso cuando quieras en **Configuración › Enviar datos a proveedores de IA**. Una vez permitido, las sugerencias de comercios y las búsquedas web quedan activadas, y ambas se pueden desactivar en **Configuración › Autocompletado**. Activar Autocompletado también permite enviar datos a proveedores de IA.
 - La app envía analíticas de uso y reportes de fallas a PostHog: qué pantallas abres, cuándo guardas algo y los errores. Nunca montos, comercios, notas ni nombres. Empieza desactivado si la región de tu dispositivo está en el EEE o el Reino Unido, y activado en el resto del mundo. Cámbialo en **Configuración › Compartir analíticas**. Nuestro servidor también le informa a PostHog el tamaño, el costo y la velocidad de cada solicitud a Anthropic, nunca su contenido, y solo la vincula a tu cuenta mientras Compartir analíticas está activado.
 - Este sitio web también usa PostHog, con una cookie. Si estás en el EEE o el Reino Unido, te pregunta primero. Cambia tu respuesta en el pie de página, en **Cookies**.
+- Con Outlayr Pro puedes conectar Notion para importar gastos de tus bases de datos de Notion. Guardamos cifrada en nuestros servidores la clave de acceso de Notion para que puedas volver a importar, hasta que desconectes Notion o elimines tu cuenta. Lo que leemos de Notion pasa por nuestro servidor hacia tu celular y no se guarda.
 - Puedes conectar a tu cuenta un asistente de IA como Claude. Una vez que lo apruebas, puede leer lo que tus dispositivos sincronizaron y, con Outlayr Pro, agregar entradas. Lo que lee se rige por la política de privacidad de ese asistente.
 - Sin anuncios y sin rastreo en apps de otras empresas. No vendemos ni compartimos tu información personal.
 - Puedes eliminar tu cuenta y todo lo que está sincronizado con ella desde la app en cualquier momento: **Configuración › Cuenta › Eliminar cuenta**.
@@ -42,6 +43,8 @@ Todos los tipos de datos que maneja Outlayr, en un solo lugar. Las secciones sig
 | Foto del recibo | Escaneo de recibo | Nuestros servidores, Anthropic | No se conserva |
 | Captura del plan de cuotas | Importación de plan de cuotas | Nuestros servidores, Anthropic | No se conserva |
 | Descripciones del archivo | Importación de CSV | Nuestros servidores, Anthropic (Pro) | No se conservan |
+| Clave de acceso de Notion (cifrada), ID de usuario de Notion | Conectar Notion (Pro) | Nuestros servidores | Hasta que desconectes Notion o elimines tu cuenta |
+| Nombres, columnas y filas de las bases de datos de Notion que elijas | Importación desde Notion (Pro) | Notion, nuestros servidores, tu dispositivo | No se conservan en nuestros servidores |
 | Dirección web, dirección IP | Logos | Logo.dev, Google | Según sus políticas |
 | Registros de compra, ID de usuario, nombre, correo electrónico | Al abrir la app, Pro | RevenueCat, Apple o Google, nuestros servidores | Hasta la eliminación de la cuenta |
 | ID de instalación, versión de la app, errores | Búsqueda de actualizaciones | Expo | Según la política de Expo |
@@ -117,6 +120,21 @@ Cuando eliminas una entrada en un dispositivo sincronizado, nuestros servidores 
 ### Desactivar la sincronización
 
 Desactivar la sincronización hace que ese dispositivo deje de enviar cambios. No quita lo que ya está en nuestros servidores. Para quitarlo, [elimina tu cuenta](#eliminar-y-exportar).
+
+## Conectar Notion
+
+Con Outlayr Pro puedes conectar un espacio de trabajo de Notion e importar gastos de sus bases de datos. Notion te pregunta qué páginas compartir con Outlayr, y Outlayr solo puede leer esas. No puede cambiar, agregar ni borrar nada en Notion.
+
+Al conectar, Notion le da a nuestro servidor una clave de acceso y tu ID de usuario de Notion. Guardamos la clave cifrada en nuestros servidores, vinculada a tu cuenta, para que puedas volver a importar más adelante sin conectar de nuevo. Nunca vemos tu contraseña de Notion y no guardamos tu nombre ni tu correo de Notion.
+
+Al importar, nuestro servidor usa la clave para leer las bases de datos que elijas: sus nombres, los nombres de sus columnas y sus filas, y los nombres de las filas a las que enlazan. Se las envía a tu celular, que arma la importación ahí. Nada de lo que se lee de Notion se guarda en nuestros servidores, y tu celular conserva solo las entradas que importes.
+
+- **Desconecta** Notion cuando quieras en **Configuración › Importar › Notion**. Nuestro servidor le pide a Notion que revoque la clave y la borra.
+- Quitar Outlayr en la configuración de Notion también revoca la clave. La borramos la próxima vez que la app intente usarla.
+- Si Pro termina, la clave se conserva hasta que desconectes, pero volver a importar requiere Pro.
+- Eliminar tu cuenta revoca y borra la clave.
+
+Notion Labs, Inc. trata tu espacio de trabajo según [su propia política de privacidad](https://www.notion.com/es-es/trust/privacy-policy). Sabe que tu espacio de trabajo está conectado a Outlayr y cuándo lo lee nuestro servidor.
 
 ## Sugerencias, voz y recibos
 
@@ -254,7 +272,7 @@ Si estás en el Espacio Económico Europeo o en el Reino Unido, estas son las ba
 
 | Finalidad | Base legal |
 | --- | --- |
-| Tu cuenta, la sincronización, el almacenamiento de fotos, la entrada por voz, el escaneo de recibos, la importación de planes de cuotas, la importación de CSV, Pro y las conexiones con asistentes de IA | Contrato: necesitamos estos datos para darte lo que pides. |
+| Tu cuenta, la sincronización, el almacenamiento de fotos, la entrada por voz, el escaneo de recibos, la importación de planes de cuotas, la importación de CSV, la conexión con Notion, Pro y las conexiones con asistentes de IA | Contrato: necesitamos estos datos para darte lo que pides. |
 | Las notas de bienvenida y de Pro, y los avisos de cambios en esta política o nuestros Términos | Contrato: son parte de la cuenta y la suscripción que pediste. |
 | El envío a Anthropic y ElevenLabs de entradas por voz, fotos de recibos, capturas de planes de cuotas, descripciones de CSV y nombres de comercios | Tu consentimiento, dado con Permitir cuando la app lo pregunta y retirado en **Configuración › Enviar datos a proveedores de IA**. |
 | Las sugerencias de comercios, las búsquedas web, la lista compartida de comercios y los logos | Intereses legítimos: agilizar el registro de entradas. Las sugerencias y las búsquedas web solo llegan a Anthropic una vez que lo permites, y desactivar Autocompletado es la forma de oponerte. |
@@ -273,6 +291,7 @@ La [tabla de arriba](#datos-de-un-vistazo) indica cuánto tiempo se conserva cad
 - Los datos sincronizados, incluidos los registros de eliminación de las entradas que eliminaste, y las fotos respaldadas se conservan hasta que elimines tu cuenta.
 - Las conversaciones de voz se eliminan cuando cierras la pantalla de voz, o una hora después de tu último mensaje.
 - Las grabaciones pasan por nuestro servidor hacia ElevenLabs, y las fotos de recibos y las capturas de planes de cuotas hacia Anthropic. No almacenamos ninguna.
+- La clave de acceso de Notion y tu ID de usuario de Notion se conservan hasta que desconectes Notion o elimines tu cuenta. Las filas leídas de Notion no se conservan en nuestros servidores.
 - Las conexiones con asistentes de IA (el nombre y la dirección del asistente, tu aprobación y sus claves de acceso) se conservan hasta que elimines tu cuenta. Las claves de acceso dejan de funcionar tras una hora, o tras 30 días sin renovarse.
 - Las solicitudes de sugerencias de comercios no se conservan una vez respondidas. Las que quedan en cola en segundo plano esperan en nuestro servidor hasta que tu dispositivo recoja la respuesta.
 - El idioma de tu app y el registro de qué correos de bienvenida, de Pro y de cambios recibiste se eliminan con tu cuenta.
@@ -280,7 +299,7 @@ La [tabla de arriba](#datos-de-un-vistazo) indica cuánto tiempo se conserva cad
 - Los elementos de la lista compartida de comercios no están vinculados a nadie. Se actualizan después de 30 o 90 días.
 - Los eventos de analíticas vinculados a tu cuenta se eliminan con ella. Los eventos de una instalación que nunca inició sesión llevan solo un ID de instalación aleatorio y se conservan según la política de conservación de PostHog. Los registros de solicitudes de IA enviados con Compartir analíticas desactivado llevan un ID aleatorio en lugar de tu ID de cuenta, más el ID de la conversación en la entrada por voz, y se conservan de la misma forma.
 - Los eventos del sitio web llevan un ID aleatorio del navegador, o un código que cambia cada día si rechazaste las cookies, y se conservan según la política de conservación de PostHog.
-- Nuestros proveedores, incluidos Anthropic, ElevenLabs, Apple, Google y Expo, conservan los datos que reciben según sus propias políticas de conservación.
+- Nuestros proveedores, incluidos Anthropic, ElevenLabs, Apple, Google y Expo, y Notion si lo conectas, conservan los datos que reciben según sus propias políticas de conservación.
 
 ## Eliminar y exportar
 
@@ -289,10 +308,11 @@ La [tabla de arriba](#datos-de-un-vistazo) indica cuánto tiempo se conserva cad
 Abre **Configuración › Cuenta › Eliminar cuenta**. Es posible que se te pida volver a iniciar sesión para confirmar. Luego, la eliminación sigue este orden:
 
 - Se revoca el acceso de Outlayr a tu inicio de sesión con Apple o Google. En el caso de Apple, nuestro servidor le pide a Apple que lo revoque. En el caso de Google, lo hace la app.
+- Si conectaste Notion, nuestro servidor le pide a Notion que revoque la clave de acceso de Outlayr.
 - Tu registro sincronizado, los registros de eliminación, las fotos respaldadas y las solicitudes de sugerencia pendientes se eliminan de nuestros servidores.
 - Se eliminan tu registro de cliente en RevenueCat y nuestra copia del estado de tu suscripción.
 - Se eliminan tu perfil en PostHog y todos los eventos de analíticas vinculados a él.
-- Se eliminan tus contadores de uso, tus conversaciones de voz abiertas, tus sesiones, el acceso de los asistentes de IA, tus enlaces de inicio de sesión y tu cuenta.
+- Se eliminan tus contadores de uso, tus conversaciones de voz abiertas, tus sesiones, el acceso de los asistentes de IA, tus enlaces de inicio de sesión, la clave de acceso de Notion y tu cuenta.
 
 Empieza de inmediato y se ejecuta desde tu dispositivo. Si se interrumpe, abre de nuevo Configuración › Cuenta y la app continúa donde se detuvo. Si no puedes usar la app, escribe a [support@tryoutlayr.com](mailto:support@tryoutlayr.com). [Elimina tu cuenta](/es/delete-account) reúne estos pasos en una sola página.
 
@@ -351,7 +371,7 @@ Como no vendemos ni compartimos, no hay nada de lo que una señal de Global Priv
 
 - El tráfico entre la app, nuestros servidores y nuestros proveedores viaja por conexiones HTTPS cifradas.
 - Cada solicitud de tus datos está ligada a tu sesión iniciada, y nuestro servidor decide a qué datos puede acceder cada solicitud. Una cuenta no puede leer ni escribir el registro ni las fotos de otra.
-- Los tokens de actualización del inicio de sesión se cifran antes de guardarlos.
+- Los tokens de actualización del inicio de sesión y la clave de acceso de Notion se cifran antes de guardarlos.
 - Las solicitudes a Anthropic y ElevenLabs no llevan nombre, correo electrónico ni ID de cuenta.
 - Puedes proteger Outlayr con el bloqueo biométrico de tu dispositivo (Face ID o Touch ID en iPhone).
 
@@ -359,7 +379,7 @@ Ningún sistema es perfectamente seguro. Si encuentras un problema de seguridad,
 
 ## Transferencias internacionales
 
-Nuestros servidores están en Helsinki, Finlandia, en la Unión Europea. danestves LLC es una empresa estadounidense, y Anthropic, ElevenLabs, RevenueCat, Expo, PostHog, Cloudflare, Logo.dev, Apple y Google tratan los datos que reciben principalmente en Estados Unidos, cuyas leyes pueden protegerlos de forma distinta a las de tu país. Escribe a [support@tryoutlayr.com](mailto:support@tryoutlayr.com) para conocer los detalles de las garantías que se aplican.
+Nuestros servidores están en Helsinki, Finlandia, en la Unión Europea. danestves LLC es una empresa estadounidense, y Anthropic, ElevenLabs, RevenueCat, Expo, PostHog, Cloudflare, Logo.dev, Apple, Google y Notion tratan los datos que reciben principalmente en Estados Unidos, cuyas leyes pueden protegerlos de forma distinta a las de tu país. Escribe a [support@tryoutlayr.com](mailto:support@tryoutlayr.com) para conocer los detalles de las garantías que se aplican.
 
 ## Menores
 

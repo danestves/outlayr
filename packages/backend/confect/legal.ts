@@ -56,6 +56,63 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         document: "privacy",
         effectiveAtMs: Date.UTC(2026, 10, 2),
     },
+    {
+        changes: {
+            en: [
+                {
+                    detail: "With Pro, import from your Notion databases. We keep Notion's access key encrypted until you disconnect it or delete your account.",
+                    label: "Connecting Notion",
+                },
+            ],
+            es: [
+                {
+                    detail: "Con Pro, importa desde tus bases de datos de Notion. Guardamos cifrada la clave de acceso de Notion hasta que la desconectes o elimines tu cuenta.",
+                    label: "Conectar Notion",
+                },
+            ],
+            fr: [
+                {
+                    detail: "Avec Pro, importez depuis vos bases de données Notion. Nous gardons la clé d'accès de Notion chiffrée jusqu'à ce que vous la déconnectiez ou supprimiez votre compte.",
+                    label: "Connexion à Notion",
+                },
+            ],
+            pt: [
+                {
+                    detail: "Com o Pro, importe das suas bases de dados do Notion. Guardamos a chave de acesso do Notion cifrada até você desconectar ou excluir a sua conta.",
+                    label: "Conectar o Notion",
+                },
+            ],
+        },
+        document: "privacy",
+        effectiveAtMs: Date.UTC(2026, 10, 16),
+    },
+    {
+        changes: {
+            en: [
+                { detail: "Added to the plans, with how long a connection lasts.", label: "Notion connection in Pro" },
+            ],
+            es: [
+                {
+                    detail: "Se suma a los planes, junto con cuánto dura una conexión.",
+                    label: "Conexión con Notion en Pro",
+                },
+            ],
+            fr: [
+                {
+                    detail: "Ajoutée aux formules, avec la durée d'une connexion.",
+                    label: "Connexion à Notion dans Pro",
+                },
+            ],
+            pt: [
+                {
+                    detail: "Adicionada aos planos, com quanto tempo dura uma conexão.",
+                    label: "Conexão com o Notion no Pro",
+                },
+            ],
+        },
+        document: "terms",
+        effectiveAtMs: Date.UTC(2026, 10, 16),
+    },
 ];
 
 export const noticeKey = ({ document, effectiveAtMs }: typeof PolicyNotice.Type) => `${document}:${effectiveAtMs}`;
