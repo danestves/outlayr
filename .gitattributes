@@ -1,1 +1,0 @@
-design/captures/*.png filter=lfs diff=lfs merge=lfs -text
