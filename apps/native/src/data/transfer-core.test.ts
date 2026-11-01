@@ -1,4 +1,5 @@
 import BetterSqlite3 from "better-sqlite3";
+import { eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
@@ -439,10 +440,64 @@ describe("buildImportPlan", () => {
         expect(plan.skipped).toStrictEqual([{ reason: "amount", row: 1 }]);
     });
 
-    it("skips a row whose category value was never linked", () => {
-        const bad = [["Travel", "Flight", "2026-07-28", "300"]];
-        const plan = buildImportPlan(bad, MAPPING, "yyyy-MM-dd", ".", links, income);
+    it("plans one category per unlinked value, on the side most of its typed rows take", () => {
+        const unlinked = [
+            ["otros ingresos", "Gift", "2026-07-28", "50", "Income"],
+            ["Otros Ingresos ", "Refund", "2026-07-27", "20", "Income"],
+            ["otros ingresos", "Fee", "2026-07-26", "5", "Expense"],
+            ["Iglesia", "Tithe", "2026-07-25", "30", ""],
+        ];
+        const plan = buildImportPlan(unlinked, { ...MAPPING, type: 4 }, "yyyy-MM-dd", ".", links, income);
+        expect(plan.skipped).toStrictEqual([]);
+        expect(plan.newCategories.map(({ name, income: side }) => ({ name, side }))).toStrictEqual([
+            { name: "Otros Ingresos", side: true },
+            { name: "Iglesia", side: false },
+        ]);
+        const [others, church] = plan.newCategories;
+        expect(plan.entries.map((entry) => [entry.categoryId, entry.income])).toStrictEqual([
+            [others?.id, true],
+            [others?.id, true],
+            [others?.id, false],
+            [church?.id, false],
+        ]);
+    });
+
+    it("still skips a row with no category value", () => {
+        const plan = buildImportPlan(
+            [["  ", "Flight", "2026-07-28", "300"]],
+            MAPPING,
+            "yyyy-MM-dd",
+            ".",
+            links,
+            income
+        );
         expect(plan.skipped).toStrictEqual([{ reason: "category", row: 1 }]);
+        expect(plan.newCategories).toStrictEqual([]);
+    });
+
+    it("never turns a description read in place of a category column into a category", () => {
+        const plan = buildImportPlan(
+            [["STARBUCKS #123", "2026-07-28", "300"]],
+            { ...MAPPING, amount: 2, category: 0, date: 1, note: 0 },
+            "yyyy-MM-dd",
+            ".",
+            links,
+            income
+        );
+        expect(plan.skipped).toStrictEqual([{ reason: "category", row: 1 }]);
+        expect(plan.newCategories).toStrictEqual([]);
+    });
+
+    it("leaves out a planned category whose every row is skipped", () => {
+        const plan = buildImportPlan(
+            [["Travel", "Flight", "someday", "300"]],
+            MAPPING,
+            "yyyy-MM-dd",
+            ".",
+            links,
+            income
+        );
+        expect(plan.newCategories).toStrictEqual([]);
     });
 
     it("skips a ragged row missing the mapped column entirely", () => {
@@ -525,6 +580,82 @@ describe("applyImport", () => {
         expect(failure.operation).toBe("import");
         expect(String(failure.cause)).toContain("disk full");
         await expect(transactionalDb.select().from(transactions)).resolves.toHaveLength(0);
+
+        spy.mockRestore();
+    });
+
+    it("creates each planned category once and files its rows under it", async () => {
+        const unlinked = [
+            ["Travel", "Flight", "2026-07-28", "300"],
+            ["travel", "Hotel", "2026-07-27", "120"],
+            ["Food", "Bakery", "2026-07-26", "12.50"],
+        ];
+        const plan = buildImportPlan(unlinked, MAPPING, "yyyy-MM-dd", ".", links, income);
+        await Effect.runPromise(applyImport(db, plan));
+
+        const created = await db.select().from(categories).where(eq(categories.name, "Travel"));
+        expect(created).toHaveLength(1);
+        expect(created[0]?.income).toBe(false);
+        const rowsOut = await db.select().from(transactions);
+        expect(rowsOut.filter((row) => row.categoryId === created[0]?.id).map((row) => row.note)).toStrictEqual(
+            expect.arrayContaining(["Flight", "Hotel"])
+        );
+        expect(rowsOut.find((row) => row.note === "Bakery")?.categoryId).toBe("cat-food");
+    });
+
+    it("reuses a category of the same name instead of creating a twin", async () => {
+        const plan = buildImportPlan(
+            [["groceries", "Bakery", "2026-07-28", "12.50"]],
+            MAPPING,
+            "yyyy-MM-dd",
+            ".",
+            new Map(),
+            income
+        );
+        await Effect.runPromise(applyImport(db, plan));
+        await expect(db.select().from(categories).where(eq(categories.name, "Groceries"))).resolves.toHaveLength(1);
+        const rowsOut = await db.select().from(transactions);
+        expect(rowsOut[0]?.categoryId).toBe("cat-food");
+    });
+
+    it("creates no category for rows left out of the write", async () => {
+        const plan = buildImportPlan(
+            [
+                ["Travel", "Flight", "2026-07-28", "300"],
+                ["Food", "Bakery", "2026-07-26", "12.50"],
+            ],
+            MAPPING,
+            "yyyy-MM-dd",
+            ".",
+            links,
+            income
+        );
+        const kept = plan.entries.filter((entry) => entry.note === "Bakery");
+        await Effect.runPromise(applyImport(db, { ...plan, entries: kept }));
+        await expect(db.select().from(categories).where(eq(categories.name, "Travel"))).resolves.toHaveLength(0);
+    });
+
+    it("rolls back the created categories when the write fails", async () => {
+        const transactionalDb = makeDb({ withRealTransactions: true });
+        await seed(transactionalDb);
+        const plan = buildImportPlan(
+            [["Travel", "Flight", "2026-07-28", "300"]],
+            MAPPING,
+            "yyyy-MM-dd",
+            ".",
+            links,
+            income
+        );
+        const spy = vi
+            .spyOn(transactionsRepo, "create")
+            .mockReturnValue(
+                Effect.fail(new TransactionsError({ cause: new Error("disk full"), operation: "create" }))
+            );
+
+        await Effect.runPromise(Effect.flip(applyImport(transactionalDb, plan)));
+        await expect(
+            transactionalDb.select().from(categories).where(eq(categories.name, "Travel"))
+        ).resolves.toHaveLength(0);
 
         spy.mockRestore();
     });

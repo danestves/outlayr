@@ -13,6 +13,7 @@ import { parseCsvAmount, parseCsvDate, parseCsvType, transactionsToCsv } from "@
 import type { DecimalSeparator } from "@/domain/transaction-csv";
 
 import { getMeta, META_KEYS } from "./app-meta-core";
+import { capitalizeCategoryName, ensureCategoryByName, presetForName } from "./categories-core";
 import { transactionsRepo } from "./transactions-core";
 
 const CsvTransferOperation = Schema.Literals(["export", "import"]);
@@ -185,12 +186,21 @@ export interface SkippedRow {
     row: number;
 }
 
+export interface PlannedCategory {
+    id: string;
+    income: boolean;
+    name: string;
+}
+
 export interface ImportPlan {
     earliest: Date | null;
     entries: ImportEntry[];
     latest: Date | null;
+    newCategories: PlannedCategory[];
     skipped: SkippedRow[];
 }
+
+const PLANNED_ID_PREFIX = "planned:";
 
 /** Folded, so `"Food"` and `"food "` are linked once rather than separately. */
 export function categoryKey(value: string): string {
@@ -360,6 +370,37 @@ function readImportRow(
     };
 }
 
+function planCategories(
+    rows: readonly (readonly string[])[],
+    mapping: ColumnMapping,
+    links: ReadonlyMap<string, string>
+): Map<string, PlannedCategory> {
+    const tallies = new Map<string, { name: string; balance: number }>();
+    const labelsAreDescriptions = mapping.category === mapping.note;
+    if (labelsAreDescriptions) {
+        return new Map();
+    }
+    for (const row of rows) {
+        const name = (row[mapping.category] ?? "").trim();
+        const key = categoryKey(name);
+        if (key === "" || links.has(key)) {
+            continue;
+        }
+        const tally = tallies.get(key) ?? { balance: 0, name: capitalizeCategoryName(name) };
+        const declared = mapping.type == null ? null : parseCsvType(row[mapping.type] ?? "");
+        if (declared != null) {
+            tally.balance += declared ? 1 : -1;
+        }
+        tallies.set(key, tally);
+    }
+    return new Map(
+        [...tallies].map(([key, { name, balance }]) => [
+            key,
+            { id: `${PLANNED_ID_PREFIX}${key}`, income: balance > 0, name },
+        ])
+    );
+}
+
 /**
  * A row that cannot be read is dropped with its reason rather than defaulted: a guessed
  * date or category is indistinguishable from a real one once it is in the ledger.
@@ -377,8 +418,16 @@ export function buildImportPlan(
     let earliest: Date | null = null;
     let latest: Date | null = null;
 
+    const planned = planCategories(rows, mapping, links);
+    const allLinks = new Map(links);
+    const allIncome = new Map(categoryIncome);
+    for (const [key, category] of planned) {
+        allLinks.set(key, category.id);
+        allIncome.set(category.id, category.income);
+    }
+
     for (const [index, row] of rows.entries()) {
-        const read = readImportRow(row, mapping, dateFormat, decimal, links, categoryIncome);
+        const read = readImportRow(row, mapping, dateFormat, decimal, allLinks, allIncome);
         if (read.entry === null) {
             skipped.push({ reason: read.skipped, row: index + 1 });
             continue;
@@ -395,7 +444,14 @@ export function buildImportPlan(
         }
     }
 
-    return { earliest, entries, latest, skipped };
+    const used = new Set(entries.map((entry) => entry.categoryId));
+    return {
+        earliest,
+        entries,
+        latest,
+        newCategories: [...planned.values()].filter((category) => used.has(category.id)),
+        skipped,
+    };
 }
 
 /**
@@ -425,6 +481,25 @@ const createEntry = (db: Database, entry: ImportEntry) =>
         )
         .pipe(Effect.mapError((error) => new CsvTransferError({ cause: error.cause, operation: "import" })));
 
+const createPlannedCategories = Effect.fn("CsvTransfer.createPlannedCategories")(function* createPlannedCategories(
+    db: Database,
+    plan: ImportPlan
+) {
+    const used = new Set(plan.entries.map((entry) => entry.categoryId));
+    const ids = new Map<string, string>();
+    for (const category of plan.newCategories) {
+        if (!used.has(category.id)) {
+            continue;
+        }
+        const style = presetForName(category.name);
+        const id = yield* ensureCategoryByName(db, category.name, category.income, style.icon, style.color).pipe(
+            Effect.mapError((cause) => new CsvTransferError({ cause, operation: "import" }))
+        );
+        ids.set(category.id, id);
+    }
+    return ids;
+});
+
 export const applyImport = Effect.fn("CsvTransfer.applyImport")(function* applyImport(db: Database, plan: ImportPlan) {
     if (plan.entries.length === 0) {
         return 0;
@@ -433,10 +508,11 @@ export const applyImport = Effect.fn("CsvTransfer.applyImport")(function* applyI
     yield* transaction(
         db,
         Effect.gen(function* write() {
+            const created = yield* createPlannedCategories(db, plan);
             for (const entry of plan.entries) {
                 // Each create reads before it inserts on the one connection the transaction holds, so running them
                 // together interleaves those reads and writes.
-                yield* createEntry(db, entry);
+                yield* createEntry(db, { ...entry, categoryId: created.get(entry.categoryId) ?? entry.categoryId });
             }
         }),
         (cause) => new CsvTransferError({ cause, operation: "import" })
