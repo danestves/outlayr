@@ -25,6 +25,24 @@ describe("scrubQueryParams", () => {
         ]);
     });
 
+    it("drops a URL's query, where a support mailto carries device diagnostics", () => {
+        const event = {
+            event: "$exception",
+            properties: {
+                $exception_list: [
+                    {
+                        type: "Error",
+                        value: "Unable to open URL: mailto:support@tryoutlayr.com?subject=Outlayr%20feedback&body=Device%3A%20Jane%27s%20iPhone",
+                    },
+                ],
+            },
+        };
+
+        expect(scrubQueryParams(event)?.properties.$exception_list).toStrictEqual([
+            { type: "Error", value: "Unable to open URL: mailto:support@tryoutlayr.com" },
+        ]);
+    });
+
     it("passes events without exceptions through", () => {
         const event = { event: "$screen", properties: { $screen_name: "log" } };
         expect(scrubQueryParams(event)).toStrictEqual({ event: "$screen", properties: { $screen_name: "log" } });
