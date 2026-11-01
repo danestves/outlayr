@@ -164,6 +164,7 @@ export function NewDebt(props: NewDebtProps) {
                             onChange={form.setDate}
                             range={{ end: new Date(form.nowMs) }}
                             value={form.date}
+                            withTime
                         />
                     )}
                     <PayBackByField form={form} />

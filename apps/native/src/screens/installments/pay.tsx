@@ -11,8 +11,9 @@ import { MonoLabel } from "@/components/mono-label";
 import { ScreenHeader } from "@/components/screen-header";
 import { revealEntering } from "@/components/sentence/sentence-motion";
 import { Text } from "@/components/text";
+import { useDisplaySettings } from "@/contexts/display-settings-context";
 import { useNow } from "@/data/use-now";
-import { formatTargetDate } from "@/domain/dates";
+import { formatTargetDate, formatTime } from "@/domain/dates";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { CompactDatePicker } from "@/screens/budgets/components/compact-date-picker";
 import { EditorRow } from "@/screens/budgets/components/editor-row";
@@ -32,6 +33,7 @@ function PayForm(props: PayFormProps) {
     const t = useTranslation();
     const insets = useSafeAreaInsets();
     const { language } = useLanguage();
+    const { use24Hour } = useDisplaySettings().state;
     const {
         accountName,
         amount,
@@ -128,19 +130,17 @@ function PayForm(props: PayFormProps) {
                                 <EditorRow
                                     label={t("installments.pay.date")}
                                     onPress={() => setPickingDate((open) => !open)}
-                                    value={formatTargetDate(date, language)}
+                                    value={`${formatTargetDate(date, language)} ${formatTime(date, use24Hour, language)}`}
                                 />
                                 {pickingDate ? (
                                     <Animated.View className="border-border border-b py-2" entering={revealEntering()}>
                                         <CompactDatePicker
                                             label={t("installments.pay.date")}
-                                            onChange={(picked) => {
-                                                setPickingDate(false);
-                                                setDate(picked);
-                                            }}
+                                            onChange={setDate}
                                             onDismiss={() => setPickingDate(false)}
                                             range={{ end: new Date(nowMs) }}
                                             value={date}
+                                            withTime
                                         />
                                     </Animated.View>
                                 ) : null}
