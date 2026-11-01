@@ -23,7 +23,7 @@ import {
 import { stageTransfer } from "@/data/transfers-core";
 import { loadValuationIn } from "@/data/valuation-source";
 import type { Database } from "@/db/client";
-import { accounts, appMeta, budgets, categories, transactions, transfers } from "@/db/schema";
+import { accounts, appMeta, budgetPlans, budgets, categories, transactions, transfers } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { DEFAULT_CURRENCY } from "@/domain/money";
 import type {
@@ -414,14 +414,32 @@ export const applyMoneyManagerImport = Effect.fn("MoneyManagerImport.apply")(fun
 
 const undoQuery = <A>(run: () => PromiseLike<A>) => Effect.tryPromise({ catch: fail("undo"), try: run });
 
+export const NOTHING_UNDONE = {
+    accounts: 0,
+    budgets: 0,
+    categories: 0,
+    transactions: 0,
+    transfers: 0,
+} satisfies MmUndoCounts;
+
 export const undoMoneyManagerImport = Effect.fn("MoneyManagerImport.undo")(function* undoMoneyManagerImport(
     db: Database
 ) {
     const record = yield* lastMoneyManagerImport(db).pipe(Effect.mapError(fail("undo")));
     if (record == null) {
-        return { accounts: 0, budgets: 0, categories: 0, transactions: 0, transfers: 0 } satisfies MmUndoCounts;
+        return NOTHING_UNDONE;
     }
+    return yield* undoRecordedImport(db, record, META_KEYS.moneyManagerImport);
+});
 
+export const undoRecordedImport = Effect.fn("MoneyManagerImport.undoRecorded")(function* undoRecordedImport(
+    db: Database,
+    record: Pick<
+        MmImportRecord,
+        "accountIds" | "budgetIds" | "categoryIds" | "renamedCategories" | "transactionIds" | "transferIds"
+    >,
+    metaKey: string
+) {
     // Repo deletes open their own transaction, which this one cannot nest.
     return yield* transaction(
         db,
@@ -470,7 +488,7 @@ export const undoMoneyManagerImport = Effect.fn("MoneyManagerImport.undo")(funct
                         )
                 );
             }
-            yield* undoQuery(() => db.delete(appMeta).where(eq(appMeta.key, META_KEYS.moneyManagerImport)));
+            yield* undoQuery(() => db.delete(appMeta).where(eq(appMeta.key, metaKey)));
             return {
                 accounts: removedAccounts,
                 budgets: removedBudgets,
@@ -560,7 +578,19 @@ const tombstoneUnusedCategories = Effect.fn("MoneyManagerImport.tombstoneUnusedC
                     .from(transactions)
                     .where(and(isNull(transactions.deletedAt), inArray(transactions.categoryId, chunk)))
             );
-            for (const row of rows) {
+            const budgeted = yield* undoQuery(() =>
+                db
+                    .select({ categoryId: budgets.categoryId })
+                    .from(budgets)
+                    .where(and(isNull(budgets.deletedAt), inArray(budgets.categoryId, chunk)))
+            );
+            const planned = yield* undoQuery(() =>
+                db
+                    .select({ categoryId: budgetPlans.categoryId })
+                    .from(budgetPlans)
+                    .where(and(isNull(budgetPlans.deletedAt), inArray(budgetPlans.categoryId, chunk)))
+            );
+            for (const row of [...rows, ...budgeted, ...planned]) {
                 if (row.categoryId != null) {
                     keep.add(row.categoryId);
                 }

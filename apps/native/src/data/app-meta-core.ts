@@ -14,6 +14,7 @@ export const META_KEYS = {
     autologUsage: "autologUsage",
     autologWaiting: "autologWaiting",
     categoryLanguage: "categoryLanguage",
+    csvImport: "csvImport",
     currency: "currency",
     /** `bootstrap` seeds `currency` unconditionally, so only this tells a chosen code from the default. */
     currencyChosen: "currencyChosen",

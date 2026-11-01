@@ -1,7 +1,9 @@
 import * as Effect from "effect/Effect";
 
+import type { LastImport } from "@/data/last-import";
+import { undoMoneyManagerImport } from "@/data/money-manager-import-core";
 import { transactionsRepo } from "@/data/transactions-core";
-import { applyImport } from "@/data/transfer-core";
+import { applyImport, undoCsvImport } from "@/data/transfer-core";
 import type { ImportPlan } from "@/data/transfer-core";
 import type { Database } from "@/db/client";
 import { attachImportLogos } from "@/lib/import-logo-attach";
@@ -21,4 +23,11 @@ export const importWithLogosCommand = ledgerCommand("import-with-logos", (input:
         Effect.catchCause(() => Effect.succeed(input.plan.entries)),
         Effect.flatMap((entries) => applyImport(input.db, { ...input.plan, entries }))
     )
+);
+
+export const undoImportCommand = ledgerCommand(
+    "undo-import",
+    Effect.fn("Ledger.undoImport")(function* undoImport(input: { db: Database; kind: LastImport["kind"] }) {
+        return input.kind === "csv" ? yield* undoCsvImport(input.db) : yield* undoMoneyManagerImport(input.db);
+    })
 );

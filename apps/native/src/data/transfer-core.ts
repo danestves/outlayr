@@ -2,6 +2,7 @@ import { ENTRY_RATE_TYPES } from "@outlayr/money/rates";
 import type { EntryRateType } from "@outlayr/money/rates";
 import { desc, eq, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
@@ -12,11 +13,12 @@ import { DEFAULT_CURRENCY } from "@/domain/money";
 import { parseCsvAmount, parseCsvDate, parseCsvType, transactionsToCsv } from "@/domain/transaction-csv";
 import type { DecimalSeparator } from "@/domain/transaction-csv";
 
-import { getMeta, META_KEYS } from "./app-meta-core";
+import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
 import { capitalizeCategoryName, ensureCategoryByName, formatCategoryName, presetForName } from "./categories-core";
+import { NOTHING_UNDONE, undoRecordedImport } from "./money-manager-import-core";
 import { transactionsRepo } from "./transactions-core";
 
-const CsvTransferOperation = Schema.Literals(["export", "import"]);
+const CsvTransferOperation = Schema.Literals(["export", "import", "undo"]);
 
 export class CsvTransferError extends Schema.TaggedError<CsvTransferError>()("CsvTransferError", {
     cause: Schema.Defect(),
@@ -525,7 +527,10 @@ const createPlannedCategories = Effect.fn("CsvTransfer.createPlannedCategories")
     plan: ImportPlan
 ) {
     const used = new Set(plan.entries.map((entry) => entry.categoryId));
+    const existing = yield* attempt("import", () => db.select({ id: categories.id }).from(categories));
+    const known = new Set(existing.map((row) => row.id));
     const ids = new Map<string, string>();
+    const created = new Set<string>();
     for (const category of plan.newCategories) {
         if (!used.has(category.id)) {
             continue;
@@ -535,9 +540,26 @@ const createPlannedCategories = Effect.fn("CsvTransfer.createPlannedCategories")
             Effect.mapError((cause) => new CsvTransferError({ cause, operation: "import" }))
         );
         ids.set(category.id, id);
+        if (!known.has(id)) {
+            created.add(id);
+        }
     }
-    return ids;
+    return { created: [...created], ids };
 });
+
+const CsvImportRecord = Schema.Struct({
+    categoryIds: Schema.mutable(Schema.Array(Schema.String)),
+    importedAt: Schema.Number,
+    transactionIds: Schema.mutable(Schema.Array(Schema.String)),
+});
+
+type CsvImportRecord = typeof CsvImportRecord.Type;
+
+const decodeImportRecord = Schema.decodeUnknownOption(Schema.fromJsonString(CsvImportRecord));
+
+export function parseCsvImportRecord(raw: string | null | undefined): CsvImportRecord | null {
+    return raw == null || raw === "" ? null : Option.getOrNull(decodeImportRecord(raw));
+}
 
 export const applyImport = Effect.fn("CsvTransfer.applyImport")(function* applyImport(db: Database, plan: ImportPlan) {
     if (plan.entries.length === 0) {
@@ -547,15 +569,43 @@ export const applyImport = Effect.fn("CsvTransfer.applyImport")(function* applyI
     yield* transaction(
         db,
         Effect.gen(function* write() {
-            const created = yield* createPlannedCategories(db, plan);
+            const { created, ids } = yield* createPlannedCategories(db, plan);
+            const transactionIds: string[] = [];
             for (const entry of plan.entries) {
                 // Each create reads before it inserts on the one connection the transaction holds, so running them
                 // together interleaves those reads and writes.
-                yield* createEntry(db, { ...entry, categoryId: created.get(entry.categoryId) ?? entry.categoryId });
+                const id = yield* createEntry(db, {
+                    ...entry,
+                    categoryId: ids.get(entry.categoryId) ?? entry.categoryId,
+                });
+                transactionIds.push(id);
             }
+            const record = { categoryIds: created, importedAt: Date.now(), transactionIds } satisfies CsvImportRecord;
+            yield* setMeta(db, META_KEYS.csvImport, JSON.stringify(record)).pipe(
+                Effect.mapError((cause) => new CsvTransferError({ cause, operation: "import" }))
+            );
         }),
         (cause) => new CsvTransferError({ cause, operation: "import" })
     );
 
     return plan.entries.length;
+});
+
+export const lastCsvImport = Effect.fn("CsvTransfer.lastCsvImport")(function* lastCsvImport(db: Database) {
+    const raw = yield* getMeta(db, META_KEYS.csvImport).pipe(
+        Effect.mapError((cause) => new CsvTransferError({ cause, operation: "undo" }))
+    );
+    return parseCsvImportRecord(raw);
+});
+
+export const undoCsvImport = Effect.fn("CsvTransfer.undoCsvImport")(function* undoCsvImport(db: Database) {
+    const record = yield* lastCsvImport(db);
+    if (record == null) {
+        return NOTHING_UNDONE;
+    }
+    return yield* undoRecordedImport(
+        db,
+        { ...record, accountIds: [], budgetIds: [], transferIds: [] },
+        META_KEYS.csvImport
+    ).pipe(Effect.mapError((cause) => new CsvTransferError({ cause, operation: "undo" })));
 });
