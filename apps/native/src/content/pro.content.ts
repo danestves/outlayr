@@ -514,6 +514,13 @@ const pro = {
             pt: "Apps de parcelamento",
             "pt-PT": "Apps de prestações",
         }),
+        "pro.row.notion": t({
+            en: "Notion connection",
+            es: "Conexión con Notion",
+            fr: "Connexion à Notion",
+            pt: "Conexão com o Notion",
+            "pt-PT": "Ligação ao Notion",
+        }),
         "pro.row.payoffPlans": t({
             en: "Payoff plans",
             es: "Planes de pago",
