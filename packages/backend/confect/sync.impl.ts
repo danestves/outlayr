@@ -8,7 +8,7 @@ import type { Docs } from "./_generated/docs";
 import type { Id } from "./_generated/id";
 import databaseSchema from "./_generated/schema";
 import { DatabaseReader, DatabaseWriter, MutationCtx, QueryCtx } from "./_generated/services";
-import { requireUserId } from "./lib/auth";
+import { optionalUserId, requireUserId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
 import { refuseWhileDeleting, seqCounter } from "./lib/syncGuards";
 import { incomingWins, SYNCED_TABLES } from "./lib/syncTables";
@@ -276,20 +276,19 @@ const currentSeq = FunctionImpl.make(
     databaseSchema,
     spec,
     "currentSeq",
-    Effect.fn("Sync.currentSeq")(
-        function* currentSeq() {
-            const ctx = yield* QueryCtx;
-            const reader = yield* DatabaseReader;
-            const userId = yield* requireUserId(ctx);
-            const state = yield* reader
-                .table("syncState")
-                .get("by_user", userId)
-                .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
-            return state?.nextSeq ?? 0;
-        },
-        Effect.catchTags({ Unauthenticated: dieAsConvexError }),
-        Effect.orDie
-    )
+    Effect.fn("Sync.currentSeq")(function* currentSeq() {
+        const ctx = yield* QueryCtx;
+        const reader = yield* DatabaseReader;
+        const userId = yield* optionalUserId(ctx);
+        if (userId === null) {
+            return 0;
+        }
+        const state = yield* reader
+            .table("syncState")
+            .get("by_user", userId)
+            .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
+        return state?.nextSeq ?? 0;
+    }, Effect.orDie)
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(

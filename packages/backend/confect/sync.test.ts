@@ -945,10 +945,12 @@ describe("currentSeq", () => {
         await expect(authenticatedAs(t, owner).query(api.sync.currentSeq, {})).resolves.toBe(2);
     });
 
-    it("refuses a caller with no session", async () => {
+    it("answers zero to a caller with no session instead of another account's watermark", async () => {
         const t = harness();
+        const owner = await seedProUser(t);
+        await pushAs(t, owner, DEVICE_A, [transactionRow("t1", 100)]);
 
-        await expect(t.query(api.sync.currentSeq, {})).rejects.toThrow(ConvexError);
+        await expect(t.query(api.sync.currentSeq, {})).resolves.toBe(0);
     });
 });
 
