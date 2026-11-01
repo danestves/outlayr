@@ -9,7 +9,7 @@ Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr
 - Log an expense or income as one sentence ("Spent $42.00 at Costco for Groceries from Chase today"), tapping any word to change it.
 - Voice entry: speak the purchase and the fields fill in.
 - Receipt scanning: take a photo or pick one from the library; the store, date, total, and every line are read for you.
-- CSV import from a bank or another app, and from a Notion database exported as Markdown & CSV (the zip as it comes), or with Pro by connecting Notion and picking its databases. Duplicates are skipped; category names that match yours and known merchants are matched to your categories on the phone, and any other category name becomes a new category.
+- CSV import from a bank or another app, and from a Notion database exported as Markdown & CSV (the zip as it comes), or with Pro by connecting Notion and picking its databases. Duplicates are skipped; category names that match yours and known merchants are matched to your categories on the phone, and with Pro any other category name becomes a new category; on the free plan those rows are skipped.
 - Category budgets or one overall monthly budget, with carry-over and a projection of where the current pace ends.
 - Savings goals with a target date, showing the monthly amount needed and whether you are ahead or behind.
 - Accounts for cash, cards, savings, and debts, each in its own currency. Transfers between accounts are not counted as spending.

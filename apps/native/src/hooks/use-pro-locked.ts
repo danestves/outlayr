@@ -1,5 +1,6 @@
 import { useRevenueCat } from "@/contexts/revenuecat-context";
 import { convex } from "@/lib/convex";
+import type { Entitlement } from "@/lib/revenuecat-service";
 
 // Most of Pro runs on the account service, so a build without one has no checkout and must gate nothing.
 export function proSellable(): boolean {
@@ -22,4 +23,13 @@ export function useProEntitled(): boolean {
 export function useProPending(): boolean {
     const entitlement = useRevenueCat();
     return entitlement.kind !== "unconfigured" && entitlement.pending;
+}
+
+export function proConfirmed(kind: Entitlement["kind"], sellable: boolean): boolean {
+    return !sellable || kind === "pro" || kind === "unconfigured";
+}
+
+export function useProConfirmed(): boolean {
+    const { kind } = useRevenueCat();
+    return proConfirmed(kind, proSellable());
 }

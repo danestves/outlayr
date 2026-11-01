@@ -373,13 +373,14 @@ function readImportRow(
 function planCategories(
     rows: readonly (readonly string[])[],
     mapping: ColumnMapping,
-    links: ReadonlyMap<string, string>
+    links: ReadonlyMap<string, string>,
+    createMissingCategories: boolean
 ) {
     const balances = new Map<string, number>();
     const names = new Map<string, string>();
     const idByKey = new Map<string, string>();
     const labelsAreDescriptions = mapping.category === mapping.note;
-    if (labelsAreDescriptions) {
+    if (labelsAreDescriptions || !createMissingCategories) {
         return { categories: [], idByKey };
     }
     for (const row of rows) {
@@ -418,14 +419,15 @@ export function buildImportPlan(
     dateFormat: string,
     decimal: DecimalSeparator,
     links: ReadonlyMap<string, string>,
-    categoryIncome: ReadonlyMap<string, boolean>
+    categoryIncome: ReadonlyMap<string, boolean>,
+    createMissingCategories: boolean
 ): ImportPlan {
     const entries: ImportEntry[] = [];
     const skipped: SkippedRow[] = [];
     let earliest: Date | null = null;
     let latest: Date | null = null;
 
-    const planned = planCategories(rows, mapping, links);
+    const planned = planCategories(rows, mapping, links, createMissingCategories);
     const allLinks = new Map([...links, ...planned.idByKey]);
     const allIncome = new Map(categoryIncome);
     for (const category of planned.categories) {

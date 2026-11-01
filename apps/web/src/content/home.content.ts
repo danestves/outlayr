@@ -149,8 +149,8 @@ const home = {
             },
             {
                 answer: t({
-                    en: "Yes. Export a CSV from your bank or another app and import it. Duplicates are skipped, and category names that match yours, or merchants Outlayr already knows, are matched to your categories on your phone. With Pro, AI matching fills in the rest, and a category name still unmatched becomes a new category, listed before you save.",
-                    es: "Sí. Exporta un CSV desde tu banco u otra app e impórtalo. Los duplicados se omiten, y los nombres de categoría que coinciden con los tuyos, o los comercios que Outlayr ya conoce, se asignan a tus categorías en tu celular. Con Pro, la asignación con IA completa el resto, y un nombre de categoría que siga sin coincidir se crea como categoría nueva, que ves antes de guardar.",
+                    en: "Yes. Export a CSV from your bank or another app and import it. Duplicates are skipped, and category names that match yours, or merchants Outlayr already knows, are matched to your categories on your phone, and a row with no match is listed as skipped. With Pro, AI matching fills in the rest, and a category name still unmatched becomes a new category, listed before you save.",
+                    es: "Sí. Exporta un CSV desde tu banco u otra app e impórtalo. Los duplicados se omiten, y los nombres de categoría que coinciden con los tuyos, o los comercios que Outlayr ya conoce, se asignan a tus categorías en tu celular, y una fila sin coincidencia aparece como omitida. Con Pro, la asignación con IA completa el resto, y un nombre de categoría que siga sin coincidir se crea como categoría nueva, que ves antes de guardar.",
                 }),
                 question: t({ en: "Can I import a CSV from my bank?", es: "¿Puedo importar un CSV de mi banco?" }),
             },
