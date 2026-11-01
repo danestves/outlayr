@@ -2,7 +2,6 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 const QUERY_PARAMS = /\nparams: [\s\S]*$/u;
-// A failed `Linking.openURL` names the whole URL; a support mailto carries device diagnostics in its query.
 const URL_QUERY = /(?<url>\b[a-z][\d+.a-z-]*:[^\s?]+)\?\S*/giu;
 
 const decodeExceptionList = Schema.decodeUnknownOption(

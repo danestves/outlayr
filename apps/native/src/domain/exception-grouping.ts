@@ -1,8 +1,6 @@
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-// Hermes reports `at apply (native)`; the SDK calls any scheme-less filename in-app, and with no chunk id
-// it never resolves.
 const NATIVE_FILENAME = "native";
 
 const JsonRecord = Schema.Record(
@@ -20,10 +18,6 @@ const decodeMessages = Schema.decodeUnknownOption(
     Schema.Array(Schema.Struct({ type: Schema.optional(Schema.String), value: Schema.optional(Schema.String) }))
 );
 
-/**
- * PostHog fingerprints an exception from its in-app resolved frames, and from the type alone when it has none, so a
- * native promise rejection (no JS stack) lands in one "Error" issue with every other stackless error, backend included.
- */
 export function groupStacklessExceptions<Event extends { properties?: Record<string, Schema.MutableJson> }>(
     event: Event | null
 ): Event | null {
