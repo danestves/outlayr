@@ -715,6 +715,7 @@ export default function TransferEditor({
                         touch();
                         draft.setDate(next);
                     }}
+                    withTime
                 />
             );
         };
