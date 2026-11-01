@@ -414,14 +414,32 @@ export const applyMoneyManagerImport = Effect.fn("MoneyManagerImport.apply")(fun
 
 const undoQuery = <A>(run: () => PromiseLike<A>) => Effect.tryPromise({ catch: fail("undo"), try: run });
 
+export const NOTHING_UNDONE = {
+    accounts: 0,
+    budgets: 0,
+    categories: 0,
+    transactions: 0,
+    transfers: 0,
+} satisfies MmUndoCounts;
+
 export const undoMoneyManagerImport = Effect.fn("MoneyManagerImport.undo")(function* undoMoneyManagerImport(
     db: Database
 ) {
     const record = yield* lastMoneyManagerImport(db).pipe(Effect.mapError(fail("undo")));
     if (record == null) {
-        return { accounts: 0, budgets: 0, categories: 0, transactions: 0, transfers: 0 } satisfies MmUndoCounts;
+        return NOTHING_UNDONE;
     }
+    return yield* undoRecordedImport(db, record, META_KEYS.moneyManagerImport);
+});
 
+export const undoRecordedImport = Effect.fn("MoneyManagerImport.undoRecorded")(function* undoRecordedImport(
+    db: Database,
+    record: Pick<
+        MmImportRecord,
+        "accountIds" | "budgetIds" | "categoryIds" | "renamedCategories" | "transactionIds" | "transferIds"
+    >,
+    metaKey: string
+) {
     // Repo deletes open their own transaction, which this one cannot nest.
     return yield* transaction(
         db,
@@ -470,7 +488,7 @@ export const undoMoneyManagerImport = Effect.fn("MoneyManagerImport.undo")(funct
                         )
                 );
             }
-            yield* undoQuery(() => db.delete(appMeta).where(eq(appMeta.key, META_KEYS.moneyManagerImport)));
+            yield* undoQuery(() => db.delete(appMeta).where(eq(appMeta.key, metaKey)));
             return {
                 accounts: removedAccounts,
                 budgets: removedBudgets,

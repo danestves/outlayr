@@ -344,6 +344,12 @@ const settingsData = {
             fr: "Notion",
             pt: "Notion",
         }),
+        "settings.import.undoRow": t({
+            en: "Undo last import",
+            es: "Deshacer última importación",
+            fr: "Annuler la dernière importation",
+            pt: "Desfazer última importação",
+        }),
         "settings.restore.action": t({
             en: "Restore from an archive",
             es: "Restaurar desde un archivo",

@@ -1,5 +1,5 @@
 import BetterSqlite3 from "better-sqlite3";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
@@ -20,8 +20,10 @@ import {
     exportFileName,
     exportTransactionsCsv,
     guessMapping,
+    lastCsvImport,
     parseImportFile,
     splitHeaderAndRows,
+    undoCsvImport,
     uniqueCategoryValues,
 } from "./transfer-core";
 
@@ -929,5 +931,70 @@ describe("applyImport", () => {
             exchangeRate: 50,
             exchangeRateType: "eur_reference",
         });
+    });
+});
+
+describe("undoCsvImport", () => {
+    let db: Database;
+    beforeEach(async () => {
+        db = makeDb();
+        await seed(db);
+        await seedTransactions(db);
+    });
+
+    const links = new Map([["food", "cat-food"]]);
+    const income = new Map([["cat-food", false]]);
+    const rows = [
+        ["Travel", "Flight", "2026-07-28", "300"],
+        ["Travel", "Hotel", "2026-07-27", "120"],
+        ["Food", "Bakery", "2026-07-26", "12.50"],
+    ];
+    const importRows = () =>
+        Effect.runPromise(applyImport(db, buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income)));
+    const liveNotes = async () =>
+        (await db.select().from(transactions).where(isNull(transactions.deletedAt))).map((row) => row.note).toSorted();
+
+    it("removes the imported entries and the categories it created, and nothing that was already there", async () => {
+        await importRows();
+        const counts = await Effect.runPromise(undoCsvImport(db));
+
+        expect(counts).toMatchObject({ categories: 1, transactions: 3 });
+        await expect(liveNotes()).resolves.toStrictEqual(["Bakery, twice", "Salary"]);
+        const live = await db.select().from(categories).where(isNull(categories.deletedAt));
+        expect(live.map((row) => row.name).toSorted()).toStrictEqual(["Groceries", "Paycheck"]);
+        await expect(Effect.runPromise(lastCsvImport(db))).resolves.toBeNull();
+    });
+
+    it("keeps a created category the user has since logged an entry in", async () => {
+        await importRows();
+        const [travel] = await db.select().from(categories).where(eq(categories.name, "Travel"));
+        await Effect.runPromise(
+            transactionsRepo.create(db, {
+                amount: 40,
+                categoryId: travel?.id ?? null,
+                currency: null,
+                date: new Date(2026, 7, 1),
+                details: null,
+                income: false,
+                note: "Taxi",
+            })
+        );
+
+        const counts = await Effect.runPromise(undoCsvImport(db));
+
+        expect(counts).toMatchObject({ categories: 0, transactions: 3 });
+        await expect(liveNotes()).resolves.toStrictEqual(["Bakery, twice", "Salary", "Taxi"]);
+        await expect(
+            db
+                .select()
+                .from(categories)
+                .where(and(eq(categories.id, travel?.id ?? ""), isNull(categories.deletedAt)))
+        ).resolves.toHaveLength(1);
+    });
+
+    it("does nothing once the import has been undone", async () => {
+        await importRows();
+        await Effect.runPromise(undoCsvImport(db));
+        await expect(Effect.runPromise(undoCsvImport(db))).resolves.toMatchObject({ categories: 0, transactions: 0 });
     });
 });
