@@ -20,9 +20,9 @@ export function fingerprintsOf(rows: readonly ExistingRow[]): ReadonlySet<string
 
 export function flagDuplicates(entries: readonly ImportEntry[], existing: ReadonlySet<string>): ReadonlySet<number> {
     const flagged = new Set<number>();
-    for (const [index, entry] of entries.entries()) {
+    for (const entry of entries) {
         if (existing.has(dedupFingerprint(entry))) {
-            flagged.add(index);
+            flagged.add(entry.row);
         }
     }
     return flagged;

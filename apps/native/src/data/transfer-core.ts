@@ -176,6 +176,7 @@ export interface ImportEntry {
     imageUri?: string | null;
     income: boolean;
     note: string;
+    row: number;
 }
 
 export type SkipReason = "category" | "date" | "amount" | "rate";
@@ -313,7 +314,7 @@ function readRateMetadata(
     return { exchangeRate, exchangeRateType };
 }
 
-type ReadRow = { entry: ImportEntry; skipped: null } | { entry: null; skipped: SkipReason };
+type ReadRow = { entry: Omit<ImportEntry, "row">; skipped: null } | { entry: null; skipped: SkipReason };
 
 function skip(reason: SkipReason): ReadRow {
     return { entry: null, skipped: reason };
@@ -424,8 +425,6 @@ export function buildImportPlan(
 ): ImportPlan {
     const entries: ImportEntry[] = [];
     const skipped: SkippedRow[] = [];
-    let earliest: Date | null = null;
-    let latest: Date | null = null;
 
     const planned = planCategories(rows, mapping, links, createMissingCategories);
     const allLinks = new Map([...links, ...planned.idByKey]);
@@ -441,24 +440,56 @@ export function buildImportPlan(
             continue;
         }
 
-        const { entry } = read;
-        entries.push(entry);
-
-        if (earliest == null || entry.date < earliest) {
-            earliest = entry.date;
-        }
-        if (latest == null || entry.date > latest) {
-            latest = entry.date;
-        }
+        entries.push({ ...read.entry, row: index + 1 });
     }
 
     const used = new Set(entries.map((entry) => entry.categoryId));
     return {
-        earliest,
+        ...dateRange(entries),
         entries,
-        latest,
         newCategories: planned.categories.filter((category) => used.has(category.id)),
         skipped,
+    };
+}
+
+function dateRange(entries: readonly ImportEntry[]): Pick<ImportPlan, "earliest" | "latest"> {
+    let earliest: Date | null = null;
+    let latest: Date | null = null;
+    for (const { date } of entries) {
+        if (earliest == null || date < earliest) {
+            earliest = date;
+        }
+        if (latest == null || date > latest) {
+            latest = date;
+        }
+    }
+    return { earliest, latest };
+}
+
+export type CategoryOverride = { kind: "existing"; categoryId: string } | { kind: "skip" };
+
+export function applyCategoryOverrides(plan: ImportPlan, overrides: ReadonlyMap<string, CategoryOverride>): ImportPlan {
+    if (overrides.size === 0) {
+        return plan;
+    }
+    const entries: ImportEntry[] = [];
+    const skipped = [...plan.skipped];
+    for (const entry of plan.entries) {
+        const override = overrides.get(entry.categoryId);
+        if (override === undefined) {
+            entries.push(entry);
+        } else if (override.kind === "existing") {
+            entries.push({ ...entry, categoryId: override.categoryId });
+        } else {
+            skipped.push({ reason: "category", row: entry.row });
+        }
+    }
+    const used = new Set(entries.map((entry) => entry.categoryId));
+    return {
+        ...dateRange(entries),
+        entries,
+        newCategories: plan.newCategories.filter((category) => used.has(category.id)),
+        skipped: skipped.sort((a, b) => a.row - b.row),
     };
 }
 

@@ -13,6 +13,7 @@ import { CSV_HEADER, parseCsvDate } from "@/domain/transaction-csv";
 import { candidateLogoIds } from "./logo-backfill-state";
 import { TransactionsError, transactionsRepo } from "./transactions-core";
 import {
+    applyCategoryOverrides,
     applyImport,
     buildImportPlan,
     CsvTransferError,
@@ -559,6 +560,46 @@ describe("buildImportPlan", () => {
     });
 });
 
+describe("applyCategoryOverrides", () => {
+    const links = new Map([["food", "cat-food"]]);
+    const income = new Map([["cat-food", false]]);
+    const rows = [
+        ["Mercado", "Bakery", "2026-07-28", "12.50"],
+        ["Food", "Lunch", "2026-07-27", "9"],
+        ["Mercado", "Market", "someday", "5"],
+        ["Mercado", "Fruit", "2026-07-25", "7"],
+        ["Travel", "Flight", "2026-07-24", "300"],
+    ];
+    const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income, true);
+    const plannedId = (name: string) => plan.newCategories.find((category) => category.name === name)?.id ?? "";
+
+    it("files an overridden category's rows under the existing category and plans nothing for it", () => {
+        const next = applyCategoryOverrides(
+            plan,
+            new Map([[plannedId("Mercado"), { categoryId: "cat-food", kind: "existing" }]])
+        );
+        expect(next.entries.map((entry) => [entry.note, entry.categoryId, entry.income])).toStrictEqual([
+            ["Bakery", "cat-food", false],
+            ["Lunch", "cat-food", false],
+            ["Fruit", "cat-food", false],
+            ["Flight", plannedId("Travel"), false],
+        ]);
+        expect(next.newCategories.map((category) => category.name)).toStrictEqual(["Travel"]);
+        expect(next.skipped).toStrictEqual(plan.skipped);
+    });
+
+    it("moves a left-out category's rows to skipped in file order and narrows the date span", () => {
+        const next = applyCategoryOverrides(plan, new Map([[plannedId("Travel"), { kind: "skip" }]]));
+        expect(next.entries.map((entry) => entry.note)).toStrictEqual(["Bakery", "Lunch", "Fruit"]);
+        expect(next.skipped).toStrictEqual([
+            { reason: "date", row: 3 },
+            { reason: "category", row: 5 },
+        ]);
+        expect(next.newCategories.map((category) => category.name)).toStrictEqual(["Mercado"]);
+        expect(next.earliest).toStrictEqual(new Date(2026, 6, 25));
+    });
+});
+
 describe("applyImport", () => {
     let db: Database;
     beforeEach(async () => {
@@ -640,6 +681,27 @@ describe("applyImport", () => {
             expect.arrayContaining(["Flight", "Hotel"])
         );
         expect(rowsOut.find((row) => row.note === "Bakery")?.categoryId).toBe("cat-food");
+    });
+
+    it("creates nothing for a category sent to an existing one", async () => {
+        const planned = buildImportPlan(
+            [["Mercado", "Bakery", "2026-07-28", "12.50"]],
+            MAPPING,
+            "yyyy-MM-dd",
+            ".",
+            new Map(),
+            income,
+            true
+        );
+        const plan = applyCategoryOverrides(
+            planned,
+            new Map([[planned.newCategories[0]?.id ?? "", { categoryId: "cat-food", kind: "existing" }]])
+        );
+        const before = await db.select().from(categories);
+        await Effect.runPromise(applyImport(db, plan));
+        await expect(db.select().from(categories)).resolves.toHaveLength(before.length);
+        const rowsOut = await db.select().from(transactions);
+        expect(rowsOut[0]?.categoryId).toBe("cat-food");
     });
 
     it("reuses a category of the same name instead of creating a twin", async () => {

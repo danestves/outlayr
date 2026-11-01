@@ -378,6 +378,12 @@ const importSheet = {
             fr: "Rien à importer",
             pt: "Nada para importar",
         }),
+        "import.reviewLeaveOutDetail": t({
+            en: "Its rows are skipped.",
+            es: "Sus filas se omiten.",
+            fr: "Ses lignes sont ignorées.",
+            pt: "As linhas são ignoradas.",
+        }),
         "import.reviewNewCategoriesHide_one": t({
             en: "{count} new category · Hide",
             es: "{count} categoría nueva · Ocultar",

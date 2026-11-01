@@ -117,7 +117,7 @@ describe("clearing ui.resumed", () => {
         store.commitDismissal();
         expect(store.getSnapshot().ui.resumed).toBe(true);
 
-        store.dispatch({ index: 0, type: "rowToggled" });
+        store.dispatch({ row: 0, type: "rowToggled" });
 
         expect(store.getSnapshot().ui.resumed).toBe(false);
     });

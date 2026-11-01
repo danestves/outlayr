@@ -1,6 +1,6 @@
 import type { CurrencyBucket } from "@outlayr/money/currency-totals";
 
-import type { ParsedImportFile } from "@/data/transfer-core";
+import type { CategoryOverride, ParsedImportFile } from "@/data/transfer-core";
 
 import type { MappingDraft, MappingGap, ResolvedMapping } from "./import-mapping";
 import type { ImportSourceId } from "./import-sources";
@@ -37,6 +37,7 @@ export type ImportCommitState =
       };
 
 export interface ImportFlowState {
+    categoryOverrides: ReadonlyMap<string, CategoryOverride>;
     commit: ImportCommitState;
     draft: MappingDraft | null;
     duplicates: ReadonlySet<number>;
@@ -50,6 +51,7 @@ export interface ImportFlowState {
 }
 
 export const INITIAL_IMPORT_FLOW_STATE: ImportFlowState = {
+    categoryOverrides: new Map(),
     commit: { phase: "idle" },
     draft: null,
     duplicates: new Set(),
@@ -79,8 +81,9 @@ export type ImportFlowEvent =
           links: ReadonlyMap<string, string>;
           fromModel: ReadonlySet<string>;
       }
-    | { type: "rowToggled"; index: number }
-    | { type: "duplicatesFlagged"; indices: ReadonlySet<number> }
+    | { type: "rowToggled"; row: number }
+    | { type: "categoryOverridden"; plannedId: string; override: CategoryOverride | null }
+    | { type: "duplicatesFlagged"; rows: ReadonlySet<number> }
     | { type: "commitStarted" }
     | { type: "commitFailed"; detail: string | null }
     | {
@@ -105,6 +108,7 @@ export function importFlowReducer(state: ImportFlowState, event: ImportFlowEvent
             }
             return {
                 ...state,
+                categoryOverrides: new Map(),
                 commit: { phase: "idle" },
                 draft: event.draft,
                 duplicates: new Set(),
@@ -123,6 +127,7 @@ export function importFlowReducer(state: ImportFlowState, event: ImportFlowEvent
             }
             return {
                 ...state,
+                categoryOverrides: new Map(),
                 commit: { phase: "idle" },
                 duplicates: new Set(),
                 excluded: new Set(),
@@ -140,23 +145,40 @@ export function importFlowReducer(state: ImportFlowState, event: ImportFlowEvent
                 return state;
             }
             const excluded = new Set(state.excluded);
-            if (excluded.has(event.index)) {
-                excluded.delete(event.index);
+            if (excluded.has(event.row)) {
+                excluded.delete(event.row);
             } else {
-                excluded.add(event.index);
+                excluded.add(event.row);
             }
             return { ...state, excluded };
+        }
+
+        case "categoryOverridden": {
+            if (state.resolution == null) {
+                return state;
+            }
+            const categoryOverrides = new Map(state.categoryOverrides);
+            if (event.override == null) {
+                categoryOverrides.delete(event.plannedId);
+            } else {
+                categoryOverrides.set(event.plannedId, event.override);
+            }
+            return { ...state, categoryOverrides };
         }
 
         case "duplicatesFlagged": {
             if (state.resolution == null) {
                 return state;
             }
-            return {
-                ...state,
-                duplicates: event.indices,
-                excluded: new Set(event.indices),
-            };
+            const excluded = new Set(
+                [...state.excluded].filter((row) => !state.duplicates.has(row) || event.rows.has(row))
+            );
+            for (const row of event.rows) {
+                if (!state.duplicates.has(row)) {
+                    excluded.add(row);
+                }
+            }
+            return { ...state, duplicates: event.rows, excluded };
         }
 
         case "commitStarted": {
