@@ -109,6 +109,31 @@ describe("pickFreeCategoryIcon", () => {
         );
         expect(allPresetIcons).toContain(result);
     });
+
+    it("reaches past the presets into the icon catalog once every preset icon is taken", () => {
+        const siblings = [...SUGGESTED_CATEGORY_PRESETS.expense, ...SUGGESTED_CATEGORY_PRESETS.income].map(
+            (preset, index): Category => ({
+                color: preset.color,
+                customName: false,
+                dateCreated: new Date(0),
+                deletedAt: null,
+                emoji: null,
+                icon: preset.icon,
+                id: `c${index}`,
+                income: false,
+                name: preset.name,
+                parentId: null,
+                preset: null,
+                sortOrder: index,
+                updatedAt: new Date(0),
+            })
+        );
+        const taken = new Set(siblings.map((row) => row.icon));
+
+        const result = pickFreeCategoryIcon(siblings, "FilmRoll01");
+
+        expect(taken.has(result)).toBe(false);
+    });
 });
 
 describe("presetLabelUpdates", () => {

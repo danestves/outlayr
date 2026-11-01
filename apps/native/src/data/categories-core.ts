@@ -9,6 +9,7 @@ import { TOMBSTONED_BUDGET } from "@/data/budgets-core";
 import type { Database } from "@/db/client";
 import { budgetPlans, budgets, categories, transactions } from "@/db/schema";
 import { transaction } from "@/db/transaction";
+import { CATEGORY_ICON_GROUPS } from "@/domain/category-icon-catalog";
 import { newId } from "@/domain/ids";
 import { uuidV5 } from "@/domain/uuid5";
 import type { TranslatableKey } from "@/i18n/catalog";
@@ -395,10 +396,12 @@ export function pickFreeCategoryIcon(siblings: readonly Category[], preferred: s
     if (!used.has(preferred)) {
         return preferred;
     }
-    const fallback = [...SUGGESTED_CATEGORY_PRESETS.expense, ...SUGGESTED_CATEGORY_PRESETS.income].find(
-        (preset) => !used.has(preset.icon)
-    );
-    return fallback?.icon ?? preferred;
+    const fallback = [
+        ...SUGGESTED_CATEGORY_PRESETS.expense.map((preset) => preset.icon),
+        ...SUGGESTED_CATEGORY_PRESETS.income.map((preset) => preset.icon),
+        ...CATEGORY_ICON_GROUPS.flatMap((group) => group.keys),
+    ].find((icon) => !used.has(icon));
+    return fallback ?? preferred;
 }
 
 export const validateCategoryCreate = Effect.fn("Categories.validateCategoryCreate")(function* validateCategoryCreate(
