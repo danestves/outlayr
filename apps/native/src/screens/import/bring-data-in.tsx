@@ -7,6 +7,7 @@ import { ImportSheet } from "@/components/import-sheet/import-sheet";
 import type { ImportSheetHandle } from "@/components/import-sheet/import-sheet";
 import { SettingsSection } from "@/components/list/list-row";
 import { SettingsScreen } from "@/components/settings/settings-screen";
+import type { ImportSourceId } from "@/domain/import-sources";
 import { useTranslation } from "@/i18n/context";
 import { expectHandoff } from "@/lib/app-handoff";
 import { importDraftStore } from "@/lib/import-draft-store";
@@ -24,10 +25,13 @@ export function BringDataIn() {
     const { paths } = useImportPaths();
     const csvSheet = useRef<ImportSheetHandle>(null);
 
-    const openCsv = () => {
+    const openFileImport = (sourceId: ImportSourceId) => {
+        if (importDraftStore.getSnapshot().flow.sourceId !== sourceId) {
+            importDraftStore.clear();
+        }
         const resume = importDraftStore.getResumeStep();
         if (resume === "source") {
-            importDraftStore.dispatch({ sourceId: "csv", type: "sourceSelected" });
+            importDraftStore.dispatch({ sourceId, type: "sourceSelected" });
         }
         importDraftStore.setStep(resume === "source" ? "file" : resume);
         csvSheet.current?.present();
@@ -48,6 +52,13 @@ export function BringDataIn() {
                     testID="import-source-money-manager"
                     title={t("mmImport.nav.moneyManager")}
                 />
+                <ImportRow
+                    detail={t("mmImport.sources.notionDetail")}
+                    leading={<SourceLogo source="notion" />}
+                    onPress={() => openFileImport("notion")}
+                    testID="import-source-notion"
+                    title={t("mmImport.sources.notion")}
+                />
             </SettingsSection>
             <SettingsSection
                 footer={t("mmImport.sources.footer")}
@@ -57,7 +68,7 @@ export function BringDataIn() {
                 <ImportRow
                     detail={t("mmImport.sources.csvDetail")}
                     leading={<CategoryIconTile color={colors.foreground} icon="Invoice03" size={32} type="solid" />}
-                    onPress={openCsv}
+                    onPress={() => openFileImport("csv")}
                     testID="import-source-csv"
                     title={t("mmImport.sources.csv")}
                 />

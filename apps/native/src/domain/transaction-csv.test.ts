@@ -119,6 +119,14 @@ describe("deduceDateFormat", () => {
         expect(deduceDateFormat(["99/99/2026", "not a date"])).toBeNull();
     });
 
+    it("recognises Notion's default full date", () => {
+        expect(deduceDateFormat(["October 9, 2026", "November 30, 2025"])).toBe("MMMM d, yyyy");
+    });
+
+    it("recognises a Spanish long date", () => {
+        expect(deduceDateFormat(["9 de octubre de 2026"])).toBe("d MMMM yyyy");
+    });
+
     it("settles ambiguity from the parseable values only", () => {
         expect(deduceDateFormat(["07/29/2026", "99/99/2026", "01/02/2026"])).toBe("MM/dd/yyyy");
     });
@@ -154,6 +162,38 @@ describe("parseCsvDate", () => {
     });
 });
 
+describe("parseCsvDate with a month name", () => {
+    it("reads a 12-hour time after the date", () => {
+        expect(parseCsvDate("Oct 9, 2026 3:05 PM", "MMMM d, yyyy")).toStrictEqual(new Date(2026, 9, 9, 15, 5));
+        expect(parseCsvDate("October 9, 2026 12:30 AM", "MMMM d, yyyy")).toStrictEqual(new Date(2026, 9, 9, 0, 30));
+    });
+
+    it("rejects a time that would roll over rather than shifting it", () => {
+        expect(parseCsvDate("October 9, 2026 3:90 PM", "MMMM d, yyyy")).toBeNull();
+        expect(parseCsvDate("October 9, 2026 13:05 PM", "MMMM d, yyyy")).toBeNull();
+    });
+
+    it("reads Spanish and Portuguese months with their accents", () => {
+        expect(parseCsvDate("2 de março de 2026", "d MMMM yyyy")).toStrictEqual(new Date(2026, 2, 2));
+        expect(parseCsvDate("15 de diciembre de 2025", "d MMMM yyyy")).toStrictEqual(new Date(2025, 11, 15));
+    });
+
+    it("reads a time after a day-first date", () => {
+        expect(parseCsvDate("9 de octubre de 2026 21:30", "d MMMM yyyy")).toStrictEqual(new Date(2026, 9, 9, 21, 30));
+        expect(parseCsvDate("9 de octubre de 2026 9:30 p. m.", "d MMMM yyyy")).toStrictEqual(
+            new Date(2026, 9, 9, 21, 30)
+        );
+    });
+
+    it("answers null for a day the month does not have", () => {
+        expect(parseCsvDate("February 30, 2026", "MMMM d, yyyy")).toBeNull();
+    });
+
+    it("answers null for a word that is not a month", () => {
+        expect(parseCsvDate("Someday 9, 2026", "MMMM d, yyyy")).toBeNull();
+    });
+});
+
 describe("parseCsvType", () => {
     it("reads the exported words", () => {
         expect(parseCsvType("Income")).toBe(true);
@@ -162,6 +202,16 @@ describe("parseCsvType", () => {
 
     it("ignores case and padding", () => {
         expect(parseCsvType("  income ")).toBe(true);
+    });
+
+    it("reads Spanish and Portuguese words", () => {
+        expect(parseCsvType("Ingreso")).toBe(true);
+        expect(parseCsvType("Gasto")).toBe(false);
+        expect(parseCsvType("Saída")).toBe(false);
+    });
+
+    it("leaves a card type alone, since Crédito names how it was paid", () => {
+        expect(parseCsvType("Crédito")).toBeNull();
     });
 
     it("answers null for anything else", () => {

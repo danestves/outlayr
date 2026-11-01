@@ -56,6 +56,7 @@ export function FileStep({ onChoose, busy = false }: FileStepProps) {
     const colors = useColors();
     const { flow: state, ui } = useImportDraft();
     const error = ui.fileError;
+    const chooseLabel = t(state.sourceId === "notion" ? "import.chooseNotionExport" : "import.chooseCsv");
 
     const { parsed, resolved } = state;
     const dateFormat =
@@ -95,7 +96,7 @@ export function FileStep({ onChoose, busy = false }: FileStepProps) {
                     busy={busy}
                     busyLabel={t("import.readingFile")}
                     className="mt-6"
-                    label={t("import.chooseCsv")}
+                    label={chooseLabel}
                     onPress={onChoose}
                 />
             </View>
@@ -181,7 +182,11 @@ export function FileStep({ onChoose, busy = false }: FileStepProps) {
                 ]}
             />
 
-            <StepCta busy={busy} busyLabel={t("import.readingFile")} label={t("import.chooseCsv")} onPress={onChoose} />
+            {state.sourceId === "notion" ? (
+                <Text className="text-footnote text-muted leading-snug">{t("import.notionExportSteps")}</Text>
+            ) : null}
+
+            <StepCta busy={busy} busyLabel={t("import.readingFile")} label={chooseLabel} onPress={onChoose} />
         </View>
     );
 }

@@ -224,6 +224,17 @@ describe("parseImportFile", () => {
     it("rejects a file that is nothing but a header", () => {
         expect(parseImportFile("Date,Note,Amount\n")).toBeNull();
     });
+
+    it("drops the page links Notion writes after a relation's title", () => {
+        const parsed = parseImportFile(
+            [
+                "\uFEFFSource,Amount,Date,Month,Tags",
+                'Uber,"R$ 8,94",12/12/2025,January (https://www.notion.so/January-2d00a14785a081b498ecc3beb6d10435?pvs=21),Transporte',
+                'Rent,1600,10/01/2026,"Home (Categories/Home%2052a1.md), Bills (https://app.notion.com/p/9f2c11)",Casa',
+            ].join("\n")
+        );
+        expect(parsed?.rows.map((row) => row[3])).toStrictEqual(["January", "Home, Bills"]);
+    });
 });
 
 describe("splitHeaderAndRows", () => {
@@ -263,6 +274,32 @@ describe("guessMapping", () => {
 
     it("ignores case and padding", () => {
         expect(guessMapping([" DATE "]).date).toBe(0);
+    });
+
+    it("maps a Spanish Notion database", () => {
+        expect(guessMapping(["Nombre", "Fecha", "Monto", "Categoría"])).toMatchObject({
+            amount: 2,
+            category: 3,
+            date: 1,
+            note: 0,
+        });
+    });
+
+    it("maps a Portuguese Notion export", () => {
+        expect(guessMapping(["Source", "Amount", "Data", "Situação", "Tags", "Tipo"])).toMatchObject({
+            amount: 1,
+            category: 4,
+            date: 2,
+            note: 0,
+            type: 5,
+        });
+    });
+
+    it("takes the amount from Importe over a value-date column", () => {
+        expect(guessMapping(["Fecha operación", "Fecha valor", "Concepto", "Importe", "Saldo"])).toMatchObject({
+            amount: 3,
+            date: 0,
+        });
     });
 
     it("leaves a field it cannot place unassigned", () => {

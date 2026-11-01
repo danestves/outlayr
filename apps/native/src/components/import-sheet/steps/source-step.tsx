@@ -7,6 +7,7 @@ import { Text } from "@/components/text";
 import { IMPORT_SOURCES } from "@/domain/import-sources";
 import { useTranslation } from "@/i18n/context";
 import { importDraftStore } from "@/lib/import-draft-store";
+import { SourceLogo } from "@/screens/import/components/parts";
 import { useColors } from "@/theme/use-colors";
 
 const ICON_TILE_SIZE = 30;
@@ -39,7 +40,11 @@ export function SourceStep() {
                         className="items-center justify-center"
                         style={{ height: ICON_TILE_SIZE, width: ICON_TILE_SIZE }}
                     >
-                        <HugeiconsIcon color={colors.foreground} icon={source.icon} size={20} strokeWidth={1.9} />
+                        {"icon" in source ? (
+                            <HugeiconsIcon color={colors.foreground} icon={source.icon} size={20} strokeWidth={1.9} />
+                        ) : (
+                            <SourceLogo size={ICON_TILE_SIZE} source={source.id} />
+                        )}
                     </View>
                     <View className="flex-1 gap-0.5">
                         <Text className="font-sans-medium text-callout text-foreground" numberOfLines={1}>

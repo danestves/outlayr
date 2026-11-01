@@ -5,7 +5,7 @@ import { guessMapping, parseImportFile } from "@/data/transfer-core";
 import { classifyParseFailure, HARD_PARSE_REJECT_CHARS } from "@/domain/import-diagnosis";
 import type { ImportFlowEvent } from "@/domain/import-flow";
 import { resolveImportMapping } from "@/domain/import-mapping";
-import { pickCsvFile } from "@/lib/data-transfer";
+import { pickImportFile } from "@/lib/data-transfer";
 import type { PickedFile } from "@/lib/data-transfer";
 import type { FileStepError } from "@/lib/import-draft-store";
 
@@ -64,7 +64,7 @@ function readPickedImport(picked: PickedFile): ChosenImportFile {
 
 export const chooseImportFileCommand = createCommand({
     execute: Effect.fn("Editor.chooseImportFile")(function* chooseImportFile(_input: undefined) {
-        const picked = yield* pickCsvFile();
+        const picked = yield* pickImportFile();
         return picked == null ? null : readPickedImport(picked);
     }),
     label: "editor:choose-import-file",

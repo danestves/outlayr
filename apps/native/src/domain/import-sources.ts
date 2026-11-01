@@ -3,14 +3,12 @@ import type { IconSvgElement } from "@hugeicons/react-native";
 
 import type { TranslationKey } from "@/i18n/catalog";
 
-export type ImportSourceId = "csv";
+export type ImportSourceId = "csv" | "notion";
 
-export interface ImportSource {
-    readonly icon: IconSvgElement;
-    readonly id: ImportSourceId;
+export type ImportSource = {
     readonly subtitleKey: TranslationKey;
     readonly titleKey: TranslationKey;
-}
+} & ({ readonly icon: IconSvgElement; readonly id: "csv" } | { readonly id: "notion" });
 
 export const IMPORT_SOURCES: readonly ImportSource[] = [
     {
@@ -18,5 +16,10 @@ export const IMPORT_SOURCES: readonly ImportSource[] = [
         id: "csv",
         subtitleKey: "settings.import.sourceCsvSubtitle",
         titleKey: "settings.import.sourceCsvTitle",
+    },
+    {
+        id: "notion",
+        subtitleKey: "settings.import.sourceNotionSubtitle",
+        titleKey: "settings.import.sourceNotionTitle",
     },
 ];

@@ -752,6 +752,18 @@ const moneyManagerImport = {
             fr: "Orange Dog · .mmbackup",
             pt: "Orange Dog · .mmbackup",
         }),
+        "mmImport.sources.notion": t({
+            en: "Notion",
+            es: "Notion",
+            fr: "Notion",
+            pt: "Notion",
+        }),
+        "mmImport.sources.notionDetail": t({
+            en: "Markdown & CSV export",
+            es: "Exportación en Markdown y CSV",
+            fr: "Export Markdown et CSV",
+            pt: "Exportação em Markdown e CSV",
+        }),
         "mmImport.sources.request": t({
             en: "Using another app? Tell us which one",
             es: "¿Usas otra app? Dinos cuál",

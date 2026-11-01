@@ -56,6 +56,20 @@ const alerts = {
             fr: "Ne plus répéter",
             pt: "Parar de repetir",
         }),
+        "alerts.transfer.archiveTooLarge": t({
+            en: "That zip is too large to import. Export only the databases you need.",
+            es: "Ese zip es demasiado grande para importarlo. Exporta solo las bases de datos que necesites.",
+            fr: "Ce zip est trop volumineux pour être importé. Exportez uniquement les bases de données utiles.",
+            pt: "Esse zip é grande demais para importar. Exporte só os bancos de dados de que precisa.",
+            "pt-PT": "Esse zip é demasiado grande para importar. Exporte só as bases de dados de que precisa.",
+        }),
+        "alerts.transfer.archiveWithoutCsv": t({
+            en: "That zip has no CSV inside. In Notion, export the database as Markdown & CSV.",
+            es: "Ese zip no trae ningún CSV. En Notion, exporta la base de datos como Markdown y CSV.",
+            fr: "Ce zip ne contient aucun CSV. Dans Notion, exportez la base de données en Markdown et CSV.",
+            pt: "Esse zip não tem nenhum CSV. No Notion, exporte o banco de dados como Markdown e CSV.",
+            "pt-PT": "Esse zip não tem nenhum CSV. No Notion, exporte a base de dados como Markdown e CSV.",
+        }),
         "alerts.transfer.sharingUnavailable": t({
             en: "Sharing isn't available on this device.",
             es: "Compartir no está disponible en este dispositivo.",

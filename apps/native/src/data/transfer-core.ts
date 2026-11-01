@@ -90,15 +90,33 @@ export interface ColumnMapping {
 }
 
 const HEADER_HINTS = {
-    amount: ["amount", "value", "total", "sum", "debit"],
-    category: ["category", "categories", "tag"],
-    currency: ["currency", "code", "ccy"],
-    date: ["date", "time", "posted", "when"],
+    amount: ["amount", "value", "total", "sum", "debit", "price", "cost", "monto", "importe", "valor", "precio"],
+    category: ["category", "categories", "tag", "categoria", "etiqueta"],
+    currency: ["currency", "code", "ccy", "moneda", "moeda", "divisa"],
+    date: ["date", "time", "posted", "when", "fecha", "data"],
     exchangeRate: ["exchange rate", "rate"],
     exchangeRateType: ["exchange rate type", "rate type"],
-    note: ["note", "description", "memo", "payee", "merchant", "name", "details"],
-    type: ["type", "direction", "kind"],
+    note: [
+        "note",
+        "description",
+        "memo",
+        "payee",
+        "merchant",
+        "name",
+        "nombre",
+        "nome",
+        "details",
+        "source",
+        "concepto",
+        "descripcion",
+        "descricao",
+        "detalle",
+        "comercio",
+    ],
+    type: ["type", "direction", "kind", "tipo"],
 } satisfies Record<keyof ColumnMapping, readonly string[]>;
+
+const COMBINING_MARKS = /\p{M}/gu;
 
 // Match specific overlapping labels before their general substring forms;
 // unlike object keys, this order is not changed by property-sorting formatters.
@@ -118,7 +136,7 @@ const HEADER_MATCH_ORDER: readonly (keyof ColumnMapping)[] = [
  * to assign, which is why `date` and `amount` widen here but not in {@link ColumnMapping}.
  */
 export function guessMapping(header: readonly string[]): ColumnMappingGuess {
-    const normalized = header.map((cell) => cell.trim().toLowerCase());
+    const normalized = header.map((cell) => cell.trim().normalize("NFD").replaceAll(COMBINING_MARKS, "").toLowerCase());
     const taken = new Set<number>();
     const guess: ColumnMappingGuess = {
         amount: null,
@@ -132,12 +150,13 @@ export function guessMapping(header: readonly string[]): ColumnMappingGuess {
     };
 
     for (const field of HEADER_MATCH_ORDER) {
-        const index = normalized.findIndex(
-            (cell, at) => !taken.has(at) && HEADER_HINTS[field].some((hint) => cell.includes(hint))
-        );
-        if (index !== -1) {
-            guess[field] = index;
-            taken.add(index);
+        for (const hint of HEADER_HINTS[field]) {
+            const index = normalized.findIndex((cell, at) => !taken.has(at) && cell.includes(hint));
+            if (index !== -1) {
+                guess[field] = index;
+                taken.add(index);
+                break;
+            }
         }
     }
     return guess;
@@ -208,12 +227,14 @@ export function splitHeaderAndRows(lines: string[][]): HeaderAndRows {
     return { header: looksLikeHeader ? first : null, rows };
 }
 
+const NOTION_LINK = /\s\((?:https:\/\/(?:www\.|app\.)?notion\.(?:so|com|site)\/[^\s)]*|[^\s()]+\.md)\)/g;
+
 /**
  * Null means the file cannot be used at all, which the caller reports once
  * rather than letting the user assign columns to something unusable.
  */
 export function parseImportFile(text: string): ParsedImportFile | null {
-    const lines = parseCsv(text);
+    const lines = parseCsv(text).map((line) => line.map((cell) => cell.replaceAll(NOTION_LINK, "")));
     if (lines.length === 0) {
         return null;
     }
