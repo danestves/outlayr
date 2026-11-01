@@ -14,7 +14,7 @@ import type { ImportCommitState, ImportFlowState } from "@/domain/import-flow";
 import { importOutTotals } from "@/domain/import-totals";
 import { deduceDateFormat, detectDecimalSeparator } from "@/domain/transaction-csv";
 import { FALLBACK_IDENTITY_COLOR } from "@/domain/transaction-identity";
-import { useProLocked } from "@/hooks/use-pro-locked";
+import { useProConfirmed, useProLocked } from "@/hooks/use-pro-locked";
 import { importDraftStore, useImportDraft } from "@/lib/import-draft-store";
 import { useHaptics } from "@/lib/use-haptics";
 import { SILENT } from "@/state/atom-command";
@@ -171,7 +171,8 @@ export function useImportReview(): ImportReviewResult {
     const { categoryIncome, categoryName, categoryTile } = indexCategories(categoryRows);
 
     const proLocked = useProLocked();
-    const plan = buildPlan(parsed, resolved, resolution, categoryIncome, !proLocked);
+    const createsCategories = useProConfirmed();
+    const plan = buildPlan(parsed, resolved, resolution, categoryIncome, createsCategories);
     const proCategoryCount = proLocked
         ? buildPlan(parsed, resolved, resolution, categoryIncome, true).newCategories.length
         : 0;
