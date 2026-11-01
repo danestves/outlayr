@@ -272,9 +272,6 @@ const pullSince = FunctionImpl.make(
     )
 );
 
-// The app watches this while signed out, so a refusal here would be logged as an exception on every reconnect.
-// Zero is never above a cursor, so it cannot wake a pull. `pullSince` keeps refusing: adoption reads an empty page
-// as an empty account.
 const currentSeq = FunctionImpl.make(
     databaseSchema,
     spec,

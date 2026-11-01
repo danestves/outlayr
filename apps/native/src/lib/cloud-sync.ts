@@ -32,7 +32,7 @@ export function watchSyncWatermark(onWatermark: (watermark: number) => void): ()
                 onWatermark(watermark);
             }
         } catch {
-            // A failed run is replaced by the next value on the same socket, so stay subscribed.
+            // Refused while signed out; the same socket delivers a value once a token is set, so stay subscribed.
         }
     });
 }
