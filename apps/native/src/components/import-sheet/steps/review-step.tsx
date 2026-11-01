@@ -19,6 +19,7 @@ import { formatDayHeader, formatSentenceDate } from "@/domain/dates";
 import { importCurrencyEntry, importOutTotals } from "@/domain/import-totals";
 import { FALLBACK_IDENTITY_COLOR } from "@/domain/transaction-identity";
 import type { ImportReviewResult, ReviewCategoryTile, ReviewRow } from "@/hooks/use-import-review";
+import { useOpenPaywall } from "@/hooks/use-pro-gate";
 import { useReviewEnrichment } from "@/hooks/use-review-enrichment";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useLanguage, useTranslation } from "@/i18n/context";
@@ -287,6 +288,23 @@ function NewCategoriesHeader({ categories, entryRows, excluded, expanded, onTogg
     );
 }
 
+function ProCategoriesRow({ count }: { count: number }) {
+    const t = useTranslation();
+    const openPaywall = useOpenPaywall();
+    return (
+        <Pressable
+            accessibilityRole="button"
+            className="border-border border-b py-3 active:opacity-60"
+            onPress={() => openPaywall("import")}
+            testID="review-pro-categories"
+        >
+            <Text className="font-sans-medium text-footnote text-tint">
+                {t("import.reviewProCategories", { count })}
+            </Text>
+        </Pressable>
+    );
+}
+
 interface ReviewStepProps {
     review: ImportReviewResult;
 }
@@ -390,6 +408,8 @@ function ReviewList({ entryRows, review, sections, skippedRows }: ReviewListProp
                 tiles={review.categoryTile}
             />
         );
+    const listHeader =
+        review.proCategoryCount === 0 ? newCategoriesHeader : <ProCategoriesRow count={review.proCategoryCount} />;
 
     const writing = review.commit.phase === "writing";
     const failed = review.commit.phase === "failed";
@@ -444,7 +464,7 @@ function ReviewList({ entryRows, review, sections, skippedRows }: ReviewListProp
                     extraData={{ enrichment, excluded: review.excluded, showNewCategories, showSkipped }}
                     keyExtractor={keyOf}
                     ListFooterComponent={skippedFooter}
-                    ListHeaderComponent={newCategoriesHeader}
+                    ListHeaderComponent={listHeader}
                     // Rows hold toggle state; a recycled container would flash the previous row's checked look.
                     recycleItems={false}
                     renderItem={renderItem}

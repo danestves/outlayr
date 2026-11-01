@@ -402,6 +402,18 @@ const importSheet = {
             fr: "{count} nouvelles catégories · Afficher",
             pt: "{count} categorias novas · Mostrar",
         }),
+        "import.reviewProCategories_one": t({
+            en: "Pro would create {count} missing category · See Pro",
+            es: "Pro crearía {count} categoría faltante · Ver Pro",
+            fr: "Pro créerait {count} catégorie manquante · Voir Pro",
+            pt: "O Pro criaria {count} categoria ausente · Ver o Pro",
+        }),
+        "import.reviewProCategories_other": t({
+            en: "Pro would create {count} missing categories · See Pro",
+            es: "Pro crearía {count} categorías faltantes · Ver Pro",
+            fr: "Pro créerait {count} catégories manquantes · Voir Pro",
+            pt: "O Pro criaria {count} categorias ausentes · Ver o Pro",
+        }),
         "import.reviewSkippedHide_one": t({
             en: "{count} row skipped · Hide",
             es: "{count} fila omitida · Ocultar",
@@ -446,10 +458,10 @@ const importSheet = {
             pt: "Valor ilegível",
         }),
         "import.skipReasonCategory": t({
-            en: "No category",
-            es: "Sin categoría",
-            fr: "Aucune catégorie",
-            pt: "Sem categoria",
+            en: "No matching category",
+            es: "Sin categoría coincidente",
+            fr: "Aucune catégorie correspondante",
+            pt: "Nenhuma categoria correspondente",
         }),
         "import.skipReasonDate": t({
             en: "Unreadable date",

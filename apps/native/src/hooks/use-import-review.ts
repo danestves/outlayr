@@ -14,6 +14,7 @@ import type { ImportCommitState, ImportFlowState } from "@/domain/import-flow";
 import { importOutTotals } from "@/domain/import-totals";
 import { deduceDateFormat, detectDecimalSeparator } from "@/domain/transaction-csv";
 import { FALLBACK_IDENTITY_COLOR } from "@/domain/transaction-identity";
+import { useProLocked } from "@/hooks/use-pro-locked";
 import { importDraftStore, useImportDraft } from "@/lib/import-draft-store";
 import { useHaptics } from "@/lib/use-haptics";
 import { SILENT } from "@/state/atom-command";
@@ -73,7 +74,8 @@ function buildPlan(
     parsed: ImportFlowState["parsed"],
     resolved: ImportFlowState["resolved"],
     resolution: ImportFlowState["resolution"],
-    categoryIncome: ReadonlyMap<string, boolean>
+    categoryIncome: ReadonlyMap<string, boolean>,
+    createMissingCategories: boolean
 ): ImportPlan {
     if (parsed == null || resolved == null) {
         return EMPTY_PLAN;
@@ -82,7 +84,15 @@ function buildPlan(
     const { rows } = parsed;
     const dateFormat = deduceDateFormat(rows.map((row) => row[mapping.date] ?? "")) ?? "";
     const decimal = detectDecimalSeparator(rows.map((row) => row[mapping.amount] ?? ""));
-    return buildImportPlan(rows, mapping, dateFormat, decimal, resolution?.links ?? new Map(), categoryIncome);
+    return buildImportPlan(
+        rows,
+        mapping,
+        dateFormat,
+        decimal,
+        resolution?.links ?? new Map(),
+        categoryIncome,
+        createMissingCategories
+    );
 }
 
 export interface ReviewCategoryTile {
@@ -101,6 +111,7 @@ export interface ImportReviewResult {
     onCommit: () => void;
     onToggle: (index: number) => void;
     plan: ImportPlan;
+    proCategoryCount: number;
     rows: ReviewRow[];
     selectedCount: number;
 }
@@ -159,7 +170,11 @@ export function useImportReview(): ImportReviewResult {
     );
     const { categoryIncome, categoryName, categoryTile } = indexCategories(categoryRows);
 
-    const plan = buildPlan(parsed, resolved, resolution, categoryIncome);
+    const proLocked = useProLocked();
+    const plan = buildPlan(parsed, resolved, resolution, categoryIncome, !proLocked);
+    const proCategoryCount = proLocked
+        ? buildPlan(parsed, resolved, resolution, categoryIncome, true).newCategories.length
+        : 0;
     for (const category of plan.newCategories) {
         const style = presetForName(category.name);
         categoryName.set(category.id, category.name);
@@ -253,6 +268,7 @@ export function useImportReview(): ImportReviewResult {
         onCommit,
         onToggle,
         plan,
+        proCategoryCount,
         rows,
         selectedCount: selectedEntries.length,
     };

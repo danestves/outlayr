@@ -4654,8 +4654,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes, if you exported a CSV from Mint. Outlayr links each Mint category that matches one of yours by name, and flags rows that look already imported before you save. With Outlayr Pro, the other Mint category names are matched to yours with AI, up to 5,000 rows a file, so split a longer export by year. A Mint category with no match comes in as a new category.",
-                            es: "Sí, si exportaste un CSV de Mint. Outlayr vincula cada categoría de Mint que coincide por nombre con una de las tuyas y marca las filas que parecen ya importadas antes de guardar. Con Outlayr Pro, los demás nombres de categoría de Mint se asignan a los tuyos con IA, hasta 5,000 filas por archivo, así que divide una exportación más larga por año. Una categoría de Mint sin coincidencia entra como categoría nueva.",
+                            en: "Yes, if you exported a CSV from Mint. Outlayr links each Mint category that matches one of yours by name, and flags rows that look already imported before you save. With Outlayr Pro, the other Mint category names are matched to yours with AI, up to 5,000 rows a file, so split a longer export by year. With Pro, a Mint category still unmatched becomes a new category; on the free plan those rows are skipped.",
+                            es: "Sí, si exportaste un CSV de Mint. Outlayr vincula cada categoría de Mint que coincide por nombre con una de las tuyas y marca las filas que parecen ya importadas antes de guardar. Con Outlayr Pro, los demás nombres de categoría de Mint se asignan a los tuyos con IA, hasta 5,000 filas por archivo, así que divide una exportación más larga por año. Con Pro, una categoría de Mint que siga sin coincidencia se crea como categoría nueva; en el plan gratis esas filas se omiten.",
                         }),
                         question: t({
                             en: "Can I import my Mint data into Outlayr?",
@@ -4674,8 +4674,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Logging, budgets, goals, and subscriptions are free, and so is importing your Mint CSV: a Mint category that matches one of yours by name links, and on the free plan any other comes in as a new category. Matching those other names to yours with AI needs Outlayr Pro, which is $7.99 a month, $49.99 a year, or $129.99 once in the United States.",
-                            es: "Registrar, los presupuestos, las metas y las suscripciones son gratis, igual que importar tu CSV de Mint: una categoría de Mint que coincide por nombre con una de las tuyas se vincula, y en el plan gratis cualquier otra entra como categoría nueva. Asignar esos otros nombres a los tuyos con IA requiere Outlayr Pro, que en Estados Unidos cuesta US$7.99 al mes, US$49.99 al año o US$129.99 en un solo pago.",
+                            en: "Logging, budgets, goals, and subscriptions are free, and so is importing the rows whose Mint category matches one of yours by name. Matching the other Mint category names to yours with AI, and creating a category for any still unmatched, needs Outlayr Pro, which is $7.99 a month, $49.99 a year, or $129.99 once in the United States.",
+                            es: "Registrar, los presupuestos, las metas y las suscripciones son gratis, igual que importar las filas cuya categoría de Mint coincide por nombre con una de las tuyas. Asignar los demás nombres de categoría de Mint a los tuyos con IA, y crear una categoría para los que sigan sin coincidir, requiere Outlayr Pro, que en Estados Unidos cuesta US$7.99 al mes, US$49.99 al año o US$129.99 en un solo pago.",
                         }),
                         question: t({
                             en: "Is Outlayr free like Mint was?",
@@ -4701,16 +4701,16 @@ const answers = {
                     {
                         body: [
                             t({
-                                en: "Outlayr needs a date, an amount, and a category or description column, with commas between columns. Each Mint category that matches one of yours by name links on any plan, and one with no match comes in as a new category. With Pro, AI first matches the other category names to yours, up to 5,000 rows and 2 MB a file, and only merchant and category names are sent, never amounts, dates, or the file.",
-                                es: "Outlayr necesita una columna de fecha, una de monto y una de categoría o descripción, con comas entre columnas. Cada categoría de Mint que coincide por nombre con una de las tuyas se vincula en cualquier plan, y una sin coincidencia entra como categoría nueva. Con Pro, la IA primero asigna los demás nombres de categoría a los tuyos, hasta 5,000 filas y 2 MB por archivo, y solo se envían nombres de comercios y de categorías, nunca montos, fechas ni el archivo.",
+                                en: "Outlayr needs a date, an amount, and a category or description column, with commas between columns. Each Mint category that matches one of yours by name links on any plan. With Pro, AI first matches the other category names to yours, up to 5,000 rows and 2 MB a file, and a name still unmatched becomes a new category; only merchant and category names are sent, never amounts, dates, or the file.",
+                                es: "Outlayr necesita una columna de fecha, una de monto y una de categoría o descripción, con comas entre columnas. Cada categoría de Mint que coincide por nombre con una de las tuyas se vincula en cualquier plan. Con Pro, la IA primero asigna los demás nombres de categoría a los tuyos, hasta 5,000 filas y 2 MB por archivo, y un nombre que siga sin coincidir se crea como categoría nueva; solo se envían nombres de comercios y de categorías, nunca montos, fechas ni el archivo.",
                             }),
                             t({
                                 en: "A Type column with words like debit and credit, or expense and income, keeps each row on its side. Without one, amounts come in positive and a row follows its category's income setting. Accounts, tags, and splits do not come in, so imported rows have no account.",
                                 es: "Una columna Type con palabras como debit y credit, o expense e income, mantiene cada fila como gasto o ingreso. Sin ella, los montos entran en positivo y cada fila sigue lo que diga su categoría. Las cuentas, las etiquetas y las divisiones no entran, así que las filas importadas no tienen cuenta.",
                             }),
                             t({
-                                en: "Rows that look already imported are flagged before you save, new categories are listed, and rows with an unreadable date or amount, or no category, are listed as skipped, with the reason.",
-                                es: "Las filas que parecen ya importadas se marcan antes de guardar, las categorías nuevas aparecen en una lista, y las filas con una fecha o un monto ilegible, o sin categoría, aparecen como omitidas, con el motivo.",
+                                en: "Rows that look already imported are flagged before you save, and rows Outlayr cannot read or match to a category are listed as skipped, with the reason; with Pro, the new categories it creates are listed as well.",
+                                es: "Las filas que parecen ya importadas se marcan antes de guardar, y las que Outlayr no puede leer ni asignar a una categoría aparecen como omitidas, con el motivo; con Pro, también se listan las categorías nuevas que crea.",
                             }),
                         ],
                         id: "mint-csv",
@@ -5368,16 +5368,16 @@ const answers = {
                     {
                         label: t({ en: "Plans", es: "Planes" }),
                         text: t({
-                            en: "Every readable row with a category imports on any plan: a category that matches one of yours by name links. Outlayr Pro matches the others to yours with AI, up to 5,000 rows and 2 MB a file, and any still unmatched becomes a new category",
-                            es: "Toda fila legible con categoría se importa en cualquier plan: una categoría que coincide por nombre con una de las tuyas se vincula. Outlayr Pro asigna las demás a las tuyas con IA, hasta 5,000 filas y 2 MB por archivo, y cualquiera que siga sin coincidir se crea como categoría nueva",
+                            en: "Rows whose category matches one of yours by name import on any plan. Outlayr Pro matches the rest with AI, up to 5,000 rows and 2 MB a file, and creates a category for any still unmatched",
+                            es: "Las filas cuya categoría coincide por nombre con una de las tuyas se importan en cualquier plan. Outlayr Pro asigna el resto con IA, hasta 5,000 filas y 2 MB por archivo, y crea una categoría para cualquiera que siga sin coincidir",
                         }),
                     },
                 ],
                 faq: [
                     {
                         answer: t({
-                            en: "Yes, the Excel workbook and the CSV. Use them in any spreadsheet app for as long as you like. Importing into Outlayr is free too: a category that matches one of yours by name links, and any other becomes a new category; the English file uses the categories a new Outlayr ledger starts with. With Outlayr Pro, AI first matches other category names to yours.",
-                            es: "Sí, tanto el libro de Excel como el CSV. Úsalos en cualquier hoja de cálculo el tiempo que quieras. Importarlos a Outlayr también es gratis: una categoría que coincide por nombre con una de las tuyas se vincula, y cualquier otra se crea como categoría nueva. Con Outlayr Pro, la IA primero asigna los demás nombres de categoría a los tuyos.",
+                            en: "Yes, the Excel workbook and the CSV. Use them in any spreadsheet app for as long as you like. Importing into Outlayr is free too for every row whose category matches one of yours by name; the English file uses the categories a new Outlayr ledger starts with. Outlayr Pro matches other category names to yours with AI and creates a category for any still unmatched.",
+                            es: "Sí, tanto el libro de Excel como el CSV. Úsalos en cualquier hoja de cálculo el tiempo que quieras. Importarlos a Outlayr también es gratis para cada fila cuya categoría coincide por nombre con una de las tuyas. Outlayr Pro asigna los demás nombres de categoría a los tuyos con IA y crea una categoría para los que sigan sin coincidir.",
                         }),
                         question: t({ en: "Is the template free?", es: "¿La plantilla es gratis?" }),
                     },
@@ -5413,8 +5413,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "It is listed as skipped before anything is saved, with the reason: an unreadable date or amount, or no category at all. A category Outlayr does not have yet is created instead. Rows that look already imported are flagged too, so you can leave them out.",
-                            es: "Aparece como omitida antes de guardar, con el motivo: una fecha o un monto ilegible, o ninguna categoría. Una categoría que Outlayr aún no tiene se crea en su lugar. Las filas que parecen ya importadas también se marcan, para que las dejes fuera.",
+                            en: "It is listed as skipped before anything is saved, with the reason: an unreadable date or amount, or no matching category. With Pro, a category Outlayr does not have yet is created instead. Rows that look already imported are flagged too, so you can leave them out.",
+                            es: "Aparece como omitida antes de guardar, con el motivo: una fecha o un monto ilegible, o sin categoría coincidente. Con Pro, una categoría que Outlayr aún no tiene se crea en su lugar. Las filas que parecen ya importadas también se marcan, para que las dejes fuera.",
                         }),
                         question: t({ en: "What if a row cannot be read?", es: "¿Y si una fila no se puede leer?" }),
                     },

@@ -323,31 +323,31 @@ describe("buildImportPlan", () => {
     ]);
 
     it("takes direction from the matched category", () => {
-        const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income);
+        const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income, true);
         expect(plan.entries[0]?.income).toBe(false);
         expect(plan.entries[1]?.income).toBe(true);
     });
 
     it("prefers an explicit type column over the category's direction", () => {
         const typed = rows.map((row) => [...row, "Income"]);
-        const plan = buildImportPlan(typed, { ...MAPPING, type: 4 }, "yyyy-MM-dd", ".", links, income);
+        const plan = buildImportPlan(typed, { ...MAPPING, type: 4 }, "yyyy-MM-dd", ".", links, income, true);
         expect(plan.entries[0]?.income).toBe(true);
     });
 
     it("stores the magnitude, never a signed amount", () => {
         const negative = [["Food", "Refund", "2026-07-28", "-12.50"]];
-        const plan = buildImportPlan(negative, MAPPING, "yyyy-MM-dd", ".", links, income);
+        const plan = buildImportPlan(negative, MAPPING, "yyyy-MM-dd", ".", links, income, true);
         expect(plan.entries[0]?.amount).toBe(12.5);
     });
 
     it("reads a mapped currency column", () => {
         const withCurrency = rows.map((row) => [...row, "eur"]);
-        const plan = buildImportPlan(withCurrency, { ...MAPPING, currency: 4 }, "yyyy-MM-dd", ".", links, income);
+        const plan = buildImportPlan(withCurrency, { ...MAPPING, currency: 4 }, "yyyy-MM-dd", ".", links, income, true);
         expect(plan.entries[0]?.currency).toBe("EUR");
     });
 
     it("leaves currency null when no column is mapped, so the ledger's code applies", () => {
-        const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income);
+        const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income, true);
         expect(plan.entries[0]?.currency).toBeNull();
     });
 
@@ -358,7 +358,8 @@ describe("buildImportPlan", () => {
             "yyyy-MM-dd",
             ",",
             links,
-            income
+            income,
+            true
         );
         expect(plan.entries[0]).toMatchObject({ exchangeRate: 55.5, exchangeRateType: "custom" });
     });
@@ -370,13 +371,14 @@ describe("buildImportPlan", () => {
             "yyyy-MM-dd",
             ".",
             links,
-            income
+            income,
+            true
         );
         expect(plan.entries[0]).toMatchObject({ exchangeRate: null, exchangeRateType: "custom" });
     });
 
     it("buildImportPlan defaults a legacy six-column row to official behavior", () => {
-        const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income);
+        const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income, true);
         expect(plan.entries[0]).toMatchObject({ exchangeRate: null, exchangeRateType: null });
     });
 
@@ -392,7 +394,8 @@ describe("buildImportPlan", () => {
             "yyyy-MM-dd",
             ".",
             links,
-            income
+            income,
+            true
         );
         expect(plan.entries).toHaveLength(0);
         expect(plan.skipped).toStrictEqual([
@@ -415,7 +418,8 @@ describe("buildImportPlan", () => {
             "yyyy-MM-dd",
             ".",
             links,
-            income
+            income,
+            true
         );
         expect(plan.entries).toHaveLength(0);
         expect(plan.skipped).toStrictEqual([{ reason: "rate", row: 1 }]);
@@ -423,20 +427,20 @@ describe("buildImportPlan", () => {
 
     it("rejects a currency cell that is not a three-letter code", () => {
         const bad = [["Food", "Bakery", "2026-07-28", "12.50", "dollars"]];
-        const plan = buildImportPlan(bad, { ...MAPPING, currency: 4 }, "yyyy-MM-dd", ".", links, income);
+        const plan = buildImportPlan(bad, { ...MAPPING, currency: 4 }, "yyyy-MM-dd", ".", links, income, true);
         expect(plan.entries[0]?.currency).toBeNull();
     });
 
     it("skips a row whose date does not parse and names the reason", () => {
         const bad = [...rows, ["Food", "Mystery", "last tuesday", "5"]];
-        const plan = buildImportPlan(bad, MAPPING, "yyyy-MM-dd", ".", links, income);
+        const plan = buildImportPlan(bad, MAPPING, "yyyy-MM-dd", ".", links, income, true);
         expect(plan.entries).toHaveLength(2);
         expect(plan.skipped).toStrictEqual([{ reason: "date", row: 3 }]);
     });
 
     it("skips a row whose amount does not parse", () => {
         const bad = [["Food", "Mystery", "2026-07-28", "n/a"]];
-        const plan = buildImportPlan(bad, MAPPING, "yyyy-MM-dd", ".", links, income);
+        const plan = buildImportPlan(bad, MAPPING, "yyyy-MM-dd", ".", links, income, true);
         expect(plan.skipped).toStrictEqual([{ reason: "amount", row: 1 }]);
     });
 
@@ -447,7 +451,7 @@ describe("buildImportPlan", () => {
             ["otros ingresos", "Fee", "2026-07-26", "5", "Expense"],
             ["Iglesia", "Tithe", "2026-07-25", "30", ""],
         ];
-        const plan = buildImportPlan(unlinked, { ...MAPPING, type: 4 }, "yyyy-MM-dd", ".", links, income);
+        const plan = buildImportPlan(unlinked, { ...MAPPING, type: 4 }, "yyyy-MM-dd", ".", links, income, true);
         expect(plan.skipped).toStrictEqual([]);
         expect(plan.newCategories.map(({ name, income: side }) => ({ name, side }))).toStrictEqual([
             { name: "Otros ingresos", side: true },
@@ -469,10 +473,29 @@ describe("buildImportPlan", () => {
             "yyyy-MM-dd",
             ".",
             new Map([["side hustle", "cat-side"]]),
-            new Map([["cat-side", true]])
+            new Map([["cat-side", true]]),
+            true
         );
         expect(plan.newCategories).toStrictEqual([]);
         expect(plan.entries.map((entry) => [entry.categoryId, entry.income])).toStrictEqual([["cat-side", true]]);
+    });
+
+    it("skips rows whose category does not exist and plans none when creating is off", () => {
+        const plan = buildImportPlan(
+            [
+                ["Food", "Bakery", "2026-07-28", "12.50"],
+                ["Travel", "Flight", "2026-07-27", "300"],
+            ],
+            MAPPING,
+            "yyyy-MM-dd",
+            ".",
+            links,
+            income,
+            false
+        );
+        expect(plan.entries.map((entry) => entry.note)).toStrictEqual(["Bakery"]);
+        expect(plan.skipped).toStrictEqual([{ reason: "category", row: 2 }]);
+        expect(plan.newCategories).toStrictEqual([]);
     });
 
     it("still skips a row with no category value", () => {
@@ -482,7 +505,8 @@ describe("buildImportPlan", () => {
             "yyyy-MM-dd",
             ".",
             links,
-            income
+            income,
+            true
         );
         expect(plan.skipped).toStrictEqual([{ reason: "category", row: 1 }]);
         expect(plan.newCategories).toStrictEqual([]);
@@ -495,7 +519,8 @@ describe("buildImportPlan", () => {
             "yyyy-MM-dd",
             ".",
             links,
-            income
+            income,
+            true
         );
         expect(plan.skipped).toStrictEqual([{ reason: "category", row: 1 }]);
         expect(plan.newCategories).toStrictEqual([]);
@@ -508,26 +533,27 @@ describe("buildImportPlan", () => {
             "yyyy-MM-dd",
             ".",
             links,
-            income
+            income,
+            true
         );
         expect(plan.newCategories).toStrictEqual([]);
     });
 
     it("skips a ragged row missing the mapped column entirely", () => {
         const bad = [["Food", "Bakery"]];
-        const plan = buildImportPlan(bad, MAPPING, "yyyy-MM-dd", ".", links, income);
+        const plan = buildImportPlan(bad, MAPPING, "yyyy-MM-dd", ".", links, income, true);
         expect(plan.entries).toHaveLength(0);
         expect(plan.skipped).toHaveLength(1);
     });
 
     it("reports the date span of what it will write", () => {
-        const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income);
+        const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income, true);
         expect(plan.earliest).toStrictEqual(new Date(2026, 6, 27));
         expect(plan.latest).toStrictEqual(new Date(2026, 6, 28));
     });
 
     it("reports no span when nothing is importable", () => {
-        const plan = buildImportPlan([], MAPPING, "yyyy-MM-dd", ".", links, income);
+        const plan = buildImportPlan([], MAPPING, "yyyy-MM-dd", ".", links, income, true);
         expect(plan.earliest).toBeNull();
         expect(plan.latest).toBeNull();
     });
@@ -554,20 +580,20 @@ describe("applyImport", () => {
     ]);
 
     it("writes every planned entry", async () => {
-        const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income);
+        const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income, true);
         const written = await Effect.runPromise(applyImport(db, plan));
         expect(written).toBe(2);
         await expect(db.select().from(transactions)).resolves.toHaveLength(2);
     });
 
     it("never hands an imported row to the background logo lookup", async () => {
-        const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income);
+        const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income, true);
         await Effect.runPromise(applyImport(db, plan));
         await expect(Effect.runPromise(candidateLogoIds(db))).resolves.toStrictEqual(new Map());
     });
 
     it("buckets each row into its own day and month", async () => {
-        const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income);
+        const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income, true);
         await Effect.runPromise(applyImport(db, plan));
         const rowsOut = await db.select().from(transactions);
         const first = rowsOut.find((row) => row.note === "Bakery");
@@ -578,7 +604,7 @@ describe("applyImport", () => {
     it("rolls back every entry when the write fails partway through", async () => {
         const transactionalDb = makeDb({ withRealTransactions: true });
         await seed(transactionalDb);
-        const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income);
+        const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income, true);
         const originalCreate = transactionsRepo.create;
         let calls = 0;
         const spy = vi.spyOn(transactionsRepo, "create").mockImplementation((targetDb, input) => {
@@ -603,7 +629,7 @@ describe("applyImport", () => {
             ["travel", "Hotel", "2026-07-27", "120"],
             ["Food", "Bakery", "2026-07-26", "12.50"],
         ];
-        const plan = buildImportPlan(unlinked, MAPPING, "yyyy-MM-dd", ".", links, income);
+        const plan = buildImportPlan(unlinked, MAPPING, "yyyy-MM-dd", ".", links, income, true);
         await Effect.runPromise(applyImport(db, plan));
 
         const created = await db.select().from(categories).where(eq(categories.name, "Travel"));
@@ -623,7 +649,8 @@ describe("applyImport", () => {
             "yyyy-MM-dd",
             ".",
             new Map(),
-            income
+            income,
+            true
         );
         await Effect.runPromise(applyImport(db, plan));
         await expect(db.select().from(categories).where(eq(categories.name, "Groceries"))).resolves.toHaveLength(1);
@@ -641,7 +668,8 @@ describe("applyImport", () => {
             "yyyy-MM-dd",
             ".",
             links,
-            income
+            income,
+            true
         );
         const kept = plan.entries.filter((entry) => entry.note === "Bakery");
         await Effect.runPromise(applyImport(db, { ...plan, entries: kept }));
@@ -657,7 +685,8 @@ describe("applyImport", () => {
             "yyyy-MM-dd",
             ".",
             links,
-            income
+            income,
+            true
         );
         const spy = vi
             .spyOn(transactionsRepo, "create")
@@ -675,14 +704,14 @@ describe("applyImport", () => {
 
     it("names a blank-note row after its category", async () => {
         const blank = [["Food", "  ", "2026-07-28", "12.50"]];
-        const plan = buildImportPlan(blank, MAPPING, "yyyy-MM-dd", ".", links, income);
+        const plan = buildImportPlan(blank, MAPPING, "yyyy-MM-dd", ".", links, income, true);
         await Effect.runPromise(applyImport(db, plan));
         const rowsOut = await db.select().from(transactions);
         expect(rowsOut[0]?.note).toBe("Groceries");
     });
 
     it("stamps the ledger currency on rows that named none", async () => {
-        const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income);
+        const plan = buildImportPlan(rows, MAPPING, "yyyy-MM-dd", ".", links, income, true);
         await Effect.runPromise(applyImport(db, plan));
         const rowsOut = await db.select().from(transactions);
         expect(rowsOut.every((row) => row.currency === "USD")).toBeTruthy();
@@ -695,7 +724,8 @@ describe("applyImport", () => {
             "yyyy-MM-dd",
             ".",
             links,
-            income
+            income,
+            true
         );
         await Effect.runPromise(applyImport(db, plan));
 
@@ -728,7 +758,8 @@ describe("applyImport", () => {
                 ["groceries", "cat-food"],
                 ["paycheck", "cat-pay"],
             ]),
-            income
+            income,
+            true
         );
         expect(plan.skipped).toHaveLength(0);
         expect(plan.entries).toHaveLength(2);
@@ -815,7 +846,8 @@ describe("applyImport", () => {
             "ISO",
             ".",
             new Map([["groceries", "cat-food"]]),
-            income
+            income,
+            true
         );
         await Effect.runPromise(applyImport(db, plan));
 
