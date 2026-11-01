@@ -81,9 +81,9 @@ export type ImportFlowEvent =
           links: ReadonlyMap<string, string>;
           fromModel: ReadonlySet<string>;
       }
-    | { type: "rowToggled"; index: number }
+    | { type: "rowToggled"; row: number }
     | { type: "categoryOverridden"; plannedId: string; override: CategoryOverride | null }
-    | { type: "duplicatesFlagged"; indices: ReadonlySet<number> }
+    | { type: "duplicatesFlagged"; rows: ReadonlySet<number> }
     | { type: "commitStarted" }
     | { type: "commitFailed"; detail: string | null }
     | {
@@ -145,10 +145,10 @@ export function importFlowReducer(state: ImportFlowState, event: ImportFlowEvent
                 return state;
             }
             const excluded = new Set(state.excluded);
-            if (excluded.has(event.index)) {
-                excluded.delete(event.index);
+            if (excluded.has(event.row)) {
+                excluded.delete(event.row);
             } else {
-                excluded.add(event.index);
+                excluded.add(event.row);
             }
             return { ...state, excluded };
         }
@@ -163,23 +163,22 @@ export function importFlowReducer(state: ImportFlowState, event: ImportFlowEvent
             } else {
                 categoryOverrides.set(event.plannedId, event.override);
             }
-            const wasLeftOut = state.categoryOverrides.get(event.plannedId)?.kind === "skip";
-            const isLeftOut = event.override?.kind === "skip";
-            if (wasLeftOut === isLeftOut) {
-                return { ...state, categoryOverrides };
-            }
-            return { ...state, categoryOverrides, duplicates: new Set(), excluded: new Set() };
+            return { ...state, categoryOverrides };
         }
 
         case "duplicatesFlagged": {
             if (state.resolution == null) {
                 return state;
             }
-            return {
-                ...state,
-                duplicates: event.indices,
-                excluded: new Set(event.indices),
-            };
+            const excluded = new Set(
+                [...state.excluded].filter((row) => !state.duplicates.has(row) || event.rows.has(row))
+            );
+            for (const row of event.rows) {
+                if (!state.duplicates.has(row)) {
+                    excluded.add(row);
+                }
+            }
+            return { ...state, duplicates: event.rows, excluded };
         }
 
         case "commitStarted": {

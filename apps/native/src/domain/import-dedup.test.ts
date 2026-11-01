@@ -61,8 +61,12 @@ describe("dedupFingerprint", () => {
 });
 
 describe("flagDuplicates", () => {
-    it("flags exact indices whose fingerprint already exists", () => {
-        const entries = [entry({ note: "Coffee Shop" }), entry({ note: "Rent" }), entry({ note: "Coffee Shop" })];
+    it("flags the source rows whose fingerprint already exists", () => {
+        const entries = [
+            entry({ note: "Coffee Shop", row: 4 }),
+            entry({ note: "Rent", row: 5 }),
+            entry({ note: "Coffee Shop", row: 7 }),
+        ];
         const existing = fingerprintsOf([
             {
                 amount: entries[0].amount,
@@ -71,6 +75,6 @@ describe("flagDuplicates", () => {
                 note: entries[0].note,
             },
         ]);
-        expect(flagDuplicates(entries, existing)).toStrictEqual(new Set([0, 2]));
+        expect(flagDuplicates(entries, existing)).toStrictEqual(new Set([4, 7]));
     });
 });

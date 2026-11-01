@@ -89,42 +89,26 @@ describe("importFlowReducer — legal transitions", () => {
         });
     });
 
-    it("toggles a row index in and out of the excluded set", () => {
-        const once = dispatch(withResolution(), { index: 3, type: "rowToggled" });
+    it("toggles a row in and out of the excluded set", () => {
+        const once = dispatch(withResolution(), { row: 3, type: "rowToggled" });
         expect(once.excluded.has(3)).toBe(true);
-        const twice = dispatch(once, { index: 3, type: "rowToggled" });
+        const twice = dispatch(once, { row: 3, type: "rowToggled" });
         expect(twice.excluded.has(3)).toBe(false);
     });
 
-    it("keeps row selections when a category goes to an existing one, since no row changes position", () => {
-        const selected = dispatch(withResolution(), { index: 3, type: "rowToggled" });
-        const mapped = dispatch(selected, {
-            override: { categoryId: "cat-food", kind: "existing" },
-            plannedId: "planned:Mercado",
-            type: "categoryOverridden",
-        });
-        expect(mapped.categoryOverrides.get("planned:Mercado")).toStrictEqual({
-            categoryId: "cat-food",
-            kind: "existing",
-        });
-        expect(mapped.excluded.has(3)).toBe(true);
-    });
-
-    it("resets row selections when a category is left out or brought back, since its rows leave or rejoin the list", () => {
-        const selected = dispatch(withResolution(), { index: 3, type: "rowToggled" });
+    it("keeps row selections through every category choice, since they follow source rows", () => {
+        const selected = dispatch(withResolution(), { row: 3, type: "rowToggled" });
         const leftOut = dispatch(selected, {
             override: { kind: "skip" },
             plannedId: "planned:Mercado",
             type: "categoryOverridden",
         });
-        expect(leftOut.excluded.size).toBe(0);
-        const reselected = dispatch(leftOut, { index: 1, type: "rowToggled" });
-        const restored = dispatch(reselected, {
+        const restored = dispatch(leftOut, {
             override: null,
             plannedId: "planned:Mercado",
             type: "categoryOverridden",
         });
-        expect(restored.excluded.size).toBe(0);
+        expect(restored.excluded).toStrictEqual(new Set([3]));
         expect(restored.categoryOverrides.has("planned:Mercado")).toBe(false);
     });
 
@@ -180,7 +164,7 @@ describe("importFlowReducer — illegal transitions are no-ops", () => {
 
 describe("importFlowReducer — invalidation cascade", () => {
     it("selecting a different source clears everything downstream", () => {
-        const populated = dispatch(dispatch(withResolution(), { index: 0, type: "rowToggled" }), {
+        const populated = dispatch(dispatch(withResolution(), { row: 0, type: "rowToggled" }), {
             type: "commitStarted",
         });
         const otherId = "ofx" as unknown as ImportSourceId;
@@ -195,7 +179,7 @@ describe("importFlowReducer — invalidation cascade", () => {
     });
 
     it("clears the prior resolution, exclusions and commit state on a new file", () => {
-        const populated = dispatch(dispatch(withResolution(), { index: 0, type: "rowToggled" }), {
+        const populated = dispatch(dispatch(withResolution(), { row: 0, type: "rowToggled" }), {
             type: "commitStarted",
         });
         const reparsed = dispatch(populated, {
@@ -212,7 +196,7 @@ describe("importFlowReducer — invalidation cascade", () => {
     });
 
     it("clears exclusions and commit state, but keeps the mapping, when a resolution re-settles", () => {
-        const excludedAndWriting = dispatch(dispatch(withResolution(), { index: 0, type: "rowToggled" }), {
+        const excludedAndWriting = dispatch(dispatch(withResolution(), { row: 0, type: "rowToggled" }), {
             type: "commitStarted",
         });
         const resettled = dispatch(excludedAndWriting, {
@@ -229,7 +213,7 @@ describe("importFlowReducer — invalidation cascade", () => {
 
     it("preserves the excluded set when a commit fails", () => {
         const excluded = dispatch(withResolution(), {
-            index: 2,
+            row: 2,
             type: "rowToggled",
         });
         const writing = dispatch(excluded, { type: "commitStarted" });
@@ -242,20 +226,27 @@ describe("importFlowReducer — invalidation cascade", () => {
 });
 
 describe("duplicatesFlagged", () => {
-    it("flags the given indices and excludes them by default", () => {
+    it("flags the given rows and excludes them by default", () => {
         const state = withResolution();
         const flagged = dispatch(state, {
-            indices: new Set([0, 2]),
+            rows: new Set([0, 2]),
             type: "duplicatesFlagged",
         });
         expect(flagged.duplicates).toStrictEqual(new Set([0, 2]));
         expect(flagged.excluded).toStrictEqual(new Set([0, 2]));
     });
 
+    it("keeps a re-checked duplicate and releases a row that stops matching when the flags change", () => {
+        const flagged = dispatch(withResolution(), { rows: new Set([0, 2]), type: "duplicatesFlagged" });
+        const rechecked = dispatch(flagged, { row: 0, type: "rowToggled" });
+        const reflagged = dispatch(rechecked, { rows: new Set([0, 5]), type: "duplicatesFlagged" });
+        expect(reflagged.excluded).toStrictEqual(new Set([5]));
+    });
+
     it("is a no-op with no settled resolution yet", () => {
         const state = withFile();
         const flagged = dispatch(state, {
-            indices: new Set([0]),
+            rows: new Set([0]),
             type: "duplicatesFlagged",
         });
         expect(flagged).toBe(state);
@@ -265,7 +256,7 @@ describe("duplicatesFlagged", () => {
 describe("duplicates reset on invalidation", () => {
     it("clears duplicates alongside exclusions on a new file", () => {
         const flagged = dispatch(withResolution(), {
-            indices: new Set([0]),
+            rows: new Set([0]),
             type: "duplicatesFlagged",
         });
         const reparsed = dispatch(flagged, {
@@ -281,7 +272,7 @@ describe("duplicates reset on invalidation", () => {
 
     it("clears duplicates alongside exclusions when a resolution re-settles", () => {
         const flagged = dispatch(withResolution(), {
-            indices: new Set([0]),
+            rows: new Set([0]),
             type: "duplicatesFlagged",
         });
         const resettled = dispatch(flagged, {

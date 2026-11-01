@@ -34,7 +34,7 @@ export type ReviewRow =
 
 export function buildReviewRows(plan: ImportPlan, duplicates: ReadonlySet<number>): ReviewRow[] {
     const rows: ReviewRow[] = plan.entries.map((entry, index) => ({
-        duplicate: duplicates.has(index),
+        duplicate: duplicates.has(entry.row),
         entry,
         index,
         key: `entry-${index}`,
@@ -125,7 +125,7 @@ export interface ImportReviewResult {
     newCategories: readonly ReviewNewCategory[];
     onCommit: () => void;
     onOverride: (plannedId: string, override: CategoryOverride | null) => void;
-    onToggle: (index: number) => void;
+    onToggle: (row: number) => void;
     plan: ImportPlan;
     proCategoryCount: number;
     rows: ReviewRow[];
@@ -162,8 +162,8 @@ function indexCategories(
     return { categoryIncome, categoryName, categoryOptions, categoryTile };
 }
 
-function onToggle(index: number) {
-    importDraftStore.dispatch({ index, type: "rowToggled" });
+function onToggle(row: number) {
+    importDraftStore.dispatch({ row, type: "rowToggled" });
 }
 
 function onOverride(plannedId: string, override: CategoryOverride | null) {
@@ -176,7 +176,7 @@ function countNewCategories(
     excluded: ReadonlySet<number>,
     overrides: ReadonlyMap<string, CategoryOverride>
 ): ReviewNewCategory[] {
-    const selectedRows = new Set(plan.entries.filter((_, index) => !excluded.has(index)).map((entry) => entry.row));
+    const selectedRows = new Set(plan.entries.filter((entry) => !excluded.has(entry.row)).map((entry) => entry.row));
     const counts = new Map<string, number>();
     for (const entry of built.entries) {
         if (overrides.get(entry.categoryId)?.kind === "skip" || selectedRows.has(entry.row)) {
@@ -262,14 +262,14 @@ export function useImportReview(): ImportReviewResult {
             return;
         }
         importDraftStore.dispatch({
-            indices: duplicates,
+            rows: duplicates,
             type: "duplicatesFlagged",
         });
     }, [duplicates, flow.duplicates, settled]);
 
     const rows = buildReviewRows(plan, flow.duplicates);
 
-    const selectedEntries = plan.entries.filter((_, index) => !flow.excluded.has(index));
+    const selectedEntries = plan.entries.filter((entry) => !flow.excluded.has(entry.row));
 
     const importRows = useAtomAction(
         importWithLogosCommand,
@@ -288,7 +288,7 @@ export function useImportReview(): ImportReviewResult {
                 // committed counts. Dismissing the sheet after a success clears.
                 importDraftStore.dispatch({
                     count,
-                    duplicatesSkipped: [...flow.duplicates].filter((index) => flow.excluded.has(index)).length,
+                    duplicatesSkipped: [...flow.duplicates].filter((row) => flow.excluded.has(row)).length,
                     outTotals: importOutTotals(selectedEntries, currency),
                     type: "commitSucceeded",
                 });

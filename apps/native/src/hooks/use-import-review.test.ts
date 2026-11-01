@@ -135,7 +135,7 @@ describe("buildReviewRows", () => {
     };
 
     it("maps every entry in order, flagging duplicates from the given set", () => {
-        const rows = buildReviewRows(plan, new Set([1]));
+        const rows = buildReviewRows(plan, new Set([2]));
         expect(rows[0]).toMatchObject({
             duplicate: false,
             index: 0,
@@ -197,7 +197,7 @@ describe("useImportReview", () => {
         const { result } = await renderHook(() => useImportReview());
 
         await waitFor(() => expect(result.current.selectedCount).toBe(1));
-        expect(result.current.excluded.has(0)).toBe(true);
+        expect(result.current.excluded.has(1)).toBe(true);
         expect(result.current.rows[0]).toMatchObject({ duplicate: true });
     });
 
@@ -218,15 +218,15 @@ describe("useImportReview", () => {
         withReview();
 
         const first = await renderHook(() => useImportReview());
-        await waitFor(() => expect(first.result.current.excluded.has(0)).toBe(true));
+        await waitFor(() => expect(first.result.current.excluded.has(1)).toBe(true));
         await act(async () => {
-            first.result.current.onToggle(0);
+            first.result.current.onToggle(1);
         });
-        expect(importDraftStore.getSnapshot().flow.excluded.has(0)).toBe(false);
+        expect(importDraftStore.getSnapshot().flow.excluded.has(1)).toBe(false);
 
         const second = await renderHook(() => useImportReview());
         await waitFor(() => expect(second.result.current.plan.entries).toHaveLength(2));
-        expect(second.result.current.excluded.has(0)).toBe(false);
+        expect(second.result.current.excluded.has(1)).toBe(false);
     });
 
     it("onCommit writes every non-excluded entry, records the success and advances to the done step without clearing the draft", async () => {

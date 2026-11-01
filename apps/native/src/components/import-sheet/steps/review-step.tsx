@@ -78,7 +78,7 @@ interface EntryRowProps {
     entry: ImportEntry;
     index: number;
     logoUri: string | null;
-    onToggle: (index: number) => void;
+    onToggle: (row: number) => void;
     tile: ReviewCategoryTile | undefined;
 }
 
@@ -99,7 +99,7 @@ export function EntryRow({
     const colors = useColors();
     const { showCents } = useDisplaySettings().state;
     const onPress = () => {
-        onToggle(index);
+        onToggle(entry.row);
     };
     const tileColor = tile === undefined ? FALLBACK_IDENTITY_COLOR : tile.color;
     const categoryCaption =
@@ -211,7 +211,7 @@ function selectionTotals(entryRows: readonly EntryReviewRow[], excluded: Readonl
     const perDay = new Map<string, CurrencyEntry[]>();
     const selected: ImportEntry[] = [];
     for (const row of entryRows) {
-        if (excluded.has(row.index)) {
+        if (excluded.has(row.entry.row)) {
             continue;
         }
         const cell: CurrencyEntry = importCurrencyEntry(row.entry, ledgerCurrency);
@@ -372,7 +372,7 @@ function ReviewList({ entryRows, review, sections, skippedRows }: ReviewListProp
     const renderItem = ({ item }: { item: ReviewEntryListRow }) => (
         <EntryRow
             categoryName={review.categoryName.get(item.entry.categoryId)}
-            checked={!review.excluded.has(item.index)}
+            checked={!review.excluded.has(item.entry.row)}
             currency={review.currency}
             displayName={enrichment.get(item.index)?.displayName ?? item.entry.note}
             duplicate={item.duplicate}
