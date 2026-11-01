@@ -12,7 +12,6 @@ import Svg, { Line } from "react-native-svg";
 
 import { BusyText } from "@/components/busy-text";
 import { OutlayrMark } from "@/components/outlayr-mark";
-import { useLongWait } from "@/hooks/use-long-wait";
 import { useTranslation } from "@/i18n/context";
 import { useColors } from "@/theme/use-colors";
 
@@ -61,34 +60,29 @@ function MarchingWire() {
 export function NotionWait() {
     const t = useTranslation();
     const colors = useColors();
-    const long = useLongWait(true);
 
     return (
         <View className="items-center justify-center" style={{ height: BODY_HEIGHT }}>
-            {long ? (
-                <>
-                    <View accessible={false} className="flex-row items-center">
-                        <SourceLogo size={MARK} source="notion" />
-                        <MarchingWire />
-                        <View
-                            className="bg-card items-center justify-center"
-                            style={{
-                                borderColor: colors.border,
-                                borderCurve: "continuous",
-                                borderRadius: MARK * ICON_CORNER,
-                                borderWidth: 0.5,
-                                height: MARK,
-                                width: MARK,
-                            }}
-                        >
-                            <OutlayrMark size={26} />
-                        </View>
-                    </View>
-                    <BusyText className="text-subtitle font-sans-medium mt-4" color={colors.muted}>
-                        {t("mmImport.notion.checking")}
-                    </BusyText>
-                </>
-            ) : null}
+            <View accessible={false} className="flex-row items-center">
+                <SourceLogo size={MARK} source="notion" />
+                <MarchingWire />
+                <View
+                    className="bg-card items-center justify-center"
+                    style={{
+                        borderColor: colors.border,
+                        borderCurve: "continuous",
+                        borderRadius: MARK * ICON_CORNER,
+                        borderWidth: 0.5,
+                        height: MARK,
+                        width: MARK,
+                    }}
+                >
+                    <OutlayrMark size={26} />
+                </View>
+            </View>
+            <BusyText className="text-subtitle font-sans-medium mt-4" color={colors.muted}>
+                {t("mmImport.notion.checking")}
+            </BusyText>
         </View>
     );
 }
