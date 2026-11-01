@@ -96,6 +96,38 @@ describe("importFlowReducer — legal transitions", () => {
         expect(twice.excluded.has(3)).toBe(false);
     });
 
+    it("keeps row selections when a category goes to an existing one, since no row changes position", () => {
+        const selected = dispatch(withResolution(), { index: 3, type: "rowToggled" });
+        const mapped = dispatch(selected, {
+            override: { categoryId: "cat-food", kind: "existing" },
+            plannedId: "planned:Mercado",
+            type: "categoryOverridden",
+        });
+        expect(mapped.categoryOverrides.get("planned:Mercado")).toStrictEqual({
+            categoryId: "cat-food",
+            kind: "existing",
+        });
+        expect(mapped.excluded.has(3)).toBe(true);
+    });
+
+    it("resets row selections when a category is left out or brought back, since its rows leave or rejoin the list", () => {
+        const selected = dispatch(withResolution(), { index: 3, type: "rowToggled" });
+        const leftOut = dispatch(selected, {
+            override: { kind: "skip" },
+            plannedId: "planned:Mercado",
+            type: "categoryOverridden",
+        });
+        expect(leftOut.excluded.size).toBe(0);
+        const reselected = dispatch(leftOut, { index: 1, type: "rowToggled" });
+        const restored = dispatch(reselected, {
+            override: null,
+            plannedId: "planned:Mercado",
+            type: "categoryOverridden",
+        });
+        expect(restored.excluded.size).toBe(0);
+        expect(restored.categoryOverrides.has("planned:Mercado")).toBe(false);
+    });
+
     it("moves into the writing phase and then reports a failure with its detail", () => {
         const writing = dispatch(withResolution(), { type: "commitStarted" });
         expect(writing.commit).toStrictEqual({ phase: "writing" });

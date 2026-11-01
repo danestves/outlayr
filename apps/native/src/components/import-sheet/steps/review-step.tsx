@@ -4,7 +4,7 @@ import { HugeiconsIcon } from "@hugeicons/react-native";
 import { SectionList } from "@legendapp/list/section-list";
 import { currencyTotals } from "@outlayr/money/currency-totals";
 import type { CurrencyBucket, CurrencyEntry } from "@outlayr/money/currency-totals";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Pressable, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -14,19 +14,25 @@ import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
-import type { ImportEntry, PlannedCategory, SkipReason } from "@/data/transfer-core";
+import type { CategoryOverride, ImportEntry, SkipReason } from "@/data/transfer-core";
 import { formatDayHeader, formatSentenceDate } from "@/domain/dates";
 import { importCurrencyEntry, importOutTotals } from "@/domain/import-totals";
+import { tc } from "@/domain/money-manager/count-labels";
 import { FALLBACK_IDENTITY_COLOR } from "@/domain/transaction-identity";
-import type { ImportReviewResult, ReviewCategoryTile, ReviewRow } from "@/hooks/use-import-review";
+import type { ImportReviewResult, ReviewCategoryTile, ReviewNewCategory, ReviewRow } from "@/hooks/use-import-review";
 import { useOpenPaywall } from "@/hooks/use-pro-gate";
 import { useReviewEnrichment } from "@/hooks/use-review-enrichment";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { LARGE_SHEET_TOP_INSET } from "@/lib/sheet-detents";
+import { ChoiceSheet } from "@/screens/import/components/choice-sheet";
+import type { ChoiceSheetHandle } from "@/screens/import/components/choice-sheet";
+import { ImportRow } from "@/screens/import/components/import-row";
+import type { ImportRowProps } from "@/screens/import/components/import-row";
 import { useColors } from "@/theme/use-colors";
 
 import { MeasureStrip } from "../measure-strip";
+import { NewCategoryChoices } from "../new-category-choices";
 import { OutTotalCell } from "../out-total-cell";
 import { StepCta } from "../step-cta";
 
@@ -224,30 +230,37 @@ function selectionTotals(entryRows: readonly EntryReviewRow[], excluded: Readonl
     };
 }
 
-const NEW_CATEGORY_TILE_SIZE = 24;
-const NEW_CATEGORY_TILE_RADIUS = 6;
+const NEW_CATEGORY_TILE_SIZE = 32;
 
 interface NewCategoriesHeaderProps {
-    categories: readonly PlannedCategory[];
-    entryRows: readonly EntryReviewRow[];
-    excluded: ReadonlySet<number>;
     expanded: boolean;
+    names: ReadonlyMap<string, string>;
+    onEdit: (plannedId: string) => void;
     onToggle: () => void;
+    rows: readonly ReviewNewCategory[];
     tiles: ReadonlyMap<string, ReviewCategoryTile>;
 }
 
-function NewCategoriesHeader({ categories, entryRows, excluded, expanded, onToggle, tiles }: NewCategoriesHeaderProps) {
+function newCategoryTarget(
+    override: CategoryOverride | undefined,
+    names: ReadonlyMap<string, string>,
+    t: ReturnType<typeof useTranslation>
+): NonNullable<ImportRowProps["target"]> {
+    if (override === undefined) {
+        return { label: t("mmImport.target.howNew") };
+    }
+    if (override.kind === "skip") {
+        return { label: t("mmImport.target.leftOut"), loud: true };
+    }
+    return {
+        how: t("mmImport.target.howMatched"),
+        label: names.get(override.categoryId) ?? "",
+        tone: "matched",
+    };
+}
+
+function NewCategoriesHeader({ expanded, names, onEdit, onToggle, rows, tiles }: NewCategoriesHeaderProps) {
     const t = useTranslation();
-    const rowCounts = new Map<string, number>();
-    for (const row of entryRows) {
-        if (!excluded.has(row.index)) {
-            rowCounts.set(row.entry.categoryId, (rowCounts.get(row.entry.categoryId) ?? 0) + 1);
-        }
-    }
-    const created = categories.filter((category) => rowCounts.has(category.id));
-    if (created.length === 0) {
-        return null;
-    }
     return (
         <View>
             <Pressable
@@ -259,28 +272,30 @@ function NewCategoriesHeader({ categories, entryRows, excluded, expanded, onTogg
             >
                 <Text className="text-footnote text-muted">
                     {t(expanded ? "import.reviewNewCategoriesHide" : "import.reviewNewCategoriesShow", {
-                        count: created.length,
+                        count: rows.length,
                     })}
                 </Text>
             </Pressable>
             {expanded
-                ? created.map((category) => {
+                ? rows.map(({ category, count, override }) => {
                       const tile = tiles.get(category.id);
                       return (
-                          <View className="border-border flex-row items-center gap-3 border-b py-2" key={category.id}>
-                              <CategoryIconTile
-                                  color={tile?.color ?? FALLBACK_IDENTITY_COLOR}
-                                  emoji={tile?.emoji}
-                                  icon={tile?.icon}
-                                  radius={NEW_CATEGORY_TILE_RADIUS}
-                                  size={NEW_CATEGORY_TILE_SIZE}
-                                  type="solid"
-                              />
-                              <Text className="text-footnote text-foreground flex-1" numberOfLines={1}>
-                                  {category.name}
-                              </Text>
-                              <MonoLabel>{String(rowCounts.get(category.id) ?? 0)}</MonoLabel>
-                          </View>
+                          <ImportRow
+                              detail={tc(t, "mmImport.count.entries", count)}
+                              key={category.id}
+                              leading={
+                                  <CategoryIconTile
+                                      color={tile?.color ?? FALLBACK_IDENTITY_COLOR}
+                                      emoji={tile?.emoji}
+                                      icon={tile?.icon}
+                                      size={NEW_CATEGORY_TILE_SIZE}
+                                  />
+                              }
+                              onPress={() => onEdit(category.id)}
+                              target={newCategoryTarget(override, names, t)}
+                              testID={`review-new-category-${category.id}`}
+                              title={category.name}
+                          />
                       );
                   })
                 : null}
@@ -344,6 +359,13 @@ function ReviewList({ entryRows, review, sections, skippedRows }: ReviewListProp
     const onToggleNewCategories = () => {
         setShowNewCategories((current) => !current);
     };
+    const categorySheet = useRef<ChoiceSheetHandle>(null);
+    const [editing, setEditing] = useState<string | null>(null);
+    const edited = review.newCategories.find(({ category }) => category.id === editing);
+    const onEditCategory = (plannedId: string) => {
+        setEditing(plannedId);
+        categorySheet.current?.present();
+    };
 
     const { outTotals, dayTotals } = selectionTotals(entryRows, review.excluded, review.currency);
 
@@ -398,13 +420,13 @@ function ReviewList({ entryRows, review, sections, skippedRows }: ReviewListProp
         );
 
     const newCategoriesHeader =
-        review.plan.newCategories.length === 0 ? null : (
+        review.newCategories.length === 0 ? null : (
             <NewCategoriesHeader
-                categories={review.plan.newCategories}
-                entryRows={entryRows}
-                excluded={review.excluded}
                 expanded={showNewCategories}
+                names={review.categoryName}
+                onEdit={onEditCategory}
                 onToggle={onToggleNewCategories}
+                rows={review.newCategories}
                 tiles={review.categoryTile}
             />
         );
@@ -461,7 +483,13 @@ function ReviewList({ entryRows, review, sections, skippedRows }: ReviewListProp
                 <SectionList
                     contentContainerStyle={{ paddingBottom: 16, paddingHorizontal: 20 }}
                     estimatedItemSize={ESTIMATED_ROW_HEIGHT}
-                    extraData={{ enrichment, excluded: review.excluded, showNewCategories, showSkipped }}
+                    extraData={{
+                        enrichment,
+                        excluded: review.excluded,
+                        newCategories: review.newCategories,
+                        showNewCategories,
+                        showSkipped,
+                    }}
                     keyExtractor={keyOf}
                     ListFooterComponent={skippedFooter}
                     ListHeaderComponent={listHeader}
@@ -491,6 +519,34 @@ function ReviewList({ entryRows, review, sections, skippedRows }: ReviewListProp
                     testID="review-commit-cta"
                 />
             </View>
+
+            <ChoiceSheet
+                detail={edited ? tc(t, "mmImport.count.entries", edited.count) : undefined}
+                leading={
+                    edited ? (
+                        <CategoryIconTile
+                            color={review.categoryTile.get(edited.category.id)?.color ?? FALLBACK_IDENTITY_COLOR}
+                            icon={review.categoryTile.get(edited.category.id)?.icon}
+                            size={NEW_CATEGORY_TILE_SIZE}
+                        />
+                    ) : undefined
+                }
+                onDismiss={() => setEditing(null)}
+                ref={categorySheet}
+                title={edited?.category.name ?? ""}
+            >
+                {edited ? (
+                    <NewCategoryChoices
+                        category={edited.category}
+                        onPicked={(override) => {
+                            review.onOverride(edited.category.id, override);
+                            categorySheet.current?.dismiss();
+                        }}
+                        options={review.categoryOptions}
+                        override={edited.override}
+                    />
+                ) : null}
+            </ChoiceSheet>
         </View>
     );
 }

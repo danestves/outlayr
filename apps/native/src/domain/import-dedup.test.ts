@@ -12,6 +12,7 @@ function entry(overrides: Partial<ImportEntry> = {}): ImportEntry {
         date: new Date(2026, 7, 1, 9, 30),
         income: false,
         note: "Coffee Shop",
+        row: 1,
         ...overrides,
     };
 }

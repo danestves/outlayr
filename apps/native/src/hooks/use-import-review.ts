@@ -6,8 +6,8 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { presetForName } from "@/data/categories-core";
 import { useLiveQuery } from "@/data/live-query";
-import { buildImportPlan, CsvTransferError } from "@/data/transfer-core";
-import type { ImportEntry, ImportPlan, SkipReason } from "@/data/transfer-core";
+import { applyCategoryOverrides, buildImportPlan, CsvTransferError } from "@/data/transfer-core";
+import type { CategoryOverride, ImportEntry, ImportPlan, PlannedCategory, SkipReason } from "@/data/transfer-core";
 import { categories, transactions } from "@/db/schema";
 import { fingerprintsOf, flagDuplicates } from "@/domain/import-dedup";
 import type { ImportCommitState, ImportFlowState } from "@/domain/import-flow";
@@ -101,14 +101,30 @@ export interface ReviewCategoryTile {
     icon: string | null;
 }
 
+export interface ReviewCategoryOption {
+    id: string;
+    income: boolean;
+    name: string;
+    tile: ReviewCategoryTile;
+}
+
+export interface ReviewNewCategory {
+    category: PlannedCategory;
+    count: number;
+    override: CategoryOverride | undefined;
+}
+
 export interface ImportReviewResult {
     categoryName: ReadonlyMap<string, string>;
+    categoryOptions: readonly ReviewCategoryOption[];
     categoryTile: ReadonlyMap<string, ReviewCategoryTile>;
     commit: ImportCommitState;
     /** The ledger's display currency, for entries whose row stated none. */
     currency: string;
     excluded: ReadonlySet<number>;
+    newCategories: readonly ReviewNewCategory[];
     onCommit: () => void;
+    onOverride: (plannedId: string, override: CategoryOverride | null) => void;
     onToggle: (index: number) => void;
     plan: ImportPlan;
     proCategoryCount: number;
@@ -128,23 +144,52 @@ function indexCategories(
 ) {
     const categoryIncome = new Map<string, boolean>();
     const categoryName = new Map<string, string>();
+    const categoryOptions: ReviewCategoryOption[] = [];
     const categoryTile = new Map<string, ReviewCategoryTile>();
     for (const row of rows) {
         categoryIncome.set(row.id, row.income);
-        if (row.name != null) {
-            categoryName.set(row.id, row.name);
-        }
-        categoryTile.set(row.id, {
+        const tile = {
             color: row.color ?? FALLBACK_IDENTITY_COLOR,
             emoji: row.emoji ?? null,
             icon: row.icon ?? null,
-        });
+        };
+        categoryTile.set(row.id, tile);
+        if (row.name != null) {
+            categoryName.set(row.id, row.name);
+            categoryOptions.push({ id: row.id, income: row.income, name: row.name, tile });
+        }
     }
-    return { categoryIncome, categoryName, categoryTile };
+    return { categoryIncome, categoryName, categoryOptions, categoryTile };
 }
 
 function onToggle(index: number) {
     importDraftStore.dispatch({ index, type: "rowToggled" });
+}
+
+function onOverride(plannedId: string, override: CategoryOverride | null) {
+    importDraftStore.dispatch({ override, plannedId, type: "categoryOverridden" });
+}
+
+function countNewCategories(
+    built: ImportPlan,
+    plan: ImportPlan,
+    excluded: ReadonlySet<number>,
+    overrides: ReadonlyMap<string, CategoryOverride>
+): ReviewNewCategory[] {
+    const selectedRows = new Set(plan.entries.filter((_, index) => !excluded.has(index)).map((entry) => entry.row));
+    const counts = new Map<string, number>();
+    for (const entry of built.entries) {
+        if (overrides.get(entry.categoryId)?.kind === "skip" || selectedRows.has(entry.row)) {
+            counts.set(entry.categoryId, (counts.get(entry.categoryId) ?? 0) + 1);
+        }
+    }
+    return built.newCategories
+        .map((category) => ({
+            category,
+            count: counts.get(category.id) ?? 0,
+            override: overrides.get(category.id),
+        }))
+        .filter((row) => row.count > 0);
 }
 
 export function useImportReview(): ImportReviewResult {
@@ -168,15 +213,16 @@ export function useImportReview(): ImportReviewResult {
             .from(categories)
             .where(isNull(categories.deletedAt))
     );
-    const { categoryIncome, categoryName, categoryTile } = indexCategories(categoryRows);
+    const { categoryIncome, categoryName, categoryOptions, categoryTile } = indexCategories(categoryRows);
 
     const proLocked = useProLocked();
     const createsCategories = useProConfirmed();
-    const plan = buildPlan(parsed, resolved, resolution, categoryIncome, createsCategories);
+    const built = buildPlan(parsed, resolved, resolution, categoryIncome, createsCategories);
+    const plan = applyCategoryOverrides(built, flow.categoryOverrides);
     const proCategoryCount = proLocked
         ? buildPlan(parsed, resolved, resolution, categoryIncome, true).newCategories.length
         : 0;
-    for (const category of plan.newCategories) {
+    for (const category of built.newCategories) {
         const style = presetForName(category.name);
         categoryName.set(category.id, category.name);
         categoryTile.set(category.id, { color: style.color, emoji: null, icon: style.icon });
@@ -262,11 +308,14 @@ export function useImportReview(): ImportReviewResult {
 
     return {
         categoryName,
+        categoryOptions,
         categoryTile,
         commit: flow.commit,
         currency,
         excluded: flow.excluded,
+        newCategories: countNewCategories(built, plan, flow.excluded, flow.categoryOverrides),
         onCommit,
+        onOverride,
         onToggle,
         plan,
         proCategoryCount,

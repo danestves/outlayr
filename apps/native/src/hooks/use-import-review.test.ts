@@ -117,6 +117,7 @@ describe("buildReviewRows", () => {
                 date: new Date(2026, 6, 28),
                 income: false,
                 note: "Bakery",
+                row: 1,
             },
             {
                 amount: 2400,
@@ -125,6 +126,7 @@ describe("buildReviewRows", () => {
                 date: new Date(2026, 6, 27),
                 income: true,
                 note: "Salary",
+                row: 2,
             },
         ],
         latest: new Date(2026, 6, 28),

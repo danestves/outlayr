@@ -38,6 +38,7 @@ function entry(note: string): ImportEntry {
         date: new Date(2026, 6, 28),
         income: false,
         note,
+        row: 1,
     };
 }
 
