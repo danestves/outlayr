@@ -112,17 +112,17 @@ describe("categoriesRepo.create validation", () => {
         expect(row?.icon).toBeNull();
     });
 
-    it("title-cases and trims the stored name", async () => {
+    it("capitalizes the first letter, trims, and keeps the rest as typed", async () => {
         const id = await Effect.runPromise(
             categoriesRepo.create(db, {
                 color: "#279AF4",
                 icon: "Coffee02",
                 income: false,
-                name: "  coffee shop  ",
+                name: "  coffee  at PayPal  ",
             })
         );
         const row = await getCategoryById(db, id);
-        expect(row?.name).toBe("Coffee Shop");
+        expect(row?.name).toBe("Coffee at PayPal");
         expect(row?.icon).toBe("Coffee02");
         expect(row?.color).toBe("#279AF4");
         expect(row?.income).toBe(false);
@@ -339,7 +339,7 @@ describe("categoriesRepo.update", () => {
         expect(getCategoryById(db, id)?.name).toBe("Groceries");
     });
 
-    it("renames, recolors, and title-cases without touching other fields", async () => {
+    it("renames, recolors, and capitalizes without touching other fields", async () => {
         const id = await Effect.runPromise(
             categoriesRepo.create(db, {
                 color: "#279AF4",
@@ -355,7 +355,7 @@ describe("categoriesRepo.update", () => {
             })
         );
         const row = await getCategoryById(db, id);
-        expect(row?.name).toBe("Morning Coffee");
+        expect(row?.name).toBe("Morning coffee");
         expect(row?.color).toBe("#EC7A58");
         expect(row?.icon).toBe("Coffee02");
         expect(row?.income).toBe(false);

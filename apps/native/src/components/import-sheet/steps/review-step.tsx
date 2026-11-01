@@ -14,7 +14,7 @@ import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
-import type { ImportEntry, SkipReason } from "@/data/transfer-core";
+import type { ImportEntry, PlannedCategory, SkipReason } from "@/data/transfer-core";
 import { formatDayHeader, formatSentenceDate } from "@/domain/dates";
 import { importCurrencyEntry, importOutTotals } from "@/domain/import-totals";
 import { FALLBACK_IDENTITY_COLOR } from "@/domain/transaction-identity";
@@ -223,6 +223,70 @@ function selectionTotals(entryRows: readonly EntryReviewRow[], excluded: Readonl
     };
 }
 
+const NEW_CATEGORY_TILE_SIZE = 24;
+const NEW_CATEGORY_TILE_RADIUS = 6;
+
+interface NewCategoriesHeaderProps {
+    categories: readonly PlannedCategory[];
+    entryRows: readonly EntryReviewRow[];
+    excluded: ReadonlySet<number>;
+    expanded: boolean;
+    onToggle: () => void;
+    tiles: ReadonlyMap<string, ReviewCategoryTile>;
+}
+
+function NewCategoriesHeader({ categories, entryRows, excluded, expanded, onToggle, tiles }: NewCategoriesHeaderProps) {
+    const t = useTranslation();
+    const rowCounts = new Map<string, number>();
+    for (const row of entryRows) {
+        if (!excluded.has(row.index)) {
+            rowCounts.set(row.entry.categoryId, (rowCounts.get(row.entry.categoryId) ?? 0) + 1);
+        }
+    }
+    const created = categories.filter((category) => rowCounts.has(category.id));
+    if (created.length === 0) {
+        return null;
+    }
+    return (
+        <View>
+            <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ expanded }}
+                className="border-border border-b py-3 active:opacity-60"
+                onPress={onToggle}
+                testID="review-new-categories-toggle"
+            >
+                <Text className="text-footnote text-muted">
+                    {t(expanded ? "import.reviewNewCategoriesHide" : "import.reviewNewCategoriesShow", {
+                        count: created.length,
+                    })}
+                </Text>
+            </Pressable>
+            {expanded
+                ? created.map((category) => {
+                      const tile = tiles.get(category.id);
+                      return (
+                          <View className="border-border flex-row items-center gap-3 border-b py-2" key={category.id}>
+                              <CategoryIconTile
+                                  color={tile?.color ?? FALLBACK_IDENTITY_COLOR}
+                                  emoji={tile?.emoji}
+                                  icon={tile?.icon}
+                                  radius={NEW_CATEGORY_TILE_RADIUS}
+                                  size={NEW_CATEGORY_TILE_SIZE}
+                                  type="solid"
+                              />
+                              <Text className="text-footnote text-foreground flex-1" numberOfLines={1}>
+                                  {category.name}
+                              </Text>
+                              <MonoLabel>{String(rowCounts.get(category.id) ?? 0)}</MonoLabel>
+                          </View>
+                      );
+                  })
+                : null}
+        </View>
+    );
+}
+
 interface ReviewStepProps {
     review: ImportReviewResult;
 }
@@ -257,6 +321,10 @@ function ReviewList({ entryRows, review, sections, skippedRows }: ReviewListProp
     const [showSkipped, setShowSkipped] = useState(false);
     const onToggleSkipped = () => {
         setShowSkipped((current) => !current);
+    };
+    const [showNewCategories, setShowNewCategories] = useState(false);
+    const onToggleNewCategories = () => {
+        setShowNewCategories((current) => !current);
     };
 
     const { outTotals, dayTotals } = selectionTotals(entryRows, review.excluded, review.currency);
@@ -311,6 +379,18 @@ function ReviewList({ entryRows, review, sections, skippedRows }: ReviewListProp
             </View>
         );
 
+    const newCategoriesHeader =
+        review.plan.newCategories.length === 0 ? null : (
+            <NewCategoriesHeader
+                categories={review.plan.newCategories}
+                entryRows={entryRows}
+                excluded={review.excluded}
+                expanded={showNewCategories}
+                onToggle={onToggleNewCategories}
+                tiles={review.categoryTile}
+            />
+        );
+
     const writing = review.commit.phase === "writing";
     const failed = review.commit.phase === "failed";
 
@@ -361,9 +441,10 @@ function ReviewList({ entryRows, review, sections, skippedRows }: ReviewListProp
                 <SectionList
                     contentContainerStyle={{ paddingBottom: 16, paddingHorizontal: 20 }}
                     estimatedItemSize={ESTIMATED_ROW_HEIGHT}
-                    extraData={{ enrichment, excluded: review.excluded, showSkipped }}
+                    extraData={{ enrichment, excluded: review.excluded, showNewCategories, showSkipped }}
                     keyExtractor={keyOf}
                     ListFooterComponent={skippedFooter}
+                    ListHeaderComponent={newCategoriesHeader}
                     // Rows hold toggle state; a recycled container would flash the previous row's checked look.
                     recycleItems={false}
                     renderItem={renderItem}

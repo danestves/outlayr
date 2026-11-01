@@ -128,6 +128,7 @@ describe("buildReviewRows", () => {
             },
         ],
         latest: new Date(2026, 6, 28),
+        newCategories: [],
         skipped: [{ reason: "amount", row: 3 }],
     };
 

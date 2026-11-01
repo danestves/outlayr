@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
 import { useGlobalCurrency } from "@/data/app-meta";
+import { presetForName } from "@/data/categories-core";
 import { useLiveQuery } from "@/data/live-query";
 import { buildImportPlan, CsvTransferError } from "@/data/transfer-core";
 import type { ImportEntry, ImportPlan, SkipReason } from "@/data/transfer-core";
@@ -64,6 +65,7 @@ const EMPTY_PLAN: ImportPlan = {
     earliest: null,
     entries: [],
     latest: null,
+    newCategories: [],
     skipped: [],
 };
 
@@ -158,6 +160,11 @@ export function useImportReview(): ImportReviewResult {
     const { categoryIncome, categoryName, categoryTile } = indexCategories(categoryRows);
 
     const plan = buildPlan(parsed, resolved, resolution, categoryIncome);
+    for (const category of plan.newCategories) {
+        const style = presetForName(category.name);
+        categoryName.set(category.id, category.name);
+        categoryTile.set(category.id, { color: style.color, emoji: null, icon: style.icon });
+    }
 
     const existingRows = useLiveQuery(
         transactions,

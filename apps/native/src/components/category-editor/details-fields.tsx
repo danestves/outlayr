@@ -34,7 +34,7 @@ export function CategoryDetailsFields({
         <View className="gap-4">
             {/* The failure takes the caption's slot, directly below the name field. */}
             <OutlinedTextField
-                autoCapitalize="words"
+                autoCapitalize="sentences"
                 error={failure != null}
                 label={nameLabel}
                 onChangeText={onNameChange}

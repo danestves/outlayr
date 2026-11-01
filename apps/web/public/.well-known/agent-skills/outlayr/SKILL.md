@@ -30,7 +30,7 @@ Date,Note,Amount,Currency,Category,Type
 - **Note**: the merchant or description.
 - **Amount**: a positive number with `.` as the decimal separator and no thousands separators or currency symbols. The sign is ignored; direction comes from `Type`.
 - **Currency**: a three-letter ISO 4217 code. Leave it blank to use the user's main currency.
-- **Category**: any label. During import the user links each distinct label to one of their categories; labels that match a category name link on their own.
+- **Category**: any label. Labels that match a category name link on their own; with Pro, AI links others to the user's categories, and any label still unmatched becomes a new category.
 - **Type**: `Expense` or `Income`. Without it, a row takes the direction of the category it is linked to.
 
 Only Date, Amount, and either Category or Note are required. Rows that repeat an entry already in Outlayr are skipped, so importing an overlapping export twice is safe.
