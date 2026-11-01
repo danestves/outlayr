@@ -97,6 +97,7 @@ export interface OutlayrLedgerState {
         icon: string | null;
         color: string | null;
         preset: string | null;
+        customName: boolean;
     }[];
     budgetCategoryIds: readonly string[];
     /** Live entries; `date` is epoch ms. */
@@ -240,6 +241,7 @@ export interface PlannedCategory {
     parent: { key: string } | { categoryId: string } | null;
     existingId: string | null;
     preset?: CategoryPreset | null;
+    renamesExisting?: boolean;
 }
 
 export interface PlannedBudget {
@@ -295,6 +297,7 @@ export interface MmImportRecord {
     expectedBalances: Record<string, number>;
     /** Accounts whose opening balance was set so they land on Money Manager's balance. */
     adjustedAccountIds: string[];
+    renamedCategories?: { id: string; previous: string; imported: string }[];
 }
 
 export interface MmBalanceCheck {

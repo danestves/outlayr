@@ -192,7 +192,7 @@ function CategoryChoices({
             .categories[category.uid];
         sub = suggested?.kind === "sub" ? suggested : null;
     }
-    const parent = sub === null ? null : categoryName(draft, sub.parent);
+    const parent = sub === null ? null : categoryName(draft, sub.parent, category.income);
 
     return (
         <View>

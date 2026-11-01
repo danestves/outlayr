@@ -34,7 +34,7 @@ const EMPTY: OutlayrLedgerState = {
     entries: [],
 };
 
-function planFromFixture() {
+function planFromFixture(ledger: OutlayrLedgerState = EMPTY) {
     const archive = readMoneyManagerArchive(buildMoneyManagerFixture());
     if (!archive.ok) {
         throw new Error(archive.error.kind);
@@ -43,8 +43,8 @@ function planFromFixture() {
     const all: SqlAll = (sql) => sqlite.prepare(sql).all() as Record<string, unknown>[];
     const snapshot = readMoneyManagerSnapshot(all);
     sqlite.close();
-    const analysis = analyzeSnapshot(snapshot, EMPTY);
-    return buildImportPlan(snapshot, analysis, defaultChoices(snapshot, analysis, EMPTY), EMPTY);
+    const analysis = analyzeSnapshot(snapshot, ledger);
+    return buildImportPlan(snapshot, analysis, defaultChoices(snapshot, analysis, ledger), ledger);
 }
 
 describe("applyMoneyManagerImport", () => {
@@ -74,7 +74,7 @@ describe("applyMoneyManagerImport", () => {
         const groceries = await db
             .select({ id: categories.id })
             .from(categories)
-            .where(and(eq(categories.name, "Groceries"), isNull(categories.deletedAt)));
+            .where(and(eq(categories.name, "Mercado"), isNull(categories.deletedAt)));
         const groceriesId = groceries[0]?.id;
         if (groceriesId == null || record.accountKeys.cash == null || record.transferIds[0] == null) {
             throw new Error("import did not create cash, groceries, or a transfer");
@@ -120,7 +120,7 @@ describe("applyMoneyManagerImport", () => {
             .select({ name: categories.name })
             .from(categories)
             .where(isNull(categories.deletedAt));
-        expect(liveCategories.map((row) => row.name)).toStrictEqual(["Groceries"]);
+        expect(liveCategories.map((row) => row.name)).toStrictEqual(["Mercado"]);
         const liveAccounts = await db.select({ name: accounts.name }).from(accounts).where(isNull(accounts.deletedAt));
         expect(liveAccounts.map((row) => row.name)).toStrictEqual(["Cash"]);
         await expect(Effect.runPromise(lastMoneyManagerImport(db))).resolves.toBeNull();
@@ -131,6 +131,36 @@ describe("applyMoneyManagerImport", () => {
             transactions: 0,
             transfers: 0,
         });
+    });
+
+    it("renames an untouched seeded category to the Money Manager name and undo puts it back", async () => {
+        const db = transactionalDatabase();
+        const now = new Date();
+        await db.insert(categories).values({
+            color: "#53915A",
+            customName: false,
+            dateCreated: now,
+            icon: "ShoppingCart01",
+            id: "seed-groceries",
+            income: false,
+            name: "Groceries",
+            preset: "Groceries",
+            sortOrder: 0,
+            updatedAt: now,
+        });
+        const seeded = () =>
+            db
+                .select({ customName: categories.customName, name: categories.name })
+                .from(categories)
+                .where(eq(categories.id, "seed-groceries"));
+
+        const ledger = await Effect.runPromise(readLedgerState(db));
+        const record = await Effect.runPromise(applyMoneyManagerImport(db, planFromFixture(ledger)));
+        expect(record.categoryIds).not.toContain("seed-groceries");
+        await expect(seeded()).resolves.toStrictEqual([{ customName: true, name: "Mercado" }]);
+
+        await Effect.runPromise(undoMoneyManagerImport(db));
+        await expect(seeded()).resolves.toStrictEqual([{ customName: false, name: "Groceries" }]);
     });
 
     it("rolls the whole import back when a category cannot be saved", async () => {
