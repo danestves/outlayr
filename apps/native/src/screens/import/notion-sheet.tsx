@@ -15,6 +15,7 @@ import { Linking, Platform, Pressable, useWindowDimensions, View } from "react-n
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCSSVariable } from "uniwind";
 
+import { GrowToContent } from "@/components/import-sheet/grow-to-content";
 import { SheetHeader } from "@/components/import-sheet/sheet-header";
 import { StepCta } from "@/components/import-sheet/step-cta";
 import { SettingsSection } from "@/components/list/list-row";
@@ -36,6 +37,7 @@ import { useColors } from "@/theme/use-colors";
 
 import { ImportRow } from "./components/import-row";
 import { SourceLogo } from "./components/parts";
+import { NotionWait } from "./notion-wait";
 import { useImportPaths } from "./paths";
 
 const NOTION_EXPORT_HELP = "https://www.notion.com/help/export-your-content";
@@ -117,6 +119,7 @@ export function NotionSheet({ connection, onImport, onRefresh, onUpload, ref }: 
     const afterDismiss = useRef<(() => void) | null>(null);
     const [presented, setPresented] = useState(false);
     const [confirming, setConfirming] = useState(false);
+    const [headerHeight, setHeaderHeight] = useState(0);
     const { height } = useWindowDimensions();
     const { bottom, top } = useSafeAreaInsets();
     const sheetHeight = Math.min(height * MAX_SHEET_FRACTION, height - top - STATUS_BAR_CLEARANCE);
@@ -165,29 +168,35 @@ export function NotionSheet({ connection, onImport, onRefresh, onUpload, ref }: 
                     }}
                     testID="notion-sheet"
                 >
-                    <SheetHeader
-                        onBack={confirming ? () => setConfirming(false) : undefined}
-                        onClose={() => sheetRef.current?.dismiss()}
-                        title={t("mmImport.sources.notion")}
-                    />
-                    {confirming ? (
-                        <DisconnectConfirm
-                            onDisconnected={() => {
-                                setConfirming(false);
-                                onRefresh();
-                            }}
-                            onKeep={() => setConfirming(false)}
+                    <View onLayout={({ nativeEvent }) => setHeaderHeight(nativeEvent.layout.height)}>
+                        <SheetHeader
+                            onBack={confirming ? () => setConfirming(false) : undefined}
+                            onClose={() => sheetRef.current?.dismiss()}
+                            title={t("mmImport.sources.notion")}
                         />
-                    ) : (
-                        <ConnectionBody
-                            onDisconnect={() => setConfirming(true)}
-                            onImport={(event) => leaveThen(() => onImport(event))}
-                            onRefresh={onRefresh}
-                            onSignIn={onboarding ? undefined : () => leaveThen(() => router.push("/settings/account"))}
-                            onUpload={() => leaveThen(onUpload)}
-                            screen={screenOf(connection)}
-                        />
-                    )}
+                    </View>
+                    <GrowToContent maxHeight={sheetHeight - SHEET_CHROME - bottom - headerHeight}>
+                        {confirming ? (
+                            <DisconnectConfirm
+                                onDisconnected={() => {
+                                    setConfirming(false);
+                                    onRefresh();
+                                }}
+                                onKeep={() => setConfirming(false)}
+                            />
+                        ) : (
+                            <ConnectionBody
+                                onDisconnect={() => setConfirming(true)}
+                                onImport={(event) => leaveThen(() => onImport(event))}
+                                onRefresh={onRefresh}
+                                onSignIn={
+                                    onboarding ? undefined : () => leaveThen(() => router.push("/settings/account"))
+                                }
+                                onUpload={() => leaveThen(onUpload)}
+                                screen={screenOf(connection)}
+                            />
+                        )}
+                    </GrowToContent>
                 </View>
             ) : null}
         </BottomSheetModal>
@@ -251,11 +260,7 @@ function ConnectionBody({ onDisconnect, onImport, onRefresh, onSignIn, onUpload,
 
     switch (screen.kind) {
         case "checking": {
-            return (
-                <SheetBody>
-                    <Text className="text-muted text-subtitle pt-4">{t("mmImport.notion.checking")}</Text>
-                </SheetBody>
-            );
+            return <NotionWait />;
         }
         case "signedOut":
         case "connect": {

@@ -17,7 +17,7 @@ const SOURCE_LOGOS = {
 export type ImportSource = keyof typeof SOURCE_LOGOS;
 
 /** iOS app icon corner, so a store icon reads as the app it is. */
-const ICON_CORNER = 0.225;
+export const ICON_CORNER = 0.225;
 
 export function SourceLogo({ size = 32, source }: { size?: number; source: ImportSource }) {
     const colors = useColors();
