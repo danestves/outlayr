@@ -462,6 +462,19 @@ describe("buildImportPlan", () => {
         ]);
     });
 
+    it("links a spacing variant of a value to its existing category instead of planning a new one", () => {
+        const plan = buildImportPlan(
+            [["Side  Hustle", "Gig", "2026-07-28", "300"]],
+            MAPPING,
+            "yyyy-MM-dd",
+            ".",
+            new Map([["side hustle", "cat-side"]]),
+            new Map([["cat-side", true]])
+        );
+        expect(plan.newCategories).toStrictEqual([]);
+        expect(plan.entries.map((entry) => [entry.categoryId, entry.income])).toStrictEqual([["cat-side", true]]);
+    });
+
     it("still skips a row with no category value", () => {
         const plan = buildImportPlan(
             [["  ", "Flight", "2026-07-28", "300"]],

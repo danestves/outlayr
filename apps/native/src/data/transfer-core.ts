@@ -204,7 +204,7 @@ const PLANNED_ID_PREFIX = "planned:";
 
 /** Folded, so `"Food"` and `"food "` are linked once rather than separately. */
 export function categoryKey(value: string): string {
-    return value.trim().toLowerCase();
+    return capitalizeCategoryName(value).toLowerCase();
 }
 
 export interface ParsedImportFile {
