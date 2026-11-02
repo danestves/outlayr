@@ -158,10 +158,11 @@ export function buildAnswers(input: AnswerInput): Answers {
     const usualOf = (scope: string): number => mean((toDate.get(scope) ?? []).slice(1), Math.max(1, history.length));
     const spent = full.get(EVERY_SCOPE)?.[0] ?? 0;
     const usualByNow = hasUsual ? usualOf(EVERY_SCOPE) : null;
+    const toEnd = spendPerWindow(rows, [progress.window, ...history.map((window) => cutAt(window, progress.days))]);
     const usualRest =
         usualByNow == null
             ? null
-            : Math.max(0, mean((full.get(EVERY_SCOPE) ?? []).slice(1), history.length) - usualByNow);
+            : Math.max(0, mean((toEnd.get(EVERY_SCOPE) ?? []).slice(1), history.length) - usualByNow);
     let forecast: number | null = null;
     if (!progress.closed) {
         forecast = usualRest == null ? forecastSpend(spent, progress) : spent + usualRest;

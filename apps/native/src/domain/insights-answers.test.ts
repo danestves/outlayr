@@ -197,6 +197,23 @@ describe("buildAnswers", () => {
         expect(buildAnswers(input({ rows })).forecast).toBe(130);
     });
 
+    it("adds nothing on the last day of a month shorter than the ones before it", () => {
+        const window = (y: number, m: number): BudgetWindow => ({
+            end: new Date(y, m, 1),
+            start: new Date(y, m - 1, 1),
+        });
+        const prior = [window(2025, 1), window(2024, 12), window(2024, 11)];
+        const rows = [
+            ...prior.flatMap((w) => [
+                row(new Date(w.start.getFullYear(), w.start.getMonth(), 1, 12), 10),
+                row(new Date(w.start.getFullYear(), w.start.getMonth(), 30, 12), 90),
+            ]),
+            row(d(2025, 2, 1), 10),
+        ];
+        const progress = periodProgress(window(2025, 2), d(2025, 2, 28), false);
+        expect(buildAnswers(input({ prior, progress, rows })).forecast).toBe(10);
+    });
+
     it("falls back to the daily pace without three prior periods", () => {
         const answers = buildAnswers(input({ prior: [], rows: [row(d(2025, 7, 5), 50)] }));
         expect(answers.forecast).toBeCloseTo(155, 5);
