@@ -160,12 +160,6 @@ const insights = {
             pt: "Você gastou {amount} nessa semana",
             "pt-PT": "Gastou {amount} nessa semana",
         }),
-        "insights.answers.plan": t({
-            en: "Plan {year}",
-            es: "Plan {year}",
-            fr: "Plan {year}",
-            pt: "Plano {year}",
-        }),
         "insights.answers.see": t({
             en: "See {name}",
             es: "Ver {name}",
