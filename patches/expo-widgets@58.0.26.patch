@@ -22,7 +22,7 @@ index 9639055..937e345 100644
 +apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 +
  group = 'expo.modules.widgets'
- version = '58.0.24'
+ version = '58.0.26'
  
 @@ -64,6 +75,7 @@ android {
  
@@ -41,7 +41,7 @@ index 9639055..937e345 100644
 +  implementation 'androidx.compose.ui:ui-android:1.12.1'
    // Glance requests work-runtime-ktx 2.7.1, which still bundles the Kotlin extensions WorkManager 2.8+
    // moved into work-runtime, so any 2.8+ in the graph duplicates those classes in release builds.
-   // 2.9.1, the version expo-background-task and expo-observe use, is the empty shim.
+   // The 2.10.5 work-runtime-ktx artifact is an empty shim.
 diff --git a/android/src/main/AndroidManifest.xml b/android/src/main/AndroidManifest.xml
 index 2fa6c08..3dd3f51 100644
 --- a/android/src/main/AndroidManifest.xml

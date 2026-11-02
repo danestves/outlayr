@@ -50,14 +50,13 @@ minimumReleaseAgeExclude:
 patchedDependencies:
     "@convex-dev/agent@0.7.8": patches/@convex-dev__agent@0.7.8.patch
     "@confect/server@10.4.1": patches/@confect__server@10.4.1.patch
-    "@expo/ui@58.0.24": patches/@expo__ui@58.0.24.patch
-    "@expo/fingerprint@0.21.7": patches/@expo__fingerprint@0.21.7.patch
+    "@expo/ui@58.0.26": patches/@expo__ui@58.0.26.patch
     "@hugeicons/react-native@1.0.16": patches/@hugeicons__react-native@1.0.16.patch
     "@tanstack/ai-mcp@1.0.0": patches/@tanstack__ai-mcp@1.0.0.patch
-    expo-router@58.0.27: patches/expo-router@58.0.27.patch
-    expo-widgets@58.0.24: patches/expo-widgets@58.0.24.patch
+    expo-router@58.0.29: patches/expo-router@58.0.29.patch
+    expo-widgets@58.0.26: patches/expo-widgets@58.0.26.patch
     number-flow-react-native@0.5.1: patches/number-flow-react-native@0.5.1.patch
-    panelui-native@0.115.0: patches/panelui-native@0.115.0.patch
+    panelui-native@0.116.0: patches/panelui-native@0.116.0.patch
     react-native-nano-icons@1.0.1: patches/react-native-nano-icons@1.0.1.patch
 overrides:
     "@coderabbitai/config>zod": "catalog:"
