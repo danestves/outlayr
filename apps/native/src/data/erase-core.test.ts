@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import {
+    accounts,
     appMeta,
     budgetPlans,
     budgets,
@@ -238,6 +239,25 @@ describe("eraseLedger", () => {
 
         const [row] = await db.select().from(transactionAttachments);
         expect(row).toMatchObject({ deletedAt: expect.any(Date), imageKey: null, imageUri: null, name: null });
+    });
+
+    it("clears every balance check, since the balance it matched is gone", async () => {
+        await db.insert(accounts).values({
+            checkedAt: AUTHORED,
+            currency: "EUR",
+            dateCreated: AUTHORED,
+            id: "acct-1",
+            initialBalance: 250,
+            initialBalanceDate: AUTHORED,
+            name: "Checking",
+            updatedAt: AUTHORED,
+        });
+
+        await Effect.runPromise(eraseLedger(db, "transactions"));
+
+        const [row] = await db.select().from(accounts).where(eq(accounts.id, "acct-1"));
+        expect(row).toMatchObject({ checkedAt: null, deletedAt: null });
+        expect(row?.updatedAt.getTime()).toBeGreaterThan(AUTHORED.getTime());
     });
 
     it("keeps budgets live under the transactions scope", async () => {

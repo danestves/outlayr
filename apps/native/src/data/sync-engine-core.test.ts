@@ -25,6 +25,7 @@ import {
     SYNCED_TABLES as CONVEX_SYNCED_TABLES,
 } from "../../../../packages/backend/confect/lib/syncTables";
 import { PUSH_BATCH_LIMIT as CONVEX_PUSH_BATCH_LIMIT } from "../../../../packages/backend/confect/sync";
+import { accountsRepo } from "./accounts-core";
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
 import {
     applyPulledRows,
@@ -1163,6 +1164,7 @@ describe("two devices against one account", () => {
         await Effect.runPromise(setSyncEnabled(beta, true));
 
         await alpha.insert(accounts).values({
+            checkedAt: AT(5000),
             currency: "EUR",
             dateCreated: AT(3000),
             id: "acct-1",
@@ -1185,8 +1187,34 @@ describe("two devices against one account", () => {
         expect(row.initialBalanceDate.getTime()).toBe(4000);
         expect(row.dateCreated.getTime()).toBe(3000);
         expect(row.sortOrder).toBe(2);
+        expect(row.checkedAt?.getTime()).toBe(5000);
         expect(row.imageUri).toBeNull();
         await expect(Effect.runPromise(outboxPendingCount(beta))).resolves.toBe(0);
+    });
+
+    it("carries a check stamped after the account had already synced", async () => {
+        const alpha = makeDb();
+        const beta = makeDb();
+        const server = makeServer();
+        await Effect.runPromise(setSyncEnabled(alpha, true));
+        await Effect.runPromise(setSyncEnabled(beta, true));
+        await alpha.insert(accounts).values({
+            currency: "USD",
+            dateCreated: AT(1000),
+            id: "acct-1",
+            initialBalanceDate: AT(1000),
+            name: "Checking",
+            updatedAt: AT(1000),
+        });
+        await Effect.runPromise(runSync(alpha, server.transport));
+        await Effect.runPromise(runSync(beta, server.transport));
+
+        await Effect.runPromise(accountsRepo.markChecked(alpha, { currency: "USD", id: "acct-1" }, AT(9000)));
+        await Effect.runPromise(runSync(alpha, server.transport));
+        await Effect.runPromise(runSync(beta, server.transport));
+
+        const [row] = await beta.select().from(accounts);
+        expect(row.checkedAt?.getTime()).toBe(9000);
     });
 
     it("converges a concurrent edit to the same row on the later writer", async () => {

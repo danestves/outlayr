@@ -50,6 +50,16 @@ describe("the debts overview", () => {
         expect(Object.is(debts.youOwe[0]?.amount, 0)).toBe(true);
     });
 
+    it("counts an overpaid card's credit as owed to you, never as negative debt", () => {
+        const debts = debtsOverview(
+            [row("zinli", "asset", 100), row("visa", "liability", 25), row("cashea", "liability", -40)],
+            "USD"
+        );
+        expect(debts.youOweTotal).toBe(40);
+        expect(debts.owedToYouTotal).toBe(25);
+        expect(debts.haveTotal).toBe(125);
+    });
+
     it("holds an overdrawn account against what you have", () => {
         const debts = debtsOverview(
             [row("zinli", "asset", 120), row("bdv", "asset", -20.5), row("ana", "person", 5)],

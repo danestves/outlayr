@@ -63,6 +63,7 @@ function makeDb(): SpendDb {
 			initialBalanceUsd real,
 			initialBalanceDate integer NOT NULL,
 			kind text NOT NULL DEFAULT 'asset',
+			checkedAt integer,
 			icon text,
 			emoji text,
 			customColor text,

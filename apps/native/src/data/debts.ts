@@ -162,7 +162,7 @@ export function useLogOverviewIn(
     };
 }
 
-function personOutsideMovesQuery(db: Database, accountId: string) {
+function accountOutsideMovesQuery(db: Database, accountId: string) {
     return db
         .select({
             amount: outsideMoves.amount,
@@ -178,21 +178,14 @@ function personOutsideMovesQuery(db: Database, accountId: string) {
 
 export function useOutsideMoveRows(
     db: Database,
-    person: Pick<Account, "currency" | "id" | "name"> | null,
+    account: Pick<Account, "currency" | "id" | "name">,
     outside: string
 ): TransferLogRow[] {
-    const rows = useLiveQuery(
-        outsideMoves,
-        () => (person === null ? { all: () => [] } : personOutsideMovesQuery(db, person.id)),
-        [person?.id]
-    );
-    if (person === null) {
-        return [];
-    }
+    const rows = useLiveQuery(outsideMoves, () => accountOutsideMovesQuery(db, account.id), [account.id]);
     return rows.map((row): TransferLogRow => {
         const into = row.amount > 0;
         const amount = Math.abs(row.amount);
-        const route = into ? `${outside} → ${person.name}` : `${person.name} → ${outside}`;
+        const route = into ? `${outside} → ${account.name}` : `${account.name} → ${outside}`;
         return {
             amount,
             amountUsd: row.amountUsd === null ? null : Math.abs(row.amountUsd),
@@ -201,7 +194,7 @@ export function useOutsideMoveRows(
             categoryIcon: null,
             categoryId: null,
             categoryName: null,
-            currency: person.currency,
+            currency: account.currency,
             customColor: null,
             date: row.date,
             day: startOfDay(row.date),
@@ -217,7 +210,7 @@ export function useOutsideMoveRows(
             imageUri: null,
             income: into,
             installmentId: null,
-            moved: { arrived: amount, arrivedCurrency: person.currency, fees: [], outside: null, sent: amount },
+            moved: { arrived: amount, arrivedCurrency: account.currency, fees: [], outside: null, sent: amount },
             note: row.note === "" ? route : row.note,
             recurringAnchorDay: null,
             recurringCoefficient: 1,

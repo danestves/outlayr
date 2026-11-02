@@ -97,6 +97,7 @@ const INSTALLMENTS_DDL = `
 		sortOrder integer DEFAULT 0 NOT NULL, updatedAt integer NOT NULL, deletedAt integer
 	);
 	CREATE TABLE appMeta (key text PRIMARY KEY NOT NULL, value text);
+	CREATE TABLE accounts (id text PRIMARY KEY NOT NULL, checkedAt integer, updatedAt integer NOT NULL);
 `;
 
 function makeDb(ddl = `${TRANSACTIONS_DDL}${TRANSFERS_DDL}${INSTALLMENTS_DDL}`): Database {

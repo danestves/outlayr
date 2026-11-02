@@ -221,6 +221,45 @@ export const accountsRepo = {
         );
     }),
 
+    /** Skips a tombstone: a peer's delete may have landed first. */
+    /** An adjustment is an outside move, so it moves the balance without counting as spending or income. */
+    markChecked: Effect.fn("Accounts.markChecked")(function* markChecked(
+        db: Database,
+        account: Pick<Account, "currency" | "id">,
+        at: Date,
+        adjustment?: { amount: number; note: string }
+    ) {
+        const stamp = query("update", () =>
+            db
+                .update(accounts)
+                .set({ checkedAt: at, updatedAt: at })
+                .where(and(eq(accounts.id, account.id), isNull(accounts.deletedAt)))
+        );
+        if (adjustment === undefined) {
+            yield* stamp;
+            return;
+        }
+        const amountUsd = yield* frozenUsdAmount(db, adjustment.amount, account.currency, at);
+        yield* transaction(
+            db,
+            Effect.gen(function* write() {
+                yield* query("update", () =>
+                    db.insert(outsideMoves).values({
+                        accountId: account.id,
+                        amount: adjustment.amount,
+                        amountUsd,
+                        date: at,
+                        id: newId(),
+                        note: adjustment.note,
+                        updatedAt: at,
+                    })
+                );
+                yield* stamp;
+            }),
+            (cause) => new AccountsError({ cause, operation: "update" })
+        );
+    }),
+
     update: Effect.fn("Accounts.update")(function* update(db: Database, id: string, patch: Partial<AccountInput>) {
         const existing = yield* read("update", () => getAccountById(db, id));
         if (existing == null) {

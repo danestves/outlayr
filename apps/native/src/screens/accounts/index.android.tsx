@@ -33,6 +33,7 @@ import { useColors } from "@/theme/use-colors";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
 import { useSortMenu } from "./add-menu";
+import { listCheckedWording } from "./checked-wording";
 import { DebtSections, LedgerTotals } from "./debt-sections";
 import { useAccountList } from "./use-account-list";
 
@@ -152,9 +153,12 @@ function AccountRow({ account, colors, db, onDelete, onEdit, onOpen }: AccountRo
     const balance = useAccountBalance(db, account, nowMs);
     const m3 = useMaterialColors();
     const menu = useRef<MenuComponentRef>(null);
-    const subtitle = isMultiCurrency(balance.composition, account.currency)
+    const currency = isMultiCurrency(balance.composition, account.currency)
         ? t("accounts.multiCurrency")
         : account.currency;
+    const checked = listCheckedWording(t, account.checkedAt, nowMs);
+    const subtitle = checked === null ? currency : `${currency} · ${checked.text}`;
+    const subtitleTone = checked?.stale ? "text-m3-error" : "text-m3-on-surface-variant";
     const amount = formatSignedAmount(balance.total, account.currency, showCents, language);
     const tileColor = account.imageColor ?? account.customColor ?? colors.foreground;
     const stacked = useAccessibilityTextSize();
@@ -197,7 +201,7 @@ function AccountRow({ account, colors, db, onDelete, onEdit, onOpen }: AccountRo
                     <View className="flex-1">
                         <Text className="text-body text-m3-on-surface">
                             {`${account.name} `}
-                            <Text className="text-caption text-m3-on-surface-variant">{subtitle}</Text>
+                            <Text className={`text-caption ${subtitleTone}`}>{subtitle}</Text>
                         </Text>
                         <View className="flex-row items-center gap-2">{balanceTexts}</View>
                     </View>
@@ -207,7 +211,7 @@ function AccountRow({ account, colors, db, onDelete, onEdit, onOpen }: AccountRo
                             <Text className="text-body text-m3-on-surface" numberOfLines={1}>
                                 {account.name}
                             </Text>
-                            <Text className="text-caption text-m3-on-surface-variant" numberOfLines={1}>
+                            <Text className={`text-caption ${subtitleTone}`} numberOfLines={2}>
                                 {subtitle}
                             </Text>
                         </View>

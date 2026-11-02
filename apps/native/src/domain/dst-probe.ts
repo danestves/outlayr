@@ -5,6 +5,7 @@ import { utcDateString } from "@outlayr/money/dates";
 import { buildRateTable } from "@outlayr/money/valuation";
 
 import { accountBalanceSeries } from "./account-balance-series";
+import { checkedAge } from "./balance-check";
 import { buildBurndown } from "./budget-burndown";
 import { budgetPace, daysLeftInWindow, hoursLeftInDay } from "./budget-math";
 import { nextClockTick } from "./clock";
@@ -46,6 +47,9 @@ async function answer(): Promise<string> {
         }
         case "days-between": {
             return String(daysBetween(localDate(0).getTime(), localDate(5).getTime()));
+        }
+        case "checked-age": {
+            return JSON.stringify(checkedAge(localDate(0), localDate(5).getTime()));
         }
         case "goal-elapsed": {
             const span = { startAmount: 0, startDate: localDate(0), targetDate: localDate(5) };

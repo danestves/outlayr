@@ -6,7 +6,7 @@ import * as Effect from "effect/Effect";
 import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
-import { accounts, exchangeRates, savingsGoals, transactions } from "@/db/schema";
+import { accounts, exchangeRates, outsideMoves, savingsGoals, transactions } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
 
 import { accountsRepo, getAccountById, getLastUsedAccount, rememberLastUsedAccount } from "./accounts-core";
@@ -556,5 +556,28 @@ describe("an attached entry moving the balance", () => {
             })
         );
         expect((await balanceOf(accountId)).total).toBe(115);
+    });
+});
+
+describe("accountsRepo.markChecked", () => {
+    let db: Database;
+    beforeEach(() => {
+        db = makeDb();
+    });
+
+    it("moves the balance outside spending and stamps the check together", async () => {
+        const id = await Effect.runPromise(
+            accountsRepo.create(db, { currency: "USD", initialBalance: 184, name: "Cash" })
+        );
+
+        await Effect.runPromise(
+            accountsRepo.markChecked(db, { currency: "USD", id }, JAN_5, { amount: -34, note: "Balance adjustment" })
+        );
+
+        expect(db.select().from(transactions).all()).toStrictEqual([]);
+        expect(
+            db.select({ amount: outsideMoves.amount, note: outsideMoves.note }).from(outsideMoves).all()
+        ).toStrictEqual([{ amount: -34, note: "Balance adjustment" }]);
+        expect(getAccountById(db, id)?.checkedAt).toStrictEqual(JAN_5);
     });
 });

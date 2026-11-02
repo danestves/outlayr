@@ -19,6 +19,8 @@ import {
     accessibilityValue,
     font,
     foregroundStyle,
+    fixedSize,
+    frame,
     lineLimit,
     listRowBackground,
     listRowInsets,
@@ -54,6 +56,7 @@ import { useColors } from "@/theme/use-colors";
 import type { ThemeColors } from "@/theme/use-colors";
 
 import { useSortMenu } from "./add-menu";
+import { listCheckedWording } from "./checked-wording";
 import { DebtSections, LedgerTotals } from "./debt-sections";
 import { GoalsSection } from "./goals-section";
 import { useAccountList } from "./use-account-list";
@@ -197,19 +200,22 @@ function AccountRow({ account, colors, db, onDelete, onOpen }: AccountRowProps) 
     const nowMs = useNow();
     const balance = useAccountBalance(db, account, nowMs);
     const stacked = useAccessibilityTextSize();
-    const subtitle = isMultiCurrency(balance.composition, account.currency)
+    const currency = isMultiCurrency(balance.composition, account.currency)
         ? t("accounts.multiCurrency")
         : account.currency;
+    const checked = listCheckedWording(t, account.checkedAt, nowMs);
+    const subtitle = checked === null ? currency : `${currency} · ${checked.text}`;
+    const subtitleColor = checked?.stale ? colors.tint : colors.muted;
     const tileColor = account.imageColor ?? account.customColor ?? colors.foreground;
     const subtitleText = (
-        <SwiftText modifiers={[SUBTITLE, lineLimit(1), foregroundStyle(colors.muted)]}>{subtitle}</SwiftText>
+        <SwiftText modifiers={[SUBTITLE, lineLimit(2), foregroundStyle(subtitleColor)]}>{subtitle}</SwiftText>
     );
     const balanceTexts = (
         <>
             {balance.exact ? null : (
                 <SwiftText modifiers={[APPROX, foregroundStyle(colors.subtle)]}>{`${account.currency}?`}</SwiftText>
             )}
-            <SwiftText modifiers={[AMOUNT, monospacedDigit(), lineLimit(1), foregroundStyle(LABEL)]}>
+            <SwiftText modifiers={[AMOUNT, monospacedDigit(), lineLimit(1), fixedSize(), foregroundStyle(LABEL)]}>
                 {formatSignedAmount(balance.total, account.currency, showCents, language)}
             </SwiftText>
         </>
@@ -247,19 +253,22 @@ function AccountRow({ account, colors, db, onDelete, onOpen }: AccountRowProps) 
                     <VStack alignment="leading" spacing={1}>
                         <SwiftText modifiers={[PARENT_NAME, foregroundStyle(LABEL)]}>
                             {`${account.name} `}
-                            <SwiftText modifiers={[SUBTITLE, foregroundStyle(colors.muted)]}>{subtitle}</SwiftText>
+                            <SwiftText modifiers={[SUBTITLE, foregroundStyle(subtitleColor)]}>{subtitle}</SwiftText>
                         </SwiftText>
                         <HStack spacing={6}>{balanceTexts}</HStack>
                     </VStack>
                 ) : (
                     <>
-                        <VStack alignment="leading" spacing={1}>
+                        <VStack
+                            alignment="leading"
+                            modifiers={[frame({ alignment: "leading", maxWidth: Number.POSITIVE_INFINITY })]}
+                            spacing={1}
+                        >
                             <SwiftText modifiers={[PARENT_NAME, lineLimit(1), foregroundStyle(LABEL)]}>
                                 {account.name}
                             </SwiftText>
                             {subtitleText}
                         </VStack>
-                        <Spacer />
                         {balanceTexts}
                     </>
                 )}

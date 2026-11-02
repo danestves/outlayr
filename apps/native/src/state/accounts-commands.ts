@@ -2,7 +2,7 @@ import * as Effect from "effect/Effect";
 
 import { openingForBalance } from "@/data/accounts";
 import { accountsRepo } from "@/data/accounts-core";
-import type { AccountInput } from "@/data/accounts-core";
+import type { Account, AccountInput } from "@/data/accounts-core";
 import { transfersRepo } from "@/data/transfers-core";
 import type { TransferInput } from "@/data/transfers-core";
 import type { Database } from "@/db/client";
@@ -59,6 +59,17 @@ export const saveTransferCommand = accountsCommand(
         yield* transfersRepo.update(input.db, input.id, input.input);
         return input.id;
     })
+);
+
+interface BalanceCheck {
+    account: Pick<Account, "currency" | "id">;
+    db: Database;
+    difference: number;
+    note: string;
+}
+
+export const checkBalanceCommand = accountsCommand("check-balance", ({ account, db, difference, note }: BalanceCheck) =>
+    accountsRepo.markChecked(db, account, new Date(), difference === 0 ? undefined : { amount: difference, note })
 );
 
 export const reorderAccountsCommand = accountsCommand("reorder", (input: { db: Database; orderedIds: string[] }) =>
