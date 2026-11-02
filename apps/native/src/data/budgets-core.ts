@@ -19,6 +19,7 @@ const BudgetsOperation = Schema.Literals([
     "create-main-budget",
     "delete-budget",
     "delete-main-budget",
+    "has-main-budget",
     "patch-budget",
     "patch-main-budget",
 ]);
@@ -296,6 +297,13 @@ export const budgetsRepo = {
                 .set({ ...TOMBSTONED_MAIN_BUDGET, deletedAt: now, updatedAt: now })
                 .where(and(eq(mainBudget.id, id), isNull(mainBudget.deletedAt)))
         );
+    }),
+
+    hasMainBudget: Effect.fn("Budgets.hasMainBudget")(function* hasMainBudget(db: Database) {
+        const rows = yield* query("has-main-budget", () =>
+            db.select({ id: mainBudget.id }).from(mainBudget).where(isNull(mainBudget.deletedAt)).limit(1)
+        );
+        return rows.length > 0;
     }),
 
     patchBudget: Effect.fn("Budgets.patchBudget")(function* patchBudget(

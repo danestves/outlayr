@@ -132,7 +132,14 @@ export const removeSavingsGoalCommand = planningCommand("remove-goal", (input: {
 export const createMainBudgetCommand = planningCommand(
     "create-main-budget",
     (input: { db: Database; input: CreateMainBudgetInput }) =>
-        budgetsRepo.createMainBudget(input.db, input.input).pipe(trackBudgetCreated("overall"))
+        Effect.gen(function* createOverallBudget() {
+            const existed = yield* budgetsRepo.hasMainBudget(input.db);
+            const id = yield* budgetsRepo.createMainBudget(input.db, input.input);
+            if (!existed) {
+                posthog?.capture("budget_created", { kind: "overall" });
+            }
+            return id;
+        })
 );
 
 export const createBudgetCommand = planningCommand(

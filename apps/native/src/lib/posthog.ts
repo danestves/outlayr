@@ -8,13 +8,14 @@ import { Platform } from "react-native";
 import { SETTING_DEFAULTS } from "@/data/settings-core";
 import { groupStacklessExceptions } from "@/domain/exception-grouping";
 import { scrubQueryParams } from "@/domain/exception-scrub";
+import { dropLaunchUrl } from "@/domain/launch-url-scrub";
 import { ENV } from "@/env";
 import { purchaseListener } from "@/lib/purchase-listener";
 
 export const posthog =
     !__DEV__ && ENV.EXPO_PUBLIC_POSTHOG_PROJECT_TOKEN
         ? new PostHog(ENV.EXPO_PUBLIC_POSTHOG_PROJECT_TOKEN, {
-              before_send: [scrubQueryParams, groupStacklessExceptions],
+              before_send: [scrubQueryParams, groupStacklessExceptions, dropLaunchUrl],
               customAppProperties: (properties) => ({
                   ...properties,
                   $os_name: Platform.select({ android: "Android", ios: "iOS" }),
