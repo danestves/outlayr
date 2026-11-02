@@ -17,6 +17,7 @@ import { enableReminderStep } from "@/domain/reminder";
 import { requestUnlock } from "@/lib/app-lock";
 import { shareFile } from "@/lib/data-transfer";
 import { armLogoBackfill, cancelLogoBackfill } from "@/lib/logo-backfill";
+import { posthog } from "@/lib/posthog";
 import { Reminders } from "@/lib/reminders";
 import { RevenueCat } from "@/lib/revenuecat-service";
 import { appRuntime } from "@/lib/runtime";
@@ -190,8 +191,12 @@ const shareBuilt = Effect.fn("Export.share")(function* shareBuilt<E, R>(
     yield* shareFile(payload, input.fileName, input.mimeType, input.dialogTitle);
 });
 
+const trackExport = (format: "archive" | "csv") =>
+    Effect.tap(() => Effect.sync(() => posthog?.capture("data_exported", { format })));
+
 export const exportCsvCommand = createRuntimeCommand(appRuntime, {
-    execute: (input: ShareInput & { db: Database }) => shareBuilt(exportTransactionsCsv(input.db), input),
+    execute: (input: ShareInput & { db: Database }) =>
+        shareBuilt(exportTransactionsCsv(input.db), input).pipe(trackExport("csv")),
     label: "export:csv",
 });
 
@@ -203,7 +208,7 @@ export const exportArchiveFileCommand = createRuntimeCommand(appRuntime, {
                 Effect.map(serializeArchive)
             ),
             input
-        ),
+        ).pipe(trackExport("archive")),
     label: "export:archive",
 });
 
@@ -241,6 +246,7 @@ export const toggleAppLockCommand = createCommand({
         const result = yield* requestUnlock(input.promptMessage);
         if (result.success) {
             yield* setBoolSetting(input.db, "biometricLock", input.next);
+            posthog?.capture("setting_changed", { enabled: input.next, setting: "biometricLock" });
             return null;
         }
         return lockFailureMessage(result.error);

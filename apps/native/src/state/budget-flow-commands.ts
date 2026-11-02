@@ -7,6 +7,7 @@ import { savingsGoalsRepo } from "@/data/savings-goals-core";
 import type { SavingsGoalInput } from "@/data/savings-goals-core";
 import type { Valuation } from "@/data/valuation-source";
 import type { Database } from "@/db/client";
+import { posthog } from "@/lib/posthog";
 import { appRuntime } from "@/lib/runtime";
 
 import { createRuntimeCommand } from "./atom-command";
@@ -34,7 +35,9 @@ const createGoalFromAccount = Effect.fn("BudgetFlow.createGoalFromAccount")(func
         return yield* new GoalAnchorUnvaluedError();
     }
     yield* Effect.sync(input.dismiss);
-    return yield* savingsGoalsRepo.create(db, { ...goal, startAmount: balance.value });
+    const id = yield* savingsGoalsRepo.create(db, { ...goal, startAmount: balance.value });
+    posthog?.capture("budget_created", { kind: "goal" });
+    return id;
 });
 
 const readGoalAnchor = Effect.fn("BudgetFlow.readGoalAnchor")(function* readGoalAnchor(input: {

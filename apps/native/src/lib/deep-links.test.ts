@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { budgetLink, DEEP_LINKS, redirectLaunchPath, resolveDeepLink, transactionLink } from "./deep-links";
+import {
+    budgetLink,
+    DEEP_LINKS,
+    deepLinkTarget,
+    redirectLaunchPath,
+    resolveDeepLink,
+    transactionLink,
+} from "./deep-links";
 
 describe("resolveDeepLink", () => {
     it("maps every canonical link the widgets and intents emit", () => {
@@ -78,5 +85,15 @@ describe("redirectLaunchPath", () => {
         const [drain, calls] = drainSpy();
         expect(redirectLaunchPath({ initial: false, path: DEEP_LINKS.budgets }, drain)).toBe("/budgets");
         expect(calls.count).toBe(0);
+    });
+});
+
+describe("deepLinkTarget", () => {
+    it("names the host without ids or query, and nothing for links outside the contract", () => {
+        expect(deepLinkTarget(transactionLink("abc123"))).toBe("transaction");
+        expect(deepLinkTarget(DEEP_LINKS.newIncome)).toBe("new");
+        expect(deepLinkTarget("outlayr://NewExpense")).toBe("newexpense");
+        expect(deepLinkTarget("/transactions/scan")).toBeNull();
+        expect(deepLinkTarget("exp://192.168.1.4:8081")).toBeNull();
     });
 });

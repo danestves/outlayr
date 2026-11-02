@@ -20,6 +20,7 @@ import { useAuthSession } from "@/lib/auth-session";
 import { cloudRuntime } from "@/lib/cloud-runtime";
 import { useLedgerAdoption } from "@/lib/ledger-adoption";
 import { notifyFailure } from "@/lib/notify";
+import { posthog } from "@/lib/posthog";
 import { SILENT } from "@/state/atom-command";
 import { runAdoptionCommand } from "@/state/lifecycle-commands";
 import { setSyncEnabledCommand } from "@/state/sync-commands";
@@ -31,6 +32,8 @@ const RESUME: AdoptionActions = {
     wipeAccount: false,
     wipeLocal: false,
 };
+
+const syncTracked = (on: boolean) => () => posthog?.capture("setting_changed", { enabled: on, setting: "sync" });
 
 export function Sync() {
     const db = useDatabase();
@@ -50,8 +53,8 @@ export function Sync() {
         },
         onSettled: () => setBusy(false),
     };
-    const setSyncEnabled = useAtomAction(setSyncEnabledCommand, handlers, SILENT);
-    const runAdoption = useAtomAction(runAdoptionCommand, handlers, SILENT);
+    const setSyncEnabled = useAtomAction(setSyncEnabledCommand, { ...handlers, onSuccess: syncTracked(false) }, SILENT);
+    const runAdoption = useAtomAction(runAdoptionCommand, { ...handlers, onSuccess: syncTracked(true) }, SILENT);
 
     const runnable = syncRunnable(enabled, entitled);
     const capability = effectiveCapabilityStatus({

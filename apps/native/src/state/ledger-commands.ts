@@ -6,7 +6,9 @@ import { transactionsRepo } from "@/data/transactions-core";
 import { applyImport, undoCsvImport } from "@/data/transfer-core";
 import type { ImportPlan } from "@/data/transfer-core";
 import type { Database } from "@/db/client";
+import { countBucket } from "@/domain/count-bucket";
 import { attachImportLogos } from "@/lib/import-logo-attach";
+import { posthog } from "@/lib/posthog";
 import { appRuntime } from "@/lib/runtime";
 
 import { createRuntimeCommand } from "./atom-command";
@@ -21,7 +23,10 @@ export const restoreTransactionCommand = ledgerCommand("restore-transaction", (i
 export const importWithLogosCommand = ledgerCommand("import-with-logos", (input: { db: Database; plan: ImportPlan }) =>
     attachImportLogos(input.plan.entries).pipe(
         Effect.catchCause(() => Effect.succeed(input.plan.entries)),
-        Effect.flatMap((entries) => applyImport(input.db, { ...input.plan, entries }))
+        Effect.flatMap((entries) => applyImport(input.db, { ...input.plan, entries })),
+        Effect.tap((count) =>
+            Effect.sync(() => posthog?.capture("import_finished", { rows: countBucket(count), source: "csv" }))
+        )
     )
 );
 

@@ -7,6 +7,7 @@ import {
     verifyImportedBalances,
 } from "@/data/money-manager-import-core";
 import type { Database } from "@/db/client";
+import { countBucket } from "@/domain/count-bucket";
 import { analyzeSnapshot } from "@/domain/money-manager/analysis";
 import { defaultChoices } from "@/domain/money-manager/defaults";
 import { buildImportPlan } from "@/domain/money-manager/plan";
@@ -15,6 +16,7 @@ import { pickBackupFile, readBackupFile } from "@/lib/money-manager-file";
 import type { BackupSource } from "@/lib/money-manager-file";
 import { moneyManagerSession } from "@/lib/money-manager-session";
 import type { MoneyManagerDraft } from "@/lib/money-manager-session";
+import { posthog } from "@/lib/posthog";
 
 import { createCommand } from "./atom-command";
 
@@ -64,6 +66,10 @@ export const applyMoneyManagerImportCommand = createCommand({
         // The rows are committed by now; a failed check only hides the balances, a retry would import twice.
         const checks = yield* verifyImportedBalances(input.db, record).pipe(Effect.orElseSucceed(() => []));
         moneyManagerSession.finish({ checks, record });
+        posthog?.capture("import_finished", {
+            rows: countBucket(plan.entries.length + plan.transfers.length),
+            source: "money_manager",
+        });
         return record;
     }),
     label: "money-manager:apply",
