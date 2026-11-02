@@ -71,6 +71,13 @@ export const emailConfig = Config.all({
 
 export const revenueCatSecretKey = secret("REVENUECAT_SECRET_KEY");
 
+export const revenueCatMetricsConfig = Config.all({
+    projectId: text("REVENUECAT_PROJECT_ID"),
+    secretKey: secret("REVENUECAT_V2_SECRET_KEY"),
+}).pipe(Config.map(Option.all));
+
+export const gitHubToken = secret("GITHUB_TOKEN");
+
 export const revenueCatWebhookAuth = Config.schema(
     Schema.Redacted(Schema.String.check(Schema.isMinLength(MIN_WEBHOOK_AUTH_LENGTH))),
     "REVENUECAT_WEBHOOK_AUTH"

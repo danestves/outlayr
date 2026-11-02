@@ -13,6 +13,7 @@ function pages(): [path: string, updated: Date | null][] {
         ["/", null],
         ["/support", null],
         ["/about", null],
+        ["/open", null],
         ["/terms", LEGAL_DAYS.terms],
         ["/privacy", LEGAL_DAYS.privacy],
         ["/delete-account", LEGAL_DAYS["delete-account"]],

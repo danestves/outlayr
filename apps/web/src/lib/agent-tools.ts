@@ -22,6 +22,7 @@ function sitePages(locale: Locale): SitePage[] {
     const home = getIntlayer("home", locale);
     const about = getIntlayer("about", locale);
     const support = getIntlayer("support", locale);
+    const open = getIntlayer("open", locale);
     const { notFound } = getIntlayer("site", locale);
     const { compare, guides, hubs } = getIntlayer("answers", locale);
     const tools = getIntlayer("tools", locale);
@@ -29,6 +30,7 @@ function sitePages(locale: Locale): SitePage[] {
         { description: home.meta.description, path: "/", title: home.meta.title },
         { description: about.meta.description, path: "/about", title: about.meta.title },
         { description: support.meta.description, path: "/support", title: support.meta.title },
+        { description: open.meta.description, path: "/open", title: open.meta.title },
         { path: "/privacy", title: notFound.pages.privacy },
         { path: "/terms", title: notFound.pages.terms },
         { path: "/delete-account", title: notFound.pages.deleteAccount },
