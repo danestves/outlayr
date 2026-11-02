@@ -23,6 +23,7 @@ import {
     listRowBackground,
     listRowInsets,
     listRowSeparator,
+    listSectionMargins,
     monospacedDigit,
     onTapGesture,
     tint,
@@ -77,6 +78,7 @@ const CHEVRON = font({
     weight: "semibold",
 });
 
+const TOGGLE_MARGIN = listSectionMargins({ edges: "top", length: 0 });
 const TOGGLE_ROW = [listRowInsets({ bottom: 0, leading: 0, top: 0, trailing: 0 }), listRowSeparator("hidden")];
 
 interface AccountsProps {
@@ -112,7 +114,7 @@ export function Accounts({ addMenu, onAddGoal, toggle }: AccountsProps) {
             ) : (
                 <Host style={{ flex: 1 }} useViewportSizeMeasurement>
                     <List modifiers={groupedList(colors)}>
-                        <Section modifiers={[listRowBackground(colors.groupedBackground)]}>
+                        <Section modifiers={[listRowBackground(colors.groupedBackground), TOGGLE_MARGIN]}>
                             <HStack modifiers={TOGGLE_ROW}>
                                 <BalancesViewPicker {...toggle} />
                             </HStack>
