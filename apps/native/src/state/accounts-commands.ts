@@ -3,7 +3,6 @@ import * as Effect from "effect/Effect";
 import { openingForBalance } from "@/data/accounts";
 import { accountsRepo } from "@/data/accounts-core";
 import type { Account, AccountInput } from "@/data/accounts-core";
-import { transactionsRepo } from "@/data/transactions-core";
 import { transfersRepo } from "@/data/transfers-core";
 import type { TransferInput } from "@/data/transfers-core";
 import type { Database } from "@/db/client";
@@ -65,33 +64,12 @@ export const saveTransferCommand = accountsCommand(
 interface BalanceCheck {
     account: Pick<Account, "currency" | "id">;
     db: Database;
-    entry: { amount: number; income: boolean } | null;
+    difference: number;
     note: string;
 }
 
-export const checkBalanceCommand = accountsCommand(
-    "check-balance",
-    Effect.fn("Accounts.checkBalance")(function* checkBalance({ account, db, entry, note }: BalanceCheck) {
-        const now = new Date();
-        if (entry === null) {
-            yield* accountsRepo.markChecked(db, account.id, now);
-            return;
-        }
-        yield* transactionsRepo.create(
-            db,
-            {
-                accountId: account.id,
-                amount: entry.amount,
-                categoryId: null,
-                currency: account.currency,
-                date: now,
-                details: null,
-                income: entry.income,
-                note,
-            },
-            { inSameTransaction: () => accountsRepo.markChecked(db, account.id, now) }
-        );
-    })
+export const checkBalanceCommand = accountsCommand("check-balance", ({ account, db, difference, note }: BalanceCheck) =>
+    accountsRepo.markChecked(db, account, new Date(), difference === 0 ? undefined : { amount: difference, note })
 );
 
 export const reorderAccountsCommand = accountsCommand("reorder", (input: { db: Database; orderedIds: string[] }) =>

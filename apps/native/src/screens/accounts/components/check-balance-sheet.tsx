@@ -16,10 +16,11 @@ import { GrowToContent } from "@/components/import-sheet/grow-to-content";
 import { MonoLabel } from "@/components/mono-label";
 import { SheetGestureRoot } from "@/components/sheet-gesture-root";
 import { Text } from "@/components/text";
+import { cn } from "@/components/tw";
 import { useDatabase } from "@/contexts/local-data-context";
 import type { Account } from "@/data/accounts-core";
 import { formatSignedAmount } from "@/domain/account-display";
-import { balanceAdjustment } from "@/domain/balance-check";
+import { balanceDifference } from "@/domain/balance-check";
 import { minorUnitsFor } from "@/domain/money";
 import { numpadToNumber } from "@/domain/numpad";
 import { useSheetSurface } from "@/hooks/use-sheet-surface";
@@ -73,17 +74,13 @@ function CheckBody({ account, balance, onClose }: Omit<CheckBalanceSheetProps, "
     const minorUnits = minorUnitsFor(currency);
     const [fixing, setFixing] = useState(false);
     const [entry, setEntry] = useState("");
+    const [negative, setNegative] = useState(balance < 0 || (liability && balance === 0));
     const [typed, setTyped] = useState(false);
     const [busy, setBusy] = useState(false);
     const [failure, setFailure] = useState<string | null>(null);
 
-    const shown = numpadToNumber(entry);
-    const { difference, entry: adjustment } = balanceAdjustment({
-        balance,
-        currency,
-        kind: account.kind,
-        shown,
-    });
+    const magnitude = numpadToNumber(entry);
+    const difference = balanceDifference(balance, negative ? -magnitude : magnitude, currency);
     const money = (value: number) => formatSignedAmount(value, currency, true, language);
 
     const checkBalance = useAtomAction(
@@ -103,13 +100,13 @@ function CheckBody({ account, balance, onClose }: Omit<CheckBalanceSheetProps, "
         SILENT
     );
 
-    const commit = (next: typeof adjustment) => {
+    const commit = (next: number) => {
         if (busy) {
             return;
         }
         setBusy(true);
         setFailure(null);
-        checkBalance({ account, db, entry: next, note: t("accounts.check.note") });
+        checkBalance({ account, db, difference: next, note: t("accounts.check.note") });
     };
 
     return (
@@ -123,8 +120,18 @@ function CheckBody({ account, balance, onClose }: Omit<CheckBalanceSheetProps, "
                 {fixing ? (
                     <View className="px-5 pt-4">
                         <MonoLabel>{t("accounts.check.shows", { account: account.name })}</MonoLabel>
-                        <View className="items-start pt-1 pb-4">
-                            <HeroNumber amount={shown} code={currency} sign={liability && shown > 0 ? "-" : ""} still />
+                        <View className="flex-row items-center pt-1 pb-4">
+                            <Pressable
+                                accessibilityLabel={t("accounts.a11y.balanceSign")}
+                                accessibilityRole="button"
+                                className="h-11 w-8 items-center justify-center active:opacity-70"
+                                onPress={() => setNegative((value) => !value)}
+                            >
+                                <Text className={cn("text-title", negative ? "text-tint" : "text-muted")}>
+                                    {negative ? "−" : "+"}
+                                </Text>
+                            </Pressable>
+                            <HeroNumber amount={magnitude} code={currency} sign="" still />
                         </View>
                         <View className="border-border border-t">
                             <View className="border-border flex-row items-center justify-between border-b py-3">
@@ -156,11 +163,11 @@ function CheckBody({ account, balance, onClose }: Omit<CheckBalanceSheetProps, "
                                 busy={busy}
                                 disabled={!typed}
                                 label={
-                                    adjustment === null
+                                    difference === 0
                                         ? t("accounts.check.markChecked")
                                         : t("accounts.check.log", { amount: money(difference) })
                                 }
-                                onPress={() => commit(adjustment)}
+                                onPress={() => commit(difference)}
                             />
                         </View>
                     </View>
@@ -177,7 +184,7 @@ function CheckBody({ account, balance, onClose }: Omit<CheckBalanceSheetProps, "
                             accessibilityState={{ busy, disabled: busy }}
                             className="bg-foreground h-14 items-center justify-center rounded-[28px] active:opacity-70"
                             disabled={busy}
-                            onPress={() => commit(null)}
+                            onPress={() => commit(0)}
                         >
                             <Text className="font-sans-semibold text-background text-callout">
                                 {t("accounts.check.matches")}

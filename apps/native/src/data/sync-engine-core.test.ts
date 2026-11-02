@@ -1209,7 +1209,7 @@ describe("two devices against one account", () => {
         await Effect.runPromise(runSync(alpha, server.transport));
         await Effect.runPromise(runSync(beta, server.transport));
 
-        await Effect.runPromise(accountsRepo.markChecked(alpha, "acct-1", AT(9000)));
+        await Effect.runPromise(accountsRepo.markChecked(alpha, { currency: "USD", id: "acct-1" }, AT(9000)));
         await Effect.runPromise(runSync(alpha, server.transport));
         await Effect.runPromise(runSync(beta, server.transport));
 

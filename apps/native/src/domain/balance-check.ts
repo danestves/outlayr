@@ -1,4 +1,3 @@
-import { toAccountKind } from "@outlayr/money/account-kind";
 import { decimalsFor } from "@outlayr/money/currency";
 import { roundMoney } from "@outlayr/money/round";
 
@@ -28,25 +27,7 @@ export function checkedAge(checkedAt: Date | null, nowMs: number): CheckedAge {
     return { days, state: days > STALE_AFTER_DAYS ? "stale" : "daysAgo" };
 }
 
-export interface BalanceAdjustment {
-    difference: number;
-    entry: { amount: number; income: boolean } | null;
-}
-
-/**
- * `shown` is the figure as the bank prints it, which for a card is what is owed. A liability is stored negative, so
- * the same typed figure lands on the other side of zero.
- */
-export function balanceAdjustment(input: {
-    balance: number;
-    currency: string;
-    kind: string | null | undefined;
-    shown: number;
-}): BalanceAdjustment {
-    const target = toAccountKind(input.kind) === "liability" ? -input.shown : input.shown;
-    const difference = roundMoney(target - input.balance, decimalsFor(input.currency));
-    if (difference === 0) {
-        return { difference: 0, entry: null };
-    }
-    return { difference, entry: { amount: Math.abs(difference), income: difference > 0 } };
+/** Both figures are signed the way the account shows them: an owed card or an overdrawn account is negative. */
+export function balanceDifference(balance: number, shown: number, currency: string): number {
+    return roundMoney(shown - balance, decimalsFor(currency));
 }

@@ -151,7 +151,7 @@ function DetailBody({
     const person = isPerson(account);
     const { pendingId, requestDelete } = useDeferredDelete("row");
     const checkSheetRef = useRef<BottomSheetModal>(null);
-    const moveRows = useOutsideMoveRows(db, person ? account : null, t("debts.field.outside"));
+    const moveRows = useOutsideMoveRows(db, account, t("debts.field.outside"));
     const liveMoves = moveRows.filter((row) => row.id !== pendingId);
     const rows = mergeByRecency(mergeByRecency(mergeByRecency(transactionRows, transferRows), outsideRows), liveMoves);
     const sections = groupByDay(rows, account.currency, rates);

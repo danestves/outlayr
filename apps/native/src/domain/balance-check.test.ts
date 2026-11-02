@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vite-plus/test";
 
-import { balanceAdjustment, checkedAge } from "./balance-check";
+import { balanceDifference, checkedAge } from "./balance-check";
 
 const at = (month: number, day: number, hour = 12, minute = 0) => new Date(2026, month, day, hour, minute);
 
@@ -49,48 +49,13 @@ describe("how long ago an account was checked", () => {
     });
 });
 
-describe("the entry that makes the ledger match the bank", () => {
-    it("logs an expense when the bank shows less", () => {
-        expect(
-            balanceAdjustment({ balance: 12_480.32, currency: "USD", kind: "asset", shown: 12_355.1 })
-        ).toStrictEqual({ difference: -125.22, entry: { amount: 125.22, income: false } });
-    });
-
-    it("logs income when the bank shows more", () => {
-        expect(balanceAdjustment({ balance: 100, currency: "USD", kind: null, shown: 130.5 })).toStrictEqual({
-            difference: 30.5,
-            entry: { amount: 30.5, income: true },
-        });
-    });
-
-    it("only stamps the check when the figures agree, float noise included", () => {
-        expect(balanceAdjustment({ balance: 0.1 + 0.2, currency: "USD", kind: "asset", shown: 0.3 })).toStrictEqual({
-            difference: 0,
-            entry: null,
-        });
+describe("the adjustment that makes the ledger match the bank", () => {
+    it("is zero when the figures agree, float noise included", () => {
+        expect(balanceDifference(0.1 + 0.2, 0.3, "USD")).toBe(0);
     });
 
     it("rounds to the currency's own precision", () => {
-        expect(balanceAdjustment({ balance: 1000.4, currency: "JPY", kind: "asset", shown: 1000 })).toStrictEqual({
-            difference: 0,
-            entry: null,
-        });
-        expect(balanceAdjustment({ balance: 1000, currency: "JPY", kind: "asset", shown: 1250 })).toStrictEqual({
-            difference: 250,
-            entry: { amount: 250, income: true },
-        });
-    });
-
-    it("reads a card's typed figure as what is owed", () => {
-        const card = { balance: -500, currency: "USD", kind: "liability" };
-        expect(balanceAdjustment({ ...card, shown: 480 })).toStrictEqual({
-            difference: 20,
-            entry: { amount: 20, income: true },
-        });
-        expect(balanceAdjustment({ ...card, shown: 520 })).toStrictEqual({
-            difference: -20,
-            entry: { amount: 20, income: false },
-        });
-        expect(balanceAdjustment({ ...card, shown: 500 }).entry).toBeNull();
+        expect(balanceDifference(1000.4, 1000, "JPY")).toBe(0);
+        expect(balanceDifference(-500.004, -480, "USD")).toBe(20);
     });
 });
