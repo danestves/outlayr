@@ -1,0 +1,189 @@
+.month-panel {
+    inset: 44px 44px -40px;
+    display: flex;
+    flex-direction: column;
+    padding: 28px 32px;
+
+    &[data-layout="compact"] {
+        inset: 16px 16px -40px;
+        padding: 22px 22px;
+    }
+}
+
+.month-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 22px;
+    margin-bottom: 12px;
+}
+
+.month-chip {
+    padding: 0 6px;
+    border-radius: 5px;
+    background: var(--film-chip);
+    color: var(--film-income);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 20px;
+    opacity: 0;
+    scale: 0.6;
+    transition:
+        opacity 300ms var(--film-ease),
+        scale 500ms var(--film-ease);
+
+    &[data-in] {
+        opacity: 1;
+        scale: 1;
+    }
+}
+
+.month-verdict {
+    margin: 12px 0 0;
+    color: var(--film-muted);
+    font-size: 14px;
+    line-height: 1.45;
+    text-wrap: pretty;
+
+    [data-layout="compact"] & {
+        font-size: 13px;
+    }
+}
+
+.month-totals {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 1px solid var(--film-rule);
+
+    & > div {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    & > div + div {
+        padding-left: 16px;
+        border-left: 1px solid var(--film-rule);
+    }
+
+    & b {
+        font-size: 18px;
+        font-weight: 600;
+    }
+}
+
+.month-income {
+    color: var(--film-income);
+}
+
+.month-spend {
+    color: var(--film-spend);
+}
+
+.month-bars {
+    --track: 112px;
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    margin: 22px 0 24px;
+
+    [data-layout="compact"] & {
+        --track: 92px;
+        gap: 6px;
+        margin: 18px 0 20px;
+    }
+}
+
+.month-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.month-track {
+    position: relative;
+    width: 100%;
+    height: var(--track);
+    overflow: hidden;
+    border-radius: 6px;
+    background: var(--film-track);
+    opacity: 0.35;
+    transition: opacity 500ms var(--film-ease) calc(var(--i) * 80ms);
+
+    [data-in] > .month-day > & {
+        opacity: 1;
+    }
+}
+
+.month-fill {
+    position: absolute;
+    inset: 0;
+    border-radius: 6px;
+    background: var(--film-ink);
+    transform: scaleY(0);
+    transform-origin: bottom;
+    transition: transform 950ms var(--film-ease) calc(var(--i) * 80ms);
+
+    [data-in] > .month-day > .month-track > & {
+        transform: scaleY(var(--h));
+    }
+}
+
+.month-letter {
+    color: var(--film-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+}
+
+.month-average {
+    position: absolute;
+    top: calc(var(--track) * (1 - var(--h)));
+    left: 0;
+    width: 100%;
+    border-top: 1.5px dashed var(--film-muted);
+    clip-path: inset(-20px 100% -2px 0);
+    transition: clip-path 700ms var(--film-glide);
+
+    &[data-in] {
+        clip-path: inset(-20px 0 -2px 0);
+    }
+
+    & span {
+        position: absolute;
+        top: -17px;
+        left: 6px;
+        color: var(--film-muted);
+        font-family: var(--font-mono);
+        font-size: 10px;
+    }
+}
+
+.month-mover {
+    display: grid;
+    grid-template-columns: auto 1fr auto 52px;
+    gap: 12px;
+    align-items: center;
+    height: 44px;
+    font-size: 15px;
+
+    [data-layout="compact"] & {
+        grid-template-columns: auto 1fr auto 44px;
+        gap: 10px;
+        font-size: 14px;
+    }
+}
+
+.month-name {
+    font-weight: 500;
+}
+
+.month-change {
+    color: var(--film-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-align: right;
+}

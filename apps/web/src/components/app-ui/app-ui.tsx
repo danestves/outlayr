@@ -4,9 +4,9 @@ import { useIntlayer } from "react-intlayer";
 import { Icon } from "@/components/icon";
 import type { IconName } from "@/components/icon";
 
-type Size = "lg" | "md" | "sm";
+type Size = "lg" | "md";
 
-const SIZE: Record<Size, string> = { lg: "ui ui-lg", md: "ui", sm: "ui ui-sm" };
+const SIZE: Record<Size, string> = { lg: "ui ui-lg", md: "ui" };
 
 const STEP = "M0 10V76H13V80H27V84H40V86H53V90H67V93H80V97H93V99H107V104H120V107H133V110H147V113H160";
 

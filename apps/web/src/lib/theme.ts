@@ -1,5 +1,3 @@
-import { useSyncExternalStore } from "react";
-
 export const THEMES = ["system", "light", "dark"] as const;
 
 export type Theme = (typeof THEMES)[number];
@@ -67,22 +65,4 @@ function watchSystemTheme(onChange: () => void) {
     const query = matchMedia(DARK_QUERY);
     query.addEventListener("change", onChange);
     return () => query.removeEventListener("change", onChange);
-}
-
-export function isDarkPainted() {
-    return document.documentElement.dataset.theme === "dark";
-}
-
-function subscribePainted(onChange: () => void) {
-    const watcher = new MutationObserver(onChange);
-    watcher.observe(document.documentElement, { attributeFilter: ["data-theme"] });
-    return () => watcher.disconnect();
-}
-
-export function usePaintedTheme(): "dark" | "light" | null {
-    return useSyncExternalStore(
-        subscribePainted,
-        () => (isDarkPainted() ? "dark" : "light"),
-        () => null
-    );
 }

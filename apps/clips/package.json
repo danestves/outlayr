@@ -5,7 +5,7 @@
     "scripts": {
         "studio": "remotion studio",
         "render": "remotion render BankShortcut-en out/bank-shortcut-en.mp4 && remotion render BankShortcut-es out/bank-shortcut-es.mp4",
-        "render:web": "sh scripts/web.sh",
+        "render:promo": "sh scripts/promo.sh",
         "loops": "sh scripts/loops.sh",
         "check-types": "tsc --noEmit"
     },
