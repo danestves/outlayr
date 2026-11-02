@@ -221,6 +221,16 @@ export const accountsRepo = {
         );
     }),
 
+    /** Skips a tombstone: a peer's delete may have landed first. */
+    markChecked: Effect.fn("Accounts.markChecked")(function* markChecked(db: Database, id: string, at: Date) {
+        yield* query("update", () =>
+            db
+                .update(accounts)
+                .set({ checkedAt: at, updatedAt: at })
+                .where(and(eq(accounts.id, id), isNull(accounts.deletedAt)))
+        );
+    }),
+
     update: Effect.fn("Accounts.update")(function* update(db: Database, id: string, patch: Partial<AccountInput>) {
         const existing = yield* read("update", () => getAccountById(db, id));
         if (existing == null) {

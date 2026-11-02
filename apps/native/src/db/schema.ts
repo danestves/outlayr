@@ -29,6 +29,7 @@ export const categories = sqliteTable(
 export const accounts = sqliteTable(
     "accounts",
     {
+        checkedAt: integer("checkedAt", { mode: "timestamp_ms" }),
         currency: text("currency").notNull(),
         customColor: text("customColor"),
         dateCreated: integer("dateCreated", { mode: "timestamp_ms" }).notNull(),
