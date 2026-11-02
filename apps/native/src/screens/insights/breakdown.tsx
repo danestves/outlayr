@@ -38,6 +38,7 @@ import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useInsights } from "@/data/use-insights";
 import type { UseInsightsResult } from "@/data/use-insights";
 import { useNow } from "@/data/use-now";
+import { BALANCES_ACCOUNTS } from "@/domain/balances";
 import {
     INSIGHTS_MEASURE_ORDER,
     insightsMeasureAlternatives,
@@ -479,7 +480,7 @@ export function InsightsBreakdown() {
 
                     <NetWorthWidget
                         currency={currency}
-                        onOpen={() => router.push("/accounts")}
+                        onOpen={() => router.navigate(BALANCES_ACCOUNTS)}
                         series={netWorth}
                         showCents={showCents}
                     />

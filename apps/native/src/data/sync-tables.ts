@@ -57,8 +57,9 @@ export const SYNCED_META_KEYS = [
     "accentColor",
     META_KEYS.timeZone,
     "accountsByHand",
-    // Not synced: `colorScheme` and `numberEntryType` suit each device; `biometricLock`, `notification*`, `sync*`,
-    // `ledgerAdoption`, `firstLaunch`, `onboardingComplete` and `recurrenceRepaired` describe this install.
+    // Not synced: `colorScheme`, `numberEntryType` and `balancesView` suit each device; `biometricLock`,
+    // `notification*`, `sync*`, `ledgerAdoption`, `firstLaunch`, `onboardingComplete` and `recurrenceRepaired`
+    // describe this install.
 ] as const satisfies readonly (BoolSettingKey | NumberSettingKey | (typeof META_KEYS)[keyof typeof META_KEYS])[];
 
 type WireDefault = boolean | number | string;

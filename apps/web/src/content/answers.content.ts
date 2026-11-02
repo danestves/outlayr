@@ -1101,8 +1101,8 @@ const answers = {
                     {
                         label: MOVING.lost,
                         text: t({
-                            en: "Accounts and envelope amounts. Set your limits again on Budgets, and turn on carry-over to keep what you do not spend.",
-                            es: "Las cuentas y los montos de los sobres. Vuelve a poner tus límites en Presupuestos y activa Acumular lo que sobre para conservar lo que no gastes.",
+                            en: "Accounts and envelope amounts. Set your limits again in Balances, under Categories, and turn on carry-over to keep what you do not spend.",
+                            es: "Las cuentas y los montos de los sobres. Vuelve a poner tus límites en Saldos, en Categorías, y activa Acumular lo que sobre para conservar lo que no gastes.",
                         }),
                     },
                 ],
@@ -4224,8 +4224,8 @@ const answers = {
                 steps: [
                     {
                         text: t({
-                            en: "On Budgets, pick a category or set one limit for the month. Categories without a budget show what you typically spend.",
-                            es: "En Presupuestos, elige una categoría o pon un límite para el mes. Las categorías sin presupuesto muestran lo que gastas normalmente.",
+                            en: "In Balances, under Categories, pick a category or set one limit for the month. Categories without a budget show what you typically spend.",
+                            es: "En Saldos, en Categorías, elige una categoría o pon un límite para el mes. Las categorías sin presupuesto muestran lo que gastas normalmente.",
                         }),
                         title: t({ en: "Set a limit", es: "Pon un límite" }),
                     },
@@ -4238,8 +4238,8 @@ const answers = {
                     },
                     {
                         text: t({
-                            en: "If this pace runs past the limit, Budgets says by how much, or the day the money ran out.",
-                            es: "Si este ritmo pasa el límite, Presupuestos te dice por cuánto, o el día en que se acabó el dinero.",
+                            en: "If this pace runs past the limit, Outlayr says by how much, or the day the money ran out.",
+                            es: "Si este ritmo pasa el límite, Outlayr te dice por cuánto, o el día en que se acabó el dinero.",
                         }),
                         title: t({ en: "Read the pace", es: "Mira el ritmo" }),
                     },
@@ -5403,8 +5403,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "No. Only the rows on Transactions come in. Set your budgets again in Outlayr on Budgets, where it also shows where your pace ends.",
-                            es: "No. Solo entran las filas de Movimientos. Vuelve a poner tus presupuestos en Outlayr, en Presupuestos, donde además te muestra a dónde te lleva tu ritmo.",
+                            en: "No. Only the rows on Transactions come in. Set your budgets again in Outlayr in Balances, under Categories, where it also shows where your pace ends.",
+                            es: "No. Solo entran las filas de Movimientos. Vuelve a poner tus presupuestos en Outlayr, en Saldos, en Categorías, donde además te muestra a dónde te lleva tu ritmo.",
                         }),
                         question: t({
                             en: "Do my budgets import too?",

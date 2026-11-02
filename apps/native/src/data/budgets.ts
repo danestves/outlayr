@@ -2,15 +2,7 @@ import { useAtomMount } from "@effect/atom-react/Hooks";
 import { categoryBudgetFigures, overallBudgetFigures } from "@outlayr/money/budget-figures";
 import { carryWindows } from "@outlayr/money/budget-rollover";
 import type { ExpenseContribution } from "@outlayr/money/budget-spent";
-import {
-    advanceBudgetWindow,
-    BUDGET_TYPE,
-    periodEnd,
-    periodsBackTo,
-    shiftWindow,
-    startOfPeriod,
-    windowEndMs,
-} from "@outlayr/money/budget-window";
+import { advanceBudgetWindow, periodsBackTo, shiftWindow, windowEndMs } from "@outlayr/money/budget-window";
 import type { BudgetWindow } from "@outlayr/money/budget-window";
 import { utcDateString } from "@outlayr/money/dates";
 import { sumValuedIn, valueDatedRowsIn } from "@outlayr/money/valuation";
@@ -20,12 +12,10 @@ import * as Effect from "effect/Effect";
 import * as Atom from "effect/reactivity/Atom";
 import { useMemo } from "react";
 
-import { useSettingNumber } from "@/contexts/display-settings-context";
 import type { Database } from "@/db/client";
 import { budgets, mainBudget, transactions } from "@/db/schema";
 import { buildBurndown } from "@/domain/budget-burndown";
 import type { Burndown } from "@/domain/budget-burndown";
-import { closedWindowsBefore, EVERY_SCOPE, spendPerWindow, typicalOf } from "@/domain/budget-typical";
 import { translateNow } from "@/i18n/runtime";
 import { appRuntime } from "@/lib/runtime";
 
@@ -488,64 +478,4 @@ export function useBudgetContributions(
     );
 
     return useDecoratedRows(db, data);
-}
-
-export interface UnbudgetedScope {
-    categoryId: string;
-    color: string;
-    emoji: string | null;
-    icon: string | null;
-    name: string;
-    typical: number;
-}
-
-export interface UnbudgetedRail {
-    everything: number | null;
-    scopes: UnbudgetedScope[];
-    window: BudgetWindow;
-}
-
-// Top-level only: a subcategory's spend already counts toward its parent, so offering both asks for the money twice.
-export function useUnbudgetedScopes(
-    db: Database,
-    nowMs: number,
-    contributions: readonly ExpenseContribution[]
-): UnbudgetedRail {
-    const rows = useLiveQuery(budgets, () =>
-        db.select({ categoryId: budgets.categoryId }).from(budgets).where(isNull(budgets.deletedAt))
-    );
-    const categoryMeta = useCategoryMeta(db);
-    const firstDayOfMonth = useSettingNumber("firstDayOfMonth");
-    const firstWeekday = useSettingNumber("firstWeekday");
-
-    const now = new Date(nowMs);
-    const start = startOfPeriod(now, BUDGET_TYPE.month, { firstDayOfMonth, firstWeekday });
-    const window = { end: periodEnd(start, BUDGET_TYPE.month), start };
-    const totals = spendPerWindow(
-        contributions,
-        closedWindowsBefore({ current: window, since: earliestDate(contributions), type: BUDGET_TYPE.month })
-    );
-    const budgeted = new Set(rows.map((row) => row.categoryId));
-
-    const scopes: UnbudgetedScope[] = [];
-    for (const [categoryId, meta] of categoryMeta) {
-        if (meta.parentId || budgeted.has(categoryId)) {
-            continue;
-        }
-        const typical = typicalOf(totals.get(categoryId) ?? []);
-        if (typical === null) {
-            continue;
-        }
-        scopes.push({
-            categoryId,
-            color: meta.color ?? "#767676",
-            emoji: meta.emoji,
-            icon: meta.icon,
-            name: meta.name ?? translateNow("budgets.name.default"),
-            typical,
-        });
-    }
-    scopes.sort((left, right) => right.typical - left.typical);
-
-    return { everything: typicalOf(totals.get(EVERY_SCOPE) ?? []), scopes, window };
 }

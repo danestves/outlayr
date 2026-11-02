@@ -19,10 +19,7 @@ export function SavingsGoalsSection({ goals, currency, onPress, onAdd }: Savings
     const t = useTranslation();
     const { language } = useLanguage();
 
-    // Only `exact` goals sink: an incomparable goal has no verdict to file under.
-    const ordered = [...goals].sort(
-        (left, right) => Number(left.exact && left.progress.reached) - Number(right.exact && right.progress.reached)
-    );
+    const ordered = goalsInOrder(goals);
     const outstanding = stillToFind(goals);
 
     return (
@@ -53,6 +50,13 @@ export function SavingsGoalsSection({ goals, currency, onPress, onAdd }: Savings
                 <Text className="text-footnote text-muted pt-2.5 leading-snug">{t("goals.empty.body")}</Text>
             ) : null}
         </View>
+    );
+}
+
+/** Reached goals sink, but only `exact` ones: an incomparable goal has no verdict to file under. */
+export function goalsInOrder(goals: readonly SavingsGoalWithProgress[]): SavingsGoalWithProgress[] {
+    return [...goals].sort(
+        (left, right) => Number(left.exact && left.progress.reached) - Number(right.exact && right.progress.reached)
     );
 }
 

@@ -106,7 +106,7 @@ export function YearView({ db, nowMs }: { db: Database; nowMs: number }) {
                             fill={month.in > 0 ? (month.out + month.setAside) / month.in : 1}
                             key={month.key}
                             label={monthName(month.key, language)}
-                            onPress={() => router.push(`/budgets/plan/${month.key}`)}
+                            onPress={() => router.push(`/insights/plan/${month.key}`)}
                             right={right}
                             suffix={short ? t("budgets.plan.suffix.short") : t("budgets.suffix.left")}
                             tone={short ? "short" : "plain"}
