@@ -78,6 +78,7 @@ const site = {
                 productHunt: t({ en: "On Product Hunt", es: "En Product Hunt" }),
             },
             nav: t({ en: "Footer", es: "Pie de página" }),
+            open: t({ en: "Open numbers", es: "Números abiertos" }),
             privacy: t({ en: "Privacy", es: "Privacidad" }),
             source: t({ en: "Source code", es: "Código fuente" }),
             support: t({ en: "Support", es: "Soporte" }),

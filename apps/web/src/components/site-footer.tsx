@@ -91,6 +91,7 @@ export function SiteFooter() {
                         </Column>
                         <Column title={footer.company}>
                             <Item to="/about">{footer.about}</Item>
+                            <Item to="/open">{footer.open}</Item>
                             <Item to="/privacy">{footer.privacy}</Item>
                             <Item to="/terms">{footer.terms}</Item>
                             <li>

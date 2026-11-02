@@ -19,6 +19,7 @@ import mcpEntries from "../mcpEntries.spec";
 import mcpLedger from "../mcpLedger.spec";
 import merchantKnowledge from "../merchantKnowledge.spec";
 import notion from "../notion.spec";
+import openStats from "../openStats.spec";
 import openexchangerates from "../openexchangerates.spec";
 import photos from "../photos.spec";
 import receiptScan from "../receiptScan.spec";
@@ -47,6 +48,7 @@ const spec: Spec.Spec<{
   readonly mcpLedger: GroupSpec.NamedAt<typeof mcpLedger, "mcpLedger">;
   readonly merchantKnowledge: GroupSpec.NamedAt<typeof merchantKnowledge, "merchantKnowledge">;
   readonly notion: GroupSpec.NamedAt<typeof notion, "notion">;
+  readonly openStats: GroupSpec.NamedAt<typeof openStats, "openStats">;
   readonly openexchangerates: GroupSpec.NamedAt<typeof openexchangerates, "openexchangerates">;
   readonly photos: GroupSpec.NamedAt<typeof photos, "photos">;
   readonly receiptScan: GroupSpec.NamedAt<typeof receiptScan, "receiptScan">;
@@ -74,6 +76,7 @@ const spec: Spec.Spec<{
   ["mcpLedger"]: mcpLedger,
   ["merchantKnowledge"]: merchantKnowledge,
   ["notion"]: notion,
+  ["openStats"]: openStats,
   ["openexchangerates"]: openexchangerates,
   ["photos"]: photos,
   ["receiptScan"]: receiptScan,
