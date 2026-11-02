@@ -4,6 +4,7 @@ import { HugeiconsIcon } from "@hugeicons/react-native";
 import { isMultiCurrency } from "@outlayr/money/account-overview";
 import { Stack, useRouter } from "expo-router";
 import { useRef } from "react";
+import type { ReactNode } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -13,10 +14,8 @@ import { Eyebrow, PARENT_TILE } from "@/components/category-list-chrome";
 import { EmptyState } from "@/components/empty-state";
 import { Tile } from "@/components/empty-state-parts";
 import { RowMenu } from "@/components/row-menu";
-import { ScreenHeader } from "@/components/screen-header";
 import { SwipeToDelete } from "@/components/swipe-to-delete";
 import { Text } from "@/components/text";
-import { toolbarIcon } from "@/components/toolbar-icons";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
 import { useAccountBalance } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
@@ -25,25 +24,35 @@ import type { Database } from "@/db/client";
 import { formatSignedAmount } from "@/domain/account-display";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useLanguage, useTranslation } from "@/i18n/context";
+import { BalancesViewToggle } from "@/screens/balances/view-toggle";
+import type { BalancesViewToggleProps } from "@/screens/balances/view-toggle";
+import { SavingsGoalsSection } from "@/screens/budgets/components/savings-goals-section";
 import { withAlpha } from "@/theme/shade";
 import type { ThemeColors } from "@/theme/use-colors";
 import { useColors } from "@/theme/use-colors";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
-import { useAddMenu } from "./add-menu";
+import { useSortMenu } from "./add-menu";
 import { DebtSections, LedgerTotals } from "./debt-sections";
 import { useAccountList } from "./use-account-list";
 
 /** Where the row's text starts, which is where its menu drops down from. */
 const TEXT_LEADING = 16 + PARENT_TILE + 16;
 
-export function Accounts() {
+interface AccountsProps {
+    addMenu: ReactNode;
+    onAddGoal: () => void;
+    toggle: BalancesViewToggleProps;
+}
+
+/** The Accounts view of Balances: money held, owed and saved toward goals. */
+export function Accounts({ addMenu, onAddGoal, toggle }: AccountsProps) {
     const router = useRouter();
     const t = useTranslation();
     const colors = useColors();
     const insets = useSafeAreaInsets();
-    const { assets, currency, db, debts, deleteAccount, empty, openDetail, rows } = useAccountList();
-    const addMenu = useAddMenu();
+    const { assets, currency, db, debts, deleteAccount, empty, goals, openDetail, openGoal, rows } = useAccountList();
+    const sortMenu = useSortMenu(rows.length);
 
     const openEditor = (id: string) => {
         router.push({
@@ -54,18 +63,13 @@ export function Accounts() {
 
     return (
         <View className="bg-m3-surface flex-1">
-            <ScreenHeader title={t("accounts.title")} />
-            <Stack.Screen.BackButton displayMode="minimal" />
             <Stack.Toolbar placement="right">
-                <Stack.Toolbar.Button
-                    accessibilityLabel={t("accounts.a11y.reorder")}
-                    hidden={rows.length <= 1}
-                    onPress={() => router.push("/accounts/reorder")}
-                >
-                    <Stack.Toolbar.Icon {...toolbarIcon("reorder")} />
-                </Stack.Toolbar.Button>
+                {sortMenu}
                 {addMenu}
             </Stack.Toolbar>
+            <View className="px-4 pt-2 pb-2">
+                <BalancesViewToggle {...toggle} />
+            </View>
             {empty ? (
                 <EmptyState body={t("accounts.empty")} mark={<AccountsMark />} tier="takeover" />
             ) : (
@@ -88,6 +92,9 @@ export function Accounts() {
                         />
                     ))}
                     <DebtSections currency={currency} debts={debts} />
+                    <View className="px-4">
+                        <SavingsGoalsSection currency={currency} goals={goals} onAdd={onAddGoal} onPress={openGoal} />
+                    </View>
                     {rows.length >= 2 ? <TransfersRow /> : null}
                 </ScrollView>
             )}

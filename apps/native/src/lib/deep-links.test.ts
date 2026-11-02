@@ -6,8 +6,8 @@ describe("resolveDeepLink", () => {
     it("maps every canonical link the widgets and intents emit", () => {
         expect(resolveDeepLink(DEEP_LINKS.log)).toBe("/");
         expect(resolveDeepLink(DEEP_LINKS.insights)).toBe("/insights");
-        expect(resolveDeepLink(DEEP_LINKS.budgets)).toBe("/budgets");
-        expect(resolveDeepLink(DEEP_LINKS.overallBudget)).toBe("/budgets/overall");
+        expect(resolveDeepLink(DEEP_LINKS.budgets)).toBe("/balances?view=categories");
+        expect(resolveDeepLink(DEEP_LINKS.overallBudget)).toBe("/balances/overall");
         expect(resolveDeepLink(DEEP_LINKS.search)).toBe("/search");
         expect(resolveDeepLink(DEEP_LINKS.newExpense)).toBe("/transactions/create");
         expect(resolveDeepLink(DEEP_LINKS.newIncome)).toBe("/transactions/create?income=1");
@@ -16,13 +16,19 @@ describe("resolveDeepLink", () => {
     });
 
     it("accepts the bare path form expo-router hands it while running", () => {
-        expect(resolveDeepLink("/budgets/overall")).toBe("/budgets/overall");
+        expect(resolveDeepLink("/budgets/overall")).toBe("/balances/overall");
         expect(resolveDeepLink("new?income=1")).toBe("/transactions/create?income=1");
     });
 
     it("routes a single transaction, which is what Spotlight opens", () => {
         expect(resolveDeepLink(transactionLink("abc123"))).toBe("/transactions/abc123");
-        expect(resolveDeepLink(budgetLink("b7"))).toBe("/budgets/b7");
+        expect(resolveDeepLink(budgetLink("b7"))).toBe("/balances/b7");
+    });
+
+    it("sends the old Budgets screens to where they moved", () => {
+        expect(resolveDeepLink("outlayr://budgets/goals/g1")).toBe("/balances/goals/g1");
+        expect(resolveDeepLink("/budgets/plan/202611")).toBe("/insights/plan/202611");
+        expect(resolveDeepLink("outlayr://budgets?from=widget")).toBe("/balances?view=categories&from=widget");
     });
 
     it("degrades a host with no id to its section rather than to not-found", () => {
@@ -31,7 +37,7 @@ describe("resolveDeepLink", () => {
 
     it("still answers the retired Swift hosts", () => {
         expect(resolveDeepLink("outlayr://newExpense")).toBe("/transactions/create");
-        expect(resolveDeepLink("outlayr://budget")).toBe("/budgets");
+        expect(resolveDeepLink("outlayr://budget")).toBe("/balances?view=categories");
         expect(resolveDeepLink("outlayr://transactions")).toBe("/");
     });
 
@@ -41,7 +47,7 @@ describe("resolveDeepLink", () => {
     });
 
     it("is case-insensitive on the host, as URLs are", () => {
-        expect(resolveDeepLink("outlayr://Budgets")).toBe("/budgets");
+        expect(resolveDeepLink("outlayr://Budgets")).toBe("/balances?view=categories");
     });
 
     it("declines anything outside the contract so ordinary paths pass through", () => {
@@ -76,7 +82,9 @@ describe("redirectLaunchPath", () => {
 
     it("leaves the registry alone for a link arriving while the app runs", () => {
         const [drain, calls] = drainSpy();
-        expect(redirectLaunchPath({ initial: false, path: DEEP_LINKS.budgets }, drain)).toBe("/budgets");
+        expect(redirectLaunchPath({ initial: false, path: DEEP_LINKS.budgets }, drain)).toBe(
+            "/balances?view=categories"
+        );
         expect(calls.count).toBe(0);
     });
 });

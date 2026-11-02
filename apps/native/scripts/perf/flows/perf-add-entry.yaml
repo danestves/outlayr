@@ -1,7 +1,7 @@
 steps:
-    - echo: On the Log with the seeded ledger; open Budgets, come back, then add a 12.50 entry at Lidl
+    - echo: On the Log with the seeded ledger; open Balances, come back, then add a 12.50 entry at Lidl
     - await: { visible: { text: Hide amounts }, timeout: 20000 }
-    - tap: { text: Budgets }
+    - tap: { text: Balances }
     - await: { visible: { text: Burn-down chart }, timeout: 10000 }
     - await: { idle: true }
     - tap: { text: Log }

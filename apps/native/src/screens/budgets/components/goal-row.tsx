@@ -130,7 +130,7 @@ function wordTone(reached: boolean, onPace: boolean, ahead: boolean): string {
     return ahead ? "text-income" : "text-over-budget";
 }
 
-function GoalRail({
+export function GoalRail({
     behind,
     expected,
     fraction,

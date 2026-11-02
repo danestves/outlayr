@@ -23,17 +23,20 @@ export function budgetLink(id: string): string {
     return `${DEEP_LINKS.budgets}/${id}`;
 }
 
+/** Budgets became the Categories view of Balances: the `budgets` names stay because installed widgets carry them. */
+const BUDGETS_HOME = "/balances?view=categories";
+
 /** Hosts the Swift app shipped, always bare: a shortcut built against the old build still fires them. */
 // Keyed by an untrusted host parsed off the URL, hence a Map.
 const LEGACY_HOSTS = new Map<string, string>([
-    ["budget", "/budgets"],
+    ["budget", BUDGETS_HOME],
     ["newexpense", "/transactions/create"],
     ["newincome", "/transactions/create?income=1"],
     ["transactions", "/"],
 ]);
 
 const HOSTS = new Map<string, string>([
-    ["budgets", "/budgets"],
+    ["budgets", BUDGETS_HOME],
     ["insights", "/insights"],
     ["log", "/"],
     ["new", "/transactions/create"],
@@ -85,10 +88,16 @@ export function resolveDeepLink(raw: string): string | null {
     }
 
     if (ID_HOSTS.has(key) && rest.length > 0) {
-        return `${base}/${rest.join("/")}${query}`;
+        return `${key === "budgets" ? budgetsPath(rest) : `${base}/${rest.join("/")}`}${query}`;
     }
 
-    return `${ID_HOST_SECTION.get(key) ?? base}${query}`;
+    const section = ID_HOST_SECTION.get(key) ?? base;
+    return query && section.includes("?") ? `${section}&${query.slice(1)}` : `${section}${query}`;
+}
+
+/** Plan the year moved to Insights; every other `budgets/…` screen kept its path under Balances. */
+function budgetsPath(rest: readonly string[]): string {
+    return `${rest[0] === "plan" ? "/insights" : "/balances"}/${rest.join("/")}`;
 }
 
 /**

@@ -3,6 +3,117 @@ import type { Dictionary } from "intlayer";
 
 const budgets = {
     content: {
+        "balances.add.categoryLimit": t({
+            en: "Category limit",
+            es: "Límite por categoría",
+            fr: "Limite par catégorie",
+            pt: "Limite por categoria",
+        }),
+        "balances.add.limits": t({
+            en: "Limits",
+            es: "Límites",
+            fr: "Limites",
+            pt: "Limites",
+        }),
+        "balances.add.overallLimit": t({
+            en: "Overall limit",
+            es: "Límite general",
+            fr: "Limite globale",
+            pt: "Limite geral",
+        }),
+        "balances.add.prompt": t({
+            en: "Add to Balances",
+            es: "Agregar a Saldos",
+            "es-ES": "Añadir a Saldos",
+            fr: "Ajouter aux soldes",
+            pt: "Adicionar aos saldos",
+        }),
+        "balances.category.addLimit": t({
+            en: "Add a limit",
+            es: "Agregar un límite",
+            "es-ES": "Añadir un límite",
+            fr: "Ajouter une limite",
+            pt: "Adicionar um limite",
+        }),
+        "balances.category.lately": t({
+            en: "Last {months} months",
+            es: "Últimos {months} meses",
+            fr: "{months} derniers mois",
+            pt: "Últimos {months} meses",
+        }),
+        "balances.category.limit": t({
+            en: "Limit",
+            es: "Límite",
+            fr: "Limite",
+            pt: "Limite",
+        }),
+        "balances.category.noLimit": t({
+            en: "{period} · No limit",
+            es: "{period} · Sin límite",
+            fr: "{period} · Sans limite",
+            pt: "{period} · Sem limite",
+        }),
+        "balances.noLimit": t({
+            en: "No limit",
+            es: "Sin límite",
+            fr: "Sans limite",
+            pt: "Sem limite",
+        }),
+        "balances.share": t({
+            en: "{percent}% of spending",
+            es: "{percent}% del gasto",
+            fr: "{percent} % des dépenses",
+            pt: "{percent}% dos gastos",
+        }),
+        "balances.sort.balance": t({
+            en: "Balance",
+            es: "Saldo",
+            fr: "Solde",
+            pt: "Saldo",
+        }),
+        "balances.sort.prompt": t({
+            en: "Sort accounts",
+            es: "Ordenar cuentas",
+            fr: "Trier les comptes",
+            pt: "Ordenar contas",
+        }),
+        "balances.sort.yours": t({
+            en: "Your order",
+            es: "Tu orden",
+            fr: "Votre ordre",
+            pt: "Sua ordem",
+            "pt-PT": "A sua ordem",
+        }),
+        "balances.spent": t({
+            en: "Spent",
+            es: "Gastado",
+            fr: "Dépensé",
+            pt: "Gasto",
+        }),
+        "balances.title": t({
+            en: "Balances",
+            es: "Saldos",
+            fr: "Soldes",
+            pt: "Saldos",
+        }),
+        "balances.view.accounts": t({
+            en: "Accounts",
+            es: "Cuentas",
+            fr: "Comptes",
+            pt: "Contas",
+        }),
+        "balances.view.categories": t({
+            en: "Categories",
+            es: "Categorías",
+            fr: "Catégories",
+            pt: "Categorias",
+        }),
+        "balances.withLimit": t({
+            en: "With a limit",
+            es: "Con límite",
+            fr: "Avec limite",
+            pt: "Com limite",
+        }),
         "budgets.action.changeLimit": t({
             en: "Change limit",
             es: "Cambiar límite",
@@ -291,24 +402,11 @@ const budgets = {
             fr: "Épuisé le {date}, dernier jour de la période.",
             pt: "Acabou em {date}, no último dia do período.",
         }),
-        "budgets.list.budgets": t({
-            en: "BUDGETS",
-            es: "PRESUPUESTOS",
-            fr: "BUDGETS",
-            pt: "ORÇAMENTOS",
-        }),
         "budgets.list.categories": t({
             en: "CATEGORIES",
             es: "CATEGORÍAS",
             fr: "CATÉGORIES",
             pt: "CATEGORIAS",
-        }),
-        "budgets.list.overCount": t({
-            en: "{over} OF {total} OVER",
-            es: "{over} DE {total} EXCEDIDOS",
-            fr: "{over} SUR {total} EN DÉPASSEMENT",
-            pt: "{over} DE {total} ESTOURADOS",
-            "pt-PT": "{over} DE {total} EXCEDIDOS",
         }),
         "budgets.measure.limit": t({
             en: "LIMIT",
@@ -377,12 +475,6 @@ const budgets = {
             pt: "este ano",
         }),
         // Title case: a chip is a label. `budgets.periodPhrase.*` is the mid-sentence form.
-        "budgets.periodMenu": t({
-            en: "Budget period",
-            es: "Período del presupuesto",
-            fr: "Période du budget",
-            pt: "Período do orçamento",
-        }),
         "budgets.periodName.day": t({
             en: "Day",
             es: "Día",
@@ -883,30 +975,6 @@ const budgets = {
             fr: "Le déficit dure jusqu’en {month}.",
             pt: "Fica no déficit até {month}.",
         }),
-        "budgets.rail.another": t({
-            en: "Budget another category",
-            es: "Presupuestar otra categoría",
-            fr: "Budgéter une autre catégorie",
-            pt: "Orçamento para outra categoria",
-        }),
-        "budgets.rail.set": t({
-            en: "Set a limit",
-            es: "Poner un límite",
-            fr: "Fixer une limite",
-            pt: "Definir um limite",
-        }),
-        "budgets.rail.title": t({
-            en: "NOT BUDGETED YET",
-            es: "AÚN SIN PRESUPUESTO",
-            fr: "PAS ENCORE DE BUDGET",
-            pt: "AINDA SEM ORÇAMENTO",
-        }),
-        "budgets.rail.typical": t({
-            en: "{amount} {period}, typically",
-            es: "{amount} {period}, normalmente",
-            fr: "{amount} {period}, en général",
-            pt: "{amount} {period}, normalmente",
-        }),
         "budgets.row.actionsHint": t({
             en: "Double tap and hold to open actions for this budget",
             es: "Toca dos veces y mantén para abrir las acciones de este presupuesto",
@@ -1023,12 +1091,6 @@ const budgets = {
             es: "de más",
             fr: "de dépassement",
             pt: "a mais",
-        }),
-        "budgets.title": t({
-            en: "Budgets",
-            es: "Presupuestos",
-            fr: "Budgets",
-            pt: "Orçamentos",
         }),
         "budgets.undo.deleted": t({
             en: "Budget deleted",

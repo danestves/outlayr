@@ -30,7 +30,7 @@ import { patchMainBudgetCommand } from "@/state/planning-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
 
-/** Under `/budgets/[id]` with the reserved id `overall`: a static sibling of a dynamic segment never resolved. */
+/** Under `/balances/[id]` with the reserved id `overall`: a static sibling of a dynamic segment never resolved. */
 export function OverallBudgetDetail({ db, onDone }: { db: Database; onDone: () => void }) {
     const router = useRouter();
     const t = useTranslation();
