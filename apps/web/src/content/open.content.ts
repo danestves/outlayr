@@ -73,8 +73,8 @@ const open = {
             },
             pro: {
                 description: t({
-                    en: "Active Outlayr Pro subscriptions, as RevenueCat reports them",
-                    es: "Suscripciones activas a Outlayr Pro, según RevenueCat",
+                    en: "Active Outlayr Pro subscriptions and free trials, as RevenueCat reports them",
+                    es: "Suscripciones activas a Outlayr Pro y pruebas gratis, según RevenueCat",
                 }),
                 label: t({ en: "Pro subscribers", es: "Suscriptores Pro" }),
             },
