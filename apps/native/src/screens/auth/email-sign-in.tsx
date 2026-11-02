@@ -86,6 +86,9 @@ function useRequest<Tag extends string>() {
     const [busy, setBusy] = useState<Tag | null>(null);
     const [error, setError] = useState<string | null>(null);
     const run = (tag: Tag, fire: () => void) => {
+        if (busy !== null) {
+            return;
+        }
         setError(null);
         setBusy(tag);
         fire();
