@@ -204,11 +204,12 @@ export const fetchRevenueStats = Effect.fn("OpenStats.fetchRevenueStats")(functi
             ).pipe(Effect.map(({ value }) => ({ month, proceeds: value })));
         })
     );
-    const active = overview.metrics.find(({ id }) => id === "active_subscriptions");
-    if (active === undefined) {
+    const paid = overview.metrics.find(({ id }) => id === "active_subscriptions");
+    const trials = overview.metrics.find(({ id }) => id === "active_trials");
+    if (paid === undefined || trials === undefined) {
         return yield* new OpenStatsError({ reason: "contract", source: "revenuecat" });
     }
-    return { activeSubscriptions: active.value, months };
+    return { activeSubscriptions: paid.value + trials.value, months };
 });
 
 const PullPage = Schema.Array(Schema.Struct({ merged_at: Schema.NullOr(Schema.String) }));
