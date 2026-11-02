@@ -158,7 +158,14 @@ export function buildAnswers(input: AnswerInput): Answers {
     const usualOf = (scope: string): number => mean((toDate.get(scope) ?? []).slice(1), Math.max(1, history.length));
     const spent = full.get(EVERY_SCOPE)?.[0] ?? 0;
     const usualByNow = hasUsual ? usualOf(EVERY_SCOPE) : null;
-    const forecast = progress.closed ? null : forecastSpend(spent, progress);
+    const usualRest =
+        usualByNow == null
+            ? null
+            : Math.max(0, mean((full.get(EVERY_SCOPE) ?? []).slice(1), history.length) - usualByNow);
+    let forecast: number | null = null;
+    if (!progress.closed) {
+        forecast = usualRest == null ? forecastSpend(spent, progress) : spent + usualRest;
+    }
     const headline = headlineKind({ closed: progress.closed, forecast: forecast ?? spent, limit, spent, usualByNow });
 
     const barSpend = spendPerWindow(rows, [progress.window, ...prior.slice(0, PRIOR_PERIODS - 1)]);
