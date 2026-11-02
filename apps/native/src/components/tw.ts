@@ -1,5 +1,4 @@
-import { extendTailwindMerge } from "tailwind-merge";
-import { createTV } from "tailwind-variants";
+import { createTV, extendTailwindMerge } from "tailwind-variants/config";
 
 // tailwind-merge files every unknown `--text-*` token as a colour, so `cn("text-body", "text-danger")` would drop
 // the size. Declaring the sizes keeps them apart; colours fall through to `text-color` already.
@@ -28,7 +27,6 @@ const twMergeConfig = {
     },
 } as const;
 
-// Not `tailwind-variants`' `cnMerge`: it accepts `twMergeConfig` and silently ignores it (`text-title` still drops).
 const merge = extendTailwindMerge(twMergeConfig);
 
 export function cn(...classes: (string | false | null | undefined)[]): string | undefined {
