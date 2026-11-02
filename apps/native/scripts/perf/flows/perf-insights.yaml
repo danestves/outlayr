@@ -1,5 +1,5 @@
 steps:
-    - echo: On the Log with the seeded ledger; Insights, Year period, then filter the Healthcare category so its transaction list mounts
+    - echo: On the Log with the seeded ledger; Insights, Year period, All categories, then filter the Healthcare category so its transaction list mounts
     - await: { visible: { text: Hide amounts }, timeout: 20000 }
     - tap: { text: Insights }
     - await: { visible: { text: Change period }, timeout: 10000 }
@@ -7,6 +7,10 @@ steps:
     - tap: { text: Change period }
     - await: { visible: { text: Year }, timeout: 5000 }
     - tap: { text: Year }
+    - await: { idle: true }
+    - scroll-to: { target: { text: All categories } }
+    - tap: { text: All categories }
+    - await: { visible: { text: Breakdown }, timeout: 10000 }
     - await: { idle: true }
     - scroll-to: { target: { text: Healthcare } }
     - await: { idle: true }
