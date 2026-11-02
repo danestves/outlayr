@@ -254,7 +254,7 @@ export function SignInFlow({ onDone, target }: { onDone: () => void; target: str
                 </button>
             </form>
             <div className="mt-2 flex justify-center gap-2">
-                <button className={TEXT_BUTTON} onClick={() => go("create")} type="button">
+                <button className={TEXT_BUTTON} disabled={busy} onClick={() => go("create")} type="button">
                     Create account
                 </button>
                 {sendingCode ? (
