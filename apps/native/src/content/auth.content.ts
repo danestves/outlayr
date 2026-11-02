@@ -123,6 +123,19 @@ const auth = {
             pt: "Conciliando…",
             "pt-PT": "A conciliar…",
         }),
+        "auth.email.change": t({
+            en: "Change",
+            es: "Cambiar",
+            fr: "Modifier",
+            pt: "Alterar",
+        }),
+        "auth.email.checking": t({
+            en: "Checking the code…",
+            es: "Comprobando el código…",
+            fr: "Vérification du code…",
+            pt: "Verificando o código…",
+            "pt-PT": "A verificar o código…",
+        }),
         "auth.email.code": t({
             en: "Code",
             es: "Código",
@@ -201,26 +214,6 @@ const auth = {
             pt: "Esqueceu a senha?",
             "pt-PT": "Esqueceu-se da palavra-passe?",
         }),
-        "auth.email.forgot.action": t({
-            en: "Send code",
-            es: "Enviar código",
-            fr: "Envoyer le code",
-            pt: "Enviar código",
-        }),
-        "auth.email.forgot.body": t({
-            en: "We'll email you a code to set a new one.",
-            es: "Te enviaremos un código para crear una nueva.",
-            fr: "Nous vous enverrons par e-mail un code pour en définir un nouveau.",
-            pt: "Vamos enviar um código por e-mail para você criar uma nova.",
-            "pt-PT": "Vamos enviar-lhe um código por e-mail para criar uma nova.",
-        }),
-        "auth.email.forgot.title": t({
-            en: "Reset your password",
-            es: "Restablece tu contraseña",
-            fr: "Réinitialiser le mot de passe",
-            pt: "Redefina sua senha",
-            "pt-PT": "Redefina a sua palavra-passe",
-        }),
         "auth.email.hidePassword": t({
             en: "Hide password",
             es: "Ocultar contraseña",
@@ -235,12 +228,26 @@ const auth = {
             pt: "Nova senha",
             "pt-PT": "Nova palavra-passe",
         }),
+        "auth.email.newPassword.title": t({
+            en: "Choose a new password",
+            es: "Elige una contraseña nueva",
+            fr: "Choisissez un nouveau mot de passe",
+            pt: "Escolha uma nova senha",
+            "pt-PT": "Escolha uma nova palavra-passe",
+        }),
         "auth.email.password": t({
             en: "Password",
             es: "Contraseña",
             fr: "Mot de passe",
             pt: "Senha",
             "pt-PT": "Palavra-passe",
+        }),
+        "auth.email.password.title": t({
+            en: "Enter your password",
+            es: "Escribe tu contraseña",
+            fr: "Saisissez votre mot de passe",
+            pt: "Digite sua senha",
+            "pt-PT": "Introduza a sua palavra-passe",
         }),
         "auth.email.passwordHint": t({
             en: "8 or more characters",
@@ -267,12 +274,12 @@ const auth = {
             pt: "Definir senha",
             "pt-PT": "Definir palavra-passe",
         }),
-        "auth.email.reset.body": t({
-            en: "Enter the code we sent to {email} and choose a new password.",
-            es: "Escribe el código que enviamos a {email} y elige una contraseña nueva.",
-            fr: "Saisissez le code envoyé à {email} et choisissez un nouveau mot de passe.",
-            pt: "Digite o código que enviamos para {email} e escolha uma nova senha.",
-            "pt-PT": "Introduza o código que enviámos para {email} e escolha uma nova palavra-passe.",
+        "auth.email.sending": t({
+            en: "Sending code…",
+            es: "Enviando código…",
+            fr: "Envoi du code…",
+            pt: "Enviando código…",
+            "pt-PT": "A enviar o código…",
         }),
         "auth.email.showPassword": t({
             en: "Show password",
@@ -288,18 +295,11 @@ const auth = {
             pt: "Entrar",
             "pt-PT": "Iniciar sessão",
         }),
-        "auth.email.signIn.title": t({
-            en: "Sign in with email",
-            es: "Inicia sesión con tu correo",
-            fr: "Se connecter avec un e-mail",
-            pt: "Entre com seu e-mail",
-            "pt-PT": "Inicie sessão com o seu e-mail",
-        }),
-        "auth.email.verify.action": t({
-            en: "Verify",
-            es: "Verificar",
-            fr: "Vérifier",
-            pt: "Verificar",
+        "auth.email.start.title": t({
+            en: "What's your email?",
+            es: "¿Cuál es tu correo?",
+            fr: "Quel est votre e-mail ?",
+            pt: "Qual é o seu e-mail?",
         }),
         "auth.email.verify.body": t({
             en: "Enter the code we sent to {email}.",

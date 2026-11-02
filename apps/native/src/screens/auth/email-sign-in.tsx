@@ -4,21 +4,25 @@ import { HugeiconsIcon } from "@hugeicons/react-native";
 import * as Cause from "effect/Cause";
 import * as Schema from "effect/Schema";
 import { router, useLocalSearchParams } from "expo-router";
+import { Button } from "panelui-native/components/button";
+import { Input } from "panelui-native/components/input";
+import type { InputProps } from "panelui-native/components/input";
+import { OtpInput } from "panelui-native/components/otp-input";
 import { useState } from "react";
-import type { ComponentProps, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { KeyboardAvoidingView, Pressable, ScrollView, View } from "react-native";
-import { useCSSVariable } from "uniwind";
 
 import type { EmailSignInRoute } from "@/components/account/provider-sign-in-buttons";
-import { FirstRun } from "@/components/first-run";
-import { MonoLabel } from "@/components/mono-label";
-import { Text, TextInput } from "@/components/text";
-import { cn } from "@/components/tw";
+import { BusyText } from "@/components/busy-text";
+import { Text } from "@/components/text";
 import { signInFailureDetail, signInFailureMessage } from "@/domain/account";
+import { useLongWait } from "@/hooks/use-long-wait";
+import type { TranslationKey } from "@/i18n/catalog";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { authClient } from "@/lib/auth-client";
 import { SILENT } from "@/state/atom-command";
 import {
+    checkResetCodeCommand,
     EmailAuthError,
     requestPasswordResetCommand,
     resetPasswordCommand,
@@ -28,17 +32,17 @@ import {
     verifyEmailCommand,
 } from "@/state/auth-flow-commands";
 import { useAtomAction } from "@/state/use-atom-action";
+import { useColors } from "@/theme/use-colors";
 
 type AuthClient = NonNullable<typeof authClient>;
 
-const STEPS = ["sign-in", "create", "verify", "forgot", "reset"] as const;
+const STEPS = ["email", "sign-in", "create", "verify", "reset", "new-password"] as const;
 type Step = (typeof STEPS)[number];
 const isStep = Schema.is(Schema.Literals(STEPS));
 
 const CODE_LENGTH = 6;
-const CODE_SLOTS = Array.from({ length: CODE_LENGTH }, (_, slot) => slot);
 const MIN_PASSWORD_LENGTH = 8;
-const NON_DIGITS = /\D/g;
+const PLAUSIBLE_EMAIL = /^\S+@\S+\.\S+$/;
 
 interface Flow {
     client: AuthClient;
@@ -47,27 +51,29 @@ interface Flow {
 }
 
 export function EmailSignIn({ route }: { route: EmailSignInRoute }) {
-    const params = useLocalSearchParams<{ email?: string; step?: string }>();
+    const params = useLocalSearchParams<{ email?: string; otp?: string; step?: string }>();
     if (authClient === null) {
         return null;
     }
     const flow: Flow = { client: authClient, email: params.email ?? "", route };
     const steps: Record<Step, ReactNode> = {
         create: <CreateStep {...flow} />,
-        forgot: <ForgotStep {...flow} />,
-        reset: <ResetStep {...flow} />,
+        email: <EmailStep {...flow} />,
+        "new-password": <NewPasswordStep {...flow} otp={params.otp ?? ""} />,
+        reset: <ResetCodeStep {...flow} />,
         "sign-in": <SignInStep {...flow} />,
         verify: <VerifyStep {...flow} />,
     };
     return (
         <KeyboardAvoidingView behavior="padding" className="bg-fr-ground flex-1">
-            {steps[isStep(params.step) ? params.step : "sign-in"]}
+            {steps[isStep(params.step) ? params.step : "email"]}
         </KeyboardAvoidingView>
     );
 }
 
-function goTo(route: EmailSignInRoute, step: Step, email: string) {
-    router.push({ params: { email: email.trim(), step }, pathname: route });
+function goTo(route: EmailSignInRoute, step: Step, email: string, otp?: string) {
+    const params = { email: email.trim(), step };
+    router.push({ params: otp === undefined ? params : { ...params, otp }, pathname: route });
 }
 
 function useFetchOptions() {
@@ -75,13 +81,13 @@ function useFetchOptions() {
     return { headers: { "accept-language": language } };
 }
 
-function useRequest() {
+function useRequest<Tag extends string>() {
     const t = useTranslation();
-    const [busy, setBusy] = useState(false);
+    const [busy, setBusy] = useState<Tag | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const run = (fire: () => void) => {
+    const run = (tag: Tag, fire: () => void) => {
         setError(null);
-        setBusy(true);
+        setBusy(tag);
         fire();
     };
     const handlers = {
@@ -91,17 +97,51 @@ function useRequest() {
             console.warn("[outlayr] email sign-in failed", signInFailureDetail(cause));
             setError(signInFailureMessage(cause, t));
         },
-        onSettled: () => setBusy(false),
+        onSettled: () => setBusy(null),
     };
-    return { busy, error, handlers, run };
+    return { busy, error, handlers, run, setError };
 }
 
-function SignInStep({ client, email: givenEmail, route }: Flow) {
+function EmailStep({ email: givenEmail, route }: Flow) {
+    const t = useTranslation();
+    const [email, setEmail] = useState(givenEmail);
+    const [error, setError] = useState<string | null>(null);
+
+    const submit = () => {
+        if (!PLAUSIBLE_EMAIL.test(email.trim())) {
+            setError(t("auth.email.error.email"));
+            return;
+        }
+        setError(null);
+        goTo(route, "sign-in", email);
+    };
+
+    return (
+        <StepLayout title={t("auth.email.start.title")}>
+            <TextField
+                accessibilityLabel={t("auth.email.email")}
+                autoComplete="email"
+                autoFocus
+                errorMessage={error ?? undefined}
+                keyboardType="email-address"
+                onChangeText={setEmail}
+                onSubmitEditing={submit}
+                returnKeyType="next"
+                textContentType="emailAddress"
+                value={email}
+            />
+            <Action disabled={!email.trim()} label={t("common.continue")} onPress={submit} />
+        </StepLayout>
+    );
+}
+
+function SignInStep({ client, email, route }: Flow) {
     const t = useTranslation();
     const fetchOptions = useFetchOptions();
-    const { busy, error, handlers, run } = useRequest();
-    const [email, setEmail] = useState(givenEmail);
+    const colors = useColors();
+    const { busy, error, handlers, run } = useRequest<"sign-in" | "forgot">();
     const [password, setPassword] = useState("");
+    const sending = useLongWait(busy === "forgot");
     const signIn = useAtomAction(
         signInEmailCommand,
         {
@@ -114,309 +154,396 @@ function SignInStep({ client, email: givenEmail, route }: Flow) {
         },
         SILENT
     );
-
-    const submit = () => run(() => signIn({ client, email, fetchOptions, password }));
-
-    return (
-        <FirstRun
-            action={{ disabled: busy || !email || !password, label: t("auth.email.signIn.action"), onPress: submit }}
-            error={error}
-            eyebrow={t("auth.email.email")}
-            skip={{ label: t("auth.email.create"), onPress: () => goTo(route, "create", email) }}
-            title={t("auth.email.signIn.title")}
-        >
-            <Fields>
-                <EmailField autoFocus={!email} onChangeText={setEmail} value={email} />
-                <Field
-                    autoComplete="current-password"
-                    autoFocus={Boolean(email)}
-                    label={t("auth.email.password")}
-                    onChangeText={setPassword}
-                    onSubmitEditing={submit}
-                    secureTextEntry
-                    textContentType="password"
-                    value={password}
-                />
-                <Pressable accessibilityRole="button" className="self-end" onPress={() => goTo(route, "forgot", email)}>
-                    <Text className="font-sans-medium text-caption text-fr-ink">{t("auth.email.forgot")}</Text>
-                </Pressable>
-            </Fields>
-        </FirstRun>
-    );
-}
-
-function CreateStep({ client, email: givenEmail, route }: Flow) {
-    const t = useTranslation();
-    const fetchOptions = useFetchOptions();
-    const { busy, error, handlers, run } = useRequest();
-    const [email, setEmail] = useState(givenEmail);
-    const [password, setPassword] = useState("");
-    const ready = Boolean(email) && password.length >= MIN_PASSWORD_LENGTH;
-    const signUp = useAtomAction(
-        signUpEmailCommand,
-        { ...handlers, onSuccess: () => goTo(route, "verify", email) },
-        SILENT
-    );
-
-    const submit = () => run(() => signUp({ client, email, fetchOptions, password }));
-
-    return (
-        <FirstRun
-            action={{ disabled: busy || !ready, label: t("auth.email.create.action"), onPress: submit }}
-            error={error}
-            eyebrow={t("auth.email.email")}
-            title={t("auth.email.create.title")}
-        >
-            <Fields>
-                <EmailField autoFocus={!email} onChangeText={setEmail} value={email} />
-                <NewPasswordField autoFocus={Boolean(email)} onChangeText={setPassword} value={password} />
-            </Fields>
-        </FirstRun>
-    );
-}
-
-function VerifyStep({ client, email }: Flow) {
-    const t = useTranslation();
-    const fetchOptions = useFetchOptions();
-    const { busy, error, handlers, run } = useRequest();
-    const [code, setCode] = useState("");
-    const [resent, setResent] = useState(false);
-    const verifyEmail = useAtomAction(verifyEmailCommand, handlers, SILENT);
-    const sendOtp = useAtomAction(
-        sendVerificationOtpCommand,
-        { ...handlers, onSuccess: () => setResent(true) },
-        SILENT
-    );
-
-    const verify = (otp: string) => run(() => verifyEmail({ client, email, fetchOptions, otp }));
-    const resend = () =>
-        run(() => {
-            setResent(false);
-            sendOtp({ client, email, fetchOptions });
-        });
-
-    return (
-        <FirstRun
-            action={{
-                disabled: busy || code.length < CODE_LENGTH,
-                label: t("auth.email.verify.action"),
-                onPress: () => verify(code),
-            }}
-            body={t("auth.email.verify.body", { email })}
-            error={error}
-            eyebrow={t("auth.email.email")}
-            footnote={resent ? t("auth.email.resent") : undefined}
-            skip={{ label: t("auth.email.resend"), onPress: resend }}
-            title={t("auth.email.verify.title")}
-        >
-            <Fields>
-                <CodeField
-                    onChange={(next) => {
-                        setCode(next);
-                        if (next.length === CODE_LENGTH && !busy) {
-                            verify(next);
-                        }
-                    }}
-                    value={code}
-                />
-            </Fields>
-        </FirstRun>
-    );
-}
-
-function ForgotStep({ client, email: givenEmail, route }: Flow) {
-    const t = useTranslation();
-    const fetchOptions = useFetchOptions();
-    const { busy, error, handlers, run } = useRequest();
-    const [email, setEmail] = useState(givenEmail);
     const requestReset = useAtomAction(
         requestPasswordResetCommand,
         { ...handlers, onSuccess: () => goTo(route, "reset", email) },
         SILENT
     );
 
-    const submit = () => run(() => requestReset({ client, email: email.trim(), fetchOptions }));
+    const submit = () => run("sign-in", () => signIn({ client, email, fetchOptions, password }));
 
     return (
-        <FirstRun
-            action={{ disabled: busy || !email, label: t("auth.email.forgot.action"), onPress: submit }}
-            body={t("auth.email.forgot.body")}
-            error={error}
-            eyebrow={t("auth.email.email")}
-            title={t("auth.email.forgot.title")}
-        >
-            <Fields>
-                <EmailField autoFocus onChangeText={setEmail} onSubmitEditing={submit} value={email} />
-            </Fields>
-        </FirstRun>
+        <StepLayout lead={<Who email={email} onChange={() => router.back()} />} title={t("auth.email.password.title")}>
+            <PasswordField
+                autoComplete="current-password"
+                autoFocus
+                errorMessage={error ?? undefined}
+                label={t("auth.email.password")}
+                onChangeText={setPassword}
+                onSubmitEditing={submit}
+                returnKeyType="go"
+                textContentType="password"
+                value={password}
+            />
+            {sending ? (
+                <BusyText className="text-subtitle" color={colors.muted}>
+                    {t("auth.email.sending")}
+                </BusyText>
+            ) : (
+                <Link
+                    disabled={busy !== null}
+                    label={t("auth.email.forgot")}
+                    onPress={() => run("forgot", () => requestReset({ client, email, fetchOptions }))}
+                />
+            )}
+            <Action
+                busy={busy === "sign-in"}
+                busyLabel="auth.signIn.pending"
+                disabled={!password || busy === "forgot"}
+                label={t("auth.email.signIn.action")}
+                onPress={submit}
+            />
+            <Pressable accessibilityRole="button" className="items-center" onPress={() => goTo(route, "create", email)}>
+                <Text className="font-sans-medium text-fr-muted text-subtitle">{t("auth.email.create")}</Text>
+            </Pressable>
+        </StepLayout>
     );
 }
 
-/** The reset itself opens no session, so the new password signs in straight after. */
-function ResetStep({ client, email }: Flow) {
+function CreateStep({ client, email, route }: Flow) {
     const t = useTranslation();
     const fetchOptions = useFetchOptions();
-    const { busy, error, handlers, run } = useRequest();
-    const [code, setCode] = useState("");
+    const { busy, error, handlers, run } = useRequest<"create">();
     const [password, setPassword] = useState("");
+    const signUp = useAtomAction(
+        signUpEmailCommand,
+        { ...handlers, onSuccess: () => goTo(route, "verify", email) },
+        SILENT
+    );
+
+    const ready = password.length >= MIN_PASSWORD_LENGTH;
+    const submit = () => run("create", () => signUp({ client, email, fetchOptions, password }));
+
+    return (
+        <StepLayout lead={<Who email={email} />} title={t("auth.email.create.title")}>
+            <NewPasswordField
+                errorMessage={error ?? undefined}
+                onChangeText={setPassword}
+                onSubmitEditing={ready ? submit : undefined}
+                value={password}
+            />
+            <Action
+                busy={busy === "create"}
+                busyLabel="auth.email.sending"
+                disabled={!ready}
+                label={t("auth.email.create.action")}
+                onPress={submit}
+            />
+        </StepLayout>
+    );
+}
+
+function VerifyStep({ client, email }: Flow) {
+    const t = useTranslation();
+    const fetchOptions = useFetchOptions();
+    const { busy, error, handlers, run } = useRequest<"code" | "resend">();
+    const [code, setCode] = useState("");
     const [resent, setResent] = useState(false);
-    const ready = code.length === CODE_LENGTH && password.length >= MIN_PASSWORD_LENGTH;
-    const resetPassword = useAtomAction(resetPasswordCommand, handlers, SILENT);
+    const verifyEmail = useAtomAction(
+        verifyEmailCommand,
+        {
+            ...handlers,
+            onFailure: (failed) => {
+                handlers.onFailure(failed);
+                setCode("");
+            },
+        },
+        SILENT
+    );
+    const sendOtp = useAtomAction(
+        sendVerificationOtpCommand,
+        { ...handlers, onSuccess: () => setResent(true) },
+        SILENT
+    );
+
+    return (
+        <StepLayout body={t("auth.email.verify.body", { email })} title={t("auth.email.verify.title")}>
+            <CodeEntry
+                busy={busy}
+                code={code}
+                error={error}
+                onChange={setCode}
+                onComplete={(otp) => run("code", () => verifyEmail({ client, email, fetchOptions, otp }))}
+                onResend={() =>
+                    run("resend", () => {
+                        setResent(false);
+                        sendOtp({ client, email, fetchOptions });
+                    })
+                }
+                resent={resent}
+            />
+        </StepLayout>
+    );
+}
+
+function ResetCodeStep({ client, email, route }: Flow) {
+    const t = useTranslation();
+    const fetchOptions = useFetchOptions();
+    const { busy, error, handlers, run } = useRequest<"code" | "resend">();
+    const [code, setCode] = useState("");
+    const [resent, setResent] = useState(false);
+    const checkCode = useAtomAction(
+        checkResetCodeCommand,
+        {
+            ...handlers,
+            onFailure: (failed) => {
+                handlers.onFailure(failed);
+                setCode("");
+            },
+            onSuccess: (otp) => goTo(route, "new-password", email, otp),
+        },
+        SILENT
+    );
     const requestReset = useAtomAction(
         requestPasswordResetCommand,
         { ...handlers, onSuccess: () => setResent(true) },
         SILENT
     );
 
-    const submit = () => run(() => resetPassword({ client, email, fetchOptions, otp: code, password }));
-    const resend = () =>
-        run(() => {
-            setResent(false);
-            requestReset({ client, email, fetchOptions });
-        });
-
     return (
-        <FirstRun
-            action={{ disabled: busy || !ready, label: t("auth.email.reset.action"), onPress: submit }}
-            body={t("auth.email.reset.body", { email })}
-            error={error}
-            eyebrow={t("auth.email.email")}
-            footnote={resent ? t("auth.email.resent") : undefined}
-            skip={{ label: t("auth.email.resend"), onPress: resend }}
-            title={t("auth.email.forgot.title")}
-        >
-            <Fields>
-                <CodeField onChange={setCode} value={code} />
-                <NewPasswordField label={t("auth.email.newPassword")} onChangeText={setPassword} value={password} />
-            </Fields>
-        </FirstRun>
+        <StepLayout body={t("auth.email.verify.body", { email })} title={t("auth.email.verify.title")}>
+            <CodeEntry
+                busy={busy}
+                code={code}
+                error={error}
+                onChange={setCode}
+                onComplete={(otp) => run("code", () => checkCode({ client, email, fetchOptions, otp }))}
+                onResend={() =>
+                    run("resend", () => {
+                        setResent(false);
+                        requestReset({ client, email, fetchOptions });
+                    })
+                }
+                resent={resent}
+            />
+        </StepLayout>
     );
 }
 
-function Fields({ children }: { children: ReactNode }) {
+/** The reset itself opens no session, so the new password signs in straight after. */
+function NewPasswordStep({ client, email, otp }: Flow & { otp: string }) {
+    const t = useTranslation();
+    const fetchOptions = useFetchOptions();
+    const { busy, error, handlers, run } = useRequest<"reset">();
+    const [password, setPassword] = useState("");
+    const resetPassword = useAtomAction(resetPasswordCommand, handlers, SILENT);
+
+    const ready = password.length >= MIN_PASSWORD_LENGTH;
+    const submit = () => run("reset", () => resetPassword({ client, email, fetchOptions, otp, password }));
+
+    return (
+        <StepLayout lead={<Who email={email} />} title={t("auth.email.newPassword.title")}>
+            <NewPasswordField
+                errorMessage={error ?? undefined}
+                label={t("auth.email.newPassword")}
+                onChangeText={setPassword}
+                onSubmitEditing={ready ? submit : undefined}
+                value={password}
+            />
+            <Action
+                busy={busy === "reset"}
+                busyLabel="auth.signIn.pending"
+                disabled={!ready}
+                label={t("auth.email.reset.action")}
+                onPress={submit}
+            />
+        </StepLayout>
+    );
+}
+
+function StepLayout({
+    title,
+    body,
+    lead,
+    children,
+}: {
+    title: string;
+    body?: string;
+    lead?: ReactNode;
+    children: ReactNode;
+}) {
     return (
         <ScrollView
             className="flex-1"
-            contentContainerClassName="gap-4 pt-7"
+            contentContainerClassName="pt-safe-offset-14 android:pt-safe-offset-19 pb-safe-offset-5 px-6"
             keyboardDismissMode="interactive"
             keyboardShouldPersistTaps="handled"
         >
-            {children}
+            <Text className="font-sans-semibold text-fr-ink text-[28px] leading-[33px] tracking-[-0.5px]">{title}</Text>
+            {body ? <Text className="text-fr-muted text-subtitle pt-2 leading-snug">{body}</Text> : null}
+            {lead}
+            <View className="gap-4 pt-6">{children}</View>
         </ScrollView>
     );
 }
 
-type FieldProps = ComponentProps<typeof TextInput> & { hint?: string; label: string };
-
-function Field({ hint, label, secureTextEntry, ...input }: FieldProps) {
+function Who({ email, onChange }: { email: string; onChange?: () => void }) {
     const t = useTranslation();
-    const [focused, setFocused] = useState(false);
+    return (
+        <View className="flex-row items-center gap-2 pt-2">
+            <Text className="text-fr-muted text-subtitle shrink" numberOfLines={1}>
+                {email}
+            </Text>
+            {onChange ? (
+                <Pressable accessibilityRole="button" hitSlop={12} onPress={onChange}>
+                    <Text className="font-sans-semibold text-fr-ink text-subtitle">{t("auth.email.change")}</Text>
+                </Pressable>
+            ) : null}
+        </View>
+    );
+}
+
+function Link({ label, onPress, disabled }: { label: string; onPress: () => void; disabled?: boolean }) {
+    return (
+        <Pressable
+            accessibilityRole="button"
+            className="self-start disabled:opacity-50"
+            disabled={disabled}
+            hitSlop={12}
+            onPress={onPress}
+        >
+            <Text className="font-sans-semibold text-fr-ink text-subtitle">{label}</Text>
+        </Pressable>
+    );
+}
+
+function Action({
+    label,
+    onPress,
+    disabled = false,
+    busy = false,
+    busyLabel,
+}: {
+    label: string;
+    onPress: () => void;
+    disabled?: boolean;
+    busy?: boolean;
+    busyLabel?: TranslationKey;
+}) {
+    const t = useTranslation();
+    const colors = useColors();
+    const slow = useLongWait(busy);
+    return (
+        <Button
+            className="bg-fr-ink border-fr-ink min-h-13 rounded-full"
+            disabled={disabled || busy}
+            fullWidth
+            labelClassName="font-sans-semibold text-body text-fr-ground"
+            onPress={onPress}
+            size="lg"
+        >
+            {slow && busyLabel ? (
+                <BusyText className="font-sans-semibold text-body" color={colors.background}>
+                    {t(busyLabel)}
+                </BusyText>
+            ) : (
+                label
+            )}
+        </Button>
+    );
+}
+
+function TextField({ className, ...input }: InputProps) {
+    const colors = useColors();
+    return (
+        <Input
+            autoCapitalize="none"
+            autoCorrect={false}
+            className={`bg-fr-card text-fr-ink rounded-2xl font-sans ${className ?? ""}`}
+            containerClassName="gap-2"
+            selectionColor={colors.foreground}
+            size="xl"
+            {...input}
+        />
+    );
+}
+
+function PasswordField({ label, ...input }: InputProps & { label: string }) {
+    const t = useTranslation();
     const [revealed, setRevealed] = useState(false);
-    // SAFETY: both names are declared in global.css, so each slot resolves.
-    const [ink, muted] = useCSSVariable(["--fr-ink", "--fr-muted"]) as string[];
-
+    const colors = useColors();
     return (
-        <View className="gap-2">
-            <MonoLabel className="text-fr-muted">{label}</MonoLabel>
-            <View
-                className={cn(
-                    "bg-fr-card h-13 flex-row items-center gap-3 rounded-[14px] border px-4",
-                    focused ? "border-fr-ink" : "border-fr-rule"
-                )}
-            >
-                <TextInput
-                    accessibilityLabel={label}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    className="text-callout text-fr-ink flex-1 font-sans"
-                    onBlur={() => setFocused(false)}
-                    onFocus={() => setFocused(true)}
-                    secureTextEntry={secureTextEntry && !revealed}
-                    selectionColor={ink}
-                    {...input}
-                />
-                {secureTextEntry ? (
-                    <Pressable
-                        accessibilityLabel={t(revealed ? "auth.email.hidePassword" : "auth.email.showPassword")}
-                        accessibilityRole="button"
-                        hitSlop={12}
-                        onPress={() => setRevealed(!revealed)}
-                    >
-                        <HugeiconsIcon
-                            color={muted}
-                            icon={revealed ? ViewOffSlashIcon : ViewIcon}
-                            size={20}
-                            strokeWidth={1.7}
-                        />
-                    </Pressable>
-                ) : null}
-            </View>
-            {hint ? <Text className="text-fr-muted text-footnote">{hint}</Text> : null}
-        </View>
-    );
-}
-
-function EmailField(props: Omit<FieldProps, "label">) {
-    const t = useTranslation();
-    return (
-        <Field
-            autoComplete="email"
-            keyboardType="email-address"
-            label={t("auth.email.email")}
-            textContentType="emailAddress"
-            {...props}
+        <TextField
+            accessibilityLabel={label}
+            endContent={
+                <Pressable
+                    accessibilityLabel={t(revealed ? "auth.email.hidePassword" : "auth.email.showPassword")}
+                    accessibilityRole="button"
+                    hitSlop={12}
+                    onPress={() => setRevealed(!revealed)}
+                >
+                    <HugeiconsIcon
+                        color={colors.muted}
+                        icon={revealed ? ViewOffSlashIcon : ViewIcon}
+                        size={22}
+                        strokeWidth={1.7}
+                    />
+                </Pressable>
+            }
+            secureTextEntry={!revealed}
+            {...input}
         />
     );
 }
 
-function NewPasswordField(props: Omit<FieldProps, "label"> & { label?: string }) {
+function NewPasswordField({ label, ...input }: InputProps & { label?: string }) {
     const t = useTranslation();
     return (
-        <Field
+        <PasswordField
             autoComplete="new-password"
-            hint={t("auth.email.passwordHint")}
-            label={t("auth.email.password")}
-            secureTextEntry
+            autoFocus
+            description={t("auth.email.passwordHint")}
+            label={label ?? t("auth.email.password")}
+            returnKeyType="go"
             textContentType="newPassword"
-            {...props}
+            {...input}
         />
     );
 }
 
-/** Transparent text, not zero opacity: keeps paste, one-time-code autofill and VoiceOver working. */
-function CodeField({ onChange, value }: { onChange: (code: string) => void; value: string }) {
+function CodeEntry({
+    code,
+    onChange,
+    onComplete,
+    onResend,
+    busy,
+    error,
+    resent,
+}: {
+    code: string;
+    onChange: (code: string) => void;
+    onComplete: (code: string) => void;
+    onResend: () => void;
+    busy: "code" | "resend" | null;
+    error: string | null;
+    resent: boolean;
+}) {
     const t = useTranslation();
+    const colors = useColors();
+    const checking = useLongWait(busy === "code");
     return (
-        <View className="gap-2">
-            <MonoLabel className="text-fr-muted">{t("auth.email.code")}</MonoLabel>
-            <View>
-                <View className="flex-row gap-2" pointerEvents="none">
-                    {CODE_SLOTS.map((slot) => (
-                        <View
-                            className={cn(
-                                "bg-fr-card h-15 flex-1 items-center justify-center rounded-[14px] border",
-                                slot === value.length ? "border-fr-ink" : "border-fr-rule"
-                            )}
-                            key={slot}
-                        >
-                            <Text className="font-mono-medium text-fr-ink text-[26px]">{value[slot] ?? ""}</Text>
-                        </View>
-                    ))}
-                </View>
-                <TextInput
-                    accessibilityLabel={t("auth.email.code")}
-                    autoComplete="one-time-code"
-                    autoFocus
-                    caretHidden
-                    className="absolute inset-0 text-transparent"
-                    keyboardType="number-pad"
-                    maxLength={CODE_LENGTH}
-                    onChangeText={(text) => onChange(text.replaceAll(NON_DIGITS, "").slice(0, CODE_LENGTH))}
-                    selectionColor="transparent"
-                    textContentType="oneTimeCode"
-                    value={value}
-                />
-            </View>
-        </View>
+        <>
+            <OtpInput
+                accessibilityLabel={t("auth.email.code")}
+                autoComplete="one-time-code"
+                autoFocus
+                cellClassName="bg-fr-card h-16 w-[46px] rounded-[14px]"
+                errorMessage={error ?? undefined}
+                length={CODE_LENGTH}
+                onChangeText={(next) => busy !== "code" && onChange(next)}
+                onComplete={onComplete}
+                selectionColor="transparent"
+                style={{ color: "transparent", opacity: 1 }}
+                value={code}
+            />
+            {checking ? (
+                <BusyText className="text-subtitle" color={colors.muted}>
+                    {t("auth.email.checking")}
+                </BusyText>
+            ) : (
+                <Link disabled={busy !== null} label={t("auth.email.resend")} onPress={onResend} />
+            )}
+            {resent ? <Text className="text-fr-muted text-footnote">{t("auth.email.resent")}</Text> : null}
+        </>
     );
 }
