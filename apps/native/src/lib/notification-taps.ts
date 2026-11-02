@@ -8,6 +8,7 @@ import { cardStillAsks, drainPendingWrites, fileWaitingPurchases, pendingWriteTx
 import { backfillRecurring } from "@/data/recurrence-backfill";
 import { getTransactionById } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
+import { paywallHref } from "@/domain/paywall-trigger";
 
 import { warnAndContinue } from "./warn-and-continue";
 import { claimPendingWrites, releasePendingWrites } from "./widget-bridge";
@@ -70,7 +71,7 @@ export const resolveReminderTap = Effect.fn("NotificationTaps.resolveReminder")(
     } else if (tap.open === "recap") {
         target = { params: { month: tap.month }, pathname: "/recap" };
     } else if (tap.open === "pro") {
-        target = "/paywall";
+        target = paywallHref("trial_reminder");
     } else if (tap.open === "create") {
         target = tap.date === undefined ? "/transactions/create" : `/transactions/create?date=${tap.date}`;
     }

@@ -63,11 +63,19 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "With Pro, import from your Notion databases. We keep Notion's access key encrypted until you disconnect it or delete your account.",
                     label: "Connecting Notion",
                 },
+                {
+                    detail: "With Share analytics on: budgets created, cards shared, imports, exports, setting changes and links that open the app. Never amounts, names or notes.",
+                    label: "Which features you use",
+                },
             ],
             es: [
                 {
                     detail: "Con Pro, importa desde tus bases de datos de Notion. Guardamos cifrada la clave de acceso de Notion hasta que la desconectes o elimines tu cuenta.",
                     label: "Conectar Notion",
+                },
+                {
+                    detail: "Con Compartir analíticas activado: presupuestos creados, tarjetas compartidas, importaciones, exportaciones, cambios de ajustes y enlaces que abren la app. Nunca montos, nombres ni notas.",
+                    label: "Qué funciones usas",
                 },
             ],
             fr: [
@@ -75,11 +83,19 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Avec Pro, importez depuis vos bases de données Notion. Nous gardons la clé d'accès de Notion chiffrée jusqu'à ce que vous la déconnectiez ou supprimiez votre compte.",
                     label: "Connexion à Notion",
                 },
+                {
+                    detail: "Avec Partager les données d'analyse activé : budgets créés, cartes partagées, imports, exports, réglages modifiés et liens qui ouvrent l'app. Jamais de montants, de noms ni de notes.",
+                    label: "Les fonctions que vous utilisez",
+                },
             ],
             pt: [
                 {
                     detail: "Com o Pro, importe das suas bases de dados do Notion. Guardamos a chave de acesso do Notion cifrada até você desconectar ou excluir a sua conta.",
                     label: "Conectar o Notion",
+                },
+                {
+                    detail: "Com Compartilhar análises ativado: orçamentos criados, cartões compartilhados, importações, exportações, mudanças de ajustes e links que abrem o app. Nunca valores, nomes ou notas.",
+                    label: "Quais recursos você usa",
                 },
             ],
         },

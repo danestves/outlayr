@@ -91,6 +91,15 @@ export function resolveDeepLink(raw: string): string | null {
     return `${ID_HOST_SECTION.get(key) ?? base}${query}`;
 }
 
+export function deepLinkTarget(raw: string): string | null {
+    const [host, ...rest] = parts(raw).segments;
+    const key = host?.toLowerCase();
+    if (key === undefined) {
+        return null;
+    }
+    return HOSTS.has(key) || (rest.length === 0 && LEGACY_HOSTS.has(key)) ? key : null;
+}
+
 /**
  * expo-router never empties expo-linking's launch-URL registry (`expo-router/build/global-state/useStore.js:47`),
  * so without the drain a dev reload lands back on the launch destination.

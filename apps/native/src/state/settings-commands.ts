@@ -1,13 +1,21 @@
+import * as Effect from "effect/Effect";
+
 import { toggleFavouriteCurrency } from "@/data/favourite-currencies-core";
 import { saveAiConsent, setBoolSetting, setCurrency, setNumberSetting } from "@/data/settings-core";
 import type { BoolSettingKey, NumberSettingKey } from "@/data/settings-core";
 import type { Database } from "@/db/client";
+import { posthog } from "@/lib/posthog";
 
 import { createCommand } from "./atom-command";
 
+const trackSetting = (setting: string, enabled: boolean) =>
+    Effect.tap(() => Effect.sync(() => posthog?.capture("setting_changed", { enabled, setting })));
+
 export const setBoolSettingCommand = createCommand({
     execute: (input: { db: Database; key: BoolSettingKey; value: boolean }) =>
-        setBoolSetting(input.db, input.key, input.value),
+        input.key === "shareAnalytics"
+            ? setBoolSetting(input.db, input.key, input.value)
+            : setBoolSetting(input.db, input.key, input.value).pipe(trackSetting(input.key, input.value)),
     label: "settings:set-bool",
 });
 
@@ -18,7 +26,8 @@ export const setNumberSettingCommand = createCommand({
 });
 
 export const saveAiConsentCommand = createCommand({
-    execute: (input: { allowed: boolean; db: Database }) => saveAiConsent(input.db, input.allowed),
+    execute: (input: { allowed: boolean; db: Database }) =>
+        saveAiConsent(input.db, input.allowed).pipe(trackSetting("aiConsent", input.allowed)),
     label: "settings:save-ai-consent",
 });
 

@@ -2,19 +2,25 @@ import { clearInitialURL } from "expo-linking";
 
 import { IMPORT_PATHS } from "@/domain/import-paths";
 import { backupHandover } from "@/lib/backup-handover";
-import { redirectLaunchPath } from "@/lib/deep-links";
+import { deepLinkTarget, redirectLaunchPath } from "@/lib/deep-links";
 import { moneyManagerSession } from "@/lib/money-manager-session";
+import { posthog } from "@/lib/posthog";
 
 // Every link from outside the bundle (widgets, App Intents, Siri, quick actions, opened files) passes through here.
 export function redirectSystemPath(event: { path: string | null; initial: boolean }) {
     const handover = event.path === null ? null : backupHandover(event.path);
     if (handover !== null) {
+        posthog?.capture("app_link_opened", { cold_start: event.initial, target: "backup_file" });
         if (event.initial) {
             drainLaunchURL();
         }
         // During the first run the guard sends this to the cover, which picks the backup up from the session.
         moneyManagerSession.handOver(handover);
         return IMPORT_PATHS.ledger.open;
+    }
+    const target = event.path === null ? null : deepLinkTarget(event.path);
+    if (target !== null) {
+        posthog?.capture("app_link_opened", { cold_start: event.initial, target });
     }
     return redirectLaunchPath(event, drainLaunchURL);
 }

@@ -22,12 +22,16 @@ import type { SavingsGoalPatch } from "@/data/savings-goals-core";
 import type { Database } from "@/db/client";
 import { comesFromPerson } from "@/domain/debt-choices";
 import type { DebtVerb } from "@/domain/debts";
+import { posthog } from "@/lib/posthog";
 import { appRuntime } from "@/lib/runtime";
 
 import { createRuntimeCommand } from "./atom-command";
 
 const planningCommand = <W, A, E>(label: string, execute: (input: W) => Effect.Effect<A, E>) =>
     createRuntimeCommand(appRuntime, { execute, label: `planning:${label}` });
+
+const trackBudgetCreated = (kind: "category" | "overall") =>
+    Effect.tap(() => Effect.sync(() => posthog?.capture("budget_created", { kind })));
 
 export interface DebtDraft {
     account: Account | null;
@@ -127,12 +131,21 @@ export const removeSavingsGoalCommand = planningCommand("remove-goal", (input: {
 
 export const createMainBudgetCommand = planningCommand(
     "create-main-budget",
-    (input: { db: Database; input: CreateMainBudgetInput }) => budgetsRepo.createMainBudget(input.db, input.input)
+    (input: { db: Database; input: CreateMainBudgetInput }) =>
+        Effect.gen(function* createOverallBudget() {
+            const existed = yield* budgetsRepo.hasMainBudget(input.db);
+            const id = yield* budgetsRepo.createMainBudget(input.db, input.input);
+            if (!existed) {
+                posthog?.capture("budget_created", { kind: "overall" });
+            }
+            return id;
+        })
 );
 
 export const createBudgetCommand = planningCommand(
     "create-budget",
-    (input: { db: Database; input: CreateBudgetInput }) => budgetsRepo.createBudget(input.db, input.input)
+    (input: { db: Database; input: CreateBudgetInput }) =>
+        budgetsRepo.createBudget(input.db, input.input).pipe(trackBudgetCreated("category"))
 );
 
 export const patchBudgetCommand = planningCommand(

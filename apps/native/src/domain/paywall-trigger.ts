@@ -14,6 +14,7 @@ export const PaywallTrigger = Schema.Literals([
     "people",
     "settings",
     "sync",
+    "trial_reminder",
     "unknown",
     "usage",
 ]);
