@@ -13,6 +13,7 @@ import type { OxlintOverride } from "vite-plus/lint";
 const projectIgnores = [
     ".impeccable",
     "apps/screenshots/*",
+    "apps/web/src/stageshow",
     "!apps/screenshots/scripts",
     "**/.expo",
     "**/.vscode",
@@ -202,6 +203,12 @@ export default defineConfig({
                 files: ["apps/native/src/app/**"],
                 rules: {
                     "unicorn/filename-case": "off",
+                },
+            },
+            {
+                files: ["apps/web/src/components/home/films/**"],
+                rules: {
+                    "tailwindcss/no-unknown-classes": "off",
                 },
             },
             {

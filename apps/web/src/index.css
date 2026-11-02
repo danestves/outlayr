@@ -274,10 +274,6 @@
         font-size: 3.6cqi;
     }
 
-    .ui-sm {
-        font-size: 3.3cqi;
-    }
-
     @media (max-width: 40rem) {
         .ui {
             font-size: 3.8cqi;
@@ -285,10 +281,6 @@
 
         .ui-lg {
             font-size: 4.4cqi;
-        }
-
-        .ui-sm {
-            font-size: 3.3cqi;
         }
     }
 

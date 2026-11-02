@@ -5,14 +5,13 @@ import { Icon } from "@/components/icon";
 import type { IconName } from "@/components/icon";
 import { CONTAINER } from "@/lib/layout";
 
-import { Film } from "./media";
+import { CaptureFilm } from "./films/capture";
+import { FilmFrame } from "./films/frame";
+import { MonthFilm } from "./films/month";
+import { SortedFilm } from "./films/sorted";
 import { HEADING, LABEL } from "./problem";
 
-const FILMS = [
-    { aspect: "aspect-[16/10]", name: "capture" },
-    { aspect: "aspect-square", name: "sorted" },
-    { aspect: "aspect-square", name: "month" },
-] as const;
+const FILMS = [CaptureFilm, SortedFilm, MonthFilm] as const;
 const WAYS: IconName[] = ["text-aa", "microphone", "receipt", "file-csv"];
 
 export function HowItWorks() {
@@ -64,11 +63,9 @@ export function HowItWorks() {
                         </div>
                         <div className="lg:col-span-7" data-reveal>
                             <div className="bg-surface overflow-hidden rounded-3xl">
-                                <Film
-                                    aspect={FILMS[index]?.aspect}
-                                    label={step.film.value}
-                                    name={FILMS[index]?.name ?? "capture"}
-                                />
+                                <FilmFrame label={step.film.value}>
+                                    <Scene film={FILMS[index]} />
+                                </FilmFrame>
                             </div>
                         </div>
                     </li>
@@ -80,4 +77,8 @@ export function HowItWorks() {
             </div>
         </section>
     );
+}
+
+function Scene({ film: Film }: { film: (typeof FILMS)[number] | undefined }) {
+    return Film === undefined ? null : <Film />;
 }
