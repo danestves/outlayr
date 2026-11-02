@@ -38,6 +38,9 @@ export const StepDate: typeof StepDateBase = ({ date, onChange, withTime = false
                     initialDate={initialDay}
                     // Also fires once on mount with the initial day, which is not a change.
                     onDateSelected={(picked) => {
+                        if (picked === null) {
+                            return;
+                        }
                         const next = onUtcPickerDay(picked, date);
                         if (next.getTime() !== date.getTime()) {
                             onChange(next);
