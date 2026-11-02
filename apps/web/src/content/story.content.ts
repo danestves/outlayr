@@ -51,8 +51,8 @@ const story = {
                 },
                 {
                     body: t({
-                        en: "Budgets tell you in plain words where this pace ends, and Insights shows what changed since last week.",
-                        es: "Tus presupuestos te dicen en palabras simples a dónde te lleva este ritmo, y Estadísticas te muestra qué cambió desde la semana pasada.",
+                        en: "Budgets tell you in plain words where this pace ends, and Insights tells you whether you are spending faster or slower than usual.",
+                        es: "Tus presupuestos te dicen en palabras simples a dónde te lleva este ritmo, y Estadísticas te dice si estás gastando más rápido o más lento de lo normal.",
                     }),
                     film: t({
                         en: "The week fills in day by day, with the categories that moved most.",

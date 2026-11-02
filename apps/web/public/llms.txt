@@ -17,7 +17,7 @@ Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr
 - Installment purchases from buy now, pay later apps such as Cashea and Klarna: the upfront and each cuota, a reminder the day before each one is due, and late fees. An order already in progress can be read from a screenshot of its payment plan.
 - 165 currencies. Totals convert to your main currency at the rate from the day each purchase happened.
 - Subscriptions and paychecks log themselves on their day, with an optional reminder before each charge.
-- Insights: spending by day and by category, income against spending, and net worth over time. The month can start on payday.
+- Insights: opens with a plain sentence on whether you are spending faster or slower than usual, with the pace chart and a few cards behind it. Spending by day and by category, income against spending, and net worth over time are one tap down. The month can start on payday.
 - App lock with Face ID or Touch ID on iPhone, or a fingerprint or face on Android.
 - On iPhone: Home Screen and Lock Screen widgets, Spotlight search, and Apple Pay logging through a Shortcuts automation.
 - CSV export and full archive export.

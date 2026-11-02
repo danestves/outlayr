@@ -22,7 +22,7 @@ so two builds are compared on the same taps and the same data.
   - `perf-search`: Search, then "carrefour" one key per step, one result list per keystroke.
   - `perf-accounts`: Settings, then the Accounts list. It only mounts the screen; it does not
     write while Accounts is open.
-  - `perf-insights`: Insights on Year, then the Healthcare category (250 entries on the seed).
+  - `perf-insights`: Insights on Year, then All categories and the Healthcare category (250 entries on the seed).
   - `perf-category-step`: the entry form's Category step, which mounts every category pill.
   - `perf-currency-search`: the entry form's currency picker, then "euro" in its search.
   - `perf-log-deep-write`: a 12.50 entry dated yesterday, after its setup flings 90 times down

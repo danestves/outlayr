@@ -11,6 +11,7 @@ export default function InsightsLayout() {
         <TabPauseProvider>
             <Stack screenOptions={appBar}>
                 <Stack.Screen name="index" options={{ title: t("insights.title") }} />
+                <Stack.Screen name="breakdown" options={{ title: t("insights.breakdown.title") }} />
                 <Stack.Screen name="cash-flow" />
             </Stack>
         </TabPauseProvider>
