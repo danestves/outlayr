@@ -1,5 +1,3 @@
-import type { ExpenseContribution } from "@outlayr/money/budget-spent";
-import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import { Pressable, View } from "react-native";
 import type { ViewStyle } from "react-native";
 import Svg, { Path } from "react-native-svg";
@@ -11,82 +9,21 @@ import { useTranslation } from "@/i18n/context";
 import { MARK_CEILING } from "@/theme/empty-state-ink";
 import { useColors } from "@/theme/use-colors";
 
-import { BudgetLimitBody } from "./budget-limit-body";
-import type { LimitCommit } from "./budget-limit-body";
-
-interface BudgetEmptyStateProps {
-    calendar: { firstDayOfMonth: number; firstWeekday: number };
-    contributions: readonly ExpenseContribution[];
-    currency: string;
-    nowMs: number;
-    /** Goals live below the budgets, and this takeover renders instead of them. */
-    onAddGoal: () => void;
-    onAddTransaction: () => void;
-    onCommit: (commit: LimitCommit) => void;
-}
-
-export function BudgetEmptyState({
-    contributions,
-    currency,
-    nowMs,
-    calendar,
-    onAddGoal,
-    onAddTransaction,
-    onCommit,
-}: BudgetEmptyStateProps) {
-    const t = useTranslation();
-
-    if (contributions.length === 0) {
-        return <NothingToBudget onAddGoal={onAddGoal} onAddTransaction={onAddTransaction} />;
-    }
-
-    return (
-        <>
-            <BudgetLimitBody
-                calendar={calendar}
-                contributions={contributions}
-                currency={currency}
-                nowMs={nowMs}
-                onCommit={onCommit}
-                periodChoice={false}
-                target={{
-                    categoryId: null,
-                    limit: null,
-                    name: t("budgets.scope.everything").toLocaleLowerCase(),
-                    type: BUDGET_TYPE.month,
-                }}
-            />
-            <GoalWayOut onPress={onAddGoal} />
-        </>
-    );
-}
-
-function GoalWayOut({ onPress }: { onPress: () => void }) {
-    const t = useTranslation();
-    return (
-        <Pressable accessibilityRole="button" className="items-center px-5 pt-4 active:opacity-60" onPress={onPress}>
-            <Text className="text-tint text-subtitle">{t("goals.add")}</Text>
-        </Pressable>
-    );
-}
-
-function NothingToBudget({ onAddGoal, onAddTransaction }: { onAddGoal: () => void; onAddTransaction: () => void }) {
+/** Shown while there is no expense to set a limit against. */
+export function BudgetEmptyState({ onAddTransaction }: { onAddTransaction: () => void }) {
     const t = useTranslation();
     return (
         <EmptyState
             action={
-                <View className="items-center gap-1">
-                    <Pressable
-                        accessibilityRole="button"
-                        className="bg-accent rounded-full px-7 py-3.5 active:opacity-80"
-                        onPress={onAddTransaction}
-                    >
-                        <Text className="font-sans-semibold text-accent-foreground text-body">
-                            {t("budgets.empty.action")}
-                        </Text>
-                    </Pressable>
-                    <GoalWayOut onPress={onAddGoal} />
-                </View>
+                <Pressable
+                    accessibilityRole="button"
+                    className="bg-accent rounded-full px-7 py-3.5 active:opacity-80"
+                    onPress={onAddTransaction}
+                >
+                    <Text className="font-sans-semibold text-accent-foreground text-body">
+                        {t("budgets.empty.action")}
+                    </Text>
+                </Pressable>
             }
             body={t("budgets.empty.body")}
             mark={<PlotUnset />}

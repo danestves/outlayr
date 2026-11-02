@@ -83,7 +83,7 @@ function OverLimitCard({ card, context, money, name }: CardProps<Extract<AnswerC
             evidence={evidence}
             kicker={t("insights.answers.limit.kicker", { name })}
             kickerClass="text-danger"
-            onSee={budgetId ? () => router.push(`/budgets/${budgetId}`) : undefined}
+            onSee={budgetId ? () => router.push(`/balances/${budgetId}`) : undefined}
             seeLabel={t("insights.answers.see", { name })}
             title={t("insights.answers.limit.title", { limit: money.exact(card.limit), name })}
         >
