@@ -9,6 +9,7 @@ import { buildBurndown } from "./budget-burndown";
 import { budgetPace, daysLeftInWindow, hoursLeftInDay } from "./budget-math";
 import { nextClockTick } from "./clock";
 import { formatDayHeader } from "./dates";
+import { cumulativeByDay, periodProgress } from "./insights-answers";
 import { generateSchedule } from "./installments";
 import { daysBetween, localDayKey } from "./local-day";
 import { loggedDays } from "./month-days";
@@ -100,6 +101,24 @@ async function answer(): Promise<string> {
                     projected: buildBurndown(rowsInside, options).projectedBalance,
                     spent: perDay.map((amount) => (sum += amount)),
                 },
+            });
+        }
+        case "answers-pace": {
+            const window = { end: localDate(5), start: localDate(0) };
+            const now = localDate(10);
+            const rows = [0, 1, 2, 3, 12, 23].flatMap((hour) =>
+                [0, 1, 2, 29, 30].map((day) => ({
+                    amount: 1,
+                    categoryId: null,
+                    date: new Date(window.start.getFullYear(), window.start.getMonth(), day + 1, hour, 30),
+                    parentId: null,
+                }))
+            );
+            const progress = periodProgress(window, now, false);
+            return JSON.stringify({
+                cumulative: cumulativeByDay(rows, progress),
+                days: progress.days,
+                elapsed: progress.elapsed,
             });
         }
         case "balance-series": {
