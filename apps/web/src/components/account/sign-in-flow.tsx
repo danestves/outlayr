@@ -2,8 +2,7 @@ import * as Effect from "effect/Effect";
 import { useState } from "react";
 import type { FormEvent } from "react";
 
-import { authRequest, failureMessage } from "@/lib/account";
-import type { AuthFailure } from "@/lib/account";
+import { AuthFailure, authRequest, failureMessage } from "@/lib/account";
 import { authClient } from "@/lib/auth-client";
 
 import { LocalizedLink } from "../localized-link";
@@ -11,8 +10,9 @@ import { CODE_LENGTH, CodeField, ErrorLine, Field, LINE_PILL, Muted, Screen, SOL
 import { AppleGlyph, GoogleGlyph } from "./provider-icons";
 
 const MIN_PASSWORD_LENGTH = 8;
+const LONG_WAIT = "2 seconds";
 
-type Step = "create" | "forgot" | "reset" | "sign-in" | "verify";
+type Step = "create" | "reset" | "sign-in" | "verify";
 
 export function SignInFlow({ onDone, target }: { onDone: () => void; target: string }) {
     const [step, setStep] = useState<Step>("sign-in");
@@ -22,6 +22,7 @@ export function SignInFlow({ onDone, target }: { onDone: () => void; target: str
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [resent, setResent] = useState(false);
+    const [sendingCode, setSendingCode] = useState(false);
 
     const go = (next: Step) => {
         setError(null);
@@ -88,15 +89,17 @@ export function SignInFlow({ onDone, target }: { onDone: () => void; target: str
             })
         );
 
-    const requestReset = (event: FormEvent) => {
-        event.preventDefault();
+    const requestReset = () =>
         run(
             Effect.gen(function* requestResetProgram() {
+                if (!email) {
+                    return yield* new AuthFailure({ code: "INVALID_EMAIL" });
+                }
+                yield* Effect.forkScoped(Effect.sync(() => setSendingCode(true)).pipe(Effect.delay(LONG_WAIT)));
                 yield* authRequest(() => authClient.emailOtp.requestPasswordReset({ email }));
                 go("reset");
-            })
+            }).pipe(Effect.scoped, Effect.ensuring(Effect.sync(() => setSendingCode(false))))
         );
-    };
 
     const resendReset = () =>
         run(
@@ -186,29 +189,6 @@ export function SignInFlow({ onDone, target }: { onDone: () => void; target: str
         );
     }
 
-    if (step === "forgot") {
-        return (
-            <Screen title="Reset your password">
-                <Muted>We&apos;ll email you a code to set a new one.</Muted>
-                <form onSubmit={requestReset}>
-                    <Field
-                        autoComplete="email"
-                        label="Email"
-                        onChange={(event) => setEmail(event.target.value.trim())}
-                        value={email}
-                    />
-                    <ErrorLine message={error} />
-                    <button className={SOLID_PILL} disabled={busy || !email} type="submit">
-                        Send code
-                    </button>
-                </form>
-                <button className={`${TEXT_BUTTON} mt-2`} onClick={() => go("sign-in")} type="button">
-                    Back to sign in
-                </button>
-            </Screen>
-        );
-    }
-
     if (step === "reset") {
         return (
             <Screen title="Reset your password">
@@ -274,12 +254,16 @@ export function SignInFlow({ onDone, target }: { onDone: () => void; target: str
                 </button>
             </form>
             <div className="mt-2 flex justify-center gap-2">
-                <button className={TEXT_BUTTON} onClick={() => go("create")} type="button">
+                <button className={TEXT_BUTTON} disabled={busy} onClick={() => go("create")} type="button">
                     Create account
                 </button>
-                <button className={TEXT_BUTTON} onClick={() => go("forgot")} type="button">
-                    Forgot password?
-                </button>
+                {sendingCode ? (
+                    <output className="text-app-muted px-2 py-2 text-sm">Sending code…</output>
+                ) : (
+                    <button className={TEXT_BUTTON} disabled={busy} onClick={requestReset} type="button">
+                        Forgot password?
+                    </button>
+                )}
             </div>
             <p className="text-app-muted mt-4 text-xs">
                 By continuing you accept the{" "}
