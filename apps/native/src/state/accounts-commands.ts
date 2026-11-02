@@ -2,7 +2,8 @@ import * as Effect from "effect/Effect";
 
 import { openingForBalance } from "@/data/accounts";
 import { accountsRepo } from "@/data/accounts-core";
-import type { AccountInput } from "@/data/accounts-core";
+import type { Account, AccountInput } from "@/data/accounts-core";
+import { transactionsRepo } from "@/data/transactions-core";
 import { transfersRepo } from "@/data/transfers-core";
 import type { TransferInput } from "@/data/transfers-core";
 import type { Database } from "@/db/client";
@@ -58,6 +59,38 @@ export const saveTransferCommand = accountsCommand(
         }
         yield* transfersRepo.update(input.db, input.id, input.input);
         return input.id;
+    })
+);
+
+interface BalanceCheck {
+    account: Pick<Account, "currency" | "id">;
+    db: Database;
+    entry: { amount: number; income: boolean } | null;
+    note: string;
+}
+
+export const checkBalanceCommand = accountsCommand(
+    "check-balance",
+    Effect.fn("Accounts.checkBalance")(function* checkBalance({ account, db, entry, note }: BalanceCheck) {
+        const now = new Date();
+        if (entry === null) {
+            yield* accountsRepo.markChecked(db, account.id, now);
+            return;
+        }
+        yield* transactionsRepo.create(
+            db,
+            {
+                accountId: account.id,
+                amount: entry.amount,
+                categoryId: null,
+                currency: account.currency,
+                date: now,
+                details: null,
+                income: entry.income,
+                note,
+            },
+            { inSameTransaction: () => accountsRepo.markChecked(db, account.id, now) }
+        );
     })
 );
 

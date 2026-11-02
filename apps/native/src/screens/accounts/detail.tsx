@@ -1,6 +1,8 @@
+import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { SectionList } from "@legendapp/list/section-list";
 import { isPerson, toAccountKind } from "@outlayr/money/account-kind";
 import { Stack, useRouter } from "expo-router";
+import { useRef } from "react";
 import type { ReactNode } from "react";
 import { Alert, View } from "react-native";
 
@@ -36,6 +38,8 @@ import { PersonHero, PersonToolbar } from "@/screens/debts/person-header";
 import { usePayoffPlan } from "@/screens/debts/use-payoff-plan";
 
 import { AccountBalanceChart } from "./components/account-balance-chart";
+import { CheckBalanceCard } from "./components/check-balance-card";
+import { CheckBalanceSheet } from "./components/check-balance-sheet";
 import { InstallmentSections } from "./components/installment-sections";
 import { LiabilityToolbar } from "./components/liability-toolbar";
 
@@ -146,6 +150,7 @@ function DetailBody({
     );
     const person = isPerson(account);
     const { pendingId, requestDelete } = useDeferredDelete("row");
+    const checkSheetRef = useRef<BottomSheetModal>(null);
     const moveRows = useOutsideMoveRows(db, person ? account : null, t("debts.field.outside"));
     const liveMoves = moveRows.filter((row) => row.id !== pendingId);
     const rows = mergeByRecency(mergeByRecency(mergeByRecency(transactionRows, transferRows), outsideRows), liveMoves);
@@ -219,6 +224,13 @@ function DetailBody({
                             </View>
                             <Text className="font-sans-medium text-muted text-subtitle">{startedAt}</Text>
                             {summary}
+                            <View className="w-full pt-3">
+                                <CheckBalanceCard
+                                    account={account}
+                                    nowMs={nowMs}
+                                    onCheck={() => checkSheetRef.current?.present()}
+                                />
+                            </View>
                             <AccountBalanceChart account={account} cells={cells} rates={rates} showCents={showCents} />
                             {toAccountKind(account.kind) === "liability" ? (
                                 <InstallmentSections account={account} db={db} nowMs={nowMs} />
@@ -236,6 +248,14 @@ function DetailBody({
                 sections={sections}
                 stickySectionHeadersEnabled={false}
             />
+            {person ? null : (
+                <CheckBalanceSheet
+                    account={account}
+                    balance={balance.total}
+                    onClose={() => checkSheetRef.current?.dismiss()}
+                    ref={checkSheetRef}
+                />
+            )}
         </>
     );
 }
