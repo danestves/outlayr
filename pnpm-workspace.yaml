@@ -55,6 +55,7 @@ patchedDependencies:
     "@tanstack/ai-mcp@1.0.0": patches/@tanstack__ai-mcp@1.0.0.patch
     expo-router@58.0.29: patches/expo-router@58.0.29.patch
     expo-widgets@58.0.26: patches/expo-widgets@58.0.26.patch
+    lru-cache@11.5.3: patches/lru-cache@11.5.3.patch
     number-flow-react-native@0.5.1: patches/number-flow-react-native@0.5.1.patch
     panelui-native@0.116.0: patches/panelui-native@0.116.0.patch
     react-native-nano-icons@1.0.1: patches/react-native-nano-icons@1.0.1.patch
