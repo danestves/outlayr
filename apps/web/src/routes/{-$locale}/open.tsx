@@ -209,7 +209,7 @@ function Months({ stats }: { stats: OpenStats }) {
     ];
     const shown = stats.accounts.months
         .map(({ month }) => month)
-        .filter((month) => [entries, added, proceeds, merged].some((values) => (values.get(month) ?? 0) > 0))
+        .filter((month) => [people, entries, added, proceeds, merged].some((values) => (values.get(month) ?? 0) > 0))
         .toReversed();
     if (shown.length === 0) {
         return null;
