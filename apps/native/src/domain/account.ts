@@ -41,6 +41,7 @@ const EMAIL_FAILURES = new Map<string, TranslationKey>([
     ["INVALID_OTP", "auth.email.error.code"],
     ["OTP_EXPIRED", "auth.email.error.code"],
     ["TOO_MANY_ATTEMPTS", "auth.email.error.attempts"],
+    ["USER_NOT_FOUND", "auth.email.error.code"],
 ]);
 
 const TOO_MANY_REQUESTS = 429;

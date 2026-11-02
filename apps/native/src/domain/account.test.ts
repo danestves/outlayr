@@ -79,6 +79,12 @@ describe("sign-in failure message", () => {
         ).toBe("Enter a valid email.");
     });
 
+    it("reads a reset code checked for an unknown email as a wrong code, so the flow never confirms who has an account", () => {
+        expect(signInFailureMessage({ code: "USER_NOT_FOUND", status: 400 }, t)).toBe(
+            signInFailureMessage({ code: "INVALID_OTP", status: 400 }, t)
+        );
+    });
+
     it("never shows the provider's own wording, which is developer-facing", () => {
         // Verbatim from a simulator with no Apple account signed in.
         const raw =

@@ -101,6 +101,19 @@ export const requestPasswordResetCommand = createRuntimeCommand(appRuntime, {
     label: "auth-flow:request-password-reset",
 });
 
+export const checkResetCodeCommand = createRuntimeCommand(appRuntime, {
+    execute: (input: EmailRequest & { otp: string }) =>
+        request(() =>
+            input.client.emailOtp.checkVerificationOtp({
+                email: input.email,
+                fetchOptions: input.fetchOptions,
+                otp: input.otp,
+                type: "forget-password",
+            })
+        ).pipe(Effect.as(input.otp)),
+    label: "auth-flow:check-reset-code",
+});
+
 export const resetPasswordCommand = createRuntimeCommand(appRuntime, {
     execute: Effect.fn("AuthFlow.resetPassword")(function* resetPassword(
         input: EmailRequest & { otp: string; password: string }
