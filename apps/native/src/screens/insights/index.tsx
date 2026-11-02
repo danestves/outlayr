@@ -13,6 +13,7 @@ import type { InsightsCalendar, InsightsPeriod } from "@/data/insights";
 import { useInsights } from "@/data/use-insights";
 import { useInsightsAnswers } from "@/data/use-insights-answers";
 import { useNow } from "@/data/use-now";
+import { BALANCES_ACCOUNTS } from "@/domain/balances";
 import { monthLongTitle } from "@/domain/dates";
 import type { Answers, HeadlineKind } from "@/domain/insights-answers";
 import { recapRowVisible } from "@/domain/recap-month";
@@ -242,7 +243,7 @@ export function Insights() {
                   {
                       id: "netWorth",
                       label: t("insights.netWorth.heading"),
-                      onPress: () => router.push("/accounts"),
+                      onPress: () => router.navigate(BALANCES_ACCOUNTS),
                       value: money.balance(worth.value),
                   },
               ]
@@ -250,7 +251,7 @@ export function Insights() {
         {
             id: "plan",
             label: t("insights.answers.plan", { year: nextYear }),
-            onPress: () => router.push(`/budgets/plan/${monthKey(nextYear, 0)}`),
+            onPress: () => router.push(`/insights/plan/${monthKey(nextYear, 0)}`),
         },
     ];
 
