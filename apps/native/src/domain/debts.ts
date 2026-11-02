@@ -62,12 +62,17 @@ export function debtsOverview<Row extends DebtsInputRow>(
     }
     youOwe.sort(largestFirst);
     owedToYou.sort(largestFirst);
-    const total = (list: readonly DebtRow<Row>[]) =>
+    const total = (list: readonly DebtRow<Row>[], part: (amount: number) => number) =>
         roundToMinorUnits(
-            list.reduce((sum, row) => sum + row.amount, 0),
+            list.reduce((sum, row) => sum + part(row.amount), 0),
             displayCurrency
         ) || 0;
-    const owedToYouTotal = total(owedToYou);
+    // An overpaid card's credit is owed to you, so neither total goes negative and Have minus Owe stays net worth.
+    const owedToYouTotal =
+        roundToMinorUnits(
+            total(owedToYou, (amount) => amount) + total(youOwe, (amount) => Math.max(-amount, 0)),
+            displayCurrency
+        ) || 0;
     return {
         assetsExact,
         exact,
@@ -76,7 +81,7 @@ export function debtsOverview<Row extends DebtsInputRow>(
         owedToYouTotal,
         settled,
         youOwe,
-        youOweTotal: total(youOwe),
+        youOweTotal: total(youOwe, (amount) => Math.max(amount, 0)),
     };
 }
 
