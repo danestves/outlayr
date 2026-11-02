@@ -35,6 +35,7 @@ export type BoolSettingKey =
     | "budgetViewStyle"
     | "use24HourClock";
 export type NumberSettingKey =
+    | "balancesView"
     | "firstWeekday"
     | "firstDayOfMonth"
     | "numberEntryType"
@@ -58,6 +59,7 @@ export const SETTING_DEFAULTS = {
     aiConsentPlanScan: false,
     aiEnrichment: true,
     animatedCharts: true,
+    balancesView: 0,
     biometricLock: false,
     budgetViewStyle: true,
     categorySuggestions: true,

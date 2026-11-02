@@ -32,6 +32,7 @@ import { useNow } from "@/data/use-now";
 import { useValuationIn } from "@/data/use-valuation";
 import { useValuedCurrencies } from "@/data/valued-currencies";
 import type { Database } from "@/db/client";
+import { BALANCES_ACCOUNTS } from "@/domain/balances";
 import { groupByDay, groupByDayAsItGrows, joinDaySections } from "@/domain/day-sections";
 import type { DayGroupable } from "@/domain/day-sections";
 import { logCurrencyOptions } from "@/domain/log-currency-options";
@@ -334,8 +335,8 @@ export function Log() {
         currency,
         debts,
         onOpen: openAccount,
-        onOpenAll: () => router.push("/accounts"),
-        onOpenDebts: () => router.push("/accounts"),
+        onOpenAll: () => router.navigate(BALANCES_ACCOUNTS),
+        onOpenDebts: () => router.navigate(BALANCES_ACCOUNTS),
         overview: accountsOverview,
         showCents,
     };
@@ -407,7 +408,7 @@ export function Log() {
                                     budget: mainBudget,
                                     currency: globalCurrency,
                                     nowMs,
-                                    onPress: () => router.push("/budgets/overall"),
+                                    onPress: () => router.push("/balances/overall"),
                                 }}
                                 measure={measure}
                                 onMeasure={onMeasure}
@@ -455,8 +456,8 @@ export function Log() {
                                 showCents={showCents}
                                 nowMs={nowMs}
                                 onOpenUpcoming={() => router.push("/settings/upcoming")}
-                                onOpenAccounts={() => router.push("/accounts")}
-                                onOpenDebts={() => router.push("/accounts")}
+                                onOpenAccounts={() => router.navigate(BALANCES_ACCOUNTS)}
+                                onOpenDebts={() => router.navigate(BALANCES_ACCOUNTS)}
                             />
                         ) : null}
                         {filter === "all" && waiting > 0 ? (

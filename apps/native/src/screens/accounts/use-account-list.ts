@@ -6,6 +6,7 @@ import { useBankAccounts } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { useDebtsOverview } from "@/data/debts";
+import { useSavingsGoals } from "@/data/savings-goals";
 import { useBoolSetting } from "@/data/settings";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useNow } from "@/data/use-now";
@@ -18,8 +19,11 @@ export function useAccountList() {
     const t = useTranslation();
     const all = useBankAccounts(db);
     const { pendingId, requestDelete } = useDeferredDelete("account");
+    const { pendingId: pendingGoalId } = useDeferredDelete("goal");
     const currency = useGlobalCurrency(db);
-    const debts = useDebtsOverview(db, useNow());
+    const nowMs = useNow();
+    const debts = useDebtsOverview(db, nowMs);
+    const goals = useSavingsGoals(db, nowMs).filter((entry) => entry.goal.id !== pendingGoalId);
     const rows = all.filter((account) => account.id !== pendingId);
     const byHand = useBoolSetting(db, "accountsByHand");
     const balances = new Map(debts.overview?.rows.map((row) => [row.id, row.balance]));
@@ -34,12 +38,14 @@ export function useAccountList() {
             requestDelete(account.id, { body: t("accounts.undo.body") });
         },
         empty: rows.length + debts.owedToYou.length + debts.youOwe.length + debts.settled.length === 0,
+        goals,
         openDetail: (id: string) => {
             router.push({
                 params: { accountId: id },
                 pathname: "/accounts/[accountId]",
             });
         },
+        openGoal: (id: string) => router.push(`/balances/goals/${id}`),
         rows,
     };
 }

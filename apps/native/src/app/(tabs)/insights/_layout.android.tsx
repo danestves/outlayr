@@ -13,6 +13,7 @@ export default function InsightsLayout() {
                 <Stack.Screen name="index" options={{ title: t("insights.title") }} />
                 <Stack.Screen name="breakdown" options={{ title: t("insights.breakdown.title") }} />
                 <Stack.Screen name="cash-flow" />
+                <Stack.Screen name="plan/[month]" />
             </Stack>
         </TabPauseProvider>
     );

@@ -354,11 +354,11 @@ const common = {
             fr: "Sous-catégorie",
             pt: "Subcategoria",
         }),
-        "nav.tab.budgets": t({
-            en: "Budgets",
-            es: "Presupuestos",
-            fr: "Budgets",
-            pt: "Orçamentos",
+        "nav.tab.balances": t({
+            en: "Balances",
+            es: "Saldos",
+            fr: "Soldes",
+            pt: "Saldos",
         }),
         "nav.tab.insights": t({
             en: "Insights",

@@ -30,6 +30,7 @@ import { useCategoryCount, useDeletedCount } from "@/data/settings-counts";
 import { useValuationCoverage } from "@/data/use-valuation-coverage";
 import { ACCENT_OPTIONS, DEFAULT_ACCENT_VALUE } from "@/domain/accent-options";
 import { appIconLabel } from "@/domain/app-icons";
+import { BALANCES_ACCOUNTS } from "@/domain/balances";
 import { offeredAccentValue } from "@/domain/material-accent";
 import { formatAmount, minorUnitsFor } from "@/domain/money";
 import { coverageNote } from "@/domain/valuation-coverage";
@@ -222,7 +223,7 @@ export function Settings() {
             >
                 <LinkRow
                     icon="Landmark"
-                    onPress={() => router.push("/accounts")}
+                    onPress={() => router.navigate(BALANCES_ACCOUNTS)}
                     title={t("settings.row.accounts")}
                     value={String(accountCount)}
                 />

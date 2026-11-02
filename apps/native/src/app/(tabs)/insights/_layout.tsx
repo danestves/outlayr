@@ -21,6 +21,10 @@ export default function InsightsLayout() {
                     <Stack.Header transparent />
                     <Stack.Screen.BackButton displayMode="minimal" />
                 </Stack.Screen>
+                <Stack.Screen name="plan/[month]">
+                    <Stack.Header transparent />
+                    <Stack.Screen.BackButton displayMode="minimal" />
+                </Stack.Screen>
             </Stack>
         </TabPauseProvider>
     );

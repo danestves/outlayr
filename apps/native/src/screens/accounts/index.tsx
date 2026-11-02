@@ -20,13 +20,17 @@ import {
     font,
     foregroundStyle,
     lineLimit,
+    listRowBackground,
+    listRowInsets,
+    listRowSeparator,
     monospacedDigit,
     onTapGesture,
     tint,
 } from "@expo/ui/swift-ui/modifiers";
 import { isMultiCurrency } from "@outlayr/money/account-overview";
 import { Stack, useRouter } from "expo-router";
-import { View } from "react-native";
+import type { ReactNode } from "react";
+import { ScrollView, View } from "react-native";
 
 import { CategoryIconTile } from "@/components/category-icon-tile";
 import { Eyebrow, PARENT_TILE } from "@/components/category-list-chrome";
@@ -34,7 +38,6 @@ import { LABEL, PARENT_NAME } from "@/components/category-list-swift";
 import { EmptyState } from "@/components/empty-state";
 import { Tile } from "@/components/empty-state-parts";
 import { groupedList, groupedRows } from "@/components/native/styles";
-import { toolbarIcon } from "@/components/toolbar-icons";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
 import { useAccountBalance } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
@@ -44,11 +47,14 @@ import { formatSignedAmount } from "@/domain/account-display";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { hitArea, outline } from "@/lib/swift-ui-geometry";
+import { BalancesViewPicker, BalancesViewToggle } from "@/screens/balances/view-toggle";
+import type { BalancesViewToggleProps } from "@/screens/balances/view-toggle";
 import { useColors } from "@/theme/use-colors";
 import type { ThemeColors } from "@/theme/use-colors";
 
-import { useAddMenu } from "./add-menu";
+import { useSortMenu } from "./add-menu";
 import { DebtSections, LedgerTotals } from "./debt-sections";
+import { GoalsSection } from "./goals-section";
 import { useAccountList } from "./use-account-list";
 
 const SUBTITLE = font({
@@ -71,34 +77,46 @@ const CHEVRON = font({
     weight: "semibold",
 });
 
-export function Accounts() {
+const TOGGLE_ROW = [listRowInsets({ bottom: 0, leading: 0, top: 0, trailing: 0 }), listRowSeparator("hidden")];
+
+interface AccountsProps {
+    addMenu: ReactNode;
+    onAddGoal: () => void;
+    toggle: BalancesViewToggleProps;
+}
+
+/** The Accounts view of Balances: money held, owed and saved toward goals. */
+export function Accounts({ addMenu, onAddGoal, toggle }: AccountsProps) {
     const router = useRouter();
     const t = useTranslation();
     const colors = useColors();
-    const { assets, currency, db, debts, deleteAccount, empty, openDetail, rows } = useAccountList();
-    const addMenu = useAddMenu();
+    const { assets, currency, db, debts, deleteAccount, empty, goals, openDetail, openGoal, rows } = useAccountList();
+    const sortMenu = useSortMenu(rows.length);
     const rowGround = groupedRows(colors);
 
     return (
         <>
-            <Stack.Header transparent />
-            <Stack.Screen.Title>{t("accounts.title")}</Stack.Screen.Title>
-            <Stack.Screen.BackButton displayMode="minimal" />
             <Stack.Toolbar placement="right">
-                <Stack.Toolbar.Button
-                    accessibilityLabel={t("accounts.a11y.reorder")}
-                    hidden={rows.length <= 1}
-                    onPress={() => router.push("/accounts/reorder")}
-                >
-                    <Stack.Toolbar.Icon {...toolbarIcon("reorder")} />
-                </Stack.Toolbar.Button>
+                {sortMenu}
                 {addMenu}
             </Stack.Toolbar>
             {empty ? (
-                <EmptyState body={t("accounts.empty")} mark={<AccountsMark />} tier="takeover" />
+                <ScrollView
+                    className="bg-background"
+                    contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20 }}
+                    contentInsetAdjustmentBehavior="automatic"
+                >
+                    <BalancesViewToggle {...toggle} />
+                    <EmptyState body={t("accounts.empty")} mark={<AccountsMark />} tier="takeover" />
+                </ScrollView>
             ) : (
                 <Host style={{ flex: 1 }} useViewportSizeMeasurement>
                     <List modifiers={groupedList(colors)}>
+                        <Section modifiers={[listRowBackground(colors.groupedBackground)]}>
+                            <HStack modifiers={TOGGLE_ROW}>
+                                <BalancesViewPicker {...toggle} />
+                            </HStack>
+                        </Section>
                         <LedgerTotals currency={currency} debts={debts} />
                         {assets.length > 0 ? (
                             <Section
@@ -120,6 +138,7 @@ export function Accounts() {
                             </Section>
                         ) : null}
                         <DebtSections currency={currency} debts={debts} />
+                        <GoalsSection currency={currency} goals={goals} onAdd={onAddGoal} onOpen={openGoal} />
                         {rows.length >= 2 ? (
                             <Section modifiers={[rowGround]}>
                                 <HStack

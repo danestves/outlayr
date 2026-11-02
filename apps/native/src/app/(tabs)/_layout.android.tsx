@@ -46,9 +46,9 @@ export default function TabLayout() {
                 <NativeTabs.Trigger.Icon drawable={{ default: "nano_insights", selected: "nano_insights_selected" }} />
                 <NativeTabs.Trigger.Label>{t("nav.tab.insights")}</NativeTabs.Trigger.Label>
             </NativeTabs.Trigger>
-            <NativeTabs.Trigger name="budgets">
+            <NativeTabs.Trigger name="balances">
                 <NativeTabs.Trigger.Icon drawable={{ default: "nano_budgets", selected: "nano_budgets_selected" }} />
-                <NativeTabs.Trigger.Label>{t("nav.tab.budgets")}</NativeTabs.Trigger.Label>
+                <NativeTabs.Trigger.Label>{t("nav.tab.balances")}</NativeTabs.Trigger.Label>
 
                 {overBudget > 0 ? <NativeTabs.Trigger.Badge>{String(overBudget)}</NativeTabs.Trigger.Badge> : null}
             </NativeTabs.Trigger>
