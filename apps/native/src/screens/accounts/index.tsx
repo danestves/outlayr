@@ -19,6 +19,8 @@ import {
     accessibilityValue,
     font,
     foregroundStyle,
+    fixedSize,
+    frame,
     lineLimit,
     listRowBackground,
     listRowInsets,
@@ -206,14 +208,14 @@ function AccountRow({ account, colors, db, onDelete, onOpen }: AccountRowProps) 
     const subtitleColor = checked?.stale ? colors.tint : colors.muted;
     const tileColor = account.imageColor ?? account.customColor ?? colors.foreground;
     const subtitleText = (
-        <SwiftText modifiers={[SUBTITLE, lineLimit(1), foregroundStyle(subtitleColor)]}>{subtitle}</SwiftText>
+        <SwiftText modifiers={[SUBTITLE, lineLimit(2), foregroundStyle(subtitleColor)]}>{subtitle}</SwiftText>
     );
     const balanceTexts = (
         <>
             {balance.exact ? null : (
                 <SwiftText modifiers={[APPROX, foregroundStyle(colors.subtle)]}>{`${account.currency}?`}</SwiftText>
             )}
-            <SwiftText modifiers={[AMOUNT, monospacedDigit(), lineLimit(1), foregroundStyle(LABEL)]}>
+            <SwiftText modifiers={[AMOUNT, monospacedDigit(), lineLimit(1), fixedSize(), foregroundStyle(LABEL)]}>
                 {formatSignedAmount(balance.total, account.currency, showCents, language)}
             </SwiftText>
         </>
@@ -257,13 +259,16 @@ function AccountRow({ account, colors, db, onDelete, onOpen }: AccountRowProps) 
                     </VStack>
                 ) : (
                     <>
-                        <VStack alignment="leading" spacing={1}>
+                        <VStack
+                            alignment="leading"
+                            modifiers={[frame({ alignment: "leading", maxWidth: Number.POSITIVE_INFINITY })]}
+                            spacing={1}
+                        >
                             <SwiftText modifiers={[PARENT_NAME, lineLimit(1), foregroundStyle(LABEL)]}>
                                 {account.name}
                             </SwiftText>
                             {subtitleText}
                         </VStack>
-                        <Spacer />
                         {balanceTexts}
                     </>
                 )}

@@ -104,10 +104,11 @@ const accounts = {
             pt: "Ajuste",
         }),
         "accounts.check.compare": t({
-            en: "Open the {account} app and compare.",
-            es: "Abre la app de {account} y compara.",
-            fr: "Ouvrez l'app {account} et comparez.",
-            pt: "Abra o app {account} e compare.",
+            en: "Compare it with your bank or wallet app.",
+            es: "Compáralo con tu banco o billetera.",
+            fr: "Comparez avec votre banque ou votre portefeuille.",
+            pt: "Compare com seu banco ou carteira.",
+            "pt-PT": "Compare com o seu banco ou carteira.",
         }),
         "accounts.check.daysAgo_one": t({
             en: "Checked {count} day ago",
@@ -194,6 +195,13 @@ const accounts = {
             fr: "Identique à votre banque à {time}",
             pt: "Conferiu com seu banco às {time}",
             "pt-PT": "Conferiu com o seu banco às {time}",
+        }),
+        "accounts.check.matchedOn": t({
+            en: "Matched your bank on {date}",
+            es: "Coincidió con tu banco el {date}",
+            fr: "Identique à votre banque le {date}",
+            pt: "Conferiu com seu banco em {date}",
+            "pt-PT": "Conferiu com o seu banco em {date}",
         }),
         "accounts.check.matches": t({
             en: "Yes, it matches",

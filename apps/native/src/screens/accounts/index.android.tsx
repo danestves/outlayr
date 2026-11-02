@@ -211,7 +211,7 @@ function AccountRow({ account, colors, db, onDelete, onEdit, onOpen }: AccountRo
                             <Text className="text-body text-m3-on-surface" numberOfLines={1}>
                                 {account.name}
                             </Text>
-                            <Text className={`text-caption ${subtitleTone}`} numberOfLines={1}>
+                            <Text className={`text-caption ${subtitleTone}`} numberOfLines={2}>
                                 {subtitle}
                             </Text>
                         </View>

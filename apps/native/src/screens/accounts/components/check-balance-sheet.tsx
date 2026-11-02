@@ -169,9 +169,7 @@ function CheckBody({ account, balance, onClose }: Omit<CheckBalanceSheetProps, "
                         <View className="items-center gap-1 pb-6">
                             <MonoLabel>{t("accounts.check.eyebrow")}</MonoLabel>
                             <HeroNumber amount={balance} code={currency} sign={balance < 0 ? "-" : ""} still />
-                            <Text className="text-body text-muted text-center">
-                                {t("accounts.check.compare", { account: account.name })}
-                            </Text>
+                            <Text className="text-body text-muted text-center">{t("accounts.check.compare")}</Text>
                         </View>
                         <InlineFailure message={failure} />
                         <Pressable
