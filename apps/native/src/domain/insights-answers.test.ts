@@ -180,6 +180,28 @@ describe("buildAnswers", () => {
         expect(answers.cards).toMatchObject([{ categoryId: "food", kind: "vsUsual", spent: 40, usual: 10 }]);
     });
 
+    it("forecasts a rent paid early in the period once, not every day", () => {
+        const answers = buildAnswers(input({ rows: steadyRent() }));
+        expect(answers.forecast).toBe(500);
+        expect(answers.headline).toBe("asUsual");
+    });
+
+    it("adds what is usually spent after today to what was spent so far", () => {
+        const rows = [
+            ...history("food", 10),
+            ...PRIOR.map((window) =>
+                row(new Date(window.start.getFullYear(), window.start.getMonth(), 20, 12), 90, "food")
+            ),
+            row(d(2025, 7, 5), 40, "food"),
+        ];
+        expect(buildAnswers(input({ rows })).forecast).toBe(130);
+    });
+
+    it("falls back to the daily pace without three prior periods", () => {
+        const answers = buildAnswers(input({ prior: [], rows: [row(d(2025, 7, 5), 50)] }));
+        expect(answers.forecast).toBeCloseTo(155, 5);
+    });
+
     it("needs three complete prior periods before it compares", () => {
         const rows = [...history("food", 10).slice(0, 2), row(d(2025, 7, 5), 400, "food")];
         const answers = buildAnswers(input({ rows }));
