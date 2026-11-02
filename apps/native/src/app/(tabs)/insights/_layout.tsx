@@ -1,10 +1,12 @@
 import { Stack } from "expo-router";
 
+import { useNow } from "@/data/use-now";
 import { useTranslation } from "@/i18n/context";
 import { TabPauseProvider } from "@/navigation/tab-pause-provider";
 
 export default function InsightsLayout() {
     const t = useTranslation();
+    const year = new Date(useNow()).getFullYear();
     return (
         <TabPauseProvider>
             <Stack>
@@ -19,6 +21,11 @@ export default function InsightsLayout() {
                 </Stack.Screen>
                 <Stack.Screen name="cash-flow">
                     <Stack.Header transparent />
+                    <Stack.Screen.BackButton displayMode="minimal" />
+                </Stack.Screen>
+                <Stack.Screen name="plan/index">
+                    <Stack.Header transparent />
+                    <Stack.Screen.Title large>{t("budgets.plan.action.plan", { year })}</Stack.Screen.Title>
                     <Stack.Screen.BackButton displayMode="minimal" />
                 </Stack.Screen>
                 <Stack.Screen name="plan/[month]">
