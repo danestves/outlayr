@@ -82,6 +82,7 @@ function CheckBody({ account, balance, onClose }: Omit<CheckBalanceSheetProps, "
     const magnitude = numpadToNumber(entry);
     const difference = balanceDifference(balance, negative ? -magnitude : magnitude, currency);
     const money = (value: number) => formatSignedAmount(value, currency, true, language);
+    const change = difference > 0 ? `+${money(difference)}` : money(difference);
 
     const checkBalance = useAtomAction(
         checkBalanceCommand,
@@ -120,11 +121,12 @@ function CheckBody({ account, balance, onClose }: Omit<CheckBalanceSheetProps, "
                 {fixing ? (
                     <View className="px-5 pt-4">
                         <MonoLabel>{t("accounts.check.shows", { account: account.name })}</MonoLabel>
-                        <View className="flex-row items-center pt-1 pb-4">
+                        <View className="flex-row items-baseline pt-1 pb-4">
                             <Pressable
                                 accessibilityLabel={t("accounts.a11y.balanceSign")}
                                 accessibilityRole="button"
-                                className="h-11 w-8 items-center justify-center active:opacity-70"
+                                className="w-8 items-center active:opacity-70"
+                                hitSlop={12}
                                 onPress={() => setNegative((value) => !value)}
                             >
                                 <Text className={cn("text-title", negative ? "text-tint" : "text-muted")}>
@@ -141,7 +143,7 @@ function CheckBody({ account, balance, onClose }: Omit<CheckBalanceSheetProps, "
                             <View className="flex-row items-center justify-between py-3">
                                 <Text className="text-body text-muted">{t("accounts.check.adjustment")}</Text>
                                 <Text className="font-sans-semibold text-body text-foreground tabular-nums">
-                                    {money(difference)}
+                                    {change}
                                 </Text>
                             </View>
                         </View>
@@ -165,7 +167,7 @@ function CheckBody({ account, balance, onClose }: Omit<CheckBalanceSheetProps, "
                                 label={
                                     difference === 0
                                         ? t("accounts.check.markChecked")
-                                        : t("accounts.check.log", { amount: money(difference) })
+                                        : t("accounts.check.log", { amount: change })
                                 }
                                 onPress={() => commit(difference)}
                             />
