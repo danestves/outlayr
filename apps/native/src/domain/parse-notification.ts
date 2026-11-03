@@ -1,3 +1,4 @@
+import type { NotificationRead } from "@outlayr/backend/confect/notificationRead.spec";
 import { CURRENCY_META, PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
 
 import { SYMBOL_ALIASES } from "./detect-currency";
@@ -40,6 +41,10 @@ const INCOMING = new RegExp(
 const STOP = String.raw`(?=\s+(?:with|using|via|on|for|con|usando|por|el|la|desde|mediante)\b|[,.;\n]|$)`;
 const PAID_TO = new RegExp(String.raw`\b(?:at|in|en|to|a|de|@)\s+(.+?)${STOP}`, "iu");
 const RECEIVED_FROM = new RegExp(String.raw`\b(?:from|de|por parte de)\s+(.+?)${STOP}`, "iu");
+const YOUR_CHARGE = new RegExp(
+    String.raw`\byour[^\S\n]+([^\n]+?)[^\S\n]+(?:transaction|purchase|payment|charge|order)\b`,
+    "iu"
+);
 
 const CARD_USED = new RegExp(String.raw`\b(?:with|con)\s+([^\n]*?[•*]{2,}\s?\d{4})(?!\d)`, "iu");
 const CARD_REFERENCE = new RegExp(String.raw`\byour\b.*\bcard\b|\btu\b.*\btarjeta\b|[x*•]{3,}[-\s]?\d{3,4}`, "iu");
@@ -79,12 +84,43 @@ export function parseNotification(text: string): ParsedNotification | null {
     const income = INCOMING.test(text);
     const tail = text.slice(match.index + match[0].length);
     const named = (income ? RECEIVED_FROM : PAID_TO).exec(tail)?.[1]?.trim();
-    const merchant = cleanMerchant(named ? payee(named, tail) : lineBefore(text, match.index));
+    const merchant = cleanMerchant(
+        named ? payee(named, tail) : (chargeNamed(text.slice(0, match.index)) ?? lineBefore(text, match.index))
+    );
     return { amount, amountText, income, merchant };
+}
+
+// "Your SiteGround transaction in the amount of USD 22.99": the name sits before the money.
+function chargeNamed(head: string): string | null {
+    const named = YOUR_CHARGE.exec(head)?.[1];
+    return named && !CARD_REFERENCE.test(named) ? named : null;
 }
 
 function payee(named: string, tail: string): string | null {
     return CARD_REFERENCE.test(named) ? (PARENTHESIZED.exec(tail)?.[1] ?? null) : named;
+}
+
+// The AI read decides what the push is and wins where it answered; the on-device parse fills what it left null.
+export function mergeNotificationRead(
+    parsed: ParsedNotification | null,
+    read: NotificationRead | null
+): ParsedNotification | null {
+    if (read === null) {
+        return parsed;
+    }
+    if (read.kind === "declined" || read.kind === "other") {
+        return null;
+    }
+    const amount = read.amount ?? parsed?.amount;
+    if (amount === undefined) {
+        return null;
+    }
+    return {
+        amount,
+        amountText: read.currency ? `${read.currency} ${amount}` : (parsed?.amountText ?? String(amount)),
+        income: read.kind === "income",
+        merchant: cleanMerchant(read.merchant) ?? parsed?.merchant ?? null,
+    };
 }
 
 export function cleanMerchant(raw: string | null): string | null {

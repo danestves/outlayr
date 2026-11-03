@@ -10,6 +10,7 @@ import { getTransactionById } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 import { paywallHref } from "@/domain/paywall-trigger";
 
+import { readNotifications } from "./notification-read";
 import { warnAndContinue } from "./warn-and-continue";
 import { claimPendingWrites, releasePendingWrites } from "./widget-bridge";
 
@@ -79,7 +80,7 @@ export const resolveReminderTap = Effect.fn("NotificationTaps.resolveReminder")(
 });
 
 const settleWalletWrites = (db: Database, walletWrite: string) =>
-    drainPendingWrites(db, claimPendingWrites, releasePendingWrites).pipe(
+    drainPendingWrites(db, claimPendingWrites, releasePendingWrites, readNotifications).pipe(
         warnAndContinue("[outlayr] pending writes failed to apply"),
         Effect.andThen(fileWaitingPurchases(db).pipe(warnAndContinue("[outlayr] waiting purchases failed to file"))),
         Effect.andThen(pendingWriteTxId(db, walletWrite))

@@ -17,7 +17,8 @@ import { detectCurrency } from "@/domain/detect-currency";
 import type { CardAccountCandidate } from "@/domain/match-card-account";
 import { matchCardAccount } from "@/domain/match-card-account";
 import { DEFAULT_CURRENCY } from "@/domain/money";
-import { cleanMerchant, parseNotification } from "@/domain/parse-notification";
+import { cleanMerchant, mergeNotificationRead, parseNotification } from "@/domain/parse-notification";
+import type { NotificationReader, NotificationReads } from "@/lib/notification-read";
 import { autologSourceOf } from "@/lib/pending-writes-core";
 import type { ClaimedWrites, PendingWrite } from "@/lib/pending-writes-core";
 import { posthog } from "@/lib/posthog";
@@ -312,11 +313,11 @@ function sourceOf(job: PendingWrite): string | null {
     return kind ? `${kind}:${job.card?.trim().toLowerCase() ?? ""}` : null;
 }
 
-function readNotification(job: PendingWrite): PendingWrite | null {
+function readNotification(job: PendingWrite, reads: NotificationReads | undefined): PendingWrite | null {
     if (!job.text) {
         return job;
     }
-    const parsed = parseNotification(job.text);
+    const parsed = mergeNotificationRead(parseNotification(job.text), reads?.get(job.id) ?? null);
     if (!parsed) {
         return null;
     }
@@ -448,7 +449,8 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
     db: Database,
     jobs: PendingWrite[],
     now: Date = new Date(),
-    knownAccess?: AutologAccess
+    knownAccess?: AutologAccess,
+    reads?: NotificationReads
 ) {
     if (jobs.length === 0) {
         return 0;
@@ -462,7 +464,7 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
     // Exactly-once depends on this job seeing the ledger row the previous job's SQLite transaction committed, so the
     // jobs must land one at a time.
     for (const queued of jobs) {
-        const job = readNotification(queued);
+        const job = readNotification(queued, reads);
         if (queued.text) {
             yield* rememberNotification(db, {
                 amountText: job?.amountText ?? null,
@@ -885,7 +887,8 @@ let rerun = false;
 export const drainPendingWrites = Effect.fn("PendingWrites.drainPendingWrites")(function* drainPendingWrites(
     db: Database,
     claim: () => ClaimedWrites,
-    release: (claimed: ClaimedWrites) => void
+    release: (claimed: ClaimedWrites) => void,
+    reader?: NotificationReader
 ) {
     if (draining !== null) {
         rerun = true;
@@ -897,7 +900,7 @@ export const drainPendingWrites = Effect.fn("PendingWrites.drainPendingWrites")(
         let applied = 0;
         do {
             rerun = false;
-            applied += yield* runDrain(db, claim, release);
+            applied += yield* runDrain(db, claim, release, reader);
         } while (rerun);
         return applied;
     }).pipe(
@@ -916,7 +919,8 @@ type DrainFailure = Effect.Error<ReturnType<typeof runDrain>>;
 const runDrain = Effect.fn("PendingWrites.runDrain")(function* runDrain(
     db: Database,
     claim: () => ClaimedWrites,
-    release: (claimed: ClaimedWrites) => void
+    release: (claimed: ClaimedWrites) => void,
+    reader?: NotificationReader
 ) {
     const claimed = yield* attemptSync("claim", claim);
     const access = yield* readAutologAccess(db);
@@ -924,7 +928,9 @@ const runDrain = Effect.fn("PendingWrites.runDrain")(function* runDrain(
     if (claimed.names.length === 0 && waiting.length === 0) {
         return 0;
     }
-    const applied = yield* applyPendingWrites(db, [...waiting, ...claimed.jobs], new Date(), access);
+    const jobs = [...waiting, ...claimed.jobs];
+    const reads = reader ? yield* reader(db, jobs) : undefined;
+    const applied = yield* applyPendingWrites(db, jobs, new Date(), access, reads);
     if (waiting.length > 0) {
         yield* writeAutologWaiting(db, []);
     }
