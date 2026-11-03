@@ -23,7 +23,21 @@ export interface OpenStats {
 
 const latest = makeFunctionReference<"query", Record<string, never>, OpenStats | null>("openStats:latest");
 
+// Railway ships the web on merge but Convex deploys by hand, so the function can be missing for a few minutes.
+const isMissingFunction = (error: unknown) =>
+    error instanceof Error && error.message.includes("Could not find public function");
+
 export const getOpenStats = createServerFn({ method: "GET" }).handler(async () => {
     const url = ENV.VITE_CONVEX_URL;
-    return url ? await new ConvexHttpClient(url).query(latest, {}) : null;
+    if (!url) {
+        return null;
+    }
+    try {
+        return await new ConvexHttpClient(url).query(latest, {});
+    } catch (error) {
+        if (isMissingFunction(error)) {
+            return null;
+        }
+        throw error;
+    }
 });
