@@ -8,6 +8,7 @@ import { LinkRow, SettingsSection, ToggleRow } from "@/components/list/list-row"
 import { AccentSwatches } from "@/components/settings/accent-swatches";
 import { AccountPanel } from "@/components/settings/account-panel";
 import { DataActions } from "@/components/settings/data-actions";
+import { InviteFriendsRow } from "@/components/settings/invite-row";
 import { SegmentedRow } from "@/components/settings/segmented-row";
 import { SettingsFooterLinks } from "@/components/settings/settings-footer-links";
 import type { SettingsIconName } from "@/components/settings/settings-icons";
@@ -113,6 +114,7 @@ export function Settings() {
     return (
         <SettingsScreen>
             <AccountPanel />
+            <InviteFriendsRow />
 
             <SettingsSection
                 accessory={

@@ -337,6 +337,7 @@ function RootStack() {
                     ))}
                     <Stack.Screen name="accounts/reorder" options={chrome.pushed} />
                     <Stack.Screen name="accounts/[accountId]/index" options={chrome.pushed} />
+                    <Stack.Screen name="i/[code]" options={{ headerShown: false }} />
                     <Stack.Screen name="installments/[planId]" options={chrome.pushed} />
                     <Stack.Screen name="installments/scan" options={chrome.bareModal} />
                     <Stack.Screen name="settings/categories/reorder" options={chrome.pushed} />

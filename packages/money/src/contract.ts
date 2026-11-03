@@ -59,6 +59,15 @@ export function normalizeReferralCode(input: string): string | null {
     return REFERRAL_CODE.test(code) ? code : null;
 }
 
+export function formatReferralCode(code: string): string {
+    return `${code.slice(0, REFERRAL_CODE_LENGTH / 2)} ${code.slice(REFERRAL_CODE_LENGTH / 2)}`;
+}
+
+export function referralLink(code: string, language: string): string {
+    const prefix = language.startsWith("es") ? "/es" : "";
+    return `tryoutlayr.com${prefix}/i/${code.toLowerCase()}`;
+}
+
 export const REFERRAL_DAYS_TO_EARN = 3;
 
 export const REFERRAL_YEARLY_CAP = 12;

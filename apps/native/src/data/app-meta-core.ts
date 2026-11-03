@@ -43,6 +43,7 @@ export const META_KEYS = {
     pendingWriteLedger: "pendingWriteLedger",
     repricedSubscriptions: "repricedSubscriptions",
     recurrenceRepaired: "recurrenceRepaired",
+    referralRewardSeen: "referralRewardSeen",
     reminderAsked: "reminderAsked",
     reminderChosen: "reminderChosen",
     syncAccountSubject: "syncAccountSubject",

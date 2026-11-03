@@ -27,6 +27,7 @@ import FileImportIcon from "@hugeicons-pro/core-stroke-rounded/FileImportIcon";
 import FileInputIcon from "@hugeicons-pro/core-stroke-rounded/FileInputIcon";
 import FingerprintPatternIcon from "@hugeicons-pro/core-stroke-rounded/FingerprintPatternIcon";
 import FlaskConicalIcon from "@hugeicons-pro/core-stroke-rounded/FlaskConicalIcon";
+import GiftIcon from "@hugeicons-pro/core-stroke-rounded/GiftIcon";
 import HandIcon from "@hugeicons-pro/core-stroke-rounded/HandIcon";
 import HistoryIcon from "@hugeicons-pro/core-stroke-rounded/HistoryIcon";
 import InformationCircleIcon from "@hugeicons-pro/core-stroke-rounded/InformationCircleIcon";
@@ -115,6 +116,7 @@ const REGISTRY = {
     FileExport: FileExportIcon,
     FingerprintPattern: FingerprintPatternIcon,
     FlaskConical: FlaskConicalIcon,
+    Gift: GiftIcon,
     Hand: HandIcon,
     History: HistoryIcon,
     Landmark: LandmarkIcon,

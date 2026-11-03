@@ -28,6 +28,7 @@ type Onboarding = typeof import("@/content/onboarding.content").default;
 type PolicyNotice = typeof import("@/content/policy-notice.content").default;
 type Pro = typeof import("@/content/pro.content").default;
 type Receipt = typeof import("@/content/receipt.content").default;
+type Referrals = typeof import("@/content/referrals.content").default;
 type Search = typeof import("@/content/search.content").default;
 type Settings = typeof import("@/content/settings.content").default;
 type SettingsAccount = typeof import("@/content/settings-account.content").default;
@@ -64,6 +65,7 @@ export const DICTIONARY_KEYS = [
     "policy-notice",
     "pro",
     "receipt",
+    "referrals",
     "search",
     "settings",
     "settings-account",
@@ -100,6 +102,7 @@ type Content =
     | PolicyNotice["content"]
     | Pro["content"]
     | Receipt["content"]
+    | Referrals["content"]
     | Search["content"]
     | Settings["content"]
     | SettingsAccount["content"]
