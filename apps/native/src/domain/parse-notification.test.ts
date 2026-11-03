@@ -37,6 +37,7 @@ describe("parseNotification", () => {
             "Purchase alert\nYour debit card purchase of $12.40 was approved.",
             "Your Visa card purchase of $12.40",
             "Your card ending in 1234 transaction of $9.99",
+            "Your Recent transaction of $45.00 was approved.",
         ]) {
             expect(parseNotification(text)).toMatchObject({ merchant: null });
         }
@@ -226,6 +227,18 @@ describe("mergeNotificationRead", () => {
                 merchant: "Juan",
             })
         ).toStrictEqual({ amount: 1500, amountText: "ARS 1500", income: true, merchant: "Juan" });
+    });
+
+    it("drops the parser's currency when the AI read a different amount", () => {
+        const text = "Purchase of EUR 100.00 approved. Charged USD 108.40 to your card";
+        expect(
+            mergeNotificationRead(text, parseNotification(text), {
+                amount: 108.4,
+                currency: null,
+                kind: "purchase",
+                merchant: null,
+            })
+        ).toMatchObject({ amount: 108.4, amountText: "108.4" });
     });
 
     it("leaves a bare $ for the card's account to settle, whatever currency the AI guessed", () => {

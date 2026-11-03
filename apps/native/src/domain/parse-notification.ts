@@ -49,7 +49,10 @@ const YOUR_CHARGE = new RegExp(
 const CARD_USED = new RegExp(String.raw`\b(?:with|con)\s+([^\n]*?[•*]{2,}\s?\d{4})(?!\d)`, "iu");
 const CARD_REFERENCE = new RegExp(String.raw`\byour\b.*\bcard\b|\btu\b.*\btarjeta\b|[x*•]{3,}[-\s]?\d{3,4}`, "iu");
 const PARENTHESIZED = new RegExp(String.raw`\(([^()]+)\)`, "u");
-const CHARGE_WORDS = new RegExp(String.raw`\b(?:card|tarjeta|ending)\b`, "iu");
+const CHARGE_WORDS = new RegExp(
+    String.raw`\b(?:card|tarjeta|ending|recent|latest|last|online|contactless|debit|credit|pending|scheduled|recurring|international)\b`,
+    "iu"
+);
 const NAME_START = new RegExp(String.raw`^[\p{Lu}\d]`, "u");
 
 const POS_PREFIX = new RegExp(
@@ -125,10 +128,16 @@ export function mergeNotificationRead(
     }
     return {
         amount,
-        amountText: readCurrency(text, parsed, read.currency, amount) ?? parsed?.amountText ?? String(amount),
+        amountText: readCurrency(text, parsed, read.currency, amount) ?? sameAmountText(parsed, amount),
         income: read.kind === "income",
         merchant: cleanMerchant(read.merchant) ?? parsed?.merchant ?? null,
     };
+}
+
+// The parser's currency describes its own amount; when the AI read a different one (a push with two amounts), the
+// card's account settles the currency instead.
+function sameAmountText(parsed: ParsedNotification | null, amount: number): string {
+    return parsed !== null && parsed.amount === amount ? parsed.amountText : String(amount);
 }
 
 // A bare "$" belongs to 22 currencies and the card's account settles it, so the model's guess counts only when
