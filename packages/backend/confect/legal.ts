@@ -129,6 +129,66 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         document: "terms",
         effectiveAtMs: Date.UTC(2026, 10, 16),
     },
+    {
+        changes: {
+            en: [
+                {
+                    detail: "With Smart fill on, a notification Outlayr logs that shows an amount goes to our AI provider so it can read the merchant, amount, and currency. Its text isn't kept.",
+                    label: "Reading bank notifications",
+                },
+            ],
+            es: [
+                {
+                    detail: "Con Autocompletado activado, una notificación que Outlayr registra y que muestra un monto va a nuestro proveedor de IA para leer el comercio, el monto y la moneda. No guardamos su texto.",
+                    label: "Lectura de notificaciones del banco",
+                },
+            ],
+            fr: [
+                {
+                    detail: "Avec Remplissage intelligent activé, une notification enregistrée par Outlayr qui affiche un montant est envoyée à notre fournisseur d'IA pour lire le commerçant, le montant et la devise. Son texte n'est pas conservé.",
+                    label: "Lecture des notifications bancaires",
+                },
+            ],
+            pt: [
+                {
+                    detail: "Com Preenchimento inteligente ativado, uma notificação que o Outlayr registra e que mostra um valor vai para o nosso provedor de IA para ler o estabelecimento, o valor e a moeda. O texto não é guardado.",
+                    label: "Leitura de notificações do banco",
+                },
+            ],
+        },
+        document: "privacy",
+        effectiveAtMs: Date.UTC(2026, 10, 23),
+    },
+    {
+        changes: {
+            en: [
+                {
+                    detail: "Added to the AI features. Entries it logs are saved without a draft and marked for you to review.",
+                    label: "Notification reading",
+                },
+            ],
+            es: [
+                {
+                    detail: "Se suma a las funciones de IA. Las entradas que registra se guardan sin borrador y quedan marcadas para que las revises.",
+                    label: "Lectura de notificaciones",
+                },
+            ],
+            fr: [
+                {
+                    detail: "Ajoutée aux fonctions d'IA. Les entrées qu'elle enregistre sont sauvegardées sans brouillon et signalées pour que vous les vérifiiez.",
+                    label: "Lecture des notifications",
+                },
+            ],
+            pt: [
+                {
+                    detail: "Adicionada aos recursos de IA. Os lançamentos que ela registra são salvos sem rascunho e marcados para você revisar.",
+                    label: "Leitura de notificações",
+                },
+            ],
+        },
+        document: "terms",
+        effectiveAtMs: Date.UTC(2026, 10, 23),
+    },
 ];
 
 export const noticeKey = ({ document, effectiveAtMs }: typeof PolicyNotice.Type) => `${document}:${effectiveAtMs}`;

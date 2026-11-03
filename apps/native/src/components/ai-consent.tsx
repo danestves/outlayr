@@ -30,6 +30,7 @@ const FEATURES = [
     { sends: "aiConsent.scanSends", title: "aiConsent.scan" },
     { sends: "aiConsent.planScanSends", title: "aiConsent.planScan" },
     { sends: "aiConsent.suggestionsSends", title: "aiConsent.suggestions" },
+    { sends: "aiConsent.notificationsSends", title: "aiConsent.notifications" },
     { sends: "aiConsent.lookupSends", title: "aiConsent.lookup" },
 ] as const satisfies readonly { sends: TranslationKey; title: TranslationKey }[];
 

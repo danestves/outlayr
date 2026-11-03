@@ -16,8 +16,8 @@ const about = {
         data: {
             label: t({ en: "Your data", es: "Tus datos" }),
             text: t({
-                en: "Your ledger is stored on your phone. Without an account, your entries, amounts, and notes never leave it. With Pro, sync keeps a copy on our servers until you delete your account. Voice entries, receipt scans, and merchant suggestions are processed by Anthropic and ElevenLabs, and recordings and scanned photos are not stored. Your data is never sold.",
-                es: "Tu registro se guarda en tu celular. Sin una cuenta, tus registros, montos y notas nunca salen de él. Con Pro, la sincronización guarda una copia en nuestros servidores hasta que elimines tu cuenta. Las entradas por voz, los escaneos de recibos y las sugerencias de comercios los procesan Anthropic y ElevenLabs, y no guardamos las grabaciones ni las fotos escaneadas. Tus datos nunca se venden.",
+                en: "Your ledger is stored on your phone. Without an account, your entries, amounts, and notes never leave it. With Pro, sync keeps a copy on our servers until you delete your account. Voice entries, receipt scans, merchant suggestions, and the bank notifications Outlayr logs are processed by Anthropic and ElevenLabs, and recordings, scanned photos, and notifications are not stored. Your data is never sold.",
+                es: "Tu registro se guarda en tu celular. Sin una cuenta, tus registros, montos y notas nunca salen de él. Con Pro, la sincronización guarda una copia en nuestros servidores hasta que elimines tu cuenta. Las entradas por voz, los escaneos de recibos, las sugerencias de comercios y las notificaciones del banco que Outlayr registra los procesan Anthropic y ElevenLabs, y no guardamos las grabaciones, las fotos escaneadas ni las notificaciones. Tus datos nunca se venden.",
             }),
         },
         entity: t({
