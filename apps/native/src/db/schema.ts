@@ -404,6 +404,7 @@ export const outsideMoves = sqliteTable(
         accountId: text("accountId")
             .notNull()
             .references(() => accounts.id, { onDelete: "cascade" }),
+        adjustment: integer("adjustment", { mode: "boolean" }).notNull().default(false),
         amount: real("amount").notNull(),
         amountUsd: real("amountUsd"),
         date: integer("date", { mode: "timestamp_ms" }).notNull(),

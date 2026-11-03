@@ -216,6 +216,7 @@ export const budgetPlanFields = {
 
 export const outsideMoveFields = {
     accountId: Schema.String,
+    adjustment: Schema.optional(Schema.Boolean),
     amount: Schema.Number,
     amountUsd: Schema.NullOr(Schema.Number),
     date: Schema.Number,

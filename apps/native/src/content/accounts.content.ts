@@ -225,6 +225,12 @@ const accounts = {
             fr: "Marquer comme vérifié",
             pt: "Marcar como conferido",
         }),
+        "accounts.check.marker": t({
+            en: "Checked {time} · adjusted {amount}",
+            es: "Revisado {time} · ajuste de {amount}",
+            fr: "Vérifié {time} · ajustement de {amount}",
+            pt: "Conferido {time} · ajuste de {amount}",
+        }),
         "accounts.check.matched": t({
             en: "Matched your bank at {time}",
             es: "Coincidió con tu banco a las {time}",

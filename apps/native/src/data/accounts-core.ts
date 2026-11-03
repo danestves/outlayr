@@ -252,6 +252,7 @@ export const accountsRepo = {
                 yield* query("update", () =>
                     db.insert(outsideMoves).values({
                         accountId: account.id,
+                        adjustment: true,
                         amount: adjustment.amount,
                         amountUsd,
                         date: at,

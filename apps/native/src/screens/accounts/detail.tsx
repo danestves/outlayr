@@ -41,6 +41,7 @@ import { AccountBalanceChart } from "./components/account-balance-chart";
 import { CardLines, hasCardLines } from "./components/card-lines";
 import { CheckBalanceCard } from "./components/check-balance-card";
 import { CheckBalanceSheet } from "./components/check-balance-sheet";
+import { CheckMarker } from "./components/check-marker";
 import { InstallmentSections } from "./components/installment-sections";
 import { LiabilityToolbar } from "./components/liability-toolbar";
 
@@ -164,7 +165,7 @@ function DetailBody({
         const move = moveById.get(rowId);
         if (move !== undefined) {
             const amount = `${move.sign ?? ""}${formatAmount(move.amount, move.currency, showCents, language)}`;
-            Alert.alert(move.note, amount, [
+            Alert.alert(move.adjustment ? t("accounts.check.note") : move.note, amount, [
                 { style: "cancel", text: t("common.cancel") },
                 { onPress: () => requestDelete(rowId), style: "destructive", text: t("common.delete") },
             ]);
@@ -251,9 +252,19 @@ function DetailBody({
                     )
                 }
                 recycleItems={false}
-                renderItem={({ item }) => (
-                    <TransactionRow currency={account.currency} onPress={openRow} rates={rates} transaction={item} />
-                )}
+                renderItem={({ item }) => {
+                    const move = moveById.get(item.id);
+                    return move?.adjustment ? (
+                        <CheckMarker move={move} onPress={openRow} />
+                    ) : (
+                        <TransactionRow
+                            currency={account.currency}
+                            onPress={openRow}
+                            rates={rates}
+                            transaction={item}
+                        />
+                    );
+                }}
                 renderSectionHeader={({ section }) => (
                     <DaySectionHeader first={sections[0] === section} section={section} />
                 )}
