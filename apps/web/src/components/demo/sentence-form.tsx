@@ -37,10 +37,11 @@ export function SentenceForm() {
 }
 
 function Demo({ locale }: { locale: Locale }) {
-    const { added, blank, cta, kind, lead, log, sentence, sizer, steps } = useIntlayer("demo");
+    const { added, amountNeeded, blank, cta, kind, lead, log, sentence, sizer, steps } = useIntlayer("demo");
     const nameOf = useNames();
     const stage = useRef<HTMLDivElement>(null);
     const stageId = useId();
+    const stepLabelId = useId();
     const { ref: root, running } = useAutoplay<HTMLDivElement>();
     const [state, dispatch] = useReducer(reduce, locale, initialState);
     const [edited, setEdited] = useState(false);
@@ -68,6 +69,9 @@ function Demo({ locale }: { locale: Locale }) {
             const money = signedMoney(amountOf(state.draft), state.draft.currency, state.draft.kind === "income");
             setAnnouncement(added({ merchant, money }));
             capture("demo_entry_added", { currency: state.draft.currency, kind: state.draft.kind });
+        } else if (action.type === "footer" && reduce(state, action).needsAmount) {
+            setAnnouncement(amountNeeded);
+            capture("demo_amount_needed");
         }
         flushSync(() => {
             dispatch(action);
@@ -88,7 +92,7 @@ function Demo({ locale }: { locale: Locale }) {
         }
     };
 
-    const { aim, draft, step } = state;
+    const { aim, draft, needsAmount, step } = state;
     const whole = isWhole(draft);
     const open = (next: Step) => visit({ step: next, type: "open" }, "stage");
 
@@ -185,7 +189,12 @@ function Demo({ locale }: { locale: Locale }) {
             <div>
                 <div id={stageId} ref={stage} tabIndex={-1}>
                     <div className="border-border flex h-11 items-center justify-between gap-4 border-t">
-                        <span className="text-muted font-mono text-xs tracking-widest uppercase">{steps[step]}</span>
+                        <span
+                            className={`font-mono text-xs tracking-widest uppercase ${needsAmount ? "text-tint" : "text-muted"}`}
+                            id={stepLabelId}
+                        >
+                            {needsAmount ? amountNeeded : steps[step]}
+                        </span>
                         {step === "amount" ? (
                             <CodeButton
                                 aimed={aim === "slot:currency"}
@@ -201,6 +210,7 @@ function Demo({ locale }: { locale: Locale }) {
                         <StageBody aim={aim} draft={draft} locale={state.locale} step={step} visit={visit} />
                     </div>
                     <button
+                        aria-describedby={needsAmount ? stepLabelId : undefined}
                         className={`fluid bg-tint mt-4 h-12 w-full rounded-full font-semibold text-white hover:opacity-90 active:scale-[0.98] ${aim === "footer" ? "opacity-80" : ""}`}
                         onClick={() => visit({ type: "footer" })}
                         type="button"
