@@ -1,6 +1,7 @@
 import { RECURRING_TYPE, landingDate } from "@outlayr/money/recurrence";
 import { describe, expect, it } from "vite-plus/test";
 
+import { upcomingSchedules } from "./log-filtered";
 import type { TransactionWithCategory } from "./transactions";
 
 const at = (year: number, month: number, day: number, hour = 0): Date => new Date(year, month - 1, day, hour);
@@ -59,5 +60,21 @@ describe("landingDate", () => {
         const row = carrier({ date: at(2025, 3, 15, 9), day: at(2025, 3, 14) });
 
         expect(landingDate(row, at(2025, 3, 20))).toStrictEqual(at(2025, 4, 15));
+    });
+});
+
+describe("upcomingSchedules", () => {
+    it("drops a schedule whose next charge falls after its end date", () => {
+        // Started 23 Oct, cancelled to end 28 Oct: the 23 Nov charge never happens.
+        const ended = carrier({ date: at(2026, 10, 23, 9), recurringEndDate: at(2026, 10, 28) });
+        const live = carrier({ date: at(2026, 10, 17, 9), id: "live" });
+
+        expect(upcomingSchedules([ended, live], at(2026, 11, 2)).map((row) => row.id)).toStrictEqual(["live"]);
+    });
+
+    it("keeps a charge that lands on the end date itself", () => {
+        const row = carrier({ date: at(2026, 10, 23, 9), recurringEndDate: at(2026, 11, 23) });
+
+        expect(upcomingSchedules([row], at(2026, 11, 2))).toHaveLength(1);
     });
 });
