@@ -113,6 +113,15 @@ export function accountStats(createdAt: readonly number[], now: number): typeof 
     return { months, weeks };
 }
 
+export function firstSyncPerUser(states: readonly { _creationTime: number; userId: string }[]): number[] {
+    const first = new Map<string, number>();
+    for (const { _creationTime, userId } of states) {
+        const [user = userId] = userId.split(":", 1);
+        first.set(user, Math.min(first.get(user) ?? _creationTime, _creationTime));
+    }
+    return [...first.values()];
+}
+
 export function weeksFromRows(rows: readonly (readonly [number, number, number, number])[]) {
     const weeks = Array.from({ length: WEEKS }, () => ({ countries: 0, entries: 0, people: 0 }));
     for (const [ago, people, entries, countries] of rows) {

@@ -47,6 +47,7 @@ import m0043 from './20261031210233_0043_category_presets/migration.sql';
 import m0044 from './20261031213723_0044_accounts_by_hand_synced/migration.sql';
 import m0045 from './20261102025744_0045_account_checked_at/migration.sql';
 import m0046 from './20261103032956_0046_card_statement/migration.sql';
+import m0047 from './20261103063027_0047_profiles/migration.sql';
 
   export default {
     migrations: {
@@ -96,7 +97,8 @@ import m0046 from './20261103032956_0046_card_statement/migration.sql';
       "20261031210233_0043_category_presets": m0043,
       "20261031213723_0044_accounts_by_hand_synced": m0044,
       "20261102025744_0045_account_checked_at": m0045,
-      "20261103032956_0046_card_statement": m0046
+      "20261103032956_0046_card_statement": m0046,
+      "20261103063027_0047_profiles": m0047
 }
   }
   

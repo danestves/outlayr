@@ -11,7 +11,7 @@ import databaseSchema from "./_generated/schema";
 import { DatabaseReader, DatabaseWriter, MutationRunner, QueryRunner } from "./_generated/services";
 import { gitHubToken, postHogConfig, revenueCatMetricsConfig } from "./lib/config";
 import { outboundHttp } from "./lib/http";
-import { accountStats, fetchGitHubStats, fetchPostHogStats, fetchRevenueStats } from "./openStats";
+import { accountStats, fetchGitHubStats, firstSyncPerUser, fetchPostHogStats, fetchRevenueStats } from "./openStats";
 import type { OpenStatsError } from "./openStats";
 import spec from "./openStats.spec";
 
@@ -74,7 +74,7 @@ const inputs = FunctionImpl.make(
         const previous = yield* latestDoc;
         return {
             previous: Option.match(previous, { onNone: () => null, onSome: toSnapshot }),
-            syncedAt: states.map((state) => state._creationTime),
+            syncedAt: firstSyncPerUser(states),
         };
     }, Effect.orDie)
 );

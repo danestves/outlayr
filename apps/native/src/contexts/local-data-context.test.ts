@@ -12,6 +12,7 @@ import { testDatabase, withAsyncTransactions } from "@/db/test-database";
 import { appRuntime } from "@/lib/runtime";
 
 vi.mock("expo-localization", () => ({ getLocales: () => [] }));
+vi.mock("@/lib/active-profile", () => ({ activeProfileId: () => undefined }));
 
 function emptyDatabase(): Database {
     const sqlite = new BetterSqlite3(":memory:");

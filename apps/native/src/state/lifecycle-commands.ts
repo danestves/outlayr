@@ -9,6 +9,7 @@ import { pickCardAccount } from "@/data/pending-writes-core";
 import { reconcilePhotos } from "@/data/photo-store-core";
 import type { PhotoFiles } from "@/data/photo-store-core";
 import { downloadEveryPhoto } from "@/data/photo-sync-core";
+import { deviceHasProfiles } from "@/data/profile-registry";
 import { isSyncEnabled } from "@/data/sync-outbox-core";
 import type { Database } from "@/db/client";
 import { adoptionActions, adoptionPlan } from "@/domain/ledger-adoption";
@@ -62,7 +63,7 @@ export const restoreArchiveWithPhotos = Effect.fn("Lifecycle.restoreArchive")(
         files: PhotoFiles;
     }) {
         yield* restoreArchive(input.db, input.document);
-        yield* reconcilePhotos(input.db, input.files, Date.now());
+        yield* reconcilePhotos(input.db, input.files, Date.now(), deviceHasProfiles());
     }
 );
 

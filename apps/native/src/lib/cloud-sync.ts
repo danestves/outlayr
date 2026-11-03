@@ -2,7 +2,9 @@ import { api } from "@outlayr/backend/convex/_generated/api";
 import * as Schema from "effect/Schema";
 
 import type { PullFn, PushFn } from "@/data/sync-engine-core";
+import { profileArgs } from "@/domain/profiles";
 
+import { activeProfileId } from "./active-profile";
 import { cloudRuntime } from "./cloud-runtime";
 import { cloudMutation, cloudQuery } from "./convex";
 
@@ -13,8 +15,8 @@ export interface SyncTransport {
 
 export function syncTransport(): SyncTransport {
     return {
-        pull: (args) => cloudQuery("sync:pullSince", args),
-        push: (args) => cloudMutation("sync:push", args),
+        pull: (args) => cloudQuery("sync:pullSince", { ...args, ...profileArgs(activeProfileId()) }),
+        push: (args) => cloudMutation("sync:push", { ...args, ...profileArgs(activeProfileId()) }),
     };
 }
 
@@ -24,7 +26,7 @@ export function watchSyncWatermark(onWatermark: (watermark: number) => void): ()
     if (cloudRuntime === null) {
         return () => undefined;
     }
-    const watch = cloudRuntime.convex.watchQuery(api.sync.currentSeq, {});
+    const watch = cloudRuntime.convex.watchQuery(api.sync.currentSeq, profileArgs(activeProfileId()));
     return watch.onUpdate(() => {
         try {
             const watermark = watch.localQueryResult();
