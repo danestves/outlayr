@@ -46,6 +46,39 @@ const tools = {
             every: t({ en: "Every", es: "Cada" }),
             method: t({ en: "How it is calculated", es: "Cómo se calcula" }),
             more: insert(t({ en: "And {{count}} more", es: "Y {{count}} más" })),
+            rates: {
+                amount: t({ en: "Amount", es: "Monto" }),
+                buy: t({ en: "buy", es: "compra" }),
+                convert: t({ en: "Convert", es: "Convertir" }),
+                kinds: {
+                    bcv: t({ en: "Official (BCV)", es: "Oficial (BCV)" }),
+                    blue: t({ en: "Blue", es: "Blue" }),
+                    ccl: t({ en: "CCL (contado con liquidación)", es: "CCL (contado con liquidación)" }),
+                    cripto: t({ en: "Crypto", es: "Cripto" }),
+                    mayorista: t({ en: "Wholesale", es: "Mayorista" }),
+                    mep: t({ en: "MEP (bolsa)", es: "MEP (bolsa)" }),
+                    oficial: t({ en: "Official", es: "Oficial" }),
+                    tarjeta: t({ en: "Card", es: "Tarjeta" }),
+                },
+                rate: t({ en: "Dollar", es: "Dólar" }),
+                result: insert(
+                    t({
+                        en: "{{from}} is {{to}} at the {{rate}} rate",
+                        es: "{{from}} son {{to}} al dólar {{rate}}",
+                    })
+                ),
+                sell: t({ en: "sell", es: "venta" }),
+                source: insert(
+                    t({
+                        en: "Rates from {{service}}, which takes each one from the source linked on its row. Each row shows when that source last updated it.",
+                        es: "Tasas de {{service}}, que toma cada una de la fuente enlazada en su fila. Cada fila muestra cuándo la actualizó esa fuente.",
+                    })
+                ),
+                unavailable: t({
+                    en: "The rate is unavailable right now. Try again in a few minutes.",
+                    es: "La tasa no está disponible en este momento. Intenta de nuevo en unos minutos.",
+                }),
+            },
             remove: t({ en: "Remove", es: "Quitar" }),
             row: {
                 month: insert(t({ en: "Month {{n}}", es: "Mes {{n}}" })),
@@ -496,6 +529,150 @@ const tools = {
                     es: "Todos pagaron su parte. Nadie debe nada.",
                 }),
                 title: t({ en: "Split expenses calculator", es: "Calculadora para dividir gastos" }),
+            },
+            "dolar-bcv-hoy": {
+                faq: [
+                    {
+                        answer: t({
+                            en: "The official exchange rate the Banco Central de Venezuela publishes for the bolívar against the dollar. It comes from the operations at the exchange desks of the banks, and it is the official reference for turning dollars into bolívares.",
+                            es: "El tipo de cambio oficial que publica el Banco Central de Venezuela para el bolívar frente al dólar. Sale de las operaciones de las mesas de cambio de los bancos, y es la referencia oficial para pasar dólares a bolívares.",
+                        }),
+                        question: t({ en: "What is the BCV rate?", es: "¿Qué es la tasa del BCV?" }),
+                    },
+                    {
+                        answer: t({
+                            en: "The BCV publishes a rate for each business day, so it changes once a day and not minute by minute. Its row on this page shows the date it is valid for.",
+                            es: "El BCV publica una tasa para cada día hábil, así que cambia una vez al día y no minuto a minuto. Su fila en esta página muestra la fecha para la que vale.",
+                        }),
+                        question: t({
+                            en: "How often does the BCV rate change?",
+                            es: "¿Cada cuánto cambia la tasa del BCV?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. Outlayr is a multi-currency expense tracker that keeps the rate it used next to every entry. For a purchase in bolívares it offers USD (BCV) and EUR (BCV), both from the central bank's published rates, and My rate when the one you got was different.",
+                            es: "Sí. Outlayr es una app para controlar gastos en varias monedas que guarda la tasa que usó junto a cada registro. Para una compra en bolívares te ofrece USD (BCV) y EUR (BCV), las dos de las tasas que publica el banco central, y Mi tasa cuando la que te dieron fue distinta.",
+                        }),
+                        question: t({
+                            en: "Can Outlayr log my spending in bolívares and dollars?",
+                            es: "¿Outlayr puede llevar mis gastos en bolívares y en dólares?",
+                        }),
+                    },
+                    PRIVACY_FAQ,
+                ],
+                lead: t({
+                    en: "Today's official BCV rate for the dollar in Venezuela, with a calculator to turn dollars into bolívares and back.",
+                    es: "La tasa oficial del BCV para el dólar en Venezuela hoy, con una calculadora para pasar de dólares a bolívares y de bolívares a dólares.",
+                }),
+                meta: {
+                    title: t({
+                        en: "BCV Dollar Rate Today and USD to Bolívar Calculator · Outlayr",
+                        es: "Dólar BCV hoy: tasa oficial y calculadora de bolívares · Outlayr",
+                    }),
+                },
+                method: [
+                    t({
+                        en: "The official rate is the one the Banco Central de Venezuela publishes. It is published for a date, so its row shows that date and no time.",
+                        es: "La tasa oficial es la que publica el Banco Central de Venezuela. Se publica para una fecha, así que su fila muestra esa fecha y no una hora.",
+                    }),
+                    t({
+                        en: "The calculator multiplies dollars by the rate you pick, or divides bolívares by it, and rounds to the cent. Banks and shops can give you a different rate, so use it as a reference.",
+                        es: "La calculadora multiplica los dólares por la tasa que elijas, o divide los bolívares entre ella, y redondea al centavo. Los bancos y las tiendas pueden darte otra tasa, así que úsala como referencia.",
+                    }),
+                    t({
+                        en: "This page asks DolarApi for the rates at most every 3 hours, so a rate can be a few hours old, and each row shows when its source last updated it. If DolarApi can't be reached, the page says so instead of showing an old number.",
+                        es: "Esta página le pide las tasas a DolarApi como máximo cada 3 horas, así que una tasa puede tener unas horas, y cada fila muestra cuándo la actualizó su fuente. Si no se puede llegar a DolarApi, la página lo dice en vez de mostrar un número viejo.",
+                    }),
+                ],
+                related: [
+                    "/guides/multi-currency-expense-tracker",
+                    "/guides/best-expense-tracker-apps-latin-america",
+                    "/tools/installment-calculator",
+                ] satisfies PageRef[],
+                title: t({
+                    en: "BCV dollar today: the official rate in Venezuela",
+                    es: "Dólar BCV hoy: la tasa oficial en Venezuela",
+                }),
+            },
+            "dolar-hoy-argentina": {
+                faq: [
+                    {
+                        answer: t({
+                            en: "It depends on what you are doing. Official is the retail rate at banks, card is for paying in dollars with a card, MEP and CCL come from trading bonds or stocks, and blue is the informal market. Check the rate your bank, shop or card uses before you convert.",
+                            es: "Depende de lo que vayas a hacer. El oficial es el precio minorista en los bancos, la tarjeta es para pagar en dólares con tarjeta, el MEP y el CCL salen de operar bonos o acciones, y el blue es el mercado informal. Revisa qué cotización usa tu banco, tu comercio o tu tarjeta antes de convertir.",
+                        }),
+                        question: t({ en: "Which dollar should I look at?", es: "¿Qué dólar tengo que mirar?" }),
+                    },
+                    {
+                        answer: t({
+                            en: "Both come from buying a bond or stock with pesos and selling it for dollars. With MEP the dollars stay in Argentina, and with CCL they go to an account abroad.",
+                            es: "Los dos salen de comprar un bono o una acción con pesos y venderlo por dólares. Con el MEP los dólares quedan en Argentina, y con el CCL van a una cuenta en el exterior.",
+                        }),
+                        question: t({
+                            en: "What is the difference between MEP and CCL?",
+                            es: "¿Cuál es la diferencia entre el dólar MEP y el CCL?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Because it adds the taxes charged on card purchases in dollars to the official rate.",
+                            es: "Porque le suma al oficial los impuestos que se cobran en las compras con tarjeta en dólares.",
+                        }),
+                        question: t({
+                            en: "Why is the card dollar higher than the official one?",
+                            es: "¿Por qué el dólar tarjeta es más alto que el oficial?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. Outlayr is a multi-currency expense tracker that keeps the rate it used next to every entry. Choose My rate and type the rate you actually got, such as the blue or MEP rate you paid, and the entry keeps it.",
+                            es: "Sí. Outlayr es una app para controlar gastos en varias monedas que guarda la tasa que usó junto a cada registro. Elige Mi tasa y escribe la que te dieron, como el blue o el MEP al que pagaste, y el registro la conserva.",
+                        }),
+                        question: t({
+                            en: "Can Outlayr log my spending in pesos and dollars?",
+                            es: "¿Outlayr puede llevar mis gastos en pesos y en dólares?",
+                        }),
+                    },
+                    PRIVACY_FAQ,
+                ],
+                lead: t({
+                    en: "Today's blue, official, MEP, CCL, card, wholesale and crypto dollar in Argentina, with a calculator to turn dollars into pesos and back.",
+                    es: "El dólar blue, oficial, MEP, CCL, tarjeta, mayorista y cripto de hoy en Argentina, con una calculadora para pasar de dólares a pesos y de pesos a dólares.",
+                }),
+                meta: {
+                    title: t({
+                        en: "Dollar Rate Today in Argentina: Blue, Official, MEP, Card · Outlayr",
+                        es: "Dólar hoy Argentina: blue, oficial, MEP y tarjeta · Outlayr",
+                    }),
+                },
+                method: [
+                    t({
+                        en: "Each row is a different dollar in Argentina. Official is the retail price at banks, and wholesale is the rate for operations between banks. Blue is the informal market, and crypto is what a dollar costs in stablecoins such as USDT.",
+                        es: "Cada fila es un dólar distinto en Argentina. El oficial es el precio minorista en los bancos, y el mayorista es la cotización de las operaciones entre bancos. El blue es el mercado informal, y el cripto es lo que cuesta un dólar en stablecoins como el USDT.",
+                    }),
+                    t({
+                        en: "MEP, also called bolsa, and CCL, contado con liquidación, both come from buying a bond or stock in pesos and selling it for dollars. With MEP the dollars stay in Argentina, and with CCL they end up abroad. Card is the official rate plus the taxes charged on card purchases in dollars.",
+                        es: "El MEP, también llamado bolsa, y el CCL, contado con liquidación, salen de comprar un bono o una acción en pesos y venderlo por dólares. Con el MEP los dólares quedan en Argentina, y con el CCL terminan en el exterior. La tarjeta es el oficial más los impuestos que se cobran en las compras con tarjeta en dólares.",
+                    }),
+                    t({
+                        en: "Most rows have a buy and a sell price. The calculator uses the sell price, which is what it costs to buy one dollar. If you are selling dollars, the buy price is the one you get. Amounts are multiplied or divided by the rate and rounded to the cent.",
+                        es: "La mayoría de las filas tiene un precio de compra y uno de venta. La calculadora usa el de venta, que es lo que cuesta comprar un dólar. Si vas a vender dólares, el que te pagan es el de compra. Los montos se multiplican o se dividen por la tasa y se redondean al centavo.",
+                    }),
+                    t({
+                        en: "This page asks DolarApi for the rates at most every 3 hours, so a rate can be a few hours old, and each row shows when its source last updated it. If DolarApi can't be reached, the page says so instead of showing an old number.",
+                        es: "Esta página le pide las tasas a DolarApi como máximo cada 3 horas, así que una tasa puede tener unas horas, y cada fila muestra cuándo la actualizó su fuente. Si no se puede llegar a DolarApi, la página lo dice en vez de mostrar un número viejo.",
+                    }),
+                ],
+                related: [
+                    "/guides/multi-currency-expense-tracker",
+                    "/guides/best-expense-tracker-apps-latin-america",
+                    "/tools/installment-calculator",
+                ] satisfies PageRef[],
+                title: t({
+                    en: "Dollar today in Argentina: blue, official, MEP and card",
+                    es: "Dólar hoy en Argentina: blue, oficial, MEP y tarjeta",
+                }),
             },
         },
     },
