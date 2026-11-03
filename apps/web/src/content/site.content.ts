@@ -25,6 +25,10 @@ const site = {
                 "apple-pay-expense-tracker": t({ en: "Apple Pay", es: "Apple Pay" }),
                 "best-budget-apps": t({ en: "Best budget apps", es: "Mejores apps de presupuesto" }),
                 "best-expense-tracker-apps": t({ en: "Best expense trackers", es: "Mejores apps de gastos" }),
+                "best-expense-tracker-apps-latin-america": t({
+                    en: "Expense trackers in Latin America",
+                    es: "Apps de gastos en Latinoamérica",
+                }),
                 "best-open-source-expense-tracker-apps": t({
                     en: "Open source trackers",
                     es: "Apps de código abierto",

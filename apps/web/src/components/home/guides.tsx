@@ -10,6 +10,7 @@ import { LABEL } from "./problem";
 
 const PICKS = [
     "best-expense-tracker-apps",
+    "best-expense-tracker-apps-latin-america",
     "ynab-alternatives",
     "best-budget-apps",
     "multi-currency-expense-tracker",
