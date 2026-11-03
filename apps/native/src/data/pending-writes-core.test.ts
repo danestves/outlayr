@@ -205,6 +205,35 @@ describe("applyPendingWrites", () => {
         expect(row).toStrictEqual({ accountId: "acc-chase", amount: 12.4, currency: "MXN", note: "STARBUCKS" });
     });
 
+    it("files a push nothing could name under the app that posted it, not its category", async () => {
+        const AMOUNTS: Record<string, string> = { app: "22.99", bare: "9.99", card: "5.00" };
+        const push = (id: string, card: string | null) =>
+            walletWrite(id, {
+                amount: 0,
+                amountText: null,
+                card,
+                dedupeKey: `notification:expense:${id}`,
+                note: "",
+                text: `Your transaction was successful\nPayment of USD ${AMOUNTS[id]} approved on the card ending with 7909.`,
+            });
+
+        await Effect.runPromise(
+            applyPendingWrites(
+                db,
+                [push("app", "Card Suite Lite"), push("bare", null), push("card", "card ending with 7909")],
+                NOW
+            )
+        );
+
+        const rows = await db.select({ amount: transactions.amount, note: transactions.note }).from(transactions);
+        expect(rows).toStrictEqual([
+            { amount: 22.99, note: "Card Suite Lite" },
+            { amount: 9.99, note: "Bank notification" },
+            { amount: 5, note: "Bank notification" },
+        ]);
+        await expect(Effect.runPromise(getMeta(db, META_KEYS.logoCandidates))).resolves.toBeNull();
+    });
+
     it("marks the last entry as a push only when a notification logged it", async () => {
         const push = walletWrite("push", {
             amount: 0,

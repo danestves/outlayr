@@ -3,6 +3,12 @@ import type { Dictionary } from "intlayer";
 
 const settingsWallet = {
     content: {
+        "settings.integrations.unnamedPush": t({
+            en: "Bank notification",
+            es: "Notificación del banco",
+            fr: "Notification bancaire",
+            pt: "Notificação do banco",
+        }),
         "settings.integrations.onCount_one": t({
             en: "{count} on",
             es: "{count} activa",

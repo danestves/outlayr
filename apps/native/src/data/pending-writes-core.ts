@@ -18,6 +18,7 @@ import type { CardAccountCandidate } from "@/domain/match-card-account";
 import { matchCardAccount } from "@/domain/match-card-account";
 import { DEFAULT_CURRENCY } from "@/domain/money";
 import { cleanMerchant, mergeNotificationRead, parseNotification } from "@/domain/parse-notification";
+import { translateNow } from "@/i18n/runtime";
 import type { NotificationReader, NotificationReads } from "@/lib/notification-read";
 import { autologSourceOf } from "@/lib/pending-writes-core";
 import type { ClaimedWrites, PendingWrite } from "@/lib/pending-writes-core";
@@ -313,6 +314,16 @@ function sourceOf(job: PendingWrite): string | null {
     return kind ? `${kind}:${job.card?.trim().toLowerCase() ?? ""}` : null;
 }
 
+// A push nothing could name files under the app that posted it, never under its category. A card the text names
+// (Google Wallet's "Visa ••1234") is not an app. The name is a placeholder, so no merchant or logo lookup sees it.
+function filedName(job: PendingWrite): string {
+    if (!job.text || job.note.trim()) {
+        return job.note;
+    }
+    const app = job.card?.trim();
+    return app && !job.text.includes(app) ? app : translateNow("settings.integrations.unnamedPush");
+}
+
 function readNotification(job: PendingWrite, reads: NotificationReads | undefined): PendingWrite | null {
     if (!job.text) {
         return job;
@@ -521,6 +532,7 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
         const settled =
             fromAutomation(job) && !twin ? yield* settledOccurrence(db, job, account, currency, ledger, now) : null;
         const autolog = autologSourceOf(queued);
+        const filed = filedName(job);
         const creates = !twin && !settled;
         if (creates && holdsAutolog(usage, access, autolog, job.date)) {
             usage = yield* holdAutologWrite(db, usage, queued, job.date);
@@ -565,21 +577,25 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
                 const txId =
                     twin?.id ??
                     settled?.id ??
-                    (yield* transactionsRepo.create(db, {
-                        accountId: account?.id ?? null,
-                        amount: job.amount,
-                        categoryId,
-                        currency,
-                        date: new Date(job.date),
-                        details: null,
-                        fee: job.income
-                            ? null
-                            : yield* attemptSync("read", () =>
-                                  suggestedCardFee(db, { account, categoryId, currency, merchant: job.note })
-                              ),
-                        income: job.income,
-                        note: job.note,
-                    }));
+                    (yield* transactionsRepo.create(
+                        db,
+                        {
+                            accountId: account?.id ?? null,
+                            amount: job.amount,
+                            categoryId,
+                            currency,
+                            date: new Date(job.date),
+                            details: null,
+                            fee: job.income
+                                ? null
+                                : yield* attemptSync("read", () =>
+                                      suggestedCardFee(db, { account, categoryId, currency, merchant: filed })
+                                  ),
+                            income: job.income,
+                            note: filed,
+                        },
+                        { logoCandidate: filed === job.note }
+                    ));
                 if (lookup && creates) {
                     yield* queueEnrichment(db, txId);
                 }
