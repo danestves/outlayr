@@ -36,7 +36,7 @@ afterEach(() => {
     sent.mockReset();
 });
 
-test("sends only pushes that show an amount and are not logged yet", async () => {
+test("sends only pushes that show an amount and are not logged yet, once each", async () => {
     const db = migratedDatabase();
     await Effect.runPromise(setBoolSetting(db, "aiConsentV2", true));
     await Effect.runPromise(setBoolSetting(db, "aiEnrichment", true));
@@ -44,7 +44,16 @@ test("sends only pushes that show an amount and are not logged yet", async () =>
         setMeta(
             db,
             META_KEYS.pendingWriteLedger,
-            JSON.stringify([{ at: Date.now(), id: "logged", key: null, txId: "tx" }])
+            JSON.stringify([
+                { at: Date.now(), id: "logged", key: null, txId: "tx" },
+                {
+                    at: Date.now(),
+                    date: Date.UTC(2026, 10, 2),
+                    id: "spotify",
+                    key: "notification:expense:spotify",
+                    txId: "tx2",
+                },
+            ])
         )
     );
 
@@ -53,7 +62,9 @@ test("sends only pushes that show an amount and are not logged yet", async () =>
             push("code", "Banco\nYour sign-in code is 482913. Don't share it."),
             push("promo", "Banco\nGet 5% cashback this weekend!"),
             push("logged", "Banco\nYou paid $9.99 at Netflix"),
+            { ...push("repeat", "Banco\nYou paid $10.99 at Spotify"), dedupeKey: "notification:expense:spotify" },
             push("buy", "Banco\nYou paid $12.40 at STARBUCKS"),
+            { ...push("again", "Banco\nYou paid $12.40 at STARBUCKS"), dedupeKey: "notification:expense:buy" },
         ])
     );
 

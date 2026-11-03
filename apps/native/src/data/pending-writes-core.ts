@@ -401,6 +401,26 @@ function alreadyApplied(ledger: LedgerEntry[], job: PendingWrite): LedgerEntry |
     );
 }
 
+// The pushes a drain would still write: a replayed claim, a repeat of a logged purchase, or a second copy of one in
+// the same batch would only be skipped.
+export const unloggedPushes = Effect.fn("PendingWrites.unloggedPushes")(function* unloggedPushes(
+    db: Database,
+    jobs: readonly PendingWrite[]
+) {
+    const ledger = yield* readLedger(db);
+    const seen = new Set<string>();
+    return jobs.filter((job) => {
+        const key = job.dedupeKey?.trim();
+        if (alreadyApplied(ledger, job) || (key && seen.has(key))) {
+            return false;
+        }
+        if (key) {
+            seen.add(key);
+        }
+        return true;
+    });
+});
+
 function settleRepeatOf(ledger: LedgerEntry[], job: PendingWrite): LedgerEntry | null {
     const key = job.dedupeKey?.trim();
     if (!key || !REPEATS_ON_SETTLE.test(job.card ?? "")) {

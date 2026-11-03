@@ -5,7 +5,7 @@ import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-import { appliedWriteIds } from "@/data/pending-writes-core";
+import { unloggedPushes } from "@/data/pending-writes-core";
 import { readRemoteEnrichment } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import { NOTIFICATION_PATTERNS } from "@/domain/parse-notification";
@@ -39,12 +39,10 @@ export const readNotifications: NotificationReader = Effect.fn("NotificationRead
         if (!(yield* readRemoteEnrichment(db).pipe(Effect.orElseSucceed(() => false)))) {
             return reads;
         }
-        // Only a push that shows an amount leaves the device, so login codes and promotions never do; a replayed
-        // claim is already on the ledger and would only be skipped.
-        const applied = new Set(yield* appliedWriteIds(db, 0).pipe(Effect.orElseSucceed((): string[] => [])));
-        const pushes = jobs.filter(
-            (job) => job.text && NOTIFICATION_PATTERNS.money.test(job.text) && !applied.has(job.id)
-        );
+        // Only a push that shows an amount and is not logged yet leaves the device, so login codes, promotions and
+        // repeats of a logged purchase never do.
+        const unlogged = yield* unloggedPushes(db, jobs).pipe(Effect.orElseSucceed((): PendingWrite[] => []));
+        const pushes = unlogged.filter((job) => job.text && NOTIFICATION_PATTERNS.money.test(job.text));
         const language = firstLocale()?.languageTag?.trim() || undefined;
         yield* Effect.all(
             pushes.map((job) =>
