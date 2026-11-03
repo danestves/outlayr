@@ -50,13 +50,16 @@ describe("spend no limit covers", () => {
         expect(rows).toStrictEqual([{ categoryId: "food", share: 25 / 80, spent: 25 }]);
     });
 
-    it("counts uncategorised spend in the total without a row, and only inside the window", () => {
+    it("gives uncategorised spend its own row so the rows add up to the total, counting only inside the window", () => {
         const { rows, total } = unlimitedSpend(
             [spend(60, null), spend(40, "rent"), { ...spend(500, "rent"), date: NOVEMBER.end }],
             NOVEMBER,
-            new Set()
+            new Set(["groceries"])
         );
         expect(total).toBe(100);
-        expect(rows).toStrictEqual([{ categoryId: "rent", share: 0.4, spent: 40 }]);
+        expect(rows).toStrictEqual([
+            { categoryId: null, share: 0.6, spent: 60 },
+            { categoryId: "rent", share: 0.4, spent: 40 },
+        ]);
     });
 });
