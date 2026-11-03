@@ -72,6 +72,14 @@ describe("askForReview", () => {
         expect(mockStoreReview.requestReview).toHaveBeenCalledTimes(2);
     });
 
+    it("asks once when a manual save and an auto-logged entry ask at the same moment", async () => {
+        await writeEntries(db, [4, 3, 3]);
+
+        await Promise.all([askForReview(db), askForReview(db)]);
+
+        expect(mockStoreReview.requestReview).toHaveBeenCalledOnce();
+    });
+
     it("waits for a third day, which a deleted entry does not supply", async () => {
         await writeEntries(db, [5, 5]);
         await writeEntries(db, [0, 0, 1], new Date(2026, 9, 3, 13));

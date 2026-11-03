@@ -11,6 +11,7 @@ import type { Database } from "@/db/client";
 import { paywallHref } from "@/domain/paywall-trigger";
 
 import { readNotifications } from "./notification-read";
+import { askForReviewAfterAutolog } from "./review-prompt";
 import { warnAndContinue } from "./warn-and-continue";
 import { claimPendingWrites, releasePendingWrites } from "./widget-bridge";
 
@@ -82,6 +83,9 @@ export const resolveReminderTap = Effect.fn("NotificationTaps.resolveReminder")(
 const settleWalletWrites = (db: Database, walletWrite: string) =>
     drainPendingWrites(db, claimPendingWrites, releasePendingWrites, readNotifications).pipe(
         warnAndContinue("[outlayr] pending writes failed to apply"),
+        Effect.tap((drained) =>
+            drained !== undefined && drained.autologged > 0 ? askForReviewAfterAutolog(db) : Effect.void
+        ),
         Effect.andThen(fileWaitingPurchases(db).pipe(warnAndContinue("[outlayr] waiting purchases failed to file"))),
         Effect.andThen(pendingWriteTxId(db, walletWrite))
     );

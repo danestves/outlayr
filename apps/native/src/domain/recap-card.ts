@@ -10,6 +10,9 @@ const ROW_SIZE = 15;
 const BAR_HEIGHT = 6;
 const ROW_HEIGHT = 40;
 const FOOT_SIZE = 11;
+const MARK_SIZE = 14;
+const MARK_GAP = 6;
+const CAP_HEIGHT = 0.72;
 const RULE_HEIGHT = 1.3;
 const AVERAGE_GLYPH = 0.55;
 
@@ -113,9 +116,18 @@ export function layoutRecapCard(input: RecapCardInput): Required<DayCardLayout> 
 
     y += FOOT_SIZE + 14;
     texts.push(
-        { align: "left", size: FOOT_SIZE, text: input.daysLine, tone: "muted", weight: "regular", x: left, y },
-        { align: "right", size: FOOT_SIZE, text: input.url, tone: "muted", weight: "mono", x: right, y }
+        {
+            align: "left",
+            size: FOOT_SIZE,
+            text: input.url,
+            tone: "muted",
+            weight: "mono",
+            x: left + MARK_SIZE + MARK_GAP,
+            y,
+        },
+        { align: "right", size: FOOT_SIZE, text: input.daysLine, tone: "muted", weight: "regular", x: right, y }
     );
+    const mark = { left, size: MARK_SIZE, top: y - (FOOT_SIZE * CAP_HEIGHT + MARK_SIZE) / 2 };
 
-    return { bars, height: y + PADDING, rules, texts, width: DAY_CARD_WIDTH };
+    return { bars, height: y + PADDING, mark, rules, texts, width: DAY_CARD_WIDTH };
 }

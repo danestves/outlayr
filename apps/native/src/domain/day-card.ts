@@ -61,9 +61,16 @@ export interface DayCardInput {
     total: string;
 }
 
+export interface CardMark {
+    left: number;
+    size: number;
+    top: number;
+}
+
 export interface DayCardLayout {
     bars?: CardBar[];
     height: number;
+    mark?: CardMark;
     rules: CardRule[];
     texts: CardText[];
     width: number;

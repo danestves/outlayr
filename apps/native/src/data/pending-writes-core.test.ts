@@ -122,6 +122,32 @@ describe("applyPendingWrites", () => {
         await Effect.runPromise(setBoolSetting(db, "aiConsentV2", true));
     });
 
+    it("counts the expenses Wallet and bank pushes logged on their own, not entries made on purpose or replays", async () => {
+        const wallet = walletWrite("wallet-1");
+        const push = walletWrite("push-1", {
+            amount: 12,
+            amountText: "$12.00",
+            dedupeKey: "notification:expense:coffee lab",
+            date: NOW.getTime() + HOUR,
+            note: "Coffee Lab",
+        });
+        const shortcut = walletWrite("shortcut-1", { dedupeKey: null, note: "Kiosk" });
+        const watch = walletWrite("watch-1", { categoryId: "cat-expense", dedupeKey: null, note: "Tea" });
+        const salary = walletWrite("salary-1", {
+            amount: 900,
+            amountText: "$900.00",
+            dedupeKey: "notification:income:acme",
+            income: true,
+            note: "Acme",
+        });
+
+        const first = await Effect.runPromise(applyPendingWrites(db, [wallet, push, shortcut, watch, salary], NOW));
+        const replay = await Effect.runPromise(applyPendingWrites(db, [wallet, push], NOW));
+
+        expect(first).toStrictEqual({ applied: 5, autologged: 2 });
+        expect(replay).toStrictEqual({ applied: 0, autologged: 0 });
+    });
+
     it("files a bank app's push under its account in the charge's currency", async () => {
         await db.insert(accounts).values(
             ["USD", "EUR"].map((currency) => ({
@@ -191,7 +217,7 @@ describe("applyPendingWrites", () => {
             text: "Purchase alert\nYou made a $12.40 purchase at STARBUCKS with your card ending in 4321.",
         });
 
-        const applied = await Effect.runPromise(applyPendingWrites(db, [job], NOW));
+        const { applied } = await Effect.runPromise(applyPendingWrites(db, [job], NOW));
 
         expect(applied).toBe(1);
         const [row] = await db
@@ -334,7 +360,7 @@ describe("applyPendingWrites", () => {
     it("folds Payoneer's settle push into the row its authorize push made", async () => {
         await Effect.runPromise(applyPendingWrites(db, [busFare("auth", 0)], NOW));
 
-        const applied = await Effect.runPromise(applyPendingWrites(db, [busFare("settle", 20)], NOW));
+        const { applied } = await Effect.runPromise(applyPendingWrites(db, [busFare("settle", 20)], NOW));
 
         expect(applied).toBe(0);
         await expect(undeleted(db)).resolves.toHaveLength(1);
@@ -545,7 +571,7 @@ describe("applyPendingWrites", () => {
     it("skips a notification that names no amount", async () => {
         const job = walletWrite("statement", { amount: 0, note: "", text: "Your statement is ready" });
 
-        const applied = await Effect.runPromise(applyPendingWrites(db, [job], NOW));
+        const { applied } = await Effect.runPromise(applyPendingWrites(db, [job], NOW));
 
         expect(applied).toBe(0);
         await expect(liveRows(db)).resolves.toHaveLength(0);
@@ -595,7 +621,7 @@ describe("applyPendingWrites", () => {
         await Effect.runPromise(applyPendingWrites(db, [walletWrite("auth")], NOW));
         const settled = NOW.getTime() + WALLET_DEDUPE_WINDOW_MS - 1;
 
-        const applied = await Effect.runPromise(
+        const { applied } = await Effect.runPromise(
             applyPendingWrites(
                 db,
                 [walletWrite("settle", { date: settled })],
@@ -611,7 +637,7 @@ describe("applyPendingWrites", () => {
         await Effect.runPromise(applyPendingWrites(db, [walletWrite("morning")], NOW));
         const later = NOW.getTime() + WALLET_DEDUPE_WINDOW_MS + 1;
 
-        const applied = await Effect.runPromise(
+        const { applied } = await Effect.runPromise(
             applyPendingWrites(db, [walletWrite("noon", { date: later })], new Date(later))
         );
 
@@ -622,7 +648,7 @@ describe("applyPendingWrites", () => {
     it("keeps two purchases far apart that were queued while the app was closed", async () => {
         const evening = NOW.getTime() + WALLET_DEDUPE_WINDOW_MS * 50;
 
-        const applied = await Effect.runPromise(
+        const { applied } = await Effect.runPromise(
             applyPendingWrites(
                 db,
                 [walletWrite("morning"), walletWrite("evening", { date: evening })],
@@ -637,7 +663,7 @@ describe("applyPendingWrites", () => {
     it("keeps two purchases the automation could tell apart", async () => {
         await Effect.runPromise(applyPendingWrites(db, [walletWrite("a")], NOW));
 
-        const applied = await Effect.runPromise(
+        const { applied } = await Effect.runPromise(
             applyPendingWrites(db, [walletWrite("b", { dedupeKey: "wallet:id:txn-99" })], NOW)
         );
 
@@ -649,7 +675,7 @@ describe("applyPendingWrites", () => {
         const job = walletWrite("replayed", { dedupeKey: null });
 
         await Effect.runPromise(applyPendingWrites(db, [job], NOW));
-        const applied = await Effect.runPromise(applyPendingWrites(db, [job], NOW));
+        const { applied } = await Effect.runPromise(applyPendingWrites(db, [job], NOW));
 
         expect(applied).toBe(0);
         await expect(liveRows(db)).resolves.toHaveLength(1);
@@ -660,7 +686,7 @@ describe("applyPendingWrites", () => {
         await Effect.runPromise(applyPendingWrites(db, [job], NOW));
         const late = new Date(NOW.getTime() + WALLET_DEDUPE_WINDOW_MS * 3);
 
-        const applied = await Effect.runPromise(applyPendingWrites(db, [job], late));
+        const { applied } = await Effect.runPromise(applyPendingWrites(db, [job], late));
 
         expect(applied).toBe(0);
         await expect(liveRows(db)).resolves.toHaveLength(1);
@@ -672,7 +698,7 @@ describe("applyPendingWrites", () => {
         expect(row).toBeTruthy();
         await Effect.runPromise(transactionsRepo.remove(db, row.id, NOW));
 
-        const applied = await Effect.runPromise(applyPendingWrites(db, [walletWrite("again")], NOW));
+        const { applied } = await Effect.runPromise(applyPendingWrites(db, [walletWrite("again")], NOW));
 
         expect(applied).toBe(1);
         const live = await db.select({ id: transactions.id }).from(transactions).where(eq(transactions.deletedAt, NOW));
@@ -926,7 +952,7 @@ describe("applyPendingWrites", () => {
         await db.delete(categories);
         await Effect.runPromise(setBoolSetting(db, "aiEnrichment", false));
 
-        const applied = await Effect.runPromise(applyPendingWrites(db, [walletWrite("a")], NOW));
+        const { applied } = await Effect.runPromise(applyPendingWrites(db, [walletWrite("a")], NOW));
 
         expect(applied).toBe(0);
         await expect(liveRows(db)).resolves.toHaveLength(0);
@@ -973,8 +999,8 @@ describe("drainPendingWrites", () => {
         ]);
 
         await expect(db.select().from(transactions)).resolves.toHaveLength(1);
-        expect(first).toBe(1);
-        expect(second).toBe(1);
+        expect(first).toStrictEqual({ applied: 1, autologged: 1 });
+        expect(second).toStrictEqual(first);
         expect(released).toBe(1);
     });
 

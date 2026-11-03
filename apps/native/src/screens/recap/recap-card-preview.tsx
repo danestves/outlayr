@@ -1,5 +1,6 @@
 import { View } from "react-native";
 
+import { OutlayrMark } from "@/components/outlayr-mark";
 import { Text } from "@/components/text";
 import { CARD_INK, CARD_MUTED, CARD_PAPER } from "@/domain/day-card";
 import type { CardWeight, DayCardLayout } from "@/domain/day-card";
@@ -75,6 +76,9 @@ export function RecapCardPreview({ layout, width }: { layout: Required<DayCardLa
                         />
                     </View>
                 ))}
+                <View style={{ left: layout.mark.left, position: "absolute", top: layout.mark.top }}>
+                    <OutlayrMark color={CARD_INK} size={layout.mark.size} />
+                </View>
                 {layout.texts.map((text) => (
                     <Text
                         className={WEIGHT_CLASS[text.weight]}

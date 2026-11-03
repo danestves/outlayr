@@ -2,6 +2,7 @@ import { ImageFormat, Skia } from "@shopify/react-native-skia";
 import type { SkCanvas } from "@shopify/react-native-skia";
 import * as Effect from "effect/Effect";
 
+import { BRAND_MARK_PATHS, BRAND_MARK_VIEWBOX } from "@/domain/brand-mark";
 import { CARD_INK, CARD_MUTED, CARD_PAPER, layoutDayCard } from "@/domain/day-card";
 import type { CardTone, DayCardInput, DayCardLayout } from "@/domain/day-card";
 import { translateNow } from "@/i18n/runtime";
@@ -49,6 +50,22 @@ function draw(canvas: SkCanvas, layout: DayCardLayout, typefaces: CardTypefaces)
             ),
             fill
         );
+    }
+
+    if (layout.mark) {
+        const { left, size, top } = layout.mark;
+        const scale = size / BRAND_MARK_VIEWBOX.width;
+        const markPaint = paintFor("ink");
+        canvas.save();
+        canvas.translate(left, top);
+        canvas.scale(scale, scale);
+        for (const d of BRAND_MARK_PATHS) {
+            const path = Skia.Path.MakeFromSVGString(d);
+            if (path) {
+                canvas.drawPath(path, markPaint);
+            }
+        }
+        canvas.restore();
     }
 
     for (const text of layout.texts) {

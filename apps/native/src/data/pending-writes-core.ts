@@ -11,7 +11,7 @@ import * as Schema from "effect/Schema";
 import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
 import { transaction } from "@/db/transaction";
-import { countsAsAutolog, holdsAutolog } from "@/domain/autolog-cap";
+import { autologExpenseCount, countsAsAutolog, holdsAutolog } from "@/domain/autolog-cap";
 import type { AutologAccess } from "@/domain/autolog-cap";
 import { detectCurrency } from "@/domain/detect-currency";
 import type { CardAccountCandidate } from "@/domain/match-card-account";
@@ -475,6 +475,13 @@ export const pendingWriteTxId = Effect.fn("PendingWrites.pendingWriteTxId")(func
     return entry && (yield* stillOnLedger(db, entry.txId)) ? entry.txId : null;
 });
 
+export interface DrainResult {
+    applied: number;
+    autologged: number;
+}
+
+const NOTHING_DRAINED: DrainResult = { applied: 0, autologged: 0 };
+
 // Each job is recorded against its row in the same SQLite transaction as the insert, which collapses the queue's
 // at-least-once delivery to exactly once.
 export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(function* applyPendingWrites(
@@ -485,11 +492,12 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
     reads?: NotificationReads
 ) {
     if (jobs.length === 0) {
-        return 0;
+        return NOTHING_DRAINED;
     }
     const at = now.getTime();
     let ledger = yield* readLedger(db);
     let applied = 0;
+    let autologged = 0;
     const access = knownAccess ?? (yield* readAutologAccess(db));
     let usage = yield* readAutologUsage(db);
 
@@ -629,6 +637,7 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
                 source: autolog,
                 transaction_type: job.income ? "income" : "expense",
             });
+            autologged += autologExpenseCount(autolog, job.income);
         }
         const opened =
             twin && !twin.accountId && account
@@ -640,7 +649,7 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
         applied += 1;
     }
 
-    return applied;
+    return { applied, autologged } satisfies DrainResult;
 });
 
 interface MatchedAccount {
@@ -916,7 +925,7 @@ const firstCategory = Effect.fn("PendingWrites.firstCategory")(function* firstCa
     return fallback[0]?.id ?? null;
 });
 
-let draining: Deferred.Deferred<number, DrainFailure> | null = null;
+let draining: Deferred.Deferred<DrainResult, DrainFailure> | null = null;
 let rerun = false;
 
 // One drain at a time: `claimPendingWrites` re-returns an unreleased claim (crash recovery), so overlapping drains
@@ -931,15 +940,18 @@ export const drainPendingWrites = Effect.fn("PendingWrites.drainPendingWrites")(
         rerun = true;
         return yield* Deferred.await(draining);
     }
-    const pass = Deferred.makeUnsafe<number, DrainFailure>();
+    const pass = Deferred.makeUnsafe<DrainResult, DrainFailure>();
     draining = pass;
     return yield* Effect.gen(function* drainUntilSettled() {
         let applied = 0;
+        let autologged = 0;
         do {
             rerun = false;
-            applied += yield* runDrain(db, claim, release, reader);
+            const drained = yield* runDrain(db, claim, release, reader);
+            applied += drained.applied;
+            autologged += drained.autologged;
         } while (rerun);
-        return applied;
+        return { applied, autologged } satisfies DrainResult;
     }).pipe(
         Effect.onExit((exit) =>
             Effect.suspend(() => {
@@ -963,16 +975,16 @@ const runDrain = Effect.fn("PendingWrites.runDrain")(function* runDrain(
     const access = yield* readAutologAccess(db);
     const waiting = access === "open" ? yield* readAutologWaiting(db) : [];
     if (claimed.names.length === 0 && waiting.length === 0) {
-        return 0;
+        return NOTHING_DRAINED;
     }
     const jobs = [...waiting, ...claimed.jobs];
     const reads = reader ? yield* reader(db, jobs) : undefined;
-    const applied = yield* applyPendingWrites(db, jobs, new Date(), access, reads);
+    const drained = yield* applyPendingWrites(db, jobs, new Date(), access, reads);
     if (waiting.length > 0) {
         yield* writeAutologWaiting(db, []);
     }
     yield* attemptSync("release", () => {
         release(claimed);
     });
-    return applied;
+    return drained;
 });
