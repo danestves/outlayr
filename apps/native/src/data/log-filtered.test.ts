@@ -65,7 +65,6 @@ describe("landingDate", () => {
 
 describe("upcomingSchedules", () => {
     it("drops a schedule whose next charge falls after its end date", () => {
-        // Started 23 Oct, cancelled to end 28 Oct: the 23 Nov charge never happens.
         const ended = carrier({ date: at(2026, 10, 23, 9), recurringEndDate: at(2026, 10, 28) });
         const live = carrier({ date: at(2026, 10, 17, 9), id: "live" });
 

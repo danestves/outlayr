@@ -102,7 +102,6 @@ export interface UpcomingTransactions {
     schedules: TransactionWithCategory[];
 }
 
-// The backfill retires an ended schedule only once its next charge comes due, so until then the row still repeats.
 export function upcomingSchedules(rows: readonly TransactionWithCategory[], at: Date): TransactionWithCategory[] {
     return rows
         .filter(
