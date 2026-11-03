@@ -14,7 +14,6 @@ const DEFAULT_INPUT_PRICE_MICROS_PER_TOKEN = 0.1;
 const DEFAULT_OUTPUT_PRICE_MICROS_PER_TOKEN = 0.5;
 export const DEFAULT_BUDGET_CEILING_MICROS = 200_000_000;
 const BUDGET_PERIOD_MS = 30 * DAY;
-/** A third search measured ~49k input tokens and 7.4s median against ~23k and 5.1s for two. */
 export const WORST_CASE_SEARCH_CALLS = 2;
 /** Backs the pessimistic pre-charge. Search results bill as input: one-search lookups measured 14k to 17.5k tokens. */
 const ESTIMATED_INPUT_TOKENS = 18_000;
