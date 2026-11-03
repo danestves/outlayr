@@ -30,6 +30,7 @@ export const accounts = sqliteTable(
     "accounts",
     {
         checkedAt: integer("checkedAt", { mode: "timestamp_ms" }),
+        creditLimit: real("creditLimit"),
         currency: text("currency").notNull(),
         customColor: text("customColor"),
         dateCreated: integer("dateCreated", { mode: "timestamp_ms" }).notNull(),
@@ -49,7 +50,9 @@ export const accounts = sqliteTable(
         initialBalanceUsd: real("initialBalanceUsd"),
         kind: text("kind").notNull().default("asset"),
         name: text("name").notNull(),
+        paymentDay: integer("paymentDay"),
         sortOrder: integer("sortOrder").notNull().default(0),
+        statementDay: integer("statementDay"),
         updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).notNull(),
     },
     (table) => [index("accounts_deletedAt_idx").on(table.deletedAt)]

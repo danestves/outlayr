@@ -74,6 +74,7 @@ function makeDb(): SpendDb {
 			initialBalanceDate integer NOT NULL,
 			kind text NOT NULL DEFAULT 'asset',
 			checkedAt integer,
+			creditLimit real, paymentDay integer, statementDay integer,
 			icon text,
 			emoji text,
 			customColor text,

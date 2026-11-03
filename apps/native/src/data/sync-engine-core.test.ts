@@ -1165,6 +1165,7 @@ describe("two devices against one account", () => {
 
         await alpha.insert(accounts).values({
             checkedAt: AT(5000),
+            creditLimit: 5000,
             currency: "EUR",
             dateCreated: AT(3000),
             id: "acct-1",
@@ -1173,7 +1174,9 @@ describe("two devices against one account", () => {
             initialBalanceDate: AT(4000),
             initialBalanceUsd: 270,
             name: "Checking",
+            paymentDay: 10,
             sortOrder: 2,
+            statementDay: 25,
             updatedAt: AT(3000),
         });
         await Effect.runPromise(runSync(alpha, server.transport));
@@ -1188,6 +1191,7 @@ describe("two devices against one account", () => {
         expect(row.dateCreated.getTime()).toBe(3000);
         expect(row.sortOrder).toBe(2);
         expect(row.checkedAt?.getTime()).toBe(5000);
+        expect([row.creditLimit, row.statementDay, row.paymentDay]).toStrictEqual([5000, 25, 10]);
         expect(row.imageUri).toBeNull();
         await expect(Effect.runPromise(outboxPendingCount(beta))).resolves.toBe(0);
     });

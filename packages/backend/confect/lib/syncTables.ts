@@ -89,6 +89,7 @@ export const transferFields = {
 export const accountFields = {
     /** Optional for older builds; `push` patches, so an absent key leaves a stored check alone. */
     checkedAt: Schema.optional(Schema.NullOr(Schema.Number)),
+    creditLimit: Schema.optional(Schema.NullOr(Schema.Number)),
     currency: Schema.String,
     customColor: Schema.NullOr(Schema.String),
     dateCreated: Schema.Number,
@@ -102,7 +103,9 @@ export const accountFields = {
     /** Optional for older builds; absent reads as `asset` (`@outlayr/money/account-kind`). */
     kind: Schema.optional(Schema.NullOr(Schema.String)),
     name: Schema.String,
+    paymentDay: Schema.optional(Schema.NullOr(Schema.Number)),
     sortOrder: Schema.Number,
+    statementDay: Schema.optional(Schema.NullOr(Schema.Number)),
 };
 
 // `imageUri` is a device-local path that must never replicate; it stays here only so older documents validate.

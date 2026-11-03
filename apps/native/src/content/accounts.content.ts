@@ -55,6 +55,42 @@ const accounts = {
             fr: "Ajouter un compte",
             pt: "Adicionar conta",
         }),
+        "accounts.card.available": t({
+            en: "{amount} available of {limit}",
+            es: "{amount} disponible de {limit}",
+            fr: "{amount} disponibles sur {limit}",
+            pt: "{amount} disponível de {limit}",
+        }),
+        "accounts.card.closed": t({
+            en: "closed {date}",
+            es: "corte del {date}",
+            fr: "relevé du {date}",
+            pt: "fatura de {date}",
+        }),
+        "accounts.card.due": t({
+            en: "{amount} due {date}",
+            es: "{amount} vence el {date}",
+            fr: "{amount} à payer le {date}",
+            pt: "{amount} vence em {date}",
+        }),
+        "accounts.card.nextClose": t({
+            en: "Next statement closes {date}",
+            es: "Próximo corte el {date}",
+            fr: "Prochain relevé le {date}",
+            pt: "Próxima fatura fecha em {date}",
+        }),
+        "accounts.card.nothingDue": t({
+            en: "Nothing due {date}",
+            es: "Nada que pagar el {date}",
+            fr: "Rien à payer le {date}",
+            pt: "Nada a pagar em {date}",
+        }),
+        "accounts.card.overdue": t({
+            en: "{amount} overdue since {date}",
+            es: "{amount} vencido desde el {date}",
+            fr: "{amount} en retard depuis le {date}",
+            pt: "{amount} vencido desde {date}",
+        }),
         "accounts.census_one": t({
             en: "{count} account",
             es: "{count} cuenta",
@@ -291,11 +327,23 @@ const accounts = {
             fr: "Solde",
             pt: "Saldo",
         }),
+        "accounts.field.creditLimit": t({
+            en: "Credit limit",
+            es: "Límite de crédito",
+            fr: "Plafond",
+            pt: "Limite de crédito",
+        }),
         "accounts.field.currency": t({
             en: "Currency",
             es: "Moneda",
             fr: "Devise",
             pt: "Moeda",
+        }),
+        "accounts.field.day": t({
+            en: "Day {day}",
+            es: "Día {day}",
+            fr: "Le {day}",
+            pt: "Dia {day}",
         }),
         "accounts.field.kind": t({
             en: "Money I owe",
@@ -309,6 +357,24 @@ const accounts = {
             es: "Nombre",
             fr: "Nom",
             pt: "Nome",
+        }),
+        "accounts.field.notSet": t({
+            en: "Not set",
+            es: "Sin definir",
+            fr: "Non défini",
+            pt: "Não definido",
+        }),
+        "accounts.field.paymentDay": t({
+            en: "Payment due",
+            es: "Fecha de pago",
+            fr: "Date de paiement",
+            pt: "Vencimento",
+        }),
+        "accounts.field.statementDay": t({
+            en: "Statement closes",
+            es: "Fecha de corte",
+            fr: "Date du relevé",
+            pt: "Fechamento da fatura",
         }),
         "accounts.multiCurrency": t({
             en: "Multi-currency",
@@ -359,6 +425,24 @@ const accounts = {
             es: "Abre todas las cuentas",
             fr: "Ouvre tous les comptes",
             pt: "Abre todas as contas",
+        }),
+        "accounts.reminder.body": t({
+            en: "{amount} from the {date} statement.",
+            es: "{amount} del corte del {date}.",
+            fr: "{amount} du relevé du {date}.",
+            pt: "{amount} da fatura de {date}.",
+        }),
+        "accounts.reminder.bodyHidden": t({
+            en: "From the {date} statement.",
+            es: "Del corte del {date}.",
+            fr: "Du relevé du {date}.",
+            pt: "Da fatura de {date}.",
+        }),
+        "accounts.reminder.title": t({
+            en: "{card} is due tomorrow",
+            es: "Mañana vence {card}",
+            fr: "{card} est à payer demain",
+            pt: "{card} vence amanhã",
         }),
         "accounts.reorderTitle": t({
             en: "Reorder Accounts",

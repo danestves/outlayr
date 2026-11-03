@@ -39,6 +39,7 @@ export default function AccountEditor(props: AccountEditorProps) {
         draft,
         failure,
         fields,
+        limitSheet,
         name,
         openPicker,
         person,
@@ -103,6 +104,7 @@ export default function AccountEditor(props: AccountEditorProps) {
             <CurrencyPickerSheet {...currencySheet} />
 
             <AmountEntrySheet {...balanceSheet} />
+            <AmountEntrySheet {...limitSheet} />
         </View>
     );
 }

@@ -1,13 +1,19 @@
+import { toAccountKind } from "@outlayr/money/account-kind";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 
+import { settledCellsAt } from "@/data/accounts";
+import { accountsRepo } from "@/data/accounts-core";
+import { cardStatement } from "@/data/card-statement";
 import { readPlans } from "@/data/installments-core";
 import { owedPayoffPlans } from "@/data/payoff-plans";
 import { readBoolSetting, setBoolSetting } from "@/data/settings-core";
+import { loadValuationIn } from "@/data/valuation-source";
 import type { Database } from "@/db/client";
 import { accounts } from "@/db/schema";
 import {
+    cardNotice,
     cuotaNotice,
     cuotaReminders,
     debtNotice,
@@ -18,6 +24,7 @@ import {
 import { orderName } from "@/domain/installments";
 import type { TimeOfDay } from "@/domain/reminder";
 import { reminderReconcile } from "@/domain/reminder";
+import { reminderFireAt } from "@/domain/subscription-reminder";
 import { translateNow } from "@/i18n/runtime";
 
 import { armReminders, readReminderTime } from "./reminder-sync";
@@ -69,6 +76,54 @@ const cuotaNotices = Effect.fn("InstallmentReminderSync.cuotaNotices")(function*
     });
 });
 
+const cardNotices = Effect.fn("InstallmentReminderSync.cardNotices")(function* cardNotices(
+    db: Database,
+    now: Date,
+    time: TimeOfDay,
+    hideAmounts: boolean
+) {
+    const cards = (yield* accountsRepo.listActive(db)).filter(
+        (account) =>
+            toAccountKind(account.kind) === "liability" && account.paymentDay !== null && account.statementDay !== null
+    );
+    if (cards.length === 0) {
+        return [];
+    }
+    const plans = yield* Effect.try({
+        catch: (cause) => new InstallmentReminderError({ cause }),
+        try: () => readPlans(db, now),
+    });
+    const notices: DatedReminder[] = [];
+    for (const card of cards) {
+        const [cells, { rates }] = yield* Effect.all(
+            [settledCellsAt(db, card.id, now), loadValuationIn(db, card.currency)],
+            { concurrency: "unbounded" }
+        );
+        const own = plans.filter(({ plan }) => plan.accountId === card.id);
+        const statement = cardStatement(card, cells, rates, own, now.getTime());
+        if (statement?.due == null || statement.due <= 0) {
+            continue;
+        }
+        const fireAt = reminderFireAt(statement.cycle.dueOn, 1, time);
+        if (fireAt.getTime() > now.getTime()) {
+            notices.push(
+                cardNotice(
+                    {
+                        accountId: card.id,
+                        amount: statement.due,
+                        card: card.name,
+                        closedOn: statement.cycle.closedOn,
+                        currency: card.currency,
+                        fireAt,
+                    },
+                    hideAmounts
+                )
+            );
+        }
+    }
+    return notices;
+});
+
 const dueNotices = Effect.fn("InstallmentReminderSync.dueNotices")(function* dueNotices(
     db: Database,
     now: Date,
@@ -90,7 +145,8 @@ const dueNotices = Effect.fn("InstallmentReminderSync.dueNotices")(function* due
         )
     );
     const cuotas: DatedReminder[] = yield* cuotaNotices(db, now, time, cap, hideAmounts);
-    return [...cuotas, ...debts].sort((a, b) => a.fireAt.getTime() - b.fireAt.getTime()).slice(0, cap);
+    const cards = yield* cardNotices(db, now, time, hideAmounts);
+    return [...cuotas, ...debts, ...cards].sort((a, b) => a.fireAt.getTime() - b.fireAt.getTime()).slice(0, cap);
 });
 
 const reconcileInstallmentReminders = Effect.fn("InstallmentReminderSync.reconcile")(

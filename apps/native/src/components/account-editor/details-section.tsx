@@ -3,6 +3,7 @@ import {
     Divider,
     HStack,
     Image,
+    Picker,
     Spacer,
     Text as SwiftText,
     TextField,
@@ -27,7 +28,9 @@ import {
     multilineTextAlignment,
     onSubmit,
     onTapGesture,
+    pickerStyle,
     submitLabel,
+    tag,
     textInputAutocapitalization,
     tint,
 } from "@expo/ui/swift-ui/modifiers";
@@ -37,7 +40,7 @@ import { BODY, ROW, rowLabel } from "@/components/transaction-form/style";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { hitArea, outline } from "@/lib/swift-ui-geometry";
 
-import type { AccountFields } from "./use-account-form";
+import type { AccountFields, CardFields } from "./use-account-form";
 
 const SIGN_FONT = font({
     design: "rounded",
@@ -46,6 +49,8 @@ const SIGN_FONT = font({
 });
 const SIGN_HIT = 44;
 const BALANCE_MIN_SCALE = 0.5;
+const MONTH_DAYS = Array.from({ length: 31 }, (_, index) => index + 1);
+const UNSET = "unset";
 
 interface AccountEditorDetailsSectionProps extends AccountFields {
     hairline: ViewModifier[];
@@ -63,6 +68,7 @@ export function AccountEditorDetailsSection({
     balanceSignA11y,
     balanceEditA11y,
     balanceValue,
+    card,
     hairline,
     mutedColor,
     nameFieldRef,
@@ -193,6 +199,92 @@ export function AccountEditorDetailsSection({
             )}
 
             <Divider modifiers={hairline} />
+
+            {card ? <CardRows card={card} hairline={hairline} mutedColor={mutedColor} tintColor={tintColor} /> : null}
         </VStack>
+    );
+}
+
+interface CardRowsProps {
+    card: CardFields;
+    hairline: ViewModifier[];
+    mutedColor: string;
+    tintColor: string;
+}
+
+function CardRows({ card, hairline, mutedColor, tintColor }: CardRowsProps) {
+    const limitValue = card.limitValue ?? card.notSetLabel;
+    return (
+        <>
+            <HStack
+                modifiers={[
+                    ...ROW,
+                    hitArea(outline.rectangle()),
+                    onTapGesture(card.onLimitPress),
+                    accessibilityElement("combine"),
+                    accessibilityAddTraits(["isButton"]),
+                    accessibilityLabel(card.limitLabel),
+                    accessibilityValue(limitValue),
+                ]}
+            >
+                <SwiftText modifiers={[BODY, rowLabel]}>{card.limitLabel}</SwiftText>
+                <Spacer />
+                <SwiftText modifiers={[BODY, foregroundStyle(card.limitValue ? tintColor : mutedColor), lineLimit(1)]}>
+                    {limitValue}
+                </SwiftText>
+            </HStack>
+
+            <Divider modifiers={hairline} />
+
+            <DayRow
+                card={card}
+                label={card.statementDayLabel}
+                onChange={card.onStatementDayChange}
+                tintColor={tintColor}
+                value={card.statementDay}
+            />
+
+            <Divider modifiers={hairline} />
+
+            <DayRow
+                card={card}
+                label={card.paymentDayLabel}
+                onChange={card.onPaymentDayChange}
+                tintColor={tintColor}
+                value={card.paymentDay}
+            />
+
+            <Divider modifiers={hairline} />
+        </>
+    );
+}
+
+interface DayRowProps {
+    card: CardFields;
+    label: string;
+    onChange: (day: number | null) => void;
+    tintColor: string;
+    value: number | null;
+}
+
+function DayRow({ card, label, onChange, tintColor, value }: DayRowProps) {
+    return (
+        <HStack modifiers={ROW}>
+            <SwiftText modifiers={[BODY, rowLabel]}>{label}</SwiftText>
+            <Spacer />
+            <Picker
+                label={label}
+                modifiers={[pickerStyle("menu"), tint(tintColor)]}
+                onSelectionChange={(next) => onChange(next === UNSET ? null : Number(next))}
+                selection={value === null ? UNSET : String(value)}
+            >
+                <SwiftText modifiers={[tag(UNSET)]}>{card.notSetLabel}</SwiftText>
+                {MONTH_DAYS.map((day) => (
+                    <SwiftText key={day} modifiers={[tag(String(day))]}>
+                        {card.dayLabel(day)}
+                    </SwiftText>
+                ))}
+            </Picker>
+        </HStack>
     );
 }

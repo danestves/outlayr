@@ -20,6 +20,7 @@ import { tombstoneTransfersTouchingAccount } from "./transfers-core";
 export type Account = typeof accounts.$inferSelect;
 
 export interface AccountInput {
+    creditLimit?: number | null;
     currency: string;
     customColor?: string | null;
     emoji?: string | null;
@@ -32,6 +33,8 @@ export interface AccountInput {
     initialBalanceDate?: Date;
     kind?: AccountKind;
     name: string;
+    paymentDay?: number | null;
+    statementDay?: number | null;
 }
 
 export function getAccountById(db: Database, id: string): Account | null {
@@ -102,6 +105,7 @@ export const accountsRepo = {
         const sortOrder = yield* nextSortOrder(db);
         yield* query("create", () =>
             db.insert(accounts).values({
+                creditLimit: input.creditLimit ?? null,
                 currency: input.currency,
                 customColor: input.customColor ?? null,
                 dateCreated: now,
@@ -117,7 +121,9 @@ export const accountsRepo = {
                 initialBalanceUsd,
                 kind: input.kind ?? DEFAULT_ACCOUNT_KIND,
                 name: input.name,
+                paymentDay: input.paymentDay ?? null,
                 sortOrder,
+                statementDay: input.statementDay ?? null,
                 updatedAt: now,
             })
         );
