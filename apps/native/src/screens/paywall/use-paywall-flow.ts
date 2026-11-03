@@ -30,10 +30,8 @@ interface PlanPick {
 function purchaseProperties(plan: Plan | null, variant: typeof PaywallVariant.Type) {
     const product = plan?.offer.product;
     return {
-        currency: product?.currencyCode ?? null,
         period: product?.subscriptionPeriod ?? null,
         plan: plan?.kind ?? null,
-        price: product?.price ?? null,
         product_id: product?.identifier ?? null,
         variant,
     };
