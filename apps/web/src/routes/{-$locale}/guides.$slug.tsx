@@ -21,6 +21,7 @@ const PLATES = {
     "apple-pay-expense-tracker": "log-an-expense",
     "best-budget-apps": null,
     "best-expense-tracker-apps": null,
+    "best-expense-tracker-apps-latin-america": null,
     "best-open-source-expense-tracker-apps": null,
     "best-subscription-tracker-apps": null,
     "budget-planner": "04",

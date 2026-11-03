@@ -34,7 +34,7 @@ export const RIVALS_CHECKED = new Date(Date.UTC(2026, 9, 7));
 const RIVALS_RECHECKED = {
     copilot: new Date(Date.UTC(2026, 9, 23)),
     everydollar: new Date(Date.UTC(2026, 9, 23)),
-    fintonic: new Date(Date.UTC(2026, 9, 9)),
+    fintonic: new Date(Date.UTC(2026, 10, 3)),
     goodbudget: new Date(Date.UTC(2026, 9, 23)),
     monefy: new Date(Date.UTC(2026, 9, 23)),
     "money-lover": new Date(Date.UTC(2026, 9, 26)),
@@ -57,6 +57,7 @@ export const LISTS_CHECKED = new Date(Date.UTC(2026, 9, 9));
 
 const LISTS_RECHECKED = {
     "best-budget-apps": new Date(Date.UTC(2026, 9, 23)),
+    "best-expense-tracker-apps-latin-america": new Date(Date.UTC(2026, 10, 3)),
     "best-open-source-expense-tracker-apps": new Date(Date.UTC(2026, 9, 20)),
     "mint-alternative": new Date(Date.UTC(2026, 9, 23)),
     "ynab-alternatives": new Date(Date.UTC(2026, 9, 23)),

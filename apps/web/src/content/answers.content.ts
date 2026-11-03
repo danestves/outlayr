@@ -175,6 +175,23 @@ const LIST_PICKED_OURS = t({
     es: "Outlayr es nuestra. Tiene los mismos datos que las demás, incluida su propia fila de Ten en cuenta.",
 });
 
+const LATAM = {
+    cards: t({ en: "Credit cards", es: "Tarjetas de crédito" }),
+    cash: t({ en: "Cash", es: "Efectivo" }),
+    cuotas: t({ en: "Installments", es: "Cuotas" }),
+    spanish: t({ en: "In Spanish", es: "En español" }),
+};
+
+const LISTED_IN_SPANISH = t({
+    en: "Yes, and it is listed in the Argentina and Mexico App Stores",
+    es: "Sí, y aparece en el App Store de Argentina y de México",
+});
+
+const OUTLAYR_WATCH = t({
+    en: "Voice entry and receipt scans need an account and a connection, with 20 captures every 30 days on the free plan. There is no web app",
+    es: "Dictar y escanear recibos requiere una cuenta y conexión, con 20 capturas cada 30 días en el plan gratis. No tiene app web",
+});
+
 const CSV_INTO_OUTLAYR = {
     en: "Import it in Settings, under Import data, as a CSV file. Outlayr needs a date, an amount, and a category or description column, with commas between columns, so save a file with semicolons or tabs as a comma CSV first. It finds the category by a header that says Category.",
     es: "Impórtalo en Configuración, en Importar datos, como archivo CSV. Outlayr necesita una columna de fecha, una de monto y una de categoría o descripción, con comas entre columnas, así que guarda antes como CSV con comas un archivo que use punto y coma o tabulaciones. Encuentra la categoría por un encabezado que diga Category.",
@@ -1517,8 +1534,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Outlayr vs Money Lover: ads, recurring entries on the free plan, AI and receipt entry, platforms, and price. Money Lover facts checked in its help center, October 2026.",
-                        es: "Outlayr vs Money Lover: anuncios, registros recurrentes gratis, registro con IA y recibos, plataformas y precio. Datos de Money Lover revisados en su centro de ayuda, octubre de 2026.",
+                        en: "Outlayr vs Money Lover: ads, free recurring entries, AI and receipt entry, platforms, and price. Money Lover facts checked in its help center, October 2026.",
+                        es: "Outlayr vs Money Lover: anuncios, registros recurrentes gratis, IA y recibos, plataformas y precio. Datos de su centro de ayuda, revisados en octubre de 2026.",
                     }),
                     title: t({
                         en: "Money Lover Alternative: Outlayr vs Money Lover",
@@ -2130,8 +2147,8 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "It is if you want to start free, spend in more than one currency, or would rather say or scan a purchase than fill in a form. YNAB fits better if you want your bank to import transactions, or follow its give every dollar a job method. For six more options, see YNAB alternatives.",
-                            es: "Sí, si quieres empezar gratis, gastas en más de una moneda o prefieres dictar o escanear una compra en vez de llenar un formulario. YNAB te conviene más si quieres que tu banco importe los movimientos, o si sigues su método de darle un trabajo a cada dólar. Para ver seis opciones más, mira Alternativas a YNAB.",
+                            en: "Outlayr, if you want to start free, spend in more than one currency, or would rather say or scan a purchase than fill in a form. YNAB fits better if you want your bank to import transactions, or follow its give every dollar a job method. For six more options, see YNAB alternatives.",
+                            es: "Outlayr, si quieres empezar gratis, gastas en más de una moneda o prefieres dictar o escanear una compra en vez de llenar un formulario. YNAB te conviene más si quieres que tu banco importe los movimientos, o si sigues su método de darle un trabajo a cada dólar. Para ver seis opciones más, mira Alternativas a YNAB.",
                         }),
                         question: t({
                             en: "Should I use Outlayr or YNAB?",
@@ -3034,10 +3051,10 @@ const answers = {
                             },
                             {
                                 label: LABELS.currencies,
-                                source: "https://help.realbyteapps.com/hc/en-us/articles/360042988234-How-to-add-sub-currencies",
+                                source: "https://apps.apple.com/mx/app/id560481810",
                                 text: t({
-                                    en: "Sub-currencies next to a main one, with rates you update by hand",
-                                    es: "Submonedas junto a una principal, con tasas que actualizas a mano",
+                                    en: "Several at once, and you can update the exchange rate over the internet",
+                                    es: "Varias a la vez, y puedes actualizar la tasa de cambio por internet",
                                 }),
                             },
                             {
@@ -3047,10 +3064,10 @@ const answers = {
                             },
                             {
                                 label: LABELS.watch,
-                                source: "https://help.realbyteapps.com/hc/en-us/articles/360042988234-How-to-add-sub-currencies",
+                                source: "https://apps.apple.com/mx/app/id560481810",
                                 text: t({
-                                    en: "Rates for other currencies are ones you update by hand",
-                                    es: "Las tasas de las otras monedas las actualizas a mano",
+                                    en: "Syncing your data is a subscription, at $2.49 a month or $19.99 a year",
+                                    es: "Sincronizar tus datos es una suscripción, de US$2.49 al mes o US$19.99 al año",
                                 }),
                             },
                         ],
@@ -3074,13 +3091,7 @@ const answers = {
                                     es: "20 capturas de voz o de recibos cada 30 días, 2 cuentas, 2 presupuestos por categoría y cuentas en una moneda",
                                 }),
                             },
-                            {
-                                label: LABELS.watch,
-                                text: t({
-                                    en: "Voice entry and receipt scans need an account and a connection, with 20 captures every 30 days on the free plan. There is no web app",
-                                    es: "Dictar y escanear recibos requiere una cuenta y conexión, con 20 capturas cada 30 días en el plan gratis. No tiene app web",
-                                }),
-                            },
+                            { label: LABELS.watch, text: OUTLAYR_WATCH },
                         ],
                         name: "Outlayr",
                         slug: "outlayr",
@@ -3276,8 +3287,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Monefy supports 150+ currencies, Wallet by BudgetBakers converts at real-time rates, and Spendee supports several. Money Manager adds sub-currencies at rates you update by hand, and YNAB uses one currency per spending plan. Outlayr has 165 and converts each purchase at the rate from its day. Its free plan holds accounts in one currency.",
-                            es: "Monefy admite más de 150 monedas, Wallet by BudgetBakers convierte con tasas en tiempo real y Spendee admite varias. Money Manager agrega submonedas con tasas que actualizas a mano, y YNAB usa una moneda por plan de gastos. Outlayr tiene 165 y convierte cada compra con la tasa de su día. Su plan gratis permite cuentas en una moneda.",
+                            en: "Monefy supports 150+ currencies, Wallet by BudgetBakers converts at real-time rates, and Spendee supports several. Money Manager uses several at once and lets you update the rate over the internet, and YNAB uses one currency per spending plan. Outlayr has 165 and converts each purchase at the rate from its day. Its free plan holds accounts in one currency.",
+                            es: "Monefy admite más de 150 monedas, Wallet by BudgetBakers convierte con tasas en tiempo real y Spendee admite varias. Money Manager usa varias a la vez y te deja actualizar la tasa por internet, y YNAB usa una moneda por plan de gastos. Outlayr tiene 165 y convierte cada compra con la tasa de su día. Su plan gratis permite cuentas en una moneda.",
                         }),
                         question: t({
                             en: "Which expense tracker handles more than one currency?",
@@ -3323,7 +3334,7 @@ const answers = {
                 ],
                 related: [
                     "/guides/voice-expense-tracker",
-                    "/compare/fintonic",
+                    "/guides/best-expense-tracker-apps-latin-america",
                     "/guides/best-open-source-expense-tracker-apps",
                 ] satisfies PageRef[],
                 sources: t({
@@ -3333,6 +3344,501 @@ const answers = {
                 title: t({
                     en: "The best expense tracker apps, by what you need",
                     es: "La mejor app para controlar gastos, según lo que necesitas",
+                }),
+            },
+            "best-expense-tracker-apps-latin-america": {
+                apps: [
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://finyapp.io/",
+                                text: t({
+                                    en: "Free, with ads. Plus is $24.99 a year and Pro $39.99 a year, and new users get 14 days of Pro free",
+                                    es: "Gratis, con publicidad. Plus cuesta US$24.99 al año y Pro US$39.99 al año, y los usuarios nuevos reciben 14 días de Pro gratis",
+                                }),
+                            },
+                            {
+                                label: LABELS.entries,
+                                source: "https://finyapp.io/",
+                                text: t({
+                                    en: "By voice, photo, or chat, or by hand without a connection. Mercado Pago payments sync on their own in Argentina, Brazil, Mexico, Colombia, Chile, Peru, and Uruguay",
+                                    es: "Con tu voz, una foto o el chat, o a mano sin conexión. Los pagos de Mercado Pago se sincronizan solos en Argentina, Brasil, México, Colombia, Chile, Perú y Uruguay",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://finyapp.io/",
+                                text: t({
+                                    en: "40+, including USD, EUR, MXN, ARS, and BRL",
+                                    es: "Más de 40, entre ellas USD, EUR, MXN, ARS y BRL",
+                                }),
+                            },
+                            {
+                                label: LATAM.cuotas,
+                                source: "https://finyapp.io/",
+                                text: t({
+                                    en: "Detects payments in cuotas and splits them automatically. Its site shows a payment of 180,000 in 3 cuotas logged as 3 cuotas of 60,000",
+                                    es: "Detecta los pagos a cuotas y los divide automáticamente. Su sitio muestra un pago de 180.000 en 3 cuotas registrado como 3 cuotas de 60.000",
+                                }),
+                            },
+                            {
+                                label: LATAM.spanish,
+                                source: "https://apps.apple.com/ar/app/id6760370721",
+                                text: t({
+                                    en: "Its site and App Store description are in Spanish, and it is listed in the Argentina and Mexico App Stores",
+                                    es: "Su sitio y su descripción en el App Store están en español, y aparece en el App Store de Argentina y de México",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://finyapp.io/",
+                                text: t({ en: "iPhone and Android", es: "iPhone y Android" }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://finyapp.io/",
+                                text: t({
+                                    en: "The free plan shows ads and includes 100 transactions a month, 10 AI queries, and 2 scans",
+                                    es: "El plan gratis muestra publicidad e incluye 100 transacciones por mes, 10 consultas a la IA y 2 escaneos",
+                                }),
+                            },
+                        ],
+                        name: "Finy",
+                        slug: "finy",
+                        summary: t({
+                            en: "Finy is a personal finance app in Spanish for iPhone and Android that logs expenses by voice, photo, or chat.",
+                            es: "Finy es una app de finanzas personales en español para iPhone y Android que registra gastos con tu voz, una foto o el chat.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://apps.apple.com/mx/app/mobills-budget-planner/id921838244",
+                                text: t({
+                                    en: "Free, with some limits. Premium is a subscription bought inside the app, priced in the store",
+                                    es: "Gratis, con algunas limitaciones. Premium es una suscripción que compras dentro de la app, con precio en la tienda",
+                                }),
+                            },
+                            {
+                                label: LABELS.focus,
+                                source: "https://apps.apple.com/mx/app/mobills-budget-planner/id921838244",
+                                text: t({
+                                    en: "Accounts, credit cards with their limit and amount due, budgets and goals by category, and alerts for bills to pay",
+                                    es: "Cuentas, tarjetas de crédito con su límite y el monto a pagar, presupuestos y metas por categoría, y avisos de las cuentas por pagar",
+                                }),
+                            },
+                            {
+                                label: LATAM.spanish,
+                                source: "https://apps.apple.com/ar/app/id921838244",
+                                text: LISTED_IN_SPANISH,
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://www.mobills.com.br/",
+                                text: t({ en: "iPhone, Android, web", es: "iPhone, Android, web" }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://www.mobills.com.br/",
+                                text: t({
+                                    en: "Its website is in Brazilian Portuguese",
+                                    es: "Su sitio web está en portugués de Brasil",
+                                }),
+                            },
+                        ],
+                        name: "Mobills",
+                        slug: "mobills",
+                        summary: t({
+                            en: "Mobills is a Brazilian personal finance app for accounts, credit cards, budgets, and goals, with its app in Spanish.",
+                            es: "Mobills es una app brasileña de finanzas personales para cuentas, tarjetas de crédito, presupuestos y metas, con su app en español.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://www.monefy.com/",
+                                text: t({
+                                    en: "Free core app. An optional upgrade adds unlimited accounts, recurring transactions, and advanced filters",
+                                    es: "La app básica es gratis. Una mejora opcional agrega cuentas ilimitadas, movimientos recurrentes y filtros avanzados",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://www.monefy.com/faq/",
+                                text: t({
+                                    en: "150+. You type each exchange rate in the settings, and with no rate set it counts 1 to 1",
+                                    es: "Más de 150. Tú escribes cada tasa de cambio en los ajustes, y sin tasa cuenta 1 a 1",
+                                }),
+                            },
+                            {
+                                label: LATAM.cash,
+                                source: "https://www.monefy.com/faq/",
+                                text: t({
+                                    en: "Cash, cards, and banks as separate accounts",
+                                    es: "Efectivo, tarjetas y bancos como cuentas separadas",
+                                }),
+                            },
+                            {
+                                label: LATAM.spanish,
+                                source: "https://apps.apple.com/ar/app/id1212024409",
+                                text: LISTED_IN_SPANISH,
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://www.monefy.com/",
+                                text: t({
+                                    en: "iPhone and Android, synced through Google Drive or Dropbox",
+                                    es: "iPhone y Android, con sincronización por Google Drive o Dropbox",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://www.monefy.com/",
+                                text: t({
+                                    en: "Unlimited accounts and recurring transactions need the paid upgrade",
+                                    es: "Las cuentas ilimitadas y los movimientos recurrentes requieren la mejora de pago",
+                                }),
+                            },
+                        ],
+                        name: "Monefy",
+                        slug: "monefy",
+                        summary: t(RIVALS.monefy),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://apps.apple.com/mx/app/id560481810",
+                                text: t({
+                                    en: "Free, with in-app purchases. Its Data Sync Service is a subscription at $2.49 a month or $19.99 a year",
+                                    es: "Gratis, con compras dentro de la app. Su servicio de sincronización de datos es una suscripción de US$2.49 al mes o US$19.99 al año",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://apps.apple.com/mx/app/id560481810",
+                                text: t({
+                                    en: "Several at once, and you can update the exchange rate over the internet",
+                                    es: "Varias a la vez, y puedes actualizar la tasa de cambio por internet",
+                                }),
+                            },
+                            {
+                                label: LATAM.cards,
+                                source: "https://apps.apple.com/mx/app/id560481810",
+                                text: t({
+                                    en: "Credit and debit cards. Enter the payment day and it shows the payment amount and the balance left",
+                                    es: "Tarjetas de crédito y débito. Con el día de pago, muestra el monto a pagar y el saldo restante",
+                                }),
+                            },
+                            {
+                                label: LATAM.spanish,
+                                source: "https://apps.apple.com/ar/app/id560481810",
+                                text: LISTED_IN_SPANISH,
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://www.realbyteapps.com/",
+                                text: t({ en: "iPhone, Android", es: "iPhone, Android" }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://apps.apple.com/mx/app/id560481810",
+                                text: t({
+                                    en: "In the App Store in Spanish it is listed as Registro Contable: Gastos",
+                                    es: "En el App Store en español aparece como Registro Contable: Gastos",
+                                }),
+                            },
+                        ],
+                        name: "Money Manager",
+                        slug: "money-manager",
+                        summary: t({
+                            en: "Money Manager, from Realbyte, is an expense and budget app for iPhone and Android with double-entry bookkeeping.",
+                            es: "Money Manager, de Realbyte, es una app de gastos y presupuesto para iPhone y Android con contabilidad de doble entrada.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            { label: LABELS.price, text: OUTLAYR.price },
+                            { label: LABELS.entries, text: OUTLAYR.entries },
+                            { label: LABELS.currencies, text: OUTLAYR.currencies },
+                            {
+                                label: LATAM.cuotas,
+                                text: t({
+                                    en: "Splits a purchase into cuotas: what you pay now, then each payment on its own date, with a reminder the day before it is due. Installment apps such as Kueski Pay and Aplazo in Mexico are in its list",
+                                    es: "Divide una compra en cuotas: lo que pagas hoy y cada pago con su fecha, con un aviso el día antes de cada uno. Las apps de cuotas como Kueski Pay y Aplazo en México están en su lista",
+                                }),
+                            },
+                            {
+                                label: LATAM.cash,
+                                text: t({
+                                    en: "Accounts for cash, cards, savings, and debts. Pro lets each one keep its own currency",
+                                    es: "Cuentas para efectivo, tarjetas, ahorros y deudas. Con Pro, cada una puede tener su propia moneda",
+                                }),
+                            },
+                            { label: LABELS.free, text: OUTLAYR_FREE },
+                            { label: LATAM.spanish, text: LISTED_IN_SPANISH },
+                            { label: LABELS.platforms, text: OUTLAYR.platforms },
+                            { label: LABELS.watch, text: OUTLAYR_WATCH },
+                        ],
+                        name: "Outlayr",
+                        slug: "outlayr",
+                        summary: t(OUTLAYR_LEAD),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://www.spendee.com/pricing",
+                                text: t({
+                                    en: "Free Basic plan. Plus $1.99 a month or $14.99 a year, Premium $5.99 a month or $35.99 a year, after a 7-day trial. Prices vary by country",
+                                    es: "Plan Basic gratis. Plus US$1.99 al mes o US$14.99 al año, Premium US$5.99 al mes o US$35.99 al año, después de una prueba de 7 días. Los precios cambian según el país",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://help.spendee.com/article/231-how-to-setchange-the-currency-and-exchange-rate",
+                                text: t({
+                                    en: "A currency per wallet, with your own exchange rate per transaction",
+                                    es: "Una moneda por billetera, con tu propia tasa de cambio por movimiento",
+                                }),
+                            },
+                            {
+                                label: LATAM.cash,
+                                source: "https://www.spendee.com/pricing",
+                                text: t({
+                                    en: "Cash wallets: 1 on the free plan, unlimited on Plus and Premium",
+                                    es: "Billeteras de efectivo: 1 en el plan gratis, ilimitadas en Plus y Premium",
+                                }),
+                            },
+                            {
+                                label: LATAM.spanish,
+                                source: "https://apps.apple.com/ar/app/id635861140",
+                                text: LISTED_IN_SPANISH,
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://www.spendee.com/pricing",
+                                text: t({
+                                    en: "iPhone, Android, web. Budgets are on the phone only for now",
+                                    es: "iPhone, Android, web. Por ahora los presupuestos solo están en el celular",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://help.spendee.com/article/231-how-to-setchange-the-currency-and-exchange-rate",
+                                text: t({
+                                    en: "A wallet's currency cannot change once it has transactions",
+                                    es: "La moneda de una billetera no se puede cambiar cuando ya tiene movimientos",
+                                }),
+                            },
+                        ],
+                        name: "Spendee",
+                        slug: "spendee",
+                        summary: t({
+                            en: "Spendee is a budget app with a wallet for each currency, cash wallets, and shared wallets in its paid plans.",
+                            es: "Spendee es una app de presupuesto con una billetera por moneda, billeteras de efectivo y billeteras compartidas en sus planes de pago.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://budgetbakers.com/en/products/wallet/",
+                                text: t({
+                                    en: "Free tier for tracking by hand. Premium comes as a subscription or as a one-time Lifetime plan",
+                                    es: "Plan gratis para registrar a mano. Premium es una suscripción o un plan de por vida de pago único",
+                                }),
+                            },
+                            {
+                                label: LABELS.entries,
+                                source: "https://budgetbakers.com/en/products/wallet/",
+                                text: t({
+                                    en: "By hand on the free tier. Bank sync in Premium",
+                                    es: "A mano en el plan gratis. Sincronización bancaria en Premium",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://budgetbakers.com/en/products/wallet/",
+                                text: t({
+                                    en: "Several, with exchange rates calculated in real time",
+                                    es: "Varias, con tasas de cambio calculadas en tiempo real",
+                                }),
+                            },
+                            {
+                                label: LATAM.cash,
+                                source: "https://apps.apple.com/ar/app/id1032467659",
+                                text: t({
+                                    en: "Cash, credit and debit cards, and debts",
+                                    es: "Efectivo, tarjetas de crédito y débito, y deudas",
+                                }),
+                            },
+                            {
+                                label: LATAM.spanish,
+                                source: "https://apps.apple.com/ar/app/id1032467659",
+                                text: LISTED_IN_SPANISH,
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://budgetbakers.com/en/products/wallet/",
+                                text: t({ en: "iPhone, Android, web", es: "iPhone, Android, web" }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://budgetbakers.com/en/products/wallet/",
+                                text: t({
+                                    en: "Bank sync needs Premium",
+                                    es: "La sincronización bancaria requiere Premium",
+                                }),
+                            },
+                        ],
+                        name: "Wallet by BudgetBakers",
+                        slug: "wallet",
+                        summary: t(RIVALS.wallet),
+                    },
+                ],
+                facts: [
+                    {
+                        label: "Finy",
+                        text: t({
+                            en: "Best if you log by voice, photo, or chat, and want Mercado Pago payments to sync on their own",
+                            es: "Ideal si registras con tu voz, una foto o el chat, y quieres que tus pagos de Mercado Pago se sincronicen solos",
+                        }),
+                    },
+                    {
+                        label: "Mobills",
+                        text: t({
+                            en: "Best if you want an app in Spanish that keeps each credit card's limit and amount due next to budgets and goals",
+                            es: "Ideal si quieres una app en español que lleve el límite y el monto a pagar de cada tarjeta de crédito junto con presupuestos y metas",
+                        }),
+                    },
+                    {
+                        label: "Monefy",
+                        text: t({
+                            en: "Best if you want to log in two taps and type the exchange rate yourself",
+                            es: "Ideal si quieres registrar en dos toques y escribir tú la tasa de cambio",
+                        }),
+                    },
+                    {
+                        label: "Money Manager",
+                        text: t({
+                            en: "Best if you want credit and debit cards with a payment day, and several currencies at once",
+                            es: "Ideal si quieres tarjetas de crédito y débito con su día de pago, y varias monedas a la vez",
+                        }),
+                    },
+                    {
+                        label: "Outlayr",
+                        text: t({
+                            en: "Best if you spend in pesos and dollars at the rate of each day, split purchases into cuotas, or want to log by sentence, voice, or receipt",
+                            es: "Ideal si gastas en pesos y en dólares con la tasa de cada día, divides compras en cuotas o quieres registrar con una oración, tu voz o un recibo",
+                        }),
+                    },
+                    {
+                        label: "Spendee",
+                        text: t({
+                            en: "Best if you want a wallet per currency, with your own rate per transaction",
+                            es: "Ideal si quieres una billetera por moneda, con tu propia tasa por movimiento",
+                        }),
+                    },
+                    {
+                        label: "Wallet by BudgetBakers",
+                        text: t({
+                            en: "Best if you want exchange rates in real time and bank sync in Premium",
+                            es: "Ideal si quieres tasas de cambio en tiempo real y sincronización bancaria en Premium",
+                        }),
+                    },
+                ],
+                faq: [
+                    {
+                        answer: t({
+                            en: "It depends on how you spend. Finy logs by voice, photo, or chat and splits cuotas on its own. Mobills keeps credit cards with their limit and amount due. Monefy logs a purchase in two taps. Money Manager shows the payment amount and the balance left on a card. Spendee keeps a wallet per currency. Wallet by BudgetBakers converts at real-time rates. Outlayr logs by sentence, voice, or receipt and splits purchases into cuotas. All seven are free to start, and all of them are listed in the App Store for Argentina and Mexico with a description in Spanish.",
+                            es: "Depende de cómo gastes. Finy registra con tu voz, una foto o el chat, y divide las cuotas solo. Mobills lleva tus tarjetas de crédito con su límite y el monto a pagar. Monefy registra una compra en dos toques. Money Manager muestra el monto del pago y el saldo restante de una tarjeta. Spendee tiene una billetera por moneda. Wallet by BudgetBakers convierte con tasas en tiempo real. Outlayr registra con una oración, tu voz o un recibo, y divide las compras en cuotas. Las siete son gratis para empezar, y todas aparecen en el App Store de Argentina y de México con su descripción en español.",
+                        }),
+                        question: t({
+                            en: "What is the best expense tracker app in Argentina or Mexico?",
+                            es: "¿Cuál es la mejor app para controlar gastos en Argentina o México?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Finy supports 40+ currencies, including ARS, MXN, and USD. Monefy supports 150+ and you type each exchange rate. Money Manager uses several at once and lets you update the rate over the internet. Spendee gives each wallet a currency, with your own rate per transaction. Wallet by BudgetBakers converts at real-time rates. The Mobills listing does not describe using more than one currency. Outlayr has 165 and converts each purchase at the rate from its day. Its free plan holds accounts in one currency.",
+                            es: "Finy admite más de 40 monedas, entre ellas ARS, MXN y USD. Monefy admite más de 150 y tú escribes cada tasa de cambio. Money Manager usa varias a la vez y te deja actualizar la tasa por internet. Spendee le da una moneda a cada billetera, con tu propia tasa por movimiento. Wallet by BudgetBakers convierte con tasas en tiempo real. La ficha de Mobills no describe el uso de más de una moneda. Outlayr tiene 165 y convierte cada compra con la tasa de su día. Su plan gratis permite cuentas en una moneda.",
+                        }),
+                        question: t({
+                            en: "Which expense tracker handles pesos and dollars together?",
+                            es: "¿Qué app para controlar gastos lleva pesos y dólares juntos?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Finy detects payments in cuotas and splits them automatically. Outlayr splits a purchase into cuotas, or meses sin intereses: what you pay now, then each payment on its own date, with a reminder the day before it is due. The pages we read for the other five do not describe splitting a purchase into cuotas. Mobills, Money Manager, and Wallet by BudgetBakers describe credit cards, so check how they handle yours.",
+                            es: "Finy detecta los pagos a cuotas y los divide automáticamente. Outlayr divide una compra en cuotas, o en meses sin intereses: lo que pagas hoy y cada pago con su fecha, con un aviso el día antes. Las páginas de las otras cinco apps que revisamos no describen dividir una compra en cuotas. Mobills, Money Manager y Wallet by BudgetBakers describen tarjetas de crédito, así que revisa cómo manejan la tuya.",
+                        }),
+                        question: t({
+                            en: "Which app handles cuotas or meses sin intereses?",
+                            es: "¿Qué app maneja cuotas o meses sin intereses?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Monefy keeps cash as its own account, Spendee as a cash wallet, Wallet by BudgetBakers among the money it tracks, and Outlayr as an account in its own currency. The pages we read for Finy, Mobills, and Money Manager do not mention cash.",
+                            es: "Monefy lleva el efectivo como una cuenta aparte, Spendee como una billetera de efectivo, Wallet by BudgetBakers entre el dinero que sigue y Outlayr como una cuenta en su propia moneda. Las páginas de Finy, Mobills y Money Manager que revisamos no mencionan el efectivo.",
+                        }),
+                        question: t({
+                            en: "Which expense tracker works if I pay in cash?",
+                            es: "¿Qué app para controlar gastos sirve si pago en efectivo?",
+                        }),
+                    },
+                    COST_FAQ,
+                    RATE_FAQ,
+                    {
+                        answer: t({
+                            en: "Yes. Outlayr is listed in the App Store for Argentina and for Mexico with a description in Spanish, and it is offered in 175 countries and regions. Your app store shows the price for your country.",
+                            es: "Sí. Outlayr aparece en el App Store de Argentina y de México con su descripción en español, y se ofrece en 175 países y regiones. Tu tienda de apps muestra el precio de tu país.",
+                        }),
+                        question: t({
+                            en: "Is Outlayr available in Argentina and Mexico?",
+                            es: "¿Outlayr está disponible en Argentina y México?",
+                        }),
+                    },
+                ],
+                lead: t({
+                    en: "Seven expense trackers for Argentina, Mexico, and the rest of Latin America, each best for a different need: Finy, Mobills, Monefy, Money Manager, Outlayr, Spendee, and Wallet by BudgetBakers. All seven are free to start. Outlayr is ours; the other six are not.",
+                    es: "Siete apps para controlar gastos en Argentina, México y el resto de Latinoamérica, cada una mejor para algo distinto: Finy, Mobills, Monefy, Money Manager, Outlayr, Spendee y Wallet by BudgetBakers. Las siete son gratis para empezar. Outlayr es nuestra; las otras seis no.",
+                }),
+                meta: {
+                    description: t({
+                        en: "Seven expense tracker apps compared for Argentina and Mexico: pesos and dollars, cuotas, cash, and price. Outlayr is ours; the other six are not.",
+                        es: "Compara 7 apps para controlar gastos en Argentina y México y elige tu gestor de gastos: pesos y dólares, cuotas, efectivo y precio. Outlayr es nuestra.",
+                    }),
+                    title: t({
+                        en: "Best Expense Tracker Apps in Argentina and Mexico (2026) · Outlayr",
+                        es: "Mejores apps para controlar gastos en Argentina y México (2026) · Outlayr",
+                    }),
+                },
+                picked: [
+                    t({
+                        en: "Each app here has a Spanish description in the App Store for Argentina and Mexico, and each fits a different need, from logging in two taps to spending in pesos and dollars or splitting a purchase into cuotas. They are in alphabetical order, not ranked.",
+                        es: "Cada app de esta lista tiene su descripción en español en el App Store de Argentina y de México, y cada una sirve para algo distinto, desde registrar en dos toques hasta gastar en pesos y en dólares o dividir una compra en cuotas. Van en orden alfabético, no por puesto.",
+                    }),
+                    t({
+                        en: "Every detail about the other apps was read on that app's own site, help center, or App Store listing on the date below the table, and links to the page it came from. These are the facts as each app states them, not results of our own testing. A feature a page does not mention is left out, not marked as missing.",
+                        es: "Cada dato de las otras apps se leyó en el sitio, el centro de ayuda o la ficha del App Store de esa app en la fecha que aparece bajo la tabla, y enlaza a la página de donde salió. Son los datos tal como los da cada app, no resultados de pruebas nuestras. Lo que una página no menciona se deja fuera, no se marca como faltante.",
+                    }),
+                    LIST_PICKED_OURS,
+                ],
+                related: [
+                    "/guides/multi-currency-expense-tracker",
+                    "/tools/installment-calculator",
+                    "/guides/best-expense-tracker-apps",
+                ] satisfies PageRef[],
+                sources: LIST_SOURCES,
+                title: t({
+                    en: "The best expense tracker apps in Argentina, Mexico, and the rest of Latin America",
+                    es: "La mejor app para controlar gastos en Argentina, México y el resto de Latinoamérica",
                 }),
             },
             "best-open-source-expense-tracker-apps": {
