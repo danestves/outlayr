@@ -1,7 +1,8 @@
 import AddIcon from "@hugeicons-pro/core-stroke-rounded/Add01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
-import { BUDGET_TYPE, periodEnd, startOfPeriod } from "@outlayr/money/budget-window";
+import { BUDGET_TYPE, periodsBackTo, shiftWindow, startOfPeriod, windowEndMs } from "@outlayr/money/budget-window";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
 import { HeroNumber } from "@/components/amount-text";
@@ -23,6 +24,7 @@ import { monthAbbrev, monthLongTitle } from "@/domain/dates";
 import { formatAmount } from "@/domain/money";
 import { useLeaveWhenGone } from "@/hooks/use-leave-when-gone";
 import { useLanguage, useTranslation } from "@/i18n/context";
+import { BudgetPeriodStepper } from "@/screens/budgets/components/budget-period-stepper";
 import { withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";
 
@@ -34,8 +36,8 @@ const BAR_FLOOR = 2;
 const BAR_WASH = 0.18;
 const FALLBACK_COLOR = "#767676";
 
-/** A category no limit covers yet: what it took this month and lately, and the way to limit it. */
-export function CategoryDetail({ categoryId }: { categoryId: string }) {
+/** What a category took in a month and the months before it, and the way to limit it while no limit covers it. */
+export function CategoryDetail({ categoryId, initialMonthOffset }: { categoryId: string; initialMonthOffset: number }) {
     const db = useDatabase();
     const router = useRouter();
     const t = useTranslation();
@@ -51,9 +53,12 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
     const contributions = useExpenseContributions(db, nowMs);
     const allBudgets = usePerCategoryBudgets(db, nowMs, contributions);
     const limits = useLimitFlow({ allBudgets, contributions, currency, nowMs });
+    const [monthOffset, setMonthOffset] = useState(initialMonthOffset);
 
-    const start = startOfPeriod(new Date(nowMs), BUDGET_TYPE.month, { firstDayOfMonth, firstWeekday });
-    const current = { end: periodEnd(start, BUDGET_TYPE.month), start };
+    const thisMonth = startOfPeriod(new Date(nowMs), BUDGET_TYPE.month, { firstDayOfMonth, firstWeekday });
+    const current = shiftWindow(thisMonth, BUDGET_TYPE.month, monthOffset);
+    const { start } = current;
+    const live = monthOffset === 0;
     const windows = [
         current,
         ...closedWindowsBefore({ current, since: earliestDate(contributions), type: BUDGET_TYPE.month }),
@@ -63,11 +68,11 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
     const spent = series[0] ?? 0;
     const everything = totals.get(EVERY_SCOPE)?.[0] ?? 0;
     const typical = typicalOf(series.slice(1));
-    const entries = useBudgetContributions(db, categoryId, start, nowMs);
+    const entries = useBudgetContributions(db, categoryId, start, windowEndMs(current, nowMs));
     const limited = allBudgets.find((budget) => budget.categoryId === categoryId);
 
-    // Once a limit covers it, the budget's own detail is this category's screen.
-    useLeaveWhenGone(limited !== undefined, () => router.replace(`/balances/${limited?.id}`));
+    // Once a limit covers it, the budget's own detail is this category's running month.
+    useLeaveWhenGone(live && limited !== undefined, () => router.replace(`/balances/${limited?.id}`));
 
     const name = meta?.name ?? t("budgets.name.default");
     const period =
@@ -86,7 +91,17 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                 contentContainerClassName="px-5 pt-2 pb-safe-offset-10"
                 contentInsetAdjustmentBehavior="automatic"
             >
-                <MonoLabel>{t("balances.category.noLimit", { period })}</MonoLabel>
+                <View className="pb-3">
+                    <BudgetPeriodStepper
+                        label={period}
+                        maxBack={periodsBackTo(thisMonth, BUDGET_TYPE.month, earliestDate(contributions))}
+                        offset={monthOffset}
+                        onStep={setMonthOffset}
+                        type={BUDGET_TYPE.month}
+                        window={current}
+                    />
+                </View>
+                <MonoLabel>{limited ? t("balances.spent") : t("balances.noLimit")}</MonoLabel>
                 <HeroNumber amount={spent} code={currency} showCents={showCents} />
                 <Text className="text-muted text-subtitle pt-1">
                     {t("balances.share", { percent: spent > 0 && percent === 0 ? "<1" : String(percent) })}
@@ -117,7 +132,9 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                             key={bar.start.getTime()}
                             style={{
                                 backgroundColor:
-                                    bar.start === start ? colors.foreground : withAlpha(colors.foreground, BAR_WASH),
+                                    bar.start.getTime() === start.getTime()
+                                        ? colors.foreground
+                                        : withAlpha(colors.foreground, BAR_WASH),
                                 height: Math.max(BAR_FLOOR, (bar.amount / peak) * BAR_HEIGHT),
                             }}
                         />
@@ -126,7 +143,10 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                 <View className="flex-row gap-2 pt-1.5">
                     {bars.map((bar) => (
                         <MonoLabel
-                            className={cn("flex-1 text-center", bar.start === start && "text-foreground")}
+                            className={cn(
+                                "flex-1 text-center",
+                                bar.start.getTime() === start.getTime() && "text-foreground"
+                            )}
                             key={bar.start.getTime()}
                         >
                             {monthAbbrev(bar.start, language)}
@@ -134,27 +154,29 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                     ))}
                 </View>
 
-                <View className="pt-7">
-                    <MonoLabel>{t("balances.category.limit")}</MonoLabel>
-                    <Pressable
-                        accessibilityRole="button"
-                        className="border-border mt-2 flex-row items-center gap-3 border-y py-3 active:opacity-60"
-                        onPress={() =>
-                            limits.openLimit({
-                                categoryId,
-                                color: meta?.color ?? FALLBACK_COLOR,
-                                emoji: meta?.emoji ?? null,
-                                icon: meta?.icon ?? null,
-                                limit: null,
-                                name,
-                                type: BUDGET_TYPE.month,
-                            })
-                        }
-                    >
-                        <HugeiconsIcon color={colors.tint} icon={AddIcon} size={18} strokeWidth={2} />
-                        <Text className="text-tint text-body">{t("balances.category.addLimit")}</Text>
-                    </Pressable>
-                </View>
+                {limited ? null : (
+                    <View className="pt-7">
+                        <MonoLabel>{t("balances.category.limit")}</MonoLabel>
+                        <Pressable
+                            accessibilityRole="button"
+                            className="border-border mt-2 flex-row items-center gap-3 border-y py-3 active:opacity-60"
+                            onPress={() =>
+                                limits.openLimit({
+                                    categoryId,
+                                    color: meta?.color ?? FALLBACK_COLOR,
+                                    emoji: meta?.emoji ?? null,
+                                    icon: meta?.icon ?? null,
+                                    limit: null,
+                                    name,
+                                    type: BUDGET_TYPE.month,
+                                })
+                            }
+                        >
+                            <HugeiconsIcon color={colors.tint} icon={AddIcon} size={18} strokeWidth={2} />
+                            <Text className="text-tint text-body">{t("balances.category.addLimit")}</Text>
+                        </Pressable>
+                    </View>
+                )}
 
                 {entries.length ? (
                     <View className="pt-7">
