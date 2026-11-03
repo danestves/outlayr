@@ -10,6 +10,11 @@ export const openBankShortcutCommand = createCommand({
     label: "links:open-bank-shortcut",
 });
 
+export const emailSupportCommand = createCommand({
+    execute: (mailto: string) => openUrl(mailto),
+    label: "links:email-support",
+});
+
 export const openShortcutsAutomationsCommand = createCommand({
     execute: (_input: undefined) => openShortcutsAutomations(),
     label: "links:open-shortcuts-automations",

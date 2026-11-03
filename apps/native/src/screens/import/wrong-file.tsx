@@ -2,7 +2,7 @@ import File01Icon from "@hugeicons-pro/core-stroke-rounded/File01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Linking, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { MonoLabel } from "@/components/mono-label";
 import { SettingsAction } from "@/components/settings/settings-action";
@@ -12,10 +12,9 @@ import { useDatabase } from "@/contexts/local-data-context";
 import type { MmArchiveError } from "@/domain/money-manager/types";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
-import { expectHandoff } from "@/lib/app-handoff";
 import { useMoneyManagerSession } from "@/lib/money-manager-session";
 import { notifyFailure } from "@/lib/notify";
-import { supportMailURL } from "@/lib/support-link";
+import { emailSupport } from "@/lib/support-link";
 import { SILENT } from "@/state/atom-command";
 import { loadMoneyManagerBackupCommand } from "@/state/money-manager-commands";
 import { useAtomAction } from "@/state/use-atom-action";
@@ -87,10 +86,7 @@ export function MoneyManagerWrongFile() {
                     <Pressable
                         accessibilityRole="link"
                         className="h-12 items-center justify-center active:opacity-60"
-                        onPress={() => {
-                            expectHandoff();
-                            Linking.openURL(supportMailURL(t("mmImport.sources.requestSubject")));
-                        }}
+                        onPress={() => emailSupport(t("mmImport.sources.requestSubject"))}
                     >
                         <Text className="text-foreground text-callout font-sans-semibold">
                             {t("mmImport.wrongFile.tellUs")}

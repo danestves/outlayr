@@ -1,7 +1,6 @@
 import { useAtomValue } from "@effect/atom-react/Hooks";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
-import { Linking } from "react-native";
 
 import { CategoryIconTile } from "@/components/category-icon-tile";
 import { ImportSheet } from "@/components/import-sheet/import-sheet";
@@ -12,10 +11,9 @@ import type { ImportFlowEvent } from "@/domain/import-flow";
 import type { ImportSourceId } from "@/domain/import-sources";
 import { useProEntitled } from "@/hooks/use-pro-locked";
 import { useTranslation } from "@/i18n/context";
-import { expectHandoff } from "@/lib/app-handoff";
 import { useAuthSession } from "@/lib/auth-session";
 import { importDraftStore } from "@/lib/import-draft-store";
-import { supportMailURL } from "@/lib/support-link";
+import { emailSupport } from "@/lib/support-link";
 import { notionConnectionAtom } from "@/state/notion-commands";
 import { useColors } from "@/theme/use-colors";
 
@@ -67,10 +65,7 @@ export function BringDataIn() {
             : t("mmImport.notion.connectedTo", { workspace: workspace.name });
     };
 
-    const askForApp = () => {
-        expectHandoff();
-        Linking.openURL(supportMailURL(t("mmImport.sources.requestSubject")));
-    };
+    const askForApp = () => emailSupport(t("mmImport.sources.requestSubject"));
 
     return (
         <SettingsScreen>

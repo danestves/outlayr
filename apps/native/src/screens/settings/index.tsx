@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Linking, Platform, View } from "react-native";
+import { Platform, View } from "react-native";
 
 import { AiConsentPromptSheet } from "@/components/ai-consent";
 import { UndoImportRow } from "@/components/import-flow/undo-import-row";
@@ -43,8 +43,7 @@ import { APP_BUILD, APP_VERSION } from "@/lib/app-version";
 import { hasSystemLanguageSettings } from "@/lib/language-settings";
 import { legalUrl } from "@/lib/legal-url";
 import { notifyFailure } from "@/lib/notify";
-import { SUPPORT_EMAIL, supportDiagnostics } from "@/lib/support-link";
-import { supportMailto } from "@/lib/support-mailto";
+import { emailSupport } from "@/lib/support-link";
 import { SILENT } from "@/state/atom-command";
 import { appAtomRegistry } from "@/state/atom-registry";
 import { openLanguageSettingsCommand } from "@/state/link-commands";
@@ -108,7 +107,6 @@ export function Settings() {
     const colorScheme = settings.number("colorScheme");
     const scheme = useIsDark() ? "dark" : "light";
 
-    const diagnostics = supportDiagnostics(APP_VERSION, APP_BUILD);
     const previewAmount = formatAmount(SAMPLE_AMOUNT, currency, showCents, language);
     const centsLastAmount = formatAmount(CENTS_LAST_KEYS / 10 ** minorUnitsFor(currency), currency, true, language);
 
@@ -338,10 +336,7 @@ export function Settings() {
                 />
                 <LinkRow
                     icon="Lifebuoy"
-                    onPress={() => {
-                        expectHandoff();
-                        Linking.openURL(supportMailto(SUPPORT_EMAIL, t("settings.support.subject"), diagnostics));
-                    }}
+                    onPress={() => emailSupport(t("settings.support.subject"))}
                     title={t("settings.row.contactSupport")}
                 />
             </SettingsSection>

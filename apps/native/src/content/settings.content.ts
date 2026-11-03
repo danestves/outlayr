@@ -676,6 +676,27 @@ const settings = {
             fr: "J'aimerais qu'Outlayr puisse",
             pt: "Queria que o Outlayr pudesse",
         }),
+        "settings.support.noMailBody": t({
+            en: "Write to us at {address} from any email app.",
+            es: "Escríbenos a {address} desde cualquier app de correo.",
+            fr: "Écrivez-nous à {address} depuis n'importe quelle app de messagerie.",
+            pt: "Escreva para {address} de qualquer app de e-mail.",
+            "pt-PT": "Escreva para {address} a partir de qualquer app de e-mail.",
+        }),
+        "settings.support.noMailTitle": t({
+            en: "No mail app could open",
+            es: "No se pudo abrir ninguna app de correo",
+            fr: "Aucune app de messagerie n'a pu s'ouvrir",
+            pt: "Nenhum app de e-mail abriu",
+            "pt-PT": "Nenhuma app de e-mail abriu",
+        }),
+        "settings.support.shareAddress": t({
+            en: "Share address",
+            es: "Compartir dirección",
+            fr: "Partager l'adresse",
+            pt: "Compartilhar endereço",
+            "pt-PT": "Partilhar endereço",
+        }),
         "settings.support.subject": t({
             en: "Outlayr feedback",
             es: "Comentarios sobre Outlayr",
