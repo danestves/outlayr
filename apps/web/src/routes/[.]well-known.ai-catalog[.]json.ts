@@ -15,6 +15,7 @@ const catalog = {
                 "Is Outlayr on Android?",
                 "How much do my subscriptions cost per month?",
                 "What does an installment plan really cost?",
+                "Is it cheaper to pay in installments or cash with inflation?",
             ],
             type: SERVER_CARD_TYPE,
             url: `${SITE_URL}/.well-known/mcp/server-card.json`,

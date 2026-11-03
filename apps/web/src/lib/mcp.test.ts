@@ -95,6 +95,30 @@ describe("public MCP server", () => {
         );
     });
 
+    it("weighs inflation and a cash discount in installment_cost, in currency units", async () => {
+        const plan = { cashPrice: 1200, eachPayment: 200, payments: 6 };
+        const tie = await callTool("installment_cost", plan);
+        expect(tie.result.structuredContent).toMatchObject({
+            cheaper: "same",
+            extraOverCash: 0,
+            totalInTodaysMoney: 1200,
+        });
+
+        const inflated = await callTool("installment_cost", { ...plan, monthlyInflationPercent: 3 });
+        expect(inflated.result.structuredContent).toMatchObject({
+            cheaper: "installments",
+            totalInTodaysMoney: 1083.44,
+        });
+
+        const discounted = await callTool("installment_cost", { ...plan, cashDiscountPercent: 10 });
+        expect(discounted.result.structuredContent).toMatchObject({
+            cashPriceAfterDiscount: 1080,
+            cheaper: "cash",
+            extraOverCash: 120,
+        });
+        expect((await callTool("installment_cost", { ...plan, cashDiscountPercent: 101 })).result.isError).toBe(true);
+    });
+
     it("applies schema defaults", async () => {
         const reply = await callTool("budget_split", { income: 3000 });
         expect(reply.result.structuredContent.monthly).toEqual({ needs: 1500, savings: 600, wants: 900 });
