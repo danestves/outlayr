@@ -1254,6 +1254,24 @@ describe("the free auto-log cap", () => {
         await expect(Effect.runPromise(readAutologWaiting(db))).resolves.toStrictEqual([]);
     });
 
+    it("counts only the entries that arrive fresh as auto-logged, not the ones a Pro unlock releases", async () => {
+        await Effect.runPromise(applyPendingWrites(db, [fare("w1", "Blue Bottle", 0)], NOW));
+        await Effect.runPromise(writeAutologAccess(db, "open"));
+        const nothingClaimed = () => ({ jobs: [], names: [] });
+        const fresh = fare("w2", "Philz", 1);
+        const claimsFresh = () => ({ jobs: [fresh], names: ["claimed-1.jsonl"] });
+
+        const pending = () => Effect.runPromise(getMeta(db, META_KEYS.autologReviewPending));
+
+        const released = await Effect.runPromise(drainPendingWrites(db, nothingClaimed, () => undefined));
+        expect(released).toStrictEqual({ applied: 1, autologged: 0 });
+        await expect(pending()).resolves.toBeNull();
+
+        const arrived = await Effect.runPromise(drainPendingWrites(db, claimsFresh, () => undefined));
+        expect(arrived).toStrictEqual({ applied: 1, autologged: 1 });
+        await expect(pending()).resolves.toBe("1");
+    });
+
     it("leaves what waited alone while the customer is free", async () => {
         await Effect.runPromise(applyPendingWrites(db, [fare("w1", "Blue Bottle", 0)], NOW));
 

@@ -35,7 +35,6 @@ import { armLogoBackfill, backfillLogos } from "@/lib/logo-backfill";
 import { readNotifications } from "@/lib/notification-read";
 import { notifyWarning } from "@/lib/notify";
 import { RevenueCat } from "@/lib/revenuecat-service";
-import { askForReviewAfterAutolog } from "@/lib/review-prompt";
 import { onWatchPendingWrite } from "@/lib/watch-link";
 
 import { appStates, launchAndForegrounds, listen, signals, WatchAppState, WatchTableWrites } from "./app-events";
@@ -230,7 +229,6 @@ export const make = Effect.gen(function* make() {
         );
         const drainRun = drainPendingWrites(db, claimPendingWrites, releasePendingWrites, readNotifications).pipe(
             failedStep("drain"),
-            Effect.tap(({ autologged }) => (autologged > 0 ? askForReviewAfterAutolog(db) : Effect.void)),
             Effect.flatMap(({ applied }) => publishIf(applied === 0)),
             Effect.catchTags({ SystemSyncError: (error) => warn(error).pipe(Effect.andThen(publishSoon)) }),
             Effect.andThen(

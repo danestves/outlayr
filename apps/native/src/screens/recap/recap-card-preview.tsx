@@ -1,7 +1,7 @@
 import { View } from "react-native";
 
 import { OutlayrMark } from "@/components/outlayr-mark";
-import { Text } from "@/components/text";
+import { FontScaleCapContext, Text } from "@/components/text";
 import { CARD_INK, CARD_MUTED, CARD_PAPER } from "@/domain/day-card";
 import type { CardWeight, DayCardLayout } from "@/domain/day-card";
 
@@ -17,85 +17,87 @@ const TRACK_OPACITY = 0.2;
 export function RecapCardPreview({ layout, width }: { layout: Required<DayCardLayout>; width: number }) {
     const scale = width / layout.width;
     return (
-        <View
-            accessibilityElementsHidden
-            importantForAccessibility="no-hide-descendants"
-            style={{ height: layout.height * scale, width }}
-        >
+        <FontScaleCapContext value={1}>
             <View
-                style={{
-                    backgroundColor: CARD_PAPER,
-                    height: layout.height,
-                    transform: [{ scale }],
-                    transformOrigin: "top left",
-                    width: layout.width,
-                }}
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+                style={{ height: layout.height * scale, width }}
             >
-                {layout.rules.map((rule) => (
-                    <View
-                        key={`rule-${rule.y}`}
-                        style={{
-                            backgroundColor: CARD_MUTED,
-                            height: rule.height,
-                            left: rule.x,
-                            opacity: 0.35,
-                            position: "absolute",
-                            top: rule.y,
-                            width: rule.width,
-                        }}
-                    />
-                ))}
-                {layout.bars.map((bar) => (
-                    <View
-                        key={`bar-${bar.y}`}
-                        style={{
-                            borderRadius: bar.height / 2,
-                            height: bar.height,
-                            left: bar.x,
-                            overflow: "hidden",
-                            position: "absolute",
-                            top: bar.y,
-                            width: bar.width,
-                        }}
-                    >
+                <View
+                    style={{
+                        backgroundColor: CARD_PAPER,
+                        height: layout.height,
+                        transform: [{ scale }],
+                        transformOrigin: "top left",
+                        width: layout.width,
+                    }}
+                >
+                    {layout.rules.map((rule) => (
                         <View
+                            key={`rule-${rule.y}`}
                             style={{
                                 backgroundColor: CARD_MUTED,
-                                height: "100%",
-                                opacity: TRACK_OPACITY,
-                                width: "100%",
-                            }}
-                        />
-                        <View
-                            style={{
-                                backgroundColor: bar.color,
-                                height: "100%",
+                                height: rule.height,
+                                left: rule.x,
+                                opacity: 0.35,
                                 position: "absolute",
-                                width: Math.max(bar.height, bar.width * bar.fraction),
+                                top: rule.y,
+                                width: rule.width,
                             }}
                         />
+                    ))}
+                    {layout.bars.map((bar) => (
+                        <View
+                            key={`bar-${bar.y}`}
+                            style={{
+                                borderRadius: bar.height / 2,
+                                height: bar.height,
+                                left: bar.x,
+                                overflow: "hidden",
+                                position: "absolute",
+                                top: bar.y,
+                                width: bar.width,
+                            }}
+                        >
+                            <View
+                                style={{
+                                    backgroundColor: CARD_MUTED,
+                                    height: "100%",
+                                    opacity: TRACK_OPACITY,
+                                    width: "100%",
+                                }}
+                            />
+                            <View
+                                style={{
+                                    backgroundColor: bar.color,
+                                    height: "100%",
+                                    position: "absolute",
+                                    width: Math.max(bar.height, bar.width * bar.fraction),
+                                }}
+                            />
+                        </View>
+                    ))}
+                    <View style={{ left: layout.mark.left, position: "absolute", top: layout.mark.top }}>
+                        <OutlayrMark color={CARD_INK} size={layout.mark.size} />
                     </View>
-                ))}
-                <View style={{ left: layout.mark.left, position: "absolute", top: layout.mark.top }}>
-                    <OutlayrMark color={CARD_INK} size={layout.mark.size} />
+                    {layout.texts.map((text) => (
+                        <Text
+                            className={WEIGHT_CLASS[text.weight]}
+                            key={`text-${text.y}-${text.align}`}
+                            numberOfLines={1}
+                            style={{
+                                color: text.tone === "ink" ? CARD_INK : CARD_MUTED,
+                                fontSize: text.size,
+                                position: "absolute",
+                                top: text.y - text.size,
+                                ...(text.align === "right" ? { right: layout.width - text.x } : { left: text.x }),
+                            }}
+                        >
+                            {text.text}
+                        </Text>
+                    ))}
                 </View>
-                {layout.texts.map((text) => (
-                    <Text
-                        className={WEIGHT_CLASS[text.weight]}
-                        key={`text-${text.y}-${text.align}`}
-                        numberOfLines={1}
-                        style={{
-                            color: text.tone === "ink" ? CARD_INK : CARD_MUTED,
-                            fontSize: text.size,
-                            position: "absolute",
-                            top: text.y - text.size,
-                            ...(text.align === "right" ? { right: layout.width - text.x } : { left: text.x }),
-                        }}
-                    >
-                        {text.text}
-                    </Text>
-                ))}
             </View>
-        </View>
+        </FontScaleCapContext>
     );
 }

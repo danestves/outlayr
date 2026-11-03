@@ -49,6 +49,7 @@ import { barWindow, periodBars } from "@/domain/period-bars";
 import { mergeByRecency } from "@/domain/transfer-log-rows";
 import type { TransferLogRow } from "@/domain/transfer-log-rows";
 import { chargesBetween } from "@/domain/upcoming";
+import { useAutologReview } from "@/hooks/use-autolog-review";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { useDayCardShare } from "@/lib/use-day-card-share";
 import { useTransactionRowActions } from "@/lib/use-transaction-row-actions";
@@ -179,6 +180,7 @@ function useTailGrouping<T extends DayGroupable>(currency: string, rates: RateTa
 
 export function Log() {
     const db = useDatabase();
+    useAutologReview(db);
     const setNumberSetting = useAtomCommand(setNumberSettingCommand);
     const markReviewed = useAtomCommand(markReviewedCommand);
     const { waiting } = useAutologUsage(db);

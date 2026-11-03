@@ -977,14 +977,18 @@ const runDrain = Effect.fn("PendingWrites.runDrain")(function* runDrain(
     if (claimed.names.length === 0 && waiting.length === 0) {
         return NOTHING_DRAINED;
     }
-    const jobs = [...waiting, ...claimed.jobs];
-    const reads = reader ? yield* reader(db, jobs) : undefined;
-    const drained = yield* applyPendingWrites(db, jobs, new Date(), access, reads);
+    const reads = reader ? yield* reader(db, [...waiting, ...claimed.jobs]) : undefined;
+    const now = new Date();
+    const released = yield* applyPendingWrites(db, waiting, now, access, reads);
+    const fresh = yield* applyPendingWrites(db, claimed.jobs, now, access, reads);
     if (waiting.length > 0) {
         yield* writeAutologWaiting(db, []);
+    }
+    if (fresh.autologged > 0) {
+        yield* setMeta(db, META_KEYS.autologReviewPending, "1");
     }
     yield* attemptSync("release", () => {
         release(claimed);
     });
-    return drained;
+    return { applied: released.applied + fresh.applied, autologged: fresh.autologged } satisfies DrainResult;
 });
