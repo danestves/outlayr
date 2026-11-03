@@ -147,6 +147,7 @@ export const ROOT_STACK_SCREEN_NAMES = {
         "onboarding/auto-log",
         "onboarding/smart-features",
         "onboarding/rhythm",
+        "onboarding/first-entry",
         ...ONBOARDING_IMPORT_SCREENS.map((screen) => screen.name),
     ],
     "sign-in": ["auth/sign-in", "auth/email"],

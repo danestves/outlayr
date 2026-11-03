@@ -1,8 +1,10 @@
-import { View } from "react-native";
+import { useRouter } from "expo-router";
+import { Pressable, View } from "react-native";
 
 import { EmptyState } from "@/components/empty-state";
 import { Bar, GhostAvatar, GhostPanel, GhostRow, Hairline, Slot } from "@/components/empty-state-parts";
 import { Arrive } from "@/components/mark-motion";
+import { Text } from "@/components/text";
 import { useTranslation } from "@/i18n/context";
 import { MARK_CEILING } from "@/theme/empty-state-ink";
 
@@ -11,8 +13,23 @@ const INSET = 14;
 
 export function LogEmptyState() {
     const t = useTranslation();
+    const router = useRouter();
     return (
-        <EmptyState body={t("log.empty.body")} mark={<LedgerWaiting />} tier="takeover" title={t("log.empty.title")} />
+        <EmptyState
+            action={
+                <Pressable
+                    accessibilityRole="button"
+                    className="bg-accent rounded-full px-7 py-3.5 active:opacity-80"
+                    onPress={() => router.push("/transactions/create")}
+                >
+                    <Text className="font-sans-semibold text-accent-foreground text-body">{t("log.empty.action")}</Text>
+                </Pressable>
+            }
+            body={t("log.empty.body")}
+            mark={<LedgerWaiting />}
+            tier="takeover"
+            title={t("log.empty.title")}
+        />
     );
 }
 

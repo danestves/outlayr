@@ -85,7 +85,7 @@ export interface EntryCommit {
         siblings: readonly { id: string; name: string | null; parentId: string | null }[];
         value: PendingCategory;
     };
-    source: "form" | "scan" | "voice";
+    source: "form" | "onboarding" | "scan" | "voice";
     splits?: { allocations: readonly Allocation[]; decimals: number };
     tags?: { pendingNames: readonly string[]; tagIds: readonly string[] };
 }

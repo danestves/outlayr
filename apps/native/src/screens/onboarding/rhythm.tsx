@@ -1,4 +1,5 @@
 import * as Cause from "effect/Cause";
+import { useRouter } from "expo-router";
 import { View } from "react-native";
 
 import { FirstRun } from "@/components/first-run";
@@ -9,7 +10,6 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { formatTimeOfDay, REMINDER_EVENING, reminderTime } from "@/domain/reminder";
 import { useTranslation } from "@/i18n/context";
 import { SILENT } from "@/state/atom-command";
-import { finishOnboardingCommand } from "@/state/lifecycle-commands";
 import { chooseFirstRunReminderCommand } from "@/state/settings-flow-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 
@@ -36,22 +36,16 @@ function MockNotification({ body, back }: { body: string; back?: boolean }) {
 export function OnboardingRhythm() {
     const db = useDatabase();
     const t = useTranslation();
-    const finishOnboarding = useAtomAction(
-        finishOnboardingCommand,
-        { onFailure: (cause) => console.error("Finishing onboarding failed", Cause.squash(cause)) },
-        SILENT
-    );
+    const router = useRouter();
+    const next = () => router.push("/onboarding/first-entry");
     const chooseReminder = useAtomAction(
         chooseFirstRunReminderCommand,
         {
             onFailure: (cause) => console.error("Saving the first-run reminder choice failed", Cause.squash(cause)),
-            onSettled: () => finishOnboarding(db),
+            onSettled: next,
         },
         SILENT
     );
-
-    // `finishOnboarding` settles the root guard, which swaps this stack. Nothing navigates.
-    const finish = () => finishOnboarding(db);
 
     const remind = () => chooseReminder({ db, option: REMINDER_EVENING });
 
@@ -71,7 +65,7 @@ export function OnboardingRhythm() {
                     <MockNotification body={t("onboarding.rhythm.notifToday")} />
                 </View>
             }
-            skip={{ label: t("onboarding.rhythm.none"), onPress: finish }}
+            skip={{ label: t("onboarding.rhythm.none"), onPress: next }}
             title={t("onboarding.rhythm.title")}
         />
     );

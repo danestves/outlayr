@@ -136,6 +136,13 @@ const log = {
             pt: "Não foi possível apagar o lançamento",
             "pt-PT": "Não foi possível apagar o registo",
         }),
+        "log.empty.action": t({
+            en: "Write your first line",
+            es: "Escribe tu primera línea",
+            fr: "Écrivez votre première ligne",
+            pt: "Escreva sua primeira linha",
+            "pt-PT": "Escreva a sua primeira linha",
+        }),
         "log.empty.body": t({
             en: "Your first entry sets the baseline everything else is measured against.",
             es: "Tu primer registro define la base con la que se compara todo lo demás.",

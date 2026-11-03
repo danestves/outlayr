@@ -289,6 +289,7 @@ function RootStack() {
                 <Stack.Screen name="onboarding/auto-log" options={chrome.firstRunStep} />
                 <Stack.Screen name="onboarding/smart-features" options={chrome.firstRunStep} />
                 <Stack.Screen name="onboarding/rhythm" options={chrome.firstRunStep} />
+                <Stack.Screen name="onboarding/first-entry" options={chrome.firstRunStep} />
                 {ONBOARDING_IMPORT_SCREENS.map((screen) => (
                     <Stack.Screen key={screen.name} name={screen.name} options={importOptions(screen)} />
                 ))}
