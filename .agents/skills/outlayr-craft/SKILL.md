@@ -23,10 +23,11 @@ replace.
    control, typed as a union (`"buy" | "restore" | null`), never one boolean
    shared by several buttons.
 2. **The length of the wait picks the treatment.**
-   - Under 2 s (local DB writes, toggles, route changes): nothing. Disable
+   - Under 400 ms (local DB writes, toggles, route changes): nothing. Disable
      the control against double taps and show no indicator.
    - Unknown length: `useLongWait` (`@/hooks/use-long-wait`) shows the named
-     status only once 2 s have passed.
+     status once 400 ms have passed and keeps it at least 300 ms, so a
+     request that ends just after the delay never flashes it.
    - Work you can count: say the count ("Restoring 1,240 rows…").
    - AI work (model calls, lookups, receipt reading): `ThinkingOrb`
      (`@/components/thinking-orb/thinking-orb`, `state="searching"`, 20 pt)
