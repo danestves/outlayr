@@ -54,7 +54,7 @@ describe("spend no limit covers", () => {
         const { rows, total } = unlimitedSpend(
             [spend(60, null), spend(40, "rent"), { ...spend(500, "rent"), date: NOVEMBER.end }],
             NOVEMBER,
-            new Set()
+            new Set(["groceries"])
         );
         expect(total).toBe(100);
         expect(rows).toStrictEqual([
