@@ -26,7 +26,7 @@ const A_DAY = { headers: { "cache-control": "public, max-age=86400" } };
 
 export default defineConfig({
     plugins: [
-        varlockVitePlugin({ ssrInjectMode: "auto-load" }),
+        varlockVitePlugin({ ssrInjectMode: "resolved-env" }),
         contentCollections(),
         tailwindcss(),
         intlayer(),
