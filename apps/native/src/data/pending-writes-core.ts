@@ -314,13 +314,14 @@ function sourceOf(job: PendingWrite): string | null {
     return kind ? `${kind}:${job.card?.trim().toLowerCase() ?? ""}` : null;
 }
 
-// A push nothing could name files under the app that posted it, never under its category. The app's name is a
-// placeholder, so neither the merchant lookup nor the logo lookup ever sees it.
+// A push nothing could name files under the app that posted it, never under its category. A card the text names
+// (Google Wallet's "Visa ••1234") is not an app. The name is a placeholder, so no merchant or logo lookup sees it.
 function filedName(job: PendingWrite): string {
     if (!job.text || job.note.trim()) {
         return job.note;
     }
-    return job.card?.trim() || translateNow("settings.integrations.unnamedPush");
+    const app = job.card?.trim();
+    return app && !job.text.includes(app) ? app : translateNow("settings.integrations.unnamedPush");
 }
 
 function readNotification(job: PendingWrite, reads: NotificationReads | undefined): PendingWrite | null {
@@ -588,7 +589,7 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
                             fee: job.income
                                 ? null
                                 : yield* attemptSync("read", () =>
-                                      suggestedCardFee(db, { account, categoryId, currency, merchant: job.note })
+                                      suggestedCardFee(db, { account, categoryId, currency, merchant: filed })
                                   ),
                             income: job.income,
                             note: filed,
