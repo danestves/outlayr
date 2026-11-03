@@ -8,6 +8,7 @@ import * as Schema from "effect/Schema";
 import { appliedWriteIds } from "@/data/pending-writes-core";
 import { readRemoteEnrichment } from "@/data/settings-core";
 import type { Database } from "@/db/client";
+import { NOTIFICATION_PATTERNS } from "@/domain/parse-notification";
 import { firstLocale } from "@/i18n/device-language";
 
 import { aiConsentArgs, cloudAction, isCloudAuthenticated } from "./convex";
@@ -38,9 +39,12 @@ export const readNotifications: NotificationReader = Effect.fn("NotificationRead
         if (!(yield* readRemoteEnrichment(db).pipe(Effect.orElseSucceed(() => false)))) {
             return reads;
         }
-        // A replayed claim is already on the ledger and would only be skipped, so its text stays on the device.
+        // Only a push that shows an amount leaves the device, so login codes and promotions never do; a replayed
+        // claim is already on the ledger and would only be skipped.
         const applied = new Set(yield* appliedWriteIds(db, 0).pipe(Effect.orElseSucceed((): string[] => [])));
-        const pushes = jobs.filter((job) => job.text?.trim() && !applied.has(job.id));
+        const pushes = jobs.filter(
+            (job) => job.text && NOTIFICATION_PATTERNS.money.test(job.text) && !applied.has(job.id)
+        );
         const language = firstLocale()?.languageTag?.trim() || undefined;
         yield* Effect.all(
             pushes.map((job) =>
