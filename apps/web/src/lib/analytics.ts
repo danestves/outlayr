@@ -1,6 +1,6 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
-import type { PostHog, Properties } from "posthog-js";
+import type { CaptureResult, PostHog, Properties } from "posthog-js";
 
 import { ENV } from "@/env";
 
@@ -60,6 +60,19 @@ const ASK_FIRST = new Set([
     "YT",
 ]);
 
+// Browsers report this on window when a ResizeObserver callback changes layout. The spec calls it benign: the
+// notifications arrive next frame. The vendored Stageshow films trigger it, and they stay a copy of upstream.
+const RESIZE_OBSERVER_LOOP = /^ResizeObserver loop (completed with undelivered notifications|limit exceeded)/;
+
+function dropResizeObserverLoop(event: CaptureResult | null): CaptureResult | null {
+    const exceptions: unknown = event?.event === "$exception" ? event.properties.$exception_list : undefined;
+    const benign =
+        Array.isArray(exceptions) &&
+        exceptions.length > 0 &&
+        exceptions.every((exception) => RESIZE_OBSERVER_LOOP.test(String(exception?.value ?? "")));
+    return benign ? null : event;
+}
+
 // Loaded on start rather than imported: posthog-js was over a third of the chunk every page waits on.
 let posthog: PostHog | null = null;
 let starting = false;
@@ -96,6 +109,7 @@ export const startAnalytics = Effect.fn("Analytics.start")(function* startAnalyt
     client.init(TOKEN, {
         advanced_disable_feature_flags: true,
         api_host: "https://relay.tryoutlayr.com",
+        before_send: dropResizeObserverLoop,
         capture_exceptions: true,
         cookieless_mode: "on_reject",
         defaults: "2026-08-30",
