@@ -23,9 +23,6 @@ export interface OpenStats {
 
 const latest = makeFunctionReference<"query", Record<string, never>, OpenStats | null>("openStats:latest");
 
-const isMissingFunction = (error: unknown) =>
-    error instanceof Error && error.message.includes("Could not find public function");
-
 export const getOpenStats = createServerFn({ method: "GET" }).handler(async () => {
     const url = ENV.VITE_CONVEX_URL;
     if (!url) {
@@ -34,7 +31,7 @@ export const getOpenStats = createServerFn({ method: "GET" }).handler(async () =
     try {
         return await new ConvexHttpClient(url).query(latest, {});
     } catch (error) {
-        if (isMissingFunction(error)) {
+        if (error instanceof Error && error.message.includes("Could not find public function")) {
             return null;
         }
         throw error;
