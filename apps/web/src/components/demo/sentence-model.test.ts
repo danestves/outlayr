@@ -40,6 +40,21 @@ describe("reduce", () => {
         expect(next.log).toBe(state.log);
     });
 
+    it("holds the amount step and asks for an amount until one is typed", () => {
+        const draft = { ...BLANK, account: "Cash", category: "Coffee" };
+        const pressed = reduce({ ...INITIAL, draft, step: "amount" }, { type: "footer" });
+        const again = reduce(pressed, { type: "footer" });
+        expect(again).toMatchObject({ needsAmount: true, step: "amount" });
+        expect(again.log).toBe(INITIAL.log);
+        expect(visit(again, ["5"]).needsAmount).toBe(false);
+    });
+
+    it("asks for an amount when Next wraps back to a blank amount", () => {
+        const draft = { ...BLANK, account: "Cash", category: "Coffee" };
+        const next = reduce({ ...INITIAL, draft, step: "merchant" }, { type: "footer" });
+        expect(next).toMatchObject({ needsAmount: true, step: "amount" });
+    });
+
     it("suggests the category of a known merchant", () => {
         const next = reduce({ ...INITIAL, draft: BLANK, step: "merchant" }, { type: "name", value: "Costco" });
         expect(next.draft.category).toBe("Groceries");

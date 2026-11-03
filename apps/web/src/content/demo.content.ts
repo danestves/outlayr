@@ -9,6 +9,7 @@ const demo = {
                 es: "Transacción agregada: {{merchant}}, {{money}}",
             })
         ),
+        amountNeeded: t({ en: "Enter an amount first", es: "Primero ingresa un monto" }),
         blank: {
             account: t({ en: "an account", es: "una cuenta" }),
             category: t({ en: "a category", es: "una categoría" }),

@@ -79,6 +79,7 @@ export interface State {
     draft: Draft;
     locale: Locale;
     log: readonly Row[];
+    needsAmount: boolean;
     nextId: number;
     step: Step;
 }
@@ -344,7 +345,8 @@ function choose(state: State, value: string): State {
     return state;
 }
 
-function apply(state: State, action: VisitorAction): State {
+function apply(previous: State, action: VisitorAction): State {
+    const state = previous.needsAmount ? { ...previous, needsAmount: false } : previous;
     const { draft } = state;
     switch (action.type) {
         case "kind": {
@@ -373,10 +375,12 @@ function apply(state: State, action: VisitorAction): State {
             if (isWhole(draft)) {
                 return save(state);
             }
-            return {
-                ...state,
-                step: nextMissing(draft, afterStep(state.step)) ?? nextMissing(draft, 0) ?? "amount",
-            };
+            const hasAmount = answered(draft, "amount");
+            if (!hasAmount && state.step === "amount") {
+                return { ...state, needsAmount: true };
+            }
+            const step = nextMissing(draft, afterStep(state.step)) ?? nextMissing(draft, 0) ?? "amount";
+            return { ...state, needsAmount: !hasAmount && step === "amount", step };
         }
     }
 }
@@ -453,7 +457,7 @@ export function reduce(state: State, action: Action): State {
     }
     if (action.type === "restart") {
         const cursor = SCRIPTS[state.locale].starts.findLast((start) => start <= state.cursor) ?? 0;
-        return { ...state, aim: null, cursor, draft: BLANK, step: "amount" };
+        return { ...state, aim: null, cursor, draft: BLANK, needsAmount: false, step: "amount" };
     }
     return { ...apply(state, action), aim: null };
 }
@@ -487,6 +491,7 @@ export function initialState(locale: Locale): State {
         },
         locale,
         log: cast.seedLog,
+        needsAmount: false,
         nextId: cast.seedLog.length + 1,
         step: "amount",
     };
