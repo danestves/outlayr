@@ -32,6 +32,14 @@ describe("parseNotification", () => {
                 "Your transaction was successful\nPayment of USD 22.99 approved on the card ending with 7909."
             )
         ).toMatchObject({ merchant: null });
+        for (const text of [
+            "Chase\nYour recent transaction of $45.00 was approved.",
+            "Purchase alert\nYour debit card purchase of $12.40 was approved.",
+            "Your Visa card purchase of $12.40",
+            "Your card ending in 1234 transaction of $9.99",
+        ]) {
+            expect(parseNotification(text)).toMatchObject({ merchant: null });
+        }
     });
 
     it("reads Payoneer's card push, merchant in parentheses after the card", () => {
@@ -178,26 +186,54 @@ describe("parseNotification", () => {
 });
 
 describe("mergeNotificationRead", () => {
+    const TEXT = "Your SiteGround transaction in the amount of USD 22.99 was approved";
     const parsed = { amount: 22.99, amountText: "USD 22.99", income: false, merchant: null };
 
     it("logs nothing when the AI reads a decline or a non-purchase the parser took for one", () => {
         expect(
-            mergeNotificationRead(parsed, { amount: 22.99, currency: "USD", kind: "declined", merchant: "SiteGround" })
+            mergeNotificationRead(TEXT, parsed, {
+                amount: 22.99,
+                currency: "USD",
+                kind: "declined",
+                merchant: "SiteGround",
+            })
         ).toBeNull();
         expect(
-            mergeNotificationRead(parsed, { amount: 500, currency: "USD", kind: "other", merchant: null })
+            mergeNotificationRead(TEXT, parsed, { amount: 500, currency: "USD", kind: "other", merchant: null })
         ).toBeNull();
     });
 
     it("takes the AI's merchant and keeps the parser's amount where the AI left it null", () => {
         expect(
-            mergeNotificationRead(parsed, { amount: null, currency: null, kind: "purchase", merchant: "SiteGround" })
+            mergeNotificationRead(TEXT, parsed, {
+                amount: null,
+                currency: null,
+                kind: "purchase",
+                merchant: "SiteGround",
+            })
         ).toStrictEqual({ amount: 22.99, amountText: "USD 22.99", income: false, merchant: "SiteGround" });
     });
 
-    it("logs a purchase the parser missed, with the AI's currency", () => {
+    it("logs a transfer the parser missed, with the currency the text names", () => {
         expect(
-            mergeNotificationRead(null, { amount: 1500, currency: "ARS", kind: "income", merchant: "Juan" })
+            mergeNotificationRead("Juan te envió 1500 pesos ARS", null, {
+                amount: 1500,
+                currency: "ARS",
+                kind: "income",
+                merchant: "Juan",
+            })
         ).toStrictEqual({ amount: 1500, amountText: "ARS 1500", income: true, merchant: "Juan" });
+    });
+
+    it("leaves a bare $ for the card's account to settle, whatever currency the AI guessed", () => {
+        const text = "Compra aprobada\nCompraste $250.00 en OXXO";
+        expect(
+            mergeNotificationRead(text, parseNotification(text), {
+                amount: 250,
+                currency: "USD",
+                kind: "purchase",
+                merchant: "OXXO",
+            })
+        ).toMatchObject({ amount: 250, amountText: "$250.00" });
     });
 });

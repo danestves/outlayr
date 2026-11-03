@@ -317,7 +317,7 @@ function readNotification(job: PendingWrite, reads: NotificationReads | undefine
     if (!job.text) {
         return job;
     }
-    const parsed = mergeNotificationRead(parseNotification(job.text), reads?.get(job.id) ?? null);
+    const parsed = mergeNotificationRead(job.text, parseNotification(job.text), reads?.get(job.id) ?? null);
     if (!parsed) {
         return null;
     }

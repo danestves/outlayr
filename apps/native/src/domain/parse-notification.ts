@@ -1,7 +1,7 @@
 import type { NotificationRead } from "@outlayr/backend/confect/notificationRead.spec";
 import { CURRENCY_META, PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
 
-import { SYMBOL_ALIASES } from "./detect-currency";
+import { detectCurrency, SYMBOL_ALIASES } from "./detect-currency";
 import { detectDecimalSeparator, parseCsvAmount } from "./transaction-csv";
 
 export interface ParsedNotification {
@@ -49,6 +49,8 @@ const YOUR_CHARGE = new RegExp(
 const CARD_USED = new RegExp(String.raw`\b(?:with|con)\s+([^\n]*?[•*]{2,}\s?\d{4})(?!\d)`, "iu");
 const CARD_REFERENCE = new RegExp(String.raw`\byour\b.*\bcard\b|\btu\b.*\btarjeta\b|[x*•]{3,}[-\s]?\d{3,4}`, "iu");
 const PARENTHESIZED = new RegExp(String.raw`\(([^()]+)\)`, "u");
+const CHARGE_WORDS = new RegExp(String.raw`\b(?:card|tarjeta|ending)\b`, "iu");
+const NAME_START = new RegExp(String.raw`^[\p{Lu}\d]`, "u");
 
 const POS_PREFIX = new RegExp(
     String.raw`^(?:sumup|sq|sqc|tst|pp|paypal|zettle|izettle|stripe|amzn(?: mktp)?)\s*\*\s*`,
@@ -90,10 +92,11 @@ export function parseNotification(text: string): ParsedNotification | null {
     return { amount, amountText, income, merchant };
 }
 
-// "Your SiteGround transaction in the amount of USD 22.99": the name sits before the money.
+// "Your SiteGround transaction in the amount of USD 22.99": the name sits before the money. A lowercase word
+// ("Your recent transaction", "Your debit card purchase") is the bank describing the charge, not naming a payee.
 function chargeNamed(head: string): string | null {
     const named = YOUR_CHARGE.exec(head)?.[1];
-    return named && !CARD_REFERENCE.test(named) ? named : null;
+    return named && NAME_START.test(named) && !CHARGE_WORDS.test(named) && !CARD_REFERENCE.test(named) ? named : null;
 }
 
 function payee(named: string, tail: string): string | null {
@@ -102,6 +105,7 @@ function payee(named: string, tail: string): string | null {
 
 // The AI read decides what the push is and wins where it answered; the on-device parse fills what it left null.
 export function mergeNotificationRead(
+    text: string,
     parsed: ParsedNotification | null,
     read: NotificationRead | null
 ): ParsedNotification | null {
@@ -117,10 +121,26 @@ export function mergeNotificationRead(
     }
     return {
         amount,
-        amountText: read.currency ? `${read.currency} ${amount}` : (parsed?.amountText ?? String(amount)),
+        amountText: readCurrency(text, parsed, read.currency, amount) ?? parsed?.amountText ?? String(amount),
         income: read.kind === "income",
         merchant: cleanMerchant(read.merchant) ?? parsed?.merchant ?? null,
     };
+}
+
+// A bare "$" belongs to 22 currencies and the card's account settles it, so the model's guess counts only when
+// the text names the code or the parser read the same currency.
+function readCurrency(
+    text: string,
+    parsed: ParsedNotification | null,
+    code: string | null,
+    amount: number
+): string | null {
+    if (code === null) {
+        return null;
+    }
+    const named = new RegExp(String.raw`(?<![A-Za-z])${escape(code)}(?![A-Za-z])`, "iu").test(text);
+    const agreed = parsed !== null && detectCurrency(parsed.amountText) === code;
+    return named || agreed ? `${code} ${amount}` : null;
 }
 
 export function cleanMerchant(raw: string | null): string | null {

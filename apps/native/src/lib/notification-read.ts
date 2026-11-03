@@ -5,6 +5,7 @@ import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
+import { appliedWriteIds } from "@/data/pending-writes-core";
 import { readRemoteEnrichment } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import { firstLocale } from "@/i18n/device-language";
@@ -16,8 +17,8 @@ export type NotificationReads = ReadonlyMap<string, NotificationRead>;
 
 export type NotificationReader = (db: Database, jobs: readonly PendingWrite[]) => Effect.Effect<NotificationReads>;
 
-// The drain holds a notification tap until it lands, so a slow read falls back to the on-device parse.
-const READ_TIMEOUT_MS = 8000;
+// The drain holds a notification tap until it lands, so whatever has not answered by then keeps the on-device parse.
+const READ_BUDGET_MS = 8000;
 const READ_CONCURRENCY = 4;
 
 const decodeReadResult = Schema.decodeUnknownOption(ReadResult);
@@ -25,30 +26,30 @@ const decodeReadResult = Schema.decodeUnknownOption(ReadResult);
 const readOne = (text: string, language: string | undefined) =>
     cloudAction(api.notificationRead.read, { language, text, ...aiConsentArgs() }).pipe(
         Effect.map((reply) => Option.getOrNull(Option.flatMapNullishOr(decodeReadResult(reply), ({ read }) => read))),
-        Effect.timeout(READ_TIMEOUT_MS),
         Effect.catchCause(() => Effect.succeed(null))
     );
 
 export const readNotifications: NotificationReader = Effect.fn("NotificationRead.readNotifications")(
     function* readNotifications(db, jobs) {
         const reads = new Map<string, NotificationRead>();
-        const pushes = jobs.filter((job) => job.text?.trim());
-        if (pushes.length === 0 || !isCloudAuthenticated()) {
+        if (!jobs.some((job) => job.text?.trim()) || !isCloudAuthenticated()) {
             return reads;
         }
         if (!(yield* readRemoteEnrichment(db).pipe(Effect.orElseSucceed(() => false)))) {
             return reads;
         }
+        // A replayed claim is already on the ledger and would only be skipped, so its text stays on the device.
+        const applied = new Set(yield* appliedWriteIds(db, 0).pipe(Effect.orElseSucceed((): string[] => [])));
+        const pushes = jobs.filter((job) => job.text?.trim() && !applied.has(job.id));
         const language = firstLocale()?.languageTag?.trim() || undefined;
-        const answers = yield* Effect.all(
-            pushes.map((job) => readOne(job.text ?? "", language).pipe(Effect.map((read) => ({ id: job.id, read })))),
-            { concurrency: READ_CONCURRENCY }
-        );
-        for (const { id, read } of answers) {
-            if (read !== null) {
-                reads.set(id, read);
-            }
-        }
+        yield* Effect.all(
+            pushes.map((job) =>
+                readOne(job.text ?? "", language).pipe(
+                    Effect.map((read) => (read === null ? reads : reads.set(job.id, read)))
+                )
+            ),
+            { concurrency: READ_CONCURRENCY, discard: true }
+        ).pipe(Effect.timeout(READ_BUDGET_MS), Effect.ignore);
         return reads;
     }
 );
