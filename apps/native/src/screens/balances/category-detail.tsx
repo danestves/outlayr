@@ -102,57 +102,63 @@ export function CategoryDetail({ categoryId, initialMonthOffset }: { categoryId:
                     />
                 </View>
                 <MonoLabel>{limited ? t("balances.spent") : t("balances.noLimit")}</MonoLabel>
-                <HeroNumber amount={spent} code={currency} showCents={showCents} />
+                <HeroNumber amount={spent} code={currency} showCents={showCents} sign="" />
                 <Text className="text-muted text-subtitle pt-1">
                     {t("balances.share", { percent: spent > 0 && percent === 0 ? "<1" : String(percent) })}
                 </Text>
 
-                <View className="flex-row items-baseline justify-between pt-7 pb-3">
-                    <MonoLabel>{t("balances.category.lately", { months: bars.length })}</MonoLabel>
-                    {typical === null ? null : (
-                        <MonoLabel>
-                            {t("budgets.sheet.typical", { amount: formatAmount(typical, currency, false, language) })}
-                        </MonoLabel>
-                    )}
-                </View>
-                <View
-                    accessibilityLabel={bars
-                        .map(
-                            (bar) =>
-                                `${monthLongTitle(bar.start, language)}: ${formatAmount(bar.amount, currency, false, language)}`
-                        )
-                        .join(", ")}
-                    accessible
-                    className="flex-row items-end gap-2"
-                    style={{ height: BAR_HEIGHT }}
-                >
-                    {bars.map((bar) => (
-                        <View
-                            className="flex-1 rounded-sm"
-                            key={bar.start.getTime()}
-                            style={{
-                                backgroundColor:
-                                    bar.start.getTime() === start.getTime()
-                                        ? colors.foreground
-                                        : withAlpha(colors.foreground, BAR_WASH),
-                                height: Math.max(BAR_FLOOR, (bar.amount / peak) * BAR_HEIGHT),
-                            }}
-                        />
-                    ))}
-                </View>
-                <View className="flex-row gap-2 pt-1.5">
-                    {bars.map((bar) => (
-                        <MonoLabel
-                            className={cn(
-                                "flex-1 text-center",
-                                bar.start.getTime() === start.getTime() && "text-foreground"
+                {bars.length > 1 ? (
+                    <>
+                        <View className="flex-row items-baseline justify-between pt-7 pb-3">
+                            <MonoLabel>{t("balances.category.lately", { months: bars.length })}</MonoLabel>
+                            {typical === null ? null : (
+                                <MonoLabel>
+                                    {t("budgets.sheet.typical", {
+                                        amount: formatAmount(typical, currency, false, language),
+                                    })}
+                                </MonoLabel>
                             )}
-                            key={bar.start.getTime()}
+                        </View>
+                        <View
+                            accessibilityLabel={bars
+                                .map(
+                                    (bar) =>
+                                        `${monthLongTitle(bar.start, language)}: ${formatAmount(bar.amount, currency, false, language)}`
+                                )
+                                .join(", ")}
+                            accessible
+                            className="flex-row items-end gap-2"
+                            style={{ height: BAR_HEIGHT }}
                         >
-                            {monthAbbrev(bar.start, language)}
-                        </MonoLabel>
-                    ))}
-                </View>
+                            {bars.map((bar) => (
+                                <View
+                                    className="flex-1 rounded-sm"
+                                    key={bar.start.getTime()}
+                                    style={{
+                                        backgroundColor:
+                                            bar.start.getTime() === start.getTime()
+                                                ? colors.foreground
+                                                : withAlpha(colors.foreground, BAR_WASH),
+                                        height: Math.max(BAR_FLOOR, (bar.amount / peak) * BAR_HEIGHT),
+                                    }}
+                                />
+                            ))}
+                        </View>
+                        <View className="flex-row gap-2 pt-1.5">
+                            {bars.map((bar) => (
+                                <MonoLabel
+                                    className={cn(
+                                        "flex-1 text-center",
+                                        bar.start.getTime() === start.getTime() && "text-foreground"
+                                    )}
+                                    key={bar.start.getTime()}
+                                >
+                                    {monthAbbrev(bar.start, language)}
+                                </MonoLabel>
+                            ))}
+                        </View>
+                    </>
+                ) : null}
 
                 {limited ? null : (
                     <View className="pt-7">
