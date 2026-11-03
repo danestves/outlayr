@@ -5611,8 +5611,8 @@ const answers = {
                     {
                         body: [
                             t({
-                                en: "Log your pay as income, in the Paycheck category. Then set budgets in your currency: a monthly one on Family for what you send home, and others for rent, groceries, and whatever else you spend on. Budgets can run by day, week, month, or year, and what you log in another currency counts at the rate from its day.",
-                                es: "Registra lo que cobras como ingreso, en la categoría Sueldo. Después haz tus presupuestos en tu moneda: uno mensual en Familia para lo que envías, y otros para el alquiler, el supermercado y lo demás que gastes. Los presupuestos pueden ser por día, semana, mes o año, y lo que registres en otra moneda cuenta con la tasa de su día.",
+                                en: "Log your pay as income, in the Paycheck category. Then set budgets in your currency: a monthly one on Family for what you send home, and one more for rent, groceries, or whatever else you spend on. Budgets can run by day, week, month, or year, and what you log in another currency counts at the rate from its day.",
+                                es: "Registra lo que cobras como ingreso, en la categoría Sueldo. Después haz tus presupuestos en tu moneda: uno mensual en Familia para lo que envías, y uno más para el alquiler, el supermercado o lo demás que gastes. Los presupuestos pueden ser por día, semana, mes o año, y lo que registres en otra moneda cuenta con la tasa de su día.",
                             }),
                             t({
                                 en: "If you're paid on the 15th, set your month to start on the 15th in Settings, under Time frames, and budgets and insights run from payday to payday. The free plan includes 2 category budgets plus the overall one; Outlayr Pro has no limit.",
@@ -5645,8 +5645,8 @@ const answers = {
                     },
                     {
                         text: t({
-                            en: "A monthly budget on Family, and others for the rest.",
-                            es: "Un presupuesto mensual en Familia, y otros para el resto.",
+                            en: "A monthly budget on Family for what you log there, and one more for the rest.",
+                            es: "Un presupuesto mensual en Familia para lo que registres ahí, y uno más para el resto.",
                         }),
                         title: t({ en: "Budget in the same currency", es: "Haz tu presupuesto en la misma moneda" }),
                     },
