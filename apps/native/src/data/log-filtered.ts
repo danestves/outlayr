@@ -1,5 +1,5 @@
 import { addDays, startOfDay } from "@outlayr/money/calendar";
-import { landingDate } from "@outlayr/money/recurrence";
+import { RECURRING_TYPE, landingDate } from "@outlayr/money/recurrence";
 import { and, asc, desc, eq, gt, gte, inArray, isNull, lt, lte, or } from "drizzle-orm";
 
 import type { Database } from "@/db/client";
@@ -102,6 +102,17 @@ export interface UpcomingTransactions {
     schedules: TransactionWithCategory[];
 }
 
+export function upcomingSchedules(rows: readonly TransactionWithCategory[], at: Date): TransactionWithCategory[] {
+    return rows
+        .filter(
+            (row) =>
+                row.recurringType === RECURRING_TYPE.none ||
+                row.recurringEndDate == null ||
+                landingDate(row, at).getTime() < addDays(startOfDay(row.recurringEndDate), 1).getTime()
+        )
+        .sort((a, b) => landingDate(a, at).getTime() - landingDate(b, at).getTime());
+}
+
 // Furthest next landing first, matching Swift's `FutureListView`.
 // `enabled` false skips the schedule scan for a viewer that renders none of it; switching it on re-reads at once.
 export function useUpcomingTransactions(
@@ -138,7 +149,7 @@ export function useUpcomingTransactions(
     const decorated = useDecoratedRows(db, rows);
 
     const at = new Date(nowMs);
-    const schedules = [...decorated].sort((a, b) => landingDate(a, at).getTime() - landingDate(b, at).getTime());
+    const schedules = upcomingSchedules(decorated, at);
     if (!limited) {
         return { rows: schedules, schedules };
     }
