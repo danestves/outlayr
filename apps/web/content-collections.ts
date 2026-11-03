@@ -68,6 +68,12 @@ const posts = defineCollection({
     transform: async (document, context) => {
         const { _meta, content, ...frontmatter } = document;
         const locale = decodeLocale(_meta.directory);
+        for (const day of [frontmatter.date, frontmatter.published ?? frontmatter.date]) {
+            const parsed = new Date(`${day}T00:00:00Z`);
+            if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== day) {
+                throw new Error(`content/posts/${_meta.filePath} has an impossible date, ${day}`);
+            }
+        }
         const siblings = await context.collection.documents();
         if (!siblings.some((other) => other._meta.fileName === _meta.fileName && other._meta.directory !== locale)) {
             throw new Error(`content/posts/${_meta.filePath} has no translation; write it in both en and es`);

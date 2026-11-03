@@ -36,7 +36,16 @@ export const Route = createFileRoute("/{-$locale}/blog/")({
 });
 
 function byMonth(posts: readonly Listed[], locale: Locale) {
-    const months = Map.groupBy(posts, (post) => post.date.slice(0, 7));
+    const months = new Map<string, Listed[]>();
+    for (const post of posts) {
+        const key = post.date.slice(0, 7);
+        const month = months.get(key);
+        if (month) {
+            month.push(post);
+        } else {
+            months.set(key, [post]);
+        }
+    }
     return [...months].map(([key, entries]) => {
         const label = postDay(`${key}-01`).toLocaleDateString(LANGUAGES[locale].date, {
             month: "long",
