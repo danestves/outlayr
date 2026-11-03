@@ -103,7 +103,7 @@ function payee(named: string, tail: string): string | null {
     return CARD_REFERENCE.test(named) ? (PARENTHESIZED.exec(tail)?.[1] ?? null) : named;
 }
 
-// The AI read decides what the push is and wins where it answered; the on-device parse fills what it left null.
+// The AI read wins where it answered and the on-device parse fills what it left null; only a decline drops the push.
 export function mergeNotificationRead(
     text: string,
     parsed: ParsedNotification | null,
@@ -112,8 +112,12 @@ export function mergeNotificationRead(
     if (read === null) {
         return parsed;
     }
-    if (read.kind === "declined" || read.kind === "other") {
+    if (read.kind === "declined") {
         return null;
+    }
+    // A missing purchase is worse than a statement logged by mistake, so "other" only defers to the parser.
+    if (read.kind === "other") {
+        return parsed;
     }
     const amount = read.amount ?? parsed?.amount;
     if (amount === undefined) {

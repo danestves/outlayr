@@ -189,7 +189,7 @@ describe("mergeNotificationRead", () => {
     const TEXT = "Your SiteGround transaction in the amount of USD 22.99 was approved";
     const parsed = { amount: 22.99, amountText: "USD 22.99", income: false, merchant: null };
 
-    it("logs nothing when the AI reads a decline or a non-purchase the parser took for one", () => {
+    it("logs nothing when the AI reads a decline the parser took for a purchase", () => {
         expect(
             mergeNotificationRead(TEXT, parsed, {
                 amount: 22.99,
@@ -198,9 +198,12 @@ describe("mergeNotificationRead", () => {
                 merchant: "SiteGround",
             })
         ).toBeNull();
+    });
+
+    it("still logs what the parser read when the AI calls it something other than a purchase", () => {
         expect(
-            mergeNotificationRead(TEXT, parsed, { amount: 500, currency: "USD", kind: "other", merchant: null })
-        ).toBeNull();
+            mergeNotificationRead(TEXT, parsed, { amount: null, currency: null, kind: "other", merchant: null })
+        ).toBe(parsed);
     });
 
     it("takes the AI's merchant and keeps the parser's amount where the AI left it null", () => {

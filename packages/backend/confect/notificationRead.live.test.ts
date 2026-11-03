@@ -46,7 +46,7 @@ describe.skipIf(!enabled)("notificationRead against the live model", () => {
         expect(result.read?.kind).toBe("declined");
     });
 
-    it("refuses to log a balance reminder that carries an amount", async () => {
+    it("calls a balance reminder that carries an amount other", async () => {
         const result = await read("Statement ready\nYour statement balance is $512.30. Payment due Nov 20.", "en-US");
 
         expect(result.read?.kind).toBe("other");
