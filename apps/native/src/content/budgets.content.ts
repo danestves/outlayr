@@ -47,12 +47,6 @@ const budgets = {
             fr: "Limite",
             pt: "Limite",
         }),
-        "balances.category.noLimit": t({
-            en: "{period} · No limit",
-            es: "{period} · Sin límite",
-            fr: "{period} · Sans limite",
-            pt: "{period} · Sem limite",
-        }),
         "balances.noLimit": t({
             en: "No limit",
             es: "Sin límite",

@@ -116,12 +116,12 @@ export function BalancesCategories({
 
     const openBudget = (id: string) => router.push(`/balances/${id}`);
     const openCategory = (categoryId: string) => {
-        const limited = budgets.find((budget) => budget.categoryId === categoryId);
+        const limited = live ? budgets.find((budget) => budget.categoryId === categoryId) : undefined;
         if (limited) {
             openBudget(limited.id);
             return;
         }
-        router.push(`/balances/category/${categoryId}`);
+        router.push(`/balances/category/${categoryId}?month=${monthOffset}`);
     };
     const menuItems = (budget: CategoryBudgetView) =>
         budgetMenuItems({
